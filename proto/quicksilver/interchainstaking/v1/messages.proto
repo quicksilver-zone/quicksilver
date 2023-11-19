@@ -43,6 +43,13 @@ service Msg {
       body: "*"
     };
   }
+
+  rpc GovSetLsmCaps(MsgGovSetLsmCaps) returns (MsgGovSetLsmCapsResponse) {
+    option (google.api.http) = {
+      post: "/quicksilver/tx/v1/interchainstaking/reopen_channel"
+      body: "*"
+    };
+  }
 }
 
 // MsgRequestRedemption represents a message type to request a burn of qAssets
@@ -59,6 +66,9 @@ message MsgRequestRedemption {
   string from_address = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
+// MsgRequestRedemptionResponse defines the MsgRequestRedemption response type.
+message MsgRequestRedemptionResponse {}
+
 // MsgSignalIntent represents a message type for signalling voting intent for
 // one or more validators.
 message MsgSignalIntent {
@@ -69,9 +79,6 @@ message MsgSignalIntent {
   string intents = 2 [(gogoproto.moretags) = "yaml:\"intents\""];
   string from_address = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
-
-// MsgRequestRedemptionResponse defines the MsgRequestRedemption response type.
-message MsgRequestRedemptionResponse {}
 
 // MsgSignalIntentResponse defines the MsgSignalIntent response type.
 message MsgSignalIntentResponse {}

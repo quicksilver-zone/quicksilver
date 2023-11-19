@@ -4518,7 +4518,7 @@ func (suite *KeeperTestSuite) TestHandleRedeemTokens() {
 				quicksilver.InterchainstakingKeeper.SetDelegation(ctx, zone.ChainId, dr)
 			}
 			for idx, msg := range test.msgs(ctx, quicksilver, zone) {
-				err := quicksilver.InterchainstakingKeeper.HandleRedeemTokens(ctx, msg, tokens[idx])
+				err := quicksilver.InterchainstakingKeeper.HandleRedeemTokens(ctx, msg, tokens[idx], "")
 				if test.errs[idx] {
 					suite.Error(err)
 				} else {

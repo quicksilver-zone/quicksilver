@@ -289,7 +289,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 
 			tt.malleate()
 
-			msgSrv := icskeeper.NewMsgServerImpl(*suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper)
+			msgSrv := icskeeper.NewMsgServerImpl(suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper)
 			res, err := msgSrv.RequestRedemption(sdk.WrapSDKContext(suite.chainA.GetContext()), &msg)
 
 			if tt.expectErr != "" {
@@ -339,7 +339,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 
 			tt.malleate()
 
-			msgSrv := icskeeper.NewMsgServerImpl(*suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper)
+			msgSrv := icskeeper.NewMsgServerImpl(suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper)
 			res, err := msgSrv.RequestRedemption(sdk.WrapSDKContext(suite.chainA.GetContext()), &msg)
 
 			if tt.expectErrLsm != "" {
@@ -470,7 +470,7 @@ func (suite *KeeperTestSuite) TestSignalIntent() {
 			}
 			suite.NoError(err)
 
-			msgSrv := icskeeper.NewMsgServerImpl(*suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper)
+			msgSrv := icskeeper.NewMsgServerImpl(suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper)
 			res, err := msgSrv.SignalIntent(sdk.WrapSDKContext(suite.chainA.GetContext()), msg)
 			if tt.expectErr {
 				suite.Error(err)
@@ -570,7 +570,7 @@ func (suite *KeeperTestSuite) TestGovCloseChannel() {
 			suite.setupTestZones()
 
 			msg := tc.malleate(suite)
-			msgSrv := icskeeper.NewMsgServerImpl(*suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper)
+			msgSrv := icskeeper.NewMsgServerImpl(suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper)
 			ctx := suite.chainA.GetContext()
 
 			_, err := msgSrv.GovCloseChannel(ctx, msg)
@@ -673,7 +673,7 @@ func (suite *KeeperTestSuite) TestGovReopenChannel() {
 			suite.setupTestZones()
 
 			msg := tc.malleate(suite)
-			msgSrv := icskeeper.NewMsgServerImpl(*suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper)
+			msgSrv := icskeeper.NewMsgServerImpl(suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper)
 			ctx := suite.chainA.GetContext()
 
 			_, err := msgSrv.GovReopenChannel(ctx, msg)
@@ -687,6 +687,115 @@ func (suite *KeeperTestSuite) TestGovReopenChannel() {
 			conn, err := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetConnectionForPort(ctx, msg.PortId)
 			suite.NoError(err)
 			suite.Equal(conn, msg.ConnectionId)
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestSetLsmCaps() {
+	tests := []struct {
+		name      string
+		malleate  func(s *KeeperTestSuite) *icstypes.MsgGovSetLsmCaps
+		expectErr bool
+	}{
+		{
+			"invalid authority",
+			func(s *KeeperTestSuite) *icstypes.MsgGovSetLsmCaps {
+				return &icstypes.MsgGovSetLsmCaps{
+					ChainId: s.chainB.ChainID,
+					Caps: &icstypes.LsmCaps{
+						ValidatorCap:     sdk.NewDecWithPrec(50, 2),
+						ValidatorBondCap: sdk.NewDec(250),
+						GlobalCap:        sdk.NewDecWithPrec(25, 2),
+					},
+					Authority: testAddress,
+				}
+			},
+			true,
+		},
+		{
+			"invalid zone",
+			func(s *KeeperTestSuite) *icstypes.MsgGovSetLsmCaps {
+				return &icstypes.MsgGovSetLsmCaps{
+					ChainId: "unknownzone-1",
+					Caps: &icstypes.LsmCaps{
+						ValidatorCap:     sdk.NewDecWithPrec(50, 2),
+						ValidatorBondCap: sdk.NewDec(250),
+						GlobalCap:        sdk.NewDecWithPrec(25, 2),
+					},
+					Authority: testAddress,
+				}
+			},
+			true,
+		},
+		{
+			"non lsm zone",
+			func(s *KeeperTestSuite) *icstypes.MsgGovSetLsmCaps {
+				zone, _ := s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.GetZone(s.chainA.GetContext(), s.chainB.ChainID)
+				zone.LiquidityModule = false
+				s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetZone(s.chainA.GetContext(), &zone)
+
+				return &icstypes.MsgGovSetLsmCaps{
+					ChainId: s.chainB.ChainID,
+					Caps: &icstypes.LsmCaps{
+						ValidatorCap:     sdk.NewDecWithPrec(50, 2),
+						ValidatorBondCap: sdk.NewDec(250),
+						GlobalCap:        sdk.NewDecWithPrec(25, 2),
+					},
+					Authority: testAddress,
+				}
+			},
+			true,
+		},
+		{
+			"valid",
+			func(s *KeeperTestSuite) *icstypes.MsgGovSetLsmCaps {
+				return &icstypes.MsgGovSetLsmCaps{
+					ChainId: s.chainB.ChainID,
+					Caps: &icstypes.LsmCaps{
+						ValidatorCap:     sdk.NewDecWithPrec(50, 2),
+						ValidatorBondCap: sdk.NewDec(250),
+						GlobalCap:        sdk.NewDecWithPrec(25, 2),
+					},
+					Authority: "quick10d07y265gmmuvt4z0w9aw880jnsr700j3xrh0p",
+				}
+			},
+			false,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+
+		s.Run(tt.name, func() {
+			s.SetupTest()
+			s.setupTestZones()
+
+			msg := tt.malleate(s)
+
+			msgSrv := icskeeper.NewMsgServerImpl(s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper)
+			res, err := msgSrv.GovSetLsmCaps(sdk.WrapSDKContext(s.chainA.GetContext()), msg)
+			if tt.expectErr {
+				s.Error(err)
+				s.Nil(res)
+			} else {
+				s.NoError(err)
+				s.NotNil(res)
+			}
+
+			qapp := s.GetQuicksilverApp(s.chainA)
+			icsKeeper := qapp.InterchainstakingKeeper
+			zone, found := icsKeeper.GetZone(s.chainA.GetContext(), s.chainB.ChainID)
+			s.True(found)
+
+			caps, found := icsKeeper.GetLsmCaps(s.chainA.GetContext(), zone.ChainId)
+			if tt.expectErr {
+				s.False(found)
+				s.Nil(caps)
+			} else {
+				s.True(found)
+				s.Equal(caps, msg.Caps)
+
+			}
 		})
 	}
 }

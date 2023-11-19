@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	lsmstakingTypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
+	lsmstakingTypes "github.com/quicksilver-zone/quicksilver/x/lsmtypes"
 
 	sdkmath "cosmossdk.io/math"
 
@@ -206,10 +206,30 @@ func (*Keeper) PrepareDelegationMessagesForShares(zone *types.Zone, coins sdk.Co
 	var msgs []sdk.Msg
 	for _, coin := range coins.Sort() {
 		if !coin.IsZero() {
-			msgs = append(msgs, &lsmstakingTypes.MsgRedeemTokensforShares{DelegatorAddress: zone.DelegationAddress.Address, Amount: coin})
+			msgs = append(msgs, &lsmstakingTypes.MsgRedeemTokensForShares{DelegatorAddress: zone.DelegationAddress.Address, Amount: coin})
 		}
 	}
 	return msgs
+}
+
+func (k Keeper) DetermineMaximumValidatorAllocations(ctx sdk.Context, zone *types.Zone) map[string]sdkmath.Int {
+	out := make(map[string]sdkmath.Int)
+	caps, found := k.GetLsmCaps(ctx, zone.ChainId)
+	if !found {
+		// No cap found, permit the transaction
+		return out
+	}
+
+	for _, val := range zone.Validators {
+		// validator bond max
+		maxBondShares := val.ValidatorBondShares.Mul(caps.ValidatorBondCap).Sub(val.LiquidShares)
+
+		// validator pc max
+		maxLiquidStakedShares := sdk.NewDecFromInt(val.VotingPower).Mul(caps.ValidatorCap).Sub(val.LiquidShares)
+		out[val.ValoperAddress] = sdkmath.MinInt(maxBondShares.TruncateInt(), maxLiquidStakedShares.TruncateInt())
+	}
+
+	return out
 }
 
 func (k *Keeper) DeterminePlanForDelegation(ctx sdk.Context, zone *types.Zone, amount sdk.Coins) (map[string]sdkmath.Int, error) {
@@ -218,7 +238,8 @@ func (k *Keeper) DeterminePlanForDelegation(ctx sdk.Context, zone *types.Zone, a
 	if err != nil {
 		return nil, err
 	}
-	return types.DetermineAllocationsForDelegation(currentAllocations, currentSum, targetAllocations, amount)
+	maxCanAllocate := k.DetermineMaximumValidatorAllocations(ctx, zone)
+	return types.DetermineAllocationsForDelegation(currentAllocations, currentSum, targetAllocations, amount, maxCanAllocate)
 }
 
 func (k *Keeper) WithdrawDelegationRewardsForResponse(ctx sdk.Context, zone *types.Zone, delegator string, response []byte) error {
@@ -291,7 +312,7 @@ func (k *Keeper) FlushOutstandingDelegations(ctx sdk.Context, zone *types.Zone, 
 	var pendingAmount sdk.Coins
 	exclusionTime := ctx.BlockTime().AddDate(0, 0, -1)
 	k.IterateZoneReceipts(ctx, zone.ChainId, func(_ int64, receiptInfo types.Receipt) (stop bool) {
-		if (receiptInfo.FirstSeen.After(exclusionTime) || receiptInfo.FirstSeen.Equal(exclusionTime)) && receiptInfo.Completed == nil {
+		if (receiptInfo.FirstSeen.After(exclusionTime) || receiptInfo.FirstSeen.Equal(exclusionTime)) && receiptInfo.Completed == nil && receiptInfo.Amount[0].Denom == delAddrBalance.Denom {
 			pendingAmount = pendingAmount.Add(receiptInfo.Amount...)
 		}
 		return false
@@ -300,14 +321,12 @@ func (k *Keeper) FlushOutstandingDelegations(ctx sdk.Context, zone *types.Zone, 
 	coinsToFlush, hasNeg := sdk.NewCoins(delAddrBalance).SafeSub(pendingAmount...)
 	if hasNeg || coinsToFlush.IsZero() {
 		k.Logger(ctx).Debug("delegate account balance negative, setting outdated reciepts")
-		k.SetReceiptsCompleted(ctx, zone.ChainId, exclusionTime, ctx.BlockTime())
+		k.SetReceiptsCompleted(ctx, zone.ChainId, exclusionTime, ctx.BlockTime(), delAddrBalance.Denom)
 		return nil
 	}
 
 	// set the zone amount to the coins to be flushed.
-	zone.DelegationAddress.Balance = coinsToFlush
 	k.Logger(ctx).Info("flush delegations ", "total", coinsToFlush)
-	k.SetZone(ctx, zone)
 
 	sendMsg := banktypes.MsgSend{
 		FromAddress: "",

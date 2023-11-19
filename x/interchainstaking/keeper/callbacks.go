@@ -78,6 +78,7 @@ func (c Callbacks) RegisterCallbacks() icqtypes.QueryCallbacks {
 		AddCallback("accountbalance", Callback(AccountBalanceCallback)).
 		AddCallback("allbalances", Callback(AllBalancesCallback)).
 		AddCallback("delegationaccountbalance", Callback(DelegationAccountBalanceCallback)).
+		AddCallback("delegationaccountbalances", Callback(DelegationAccountBalancesCallback)).
 		AddCallback("signinginfo", Callback(SigningInfoCallback))
 
 	return a.(Callbacks)
@@ -518,7 +519,7 @@ func DepositTxCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Q
 		return err
 	}
 
-	txn, err := txDecoder(k.cdc)(res.Proof.Data)
+	txn, err := TxDecoder(k.cdc)(res.Proof.Data)
 	if err != nil {
 		return err
 	}
@@ -617,13 +618,68 @@ func DelegationAccountBalanceCallback(k *Keeper, ctx sdk.Context, args []byte, q
 		return err
 	}
 
+	k.Logger(ctx).Info("Received balance response for denom", "denom", coin.Denom)
 	err = zone.DecrementWithdrawalWaitgroup()
 	if err != nil {
 		return err
 	}
+
+	// set the zone amount.
+	balance := zone.DelegationAddress.Balance
+	if ok, _ := zone.DelegationAddress.Balance.Find(coin.Denom); !ok {
+		zone.DelegationAddress.Balance = zone.DelegationAddress.Balance.Add(coin)
+	} else {
+		for idx, i := range balance {
+			if coin.Denom == i.Denom {
+				zone.DelegationAddress.Balance[idx].Amount = coin.Amount
+				break
+			}
+		}
+	}
+
 	k.SetZone(ctx, &zone)
 
 	return k.FlushOutstandingDelegations(ctx, &zone, coin)
+}
+
+func DelegationAccountBalancesCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
+	zone, found := k.GetZone(ctx, query.GetChainId())
+	if !found {
+		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
+	}
+	result := banktypes.QueryAllBalancesResponse{}
+	k.cdc.MustUnmarshal(args, &result)
+
+	zone.WithdrawalWaitgroup--
+
+	addressBytes, err := addressutils.AccAddressFromBech32(zone.DelegationAddress.Address, zone.AccountPrefix)
+	if err != nil {
+		k.Logger(ctx).Error("cannot decode bech32 delegation addr")
+		return err
+	}
+	balances := result.GetBalances().Sort()
+	accountBalances := zone.DelegationAddress.Balance.Sort()
+
+	for _, coin := range balances.Add(accountBalances...) { // we want to iterate over all denoms, including ones we currently have values for.
+
+		k.ICQKeeper.MakeRequest(
+			ctx,
+			zone.ConnectionId,
+			zone.ChainId,
+			types.BankStoreKey,
+			append(banktypes.CreateAccountBalancesPrefix(addressBytes), []byte(coin.Denom)...),
+			sdk.NewInt(-1),
+			types.ModuleName,
+			"delegationaccountbalance",
+			0,
+		)
+
+		k.Logger(ctx).Info("Emitting balance request for denom", "denom", coin.Denom)
+		zone.WithdrawalWaitgroup++
+	}
+	k.SetZone(ctx, &zone)
+
+	return nil
 }
 
 func AllBalancesCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
@@ -672,8 +728,8 @@ func AllBalancesCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes
 	return k.SetAccountBalance(ctx, zone, balanceQuery.Address, args)
 }
 
-// txDecoder.
-func txDecoder(cdc codec.Codec) sdk.TxDecoder {
+// TxDecoder.
+func TxDecoder(cdc codec.Codec) sdk.TxDecoder {
 	return func(txBytes []byte) (sdk.Tx, error) {
 		// Make sure txBytes follow ADR-027.
 		err := rejectNonADR027TxRaw(txBytes)

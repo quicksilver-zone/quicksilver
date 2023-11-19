@@ -1,7 +1,7 @@
 package types
 
 import (
-	lsmstakingtypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
+	lsmstakingtypes "github.com/quicksilver-zone/quicksilver/x/lsmtypes"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
@@ -32,6 +32,7 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		&MsgRequestRedemption{},
 		&MsgGovCloseChannel{},
 		&MsgGovReopenChannel{},
+		&MsgGovSetLsmCaps{},
 	)
 
 	registry.RegisterImplementations(
