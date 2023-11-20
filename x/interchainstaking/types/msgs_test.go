@@ -242,7 +242,7 @@ func TestMsgRequestRedemption_ValidateBasic(t *testing.T) {
 	}
 }
 
-func TestMsgReopenIntent_ValidateBasic(t *testing.T) {
+func TestMsgReopen_ValidateBasic(t *testing.T) {
 	type fields struct {
 		PortID       string
 		ConnectionID string
@@ -258,12 +258,13 @@ func TestMsgReopenIntent_ValidateBasic(t *testing.T) {
 			"blank",
 			fields{},
 			true,
-			"invalid port format",
+			"empty address string is not allowed",
 		},
 		{
 			"invalid port",
 			fields{
-				PortID: "cat",
+				FromAddress: addressutils.GenerateAddressForTestWithPrefix("cosmos"),
+				PortID:      "cat",
 			},
 			true,
 			"invalid port format",
@@ -271,7 +272,8 @@ func TestMsgReopenIntent_ValidateBasic(t *testing.T) {
 		{
 			"invalid account",
 			fields{
-				PortID: "icacontroller-osmosis-4.bad",
+				FromAddress: addressutils.GenerateAddressForTestWithPrefix("cosmos"),
+				PortID:      "icacontroller-osmosis-4.bad",
 			},
 			true,
 			"invalid port format; unexpected account",
@@ -279,24 +281,27 @@ func TestMsgReopenIntent_ValidateBasic(t *testing.T) {
 		{
 			"invalid connection; too short",
 			fields{
+				FromAddress:  addressutils.GenerateAddressForTestWithPrefix("cosmos"),
 				PortID:       "icacontroller-osmosis-4.withdrawal",
 				ConnectionID: "bad-1",
 			},
 			true,
-			"invalid connection string; too short",
+			"invalid connection",
 		},
 		{
 			"invalid connection; too short",
 			fields{
+				FromAddress:  addressutils.GenerateAddressForTestWithPrefix("cosmos"),
 				PortID:       "icacontroller-osmosis-4.withdrawal",
 				ConnectionID: "longenoughbutstillbad-1",
 			},
 			true,
-			"invalid connection string; incorrect prefix",
+			"invalid connection",
 		},
 		{
 			"valid",
 			fields{
+				FromAddress:  addressutils.GenerateAddressForTestWithPrefix("cosmos"),
 				PortID:       "icacontroller-osmosis-4.withdrawal",
 				ConnectionID: "connection-1",
 			},

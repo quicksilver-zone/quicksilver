@@ -68,9 +68,9 @@ func (k Keeper) AllLsmCaps(ctx sdk.Context) map[string]types.LsmCaps {
 	return allCaps
 }
 
-func (k Keeper) GetLiquidStakedSupply(zone *types.Zone) sdk.Dec {
+func (k Keeper) GetLiquidStakedSupply(ctx sdk.Context, zone *types.Zone) sdk.Dec {
 	out := sdk.ZeroDec()
-	for _, val := range zone.Validators {
+	for _, val := range k.GetActiveValidators(ctx, zone.ChainId) {
 		if val.Status == stakingtypes.BondStatusBonded {
 			out = out.Add(val.LiquidShares)
 		}
@@ -78,9 +78,9 @@ func (k Keeper) GetLiquidStakedSupply(zone *types.Zone) sdk.Dec {
 	return out
 }
 
-func (k Keeper) GetTotalStakedSupply(zone *types.Zone) math.Int {
+func (k Keeper) GetTotalStakedSupply(ctx sdk.Context, zone *types.Zone) math.Int {
 	out := sdk.ZeroInt()
-	for _, val := range zone.Validators {
+	for _, val := range k.GetActiveValidators(ctx, zone.ChainId) {
 		if val.Status == stakingtypes.BondStatusBonded {
 			out = out.Add(val.VotingPower)
 		}
@@ -95,8 +95,8 @@ func (k Keeper) CheckExceedsGlobalCap(ctx sdk.Context, zone *types.Zone, amount 
 		return false
 	}
 
-	liquidSupply := k.GetLiquidStakedSupply(zone)
-	totalSupply := sdk.NewDecFromInt(k.GetTotalStakedSupply(zone))
+	liquidSupply := k.GetLiquidStakedSupply(ctx, zone)
+	totalSupply := sdk.NewDecFromInt(k.GetTotalStakedSupply(ctx, zone))
 	amountDec := sdk.NewDecFromInt(amount)
 	return liquidSupply.Add(amountDec).Quo(totalSupply).GT(caps.GlobalCap)
 }
