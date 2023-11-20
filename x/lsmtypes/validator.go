@@ -1,13 +1,13 @@
 package lsmtypes
 
 import (
+	"gopkg.in/yaml.v2"
+
 	"cosmossdk.io/errors"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"gopkg.in/yaml.v2"
 )
 
 // String implements the Stringer interface for a Validator object.

@@ -4,8 +4,6 @@ import (
 	"errors"
 	"fmt"
 
-	lsmstakingTypes "github.com/quicksilver-zone/quicksilver/x/lsmtypes"
-
 	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -16,6 +14,7 @@ import (
 
 	"github.com/quicksilver-zone/quicksilver/utils"
 	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
+	lsmstakingTypes "github.com/quicksilver-zone/quicksilver/x/lsmtypes"
 )
 
 // GetDelegation returns a specific delegation.

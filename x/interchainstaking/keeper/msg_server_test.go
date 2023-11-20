@@ -691,7 +691,7 @@ func (suite *KeeperTestSuite) TestGovReopenChannel() {
 	}
 }
 
-func (s *KeeperTestSuite) TestSetLsmCaps() {
+func (suite *KeeperTestSuite) TestSetLsmCaps() {
 	tests := []struct {
 		name      string
 		malleate  func(s *KeeperTestSuite) *icstypes.MsgGovSetLsmCaps
@@ -766,34 +766,34 @@ func (s *KeeperTestSuite) TestSetLsmCaps() {
 	for _, tt := range tests {
 		tt := tt
 
-		s.Run(tt.name, func() {
-			s.SetupTest()
-			s.setupTestZones()
+		suite.Run(tt.name, func() {
+			suite.SetupTest()
+			suite.setupTestZones()
 
-			msg := tt.malleate(s)
+			msg := tt.malleate(suite)
 
-			msgSrv := icskeeper.NewMsgServerImpl(s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper)
-			res, err := msgSrv.GovSetLsmCaps(sdk.WrapSDKContext(s.chainA.GetContext()), msg)
+			msgSrv := icskeeper.NewMsgServerImpl(suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper)
+			res, err := msgSrv.GovSetLsmCaps(sdk.WrapSDKContext(suite.chainA.GetContext()), msg)
 			if tt.expectErr {
-				s.Error(err)
-				s.Nil(res)
+				suite.Error(err)
+				suite.Nil(res)
 			} else {
-				s.NoError(err)
-				s.NotNil(res)
+				suite.NoError(err)
+				suite.NotNil(res)
 			}
 
-			qapp := s.GetQuicksilverApp(s.chainA)
+			qapp := suite.GetQuicksilverApp(suite.chainA)
 			icsKeeper := qapp.InterchainstakingKeeper
-			zone, found := icsKeeper.GetZone(s.chainA.GetContext(), s.chainB.ChainID)
-			s.True(found)
+			zone, found := icsKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
+			suite.True(found)
 
-			caps, found := icsKeeper.GetLsmCaps(s.chainA.GetContext(), zone.ChainId)
+			caps, found := icsKeeper.GetLsmCaps(suite.chainA.GetContext(), zone.ChainId)
 			if tt.expectErr {
-				s.False(found)
-				s.Nil(caps)
+				suite.False(found)
+				suite.Nil(caps)
 			} else {
-				s.True(found)
-				s.Equal(caps, msg.Caps)
+				suite.True(found)
+				suite.Equal(caps, msg.Caps)
 
 			}
 		})

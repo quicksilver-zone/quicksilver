@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/proto" // nolint:staticcheck
-	lsmstakingtypes "github.com/quicksilver-zone/quicksilver/x/lsmtypes"
 
 	sdkmath "cosmossdk.io/math"
 
@@ -31,6 +30,7 @@ import (
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	queryTypes "github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
 	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
+	lsmstakingtypes "github.com/quicksilver-zone/quicksilver/x/lsmtypes"
 )
 
 type TypedMsg struct {

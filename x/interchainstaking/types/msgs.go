@@ -8,11 +8,12 @@ import (
 	"strings"
 
 	"github.com/ingenuity-build/multierror"
-	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
+
+	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 )
 
 // interchainstaking message types.
