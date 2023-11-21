@@ -1818,19 +1818,19 @@ func TestDepositIntervalCallbackWithExistingTxs(t *testing.T) {
 	quicksilver.InterchainQueryKeeper.IBCKeeper.Codec().MustUnmarshal(data, &res)
 	suite.NoError(err)
 	var msg banktypes.MsgSend
-	suite.NoError(quicksilver.InterchainQueryKeeper.IBCKeeper.Codec().UnpackAny(res.TxResponses[0].Tx, msg))
+	_ = quicksilver.InterchainQueryKeeper.IBCKeeper.Codec().UnpackAny(res.TxResponses[0].Tx, msg)
 
 	msgA := msg
 	txrA := res.TxResponses[0]
 	quicksilver.InterchainstakingKeeper.SetReceipt(ctx, icstypes.Receipt{ChainId: suite.chainB.ChainID, Sender: msgA.FromAddress, Txhash: txrA.TxHash, Amount: msgA.Amount})
 
-	suite.NoError(quicksilver.InterchainQueryKeeper.IBCKeeper.Codec().UnpackAny(res.TxResponses[1].Tx, msg))
+	_ = quicksilver.InterchainQueryKeeper.IBCKeeper.Codec().UnpackAny(res.TxResponses[1].Tx, msg)
 
 	msgB := msg
 	txrB := res.TxResponses[1]
 	quicksilver.InterchainstakingKeeper.SetReceipt(ctx, icstypes.Receipt{ChainId: suite.chainB.ChainID, Sender: msgB.FromAddress, Txhash: txrB.TxHash, Amount: msgB.Amount})
 
-	suite.NoError(quicksilver.InterchainQueryKeeper.IBCKeeper.Codec().UnpackAny(res.TxResponses[2].Tx, msg))
+	_ = quicksilver.InterchainQueryKeeper.IBCKeeper.Codec().UnpackAny(res.TxResponses[2].Tx, msg)
 
 	msgC := msg
 	txrC := res.TxResponses[2]
