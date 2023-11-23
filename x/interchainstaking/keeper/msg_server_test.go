@@ -756,7 +756,7 @@ func (suite *KeeperTestSuite) TestSetLsmCaps() {
 						ValidatorBondCap: sdk.NewDec(250),
 						GlobalCap:        sdk.NewDecWithPrec(25, 2),
 					},
-					Authority: "quick10d07y265gmmuvt4z0w9aw880jnsr700j3xrh0p",
+					Authority: "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn,",
 				}
 			},
 			false,

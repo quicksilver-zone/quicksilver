@@ -1448,7 +1448,7 @@ func TestDelegationsCallbackAllPresentNoChange(t *testing.T) {
 
 	data := cdc.MustMarshal(&response)
 
-	delegationQuery := stakingtypes.QueryDelegatorDelegationsRequest{DelegatorAddr: zone.DelegationAddress.Address, Pagination: &query.PageRequest{Limit: uint64(len(zone.Validators))}}
+	delegationQuery := stakingtypes.QueryDelegatorDelegationsRequest{DelegatorAddr: zone.DelegationAddress.Address, Pagination: &query.PageRequest{Limit: uint64(len(vals))}}
 	bz := cdc.MustMarshal(&delegationQuery)
 
 	err := keeper.DelegationsCallback(quicksilver.InterchainstakingKeeper, ctx, data, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: bz})
@@ -1497,7 +1497,7 @@ func TestDelegationsCallbackAllPresentOneChange(t *testing.T) {
 
 	data := cdc.MustMarshal(&response)
 
-	delegationQuery := stakingtypes.QueryDelegatorDelegationsRequest{DelegatorAddr: zone.DelegationAddress.Address, Pagination: &query.PageRequest{Limit: uint64(len(zone.Validators))}}
+	delegationQuery := stakingtypes.QueryDelegatorDelegationsRequest{DelegatorAddr: zone.DelegationAddress.Address, Pagination: &query.PageRequest{Limit: uint64(len(vals))}}
 	bz := cdc.MustMarshal(&delegationQuery)
 
 	err := keeper.DelegationsCallback(quicksilver.InterchainstakingKeeper, ctx, data, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: bz})
@@ -1545,7 +1545,7 @@ func TestDelegationsCallbackOneMissing(t *testing.T) {
 
 	data := cdc.MustMarshal(&response)
 
-	delegationQuery := stakingtypes.QueryDelegatorDelegationsRequest{DelegatorAddr: zone.DelegationAddress.Address, Pagination: &query.PageRequest{Limit: uint64(len(zone.Validators))}}
+	delegationQuery := stakingtypes.QueryDelegatorDelegationsRequest{DelegatorAddr: zone.DelegationAddress.Address, Pagination: &query.PageRequest{Limit: uint64(len(vals))}}
 	bz := cdc.MustMarshal(&delegationQuery)
 
 	err := keeper.DelegationsCallback(quicksilver.InterchainstakingKeeper, ctx, data, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: bz})
@@ -1595,7 +1595,7 @@ func TestDelegationsCallbackOneAdditional(t *testing.T) {
 
 	data := cdc.MustMarshal(&response)
 
-	delegationQuery := stakingtypes.QueryDelegatorDelegationsRequest{DelegatorAddr: zone.DelegationAddress.Address, Pagination: &query.PageRequest{Limit: uint64(len(zone.Validators))}}
+	delegationQuery := stakingtypes.QueryDelegatorDelegationsRequest{DelegatorAddr: zone.DelegationAddress.Address, Pagination: &query.PageRequest{Limit: uint64(len(vals))}}
 	bz := cdc.MustMarshal(&delegationQuery)
 
 	err := keeper.DelegationsCallback(quicksilver.InterchainstakingKeeper, ctx, data, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: bz})
@@ -2229,7 +2229,7 @@ func (suite *KeeperTestSuite) TestDepositLsmTxCallback() {
 		zone.DepositAddress.IncrementBalanceWaitgroup()
 		zone.WithdrawalAddress.IncrementBalanceWaitgroup()
 		// add the validator from the gaiatest-1 network to our registered zone. This is required for LSM deposit as the tokenised share denom is checked against known validators.
-		zone.Validators = append(zone.Validators, &icstypes.Validator{
+		quicksilver.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, icstypes.Validator{
 			ValoperAddress:      "cosmosvaloper1gg7w8w2y9jfv76a2yyahe42y09g9ry2raa5rqf",
 			CommissionRate:      sdk.NewDecWithPrec(1, 1),
 			DelegatorShares:     sdk.MustNewDecFromStr("4235376641.000000000000000000"),
@@ -2325,7 +2325,7 @@ func (suite *KeeperTestSuite) TestDepositTxCallback2() {
 		zone.DepositAddress.IncrementBalanceWaitgroup()
 		zone.WithdrawalAddress.IncrementBalanceWaitgroup()
 		// add the validator from the gaiatest-1 network to our registered zone. This is required for LSM deposit as the tokenised share denom is checked against known validators.
-		zone.Validators = append(zone.Validators, &icstypes.Validator{
+		quicksilver.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, icstypes.Validator{
 			ValoperAddress:      "cosmosvaloper1gg7w8w2y9jfv76a2yyahe42y09g9ry2raa5rqf",
 			CommissionRate:      sdk.NewDecWithPrec(1, 1),
 			DelegatorShares:     sdk.MustNewDecFromStr("4235376641.000000000000000000"),
@@ -2620,7 +2620,9 @@ func (suite *KeeperTestSuite) TestDelegationAccountBalanceCallbackLSM() {
 		ctx := suite.chainA.GetContext()
 
 		zone, _ := app.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
-		denom := zone.Validators[0].ValoperAddress + "/1"
+
+		valOper := app.InterchainstakingKeeper.GetValidatorAddresses(ctx, suite.chainB.ChainID)[0]
+		denom := valOper + "/1"
 		zone.WithdrawalWaitgroup = 2
 		zone.DelegationAddress.Balance = sdk.NewCoins(sdk.NewCoin("uatom", math.NewInt(500)))
 		app.InterchainstakingKeeper.SetZone(ctx, &zone)

@@ -108,7 +108,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 
 	for msgIndex, msg := range msgs {
 		// use msgData for v0.45 and below and msgResponse for v0.46+
-		// nolint:staticcheck // SA1019 ignore this!
+		//nolint:staticcheck // SA1019 ignore this!
 		var msgResponse []byte
 
 		// check that the msgResponses slice is at least the length of the current index.
@@ -179,8 +179,10 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 			continue
 		case "/cosmos.staking.v1beta1.MsgDelegate":
 			if !success {
-				// We can safely ignore this, as this can reasonably fail, and we cater for this in the flush logic.
-				return nil
+				if err := k.HandleFailedDelegate(ctx, msg.Msg, packetData.Memo); err != nil {
+					return err
+				}
+				continue
 			}
 			response := stakingtypes.MsgDelegateResponse{}
 			err = proto.Unmarshal(msgResponse, &response)
@@ -388,7 +390,8 @@ func (k *Keeper) HandleCompleteSend(ctx sdk.Context, msg sdk.Msg, memo string) e
 	case zone.IsDelegateAddress(sMsg.FromAddress):
 		return k.HandleWithdrawForUser(ctx, zone, sMsg, memo)
 	case zone.IsDelegateAddress(sMsg.ToAddress) && zone.DepositAddress.Address == sMsg.FromAddress:
-		return k.handleSendToDelegate(ctx, zone, sMsg, memo)
+		_, err := k.handleSendToDelegate(ctx, zone, sMsg, memo)
+		return err
 	default:
 		err = fmt.Errorf("unexpected completed send (2) from %s to %s (amount: %s)", sMsg.FromAddress, sMsg.ToAddress, sMsg.Amount)
 		k.Logger(ctx).Error(err.Error())
@@ -397,16 +400,17 @@ func (k *Keeper) HandleCompleteSend(ctx sdk.Context, msg sdk.Msg, memo string) e
 }
 
 func (k *Keeper) handleRewardsDelegation(ctx sdk.Context, zone types.Zone, msg *banktypes.MsgSend) error {
-	return k.handleSendToDelegate(ctx, &zone, msg, "rewards")
+	_, err := k.handleSendToDelegate(ctx, &zone, msg, "rewards")
+	return err
 }
 
-func (k *Keeper) handleSendToDelegate(ctx sdk.Context, zone *types.Zone, msg *banktypes.MsgSend, memo string) error {
+func (k *Keeper) handleSendToDelegate(ctx sdk.Context, zone *types.Zone, msg *banktypes.MsgSend, memo string) (int, error) {
 	var msgs []sdk.Msg
 	for _, coin := range msg.Amount {
 		if coin.Denom == zone.BaseDenom {
 			allocations, err := k.DeterminePlanForDelegation(ctx, zone, msg.Amount)
 			if err != nil {
-				return err
+				return 0, err
 			}
 			msgs = append(msgs, k.PrepareDelegationMessagesForCoins(zone, allocations)...)
 		} else {
@@ -416,7 +420,7 @@ func (k *Keeper) handleSendToDelegate(ctx sdk.Context, zone *types.Zone, msg *ba
 
 	k.Logger(ctx).Info("messages to send", "messages", msgs)
 
-	return k.SubmitTx(ctx, msgs, zone.DelegationAddress, memo, zone.MessagesPerTx)
+	return len(msgs), k.SubmitTx(ctx, msgs, zone.DelegationAddress, memo, zone.MessagesPerTx)
 }
 
 // HandleWithdrawForUser handles withdraw for user will check that the msgSend we have successfully executed matches an existing withdrawal record.
@@ -985,7 +989,7 @@ func (k *Keeper) HandleDelegate(ctx sdk.Context, msg sdk.Msg, memo string) error
 	switch {
 	case memo == "rewards":
 	case strings.HasPrefix(memo, "batch"):
-		k.Logger(ctx).Debug("batch delegation", "memo", memo, "tx", delegateMsg)
+		k.Logger(ctx).Error("batch delegation", "memo", memo, "tx", delegateMsg)
 		exclusionTimestampUnix, err := strconv.ParseInt(strings.Split(memo, "/")[1], 10, 64)
 		if err != nil {
 			return err
@@ -993,8 +997,9 @@ func (k *Keeper) HandleDelegate(ctx sdk.Context, msg sdk.Msg, memo string) error
 		k.Logger(ctx).Debug("outstanding delegations ack-received")
 		k.SetReceiptsCompleted(ctx, zone.ChainId, time.Unix(exclusionTimestampUnix, 0), ctx.BlockTime(), delegateMsg.Amount.Denom)
 		zone.DelegationAddress.Balance = zone.DelegationAddress.Balance.Sub(delegateMsg.Amount)
+		zone.WithdrawalWaitgroup--
 		k.SetZone(ctx, zone)
-		if zone.DelegationAddress.Balance.IsZero() && zone.WithdrawalWaitgroup == 0 {
+		if zone.WithdrawalWaitgroup == 0 {
 			k.Logger(ctx).Info("Triggering redemption rate calc after delegation flush")
 			if err := k.TriggerRedemptionRate(ctx, zone); err != nil {
 				return err
@@ -1012,6 +1017,41 @@ func (k *Keeper) HandleDelegate(ctx sdk.Context, msg sdk.Msg, memo string) error
 	}
 
 	return k.UpdateDelegationRecordForAddress(ctx, delegateMsg.DelegatorAddress, delegateMsg.ValidatorAddress, delegateMsg.Amount, zone, false)
+}
+
+func (k *Keeper) HandleFailedDelegate(ctx sdk.Context, msg sdk.Msg, memo string) error {
+	k.Logger(ctx).Info("Received MsgDelegate failure acknowledgement")
+	// first, type assertion. we should have stakingtypes.MsgDelegate
+	delegateMsg, ok := msg.(*stakingtypes.MsgDelegate)
+	if !ok {
+		k.Logger(ctx).Error("unable to cast source message to MsgDelegate")
+		return errors.New("unable to cast source message to MsgDelegate")
+	}
+	zone, found := k.GetZoneForDelegateAccount(ctx, delegateMsg.DelegatorAddress)
+	if !found {
+		// most likely a performance account...
+		if _, found := k.GetZoneForPerformanceAccount(ctx, delegateMsg.DelegatorAddress); found {
+			return nil
+		}
+		return fmt.Errorf("unable to find zone for address %s", delegateMsg.DelegatorAddress)
+	}
+
+	switch {
+	case strings.HasPrefix(memo, "batch"):
+		k.Logger(ctx).Error("batch delegation failed", "memo", memo, "tx", delegateMsg)
+		zone.WithdrawalWaitgroup--
+		k.SetZone(ctx, zone)
+		if zone.WithdrawalWaitgroup == 0 {
+			k.Logger(ctx).Info("Triggering redemption rate calc after delegation flush")
+			if err := k.TriggerRedemptionRate(ctx, zone); err != nil {
+				return err
+			}
+		}
+
+	default:
+		// no-op
+	}
+	return nil
 }
 
 func (k *Keeper) HandleUpdatedWithdrawAddress(ctx sdk.Context, msg sdk.Msg) error {
@@ -1199,7 +1239,7 @@ func (k *Keeper) HandleWithdrawRewards(ctx sdk.Context, msg sdk.Msg) error {
 		k.SetZone(ctx, zone)
 	}
 	k.Logger(ctx).Info("Received MsgWithdrawDelegatorReward acknowledgement", "wg", zone.WithdrawalWaitgroup, "delegator", withdrawalMsg.DelegatorAddress)
-	switch zone.WithdrawalWaitgroup == 0 && zone.DelegationAddress.Balance.IsZero() {
+	switch zone.WithdrawalWaitgroup == 0 {
 	case true:
 		k.Logger(ctx).Info("triggering redemption rate calc after rewards withdrawal")
 		return k.TriggerRedemptionRate(ctx, zone)

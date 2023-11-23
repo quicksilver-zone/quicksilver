@@ -12,6 +12,7 @@ const (
 	MsgTypeRebalance   = "rebalance"
 	MsgTypeUnbondSend  = "unbondSend"
 	MsgTypePerformance = "perf"
+	MsgTypeBatch       = "batch"
 	// TransferPort is the portID for ibc transfer module.
 	TransferPort = "transfer"
 )

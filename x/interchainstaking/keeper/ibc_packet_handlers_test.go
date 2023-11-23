@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	lsmstakingtypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
+	lsmstakingtypes "github.com/quicksilver-zone/quicksilver/x/lsmtypes"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/math"
@@ -27,6 +27,7 @@ import (
 	"github.com/quicksilver-zone/quicksilver/utils"
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	"github.com/quicksilver-zone/quicksilver/utils/randomutils"
+	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 )
 
@@ -112,7 +113,6 @@ func (suite *KeeperTestSuite) TestHandleMsgTransferGood() {
 
 			txMaccBalance := quicksilver.BankKeeper.GetAllBalances(ctx, txMacc)
 			feeMaccBalance := quicksilver.BankKeeper.GetAllBalances(ctx, feeMacc)
-			fmt.Println(feeMaccBalance)
 			zoneAddress, err := addressutils.AccAddressFromBech32(zone.WithdrawalAddress.Address, "")
 			suite.NoError(err)
 			wdAccountBalance := quicksilver.BankKeeper.GetAllBalances(ctx, zoneAddress)
@@ -851,7 +851,7 @@ func (suite *KeeperTestSuite) TestHandleWithdrawRewards() {
 					ValidatorAddress: val,
 				}
 			},
-			triggered: false,
+			triggered: true,
 			err:       false,
 		},
 		{
@@ -2789,15 +2789,22 @@ func (suite *KeeperTestSuite) TestReceiveAckForRedeemTokens() {
 	delegationRecord := icstypes.Delegation{
 		DelegationAddress: zone.DelegationAddress.Address,
 		ValidatorAddress:  vals[0],
-		Amount:            sdk.NewCoin(vals[0]+"0x", sdk.NewInt(1000)),
-		Height:            1,
-		RedelegationEnd:   1,
+		Amount:            sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000)),
 	}
 	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, zone.ChainId, delegationRecord)
+	txHash := randomutils.GenerateRandomHashAsHex(32)
+	t := ctx.BlockTime().Add(-time.Minute * 5)
+	quicksilver.InterchainstakingKeeper.SetReceipt(ctx, types.Receipt{
+		ChainId:   zone.ChainId,
+		Sender:    addressutils.GenerateAddressForTestWithPrefix(zone.AccountPrefix),
+		Txhash:    txHash,
+		Amount:    sdk.NewCoins(sdk.NewCoin(vals[0]+"/1", sdk.NewInt(100))),
+		FirstSeen: &t,
+	})
 
-	redeemTokens := &lsmstakingtypes.MsgRedeemTokensforShares{
+	redeemTokens := &lsmstakingtypes.MsgRedeemTokensForShares{
 		DelegatorAddress: zone.DelegationAddress.Address,
-		Amount:           sdk.NewCoin(vals[0]+"0x", sdk.NewInt(100)),
+		Amount:           sdk.NewCoin(vals[0]+"/1", sdk.NewInt(100)),
 	}
 	data, err := icatypes.SerializeCosmosTx(quicksilver.InterchainstakingKeeper.GetCodec(), []sdk.Msg{redeemTokens})
 	suite.NoError(err)
@@ -2806,12 +2813,13 @@ func (suite *KeeperTestSuite) TestReceiveAckForRedeemTokens() {
 	packetData := icatypes.InterchainAccountPacketData{
 		Type: icatypes.EXECUTE_TX,
 		Data: data,
+		Memo: txHash,
 	}
 
 	packet := channeltypes.Packet{Data: quicksilver.InterchainstakingKeeper.GetCodec().MustMarshalJSON(&packetData)}
 
-	response := lsmstakingtypes.MsgRedeemTokensforSharesResponse{
-		Amount: sdk.NewCoin(vals[0]+"0x", sdk.NewInt(100)),
+	response := lsmstakingtypes.MsgRedeemTokensForSharesResponse{
+		Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(100)),
 	}
 
 	anyResponse, err := codectypes.NewAnyWithValue(&response)
@@ -2833,9 +2841,7 @@ func (suite *KeeperTestSuite) TestReceiveAckForRedeemTokens() {
 
 	delegationRecord, found = quicksilver.InterchainstakingKeeper.GetDelegation(ctx, zone.ChainId, zone.DelegationAddress.Address, vals[0])
 	suite.True(found)
-	suite.Equal(delegationRecord.Amount, sdk.NewCoin(vals[0]+"0x", sdk.NewInt(1100)))
-	suite.Equal(delegationRecord.Height, int64(1))
-	suite.Equal(delegationRecord.RedelegationEnd, int64(1))
+	suite.Equal(delegationRecord.Amount, sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1100)))
 }
 
 func (suite *KeeperTestSuite) TestReceiveAckForTokenizedShares() {
@@ -2878,7 +2884,7 @@ func (suite *KeeperTestSuite) TestReceiveAckForTokenizedShares() {
 	tokenizeShares := &lsmstakingtypes.MsgTokenizeShares{
 		DelegatorAddress:    zone.DelegationAddress.Address,
 		ValidatorAddress:    vals[0],
-		Amount:              sdk.NewCoin(vals[0]+"1", sdk.NewInt(1000)),
+		Amount:              sdk.NewCoin(vals[0]+"/1", sdk.NewInt(1000)),
 		TokenizedShareOwner: addressutils.GenerateAddressForTestWithPrefix(zone.GetAccountPrefix()),
 	}
 	data, err := icatypes.SerializeCosmosTx(quicksilver.InterchainstakingKeeper.GetCodec(), []sdk.Msg{tokenizeShares})
@@ -2894,7 +2900,7 @@ func (suite *KeeperTestSuite) TestReceiveAckForTokenizedShares() {
 	packet := channeltypes.Packet{Data: quicksilver.InterchainstakingKeeper.GetCodec().MustMarshalJSON(&packetData)}
 
 	response := lsmstakingtypes.MsgTokenizeSharesResponse{
-		Amount: sdk.NewCoin(vals[0]+"1", sdk.NewInt(1000)),
+		Amount: sdk.NewCoin(vals[0]+"/1", sdk.NewInt(1000)),
 	}
 
 	anyResponse, err := codectypes.NewAnyWithValue(&response)
@@ -3589,7 +3595,7 @@ func (suite *KeeperTestSuite) TestHandleTokenizedShares() {
 				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
 
 				return sdk.NewCoins(
-					sdk.NewCoin(vals[0]+"0x", sdk.NewInt(1000)),
+					sdk.NewCoin(vals[0]+"/1", sdk.NewInt(1000)),
 				)
 			},
 			expectedWithdrawalRecords: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []icstypes.WithdrawalRecord {
@@ -3610,7 +3616,7 @@ func (suite *KeeperTestSuite) TestHandleTokenizedShares() {
 							},
 						},
 						Recipient:      addressutils.GenerateAddressForTestWithPrefix(zone.GetAccountPrefix()),
-						Amount:         sdk.Coins{sdk.NewCoin(vals[0]+"0x", sdk.NewInt(1000))},
+						Amount:         sdk.Coins{sdk.NewCoin(vals[0]+"/1", sdk.NewInt(1000))},
 						BurnAmount:     sdk.NewCoin(zone.LocalDenom, sdk.NewInt(1800)),
 						Txhash:         txHash,
 						Status:         icstypes.WithdrawStatusTokenize,
@@ -3665,7 +3671,7 @@ func (suite *KeeperTestSuite) TestHandleTokenizedShares() {
 				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
 
 				return sdk.NewCoins(
-					sdk.NewCoin(vals[0]+"0x", sdk.NewInt(500)),
+					sdk.NewCoin(vals[0]+"/1", sdk.NewInt(500)),
 				)
 			},
 			expectedWithdrawalRecords: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []icstypes.WithdrawalRecord {
@@ -3848,8 +3854,8 @@ func (suite *KeeperTestSuite) TestHandleTokenizedShares() {
 			sharesAmount: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) sdk.Coins {
 				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
 				return sdk.NewCoins(
-					sdk.NewCoin(vals[0]+"0x", sdk.NewInt(1000)),
-					sdk.NewCoin(vals[1]+"1x", sdk.NewInt(1000)),
+					sdk.NewCoin(vals[0]+"/1", sdk.NewInt(1000)),
+					sdk.NewCoin(vals[1]+"/2", sdk.NewInt(1000)),
 				)
 			},
 			expectedWithdrawalRecords: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []icstypes.WithdrawalRecord {
@@ -3973,7 +3979,7 @@ func (suite *KeeperTestSuite) TestGetValidatorForToken() {
 			setupConnection: true,
 			amount: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) sdk.Coin {
 				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
-				return sdk.NewCoin(vals[0]+"0x", sdk.NewInt(100))
+				return sdk.NewCoin(vals[0]+"/1", sdk.NewInt(100))
 			},
 			expectVal: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) string {
 				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
@@ -4324,7 +4330,6 @@ func (suite *KeeperTestSuite) TestHandleRedeemTokens() {
 	tests := []struct {
 		name                      string
 		errs                      []bool
-		tokens                    func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []sdk.Coin
 		msgs                      func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []sdk.Msg
 		delegationRecords         func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []icstypes.Delegation
 		expectedDelegationRecords func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []icstypes.Delegation
@@ -4338,24 +4343,16 @@ func (suite *KeeperTestSuite) TestHandleRedeemTokens() {
 					{
 						DelegationAddress: zone.DelegationAddress.Address,
 						ValidatorAddress:  vals[0],
-						Amount:            sdk.NewCoin(vals[0]+"0x", sdk.NewInt(1000)),
-						Height:            1,
-						RedelegationEnd:   1,
+						Amount:            sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000)),
 					},
-				}
-			},
-			tokens: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []sdk.Coin {
-				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
-				return []sdk.Coin{
-					sdk.NewCoin(vals[0]+"0x", sdk.NewInt(200)),
 				}
 			},
 			msgs: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []sdk.Msg {
 				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
 				return []sdk.Msg{
-					&lsmstakingtypes.MsgRedeemTokensforShares{
+					&lsmstakingtypes.MsgRedeemTokensForShares{
 						DelegatorAddress: zone.DelegationAddress.Address,
-						Amount:           sdk.NewCoin(vals[0]+"0x", sdk.NewInt(500)),
+						Amount:           sdk.NewCoin(vals[0]+"/1", sdk.NewInt(200)),
 					},
 				}
 			},
@@ -4365,9 +4362,7 @@ func (suite *KeeperTestSuite) TestHandleRedeemTokens() {
 					{
 						DelegationAddress: zone.DelegationAddress.Address,
 						ValidatorAddress:  vals[0],
-						Amount:            sdk.NewCoin(vals[0]+"0x", sdk.NewInt(1200)),
-						Height:            1,
-						RedelegationEnd:   1,
+						Amount:            sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1200)),
 					},
 				}
 			},
@@ -4381,36 +4376,25 @@ func (suite *KeeperTestSuite) TestHandleRedeemTokens() {
 					{
 						DelegationAddress: zone.DelegationAddress.Address,
 						ValidatorAddress:  vals[0],
-						Amount:            sdk.NewCoin(vals[0]+"0x", sdk.NewInt(1000)),
-						Height:            1,
-						RedelegationEnd:   1,
+						Amount:            sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000)),
 					},
 					{
 						DelegationAddress: zone.DelegationAddress.Address,
 						ValidatorAddress:  vals[1],
-						Amount:            sdk.NewCoin(vals[1]+"1x", sdk.NewInt(1000)),
-						Height:            1,
-						RedelegationEnd:   1,
+						Amount:            sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000)),
 					},
-				}
-			},
-			tokens: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []sdk.Coin {
-				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
-				return []sdk.Coin{
-					sdk.NewCoin(vals[0]+"0x", sdk.NewInt(100)),
-					sdk.NewCoin(vals[1]+"1x", sdk.NewInt(200)),
 				}
 			},
 			msgs: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []sdk.Msg {
 				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
 				return []sdk.Msg{
-					&lsmstakingtypes.MsgRedeemTokensforShares{
+					&lsmstakingtypes.MsgRedeemTokensForShares{
 						DelegatorAddress: zone.DelegationAddress.Address,
-						Amount:           sdk.NewCoin(vals[0]+"0x", sdk.NewInt(100)),
+						Amount:           sdk.NewCoin(vals[0]+"/1", sdk.NewInt(100)),
 					},
-					&lsmstakingtypes.MsgRedeemTokensforShares{
+					&lsmstakingtypes.MsgRedeemTokensForShares{
 						DelegatorAddress: zone.DelegationAddress.Address,
-						Amount:           sdk.NewCoin(vals[1]+"1x", sdk.NewInt(200)),
+						Amount:           sdk.NewCoin(vals[1]+"/2", sdk.NewInt(200)),
 					},
 				}
 			},
@@ -4420,16 +4404,12 @@ func (suite *KeeperTestSuite) TestHandleRedeemTokens() {
 					{
 						DelegationAddress: zone.DelegationAddress.Address,
 						ValidatorAddress:  vals[0],
-						Amount:            sdk.NewCoin(vals[0]+"0x", sdk.NewInt(1100)),
-						Height:            1,
-						RedelegationEnd:   1,
+						Amount:            sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1100)),
 					},
 					{
 						DelegationAddress: zone.DelegationAddress.Address,
 						ValidatorAddress:  vals[1],
-						Amount:            sdk.NewCoin(vals[1]+"1x", sdk.NewInt(1200)),
-						Height:            1,
-						RedelegationEnd:   1,
+						Amount:            sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1200)),
 					},
 				}
 			},
@@ -4443,36 +4423,25 @@ func (suite *KeeperTestSuite) TestHandleRedeemTokens() {
 					{
 						DelegationAddress: zone.DelegationAddress.Address,
 						ValidatorAddress:  vals[0],
-						Amount:            sdk.NewCoin(vals[0]+"0x", sdk.NewInt(1000)),
-						Height:            1,
-						RedelegationEnd:   1,
+						Amount:            sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000)),
 					},
 					{
 						DelegationAddress: zone.DelegationAddress.Address,
 						ValidatorAddress:  vals[1],
-						Amount:            sdk.NewCoin(vals[1]+"1x", sdk.NewInt(1000)),
-						Height:            1,
-						RedelegationEnd:   1,
+						Amount:            sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000)),
 					},
-				}
-			},
-			tokens: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []sdk.Coin {
-				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
-				return []sdk.Coin{
-					sdk.NewCoin(vals[0]+"3x", sdk.NewInt(100)),
-					sdk.NewCoin(vals[1]+"1x", sdk.NewInt(200)),
 				}
 			},
 			msgs: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []sdk.Msg {
 				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
 				return []sdk.Msg{
-					&lsmstakingtypes.MsgRedeemTokensforShares{
+					&lsmstakingtypes.MsgRedeemTokensForShares{
 						DelegatorAddress: zone.DelegationAddress.Address,
 						Amount:           sdk.NewCoin("hello", sdk.NewInt(100)),
 					},
-					&lsmstakingtypes.MsgRedeemTokensforShares{
+					&lsmstakingtypes.MsgRedeemTokensForShares{
 						DelegatorAddress: zone.DelegationAddress.Address,
-						Amount:           sdk.NewCoin(vals[1]+"1x", sdk.NewInt(200)),
+						Amount:           sdk.NewCoin(vals[1]+"/2", sdk.NewInt(200)),
 					},
 				}
 			},
@@ -4482,16 +4451,12 @@ func (suite *KeeperTestSuite) TestHandleRedeemTokens() {
 					{
 						DelegationAddress: zone.DelegationAddress.Address,
 						ValidatorAddress:  vals[0],
-						Amount:            sdk.NewCoin(vals[0]+"0x", sdk.NewInt(1000)),
-						Height:            1,
-						RedelegationEnd:   1,
+						Amount:            sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000)),
 					},
 					{
 						DelegationAddress: zone.DelegationAddress.Address,
 						ValidatorAddress:  vals[1],
-						Amount:            sdk.NewCoin(vals[1]+"1x", sdk.NewInt(1200)),
-						Height:            1,
-						RedelegationEnd:   1,
+						Amount:            sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1200)),
 					},
 				}
 			},
@@ -4508,8 +4473,6 @@ func (suite *KeeperTestSuite) TestHandleRedeemTokens() {
 			ctx = ctx.WithContext(context.WithValue(ctx.Context(), utils.ContextKey("connectionID"), suite.path.EndpointA.ConnectionID))
 
 			zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
-
-			tokens := test.tokens(ctx, quicksilver, zone)
 			if !found {
 				suite.Fail("unable to retrieve zone for test")
 			}
@@ -4517,8 +4480,22 @@ func (suite *KeeperTestSuite) TestHandleRedeemTokens() {
 			for _, dr := range test.delegationRecords(ctx, quicksilver, zone) {
 				quicksilver.InterchainstakingKeeper.SetDelegation(ctx, zone.ChainId, dr)
 			}
+
+			t := ctx.BlockTime().Add(-time.Minute * 2)
+
 			for idx, msg := range test.msgs(ctx, quicksilver, zone) {
-				err := quicksilver.InterchainstakingKeeper.HandleRedeemTokens(ctx, msg, tokens[idx], "")
+				txHash := randomutils.GenerateRandomHashAsHex(32)
+				lsmMsg, ok := msg.(*lsmstakingtypes.MsgRedeemTokensForShares)
+				suite.True(ok)
+				quicksilver.InterchainstakingKeeper.SetReceipt(ctx, icstypes.Receipt{
+					ChainId:   suite.chainB.ChainID,
+					Sender:    lsmMsg.DelegatorAddress,
+					Txhash:    txHash,
+					Amount:    sdk.NewCoins(lsmMsg.Amount),
+					FirstSeen: &t,
+				})
+
+				err := quicksilver.InterchainstakingKeeper.HandleRedeemTokens(ctx, msg, sdk.NewCoin(zone.BaseDenom, lsmMsg.Amount.Amount), txHash)
 				if test.errs[idx] {
 					suite.Error(err)
 				} else {
@@ -4530,9 +4507,169 @@ func (suite *KeeperTestSuite) TestHandleRedeemTokens() {
 				dr, found := quicksilver.InterchainstakingKeeper.GetDelegation(ctx, zone.ChainId, edr.DelegationAddress, edr.ValidatorAddress)
 				suite.True(found)
 				suite.Equal(dr.Amount, edr.Amount)
-				suite.Equal(dr.Height, edr.Height)
-				suite.Equal(dr.RedelegationEnd, edr.RedelegationEnd)
 			}
 		})
 	}
+}
+
+func (suite *KeeperTestSuite) TestHandleFailedDelegate_Batch_OK() {
+	suite.SetupTest()
+	suite.setupTestZones()
+
+	app := suite.GetQuicksilverApp(suite.chainA)
+	ctx := suite.chainA.GetContext()
+
+	zone, found := app.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+	suite.True(found)
+
+	zone.WithdrawalWaitgroup = 100
+	app.InterchainstakingKeeper.SetZone(ctx, &zone)
+
+	vals := app.InterchainstakingKeeper.GetValidatorAddresses(ctx, suite.chainB.ChainID)
+	msg := stakingtypes.MsgDelegate{DelegatorAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[0], Amount: sdk.NewCoin("uatom", sdk.NewInt(100))}
+	var msgMsg sdk.Msg = &msg
+	err := app.InterchainstakingKeeper.HandleFailedDelegate(ctx, msgMsg, "batch/12345678")
+	suite.NoError(err)
+
+	zone, found = app.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+	suite.True(found)
+	suite.Equal(uint32(99), zone.WithdrawalWaitgroup)
+}
+
+func (suite *KeeperTestSuite) TestHandleFailedDelegate_PerfAddress_OK() {
+	suite.SetupTest()
+	suite.setupTestZones()
+
+	app := suite.GetQuicksilverApp(suite.chainA)
+	ctx := suite.chainA.GetContext()
+
+	zone, found := app.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+	suite.True(found)
+
+	zone.WithdrawalWaitgroup = 100
+	app.InterchainstakingKeeper.SetZone(ctx, &zone)
+
+	vals := app.InterchainstakingKeeper.GetValidatorAddresses(ctx, suite.chainB.ChainID)
+	msg := stakingtypes.MsgDelegate{DelegatorAddress: zone.PerformanceAddress.Address, ValidatorAddress: vals[0], Amount: sdk.NewCoin("uatom", sdk.NewInt(100))}
+	var msgMsg sdk.Msg = &msg
+	err := app.InterchainstakingKeeper.HandleFailedDelegate(ctx, msgMsg, "batch/12345678")
+	suite.NoError(err)
+
+	zone, found = app.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+	suite.True(found)
+	// delegator was perf address, no change in waitgroup
+	suite.Equal(uint32(100), zone.WithdrawalWaitgroup)
+}
+
+func (suite *KeeperTestSuite) TestHandleFailedDelegate_NotBatch_OK() {
+	suite.SetupTest()
+	suite.setupTestZones()
+
+	app := suite.GetQuicksilverApp(suite.chainA)
+	ctx := suite.chainA.GetContext()
+
+	zone, found := app.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+	suite.True(found)
+
+	zone.WithdrawalWaitgroup = 100
+	app.InterchainstakingKeeper.SetZone(ctx, &zone)
+
+	vals := app.InterchainstakingKeeper.GetValidatorAddresses(ctx, suite.chainB.ChainID)
+	msg := stakingtypes.MsgDelegate{DelegatorAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[0], Amount: sdk.NewCoin("uatom", sdk.NewInt(100))}
+	var msgMsg sdk.Msg = &msg
+	err := app.InterchainstakingKeeper.HandleFailedDelegate(ctx, msgMsg, randomutils.GenerateRandomHashAsHex(32))
+	suite.NoError(err)
+
+	zone, found = app.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+	suite.True(found)
+	// memo was not a batch id, so don't decrement withdrawal wg
+	suite.Equal(uint32(100), zone.WithdrawalWaitgroup)
+}
+
+func (suite *KeeperTestSuite) TestHandleFailedDelegate_BatchTriggerRR_OK() {
+	suite.SetupTest()
+	suite.setupTestZones()
+
+	app := suite.GetQuicksilverApp(suite.chainA)
+	ctx := suite.chainA.GetContext()
+
+	zone, found := app.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+	suite.True(found)
+
+	zone.WithdrawalWaitgroup = 1
+	app.InterchainstakingKeeper.SetZone(ctx, &zone)
+	preQueries := app.InterchainQueryKeeper.AllQueries(ctx)
+
+	vals := app.InterchainstakingKeeper.GetValidatorAddresses(ctx, suite.chainB.ChainID)
+	msg := stakingtypes.MsgDelegate{DelegatorAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[0], Amount: sdk.NewCoin("uatom", sdk.NewInt(100))}
+	var msgMsg sdk.Msg = &msg
+	err := app.InterchainstakingKeeper.HandleFailedDelegate(ctx, msgMsg, "batch/12345678")
+	suite.NoError(err)
+
+	zone, found = app.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+	suite.True(found)
+	// memo was not a batch id, so don't decrement withdrawal wg
+	suite.Equal(uint32(0), zone.WithdrawalWaitgroup)
+
+	postQueries := app.InterchainQueryKeeper.AllQueries(ctx)
+
+	// we should have exactly one additional query
+	suite.Equal(len(postQueries), len(preQueries)+1)
+
+	distributeRewardsPreQueryCount := 0
+	distributeRewardsPostQueryCount := 0
+	for _, q := range preQueries {
+		if q.CallbackId == "distributerewards" {
+			distributeRewardsPreQueryCount++
+		}
+	}
+
+	for _, q := range postQueries {
+		if q.CallbackId == "distributerewards" {
+			distributeRewardsPostQueryCount++
+		}
+	}
+
+	suite.Equal(distributeRewardsPostQueryCount, distributeRewardsPreQueryCount+1)
+
+}
+
+func (suite *KeeperTestSuite) TestHandleFailedDelegate_BadAddr_Fail() {
+	suite.SetupTest()
+	suite.setupTestZones()
+
+	app := suite.GetQuicksilverApp(suite.chainA)
+	ctx := suite.chainA.GetContext()
+
+	zone, found := app.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+	suite.True(found)
+
+	zone.WithdrawalWaitgroup = 100
+	app.InterchainstakingKeeper.SetZone(ctx, &zone)
+
+	vals := app.InterchainstakingKeeper.GetValidatorAddresses(ctx, suite.chainB.ChainID)
+	msg := stakingtypes.MsgDelegate{DelegatorAddress: addressutils.GenerateAddressForTestWithPrefix("cosmos"), ValidatorAddress: vals[0], Amount: sdk.NewCoin("uatom", sdk.NewInt(100))}
+	var msgMsg sdk.Msg = &msg
+	err := app.InterchainstakingKeeper.HandleFailedDelegate(ctx, msgMsg, randomutils.GenerateRandomHashAsHex(32))
+	suite.ErrorContains(err, "unable to find zone for address")
+}
+
+func (suite *KeeperTestSuite) TestHandleFailedDelegate_BadMsg_Fail() {
+	suite.SetupTest()
+	suite.setupTestZones()
+
+	app := suite.GetQuicksilverApp(suite.chainA)
+	ctx := suite.chainA.GetContext()
+
+	zone, found := app.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+	suite.True(found)
+
+	zone.WithdrawalWaitgroup = 100
+	app.InterchainstakingKeeper.SetZone(ctx, &zone)
+
+	vals := app.InterchainstakingKeeper.GetValidatorAddresses(ctx, suite.chainB.ChainID)
+	msg := stakingtypes.MsgBeginRedelegate{DelegatorAddress: zone.DelegationAddress.Address, ValidatorSrcAddress: vals[0], ValidatorDstAddress: vals[1], Amount: sdk.NewCoin("uatom", sdk.NewInt(100))}
+	var msgMsg sdk.Msg = &msg
+	err := app.InterchainstakingKeeper.HandleFailedDelegate(ctx, msgMsg, "batch/12345678")
+	suite.ErrorContains(err, "unable to cast source message to MsgDelegate")
 }
