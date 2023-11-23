@@ -159,7 +159,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 				return err
 			}
 			continue
-		case "/liquidstaking.staking.v1beta1.MsgTokenizeShares":
+		case "/cosmos.staking.v1beta1.MsgTokenizeShares":
 			if !success {
 				// We can safely ignore this, as this can reasonably fail, and we cater for this in the flush logic.
 				return nil
@@ -550,25 +550,24 @@ func (k *Keeper) HandleTokenizedShares(ctx sdk.Context, msg sdk.Msg, sharesAmoun
 	for _, dist := range withdrawalRecord.Distribution {
 		if equalLsmCoin(dist.Valoper, dist.Amount, sharesAmount) {
 			withdrawalRecord.Amount = withdrawalRecord.Amount.Add(sharesAmount)
-			// matched amount
-			if len(withdrawalRecord.Distribution) == len(withdrawalRecord.Amount) {
-				// we just added the last tokens
-				k.Logger(ctx).Info("Found matching withdrawal; marking for send")
-				k.DeleteWithdrawalRecord(ctx, zone.ChainId, memo, types.WithdrawStatusTokenize)
-				withdrawalRecord.Status = types.WithdrawStatusSend
-				sendMsg := &banktypes.MsgSend{FromAddress: zone.DelegationAddress.Address, ToAddress: withdrawalRecord.Recipient, Amount: withdrawalRecord.Amount}
-				err = k.SubmitTx(ctx, []sdk.Msg{sendMsg}, zone.DelegationAddress, memo, zone.MessagesPerTx)
-				if err != nil {
-					return err
-				}
-			} else {
-				k.Logger(ctx).Info("Found matching withdrawal; awaiting additional messages")
-			}
-			k.SetWithdrawalRecord(ctx, withdrawalRecord)
 			break
 		}
 	}
-	return nil
+
+	k.SetWithdrawalRecord(ctx, withdrawalRecord)
+
+	if len(withdrawalRecord.Distribution) != len(withdrawalRecord.Amount) {
+		k.Logger(ctx).Info(fmt.Sprintf("Found matching withdrawal (%d/%d); awaiting additional messages", len(withdrawalRecord.Amount), len(withdrawalRecord.Distribution)))
+	} else {
+		k.Logger(ctx).Info("Found matching withdrawal; marking for send")
+		k.DeleteWithdrawalRecord(ctx, zone.ChainId, memo, types.WithdrawStatusTokenize)
+		withdrawalRecord.Status = types.WithdrawStatusSend
+		k.SetWithdrawalRecord(ctx, withdrawalRecord)
+		sendMsg := &banktypes.MsgSend{FromAddress: zone.DelegationAddress.Address, ToAddress: withdrawalRecord.Recipient, Amount: withdrawalRecord.Amount}
+		err = k.SubmitTx(ctx, []sdk.Msg{sendMsg}, zone.DelegationAddress, memo, zone.MessagesPerTx)
+	}
+	return err
+
 }
 
 func (k *Keeper) HandleBeginRedelegate(ctx sdk.Context, msg sdk.Msg, completion time.Time, memo string) error {
@@ -1349,7 +1348,7 @@ func (*Keeper) prepareRewardsDistributionMsgs(zone types.Zone, rewards sdkmath.I
 }
 
 func equalLsmCoin(valoper string, amount uint64, lsmAmount sdk.Coin) bool {
-	if strings.Contains(lsmAmount.Denom, valoper) {
+	if strings.HasPrefix(lsmAmount.Denom, valoper) {
 		return lsmAmount.Amount.Equal(sdk.NewIntFromUint64(amount))
 	}
 	return false

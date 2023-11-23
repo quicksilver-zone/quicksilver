@@ -2871,11 +2871,11 @@ func (suite *KeeperTestSuite) TestReceiveAckForTokenizedShares() {
 		},
 		Recipient:      addressutils.GenerateAddressForTestWithPrefix(zone.GetAccountPrefix()),
 		Amount:         sdk.Coins{},
-		BurnAmount:     sdk.NewCoin(zone.LocalDenom, sdk.NewInt(1800)),
+		BurnAmount:     sdk.NewCoin(zone.LocalDenom, sdk.NewInt(800)),
 		Txhash:         txHash,
 		Status:         icstypes.WithdrawStatusTokenize,
 		CompletionTime: ctx.BlockTime().Add(-1 * time.Hour),
-		Acknowledged:   true,
+		Acknowledged:   false,
 	}
 	quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(ctx, withdrawalRecord)
 	_, found = quicksilver.InterchainstakingKeeper.GetWithdrawalRecord(ctx, zone.ChainId, txHash, icstypes.WithdrawStatusTokenize)
@@ -2884,7 +2884,7 @@ func (suite *KeeperTestSuite) TestReceiveAckForTokenizedShares() {
 	tokenizeShares := &lsmstakingtypes.MsgTokenizeShares{
 		DelegatorAddress:    zone.DelegationAddress.Address,
 		ValidatorAddress:    vals[0],
-		Amount:              sdk.NewCoin(vals[0]+"/1", sdk.NewInt(1000)),
+		Amount:              sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000)),
 		TokenizedShareOwner: addressutils.GenerateAddressForTestWithPrefix(zone.GetAccountPrefix()),
 	}
 	data, err := icatypes.SerializeCosmosTx(quicksilver.InterchainstakingKeeper.GetCodec(), []sdk.Msg{tokenizeShares})
@@ -2920,6 +2920,11 @@ func (suite *KeeperTestSuite) TestReceiveAckForTokenizedShares() {
 
 	_, found = quicksilver.InterchainstakingKeeper.GetWithdrawalRecord(ctx, zone.ChainId, txHash, icstypes.WithdrawStatusTokenize)
 	suite.False(found)
+
+	wr, found := quicksilver.InterchainstakingKeeper.GetWithdrawalRecord(ctx, zone.ChainId, txHash, icstypes.WithdrawStatusSend)
+	suite.True(found)
+
+	suite.Equal(wr.Amount[0], response.Amount)
 }
 
 func (suite *KeeperTestSuite) TestReceiveAckForDelegate() {
@@ -4631,7 +4636,6 @@ func (suite *KeeperTestSuite) TestHandleFailedDelegate_BatchTriggerRR_OK() {
 	}
 
 	suite.Equal(distributeRewardsPostQueryCount, distributeRewardsPreQueryCount+1)
-
 }
 
 func (suite *KeeperTestSuite) TestHandleFailedDelegate_BadAddr_Fail() {
