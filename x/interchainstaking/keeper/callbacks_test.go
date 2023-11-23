@@ -2229,7 +2229,7 @@ func (suite *KeeperTestSuite) TestDepositLsmTxCallback() {
 		zone.DepositAddress.IncrementBalanceWaitgroup()
 		zone.WithdrawalAddress.IncrementBalanceWaitgroup()
 		// add the validator from the gaiatest-1 network to our registered zone. This is required for LSM deposit as the tokenised share denom is checked against known validators.
-		quicksilver.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, icstypes.Validator{
+		err := quicksilver.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, icstypes.Validator{
 			ValoperAddress:      "cosmosvaloper1gg7w8w2y9jfv76a2yyahe42y09g9ry2raa5rqf",
 			CommissionRate:      sdk.NewDecWithPrec(1, 1),
 			DelegatorShares:     sdk.MustNewDecFromStr("4235376641.000000000000000000"),
@@ -2240,6 +2240,8 @@ func (suite *KeeperTestSuite) TestDepositLsmTxCallback() {
 			ValidatorBondShares: sdk.MustNewDecFromStr("1000000.000000000000000000"),
 			LiquidShares:        sdk.MustNewDecFromStr("4234076641.000000000000000000"),
 		})
+		suite.NoError(err)
+
 		// override the DepositAddress to match that of the chain where the fixture was captured.
 		zone.DepositAddress.Address = "cosmos1avvehf3npvn6weyxtvyu7mhwwvjryzw69g43tq0nl80wqjglr6hse5mcz4"
 		quicksilver.InterchainstakingKeeper.SetZone(ctx, &zone)
@@ -2248,7 +2250,7 @@ func (suite *KeeperTestSuite) TestDepositLsmTxCallback() {
 		payload := icqtypes.GetTxWithProofResponse{}
 		payloadBytes := decodeBase64NoErr(txFixtureLsm)
 
-		err := quicksilver.InterchainstakingKeeper.GetCodec().Unmarshal(payloadBytes, &payload)
+		err = quicksilver.InterchainstakingKeeper.GetCodec().Unmarshal(payloadBytes, &payload)
 		// update payload header to ensure we can validate it.
 		payload.Header.Header.Time = ctx.BlockTime()
 		suite.NoError(err)
@@ -2325,7 +2327,7 @@ func (suite *KeeperTestSuite) TestDepositTxCallback2() {
 		zone.DepositAddress.IncrementBalanceWaitgroup()
 		zone.WithdrawalAddress.IncrementBalanceWaitgroup()
 		// add the validator from the gaiatest-1 network to our registered zone. This is required for LSM deposit as the tokenised share denom is checked against known validators.
-		quicksilver.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, icstypes.Validator{
+		err := quicksilver.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, icstypes.Validator{
 			ValoperAddress:      "cosmosvaloper1gg7w8w2y9jfv76a2yyahe42y09g9ry2raa5rqf",
 			CommissionRate:      sdk.NewDecWithPrec(1, 1),
 			DelegatorShares:     sdk.MustNewDecFromStr("4235376641.000000000000000000"),
@@ -2336,6 +2338,8 @@ func (suite *KeeperTestSuite) TestDepositTxCallback2() {
 			ValidatorBondShares: sdk.MustNewDecFromStr("1000000.000000000000000000"),
 			LiquidShares:        sdk.MustNewDecFromStr("4234076641.000000000000000000"),
 		})
+		suite.NoError(err)
+
 		// override the DepositAddress to match that of the chain where the fixture was captured.
 		zone.DepositAddress.Address = "cosmos1d2jrh4gj66smxns6xfv8mdd4keef5ek97knl9gw9skkzryjyhxjsywlfhm"
 		quicksilver.InterchainstakingKeeper.SetZone(ctx, &zone)
@@ -2344,7 +2348,7 @@ func (suite *KeeperTestSuite) TestDepositTxCallback2() {
 		payload := icqtypes.GetTxWithProofResponse{}
 		payloadBytes := decodeBase64NoErr(txFixture)
 
-		err := quicksilver.InterchainstakingKeeper.GetCodec().Unmarshal(payloadBytes, &payload)
+		err = quicksilver.InterchainstakingKeeper.GetCodec().Unmarshal(payloadBytes, &payload)
 		// update payload header to ensure we can validate it.
 		payload.Header.Header.Time = ctx.BlockTime()
 		suite.NoError(err)
