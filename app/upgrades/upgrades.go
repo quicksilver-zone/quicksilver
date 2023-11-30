@@ -2,6 +2,7 @@ package upgrades
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	sdkmath "cosmossdk.io/math"
@@ -41,6 +42,7 @@ func Upgrades() []Upgrade {
 		{UpgradeName: V010404rc2UpgradeName, CreateUpgradeHandler: V010404beta10UpgradeHandler},
 		{UpgradeName: V010404rc3UpgradeName, CreateUpgradeHandler: NoOpHandler},
 		{UpgradeName: V010404rc4UpgradeName, CreateUpgradeHandler: NoOpHandler},
+		{UpgradeName: V010405UpgradeName, CreateUpgradeHandler: V010405UpgradeHandler},
 	}
 }
 
@@ -626,66 +628,114 @@ func V010404beta10UpgradeHandler(
 	}
 }
 
-// func V010400UpgradeHandler(
-//	mm *module.Manager,
-//	configurator module.Configurator,
-//	appKeepers *keepers.AppKeepers,
-// ) upgradetypes.UpgradeHandler {
-//	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-//		// upgrade zones
-//		appKeepers.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zone *icstypes.Zone) (stop bool) {
-//			zone.DepositsEnabled = true
-//			zone.ReturnToSender = false
-//			zone.UnbondingEnabled = false
-//			zone.Decimals = 6
-//			appKeepers.InterchainstakingKeeper.SetZone(ctx, zone)
-//			return false
-//		})
-//
-//		// upgrade receipts
-//		blockTime := ctx.BlockTime()
-//		for _, r := range appKeepers.InterchainstakingKeeper.AllReceipts(ctx) {
-//			r.FirstSeen = &blockTime
-//			r.Completed = &blockTime
-//			appKeepers.InterchainstakingKeeper.SetReceipt(ctx, r)
-//		}
-//		if isTestnet(ctx) || isTest(ctx) {
-//
-//			appKeepers.InterchainstakingKeeper.RemoveZoneAndAssociatedRecords(ctx, "uni-5")
-//
-//			// burn uqjunox
-//			addr1, err := utils.AccAddressFromBech32("quick17v9kk34km3w6hdjs2sn5s5qjdu2zrm0m3rgtmq", "quick")
-//			if err != nil {
-//				return nil, err
-//			}
-//			addr2, err := utils.AccAddressFromBech32("quick16x03wcp37kx5e8ehckjxvwcgk9j0cqnhcccnty", "quick")
-//			if err != nil {
-//				return nil, err
-//			}
-//
-//			err = appKeepers.BankKeeper.SendCoinsFromAccountToModule(ctx, addr1, tokenfactorytypes.ModuleName, sdk.NewCoins(sdk.NewCoin("uqjunox", sdkmath.NewInt(1600000))))
-//			if err != nil {
-//				return nil, err
-//			}
-//
-//			err = appKeepers.BankKeeper.SendCoinsFromAccountToModule(ctx, addr2, tokenfactorytypes.ModuleName, sdk.NewCoins(sdk.NewCoin("uqjunox", sdkmath.NewInt(200000000))))
-//			if err != nil {
-//				return nil, err
-//			}
-//
-//			err = appKeepers.BankKeeper.SendCoinsFromModuleToModule(ctx, icstypes.EscrowModuleAccount, tokenfactorytypes.ModuleName, sdk.NewCoins(sdk.NewCoin("uqjunox", sdkmath.NewInt(400000))))
-//			if err != nil {
-//				return nil, err
-//			}
-//
-//			err = appKeepers.BankKeeper.BurnCoins(ctx, tokenfactorytypes.ModuleName, sdk.NewCoins(sdk.NewCoin("uqjunox", sdkmath.NewInt(202000000))))
-//			if err != nil {
-//				return nil, err
-//			}
-//		}
-//		return mm.RunMigrations(ctx, configurator, fromVM)
-//	}
-// }
+func V010405UpgradeHandler(
+	mm *module.Manager,
+	configurator module.Configurator,
+	appKeepers *keepers.AppKeepers,
+) upgradetypes.UpgradeHandler {
+	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		// add new fields
+		appKeepers.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zone *icstypes.Zone) (stop bool) {
+			zone.DepositsEnabled = true
+			zone.ReturnToSender = false
+			zone.UnbondingEnabled = false
+			zone.Decimals = 6
+			appKeepers.InterchainstakingKeeper.SetZone(ctx, zone)
+			return false
+		})
+
+		// update validator locations
+
+		appKeepers.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zone *icstypes.Zone) (stop bool) {
+			for _, val := range zone.Validators {
+				newVal := icstypes.Validator{
+					ValoperAddress:      val.ValoperAddress,
+					CommissionRate:      val.CommissionRate,
+					DelegatorShares:     val.DelegatorShares,
+					VotingPower:         val.VotingPower,
+					Score:               val.Score,
+					Status:              val.Status,
+					Jailed:              val.Jailed,
+					Tombstoned:          val.Tombstoned,
+					JailedSince:         val.JailedSince,
+					ValidatorBondShares: val.ValidatorBondShares,
+					LiquidShares:        val.LiquidShares,
+				}
+				err := appKeepers.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, newVal)
+				if err != nil {
+					panic(err)
+				}
+			}
+			zone.Validators = nil
+			appKeepers.InterchainstakingKeeper.SetZone(ctx, zone)
+			return false
+		})
+
+		if err := migrateTestnetIncentives(ctx, appKeepers); err != nil {
+			panic(fmt.Sprintf("unable to migrate testnet incentives: %v", err))
+		}
+
+		if err := migrateIngenuityMultisigToNotional(ctx, appKeepers); err != nil {
+			panic(fmt.Sprintf("unable to migrate testnet incentives: %v", err))
+		}
+
+		return mm.RunMigrations(ctx, configurator, fromVM)
+	}
+}
+
+func migrateTestnetIncentives(ctx sdk.Context, appKeepers *keepers.AppKeepers) error {
+	migrations := map[string]string{
+		"quick1qlckz3nplj3sf323n4ma7n75fmv60lpclq5ccc": "quick15dhqkz3mxxg4tt3m8uz5yy3mzfckgzzh5hpaqp",
+		"quick1edavtxhdfs8luyvedgkjcxjc9dtvks3ve7etku": "quick1dz3y9k9harjal8nyqg3vl570aj7slaemmxgn86",
+		"quick1pajjuywnj6w3y6pclp4tj55a7ngz9tp2z4pgep": "quick15sr0uhelt0hw4x7l9zsy4a7hqkaw6jepq4ald9",
+		"quick1vhd4n5u8rsmsdgs4h7zsn4h4klsej6n8spvsl3": "quick12fyxjyxt64c2q5y0sdts6m4uxcy4cmff7l0ffx",
+	}
+	return migrateVestingAccounts(ctx, appKeepers, migrations)
+}
+
+func migrateIngenuityMultisigToNotional(ctx sdk.Context, appKeepers *keepers.AppKeepers) error {
+	migrations := map[string]string{
+		"quick1e22za5qrqqp488h5p7vw2pfx8v0y4u444ufeuw": "XXXXXNEWXXXXX",
+	}
+	return migrateVestingAccounts(ctx, appKeepers, migrations)
+}
+
+func migrateVestingAccounts(ctx sdk.Context, appKeepers *keepers.AppKeepers, migrations map[string]string) error {
+	for fromBech32, toBech32 := range migrations {
+		from, err := addressutils.AccAddressFromBech32(fromBech32, "quick")
+		if err != nil {
+			return err
+		}
+		to, err := addressutils.AccAddressFromBech32(toBech32, "quick")
+		if err != nil {
+			return err
+		}
+		err = migrateVestingAccount(ctx, appKeepers, from, to)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func migrateVestingAccount(ctx sdk.Context, appKeepers *keepers.AppKeepers, from sdk.AccAddress, to sdk.AccAddress) error {
+	oldAccount := appKeepers.AccountKeeper.GetAccount(ctx, from)
+	if newAccount := appKeepers.AccountKeeper.GetAccount(ctx, from); newAccount != nil {
+		return fmt.Errorf("unable to migrate vesting account; destination is already an account")
+	}
+	err := oldAccount.SetAddress(to)
+	if err != nil {
+		return err
+	}
+	err = oldAccount.SetPubKey(nil)
+	if err != nil {
+		return err
+	}
+
+	appKeepers.AccountKeeper.RemoveAccount(ctx, oldAccount)
+	return nil
+}
+
 //
 // func V010400rc6UpgradeHandler(
 //	mm *module.Manager,
