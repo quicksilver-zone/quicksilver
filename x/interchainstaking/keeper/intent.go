@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/quicksilver-zone/quicksilver/utils"
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	prtypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
 	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
@@ -213,7 +214,7 @@ func (k *Keeper) UpdateDelegatorIntent(ctx sdk.Context, delegator sdk.AccAddress
 	}
 
 	if updateWithCoin {
-		delIntent = zone.UpdateIntentWithCoins(delIntent, baseBalance, inAmount, k.GetValidatorAddresses(ctx, zone.ChainId))
+		delIntent = zone.UpdateIntentWithCoins(delIntent, baseBalance, inAmount, utils.StringSliceToMap(k.GetValidatorAddresses(ctx, zone.ChainId)))
 	}
 
 	if updateWithMemo {
