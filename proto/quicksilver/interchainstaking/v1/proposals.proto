@@ -3,6 +3,7 @@ package quicksilver.interchainstaking.v1;
 
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
+import "quicksilver/interchainstaking/v1/interchainstaking.proto";
 
 option go_package = "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types";
 
@@ -111,3 +112,18 @@ message MsgGovCloseChannel {
 
 // MsgGovCloseChannelResponse defines the MsgGovCloseChannel response type.
 message MsgGovCloseChannelResponse {}
+
+message MsgGovSetLsmCaps {
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string title = 1;
+  string description = 2;
+
+  string chain_id = 3 [(gogoproto.moretags) = "yaml:\"chain_id\""];
+  LsmCaps caps = 4 [(gogoproto.moretags) = "yaml:\"caps\""];
+
+  string authority = 5 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+message MsgGovSetLsmCapsResponse {}

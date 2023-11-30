@@ -186,7 +186,7 @@ func TestDetermineAllocationsForDelegation(t *testing.T) {
 			for _, amount := range val.current {
 				sum = sum.Add(amount)
 			}
-			allocations, err := types.DetermineAllocationsForDelegation(val.current, sum, val.target, val.inAmount)
+			allocations, err := types.DetermineAllocationsForDelegation(val.current, sum, val.target, val.inAmount, make(map[string]sdkmath.Int))
 			require.NoError(t, err)
 			require.Equal(t, len(val.expected), len(allocations))
 			for valoper := range val.expected {

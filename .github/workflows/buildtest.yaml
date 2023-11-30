@@ -31,7 +31,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v4
         with:
-          go-version: "1.20.5"
+          go-version: "1.20.11"
         env:
           GOOS: ${{ matrix.targetos }}
           GOARCH: ${{ matrix.arch }}
@@ -65,11 +65,10 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v4
         with:
-          go-version: "1.20.5"
+          go-version: "1.20.11"
         env:
           GOOS: ${{ matrix.targetos }}
           GOARCH: ${{ matrix.arch }}
-
       - name: Setup Golang caches
         uses: actions/cache@v3
         with:
@@ -90,9 +89,9 @@ jobs:
           excludelist+=" $(find ./ -type f -name '*.pb.go')"
           excludelist+=" $(find ./ -type f -name '*.pb.gw.go')"
           excludelist+=" $(find ./ -type f -path './test/*.go')"
-          excludelist+=" $(find ./ -type f -path './osmosis-types/*.go')"
+          excludelist+=" $(find ./ -type f -path './third-party-chains/*.go')"
           for filename in ${excludelist}; do
-            filename=$(echo $filename | sed 's/^./github.com\/ingenuity-build\/quicksilver/g')
+            filename=$(echo $filename | sed 's/^./github.com\/quicksilver-zone\/quicksilver/g')
             echo "Excluding ${filename} from coverage report..."
             sed -i.bak "/$(echo $filename | sed 's/\//\\\//g')/d" coverage.txt
           done
