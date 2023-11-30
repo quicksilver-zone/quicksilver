@@ -3,10 +3,10 @@ package app
 import (
 	"fmt"
 
-	packetforwardtypes "github.com/strangelove-ventures/packet-forward-middleware/v5/router/types"
-
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	supplytypes "github.com/quicksilver-zone/quicksilver/x/supply/types"
+	packetforwardtypes "github.com/strangelove-ventures/packet-forward-middleware/v5/router/types"
 
 	"github.com/quicksilver-zone/quicksilver/app/upgrades"
 )
@@ -50,6 +50,11 @@ func (app *Quicksilver) setUpgradeStoreLoaders() {
 
 		storeUpgrades = &storetypes.StoreUpgrades{
 			Added: []string{packetforwardtypes.ModuleName},
+		}
+
+	case upgrades.V010405rc0UpgradeName:
+		storeUpgrades = &storetypes.StoreUpgrades{
+			Added: []string{supplytypes.ModuleName},
 		}
 	default:
 		// no-op
