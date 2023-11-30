@@ -310,7 +310,7 @@ func (suite *KeeperTestSuite) TestReceiptStore() {
 	suite.Equal(1, len(out))
 	suite.Equal(&now, out[0].Completed)
 
-	icsKeeper.SetReceiptsCompleted(ctx, zone.ChainId, now, now)
+	icsKeeper.SetReceiptsCompleted(ctx, zone.ChainId, now, now, zone.BaseDenom)
 
 	receipt, found = icsKeeper.GetReceipt(ctx, zone.ChainId, hash3)
 	suite.True(found)

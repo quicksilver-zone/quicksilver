@@ -33,12 +33,14 @@ func (suite *KeeperTestSuite) TestStoreGetDeleteValidator() {
 		count := len(app.InterchainstakingKeeper.GetValidators(ctx, zone.ChainId))
 
 		newValidator := types.Validator{
-			ValoperAddress:  validator.String(),
-			CommissionRate:  sdk.NewDec(5.0),
-			DelegatorShares: sdk.NewDec(1000.0),
-			VotingPower:     sdk.NewInt(1000),
-			Status:          stakingtypes.BondStatusBonded,
-			Score:           sdk.NewDec(0),
+			ValoperAddress:      validator.String(),
+			CommissionRate:      sdk.NewDec(5.0),
+			DelegatorShares:     sdk.NewDec(1000.0),
+			VotingPower:         sdk.NewInt(1000),
+			Status:              stakingtypes.BondStatusBonded,
+			Score:               sdk.NewDec(0),
+			LiquidShares:        sdk.ZeroDec(),
+			ValidatorBondShares: sdk.ZeroDec(),
 		}
 		err = app.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, newValidator)
 		suite.NoError(err)

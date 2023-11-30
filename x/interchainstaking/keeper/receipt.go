@@ -408,9 +408,9 @@ func (k *Keeper) UserZoneReceipts(ctx sdk.Context, zone *types.Zone, addr sdk.Ac
 	return receipts, nil
 }
 
-func (k *Keeper) SetReceiptsCompleted(ctx sdk.Context, chainID string, qualifyingTime, completionTime time.Time) {
+func (k *Keeper) SetReceiptsCompleted(ctx sdk.Context, chainID string, qualifyingTime, completionTime time.Time, denom string) {
 	k.IterateZoneReceipts(ctx, chainID, func(_ int64, receiptInfo types.Receipt) (stop bool) {
-		if receiptInfo.FirstSeen.Before(qualifyingTime) && receiptInfo.Completed == nil {
+		if receiptInfo.FirstSeen.Before(qualifyingTime) && receiptInfo.Completed == nil && denom == receiptInfo.Amount[0].Denom {
 			receiptInfo.Completed = &completionTime
 			k.SetReceipt(ctx, receiptInfo)
 
