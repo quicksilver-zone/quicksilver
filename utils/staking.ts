@@ -1,10 +1,9 @@
 import { Coin, decodeCosmosSdkDecFromProto } from '@cosmjs/stargate';
-import { Validator } from '@hoangdv2429/quicksilverjs';
 import BigNumber from 'bignumber.js';
 import { QueryDelegationTotalRewardsResponse } from 'interchain-query/cosmos/distribution/v1beta1/query';
 import { QueryAnnualProvisionsResponse } from 'interchain-query/cosmos/mint/v1beta1/query';
 import { QueryDelegatorDelegationsResponse, QueryParamsResponse } from 'interchain-query/cosmos/staking/v1beta1/query';
-import { Pool } from 'interchain-query/cosmos/staking/v1beta1/staking';
+import { Pool, Validator } from 'interchain-query/cosmos/staking/v1beta1/staking';
 
 import { decodeUint8Arr, isGreaterThanZero, shiftDigits, toNumber } from '.';
 
@@ -53,10 +52,12 @@ export type ChainMetaData = {
 export const extendValidators = (validators: ParsedValidator[] = [], chainMetadata: ChainMetaData) => {
   const { annualProvisions, communityTax, pool } = chainMetadata;
 
+
   return validators.map((validator) => {
     const apr = annualProvisions
       ? calcStakingApr({
           annualProvisions,
+            //@ts-ignore
           commission: validator.commission,
           communityTax,
           pool,
