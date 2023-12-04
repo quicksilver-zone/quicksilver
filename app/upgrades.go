@@ -3,12 +3,13 @@ package app
 import (
 	"fmt"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	supplytypes "github.com/quicksilver-zone/quicksilver/x/supply/types"
 	packetforwardtypes "github.com/strangelove-ventures/packet-forward-middleware/v5/router/types"
 
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+
 	"github.com/quicksilver-zone/quicksilver/app/upgrades"
+	supplytypes "github.com/quicksilver-zone/quicksilver/x/supply/types"
 )
 
 func (app *Quicksilver) setUpgradeHandlers() {
