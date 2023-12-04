@@ -6,7 +6,7 @@ import (
 	"sort"
 	"time"
 
-	lsmstakingtypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
+	lsmstakingtypes "github.com/quicksilver-zone/quicksilver/x/lsmtypes"
 
 	"cosmossdk.io/math"
 
