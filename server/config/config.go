@@ -34,7 +34,7 @@ type TLSConfig struct {
 }
 
 type SupplyConfig struct {
-	// Enabled determines wheter we expose the supply endpoint.
+	// Enabled determines whether we expose the supply endpoint.
 	Enabled bool `mapstructure:"enabled"`
 }
 
