@@ -39,7 +39,6 @@ func (q Querier) Supply(c context.Context, _ *types.QuerySupplyRequest) (*types.
 		})
 
 		return &types.QuerySupplyResponse{Supply: supply.Amount.Uint64(), CirculatingSupply: circulatingSupply.Uint64()}, nil
-	} else {
-		return nil, fmt.Errorf("endpoint disabled")
 	}
+	return nil, fmt.Errorf("endpoint disabled")
 }

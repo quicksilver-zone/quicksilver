@@ -3,9 +3,10 @@ package app
 import (
 	"fmt"
 
+	packetforwardtypes "github.com/strangelove-ventures/packet-forward-middleware/v5/router/types"
+
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	packetforwardtypes "github.com/strangelove-ventures/packet-forward-middleware/v5/router/types"
 
 	"github.com/quicksilver-zone/quicksilver/app/upgrades"
 	supplytypes "github.com/quicksilver-zone/quicksilver/x/supply/types"
