@@ -132,7 +132,7 @@ export const ValidatorsTable: React.FC<{
                   onClick={() =>
                     onValidatorClick({
                       name: validator.name || '',
-                      operatorAddress: validator.operatorAddress || '',
+                      operatorAddress: validator.address || '',
                     })
                   }
                   backgroundColor={selectedValidators.some((v) => v.name === validator.name) ? 'rgba(255, 128, 0, 0.25)' : 'transparent'}

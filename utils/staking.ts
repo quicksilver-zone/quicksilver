@@ -1,9 +1,10 @@
 import { Coin, decodeCosmosSdkDecFromProto } from '@cosmjs/stargate';
+import { Validator } from '@hoangdv2429/quicksilverjs';
 import BigNumber from 'bignumber.js';
 import { QueryDelegationTotalRewardsResponse } from 'interchain-query/cosmos/distribution/v1beta1/query';
 import { QueryAnnualProvisionsResponse } from 'interchain-query/cosmos/mint/v1beta1/query';
 import { QueryDelegatorDelegationsResponse, QueryParamsResponse } from 'interchain-query/cosmos/staking/v1beta1/query';
-import { Pool, Validator } from 'interchain-query/cosmos/staking/v1beta1/staking';
+import { Pool } from 'interchain-query/cosmos/staking/v1beta1/staking';
 
 import { decodeUint8Arr, isGreaterThanZero, shiftDigits, toNumber } from '.';
 
@@ -35,8 +36,8 @@ export const parseValidators = (validators: Validator[]) => {
     description: validator.description?.details || '',
     name: validator.description?.moniker || '',
     identity: validator.description?.identity || '',
-    operatorAddress: validator.operatorAddress,
-    commission: validator.commission?.commissionRates?.rate || ZERO,
+    address: validator.operatorAddress,
+    commission: validator.commission?.commissionRates || ZERO,
     votingPower: toNumber(shiftDigits(validator.tokens, -6, 0), 0),
   }));
 };

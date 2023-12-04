@@ -66,7 +66,7 @@ export const MultiModal: React.FC<MultiModalProps> = ({
 
     const topValidators = validators.slice(0, count).map((validator) => ({
       name: validator.name,
-      operatorAddress: validator.operatorAddress,
+      operatorAddress: validator.address,
     }));
 
     setSelectedValidators(topValidators);
