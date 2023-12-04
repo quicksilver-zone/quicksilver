@@ -38,6 +38,7 @@ func newQuicksilver(t *testing.T) *app.Quicksilver {
 		app.EmptyAppOptions{},
 		app.GetWasmOpts(app.EmptyAppOptions{}),
 		true,
+		false,
 	)
 }
 

@@ -16,13 +16,14 @@ import (
 
 // Keeper of the mint store.
 type Keeper struct {
-	cdc            codec.BinaryCodec
-	storeKey       storetypes.StoreKey
-	accountKeeper  types.AccountKeeper
-	bankKeeper     types.BankKeeper
-	stakingKeeper  types.StakingKeeper
-	moduleAccounts []string
-	baseDenom      string
+	cdc             codec.BinaryCodec
+	storeKey        storetypes.StoreKey
+	accountKeeper   types.AccountKeeper
+	bankKeeper      types.BankKeeper
+	stakingKeeper   types.StakingKeeper
+	moduleAccounts  []string
+	baseDenom       string
+	endpointEnabled bool
 }
 
 // NewKeeper creates a new mint Keeper instance.
@@ -33,14 +34,16 @@ func NewKeeper(
 	bk types.BankKeeper,
 	sk types.StakingKeeper,
 	moduleAccounts []string,
+	endpointEnabled bool,
 ) Keeper {
 	return Keeper{
-		cdc:            cdc,
-		storeKey:       storeKey,
-		accountKeeper:  ak,
-		bankKeeper:     bk,
-		stakingKeeper:  sk,
-		moduleAccounts: moduleAccounts,
+		cdc:             cdc,
+		storeKey:        storeKey,
+		accountKeeper:   ak,
+		bankKeeper:      bk,
+		stakingKeeper:   sk,
+		moduleAccounts:  moduleAccounts,
+		endpointEnabled: endpointEnabled,
 	}
 }
 
