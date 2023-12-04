@@ -60,6 +60,7 @@ func BenchmarkSimulation(b *testing.B) {
 		app.EmptyAppOptions{},
 		app.GetWasmOpts(app.EmptyAppOptions{}),
 		false,
+		false,
 	)
 
 	// Run randomized simulations
@@ -119,6 +120,7 @@ func TestAppStateDeterminism(t *testing.T) {
 				wasm.EnableAllProposals,
 				app.EmptyAppOptions{},
 				app.GetWasmOpts(app.EmptyAppOptions{}),
+				false,
 				false,
 				interBlockCacheOpt(),
 			)

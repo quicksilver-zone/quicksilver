@@ -21,7 +21,8 @@ const (
 // from the SDK as well as the TLS configuration.
 type Config struct {
 	config.Config
-	TLS TLSConfig `mapstructure:"tls"`
+	TLS    TLSConfig    `mapstructure:"tls"`
+	Supply SupplyConfig `mapstructure:"supply"`
 }
 
 // TLSConfig defines the certificate and matching private key for the server.
@@ -30,6 +31,11 @@ type TLSConfig struct {
 	CertificatePath string `mapstructure:"certificate-path"`
 	// KeyPath the file path for the key .pem file
 	KeyPath string `mapstructure:"key-path"`
+}
+
+type SupplyConfig struct {
+	// Enabled determines wheter we expose the supply endpoint.
+	Enabled bool `mapstructure:"enabled"`
 }
 
 // AppConfig helps to override default appConfig template and configs.
@@ -58,6 +64,7 @@ func AppConfig(denom string) (customAppTemplate string, customAppConfig interfac
 	customAppConfig = Config{
 		Config: *srvCfg,
 		TLS:    *DefaultTLSConfig(),
+		Supply: *DefaultSupplyConfig(),
 	}
 
 	customAppTemplate = config.DefaultConfigTemplate + DefaultConfigTemplate
@@ -70,6 +77,14 @@ func DefaultConfig() *Config {
 	return &Config{
 		Config: *config.DefaultConfig(),
 		TLS:    *DefaultTLSConfig(),
+		Supply: *DefaultSupplyConfig(),
+	}
+}
+
+// DefaultConfig returns server's default configuration.
+func DefaultSupplyConfig() *SupplyConfig {
+	return &SupplyConfig{
+		Enabled: false,
 	}
 }
 
@@ -107,6 +122,9 @@ func GetConfig(v *viper.Viper) Config {
 		TLS: TLSConfig{
 			CertificatePath: v.GetString("tls.certificate-path"),
 			KeyPath:         v.GetString("tls.key-path"),
+		},
+		Supply: SupplyConfig{
+			Enabled: v.GetBool("supply.enabled"),
 		},
 	}
 }
