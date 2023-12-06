@@ -25,8 +25,6 @@ export default function Home() {
         bgRepeat="no-repeat"
         bgColor="#000000"
       >
-        <Header chainName="quicksilver" />
-        <SideHeader />
         <Container justifyContent="center" alignItems="center" maxW="5xl">
           <Head>
             <title>Governance</title>

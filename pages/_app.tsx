@@ -22,6 +22,7 @@ import type { AppProps } from 'next/app';
 import { defaultTheme } from '@/config';
 
 import '@interchain-ui/react/styles';
+import { Header, SideHeader } from '@/components';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -66,6 +67,8 @@ function CreateCosmosApp({ Component, pageProps }: AppProps) {
       >
         <QueryClientProvider client={queryClient}>
           <ReactQueryDevtools initialIsOpen={true} />
+          <Header chainName="quicksilver" />
+        <SideHeader />
           <Component {...pageProps} />
         </QueryClientProvider>
       </ChainProvider>

@@ -35,6 +35,18 @@ export const getZoneWithChainId = async (chainId) => {
     }
 }
 
+export const fetchRedemptionRate = async (chainId) => {
+    let result = { redemptionRate: 0 };
+    try {
+        let rate = await getRedemptionRate(chainId);
+        result.redemptionRate = parseFloat(rate);
+    } catch (e) {
+        console.log(e.message);
+    }
+    return result;
+};
+
+
 export const getValidators = async (chainId) => {
     try {
         const zone = await getZoneWithChainId(chainId)

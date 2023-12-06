@@ -31,14 +31,24 @@ export const calcStakingApr = ({ pool, commission, communityTax, annualProvision
 export type ParsedValidator = ReturnType<typeof parseValidators>[0];
 
 export const parseValidators = (validators: Validator[]) => {
-  return validators.map((validator) => ({
-    description: validator.description?.details || '',
-    name: validator.description?.moniker || '',
-    identity: validator.description?.identity || '',
-    address: validator.operatorAddress,
-    commission: validator.commission?.commissionRates || ZERO,
-    votingPower: toNumber(shiftDigits(validator.tokens, -6, 0), 0),
-  }));
+  return validators.map((validator) => {
+
+    const commissionRate = validator.commission?.commission_rates?.rate || ZERO;
+
+
+    // If you need to convert to percentage, for example
+    const commissionPercentage = parseFloat(commissionRate) * 100;
+
+
+    return {
+      description: validator.description?.details || '',
+      name: validator.description?.moniker || '',
+      identity: validator.description?.identity || '',
+      address: validator.operatorAddress || '',
+      commission: commissionPercentage.toFixed() + '%', // Assuming you want to display as percentage
+      votingPower: toNumber(shiftDigits(validator.tokens, -6, 0), 0),
+    };
+  });
 };
 
 export type ExtendedValidator = ReturnType<typeof extendValidators>[0];

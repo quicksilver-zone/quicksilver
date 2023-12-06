@@ -86,9 +86,10 @@ export const ValidatorsTable: React.FC<{
       >
         <TableContainer>
           <Table mb={2} border="1px solid rgba(255,128,0, 0.25)" variant="simple" height="lg">
-            <TableCaption>All validators</TableCaption>
+            <TableCaption>Active validators</TableCaption>
             <Thead>
-              <Tr>
+              <Tr
+              >
                 <Th
                   border="1px solid rgba(255,128,0, 0.25)"
                   color="white"
@@ -136,14 +137,23 @@ export const ValidatorsTable: React.FC<{
                     })
                   }
                   backgroundColor={selectedValidators.some((v) => v.name === validator.name) ? 'rgba(255, 128, 0, 0.25)' : 'transparent'}
+                  style={{ maxHeight: '50px' }} 
                 >
-                  <Td border="1px solid rgba(255,128,0, 0.25)" color="white">
+                  <Td
+        border="1px solid rgba(255,128,0, 0.25)"
+        color="white"
+        style={{
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+        }} // Apply overflow handling to table cells
+      >
                     {(validator.name.length || 0) > 20 ? validator.name.substring(0, 14) || '' + '...' : validator.name || ''}
                   </Td>
                   <Td border="1px solid rgba(255,128,0, 0.25)" color="white">
-                    {validator.commission ? validator.commission + '%' : 'N/A'}
+                    {validator.commission ? validator.commission : 'N/A'}
                   </Td>
-                  <Td border="1px solid rgba(255,128,0, 0.25)"></Td>
+                  <Td border="1px solid rgba(255,128,0, 0.25)">{}</Td>
                   <Td border="1px solid rgba(255,128,0, 0.25)"></Td>
                 </Tr>
               ))}

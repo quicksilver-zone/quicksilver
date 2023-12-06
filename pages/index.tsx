@@ -18,8 +18,6 @@ export default function Home() {
         bgRepeat="no-repeat"
         bgColor="#000000"
       >
-        <Header chainName="quicksilver" />
-        <SideHeader />
         <Box justifyContent="center" alignItems="center" maxW="5xl">
           <Head>
             <title>Quick Silver</title>

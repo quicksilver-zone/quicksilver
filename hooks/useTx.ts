@@ -36,7 +36,7 @@ export const useTx = (chainName: string) => {
       toaster.toast({
         type: ToastType.Error,
         title: 'Wallet not connected',
-        message: 'Please connect the wallet',
+        message: 'Please connect your wallet',
       });
       return;
     }

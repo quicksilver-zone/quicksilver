@@ -23,7 +23,8 @@ import {
 import { useChain } from '@cosmos-kit/react';
 import React, { useEffect, useState } from 'react';
 
-import { useBalanceQuery } from '@/hooks/useQueries';
+import { useBalanceQuery, useZoneQuery } from '@/hooks/useQueries';
+import { fetchRedemptionRate } from '@/services/zone';
 import { getExponent } from '@/utils';
 import { shiftDigits } from '@/utils';
 
@@ -49,6 +50,9 @@ export const StakingBox = ({ selectedOption, isModalOpen, setModalOpen }: Stakin
 
   const baseBalance = shiftDigits(balance?.balance?.amount || '0', -exp);
 
+  const { data: zone, isLoading: isZoneLoading, isError: isZoneError } = useZoneQuery(selectedOption.chainId);
+
+
   useEffect(() => {
     setTokenAmount('0');
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -57,6 +61,7 @@ export const StakingBox = ({ selectedOption, isModalOpen, setModalOpen }: Stakin
   const truncateToThreeDecimals = (num: number) => {
     return Math.trunc(num * 1000) / 1000;
   };
+
 
   const truncatedBalance = truncateToThreeDecimals(Number(baseBalance));
 
@@ -229,7 +234,7 @@ export const StakingBox = ({ selectedOption, isModalOpen, setModalOpen }: Stakin
                 </Stat>
                 <Spacer /> {/* This pushes the next Stat component to the right */}
                 <Stat py={4} textAlign="right" color="white">
-                  <StatNumber textColor="complimentary.900">{(Number(tokenAmount) * 0.95).toFixed(2)}</StatNumber>
+                  <StatNumber textColor="complimentary.900">{(Number(tokenAmount) / Number(zone?.redemptionRate)).toFixed(2)}</StatNumber>
                 </Stat>
               </HStack>
               <Button
@@ -319,7 +324,7 @@ export const StakingBox = ({ selectedOption, isModalOpen, setModalOpen }: Stakin
                 </Stat>
                 <Spacer /> {/* This pushes the next Stat component to the right */}
                 <Stat py={4} textAlign="right" color="white">
-                  <StatNumber textColor="complimentary.900">{(Number(tokenAmount) * 0.95).toFixed(2)}</StatNumber>
+                  <StatNumber textColor="complimentary.900">{(Number(tokenAmount) * Number(zone?.redemptionRate)).toFixed(2)}</StatNumber>
                 </Stat>
               </HStack>
               <Button

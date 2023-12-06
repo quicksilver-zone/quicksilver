@@ -14,14 +14,23 @@ import React from 'react';
 import { BsTrophy, BsCoin, BsClock } from 'react-icons/bs';
 import { RiStockLine } from 'react-icons/ri';
 
+import { useZoneQuery } from '@/hooks/useQueries';
+
 type AssetsAccordianProps = {
+  displayApr: string,
   selectedOption: {
     name: string;
     value: string;
+    chainId: string;
   };
 };
 
-export const InfoBox: React.FC<AssetsAccordianProps> = ({ selectedOption }) => {
+
+
+export const InfoBox: React.FC<AssetsAccordianProps> = ({ selectedOption, displayApr }) => {
+  const { data: zone, isLoading: isZoneLoading, isError: isZoneError } = useZoneQuery(selectedOption.chainId);
+  const redemptionRate = zone?.redemptionRate;
+  const unbondingPeriod = (Number(zone?.unbondingPeriod) / 86400000000000).toString() + ' days';
   return (
     <Box
       zIndex={2}
@@ -64,7 +73,7 @@ export const InfoBox: React.FC<AssetsAccordianProps> = ({ selectedOption }) => {
                 </Text>
               </Flex>
               <Text pr={2} color="complimentary.900">
-                35%
+                {displayApr}
               </Text>
             </Flex>
           </h2>
@@ -115,7 +124,7 @@ export const InfoBox: React.FC<AssetsAccordianProps> = ({ selectedOption }) => {
                 </Text>
               </Flex>
               <Text pr={2} color="complimentary.900">
-                21-24 Days*
+                {unbondingPeriod}
               </Text>
             </Flex>
           </h2>
@@ -163,7 +172,7 @@ export const InfoBox: React.FC<AssetsAccordianProps> = ({ selectedOption }) => {
                 </Text>
               </Flex>
               <Text pr={2} color="complimentary.900">
-                1 q{selectedOption.value.toUpperCase()} = 1{' '}
+                1 q{selectedOption.value.toUpperCase()} = {Number(redemptionRate).toFixed(2).toString()}{' '}
                 {selectedOption.value.toUpperCase()}
               </Text>
             </Flex>

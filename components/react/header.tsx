@@ -16,7 +16,7 @@ export const Header: React.FC<{ chainName: string }> = ({ chainName }) => {
       top="0"
       position="sticky"
       px={10}
-      bgColor="transparent"
+      bgColor="black"
     >
       <Flex
         maxW="100%"

@@ -1,11 +1,15 @@
 import { useChain } from '@cosmos-kit/react';
+import { Zone } from '@hoangdv2429/quicksilverjs/dist/codegen/quicksilver/interchainstaking/v1/interchainstaking';
 import { useQuery } from '@tanstack/react-query';
+import axios from 'axios';
 import { cosmos } from 'interchain-query';
 
 import { getCoin } from '@/utils';
 import { parseValidators } from '@/utils/staking';
 
 import { useGrpcQueryClient } from './useGrpcQueryClient';
+
+
 
 const BigNumber = require('bignumber.js');
 const Long = require('long');
@@ -92,6 +96,7 @@ export const useValidatorsQuery = (chainName: string) => {
       });
 
       const sorted = validators.validators.sort((a, b) => new BigNumber(b.tokens).minus(a.tokens).toNumber());
+
       return parseValidators(sorted);
     },
     {
@@ -105,4 +110,83 @@ export const useValidatorsQuery = (chainName: string) => {
     isLoading: validatorQuery.isLoading,
     isError: validatorQuery.isError,
   };
+};
+
+const fetchAPY = async (chainId: any) => {
+  const res = await axios.get(`https://data.quicksilver.zone/apr`);
+  const { chains } = res.data;
+  if (!chains) {
+      return 0;
+  }
+  const chainInfo = chains.find((chain: { chain_id: any; }) => chain.chain_id === chainId);
+  return chainInfo ? chainInfo.apr : 0;
+};
+
+export const useAPYQuery = (chainId: any) => {
+  const query = useQuery(
+      ['APY', chainId],
+      () => fetchAPY(chainId),
+      {
+          staleTime: Infinity,
+          enabled: !!chainId,
+      }
+  );
+
+  return {
+      APY: query.data,
+      isLoading: query.isLoading,
+      isError: query.isError,
+  };
+};
+
+export const useZoneQuery = (chainId: string) => {
+  return useQuery<Zone, Error>(
+    ['zone', chainId],
+    async () => {
+      const res = await axios.get(`${process.env.NEXT_PUBLIC_QUICKSILVER_API}/quicksilver/interchainstaking/v1/zones`);
+      const { zones } = res.data;
+
+      if (!zones || zones.length === 0) {
+        throw new Error('Failed to query zones');
+      }
+
+      const apiZone = zones.find((z: { chain_id: string }) => z.chain_id === chainId);
+      if (!apiZone) {
+        throw new Error(`No zone with chain id ${chainId} found`);
+      }
+
+      // Parse or map the API zone data to your Zone interface
+      const parsedZone: Zone = {
+        connectionId: apiZone.connection_id,
+        chainId: apiZone.chain_id,
+        depositAddress: apiZone.deposit_address,
+        withdrawalAddress: apiZone.withdrawal_address,
+        performanceAddress: apiZone.performance_address,
+        delegationAddress: apiZone.delegation_address,
+        accountPrefix: apiZone.account_prefix,
+        localDenom: apiZone.local_denom,
+        baseDenom: apiZone.base_denom,
+        redemptionRate: apiZone.redemption_rate,
+        lastRedemptionRate: apiZone.last_redemption_rate,
+        validators: apiZone.validators,
+        aggregateIntent: apiZone.aggregate_intent,
+        multiSend: apiZone.multi_send,
+        liquidityModule: apiZone.liquidity_module,
+        withdrawalWaitgroup: apiZone.withdrawal_waitgroup,
+        ibcNextValidatorsHash: apiZone.ibc_next_validators_hash,
+        validatorSelectionAllocation: apiZone.validator_selection_allocation,
+        holdingsAllocation: apiZone.holdings_allocation,
+        lastEpochHeight: apiZone.last_epoch_height,
+        tvl: apiZone.tvl,
+        unbondingPeriod: apiZone.unbonding_period,
+        messagesPerTx: apiZone.messages_per_tx,
+        // ... other fields as needed
+      };
+
+      return parsedZone;
+    },
+    {
+      enabled: !!chainId,
+    }
+  );
 };

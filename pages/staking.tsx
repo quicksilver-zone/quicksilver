@@ -19,7 +19,8 @@ import { NetworkSelect } from '@/components';
 import { StakingBox } from '@/components';
 import { InfoBox } from '@/components';
 import { AssetsAccordian } from '@/components';
-import { getAPY, getAPYs } from '@/services/zone';
+import { useAPYQuery, useZoneQuery } from '@/hooks/useQueries';
+import { getAPY } from '@/services/zone';
 
 const DynamicStakingBox = dynamic(() => Promise.resolve(StakingBox), {
   ssr: false,
@@ -70,23 +71,17 @@ export default function Staking() {
   ];
 
   const [selectedNetwork, setSelectedNetwork] = useState(networks[0]);
-  console.log(selectedNetwork.chainId);
+
   const [isModalOpen, setModalOpen] = useState(false);
   const [apr, setApr] = useState('0%');
+  const { APY, isLoading, isError } = useAPYQuery(selectedNetwork.chainId);
 
-  useEffect(() => {
-    const fetchAPR = async () => {
-      try {
-        const aprValue = await getAPY(selectedNetwork.chainId);
-        setApr(aprValue.toFixed(2) + '%');
-      } catch (error) {
-        console.error(`Error fetching APY for ${selectedNetwork.chainId}:`, error);
-        setApr('Error');
-      }
-    };
-  
-    fetchAPR();
-  }, [selectedNetwork]);
+  let displayApr = '0%';
+  if (!isLoading && !isError && APY !== undefined) {
+    displayApr = (APY * 100).toFixed(2) + '%';
+  } else if (isError) {
+    displayApr = 'Error';
+  }
 
   return (
     <>
@@ -108,12 +103,9 @@ export default function Staking() {
           />
           <link rel="icon" href="/quicksilver-app-v2/img/favicon.png" />
         </Head>
-        <Header chainName={selectedNetwork.chainName} />
-        <SideHeader />
         <Container
           zIndex={2}
           position="relative"
-          mt={-7}
           maxW="container.lg"
           maxH="80vh"
           h="80vh"
@@ -136,9 +128,9 @@ export default function Staking() {
                   setSelectedNetwork={setSelectedNetwork}
                 />
                 <VStack p={1} borderRadius="10px" alignItems="flex-end">
-                  <Stat color="complimentary.900">
+                  <Stat minW={'90px'} color="complimentary.900">
                     <StatLabel>APR</StatLabel>
-                    <StatNumber>{apr}</StatNumber>
+                    <StatNumber>{displayApr}</StatNumber>
                   </Stat>
                 </VStack>
               </HStack>
@@ -158,7 +150,7 @@ export default function Staking() {
               {/* Right Box */}
               <Flex flex="1" direction="column">
                 {/* Top Half (2/3) */}
-                <InfoBox selectedOption={selectedNetwork} />
+                <InfoBox selectedOption={selectedNetwork} displayApr={displayApr} />
 
                 <Box h="10px" />
                 {/* Bottom Half (1/3) */}
