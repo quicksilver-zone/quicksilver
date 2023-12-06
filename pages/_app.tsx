@@ -1,6 +1,12 @@
 import '../styles/globals.css';
 import { Chain } from '@chain-registry/types';
 import { Box, ChakraProvider } from '@chakra-ui/react';
+import {
+  quicksilverProtoRegistry,
+  quicksilverAminoConverters,
+  getSigningQuicksilverClientOptions,
+  getSigningCosmosClientOptions,
+} from '@chalabi/quicksilverjs';
 import { Registry } from '@cosmjs/proto-signing';
 import { SigningStargateClientOptions, AminoTypes } from '@cosmjs/stargate';
 import { SignerOptions, WalletViewProps } from '@cosmos-kit/core';
@@ -8,12 +14,6 @@ import { wallets as cosmostationWallets } from '@cosmos-kit/cosmostation';
 import { wallets as keplrWallets } from '@cosmos-kit/keplr';
 import { wallets as leapWallets } from '@cosmos-kit/leap';
 import { ChainProvider } from '@cosmos-kit/react';
-import {
-  quicksilverProtoRegistry,
-  quicksilverAminoConverters,
-  getSigningQuicksilverClientOptions,
-  getSigningCosmosClientOptions,
-} from '@hoangdv2429/quicksilverjs';
 import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { chains, assets } from 'chain-registry';

@@ -1,11 +1,11 @@
 import { Box, Text, Link, useToast } from '@chakra-ui/react';
+import { getSigningQuicksilverClient, quicksilver } from '@chalabi/quicksilverjs';
+import { ValidatorIntent } from '@chalabi/quicksilverjs/dist/codegen/quicksilver/interchainstaking/v1/interchainstaking';
+import { MsgSignalIntent } from '@chalabi/quicksilverjs/dist/codegen/quicksilver/interchainstaking/v1/messages';
 import { StdFee } from '@cosmjs/amino';
 import { HttpEndpoint, SigningStargateClient } from '@cosmjs/stargate';
 import { ChainName, Dispatch } from '@cosmos-kit/core';
 import { useChain } from '@cosmos-kit/react';
-import { getSigningQuicksilverClient, quicksilver } from '@hoangdv2429/quicksilverjs';
-import { ValidatorIntent } from '@hoangdv2429/quicksilverjs/dist/codegen/quicksilver/interchainstaking/v1/interchainstaking';
-import { MsgSignalIntent } from '@hoangdv2429/quicksilverjs/dist/codegen/quicksilver/interchainstaking/v1/messages';
 import { assets, chains } from 'chain-registry';
 import { SetStateAction } from 'react';
 

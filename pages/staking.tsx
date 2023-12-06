@@ -11,7 +11,7 @@ import {
 } from '@chakra-ui/react';
 import dynamic from 'next/dynamic';
 import Head from 'next/head';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { Header } from '@/components';
 import { SideHeader } from '@/components';
@@ -19,6 +19,7 @@ import { NetworkSelect } from '@/components';
 import { StakingBox } from '@/components';
 import { InfoBox } from '@/components';
 import { AssetsAccordian } from '@/components';
+import { getAPY, getAPYs } from '@/services/zone';
 
 const DynamicStakingBox = dynamic(() => Promise.resolve(StakingBox), {
   ssr: false,
@@ -48,7 +49,7 @@ export default function Staking() {
       qlogo: '/quicksilver-app-v2/img/networks/qstars.svg',
       name: 'Stargaze',
       chainName: 'stargaze',
-      chainId: 'cosmoshub-4',
+      chainId: 'stargaze-1',
     },
     {
       value: 'REGEN',
@@ -56,7 +57,7 @@ export default function Staking() {
       qlogo: '/quicksilver-app-v2/img/networks/regen.svg',
       name: 'Regen',
       chainName: 'regen',
-      chainId: 'cosmoshub-4',
+      chainId: 'regen-1',
     },
     {
       value: 'SOMM',
@@ -64,13 +65,29 @@ export default function Staking() {
       qlogo: '/quicksilver-app-v2/img/networks/sommelier.png',
       name: 'Sommelier',
       chainName: 'sommelier',
-      chainId: 'cosmoshub-4',
+      chainId: 'sommelier-3',
     },
   ];
 
   const [selectedNetwork, setSelectedNetwork] = useState(networks[0]);
+  console.log(selectedNetwork.chainId);
   const [isModalOpen, setModalOpen] = useState(false);
-  useState(null);
+  const [apr, setApr] = useState('0%');
+
+  useEffect(() => {
+    const fetchAPR = async () => {
+      try {
+        const aprValue = await getAPY(selectedNetwork.chainId);
+        setApr(aprValue.toFixed(2) + '%');
+      } catch (error) {
+        console.error(`Error fetching APY for ${selectedNetwork.chainId}:`, error);
+        setApr('Error');
+      }
+    };
+  
+    fetchAPR();
+  }, [selectedNetwork]);
+
   return (
     <>
       <Box
@@ -120,8 +137,8 @@ export default function Staking() {
                 />
                 <VStack p={1} borderRadius="10px" alignItems="flex-end">
                   <Stat color="complimentary.900">
-                    <StatLabel>APY</StatLabel>
-                    <StatNumber>35%</StatNumber>
+                    <StatLabel>APR</StatLabel>
+                    <StatNumber>{apr}</StatNumber>
                   </Stat>
                 </VStack>
               </HStack>

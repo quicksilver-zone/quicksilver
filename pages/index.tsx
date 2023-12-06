@@ -3,6 +3,7 @@ import Head from 'next/head';
 
 import { Header } from '@/components';
 import { SideHeader } from '@/components';
+import LiquidMetalSphere from '@/components/ThreeJS/liquidMetalSphere';
 
 export default function Home() {
   return (
@@ -28,7 +29,9 @@ export default function Home() {
             />
             <link rel="icon" href="/quicksilver-app-v2/img/favicon.png" />
           </Head>
+
         </Box>
+        <LiquidMetalSphere/>
       </Box>
     </>
   );

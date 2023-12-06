@@ -38,7 +38,7 @@ const networks = [
     qlogo: '/quicksilver-app-v2/img/networks/qstars.svg',
     name: 'Stargaze',
     chainName: 'stargaze',
-    chainId: 'cosmoshub-4',
+    chainId: 'stargaze-1',
   },
   {
     value: 'REGEN',
@@ -46,7 +46,7 @@ const networks = [
     qlogo: '/quicksilver-app-v2/img/networks/regen.svg',
     name: 'Regen',
     chainName: 'regen',
-    chainId: 'cosmoshub-4',
+    chainId: 'regen-1',
   },
   {
     value: 'SOMM',
@@ -54,7 +54,7 @@ const networks = [
     qlogo: '/quicksilver-app-v2/img/networks/sommelier.png',
     name: 'Sommelier',
     chainName: 'sommelier',
-    chainId: 'cosmoshub-4',
+    chainId: 'sommelier-3',
   },
 ];
 
