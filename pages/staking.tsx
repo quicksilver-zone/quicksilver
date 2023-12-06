@@ -11,16 +11,13 @@ import {
 } from '@chakra-ui/react';
 import dynamic from 'next/dynamic';
 import Head from 'next/head';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
-import { Header } from '@/components';
-import { SideHeader } from '@/components';
 import { NetworkSelect } from '@/components';
 import { StakingBox } from '@/components';
 import { InfoBox } from '@/components';
 import { AssetsAccordian } from '@/components';
-import { useAPYQuery, useZoneQuery } from '@/hooks/useQueries';
-import { getAPY } from '@/services/zone';
+import { useAPYQuery } from '@/hooks/useQueries';
 
 const DynamicStakingBox = dynamic(() => Promise.resolve(StakingBox), {
   ssr: false,
@@ -137,7 +134,7 @@ export default function Staking() {
             </Box>
 
             {/* Content Boxes */}
-            <Flex h="100%">
+            <Flex h="100%" maxH={'2xl'}>
               {/* Staking Box*/}
               <DynamicStakingBox
                 selectedOption={selectedNetwork}

@@ -24,7 +24,6 @@ import { useChain } from '@cosmos-kit/react';
 import React, { useEffect, useState } from 'react';
 
 import { useBalanceQuery, useZoneQuery } from '@/hooks/useQueries';
-import { fetchRedemptionRate } from '@/services/zone';
 import { getExponent } from '@/utils';
 import { shiftDigits } from '@/utils';
 
