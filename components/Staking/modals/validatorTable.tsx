@@ -153,7 +153,7 @@ export const ValidatorsTable: React.FC<{
                   <Td border="1px solid rgba(255,128,0, 0.25)" color="white">
                     {validator.commission ? validator.commission : 'N/A'}
                   </Td>
-                  <Td border="1px solid rgba(255,128,0, 0.25)">{}</Td>
+                  <Td border="1px solid rgba(255,128,0, 0.25)">{validator.address}</Td>
                   <Td border="1px solid rgba(255,128,0, 0.25)"></Td>
                 </Tr>
               ))}

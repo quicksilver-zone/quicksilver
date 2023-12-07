@@ -137,24 +137,37 @@ export const StakingBox = ({ selectedOption, isModalOpen, setModalOpen }: Stakin
                   }}
                   color="complimentary.900"
                   textAlign={'right'}
-                  placeholder={inputError ? 'Tokens available < 1' : 'amount'}
+                  placeholder={inputError ? 'Invalid Number' : 'amount'}
                   _placeholder={{
                     color: inputError ? 'red.500' : 'grey',
                   }}
                   value={tokenAmount}
+                  type="text"
                   onChange={(e) => {
+                    // Allow any numeric input
                     const validNumberPattern = /^\d*\.?\d*$/;
                     if (validNumberPattern.test(e.target.value)) {
-                      const inputValue = parseFloat(e.target.value);
-                      if (!isNaN(inputValue)) {
-                        if (inputValue < 1) {
-                          setInputError(true);
-                          setTokenAmount('');
-                        } else if (inputValue <= maxStakingAmount) {
-                          setInputError(false);
-                          setTokenAmount(e.target.value);
-                        }
+                      setTokenAmount(e.target.value);
+                    }
+                  }}
+                  onBlur={() => {
+                    // Validation on blur
+                    let inputValue = parseFloat(tokenAmount);
+                    if (!isNaN(inputValue)) {
+                      if (inputValue < 1) {
+                        setInputError(true);
+                        setTokenAmount(''); // Clear the input
+                      } else if (inputValue <= maxStakingAmount) {
+                        setInputError(false);
+                        // Optionally, adjust the input to fit within the max limit
+                        setTokenAmount(Math.min(inputValue, maxStakingAmount).toString());
+                      } else {
+                        setInputError(true);
+                        setTokenAmount(maxStakingAmount.toString()); // Set to max limit
                       }
+                    } else {
+                      setInputError(true);
+                      setTokenAmount(''); // Clear the input for non-numeric values
                     }
                   }}
                 />
@@ -286,6 +299,7 @@ export const StakingBox = ({ selectedOption, isModalOpen, setModalOpen }: Stakin
                   textAlign={'right'}
                   placeholder="amount"
                   value={tokenAmount}
+                  type="text"
                   onChange={(e) => setTokenAmount(e.target.value)}
                 />
                 <Flex w="100%" flexDirection="row" py={4} mb={-4} justifyContent="space-between" alignItems="center">

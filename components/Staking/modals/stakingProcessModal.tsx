@@ -184,7 +184,7 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
           <ModalCloseButton color="white" />
           <HStack h="100%" spacing="48px" align="stretch">
             {/* Left Section */}
-            <Flex flexDirection="column" justifyContent="space-between" width="40%" p={4} bg="#1E1C19" height="100%">
+            <Flex  flexDirection="column" justifyContent="space-between" width="40%" p={4} bg="#1E1C19" height="100%">
               <Box position="relative">
                 <Stat>
                   <StatLabel color="rgba(255,255,255,0.5)">LIQUID STAKING</StatLabel>
@@ -286,6 +286,7 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
                     onClose={() => setModalOpen(false)}
                     selectedChainName={selectedOption?.chainName || ''}
                     selectedValidators={selectedValidators}
+                    selectedChainId={selectedOption?.chainId || ''}
                     setSelectedValidators={setSelectedValidators}
                   />
                 </>

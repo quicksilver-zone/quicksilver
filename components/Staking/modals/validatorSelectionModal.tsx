@@ -23,7 +23,7 @@ import {
 import React, { useEffect } from 'react';
 import { FaSearch } from 'react-icons/fa';
 
-import { useValidatorsQuery } from '@/hooks/useQueries';
+import { useValidatorsQuery, useZoneQuery } from '@/hooks/useQueries';
 
 import { ValidatorsTable } from './validatorTable';
 
@@ -32,6 +32,7 @@ interface MultiModalProps {
   onClose: () => void;
   children?: React.ReactNode;
   selectedChainName: string;
+  selectedChainId: string;
   selectedValidators: { name: string; operatorAddress: string }[];
   setSelectedValidators: React.Dispatch<React.SetStateAction<{ name: string; operatorAddress: string }[]>>;
 }
@@ -42,10 +43,13 @@ export const MultiModal: React.FC<MultiModalProps> = ({
   selectedChainName,
   selectedValidators,
   setSelectedValidators,
+  selectedChainId
 }) => {
   const [searchTerm, setSearchTerm] = React.useState<string>('');
 
   const { validatorsData, isLoading, isError } = useValidatorsQuery(selectedChainName);
+
+  const { data: zone, isLoading: isZoneLoading, isError: isZoneError } = useZoneQuery(selectedChainId);
 
   const validators = validatorsData;
   const handleValidatorClick = (validator: { name: string; operatorAddress: string }) => {
