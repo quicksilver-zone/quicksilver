@@ -157,6 +157,11 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
 
   const handleLiquidStake = async (event: React.MouseEvent) => {
     console.log('handleValidatorIntent called');
+    // Convert tokenAmount to a number
+    const numericAmount = Number(tokenAmount);
+
+    // Adjust for decimal places if necessary, e.g., multiply by 10^6
+    const smallestUnitAmount = numericAmount * Math.pow(10, 6);
     try {
       setIsSigning(true);
       await liquidStakeTx(
@@ -169,7 +174,7 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
         setIsError,
         setIsSigning,
         intents,
-        Number(tokenAmount),
+        smallestUnitAmount,
         zone,
       )(event);
     } catch (error) {

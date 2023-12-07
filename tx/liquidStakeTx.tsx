@@ -85,8 +85,6 @@ export const liquidStakeTx = (
   memoBuffer = Buffer.concat([Buffer.from([0x02, memoBuffer.length]), memoBuffer]);
   const memo = memoBuffer.toString('base64');
 
-  console.log(amount);
-
   return async (event: React.MouseEvent) => {
     event.preventDefault();
     const stargateClient = await getSigningStargateClient();
