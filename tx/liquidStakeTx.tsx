@@ -75,13 +75,14 @@ export const liquidStakeTx = (
     let { words } = bech32.decode(valAddr);
     let wordsUint8Array = new Uint8Array(bech32.fromWords(words));
     let weightByte = valToByte(weight);
-    return Buffer.concat([Buffer.from([0x02, 0x15]), Buffer.from([weightByte]), wordsUint8Array]);
+    return Buffer.concat([Buffer.from([weightByte]), wordsUint8Array]);
   };
 
   let memoBuffer = Buffer.alloc(0);
   validatorsSelect.forEach((val) => {
     memoBuffer = Buffer.concat([memoBuffer, addValidator(val.address, val.intent / 100)]);
   });
+  memoBuffer = Buffer.concat([Buffer.from([0x02, memoBuffer.length]), memoBuffer]);
   const memo = memoBuffer.toString('base64');
 
   console.log(amount);
