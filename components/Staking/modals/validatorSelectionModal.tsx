@@ -43,13 +43,11 @@ export const MultiModal: React.FC<MultiModalProps> = ({
   selectedChainName,
   selectedValidators,
   setSelectedValidators,
-  selectedChainId
+  selectedChainId,
 }) => {
   const [searchTerm, setSearchTerm] = React.useState<string>('');
 
   const { validatorsData, isLoading, isError } = useValidatorsQuery(selectedChainName);
-
-  const { data: zone, isLoading: isZoneLoading, isError: isZoneError } = useZoneQuery(selectedChainId);
 
   const validators = validatorsData;
   const handleValidatorClick = (validator: { name: string; operatorAddress: string }) => {

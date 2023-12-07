@@ -17,12 +17,13 @@ import { ChainProvider } from '@cosmos-kit/react';
 import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { chains, assets } from 'chain-registry';
+import { cosmosAminoConverters, cosmosProtoRegistry } from 'interchain-query';
 import type { AppProps } from 'next/app';
 
+import { Header, SideHeader } from '@/components';
 import { defaultTheme } from '@/config';
 
 import '@interchain-ui/react/styles';
-import { Header, SideHeader } from '@/components';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -36,8 +37,8 @@ const queryClient = new QueryClient({
 function CreateCosmosApp({ Component, pageProps }: AppProps) {
   const signerOptions: SignerOptions = {
     signingStargate: (chain: Chain): SigningStargateClientOptions | undefined => {
-      const registry = new Registry(quicksilverProtoRegistry);
-      const aminoTypes = new AminoTypes(quicksilverAminoConverters);
+      const registry = new Registry(cosmosProtoRegistry);
+      const aminoTypes = new AminoTypes(cosmosAminoConverters);
       return {
         aminoTypes: aminoTypes,
         registry: registry,
@@ -68,7 +69,7 @@ function CreateCosmosApp({ Component, pageProps }: AppProps) {
         <QueryClientProvider client={queryClient}>
           <ReactQueryDevtools initialIsOpen={true} />
           <Header chainName="quicksilver" />
-        <SideHeader />
+          <SideHeader />
           <Component {...pageProps} />
         </QueryClientProvider>
       </ChainProvider>

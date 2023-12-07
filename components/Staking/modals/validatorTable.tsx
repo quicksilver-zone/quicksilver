@@ -22,6 +22,15 @@ export const ValidatorsTable: React.FC<{
     }
   };
 
+  const [totalVotingPower, setTotalVotingPower] = React.useState(0);
+
+  React.useEffect(() => {
+    const totalVP = validators.reduce((acc, validator) => {
+      return acc + (validator.votingPower || 0);
+    }, 0);
+    setTotalVotingPower(totalVP);
+  }, [validators]);
+
   React.useEffect(() => {
     let filteredValidators = [...validators];
 
@@ -54,12 +63,19 @@ export const ValidatorsTable: React.FC<{
           return sortOrder === 'asc' ? parseFloat(aRate) - parseFloat(bRate) : parseFloat(bRate) - parseFloat(aRate);
         });
         break;
+      case 'votingPowerPercentage':
+        filteredValidators.sort((a, b) => {
+          const aPercentage = (a.votingPower / totalVotingPower) * 100;
+          const bPercentage = (b.votingPower / totalVotingPower) * 100;
+          return sortOrder === 'asc' ? aPercentage - bPercentage : bPercentage - aPercentage;
+        });
+        break;
       default:
         break;
     }
 
     setSortedValidators(filteredValidators);
-  }, [validators, searchTerm, sortBy, sortOrder]);
+  }, [validators, searchTerm, sortBy, sortOrder, totalVotingPower]);
 
   return (
     <Box borderRadius={'6px'} maxH="xl" minH="lg">
@@ -88,8 +104,7 @@ export const ValidatorsTable: React.FC<{
           <Table mb={2} border="1px solid rgba(255,128,0, 0.25)" variant="simple" height="lg">
             <TableCaption>Active validators</TableCaption>
             <Thead>
-              <Tr
-              >
+              <Tr>
                 <Th
                   border="1px solid rgba(255,128,0, 0.25)"
                   color="white"
@@ -117,46 +132,61 @@ export const ValidatorsTable: React.FC<{
                 <Th border="1px solid rgba(255,128,0, 0.25)" color="white" fontSize={'16px'}>
                   Missed
                 </Th>
-                <Th border="1px solid rgba(255,128,0, 0.25)" color="white" fontSize={'16px'}>
-                  Rank
+                <Th
+                  border="1px solid rgba(255,128,0, 0.25)"
+                  color="white"
+                  fontSize={'16px'}
+                  onClick={() => handleSort('votingPowerPercentage')}
+                  _hover={{
+                    backgroundColor: 'rgba(255,128,0, 0.25)',
+                    cursor: 'pointer',
+                  }}
+                >
+                  VP
                 </Th>
               </Tr>
             </Thead>
             <Tbody borderRadius={'10px'}>
-              {sortedValidators.map((validator, index) => (
-                <Tr
-                  cursor="pointer"
-                  key={index}
-                  _hover={{
-                    bgColor: 'rgba(255,128,0, 0.1)',
-                  }}
-                  onClick={() =>
-                    onValidatorClick({
-                      name: validator.name || '',
-                      operatorAddress: validator.address || '',
-                    })
-                  }
-                  backgroundColor={selectedValidators.some((v) => v.name === validator.name) ? 'rgba(255, 128, 0, 0.25)' : 'transparent'}
-                  style={{ maxHeight: '50px' }} 
-                >
-                  <Td
-        border="1px solid rgba(255,128,0, 0.25)"
-        color="white"
-        style={{
-          whiteSpace: 'nowrap',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-        }} // Apply overflow handling to table cells
-      >
-                    {(validator.name.length || 0) > 20 ? validator.name.substring(0, 14) || '' + '...' : validator.name || ''}
-                  </Td>
-                  <Td border="1px solid rgba(255,128,0, 0.25)" color="white">
-                    {validator.commission ? validator.commission : 'N/A'}
-                  </Td>
-                  <Td border="1px solid rgba(255,128,0, 0.25)">{validator.address}</Td>
-                  <Td border="1px solid rgba(255,128,0, 0.25)"></Td>
-                </Tr>
-              ))}
+              {sortedValidators.map((validator, index) => {
+                const votingPowerPercentage = totalVotingPower > 0 ? ((validator.votingPower || 0) / totalVotingPower) * 100 : 0;
+
+                return (
+                  <Tr
+                    cursor="pointer"
+                    key={index}
+                    _hover={{
+                      bgColor: 'rgba(255,128,0, 0.1)',
+                    }}
+                    onClick={() =>
+                      onValidatorClick({
+                        name: validator.name || '',
+                        operatorAddress: validator.address || '',
+                      })
+                    }
+                    backgroundColor={selectedValidators.some((v) => v.name === validator.name) ? 'rgba(255, 128, 0, 0.25)' : 'transparent'}
+                    style={{ maxHeight: '50px' }}
+                  >
+                    <Td
+                      border="1px solid rgba(255,128,0, 0.25)"
+                      color="white"
+                      style={{
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                      }} // Apply overflow handling to table cells
+                    >
+                      {(validator.name.length || 0) > 20 ? validator.name.substring(0, 14) || '' + '...' : validator.name || ''}
+                    </Td>
+                    <Td border="1px solid rgba(255,128,0, 0.25)" color="white">
+                      {validator.commission ? validator.commission : 'N/A'}
+                    </Td>
+                    <Td border="1px solid rgba(255,128,0, 0.25)">{}</Td>
+                    <Td border="1px solid rgba(255,128,0, 0.25)" color="white">
+                      {`${votingPowerPercentage.toFixed(2)}%`}
+                    </Td>
+                  </Tr>
+                );
+              })}
             </Tbody>
           </Table>
         </TableContainer>

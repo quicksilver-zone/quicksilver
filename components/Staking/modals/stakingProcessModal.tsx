@@ -27,7 +27,9 @@ import { ValidatorIntent } from '@hoangdv2429/quicksilverjs/dist/codegen/quicksi
 import React, { useEffect, useState } from 'react';
 
 import { useQueryHooks } from '@/hooks';
+import { useZoneQuery } from '@/hooks/useQueries';
 import { intentTx } from '@/tx/intentTx';
+import { liquidStakeTx } from '@/tx/liquidStakeTx';
 
 import { MultiModal } from './validatorSelectionModal';
 
@@ -86,7 +88,7 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
 
   const { address, getSigningStargateClient } = useChain(selectedOption?.chainName || '');
 
-  const labels = ['Choose validators', `Set weights`, `Submit intents`, `Receive q${selectedOption?.value}`];
+  const labels = ['Choose validators', `Set weights`, `Sign & Submit`, `Receive q${selectedOption?.value}`];
   const [isModalOpen, setModalOpen] = useState(false);
 
   const [selectedValidators, setSelectedValidators] = React.useState<{ name: string; operatorAddress: string }[]>([]);
@@ -115,7 +117,7 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
   const [totalWeight, setTotalWeight] = useState<string>('0');
 
   const [isCustomValid, setIsCustomValid] = useState(true);
-  const [defaultWeight, setDefaultWeight] = useState('0');
+  const [defaultWeight, setDefaultWeight] = useState(0);
 
   // Modify the handleWeightChange function
   const handleWeightChange = (e: React.ChangeEvent<HTMLInputElement>, validatorName: string) => {
@@ -134,32 +136,41 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
 
   // Calculate defaultWeight as string
   useEffect(() => {
-    setDefaultWeight((1 / numberOfValidators).toFixed(4));
+    setDefaultWeight(1 / numberOfValidators);
   }, [numberOfValidators]);
 
   const [useDefaultWeights, setUseDefaultWeights] = useState(true);
 
-  const intents: ValidatorIntent[] = selectedValidators.map((validator) => ({
-    valoperAddress: validator.operatorAddress,
-    weight: useDefaultWeights ? defaultWeight : weights[validator.operatorAddress]?.toString() || '0',
+  interface ValidatorsSelect {
+    address: string;
+    intent: number;
+  }
+
+  const intents: ValidatorsSelect[] = selectedValidators.map((validator) => ({
+    address: validator.operatorAddress,
+    intent: useDefaultWeights ? defaultWeight : weights[validator.operatorAddress] || 0,
   }));
 
   const solution = useQueryHooks(selectedOption?.chainName || '');
 
-  const handleValidatorIntent = async (event: React.MouseEvent) => {
+  const { data: zone, isLoading: isZoneLoading, isError: isZoneError } = useZoneQuery(selectedOption?.chainId ?? '');
+
+  const handleLiquidStake = async (event: React.MouseEvent) => {
     console.log('handleValidatorIntent called');
     try {
       setIsSigning(true);
-      await intentTx(
+      await liquidStakeTx(
         getSigningStargateClient,
         setResp,
         selectedOption?.chainName || '',
         selectedOption?.chainId || '',
         address,
-        intents,
         toast,
         setIsError,
         setIsSigning,
+        intents,
+        Number(tokenAmount),
+        zone,
       )(event);
     } catch (error) {
       console.log('Transaction failed', error);
@@ -184,7 +195,7 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
           <ModalCloseButton color="white" />
           <HStack h="100%" spacing="48px" align="stretch">
             {/* Left Section */}
-            <Flex  flexDirection="column" justifyContent="space-between" width="40%" p={4} bg="#1E1C19" height="100%">
+            <Flex flexDirection="column" justifyContent="space-between" width="40%" p={4} bg="#1E1C19" height="100%">
               <Box position="relative">
                 <Stat>
                   <StatLabel color="rgba(255,255,255,0.5)">LIQUID STAKING</StatLabel>
@@ -251,19 +262,24 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
                     </Text>
                   </Flex>
                   {selectedValidators.length > 0 && (
-                    <Button
-                      mt={2}
-                      color="white"
-                      _hover={{
-                        bgColor: 'rgba(255, 128, 0, 0.25)',
-                      }}
-                      variant="ghost"
-                      width="35%"
-                      size="xs"
-                      onClick={() => setModalOpen(true)}
-                    >
-                      Reselect Validators
-                    </Button>
+                    <>
+                      <Button
+                        mt={2}
+                        color="white"
+                        _hover={{
+                          bgColor: 'rgba(255, 128, 0, 0.25)',
+                        }}
+                        variant="ghost"
+                        width="35%"
+                        size="xs"
+                        onClick={() => setModalOpen(true)}
+                      >
+                        Reselect Validators
+                      </Button>
+                      <Text mt={'2'} fontSize={'sm'} fontWeight={'light'}>
+                        {selectedValidators.length} / 8
+                      </Text>
+                    </>
                   )}
                   <Button
                     mt={4}
@@ -297,7 +313,7 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
                     Set Weights
                   </Text>
                   <Text mt={2} textAlign={'center'} fontWeight={'light'} fontSize="lg" color="white">
-                    Choose which validators receive more or less of your liquid delegation.
+                    Specifying weights allows you to choose how much of your liquid delegation goes to each validator.
                   </Text>
                   <HStack mt={4} justifyContent={'center'} alignItems={'center'}>
                     <Button
@@ -327,15 +343,6 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
                       ))}
                     </Grid>
                   )}
-                  <Button
-                    mt={4}
-                    width="55%"
-                    _hover={{
-                      bgColor: '#181818',
-                    }}
-                  >
-                    Next
-                  </Button>
                   <Button
                     position={'absolute'}
                     bottom={3}
@@ -378,7 +385,7 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
                         bgColor: '#181818',
                       }}
                       mt={4}
-                      onClick={(event) => handleValidatorIntent(event)}
+                      onClick={(event) => handleLiquidStake(event)}
                     >
                       {isError ? 'Try Again' : isSigning ? <Spinner /> : 'Confirm'}
                     </Button>

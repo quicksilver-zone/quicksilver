@@ -9,8 +9,6 @@ import { parseValidators } from '@/utils/staking';
 
 import { useGrpcQueryClient } from './useGrpcQueryClient';
 
-
-
 const BigNumber = require('bignumber.js');
 const Long = require('long');
 
@@ -77,26 +75,37 @@ export const useIntentQuery = (chainName: string, address: string) => {
 
 export const useValidatorsQuery = (chainName: string) => {
   const { grpcQueryClient } = useGrpcQueryClient(chainName);
+
+  const fetchValidators = async (nextKey = new Uint8Array()) => {
+    if (!grpcQueryClient) {
+      throw new Error('RPC Client not ready');
+    }
+
+    const validators = await grpcQueryClient.cosmos.staking.v1beta1.validators({
+      status: cosmos.staking.v1beta1.bondStatusToJSON(cosmos.staking.v1beta1.BondStatus.BOND_STATUS_BONDED),
+      pagination: {
+        key: nextKey,
+        offset: Long.fromNumber(0),
+        limit: Long.fromNumber(100),
+        countTotal: true,
+        reverse: false,
+      },
+    });
+    return validators;
+  };
+
   const validatorQuery = useQuery(
     ['validators', chainName],
     async () => {
-      if (!grpcQueryClient) {
-        throw new Error('RPC Client not ready');
-      }
+      let allValidators: any[] = [];
+      let nextKey = new Uint8Array();
 
-      const validators = await grpcQueryClient.cosmos.staking.v1beta1.validators({
-        status: cosmos.staking.v1beta1.bondStatusToJSON(cosmos.staking.v1beta1.BondStatus.BOND_STATUS_BONDED),
-        pagination: {
-          key: new Uint8Array(),
-          offset: Long.fromNumber(0),
-          limit: Long.fromNumber(500),
-          countTotal: true,
-          reverse: false,
-        },
-      });
-
-      const sorted = validators.validators.sort((a, b) => new BigNumber(b.tokens).minus(a.tokens).toNumber());
-
+      do {
+        const response = await fetchValidators(nextKey);
+        allValidators = allValidators.concat(response.validators);
+        nextKey = response.pagination.next_key;
+      } while (nextKey && nextKey.length > 0);
+      const sorted = allValidators.sort((a, b) => new BigNumber(b.tokens).minus(a.tokens).toNumber());
       return parseValidators(sorted);
     },
     {

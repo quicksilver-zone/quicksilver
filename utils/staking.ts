@@ -44,7 +44,7 @@ export const parseValidators = (validators: Validator[]) => {
       description: validator.description?.details || '',
       name: validator.description?.moniker || '',
       identity: validator.description?.identity || '',
-      address: validator.operatorAddress || '',
+      address: validator.operator_address || '',
       commission: commissionPercentage.toFixed() + '%', // Assuming you want to display as percentage
       votingPower: toNumber(shiftDigits(validator.tokens, -6, 0), 0),
     };
