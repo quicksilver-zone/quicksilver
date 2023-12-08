@@ -254,8 +254,10 @@ func (k *Keeper) SetValidatorsForZone(ctx sdk.Context, data []byte, icqQuery icq
 		}
 
 		if toQuery {
-			err := k.EmitValidatorQuery(ctx, icqQuery.ConnectionId, icqQuery.ChainId, validator)
-			k.Logger(ctx).Error("EmitValidatorQuery error", "valoper", validator.OperatorAddress, "err", err)
+			if err := k.EmitValidatorQuery(ctx, icqQuery.ConnectionId, icqQuery.ChainId, validator); err != nil {
+				k.Logger(ctx).Error("EmitValidatorQuery error", "valoper", validator.OperatorAddress, "err", err)
+				return err
+			}
 		}
 	}
 
@@ -300,12 +302,7 @@ func (k *Keeper) SetValidatorForZone(ctx sdk.Context, zone *types.Zone, data []b
 				return err
 			}
 		}
-		_, found := k.GetValidator(ctx, zone.ChainId, valAddrBytes)
-		// if found is true, it means that validator was tombstoned because we set it's information in SigningInfoCallback func
-		if found {
-			k.Logger(ctx).Info("%q on chainID: %q have been tombstoned", validator.OperatorAddress, zone.ChainId)
-			return nil
-		}
+
 		if err := k.SetValidator(ctx, zone.ChainId, types.Validator{
 			ValoperAddress:  validator.OperatorAddress,
 			CommissionRate:  validator.GetCommission(),
@@ -324,7 +321,7 @@ func (k *Keeper) SetValidatorForZone(ctx sdk.Context, zone *types.Zone, data []b
 		}
 	} else {
 		if val.Tombstoned {
-			k.Logger(ctx).Info("%q on chainID: %q was found to already have been tombstoned", validator.OperatorAddress, zone.ChainId)
+			k.Logger(ctx).Debug(fmt.Sprintf("%q on chainID: %q was found to already have been tombstoned; not updating state.", validator.OperatorAddress, zone.ChainId))
 			return nil
 		}
 
@@ -343,13 +340,11 @@ func (k *Keeper) SetValidatorForZone(ctx sdk.Context, zone *types.Zone, data []b
 			if err != nil {
 				return err
 			}
-			val, _ := k.GetValidator(ctx, zone.ChainId, valAddrBytes)
-			if val.Tombstoned {
-				return nil
-			}
 
 			val.Jailed = true
 			val.JailedSince = ctx.BlockTime()
+
+			// be defensive, so we don't get divison weirdness!
 			if !val.VotingPower.IsPositive() {
 				return fmt.Errorf("existing voting power must be greater than zero, received %s", val.VotingPower)
 			}
@@ -516,6 +511,9 @@ func (k *Keeper) EmitPerformanceBalanceQuery(ctx sdk.Context, zone *types.Zone) 
 		100,
 	)
 
+	zone.PerformanceAddress.BalanceWaitgroup = 1
+	k.SetZone(ctx, zone)
+
 	return nil
 }
 
@@ -586,11 +584,12 @@ func (k *Keeper) EmitDepositIntervalQuery(ctx sdk.Context, zone *types.Zone) {
 }
 
 func (k *Keeper) EmitSigningInfoQuery(ctx sdk.Context, connectionID, chainID string, validator lsmstakingtypes.Validator) error {
-	_, addr, err := bech32.DecodeAndConvert(validator.OperatorAddress)
+	consAddress, err := validator.GetConsAddr()
 	if err != nil {
 		return err
 	}
-	data := slashingtypes.ValidatorSigningInfoKey(addr)
+
+	data := slashingtypes.ValidatorSigningInfoKey(consAddress)
 	k.ICQKeeper.MakeRequest(
 		ctx,
 		connectionID,

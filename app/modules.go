@@ -66,6 +66,7 @@ import (
 	"github.com/quicksilver-zone/quicksilver/x/participationrewards"
 	participationrewardsclient "github.com/quicksilver-zone/quicksilver/x/participationrewards/client"
 	participationrewardstypes "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
+	"github.com/quicksilver-zone/quicksilver/x/supply"
 	supplytypes "github.com/quicksilver-zone/quicksilver/x/supply/types"
 	"github.com/quicksilver-zone/quicksilver/x/tokenfactory"
 	tokenfactorytypes "github.com/quicksilver-zone/quicksilver/x/tokenfactory/types"
@@ -110,6 +111,7 @@ var (
 		airdrop.AppModuleBasic{},
 		tokenfactory.AppModuleBasic{},
 		wasm.AppModuleBasic{},
+		supply.AppModuleBasic{},
 	)
 
 	// module account permissions.
@@ -178,6 +180,7 @@ func appModules(
 		airdrop.NewAppModule(appCodec, app.AirdropKeeper),
 		tokenfactory.NewAppModule(app.TokenFactoryKeeper, app.AccountKeeper, app.BankKeeper),
 		wasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
+		supply.NewAppModule(appCodec, app.SupplyKeeper),
 	}
 }
 
@@ -216,6 +219,7 @@ func simulationModules(
 		participationrewards.NewAppModule(appCodec, app.ParticipationRewardsKeeper),
 		airdrop.NewAppModule(appCodec, app.AirdropKeeper),
 		tokenfactory.NewAppModule(app.TokenFactoryKeeper, app.AccountKeeper, app.BankKeeper),
+		//supply.NewAppModule(appCodec, app.SupplyKeeper),
 		// wasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
 	}
 }
