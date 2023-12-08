@@ -42,6 +42,35 @@ export const useBalanceQuery = (chainName: string, address: string) => {
   };
 };
 
+export const useQBalanceQuery = (chainName: string, address: string, qAsset: string) => {
+  const { grpcQueryClient } = useGrpcQueryClient(chainName);
+  const balanceQuery = useQuery(
+    ['balance', qAsset],
+    async () => {
+      if (!grpcQueryClient) {
+        throw new Error('RPC Client not ready');
+      }
+
+      const balance = await grpcQueryClient.cosmos.bank.v1beta1.balance({
+        address: address || '',
+        denom: 'uq' + qAsset,
+      });
+
+      return balance;
+    },
+    {
+      enabled: !!grpcQueryClient,
+      staleTime: Infinity,
+    },
+  );
+
+  return {
+    balance: balanceQuery.data,
+    isLoading: balanceQuery.isLoading,
+    isError: balanceQuery.isError,
+  };
+};
+
 export const useIntentQuery = (chainName: string, address: string) => {
   const { grpcQueryClient } = useGrpcQueryClient(chainName);
   const { chain } = useChain(chainName);
@@ -122,7 +151,7 @@ export const useValidatorsQuery = (chainName: string) => {
 };
 
 const fetchAPY = async (chainId: any) => {
-  const res = await axios.get(`https://data.quicksilver.zone/apr`);
+  const res = await axios.get(`${process.env.NEXT_PUBLIC_QUICKSILVER_DATA_API}/apr`);
   const { chains } = res.data;
   if (!chains) {
       return 0;

@@ -23,7 +23,7 @@ import {
 import { useChain } from '@cosmos-kit/react';
 import React, { useEffect, useState } from 'react';
 
-import { useBalanceQuery, useZoneQuery } from '@/hooks/useQueries';
+import { useBalanceQuery, useQBalanceQuery, useZoneQuery } from '@/hooks/useQueries';
 import { getExponent } from '@/utils';
 import { shiftDigits } from '@/utils';
 
@@ -39,18 +39,35 @@ type StakingBoxProps = {
   };
   isModalOpen: boolean;
   setModalOpen: (isOpen: boolean) => void;
+  setBalance: (balance: string) => void;
+  setQBalance: (qBalance: string) => void;
 };
 
-export const StakingBox = ({ selectedOption, isModalOpen, setModalOpen }: StakingBoxProps): JSX.Element => {
+export const StakingBox = ({ selectedOption, isModalOpen, setModalOpen, setBalance, setQBalance }: StakingBoxProps) => {
   const [tokenAmount, setTokenAmount] = useState<string>('0');
   const { address } = useChain(selectedOption.chainName);
+  const { address: qAddress } = useChain('quicksilver');
   const exp = getExponent(selectedOption.chainName);
   const { balance, isLoading, isError } = useBalanceQuery(selectedOption.chainName, address ?? '');
+  const {
+    balance: qBalance,
+    isLoading: qIsLoading,
+    isError: qIsError,
+  } = useQBalanceQuery('quicksilver', qAddress ?? '', selectedOption.value.toLowerCase());
+
+  const qAssets = qBalance?.balance.amount || '';
 
   const baseBalance = shiftDigits(balance?.balance?.amount || '0', -exp);
 
   const { data: zone, isLoading: isZoneLoading, isError: isZoneError } = useZoneQuery(selectedOption.chainId);
 
+  useEffect(() => {
+    setQBalance(qAssets);
+  }, [qAssets, setQBalance, selectedOption.chainName]);
+
+  useEffect(() => {
+    setBalance(baseBalance);
+  }, [baseBalance, setBalance]);
 
   useEffect(() => {
     setTokenAmount('0');
@@ -60,7 +77,6 @@ export const StakingBox = ({ selectedOption, isModalOpen, setModalOpen }: Stakin
   const truncateToThreeDecimals = (num: number) => {
     return Math.trunc(num * 1000) / 1000;
   };
-
 
   const truncatedBalance = truncateToThreeDecimals(Number(baseBalance));
 

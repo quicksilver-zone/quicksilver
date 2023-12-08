@@ -108,7 +108,7 @@ export const liquidStakeTx = (
       amount: [
         {
           denom: mainDenom,
-          amount: '5000',
+          amount: '7500',
         },
       ],
       gas: '500000',

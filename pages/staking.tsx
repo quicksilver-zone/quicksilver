@@ -1,14 +1,4 @@
-import {
-  Box,
-  Image,
-  Container,
-  Flex,
-  VStack,
-  HStack,
-  Stat,
-  StatLabel,
-  StatNumber,
-} from '@chakra-ui/react';
+import { Box, Image, Container, Flex, VStack, HStack, Stat, StatLabel, StatNumber } from '@chakra-ui/react';
 import dynamic from 'next/dynamic';
 import Head from 'next/head';
 import { useState } from 'react';
@@ -18,60 +8,18 @@ import { StakingBox } from '@/components';
 import { InfoBox } from '@/components';
 import { AssetsAccordian } from '@/components';
 import { useAPYQuery } from '@/hooks/useQueries';
+import { networks } from '@/state/chains/prod';
 
 const DynamicStakingBox = dynamic(() => Promise.resolve(StakingBox), {
   ssr: false,
 });
 
 export default function Staking() {
-  const networks = [
-    {
-      value: 'ATOM',
-      logo: '/quicksilver-app-v2/img/networks/atom.svg',
-      qlogo: '/quicksilver-app-v2/img/networks/qatom.svg',
-      name: 'Cosmos Hub',
-      chainName: 'cosmoshub',
-      chainId: 'cosmoshub-4',
-    },
-    {
-      value: 'OSMO',
-      logo: '/quicksilver-app-v2/img/networks/osmosis.svg',
-      qlogo: '/quicksilver-app-v2/img/networks/qosmo.svg',
-      name: 'Osmosis',
-      chainName: 'osmosis',
-      chainId: 'osmosis-1',
-    },
-    {
-      value: 'STARS',
-      logo: '/quicksilver-app-v2/img/networks/stargaze.svg',
-      qlogo: '/quicksilver-app-v2/img/networks/qstars.svg',
-      name: 'Stargaze',
-      chainName: 'stargaze',
-      chainId: 'stargaze-1',
-    },
-    {
-      value: 'REGEN',
-      logo: '/quicksilver-app-v2/img/networks/regen.svg',
-      qlogo: '/quicksilver-app-v2/img/networks/regen.svg',
-      name: 'Regen',
-      chainName: 'regen',
-      chainId: 'regen-1',
-    },
-    {
-      value: 'SOMM',
-      logo: '/quicksilver-app-v2/img/networks/sommelier.png',
-      qlogo: '/quicksilver-app-v2/img/networks/sommelier.png',
-      name: 'Sommelier',
-      chainName: 'sommelier',
-      chainId: 'sommelier-3',
-    },
-  ];
-
   const [selectedNetwork, setSelectedNetwork] = useState(networks[0]);
-
   const [isModalOpen, setModalOpen] = useState(false);
-  const [apr, setApr] = useState('0%');
   const { APY, isLoading, isError } = useAPYQuery(selectedNetwork.chainId);
+  const [balance, setBalance] = useState('');
+  const [qBalance, setQBalance] = useState('');
 
   let displayApr = '0%';
   if (!isLoading && !isError && APY !== undefined) {
@@ -94,19 +42,10 @@ export default function Staking() {
       >
         <Head>
           <title>Staking</title>
-          <meta
-            name="viewport"
-            content="width=device-width, initial-scale=1.0"
-          />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
           <link rel="icon" href="/quicksilver-app-v2/img/favicon.png" />
         </Head>
-        <Container
-          zIndex={2}
-          position="relative"
-          maxW="container.lg"
-          maxH="80vh"
-          h="80vh"
-        >
+        <Container zIndex={2} position="relative" maxW="container.lg" maxH="80vh" h="80vh">
           {/* <Image
             alt={''}
             src="/quicksilver-app-v2/img/metalmisc2.png"
@@ -120,10 +59,7 @@ export default function Staking() {
             {/* Dropdown and Statistic */}
             <Box w="50%">
               <HStack justifyContent="space-between" w="100%">
-                <NetworkSelect
-                  selectedOption={selectedNetwork}
-                  setSelectedNetwork={setSelectedNetwork}
-                />
+                <NetworkSelect selectedOption={selectedNetwork} setSelectedNetwork={setSelectedNetwork} />
                 <VStack p={1} borderRadius="10px" alignItems="flex-end">
                   <Stat minW={'90px'} color="complimentary.900">
                     <StatLabel>APR</StatLabel>
@@ -140,8 +76,9 @@ export default function Staking() {
                 selectedOption={selectedNetwork}
                 isModalOpen={isModalOpen}
                 setModalOpen={setModalOpen}
+                setBalance={setBalance}
+                setQBalance={setQBalance}
               />
-
               <Box w="10px" />
 
               {/* Right Box */}
@@ -151,7 +88,7 @@ export default function Staking() {
 
                 <Box h="10px" />
                 {/* Bottom Half (1/3) */}
-                <AssetsAccordian selectedOption={selectedNetwork} />
+                <AssetsAccordian selectedOption={selectedNetwork} balance={balance} qBalance={qBalance} />
               </Flex>
             </Flex>
           </Flex>

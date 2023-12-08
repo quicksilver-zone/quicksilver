@@ -157,11 +157,9 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
 
   const handleLiquidStake = async (event: React.MouseEvent) => {
     console.log('handleValidatorIntent called');
-    // Convert tokenAmount to a number
     const numericAmount = Number(tokenAmount);
-
-    // Adjust for decimal places if necessary, e.g., multiply by 10^6
     const smallestUnitAmount = numericAmount * Math.pow(10, 6);
+
     try {
       setIsSigning(true);
       await liquidStakeTx(
@@ -176,12 +174,28 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
         intents,
         smallestUnitAmount,
         zone,
-      )(event);
+      )(event)
+        .then(() => {
+          // On successful transaction, advance to the final step
+          setStep(4);
+          setTransactionStatus('Success');
+        })
+        .catch((error) => {
+          // Handle any errors
+          console.error('Transaction failed', error);
+          setIsError(true);
+          setTransactionStatus('Failed');
+        })
+        .finally(() => {
+          // Always runs regardless of transaction outcome
+          setIsSigning(false);
+        });
     } catch (error) {
-      console.log('Transaction failed', error);
+      console.error('Transaction failed', error);
+      setIsSigning(false);
+      setIsError(true);
     }
   };
-
   //placehoder for transaction status
   const [transactionStatus, setTransactionStatus] = useState('Pending');
 
@@ -378,7 +392,7 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
                     <HStack mt={2} textAlign={'left'} fontWeight={'light'} fontSize="lg" color="white">
                       <Text fontWeight={'bold'}>Receiving:</Text>
                       <Text color="complimentary.900">
-                        {(Number(tokenAmount) * 0.95).toFixed(2)} q{selectedOption?.value}
+                        {(Number(tokenAmount) / Number(zone?.redemptionRate)).toFixed(2)} q{selectedOption?.value}
                       </Text>
                     </HStack>
                     <Text mt={2} textAlign={'left'} fontWeight={'hairline'}>
@@ -418,22 +432,24 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
               {step === 4 && (
                 <>
                   <Box justifyContent={'center'}>
-                    <Text fontWeight={'bold'} fontSize="lg" w="250px" textAlign={'left'} color="white">
-                      Status: {transactionStatus}
-                    </Text>
-                    <HStack mt={2} textAlign={'left'} fontWeight={'light'} fontSize="lg" color="white">
-                      <Text fontWeight={'bold'}>Transaction details:</Text>
-                      <Text color="complimentary.900">Mintscan</Text>
-                    </HStack>
-                    <Button
-                      w="55%"
-                      _hover={{
-                        bgColor: '#181818',
-                      }}
-                      mt={4}
-                    >
-                      Stake Again
-                    </Button>
+                    <Flex maxW="300px" flexDirection={'column'} justifyContent={'left'} alignItems={'center'}>
+                      <Text textAlign={'left'} fontWeight={'bold'} fontSize="lg" color="white">
+                        Transaction {transactionStatus}
+                      </Text>
+                      <Text mt={2} textAlign={'center'} fontWeight={'light'} fontSize="lg" color="white">
+                        Your q{selectedOption?.value} will arrive to your wallet in a few minutes.
+                      </Text>
+                      <Button
+                        w="55%"
+                        _hover={{
+                          bgColor: '#181818',
+                        }}
+                        mt={4}
+                        onClick={() => setStep(1)}
+                      >
+                        Stake Again
+                      </Button>
+                    </Flex>
                   </Box>
                 </>
               )}
