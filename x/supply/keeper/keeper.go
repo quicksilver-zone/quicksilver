@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"fmt"
-
 	"github.com/tendermint/tendermint/libs/log"
 
 	"cosmossdk.io/math"
@@ -24,7 +22,6 @@ type Keeper struct {
 	bankKeeper      types.BankKeeper
 	stakingKeeper   types.StakingKeeper
 	moduleAccounts  []string
-	baseDenom       string
 	endpointEnabled bool
 }
 
@@ -56,9 +53,7 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", "x/"+types.ModuleName)
 }
 
-func (k Keeper) CalculateCirculatingSupply(ctx sdk.Context, excludeAddresses []string) math.Int {
-	baseDenom := k.stakingKeeper.BondDenom(ctx)
-	// Creates context with current height and checks txs for ctx to be usable by start of next block
+func (k Keeper) CalculateCirculatingSupply(ctx sdk.Context, baseDenom string, excludeAddresses []string) math.Int {
 	nonCirculating := math.ZeroInt()
 	k.accountKeeper.IterateAccounts(ctx, func(account authtypes.AccountI) (stop bool) {
 		for _, addr := range excludeAddresses {
@@ -78,10 +73,9 @@ func (k Keeper) CalculateCirculatingSupply(ctx sdk.Context, excludeAddresses []s
 		if macc != stakingtypes.BondedPoolName && macc != stakingtypes.NotBondedPoolName {
 			addr := k.accountKeeper.GetModuleAddress(macc)
 			maccBalance := k.bankKeeper.GetBalance(ctx, addr, baseDenom).Amount
-			fmt.Println(macc, maccBalance)
 			nonCirculating = nonCirculating.Add(maccBalance)
 		}
 	}
 
-	return k.bankKeeper.GetSupply(ctx, k.baseDenom).Amount.Sub(nonCirculating)
+	return k.bankKeeper.GetSupply(ctx, baseDenom).Amount.Sub(nonCirculating)
 }

@@ -23,10 +23,12 @@ func NewQuerier(k Keeper) Querier {
 
 // Supply returns supply and circulating supply of the staking denom.
 func (q Querier) Supply(c context.Context, _ *types.QuerySupplyRequest) (*types.QuerySupplyResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+
 	if q.endpointEnabled {
-		ctx := sdk.UnwrapSDKContext(c)
-		supply := q.Keeper.bankKeeper.GetSupply(ctx, q.Keeper.baseDenom)
-		circulatingSupply := q.Keeper.CalculateCirculatingSupply(ctx, []string{
+		baseDenom := q.stakingKeeper.BondDenom(ctx)
+		supply := q.bankKeeper.GetSupply(ctx, baseDenom)
+		circulatingSupply := q.CalculateCirculatingSupply(ctx, baseDenom, []string{
 			"quick1yxe3vmd2ypjf0fs4cejnmv2559tqq5x5cc5nyh", // foundation account
 			"quick1j5cgdlthhstqy2gqnglpjf4fvx3gs24yrcdtrf", // founder
 			"quick1puj8yjmgrvn4w8vfswsnx972lucywetd57zalh", // founder

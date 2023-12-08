@@ -32,6 +32,7 @@ func NewRegisterZoneProposal(
 	liquidityModule bool,
 	decimals int64,
 	messagePerTx int64,
+	is_118 bool,
 ) *RegisterZoneProposal {
 	return &RegisterZoneProposal{
 		Title:            title,
@@ -46,6 +47,7 @@ func NewRegisterZoneProposal(
 		LiquidityModule:  liquidityModule,
 		Decimals:         decimals,
 		MessagesPerTx:    messagePerTx,
+		Is_118:           is_118,
 	}
 }
 
@@ -86,10 +88,6 @@ func (m RegisterZoneProposal) ValidateBasic() error {
 		return errors.New("messages_per_tx must be a positive non-zero integer")
 	}
 
-	if m.LiquidityModule {
-		return errors.New("liquidity module is unsupported")
-	}
-
 	if m.Decimals == 0 {
 		return errors.New("decimals field is mandatory")
 	}
@@ -111,6 +109,7 @@ func (m RegisterZoneProposal) String() string {
   Liquidity Staking Module Enabled: %t
   Messages per Tx:                  %d
   Decimals:                         %d
+  Is_118:							%t
 `,
 		m.Title,
 		m.Description,
@@ -123,6 +122,7 @@ func (m RegisterZoneProposal) String() string {
 		m.LiquidityModule,
 		m.MessagesPerTx,
 		m.Decimals,
+		m.Is_118,
 	)
 }
 
