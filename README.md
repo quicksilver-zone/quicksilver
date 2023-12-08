@@ -44,3 +44,13 @@ Please ensure your IDE is configured to use Typescript v4.9.3
 - need to handle number displays better, sometimes they show NaN or undefined but quickly render
 
 - need to update any QS endpoints that will potentially be outdated with the coming of 1.4
+
+**UI/UX**
+
+- customize wallet connect modal
+
+- threejs liquid metal sphere landing page
+
+- Mobile breakpoints
+
+-

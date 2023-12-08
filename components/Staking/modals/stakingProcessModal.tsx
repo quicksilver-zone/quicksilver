@@ -19,16 +19,12 @@ import {
   Input,
   Grid,
 } from '@chakra-ui/react';
-import { isOfflineDirectSigner } from '@cosmjs/proto-signing';
 import { useChain } from '@cosmos-kit/react';
 import styled from '@emotion/styled';
-import { getSigningQuicksilverClient } from '@hoangdv2429/quicksilverjs';
-import { ValidatorIntent } from '@hoangdv2429/quicksilverjs/dist/codegen/quicksilver/interchainstaking/v1/interchainstaking';
 import React, { useEffect, useState } from 'react';
 
 import { useQueryHooks } from '@/hooks';
 import { useZoneQuery } from '@/hooks/useQueries';
-import { intentTx } from '@/tx/intentTx';
 import { liquidStakeTx } from '@/tx/liquidStakeTx';
 
 import { MultiModal } from './validatorSelectionModal';
@@ -38,7 +34,7 @@ const ChakraModalContent = styled(ModalContent)`
   background: none;
   &::before,
   &::after {
-    z-index: -1; // Push the pseudo-elements to the background
+    z-index: -1;
   }
   &::before {
     content: '';
@@ -107,7 +103,7 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
 
   const toast = useToast();
 
-  const totalWeights = 1; // Assuming the total weight to be 1
+  const totalWeights = 1;
   const numberOfValidators = selectedValidators.length;
 
   // Calculate the weight for each validator
@@ -118,6 +114,11 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
 
   const [isCustomValid, setIsCustomValid] = useState(true);
   const [defaultWeight, setDefaultWeight] = useState(0);
+
+  useEffect(() => {
+    // Update the state when selectedValidators changes
+    setIsCustomValid(selectedValidators.length === 0);
+  }, [selectedValidators]);
 
   // Modify the handleWeightChange function
   const handleWeightChange = (e: React.ChangeEvent<HTMLInputElement>, validatorName: string) => {
@@ -151,18 +152,15 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
     intent: useDefaultWeights ? defaultWeight : weights[validator.operatorAddress] || 0,
   }));
 
-  const solution = useQueryHooks(selectedOption?.chainName || '');
-
   const { data: zone, isLoading: isZoneLoading, isError: isZoneError } = useZoneQuery(selectedOption?.chainId ?? '');
 
   const handleLiquidStake = async (event: React.MouseEvent) => {
-    console.log('handleValidatorIntent called');
     const numericAmount = Number(tokenAmount);
     const smallestUnitAmount = numericAmount * Math.pow(10, 6);
 
     try {
       setIsSigning(true);
-      await liquidStakeTx(
+      const response = await liquidStakeTx(
         getSigningStargateClient,
         setResp,
         selectedOption?.chainName || '',
@@ -174,28 +172,30 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
         intents,
         smallestUnitAmount,
         zone,
-      )(event)
-        .then(() => {
-          // On successful transaction, advance to the final step
-          setStep(4);
-          setTransactionStatus('Success');
-        })
-        .catch((error) => {
-          // Handle any errors
-          console.error('Transaction failed', error);
-          setIsError(true);
-          setTransactionStatus('Failed');
-        })
-        .finally(() => {
-          // Always runs regardless of transaction outcome
-          setIsSigning(false);
-        });
+      )(event);
+
+      // Parse the response
+      const parsedResponse = JSON.parse(resp);
+
+      if (parsedResponse && parsedResponse.code === 0) {
+        // Successful transaction
+        setStep(4);
+        setTransactionStatus('Success');
+      } else {
+        // Unsuccessful transaction
+        setIsError(true);
+        setTransactionStatus('Failed');
+      }
     } catch (error) {
       console.error('Transaction failed', error);
       setIsSigning(false);
       setIsError(true);
+      setTransactionStatus('Failed');
+    } finally {
+      setIsSigning(false);
     }
   };
+
   //placehoder for transaction status
   const [transactionStatus, setTransactionStatus] = useState('Pending');
 
@@ -206,6 +206,21 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
     setIsSigning(false);
     setUseDefaultWeights(true);
   }, [selectedOption?.chainName]);
+
+  const [isCustomWeight, setIsCustomWeight] = useState(false);
+
+  const handleCustomWeightMode = () => {
+    setIsCustomWeight(true);
+    setUseDefaultWeights(false);
+  };
+
+  const handleNextInCustomWeightMode = () => {
+    if (isCustomValid) {
+      setIsCustomWeight(false);
+      advanceStep();
+    }
+  };
+
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="2xl">
       <ModalOverlay />
@@ -326,7 +341,7 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
                   />
                 </>
               )}
-              {step === 2 && (
+              {step === 2 && !isCustomWeight && (
                 <>
                   <Text textAlign={'left'} fontWeight={'bold'} fontSize="lg" color="white">
                     Set Weights
@@ -343,25 +358,8 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
                     >
                       Default
                     </Button>
-                    <Button onClick={() => setUseDefaultWeights(false)}>Custom</Button>
+                    <Button onClick={handleCustomWeightMode}>Custom</Button>
                   </HStack>
-                  {useDefaultWeights === false && (
-                    <Grid templateColumns={`repeat(${Math.ceil(Math.sqrt(selectedValidators.length))}, 1fr)`} gap={4}>
-                      {selectedValidators.map((validator, index) => (
-                        <Flex key={validator.operatorAddress} flexDirection={'column'} alignItems={'center'}>
-                          <Text fontSize="sm" color="white" mb={2}>
-                            {validator.name}
-                          </Text>
-                          <Input
-                            type="number"
-                            width="50px"
-                            placeholder="Weight"
-                            onChange={(e) => handleWeightChange(e, validator.operatorAddress)}
-                          />
-                        </Flex>
-                      ))}
-                    </Grid>
-                  )}
                   <Button
                     position={'absolute'}
                     bottom={3}
@@ -382,6 +380,53 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
                   </Button>
                 </>
               )}
+              {step === 2 && isCustomWeight && (
+                <>
+                  <Text textAlign={'left'} fontWeight={'bold'} fontSize="lg" color="white">
+                    Set Custom Weights
+                  </Text>
+                  <Text mt={2} textAlign={'center'} fontWeight={'light'} fontSize="lg" color="white">
+                    The total weight must equal 100
+                  </Text>
+                  <Grid mt={2} templateColumns={`repeat(${Math.ceil(Math.sqrt(selectedValidators.length))}, 1fr)`} gap={4}>
+                    {selectedValidators.map((validator, index) => (
+                      <Flex key={validator.operatorAddress} flexDirection={'column'} alignItems={'center'}>
+                        <Text fontSize="sm" color="white" mb={2}>
+                          {validator.name}
+                        </Text>
+                        <Input
+                          type="number"
+                          width="55px"
+                          placeholder=""
+                          onChange={(e) => handleWeightChange(e, validator.operatorAddress)}
+                        />
+                      </Flex>
+                    ))}
+                  </Grid>
+                  <Flex mt={4} justifyContent={'space-between'} width={'100%'} alignItems={'center'}>
+                    <Button
+                      bgColor="none"
+                      _hover={{
+                        bgColor: 'none',
+                        color: 'complimentary.900',
+                      }}
+                      _selected={{
+                        bgColor: 'none',
+                      }}
+                      color="white"
+                      variant="none"
+                      onClick={() => {
+                        setIsCustomWeight(false);
+                      }}
+                    >
+                      ←
+                    </Button>
+                    <Button isDisabled={!isCustomValid} onClick={handleNextInCustomWeightMode}>
+                      Next
+                    </Button>
+                  </Flex>
+                </>
+              )}
 
               {step === 3 && (
                 <>
@@ -396,7 +441,7 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
                       </Text>
                     </HStack>
                     <Text mt={2} textAlign={'left'} fontWeight={'hairline'}>
-                      Processing time: 1 minute
+                      Processing time: ~2 minutes
                     </Text>
                     <Button
                       w="55%"

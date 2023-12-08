@@ -86,6 +86,12 @@ export const StakingBox = ({ selectedOption, isModalOpen, setModalOpen, setBalan
 
   const [inputError, setInputError] = useState(false);
 
+  const qAssetsExponent = shiftDigits(qAssets, -6);
+  const qAssetsDisplay = qAssetsExponent.includes('.') ? qAssetsExponent.substring(0, qAssetsExponent.indexOf('.') + 3) : qAssetsExponent;
+
+  const maxUnstakingAmount = truncateToThreeDecimals(Number(qAssetsDisplay));
+  const halfUnstakingAmount = maxUnstakingAmount / 2;
+
   return (
     <Box position="relative" backdropFilter="blur(50px)" bgColor="rgba(255,255,255,0.1)" flex="1" borderRadius="10px" p={5}>
       <Tabs isFitted variant="enclosed">
@@ -294,7 +300,7 @@ export const StakingBox = ({ selectedOption, isModalOpen, setModalOpen, setBalan
               </Text>
               <Flex flexDirection="column" w="100%">
                 <Stat py={4} textAlign="left" color="white">
-                  <StatLabel>Amount tounstake:</StatLabel>
+                  <StatLabel>Amount to unstake:</StatLabel>
                   <StatNumber>q{selectedOption.value.toUpperCase()} </StatNumber>
                 </Stat>
                 <Input
@@ -319,30 +325,69 @@ export const StakingBox = ({ selectedOption, isModalOpen, setModalOpen, setBalan
                   onChange={(e) => setTokenAmount(e.target.value)}
                 />
                 <Flex w="100%" flexDirection="row" py={4} mb={-4} justifyContent="space-between" alignItems="center">
-                  <Skeleton isLoaded={!isLoading}>
-                    <SkeletonText>
+                  {address ? (
+                    <Flex mb={-4} alignItems="center" justifyContent={'center'} gap={4} flexDirection={'row'}>
                       <Text color="white" fontWeight="light">
-                        Tokens available: 0 q{selectedOption.value.toUpperCase()}
+                        Tokens available:{' '}
                       </Text>
-                    </SkeletonText>
-                  </Skeleton>
+                      {isLoading ? (
+                        <Skeleton startColor="complimentary.900" endColor="complimentary.400">
+                          <SkeletonText w={'95px'} noOfLines={1} skeletonHeight={'18px'} />
+                        </Skeleton>
+                      ) : (
+                        <Text color="complimentary.900" fontWeight="light">
+                          {address
+                            ? qAssets && Number(qAssets) !== 0
+                              ? `${qAssetsDisplay} ${selectedOption.value.toUpperCase()}`
+                              : `No q${selectedOption.value.toUpperCase()}`
+                            : '0'}
+                        </Text>
+                      )}
+                    </Flex>
+                  ) : (
+                    <Text color="complimentary.900" fontWeight="light">
+                      Connect your wallet to unstake
+                    </Text>
+                  )}
 
-                  <Button
-                    _hover={{
-                      bgColor: 'rgba(255,255,255,0.05)',
-                      backdropFilter: 'blur(10px)',
-                    }}
-                    _active={{
-                      bgColor: 'rgba(255,255,255,0.05)',
-                      backdropFilter: 'blur(10px)',
-                    }}
-                    color="complimentary.900"
-                    variant="ghost"
-                    w="60px"
-                    h="30px"
-                  >
-                    max
-                  </Button>
+                  <HStack mb={-4} spacing={2}>
+                    <Button
+                      _hover={{
+                        bgColor: 'rgba(255,255,255,0.05)',
+                        backdropFilter: 'blur(10px)',
+                      }}
+                      _active={{
+                        bgColor: 'rgba(255,255,255,0.05)',
+                        backdropFilter: 'blur(10px)',
+                      }}
+                      color="complimentary.900"
+                      variant="ghost"
+                      w="60px"
+                      h="30px"
+                      onClick={() => setTokenAmount(halfUnstakingAmount.toString())}
+                      isDisabled={!qAssets || Number(qAssets) < 1}
+                    >
+                      half
+                    </Button>
+                    <Button
+                      _hover={{
+                        bgColor: 'rgba(255,255,255,0.05)',
+                        backdropFilter: 'blur(10px)',
+                      }}
+                      _active={{
+                        bgColor: 'rgba(255,255,255,0.05)',
+                        backdropFilter: 'blur(10px)',
+                      }}
+                      color="complimentary.900"
+                      variant="ghost"
+                      w="60px"
+                      h="30px"
+                      onClick={() => setTokenAmount(maxUnstakingAmount.toString())}
+                      isDisabled={!qAssets || Number(qAssets) < 1}
+                    >
+                      max
+                    </Button>
+                  </HStack>
                 </Flex>
               </Flex>
               <Divider bgColor="complimentary.900" />
