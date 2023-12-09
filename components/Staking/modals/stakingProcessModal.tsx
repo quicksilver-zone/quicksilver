@@ -83,7 +83,6 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
   const [isError, setIsError] = useState<boolean>(false);
 
   const { address, getSigningStargateClient } = useChain(selectedOption?.chainName || '');
-  const { address: qAddress } = useChain('quicksilver');
 
   const labels = ['Choose validators', `Set weights`, `Sign & Submit`, `Receive q${selectedOption?.value}`];
   const [isModalOpen, setModalOpen] = useState(false);
@@ -228,7 +227,7 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
       <ChakraModalContent h="48%">
         <ModalBody borderRadius={4} h="48%">
           <ModalCloseButton color="white" />
-          <HStack h="100%" spacing="48px" align="stretch">
+          <HStack position={'relative'} h="100%" spacing="48px" align="stretch">
             {/* Left Section */}
             <Flex flexDirection="column" justifyContent="space-between" width="40%" p={4} bg="#1E1C19" height="100%">
               <Box position="relative">

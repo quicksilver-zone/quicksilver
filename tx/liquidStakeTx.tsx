@@ -3,12 +3,14 @@ import { StdFee } from '@cosmjs/amino';
 import { coins, Coin, SigningStargateClient } from '@cosmjs/stargate';
 import { ChainName, Dispatch } from '@cosmos-kit/core';
 import { quicksilver } from '@hoangdv2429/quicksilverjs';
-import { AminoConverter } from '@hoangdv2429/quicksilverjs/dist/codegen/quicksilver/interchainstaking/v1/messages.amino';
 import { bech32 } from 'bech32';
 import { assets } from 'chain-registry';
+import chains from 'chain-registry';
 import { cosmos } from 'interchain-query';
 import { Zone } from 'quicksilverjs/types/codegen/quicksilver/interchainstaking/v1/interchainstaking';
 import { SetStateAction } from 'react';
+
+import { shiftDigits } from '@/utils';
 
 const showSuccessToast = (toast: ReturnType<typeof useToast>, txHash: string, chainName: ChainName) => {
   const mintscanUrl = `https://www.mintscan.io/${chainName}/txs/${txHash}`;
@@ -102,13 +104,16 @@ export const liquidStakeTx = (
     });
 
     const mainTokens = assets.find(({ chain_name }) => chain_name === chainName);
-    const mainDenom = mainTokens?.assets[0].base ?? 'uqck';
+    const fees = chains.chains.find(({ chain_name }) => chain_name === chainName)?.fees?.fee_tokens;
+    const mainDenom = mainTokens?.assets[0].base ?? '';
+    const fixedMinGasPrice = fees?.find(({ denom }) => denom === mainDenom)?.average_gas_price ?? '';
+    const feeAmount = shiftDigits(fixedMinGasPrice, 6);
 
     const fee: StdFee = {
       amount: [
         {
           denom: mainDenom,
-          amount: '7500',
+          amount: feeAmount.toString(),
         },
       ],
       gas: '500000',

@@ -1,57 +1,45 @@
-import { HamburgerIcon } from '@chakra-ui/icons';
-import {
-  Flex,
-  Box,
-  Image,
-  Spacer,
-  VStack,
-  IconButton,
-  Tooltip,
-} from '@chakra-ui/react';
+import { HamburgerIcon, ArrowBackIcon } from '@chakra-ui/icons';
+import { Flex, Box, Image, Spacer, VStack, IconButton, Tooltip, ScaleFade, useBreakpointValue } from '@chakra-ui/react';
 import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
+import { FaDiscord, FaTwitter, FaGithub, FaInfo } from 'react-icons/fa';
+import { IoIosDocument } from 'react-icons/io';
+import { MdPrivacyTip } from 'react-icons/md';
 
 export const SideHeader = () => {
   const router = useRouter();
   const [selectedPage, setSelectedPage] = useState('');
+  const [showSocialLinks, setShowSocialLinks] = useState(false);
+
   useEffect(() => {
-    // Function to handle route changes
     const handleRouteChange = (url: string) => {
       const path = url.split('/quicksilver-app-v2/')[1];
       setSelectedPage(path);
     };
 
-    // Add the route change listener
     router.events.on('routeChangeComplete', handleRouteChange);
-
-    // Cleanup the listener when the component is unmounted
-    return () => {
-      router.events.off('routeChangeComplete', handleRouteChange);
-    };
+    return () => router.events.off('routeChangeComplete', handleRouteChange);
   }, [router]);
 
   const commonBoxShadowColor = 'rgba(255, 128, 0, 0.25)';
+  const toggleSocialLinks = () => setShowSocialLinks(!showSocialLinks);
+
+  // Use breakpoint value to determine if the device is mobile
+  const isMobile = useBreakpointValue({ base: true, md: false });
 
   return (
     <Box
-      w="fit-content"
-      h="95vh"
+      w={isMobile ? 'auto' : 'fit-content'}
+      h={{ base: 'auto', md: '95vh' }}
       backdropFilter="blur(10px)"
-      borderRadius={10}
+      borderRadius={100}
       zIndex={10}
       top={6}
-      left="6"
+      left={6}
       position="fixed"
       bgColor="rgba(214, 219, 220, 0.1)"
     >
-      <Flex
-        direction="column"
-        align="center"
-        zIndex={10}
-        justifyContent="space-between"
-        py={4}
-        height="100%"
-      >
+      <Flex direction="column" align="center" zIndex={10} justifyContent="space-between" py={4} height="100%">
         <Image
           alt="logo"
           mt="-10px"
@@ -60,151 +48,205 @@ export const SideHeader = () => {
           onClick={() => router.push('/')}
           cursor="pointer"
         />
+
+        {/* Only display additional content if not on mobile */}
+        {!isMobile && (
+          <>
+            <Spacer />
+            <ScaleFade initialScale={0.5} in={!showSocialLinks}>
+              {!showSocialLinks && (
+                <VStack justifyContent="center" alignItems="center" spacing={16}>
+                  <Tooltip borderLeft="4px solid rgba(255, 128, 0, 0.9)" label="Staking" placement="right">
+                    <Box
+                      w="55px"
+                      h="55px"
+                      onClick={() => router.push('/staking')}
+                      cursor="pointer"
+                      borderRadius="100px"
+                      boxShadow={
+                        selectedPage === 'staking' ? `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}` : ''
+                      }
+                      _hover={{
+                        boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`,
+                      }}
+                    >
+                      <Image
+                        filter={selectedPage === 'staking' ? 'contrast(100%)' : 'contrast(50%)'}
+                        _hover={{
+                          filter: 'contrast(100%)',
+                        }}
+                        alt="Staking"
+                        h="55px"
+                        src="/quicksilver-app-v2/img/test.png"
+                      />
+                    </Box>
+                  </Tooltip>
+
+                  <Tooltip borderLeft="4px solid rgba(255, 128, 0, 0.9)" label="Governance" placement="right">
+                    <Box
+                      w="55px"
+                      h="55px"
+                      onClick={() => router.push('/governance')}
+                      cursor="pointer"
+                      borderRadius="100px"
+                      boxShadow={
+                        selectedPage === 'governance'
+                          ? `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`
+                          : ''
+                      }
+                      _hover={{
+                        boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`,
+                      }}
+                    >
+                      <Image
+                        filter={selectedPage === 'governance' ? 'contrast(100%)' : 'contrast(50%)'}
+                        _hover={{
+                          filter: 'contrast(100%)',
+                        }}
+                        alt="Governance"
+                        h="55px"
+                        src="/quicksilver-app-v2/img/test2.png"
+                      />
+                    </Box>
+                  </Tooltip>
+
+                  <Tooltip borderLeft="4px solid rgba(255, 128, 0, 0.9)" label="Assets" placement="right">
+                    <Box
+                      w="55px"
+                      h="55px"
+                      onClick={() => router.push('/assets')}
+                      cursor="pointer"
+                      borderRadius="100px"
+                      boxShadow={
+                        selectedPage === 'assets' ? `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}` : ''
+                      }
+                      _hover={{
+                        boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`,
+                      }}
+                    >
+                      <Image
+                        filter={selectedPage === 'assets' ? 'contrast(100%)' : 'contrast(50%)'}
+                        _hover={{
+                          filter: 'contrast(100%)',
+                        }}
+                        alt="Assets"
+                        h="55px"
+                        src="/quicksilver-app-v2/img/test3.png"
+                      />
+                    </Box>
+                  </Tooltip>
+
+                  <Tooltip borderLeft="4px solid rgba(255, 128, 0, 0.9)" label="DeFi" placement="right">
+                    <Box
+                      w="55px"
+                      h="55px"
+                      onClick={() => router.push('/defi')}
+                      cursor="pointer"
+                      borderRadius="100px"
+                      boxShadow={
+                        selectedPage === 'defi' ? `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}` : ''
+                      }
+                      _hover={{
+                        boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`,
+                      }}
+                    >
+                      <Image
+                        filter={selectedPage === 'defi' ? 'contrast(100%)' : 'contrast(50%)'}
+                        _hover={{
+                          filter: 'contrast(100%)',
+                        }}
+                        alt="DeFi"
+                        h="55px"
+                        src="/quicksilver-app-v2/img/test4.png"
+                      />
+                    </Box>
+                  </Tooltip>
+                </VStack>
+              )}
+            </ScaleFade>
+
+            <ScaleFade initialScale={0.5} in={showSocialLinks}>
+              {showSocialLinks && (
+                <VStack justifyContent="center" alignItems="center" spacing={16}>
+                  <Tooltip borderLeft="4px solid rgba(255, 128, 0, 0.9)" label="About" placement="right">
+                    <Box
+                      _hover={{
+                        cursor: 'pointer',
+                        boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`,
+                      }}
+                    >
+                      <FaInfo size={'25px'} color="rgb(255, 128, 0)" />
+                    </Box>
+                  </Tooltip>
+                  <Tooltip borderLeft="4px solid rgba(255, 128, 0, 0.9)" label="Docs" placement="right">
+                    <Box
+                      _hover={{
+                        cursor: 'pointer',
+                        boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`,
+                      }}
+                    >
+                      <IoIosDocument size={'25px'} color="rgba(255, 128, 0, 0.9)" />
+                    </Box>
+                  </Tooltip>
+                  <Tooltip borderLeft="4px solid rgba(255, 128, 0, 0.9)" label="Discord" placement="right">
+                    <Box
+                      _hover={{
+                        cursor: 'pointer',
+                        boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`,
+                      }}
+                    >
+                      <FaDiscord size={'25px'} color="rgb(255, 128, 0)" />
+                    </Box>
+                  </Tooltip>
+                  <Tooltip borderLeft="4px solid rgba(255, 128, 0, 0.9)" label="Github" placement="right">
+                    <Box
+                      _hover={{
+                        cursor: 'pointer',
+                        boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`,
+                      }}
+                    >
+                      <FaGithub size={'25px'} color="rgb(255, 128, 0)" />
+                    </Box>
+                  </Tooltip>
+                  <Tooltip borderLeft="4px solid rgba(255, 128, 0, 0.9)" label="Twitter" placement="right">
+                    <Box
+                      _hover={{
+                        cursor: 'pointer',
+                        boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`,
+                      }}
+                    >
+                      <FaTwitter size={'25px'} color="rgb(255, 128, 0)" />
+                    </Box>
+                  </Tooltip>
+                  <Tooltip borderLeft="4px solid rgba(255, 128, 0, 0.9)" label="Privacy Policy" placement="right">
+                    <Box
+                      _hover={{
+                        cursor: 'pointer',
+                        boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 15px 5px ${commonBoxShadowColor}`,
+                      }}
+                    >
+                      <MdPrivacyTip size={'25px'} color="rgb(255, 128, 0)" />
+                    </Box>
+                  </Tooltip>
+                </VStack>
+              )}
+            </ScaleFade>
+          </>
+        )}
+
         <Spacer />
-        <VStack justifyContent="center" alignItems="center" spacing={16}>
-          <Tooltip
-            borderLeft="4px solid rgba(255, 128, 0, 0.9)"
-            label="Staking"
-            placement="right"
-          >
-            <Box
-              w="55px"
-              h="55px"
-              onClick={() => router.push('/staking')}
-              cursor="pointer"
-              borderRadius="100px"
-              boxShadow={
-                selectedPage === 'staking'
-                  ? `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`
-                  : ''
-              }
-              _hover={{
-                boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`,
-              }}
-            >
-              <Image
-                filter={
-                  selectedPage === 'staking'
-                    ? 'contrast(100%)'
-                    : 'contrast(50%)'
-                }
-                _hover={{
-                  filter: 'contrast(100%)',
-                }}
-                alt="Staking"
-                h="55px"
-                src="/quicksilver-app-v2/img/test.png"
-              />
-            </Box>
-          </Tooltip>
-
-          <Tooltip
-            borderLeft="4px solid rgba(255, 128, 0, 0.9)"
-            label="Governance"
-            placement="right"
-          >
-            <Box
-              w="55px"
-              h="55px"
-              onClick={() => router.push('/governance')}
-              cursor="pointer"
-              borderRadius="100px"
-              boxShadow={
-                selectedPage === 'governance'
-                  ? `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`
-                  : ''
-              }
-              _hover={{
-                boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`,
-              }}
-            >
-              <Image
-                filter={
-                  selectedPage === 'governance'
-                    ? 'contrast(100%)'
-                    : 'contrast(50%)'
-                }
-                _hover={{
-                  filter: 'contrast(100%)',
-                }}
-                alt="Governance"
-                h="55px"
-                src="/quicksilver-app-v2/img/test2.png"
-              />
-            </Box>
-          </Tooltip>
-
-          <Tooltip
-            borderLeft="4px solid rgba(255, 128, 0, 0.9)"
-            label="Assets"
-            placement="right"
-          >
-            <Box
-              w="55px"
-              h="55px"
-              onClick={() => router.push('/assets')}
-              cursor="pointer"
-              borderRadius="100px"
-              boxShadow={
-                selectedPage === 'assets'
-                  ? `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`
-                  : ''
-              }
-              _hover={{
-                boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`,
-              }}
-            >
-              <Image
-                filter={
-                  selectedPage === 'assets' ? 'contrast(100%)' : 'contrast(50%)'
-                }
-                _hover={{
-                  filter: 'contrast(100%)',
-                }}
-                alt="Assets"
-                h="55px"
-                src="/quicksilver-app-v2/img/test3.png"
-              />
-            </Box>
-          </Tooltip>
-
-          <Tooltip
-            borderLeft="4px solid rgba(255, 128, 0, 0.9)"
-            label="DeFi"
-            placement="right"
-          >
-            <Box
-              w="55px"
-              h="55px"
-              onClick={() => router.push('/defi')}
-              cursor="pointer"
-              borderRadius="100px"
-              boxShadow={
-                selectedPage === 'defi'
-                  ? `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`
-                  : ''
-              }
-              _hover={{
-                boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`,
-              }}
-            >
-              <Image
-                filter={
-                  selectedPage === 'defi' ? 'contrast(100%)' : 'contrast(50%)'
-                }
-                _hover={{
-                  filter: 'contrast(100%)',
-                }}
-                alt="DeFi"
-                h="55px"
-                src="/quicksilver-app-v2/img/test4.png"
-              />
-            </Box>
-          </Tooltip>
-        </VStack>
-        <Spacer />
-        <IconButton icon={<HamburgerIcon />} aria-label="DeFi" />
+        {/* Only display the IconButton if not on mobile */}
+        {!isMobile && (
+          <IconButton
+            borderRadius={'100'}
+            icon={showSocialLinks ? <ArrowBackIcon /> : <HamburgerIcon />}
+            aria-label="Toggle View"
+            onClick={toggleSocialLinks}
+          />
+        )}
       </Flex>
     </Box>
   );
 };
+
+export default SideHeader;
