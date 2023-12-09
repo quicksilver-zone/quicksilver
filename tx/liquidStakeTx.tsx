@@ -1,14 +1,14 @@
 import { Box, Text, Link, useToast } from '@chakra-ui/react';
 import { StdFee } from '@cosmjs/amino';
-import { coins, SigningStargateClient } from '@cosmjs/stargate';
+import { coins, Coin, SigningStargateClient } from '@cosmjs/stargate';
 import { ChainName, Dispatch } from '@cosmos-kit/core';
+import { quicksilver } from '@hoangdv2429/quicksilverjs';
+import { AminoConverter } from '@hoangdv2429/quicksilverjs/dist/codegen/quicksilver/interchainstaking/v1/messages.amino';
 import { bech32 } from 'bech32';
 import { assets } from 'chain-registry';
 import { cosmos } from 'interchain-query';
 import { Zone } from 'quicksilverjs/types/codegen/quicksilver/interchainstaking/v1/interchainstaking';
 import { SetStateAction } from 'react';
-
-import { useZoneQuery } from '@/hooks/useQueries';
 
 const showSuccessToast = (toast: ReturnType<typeof useToast>, txHash: string, chainName: ChainName) => {
   const mintscanUrl = `https://www.mintscan.io/${chainName}/txs/${txHash}`;
@@ -128,4 +128,68 @@ export const liquidStakeTx = (
       }
     }
   };
+};
+
+export const unbondLiquidStakeTx = async (
+  dstAddress: string,
+  fromAddress: string,
+  unbondAmount: number,
+  local_denom: string,
+  getSigningStargateClient: () => Promise<SigningStargateClient>,
+  setResp: Dispatch<SetStateAction<string>>,
+  toast: ReturnType<typeof useToast>,
+  setIsError: Dispatch<SetStateAction<boolean>>,
+  setIsSigning: Dispatch<SetStateAction<boolean>>,
+  chainName: ChainName,
+) => {
+  setIsError(false);
+  setIsSigning(true);
+
+  try {
+    const stargateClient = await getSigningStargateClient();
+
+    if (!stargateClient || !fromAddress) {
+      console.error('Stargate client undefined or fromAddress undefined.');
+      return;
+    }
+
+    const { requestRedemption } = quicksilver.interchainstaking.v1.MessageComposer.withTypeUrl;
+
+    const value: Coin = { amount: unbondAmount.toFixed(0), denom: local_denom };
+    const msgRequestRedemption = requestRedemption({
+      value: value,
+      fromAddress: fromAddress,
+      destinationAddress: dstAddress,
+    });
+
+    const fee: StdFee = {
+      amount: [
+        {
+          denom: 'uqck',
+          amount: '7500',
+        },
+      ],
+      gas: '500000',
+    };
+
+    const response = await stargateClient.signAndBroadcast(fromAddress, [msgRequestRedemption], fee);
+
+    // Handle response
+    setResp(JSON.stringify(response, null, 2));
+    setIsSigning(false);
+
+    if (response.code === 0) {
+      showSuccessToast(toast, response.transactionHash, chainName);
+    } else {
+      setIsError(true);
+      showErrorToast(toast, 'Transaction failed');
+    }
+  } catch (error) {
+    console.error('Error in unbonding transaction:', error);
+    if (error instanceof Error) {
+      setIsSigning(false);
+      setIsError(true);
+      showErrorToast(toast, error.message);
+    }
+  }
 };

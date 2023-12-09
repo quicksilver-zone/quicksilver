@@ -25,7 +25,7 @@ import React, { useEffect, useState } from 'react';
 
 import { useQueryHooks } from '@/hooks';
 import { useZoneQuery } from '@/hooks/useQueries';
-import { liquidStakeTx } from '@/tx/liquidStakeTx';
+import { liquidStakeTx, unbondLiquidStakeTx } from '@/tx/liquidStakeTx';
 
 import { MultiModal } from './validatorSelectionModal';
 
@@ -83,6 +83,7 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
   const [isError, setIsError] = useState<boolean>(false);
 
   const { address, getSigningStargateClient } = useChain(selectedOption?.chainName || '');
+  const { address: qAddress } = useChain('quicksilver');
 
   const labels = ['Choose validators', `Set weights`, `Sign & Submit`, `Receive q${selectedOption?.value}`];
   const [isModalOpen, setModalOpen] = useState(false);

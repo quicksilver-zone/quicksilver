@@ -1,12 +1,6 @@
 import '../styles/globals.css';
 import { Chain } from '@chain-registry/types';
 import { Box, ChakraProvider } from '@chakra-ui/react';
-import {
-  quicksilverProtoRegistry,
-  quicksilverAminoConverters,
-  getSigningQuicksilverClientOptions,
-  getSigningCosmosClientOptions,
-} from '@chalabi/quicksilverjs';
 import { Registry } from '@cosmjs/proto-signing';
 import { SigningStargateClientOptions, AminoTypes } from '@cosmjs/stargate';
 import { SignerOptions, WalletViewProps } from '@cosmos-kit/core';
@@ -19,6 +13,12 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { chains, assets } from 'chain-registry';
 import { cosmosAminoConverters, cosmosProtoRegistry } from 'interchain-query';
 import type { AppProps } from 'next/app';
+import {
+  quicksilverProtoRegistry,
+  quicksilverAminoConverters,
+  getSigningQuicksilverClientOptions,
+  getSigningCosmosClientOptions,
+} from 'quicksilverjs';
 
 import { Header, SideHeader } from '@/components';
 import { defaultTheme } from '@/config';
@@ -37,11 +37,18 @@ const queryClient = new QueryClient({
 function CreateCosmosApp({ Component, pageProps }: AppProps) {
   const signerOptions: SignerOptions = {
     signingStargate: (chain: Chain): SigningStargateClientOptions | undefined => {
-      const registry = new Registry(cosmosProtoRegistry);
-      const aminoTypes = new AminoTypes(cosmosAminoConverters);
+      // Merge the proto registries from different sources
+      const mergedRegistry = new Registry([...cosmosProtoRegistry, ...quicksilverProtoRegistry]);
+
+      // Merge the amino converters from different sources
+      const mergedAminoTypes = new AminoTypes({
+        ...cosmosAminoConverters,
+        ...quicksilverAminoConverters,
+      });
+
       return {
-        aminoTypes: aminoTypes,
-        registry: registry,
+        aminoTypes: mergedAminoTypes,
+        registry: mergedRegistry,
       };
     },
   };

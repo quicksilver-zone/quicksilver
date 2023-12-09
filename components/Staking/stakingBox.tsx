@@ -19,11 +19,13 @@ import {
   Spinner,
   Skeleton,
   SkeletonText,
+  useToast,
 } from '@chakra-ui/react';
 import { useChain } from '@cosmos-kit/react';
 import React, { useEffect, useState } from 'react';
 
 import { useBalanceQuery, useQBalanceQuery, useZoneQuery } from '@/hooks/useQueries';
+import { unbondLiquidStakeTx } from '@/tx/liquidStakeTx';
 import { getExponent } from '@/utils';
 import { shiftDigits } from '@/utils';
 
@@ -48,7 +50,7 @@ export const StakingBox = ({ selectedOption, isModalOpen, setModalOpen, setBalan
   const { address } = useChain(selectedOption.chainName);
   const { address: qAddress } = useChain('quicksilver');
   const exp = getExponent(selectedOption.chainName);
-  const { balance, isLoading, isError } = useBalanceQuery(selectedOption.chainName, address ?? '');
+  const { balance, isLoading } = useBalanceQuery(selectedOption.chainName, address ?? '');
   const {
     balance: qBalance,
     isLoading: qIsLoading,
@@ -91,6 +93,58 @@ export const StakingBox = ({ selectedOption, isModalOpen, setModalOpen, setBalan
 
   const maxUnstakingAmount = truncateToThreeDecimals(Number(qAssetsDisplay));
   const halfUnstakingAmount = maxUnstakingAmount / 2;
+
+  const [resp, setResp] = useState('');
+
+  const toast = useToast();
+
+  const [isSigning, setIsSigning] = useState<boolean>(false);
+  const [isError, setIsError] = useState<boolean>(false);
+  const [transactionStatus, setTransactionStatus] = useState('Pending');
+
+  const { getSigningStargateClient } = useChain('quicksilver');
+
+  const handleLiquidUnstake = async (event: React.MouseEvent) => {
+    event.preventDefault();
+    const numericAmount = Number(tokenAmount);
+    const smallestUnitAmount = numericAmount * Math.pow(10, 6);
+
+    try {
+      setIsSigning(true);
+      const response = await unbondLiquidStakeTx(
+        // destination address
+        address ?? '', // from address
+        qAddress ?? '',
+        smallestUnitAmount, // amount to unbond
+        zone?.localDenom ?? '', // local denomination of the token
+        getSigningStargateClient,
+        setResp,
+        toast,
+        setIsError,
+        setIsSigning,
+        selectedOption?.chainName || '',
+      );
+
+      const parsedResponse = JSON.parse(resp);
+
+      // Parse the response
+      if (parsedResponse && parsedResponse.code === 0) {
+        // Successful transaction
+        setTransactionStatus('Success');
+      } else {
+        // Unsuccessful transaction
+        setIsError(true);
+        setTransactionStatus('Failed');
+      }
+    } catch (error) {
+      console.error('Transaction failed', error);
+      setIsSigning(false);
+      setIsError(true);
+      setTransactionStatus('Failed');
+    } finally {
+      setIsSigning(false);
+    }
+  };
 
   return (
     <Box position="relative" backdropFilter="blur(50px)" bgColor="rgba(255,255,255,0.1)" flex="1" borderRadius="10px" p={5}>
@@ -406,8 +460,9 @@ export const StakingBox = ({ selectedOption, isModalOpen, setModalOpen, setBalan
                 _hover={{
                   bgColor: 'complimentary.1000',
                 }}
+                onClick={handleLiquidUnstake}
               >
-                Liquid Stake
+                Unstake
               </Button>
             </VStack>
           </TabPanel>
