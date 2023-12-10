@@ -1,9 +1,6 @@
 import { Box, Container } from '@chakra-ui/react';
 import Head from 'next/head';
 
-import { Header } from '@/components';
-import { SideHeader } from '@/components';
-
 export default function Home() {
   return (
     <>

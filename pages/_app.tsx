@@ -32,10 +32,8 @@ const queryClient = new QueryClient({
 function CreateCosmosApp({ Component, pageProps }: AppProps) {
   const signerOptions: SignerOptions = {
     signingStargate: (chain: Chain): SigningStargateClientOptions | undefined => {
-      // Merge the proto registries from different sources
       const mergedRegistry = new Registry([...cosmosProtoRegistry, ...quicksilverProtoRegistry]);
 
-      // Merge the amino converters from different sources
       const mergedAminoTypes = new AminoTypes({
         ...cosmosAminoConverters,
         ...quicksilverAminoConverters,

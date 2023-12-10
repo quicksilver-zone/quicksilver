@@ -2,8 +2,6 @@ import { Box, Container, Text } from '@chakra-ui/react';
 import dynamic from 'next/dynamic';
 import Head from 'next/head';
 
-import { Header } from '@/components';
-import { SideHeader } from '@/components';
 import { VotingSection } from '@/components';
 
 const DynamicVotingSection = dynamic(() => Promise.resolve(VotingSection), {

@@ -8,15 +8,14 @@ import dayjs from 'dayjs';
 import {
   Proposal,
   ProposalStatus,
-} from 'interchain-query/cosmos/gov/v1beta1/gov';
+} from 'interchain-query/cosmos/gov/v1/gov';
 
 export const parseProposals = (
   proposals: Proposal[],
 ) => {
-  console.log(proposals, 'parser')
   const sortedProposal = proposals.sort(
     (a, b) =>
-      Number(b.proposalId) - Number(a.proposalId),
+      Number(b.id) - Number(a.id),
   );
   const votingProposals = sortedProposal.filter(
     ({ status }) =>
