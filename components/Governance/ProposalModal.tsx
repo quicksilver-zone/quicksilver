@@ -18,7 +18,7 @@ import {
   useColorModeValue,
 } from '@chakra-ui/react';
 import { cosmos } from 'interchain-query';
-import { Proposal } from 'interchain-query/cosmos/gov/v1beta1/gov';
+import { Proposal } from 'interchain-query/cosmos/gov/v1/gov';
 import React, { useMemo, useState } from 'react';
 import { PieChart } from 'react-minimal-pie-chart';
 
@@ -70,7 +70,7 @@ export const ProposalModal = ({
     },
     {
       title: 'NWV',
-      value: Number(proposal.finalTallyResult?.noWithVeto),
+      value: Number(proposal.finalTallyResult?.noWithVetoCount),
       color: VoteColor.NWV,
     },
     {
@@ -106,6 +106,8 @@ export const ProposalModal = ({
 
   const uint8ArrayValue = proposal.messages[0].value;
   const propinfo = decodeUint8Arr(uint8ArrayValue);
+
+  console.log(propinfo);
 
   const getTitleFromDecoded = (decodedStr: string) => {
     return decodedStr.slice(0, 250).match(/[A-Z][A-Za-z].*(?=\u0012)/)?.[0];

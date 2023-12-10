@@ -1,13 +1,4 @@
-import {
-  Box,
-  Center,
-  Flex,
-  Grid,
-  GridItem,
-  Spacer,
-  Text,
-  useColorMode,
-} from '@chakra-ui/react';
+import { Box, Center, Flex, Grid, GridItem, Spacer, Text, useColorMode } from '@chakra-ui/react';
 import dayjs from 'dayjs';
 import { cosmos } from 'interchain-query';
 import { Proposal } from 'interchain-query/cosmos/gov/v1/gov';
@@ -49,15 +40,11 @@ export const ProposalCard = ({
 
   const totalVotes = useMemo(() => {
     if (!proposal.finalTallyResult) return 0;
-    const total = Object.values(proposal.finalTallyResult).reduce(
-      (prev, cur) => prev + Number(cur),
-      0,
-    );
+    const total = Object.values(proposal.finalTallyResult).reduce((prev, cur) => prev + Number(cur), 0);
     return total ? total : 0;
   }, [proposal]);
 
-  const isVoted =
-    votes && proposal.finalTallyResult && votes[proposal.id.toString()];
+  const isVoted = votes && proposal.finalTallyResult && votes[proposal.id.toString()];
 
   const uint8ArrayValue = proposal.messages[0].value;
   const propinfo = decodeUint8Arr(uint8ArrayValue);
@@ -102,75 +89,31 @@ export const ProposalCard = ({
           <Flex flexDirection="column" h="44%">
             <Flex alignItems="center" fontSize="sm">
               <Text color="white">
-                {proposal.status ===
-                ProposalStatus.PROPOSAL_STATUS_DEPOSIT_PERIOD
-                  ? 'Deposit'
-                  : 'Voting'}
+                {proposal.status === ProposalStatus.PROPOSAL_STATUS_DEPOSIT_PERIOD ? 'Deposit' : 'Voting'}
                 &nbsp;end time: &nbsp;
               </Text>
               <Text color="white" fontWeight="semibold">
                 {dayjs(
-                  proposal.status ===
-                    ProposalStatus.PROPOSAL_STATUS_DEPOSIT_PERIOD
-                    ? proposal.depositEndTime
-                    : proposal.votingEndTime,
+                  proposal.status === ProposalStatus.PROPOSAL_STATUS_DEPOSIT_PERIOD ? proposal.depositEndTime : proposal.votingEndTime,
                 ).format('YYYY-MM-DD hh:mm')}
               </Text>
             </Flex>
             <Spacer />
             {totalVotes ? (
               <Flex gap="1px">
-                <Box
-                  w={getPercentage(
-                    proposal.finalTallyResult?.yesCount,
-                    totalVotes,
-                  )}
-                  h="3px"
-                  bgColor={VoteColor.YES}
-                />
-                <Box
-                  w={getPercentage(
-                    proposal.finalTallyResult?.noCount,
-                    totalVotes,
-                  )}
-                  h="3px"
-                  bgColor={VoteColor.NO}
-                />
-                <Box
-                  w={getPercentage(
-                    proposal.finalTallyResult?.noWithVetoCount,
-                    totalVotes,
-                  )}
-                  h="3px"
-                  bgColor={VoteColor.NWV}
-                />
-                <Box
-                  w={getPercentage(
-                    proposal.finalTallyResult?.abstainCount,
-                    totalVotes,
-                  )}
-                  h="3px"
-                  bgColor={VoteColor.ABSTAIN}
-                />
+                <Box w={getPercentage(proposal.finalTallyResult?.yesCount, totalVotes)} h="3px" bgColor={VoteColor.YES} />
+                <Box w={getPercentage(proposal.finalTallyResult?.noCount, totalVotes)} h="3px" bgColor={VoteColor.NO} />
+                <Box w={getPercentage(proposal.finalTallyResult?.noWithVetoCount, totalVotes)} h="3px" bgColor={VoteColor.NWV} />
+                <Box w={getPercentage(proposal.finalTallyResult?.abstainCount, totalVotes)} h="3px" bgColor={VoteColor.ABSTAIN} />
               </Flex>
             ) : (
-              <Box
-                w="100%"
-                h="3px"
-                bgColor={colorMode === 'light' ? 'gray.200' : 'gray.600'}
-              />
+              <Box w="100%" h="3px" bgColor={colorMode === 'light' ? 'gray.200' : 'gray.600'} />
             )}
           </Flex>
         </Flex>
       </GridItem>
       <GridItem colSpan={2}>
-        <Flex
-          w="100%"
-          h="100%"
-          alignItems="center"
-          px={4}
-          justifyContent="center"
-        >
+        <Flex w="100%" h="100%" alignItems="center" px={4} justifyContent="center">
           <StatusBadge status={proposal.status} />
         </Flex>
       </GridItem>
