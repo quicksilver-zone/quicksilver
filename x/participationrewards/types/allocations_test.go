@@ -21,13 +21,13 @@ func TestGetRewardsAllocations(t *testing.T) {
 		name    string
 		args    args
 		want    *types.RewardsAllocation
-		wantErr bool
+		wantErr string
 	}{
 		{
 			"empty_params",
 			args{},
 			nil,
-			true,
+			"balance is zero, nothing to allocate",
 		},
 		{
 			"invalid_no_balance",
@@ -40,7 +40,7 @@ func TestGetRewardsAllocations(t *testing.T) {
 				},
 			},
 			nil,
-			true,
+			"balance is zero, nothing to allocate",
 		},
 		{
 			"invalid_proportions_gt",
@@ -53,7 +53,7 @@ func TestGetRewardsAllocations(t *testing.T) {
 				},
 			},
 			nil,
-			true,
+			"total distribution proportions must be 1.0: got 1.50",
 		},
 		{
 			"invalid_proportions_lt",
@@ -66,7 +66,7 @@ func TestGetRewardsAllocations(t *testing.T) {
 				},
 			},
 			nil,
-			true,
+			"total distribution proportions must be 1.0: got 0.90",
 		},
 		{
 			"valid",
@@ -83,7 +83,7 @@ func TestGetRewardsAllocations(t *testing.T) {
 				Holdings:           sdk.NewInt(330000000),
 				Lockup:             sdk.NewInt(330000000),
 			},
-			false,
+			"",
 		},
 		{
 			"valid",
@@ -100,7 +100,7 @@ func TestGetRewardsAllocations(t *testing.T) {
 				Holdings:           sdk.NewInt(250000000),
 				Lockup:             sdk.NewInt(250000000),
 			},
-			false,
+			"",
 		},
 		{
 			"valid",
@@ -117,7 +117,7 @@ func TestGetRewardsAllocations(t *testing.T) {
 				Holdings:           sdk.NewInt(400000000),
 				Lockup:             sdk.NewInt(0),
 			},
-			false,
+			"",
 		},
 		{
 			"valid",
@@ -134,7 +134,7 @@ func TestGetRewardsAllocations(t *testing.T) {
 				Holdings:           sdk.NewInt(54164045698),
 				Lockup:             sdk.NewInt(54164045698),
 			},
-			false,
+			"",
 		},
 		{
 			"valid",
@@ -151,7 +151,7 @@ func TestGetRewardsAllocations(t *testing.T) {
 				Holdings:           sdk.NewInt(41033367953),
 				Lockup:             sdk.NewInt(41033367953),
 			},
-			false,
+			"",
 		},
 		{
 			"valid",
@@ -168,15 +168,16 @@ func TestGetRewardsAllocations(t *testing.T) {
 				Holdings:           sdk.NewInt(65653388725),
 				Lockup:             sdk.NewInt(0),
 			},
-			false,
+			"",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := types.GetRewardsAllocations(tt.args.moduleBalance, tt.args.proportions)
-			if tt.wantErr {
+			if tt.wantErr != "" {
 				require.Error(t, err)
 				require.Nil(t, got)
+				require.Contains(t, err.Error(), tt.wantErr)
 				t.Logf("Error: %v", err)
 				return
 			}
