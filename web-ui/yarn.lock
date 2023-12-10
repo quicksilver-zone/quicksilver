@@ -3302,14 +3302,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/react@npm:18.0.25":
-  version: 18.0.25
-  resolution: "@types/react@npm:18.0.25"
+"@types/react@npm:18.2.43":
+  version: 18.2.43
+  resolution: "@types/react@npm:18.2.43"
   dependencies:
     "@types/prop-types": "*"
     "@types/scheduler": "*"
     csstype: ^3.0.2
-  checksum: 231d658c45abdef044a716b4502774f1585d8336d73b2f5bd68f181acbfc874b7a457686ecd29b415b43ed0922c309bab7e2cf96832d188a3f4f1b02f2af760a
+  checksum: e7e4da18c7b14e4b8b1ea630d1d8224835698f2bb2485766455bfb9dea93b8ee6cc549a9fe1cb10c984e62685db44fcfb61e8fac913b008cd30a92087f25b9df
   languageName: node
   linkType: hard
 
@@ -8061,7 +8061,7 @@ __metadata:
     "@tanstack/react-query": ^4.29.12
     "@tanstack/react-query-devtools": ^4.35.0
     "@types/node": 18.11.9
-    "@types/react": 18.0.25
+    "@types/react": 18.2.43
     "@types/react-dom": 18.2.17
     "@types/three": ^0.155.1
     chain-registry: 1.19.0
