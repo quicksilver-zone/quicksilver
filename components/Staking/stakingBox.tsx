@@ -187,7 +187,7 @@ export const StakingBox = ({ selectedOption, isModalOpen, setModalOpen, setBalan
           </Tab>
         </TabList>
         <TabPanels>
-          <SlideFade offsetY="60px" in={activeTabIndex === 0}>
+          <SlideFade offsetY="-80px" in={activeTabIndex === 0}>
             <TabPanel>
               <VStack spacing={8} align="center">
                 <Text fontWeight="light" textAlign="center" color="white">
@@ -346,7 +346,7 @@ export const StakingBox = ({ selectedOption, isModalOpen, setModalOpen, setBalan
               </VStack>
             </TabPanel>
           </SlideFade>
-          <SlideFade offsetY="60px" in={activeTabIndex === 1}>
+          <SlideFade offsetY="200px" in={activeTabIndex === 1}>
             <TabPanel>
               <VStack spacing={8} align="center">
                 <Text fontWeight="light" textAlign="center" color="white">

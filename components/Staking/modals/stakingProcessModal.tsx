@@ -222,10 +222,10 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="2xl">
+    <Modal isOpen={isOpen} onClose={onClose} size={{ base: '3xl', md: '2xl' }}>
       <ModalOverlay />
-      <ChakraModalContent h="48%">
-        <ModalBody borderRadius={4} h="48%">
+      <ChakraModalContent h="48%" maxH={'100%'}>
+        <ModalBody borderRadius={4} h="48%" maxH={'100%'}>
           <ModalCloseButton color="white" />
           <HStack position={'relative'} h="100%" spacing="48px" align="stretch">
             {/* Left Section */}

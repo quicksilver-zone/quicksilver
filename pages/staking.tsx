@@ -77,7 +77,7 @@ export default function Staking() {
             </Box>
 
             {/* Content Boxes */}
-            <Flex h="100%" maxH={'2xl'} flexDir={{ base: 'column', md: 'row' }} gap={{ base: '4', md: '0' }}>
+            <Flex h="100%" maxH={'2xl'} flexDir={{ base: 'column', md: 'row' }} gap={{ base: '2', md: '0' }}>
               {/* Staking Box*/}
               <DynamicStakingBox
                 selectedOption={selectedNetwork}

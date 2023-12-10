@@ -16,7 +16,7 @@ export default function Home() {
   return (
     <>
       <SlideFade offsetY={'200px'} in={true} style={{ width: '100%' }}>
-        <Container justifyContent="center" alignItems="center" maxW="5xl">
+        <Container justifyContent="center" alignItems="center" maxW="5xl" mt={12}>
           <Head>
             <title>Governance</title>
             <meta name="viewport" content="width=device-width, initial-scale=1.0" />

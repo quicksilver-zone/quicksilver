@@ -31,7 +31,7 @@ export const ConnectWalletButton = ({ buttonText, isLoading, isDisabled, icon, o
       sx={{
         position: 'relative',
         boxShadow: '0 6px 8px rgba(0, 0, 0, 0.3)',
-        borderRadius: '140px',
+        borderRadius: 100,
         _hover: {
           boxShadow: '0 0 10px #FF9933, 0 0 15px #FFB266',
           transform: 'scale(1.1)',

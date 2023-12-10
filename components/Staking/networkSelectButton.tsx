@@ -35,6 +35,7 @@ export const NetworkSelect: React.FC<CustomMenuProps> = ({ buttonTextColor = 'wh
   return (
     <Menu>
       <MenuButton
+        borderRadius={100}
         position="relative"
         zIndex={5}
         maxW="150px"

@@ -1,5 +1,25 @@
 import { HamburgerIcon, ArrowBackIcon } from '@chakra-ui/icons';
-import { Flex, Box, Image, Spacer, VStack, IconButton, Tooltip, ScaleFade, useBreakpointValue } from '@chakra-ui/react';
+import {
+  Flex,
+  Box,
+  Image,
+  Spacer,
+  VStack,
+  IconButton,
+  Tooltip,
+  ScaleFade,
+  useBreakpointValue,
+  useDisclosure,
+  Drawer,
+  DrawerBody,
+  DrawerCloseButton,
+  DrawerContent,
+  DrawerHeader,
+  DrawerOverlay,
+  Link,
+  HStack,
+} from '@chakra-ui/react';
+import { keyframes } from '@emotion/react';
 import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
 import { FaDiscord, FaTwitter, FaGithub, FaInfo } from 'react-icons/fa';
@@ -24,34 +44,139 @@ export const SideHeader = () => {
   const commonBoxShadowColor = 'rgba(255, 128, 0, 0.25)';
   const toggleSocialLinks = () => setShowSocialLinks(!showSocialLinks);
 
-  // Use breakpoint value to determine if the device is mobile
   const isMobile = useBreakpointValue({ base: true, md: false });
   const transitionStyle = 'all 0.3s ease';
+  const { isOpen, onOpen, onClose } = useDisclosure();
+
+  const handleLogoClick = () => {
+    if (isMobile) {
+      onOpen();
+    } else {
+      router.push('/');
+    }
+  };
+
+  const shadowKeyframes = keyframes`
+  0% {
+    box-shadow: 0 0 10px 5px #FF8000;
+  }
+  25% {
+    box-shadow: 0 0 10px 5px #FF9933;
+  }
+  50% {
+    box-shadow: 0 0 10px 5px #FFB266;
+  }
+  75% {
+    box-shadow: 0 0 10px 5px #FF9933;
+  }
+  100% {
+    box-shadow: 0 0 10px 5px #FF8000;
+  }
+`;
 
   return (
     <Box
       w={isMobile ? 'auto' : 'fit-content'}
-      h={{ base: 'auto', md: '95vh' }}
+      h={{ base: 'fit-content', md: '95vh' }}
       backdropFilter="blur(10px)"
-      borderRadius={100}
+      borderRadius={{ base: 'full', md: 100 }}
       zIndex={10}
       top={6}
       left={6}
       position="fixed"
       bgColor="rgba(214, 219, 220, 0.1)"
     >
-      <Flex direction="column" align="center" zIndex={10} justifyContent="space-between" py={4} height="100%">
+      <Flex direction="column" align="center" zIndex={10} justifyContent="space-between" py={{ base: 0, md: 4 }} height="100%">
         <Image
           alt="logo"
-          mt="-10px"
+          mt={{ base: 0, md: '-10px' }}
           h="75px"
-          w={'75px'}
+          w="75px"
+          borderRadius="full"
           src="/quicksilver-app-v2/img/networks/quicksilver.svg"
-          onClick={() => router.push('/')}
+          onClick={handleLogoClick}
           cursor="pointer"
+          _hover={{
+            ...(isMobile && {
+              animation: `${shadowKeyframes} 3s linear infinite`,
+              transform: 'scale(1.05)',
+              transition: 'transform 0.3s ease',
+            }),
+          }}
         />
 
-        {/* Only display additional content if not on mobile */}
+        <Drawer isOpen={isOpen} placement="left" onClose={onClose}>
+          <DrawerOverlay />
+          <DrawerContent bgColor="black">
+            <DrawerCloseButton color="white" />
+            <DrawerHeader textDecoration={'underline'} fontSize="3xl" letterSpacing={4} lineHeight={2} color="white">
+              Quicksilver
+            </DrawerHeader>
+            <DrawerBody>
+              {['Staking', 'Governance', 'Defi', 'Assets'].map((item) => (
+                <Box key={item} mb={4} position="relative">
+                  <Link
+                    href={`/quicksilver-app-v2/${item.toLowerCase()}`}
+                    fontSize="xl"
+                    fontWeight="medium"
+                    color="white"
+                    position="relative"
+                    _hover={{
+                      textDecoration: 'none',
+                      color: 'transparent',
+                      backgroundClip: 'text',
+                      bgGradient: 'linear(to-r, #FF8000, #FF9933, #FFB266, #FFD9B3, #FFE6CC)',
+                      _before: {
+                        width: '100%',
+                      },
+                    }}
+                    _before={{
+                      content: `""`,
+                      position: 'absolute',
+                      bottom: '-2px',
+                      left: '0',
+                      width: '0',
+                      height: '2px',
+                      bgGradient: 'linear(to-r, #FF8000, #FF9933, #FFB266, #FFD9B3, #FFE6CC)',
+                      transition: 'width 0.4s ease',
+                    }}
+                  >
+                    {item}
+                  </Link>
+                </Box>
+              ))}
+              <HStack mt={'50px'} alignContent={'center'} justifyContent={'space-around'}>
+                <Box
+                  _hover={{
+                    cursor: 'pointer',
+                    boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`,
+                  }}
+                >
+                  <FaGithub size={'25px'} color="rgb(255, 128, 0)" />
+                </Box>
+                <Box
+                  _hover={{
+                    cursor: 'pointer',
+                    boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`,
+                    transition: transitionStyle,
+                  }}
+                >
+                  <FaDiscord size={'25px'} color="rgb(255, 128, 0)" />
+                </Box>
+                <Box
+                  _hover={{
+                    cursor: 'pointer',
+                    boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`,
+                    transition: transitionStyle,
+                  }}
+                >
+                  <FaTwitter size={'25px'} color="rgb(255, 128, 0)" />
+                </Box>
+              </HStack>
+            </DrawerBody>
+          </DrawerContent>
+        </Drawer>
+
         {!isMobile && (
           <>
             <Spacer />
@@ -247,7 +372,6 @@ export const SideHeader = () => {
         )}
 
         <Spacer />
-        {/* Only display the IconButton if not on mobile */}
         {!isMobile && (
           <IconButton
             borderRadius={'100'}
