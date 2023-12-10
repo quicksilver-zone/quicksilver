@@ -37,10 +37,6 @@ Please ensure your IDE is configured to use Typescript v4.9.3
 
 - figure out a better way to fit the custom weight Ui into the modal.
 
-- need to implement some animations for smoother transitions
-
-- need to finish unstaking
-
 - need to handle number displays better, sometimes they show NaN or undefined but quickly render
 
 - need to update any QS endpoints that will potentially be outdated with the coming of 1.4
@@ -53,4 +49,16 @@ Please ensure your IDE is configured to use Typescript v4.9.3
 
 - Mobile breakpoints
 
--
+**Defi**
+
+- design
+
+- build
+
+**Assets**
+
+- design
+
+- build
+
+**Mobile Menu**
