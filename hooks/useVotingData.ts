@@ -1,6 +1,6 @@
 import { useChain } from '@cosmos-kit/react';
 import { useQueries } from '@tanstack/react-query';
-import { ProposalStatus } from 'interchain-query/cosmos/gov/v1/gov';
+import { ProposalStatus } from 'interchain-query/cosmos/gov/v1beta1/gov';
 import {
   useEffect,
   useMemo,
@@ -46,7 +46,7 @@ export const useVotingData = (
     useQueryHooks(chainName);
 
   const proposalsQuery =
-    cosmosQuery.gov.v1.useProposals({
+    cosmosQuery.gov.v1beta1.useProposals({
       request: {
         voter: '',
         depositor: '',
@@ -120,6 +120,7 @@ export const useVotingData = (
     ),
   });
 
+
   const singleQueries = {
     quorum: quorumQuery,
     proposals: proposalsQuery,
@@ -141,6 +142,7 @@ export const useVotingData = (
     staticQueries.forEach((query) =>
       query.remove(),
     );
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chainName]);
 
@@ -209,7 +211,7 @@ export const useVotingData = (
       query.refetch(),
     );
   };
-
+  console.log(singleQueriesData)
   return {
     data: { ...singleQueriesData, votes },
     isLoading,

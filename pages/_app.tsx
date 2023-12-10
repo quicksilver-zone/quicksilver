@@ -78,11 +78,11 @@ function CreateCosmosApp({ Component, pageProps }: AppProps) {
             bgPosition="right center"
             bgAttachment="fixed"
             bgRepeat="no-repeat"
-            bgColor="#000000"
           >
-            <Header chainName="quicksilver" />
-            <SideHeader />
-
+            <Flex justifyContent={'space-between'} alignItems={'center'}>
+              <Header chainName="quicksilver" />
+              <SideHeader />
+            </Flex>
             <Component {...pageProps} />
           </Box>
         </QueryClientProvider>

@@ -26,6 +26,7 @@ export const SideHeader = () => {
 
   // Use breakpoint value to determine if the device is mobile
   const isMobile = useBreakpointValue({ base: true, md: false });
+  const transitionStyle = 'all 0.3s ease';
 
   return (
     <Box
@@ -44,6 +45,7 @@ export const SideHeader = () => {
           alt="logo"
           mt="-10px"
           h="75px"
+          w={'75px'}
           src="/quicksilver-app-v2/img/networks/quicksilver.svg"
           onClick={() => router.push('/')}
           cursor="pointer"
@@ -68,6 +70,7 @@ export const SideHeader = () => {
                       }
                       _hover={{
                         boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`,
+                        transition: transitionStyle,
                       }}
                     >
                       <Image
@@ -96,6 +99,7 @@ export const SideHeader = () => {
                       }
                       _hover={{
                         boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`,
+                        transition: transitionStyle,
                       }}
                     >
                       <Image
@@ -104,7 +108,8 @@ export const SideHeader = () => {
                           filter: 'contrast(100%)',
                         }}
                         alt="Governance"
-                        h="55px"
+                        h="60px"
+                        w={'60px'}
                         src="/quicksilver-app-v2/img/test2.png"
                       />
                     </Box>
@@ -122,6 +127,7 @@ export const SideHeader = () => {
                       }
                       _hover={{
                         boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`,
+                        transition: transitionStyle,
                       }}
                     >
                       <Image
@@ -148,6 +154,7 @@ export const SideHeader = () => {
                       }
                       _hover={{
                         boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`,
+                        transition: transitionStyle,
                       }}
                     >
                       <Image
@@ -183,6 +190,7 @@ export const SideHeader = () => {
                       _hover={{
                         cursor: 'pointer',
                         boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`,
+                        transition: transitionStyle,
                       }}
                     >
                       <IoIosDocument size={'25px'} color="rgba(255, 128, 0, 0.9)" />
@@ -193,6 +201,7 @@ export const SideHeader = () => {
                       _hover={{
                         cursor: 'pointer',
                         boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`,
+                        transition: transitionStyle,
                       }}
                     >
                       <FaDiscord size={'25px'} color="rgb(255, 128, 0)" />
@@ -203,6 +212,7 @@ export const SideHeader = () => {
                       _hover={{
                         cursor: 'pointer',
                         boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`,
+                        transition: transitionStyle,
                       }}
                     >
                       <FaGithub size={'25px'} color="rgb(255, 128, 0)" />
@@ -213,6 +223,7 @@ export const SideHeader = () => {
                       _hover={{
                         cursor: 'pointer',
                         boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`,
+                        transition: transitionStyle,
                       }}
                     >
                       <FaTwitter size={'25px'} color="rgb(255, 128, 0)" />
@@ -223,6 +234,7 @@ export const SideHeader = () => {
                       _hover={{
                         cursor: 'pointer',
                         boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 15px 5px ${commonBoxShadowColor}`,
+                        transition: transitionStyle,
                       }}
                     >
                       <MdPrivacyTip size={'25px'} color="rgb(255, 128, 0)" />

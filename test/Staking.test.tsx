@@ -14,6 +14,7 @@ const networks = [
     qlogo: '/quicksilver-app-v2/img/networks/q-atom.svg',
     name: 'Cosmos Hub',
     chainName: 'cosmoshub',
+    chainId: 'cosmoshub-4',
   },
   {
     value: 'OSMO',
@@ -21,6 +22,7 @@ const networks = [
     qlogo: '/quicksilver-app-v2/img/networks/qosmo.svg',
     name: 'Osmosis',
     chainName: 'osmosis',
+    chainId: 'osmosis-1',
   },
   {
     value: 'STARS',
@@ -28,6 +30,7 @@ const networks = [
     qlogo: '/quicksilver-app-v2/img/networks/stargaze-2.png',
     name: 'Stargaze',
     chainName: 'stargaze',
+    chainId: 'stargaze-1',
   },
   {
     value: 'REGEN',
@@ -35,6 +38,7 @@ const networks = [
     qlogo: '/quicksilver-app-v2/img/networks/regen.svg',
     name: 'Regen',
     chainName: 'regen',
+    chainId: 'regen-1',
   },
   {
     value: 'SOMM',
@@ -42,6 +46,7 @@ const networks = [
     qlogo: '/quicksilver-app-v2/img/networks/sommelier.png',
     name: 'Sommelier',
     chainName: 'sommelier',
+    chainId: 'sommelier-3',
   },
 ];
 
@@ -49,12 +54,7 @@ function MockNetwork() {
   const [selectedNetwork, setSelectedNetwork] = useState(networks[0]);
 
   const DummyNetworkSelect = mock(() => {
-    return (
-      <NetworkSelect
-        selectedOption={selectedNetwork}
-        setSelectedNetwork={setSelectedNetwork}
-      />
-    );
+    return <NetworkSelect selectedOption={selectedNetwork} setSelectedNetwork={setSelectedNetwork} />;
   });
   return DummyNetworkSelect();
 }

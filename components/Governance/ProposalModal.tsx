@@ -18,7 +18,7 @@ import {
   useColorModeValue,
 } from '@chakra-ui/react';
 import { cosmos } from 'interchain-query';
-import { Proposal } from 'interchain-query/cosmos/gov/v1/gov';
+import { Proposal } from 'interchain-query/cosmos/gov/v1beta1/gov';
 import React, { useMemo, useState } from 'react';
 import { PieChart } from 'react-minimal-pie-chart';
 
@@ -70,7 +70,7 @@ export const ProposalModal = ({
     },
     {
       title: 'NWV',
-      value: Number(proposal.finalTallyResult?.noWithVetoCount),
+      value: Number(proposal.finalTallyResult?.noWithVeto),
       color: VoteColor.NWV,
     },
     {
