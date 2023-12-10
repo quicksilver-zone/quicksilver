@@ -1,0 +1,299 @@
+syntax = "proto3";
+package cosmos.staking.v1beta1;
+
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "cosmos/staking/v1beta1/staking.proto";
+import "gogoproto/gogo.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/quicksilver-zone/quicksilver/x/lsmtypes";
+option (gogoproto.equal_all) = true;
+
+// TokenizeShareRecordReward represents the properties of tokenize share
+message TokenizeShareRecordReward {
+  option (gogoproto.goproto_getters) = false;
+  option (gogoproto.goproto_stringer) = true;
+
+  uint64 record_id = 1;
+
+  repeated cosmos.base.v1beta1.DecCoin reward = 2 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
+    (gogoproto.nullable) = false
+  ];
+}
+
+// QueryTokenizeShareRecordRewardRequest is the request type for the
+// Query/TokenizeShareRecordReward RPC
+// method.
+message QueryTokenizeShareRecordRewardRequest {
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string owner_address = 1 [(gogoproto.moretags) = "yaml:\"owner_address\""];
+}
+
+// QueryTokenizeShareRecordRewardResponse is the response type for the
+// Query/TokenizeShareRecordReward RPC method.
+message QueryTokenizeShareRecordRewardResponse {
+  // rewards defines all the rewards accrued by a delegator.
+  repeated TokenizeShareRecordReward rewards = 1 [(gogoproto.nullable) = false];
+  // total defines the sum of all the rewards.
+  repeated cosmos.base.v1beta1.DecCoin total = 2 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins"
+  ];
+}
+
+// MsgWithdrawTokenizeShareRecordReward withdraws tokenize share rewards for a
+// specific record
+message MsgWithdrawTokenizeShareRecordReward {
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string owner_address = 1 [(gogoproto.moretags) = "yaml:\"owner_address\""];
+  uint64 record_id = 2;
+}
+
+// MsgWithdrawTokenizeShareRecordReward defines the
+// Msg/WithdrawTokenizeShareRecordReward response type.
+message MsgWithdrawTokenizeShareRecordRewardResponse {}
+
+// MsgWithdrawAllTokenizeShareRecordReward withdraws tokenize share rewards or
+// all records owned by the designated owner
+message MsgWithdrawAllTokenizeShareRecordReward {
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string owner_address = 1 [(gogoproto.moretags) = "yaml:\"owner_address\""];
+}
+
+// MsgWithdrawAllTokenizeShareRecordRewardResponse defines the
+// Msg/WithdrawTokenizeShareRecordReward response type.
+message MsgWithdrawAllTokenizeShareRecordRewardResponse {}
+
+// QueryTokenizeShareRecordByIdRequest is request type for the
+// Query/QueryTokenizeShareRecordById RPC method.
+message QueryTokenizeShareRecordByIdRequest {
+  uint64 id = 1;
+}
+
+// QueryTokenizeShareRecordByIdRequest is response type for the
+// Query/QueryTokenizeShareRecordById RPC method.
+message QueryTokenizeShareRecordByIdResponse {
+  TokenizeShareRecord record = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryTokenizeShareRecordByDenomRequest is request type for the
+// Query/QueryTokenizeShareRecordByDenom RPC method.
+message QueryTokenizeShareRecordByDenomRequest {
+  string denom = 1;
+}
+
+// QueryTokenizeShareRecordByDenomResponse is response type for the
+// Query/QueryTokenizeShareRecordByDenom RPC method.
+message QueryTokenizeShareRecordByDenomResponse {
+  TokenizeShareRecord record = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryTokenizeShareRecordsOwnedRequest is request type for the
+// Query/QueryTokenizeShareRecordsOwned RPC method.
+message QueryTokenizeShareRecordsOwnedRequest {
+  string owner = 1;
+}
+
+// QueryTokenizeShareRecordsOwnedResponse is response type for the
+// Query/QueryTokenizeShareRecordsOwned RPC method.
+message QueryTokenizeShareRecordsOwnedResponse {
+  repeated TokenizeShareRecord records = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryAllTokenizeShareRecordsRequest is request type for the
+// Query/QueryAllTokenizeShareRecords RPC method.
+message QueryAllTokenizeShareRecordsRequest {
+  option (gogoproto.equal) = false;
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+// QueryAllTokenizeShareRecordsResponse is response type for the
+// Query/QueryAllTokenizeShareRecords RPC method.
+message QueryAllTokenizeShareRecordsResponse {
+  option (gogoproto.equal) = false;
+  repeated TokenizeShareRecord records = 1 [(gogoproto.nullable) = false];
+  // pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryLastTokenizeShareRecordIdRequest is request type for the
+// Query/QueryLastTokenizeShareRecordId RPC method.
+message QueryLastTokenizeShareRecordIdRequest {}
+
+// QueryLastTokenizeShareRecordIdResponse is response type for the
+// Query/QueryLastTokenizeShareRecordId RPC method.
+message QueryLastTokenizeShareRecordIdResponse {
+  uint64 id = 1;
+}
+
+// QueryTotalTokenizeSharedAssetsRequest is request type for the
+// Query/QueryTotalTokenizeSharedAssets RPC method.
+message QueryTotalTokenizeSharedAssetsRequest {}
+
+// QueryTotalTokenizeSharedAssetsResponse is response type for the
+// Query/QueryTotalTokenizeSharedAssets RPC method.
+message QueryTotalTokenizeSharedAssetsResponse {
+  cosmos.base.v1beta1.Coin value = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryTotalLiquidStakedRequest is request type for the
+// Query/QueryQueryTotalLiquidStaked RPC method.
+message QueryTotalLiquidStaked {}
+
+// QueryTotalLiquidStakedResponse is response type for the
+// Query/QueryQueryTotalLiquidStaked RPC method.
+message QueryTotalLiquidStakedResponse {
+  string tokens = 1;
+}
+
+// QueryTokenizeShareLockInfo queries the tokenize share lock information
+// associated with given account
+message QueryTokenizeShareLockInfo {
+  string address = 1;
+}
+
+// QueryTokenizeShareLockInfoResponse is the response from the
+// QueryTokenizeShareLockInfo query
+message QueryTokenizeShareLockInfoResponse {
+  string status = 1;
+  string expiration_time = 2;
+}
+
+// TokenizeShareRecord represents a tokenized delegation
+message TokenizeShareRecord {
+  option (gogoproto.equal) = true;
+
+  uint64 id = 1;
+  string owner = 2;
+  string module_account = 3; // module account take the role of delegator
+  string validator = 4; // validator delegated to for tokenize share record creation
+}
+
+// PendingTokenizeShareAuthorizations stores a list of addresses that have their
+// tokenize share enablement in progress
+message PendingTokenizeShareAuthorizations {
+  repeated string addresses = 1;
+}
+
+// TokenizeShareLockStatus indicates whether the address is able to tokenize
+// shares
+enum TokenizeShareLockStatus {
+  option (gogoproto.goproto_enum_prefix) = false;
+
+  // UNSPECIFIED defines an empty tokenize share lock status
+  TOKENIZE_SHARE_LOCK_STATUS_UNSPECIFIED = 0;
+  // LOCKED indicates the account is locked and cannot tokenize shares
+  TOKENIZE_SHARE_LOCK_STATUS_LOCKED = 1;
+  // UNLOCKED indicates the account is unlocked and can tokenize shares
+  TOKENIZE_SHARE_LOCK_STATUS_UNLOCKED = 2;
+  // LOCK_EXPIRING indicates the account is unable to tokenize shares, but
+  // will be able to tokenize shortly (after 1 unbonding period)
+  TOKENIZE_SHARE_LOCK_STATUS_LOCK_EXPIRING = 3;
+}
+
+// MsgUnbondValidator defines a method for performing the status transition for
+// a validator from bonded to unbonded
+message MsgUnbondValidator {
+  string validator_address = 1 [(gogoproto.moretags) = "yaml:\"address\""];
+}
+
+// MsgUnbondValidatorResponse defines the Msg/UnbondValidator response type.
+message MsgUnbondValidatorResponse {}
+
+// MsgTokenizeShares tokenizes a delegation
+message MsgTokenizeShares {
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string delegator_address = 1 [(gogoproto.moretags) = "yaml:\"delegator_address\""];
+  string validator_address = 2 [(gogoproto.moretags) = "yaml:\"validator_address\""];
+  cosmos.base.v1beta1.Coin amount = 3 [(gogoproto.nullable) = false];
+  string tokenized_share_owner = 4;
+}
+
+// MsgTokenizeSharesResponse defines the Msg/MsgTokenizeShares response type.
+message MsgTokenizeSharesResponse {
+  cosmos.base.v1beta1.Coin amount = 1 [(gogoproto.nullable) = false];
+}
+
+// MsgRedeemTokensForShares redeems a tokenized share back into a native
+// delegation
+message MsgRedeemTokensForShares {
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string delegator_address = 1 [(gogoproto.moretags) = "yaml:\"delegator_address\""];
+  cosmos.base.v1beta1.Coin amount = 2 [(gogoproto.nullable) = false];
+}
+
+// MsgRedeemTokensForSharesResponse defines the Msg/MsgRedeemTokensForShares
+// response type.
+message MsgRedeemTokensForSharesResponse {
+  cosmos.base.v1beta1.Coin amount = 1 [(gogoproto.nullable) = false];
+}
+
+// MsgTransferTokenizeShareRecord transfer a tokenize share record
+message MsgTransferTokenizeShareRecord {
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
+
+  uint64 tokenize_share_record_id = 1;
+  string sender = 2;
+  string new_owner = 3;
+}
+
+// MsgTransferTokenizeShareRecordResponse defines the
+// Msg/MsgTransferTokenizeShareRecord response type.
+message MsgTransferTokenizeShareRecordResponse {}
+
+// MsgDisableTokenizeShares prevents the tokenization of shares for a given
+// address
+message MsgDisableTokenizeShares {
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string delegator_address = 1 [(gogoproto.moretags) = "yaml:\"delegator_address\""];
+}
+
+// MsgDisableTokenizeSharesResponse defines the Msg/DisableTokenizeShares
+// response type.
+message MsgDisableTokenizeSharesResponse {}
+
+// MsgEnableTokenizeShares re-enables tokenization of shares for a given address
+message MsgEnableTokenizeShares {
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string delegator_address = 1 [(gogoproto.moretags) = "yaml:\"delegator_address\""];
+}
+
+// MsgEnableTokenizeSharesResponse defines the Msg/EnableTokenizeShares response
+// type.
+message MsgEnableTokenizeSharesResponse {
+  google.protobuf.Timestamp completion_time = 1 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdtime) = true
+  ];
+}
+
+// MsgValidatorBond defines a SDK message for performing validator self-bond of
+// delegated coins from a delegator to a validator.
+message MsgValidatorBond {
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string delegator_address = 1 [(gogoproto.moretags) = "yaml:\"delegator_address\""];
+  string validator_address = 2 [(gogoproto.moretags) = "yaml:\"validator_address\""];
+}
+
+// MsgValidatorBondResponse defines the Msg/ValidatorBond response type.
+message MsgValidatorBondResponse {}

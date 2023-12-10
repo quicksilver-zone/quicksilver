@@ -36,7 +36,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - uses: actions/checkout@v4
-      - uses: actions/setup-go@v4
+      - uses: actions/setup-go@v5
         with:
           go-version: "1.20.5"
 
@@ -57,7 +57,7 @@ jobs:
     needs: build-and-push-image
     steps:
       - name: Set up Go 1.20
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
           go-version: "1.20.5"
         id: go
@@ -74,7 +74,7 @@ jobs:
     needs: build-and-push-image
     steps:
       - name: Set up Go 1.20
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
           go-version: "1.20.5"
         id: go
@@ -91,7 +91,7 @@ jobs:
     needs: build-and-push-image
     steps:
       - name: Set up Go 1.20
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
           go-version: "1.20.5"
         id: go

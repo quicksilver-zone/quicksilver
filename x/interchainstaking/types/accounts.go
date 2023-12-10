@@ -36,7 +36,7 @@ func (a *ICAAccount) IncrementBalanceWaitgroup() {
 }
 
 func (a *ICAAccount) DecrementBalanceWaitgroup() error {
-	if a.BalanceWaitgroup <= 0 {
+	if a.BalanceWaitgroup == 0 {
 		return errors.New("unable to decrement the balance waitgroup below 0")
 	}
 	a.BalanceWaitgroup--

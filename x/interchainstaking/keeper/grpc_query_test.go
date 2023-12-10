@@ -498,7 +498,7 @@ func (suite *KeeperTestSuite) TestKeeper_Delegations() {
 					ValidatorAddress:  icsKeeper.GetValidators(ctx, suite.chainB.ChainID)[0].ValoperAddress,
 					Amount:            sdk.NewCoin("denom", sdk.NewInt(15000)),
 				}
-				icsKeeper.SetDelegation(ctx, &zone, delegation)
+				icsKeeper.SetDelegation(ctx, zone.ChainId, delegation)
 			},
 			&types.QueryDelegationsRequest{
 				ChainId: suite.chainB.ChainID,
@@ -772,7 +772,7 @@ func (suite *KeeperTestSuite) TestKeeper_ZoneWithdrawalRecords() {
 				zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
 				suite.True(found)
 
-				distribution := []*types.Distribution{
+				distributions := []*types.Distribution{
 					{
 						Valoper: icsKeeper.GetValidators(ctx, suite.chainB.ChainID)[0].ValoperAddress,
 						Amount:  10000000,
@@ -788,7 +788,7 @@ func (suite *KeeperTestSuite) TestKeeper_ZoneWithdrawalRecords() {
 					ctx,
 					zone.ChainId,
 					delegatorAddress,
-					distribution,
+					distributions,
 					testAddress,
 					sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, math.NewInt(15000000))),
 					sdk.NewCoin(zone.LocalDenom, math.NewInt(15000000)),
@@ -877,7 +877,7 @@ func (suite *KeeperTestSuite) TestKeeper_UserWithdrawalRecords() {
 				zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
 				suite.True(found)
 
-				distribution := []*types.Distribution{
+				distributions := []*types.Distribution{
 					{
 						Valoper: icsKeeper.GetValidators(ctx, suite.chainB.ChainID)[0].ValoperAddress,
 						Amount:  10000000,
@@ -893,7 +893,7 @@ func (suite *KeeperTestSuite) TestKeeper_UserWithdrawalRecords() {
 					ctx,
 					zone.ChainId,
 					delegatorAddress,
-					distribution,
+					distributions,
 					testAddress,
 					sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, math.NewInt(15000000))),
 					sdk.NewCoin(zone.LocalDenom, math.NewInt(15000000)),
@@ -970,7 +970,7 @@ func (suite *KeeperTestSuite) TestKeeper_WithdrawalRecords() {
 				zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
 				suite.True(found)
 
-				distribution := []*types.Distribution{
+				distributions := []*types.Distribution{
 					{
 						Valoper: icsKeeper.GetValidators(ctx, suite.chainB.ChainID)[0].ValoperAddress,
 						Amount:  10000000,
@@ -986,7 +986,7 @@ func (suite *KeeperTestSuite) TestKeeper_WithdrawalRecords() {
 					ctx,
 					zone.ChainId,
 					delegatorAddress,
-					distribution,
+					distributions,
 					testAddress,
 					sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, math.NewInt(15000000))),
 					sdk.NewCoin(zone.LocalDenom, math.NewInt(15000000)),
@@ -1299,6 +1299,53 @@ func (suite *KeeperTestSuite) TestKeeper_MappedAccounts() {
 			suite.NoError(err)
 
 			suite.T().Logf("Response:\n%s\n", vstr)
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestKeeper_Zone() {
+	testCases := []struct {
+		name     string
+		malleate func()
+		req      *types.QueryZoneRequest
+		wantErr  bool
+	}{
+		{
+			name:     "empty request",
+			malleate: func() {},
+			req:      nil,
+			wantErr:  true,
+		},
+		{
+			name:     "zone not found",
+			malleate: func() {},
+			req:      &types.QueryZoneRequest{ChainId: suite.chainB.ChainID},
+			wantErr:  true,
+		},
+		{
+			name: "zone valid request",
+			malleate: func() {
+				suite.SetupTest()
+				suite.setupTestZones()
+			},
+			req:     &types.QueryZoneRequest{ChainId: suite.chainB.ChainID},
+			wantErr: false,
+		},
+	}
+	for _, tc := range testCases {
+		suite.Run(tc.name, func() {
+			tc.malleate()
+			icsKeeper := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
+			ctx := suite.chainA.GetContext()
+
+			resp, err := icsKeeper.Zone(ctx, tc.req)
+			if tc.wantErr {
+				suite.T().Logf("Error:\n%v\n", err)
+				suite.Error(err)
+			} else {
+				suite.NoError(err)
+				suite.NotNil(resp)
+			}
 		})
 	}
 }
