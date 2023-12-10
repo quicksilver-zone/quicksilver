@@ -9,7 +9,6 @@ import (
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	epochstypes "github.com/quicksilver-zone/quicksilver/x/epochs/types"
 	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 )
@@ -147,20 +146,17 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNum
 			0,
 		)
 
-		addressBytes, err := addressutils.AccAddressFromBech32(zone.DelegationAddress.Address, zone.AccountPrefix)
-		if err != nil {
-			k.Logger(ctx).Error("cannot decode bech32 delegation addr")
-			return false
-		}
+		balancesQuery := banktypes.QueryAllBalancesRequest{Address: zone.DelegationAddress.Address}
+		bz = k.cdc.MustMarshal(&balancesQuery)
 		k.ICQKeeper.MakeRequest(
 			ctx,
 			zone.ConnectionId,
 			zone.ChainId,
-			types.BankStoreKey,
-			append(banktypes.CreateAccountBalancesPrefix(addressBytes), []byte(zone.BaseDenom)...),
+			"cosmos.bank.v1beta1.Query/AllBalances",
+			bz,
 			sdk.NewInt(-1),
 			types.ModuleName,
-			"delegationaccountbalance",
+			"delegationaccountbalances",
 			0,
 		)
 		// increment waitgroup; decremented in delegationaccountbalance callback

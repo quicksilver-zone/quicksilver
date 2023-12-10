@@ -33,7 +33,7 @@ func TestValidInputs(t *testing.T) {
 		"validator2": sdkmath.NewInt(450),
 	}
 
-	result, err := types.DetermineAllocationsForDelegation(currentAllocations, currentSum, targetAllocations, amount)
+	result, err := types.DetermineAllocationsForDelegation(currentAllocations, currentSum, targetAllocations, amount, make(map[string]sdkmath.Int))
 	require.NoError(t, err)
 
 	if !reflect.DeepEqual(result, expectedAllocations) {
@@ -48,7 +48,7 @@ func TestMinimumInputs(t *testing.T) {
 	targetAllocations := types.ValidatorIntents{}
 	amount := sdk.Coins{sdk.NewCoin("token", sdkmath.ZeroInt())}
 
-	_, err := types.DetermineAllocationsForDelegation(currentAllocations, currentSum, targetAllocations, amount)
+	_, err := types.DetermineAllocationsForDelegation(currentAllocations, currentSum, targetAllocations, amount, make(map[string]sdkmath.Int))
 	require.Error(t, err)
 }
 
@@ -70,7 +70,7 @@ func TestMaximumInputs(t *testing.T) {
 		"validator2": sdkmath.NewInt(4500000000),
 	}
 
-	result, err := types.DetermineAllocationsForDelegation(currentAllocations, currentSum, targetAllocations, amount)
+	result, err := types.DetermineAllocationsForDelegation(currentAllocations, currentSum, targetAllocations, amount, make(map[string]sdkmath.Int))
 	require.NoError(t, err)
 
 	if !reflect.DeepEqual(result, expectedAllocations) {
@@ -93,7 +93,7 @@ func TestEmptyCurrentAllocations(t *testing.T) {
 		"validator2": sdkmath.NewInt(500),
 	}
 
-	result, err := types.DetermineAllocationsForDelegation(currentAllocations, currentSum, targetAllocations, amount)
+	result, err := types.DetermineAllocationsForDelegation(currentAllocations, currentSum, targetAllocations, amount, make(map[string]sdkmath.Int))
 	require.NoError(t, err)
 
 	if !reflect.DeepEqual(result, expectedAllocations) {
@@ -111,7 +111,7 @@ func TestEmptyTargetAllocations(t *testing.T) {
 	targetAllocations := types.ValidatorIntents{}
 	amount := sdk.Coins{sdk.NewCoin("token", sdk.NewInt(1000))}
 
-	_, err := types.DetermineAllocationsForDelegation(currentAllocations, currentSum, targetAllocations, amount)
+	_, err := types.DetermineAllocationsForDelegation(currentAllocations, currentSum, targetAllocations, amount, make(map[string]sdkmath.Int))
 	require.Error(t, err)
 }
 
@@ -133,7 +133,7 @@ func TestNonEqualTargetAllocations(t *testing.T) {
 		"validator2": sdkmath.NewInt(710),
 	}
 
-	result, err := types.DetermineAllocationsForDelegation(currentAllocations, currentSum, targetAllocations, amount)
+	result, err := types.DetermineAllocationsForDelegation(currentAllocations, currentSum, targetAllocations, amount, make(map[string]sdkmath.Int))
 	require.NoError(t, err)
 
 	if !reflect.DeepEqual(result, expectedAllocations) {
@@ -161,7 +161,7 @@ func TestValidInputsWithZeroWeight(t *testing.T) {
 		"validator2": sdkmath.NewInt(450),
 	}
 
-	result, err := types.DetermineAllocationsForDelegation(currentAllocations, currentSum, targetAllocations, amount)
+	result, err := types.DetermineAllocationsForDelegation(currentAllocations, currentSum, targetAllocations, amount, make(map[string]sdkmath.Int))
 	require.NoError(t, err)
 
 	if !reflect.DeepEqual(result, expectedAllocations) {
@@ -191,7 +191,7 @@ func TestTargetAllocationsMoreValidators(t *testing.T) {
 		"validator4": sdkmath.NewInt(282),
 	}
 
-	result, err := types.DetermineAllocationsForDelegation(currentAllocations, currentSum, targetAllocations, amount)
+	result, err := types.DetermineAllocationsForDelegation(currentAllocations, currentSum, targetAllocations, amount, make(map[string]sdkmath.Int))
 	require.NoError(t, err)
 
 	if !reflect.DeepEqual(result, expectedAllocations) {
@@ -218,7 +218,7 @@ func TestCurrentAllocationsMoreValidators(t *testing.T) {
 		"validator2": sdkmath.NewInt(511),
 	}
 
-	result, err := types.DetermineAllocationsForDelegation(currentAllocations, currentSum, targetAllocations, amount)
+	result, err := types.DetermineAllocationsForDelegation(currentAllocations, currentSum, targetAllocations, amount, make(map[string]sdkmath.Int))
 	require.NoError(t, err)
 
 	if !reflect.DeepEqual(result, expectedAllocations) {
