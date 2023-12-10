@@ -16,11 +16,10 @@ import {
   HStack,
   Button,
   Spacer,
-  Spinner,
   Skeleton,
   SkeletonText,
   useToast,
-  Fade,
+  SlideFade,
 } from '@chakra-ui/react';
 import { useChain } from '@cosmos-kit/react';
 import React, { useEffect, useState } from 'react';
@@ -47,6 +46,7 @@ type StakingBoxProps = {
 };
 
 export const StakingBox = ({ selectedOption, isModalOpen, setModalOpen, setBalance, setQBalance }: StakingBoxProps) => {
+  const [activeTabIndex, setActiveTabIndex] = useState(0);
   const [tokenAmount, setTokenAmount] = useState<string>('0');
   const { address } = useChain(selectedOption.chainName);
   const { address: qAddress } = useChain('quicksilver');
@@ -149,7 +149,7 @@ export const StakingBox = ({ selectedOption, isModalOpen, setModalOpen, setBalan
 
   return (
     <Box position="relative" backdropFilter="blur(50px)" bgColor="rgba(255,255,255,0.1)" flex="1" borderRadius="10px" p={5}>
-      <Tabs isFitted variant="enclosed">
+      <Tabs isFitted variant="enclosed" onChange={(index) => setActiveTabIndex(index)}>
         <TabList mt={'4'} mb="1em" overflow="hidden" borderBottomColor="transparent" bg="rgba(255,255,255,0.1)" p={2} borderRadius="25px">
           <Tab
             borderRadius="25px"
@@ -187,7 +187,7 @@ export const StakingBox = ({ selectedOption, isModalOpen, setModalOpen, setBalan
           </Tab>
         </TabList>
         <TabPanels>
-          <Fade in={true}>
+          <SlideFade offsetY="60px" in={activeTabIndex === 0}>
             <TabPanel>
               <VStack spacing={8} align="center">
                 <Text fontWeight="light" textAlign="center" color="white">
@@ -330,11 +330,7 @@ export const StakingBox = ({ selectedOption, isModalOpen, setModalOpen, setBalan
                 <Button
                   width="100%"
                   _hover={{
-                    bgColor: '#181818',
-                  }}
-                  _disabled={{
-                    bgColor: '#181818',
-                    cursor: 'not-allowed',
+                    bgColor: 'complimentary.1000',
                   }}
                   onClick={() => setModalOpen(true)}
                   isDisabled={Number(tokenAmount) === 0 || !address}
@@ -349,8 +345,8 @@ export const StakingBox = ({ selectedOption, isModalOpen, setModalOpen, setBalan
                 />
               </VStack>
             </TabPanel>
-          </Fade>
-          <Fade in={true}>
+          </SlideFade>
+          <SlideFade offsetY="60px" in={activeTabIndex === 1}>
             <TabPanel>
               <VStack spacing={8} align="center">
                 <Text fontWeight="light" textAlign="center" color="white">
@@ -465,12 +461,13 @@ export const StakingBox = ({ selectedOption, isModalOpen, setModalOpen, setBalan
                     bgColor: 'complimentary.1000',
                   }}
                   onClick={handleLiquidUnstake}
+                  isDisabled={Number(tokenAmount) === 0 || !address}
                 >
                   Unstake
                 </Button>
               </VStack>
             </TabPanel>
-          </Fade>
+          </SlideFade>
         </TabPanels>
       </Tabs>
     </Box>
