@@ -12,10 +12,11 @@ import (
 
 	crescenttypes "github.com/quicksilver-zone/quicksilver/third-party-chains/crescent-types"
 	liquiditytypes "github.com/quicksilver-zone/quicksilver/third-party-chains/crescent-types/liquidity/types"
-	lpfarm "github.com/quicksilver-zone/quicksilver/third-party-chains/crescent-types/lpfarm"
+	lpfarmtypes "github.com/quicksilver-zone/quicksilver/third-party-chains/crescent-types/lpfarm"
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 	"github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
+	rewardstypes "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 )
 
 type CrescentModule struct{}
@@ -24,37 +25,37 @@ var _ Submodule = &CrescentModule{}
 
 func (CrescentModule) Hooks(ctx sdk.Context, k *Keeper) {
 	// crescent-types params
-	params, found := k.GetProtocolData(ctx, types.ProtocolDataTypeCrescentParams, types.CrescentParamsKey)
+	params, found := k.GetProtocolData(ctx, rewardstypes.ProtocolDataTypeCrescentParams, rewardstypes.CrescentParamsKey)
 	if !found {
 		k.Logger(ctx).Error("unable to query crescentparams in CrescentModule hook")
 		return
 	}
 
-	paramsData := types.CrescentParamsProtocolData{}
+	paramsData := rewardstypes.CrescentParamsProtocolData{}
 	if err := json.Unmarshal(params.Data, &paramsData); err != nil {
 		k.Logger(ctx).Error("unable to unmarshal crescentparams in CrescentModule hook", "error", err)
 		return
 	}
 
-	data, found := k.GetProtocolData(ctx, types.ProtocolDataTypeConnection, paramsData.ChainID)
+	data, found := k.GetProtocolData(ctx, rewardstypes.ProtocolDataTypeConnection, paramsData.ChainID)
 	if !found {
 		k.Logger(ctx).Error(fmt.Sprintf("unable to query connection/%s in CrescentModule hook", paramsData.ChainID))
 		return
 	}
 
-	connectionData := types.ConnectionProtocolData{}
+	connectionData := rewardstypes.ConnectionProtocolData{}
 	if err := json.Unmarshal(data.Data, &connectionData); err != nil {
 		k.Logger(ctx).Error(fmt.Sprintf("unable to unmarshal connection/%s in CrescentModule hook", paramsData.ChainID))
 		return
 	}
 
 	// update reserve address denom balance
-	k.IteratePrefixedProtocolDatas(ctx, types.GetPrefixProtocolDataKey(types.ProtocolDataTypeCrescentReserveAddressBalance), func(idx int64, _ []byte, data types.ProtocolData) bool {
-		ibalance, err := types.UnmarshalProtocolData(types.ProtocolDataTypeCrescentReserveAddressBalance, data.Data)
+	k.IteratePrefixedProtocolDatas(ctx, rewardstypes.GetPrefixProtocolDataKey(rewardstypes.ProtocolDataTypeCrescentReserveAddressBalance), func(idx int64, _ []byte, data rewardstypes.ProtocolData) bool {
+		ibalance, err := rewardstypes.UnmarshalProtocolData(rewardstypes.ProtocolDataTypeCrescentReserveAddressBalance, data.Data)
 		if err != nil {
 			return false
 		}
-		balance, _ := ibalance.(*types.CrescentReserveAddressBalanceProtocolData)
+		balance, _ := ibalance.(*rewardstypes.CrescentReserveAddressBalanceProtocolData)
 		_, addrBytes, _ := bech32.DecodeAndConvert(balance.ReserveAddress)
 		lookupKey := banktypes.CreateAccountBalancesPrefix(addrBytes)
 
@@ -73,12 +74,12 @@ func (CrescentModule) Hooks(ctx sdk.Context, k *Keeper) {
 	})
 
 	// update pool data
-	k.IteratePrefixedProtocolDatas(ctx, types.GetPrefixProtocolDataKey(types.ProtocolDataTypeCrescentPool), func(idx int64, _ []byte, data types.ProtocolData) bool {
-		ipool, err := types.UnmarshalProtocolData(types.ProtocolDataTypeCrescentPool, data.Data)
+	k.IteratePrefixedProtocolDatas(ctx, rewardstypes.GetPrefixProtocolDataKey(rewardstypes.ProtocolDataTypeCrescentPool), func(idx int64, _ []byte, data types.ProtocolData) bool {
+		ipool, err := rewardstypes.UnmarshalProtocolData(rewardstypes.ProtocolDataTypeCrescentPool, data.Data)
 		if err != nil {
 			return false
 		}
-		pool, _ := ipool.(*types.CrescentPoolProtocolData)
+		pool, _ := ipool.(*rewardstypes.CrescentPoolProtocolData)
 
 		poolKey := liquiditytypes.GetPoolKey(pool.PoolID)
 
@@ -97,12 +98,12 @@ func (CrescentModule) Hooks(ctx sdk.Context, k *Keeper) {
 	})
 
 	// update poolcoin supply
-	k.IteratePrefixedProtocolDatas(ctx, types.GetPrefixProtocolDataKey(types.ProtocolDataTypeCrescentPoolCoinSupply), func(idx int64, _ []byte, data types.ProtocolData) bool {
-		isupply, err := types.UnmarshalProtocolData(types.ProtocolDataTypeCrescentPoolCoinSupply, data.Data)
+	k.IteratePrefixedProtocolDatas(ctx, rewardstypes.GetPrefixProtocolDataKey(rewardstypes.ProtocolDataTypeCrescentPoolCoinSupply), func(idx int64, _ []byte, data types.ProtocolData) bool {
+		isupply, err := rewardstypes.UnmarshalProtocolData(rewardstypes.ProtocolDataTypeCrescentPoolCoinSupply, data.Data)
 		if err != nil {
 			return false
 		}
-		supply, _ := isupply.(*types.CrescentPoolCoinSupplyProtocolData)
+		supply, _ := isupply.(*rewardstypes.CrescentPoolCoinSupplyProtocolData)
 
 		k.IcqKeeper.MakeRequest(
 			ctx,
@@ -119,11 +120,11 @@ func (CrescentModule) Hooks(ctx sdk.Context, k *Keeper) {
 	})
 }
 
-func (CrescentModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.MsgSubmitClaim) (uint64, error) {
+func (CrescentModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *rewardstypes.MsgSubmitClaim) (uint64, error) {
 	var amount uint64
 	for _, proof := range msg.Proofs {
-		position := lpfarm.Position{}
-		if proof.ProofType == types.ProofTypeBank {
+		position := rewardstypes.Position{}
+		if proof.ProofType == rewardstypes.ProofTypeBank {
 			addr, poolDenom, err := banktypes.AddressAndDenomFromBalancesStore(proof.Key[1:])
 			if err != nil {
 				return 0, err
@@ -136,7 +137,7 @@ func (CrescentModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.MsgSu
 			if err != nil {
 				return 0, err
 			}
-			position = lpfarm.Position{
+			position = lpfarmtypes.Position{
 				Farmer:        address,
 				Denom:         coin.GetDenom(),
 				FarmingAmount: coin.Amount,

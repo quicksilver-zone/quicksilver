@@ -1,7 +1,7 @@
 package lsmtypes
 
 import (
-	fmt "fmt"
+	"fmt"
 
 	"gopkg.in/yaml.v2"
 
