@@ -13,6 +13,10 @@ on:
       - develop
       - unstable
       - unstable-v1.5
+    paths-ignore:
+      - 'quicksilverjs/**'
+      - 'webui/**'
+
 
 # This workflow makes x86_64 for windows, and linux.
 
