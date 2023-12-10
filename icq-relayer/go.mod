@@ -14,13 +14,13 @@ require (
 	github.com/strangelove-ventures/lens v0.5.2-0.20220907143146-cc0bde60edd0
 	github.com/tendermint/tendermint v0.34.29
 	golang.org/x/term v0.8.0
-	google.golang.org/grpc v1.55.0
+	google.golang.org/grpc v1.56.3
 	gopkg.in/yaml.v2 v2.4.0
 )
 
 require (
 	cloud.google.com/go v0.110.0 // indirect
-	cloud.google.com/go/compute v1.19.0 // indirect
+	cloud.google.com/go/compute v1.19.1 // indirect
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
 	cloud.google.com/go/iam v0.13.0 // indirect
 	cloud.google.com/go/storage v1.28.1 // indirect
