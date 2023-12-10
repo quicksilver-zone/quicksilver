@@ -131,7 +131,7 @@ BUILD_TARGETS := build install
 
 check_version:
 ifneq ($(GO_MINOR_VERSION),20)
-	@echo "ERROR: Go version 1.20 is required for building Quicksilver. There are consensus breaking changes between binaries compiled with and without Go 1.20."
+	@echo "ERROR: Go version 1.20 is required for building Quicksilver. There are consensus breaking changes between binaries compiled with different Go versions."
 	exit 1
 endif
 
@@ -308,14 +308,14 @@ TEST_TARGETS := test-unit test-unit-cover test-race
 # Test runs-specific rules. To add a new test target, just add
 # a new rule, customise ARGS or TEST_PACKAGES ad libitum, and
 # append the new rule to the TEST_TARGETS list.
-test-unit: ARGS=-timeout=10m -race
+test-unit: ARGS=-timeout=15m -race
 test-unit: TEST_PACKAGES=$(PACKAGES_UNIT)
 
 test-race: ARGS=-race
 test-race: TEST_PACKAGES=$(PACKAGES_NOSIMULATION)
 $(TEST_TARGETS): run-tests
 
-test-unit-cover: ARGS=-timeout=10m -race -coverprofile=coverage.txt -covermode=atomic
+test-unit-cover: ARGS=-timeout=15m -race -coverprofile=coverage.txt -covermode=atomic
 test-unit-cover: TEST_PACKAGES=$(PACKAGES_UNIT)
 
 run-tests:

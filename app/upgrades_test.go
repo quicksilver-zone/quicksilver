@@ -176,7 +176,7 @@ func (s *AppTestSuite) initTestZone() {
 		RedelegationEnd:   -62135596800,
 	}
 
-	s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetDelegation(s.chainA.GetContext(), &zone, delRecord)
+	s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetDelegation(s.chainA.GetContext(), zone.ChainId, delRecord)
 
 	wRecord := icstypes.WithdrawalRecord{
 		ChainId:   "uni-5",
@@ -314,13 +314,17 @@ func (s *AppTestSuite) TestV010402rc3UpgradeHandler() {
 
 	app.ParticipationRewardsKeeper.SetProtocolData(ctx, prtypes.GetProtocolDataKey(prtypes.ProtocolDataType(pdType), []byte("rege-redwood-1")), &prData)
 	val0 := icstypes.Validator{ValoperAddress: "osmovaloper1zxavllftfx3a3y5ldfyze7jnu5uyuktsfx2jcc", CommissionRate: sdk.MustNewDecFromStr("1"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded}
-	app.InterchainstakingKeeper.SetValidator(ctx, upgrades.OsmosisTestnetChainID, val0)
+	err := app.InterchainstakingKeeper.SetValidator(ctx, upgrades.OsmosisTestnetChainID, val0)
+	s.Require().NoError(err)
+
 	val1 := icstypes.Validator{ValoperAddress: "osmovaloper13eq5c99ym05jn02e78l8cac2fagzgdhh4294zk", CommissionRate: sdk.MustNewDecFromStr("1"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded}
-	app.InterchainstakingKeeper.SetValidator(ctx, upgrades.OsmosisTestnetChainID, val1)
+	err = app.InterchainstakingKeeper.SetValidator(ctx, upgrades.OsmosisTestnetChainID, val1)
+	s.Require().NoError(err)
+
 	vals := app.InterchainstakingKeeper.GetValidators(ctx, upgrades.OsmosisTestnetChainID)
 	s.Require().Equal(2, len(vals))
 
-	_, err := handler(ctx, types.Plan{}, app.mm.GetVersionMap())
+	_, err = handler(ctx, types.Plan{}, app.mm.GetVersionMap())
 	s.Require().NoError(err)
 
 	_, found := app.InterchainstakingKeeper.GetZone(ctx, upgrades.OsmosisTestnetChainID)

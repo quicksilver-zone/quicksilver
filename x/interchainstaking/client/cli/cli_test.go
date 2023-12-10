@@ -67,11 +67,11 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		Is_118:                       true,
 	}
 	zone.Validators = append(zone.Validators,
-		&types.Validator{ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), DelegatorShares: sdk.NewDec(2000), Score: sdk.ZeroDec()},
-		&types.Validator{ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), DelegatorShares: sdk.NewDec(2000), Score: sdk.ZeroDec()},
-		&types.Validator{ValoperAddress: "cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), DelegatorShares: sdk.NewDec(2000), Score: sdk.ZeroDec()},
-		&types.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), DelegatorShares: sdk.NewDec(2000), Score: sdk.ZeroDec()},
-		&types.Validator{ValoperAddress: "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), DelegatorShares: sdk.NewDec(2000), Score: sdk.ZeroDec()},
+		&types.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), DelegatorShares: sdk.NewDec(2000), Score: sdk.ZeroDec(), ValidatorBondShares: sdk.ZeroDec(), LiquidShares: sdk.ZeroDec()},
+		&types.Validator{ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), DelegatorShares: sdk.NewDec(2000), Score: sdk.ZeroDec(), ValidatorBondShares: sdk.ZeroDec(), LiquidShares: sdk.ZeroDec()},
+		&types.Validator{ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), DelegatorShares: sdk.NewDec(2000), Score: sdk.ZeroDec(), ValidatorBondShares: sdk.ZeroDec(), LiquidShares: sdk.ZeroDec()},
+		&types.Validator{ValoperAddress: "cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), DelegatorShares: sdk.NewDec(2000), Score: sdk.ZeroDec(), ValidatorBondShares: sdk.ZeroDec(), LiquidShares: sdk.ZeroDec()},
+		&types.Validator{ValoperAddress: "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), DelegatorShares: sdk.NewDec(2000), Score: sdk.ZeroDec(), ValidatorBondShares: sdk.ZeroDec(), LiquidShares: sdk.ZeroDec()},
 	)
 
 	// setup basic genesis state
@@ -201,13 +201,13 @@ func (s *IntegrationTestSuite) TestGetDelegatorIntentCmd() {
 			&types.QueryDelegatorIntentResponse{},
 			&types.QueryDelegatorIntentResponse{},
 		},
-		/*{
+		/* {
 			"valid",
 			[]string{s.cfg.ChainID, ""},
 			false,
 			&types.QueryDelegatorIntentResponse{},
 			&types.QueryDelegatorIntentResponse{},
-		},*/
+		}, */
 	}
 	for _, tt := range tests {
 		tt := tt
@@ -266,13 +266,13 @@ func (s *IntegrationTestSuite) TestGetDepositAccountCmd() {
 			&types.QueryDepositAccountForChainResponse{},
 			&types.QueryDepositAccountForChainResponse{},
 		},
-		/*{
+		/* {
 			"valid",
 			[]string{s.cfg.ChainID},
 			false,
 			&types.QueryDepositAccountForChainResponse{},
 			&types.QueryDepositAccountForChainResponse{},
-		},*/
+		}, */
 	}
 	for _, tt := range tests {
 		tt := tt
@@ -378,7 +378,7 @@ func (s *IntegrationTestSuite) TestGetSignalIntentTxCmd() {
 			0,
 			&sdk.TxResponse{},
 		},
-		/*{
+		/* {
 			"valid",
 			[]string{
 				s.network.Config.ChainID,
@@ -388,7 +388,7 @@ func (s *IntegrationTestSuite) TestGetSignalIntentTxCmd() {
 			false,
 			0,
 			&sdk.TxResponse{},
-		},*/
+		}, */
 	}
 	for _, tt := range tests {
 		tt := tt

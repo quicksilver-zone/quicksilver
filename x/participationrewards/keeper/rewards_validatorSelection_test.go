@@ -294,7 +294,8 @@ func (suite *KeeperTestSuite) TestCalcDistributionScores() {
 				validators := appA.InterchainstakingKeeper.GetValidators(ctx, zone.ChainId)
 				for i := range validators {
 					validators[i].VotingPower = sdk.NewInt(0)
-					appA.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, validators[i])
+					err := appA.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, validators[i])
+					suite.NoError(err)
 				}
 
 				appA.InterchainstakingKeeper.SetZone(ctx, &zone)
@@ -329,7 +330,8 @@ func (suite *KeeperTestSuite) TestCalcDistributionScores() {
 
 				for i, val := range appA.InterchainstakingKeeper.GetValidators(ctx, zone.ChainId) {
 					val.VotingPower = sdk.NewInt(int64(10 + i*10))
-					appA.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, val)
+					err := appA.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, val)
+					suite.NoError(err)
 				}
 				zone.ValidatorSelectionAllocation = 5000
 

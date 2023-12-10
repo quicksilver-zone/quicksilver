@@ -1692,12 +1692,8 @@ paths:
                         if (any.is(Foo.class)) {
                           foo = any.unpack(Foo.class);
                         }
-                        // or ...
-                        if (any.isSameTypeAs(Foo.getDefaultInstance())) {
-                          foo = any.unpack(Foo.getDefaultInstance());
-                        }
 
-                    Example 3: Pack and unpack a message in Python.
+                     Example 3: Pack and unpack a message in Python.
 
                         foo = Foo(...)
                         any = Any()
@@ -1707,7 +1703,7 @@ paths:
                           any.Unpack(foo)
                           ...
 
-                    Example 4: Pack and unpack a message in Go
+                     Example 4: Pack and unpack a message in Go
 
                          foo := &pb.Foo{...}
                          any, err := anypb.New(foo)
@@ -1735,8 +1731,10 @@ paths:
                     name "y.z".
 
 
+
                     JSON
 
+                    ====
 
                     The JSON representation of an `Any` value uses the regular
 
@@ -2005,12 +2003,8 @@ paths:
                         if (any.is(Foo.class)) {
                           foo = any.unpack(Foo.class);
                         }
-                        // or ...
-                        if (any.isSameTypeAs(Foo.getDefaultInstance())) {
-                          foo = any.unpack(Foo.getDefaultInstance());
-                        }
 
-                    Example 3: Pack and unpack a message in Python.
+                     Example 3: Pack and unpack a message in Python.
 
                         foo = Foo(...)
                         any = Any()
@@ -2020,7 +2014,7 @@ paths:
                           any.Unpack(foo)
                           ...
 
-                    Example 4: Pack and unpack a message in Go
+                     Example 4: Pack and unpack a message in Go
 
                          foo := &pb.Foo{...}
                          any, err := anypb.New(foo)
@@ -2048,8 +2042,10 @@ paths:
                     name "y.z".
 
 
+
                     JSON
 
+                    ====
 
                     The JSON representation of an `Any` value uses the regular
 
@@ -2333,15 +2329,12 @@ paths:
         - Msg
   /quicksilver/tx/v1/interchainstaking/reopen_channel:
     post:
-      operationId: GovReopenChannel
+      operationId: GovSetLsmCaps
       responses:
         '200':
           description: A successful response.
           schema:
             type: object
-            description: >-
-              MsgGovReopenChannelResponse defines the MsgGovReopenChannel
-              response type.
         default:
           description: An unexpected error response.
           schema:
@@ -2375,10 +2368,17 @@ paths:
                 type: string
               description:
                 type: string
-              connection_id:
+              chain_id:
                 type: string
-              port_id:
-                type: string
+              caps:
+                type: object
+                properties:
+                  validator_cap:
+                    type: string
+                  validator_bond_cap:
+                    type: string
+                  global_cap:
+                    type: string
               authority:
                 type: string
       tags:
@@ -2950,6 +2950,14 @@ paths:
                         jailed_since:
                           type: string
                           format: date-time
+                        validator_bond_shares:
+                          type: string
+                          title: Number of shares self bonded from the validator
+                        liquid_shares:
+                          type: string
+                          title: >-
+                            Number of shares either tokenized or owned by a
+                            liquid staking provider
                   aggregate_intent:
                     type: array
                     items:
@@ -3240,6 +3248,14 @@ paths:
                           jailed_since:
                             type: string
                             format: date-time
+                          validator_bond_shares:
+                            type: string
+                            title: Number of shares self bonded from the validator
+                          liquid_shares:
+                            type: string
+                            title: >-
+                              Number of shares either tokenized or owned by a
+                              liquid staking provider
                     aggregate_intent:
                       type: array
                       items:
@@ -4237,6 +4253,14 @@ paths:
                     jailed_since:
                       type: string
                       format: date-time
+                    validator_bond_shares:
+                      type: string
+                      title: Number of shares self bonded from the validator
+                    liquid_shares:
+                      type: string
+                      title: >-
+                        Number of shares either tokenized or owned by a liquid
+                        staking provider
               pagination:
                 type: object
                 properties:

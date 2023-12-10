@@ -21,6 +21,7 @@ func CalculateAllocationDeltas(
 	locked map[string]bool,
 	currentSum sdkmath.Int,
 	targetAllocations ValidatorIntents,
+	maxCanAllocate map[string]sdkmath.Int,
 ) (targets, sources AllocationDeltas) {
 	targets = make(AllocationDeltas, 0)
 	sources = make(AllocationDeltas, 0)
@@ -54,6 +55,13 @@ func CalculateAllocationDeltas(
 		// diff between target and current allocations
 		// positive == below target (target), negative == above target (source)
 		delta := targetAmount.Sub(current)
+		max, ok := maxCanAllocate[valoper]
+		if !ok {
+			max = delta
+		}
+		if max.LT(delta) {
+			delta = max
+		}
 
 		if delta.IsPositive() {
 			targets = append(targets, &AllocationDelta{Amount: delta, ValoperAddress: valoper})
@@ -167,23 +175,40 @@ type RebalanceTarget struct {
 type RebalanceTargets []*RebalanceTarget
 
 // Sort RebalanceTargets deterministically.
-func (t RebalanceTargets) Sort() {
+func (tgts RebalanceTargets) Sort() {
 	// sort keys by relative value of delta
-	sort.SliceStable(t, func(i, j int) bool {
+	sort.SliceStable(tgts, func(i, j int) bool {
 		// < sorts alphabetically.
-		return t[i].Source < t[j].Source
+		return tgts[i].Source < tgts[j].Source
 	})
 
 	// sort keys by relative value of delta
-	sort.SliceStable(t, func(i, j int) bool {
+	sort.SliceStable(tgts, func(i, j int) bool {
 		// < sorts alphabetically.
-		return t[i].Target < t[j].Target
+		return tgts[i].Target < tgts[j].Target
 	})
 
 	// sort keys by relative value of delta
-	sort.SliceStable(t, func(i, j int) bool {
-		return t[i].Amount.LT(t[j].Amount)
+	sort.SliceStable(tgts, func(i, j int) bool {
+		return tgts[i].Amount.LT(tgts[j].Amount)
 	})
+}
+
+func (tgts RebalanceTargets) RemoveDuplicates() RebalanceTargets {
+	encountered := make(map[string]bool)
+	result := make(RebalanceTargets, 0)
+
+	for _, r := range tgts {
+		if r.Amount.IsZero() {
+			continue
+		}
+		key := fmt.Sprintf("%v-%s-%s", r.Amount.String(), r.Source, r.Target)
+		if !encountered[key] {
+			encountered[key] = true
+			result = append(result, r)
+		}
+	}
+	return result
 }
 
 // DetermineAllocationsForRebalancing takes maps of current and locked delegations, and based upon the target allocations,
@@ -194,10 +219,11 @@ func DetermineAllocationsForRebalancing(
 	currentSum sdkmath.Int,
 	lockedSum sdkmath.Int,
 	targetAllocations ValidatorIntents,
+	maxCanAllocate map[string]sdkmath.Int,
 	logger log.Logger,
 ) RebalanceTargets {
 	out := make(RebalanceTargets, 0)
-	targets, sources := CalculateAllocationDeltas(currentAllocations, currentLocked, currentSum, targetAllocations)
+	targets, sources := CalculateAllocationDeltas(currentAllocations, currentLocked, currentSum, targetAllocations, maxCanAllocate)
 
 	// rebalanceBudget = (total_delegations - locked)/2 == 50% of (total_delegations - locked)
 	// TODO: make this 2 (max_redelegation_factor) a param.
