@@ -379,7 +379,7 @@ func TestDetermineAllocationsForRebalancing(t *testing.T) {
 			}(tt.allocations, tt.locked)
 
 			actual := types.DetermineAllocationsForRebalancing(
-				tt.allocations, tt.locked, currentSum, lockedSum, tt.target, nil,
+				tt.allocations, tt.locked, currentSum, lockedSum, tt.target, make(map[string]math.Int), nil,
 			)
 
 			require.ElementsMatch(t, tt.expected, actual)

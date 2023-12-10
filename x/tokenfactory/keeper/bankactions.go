@@ -51,7 +51,7 @@ func (k Keeper) burnFrom(ctx sdk.Context, amount sdk.Coin, burnFrom string) erro
 	return k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(amount))
 }
 
-func (k Keeper) forceTransfer(ctx sdk.Context, amount sdk.Coin, fromAddr, toAddr string) error { //nolint:unused
+func (k Keeper) forceTransfer(ctx sdk.Context, amount sdk.Coin, fromAddr, toAddr string) error { // nolint:unused
 
 	// verify that denom is an x/tokenfactory denom
 	_, _, err := types.DeconstructDenom(amount.Denom)

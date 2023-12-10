@@ -21,6 +21,7 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	clienttypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
@@ -76,7 +77,9 @@ func (c Callbacks) RegisterCallbacks() icqtypes.QueryCallbacks {
 		AddCallback("perfbalance", Callback(PerfBalanceCallback)).
 		AddCallback("accountbalance", Callback(AccountBalanceCallback)).
 		AddCallback("allbalances", Callback(AllBalancesCallback)).
-		AddCallback("delegationaccountbalance", Callback(DelegationAccountBalanceCallback))
+		AddCallback("delegationaccountbalance", Callback(DelegationAccountBalanceCallback)).
+		AddCallback("delegationaccountbalances", Callback(DelegationAccountBalancesCallback)).
+		AddCallback("signinginfo", Callback(SigningInfoCallback))
 
 	return a.(Callbacks)
 }
@@ -105,11 +108,12 @@ func RewardsCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Que
 
 	k.Logger(ctx).Debug("rewards callback", "zone", query.ChainId)
 
-	// unmarshal request payload
-	rewardsQuery := distrtypes.QueryDelegationTotalRewardsRequest{}
 	if len(query.Request) == 0 {
 		return errors.New("attempted to unmarshal zero length byte slice (2)")
 	}
+
+	// unmarshal request payload
+	rewardsQuery := distrtypes.QueryDelegationTotalRewardsRequest{}
 	err := k.cdc.Unmarshal(query.Request, &rewardsQuery)
 	if err != nil {
 		return err
@@ -117,7 +121,10 @@ func RewardsCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Que
 
 	// decrement waitgroup as we have received back the query
 	// (initially incremented in AfterEpochEnd)
-	zone.WithdrawalWaitgroup--
+	err = zone.DecrementWithdrawalWaitgroup()
+	if err != nil {
+		return err
+	}
 
 	k.Logger(ctx).Debug("QueryDelegationRewards callback", "wg", zone.WithdrawalWaitgroup, "delegatorAddress", rewardsQuery.DelegatorAddress, "zone", query.ChainId)
 
@@ -130,10 +137,11 @@ func DelegationsCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes
 		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
 	}
 
-	delegationQuery := stakingtypes.QueryDelegatorDelegationsRequest{}
 	if len(query.Request) == 0 {
 		return errors.New("attempted to unmarshal zero length byte slice (3)")
 	}
+
+	delegationQuery := stakingtypes.QueryDelegatorDelegationsRequest{}
 	err := k.cdc.Unmarshal(query.Request, &delegationQuery)
 	if err != nil {
 		return err
@@ -174,8 +182,8 @@ func DelegationCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.
 			return err
 		}
 
-		if delegation, ok := k.GetDelegation(ctx, &zone, delegatorAddress, validatorAddress); ok {
-			err := k.RemoveDelegation(ctx, &zone, delegation)
+		if delegation, ok := k.GetDelegation(ctx, zone.ChainId, delegatorAddress, validatorAddress); ok {
+			err := k.RemoveDelegation(ctx, zone.ChainId, delegation)
 			if err != nil {
 				return err
 			}
@@ -228,11 +236,11 @@ func DepositIntervalCallback(k *Keeper, ctx sdk.Context, args []byte, query icqt
 
 	k.Logger(ctx).Debug("Deposit interval callback", "zone", zone.ChainId)
 
-	txs := tx.GetTxsEventResponse{}
-
 	if len(args) == 0 {
 		return errors.New("attempted to unmarshal zero length byte slice (4)")
 	}
+
+	txs := tx.GetTxsEventResponse{}
 	err := k.cdc.Unmarshal(args, &txs)
 	if err != nil {
 		k.Logger(ctx).Error("unable to unmarshal txs for deposit account", "deposit_address", zone.DepositAddress.GetAddress(), "err", err)
@@ -242,7 +250,7 @@ func DepositIntervalCallback(k *Keeper, ctx sdk.Context, args []byte, query icqt
 	for _, txn := range txs.TxResponses {
 		req := tx.GetTxRequest{Hash: txn.TxHash}
 		hashBytes := k.cdc.MustMarshal(&req)
-		_, found = k.GetReceipt(ctx, types.GetReceiptKey(zone.ChainId, txn.TxHash))
+		_, found = k.GetReceipt(ctx, zone.ChainId, txn.TxHash)
 		if found {
 			k.Logger(ctx).Debug("Found previously handled tx. Ignoring.", "txhash", txn.TxHash)
 			continue
@@ -250,6 +258,62 @@ func DepositIntervalCallback(k *Keeper, ctx sdk.Context, args []byte, query icqt
 		k.Logger(ctx).Info("Found previously unhandled tx. Processing.", "txhash", txn.TxHash)
 		k.ICQKeeper.MakeRequest(ctx, query.ConnectionId, query.ChainId, "tendermint.Tx", hashBytes, sdk.NewInt(-1), types.ModuleName, "deposittx", 0)
 	}
+	return nil
+}
+
+func SigningInfoCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
+	zone, found := k.GetZone(ctx, query.GetChainId())
+	if !found {
+		return fmt.Errorf("no registered zone for chain id: %s", zone.ChainId)
+	}
+
+	k.Logger(ctx).Debug("Validator signing info callback", "zone", zone.ChainId)
+
+	valSigningInfo := slashingtypes.ValidatorSigningInfo{}
+	if len(args) == 0 {
+		return errors.New("attempted to unmarshal zero length byte slice (10)")
+	}
+	err := k.cdc.Unmarshal(args, &valSigningInfo)
+	if err != nil {
+		return err
+	}
+	if valSigningInfo.Tombstoned {
+		consAddr, err := sdk.ConsAddressFromBech32(valSigningInfo.Address)
+		if err != nil {
+			return err
+		}
+		valAddr, found := k.GetValidatorAddrByConsAddr(ctx, zone.ChainId, consAddr)
+		if !found {
+			return fmt.Errorf("can not get validator address from consensus address: %s", valSigningInfo.Address)
+		}
+
+		k.Logger(ctx).Error("Tombstoned validator found", "valoper", valAddr)
+
+		valAddrBytes, err := addressutils.ValAddressFromBech32(valAddr, zone.GetValoperPrefix())
+		if err != nil {
+			return err
+		}
+		val, found := k.GetValidator(ctx, zone.ChainId, valAddrBytes)
+		if !found {
+			err := k.SetValidator(ctx, zone.ChainId, types.Validator{
+				ValoperAddress: valAddr,
+				Jailed:         true,
+				Tombstoned:     true,
+			})
+			if err != nil {
+				return err
+			}
+		} else {
+			val.Tombstoned = true
+			if err = k.SetValidator(ctx, zone.ChainId, val); err != nil {
+				return err
+			}
+		}
+		k.Logger(ctx).Info("%q on chainID: %q was found to already have been tombstoned, added information", val.ValoperAddress, zone.ChainId)
+
+		return nil
+	}
+
 	return nil
 }
 
@@ -443,13 +507,19 @@ func DepositTxCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Q
 		return fmt.Errorf("invalid tx for query - expected %s, got %s", queryRequest.Hash, hashStr)
 	}
 
-	_, found = k.GetReceipt(ctx, types.GetReceiptKey(zone.ChainId, hashStr))
+	_, found = k.GetReceipt(ctx, zone.ChainId, hashStr)
 	if found {
 		k.Logger(ctx).Info("Found previously handled tx. Ignoring.", "txhash", hashStr)
 		return nil
 	}
 
-	txn, err := txDecoder(k.cdc)(res.Proof.Data)
+	// check client state validity
+	err = k.CheckTMHeaderForZone(ctx, &zone, res)
+	if err != nil {
+		return err
+	}
+
+	txn, err := TxDecoder(k.cdc)(res.Proof.Data)
 	if err != nil {
 		return err
 	}
@@ -548,18 +618,77 @@ func DelegationAccountBalanceCallback(k *Keeper, ctx sdk.Context, args []byte, q
 		return err
 	}
 
-	zone.WithdrawalWaitgroup--
+	k.Logger(ctx).Info("Received balance response for denom", "denom", coin.Denom)
+	err = zone.DecrementWithdrawalWaitgroup()
+	if err != nil {
+		return err
+	}
+
+	// set the zone amount.
+	balance := zone.DelegationAddress.Balance
+	if ok, _ := zone.DelegationAddress.Balance.Find(coin.Denom); !ok {
+		zone.DelegationAddress.Balance = zone.DelegationAddress.Balance.Add(coin)
+	} else {
+		for idx, i := range balance {
+			if coin.Denom == i.Denom {
+				zone.DelegationAddress.Balance[idx].Amount = coin.Amount
+				break
+			}
+		}
+	}
+
 	k.SetZone(ctx, &zone)
 
 	return k.FlushOutstandingDelegations(ctx, &zone, coin)
 }
 
+func DelegationAccountBalancesCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
+	zone, found := k.GetZone(ctx, query.GetChainId())
+	if !found {
+		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
+	}
+	result := banktypes.QueryAllBalancesResponse{}
+	k.cdc.MustUnmarshal(args, &result)
+
+	zone.WithdrawalWaitgroup--
+
+	addressBytes, err := addressutils.AccAddressFromBech32(zone.DelegationAddress.Address, zone.AccountPrefix)
+	if err != nil {
+		k.Logger(ctx).Error("cannot decode bech32 delegation addr")
+		return err
+	}
+	balances := result.GetBalances().Sort()
+	accountBalances := zone.DelegationAddress.Balance.Sort()
+
+	for _, coin := range balances.Add(accountBalances...) { // we want to iterate over all denoms, including ones we currently have values for.
+
+		k.ICQKeeper.MakeRequest(
+			ctx,
+			zone.ConnectionId,
+			zone.ChainId,
+			types.BankStoreKey,
+			append(banktypes.CreateAccountBalancesPrefix(addressBytes), []byte(coin.Denom)...),
+			sdk.NewInt(-1),
+			types.ModuleName,
+			"delegationaccountbalance",
+			0,
+		)
+
+		k.Logger(ctx).Info("Emitting balance request for denom", "denom", coin.Denom)
+		zone.WithdrawalWaitgroup++
+	}
+	k.SetZone(ctx, &zone)
+
+	return nil
+}
+
 func AllBalancesCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
-	balanceQuery := banktypes.QueryAllBalancesRequest{}
 	// this shouldn't happen because query.Request comes from Quicksilver
 	if len(query.Request) == 0 {
 		return errors.New("attempted to unmarshal zero length byte slice (7)")
 	}
+
+	balanceQuery := banktypes.QueryAllBalancesRequest{}
 	err := k.cdc.Unmarshal(query.Request, &balanceQuery)
 	if err != nil {
 		return err
@@ -599,8 +728,8 @@ func AllBalancesCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes
 	return k.SetAccountBalance(ctx, zone, balanceQuery.Address, args)
 }
 
-// txDecoder.
-func txDecoder(cdc codec.Codec) sdk.TxDecoder {
+// TxDecoder.
+func TxDecoder(cdc codec.Codec) sdk.TxDecoder {
 	return func(txBytes []byte) (sdk.Tx, error) {
 		// Make sure txBytes follow ADR-027.
 		err := rejectNonADR027TxRaw(txBytes)

@@ -15,8 +15,8 @@ import (
 	minttypes "github.com/quicksilver-zone/quicksilver/x/mint/types"
 )
 
-func (s *KeeperTestSuite) Test_msgServer_Claim() {
-	appA := s.GetQuicksilverApp(s.chainA)
+func (suite *KeeperTestSuite) Test_msgServer_Claim() {
+	appA := suite.GetQuicksilverApp(suite.chainA)
 
 	userAddress := addressutils.GenerateAccAddressForTest().String()
 	denom := "uatom" // same as test zone setup in keeper_test
@@ -40,7 +40,7 @@ func (s *KeeperTestSuite) Test_msgServer_Claim() {
 				// no zone airdrop state
 
 				msg = types.MsgClaim{
-					ChainId: s.chainB.ChainID,
+					ChainId: suite.chainB.ChainID,
 					Action:  int64(types.ActionInitialClaim),
 					Address: userAddress,
 					Proofs:  nil,
@@ -53,10 +53,10 @@ func (s *KeeperTestSuite) Test_msgServer_Claim() {
 			"noclaimrecord",
 			func() {
 				// set valid zone airdrop state
-				s.initTestZoneDrop()
+				suite.initTestZoneDrop()
 
 				msg = types.MsgClaim{
-					ChainId: s.chainB.ChainID,
+					ChainId: suite.chainB.ChainID,
 					Action:  int64(types.ActionInitialClaim),
 					Address: userAddress,
 					Proofs:  nil,
@@ -74,17 +74,17 @@ func (s *KeeperTestSuite) Test_msgServer_Claim() {
 
 				// add claim record
 				cr := types.ClaimRecord{
-					ChainId:          s.chainB.ChainID,
+					ChainId:          suite.chainB.ChainID,
 					Address:          userAddress,
 					ActionsCompleted: nil,
 					MaxAllocation:    100000000,
 					BaseValue:        10000000,
 				}
 
-				s.setClaimRecord(cr)
+				suite.setClaimRecord(cr)
 
 				msg = types.MsgClaim{
-					ChainId: s.chainB.ChainID,
+					ChainId: suite.chainB.ChainID,
 					Action:  int64(types.ActionInitialClaim),
 					Address: userAddress,
 					Proofs:  nil,
@@ -102,7 +102,7 @@ func (s *KeeperTestSuite) Test_msgServer_Claim() {
 
 				// add deposit
 				rcpt := icstypes.Receipt{
-					ChainId: s.chainB.ChainID,
+					ChainId: suite.chainB.ChainID,
 					Sender:  userAddress,
 					Txhash:  "TestDeposit01",
 					Amount: sdk.NewCoins(
@@ -113,12 +113,12 @@ func (s *KeeperTestSuite) Test_msgServer_Claim() {
 					),
 				}
 				appA.InterchainstakingKeeper.SetReceipt(
-					s.chainA.GetContext(),
+					suite.chainA.GetContext(),
 					rcpt,
 				)
 
 				msg = types.MsgClaim{
-					ChainId: s.chainB.ChainID,
+					ChainId: suite.chainB.ChainID,
 					Action:  int64(types.ActionDepositT5),
 					Address: userAddress,
 					Proofs:  nil,
@@ -133,7 +133,7 @@ func (s *KeeperTestSuite) Test_msgServer_Claim() {
 				// use existing state (from prev test)
 
 				msg = types.MsgClaim{
-					ChainId: s.chainB.ChainID,
+					ChainId: suite.chainB.ChainID,
 					Action:  int64(types.ActionDepositT4),
 					Address: userAddress,
 					Proofs:  nil,
@@ -148,7 +148,7 @@ func (s *KeeperTestSuite) Test_msgServer_Claim() {
 				// use existing state (from prev test)
 
 				msg = types.MsgClaim{
-					ChainId: s.chainB.ChainID,
+					ChainId: suite.chainB.ChainID,
 					Action:  int64(types.ActionDepositT3),
 					Address: userAddress,
 					Proofs:  nil,
@@ -169,7 +169,7 @@ func (s *KeeperTestSuite) Test_msgServer_Claim() {
 				// use existing state (from prev test)
 
 				msg = types.MsgClaim{
-					ChainId: s.chainB.ChainID,
+					ChainId: suite.chainB.ChainID,
 					Action:  int64(types.ActionDepositT2),
 					Address: userAddress,
 					Proofs:  nil,
@@ -184,7 +184,7 @@ func (s *KeeperTestSuite) Test_msgServer_Claim() {
 				// use existing state (from prev test)
 
 				msg = types.MsgClaim{
-					ChainId: s.chainB.ChainID,
+					ChainId: suite.chainB.ChainID,
 					Action:  int64(types.ActionDepositT1),
 					Address: userAddress,
 					Proofs:  nil,
@@ -200,7 +200,7 @@ func (s *KeeperTestSuite) Test_msgServer_Claim() {
 
 				// add deposit
 				rcpt := icstypes.Receipt{
-					ChainId: s.chainB.ChainID,
+					ChainId: suite.chainB.ChainID,
 					Sender:  userAddress,
 					Txhash:  "T5_02",
 					Amount: sdk.NewCoins(
@@ -211,12 +211,12 @@ func (s *KeeperTestSuite) Test_msgServer_Claim() {
 					),
 				}
 				appA.InterchainstakingKeeper.SetReceipt(
-					s.chainA.GetContext(),
+					suite.chainA.GetContext(),
 					rcpt,
 				)
 
 				msg = types.MsgClaim{
-					ChainId: s.chainB.ChainID,
+					ChainId: suite.chainB.ChainID,
 					Action:  int64(types.ActionDepositT5),
 					Address: userAddress,
 					Proofs:  nil,
@@ -237,7 +237,7 @@ func (s *KeeperTestSuite) Test_msgServer_Claim() {
 				// use existing state (from prev test)
 
 				msg = types.MsgClaim{
-					ChainId: s.chainB.ChainID,
+					ChainId: suite.chainB.ChainID,
 					Action:  int64(types.ActionStakeQCK),
 					Address: userAddress,
 					Proofs:  nil,
@@ -252,8 +252,8 @@ func (s *KeeperTestSuite) Test_msgServer_Claim() {
 				// use existing state (from prev test)
 
 				// add staking delegation
-				valAddress, err := sdk.ValAddressFromHex(s.chainA.Vals.Validators[2].Address.String())
-				s.Require().NoError(err)
+				valAddress, err := sdk.ValAddressFromHex(suite.chainA.Vals.Validators[2].Address.String())
+				suite.Require().NoError(err)
 
 				del := staking.Delegation{
 					DelegatorAddress: userAddress,
@@ -261,12 +261,12 @@ func (s *KeeperTestSuite) Test_msgServer_Claim() {
 					Shares:           sdk.MustNewDecFromStr("10.0"),
 				}
 				appA.StakingKeeper.SetDelegation(
-					s.chainA.GetContext(),
+					suite.chainA.GetContext(),
 					del,
 				)
 
 				msg = types.MsgClaim{
-					ChainId: s.chainB.ChainID,
+					ChainId: suite.chainB.ChainID,
 					Action:  int64(types.ActionStakeQCK),
 					Address: userAddress,
 					Proofs:  nil,
@@ -283,7 +283,7 @@ func (s *KeeperTestSuite) Test_msgServer_Claim() {
 				// use existing state (from prev test)
 
 				msg = types.MsgClaim{
-					ChainId: s.chainB.ChainID,
+					ChainId: suite.chainB.ChainID,
 					Action:  int64(types.ActionSignalIntent),
 					Address: userAddress,
 					Proofs:  nil,
@@ -298,11 +298,11 @@ func (s *KeeperTestSuite) Test_msgServer_Claim() {
 				// use existing state (from prev test)
 
 				// add intent
-				valAddress, err := sdk.ValAddressFromHex(s.chainB.Vals.Validators[1].Address.String())
-				s.Require().NoError(err)
+				valAddress, err := sdk.ValAddressFromHex(suite.chainB.Vals.Validators[1].Address.String())
+				suite.Require().NoError(err)
 
-				zone, found := appA.InterchainstakingKeeper.GetZone(s.chainA.GetContext(), s.chainB.ChainID)
-				s.Require().True(found)
+				zone, found := appA.InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
+				suite.Require().True(found)
 
 				intent := icstypes.DelegatorIntent{
 					Delegator: userAddress,
@@ -314,14 +314,14 @@ func (s *KeeperTestSuite) Test_msgServer_Claim() {
 					},
 				}
 				appA.InterchainstakingKeeper.SetDelegatorIntent(
-					s.chainA.GetContext(),
+					suite.chainA.GetContext(),
 					&zone,
 					intent,
 					false,
 				)
 
 				msg = types.MsgClaim{
-					ChainId: s.chainB.ChainID,
+					ChainId: suite.chainB.ChainID,
 					Action:  int64(types.ActionSignalIntent),
 					Address: userAddress,
 					Proofs:  nil,
@@ -338,7 +338,7 @@ func (s *KeeperTestSuite) Test_msgServer_Claim() {
 				// use existing state (from prev test)
 
 				msg = types.MsgClaim{
-					ChainId: s.chainB.ChainID,
+					ChainId: suite.chainB.ChainID,
 					Action:  int64(types.ActionQSGov),
 					Address: userAddress,
 					Proofs:  nil,
@@ -357,7 +357,7 @@ func (s *KeeperTestSuite) Test_msgServer_Claim() {
 					Id:     0,
 					Status: govv1.StatusPassed,
 				}
-				appA.GovKeeper.SetProposal(s.chainA.GetContext(), prop)
+				appA.GovKeeper.SetProposal(suite.chainA.GetContext(), prop)
 
 				vote := govv1.Vote{
 					ProposalId: 0,
@@ -369,10 +369,10 @@ func (s *KeeperTestSuite) Test_msgServer_Claim() {
 						},
 					},
 				}
-				appA.GovKeeper.SetVote(s.chainA.GetContext(), vote)
+				appA.GovKeeper.SetVote(suite.chainA.GetContext(), vote)
 
 				msg = types.MsgClaim{
-					ChainId: s.chainB.ChainID,
+					ChainId: suite.chainB.ChainID,
 					Action:  int64(types.ActionQSGov),
 					Address: userAddress,
 					Proofs:  nil,
@@ -405,7 +405,7 @@ func (s *KeeperTestSuite) Test_msgServer_Claim() {
 				// use existing state (from prev test)
 
 				msg = types.MsgClaim{
-					ChainId: s.chainB.ChainID,
+					ChainId: suite.chainB.ChainID,
 					Action:  int64(types.ActionOsmosis),
 					Address: userAddress,
 					Proofs:  nil,
@@ -420,7 +420,7 @@ func (s *KeeperTestSuite) Test_msgServer_Claim() {
 				// use existing state (from prev test)
 
 				msg = types.MsgClaim{
-					ChainId: s.chainB.ChainID,
+					ChainId: suite.chainB.ChainID,
 					Action:  int64(types.ActionOsmosis),
 					Address: userAddress,
 					Proofs: []*cmtypes.Proof{
@@ -440,7 +440,7 @@ func (s *KeeperTestSuite) Test_msgServer_Claim() {
 				// consensusState := exported.ConsensusState{}
 
 				msg = types.MsgClaim{
-					ChainId: s.chainB.ChainID,
+					ChainId: suite.chainB.ChainID,
 					Action:  int64(types.ActionOsmosis),
 					Address: userAddress,
 					Proofs: []*cmtypes.Proof{
@@ -469,27 +469,27 @@ func (s *KeeperTestSuite) Test_msgServer_Claim() {
 	for _, tt := range tests {
 		tt := tt
 
-		s.Run(tt.name, func() {
+		suite.Run(tt.name, func() {
 			tt.malleate()
 
 			k := keeper.NewMsgServerImpl(appA.AirdropKeeper)
-			resp, err := k.Claim(sdk.WrapSDKContext(s.chainA.GetContext()), &msg)
+			resp, err := k.Claim(sdk.WrapSDKContext(suite.chainA.GetContext()), &msg)
 			if tt.wantErr {
-				s.Require().Error(err)
-				s.Require().Nil(resp)
-				s.T().Logf("Error: %v", err)
+				suite.Require().Error(err)
+				suite.Require().Nil(resp)
+				suite.T().Logf("Error: %v", err)
 				return
 			}
 
-			s.Require().NoError(err)
-			s.Require().NotNil(resp)
-			s.Require().Equal(tt.want, resp)
+			suite.Require().NoError(err)
+			suite.Require().NotNil(resp)
+			suite.Require().Equal(tt.want, resp)
 		})
 	}
 }
 
-func (s *KeeperTestSuite) Test_msgServer_IncentivePoolSpend() {
-	appA := s.GetQuicksilverApp(s.chainA)
+func (suite *KeeperTestSuite) Test_msgServer_IncentivePoolSpend() {
+	appA := suite.GetQuicksilverApp(suite.chainA)
 
 	modAccAddr := "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn"
 	userAddress := addressutils.GenerateAccAddressForTest().String()
@@ -498,10 +498,10 @@ func (s *KeeperTestSuite) Test_msgServer_IncentivePoolSpend() {
 	mintCoins := sdk.NewCoins(sdk.NewCoin(denom, sdk.NewIntFromUint64(100000000)))
 
 	// set up mod acct with funds
-	err := appA.BankKeeper.MintCoins(s.chainA.GetContext(), minttypes.ModuleName, mintCoins)
-	s.Require().NoError(err)
-	err = appA.BankKeeper.SendCoinsFromModuleToModule(s.chainA.GetContext(), minttypes.ModuleName, types.ModuleName, mintCoins)
-	s.Require().NoError(err)
+	err := appA.BankKeeper.MintCoins(suite.chainA.GetContext(), minttypes.ModuleName, mintCoins)
+	suite.Require().NoError(err)
+	err = appA.BankKeeper.SendCoinsFromModuleToModule(suite.chainA.GetContext(), minttypes.ModuleName, types.ModuleName, mintCoins)
+	suite.Require().NoError(err)
 
 	msg := types.MsgIncentivePoolSpend{}
 	tests := []struct {
@@ -538,27 +538,27 @@ func (s *KeeperTestSuite) Test_msgServer_IncentivePoolSpend() {
 	for _, tt := range tests {
 		tt := tt
 
-		s.Run(tt.name, func() {
+		suite.Run(tt.name, func() {
 			tt.malleate()
 
 			k := keeper.NewMsgServerImpl(appA.AirdropKeeper)
-			resp, err := k.IncentivePoolSpend(sdk.WrapSDKContext(s.chainA.GetContext()), &msg)
+			resp, err := k.IncentivePoolSpend(sdk.WrapSDKContext(suite.chainA.GetContext()), &msg)
 			if tt.wantErr {
-				s.Require().Error(err)
-				s.Require().Nil(resp)
-				s.T().Logf("Error: %v", err)
+				suite.Require().Error(err)
+				suite.Require().Nil(resp)
+				suite.T().Logf("Error: %v", err)
 				return
 			}
 
-			s.Require().NoError(err)
-			s.Require().NotNil(resp)
-			s.Require().Equal(tt.want, resp)
+			suite.Require().NoError(err)
+			suite.Require().NotNil(resp)
+			suite.Require().Equal(tt.want, resp)
 
 			// verify that balance has been properly transferred
 			accAddr, err := sdk.AccAddressFromBech32(msg.ToAddress)
-			s.Require().NoError(err)
-			balance := appA.BankKeeper.GetAllBalances(s.chainA.GetContext(), accAddr)
-			s.Require().Equal(msg.Amount, balance)
+			suite.Require().NoError(err)
+			balance := appA.BankKeeper.GetAllBalances(suite.chainA.GetContext(), accAddr)
+			suite.Require().Equal(msg.Amount, balance)
 		})
 	}
 }

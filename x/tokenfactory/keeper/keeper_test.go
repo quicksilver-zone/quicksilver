@@ -38,16 +38,16 @@ type KeeperTestSuite struct {
 }
 
 // Setup sets up basic environment for suite (App, Ctx, and test accounts).
-func (s *KeeperTestSuite) Setup() {
+func (suite *KeeperTestSuite) Setup() {
 	cmdcfg.SetBech32Prefixes(sdk.GetConfig())
-	s.App = app.Setup(s.T(), false)
-	s.Ctx = s.App.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "quick-1", Time: time.Now().UTC()})
-	s.QueryHelper = &baseapp.QueryServiceTestHelper{
-		GRPCQueryRouter: s.App.GRPCQueryRouter(),
-		Ctx:             s.Ctx,
+	suite.App = app.Setup(suite.T(), false)
+	suite.Ctx = suite.App.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "quick-1", Time: time.Now().UTC()})
+	suite.QueryHelper = &baseapp.QueryServiceTestHelper{
+		GRPCQueryRouter: suite.App.GRPCQueryRouter(),
+		Ctx:             suite.Ctx,
 	}
 
-	s.TestAccs = CreateRandomAccounts(3)
+	suite.TestAccs = CreateRandomAccounts(3)
 }
 
 // CreateRandomAccounts is a function return a list of randomly generated AccAddresses.
@@ -62,22 +62,22 @@ func CreateRandomAccounts(numAccts int) []sdk.AccAddress {
 }
 
 // FundAcc funds target address with specified amount.
-func (s *KeeperTestSuite) FundAcc(acc sdk.AccAddress, amounts sdk.Coins) {
-	err := s.App.BankKeeper.MintCoins(s.Ctx, minttypes.ModuleName, amounts)
-	s.NoError(err)
-	err = s.App.BankKeeper.SendCoinsFromModuleToAccount(s.Ctx, minttypes.ModuleName, acc, amounts)
-	s.NoError(err)
+func (suite *KeeperTestSuite) FundAcc(acc sdk.AccAddress, amounts sdk.Coins) {
+	err := suite.App.BankKeeper.MintCoins(suite.Ctx, minttypes.ModuleName, amounts)
+	suite.NoError(err)
+	err = suite.App.BankKeeper.SendCoinsFromModuleToAccount(suite.Ctx, minttypes.ModuleName, acc, amounts)
+	suite.NoError(err)
 }
 
-func (s *KeeperTestSuite) SetupTestForInitGenesis() {
+func (suite *KeeperTestSuite) SetupTestForInitGenesis() {
 	// Setting to True, leads to init genesis not running
-	s.App = app.Setup(s.T(), true)
-	s.Ctx = s.App.BaseApp.NewContext(true, tmproto.Header{})
+	suite.App = app.Setup(suite.T(), true)
+	suite.Ctx = suite.App.BaseApp.NewContext(true, tmproto.Header{})
 }
 
 // AssertEventEmitted asserts that ctx's event manager has emitted the given number of events
 // of the given type.
-func (s *KeeperTestSuite) AssertEventEmitted(ctx sdk.Context, eventTypeExpected string, numEventsExpected int) {
+func (suite *KeeperTestSuite) AssertEventEmitted(ctx sdk.Context, eventTypeExpected string, numEventsExpected int) {
 	allEvents := ctx.EventManager().Events()
 	// filter out other events
 	actualEvents := make([]sdk.Event, 0)
@@ -86,49 +86,49 @@ func (s *KeeperTestSuite) AssertEventEmitted(ctx sdk.Context, eventTypeExpected 
 			actualEvents = append(actualEvents, event)
 		}
 	}
-	s.Equal(numEventsExpected, len(actualEvents))
+	suite.Equal(numEventsExpected, len(actualEvents))
 }
 
 func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
 }
 
-func (s *KeeperTestSuite) SetupTest() {
-	s.Setup()
+func (suite *KeeperTestSuite) SetupTest() {
+	suite.Setup()
 	// Fund every TestAcc with two denoms, one of which is the denom creation fee
 	fundAccsAmount := sdk.NewCoins(sdk.NewCoin(types.DefaultParams().DenomCreationFee[0].Denom, types.DefaultParams().DenomCreationFee[0].Amount.MulRaw(100)), sdk.NewCoin(SecondaryDenom, SecondaryAmount))
-	for _, acc := range s.TestAccs {
-		s.FundAcc(acc, fundAccsAmount)
+	for _, acc := range suite.TestAccs {
+		suite.FundAcc(acc, fundAccsAmount)
 	}
 
-	s.queryClient = types.NewQueryClient(s.QueryHelper)
-	s.msgServer = keeper.NewMsgServerImpl(s.App.TokenFactoryKeeper)
+	suite.queryClient = types.NewQueryClient(suite.QueryHelper)
+	suite.msgServer = keeper.NewMsgServerImpl(suite.App.TokenFactoryKeeper)
 }
 
-func (s *KeeperTestSuite) CreateDefaultDenom() {
-	s.T().Helper()
+func (suite *KeeperTestSuite) CreateDefaultDenom() {
+	suite.T().Helper()
 
-	res, err := s.msgServer.CreateDenom(sdk.WrapSDKContext(s.Ctx), types.NewMsgCreateDenom(s.TestAccs[0].String(), "bitcoin"))
-	s.Require().NoError(err)
-	s.defaultDenom = res.GetNewTokenDenom()
+	res, err := suite.msgServer.CreateDenom(sdk.WrapSDKContext(suite.Ctx), types.NewMsgCreateDenom(suite.TestAccs[0].String(), "bitcoin"))
+	suite.Require().NoError(err)
+	suite.defaultDenom = res.GetNewTokenDenom()
 }
 
-func (s *KeeperTestSuite) TestCreateModuleAccount() {
-	quicksilver := s.App
+func (suite *KeeperTestSuite) TestCreateModuleAccount() {
+	quicksilver := suite.App
 
 	// remove module account
-	tokenfactoryModuleAccount := quicksilver.AccountKeeper.GetAccount(s.Ctx, quicksilver.AccountKeeper.GetModuleAddress(types.ModuleName))
-	quicksilver.AccountKeeper.RemoveAccount(s.Ctx, tokenfactoryModuleAccount)
+	tokenfactoryModuleAccount := quicksilver.AccountKeeper.GetAccount(suite.Ctx, quicksilver.AccountKeeper.GetModuleAddress(types.ModuleName))
+	quicksilver.AccountKeeper.RemoveAccount(suite.Ctx, tokenfactoryModuleAccount)
 
 	// ensure module account was removed
-	s.Ctx = quicksilver.BaseApp.NewContext(false, tmproto.Header{})
-	tokenfactoryModuleAccount = quicksilver.AccountKeeper.GetAccount(s.Ctx, quicksilver.AccountKeeper.GetModuleAddress(types.ModuleName))
-	s.Require().Nil(tokenfactoryModuleAccount)
+	suite.Ctx = quicksilver.BaseApp.NewContext(false, tmproto.Header{})
+	tokenfactoryModuleAccount = quicksilver.AccountKeeper.GetAccount(suite.Ctx, quicksilver.AccountKeeper.GetModuleAddress(types.ModuleName))
+	suite.Require().Nil(tokenfactoryModuleAccount)
 
 	// create module account
-	quicksilver.TokenFactoryKeeper.CreateModuleAccount(s.Ctx)
+	quicksilver.TokenFactoryKeeper.CreateModuleAccount(suite.Ctx)
 
 	// check that the module account is now initialized
-	tokenfactoryModuleAccount = quicksilver.AccountKeeper.GetAccount(s.Ctx, quicksilver.AccountKeeper.GetModuleAddress(types.ModuleName))
-	s.Require().NotNil(tokenfactoryModuleAccount)
+	tokenfactoryModuleAccount = quicksilver.AccountKeeper.GetAccount(suite.Ctx, quicksilver.AccountKeeper.GetModuleAddress(types.ModuleName))
+	suite.Require().NotNil(tokenfactoryModuleAccount)
 }

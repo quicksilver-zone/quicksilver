@@ -22,8 +22,8 @@ type msgServer struct {
 
 // NewMsgServerImpl returns an implementation of the interchainstaking
 // MsgServer interface for the provided Keeper.
-func NewMsgServerImpl(keeper Keeper) types.MsgServer {
-	return &msgServer{Keeper: &keeper}
+func NewMsgServerImpl(keeper *Keeper) types.MsgServer {
+	return &msgServer{Keeper: keeper}
 }
 
 var _ types.MsgServer = msgServer{}
@@ -173,11 +173,11 @@ func (k msgServer) GovReopenChannel(goCtx context.Context, msg *types.MsgGovReop
 	}
 
 	if _, found := k.GetZone(ctx, chainID); !found {
-		return &types.MsgGovReopenChannelResponse{}, errors.New("invalid port format; zone not found")
+		return nil, errors.New("invalid port format; zone not found")
 	}
 
 	if err := k.Keeper.registerInterchainAccount(ctx, msg.ConnectionId, portID); err != nil {
-		return &types.MsgGovReopenChannelResponse{}, err
+		return nil, err
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
@@ -201,7 +201,7 @@ func (k msgServer) GovCloseChannel(goCtx context.Context, msg *types.MsgGovClose
 
 	// checking msg authority is the gov module address
 	if k.Keeper.GetGovAuthority(ctx) != msg.Authority {
-		return &types.MsgGovCloseChannelResponse{},
+		return nil,
 			govtypes.ErrInvalidSigner.Wrapf(
 				"invalid authority: expected %s, got %s",
 				k.Keeper.GetGovAuthority(ctx), msg.Authority,
@@ -210,11 +210,11 @@ func (k msgServer) GovCloseChannel(goCtx context.Context, msg *types.MsgGovClose
 
 	_, capability, err := k.Keeper.IBCKeeper.ChannelKeeper.LookupModuleByChannel(ctx, msg.PortId, msg.ChannelId)
 	if err != nil {
-		return &types.MsgGovCloseChannelResponse{}, err
+		return nil, err
 	}
 
 	if err := k.IBCKeeper.ChannelKeeper.ChanCloseInit(ctx, msg.PortId, msg.ChannelId, capability); err != nil {
-		return &types.MsgGovCloseChannelResponse{}, err
+		return nil, err
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
@@ -230,4 +230,51 @@ func (k msgServer) GovCloseChannel(goCtx context.Context, msg *types.MsgGovClose
 	})
 
 	return &types.MsgGovCloseChannelResponse{}, nil
+}
+
+// GovSetLsmCaps set the liquid staking caps for a given chain.
+func (k msgServer) GovSetLsmCaps(goCtx context.Context, msg *types.MsgGovSetLsmCaps) (*types.MsgGovSetLsmCapsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	// checking msg authority is the gov module address
+	if k.Keeper.GetGovAuthority(ctx) != msg.Authority {
+		return nil,
+			govtypes.ErrInvalidSigner.Wrapf(
+				"invalid authority: expected %s, got %s",
+				k.Keeper.GetGovAuthority(ctx), msg.Authority,
+			)
+	}
+
+	zone, found := k.Keeper.GetZone(ctx, msg.ChainId)
+	if !found {
+		return nil,
+			fmt.Errorf(
+				"no zone found for: %s",
+				msg.ChainId,
+			)
+	}
+	if !zone.SupportLsm() {
+		return nil,
+			fmt.Errorf(
+				"zone %s does not have LSM support enabled",
+				msg.ChainId,
+			)
+	}
+
+	k.SetLsmCaps(ctx, zone.ChainId, *msg.Caps)
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+		),
+		sdk.NewEvent(
+			types.EventTypeSetLsmCaps,
+			sdk.NewAttribute(types.AttributeLsmValidatorCap, msg.Caps.ValidatorCap.String()),
+			sdk.NewAttribute(types.AttributeLsmValidatorBondCap, msg.Caps.ValidatorBondCap.String()),
+			sdk.NewAttribute(types.AttributeLsmGlobalCap, msg.Caps.GlobalCap.String()),
+		),
+	})
+
+	return &types.MsgGovSetLsmCapsResponse{}, nil
 }

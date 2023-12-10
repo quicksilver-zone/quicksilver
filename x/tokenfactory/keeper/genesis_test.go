@@ -7,7 +7,7 @@ import (
 	"github.com/quicksilver-zone/quicksilver/x/tokenfactory/types"
 )
 
-func (s *KeeperTestSuite) TestGenesis() {
+func (suite *KeeperTestSuite) TestGenesis() {
 	genesisState := types.GenesisState{
 		FactoryDenoms: []types.GenesisDenom{
 			{
@@ -31,29 +31,29 @@ func (s *KeeperTestSuite) TestGenesis() {
 		},
 	}
 
-	s.SetupTestForInitGenesis()
-	app := s.App
+	suite.SetupTestForInitGenesis()
+	app := suite.App
 
 	// Test both with bank denom metadata set, and not set.
 	for i, denom := range genesisState.FactoryDenoms {
 		// hacky, sets bank metadata to exist if i != 0, to cover both cases.
 		if i != 0 {
-			app.BankKeeper.SetDenomMetaData(s.Ctx, banktypes.Metadata{Base: denom.GetDenom()})
+			app.BankKeeper.SetDenomMetaData(suite.Ctx, banktypes.Metadata{Base: denom.GetDenom()})
 		}
 	}
 
 	// check before initGenesis that the module account is nil
-	tokenfactoryModuleAccount := app.AccountKeeper.GetAccount(s.Ctx, app.AccountKeeper.GetModuleAddress(types.ModuleName))
-	s.Require().Nil(tokenfactoryModuleAccount)
+	tokenfactoryModuleAccount := app.AccountKeeper.GetAccount(suite.Ctx, app.AccountKeeper.GetModuleAddress(types.ModuleName))
+	suite.Require().Nil(tokenfactoryModuleAccount)
 
-	app.TokenFactoryKeeper.SetParams(s.Ctx, types.Params{DenomCreationFee: sdk.Coins{sdk.NewInt64Coin("uqck", 100)}})
-	app.TokenFactoryKeeper.InitGenesis(s.Ctx, genesisState)
+	app.TokenFactoryKeeper.SetParams(suite.Ctx, types.Params{DenomCreationFee: sdk.Coins{sdk.NewInt64Coin("uqck", 100)}})
+	app.TokenFactoryKeeper.InitGenesis(suite.Ctx, genesisState)
 
 	// check that the module account is now initialized
-	tokenfactoryModuleAccount = app.AccountKeeper.GetAccount(s.Ctx, app.AccountKeeper.GetModuleAddress(types.ModuleName))
-	s.Require().NotNil(tokenfactoryModuleAccount)
+	tokenfactoryModuleAccount = app.AccountKeeper.GetAccount(suite.Ctx, app.AccountKeeper.GetModuleAddress(types.ModuleName))
+	suite.Require().NotNil(tokenfactoryModuleAccount)
 
-	exportedGenesis := app.TokenFactoryKeeper.ExportGenesis(s.Ctx)
-	s.Require().NotNil(exportedGenesis)
-	s.Require().Equal(genesisState, *exportedGenesis)
+	exportedGenesis := app.TokenFactoryKeeper.ExportGenesis(suite.Ctx)
+	suite.Require().NotNil(exportedGenesis)
+	suite.Require().Equal(genesisState, *exportedGenesis)
 }

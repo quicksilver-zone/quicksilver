@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	"context"
+	"errors"
 	"testing"
 	"time"
 
@@ -20,9 +22,11 @@ import (
 	ibctesting "github.com/cosmos/ibc-go/v5/testing"
 
 	"github.com/quicksilver-zone/quicksilver/app"
+	"github.com/quicksilver-zone/quicksilver/utils"
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	"github.com/quicksilver-zone/quicksilver/utils/randomutils"
 	ics "github.com/quicksilver-zone/quicksilver/x/interchainstaking"
+	interchainstakingkeeper "github.com/quicksilver-zone/quicksilver/x/interchainstaking/keeper"
 	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 )
 
@@ -55,7 +59,7 @@ type KeeperTestSuite struct {
 	path   *ibctesting.Path
 }
 
-func (*KeeperTestSuite) GetQuicksilverApp(chain *ibctesting.TestChain) *app.Quicksilver {
+func (suite *KeeperTestSuite) GetQuicksilverApp(chain *ibctesting.TestChain) *app.Quicksilver {
 	quicksilver, ok := chain.App.(*app.Quicksilver)
 	if !ok {
 		panic("not quicksilver app")
@@ -247,7 +251,7 @@ func (suite *KeeperTestSuite) TestGetDelegatedAmount() {
 			suite.True(found)
 
 			for _, delegation := range tt.delegations(ctx, quicksilver, zone) {
-				icsKeeper.SetDelegation(ctx, &zone, delegation)
+				icsKeeper.SetDelegation(ctx, zone.ChainId, delegation)
 			}
 
 			actual := icsKeeper.GetDelegatedAmount(ctx, &zone)
@@ -498,7 +502,7 @@ func (suite *KeeperTestSuite) TestGetRatio() {
 			}
 
 			for _, delegation := range tt.delegations(ctx, quicksilver, zone) {
-				icsKeeper.SetDelegation(ctx, &zone, delegation)
+				icsKeeper.SetDelegation(ctx, zone.ChainId, delegation)
 			}
 
 			err := quicksilver.MintKeeper.MintCoins(ctx, sdk.NewCoins(sdk.NewCoin(zone.LocalDenom, tt.supply)))
@@ -526,9 +530,9 @@ func (suite *KeeperTestSuite) TestUpdateRedemptionRate() {
 	delegationB := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[1].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
 	delegationC := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[2].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
 
-	icsKeeper.SetDelegation(ctx, &zone, delegationA)
-	icsKeeper.SetDelegation(ctx, &zone, delegationB)
-	icsKeeper.SetDelegation(ctx, &zone, delegationC)
+	icsKeeper.SetDelegation(ctx, zone.ChainId, delegationA)
+	icsKeeper.SetDelegation(ctx, zone.ChainId, delegationB)
+	icsKeeper.SetDelegation(ctx, zone.ChainId, delegationC)
 
 	err := quicksilver.MintKeeper.MintCoins(ctx, sdk.NewCoins(sdk.NewCoin(zone.LocalDenom, sdk.NewInt(3000))))
 	suite.NoError(err)
@@ -547,9 +551,9 @@ func (suite *KeeperTestSuite) TestUpdateRedemptionRate() {
 	delegationA.Amount.Amount = delegationA.Amount.Amount.AddRaw(10)
 	delegationB.Amount.Amount = delegationB.Amount.Amount.AddRaw(10)
 	delegationC.Amount.Amount = delegationC.Amount.Amount.AddRaw(10)
-	icsKeeper.SetDelegation(ctx, &zone, delegationA)
-	icsKeeper.SetDelegation(ctx, &zone, delegationB)
-	icsKeeper.SetDelegation(ctx, &zone, delegationC)
+	icsKeeper.SetDelegation(ctx, zone.ChainId, delegationA)
+	icsKeeper.SetDelegation(ctx, zone.ChainId, delegationB)
+	icsKeeper.SetDelegation(ctx, zone.ChainId, delegationC)
 
 	zone, found = icsKeeper.GetZone(ctx, suite.chainB.ChainID)
 	suite.True(found)
@@ -560,9 +564,9 @@ func (suite *KeeperTestSuite) TestUpdateRedemptionRate() {
 	delegationA.Amount.Amount = delegationA.Amount.Amount.AddRaw(166)
 	delegationB.Amount.Amount = delegationB.Amount.Amount.AddRaw(167)
 	delegationC.Amount.Amount = delegationC.Amount.Amount.AddRaw(167)
-	icsKeeper.SetDelegation(ctx, &zone, delegationA)
-	icsKeeper.SetDelegation(ctx, &zone, delegationB)
-	icsKeeper.SetDelegation(ctx, &zone, delegationC)
+	icsKeeper.SetDelegation(ctx, zone.ChainId, delegationA)
+	icsKeeper.SetDelegation(ctx, zone.ChainId, delegationB)
+	icsKeeper.SetDelegation(ctx, zone.ChainId, delegationC)
 	zone, found = icsKeeper.GetZone(ctx, suite.chainB.ChainID)
 	suite.True(found)
 	// should be capped at 2% increase. (1.01*1.02 == 1.0302)
@@ -578,9 +582,9 @@ func (suite *KeeperTestSuite) TestUpdateRedemptionRate() {
 	delegationA.Amount.Amount = delegationA.Amount.Amount.SubRaw(500)
 	delegationB.Amount.Amount = delegationB.Amount.Amount.SubRaw(500)
 	delegationC.Amount.Amount = delegationC.Amount.Amount.SubRaw(500)
-	icsKeeper.SetDelegation(ctx, &zone, delegationA)
-	icsKeeper.SetDelegation(ctx, &zone, delegationB)
-	icsKeeper.SetDelegation(ctx, &zone, delegationC)
+	icsKeeper.SetDelegation(ctx, zone.ChainId, delegationA)
+	icsKeeper.SetDelegation(ctx, zone.ChainId, delegationB)
+	icsKeeper.SetDelegation(ctx, zone.ChainId, delegationC)
 
 	// remove > 5%, cap at -5%
 	icsKeeper.UpdateRedemptionRate(ctx, &zone, sdk.ZeroInt())
@@ -605,9 +609,9 @@ func (suite *KeeperTestSuite) TestOverrideRedemptionRateNoCap() {
 	delegationB := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[1].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
 	delegationC := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[2].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
 
-	icsKeeper.SetDelegation(ctx, &zone, delegationA)
-	icsKeeper.SetDelegation(ctx, &zone, delegationB)
-	icsKeeper.SetDelegation(ctx, &zone, delegationC)
+	icsKeeper.SetDelegation(ctx, zone.ChainId, delegationA)
+	icsKeeper.SetDelegation(ctx, zone.ChainId, delegationB)
+	icsKeeper.SetDelegation(ctx, zone.ChainId, delegationC)
 
 	err := quicksilver.MintKeeper.MintCoins(ctx, sdk.NewCoins(sdk.NewCoin(zone.LocalDenom, sdk.NewInt(3000))))
 	suite.NoError(err)
@@ -624,9 +628,9 @@ func (suite *KeeperTestSuite) TestOverrideRedemptionRateNoCap() {
 	delegationA.Amount.Amount = delegationA.Amount.Amount.AddRaw(10)
 	delegationB.Amount.Amount = delegationB.Amount.Amount.AddRaw(10)
 	delegationC.Amount.Amount = delegationC.Amount.Amount.AddRaw(10)
-	icsKeeper.SetDelegation(ctx, &zone, delegationA)
-	icsKeeper.SetDelegation(ctx, &zone, delegationB)
-	icsKeeper.SetDelegation(ctx, &zone, delegationC)
+	icsKeeper.SetDelegation(ctx, zone.ChainId, delegationA)
+	icsKeeper.SetDelegation(ctx, zone.ChainId, delegationB)
+	icsKeeper.SetDelegation(ctx, zone.ChainId, delegationC)
 	icsKeeper.OverrideRedemptionRateNoCap(ctx, &zone)
 
 	zone, found = icsKeeper.GetZone(ctx, suite.chainB.ChainID)
@@ -637,9 +641,9 @@ func (suite *KeeperTestSuite) TestOverrideRedemptionRateNoCap() {
 	delegationA.Amount.Amount = delegationA.Amount.Amount.AddRaw(166)
 	delegationB.Amount.Amount = delegationB.Amount.Amount.AddRaw(167)
 	delegationC.Amount.Amount = delegationC.Amount.Amount.AddRaw(167)
-	icsKeeper.SetDelegation(ctx, &zone, delegationA)
-	icsKeeper.SetDelegation(ctx, &zone, delegationB)
-	icsKeeper.SetDelegation(ctx, &zone, delegationC)
+	icsKeeper.SetDelegation(ctx, zone.ChainId, delegationA)
+	icsKeeper.SetDelegation(ctx, zone.ChainId, delegationB)
+	icsKeeper.SetDelegation(ctx, zone.ChainId, delegationC)
 	icsKeeper.OverrideRedemptionRateNoCap(ctx, &zone)
 
 	zone, found = icsKeeper.GetZone(ctx, suite.chainB.ChainID)
@@ -655,12 +659,87 @@ func (suite *KeeperTestSuite) TestOverrideRedemptionRateNoCap() {
 	delegationA.Amount.Amount = delegationA.Amount.Amount.SubRaw(500)
 	delegationB.Amount.Amount = delegationB.Amount.Amount.SubRaw(500)
 	delegationC.Amount.Amount = delegationC.Amount.Amount.SubRaw(500)
-	icsKeeper.SetDelegation(ctx, &zone, delegationA)
-	icsKeeper.SetDelegation(ctx, &zone, delegationB)
-	icsKeeper.SetDelegation(ctx, &zone, delegationC)
+	icsKeeper.SetDelegation(ctx, zone.ChainId, delegationA)
+	icsKeeper.SetDelegation(ctx, zone.ChainId, delegationB)
+	icsKeeper.SetDelegation(ctx, zone.ChainId, delegationC)
 	icsKeeper.OverrideRedemptionRateNoCap(ctx, &zone)
 	zone, found = icsKeeper.GetZone(ctx, suite.chainB.ChainID)
 	suite.True(found)
 
 	suite.Equal(sdk.NewDecWithPrec(676666666666666667, 18), zone.RedemptionRate)
+}
+
+func (suite *KeeperTestSuite) TestGetChainIDFromContext() {
+	testCase := []struct {
+		name            string
+		setup           func() (*interchainstakingkeeper.Keeper, sdk.Context)
+		wantErr         bool
+		expectedErr     error
+		expectedChainID string
+	}{
+		{
+			name: "connectionID not in context",
+			setup: func() (*interchainstakingkeeper.Keeper, sdk.Context) {
+				suite.SetupTest()
+				suite.setupTestZones()
+				return suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper, suite.chainA.GetContext()
+			},
+			wantErr:     true,
+			expectedErr: errors.New("connectionID not in context"),
+		},
+		{
+			name: "get chainID success",
+			setup: func() (*interchainstakingkeeper.Keeper, sdk.Context) {
+				suite.SetupTest()
+				suite.setupTestZones()
+				ctx := suite.chainA.GetContext()
+
+				ctx = ctx.WithContext(context.WithValue(ctx.Context(), utils.ContextKey("connectionID"), suite.path.EndpointA.ConnectionID))
+				return suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper, ctx
+			},
+			wantErr:         false,
+			expectedErr:     nil,
+			expectedChainID: "testchain2",
+		},
+	}
+	for _, tc := range testCase {
+		suite.Run(tc.name, func() {
+			keeper, ctx := tc.setup()
+
+			chainID, err := keeper.GetChainIDFromContext(ctx)
+			if tc.wantErr {
+				suite.Equal(tc.expectedErr, err)
+				return
+			}
+			suite.NoError(err)
+			suite.Equal(tc.expectedChainID, chainID)
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestIteratePortConnection() {
+	suite.SetupTest()
+	suite.setupTestZones()
+
+	quicksilver := suite.GetQuicksilverApp(suite.chainA)
+	ctx := suite.chainA.GetContext()
+	icsKeeper := quicksilver.InterchainstakingKeeper
+	zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
+	suite.True(found)
+	// After setup, there are 4 port connections available
+	pcs := icsKeeper.AllPortConnections(ctx)
+	suite.Equal(4, len(pcs))
+	// set add 4 port connections
+	icsKeeper.SetConnectionForPort(ctx, "connection-1", zone.ChainId+"."+"deposit")
+	icsKeeper.SetConnectionForPort(ctx, "connection-2", zone.ChainId+"."+"withdrawal")
+	icsKeeper.SetConnectionForPort(ctx, "connection-3", zone.ChainId+"."+"performance")
+	icsKeeper.SetConnectionForPort(ctx, "connection-4", zone.ChainId+"."+"delegate")
+
+	// iterate
+	var portConnection []icstypes.PortConnectionTuple
+	icsKeeper.IteratePortConnections(ctx, func(pc icstypes.PortConnectionTuple) (stop bool) {
+		portConnection = append(portConnection, pc)
+		return false
+	})
+	suite.Equal(8, len(portConnection))
 }

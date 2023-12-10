@@ -2,6 +2,7 @@ package types
 
 import (
 	"errors"
+	fmt "fmt"
 	"sort"
 
 	sdkmath "cosmossdk.io/math"
@@ -85,16 +86,22 @@ func (vi ValidatorIntents) GetForValoper(valoper string) (*ValidatorIntent, bool
 }
 
 func (vi ValidatorIntents) SetForValoper(valoper string, intent *ValidatorIntent) ValidatorIntents {
-	for idx, i := range vi {
-		if i.ValoperAddress == valoper {
-			vi[idx] = vi[len(vi)-1]
-			vi = vi[:len(vi)-1]
+	idx := -1 // the index of the valoper if found
+	for i, v := range vi {
+		// Search for the valoper.
+		if v.ValoperAddress == valoper {
+			idx = i
 			break
 		}
 	}
-	vi = append(vi, intent)
 
-	return vi.Sort()
+	if idx >= 0 { // We found the valoper so just replace it
+		vi[idx] = intent
+	} else {
+		vi = append(vi, intent)
+		return vi.Sort()
+	}
+	return vi
 }
 
 func (vi ValidatorIntents) MustGetForValoper(valoper string) *ValidatorIntent {
@@ -118,25 +125,16 @@ func (vi ValidatorIntents) Normalize() ValidatorIntents {
 	return out.Sort()
 }
 
-func DetermineAllocationsForDelegation(currentAllocations map[string]sdkmath.Int, currentSum sdkmath.Int, targetAllocations ValidatorIntents, amount sdk.Coins) map[string]sdkmath.Int {
-	input := amount[0].Amount
-	deltas, sources := CalculateAllocationDeltas(currentAllocations, map[string]bool{}, currentSum, targetAllocations)
-	// take targets and sources, and flip that shit.
-	// sources -> negate -> join -> sort.
-	largestSource := sources.MaxDelta()
-
-	// negate all values in sources.
-	sources.Negate()
-	deltas = append(deltas, sources...)
-
-	sum := sdk.ZeroInt()
-
-	// raise all deltas such that the minimum value is zero.
-	for idx := range deltas {
-		deltas[idx].Amount = deltas[idx].Amount.Add(largestSource)
-		// sum here instead of calling Sum() later to save looping over slice again.
-		sum = sum.Add(deltas[idx].Amount)
+func DetermineAllocationsForDelegation(currentAllocations map[string]sdkmath.Int, currentSum sdkmath.Int, targetAllocations ValidatorIntents, amount sdk.Coins, maxCanAllocate map[string]sdkmath.Int) (map[string]sdkmath.Int, error) {
+	if amount.IsZero() {
+		return make(map[string]sdkmath.Int, 0), fmt.Errorf("unable to delegate zero amount")
 	}
+	if len(targetAllocations) == 0 {
+		return make(map[string]sdkmath.Int, 0), fmt.Errorf("unable to process nil delegation targets")
+	}
+	input := amount[0].Amount
+	deltas, _ := CalculateAllocationDeltas(currentAllocations, map[string]bool{}, currentSum.Add(amount[0].Amount), targetAllocations, maxCanAllocate)
+	sum := deltas.Sum()
 
 	// unequalSplit is the portion of input that should be distributed in attempt to make targets == 0
 	unequalSplit := sdk.MinInt(sum, input)
@@ -169,11 +167,15 @@ func DetermineAllocationsForDelegation(currentAllocations map[string]sdkmath.Int
 	outSum := sdk.ZeroInt()
 	outWeights := make(map[string]sdkmath.Int)
 	for _, delta := range deltas {
-		outWeights[delta.ValoperAddress] = delta.Amount
-		outSum = outSum.Add(delta.Amount)
+		if !delta.Amount.IsZero() {
+			outWeights[delta.ValoperAddress] = delta.Amount
+			outSum = outSum.Add(delta.Amount)
+		}
 	}
 	dust := input.Sub(outSum)
-	outWeights[deltas[0].ValoperAddress] = outWeights[deltas[0].ValoperAddress].Add(dust)
+	if !dust.IsZero() {
+		outWeights[deltas[0].ValoperAddress] = outWeights[deltas[0].ValoperAddress].Add(dust)
+	}
 
-	return outWeights
+	return outWeights, nil
 }

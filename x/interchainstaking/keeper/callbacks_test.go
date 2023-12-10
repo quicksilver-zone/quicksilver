@@ -3,18 +3,31 @@ package keeper_test
 import (
 	"bytes"
 	"encoding/base64"
+	"fmt"
 	"testing"
 	"time"
 
+	ics23 "github.com/confio/ics23/go"
 	"github.com/stretchr/testify/require"
+	"github.com/tendermint/tendermint/proto/tendermint/types"
 
+	"cosmossdk.io/math"
+
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
+	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
+	ibctypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
+	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
+	lightclienttypes "github.com/cosmos/ibc-go/v5/modules/light-clients/07-tendermint/types"
 
 	"github.com/quicksilver-zone/quicksilver/app"
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
@@ -29,6 +42,40 @@ const (
 	delegationQueryCallbackID = "delegation"
 	storeStakingKey           = "store/staking/key"
 )
+
+func (suite *KeeperTestSuite) setupIbc() (*app.Quicksilver, sdk.Context) {
+	// reset test suite
+	suite.SetupTest()
+	suite.setupTestZones()
+
+	// setup quicksilver test app
+	quicksilver := suite.GetQuicksilverApp(suite.chainA)
+	quicksilver.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
+
+	// get chainA context
+	ctx := suite.chainA.GetContext()
+
+	// get zone chainB context
+	zone, _ := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+	zone.DepositAddress.IncrementBalanceWaitgroup()
+	zone.WithdrawalAddress.IncrementBalanceWaitgroup()
+	quicksilver.InterchainstakingKeeper.SetZone(ctx, &zone)
+
+	// get the tx from fixture
+	txWithProofBz := decodeBase64NoErr(txFixtureLsm)
+	txRes := icqtypes.GetTxWithProofResponse{}
+	err := quicksilver.InterchainQueryKeeper.IBCKeeper.Codec().Unmarshal(txWithProofBz, &txRes)
+	suite.NoError(err)
+
+	// update payload header to ensure we can validate it.
+	txRes.Header.Header.Time = ctx.BlockTime()
+	// setup ClientConsensusState for checking Header validation
+	// Cheat, and set the client state and consensus state for 07-tendermint-0 to match the incoming header.
+	quicksilver.IBCKeeper.ClientKeeper.SetClientState(ctx, "07-tendermint-0", lightclienttypes.NewClientState("gaiatest-1", lightclienttypes.DefaultTrustLevel, time.Hour, time.Hour, time.Second*50, txRes.Header.TrustedHeight, []*ics23.ProofSpec{}, []string{}, false, false))
+	quicksilver.IBCKeeper.ClientKeeper.SetClientConsensusState(ctx, "07-tendermint-0", txRes.Header.TrustedHeight, txRes.Header.ConsensusState())
+
+	return quicksilver, ctx
+}
 
 func (suite *KeeperTestSuite) TestHandleValsetCallback() {
 	newVal := addressutils.GenerateValAddressForTest()
@@ -208,25 +255,24 @@ func (suite *KeeperTestSuite) TestHandleValsetCallback() {
 				require.True(foundQuery)
 			},
 		},
-		// TODO: trigger callback on status change.
-		// {
-		// 	name: "valid - status unbonding val[0]",
-		// 	valset: func(in stakingtypes.Validators) stakingtypes.QueryValidatorsResponse {
-		// 		in[0].Status = stakingtypes.Unbonding
-		// 		return stakingtypes.QueryValidatorsResponse{Validators: in}
-		// 	},
-		// 	checks: func(require *require.Assertions, ctx sdk.Context, app *quicksilver.Quicksilver, in stakingtypes.Validators) {
-		// 		foundQuery := false
-		// 		_, addr, _ := bech32.DecodeAndConvert(in[0].OperatorAddress)
-		// 		data := stakingtypes.GetValidatorKey(addr)
-		// 		for _, i := range quicksilver.InterchainQueryKeeper.AllQueries(ctx) {
-		// 			if i.QueryType == storeStakingKey && bytes.Equal(i.Request, data) {
-		// 				foundQuery = true
-		// 			}
-		// 		}
-		// 		require.True(foundQuery)
-		// 	},
-		// },
+		{
+			name: "valid - status unbonding val[0]",
+			valset: func(in stakingtypes.Validators) stakingtypes.QueryValidatorsResponse {
+				in[0].Status = stakingtypes.Unbonding
+				return stakingtypes.QueryValidatorsResponse{Validators: in}
+			},
+			checks: func(require *require.Assertions, ctx sdk.Context, quicksilver *app.Quicksilver, in stakingtypes.Validators) {
+				foundQuery := false
+				_, addr, _ := bech32.DecodeAndConvert(in[0].OperatorAddress)
+				data := stakingtypes.GetValidatorKey(addr)
+				for _, i := range quicksilver.InterchainQueryKeeper.AllQueries(ctx) {
+					if i.QueryType == storeStakingKey && bytes.Equal(i.Request, data) {
+						foundQuery = true
+					}
+				}
+				require.True(foundQuery)
+			},
+		},
 	}
 
 	for _, test := range tests {
@@ -371,22 +417,22 @@ func (suite *KeeperTestSuite) TestHandleValidatorCallback() {
 		{
 			name:      "valid - no-op",
 			validator: stakingtypes.Validator{OperatorAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", Jailed: false, Status: stakingtypes.Bonded, Tokens: sdk.NewInt(2000), DelegatorShares: sdk.NewDec(2000), Commission: stakingtypes.NewCommission(sdk.MustNewDecFromStr("0.2"), sdk.MustNewDecFromStr("0.2"), sdk.MustNewDecFromStr("0.2"))},
-			expected:  icstypes.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), DelegatorShares: sdk.NewDec(2000), Score: sdk.ZeroDec(), Status: "BOND_STATUS_BONDED"},
+			expected:  icstypes.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), DelegatorShares: sdk.NewDec(2000), Score: sdk.ZeroDec(), Status: "BOND_STATUS_BONDED", LiquidShares: sdk.ZeroDec(), ValidatorBondShares: sdk.ZeroDec()},
 		},
 		{
 			name:      "valid - +2000 tokens/shares",
 			validator: stakingtypes.Validator{OperatorAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", Jailed: false, Status: stakingtypes.Bonded, Tokens: sdk.NewInt(4000), DelegatorShares: sdk.NewDec(4000), Commission: stakingtypes.NewCommission(sdk.MustNewDecFromStr("0.2"), sdk.MustNewDecFromStr("0.2"), sdk.MustNewDecFromStr("0.2"))},
-			expected:  icstypes.Validator{ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(4000), DelegatorShares: sdk.NewDec(4000), Score: sdk.ZeroDec(), Status: "BOND_STATUS_BONDED"},
+			expected:  icstypes.Validator{ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(4000), DelegatorShares: sdk.NewDec(4000), Score: sdk.ZeroDec(), Status: "BOND_STATUS_BONDED", LiquidShares: sdk.ZeroDec(), ValidatorBondShares: sdk.ZeroDec()},
 		},
 		{
 			name:      "valid - inc. commission",
 			validator: stakingtypes.Validator{OperatorAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", Jailed: false, Status: stakingtypes.Bonded, Tokens: sdk.NewInt(2000), DelegatorShares: sdk.NewDec(2000), Commission: stakingtypes.NewCommission(sdk.MustNewDecFromStr("0.5"), sdk.MustNewDecFromStr("0.2"), sdk.MustNewDecFromStr("0.2"))},
-			expected:  icstypes.Validator{ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", CommissionRate: sdk.MustNewDecFromStr("0.5"), VotingPower: sdk.NewInt(2000), DelegatorShares: sdk.NewDec(2000), Score: sdk.ZeroDec(), Status: "BOND_STATUS_BONDED"},
+			expected:  icstypes.Validator{ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", CommissionRate: sdk.MustNewDecFromStr("0.5"), VotingPower: sdk.NewInt(2000), DelegatorShares: sdk.NewDec(2000), Score: sdk.ZeroDec(), Status: "BOND_STATUS_BONDED", LiquidShares: sdk.ZeroDec(), ValidatorBondShares: sdk.ZeroDec()},
 		},
 		{
 			name:      "valid - new validator",
 			validator: stakingtypes.Validator{OperatorAddress: newVal, Jailed: false, Status: stakingtypes.Bonded, Tokens: sdk.NewInt(3000), DelegatorShares: sdk.NewDec(3050), Commission: stakingtypes.NewCommission(sdk.MustNewDecFromStr("0.25"), sdk.MustNewDecFromStr("0.2"), sdk.MustNewDecFromStr("0.2"))},
-			expected:  icstypes.Validator{ValoperAddress: newVal, CommissionRate: sdk.MustNewDecFromStr("0.25"), VotingPower: sdk.NewInt(3000), DelegatorShares: sdk.NewDec(3050), Score: sdk.ZeroDec(), Status: "BOND_STATUS_BONDED"},
+			expected:  icstypes.Validator{ValoperAddress: newVal, CommissionRate: sdk.MustNewDecFromStr("0.25"), VotingPower: sdk.NewInt(3000), DelegatorShares: sdk.NewDec(3050), Score: sdk.ZeroDec(), Status: "BOND_STATUS_BONDED", LiquidShares: sdk.ZeroDec(), ValidatorBondShares: sdk.ZeroDec()},
 		},
 	}
 
@@ -422,6 +468,8 @@ func (suite *KeeperTestSuite) TestHandleValidatorCallback() {
 
 func (suite *KeeperTestSuite) TestHandleValidatorCallbackJailedWithSlashing() {
 	completion := time.Now().UTC().Add(time.Hour)
+	pkAny, err := codectypes.NewAnyWithValue(PKs[0])
+	suite.Require().NoError(err)
 
 	tests := []struct {
 		name               string
@@ -434,7 +482,7 @@ func (suite *KeeperTestSuite) TestHandleValidatorCallbackJailedWithSlashing() {
 			name: "jailed; single distribution",
 			validator: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) *stakingtypes.Validator {
 				vals := qs.InterchainstakingKeeper.GetValidators(ctx, zone.ChainId)
-				return &stakingtypes.Validator{OperatorAddress: vals[0].ValoperAddress, Jailed: true, Status: stakingtypes.Bonded, Tokens: vals[0].VotingPower.Mul(sdk.NewInt(19)).Quo(sdk.NewInt(20)), DelegatorShares: vals[0].DelegatorShares, Commission: stakingtypes.NewCommission(vals[0].CommissionRate, sdk.MustNewDecFromStr("0.5"), sdk.MustNewDecFromStr("0.5"))}
+				return &stakingtypes.Validator{OperatorAddress: vals[0].ValoperAddress, ConsensusPubkey: pkAny, Jailed: true, Status: stakingtypes.Bonded, Tokens: vals[0].VotingPower.Mul(sdk.NewInt(19)).Quo(sdk.NewInt(20)), DelegatorShares: vals[0].DelegatorShares, Commission: stakingtypes.NewCommission(vals[0].CommissionRate, sdk.MustNewDecFromStr("0.5"), sdk.MustNewDecFromStr("0.5"))}
 			},
 			expected: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) *icstypes.Validator {
 				vals := qs.InterchainstakingKeeper.GetValidators(ctx, zone.ChainId)
@@ -484,7 +532,7 @@ func (suite *KeeperTestSuite) TestHandleValidatorCallbackJailedWithSlashing() {
 			name: "jailed; multi distribution",
 			validator: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) *stakingtypes.Validator {
 				vals := qs.InterchainstakingKeeper.GetValidators(ctx, zone.ChainId)
-				return &stakingtypes.Validator{OperatorAddress: vals[0].ValoperAddress, Jailed: true, Status: stakingtypes.Bonded, Tokens: vals[0].VotingPower.Mul(sdk.NewInt(19)).Quo(sdk.NewInt(20)), DelegatorShares: vals[0].DelegatorShares, Commission: stakingtypes.NewCommission(vals[0].CommissionRate, sdk.MustNewDecFromStr("0.5"), sdk.MustNewDecFromStr("0.5"))}
+				return &stakingtypes.Validator{OperatorAddress: vals[0].ValoperAddress, ConsensusPubkey: pkAny, Jailed: true, Status: stakingtypes.Bonded, Tokens: vals[0].VotingPower.Mul(sdk.NewInt(19)).Quo(sdk.NewInt(20)), DelegatorShares: vals[0].DelegatorShares, Commission: stakingtypes.NewCommission(vals[0].CommissionRate, sdk.MustNewDecFromStr("0.5"), sdk.MustNewDecFromStr("0.5"))}
 			},
 			expected: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) *icstypes.Validator {
 				vals := qs.InterchainstakingKeeper.GetValidators(ctx, zone.ChainId)
@@ -542,7 +590,7 @@ func (suite *KeeperTestSuite) TestHandleValidatorCallbackJailedWithSlashing() {
 			name: "jailed; multi distribution, unrelated validators - no-op",
 			validator: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) *stakingtypes.Validator {
 				vals := qs.InterchainstakingKeeper.GetValidators(ctx, zone.ChainId)
-				return &stakingtypes.Validator{OperatorAddress: vals[0].ValoperAddress, Jailed: true, Status: stakingtypes.Bonded, Tokens: vals[0].VotingPower.Mul(sdk.NewInt(19)).Quo(sdk.NewInt(20)), DelegatorShares: vals[0].DelegatorShares, Commission: stakingtypes.NewCommission(vals[0].CommissionRate, sdk.MustNewDecFromStr("0.5"), sdk.MustNewDecFromStr("0.5"))}
+				return &stakingtypes.Validator{OperatorAddress: vals[0].ValoperAddress, ConsensusPubkey: pkAny, Jailed: true, Status: stakingtypes.Bonded, Tokens: vals[0].VotingPower.Mul(sdk.NewInt(19)).Quo(sdk.NewInt(20)), DelegatorShares: vals[0].DelegatorShares, Commission: stakingtypes.NewCommission(vals[0].CommissionRate, sdk.MustNewDecFromStr("0.5"), sdk.MustNewDecFromStr("0.5"))}
 			},
 			expected: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) *icstypes.Validator {
 				vals := qs.InterchainstakingKeeper.GetValidators(ctx, zone.ChainId)
@@ -760,6 +808,230 @@ func (suite *KeeperTestSuite) TestHandleValideRewardsCallback() {
 		//
 		suite.NoError(err)
 	})
+}
+
+func (suite *KeeperTestSuite) TestHandleDistributeRewardsCallback() {
+	suite.SetupTest()
+	suite.setupTestZones()
+	quicksilver := suite.GetQuicksilverApp(suite.chainA)
+	gaia := suite.GetQuicksilverApp(suite.chainB)
+	quicksilver.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
+
+	ctxA := suite.chainA.GetContext()
+	ctxB := suite.chainB.GetContext()
+	vals := gaia.StakingKeeper.GetAllValidators(ctxB)
+
+	zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctxA, suite.chainB.ChainID)
+	suite.True(found)
+	params := quicksilver.InterchainstakingKeeper.GetParams(ctxA)
+	commisionRate := sdk.MustNewDecFromStr("0.2")
+	params.CommissionRate = commisionRate
+	quicksilver.InterchainstakingKeeper.SetParams(ctxA, params)
+
+	prevRedemptionRate := zone.RedemptionRate
+	tests := []struct {
+		name            string
+		zoneSetup       func()
+		connectionSetup func() string
+		responseMsg     func() []byte
+		queryMsg        icqtypes.Query
+		check           func()
+		pass            bool
+	}{
+		{
+			// delta = ratio / redemption_rate
+			// The original redemption rate is 1 so if ratio exceed (-0.95, 1.02) range,
+			// it would be kept in the boundary
+			name: "valid case with positive rewards and -95% < delta < 102%",
+			zoneSetup: func() {
+				balances := sdk.NewCoins(
+					sdk.NewCoin(
+						zone.LocalDenom,
+						math.NewInt(100_000_000),
+					),
+				)
+				err := quicksilver.MintKeeper.MintCoins(ctxA, balances)
+				suite.NoError(err)
+				qAssetAmount := quicksilver.BankKeeper.GetSupply(ctxA, zone.LocalDenom)
+				suite.Equal(balances[0], qAssetAmount)
+
+				delegation := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[0].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(100_000_000))}
+				quicksilver.InterchainstakingKeeper.SetDelegation(ctxA, zone.ChainId, delegation)
+			},
+			connectionSetup: func() string {
+				channelID := quicksilver.IBCKeeper.ChannelKeeper.GenerateChannelIdentifier(ctxA)
+				quicksilver.IBCKeeper.ChannelKeeper.SetChannel(ctxA, icstypes.TransferPort, channelID, channeltypes.Channel{State: channeltypes.OPEN, Ordering: channeltypes.ORDERED, Counterparty: channeltypes.Counterparty{PortId: icstypes.TransferPort, ChannelId: channelID}, ConnectionHops: []string{suite.path.EndpointA.ConnectionID}})
+				quicksilver.IBCKeeper.ChannelKeeper.SetNextSequenceSend(ctxA, icstypes.TransferPort, channelID, 1)
+				return channelID
+			},
+			responseMsg: func() []byte {
+				balances := sdk.NewCoins(
+					sdk.NewCoin(
+						zone.BaseDenom,
+						math.NewInt(1_000_000),
+					),
+				)
+
+				response := banktypes.QueryAllBalancesResponse{
+					Balances: balances,
+				}
+				respbz, err := quicksilver.AppCodec().Marshal(&response)
+				suite.NoError(err)
+				return respbz
+			},
+			queryMsg: icqtypes.Query{ChainId: suite.chainB.ChainID},
+			check: func() {
+				zone, _ := quicksilver.InterchainstakingKeeper.GetZone(ctxA, suite.chainB.ChainID)
+				redemptionRate := zone.RedemptionRate
+
+				// The ratio is calculated as:
+				// ratio = (total_delegate + total_unbonding + epoch_rewards) / total_q_asset
+				// total_delegate = total_q_asset = 100_000_000
+				// total_unbonding = 0
+				// epoch_rewards = balances * (1 - commission_rate) = 1_000_000 * 0.8
+				// Therefore, ratio should be 1.008
+				ratio := sdk.MustNewDecFromStr("1.008")
+				suite.Equal(ratio.Mul(prevRedemptionRate), redemptionRate)
+			},
+			pass: true,
+		},
+		{
+			name:      "valid case with no rewards",
+			zoneSetup: func() {},
+			connectionSetup: func() string {
+				channelID := quicksilver.IBCKeeper.ChannelKeeper.GenerateChannelIdentifier(ctxA)
+				quicksilver.IBCKeeper.ChannelKeeper.SetChannel(ctxA, icstypes.TransferPort, channelID, channeltypes.Channel{State: channeltypes.OPEN, Ordering: channeltypes.ORDERED, Counterparty: channeltypes.Counterparty{PortId: icstypes.TransferPort, ChannelId: channelID}, ConnectionHops: []string{suite.path.EndpointA.ConnectionID}})
+				quicksilver.IBCKeeper.ChannelKeeper.SetNextSequenceSend(ctxA, icstypes.TransferPort, channelID, 1)
+				return channelID
+			},
+			responseMsg: func() []byte {
+				response := banktypes.QueryAllBalancesResponse{
+					Balances: sdk.Coins{},
+				}
+				respbz, err := quicksilver.AppCodec().Marshal(&response)
+				suite.NoError(err)
+				return respbz
+			},
+			queryMsg: icqtypes.Query{ChainId: suite.chainB.ChainID},
+			check: func() {
+				zone, _ := quicksilver.InterchainstakingKeeper.GetZone(ctxA, suite.chainB.ChainID)
+				redemptionRate := zone.RedemptionRate
+
+				suite.Equal(prevRedemptionRate, redemptionRate)
+			},
+			pass: true,
+		},
+		{
+			name:      "invalid chainId query",
+			zoneSetup: func() {},
+			connectionSetup: func() string {
+				channelID := quicksilver.IBCKeeper.ChannelKeeper.GenerateChannelIdentifier(ctxA)
+				quicksilver.IBCKeeper.ChannelKeeper.SetChannel(ctxA, icstypes.TransferPort, channelID, channeltypes.Channel{State: channeltypes.OPEN, Ordering: channeltypes.ORDERED, Counterparty: channeltypes.Counterparty{PortId: icstypes.TransferPort, ChannelId: channelID}, ConnectionHops: []string{suite.path.EndpointA.ConnectionID}})
+				quicksilver.IBCKeeper.ChannelKeeper.SetNextSequenceSend(ctxA, icstypes.TransferPort, channelID, 1)
+				return channelID
+			},
+			responseMsg: func() []byte {
+				balances := sdk.NewCoins(
+					sdk.NewCoin(
+						zone.BaseDenom,
+						math.NewInt(10_000_000),
+					),
+				)
+
+				response := banktypes.QueryAllBalancesResponse{
+					Balances: balances,
+				}
+				respbz, err := quicksilver.AppCodec().Marshal(&response)
+				suite.NoError(err)
+				return respbz
+			},
+			queryMsg: icqtypes.Query{ChainId: ""},
+			check:    func() {},
+			pass:     false,
+		},
+		{
+			name:      "invalid response",
+			zoneSetup: func() {},
+			connectionSetup: func() string {
+				channelID := quicksilver.IBCKeeper.ChannelKeeper.GenerateChannelIdentifier(ctxA)
+				quicksilver.IBCKeeper.ChannelKeeper.SetChannel(ctxA, icstypes.TransferPort, channelID, channeltypes.Channel{State: channeltypes.OPEN, Ordering: channeltypes.ORDERED, Counterparty: channeltypes.Counterparty{PortId: icstypes.TransferPort, ChannelId: channelID}, ConnectionHops: []string{suite.path.EndpointA.ConnectionID}})
+				quicksilver.IBCKeeper.ChannelKeeper.SetNextSequenceSend(ctxA, icstypes.TransferPort, channelID, 1)
+				return channelID
+			},
+			responseMsg: func() []byte {
+				balance := sdk.NewCoin(
+					zone.BaseDenom,
+					math.NewInt(10_000_000),
+				)
+				respbz, err := quicksilver.AppCodec().Marshal(&balance)
+				suite.NoError(err)
+				return respbz
+			},
+			queryMsg: icqtypes.Query{ChainId: suite.chainB.ChainID},
+			check:    func() {},
+			pass:     false,
+		},
+		{
+			name:      "no connection setup",
+			zoneSetup: func() {},
+			connectionSetup: func() string {
+				return ""
+			},
+			responseMsg: func() []byte {
+				balances := sdk.NewCoins(
+					sdk.NewCoin(
+						zone.BaseDenom,
+						math.NewInt(10_000_000),
+					),
+				)
+
+				response := banktypes.QueryAllBalancesResponse{
+					Balances: balances,
+				}
+				respbz, err := quicksilver.AppCodec().Marshal(&response)
+				suite.NoError(err)
+				return respbz
+			},
+			queryMsg: icqtypes.Query{ChainId: suite.chainB.ChainID},
+			check:    func() {},
+			pass:     false,
+		},
+	}
+	for _, test := range tests {
+		suite.Run(test.name, func() {
+			// Send coin to withdrawal address
+			balances := sdk.NewCoins(
+				sdk.NewCoin(
+					zone.BaseDenom,
+					math.NewInt(10_000_000),
+				),
+			)
+			err := gaia.MintKeeper.MintCoins(ctxB, balances)
+			suite.NoError(err)
+			addr, err := addressutils.AccAddressFromBech32(zone.WithdrawalAddress.Address, "")
+			suite.NoError(err)
+			err = gaia.BankKeeper.SendCoinsFromModuleToAccount(ctxB, minttypes.ModuleName, addr, balances)
+			suite.NoError(err)
+
+			test.zoneSetup()
+			channelID := test.connectionSetup()
+
+			respbz := test.responseMsg()
+			err = keeper.DistributeRewardsFromWithdrawAccount(quicksilver.InterchainstakingKeeper, ctxA, respbz, test.queryMsg)
+			if test.pass {
+				suite.NoError(err)
+			} else {
+				suite.Error(err)
+			}
+
+			test.check()
+			channel, found := quicksilver.IBCKeeper.ChannelKeeper.GetChannel(ctxA, icstypes.TransferPort, channelID)
+			if found {
+				channel.State = channeltypes.CLOSED
+				quicksilver.IBCKeeper.ChannelKeeper.SetChannel(ctxA, icstypes.TransferPort, channelID, channel)
+			}
+		})
+	}
 }
 
 func (suite *KeeperTestSuite) TestAllBalancesCallback() {
@@ -1164,9 +1436,9 @@ func TestDelegationsCallbackAllPresentNoChange(t *testing.T) {
 	delegationB := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[1].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
 	delegationC := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[2].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
 
-	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegationA)
-	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegationB)
-	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegationC)
+	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, zone.ChainId, delegationA)
+	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, zone.ChainId, delegationB)
+	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, zone.ChainId, delegationC)
 
 	response := stakingtypes.QueryDelegatorDelegationsResponse{DelegationResponses: []stakingtypes.DelegationResponse{
 		{Delegation: stakingtypes.Delegation{DelegatorAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[0].OperatorAddress, Shares: sdk.NewDec(1000)}, Balance: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))},
@@ -1176,7 +1448,7 @@ func TestDelegationsCallbackAllPresentNoChange(t *testing.T) {
 
 	data := cdc.MustMarshal(&response)
 
-	delegationQuery := stakingtypes.QueryDelegatorDelegationsRequest{DelegatorAddr: zone.DelegationAddress.Address, Pagination: &query.PageRequest{Limit: uint64(len(zone.Validators))}}
+	delegationQuery := stakingtypes.QueryDelegatorDelegationsRequest{DelegatorAddr: zone.DelegationAddress.Address, Pagination: &query.PageRequest{Limit: uint64(len(vals))}}
 	bz := cdc.MustMarshal(&delegationQuery)
 
 	err := keeper.DelegationsCallback(quicksilver.InterchainstakingKeeper, ctx, data, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: bz})
@@ -1191,7 +1463,7 @@ func TestDelegationsCallbackAllPresentNoChange(t *testing.T) {
 	}
 
 	suite.Equal(0, delegationRequests)
-	suite.Equal(3, len(quicksilver.InterchainstakingKeeper.GetAllDelegations(ctx, &zone)))
+	suite.Equal(3, len(quicksilver.InterchainstakingKeeper.GetAllDelegations(ctx, zone.ChainId)))
 }
 
 func TestDelegationsCallbackAllPresentOneChange(t *testing.T) {
@@ -1213,9 +1485,9 @@ func TestDelegationsCallbackAllPresentOneChange(t *testing.T) {
 	delegationB := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[1].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
 	delegationC := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[2].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
 
-	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegationA)
-	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegationB)
-	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegationC)
+	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, zone.ChainId, delegationA)
+	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, zone.ChainId, delegationB)
+	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, zone.ChainId, delegationC)
 
 	response := stakingtypes.QueryDelegatorDelegationsResponse{DelegationResponses: []stakingtypes.DelegationResponse{
 		{Delegation: stakingtypes.Delegation{DelegatorAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[0].OperatorAddress, Shares: sdk.NewDec(1000)}, Balance: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))},
@@ -1225,7 +1497,7 @@ func TestDelegationsCallbackAllPresentOneChange(t *testing.T) {
 
 	data := cdc.MustMarshal(&response)
 
-	delegationQuery := stakingtypes.QueryDelegatorDelegationsRequest{DelegatorAddr: zone.DelegationAddress.Address, Pagination: &query.PageRequest{Limit: uint64(len(zone.Validators))}}
+	delegationQuery := stakingtypes.QueryDelegatorDelegationsRequest{DelegatorAddr: zone.DelegationAddress.Address, Pagination: &query.PageRequest{Limit: uint64(len(vals))}}
 	bz := cdc.MustMarshal(&delegationQuery)
 
 	err := keeper.DelegationsCallback(quicksilver.InterchainstakingKeeper, ctx, data, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: bz})
@@ -1240,7 +1512,7 @@ func TestDelegationsCallbackAllPresentOneChange(t *testing.T) {
 	}
 
 	suite.Equal(1, delegationRequests)
-	suite.Equal(3, len(quicksilver.InterchainstakingKeeper.GetAllDelegations(ctx, &zone)))
+	suite.Equal(3, len(quicksilver.InterchainstakingKeeper.GetAllDelegations(ctx, zone.ChainId)))
 }
 
 func TestDelegationsCallbackOneMissing(t *testing.T) {
@@ -1262,9 +1534,9 @@ func TestDelegationsCallbackOneMissing(t *testing.T) {
 	delegationB := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[1].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
 	delegationC := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[2].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
 
-	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegationA)
-	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegationB)
-	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegationC)
+	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, zone.ChainId, delegationA)
+	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, zone.ChainId, delegationB)
+	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, zone.ChainId, delegationC)
 
 	response := stakingtypes.QueryDelegatorDelegationsResponse{DelegationResponses: []stakingtypes.DelegationResponse{
 		{Delegation: stakingtypes.Delegation{DelegatorAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[0].OperatorAddress, Shares: sdk.NewDec(1000)}, Balance: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))},
@@ -1273,7 +1545,7 @@ func TestDelegationsCallbackOneMissing(t *testing.T) {
 
 	data := cdc.MustMarshal(&response)
 
-	delegationQuery := stakingtypes.QueryDelegatorDelegationsRequest{DelegatorAddr: zone.DelegationAddress.Address, Pagination: &query.PageRequest{Limit: uint64(len(zone.Validators))}}
+	delegationQuery := stakingtypes.QueryDelegatorDelegationsRequest{DelegatorAddr: zone.DelegationAddress.Address, Pagination: &query.PageRequest{Limit: uint64(len(vals))}}
 	bz := cdc.MustMarshal(&delegationQuery)
 
 	err := keeper.DelegationsCallback(quicksilver.InterchainstakingKeeper, ctx, data, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: bz})
@@ -1287,8 +1559,8 @@ func TestDelegationsCallbackOneMissing(t *testing.T) {
 		}
 	}
 
-	suite.Equal(1, delegationRequests)                                                     // callback for 'missing' delegation.
-	suite.Equal(3, len(quicksilver.InterchainstakingKeeper.GetAllDelegations(ctx, &zone))) // new delegation doesn't get removed until the callback.
+	suite.Equal(1, delegationRequests)                                                            // callback for 'missing' delegation.
+	suite.Equal(3, len(quicksilver.InterchainstakingKeeper.GetAllDelegations(ctx, zone.ChainId))) // new delegation doesn't get removed until the callback.
 }
 
 func TestDelegationsCallbackOneAdditional(t *testing.T) {
@@ -1310,9 +1582,9 @@ func TestDelegationsCallbackOneAdditional(t *testing.T) {
 	delegationB := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[1].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
 	delegationC := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[2].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
 
-	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegationA)
-	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegationB)
-	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegationC)
+	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, zone.ChainId, delegationA)
+	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, zone.ChainId, delegationB)
+	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, zone.ChainId, delegationC)
 
 	response := stakingtypes.QueryDelegatorDelegationsResponse{DelegationResponses: []stakingtypes.DelegationResponse{
 		{Delegation: stakingtypes.Delegation{DelegatorAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[0].OperatorAddress, Shares: sdk.NewDec(1000)}, Balance: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))},
@@ -1323,7 +1595,7 @@ func TestDelegationsCallbackOneAdditional(t *testing.T) {
 
 	data := cdc.MustMarshal(&response)
 
-	delegationQuery := stakingtypes.QueryDelegatorDelegationsRequest{DelegatorAddr: zone.DelegationAddress.Address, Pagination: &query.PageRequest{Limit: uint64(len(zone.Validators))}}
+	delegationQuery := stakingtypes.QueryDelegatorDelegationsRequest{DelegatorAddr: zone.DelegationAddress.Address, Pagination: &query.PageRequest{Limit: uint64(len(vals))}}
 	bz := cdc.MustMarshal(&delegationQuery)
 
 	err := keeper.DelegationsCallback(quicksilver.InterchainstakingKeeper, ctx, data, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: bz})
@@ -1338,7 +1610,7 @@ func TestDelegationsCallbackOneAdditional(t *testing.T) {
 	}
 
 	suite.Equal(1, delegationRequests)
-	suite.Equal(3, len(quicksilver.InterchainstakingKeeper.GetAllDelegations(ctx, &zone))) // new delegation doesn't get added until the end
+	suite.Equal(3, len(quicksilver.InterchainstakingKeeper.GetAllDelegations(ctx, zone.ChainId))) // new delegation doesn't get added until the end
 }
 
 func TestDelegationCallbackNew(t *testing.T) {
@@ -1360,9 +1632,9 @@ func TestDelegationCallbackNew(t *testing.T) {
 	delegationB := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[1].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
 	delegationC := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[2].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
 
-	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegationA)
-	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegationB)
-	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegationC)
+	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, zone.ChainId, delegationA)
+	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, zone.ChainId, delegationB)
+	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, zone.ChainId, delegationC)
 
 	response := stakingtypes.Delegation{DelegatorAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[3].OperatorAddress, Shares: sdk.NewDec(1000)}
 
@@ -1377,7 +1649,7 @@ func TestDelegationCallbackNew(t *testing.T) {
 	err = keeper.DelegationCallback(quicksilver.InterchainstakingKeeper, ctx, data, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: bz})
 	suite.NoError(err)
 
-	suite.Equal(4, len(quicksilver.InterchainstakingKeeper.GetAllDelegations(ctx, &zone)))
+	suite.Equal(4, len(quicksilver.InterchainstakingKeeper.GetAllDelegations(ctx, zone.ChainId)))
 }
 
 func TestDelegationCallbackUpdate(t *testing.T) {
@@ -1399,9 +1671,9 @@ func TestDelegationCallbackUpdate(t *testing.T) {
 	delegationB := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[1].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
 	delegationC := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[2].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
 
-	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegationA)
-	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegationB)
-	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegationC)
+	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, zone.ChainId, delegationA)
+	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, zone.ChainId, delegationB)
+	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, zone.ChainId, delegationC)
 
 	response := stakingtypes.Delegation{DelegatorAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[2].OperatorAddress, Shares: sdk.NewDec(2000)}
 
@@ -1416,7 +1688,7 @@ func TestDelegationCallbackUpdate(t *testing.T) {
 	err = keeper.DelegationCallback(quicksilver.InterchainstakingKeeper, ctx, data, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: bz})
 	suite.NoError(err)
 
-	suite.Equal(3, len(quicksilver.InterchainstakingKeeper.GetAllDelegations(ctx, &zone)))
+	suite.Equal(3, len(quicksilver.InterchainstakingKeeper.GetAllDelegations(ctx, zone.ChainId)))
 }
 
 func TestDelegationCallbackNoOp(t *testing.T) {
@@ -1438,9 +1710,9 @@ func TestDelegationCallbackNoOp(t *testing.T) {
 	delegationB := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[1].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
 	delegationC := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[2].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
 
-	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegationA)
-	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegationB)
-	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegationC)
+	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, zone.ChainId, delegationA)
+	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, zone.ChainId, delegationB)
+	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, zone.ChainId, delegationC)
 
 	response := stakingtypes.Delegation{DelegatorAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[2].OperatorAddress, Shares: sdk.NewDec(1000)}
 
@@ -1455,7 +1727,7 @@ func TestDelegationCallbackNoOp(t *testing.T) {
 	err = keeper.DelegationCallback(quicksilver.InterchainstakingKeeper, ctx, data, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: bz})
 	suite.NoError(err)
 
-	suite.Equal(3, len(quicksilver.InterchainstakingKeeper.GetAllDelegations(ctx, &zone)))
+	suite.Equal(3, len(quicksilver.InterchainstakingKeeper.GetAllDelegations(ctx, zone.ChainId)))
 }
 
 func TestDelegationCallbackRemove(t *testing.T) {
@@ -1477,9 +1749,9 @@ func TestDelegationCallbackRemove(t *testing.T) {
 	delegationB := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[1].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
 	delegationC := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[2].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
 
-	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegationA)
-	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegationB)
-	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegationC)
+	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, zone.ChainId, delegationA)
+	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, zone.ChainId, delegationB)
+	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, zone.ChainId, delegationC)
 
 	response := stakingtypes.Delegation{}
 
@@ -1501,7 +1773,7 @@ func TestDelegationCallbackRemove(t *testing.T) {
 		}
 	}
 
-	suite.Equal(3, len(quicksilver.InterchainstakingKeeper.GetAllDelegations(ctx, &zone)))
+	suite.Equal(3, len(quicksilver.InterchainstakingKeeper.GetAllDelegations(ctx, zone.ChainId)))
 }
 
 func TestDepositIntervalCallback(t *testing.T) {
@@ -1576,8 +1848,815 @@ func TestDepositIntervalCallbackWithExistingTxs(t *testing.T) {
 	suite.Equal(int(res.Pagination.Total)-3, txQueryCount)
 }
 
+func decodeBase64NoErr(str string) []byte {
+	decoded, err := base64.StdEncoding.DecodeString(str)
+	if err != nil {
+		fmt.Println("Error decoding: ", str)
+		panic(err)
+	}
+	return decoded
+}
+
+func (suite *KeeperTestSuite) TestDepositTxCallback() {
+	// testcases
+	testCases := []struct {
+		name          string
+		txHash        string
+		txWithProofbz []byte
+		chainID       string
+		expectErr     bool
+	}{
+		{
+			name: "Deposit transaction successful",
+			// txHash that come from DepositTxFixture
+			txHash:        "b1f1852d322328f6b8d8cacd180df2b1cbbd3dd64536c9ecbf1c896a15f6217a",
+			txWithProofbz: decodeBase64NoErr(txFixtureLsm),
+			chainID:       suite.chainB.ChainID,
+			expectErr:     false,
+		},
+		{
+			name: "Deposit transaction failed: txHash mismatch",
+			// txHash that come from DepositTxFixture
+			txHash:        "2CC0F0C5106F30F5D26ABE8CB93F1EF0CCCE10754207C38B129D76ED3B7C75B2",
+			txWithProofbz: decodeBase64NoErr(txFixtureLsm),
+			chainID:       suite.chainB.ChainID,
+			expectErr:     true,
+		},
+		{
+			name:          "Deposit transaction failed: nil bytes",
+			txHash:        "b1f1852d322328f6b8d8cacd180df2b1cbbd3dd64536c9ecbf1c896a15f6217a",
+			txWithProofbz: nil,
+			chainID:       suite.chainB.ChainID,
+			expectErr:     true,
+		},
+		{
+			name:          "Deposit transaction failed: wrong bytes",
+			txHash:        "b1f1852d322328f6b8d8cacd180df2b1cbbd3dd64536c9ecbf1c896a15f6217a",
+			txWithProofbz: []byte("testing"),
+			chainID:       suite.chainB.ChainID,
+			expectErr:     true,
+		},
+		{
+			name:          "Deposit transaction failed: zone not registered",
+			txHash:        "b1f1852d322328f6b8d8cacd180df2b1cbbd3dd64536c9ecbf1c896a15f6217a",
+			txWithProofbz: decodeBase64NoErr(txFixtureLsm),
+			chainID:       "superNova",
+			expectErr:     true,
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", tc.name), func() {
+			// setup quicksilver and counter chain context
+			qckApp, ctx := suite.setupIbc()
+
+			// construct request data using txHash
+			requestData := tx.GetTxRequest{
+				Hash: tc.txHash,
+			}
+			resDataBz, _ := qckApp.AppCodec().Marshal(&requestData)
+
+			// initialize the callback
+			err := keeper.DepositTxCallback(qckApp.InterchainstakingKeeper, ctx, tc.txWithProofbz, icqtypes.Query{ChainId: tc.chainID, Request: resDataBz})
+			if tc.expectErr {
+				suite.Error(err)
+			} else {
+				suite.NoError(err)
+			}
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestSigningInfoCallback() {
+	validator := addressutils.GenerateValAddressForTest()
+	pubKey := simapp.CreateTestPubKeys(1)[0]
+
+	pkAny, err := codectypes.NewAnyWithValue(pubKey)
+	suite.Require().NoError(err)
+
+	newValidator := stakingtypes.Validator{
+		OperatorAddress: validator.String(),
+		ConsensusPubkey: pkAny,
+	}
+	consAddr, err := newValidator.GetConsAddr()
+	suite.NoError(err)
+
+	bech32ConsAddress := addressutils.MustEncodeAddressToBech32(sdk.Bech32PrefixConsAddr, consAddr)
+	testCases := []struct {
+		name      string
+		malleate  func(quicksilver *app.Quicksilver, ctx sdk.Context) []byte
+		query     icqtypes.Query
+		expectErr bool
+		check     func(quicksilver *app.Quicksilver, ctx sdk.Context)
+	}{
+		// successful callback tombstoned validator
+		{
+			name: "successful callback not tombstoned validator ",
+			malleate: func(quicksilver *app.Quicksilver, ctx sdk.Context) []byte {
+				info := slashingtypes.ValidatorSigningInfo{
+					Tombstoned: false,
+				}
+				cdc := quicksilver.InterchainstakingKeeper.GetCodec()
+				bz := cdc.MustMarshal(&info)
+				return bz
+			},
+			query: icqtypes.Query{
+				ChainId: suite.chainB.ChainID,
+			},
+			expectErr: false,
+			check: func(quicksilver *app.Quicksilver, ctx sdk.Context) {
+				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+				suite.True(found)
+
+				valAddrBytes, err := addressutils.ValAddressFromBech32(validator.String(), zone.GetValoperPrefix())
+				suite.NoError(err)
+				_, found = quicksilver.InterchainstakingKeeper.GetValidator(ctx, zone.ChainId, valAddrBytes)
+				suite.False(found)
+			},
+		},
+		// wrong chain id
+		{
+			name: "wrong chain id",
+			malleate: func(quicksilver *app.Quicksilver, ctx sdk.Context) []byte {
+				info := slashingtypes.ValidatorSigningInfo{}
+				cdc := quicksilver.InterchainstakingKeeper.GetCodec()
+				bz := cdc.MustMarshal(&info)
+				return bz
+			},
+			query: icqtypes.Query{
+				ChainId: "wrong-chain-id",
+			},
+			expectErr: true,
+		},
+		// args has no len
+		{
+			name: "args has no len",
+			malleate: func(quicksilver *app.Quicksilver, ctx sdk.Context) []byte {
+				return []byte{}
+			},
+			query: icqtypes.Query{
+				ChainId: suite.chainB.ChainID,
+			},
+			expectErr: true,
+		},
+		// wrong type args
+		{
+			name: "wrong type args",
+			malleate: func(quicksilver *app.Quicksilver, ctx sdk.Context) []byte {
+				return []byte("wrong type")
+			},
+			query: icqtypes.Query{
+				ChainId: suite.chainB.ChainID,
+			},
+			expectErr: true,
+		},
+		// consaddress decoding err
+		{
+			name: "consaddress decoding err",
+			malleate: func(quicksilver *app.Quicksilver, ctx sdk.Context) []byte {
+				info := slashingtypes.ValidatorSigningInfo{
+					Address:    "wrong bech32 address",
+					Tombstoned: true,
+				}
+				cdc := quicksilver.InterchainstakingKeeper.GetCodec()
+				bz := cdc.MustMarshal(&info)
+				return bz
+			},
+			query: icqtypes.Query{
+				ChainId: suite.chainB.ChainID,
+			},
+			expectErr: true,
+		},
+		// can't get validator address from consensus address
+		{
+			name: "can't get validator address from consensus address",
+			malleate: func(quicksilver *app.Quicksilver, ctx sdk.Context) []byte {
+				info := slashingtypes.ValidatorSigningInfo{
+					Address:    bech32ConsAddress,
+					Tombstoned: true,
+				}
+				cdc := quicksilver.InterchainstakingKeeper.GetCodec()
+				bz := cdc.MustMarshal(&info)
+				return bz
+			},
+			query: icqtypes.Query{
+				ChainId: suite.chainB.ChainID,
+			},
+			expectErr: true,
+		},
+		// success case not found validator
+		{
+			name: "success case not found validator",
+			malleate: func(quicksilver *app.Quicksilver, ctx sdk.Context) []byte {
+				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+				suite.True(found)
+				quicksilver.InterchainstakingKeeper.SetValidatorAddrByConsAddr(ctx, zone.ChainId, newValidator.OperatorAddress, consAddr)
+				info := slashingtypes.ValidatorSigningInfo{
+					Address:    bech32ConsAddress,
+					Tombstoned: true,
+				}
+				cdc := quicksilver.InterchainstakingKeeper.GetCodec()
+				bz := cdc.MustMarshal(&info)
+				return bz
+			},
+			query: icqtypes.Query{
+				ChainId: suite.chainB.ChainID,
+			},
+			expectErr: false,
+			check: func(quicksilver *app.Quicksilver, ctx sdk.Context) {
+				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+				suite.True(found)
+
+				valAddrBytes, err := addressutils.ValAddressFromBech32(validator.String(), zone.GetValoperPrefix())
+				suite.NoError(err)
+				newVal, found := quicksilver.InterchainstakingKeeper.GetValidator(ctx, zone.ChainId, valAddrBytes)
+				suite.True(found)
+				suite.True(newVal.Jailed)
+				suite.True(newVal.Tombstoned)
+			},
+		},
+		// success case found validator
+		{
+			name: "success case found validator",
+			malleate: func(quicksilver *app.Quicksilver, ctx sdk.Context) []byte {
+				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+				suite.True(found)
+				quicksilver.InterchainstakingKeeper.SetValidatorAddrByConsAddr(ctx, zone.ChainId, newValidator.OperatorAddress, consAddr)
+				err := quicksilver.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, icstypes.Validator{
+					ValoperAddress: validator.String(),
+					Jailed:         false,
+					Tombstoned:     false,
+				})
+				suite.NoError(err)
+
+				info := slashingtypes.ValidatorSigningInfo{
+					Address:    bech32ConsAddress,
+					Tombstoned: true,
+				}
+				cdc := quicksilver.InterchainstakingKeeper.GetCodec()
+				bz := cdc.MustMarshal(&info)
+				return bz
+			},
+			query: icqtypes.Query{
+				ChainId: suite.chainB.ChainID,
+			},
+			expectErr: false,
+			check: func(quicksilver *app.Quicksilver, ctx sdk.Context) {
+				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+				suite.True(found)
+
+				valAddrBytes, err := addressutils.ValAddressFromBech32(validator.String(), zone.GetValoperPrefix())
+				suite.NoError(err)
+				newVal, found := quicksilver.InterchainstakingKeeper.GetValidator(ctx, zone.ChainId, valAddrBytes)
+				suite.True(found)
+				suite.False(newVal.Jailed)
+				suite.True(newVal.Tombstoned)
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", tc.name), func() {
+			suite.SetupTest()
+			suite.setupTestZones()
+
+			quicksilver := suite.GetQuicksilverApp(suite.chainA)
+			quicksilver.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
+			ctx := suite.chainA.GetContext()
+
+			data := tc.malleate(quicksilver, ctx)
+			err := keeper.SigningInfoCallback(quicksilver.InterchainstakingKeeper, ctx, data, tc.query)
+			if tc.expectErr {
+				suite.Error(err)
+			} else {
+				suite.NoError(err)
+				tc.check(quicksilver, ctx)
+			}
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestCheckTMHeaderForZone() {
+	testCases := []struct {
+		name        string
+		expectedErr bool
+		changeCtx   func(qck *app.Quicksilver, ctx *sdk.Context, txRes *icqtypes.GetTxWithProofResponse, zoneB *icstypes.Zone)
+	}{
+		{
+			name:        "Check TM Header for Zone successful",
+			expectedErr: false,
+			changeCtx:   nil,
+		},
+		{
+			name:        "Check TM Header for Zone failed: unable to fetch client state",
+			expectedErr: true,
+			changeCtx: func(qck *app.Quicksilver, ctx *sdk.Context, txRes *icqtypes.GetTxWithProofResponse, zone *icstypes.Zone) {
+				zone.ConnectionId = "connection-1"
+			},
+		},
+		{
+			name:        "Check TM Header for Zone failed: unable to fetch consensus state on trusted height",
+			expectedErr: true,
+			changeCtx: func(qck *app.Quicksilver, ctx *sdk.Context, txRes *icqtypes.GetTxWithProofResponse, zone *icstypes.Zone) {
+				txRes.Header.TrustedHeight = ibctypes.Height{RevisionNumber: 1, RevisionHeight: 24072000}
+			},
+		},
+		{
+			name:        "Check TM Header for Zone failed: unable to verify TM Header",
+			expectedErr: true,
+			changeCtx: func(qck *app.Quicksilver, ctx *sdk.Context, txRes *icqtypes.GetTxWithProofResponse, zone *icstypes.Zone) {
+				*ctx = ctx.WithBlockTime(ctx.BlockHeader().Time.Add(time.Hour * 24 * 8))
+			},
+		},
+		{
+			name:        "Check TM Header for Zone failed: unable to marshal proof",
+			expectedErr: true,
+			changeCtx: func(qck *app.Quicksilver, ctx *sdk.Context, txRes *icqtypes.GetTxWithProofResponse, zone *icstypes.Zone) {
+				txRes.Proof = &types.TxProof{}
+			},
+		},
+		{
+			name:        "Check TM Header for Zone failed: unable to verify TM Header from wrong data hash",
+			expectedErr: true,
+			changeCtx: func(qck *app.Quicksilver, ctx *sdk.Context, txRes *icqtypes.GetTxWithProofResponse, zone *icstypes.Zone) {
+				txRes.Header.Header.DataHash = []byte("wrong data hash")
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", tc.name), func() {
+			// setup app and counter chain ctx
+			qckApp, ctx := suite.setupIbc()
+
+			// get chain B
+			zone, _ := qckApp.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+
+			// get the tx from fixture
+			txWithProofBz := decodeBase64NoErr(txFixtureLsm)
+			txRes := icqtypes.GetTxWithProofResponse{}
+			_ = qckApp.InterchainQueryKeeper.IBCKeeper.Codec().Unmarshal(txWithProofBz, &txRes)
+
+			// setup ctx for testcase
+			if tc.expectedErr {
+				tc.changeCtx(qckApp, &ctx, &txRes, &zone)
+			}
+
+			err := qckApp.InterchainstakingKeeper.CheckTMHeaderForZone(ctx, &zone, txRes)
+			if tc.expectedErr {
+				suite.Error(err)
+			} else {
+				suite.NoError(err)
+			}
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestDepositLsmTxCallback() {
+	suite.Run("Deposit transaction successful", func() {
+		suite.SetupTest()
+		suite.setupTestZones()
+
+		// setup quicksilver test app
+		quicksilver := suite.GetQuicksilverApp(suite.chainA)
+		quicksilver.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
+
+		// get chainA context
+		ctx := suite.chainA.GetContext()
+
+		// get zone chainB context
+		zone, _ := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+		zone.DepositAddress.IncrementBalanceWaitgroup()
+		zone.WithdrawalAddress.IncrementBalanceWaitgroup()
+		// add the validator from the gaiatest-1 network to our registered zone. This is required for LSM deposit as the tokenised share denom is checked against known validators.
+		err := quicksilver.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, icstypes.Validator{
+			ValoperAddress:      "cosmosvaloper1gg7w8w2y9jfv76a2yyahe42y09g9ry2raa5rqf",
+			CommissionRate:      sdk.NewDecWithPrec(1, 1),
+			DelegatorShares:     sdk.MustNewDecFromStr("4235376641.000000000000000000"),
+			VotingPower:         sdk.NewInt(4235376641),
+			Status:              "BOND_STATUS_BONDED",
+			Jailed:              false,
+			Tombstoned:          false,
+			ValidatorBondShares: sdk.MustNewDecFromStr("1000000.000000000000000000"),
+			LiquidShares:        sdk.MustNewDecFromStr("4234076641.000000000000000000"),
+		})
+		suite.NoError(err)
+
+		// override the DepositAddress to match that of the chain where the fixture was captured.
+		zone.DepositAddress.Address = "cosmos1avvehf3npvn6weyxtvyu7mhwwvjryzw69g43tq0nl80wqjglr6hse5mcz4"
+		quicksilver.InterchainstakingKeeper.SetZone(ctx, &zone)
+
+		// create tx fixture - this was taken from a live v1.2 chain (lfg-1 <-> gaiatest-1) hence the need to override client and consensus states, to match the source.
+		payload := icqtypes.GetTxWithProofResponse{}
+		payloadBytes := decodeBase64NoErr(txFixtureLsm)
+
+		err = quicksilver.InterchainstakingKeeper.GetCodec().Unmarshal(payloadBytes, &payload)
+		// update payload header to ensure we can validate it.
+		payload.Header.Header.Time = ctx.BlockTime()
+		suite.NoError(err)
+		// cheat, and set the client state and consensus state for 07-tendermint-0 to match the incoming header.
+		quicksilver.IBCKeeper.ClientKeeper.SetClientState(ctx, "07-tendermint-0", lightclienttypes.NewClientState("gaiatest-1", lightclienttypes.DefaultTrustLevel, time.Hour, time.Hour, time.Second*50, payload.Header.TrustedHeight, []*ics23.ProofSpec{}, []string{}, false, false))
+		quicksilver.IBCKeeper.ClientKeeper.SetClientConsensusState(ctx, "07-tendermint-0", payload.Header.TrustedHeight, payload.Header.ConsensusState())
+
+		requestData := tx.GetTxRequest{
+			// hash of tx in `txFixture`
+			Hash: "b1f1852d322328f6b8d8cacd180df2b1cbbd3dd64536c9ecbf1c896a15f6217a",
+		}
+		// check receipt does not exist created.
+		_, found := quicksilver.InterchainstakingKeeper.GetReceipt(ctx, zone.ChainId, requestData.Hash)
+
+		suite.False(found)
+
+		resDataBz, err := quicksilver.AppCodec().Marshal(&requestData)
+		suite.NoError(err)
+
+		// trigger the callback
+		err = keeper.DepositTxCallback(quicksilver.InterchainstakingKeeper, ctx, payloadBytes, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: resDataBz})
+
+		suite.NoError(err)
+
+		// expect quick1a2zht8x2j0dqvuejr8pxpu7due3qmk405vakg9 to have 5000 uqatoms now!
+		addrBytes, _ := addressutils.AccAddressFromBech32("cosmos1a2zht8x2j0dqvuejr8pxpu7due3qmk40lgdy3h", "")
+		newBalance := quicksilver.BankKeeper.GetAllBalances(ctx, addrBytes)
+		suite.Equal(newBalance.AmountOf("uqatom"), math.NewInt(5000))
+
+		// check receipt was created.
+		receipt, found := quicksilver.InterchainstakingKeeper.GetReceipt(ctx, zone.ChainId, requestData.Hash)
+
+		suite.True(found)
+
+		sdkTx, err := keeper.TxDecoder(quicksilver.InterchainstakingKeeper.GetCodec())(payload.Proof.Data)
+		suite.NoError(err)
+
+		authTx, _ := sdkTx.(*tx.Tx)
+
+		// validate receipt matches source / hash / amount
+		var msg sdk.Msg
+		suite.NoError(quicksilver.InterchainstakingKeeper.GetCodec().UnpackAny(authTx.Body.Messages[0], &msg))
+		sendmsg, _ := msg.(*banktypes.MsgSend)
+		suite.Equal(receipt.Sender, sendmsg.FromAddress)
+		suite.Equal(receipt.Txhash, requestData.Hash)
+		bt := ctx.BlockTime()
+		suite.Equal(receipt.FirstSeen, &bt)
+		suite.Equal(receipt.Amount, sendmsg.Amount)
+
+		// resubmitting the tx should not fail - it is silently ignored as we have now seen it before - but check the recipient balance has not changed.
+		err = keeper.DepositTxCallback(quicksilver.InterchainstakingKeeper, ctx, payloadBytes, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: resDataBz})
+
+		suite.NoError(err)
+
+		nowBalance := quicksilver.BankKeeper.GetAllBalances(ctx, addrBytes)
+		suite.Equal(nowBalance.AmountOf("uqatom"), math.NewInt(5000))
+	})
+}
+
+func (suite *KeeperTestSuite) TestDepositTxCallback2() {
+	suite.Run("Deposit transaction successful", func() {
+		suite.SetupTest()
+		suite.setupTestZones()
+
+		// setup quicksilver test app
+		quicksilver := suite.GetQuicksilverApp(suite.chainA)
+		quicksilver.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
+
+		// get chainA context
+		ctx := suite.chainA.GetContext()
+
+		// get zone chainB context
+		zone, _ := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+		zone.DepositAddress.IncrementBalanceWaitgroup()
+		zone.WithdrawalAddress.IncrementBalanceWaitgroup()
+		// add the validator from the gaiatest-1 network to our registered zone. This is required for LSM deposit as the tokenised share denom is checked against known validators.
+		err := quicksilver.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, icstypes.Validator{
+			ValoperAddress:      "cosmosvaloper1gg7w8w2y9jfv76a2yyahe42y09g9ry2raa5rqf",
+			CommissionRate:      sdk.NewDecWithPrec(1, 1),
+			DelegatorShares:     sdk.MustNewDecFromStr("4235376641.000000000000000000"),
+			VotingPower:         sdk.NewInt(4235376641),
+			Status:              "BOND_STATUS_BONDED",
+			Jailed:              false,
+			Tombstoned:          false,
+			ValidatorBondShares: sdk.MustNewDecFromStr("1000000.000000000000000000"),
+			LiquidShares:        sdk.MustNewDecFromStr("4234076641.000000000000000000"),
+		})
+		suite.NoError(err)
+
+		// override the DepositAddress to match that of the chain where the fixture was captured.
+		zone.DepositAddress.Address = "cosmos1d2jrh4gj66smxns6xfv8mdd4keef5ek97knl9gw9skkzryjyhxjsywlfhm"
+		quicksilver.InterchainstakingKeeper.SetZone(ctx, &zone)
+
+		// create tx fixture - this was taken from a live v1.2 chain (lfg-1 <-> gaiatest-1) hence the need to override client and consensus states, to match the source.
+		payload := icqtypes.GetTxWithProofResponse{}
+		payloadBytes := decodeBase64NoErr(txFixture)
+
+		err = quicksilver.InterchainstakingKeeper.GetCodec().Unmarshal(payloadBytes, &payload)
+		// update payload header to ensure we can validate it.
+		payload.Header.Header.Time = ctx.BlockTime()
+		suite.NoError(err)
+		// cheat, and set the client state and consensus state for 07-tendermint-0 to match the incoming header.
+		quicksilver.IBCKeeper.ClientKeeper.SetClientState(ctx, "07-tendermint-0", lightclienttypes.NewClientState("gaiatest-1", lightclienttypes.DefaultTrustLevel, time.Hour, time.Hour, time.Second*50, payload.Header.TrustedHeight, []*ics23.ProofSpec{}, []string{}, false, false))
+		quicksilver.IBCKeeper.ClientKeeper.SetClientConsensusState(ctx, "07-tendermint-0", payload.Header.TrustedHeight, payload.Header.ConsensusState())
+
+		requestData := tx.GetTxRequest{
+			// hash of tx in `txFixture`
+			Hash: "fa7b199bfa3877d2f438ad7802a6b92cddde5e812f5620f1db735b7a90439938",
+		}
+		// check receipt does not exist created.
+		_, found := quicksilver.InterchainstakingKeeper.GetReceipt(ctx, zone.ChainId, requestData.Hash)
+
+		suite.False(found)
+
+		resDataBz, err := quicksilver.AppCodec().Marshal(&requestData)
+		suite.NoError(err)
+
+		// trigger the callback
+		err = keeper.DepositTxCallback(quicksilver.InterchainstakingKeeper, ctx, payloadBytes, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: resDataBz})
+
+		suite.NoError(err)
+
+		// expect cosmos1a2zht8x2j0dqvuejr8pxpu7due3qmk40lgdy3h to have 500000 uqatoms now!
+		addrBytes, _ := addressutils.AccAddressFromBech32("cosmos1a2zht8x2j0dqvuejr8pxpu7due3qmk40lgdy3h", "")
+		newBalance := quicksilver.BankKeeper.GetAllBalances(ctx, addrBytes)
+		suite.Equal(newBalance.AmountOf("uqatom"), math.NewInt(500000))
+
+		// check receipt was created.
+		receipt, found := quicksilver.InterchainstakingKeeper.GetReceipt(ctx, zone.ChainId, requestData.Hash)
+
+		suite.True(found)
+
+		sdkTx, err := keeper.TxDecoder(quicksilver.InterchainstakingKeeper.GetCodec())(payload.Proof.Data)
+		suite.NoError(err)
+
+		authTx, _ := sdkTx.(*tx.Tx)
+
+		// validate receipt matches source / hash / amount
+		var msg sdk.Msg
+		suite.NoError(quicksilver.InterchainstakingKeeper.GetCodec().UnpackAny(authTx.Body.Messages[0], &msg))
+		sendmsg, _ := msg.(*banktypes.MsgSend)
+		suite.Equal(receipt.Sender, sendmsg.FromAddress)
+		suite.Equal(receipt.Txhash, requestData.Hash)
+		bt := ctx.BlockTime()
+		suite.Equal(receipt.FirstSeen, &bt)
+		suite.Equal(receipt.Amount, sendmsg.Amount)
+
+		// resubmitting the tx should not fail - it is silently ignored as we have now seen it before - but check the recipient balance has not changed.
+		err = keeper.DepositTxCallback(quicksilver.InterchainstakingKeeper, ctx, payloadBytes, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: resDataBz})
+
+		suite.NoError(err)
+
+		nowBalance := quicksilver.BankKeeper.GetAllBalances(ctx, addrBytes)
+		suite.Equal(nowBalance.AmountOf("uqatom"), math.NewInt(500000))
+	})
+}
+
+func (suite *KeeperTestSuite) TestDepositLsmTxCallbackFailOnNonMatchingValidator() {
+	suite.Run("Deposit transaction successful", func() {
+		suite.SetupTest()
+		suite.setupTestZones()
+
+		// setup quicksilver test app
+		quicksilver := suite.GetQuicksilverApp(suite.chainA)
+		quicksilver.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
+
+		// get chainA context
+		ctx := suite.chainA.GetContext()
+
+		// get zone chainB context
+		zone, _ := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+		zone.DepositAddress.IncrementBalanceWaitgroup()
+		zone.WithdrawalAddress.IncrementBalanceWaitgroup()
+
+		// override the DepositAddress to match that of the chain where the fixture was captured.
+		zone.DepositAddress.Address = "cosmos1avvehf3npvn6weyxtvyu7mhwwvjryzw69g43tq0nl80wqjglr6hse5mcz4"
+		quicksilver.InterchainstakingKeeper.SetZone(ctx, &zone)
+
+		// create tx fixture - this was taken from a live v1.2 chain (lfg-1 <-> gaiatest-1) hence the need to override client and consensus states, to match the source.
+		payload := icqtypes.GetTxWithProofResponse{}
+		payloadBytes := decodeBase64NoErr(txFixtureLsm)
+
+		err := quicksilver.InterchainstakingKeeper.GetCodec().Unmarshal(payloadBytes, &payload)
+		// update payload header to ensure we can validate it.
+		payload.Header.Header.Time = ctx.BlockTime()
+		suite.NoError(err)
+		// cheat, and set the client state and consensus state for 07-tendermint-0 to match the incoming header.
+		quicksilver.IBCKeeper.ClientKeeper.SetClientState(ctx, "07-tendermint-0", lightclienttypes.NewClientState("gaiatest-1", lightclienttypes.DefaultTrustLevel, time.Hour, time.Hour, time.Second*50, payload.Header.TrustedHeight, []*ics23.ProofSpec{}, []string{}, false, false))
+		quicksilver.IBCKeeper.ClientKeeper.SetClientConsensusState(ctx, "07-tendermint-0", payload.Header.TrustedHeight, payload.Header.ConsensusState())
+
+		requestData := tx.GetTxRequest{
+			// hash of tx in `txFixture`
+			Hash: "b1f1852d322328f6b8d8cacd180df2b1cbbd3dd64536c9ecbf1c896a15f6217a",
+		}
+		// check receipt does not exist created.
+		_, found := quicksilver.InterchainstakingKeeper.GetReceipt(ctx, zone.ChainId, requestData.Hash)
+
+		suite.False(found)
+
+		resDataBz, err := quicksilver.AppCodec().Marshal(&requestData)
+		suite.NoError(err)
+
+		// trigger the callback
+		err = keeper.DepositTxCallback(quicksilver.InterchainstakingKeeper, ctx, payloadBytes, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: resDataBz})
+
+		suite.ErrorContains(err, "unable to validate coins. Ignoring.")
+
+		// expect quick1a2zht8x2j0dqvuejr8pxpu7due3qmk405vakg9 to have 0 uqatoms, as the deposit failed.
+		addrBytes, _ := addressutils.AccAddressFromBech32("cosmos1a2zht8x2j0dqvuejr8pxpu7due3qmk40lgdy3h", "")
+		newBalance := quicksilver.BankKeeper.GetAllBalances(ctx, addrBytes)
+		suite.Equal(newBalance.AmountOf("uqatom"), math.NewInt(0))
+
+		_, found = quicksilver.InterchainstakingKeeper.GetReceipt(ctx, zone.ChainId, requestData.Hash)
+
+		suite.False(found)
+	})
+}
+
+func (suite *KeeperTestSuite) TestDelegationAccountBalancesCallback() {
+	tcs := []struct {
+		Name               string
+		PreviousBalance    sdk.Coins
+		IncomingBalance    sdk.Coins
+		ExpectedQueryCount int
+		ExpectedWaitgroup  uint32
+	}{
+		{
+			Name:               "initial nil, incoming uqck",
+			PreviousBalance:    sdk.NewCoins(),
+			IncomingBalance:    sdk.NewCoins(sdk.NewCoin("uqck", sdk.NewInt(1))),
+			ExpectedQueryCount: 1, // uqck
+			ExpectedWaitgroup:  1,
+		},
+		{
+			Name:               "initial uqck, incoming uqck",
+			PreviousBalance:    sdk.NewCoins(sdk.NewCoin("uqck", sdk.NewInt(1))),
+			IncomingBalance:    sdk.NewCoins(sdk.NewCoin("uqck", sdk.NewInt(1))),
+			ExpectedQueryCount: 1, // uqck
+			ExpectedWaitgroup:  1,
+		},
+		{
+			Name:               "initial uqck, incoming lsm",
+			PreviousBalance:    sdk.NewCoins(sdk.NewCoin("uqck", sdk.NewInt(1))),
+			IncomingBalance:    sdk.NewCoins(sdk.NewCoin(addressutils.GenerateAddressForTestWithPrefix("cosmosvaloper")+"/1", sdk.NewInt(1))),
+			ExpectedQueryCount: 2, // uqck
+			ExpectedWaitgroup:  2,
+		},
+		{
+			Name:               "initial uqck, incoming lsm + qck",
+			PreviousBalance:    sdk.NewCoins(sdk.NewCoin("uqck", sdk.NewInt(1))),
+			IncomingBalance:    sdk.NewCoins(sdk.NewCoin(addressutils.GenerateAddressForTestWithPrefix("cosmosvaloper")+"/1", sdk.NewInt(1)), sdk.NewCoin("uqck", sdk.NewInt(1))),
+			ExpectedQueryCount: 2, // uqck
+			ExpectedWaitgroup:  2,
+		},
+		{
+			Name:               "initial lsm, incoming uqck",
+			PreviousBalance:    sdk.NewCoins(sdk.NewCoin(addressutils.GenerateAddressForTestWithPrefix("cosmosvaloper")+"/1", sdk.NewInt(1))),
+			IncomingBalance:    sdk.NewCoins(sdk.NewCoin("uqck", sdk.NewInt(1))),
+			ExpectedQueryCount: 2, // uqck
+			ExpectedWaitgroup:  2,
+		},
+		{
+			Name:               "initial uqck, incoming nil",
+			PreviousBalance:    sdk.NewCoins(sdk.NewCoin("uqck", sdk.NewInt(1))),
+			IncomingBalance:    sdk.NewCoins(),
+			ExpectedQueryCount: 1, // uqck
+			ExpectedWaitgroup:  1,
+		},
+		{
+			Name:               "initial nil, incoming nil",
+			PreviousBalance:    sdk.NewCoins(),
+			IncomingBalance:    sdk.NewCoins(),
+			ExpectedQueryCount: 0, // uqck
+			ExpectedWaitgroup:  0,
+		},
+	}
+
+	for _, t := range tcs {
+		suite.Run(t.Name, func() {
+			suite.SetupTest()
+			suite.setupTestZones()
+
+			app := suite.GetQuicksilverApp(suite.chainA)
+			app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
+			ctx := suite.chainA.GetContext()
+
+			zone, _ := app.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+			zone.WithdrawalWaitgroup = 1
+			zone.DelegationAddress.Balance = t.PreviousBalance
+			app.InterchainstakingKeeper.SetZone(ctx, &zone)
+
+			query := banktypes.QueryAllBalancesRequest{
+				Address: zone.DelegationAddress.Address,
+			}
+			reqbz, err := app.AppCodec().Marshal(&query)
+			suite.Require().NoError(err)
+
+			response := banktypes.QueryAllBalancesResponse{Balances: t.IncomingBalance}
+			respbz, err := app.AppCodec().Marshal(&response)
+			suite.Require().NoError(err)
+
+			err = keeper.DelegationAccountBalancesCallback(app.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: reqbz})
+			suite.Require().NoError(err)
+
+			// refetch zone
+			zone, _ = app.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+			suite.Require().Equal(t.ExpectedWaitgroup, zone.WithdrawalWaitgroup)
+
+			_, addr, err := bech32.DecodeAndConvert(zone.DelegationAddress.Address)
+			suite.Require().NoError(err)
+			data := banktypes.CreateAccountBalancesPrefix(addr)
+
+			// check a ICQ request was made
+			for _, b := range t.IncomingBalance {
+				found := false
+				app.InterchainQueryKeeper.IterateQueries(ctx, func(index int64, queryInfo icqtypes.Query) (stop bool) {
+					if queryInfo.ChainId == zone.ChainId &&
+						queryInfo.ConnectionId == zone.ConnectionId &&
+						queryInfo.QueryType == icstypes.BankStoreKey &&
+						bytes.Equal(queryInfo.Request, append(data, []byte(b.GetDenom())...)) {
+						found = true
+						return true
+					}
+					return false
+				})
+				suite.Require().True(found)
+			}
+		})
+	}
+}
+
 func (suite *KeeperTestSuite) TestDelegationAccountBalanceCallback() {
-	suite.Run("account balance", func() {
+	suite.Run("delegation account balance", func() {
+		suite.SetupTest()
+		suite.setupTestZones()
+
+		app := suite.GetQuicksilverApp(suite.chainA)
+		app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
+		ctx := suite.chainA.GetContext()
+
+		zone, _ := app.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+		zone.WithdrawalWaitgroup = 2
+		zone.DelegationAddress.Balance = sdk.NewCoins(sdk.NewCoin("uatom", math.NewInt(500)))
+		app.InterchainstakingKeeper.SetZone(ctx, &zone)
+
+		response := sdk.NewCoin("uatom", sdk.NewInt(10))
+		respbz, err := app.AppCodec().Marshal(&response)
+		suite.Require().NoError(err)
+
+		accAddr, err := sdk.AccAddressFromBech32(zone.DelegationAddress.Address)
+		suite.Require().NoError(err)
+		data := append(banktypes.CreateAccountBalancesPrefix(accAddr), []byte("uatom")...)
+
+		err = keeper.DelegationAccountBalanceCallback(app.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: data})
+		suite.Require().NoError(err)
+
+		ctx = suite.chainA.GetContext()
+		zone, _ = app.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+		suite.Equal(uint32(5), zone.WithdrawalWaitgroup) // initial 2 is reduced to 1, but incremented by 4 (4x delegation messages) == 5
+		suite.Equal(sdk.NewInt(10), zone.DelegationAddress.Balance.AmountOf("uatom"))
+	})
+}
+
+func (suite *KeeperTestSuite) TestDelegationAccountBalanceCallbackLSM() {
+	suite.Run("delegation account balance", func() {
+		suite.SetupTest()
+		suite.setupTestZones()
+
+		app := suite.GetQuicksilverApp(suite.chainA)
+		app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
+		ctx := suite.chainA.GetContext()
+
+		zone, _ := app.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+
+		valOper := app.InterchainstakingKeeper.GetValidatorAddresses(ctx, suite.chainB.ChainID)[0]
+		denom := valOper + "/1"
+		zone.WithdrawalWaitgroup = 2
+		zone.DelegationAddress.Balance = sdk.NewCoins(sdk.NewCoin("uatom", math.NewInt(500)))
+		app.InterchainstakingKeeper.SetZone(ctx, &zone)
+
+		response := sdk.NewCoin(denom, sdk.NewInt(10))
+		respbz, err := app.AppCodec().Marshal(&response)
+		suite.Require().NoError(err)
+
+		accAddr, err := sdk.AccAddressFromBech32(zone.DelegationAddress.Address)
+		suite.Require().NoError(err)
+		data := append(banktypes.CreateAccountBalancesPrefix(accAddr), []byte(denom)...)
+
+		err = keeper.DelegationAccountBalanceCallback(app.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: data})
+		suite.Require().NoError(err)
+
+		ctx = suite.chainA.GetContext()
+		zone, _ = app.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+		suite.Equal(uint32(2), zone.WithdrawalWaitgroup) // initial 2 is reduced to 1, but incremented by 1 (1x redeem token messages) == 2
+		suite.Equal(sdk.NewInt(500), zone.DelegationAddress.Balance.AmountOf("uatom"))
+		suite.Equal(sdk.NewInt(10), zone.DelegationAddress.Balance.AmountOf(denom))
+	})
+}
+
+const (
+	txFixtureLsm = "GsEDCiCFDDobCzFK2Vf0BXcgdEycLSdJL8IP7PEVWKelDQeJ3xL2AgrXAQrUAQocL2Nvc21vcy5iYW5rLnYxYmV0YTEuTXNnU2VuZBKzAQotY29zbW9zMWEyemh0OHgyajBkcXZ1ZWpyOHB4cHU3ZHVlM3FtazQwbGdkeTNoEkFjb3Ntb3MxYXZ2ZWhmM25wdm42d2V5eHR2eXU3bWh3d3Zqcnl6dzY5ZzQzdHEwbmw4MHdxamdscjZoc2U1bWN6NBo/Cjdjb3Ntb3N2YWxvcGVyMWdnN3c4dzJ5OWpmdjc2YTJ5eWFoZTQyeTA5ZzlyeTJyYWE1cnFmLzE0EgQ1MDAwElgKUApGCh8vY29zbW9zLmNyeXB0by5zZWNwMjU2azEuUHViS2V5EiMKIQLaGco86x6BgxaGOBf/rgbHMEyZzECi+5in9DJ31ln/0BIECgIIARgoEgQQwJoMGkAtbKm5mTCs2SJzFZL5UKaFbKascEfSLtLFX4w9H/iLKXVqia/1REtynG8yLW374PPGFRplDo62C3SrhSBSLETgGiQIARoghQw6GwsxStlX9AV3IHRMnC0nSS/CD+zxFVinpQ0Hid8i2wYK0AQKkgMKAggLEgpnYWlhdGVzdC0xGJjdDiIMCPHf2agGEODypL8CKkgKIFvrRJTTqdEJ0eh/bm+bNFIMSX7ad1Uz9FX2u8acwNOAEiQIARIgqdknqwXY2NKl/r0A/JEd6hFCVr+E+xoDP5xqjTdMzkkyIFTqmUpOcyiALxE9GyyJ8B0qHyYAXdEyebrP+zlYCVe/OiCFDDobCzFK2Vf0BXcgdEycLSdJL8IP7PEVWKelDQeJ30IgLdUPCAh3Ii0/aGdGLRM24PsOqJJsvS6jPy3hstJUQ0RKIC3VDwgIdyItP2hnRi0TNuD7DqiSbL0uoz8t4bLSVENEUiAEgJG8fdwoP3e/v5HXPETaWMPfipy8hnQF2Lfz2q2iL1ogxyvS5b5sdsYoCMUEDDELSqvtajtVi8Tix+aShLESfBdiIOOwxEKY/BwUmvv0yJlvuSQnrkHkZJuTTKSVmRt4UrhVaiDjsMRCmPwcFJr79MiZb7kkJ65B5GSbk0yklZkbeFK4VXIUeQRs3t3nFppZq/OiJ+/f0AsW+twSuAEImN0OGkgKIOEOuKl3gvM4+gGbzlmy63IKY27HPnTJ6rszQyUuZAwPEiQIARIgiO0gt0gzcxTIEfFhpxf+XrKDoSnwZ9/HXl9XavCfS7UiaAgCEhR5BGze3ecWmlmr86In79/QCxb63BoMCPbf2agGEJiC0c0CIkBUNOaucBUZko0uikQApp2uWUJQ/zAtwTr5PRWlVS5/wFJYMGBSDNh5EEWY4FTclhTHLV2aMyyH5pfH6L0fr50CEn4KPQoUeQRs3t3nFppZq/OiJ+/f0AsW+twSIgogx4ew5LC25gOeUAdpun5LhBSfIBHUbK7Zjyzn8VRr1ZwYhCESPQoUeQRs3t3nFppZq/OiJ+/f0AsW+twSIgogx4ew5LC25gOeUAdpun5LhBSfIBHUbK7Zjyzn8VRr1ZwYhCEaBggBEKvdDiJ+Cj0KFHkEbN7d5xaaWavzoifv39ALFvrcEiIKIMeHsOSwtuYDnlAHabp+S4QUnyAR1Gyu2Y8s5/FUa9WcGIQhEj0KFHkEbN7d5xaaWavzoifv39ALFvrcEiIKIMeHsOSwtuYDnlAHabp+S4QUnyAR1Gyu2Y8s5/FUa9WcGIQh"
+	txFixture    = "GpEDCiCLUGKqmJoWFGAjKS1WTXAEkU48Kmq7MiB5rsPW08bLqhLGAgqnAQqkAQocL2Nvc21vcy5iYW5rLnYxYmV0YTEuTXNnU2VuZBKDAQotY29zbW9zMWEyemh0OHgyajBkcXZ1ZWpyOHB4cHU3ZHVlM3FtazQwbGdkeTNoEkFjb3Ntb3MxZDJqcmg0Z2o2NnNteG5zNnhmdjhtZGQ0a2VlZjVlazk3a25sOWd3OXNra3pyeWp5aHhqc3l3bGZobRoPCgV1YXRvbRIGNTAwMDAwElgKUApGCh8vY29zbW9zLmNyeXB0by5zZWNwMjU2azEuUHViS2V5EiMKIQLaGco86x6BgxaGOBf/rgbHMEyZzECi+5in9DJ31ln/0BIECgIIARgrEgQQwJoMGkD0/1DW4n4Fp1JZyWDtlWBmi9+ulHrLioDyvQ/4NNLiVSUAj9x4ljCUNwlSzpPtykfjjnGT7IyByWnKB0bGayDWGiQIARogi1BiqpiaFhRgIyktVk1wBJFOPCpquzIgea7D1tPGy6oi2wYK0AQKkgMKAggLEgpnYWlhdGVzdC0xGKrnECIMCNq7+6gGELjv0fEBKkgKICeLs3J8bIJCpWaee12QDGfgsDqmwpDoxQStliWR9bFSEiQIARIgXQsgwP+G56ZGtMeQE1n+8KuZOODcJC75Q6dui0ARvYAyIBu01YZQurtiiOsKiKE/e5CGuD1ioTthG76thsmL10SeOiCLUGKqmJoWFGAjKS1WTXAEkU48Kmq7MiB5rsPW08bLqkIgr8VHiDIZrvPjyaybOEWM23OI1PkRdC+9XJhIjJRBNK1KIK/FR4gyGa7z48msmzhFjNtziNT5EXQvvVyYSIyUQTStUiAEgJG8fdwoP3e/v5HXPETaWMPfipy8hnQF2Lfz2q2iL1ogm6BBj4GRVW4wgJp9qZfWiClAzSc8nzvFbVjT3LGc1PBiIOOwxEKY/BwUmvv0yJlvuSQnrkHkZJuTTKSVmRt4UrhVaiDjsMRCmPwcFJr79MiZb7kkJ65B5GSbk0yklZkbeFK4VXIUeQRs3t3nFppZq/OiJ+/f0AsW+twSuAEIqucQGkgKIB5737NG8FYvnQW6/urw4FNMaM+9CzIhy1MLzQk1/p6WEiQIARIgNltfvzoTATg0D0mHHtrROQIgWFM0QqVxA88cst3U28IiaAgCEhR5BGze3ecWmlmr86In79/QCxb63BoMCN+7+6gGEPjly/sBIkDpPn0WzYyqh6Xx8Bru5+EaA4XFsEsfO6mrXMrZABOgmbrRqHyGcd5wNj2ddC7mj52Ls03KuAsxvWItEYeJLvQGEn4KPQoUeQRs3t3nFppZq/OiJ+/f0AsW+twSIgogx4ew5LC25gOeUAdpun5LhBSfIBHUbK7Zjyzn8VRr1ZwYqyESPQoUeQRs3t3nFppZq/OiJ+/f0AsW+twSIgogx4ew5LC25gOeUAdpun5LhBSfIBHUbK7Zjyzn8VRr1ZwYqyEaBggBEMnnECJ+Cj0KFHkEbN7d5xaaWavzoifv39ALFvrcEiIKIMeHsOSwtuYDnlAHabp+S4QUnyAR1Gyu2Y8s5/FUa9WcGKshEj0KFHkEbN7d5xaaWavzoifv39ALFvrcEiIKIMeHsOSwtuYDnlAHabp+S4QUnyAR1Gyu2Y8s5/FUa9WcGKsh"
+)
+
+func (suite *KeeperTestSuite) TestPerfBalanceCallbackUpdate() {
+	suite.Run("perf balance", func() {
 		suite.SetupTest()
 		suite.setupTestZones()
 
@@ -1586,24 +2665,23 @@ func (suite *KeeperTestSuite) TestDelegationAccountBalanceCallback() {
 		ctx := suite.chainA.GetContext()
 
 		zone, _ := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
-		zone.DepositAddress.IncrementBalanceWaitgroup()
-		zone.WithdrawalAddress.IncrementBalanceWaitgroup()
+		zone.PerformanceAddress.IncrementBalanceWaitgroup()
 		quicksilver.InterchainstakingKeeper.SetZone(ctx, &zone)
 
-		response := sdk.NewCoin("qck", sdk.NewInt(10))
+		response := sdk.NewCoin("uatom", sdk.NewInt(101))
 		respbz, err := quicksilver.AppCodec().Marshal(&response)
 		suite.NoError(err)
 
-		delAddr := zone.DelegationAddress.Address
-
-		accAddr, err := addressutils.AccAddressFromBech32(delAddr, "cosmos")
+		address := zone.PerformanceAddress.Address
+		accAddr, err := sdk.AccAddressFromBech32(address)
 		suite.NoError(err)
+		data := append(banktypes.CreateAccountBalancesPrefix(accAddr), []byte("uatom")...)
 
-		data := append(banktypes.CreateAccountBalancesPrefix(accAddr), []byte("qck")...)
-
-		err = keeper.DelegationAccountBalanceCallback(quicksilver.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: data})
-
+		err = keeper.PerfBalanceCallback(quicksilver.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: data})
 		suite.NoError(err)
+		// check performance account balance been updated
+		zone, _ = quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+		suite.Equal(response.Amount, zone.PerformanceAddress.Balance.AmountOf(response.Denom))
 	})
 }
 

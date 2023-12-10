@@ -12,6 +12,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -23,6 +24,7 @@ import (
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	icacontrollerkeeper "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/controller/keeper"
@@ -36,6 +38,7 @@ import (
 	interchainquerykeeper "github.com/quicksilver-zone/quicksilver/x/interchainquery/keeper"
 	icqtypes "github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
 	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
+	lsmstakingtypes "github.com/quicksilver-zone/quicksilver/x/lsmtypes"
 )
 
 // Keeper of this module maintains collections of registered zones.
@@ -205,6 +208,7 @@ func (k *Keeper) SetValidatorsForZone(ctx sdk.Context, data []byte, icqQuery icq
 		}
 
 		if validatorsReq.Pagination == nil {
+			k.Logger(ctx).Debug("unmarshalled a QueryValidatorsRequest with a nil Pagination", "zone", icqQuery.ChainId)
 			validatorsReq.Pagination = new(query.PageRequest)
 		}
 		validatorsReq.Pagination.Key = validatorsRes.Pagination.NextKey
@@ -235,10 +239,23 @@ func (k *Keeper) SetValidatorsForZone(ctx sdk.Context, data []byte, icqQuery icq
 		case !val.DelegatorShares.Equal(validator.DelegatorShares):
 			k.Logger(ctx).Debug("Validator shares amount change; fetching proof", "valoper", validator.OperatorAddress, "from", val.DelegatorShares, "to", validator.DelegatorShares)
 			toQuery = true
+		case val.Jailed != validator.Jailed:
+			k.Logger(ctx).Debug("jail status change; fetching proof", "valoper", validator.OperatorAddress, "from", val.Jailed, "to", validator.Jailed)
+			toQuery = true
+		case val.Status != validator.Status.String():
+			k.Logger(ctx).Debug("bond status change; fetching proof", "valoper", validator.OperatorAddress, "from", val.Status, "to", validator.Status.String())
+			toQuery = true
+		case !validator.LiquidShares.IsNil() && !val.LiquidShares.Equal(validator.LiquidShares):
+			k.Logger(ctx).Debug("liquid shares amount change; fetching proof", "valoper", validator.OperatorAddress, "from", val.LiquidShares, "to", validator.LiquidShares)
+			toQuery = true
+		case !validator.ValidatorBondShares.IsNil() && !val.ValidatorBondShares.Equal(validator.ValidatorBondShares):
+			k.Logger(ctx).Debug("Validator bond shares amount change; fetching proof", "valoper", validator.OperatorAddress, "from", val.ValidatorBondShares, "to", validator.ValidatorBondShares)
+			toQuery = true
 		}
 
 		if toQuery {
-			k.EmitValidatorQuery(ctx, icqQuery.ConnectionId, icqQuery.ChainId, validator)
+			err := k.EmitValidatorQuery(ctx, icqQuery.ConnectionId, icqQuery.ChainId, validator)
+			k.Logger(ctx).Error("EmitValidatorQuery error", "valoper", validator.OperatorAddress, "err", err)
 		}
 	}
 
@@ -265,11 +282,29 @@ func (k *Keeper) SetValidatorForZone(ctx sdk.Context, zone *types.Zone, data []b
 	}
 	val, found := k.GetValidator(ctx, zone.ChainId, valAddrBytes)
 	if !found {
-		k.Logger(ctx).Info("Unable to find validator - adding...", "valoper", validator.OperatorAddress)
+		k.Logger(ctx).Debug("Unable to find validator - adding...", "valoper", validator.OperatorAddress)
 
 		jailTime := time.Time{}
 		if validator.IsJailed() {
+			var pk cryptotypes.PubKey
+			err := k.cdc.UnpackAny(validator.ConsensusPubkey, &pk)
+			if err != nil {
+				return err
+			}
+			consAddr := sdk.ConsAddress(pk.Address().Bytes())
+			k.SetValidatorAddrByConsAddr(ctx, zone.ChainId, validator.OperatorAddress, consAddr)
 			jailTime = ctx.BlockTime()
+
+			err = k.EmitSigningInfoQuery(ctx, zone.ConnectionId, zone.ChainId, validator)
+			if err != nil {
+				return err
+			}
+		}
+		_, found := k.GetValidator(ctx, zone.ChainId, valAddrBytes)
+		// if found is true, it means that validator was tombstoned because we set it's information in SigningInfoCallback func
+		if found {
+			k.Logger(ctx).Info("%q on chainID: %q have been tombstoned", validator.OperatorAddress, zone.ChainId)
+			return nil
 		}
 		if err := k.SetValidator(ctx, zone.ChainId, types.Validator{
 			ValoperAddress:  validator.OperatorAddress,
@@ -287,10 +322,31 @@ func (k *Keeper) SetValidatorForZone(ctx sdk.Context, zone *types.Zone, data []b
 		if err := k.MakePerformanceDelegation(ctx, zone, validator.OperatorAddress); err != nil {
 			return err
 		}
-
 	} else {
+		if val.Tombstoned {
+			k.Logger(ctx).Info("%q on chainID: %q was found to already have been tombstoned", validator.OperatorAddress, zone.ChainId)
+			return nil
+		}
+
 		if !val.Jailed && validator.IsJailed() {
 			k.Logger(ctx).Info("Transitioning validator to jailed state", "valoper", validator.OperatorAddress, "old_vp", val.VotingPower, "new_vp", validator.Tokens, "new_shares", validator.DelegatorShares, "old_shares", val.DelegatorShares)
+
+			var pk cryptotypes.PubKey
+			err := k.cdc.UnpackAny(validator.ConsensusPubkey, &pk)
+			if err != nil {
+				return err
+			}
+			consAddr := sdk.ConsAddress(pk.Address().Bytes())
+			k.SetValidatorAddrByConsAddr(ctx, zone.ChainId, validator.OperatorAddress, consAddr)
+
+			err = k.EmitSigningInfoQuery(ctx, zone.ConnectionId, zone.ChainId, validator)
+			if err != nil {
+				return err
+			}
+			val, _ := k.GetValidator(ctx, zone.ChainId, valAddrBytes)
+			if val.Tombstoned {
+				return nil
+			}
 
 			val.Jailed = true
 			val.JailedSince = ctx.BlockTime()
@@ -309,7 +365,7 @@ func (k *Keeper) SetValidatorForZone(ctx sdk.Context, zone *types.Zone, data []b
 				return err
 			}
 		} else if val.Jailed && !validator.IsJailed() {
-			k.Logger(ctx).Info("Transitioning validator to unjailed state", "valoper", validator.OperatorAddress)
+			k.Logger(ctx).Debug("Transitioning validator to unjailed state", "valoper", validator.OperatorAddress)
 
 			val.Jailed = false
 			val.JailedSince = time.Time{}
@@ -336,11 +392,21 @@ func (k *Keeper) SetValidatorForZone(ctx sdk.Context, zone *types.Zone, data []b
 			val.Status = validator.Status.String()
 		}
 
+		if !validator.ValidatorBondShares.IsNil() && !val.ValidatorBondShares.Equal(validator.ValidatorBondShares) {
+			k.Logger(ctx).Info("Validator bonded shares change; updating", "valoper", validator.OperatorAddress, "oldShares", val.ValidatorBondShares, "newShares", validator.ValidatorBondShares)
+			val.ValidatorBondShares = validator.ValidatorBondShares
+		}
+
+		if !validator.LiquidShares.IsNil() && !val.LiquidShares.Equal(validator.LiquidShares) {
+			k.Logger(ctx).Info("Validator liquid shares change; updating", "valoper", validator.OperatorAddress, "oldShares", val.LiquidShares, "newShares", validator.LiquidShares)
+			val.LiquidShares = validator.LiquidShares
+		}
+
 		if err := k.SetValidator(ctx, zone.ChainId, val); err != nil {
 			return err
 		}
 
-		if _, found := k.GetPerformanceDelegation(ctx, zone, validator.OperatorAddress); !found {
+		if _, found := k.GetPerformanceDelegation(ctx, zone.ChainId, zone.PerformanceAddress, validator.OperatorAddress); !found {
 			if err := k.MakePerformanceDelegation(ctx, zone, validator.OperatorAddress); err != nil {
 				return err
 			}
@@ -348,29 +414,6 @@ func (k *Keeper) SetValidatorForZone(ctx sdk.Context, zone *types.Zone, data []b
 	}
 
 	return nil
-}
-
-func (k *Keeper) UpdateWithdrawalRecordsForSlash(ctx sdk.Context, zone *types.Zone, valoper string, delta sdk.Dec) error {
-	var err error
-	k.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, types.WithdrawStatusUnbond, func(_ int64, record types.WithdrawalRecord) bool {
-		recordSubAmount := sdkmath.ZeroInt()
-		distr := record.Distribution
-		for _, d := range distr {
-			if d.Valoper != valoper {
-				continue
-			}
-			newAmount := sdk.NewDec(int64(d.Amount)).Quo(delta).TruncateInt()
-			thisSubAmount := sdkmath.NewInt(int64(d.Amount)).Sub(newAmount)
-			recordSubAmount = recordSubAmount.Add(thisSubAmount)
-			d.Amount = newAmount.Uint64()
-			k.Logger(ctx).Info("Updated withdrawal record due to slashing", "valoper", valoper, "old_amount", d.Amount, "new_amount", newAmount.Int64(), "sub_amount", thisSubAmount.Int64())
-		}
-		record.Distribution = distr
-		record.Amount = record.Amount.Sub(sdk.NewCoin(zone.BaseDenom, recordSubAmount))
-		k.SetWithdrawalRecord(ctx, record)
-		return false
-	})
-	return err
 }
 
 func (k *Keeper) depositInterval(ctx sdk.Context) zoneItrFn {
@@ -430,15 +473,15 @@ func (k *Keeper) SetParams(ctx sdk.Context, params types.Params) {
 func (k *Keeper) GetChainID(ctx sdk.Context, connectionID string) (string, error) {
 	conn, found := k.IBCKeeper.ConnectionKeeper.GetConnection(ctx, connectionID)
 	if !found {
-		return "", fmt.Errorf("invalid connection id, \"%s\" not found", connectionID)
+		return "", fmt.Errorf("invalid connection id, %q not found", connectionID)
 	}
 	clientState, found := k.IBCKeeper.ClientKeeper.GetClientState(ctx, conn.ClientId)
 	if !found {
-		return "", fmt.Errorf("client id \"%s\" not found for connection \"%s\"", conn.ClientId, connectionID)
+		return "", fmt.Errorf("client id %q not found for connection %q", conn.ClientId, connectionID)
 	}
 	client, ok := clientState.(*ibctmtypes.ClientState)
 	if !ok {
-		return "", fmt.Errorf("invalid client state for client \"%s\" on connection \"%s\"", conn.ClientId, connectionID)
+		return "", fmt.Errorf("invalid client state for client %q on connection %q", conn.ClientId, connectionID)
 	}
 
 	return client.ChainId, nil
@@ -497,8 +540,12 @@ func (k *Keeper) EmitValSetQuery(ctx sdk.Context, connectionID, chainID string, 
 	return nil
 }
 
-func (k *Keeper) EmitValidatorQuery(ctx sdk.Context, connectionID, chainID string, validator stakingtypes.Validator) {
-	_, addr, _ := bech32.DecodeAndConvert(validator.OperatorAddress)
+func (k *Keeper) EmitValidatorQuery(ctx sdk.Context, connectionID, chainID string, validator lsmstakingtypes.Validator) error {
+	_, addr, err := bech32.DecodeAndConvert(validator.OperatorAddress)
+	if err != nil {
+		return fmt.Errorf("EmitValidatorQuery failed to decode validator.OperatorAddress: %q got error: %w",
+			validator.OperatorAddress, err)
+	}
 	data := stakingtypes.GetValidatorKey(addr)
 	k.ICQKeeper.MakeRequest(
 		ctx,
@@ -511,6 +558,7 @@ func (k *Keeper) EmitValidatorQuery(ctx sdk.Context, connectionID, chainID strin
 		"validator",
 		0,
 	)
+	return nil
 }
 
 func (k *Keeper) EmitDepositIntervalQuery(ctx sdk.Context, zone *types.Zone) {
@@ -537,9 +585,30 @@ func (k *Keeper) EmitDepositIntervalQuery(ctx sdk.Context, zone *types.Zone) {
 	)
 }
 
-func (k *Keeper) GetDelegationsInProcess(ctx sdk.Context, zone *types.Zone) sdkmath.Int {
+func (k *Keeper) EmitSigningInfoQuery(ctx sdk.Context, connectionID, chainID string, validator lsmstakingtypes.Validator) error {
+	_, addr, err := bech32.DecodeAndConvert(validator.OperatorAddress)
+	if err != nil {
+		return err
+	}
+	data := slashingtypes.ValidatorSigningInfoKey(addr)
+	k.ICQKeeper.MakeRequest(
+		ctx,
+		connectionID,
+		chainID,
+		"store/slashing/key",
+		data,
+		sdk.NewInt(-1),
+		types.ModuleName,
+		"signinginfo",
+		0,
+	)
+
+	return nil
+}
+
+func (k *Keeper) GetDelegationsInProcess(ctx sdk.Context, chainID string) sdkmath.Int {
 	delegationsInProcess := sdkmath.ZeroInt()
-	k.IterateZoneReceipts(ctx, zone, func(_ int64, receipt types.Receipt) (stop bool) {
+	k.IterateZoneReceipts(ctx, chainID, func(_ int64, receipt types.Receipt) (stop bool) {
 		if receipt.Completed == nil {
 			for _, coin := range receipt.Amount {
 				delegationsInProcess = delegationsInProcess.Add(coin.Amount) // we cannot simply choose
@@ -553,13 +622,11 @@ func (k *Keeper) GetDelegationsInProcess(ctx sdk.Context, zone *types.Zone) sdkm
 // redemption rate
 
 func (k *Keeper) UpdateRedemptionRate(ctx sdk.Context, zone *types.Zone, epochRewards sdkmath.Int) {
-	delegationsInProcess := k.GetDelegationsInProcess(ctx, zone)
+	delegationsInProcess := k.GetDelegationsInProcess(ctx, zone.ChainId)
 	ratio, isZero := k.GetRatio(ctx, zone, epochRewards.Add(delegationsInProcess))
-	k.Logger(ctx).Info("Epochly rewards", "coins", epochRewards)
-	k.Logger(ctx).Info("Last redemption rate", "rate", zone.LastRedemptionRate)
-	k.Logger(ctx).Info("Current redemption rate", "rate", zone.RedemptionRate)
-	k.Logger(ctx).Info("New redemption rate", "rate", ratio, "supply", k.BankKeeper.GetSupply(ctx, zone.LocalDenom).Amount, "lv", k.GetDelegatedAmount(ctx, zone).Amount.Add(epochRewards).Add(delegationsInProcess))
+	k.Logger(ctx).Info("Redemption Rate Update", "chain", zone.ChainId, "epochly_rewards", epochRewards, "last_rate", zone.LastRedemptionRate, "current_rate", zone.RedemptionRate, "new_rate", ratio, "supply", k.BankKeeper.GetSupply(ctx, zone.LocalDenom).Amount, "lv", k.GetDelegatedAmount(ctx, zone).Amount.Add(epochRewards).Add(delegationsInProcess))
 
+	// TODO: make max deltas params.
 	// soft cap redemption rate, instead of panicking.
 	delta := ratio.Quo(zone.RedemptionRate)
 	if delta.GT(sdk.NewDecWithPrec(102, 2)) {
@@ -576,11 +643,11 @@ func (k *Keeper) UpdateRedemptionRate(ctx sdk.Context, zone *types.Zone, epochRe
 }
 
 func (k *Keeper) OverrideRedemptionRateNoCap(ctx sdk.Context, zone *types.Zone) {
-	ratio, _ := k.GetRatio(ctx, zone, sdk.ZeroInt())
-	k.Logger(ctx).Info("Last redemption rate", "rate", zone.LastRedemptionRate)
-	k.Logger(ctx).Info("Current redemption rate", "rate", zone.RedemptionRate)
-	k.Logger(ctx).Info("New redemption rate", "rate", ratio, "supply", k.BankKeeper.GetSupply(ctx, zone.LocalDenom).Amount, "lv", k.GetDelegatedAmount(ctx, zone).Amount)
+	delegationsInProcess := k.GetDelegationsInProcess(ctx, zone.ChainId)
+	ratio, _ := k.GetRatio(ctx, zone, delegationsInProcess)
+	k.Logger(ctx).Info("Forced Redemption Rate Update", "chain", zone.ChainId, "last_rate", zone.LastRedemptionRate, "current_rate", zone.RedemptionRate, "new_rate", ratio, "supply", k.BankKeeper.GetSupply(ctx, zone.LocalDenom).Amount, "lv", k.GetDelegatedAmount(ctx, zone).Amount.Add(delegationsInProcess))
 
+	zone.LastRedemptionRate = zone.RedemptionRate
 	zone.RedemptionRate = ratio
 	k.SetZone(ctx, zone)
 }
@@ -589,6 +656,7 @@ func (k *Keeper) GetRatio(ctx sdk.Context, zone *types.Zone, epochRewards sdkmat
 	// native asset amount
 	nativeAssetAmount := k.GetDelegatedAmount(ctx, zone).Amount
 	nativeAssetUnbondingAmount := k.GetUnbondingAmount(ctx, zone).Amount
+	nativeAssetUnbonded := zone.DelegationAddress.Balance.AmountOf(zone.BaseDenom)
 
 	// qAsset amount
 	qAssetAmount := k.BankKeeper.GetSupply(ctx, zone.LocalDenom).Amount
@@ -600,33 +668,41 @@ func (k *Keeper) GetRatio(ctx sdk.Context, zone *types.Zone, epochRewards sdkmat
 		return sdk.OneDec(), true
 	}
 
-	return sdk.NewDecFromInt(nativeAssetAmount.Add(epochRewards).Add(nativeAssetUnbondingAmount)).Quo(sdk.NewDecFromInt(qAssetAmount)), false
+	return sdk.NewDecFromInt(nativeAssetAmount.Add(epochRewards).Add(nativeAssetUnbondingAmount).Add(nativeAssetUnbonded)).Quo(sdk.NewDecFromInt(qAssetAmount)), false
 }
 
-func (k *Keeper) GetAggregateIntentOrDefault(ctx sdk.Context, z *types.Zone) (types.ValidatorIntents, error) {
+func (k *Keeper) GetAggregateIntentOrDefault(ctx sdk.Context, zone *types.Zone) (types.ValidatorIntents, error) {
 	var intents types.ValidatorIntents
 	var filteredIntents types.ValidatorIntents
 
-	if len(z.AggregateIntent) == 0 {
-		intents = k.DefaultAggregateIntents(ctx, z.ChainId)
+	if len(zone.AggregateIntent) == 0 {
+		intents = k.DefaultAggregateIntents(ctx, zone.ChainId)
 	} else {
-		intents = z.AggregateIntent
+		intents = zone.AggregateIntent
 	}
+
+	jailedThreshold := k.EpochsKeeper.GetEpochInfo(ctx, "epoch").Duration * 2
+
 	// filter intents here...
 	// check validators for tombstoned
-	for _, v := range intents {
-		valAddrBytes, err := addressutils.ValAddressFromBech32(v.ValoperAddress, z.GetValoperPrefix())
+	for _, validatorIntent := range intents {
+		valAddrBytes, err := addressutils.ValAddressFromBech32(validatorIntent.ValoperAddress, zone.GetValoperPrefix())
 		if err != nil {
 			return nil, err
 		}
-		val, found := k.GetValidator(ctx, z.ChainId, valAddrBytes)
+		validator, found := k.GetValidator(ctx, zone.ChainId, valAddrBytes)
 
 		// this case should not happen as we check the validity of a validator entry when intent is set.
 		if !found {
 			continue
 		}
 		// we should never let tombstoned validators into the list, even if they are explicitly selected
-		if val.Tombstoned {
+		if validator.Tombstoned {
+			continue
+		}
+
+		// if the validator has been jailed for > two epochs, remove them.
+		if validator.Jailed && validator.JailedSince.Add(jailedThreshold).Before(ctx.BlockTime()) {
 			continue
 		}
 
@@ -634,19 +710,20 @@ func (k *Keeper) GetAggregateIntentOrDefault(ctx sdk.Context, z *types.Zone) (ty
 		// if in deny list {
 		// continue
 		// }
-		filteredIntents = append(filteredIntents, v)
+		filteredIntents = append(filteredIntents, validatorIntent)
 	}
 
 	return filteredIntents, nil
 }
 
 func (k *Keeper) Rebalance(ctx sdk.Context, zone *types.Zone, epochNumber int64) error {
-	currentAllocations, currentSum, currentLocked, lockedSum := k.GetDelegationMap(ctx, zone)
+	currentAllocations, currentSum, currentLocked, lockedSum := k.GetDelegationMap(ctx, zone.ChainId)
 	targetAllocations, err := k.GetAggregateIntentOrDefault(ctx, zone)
 	if err != nil {
 		return err
 	}
-	rebalances := types.DetermineAllocationsForRebalancing(currentAllocations, currentLocked, currentSum, lockedSum, targetAllocations, k.Logger(ctx))
+	maxCanAllocate := k.DetermineMaximumValidatorAllocations(ctx, zone)
+	rebalances := types.DetermineAllocationsForRebalancing(currentAllocations, currentLocked, currentSum, lockedSum, targetAllocations, maxCanAllocate, k.Logger(ctx)).RemoveDuplicates()
 	msgs := make([]sdk.Msg, 0)
 	for _, rebalance := range rebalances {
 		msgs = append(msgs, &stakingtypes.MsgBeginRedelegate{DelegatorAddress: zone.DelegationAddress.Address, ValidatorSrcAddress: rebalance.Source, ValidatorDstAddress: rebalance.Target, Amount: sdk.NewCoin(zone.BaseDenom, rebalance.Amount)})
@@ -659,7 +736,7 @@ func (k *Keeper) Rebalance(ctx sdk.Context, zone *types.Zone, epochNumber int64)
 		})
 	}
 	if len(msgs) == 0 {
-		k.Logger(ctx).Info("No rebalancing required")
+		k.Logger(ctx).Debug("No rebalancing required")
 		return nil
 	}
 	k.Logger(ctx).Info("Send rebalancing messages", "msgs", msgs)
@@ -667,8 +744,8 @@ func (k *Keeper) Rebalance(ctx sdk.Context, zone *types.Zone, epochNumber int64)
 }
 
 // UnmarshalValidatorsResponse attempts to umarshal  a byte slice into a QueryValidatorsResponse.
-func (k *Keeper) UnmarshalValidatorsResponse(data []byte) (stakingtypes.QueryValidatorsResponse, error) {
-	validatorsRes := stakingtypes.QueryValidatorsResponse{}
+func (k *Keeper) UnmarshalValidatorsResponse(data []byte) (lsmstakingtypes.QueryValidatorsResponse, error) {
+	validatorsRes := lsmstakingtypes.QueryValidatorsResponse{}
 	if len(data) == 0 {
 		return validatorsRes, errors.New("attempted to unmarshal zero length byte slice (8)")
 	}
@@ -692,8 +769,8 @@ func (k *Keeper) UnmarshalValidatorsRequest(data []byte) (stakingtypes.QueryVali
 }
 
 // UnmarshalValidator attempts to umarshal  a byte slice into a Validator.
-func (k *Keeper) UnmarshalValidator(data []byte) (stakingtypes.Validator, error) {
-	validator := stakingtypes.Validator{}
+func (k *Keeper) UnmarshalValidator(data []byte) (lsmstakingtypes.Validator, error) {
+	validator := lsmstakingtypes.Validator{}
 	if len(data) == 0 {
 		return validator, errors.New("attempted to unmarshal zero length byte slice (9)")
 	}

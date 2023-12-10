@@ -190,13 +190,13 @@ func BulkGenesisAirdropCmd(defaultNodeHome string) *cobra.Command {
 			}
 
 			for _, zd := range airdropGenState.ZoneDrops {
-				if zd.ChainId == claimRecords[0].ChainId { //nolint:gosec
+				if zd.ChainId == claimRecords[0].ChainId { // nolint:gosec
 					zoneDrop = zd
 				}
 			}
 
 			if zoneDrop == nil {
-				return fmt.Errorf("zoneDrop doesn't exist for chain ID: %s", claimRecords[0].ChainId) //nolint:gosec // TODO: remove
+				return fmt.Errorf("zoneDrop doesn't exist for chain ID: %s", claimRecords[0].ChainId) // nolint:gosec // TODO: remove
 			}
 
 			authGenState := authtypes.GetGenesisStateFromAppState(clientCtx.Codec, appState)
@@ -211,7 +211,7 @@ func BulkGenesisAirdropCmd(defaultNodeHome string) *cobra.Command {
 			existing := airdropGenState.ClaimRecords
 
 			for _, i := range existing {
-				if i.ChainId == claimRecords[0].ChainId { //nolint:gosec // TODO: remove
+				if i.ChainId == claimRecords[0].ChainId { // nolint:gosec // TODO: remove
 					zoneclaims[i.Address] = true
 				}
 			}

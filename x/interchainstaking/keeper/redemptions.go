@@ -60,14 +60,22 @@ func (k *Keeper) processRedemptionForLsm(ctx sdk.Context, zone *types.Zone, send
 			TokenizedShareOwner: destination,
 		})
 	}
-	// add unallocated dust.
-	msgs[0].Amount = msgs[0].Amount.AddAmount(outstanding) //nolint:gosec
+
 	sdkMsgs := make([]sdk.Msg, 0)
 	for _, msg := range msgs {
 		sdkMsgs = append(sdkMsgs, sdk.Msg(msg))
 	}
+	distributions := make([]*types.Distribution, 0)
 
-	k.AddWithdrawalRecord(ctx, zone.ChainId, sender.String(), []*types.Distribution{}, destination, sdk.Coins{}, burnAmount, hash, types.WithdrawStatusTokenize, time.Unix(0, 0), k.EpochsKeeper.GetEpochInfo(ctx, epochstypes.EpochIdentifierEpoch).CurrentEpoch)
+	for valoper, amount := range distribution {
+		newDistribution := types.Distribution{
+			Valoper: valoper,
+			Amount:  amount,
+		}
+		distributions = append(distributions, &newDistribution)
+	}
+
+	k.AddWithdrawalRecord(ctx, zone.ChainId, sender.String(), distributions, destination, sdk.Coins{}, burnAmount, hash, types.WithdrawStatusTokenize, time.Unix(0, 0), k.EpochsKeeper.GetEpochInfo(ctx, epochstypes.EpochIdentifierEpoch).CurrentEpoch)
 
 	return k.SubmitTx(ctx, sdkMsgs, zone.DelegationAddress, hash, zone.MessagesPerTx)
 }
@@ -82,14 +90,14 @@ func (k *Keeper) queueRedemption(
 	burnAmount sdk.Coin,
 	hash string,
 ) error { //nolint:unparam // we know that the error is always nil
-	distribution := make([]*types.Distribution, 0)
+	distributions := make([]*types.Distribution, 0)
 	amount := sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, nativeTokens))
 
 	k.AddWithdrawalRecord(
 		ctx,
 		zone.ChainId,
 		sender.String(),
-		distribution,
+		distributions,
 		destination,
 		amount,
 		burnAmount,
@@ -108,7 +116,7 @@ func (k *Keeper) queueRedemption(
 func (k *Keeper) GetUnlockedTokensForZone(ctx sdk.Context, zone *types.Zone) (map[string]math.Int, math.Int, error) {
 	availablePerValidator := make(map[string]math.Int, len(zone.Validators))
 	total := sdk.ZeroInt()
-	for _, delegation := range k.GetAllDelegations(ctx, zone) {
+	for _, delegation := range k.GetAllDelegations(ctx, zone.ChainId) {
 		thisAvailable, found := availablePerValidator[delegation.ValidatorAddress]
 		if !found {
 			thisAvailable = sdk.ZeroInt()
@@ -277,7 +285,7 @@ func (k *Keeper) GCCompletedUnbondings(ctx sdk.Context, zone *types.Zone) error 
 }
 
 func (k *Keeper) DeterminePlanForUndelegation(ctx sdk.Context, zone *types.Zone, amount sdk.Coins) (map[string]math.Int, error) {
-	currentAllocations, currentSum, _, _ := k.GetDelegationMap(ctx, zone)
+	currentAllocations, currentSum, _, _ := k.GetDelegationMap(ctx, zone.ChainId)
 	availablePerValidator, _, err := k.GetUnlockedTokensForZone(ctx, zone)
 	if err != nil {
 		return nil, err

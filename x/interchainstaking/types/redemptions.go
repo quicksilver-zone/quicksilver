@@ -9,7 +9,7 @@ import (
 func DetermineAllocationsForUndelegation(currentAllocations map[string]math.Int, lockedAllocations map[string]bool, currentSum math.Int, targetAllocations ValidatorIntents, availablePerValidator map[string]math.Int, amount sdk.Coins) map[string]math.Int {
 	// this is brooooken
 	input := amount[0].Amount
-	underAllocated, overAllocated := CalculateAllocationDeltas(currentAllocations, lockedAllocations, currentSum /* .Sub(input) */, targetAllocations)
+	underAllocated, overAllocated := CalculateAllocationDeltas(currentAllocations, lockedAllocations, currentSum /* .Sub(input) */, targetAllocations, make(map[string]math.Int))
 	outSum := sdk.ZeroInt()
 	outWeights := make(map[string]math.Int)
 
@@ -52,7 +52,7 @@ func DetermineAllocationsForUndelegation(currentAllocations map[string]math.Int,
 	// negate all values in underallocated.
 	underAllocated.Negate()
 	// append the two slices
-	//nolint:gocritic
+	// nolint:gocritic
 	deltas := append(overAllocated, underAllocated...)
 	deltas.Sort()
 
