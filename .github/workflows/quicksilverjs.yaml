@@ -1,5 +1,7 @@
 name: quicksilverjs
-on: [push]
+on:
+  push:
+
 
 jobs:
   build:
