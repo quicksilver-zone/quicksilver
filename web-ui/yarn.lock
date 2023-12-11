@@ -2798,7 +2798,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@motionone/dom@npm:^10.15.3, @motionone/dom@npm:^10.16.2":
+"@motionone/dom@npm:^10.16.2":
   version: 10.16.2
   resolution: "@motionone/dom@npm:10.16.2"
   dependencies:
@@ -5977,13 +5977,11 @@ __metadata:
   languageName: node
   linkType: hard
 
-"framer-motion@npm:9.0.7":
-  version: 9.0.7
-  resolution: "framer-motion@npm:9.0.7"
+"framer-motion@npm:10.16.16":
+  version: 10.16.16
+  resolution: "framer-motion@npm:10.16.16"
   dependencies:
     "@emotion/is-prop-valid": ^0.8.2
-    "@motionone/dom": ^10.15.3
-    hey-listen: ^1.0.8
     tslib: ^2.4.0
   peerDependencies:
     react: ^18.0.0
@@ -5991,7 +5989,12 @@ __metadata:
   dependenciesMeta:
     "@emotion/is-prop-valid":
       optional: true
-  checksum: f9ef0facc708cc934345c192c6bad11fee38562df07a8d2928502bc61af6133fdd19eb24ee10b24bd90689447c1fcce27087b4914f33ed7268984d5792e6373c
+  peerDependenciesMeta:
+    react:
+      optional: true
+    react-dom:
+      optional: true
+  checksum: 992d755faab7171aecd4b548ea4c3baf6a9172b9348a98033e594a46a9f3f90c6f5854898d48884c3ecf7db4fc2ae3f05e27e125b4c5b397e836d765265577c1
   languageName: node
   linkType: hard
 
@@ -8345,7 +8348,7 @@ __metadata:
     dayjs: ^1.11.10
     eslint: 8.55.0
     eslint-config-next: 14.0.4
-    framer-motion: 9.0.7
+    framer-motion: 10.16.16
     interchain-query: ^1.10.1
     next: 14.0.4
     prettier: ^3.0.3
