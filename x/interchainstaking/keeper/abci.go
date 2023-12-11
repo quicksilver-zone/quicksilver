@@ -8,7 +8,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	tmtypes "github.com/cosmos/ibc-go/v5/modules/light-clients/07-tendermint/types"
 
@@ -70,7 +70,7 @@ func (k *Keeper) BeginBlocker(ctx sdk.Context) {
 		k.Logger(ctx).Info("IBC ValSet has changed; requerying valset")
 		// trigger valset update.
 		period := int64(k.GetParam(ctx, types.KeyValidatorSetInterval))
-		query := stakingTypes.QueryValidatorsRequest{}
+		query := stakingtypes.QueryValidatorsRequest{}
 		err := k.EmitValSetQuery(ctx, zone.ConnectionId, zone.ChainId, query, sdkmath.NewInt(period))
 		if err != nil {
 			k.Logger(ctx).Error("unable to trigger valset update query", "error", err.Error())
