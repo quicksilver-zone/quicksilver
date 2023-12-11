@@ -2,8 +2,6 @@ module github.com/quicksilver-zone/quicksilver
 
 go 1.21
 
-toolchain go1.21.5
-
 require (
 	cosmossdk.io/errors v1.0.0
 	cosmossdk.io/math v1.2.0
