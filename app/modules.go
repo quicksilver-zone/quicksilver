@@ -66,6 +66,7 @@ import (
 	"github.com/quicksilver-zone/quicksilver/x/participationrewards"
 	participationrewardsclient "github.com/quicksilver-zone/quicksilver/x/participationrewards/client"
 	participationrewardstypes "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
+	supplytypes "github.com/quicksilver-zone/quicksilver/x/supply/types"
 	"github.com/quicksilver-zone/quicksilver/x/tokenfactory"
 	tokenfactorytypes "github.com/quicksilver-zone/quicksilver/x/tokenfactory/types"
 )
@@ -262,6 +263,7 @@ func orderBeginBlockers() []string {
 		vestingtypes.ModuleName,
 		tokenfactorytypes.ModuleName,
 		wasm.ModuleName,
+		supplytypes.ModuleName,
 	}
 }
 
@@ -305,6 +307,7 @@ func orderEndBlockers() []string {
 		airdroptypes.ModuleName,
 		tokenfactorytypes.ModuleName,
 		wasm.ModuleName,
+		supplytypes.ModuleName,
 		// currently no-op.
 	}
 }
@@ -347,6 +350,7 @@ func orderInitBlockers() []string {
 		participationrewardstypes.ModuleName,
 		airdroptypes.ModuleName,
 		tokenfactorytypes.ModuleName,
+		supplytypes.ModuleName,
 		// wasmd
 		wasm.ModuleName,
 		// NOTE: crisis module must go at the end to check for invariants on each module
