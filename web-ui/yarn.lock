@@ -6496,9 +6496,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"interchain-query@npm:^1.8.7":
-  version: 1.8.10
-  resolution: "interchain-query@npm:1.8.10"
+"interchain-query@npm:^1.10.1":
+  version: 1.10.1
+  resolution: "interchain-query@npm:1.10.1"
   dependencies:
     "@cosmjs/amino": 0.29.4
     "@cosmjs/proto-signing": 0.29.4
@@ -6507,7 +6507,7 @@ __metadata:
     protobufjs: ^6.11.2
   peerDependencies:
     "@tanstack/react-query": ^4.29.12
-  checksum: 3b2a1b815a066bd8ac89754be80a3d80c9baea130d3f081c9ebec9cd74d3a749e19aafc4aa668e401bb674c944d688dcdaf8fa40dab2aca65db704f139714dc9
+  checksum: 42b0f493b101da9572e83452a7cae5b0306f6002164193612fb257ab75f3663554b96cc4dd8e95d4db01ef03351d292ecc8972c1f320747f728bd3ec95931685
   languageName: node
   linkType: hard
 
@@ -8346,7 +8346,7 @@ __metadata:
     eslint: 8.55.0
     eslint-config-next: 14.0.4
     framer-motion: 9.0.7
-    interchain-query: ^1.8.7
+    interchain-query: ^1.10.1
     next: 14.0.4
     prettier: ^3.0.3
     react: 18.2.0
