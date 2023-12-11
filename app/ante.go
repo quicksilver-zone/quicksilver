@@ -2,7 +2,7 @@ package app
 
 import (
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
-	wasmTypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
 	sdkioerrors "cosmossdk.io/errors"
 
@@ -21,7 +21,7 @@ type HandlerOptions struct {
 	ante.HandlerOptions
 
 	TxCounterStoreKey storetypes.StoreKey
-	WasmConfig        wasmTypes.WasmConfig
+	WasmConfig        wasmtypes.WasmConfig
 
 	IBCKeeper *ibckeeper.Keeper
 }

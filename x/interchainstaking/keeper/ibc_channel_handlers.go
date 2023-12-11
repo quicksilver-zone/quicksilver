@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	bankTypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 )
@@ -53,7 +53,7 @@ func (k *Keeper) HandleChannelOpenAck(ctx sdk.Context, portID, connectionID stri
 
 			k.SetAddressZoneMapping(ctx, address, zone.ChainId)
 
-			balanceQuery := bankTypes.QueryAllBalancesRequest{Address: address}
+			balanceQuery := banktypes.QueryAllBalancesRequest{Address: address}
 			bz, err := k.GetCodec().Marshal(&balanceQuery)
 			if err != nil {
 				return err
