@@ -131,7 +131,7 @@ BUILD_TARGETS := build install
 
 check_version:
 ifneq ($(GO_MINOR_VERSION),20)
-	@echo "ERROR: Go version 1.20 is required for building Quicksilver. There are consensus breaking changes between binaries compiled with and without Go 1.20."
+	@echo "ERROR: Go version 1.20 is required for building Quicksilver. There are consensus breaking changes between binaries compiled with different Go versions."
 	exit 1
 endif
 

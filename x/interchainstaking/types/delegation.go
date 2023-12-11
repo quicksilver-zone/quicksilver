@@ -86,16 +86,22 @@ func (vi ValidatorIntents) GetForValoper(valoper string) (*ValidatorIntent, bool
 }
 
 func (vi ValidatorIntents) SetForValoper(valoper string, intent *ValidatorIntent) ValidatorIntents {
-	for idx, i := range vi {
-		if i.ValoperAddress == valoper {
-			vi[idx] = vi[len(vi)-1]
-			vi = vi[:len(vi)-1]
+	idx := -1 // the index of the valoper if found
+	for i, v := range vi {
+		// Search for the valoper.
+		if v.ValoperAddress == valoper {
+			idx = i
 			break
 		}
 	}
-	vi = append(vi, intent)
 
-	return vi.Sort()
+	if idx >= 0 { // We found the valoper so just replace it
+		vi[idx] = intent
+	} else {
+		vi = append(vi, intent)
+		return vi.Sort()
+	}
+	return vi
 }
 
 func (vi ValidatorIntents) MustGetForValoper(valoper string) *ValidatorIntent {
@@ -119,7 +125,7 @@ func (vi ValidatorIntents) Normalize() ValidatorIntents {
 	return out.Sort()
 }
 
-func DetermineAllocationsForDelegation(currentAllocations map[string]sdkmath.Int, currentSum sdkmath.Int, targetAllocations ValidatorIntents, amount sdk.Coins) (map[string]sdkmath.Int, error) {
+func DetermineAllocationsForDelegation(currentAllocations map[string]sdkmath.Int, currentSum sdkmath.Int, targetAllocations ValidatorIntents, amount sdk.Coins, maxCanAllocate map[string]sdkmath.Int) (map[string]sdkmath.Int, error) {
 	if amount.IsZero() {
 		return make(map[string]sdkmath.Int, 0), fmt.Errorf("unable to delegate zero amount")
 	}
@@ -127,7 +133,7 @@ func DetermineAllocationsForDelegation(currentAllocations map[string]sdkmath.Int
 		return make(map[string]sdkmath.Int, 0), fmt.Errorf("unable to process nil delegation targets")
 	}
 	input := amount[0].Amount
-	deltas, _ := CalculateAllocationDeltas(currentAllocations, map[string]bool{}, currentSum.Add(amount[0].Amount), targetAllocations)
+	deltas, _ := CalculateAllocationDeltas(currentAllocations, map[string]bool{}, currentSum.Add(amount[0].Amount), targetAllocations, maxCanAllocate)
 	sum := deltas.Sum()
 
 	// unequalSplit is the portion of input that should be distributed in attempt to make targets == 0

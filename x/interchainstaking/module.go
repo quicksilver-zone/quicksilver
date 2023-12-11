@@ -138,7 +138,7 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	// zanicar: this is the only I can find that clearly states that MsgServer
 	// WILL NOT expose gRPC services, and that QueryServer WILL expose gRPC
 	// services;
-	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(*am.keeper))
+	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
 	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
 }
 

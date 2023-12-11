@@ -218,7 +218,6 @@ type Query struct {
 }
 
 func handleHistoricRequests(queries []qstypes.Query, sourceChainId string, logger log.Logger, metrics prommetrics.Metrics) {
-
 	metrics.HistoricQueries.WithLabelValues("historic-queries").Set(float64(len(queries)))
 
 	if len(queries) == 0 {
@@ -365,7 +364,6 @@ func handleEvent(event coretypes.ResultEvent, logger log.Logger, metrics prommet
 }
 
 func RunGRPCQuery(ctx context.Context, client *lensclient.ChainClient, method string, reqBz []byte, md metadata.MD, metrics prommetrics.Metrics) (abcitypes.ResponseQuery, metadata.MD, error) {
-
 	// parse height header
 	height, err := lensclient.GetHeightFromMetadata(md)
 	if err != nil {
@@ -422,6 +420,7 @@ func retryLightblock(ctx context.Context, client *lensclient.ChainClient, height
 	}
 	return lightBlock.(*tmtypes.LightBlock), err
 }
+
 func doRequestWithMetrics(query Query, logger log.Logger, metrics prommetrics.Metrics) {
 	startTime := time.Now()
 	metrics.Requests.WithLabelValues("requests", query.Type).Inc()
@@ -546,7 +545,6 @@ func doRequest(query Query, logger log.Logger, metrics prommetrics.Metrics) {
 // does not contain the Tx object (that we don't use, because the TxProof already contains a byte representation of tx anyway!)
 // Note: this function is compatible with 0.34 and 0.37 representations of transactions.
 func Tx(client *lensclient.ChainClient, hash []byte) (tmtypes.TxProof, int64, error) {
-
 	params := map[string]interface{}{
 		"hash":  hash,
 		"prove": true,
@@ -611,7 +609,6 @@ func Tx(client *lensclient.ChainClient, hash []byte) (tmtypes.TxProof, int64, er
 	}
 
 	return result.Proof, int64(height), nil
-
 }
 
 // a minimised representation of the Tx emitted by a Tx query, only containing Height and Proof and thus compatbiel with tm0.34 and tm0.37.
@@ -670,7 +667,6 @@ func getHeader(ctx context.Context, client, submitClient *lensclient.ChainClient
 	clientHeight, ok := trustedHeight.(clienttypes.Height)
 	if !ok {
 		return nil, fmt.Errorf("error: Could coerce trusted height")
-
 	}
 
 	if !historicOk && clientHeight.RevisionHeight >= uint64(requestHeight+1) {
@@ -808,7 +804,6 @@ func unique(msgSlice []sdk.Msg, logger log.Logger) []sdk.Msg {
 }
 
 func Close() error {
-
 	query := tmquery.MustParse(fmt.Sprintf("message.module='%s'", "interchainquery"))
 
 	for _, chainClient := range globalCfg.Cl {
