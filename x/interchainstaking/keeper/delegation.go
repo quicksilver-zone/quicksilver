@@ -9,12 +9,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	distrTypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/quicksilver-zone/quicksilver/utils"
 	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
-	lsmstakingTypes "github.com/quicksilver-zone/quicksilver/x/lsmtypes"
+	lsmstakingtypes "github.com/quicksilver-zone/quicksilver/x/lsmtypes"
 )
 
 // GetDelegation returns a specific delegation.
@@ -195,7 +195,7 @@ func (*Keeper) PrepareDelegationMessagesForCoins(zone *types.Zone, allocations m
 	var msgs []sdk.Msg
 	for _, valoper := range utils.Keys(allocations) {
 		if !allocations[valoper].IsZero() {
-			msgs = append(msgs, &stakingTypes.MsgDelegate{DelegatorAddress: zone.DelegationAddress.Address, ValidatorAddress: valoper, Amount: sdk.NewCoin(zone.BaseDenom, allocations[valoper])})
+			msgs = append(msgs, &stakingtypes.MsgDelegate{DelegatorAddress: zone.DelegationAddress.Address, ValidatorAddress: valoper, Amount: sdk.NewCoin(zone.BaseDenom, allocations[valoper])})
 		}
 	}
 	return msgs
@@ -205,7 +205,7 @@ func (*Keeper) PrepareDelegationMessagesForShares(zone *types.Zone, coins sdk.Co
 	var msgs []sdk.Msg
 	for _, coin := range coins.Sort() {
 		if !coin.IsZero() {
-			msgs = append(msgs, &lsmstakingTypes.MsgRedeemTokensForShares{DelegatorAddress: zone.DelegationAddress.Address, Amount: coin})
+			msgs = append(msgs, &lsmstakingtypes.MsgRedeemTokensForShares{DelegatorAddress: zone.DelegationAddress.Address, Amount: coin})
 		}
 	}
 	return msgs
@@ -244,7 +244,7 @@ func (k *Keeper) DeterminePlanForDelegation(ctx sdk.Context, zone *types.Zone, a
 func (k *Keeper) WithdrawDelegationRewardsForResponse(ctx sdk.Context, zone *types.Zone, delegator string, response []byte) error {
 	var msgs []sdk.Msg
 
-	delegatorRewards := distrTypes.QueryDelegationTotalRewardsResponse{}
+	delegatorRewards := distrtypes.QueryDelegationTotalRewardsResponse{}
 	err := k.cdc.Unmarshal(response, &delegatorRewards)
 	if err != nil {
 		return err
@@ -258,7 +258,7 @@ func (k *Keeper) WithdrawDelegationRewardsForResponse(ctx sdk.Context, zone *typ
 		if !del.Reward.IsZero() && !del.Reward.Empty() {
 			k.Logger(ctx).Info("Withdraw rewards", "delegator", delegator, "validator", del.ValidatorAddress, "amount", del.Reward)
 
-			msgs = append(msgs, &distrTypes.MsgWithdrawDelegatorReward{DelegatorAddress: delegator, ValidatorAddress: del.ValidatorAddress})
+			msgs = append(msgs, &distrtypes.MsgWithdrawDelegatorReward{DelegatorAddress: delegator, ValidatorAddress: del.ValidatorAddress})
 		}
 	}
 
@@ -301,7 +301,7 @@ func (k *Keeper) MakePerformanceDelegation(ctx sdk.Context, zone *types.Zone, va
 	// create delegation record in MsgDelegate acknowledgement callback
 	if zone.PerformanceAddress != nil {
 		k.SetPerformanceDelegation(ctx, zone.ChainId, types.NewDelegation(zone.PerformanceAddress.Address, validator, sdk.NewInt64Coin(zone.BaseDenom, 0))) // intentionally zero; we add a record here to stop race conditions
-		msg := stakingTypes.MsgDelegate{DelegatorAddress: zone.PerformanceAddress.Address, ValidatorAddress: validator, Amount: sdk.NewInt64Coin(zone.BaseDenom, 10000)}
+		msg := stakingtypes.MsgDelegate{DelegatorAddress: zone.PerformanceAddress.Address, ValidatorAddress: validator, Amount: sdk.NewInt64Coin(zone.BaseDenom, 10000)}
 		return k.SubmitTx(ctx, []sdk.Msg{&msg}, zone.PerformanceAddress, fmt.Sprintf("%s/%s", types.MsgTypePerformance, validator), zone.MessagesPerTx)
 	}
 	return nil
