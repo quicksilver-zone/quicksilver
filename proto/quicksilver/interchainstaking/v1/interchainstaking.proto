@@ -34,29 +34,17 @@ message Zone {
   bool liquidity_module = 15;
   uint32 withdrawal_waitgroup = 16;
   bytes ibc_next_validators_hash = 17;
-  uint64 validator_selection_allocation = 18 [
-    (gogoproto.jsontag) = "validator_selection_allocation,string,omitempty"
-  ];
-  uint64 holdings_allocation = 19[
-    (gogoproto.jsontag) = "holdings_allocation,string,omitempty"
-  ];
-  int64 last_epoch_height = 20 [
-    (gogoproto.jsontag) = "last_epoch_height,string,omitempty"
-  ]; // deprecated
+  uint64 validator_selection_allocation = 18 [(gogoproto.jsontag) = "validator_selection_allocation,string,omitempty"];
+  uint64 holdings_allocation = 19 [(gogoproto.jsontag) = "holdings_allocation,string,omitempty"];
+  int64 last_epoch_height = 20 [(gogoproto.jsontag) = "last_epoch_height,string,omitempty"]; // deprecated
   string tvl = 21 [
     (cosmos_proto.scalar) = "cosmos.Dec",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable) = false
   ];
-  int64 unbonding_period = 22 [
-    (gogoproto.jsontag) = "unbonding_period,string,omitempty"
-  ];
-  int64 messages_per_tx = 23 [
-    (gogoproto.jsontag) = "messages_per_tx,string,omitempty"
-  ];
-  int64 decimals = 24 [
-    (gogoproto.jsontag) = "decimals,string,omitempty"
-  ];
+  int64 unbonding_period = 22 [(gogoproto.jsontag) = "unbonding_period,string,omitempty"];
+  int64 messages_per_tx = 23 [(gogoproto.jsontag) = "messages_per_tx,string,omitempty"];
+  int64 decimals = 24 [(gogoproto.jsontag) = "decimals,string,omitempty"];
   bool unbonding_enabled = 25;
   bool deposits_enabled = 26;
   bool return_to_sender = 27;
@@ -67,6 +55,24 @@ message Zone {
 message SubzoneInfo {
   string authority = 1;
   string base_chainID = 2;
+}
+
+message LsmCaps {
+  string validator_cap = 1 [
+    (cosmos_proto.scalar) = "cosmos.Dec",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+  string validator_bond_cap = 2 [
+    (cosmos_proto.scalar) = "cosmos.Dec",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+  string global_cap = 3 [
+    (cosmos_proto.scalar) = "cosmos.Dec",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
 }
 
 message ICAAccount {
@@ -168,6 +174,18 @@ message Validator {
   google.protobuf.Timestamp jailed_since = 9 [
     (gogoproto.nullable) = false,
     (gogoproto.stdtime) = true
+  ];
+  // Number of shares self bonded from the validator
+  string validator_bond_shares = 10 [
+    (gogoproto.moretags) = "yaml:\"validator_bond_shares\"",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+  // Number of shares either tokenized or owned by a liquid staking provider
+  string liquid_shares = 11 [
+    (gogoproto.moretags) = "yaml:\"liquid_shares\"",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
   ];
 }
 

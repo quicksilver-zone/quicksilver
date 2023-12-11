@@ -1,0 +1,102 @@
+syntax = "proto3";
+package cosmos.lsmstaking.v1beta1;
+
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "cosmos/staking/v1beta1/staking.proto";
+import "cosmos_proto/cosmos.proto";
+import "gogoproto/gogo.proto";
+import "google/protobuf/any.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/quicksilver-zone/quicksilver/x/lsmtypes";
+option (gogoproto.equal_all) = true;
+
+// Validator defines a validator, together with the total amount of the
+// Validator's bond shares and their exchange rate to coins. Slashing results in
+// a decrease in the exchange rate, allowing correct calculation of future
+// undelegations without iterating over delegators. When coins are delegated to
+// this validator, the validator is credited with a delegation whose number of
+// bond shares is based on the amount of coins delegated divided by the current
+// exchange rate. Voting power can be calculated as total bonded shares
+// multiplied by exchange rate.
+message Validator {
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // operator_address defines the address of the validator's operator; bech
+  // encoded in JSON.
+  string operator_address = 1 [(gogoproto.moretags) = "yaml:\"operator_address\""];
+  // consensus_pubkey is the consensus public key of the validator, as a
+  // Protobuf Any.
+  google.protobuf.Any consensus_pubkey = 2 [
+    (cosmos_proto.accepts_interface) = "cosmos.crypto.PubKey",
+    (gogoproto.moretags) = "yaml:\"consensus_pubkey\""
+  ];
+  // jailed defined whether the validator has been jailed from bonded status or
+  // not.
+  bool jailed = 3;
+  // status is the validator status (bonded/unbonding/unbonded).
+  cosmos.staking.v1beta1.BondStatus status = 4;
+  // tokens define the delegated tokens (incl. self-delegation).
+  string tokens = 5 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false
+  ];
+  // delegator_shares defines total shares issued to a validator's delegators.
+  string delegator_shares = 6 [
+    (gogoproto.moretags) = "yaml:\"delegator_shares\"",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+  // description defines the description terms for the validator.
+  cosmos.staking.v1beta1.Description description = 7 [(gogoproto.nullable) = false];
+  // unbonding_height defines, if unbonding, the height at which this validator
+  // has begun unbonding.
+  int64 unbonding_height = 8 [(gogoproto.moretags) = "yaml:\"unbonding_height\""];
+  // unbonding_time defines, if unbonding, the min time for the validator to
+  // complete unbonding.
+  google.protobuf.Timestamp unbonding_time = 9 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdtime) = true,
+    (gogoproto.moretags) = "yaml:\"unbonding_time\""
+  ];
+  // commission defines the commission parameters.
+  cosmos.staking.v1beta1.Commission commission = 10 [(gogoproto.nullable) = false];
+  // Deprecated: This field has been deprecated with LSM in favor of the
+  // validator bond
+  string min_self_delegation = 11 [
+    deprecated = true,
+    (gogoproto.moretags) = "yaml:\"min_self_delegation\"",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false
+  ];
+  // strictly positive if this validator's unbonding has been stopped by
+  // external modules
+  int64 unbonding_on_hold_ref_count = 12;
+  // list of unbonding ids, each uniquely identifing an unbonding of this
+  // validator
+  repeated uint64 unbonding_ids = 13;
+  // Number of shares self bonded from the validator
+  string validator_bond_shares = 14 [
+    (gogoproto.moretags) = "yaml:\"validator_bond_shares\"",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+  // Number of shares either tokenized or owned by a liquid staking provider
+  string liquid_shares = 15 [
+    (gogoproto.moretags) = "yaml:\"liquid_shares\"",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message QueryValidatorsResponse {
+  option (gogoproto.equal) = false;
+  // validators contains all the queried validators.
+  repeated Validator validators = 1 [(gogoproto.nullable) = false];
+
+  // pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}

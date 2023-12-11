@@ -6,6 +6,14 @@ name: build and test
 # or API.
 on:
   pull_request:
+    branches:
+      - main
+      - develop
+      - unstable
+      - unstable-v1.5
+    paths-ignore:
+      - 'quicksilverjs/**'
+      - 'webui/**'
   workflow_dispatch:
   push:
     branches:
@@ -13,6 +21,10 @@ on:
       - develop
       - unstable
       - unstable-v1.5
+    paths-ignore:
+      - 'quicksilverjs/**'
+      - 'webui/**'
+
 
 # This workflow makes x86_64 for windows, and linux.
 
@@ -29,9 +41,9 @@ jobs:
     name: build quicksilver
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-go@v4
+      - uses: actions/setup-go@v5
         with:
-          go-version: "1.20.5"
+          go-version: "1.20.11"
         env:
           GOOS: ${{ matrix.targetos }}
           GOARCH: ${{ matrix.arch }}
@@ -63,13 +75,12 @@ jobs:
     name: test quicksilver
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-go@v4
+      - uses: actions/setup-go@v5
         with:
-          go-version: "1.20.5"
+          go-version: "1.20.11"
         env:
           GOOS: ${{ matrix.targetos }}
           GOARCH: ${{ matrix.arch }}
-
       - name: Setup Golang caches
         uses: actions/cache@v3
         with:
@@ -90,9 +101,9 @@ jobs:
           excludelist+=" $(find ./ -type f -name '*.pb.go')"
           excludelist+=" $(find ./ -type f -name '*.pb.gw.go')"
           excludelist+=" $(find ./ -type f -path './test/*.go')"
-          excludelist+=" $(find ./ -type f -path './osmosis-types/*.go')"
+          excludelist+=" $(find ./ -type f -path './third-party-chains/*.go')"
           for filename in ${excludelist}; do
-            filename=$(echo $filename | sed 's/^./github.com\/ingenuity-build\/quicksilver/g')
+            filename=$(echo $filename | sed 's/^./github.com\/quicksilver-zone\/quicksilver/g')
             echo "Excluding ${filename} from coverage report..."
             sed -i.bak "/$(echo $filename | sed 's/\//\\\//g')/d" coverage.txt
           done
@@ -124,7 +135,7 @@ jobs:
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-go-
-      - uses: actions/setup-go@v4
+      - uses: actions/setup-go@v5
         with:
           go-version: "1.20.5"
       - name: Run simulation tests

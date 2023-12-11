@@ -18,11 +18,11 @@ import (
 )
 
 const (
-	OpWeightMsgCreateDenom               = "op_weight_msg_create_denom"       //nolint:gosec // not credentials
-	OpWeightMsgMint                      = "op_weight_msg_mint"               //nolint:gosec // not credentials
-	OpWeightMsgBurn                      = "op_weight_msg_burn"               //nolint:gosec // not credentials
-	OpWeightMsgChangeAdmin               = "op_weight_msg_change_admin"       //nolint:gosec // not credentials
-	OpWeightMsgSetDenomMetadata          = "op_weight_msg_set_denom_metadata" //nolint:gosec // not credentials
+	OpWeightMsgCreateDenom               = "op_weight_msg_create_denom"       // nolint:gosec // not credentials
+	OpWeightMsgMint                      = "op_weight_msg_mint"               // nolint:gosec // not credentials
+	OpWeightMsgBurn                      = "op_weight_msg_burn"               // nolint:gosec // not credentials
+	OpWeightMsgChangeAdmin               = "op_weight_msg_change_admin"       // nolint:gosec // not credentials
+	OpWeightMsgSetDenomMetadata          = "op_weight_msg_set_denom_metadata" // nolint:gosec // not credentials
 	DefaultWeightMsgCreateDenom      int = 50
 	DefaultWeightMsgMint             int = 10
 	DefaultWeightMsgBurn             int = 10

@@ -8,8 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/golang/protobuf/proto" //nolint:staticcheck
-	lsmstakingtypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
+	"github.com/golang/protobuf/proto" // nolint:staticcheck
 
 	sdkmath "cosmossdk.io/math"
 
@@ -29,8 +28,9 @@ import (
 
 	"github.com/quicksilver-zone/quicksilver/utils"
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
-	queryTypes "github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
+	querytypes "github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
 	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
+	lsmstakingtypes "github.com/quicksilver-zone/quicksilver/x/lsmtypes"
 )
 
 type TypedMsg struct {
@@ -138,28 +138,30 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 				return err
 			}
 			continue
-		case "/cosmos.staking.v1beta1.MsgRedeemTokensforShares":
-			// TODO: handle this before LSM
+		case "/cosmos.staking.v1beta1.MsgRedeemTokensForShares":
 			if !success {
-				return nil
+				if err := k.HandleFailedRedeemTokens(ctx, msg.Msg, packetData.Memo); err != nil {
+					return err
+				}
+				continue
 			}
-			response := lsmstakingtypes.MsgRedeemTokensforSharesResponse{}
+			response := lsmstakingtypes.MsgRedeemTokensForSharesResponse{}
 
 			err = proto.Unmarshal(msgResponse, &response)
 			if err != nil {
-				k.Logger(ctx).Error("unable to unmarshal MsgRedeemTokensforShares response", "error", err)
+				k.Logger(ctx).Error("unable to unmarshal MsgRedeemTokensForShares response", "error", err)
 				return err
 			}
 
 			k.Logger(ctx).Info("Tokens redeemed for shares", "response", response)
 			// we should update delegation records here.
-			if err := k.HandleRedeemTokens(ctx, msg.Msg, response.Amount); err != nil {
+			if err := k.HandleRedeemTokens(ctx, msg.Msg, response.Amount, packetData.Memo); err != nil {
 				return err
 			}
 			continue
 		case "/cosmos.staking.v1beta1.MsgTokenizeShares":
-			// TODO: handle this before LSM
 			if !success {
+				// We can safely ignore this, as this can reasonably fail, and we cater for this in the flush logic.
 				return nil
 			}
 			response := lsmstakingtypes.MsgTokenizeSharesResponse{}
@@ -176,9 +178,11 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 			}
 			continue
 		case "/cosmos.staking.v1beta1.MsgDelegate":
-			// TODO: can we safely ignore this?
 			if !success {
-				return nil
+				if err := k.HandleFailedDelegate(ctx, msg.Msg, packetData.Memo); err != nil {
+					return err
+				}
+				continue
 			}
 			response := stakingtypes.MsgDelegateResponse{}
 			err = proto.Unmarshal(msgResponse, &response)
@@ -386,7 +390,8 @@ func (k *Keeper) HandleCompleteSend(ctx sdk.Context, msg sdk.Msg, memo string) e
 	case zone.IsDelegateAddress(sMsg.FromAddress):
 		return k.HandleWithdrawForUser(ctx, zone, sMsg, memo)
 	case zone.IsDelegateAddress(sMsg.ToAddress) && zone.DepositAddress.Address == sMsg.FromAddress:
-		return k.handleSendToDelegate(ctx, zone, sMsg, memo)
+		_, err := k.handleSendToDelegate(ctx, zone, sMsg, memo)
+		return err
 	default:
 		err = fmt.Errorf("unexpected completed send (2) from %s to %s (amount: %s)", sMsg.FromAddress, sMsg.ToAddress, sMsg.Amount)
 		k.Logger(ctx).Error(err.Error())
@@ -395,16 +400,17 @@ func (k *Keeper) HandleCompleteSend(ctx sdk.Context, msg sdk.Msg, memo string) e
 }
 
 func (k *Keeper) handleRewardsDelegation(ctx sdk.Context, zone types.Zone, msg *banktypes.MsgSend) error {
-	return k.handleSendToDelegate(ctx, &zone, msg, "rewards")
+	_, err := k.handleSendToDelegate(ctx, &zone, msg, "rewards")
+	return err
 }
 
-func (k *Keeper) handleSendToDelegate(ctx sdk.Context, zone *types.Zone, msg *banktypes.MsgSend, memo string) error {
+func (k *Keeper) handleSendToDelegate(ctx sdk.Context, zone *types.Zone, msg *banktypes.MsgSend, memo string) (int, error) {
 	var msgs []sdk.Msg
 	for _, coin := range msg.Amount {
 		if coin.Denom == zone.BaseDenom {
 			allocations, err := k.DeterminePlanForDelegation(ctx, zone, msg.Amount)
 			if err != nil {
-				return err
+				return 0, err
 			}
 			msgs = append(msgs, k.PrepareDelegationMessagesForCoins(zone, allocations)...)
 		} else {
@@ -414,7 +420,7 @@ func (k *Keeper) handleSendToDelegate(ctx sdk.Context, zone *types.Zone, msg *ba
 
 	k.Logger(ctx).Info("messages to send", "messages", msgs)
 
-	return k.SubmitTx(ctx, msgs, zone.DelegationAddress, memo, zone.MessagesPerTx)
+	return len(msgs), k.SubmitTx(ctx, msgs, zone.DelegationAddress, memo, zone.MessagesPerTx)
 }
 
 // HandleWithdrawForUser handles withdraw for user will check that the msgSend we have successfully executed matches an existing withdrawal record.
@@ -467,12 +473,10 @@ func (k *Keeper) HandleWithdrawForUser(ctx sdk.Context, zone *types.Zone, msg *b
 
 		if len(dlist) > 0 {
 			newDist := make([]*types.Distribution, 0)
-			i := 0
 			for idx := range withdrawalRecord.Distribution {
 				if _, remove := dlist[idx]; !remove {
 					newDist = append(newDist, withdrawalRecord.Distribution[idx])
 				}
-				i++
 			}
 			k.Logger(ctx).Info("found matching withdrawal; awaiting additional messages")
 			withdrawalRecord.Distribution = newDist
@@ -544,27 +548,25 @@ func (k *Keeper) HandleTokenizedShares(ctx sdk.Context, msg sdk.Msg, sharesAmoun
 	}
 
 	for _, dist := range withdrawalRecord.Distribution {
-		if sharesAmount.Equal(dist.Amount) {
-			withdrawalRecord.Amount.Add(sharesAmount)
-			// matched amount
-			if len(withdrawalRecord.Distribution) == len(withdrawalRecord.Amount) {
-				// we just added the last tokens
-				k.Logger(ctx).Info("Found matching withdrawal; marking for send")
-				k.DeleteWithdrawalRecord(ctx, zone.ChainId, memo, types.WithdrawStatusTokenize)
-				withdrawalRecord.Status = types.WithdrawStatusSend
-				sendMsg := &banktypes.MsgSend{FromAddress: zone.DelegationAddress.Address, ToAddress: withdrawalRecord.Recipient, Amount: withdrawalRecord.Amount}
-				err = k.SubmitTx(ctx, []sdk.Msg{sendMsg}, zone.DelegationAddress, memo, zone.MessagesPerTx)
-				if err != nil {
-					return err
-				}
-			} else {
-				k.Logger(ctx).Info("Found matching withdrawal; awaiting additional messages")
-			}
-			k.SetWithdrawalRecord(ctx, withdrawalRecord)
+		if equalLsmCoin(dist.Valoper, dist.Amount, sharesAmount) {
+			withdrawalRecord.Amount = withdrawalRecord.Amount.Add(sharesAmount)
 			break
 		}
 	}
-	return nil
+
+	k.SetWithdrawalRecord(ctx, withdrawalRecord)
+
+	if len(withdrawalRecord.Distribution) != len(withdrawalRecord.Amount) {
+		k.Logger(ctx).Info(fmt.Sprintf("Found matching withdrawal (%d/%d); awaiting additional messages", len(withdrawalRecord.Amount), len(withdrawalRecord.Distribution)))
+	} else {
+		k.Logger(ctx).Info("Found matching withdrawal; marking for send")
+		k.DeleteWithdrawalRecord(ctx, zone.ChainId, memo, types.WithdrawStatusTokenize)
+		withdrawalRecord.Status = types.WithdrawStatusSend
+		k.SetWithdrawalRecord(ctx, withdrawalRecord)
+		sendMsg := &banktypes.MsgSend{FromAddress: zone.DelegationAddress.Address, ToAddress: withdrawalRecord.Recipient, Amount: withdrawalRecord.Amount}
+		err = k.SubmitTx(ctx, []sdk.Msg{sendMsg}, zone.DelegationAddress, memo, zone.MessagesPerTx)
+	}
+	return err
 }
 
 func (k *Keeper) HandleBeginRedelegate(ctx sdk.Context, msg sdk.Msg, completion time.Time, memo string) error {
@@ -601,7 +603,7 @@ func (k *Keeper) HandleBeginRedelegate(ctx sdk.Context, msg sdk.Msg, completion 
 		k.SetRedelegationRecord(ctx, record)
 	}
 
-	tgtDelegation, found := k.GetDelegation(ctx, zone, redelegateMsg.DelegatorAddress, redelegateMsg.ValidatorDstAddress)
+	tgtDelegation, found := k.GetDelegation(ctx, zone.ChainId, redelegateMsg.DelegatorAddress, redelegateMsg.ValidatorDstAddress)
 	if !found {
 		tgtDelegation = types.NewDelegation(redelegateMsg.DelegatorAddress, redelegateMsg.ValidatorDstAddress, redelegateMsg.Amount)
 	} else {
@@ -609,7 +611,7 @@ func (k *Keeper) HandleBeginRedelegate(ctx sdk.Context, msg sdk.Msg, completion 
 	}
 	// RedelegationEnd is used to determine whether the delegation is 'locked' for transient redelegations.
 	tgtDelegation.RedelegationEnd = completion.Unix() // this field should be a timestamp, but let's avoid unnecessary state changes.
-	k.SetDelegation(ctx, zone, tgtDelegation)
+	k.SetDelegation(ctx, zone.ChainId, tgtDelegation)
 
 	delAddr, err := addressutils.AccAddressFromBech32(redelegateMsg.DelegatorAddress, zone.AccountPrefix)
 	if err != nil {
@@ -634,14 +636,14 @@ func (k *Keeper) HandleBeginRedelegate(ctx sdk.Context, msg sdk.Msg, completion 
 		0,
 	)
 
-	srcDelegation, found := k.GetDelegation(ctx, zone, redelegateMsg.DelegatorAddress, redelegateMsg.ValidatorSrcAddress)
+	srcDelegation, found := k.GetDelegation(ctx, zone.ChainId, redelegateMsg.DelegatorAddress, redelegateMsg.ValidatorSrcAddress)
 	if !found {
 		k.Logger(ctx).Error("unable to find delegation record", "chain", zone.ChainId, "source", redelegateMsg.ValidatorSrcAddress, "dst", redelegateMsg.ValidatorDstAddress, "epoch_number", epochNumber)
 		return fmt.Errorf("unable to find delegation record for chain %s, src: %s, dst: %s, at epoch %d", zone.ChainId, redelegateMsg.ValidatorSrcAddress, redelegateMsg.ValidatorDstAddress, epochNumber)
 	}
 	srcDelegation.Amount = srcDelegation.Amount.Sub(redelegateMsg.Amount)
 
-	k.SetDelegation(ctx, zone, srcDelegation)
+	k.SetDelegation(ctx, zone.ChainId, srcDelegation)
 
 	valAddr, err = addressutils.ValAddressFromBech32(redelegateMsg.ValidatorDstAddress, zone.AccountPrefix+"valoper")
 	if err != nil {
@@ -884,10 +886,10 @@ func (k *Keeper) HandleFailedUndelegate(ctx sdk.Context, msg sdk.Msg, memo strin
 	return nil
 }
 
-func (k *Keeper) HandleRedeemTokens(ctx sdk.Context, msg sdk.Msg, amount sdk.Coin) error {
+func (k *Keeper) HandleRedeemTokens(ctx sdk.Context, msg sdk.Msg, amount sdk.Coin, memo string) error {
 	k.Logger(ctx).Info("Received MsgRedeemTokensforShares acknowledgement")
 	// first, type assertion. we should have stakingtypes.MsgRedeemTokensforShares
-	redeemMsg, ok := msg.(*lsmstakingtypes.MsgRedeemTokensforShares)
+	redeemMsg, ok := msg.(*lsmstakingtypes.MsgRedeemTokensForShares)
 	if !ok {
 		k.Logger(ctx).Error("unable to cast source message to MsgRedeemTokensforShares")
 		return errors.New("unable to cast source message to MsgRedeemTokensforShares")
@@ -901,7 +903,69 @@ func (k *Keeper) HandleRedeemTokens(ctx sdk.Context, msg sdk.Msg, amount sdk.Coi
 		return fmt.Errorf("zone for delegate account %s not found", redeemMsg.DelegatorAddress)
 	}
 
+	switch {
+	case strings.HasPrefix(memo, "batch"):
+		k.Logger(ctx).Debug("batch delegation", "memo", memo, "tx", redeemMsg)
+		exclusionTimestampUnix, err := strconv.ParseInt(strings.Split(memo, "/")[1], 10, 64)
+		if err != nil {
+			return err
+		}
+		k.Logger(ctx).Debug("outstanding delegations ack-received")
+		k.SetReceiptsCompleted(ctx, zone.ChainId, time.Unix(exclusionTimestampUnix, 0), ctx.BlockTime(), redeemMsg.Amount.Denom)
+		zone.DelegationAddress.Balance = zone.DelegationAddress.Balance.Sub(redeemMsg.Amount)
+		k.SetZone(ctx, zone)
+		if zone.WithdrawalWaitgroup == 0 {
+			k.Logger(ctx).Info("Triggering redemption rate calc after delegation flush")
+			if err = k.TriggerRedemptionRate(ctx, zone); err != nil {
+				return err
+			}
+		}
+
+	default:
+		receipt, found := k.GetReceipt(ctx, zone.ChainId, memo)
+		if !found {
+			return fmt.Errorf("unable to find receipt for hash %s", memo)
+		}
+		t := ctx.BlockTime()
+		receipt.Completed = &t
+		k.SetReceipt(ctx, receipt)
+	}
 	return k.UpdateDelegationRecordForAddress(ctx, redeemMsg.DelegatorAddress, validatorAddress, amount, zone, false)
+}
+
+func (k *Keeper) HandleFailedRedeemTokens(ctx sdk.Context, msg sdk.Msg, memo string) error {
+	k.Logger(ctx).Info("Received MsgRedeemTokensForShares failure acknowledgement")
+	// first, type assertion. we should have lsmstakingtypes.MsgRedeemTokensForShares
+	redeemMsg, ok := msg.(*lsmstakingtypes.MsgRedeemTokensForShares)
+	if !ok {
+		k.Logger(ctx).Error("unable to cast source message to MsgRedeemTokensForShares")
+		return errors.New("unable to cast source message to MsgRedeemTokensForShares")
+	}
+	zone, found := k.GetZoneForDelegateAccount(ctx, redeemMsg.DelegatorAddress)
+	if !found {
+		// most likely a performance account...
+		if _, found := k.GetZoneForPerformanceAccount(ctx, redeemMsg.DelegatorAddress); !found {
+			return nil
+		}
+		return fmt.Errorf("unable to find zone for address %s", redeemMsg.DelegatorAddress)
+	}
+
+	switch {
+	case strings.HasPrefix(memo, "batch"):
+		k.Logger(ctx).Error("batch token redemption failed", "memo", memo, "tx", redeemMsg)
+		zone.WithdrawalWaitgroup--
+		k.SetZone(ctx, zone)
+		if zone.WithdrawalWaitgroup == 0 {
+			k.Logger(ctx).Info("Triggering redemption rate calc after delegation flush")
+			if err := k.TriggerRedemptionRate(ctx, zone); err != nil {
+				return err
+			}
+		}
+
+	default:
+		// no-op
+	}
+	return nil
 }
 
 func (k *Keeper) HandleDelegate(ctx sdk.Context, msg sdk.Msg, memo string) error {
@@ -923,23 +987,24 @@ func (k *Keeper) HandleDelegate(ctx sdk.Context, msg sdk.Msg, memo string) error
 	switch {
 	case memo == "rewards":
 	case strings.HasPrefix(memo, "batch"):
-		k.Logger(ctx).Debug("batch delegation", "memo", memo, "tx", delegateMsg)
+		k.Logger(ctx).Error("batch delegation", "memo", memo, "tx", delegateMsg)
 		exclusionTimestampUnix, err := strconv.ParseInt(strings.Split(memo, "/")[1], 10, 64)
 		if err != nil {
 			return err
 		}
 		k.Logger(ctx).Debug("outstanding delegations ack-received")
-		k.SetReceiptsCompleted(ctx, zone, time.Unix(exclusionTimestampUnix, 0), ctx.BlockTime())
+		k.SetReceiptsCompleted(ctx, zone.ChainId, time.Unix(exclusionTimestampUnix, 0), ctx.BlockTime(), delegateMsg.Amount.Denom)
 		zone.DelegationAddress.Balance = zone.DelegationAddress.Balance.Sub(delegateMsg.Amount)
+		zone.WithdrawalWaitgroup--
 		k.SetZone(ctx, zone)
-		if zone.DelegationAddress.Balance.IsZero() && zone.WithdrawalWaitgroup == 0 {
+		if zone.WithdrawalWaitgroup == 0 {
 			k.Logger(ctx).Info("Triggering redemption rate calc after delegation flush")
 			if err := k.TriggerRedemptionRate(ctx, zone); err != nil {
 				return err
 			}
 		}
 	default:
-		receipt, found := k.GetReceipt(ctx, types.GetReceiptKey(zone.ChainId, memo))
+		receipt, found := k.GetReceipt(ctx, zone.ChainId, memo)
 		if !found {
 			return fmt.Errorf("unable to find receipt for hash %s", memo)
 		}
@@ -950,6 +1015,41 @@ func (k *Keeper) HandleDelegate(ctx sdk.Context, msg sdk.Msg, memo string) error
 	}
 
 	return k.UpdateDelegationRecordForAddress(ctx, delegateMsg.DelegatorAddress, delegateMsg.ValidatorAddress, delegateMsg.Amount, zone, false)
+}
+
+func (k *Keeper) HandleFailedDelegate(ctx sdk.Context, msg sdk.Msg, memo string) error {
+	k.Logger(ctx).Info("Received MsgDelegate failure acknowledgement")
+	// first, type assertion. we should have stakingtypes.MsgDelegate
+	delegateMsg, ok := msg.(*stakingtypes.MsgDelegate)
+	if !ok {
+		k.Logger(ctx).Error("unable to cast source message to MsgDelegate")
+		return errors.New("unable to cast source message to MsgDelegate")
+	}
+	zone, found := k.GetZoneForDelegateAccount(ctx, delegateMsg.DelegatorAddress)
+	if !found {
+		// most likely a performance account...
+		if _, found := k.GetZoneForPerformanceAccount(ctx, delegateMsg.DelegatorAddress); found {
+			return nil
+		}
+		return fmt.Errorf("unable to find zone for address %s", delegateMsg.DelegatorAddress)
+	}
+
+	switch {
+	case strings.HasPrefix(memo, "batch"):
+		k.Logger(ctx).Error("batch delegation failed", "memo", memo, "tx", delegateMsg)
+		zone.WithdrawalWaitgroup--
+		k.SetZone(ctx, zone)
+		if zone.WithdrawalWaitgroup == 0 {
+			k.Logger(ctx).Info("Triggering redemption rate calc after delegation flush")
+			if err := k.TriggerRedemptionRate(ctx, zone); err != nil {
+				return err
+			}
+		}
+
+	default:
+		// no-op
+	}
+	return nil
 }
 
 func (k *Keeper) HandleUpdatedWithdrawAddress(ctx sdk.Context, msg sdk.Msg) error {
@@ -1014,7 +1114,7 @@ func (k *Keeper) UpdateDelegationRecordsForAddress(ctx sdk.Context, zone types.Z
 	if err != nil {
 		return err
 	}
-	delegatorDelegations := k.GetDelegatorDelegations(ctx, &zone, delAddr)
+	delegatorDelegations := k.GetDelegatorDelegations(ctx, zone.ChainId, delAddr)
 
 	delMap := make(map[string]types.Delegation, len(delegatorDelegations))
 	for _, del := range delegatorDelegations {
@@ -1084,7 +1184,7 @@ func (k *Keeper) UpdateDelegationRecordForAddress(
 	zone *types.Zone,
 	absolute bool,
 ) error {
-	delegation, found := k.GetDelegation(ctx, zone, delegatorAddress, validatorAddress)
+	delegation, found := k.GetDelegation(ctx, zone.ChainId, delegatorAddress, validatorAddress)
 
 	if !found {
 		k.Logger(ctx).Info("Adding delegation tuple", "delegator", delegatorAddress, "validator", validatorAddress, "amount", amount.Amount)
@@ -1098,7 +1198,7 @@ func (k *Keeper) UpdateDelegationRecordForAddress(
 		}
 		k.Logger(ctx).Info("Updating delegation tuple amount", "delegator", delegatorAddress, "validator", validatorAddress, "old_amount", oldAmount, "inbound_amount", amount.Amount, "new_amount", delegation.Amount, "abs", absolute)
 	}
-	k.SetDelegation(ctx, zone, delegation)
+	k.SetDelegation(ctx, zone.ChainId, delegation)
 
 	period := int64(k.GetParam(ctx, types.KeyValidatorSetInterval))
 	query := stakingtypes.QueryValidatorsRequest{}
@@ -1129,12 +1229,15 @@ func (k *Keeper) HandleWithdrawRewards(ctx sdk.Context, msg sdk.Msg) error {
 	// operates outside the delegator set, its purpose is to track validator
 	// performance only.
 	if withdrawalMsg.DelegatorAddress != zone.PerformanceAddress.Address {
-		zone.WithdrawalWaitgroup--
+		err = zone.DecrementWithdrawalWaitgroup()
+		if err != nil {
+			return err
+		}
 		k.Logger(ctx).Info("Decremented waitgroup", "wg", zone.WithdrawalWaitgroup)
 		k.SetZone(ctx, zone)
 	}
 	k.Logger(ctx).Info("Received MsgWithdrawDelegatorReward acknowledgement", "wg", zone.WithdrawalWaitgroup, "delegator", withdrawalMsg.DelegatorAddress)
-	switch zone.WithdrawalWaitgroup == 0 && zone.DelegationAddress.Balance.IsZero() {
+	switch zone.WithdrawalWaitgroup == 0 {
 	case true:
 		k.Logger(ctx).Info("triggering redemption rate calc after rewards withdrawal")
 		return k.TriggerRedemptionRate(ctx, zone)
@@ -1166,7 +1269,7 @@ func (k *Keeper) TriggerRedemptionRate(ctx sdk.Context, zone *types.Zone) error 
 	return nil
 }
 
-func DistributeRewardsFromWithdrawAccount(k *Keeper, ctx sdk.Context, args []byte, query queryTypes.Query) error {
+func DistributeRewardsFromWithdrawAccount(k *Keeper, ctx sdk.Context, args []byte, query querytypes.Query) error {
 	zone, found := k.GetZone(ctx, query.ChainId)
 	if !found {
 		return fmt.Errorf("unable to find zone for %s", query.ChainId)
@@ -1241,4 +1344,11 @@ func (*Keeper) prepareRewardsDistributionMsgs(zone types.Zone, rewards sdkmath.I
 		ToAddress:   zone.DelegationAddress.GetAddress(),
 		Amount:      sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, rewards)),
 	}
+}
+
+func equalLsmCoin(valoper string, amount uint64, lsmAmount sdk.Coin) bool {
+	if strings.HasPrefix(lsmAmount.Denom, valoper) {
+		return lsmAmount.Amount.Equal(sdk.NewIntFromUint64(amount))
+	}
+	return false
 }

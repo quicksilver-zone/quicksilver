@@ -204,13 +204,13 @@ func UmeeReservesUpdateCallback(ctx sdk.Context, k *Keeper, response []byte, que
 }
 
 func UmeeTotalBorrowsUpdateCallback(ctx sdk.Context, k *Keeper, response []byte, query icqtypes.Query) error {
+	if g, w := query.Request[0], umeetypes.KeyPrefixAdjustedTotalBorrow[0]; g != w {
+		return fmt.Errorf("unexpected query request prefix %q, want %q", g, w)
+	}
+
 	totalBorrows := sdk.ZeroDec()
 	if err := totalBorrows.Unmarshal(response); err != nil {
 		return err
-	}
-
-	if query.Request[0] != umeetypes.KeyPrefixAdjustedTotalBorrow[0] {
-		return errors.New("query request has unexpected prefix")
 	}
 
 	denom := umeetypes.DenomFromKey(query.Request, umeetypes.KeyPrefixAdjustedTotalBorrow)
@@ -241,13 +241,13 @@ func UmeeTotalBorrowsUpdateCallback(ctx sdk.Context, k *Keeper, response []byte,
 }
 
 func UmeeInterestScalarUpdateCallback(ctx sdk.Context, k *Keeper, response []byte, query icqtypes.Query) error {
+	if g, w := query.Request[0], umeetypes.KeyPrefixInterestScalar[0]; g != w {
+		return fmt.Errorf("unexpected query request prefix %q, want %q", g, w)
+	}
+
 	interestScalar := sdk.ZeroDec()
 	if err := interestScalar.Unmarshal(response); err != nil {
 		return err
-	}
-
-	if query.Request[0] != umeetypes.KeyPrefixInterestScalar[0] {
-		return errors.New("query request has unexpected prefix")
 	}
 
 	denom := umeetypes.DenomFromKey(query.Request, umeetypes.KeyPrefixInterestScalar)
@@ -372,11 +372,12 @@ func SetEpochBlockCallback(ctx sdk.Context, k *Keeper, args []byte, query icqtyp
 		return err
 	}
 
-	blockResponse := tmservice.GetLatestBlockResponse{}
 	// block response is never expected to be nil
 	if len(args) == 0 {
 		return errors.New("attempted to unmarshal zero length byte slice (1)")
 	}
+
+	blockResponse := tmservice.GetLatestBlockResponse{}
 	err = k.cdc.Unmarshal(args, &blockResponse)
 	if err != nil {
 		return err
@@ -385,7 +386,7 @@ func SetEpochBlockCallback(ctx sdk.Context, k *Keeper, args []byte, query icqtyp
 
 	if blockResponse.SdkBlock == nil {
 		// v0.45 and below
-		//nolint:staticcheck // SA1019 ignore this!
+		// nolint:staticcheck // SA1019 ignore this!
 		connectionData.LastEpoch = blockResponse.Block.Header.Height
 	} else {
 		// v0.46 and above

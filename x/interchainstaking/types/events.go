@@ -6,6 +6,7 @@ const (
 	EventTypeSetIntent         = "set_intent"
 	EventTypeCloseICA          = "close_ica_channel"
 	EventTypeReopenICA         = "reopen_ica_channel"
+	EventTypeSetLsmCaps        = "lsm_set_caps"
 
 	AttributeKeyConnectionID     = "connection_id"
 	AttributeKeyChainID          = "chain_id"
@@ -16,6 +17,10 @@ const (
 	AttributeKeyChannelID        = "channel_id"
 	AttributeKeyPortID           = "port_name"
 	AttributeKeyUser             = "user_address"
+
+	AttributeLsmValidatorCap     = "lsm_validator_cap"
+	AttributeLsmValidatorBondCap = "lsm_validator_bond_cap"
+	AttributeLsmGlobalCap        = "lsm_global_cap"
 
 	AttributeValueCategory = ModuleName
 )

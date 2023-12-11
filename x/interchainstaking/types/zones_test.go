@@ -8,6 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
+	"github.com/quicksilver-zone/quicksilver/utils"
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 )
@@ -37,25 +38,48 @@ func TestGetDelegationAccount(t *testing.T) {
 	require.Nil(t, acc2)
 }
 
+func TestDecrementWithdrawalWg(t *testing.T) {
+	zone := types.Zone{WithdrawalWaitgroup: 0}
+	oldWg := zone.WithdrawalWaitgroup
+	zone.WithdrawalWaitgroup++
+	firstWg := zone.WithdrawalWaitgroup
+	require.Equal(t, oldWg+1, firstWg)
+	require.NoError(t, zone.DecrementWithdrawalWaitgroup())
+	secondWg := zone.WithdrawalWaitgroup
+	require.Equal(t, firstWg-1, secondWg)
+	require.Error(t, zone.DecrementWithdrawalWaitgroup())
+}
+
 func TestValidateCoinsForZone(t *testing.T) {
 	zone := types.Zone{ConnectionId: "connection-0", ChainId: "cosmoshub-4", AccountPrefix: "cosmos", LocalDenom: "uqatom", BaseDenom: "uatom", Is_118: true}
-	valAddresses := []string{"cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", "cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll", "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7"}
-	require.NoError(t, zone.ValidateCoinsForZone(sdk.NewCoins(sdk.NewCoin("cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy1", sdk.OneInt())), valAddresses))
-	require.Errorf(t, zone.ValidateCoinsForZone(sdk.NewCoins(sdk.NewCoin("cosmosvaloper18ldc09yx4aua9g8mkl3sj526hgydzzyehcyjjr1", sdk.OneInt())), valAddresses), "invalid denom for zone: cosmosvaloper18ldc09yx4aua9g8mkl3sj526hgydzzyehcyjjr1")
+	valAddresses := map[string]bool{
+		"cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0": true,
+		"cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf": true,
+		"cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy": true,
+		"cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll": true,
+		"cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7": true,
+	}
+	require.NoError(t, zone.ValidateCoinsForZone(sdk.NewCoins(sdk.NewCoin("cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy/1", sdk.OneInt())), valAddresses))
+	require.Errorf(t, zone.ValidateCoinsForZone(sdk.NewCoins(sdk.NewCoin("cosmosvaloper18ldc09yx4aua9g8mkl3sj526hgydzzyehcyjjr/1", sdk.OneInt())), valAddresses), "invalid denom for zone: cosmosvaloper18ldc09yx4aua9g8mkl3sj526hgydzzyehcyjjr/1")
 }
 
 func TestCoinsToIntent(t *testing.T) {
 	zone := types.Zone{ConnectionId: "connection-0", ChainId: "cosmoshub-4", AccountPrefix: "cosmos", LocalDenom: "uqatom", BaseDenom: "uatom", Is_118: true}
-	valAddresses := []string{"cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", "cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll", "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7"}
-
+	valAddresses := map[string]bool{
+		"cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0": true,
+		"cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf": true,
+		"cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy": true,
+		"cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll": true,
+		"cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7": true,
+	}
 	testCases := []struct {
 		amount         sdk.Coins
 		expectedIntent map[string]sdk.Dec
 	}{
 		{
 			amount: sdk.NewCoins(
-				sdk.NewCoin("cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj01", sdk.NewInt(45)),
-				sdk.NewCoin("cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf16", sdk.NewInt(55)),
+				sdk.NewCoin("cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0/1", sdk.NewInt(45)),
+				sdk.NewCoin("cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf/16", sdk.NewInt(55)),
 			),
 			expectedIntent: map[string]sdk.Dec{
 				"cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0": sdk.NewDec(45),
@@ -64,9 +88,9 @@ func TestCoinsToIntent(t *testing.T) {
 		},
 		{
 			amount: sdk.NewCoins(
-				sdk.NewCoin("cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj01", sdk.NewInt(350)),
-				sdk.NewCoin("cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf16", sdk.NewInt(350)),
-				sdk.NewCoin("cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy6", sdk.NewInt(300)),
+				sdk.NewCoin("cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0/1", sdk.NewInt(350)),
+				sdk.NewCoin("cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf/16", sdk.NewInt(350)),
+				sdk.NewCoin("cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy/6", sdk.NewInt(300)),
 			),
 			expectedIntent: map[string]sdk.Dec{
 				"cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0": sdk.NewDec(350),
@@ -76,10 +100,10 @@ func TestCoinsToIntent(t *testing.T) {
 		},
 		{
 			amount: sdk.NewCoins(
-				sdk.NewCoin("cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj01", sdk.NewInt(3900)),
-				sdk.NewCoin("cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf16", sdk.NewInt(5500)),
-				sdk.NewCoin("cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy6", sdk.NewInt(3000)),
-				sdk.NewCoin("cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll2", sdk.NewInt(500)),
+				sdk.NewCoin("cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0/1", sdk.NewInt(3900)),
+				sdk.NewCoin("cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf/16", sdk.NewInt(5500)),
+				sdk.NewCoin("cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy/6", sdk.NewInt(3000)),
+				sdk.NewCoin("cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll/2", sdk.NewInt(500)),
 			),
 			expectedIntent: map[string]sdk.Dec{
 				"cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0": sdk.NewDec(3900),
@@ -359,8 +383,8 @@ func TestUpdateIntentWithCoins(t *testing.T) {
 				"cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf": sdk.NewDecWithPrec(55, 2),
 			},
 			amount: sdk.NewCoins(
-				sdk.NewCoin("cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj01", sdk.NewInt(450)),
-				sdk.NewCoin("cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf2", sdk.NewInt(550)),
+				sdk.NewCoin("cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0/1", sdk.NewInt(450)),
+				sdk.NewCoin("cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf/2", sdk.NewInt(550)),
 			),
 			expectedIntent: map[string]sdk.Dec{
 				"cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0": sdk.NewDecWithPrec(45, 2),
@@ -374,8 +398,8 @@ func TestUpdateIntentWithCoins(t *testing.T) {
 				"cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf": sdk.NewDecWithPrec(55, 2),
 			},
 			amount: sdk.NewCoins(
-				sdk.NewCoin("cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj01", sdk.NewInt(45000)),
-				sdk.NewCoin("cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf2", sdk.NewInt(55000)),
+				sdk.NewCoin("cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0/1", sdk.NewInt(45000)),
+				sdk.NewCoin("cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf/2", sdk.NewInt(55000)),
 			),
 			expectedIntent: map[string]sdk.Dec{
 				"cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0": sdk.NewDecWithPrec(45, 2),
@@ -389,8 +413,8 @@ func TestUpdateIntentWithCoins(t *testing.T) {
 				"cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf": sdk.NewDecWithPrec(75, 2),
 			},
 			amount: sdk.NewCoins(
-				sdk.NewCoin("cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj01", sdk.NewInt(45)),
-				sdk.NewCoin("cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf2", sdk.NewInt(55)),
+				sdk.NewCoin("cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0/1", sdk.NewInt(45)),
+				sdk.NewCoin("cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf/2", sdk.NewInt(55)),
 			),
 			expectedIntent: map[string]sdk.Dec{
 				"cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0": sdk.NewDecWithPrec(35, 2),
@@ -404,9 +428,9 @@ func TestUpdateIntentWithCoins(t *testing.T) {
 				"cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf": sdk.NewDecWithPrec(75, 2),
 			},
 			amount: sdk.NewCoins(
-				sdk.NewCoin("cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj01", sdk.NewInt(350)),
-				sdk.NewCoin("cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf2", sdk.NewInt(350)),
-				sdk.NewCoin("cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy4", sdk.NewInt(300)),
+				sdk.NewCoin("cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0/1", sdk.NewInt(350)),
+				sdk.NewCoin("cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf/2", sdk.NewInt(350)),
+				sdk.NewCoin("cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy/4", sdk.NewInt(300)),
 			),
 			expectedIntent: map[string]sdk.Dec{
 				"cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0": sdk.NewDecWithPrec(30, 2),
@@ -418,7 +442,7 @@ func TestUpdateIntentWithCoins(t *testing.T) {
 	valAddresses := []string{"cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", "cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll", "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7"}
 
 	for _, tc := range testCases {
-		intent := zone.UpdateIntentWithCoins(intentFromDecSlice(tc.originalIntent), sdk.NewDec(int64(tc.baseAmount)), tc.amount, valAddresses)
+		intent := zone.UpdateIntentWithCoins(intentFromDecSlice(tc.originalIntent), sdk.NewDec(int64(tc.baseAmount)), tc.amount, utils.StringSliceToMap(valAddresses))
 		for _, v := range intent.Intents {
 			if !tc.expectedIntent[v.ValoperAddress].Equal(v.Weight) {
 				t.Errorf("Got %v expected %v", v.Weight, tc.expectedIntent[v.ValoperAddress])

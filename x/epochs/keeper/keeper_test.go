@@ -23,21 +23,21 @@ type KeeperTestSuite struct {
 
 // Test helpers.
 
-func (s *KeeperTestSuite) DoSetupTest(t *testing.T) {
+func (suite *KeeperTestSuite) DoSetupTest(t *testing.T) {
 	t.Helper()
 
 	checkTx := false
-	s.app = app.Setup(t, checkTx)
+	suite.app = app.Setup(t, checkTx)
 
-	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
+	suite.ctx = suite.app.BaseApp.NewContext(false, tmproto.Header{})
 
-	queryHelper := baseapp.NewQueryServerTestHelper(s.ctx, s.app.InterfaceRegistry())
-	types.RegisterQueryServer(queryHelper, &s.app.EpochsKeeper)
-	s.queryClient = types.NewQueryClient(queryHelper)
+	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.app.InterfaceRegistry())
+	types.RegisterQueryServer(queryHelper, &suite.app.EpochsKeeper)
+	suite.queryClient = types.NewQueryClient(queryHelper)
 }
 
-func (s *KeeperTestSuite) SetupTest() {
-	s.DoSetupTest(s.T())
+func (suite *KeeperTestSuite) SetupTest() {
+	suite.DoSetupTest(suite.T())
 }
 
 func TestKeeperTestSuite(t *testing.T) {

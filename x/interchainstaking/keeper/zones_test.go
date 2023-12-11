@@ -5,6 +5,7 @@ import (
 	"io"
 	"sort"
 	"testing"
+	"time"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
 	"github.com/stretchr/testify/require"
@@ -14,6 +15,7 @@ import (
 	"golang.org/x/exp/maps"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/quicksilver-zone/quicksilver/app"
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
@@ -168,7 +170,7 @@ func TestKeeperWithZonesRoundTrip(t *testing.T) {
 		ValidatorAddress:  "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0",
 	}
 
-	kpr.SetDelegation(ctx, &firstZone, del1)
+	kpr.SetDelegation(ctx, firstZone.ChainId, del1)
 
 	// 7.3. Retrieve the delegation now, it should be set.
 	gotDelAmt = kpr.GetDelegatedAmount(ctx, &firstZone)
@@ -181,6 +183,154 @@ func TestKeeperWithZonesRoundTrip(t *testing.T) {
 	require.True(t, found)
 	require.NotNil(t, zone4Del, "expecting a non-nil zone back")
 	require.Equal(t, &firstZone, zone4Del, "expectign equivalent zones")
+}
+
+func (suite *KeeperTestSuite) TestRemoveZoneAndAssociatedRecords() {
+	quicksilver := suite.GetQuicksilverApp(suite.chainA)
+	ctx := suite.chainA.GetContext()
+	chainID := "quicksilver-1"
+
+	// Set zone
+	quicksilver.InterchainstakingKeeper.SetZone(ctx, &types.Zone{
+		ConnectionId: "connection-test",
+		ChainId:      chainID,
+		LocalDenom:   "uqck",
+		BaseDenom:    "qck",
+		DelegationAddress: &types.ICAAccount{
+			Address: addressutils.GenerateAddressForTestWithPrefix("quicksilver"),
+		},
+		PerformanceAddress: &types.ICAAccount{
+			Address: addressutils.GenerateAddressForTestWithPrefix("quicksilver"),
+		},
+	})
+	// Check set zone
+	zone, ok := quicksilver.InterchainstakingKeeper.GetZone(ctx, chainID)
+	suite.True(ok, "expected to retrieve a zone")
+	suite.NotEqual(types.Zone{}, zone, "Expecting a non-blank zone")
+
+	// set val
+	val0 := types.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdk.MustNewDecFromStr("1"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded}
+	err := quicksilver.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, val0)
+	suite.NoError(err)
+
+	val1 := types.Validator{ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", CommissionRate: sdk.MustNewDecFromStr("1"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded}
+	err = quicksilver.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, val1)
+	suite.NoError(err)
+
+	val2 := types.Validator{ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", CommissionRate: sdk.MustNewDecFromStr("1"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded}
+	err = quicksilver.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, val2)
+	suite.NoError(err)
+
+	val3 := types.Validator{ValoperAddress: "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7", CommissionRate: sdk.MustNewDecFromStr("1"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded}
+	err = quicksilver.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, val3)
+	suite.NoError(err)
+
+	vals := quicksilver.InterchainstakingKeeper.GetValidators(ctx, chainID)
+	// create unbonding
+	quicksilver.InterchainstakingKeeper.SetUnbondingRecord(ctx,
+		types.UnbondingRecord{
+			ChainId:       chainID,
+			EpochNumber:   1,
+			Validator:     vals[0].ValoperAddress,
+			RelatedTxhash: []string{"ABC012"},
+		})
+	// create redelegations
+	quicksilver.InterchainstakingKeeper.SetRedelegationRecord(ctx,
+		types.RedelegationRecord{
+			ChainId:     chainID,
+			EpochNumber: 1,
+			Source:      vals[1].ValoperAddress,
+			Destination: vals[0].ValoperAddress,
+			Amount:      10000000,
+		})
+	// create delegation
+	delegation := types.Delegation{
+		DelegationAddress: zone.DelegationAddress.Address,
+		ValidatorAddress:  vals[1].ValoperAddress,
+		Amount:            sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000)),
+	}
+	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, zone.ChainId, delegation)
+	// create pert delegation
+	performanceAddress := zone.PerformanceAddress
+	perfDelegation := types.Delegation{
+		DelegationAddress: performanceAddress.Address,
+		ValidatorAddress:  vals[1].ValoperAddress,
+		Amount:            sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000)),
+	}
+	quicksilver.InterchainstakingKeeper.SetPerformanceDelegation(ctx, zone.ChainId, perfDelegation)
+	// create receipt
+	cutOffTime := ctx.BlockTime().AddDate(0, 0, -1).Add(-2 * time.Hour)
+	rcpt := types.Receipt{
+		ChainId: chainID,
+		Sender:  addressutils.GenerateAccAddressForTest().String(),
+		Txhash:  "TestDeposit01",
+		Amount: sdk.NewCoins(
+			sdk.NewCoin(
+				zone.BaseDenom,
+				sdk.NewIntFromUint64(2000000),
+			),
+		),
+		FirstSeen: &cutOffTime,
+	}
+	quicksilver.InterchainstakingKeeper.SetReceipt(ctx, rcpt)
+	// create withdrawal record
+	record := types.WithdrawalRecord{
+		ChainId:   chainID,
+		Delegator: zone.DelegationAddress.Address,
+		Distribution: []*types.Distribution{
+			{
+				Valoper: vals[1].ValoperAddress,
+				Amount:  1000000,
+			},
+			{
+				Valoper: vals[2].ValoperAddress,
+				Amount:  1000000,
+			},
+		},
+		Recipient:      addressutils.GenerateAccAddressForTest().String(),
+		Amount:         sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(4000000))),
+		BurnAmount:     sdk.NewCoin(zone.LocalDenom, sdk.NewInt(4000000)),
+		Txhash:         "7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
+		Status:         types.WithdrawStatusUnbond,
+		CompletionTime: time.Now().UTC().Add(time.Hour),
+	}
+	quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(ctx, record)
+
+	// Handle
+	quicksilver.InterchainstakingKeeper.RemoveZoneAndAssociatedRecords(ctx, chainID)
+
+	// check unbondings
+	_, found := quicksilver.InterchainstakingKeeper.GetUnbondingRecord(ctx, chainID, vals[0].ValoperAddress, 1)
+	suite.False(found, "Not found unbonding record stored in the keeper")
+
+	// check redelegations
+	_, found = quicksilver.InterchainstakingKeeper.GetRedelegationRecord(ctx, chainID, vals[1].ValoperAddress, vals[0].ValoperAddress, 1)
+	suite.False(found, "Not found redelegation record stored in the keeper")
+
+	// check delegation
+	_, found = quicksilver.InterchainstakingKeeper.GetDelegation(ctx, chainID, delegation.DelegationAddress, delegation.ValidatorAddress)
+	suite.False(found, "Not found delegation stored in the keeper")
+
+	// check pert delegation
+	_, found = quicksilver.InterchainstakingKeeper.GetPerformanceDelegation(ctx, chainID, performanceAddress, perfDelegation.ValidatorAddress)
+	suite.False(found, "Not found pert delegation stored in the keeper")
+
+	// check receipts
+	_, found = quicksilver.InterchainstakingKeeper.GetReceipt(ctx, chainID, rcpt.Txhash)
+	suite.False(found, "Not found receipts stored in the keeper")
+
+	// check withdrawal records
+	_, found = quicksilver.InterchainstakingKeeper.GetWithdrawalRecord(ctx, chainID, record.Txhash, record.Status)
+	suite.False(found, "Not found withdrawal records stored in the keeper")
+
+	// check validators
+	vals = quicksilver.InterchainstakingKeeper.GetValidators(ctx, chainID)
+	suite.Equal(len(vals), 0)
+
+	// check zone
+	zone, found = quicksilver.InterchainstakingKeeper.GetZone(ctx, chainID)
+	suite.False(found, "No zone stored in the keeper")
+	suite.Equal(types.Zone{}, zone, "Expecting the blank zone")
 }
 
 // TODO: convert to keeper tests

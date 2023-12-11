@@ -133,9 +133,8 @@ func TestDetermineAllocationsForDelegation(t *testing.T) {
 			},
 			inAmount: sdk.NewCoins(sdk.NewCoin("uqck", sdk.NewInt(50000))),
 			expected: map[string]sdkmath.Int{
-				vals[0]: sdk.ZeroInt(),
-				vals[1]: sdk.NewInt(33182),
-				vals[2]: sdk.NewInt(16818),
+				vals[1]: sdk.NewInt(47000),
+				vals[2]: sdk.NewInt(3000),
 			},
 		},
 		{
@@ -153,10 +152,9 @@ func TestDetermineAllocationsForDelegation(t *testing.T) {
 			},
 			inAmount: sdk.NewCoins(sdk.NewCoin("uqck", sdk.NewInt(20))),
 			expected: map[string]sdkmath.Int{
-				vals[3]: sdk.NewInt(11),
-				vals[2]: sdk.ZeroInt(),
-				vals[1]: sdk.NewInt(6),
-				vals[0]: sdk.NewInt(3),
+				vals[3]: sdk.NewInt(7),
+				vals[1]: sdk.NewInt(5),
+				vals[0]: sdk.NewInt(8),
 			},
 		},
 		{
@@ -164,7 +162,7 @@ func TestDetermineAllocationsForDelegation(t *testing.T) {
 				vals[0]: sdk.NewInt(52),
 				vals[1]: sdk.NewInt(24),
 				vals[2]: sdk.NewInt(20),
-				vals[3]: sdk.NewInt(4),
+				vals[3]: sdk.NewInt(3),
 			},
 			target: types.ValidatorIntents{
 				{ValoperAddress: vals[0], Weight: sdk.NewDecWithPrec(50, 2)},
@@ -174,10 +172,10 @@ func TestDetermineAllocationsForDelegation(t *testing.T) {
 			},
 			inAmount: sdk.NewCoins(sdk.NewCoin("uqck", sdk.NewInt(50))),
 			expected: map[string]sdkmath.Int{
-				vals[0]: sdk.NewInt(18),
-				vals[1]: sdk.NewInt(14),
-				vals[2]: sdk.NewInt(4),
-				vals[3]: sdk.NewInt(14),
+				vals[0]: sdk.NewInt(27),
+				vals[1]: sdk.NewInt(12),
+				vals[2]: sdk.NewInt(1),
+				vals[3]: sdk.NewInt(10),
 			},
 		},
 	}
@@ -188,7 +186,8 @@ func TestDetermineAllocationsForDelegation(t *testing.T) {
 			for _, amount := range val.current {
 				sum = sum.Add(amount)
 			}
-			allocations := types.DetermineAllocationsForDelegation(val.current, sum, val.target, val.inAmount)
+			allocations, err := types.DetermineAllocationsForDelegation(val.current, sum, val.target, val.inAmount, make(map[string]sdkmath.Int))
+			require.NoError(t, err)
 			require.Equal(t, len(val.expected), len(allocations))
 			for valoper := range val.expected {
 				ex, ok := val.expected[valoper]

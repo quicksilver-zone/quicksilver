@@ -10,13 +10,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"
-	bankTypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	icatypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/types"
 	clienttypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
 	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
 	host "github.com/cosmos/ibc-go/v5/modules/core/24-host"
 
+	"github.com/quicksilver-zone/quicksilver/utils"
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 	minttypes "github.com/quicksilver-zone/quicksilver/x/mint/types"
@@ -36,7 +37,7 @@ func (k *Keeper) HandleReceiptTransaction(ctx sdk.Context, txn *tx.Tx, hash stri
 	assets := sdk.Coins{}
 
 	for _, msg := range txn.GetMsgs() {
-		msgSend, ok := msg.(*bankTypes.MsgSend)
+		msgSend, ok := msg.(*banktypes.MsgSend)
 		if !ok {
 			k.Logger(ctx).Error("got message that wasn't MsgSend!")
 			continue
@@ -74,7 +75,7 @@ func (k *Keeper) HandleReceiptTransaction(ctx sdk.Context, txn *tx.Tx, hash stri
 		return nil
 	}
 
-	if err := zone.ValidateCoinsForZone(assets, k.GetValidatorAddresses(ctx, zone.ChainId)); err != nil {
+	if err := zone.ValidateCoinsForZone(assets, utils.StringSliceToMap(k.GetValidatorAddresses(ctx, zone.ChainId))); err != nil {
 		// we expect this to trigger if the validatorset has changed recently (i.e. we haven't seen the validator before.
 		// That is okay, we'll catch it next round!)
 		k.Logger(ctx).Error("unable to validate coins. Ignoring.", "senderAddress", senderAddress)
@@ -186,7 +187,7 @@ func (k *Keeper) MintAndSendQAsset(ctx sdk.Context, sender sdk.AccAddress, sende
 		mappedAddress, found = k.GetRemoteAddressMap(ctx, sender, zone.ChainId)
 		if !found {
 			// if not found, skip minting and refund assets
-			msg := &bankTypes.MsgSend{FromAddress: zone.DepositAddress.GetAddress(), ToAddress: senderAddress, Amount: assets}
+			msg := &banktypes.MsgSend{FromAddress: zone.DepositAddress.GetAddress(), ToAddress: senderAddress, Amount: assets}
 			return k.SubmitTx(ctx, []sdk.Msg{msg}, zone.DepositAddress, "", zone.MessagesPerTx)
 		}
 		// do not set, since mapped address already exists
@@ -233,7 +234,7 @@ func (k *Keeper) MintAndSendQAsset(ctx sdk.Context, sender sdk.AccAddress, sende
 
 // TransferToDelegate transfers tokens from the zone deposit account address to the zone delegate account address.
 func (k *Keeper) TransferToDelegate(ctx sdk.Context, zone *types.Zone, coins sdk.Coins, memo string) error {
-	msg := &bankTypes.MsgSend{FromAddress: zone.DepositAddress.GetAddress(), ToAddress: zone.DelegationAddress.GetAddress(), Amount: coins}
+	msg := &banktypes.MsgSend{FromAddress: zone.DepositAddress.GetAddress(), ToAddress: zone.DelegationAddress.GetAddress(), Amount: coins}
 	return k.SubmitTx(ctx, []sdk.Msg{msg}, zone.DepositAddress, memo, zone.MessagesPerTx)
 }
 
@@ -317,7 +318,8 @@ func (Keeper) NewReceipt(ctx sdk.Context, zone *types.Zone, sender, txhash strin
 }
 
 // GetReceipt returns receipt for the given key.
-func (k *Keeper) GetReceipt(ctx sdk.Context, key string) (types.Receipt, bool) {
+func (k *Keeper) GetReceipt(ctx sdk.Context, chainID, txHash string) (types.Receipt, bool) {
+	key := types.GetReceiptKey(chainID, txHash)
 	receipt := types.Receipt{}
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixReceipt)
 	bz := store.Get([]byte(key))
@@ -337,7 +339,8 @@ func (k *Keeper) SetReceipt(ctx sdk.Context, receipt types.Receipt) {
 }
 
 // DeleteReceipt delete receipt info.
-func (k *Keeper) DeleteReceipt(ctx sdk.Context, key string) {
+func (k *Keeper) DeleteReceipt(ctx sdk.Context, chainID, txHash string) {
+	key := types.GetReceiptKey(chainID, txHash)
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixReceipt)
 	store.Delete([]byte(key))
 }
@@ -370,9 +373,9 @@ func (k *Keeper) AllReceipts(ctx sdk.Context) []types.Receipt {
 }
 
 // IterateZoneReceipts iterates through receipts of the given zone.
-func (k *Keeper) IterateZoneReceipts(ctx sdk.Context, zone *types.Zone, fn func(index int64, receiptInfo types.Receipt) (stop bool)) {
+func (k *Keeper) IterateZoneReceipts(ctx sdk.Context, chainID string, fn func(index int64, receiptInfo types.Receipt) (stop bool)) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixReceipt)
-	iterator := sdk.KVStorePrefixIterator(store, []byte(zone.ChainId))
+	iterator := sdk.KVStorePrefixIterator(store, []byte(chainID))
 	defer iterator.Close()
 
 	i := int64(0)
@@ -396,7 +399,7 @@ func (k *Keeper) UserZoneReceipts(ctx sdk.Context, zone *types.Zone, addr sdk.Ac
 		return receipts, err
 	}
 
-	k.IterateZoneReceipts(ctx, zone, func(_ int64, receipt types.Receipt) (stop bool) {
+	k.IterateZoneReceipts(ctx, zone.ChainId, func(_ int64, receipt types.Receipt) (stop bool) {
 		if receipt.Sender == bech32Address {
 			receipts = append(receipts, receipt)
 		}
@@ -406,9 +409,9 @@ func (k *Keeper) UserZoneReceipts(ctx sdk.Context, zone *types.Zone, addr sdk.Ac
 	return receipts, nil
 }
 
-func (k *Keeper) SetReceiptsCompleted(ctx sdk.Context, zone *types.Zone, qualifyingTime, completionTime time.Time) {
-	k.IterateZoneReceipts(ctx, zone, func(_ int64, receiptInfo types.Receipt) (stop bool) {
-		if receiptInfo.FirstSeen.Before(qualifyingTime) && receiptInfo.Completed == nil {
+func (k *Keeper) SetReceiptsCompleted(ctx sdk.Context, chainID string, qualifyingTime, completionTime time.Time, denom string) {
+	k.IterateZoneReceipts(ctx, chainID, func(_ int64, receiptInfo types.Receipt) (stop bool) {
+		if receiptInfo.FirstSeen.Before(qualifyingTime) && receiptInfo.Completed == nil && denom == receiptInfo.Amount[0].Denom {
 			receiptInfo.Completed = &completionTime
 			k.SetReceipt(ctx, receiptInfo)
 
