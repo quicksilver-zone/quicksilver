@@ -3,7 +3,10 @@ package keeper
 import (
 	"encoding/binary"
 	"encoding/hex"
+	"fmt"
 	"time"
+
+	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -221,4 +224,38 @@ func (k *Keeper) AllZoneUnbondingRecords(ctx sdk.Context, chainID string) []type
 		return false
 	})
 	return records
+}
+
+func (k *Keeper) UpdateWithdrawalRecordsForSlash(ctx sdk.Context, zone *types.Zone, valoper string, delta sdk.Dec) error {
+	var err error
+	k.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, types.WithdrawStatusUnbond, func(_ int64, record types.WithdrawalRecord) bool {
+		recordSubAmount := sdkmath.ZeroInt()
+		distr := record.Distribution
+		for _, d := range distr {
+			if d.Valoper != valoper {
+				continue
+			}
+			distAmount := sdk.NewDec(int64(d.Amount))
+			if distAmount.IsNegative() {
+				err = fmt.Errorf("distAmount cannot be negative; suspected overflow")
+				return true
+			}
+
+			newAmount := distAmount.Quo(delta).TruncateInt()
+			thisSubAmount := distAmount.TruncateInt().Sub(newAmount)
+			recordSubAmount = recordSubAmount.Add(thisSubAmount)
+			d.Amount = newAmount.Uint64()
+			k.Logger(ctx).Info("Updated withdrawal record due to slashing", "valoper", valoper, "old_amount", d.Amount, "new_amount", newAmount.Int64(), "sub_amount", thisSubAmount.Int64())
+		}
+		record.Distribution = distr
+		subAmount := sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, recordSubAmount))
+		if !record.Amount.IsAllGT(subAmount) {
+			err = fmt.Errorf("deductedTotal cannot contain negative coins; suspected overflow")
+			return true
+		}
+		record.Amount = record.Amount.Sub(subAmount...)
+		k.SetWithdrawalRecord(ctx, record)
+		return false
+	})
+	return err
 }

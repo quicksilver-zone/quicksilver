@@ -13,6 +13,10 @@ on:
       - develop
       - unstable
       - unstable-v1.5
+    paths-ignore:
+      - 'quicksilverjs/**'
+      - 'webui/**'
+
 
 # This workflow makes x86_64 for windows, and linux.
 
@@ -29,7 +33,7 @@ jobs:
     name: build quicksilver
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-go@v4
+      - uses: actions/setup-go@v5
         with:
           go-version: "1.20.11"
         env:
@@ -63,7 +67,7 @@ jobs:
     name: test quicksilver
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-go@v4
+      - uses: actions/setup-go@v5
         with:
           go-version: "1.20.11"
         env:
@@ -123,7 +127,7 @@ jobs:
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-go-
-      - uses: actions/setup-go@v4
+      - uses: actions/setup-go@v5
         with:
           go-version: "1.20.5"
       - name: Run simulation tests
