@@ -121,21 +121,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@chain-registry/types@npm:0.13.1, @chain-registry/types@npm:^0.13.1":
-  version: 0.13.1
-  resolution: "@chain-registry/types@npm:0.13.1"
-  dependencies:
-    "@babel/runtime": ^7.19.4
-  checksum: d38d8896a5644df098486c9c86420e5c34645cc1f97723f2edfbf62df89d0ffa47d1a0c275757d6e4c224b45444921935cbf616e639558ddb7e2cfb73770b684
-  languageName: node
-  linkType: hard
-
 "@chain-registry/types@npm:0.17.0, @chain-registry/types@npm:^0.17.0":
   version: 0.17.0
   resolution: "@chain-registry/types@npm:0.17.0"
   dependencies:
     "@babel/runtime": ^7.21.0
   checksum: 4a36ecb2b50da88af79bdb825fcfef9f6acebb4dd02cc4d09caacd10741006f9aebbf0672284caa5519261221b2736ab52e4ed16a126a68f4f64cbb931872661
+  languageName: node
+  linkType: hard
+
+"@chain-registry/types@npm:^0.13.1":
+  version: 0.13.1
+  resolution: "@chain-registry/types@npm:0.13.1"
+  dependencies:
+    "@babel/runtime": ^7.19.4
+  checksum: d38d8896a5644df098486c9c86420e5c34645cc1f97723f2edfbf62df89d0ffa47d1a0c275757d6e4c224b45444921935cbf616e639558ddb7e2cfb73770b684
   languageName: node
   linkType: hard
 
@@ -1873,24 +1873,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@cosmos-kit/core@npm:^2.5.3":
-  version: 2.5.3
-  resolution: "@cosmos-kit/core@npm:2.5.3"
-  dependencies:
-    "@chain-registry/types": 0.13.0
-    "@walletconnect/types": 2.7.2
-    bowser: 2.11.0
-    events: 3.3.0
-  peerDependencies:
-    "@cosmjs/amino": ">= 0.28"
-    "@cosmjs/cosmwasm-stargate": ">= 0.28"
-    "@cosmjs/proto-signing": ">= 0.28"
-    "@cosmjs/stargate": ">= 0.28"
-    cosmjs-types: ">= 0.5"
-  checksum: 6a3b18131f4b3642fb9a6cca5c3ef417fd3d7988fb5faa5ea62c280309a2ee56d9eb426aa42e093e509c9151f6a498c9426a509a6dce03ee9a70cfef77d47254
-  languageName: node
-  linkType: hard
-
 "@cosmos-kit/core@npm:^2.6.3":
   version: 2.6.3
   resolution: "@cosmos-kit/core@npm:2.6.3"
@@ -2033,32 +2015,32 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@cosmos-kit/react-lite@npm:^2.4.5":
-  version: 2.4.5
-  resolution: "@cosmos-kit/react-lite@npm:2.4.5"
+"@cosmos-kit/react-lite@npm:^2.5.10":
+  version: 2.5.10
+  resolution: "@cosmos-kit/react-lite@npm:2.5.10"
   dependencies:
-    "@chain-registry/types": 0.13.1
-    "@cosmos-kit/core": ^2.5.3
+    "@chain-registry/types": 0.17.0
+    "@cosmos-kit/core": ^2.7.8
   peerDependencies:
-    react: ^18.2.0
-    react-dom: ^18.2.0
-  checksum: 217a9704f3a986eff5a58b3d53d57d45c100a37698c9af41ceaf875d570e0ace4906faa3a728cca82990e7050eb68f2cd27c6f675ecea4a9c8e7bf7dddfb4418
+    react: ^18
+    react-dom: ^18
+  checksum: d26f4232d0a9dcb73d71fbca8d171b8023ae6b9d2d10cb17684baaf51d01d7070dd7585506378a6c064d492b3ed75839d4650d5e7d205e9074edd882b2537ae0
   languageName: node
   linkType: hard
 
-"@cosmos-kit/react@npm:^2.0.3":
-  version: 2.7.0
-  resolution: "@cosmos-kit/react@npm:2.7.0"
+"@cosmos-kit/react@npm:^2.9.12":
+  version: 2.9.12
+  resolution: "@cosmos-kit/react@npm:2.9.12"
   dependencies:
-    "@chain-registry/types": 0.13.1
-    "@cosmos-kit/core": ^2.5.3
-    "@cosmos-kit/react-lite": ^2.4.5
+    "@chain-registry/types": 0.17.0
+    "@cosmos-kit/core": ^2.7.8
+    "@cosmos-kit/react-lite": ^2.5.10
     "@react-icons/all-files": ^4.1.0
   peerDependencies:
-    "@interchain-ui/react": 1.5.0
-    react: ^18.2.0
-    react-dom: ^18.2.0
-  checksum: 35234b3e6c30243efeab7b0d47929bee365ed7a05cea970458139ef2c3350ae04da20b6d19a13699e68d5788b1b6a2f182d8bf98c8c8af6a0ecd4af3617cf6ed
+    "@interchain-ui/react": ^1.13.17
+    react: ^18
+    react-dom: ^18
+  checksum: cb85ed26d43c5081970fc0d92ec729318e317a9c51b25200c834b947864b96fca12d5cad7576a8676c8b94546e140d20419e71d4d98b0e78f0b3bd04b73634e5
   languageName: node
   linkType: hard
 
@@ -8242,7 +8224,7 @@ __metadata:
     "@cosmos-kit/cosmostation": ^2.4.11
     "@cosmos-kit/keplr": ^2.3.10
     "@cosmos-kit/leap": ^2.3.7
-    "@cosmos-kit/react": ^2.0.3
+    "@cosmos-kit/react": ^2.9.12
     "@emotion/react": 11.10.6
     "@emotion/styled": 11.10.6
     "@interchain-ui/react": 1.5.0

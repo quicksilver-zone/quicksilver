@@ -20,7 +20,7 @@
     "@cosmos-kit/cosmostation": "^2.4.11",
     "@cosmos-kit/keplr": "^2.3.10",
     "@cosmos-kit/leap": "^2.3.7",
-    "@cosmos-kit/react": "^2.0.3",
+    "@cosmos-kit/react": "^2.9.12",
     "@emotion/react": "11.10.6",
     "@emotion/styled": "11.10.6",
     "@interchain-ui/react": "1.5.0",
