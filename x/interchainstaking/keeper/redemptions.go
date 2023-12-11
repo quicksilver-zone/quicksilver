@@ -261,10 +261,8 @@ WITHDRAWAL:
 			if len(valopers) > vidx+1 {
 				vidx++
 				v = valopers[vidx]
-			} else {
-				if !amountToWithdrawPerWithdrawal[hash].Amount.IsZero() {
-					return fmt.Errorf("unable to satisfy unbonding")
-				}
+			} else if !amountToWithdrawPerWithdrawal[hash].Amount.IsZero() {
+				return fmt.Errorf("unable to satisfy unbonding")
 			}
 		}
 	}
