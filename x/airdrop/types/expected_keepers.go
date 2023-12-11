@@ -4,7 +4,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 
 	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 	participationrewardstypes "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
@@ -34,8 +34,8 @@ type StakingKeeper interface {
 }
 
 type GovKeeper interface {
-	IterateProposals(ctx sdk.Context, cb func(proposal v1.Proposal) (stop bool))
-	GetVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.AccAddress) (vote v1.Vote, found bool)
+	IterateProposals(ctx sdk.Context, cb func(proposal govv1.Proposal) (stop bool))
+	GetVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.AccAddress) (vote govv1.Vote, found bool)
 }
 
 type InterchainStakingKeeper interface {

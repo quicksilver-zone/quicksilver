@@ -11,7 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 
 	"github.com/quicksilver-zone/quicksilver/app"
-	quicksilverd "github.com/quicksilver-zone/quicksilver/cmd/quicksilverd"
+	quicksilverd "github.com/quicksilver-zone/quicksilver/cmd/quicksilverd" //nolint:revive
 )
 
 func TestInitCmd(t *testing.T) {

@@ -9,7 +9,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	icatypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/types"
 	ibcexported "github.com/cosmos/ibc-go/v5/modules/core/exported"
@@ -95,7 +95,7 @@ func (k *Keeper) HandleRegisterZoneProposal(ctx sdk.Context, p *types.RegisterZo
 	}
 
 	period := int64(k.GetParam(ctx, types.KeyValidatorSetInterval))
-	query := stakingTypes.QueryValidatorsRequest{}
+	query := stakingtypes.QueryValidatorsRequest{}
 	err = k.EmitValSetQuery(ctx, zone.ConnectionId, zone.ChainId, query, sdkmath.NewInt(period))
 	if err != nil {
 		return err
@@ -270,7 +270,7 @@ func (k *Keeper) HandleUpdateZoneProposal(ctx sdk.Context, p *types.UpdateZonePr
 			}
 
 			period := int64(k.GetParam(ctx, types.KeyValidatorSetInterval))
-			query := stakingTypes.QueryValidatorsRequest{}
+			query := stakingtypes.QueryValidatorsRequest{}
 			err := k.EmitValSetQuery(ctx, zone.ConnectionId, zone.ChainId, query, sdkmath.NewInt(period))
 			if err != nil {
 				return err
