@@ -8176,7 +8176,7 @@ __metadata:
     prettier: ^3.0.3
     react: 18.2.0
     react-dom: 18.2.0
-    react-icons: 4.6.0
+    react-icons: 4.12.0
     react-markdown: ^8.0.7
     react-minimal-pie-chart: ^8.4.0
     remixicon: ^3.5.0
@@ -8246,12 +8246,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-icons@npm:4.6.0":
-  version: 4.6.0
-  resolution: "react-icons@npm:4.6.0"
+"react-icons@npm:4.12.0":
+  version: 4.12.0
+  resolution: "react-icons@npm:4.12.0"
   peerDependencies:
     react: "*"
-  checksum: a08375d4563e381e156d826a8d551dd26c1bf7c424a79139173bf4c8df71e884badd7d4f5fe9faa0d73d18ace265bcc89891b65fd8f808812b1011b612ebbc53
+  checksum: db82a141117edcd884ade4229f0294b2ce15d82f68e0533294db07765d6dce00b129cf504338ec7081ce364fe899b296cb7752554ea08665b1d6bad811134e79
   languageName: node
   linkType: hard
 
