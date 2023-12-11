@@ -105,6 +105,8 @@ export const StakingBox = ({ selectedOption, isModalOpen, setModalOpen, setBalan
 
   const { getSigningStargateClient } = useChain('quicksilver');
 
+  const isCalculationDataLoaded = tokenAmount && !isNaN(Number(tokenAmount)) && zone && !isNaN(Number(zone.redemptionRate));
+
   const handleLiquidUnstake = async (event: React.MouseEvent) => {
     event.preventDefault();
     const numericAmount = Number(tokenAmount);

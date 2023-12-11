@@ -18,6 +18,7 @@ import {
   useToast,
   Input,
   Grid,
+  Checkbox,
 } from '@chakra-ui/react';
 import { useChain } from '@cosmos-kit/react';
 import styled from '@emotion/styled';
@@ -98,7 +99,11 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
   };
 
   const retreatStep = () => {
-    setStep((prevStep) => Math.max(prevStep - 1, 1));
+    if (step === 3 && check) {
+      setStep(1); // If on step 3 and checkbox is checked, go back to step 1
+    } else {
+      setStep((prevStep) => Math.max(prevStep - 1, 1)); // Otherwise, go to the previous step
+    }
   };
 
   const toast = useToast();
@@ -221,6 +226,26 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
     }
   };
 
+  const [check, setCheck] = useState(false);
+
+  const handleCheck = () => {
+    setCheck(!check);
+  };
+
+  const handleStepOneButtonClick = () => {
+    if (check) {
+      // If checkbox is checked, skip directly to step 3
+      setStep(3);
+    } else {
+      // If checkbox is not checked, consider the state of selectedValidators
+      if (selectedValidators.length === 0) {
+        setModalOpen(true);
+      } else {
+        advanceStep();
+      }
+    }
+  };
+
   return (
     <Modal isOpen={isOpen} onClose={onClose} size={{ base: '3xl', md: '2xl' }}>
       <ModalOverlay />
@@ -311,7 +336,7 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
                         Reselect Validators
                       </Button>
                       <Text mt={'2'} fontSize={'sm'} fontWeight={'light'}>
-                        {selectedValidators.length} / 8
+                        {selectedValidators.length} / 8 Validators Selected
                       </Text>
                     </>
                   )}
@@ -321,16 +346,16 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
                     _hover={{
                       bgColor: '#181818',
                     }}
-                    onClick={() => {
-                      if (selectedValidators.length === 0) {
-                        setModalOpen(true);
-                      } else {
-                        advanceStep();
-                      }
-                    }}
+                    onClick={handleStepOneButtonClick}
                   >
-                    {selectedValidators.length > 0 ? 'Next' : 'Choose Validators'}
+                    {check ? 'Skip to Step 3' : selectedValidators.length > 0 ? 'Next' : 'Choose Validators'}
                   </Button>
+                  {selectedValidators.length === 0 && (
+                    <Flex mt={'6'} flexDir={'row'} gap="3">
+                      <Checkbox _selected={{ bgColor: 'transparent' }} isChecked={check} onChange={handleCheck} colorScheme="orange" />
+                      <Text>Proceed with existing intent?</Text>
+                    </Flex>
+                  )}
                   <MultiModal
                     isOpen={isModalOpen}
                     onClose={() => setModalOpen(false)}

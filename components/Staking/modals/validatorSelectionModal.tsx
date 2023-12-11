@@ -208,6 +208,9 @@ export const MultiModal: React.FC<MultiModalProps> = ({
               </Box>
             </Box>
           )}
+          <Text mt={'2'} fontSize={'sm'} fontWeight={'light'}>
+            {selectedValidators.length} / 8 Validators Selected
+          </Text>
         </ModalBody>
         <ModalFooter></ModalFooter>
       </ModalContent>

@@ -58,7 +58,7 @@ export const liquidStakeTx = (
   setIsSigning: Dispatch<SetStateAction<boolean>>,
   validatorsSelect: ValidatorsSelect[],
   amount: number,
-  zone: Zone,
+  zone: Zone | undefined,
 ) => {
   setIsError(false);
   setIsSigning(true);
@@ -81,11 +81,15 @@ export const liquidStakeTx = (
   };
 
   let memoBuffer = Buffer.alloc(0);
-  validatorsSelect.forEach((val) => {
-    memoBuffer = Buffer.concat([memoBuffer, addValidator(val.address, val.intent / 100)]);
-  });
-  memoBuffer = Buffer.concat([Buffer.from([0x02, memoBuffer.length]), memoBuffer]);
-  const memo = memoBuffer.toString('base64');
+
+  if (validatorsSelect.length > 0) {
+    validatorsSelect.forEach((val) => {
+      memoBuffer = Buffer.concat([memoBuffer, addValidator(val.address, val.intent / 100)]);
+    });
+    memoBuffer = Buffer.concat([Buffer.from([0x02, memoBuffer.length]), memoBuffer]);
+  }
+
+  let memo = memoBuffer.length > 0 ? memoBuffer.toString('base64') : '';
 
   return async (event: React.MouseEvent) => {
     event.preventDefault();

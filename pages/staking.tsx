@@ -12,6 +12,8 @@ import {
   Spacer,
   Fade,
   SlideFade,
+  Spinner,
+  SkeletonCircle,
 } from '@chakra-ui/react';
 import dynamic from 'next/dynamic';
 import Head from 'next/head';
@@ -35,7 +37,7 @@ export default function Staking() {
   const [balance, setBalance] = useState('');
   const [qBalance, setQBalance] = useState('');
 
-  let displayApr = '0%';
+  let displayApr = '';
   if (!isLoading && !isError && APY !== undefined) {
     displayApr = (APY * 100).toFixed(2) + '%';
   } else if (isError) {
@@ -70,7 +72,19 @@ export default function Staking() {
                 <VStack p={1} borderRadius="10px" alignItems="flex-end">
                   <Stat minW={'90px'} color="complimentary.900">
                     <StatLabel>APR</StatLabel>
-                    <StatNumber>{displayApr}</StatNumber>
+                    <StatNumber height={'34px'}>
+                      {!isLoading && APY !== undefined ? (
+                        displayApr
+                      ) : (
+                        <>
+                          <HStack height={'34px'}>
+                            <SkeletonCircle size="3" startColor="complimentary.900" endColor="complimentary.400" />{' '}
+                            <SkeletonCircle size="2" startColor="complimentary.900" endColor="complimentary.400" />
+                            <SkeletonCircle size="3" startColor="complimentary.900" endColor="complimentary.400" />
+                          </HStack>
+                        </>
+                      )}
+                    </StatNumber>
                   </Stat>
                 </VStack>
               </HStack>
