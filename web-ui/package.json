@@ -29,7 +29,7 @@
     "@tanstack/react-query-devtools": "^4.35.0",
     "chain-registry": "1.19.0",
     "cosmjs-types": "0.5.0",
-    "dayjs": "^1.11.9",
+    "dayjs": "^1.11.10",
     "framer-motion": "9.0.7",
     "interchain-query": "^1.8.7",
     "next": "14.0.4",
@@ -40,15 +40,15 @@
     "react-minimal-pie-chart": "^8.4.0",
     "remixicon": "^3.5.0",
     "simplex-noise": "^4.0.1",
-    "three": "^0.156.1"
+    "three": "^0.159.0"
   },
   "devDependencies": {
     "@types/node": "18.11.9",
     "@types/react": "18.2.43",
     "@types/react-dom": "18.2.17",
-    "@types/three": "^0.155.1",
+    "@types/three": "^0.159.0",
     "eslint": "8.55.0",
-    "eslint-config-next": "13.0.5",
+    "eslint-config-next": "14.0.4",
     "prettier": "^3.0.3",
     "typescript": "4.9.3"
   },
