@@ -6,6 +6,14 @@ name: build and test
 # or API.
 on:
   pull_request:
+    branches:
+      - main
+      - develop
+      - unstable
+      - unstable-v1.5
+    paths-ignore:
+      - 'quicksilverjs/**'
+      - 'webui/**'
   workflow_dispatch:
   push:
     branches:

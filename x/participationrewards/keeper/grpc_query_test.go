@@ -1,7 +1,7 @@
 package keeper_test
 
 import (
-	encoding_json "encoding/json"
+	"encoding/json"
 	"fmt"
 
 	"github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
@@ -25,7 +25,7 @@ func (suite *KeeperTestSuite) TestKeeper_ProtocolData() {
 	suite.Run("ProtocolData", func() {
 		k := suite.GetQuicksilverApp(suite.chainA).ParticipationRewardsKeeper
 		want := types.QueryProtocolDataResponse{
-			Data: []encoding_json.RawMessage{
+			Data: []json.RawMessage{
 				[]byte(connpdstr),
 			},
 		}

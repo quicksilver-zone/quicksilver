@@ -2798,7 +2798,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@motionone/dom@npm:^10.15.3, @motionone/dom@npm:^10.16.2":
+"@motionone/dom@npm:^10.16.2":
   version: 10.16.2
   resolution: "@motionone/dom@npm:10.16.2"
   dependencies:
@@ -3421,10 +3421,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:18.11.9":
-  version: 18.11.9
-  resolution: "@types/node@npm:18.11.9"
-  checksum: cc0aae109e9b7adefc32eecb838d6fad931663bb06484b5e9cbbbf74865c721b03d16fd8d74ad90e31dbe093d956a7c2c306ba5429ba0c00f3f7505103d7a496
+"@types/node@npm:20.10.4":
+  version: 20.10.4
+  resolution: "@types/node@npm:20.10.4"
+  dependencies:
+    undici-types: ~5.26.4
+  checksum: 054b296417e771ab524bea63cf3289559c6bdf290d45428f7cc68e9b00030ff7a0ece47b8c99a26b4f47a443919813bcf42beadff2f0bea7d8125fa541d92eb0
   languageName: node
   linkType: hard
 
@@ -5977,13 +5979,11 @@ __metadata:
   languageName: node
   linkType: hard
 
-"framer-motion@npm:9.0.7":
-  version: 9.0.7
-  resolution: "framer-motion@npm:9.0.7"
+"framer-motion@npm:10.16.16":
+  version: 10.16.16
+  resolution: "framer-motion@npm:10.16.16"
   dependencies:
     "@emotion/is-prop-valid": ^0.8.2
-    "@motionone/dom": ^10.15.3
-    hey-listen: ^1.0.8
     tslib: ^2.4.0
   peerDependencies:
     react: ^18.0.0
@@ -5991,7 +5991,12 @@ __metadata:
   dependenciesMeta:
     "@emotion/is-prop-valid":
       optional: true
-  checksum: f9ef0facc708cc934345c192c6bad11fee38562df07a8d2928502bc61af6133fdd19eb24ee10b24bd90689447c1fcce27087b4914f33ed7268984d5792e6373c
+  peerDependenciesMeta:
+    react:
+      optional: true
+    react-dom:
+      optional: true
+  checksum: 992d755faab7171aecd4b548ea4c3baf6a9172b9348a98033e594a46a9f3f90c6f5854898d48884c3ecf7db4fc2ae3f05e27e125b4c5b397e836d765265577c1
   languageName: node
   linkType: hard
 
@@ -6496,9 +6501,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"interchain-query@npm:^1.8.7":
-  version: 1.8.10
-  resolution: "interchain-query@npm:1.8.10"
+"interchain-query@npm:^1.10.1":
+  version: 1.10.1
+  resolution: "interchain-query@npm:1.10.1"
   dependencies:
     "@cosmjs/amino": 0.29.4
     "@cosmjs/proto-signing": 0.29.4
@@ -6507,7 +6512,7 @@ __metadata:
     protobufjs: ^6.11.2
   peerDependencies:
     "@tanstack/react-query": ^4.29.12
-  checksum: 3b2a1b815a066bd8ac89754be80a3d80c9baea130d3f081c9ebec9cd74d3a749e19aafc4aa668e401bb674c944d688dcdaf8fa40dab2aca65db704f139714dc9
+  checksum: 42b0f493b101da9572e83452a7cae5b0306f6002164193612fb257ab75f3663554b96cc4dd8e95d4db01ef03351d292ecc8972c1f320747f728bd3ec95931685
   languageName: node
   linkType: hard
 
@@ -8336,7 +8341,7 @@ __metadata:
     "@radix-ui/react-icons": ^1.3.0
     "@tanstack/react-query": ^4.29.12
     "@tanstack/react-query-devtools": ^4.35.0
-    "@types/node": 18.11.9
+    "@types/node": 20.10.4
     "@types/react": 18.2.43
     "@types/react-dom": 18.2.17
     "@types/three": ^0.159.0
@@ -8345,13 +8350,13 @@ __metadata:
     dayjs: ^1.11.10
     eslint: 8.55.0
     eslint-config-next: 14.0.4
-    framer-motion: 9.0.7
-    interchain-query: ^1.8.7
+    framer-motion: 10.16.16
+    interchain-query: ^1.10.1
     next: 14.0.4
     prettier: ^3.0.3
     react: 18.2.0
     react-dom: 18.2.0
-    react-icons: 4.6.0
+    react-icons: 4.12.0
     react-markdown: ^8.0.7
     react-minimal-pie-chart: ^8.4.0
     remixicon: ^3.5.0
@@ -8421,12 +8426,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-icons@npm:4.6.0":
-  version: 4.6.0
-  resolution: "react-icons@npm:4.6.0"
+"react-icons@npm:4.12.0":
+  version: 4.12.0
+  resolution: "react-icons@npm:4.12.0"
   peerDependencies:
     react: "*"
-  checksum: a08375d4563e381e156d826a8d551dd26c1bf7c424a79139173bf4c8df71e884badd7d4f5fe9faa0d73d18ace265bcc89891b65fd8f808812b1011b612ebbc53
+  checksum: db82a141117edcd884ade4229f0294b2ce15d82f68e0533294db07765d6dce00b129cf504338ec7081ce364fe899b296cb7752554ea08665b1d6bad811134e79
   languageName: node
   linkType: hard
 
@@ -9509,6 +9514,13 @@ __metadata:
     has-symbols: ^1.0.3
     which-boxed-primitive: ^1.0.2
   checksum: b7a1cf5862b5e4b5deb091672ffa579aa274f648410009c81cca63fed3b62b610c4f3b773f912ce545bb4e31edc3138975b5bc777fc6e4817dca51affb6380e9
+  languageName: node
+  linkType: hard
+
+"undici-types@npm:~5.26.4":
+  version: 5.26.5
+  resolution: "undici-types@npm:5.26.5"
+  checksum: 3192ef6f3fd5df652f2dc1cd782b49d6ff14dc98e5dced492aa8a8c65425227da5da6aafe22523c67f035a272c599bb89cfe803c1db6311e44bed3042fc25487
   languageName: node
   linkType: hard
 
