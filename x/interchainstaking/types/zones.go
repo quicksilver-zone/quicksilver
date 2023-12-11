@@ -45,21 +45,20 @@ func (z *Zone) DecrementWithdrawalWaitgroup() error {
 	return nil
 }
 
-func (z *Zone) ValidateCoinsForZone(coins sdk.Coins, zoneVals []string) error {
-COINS:
+func (z *Zone) ValidateCoinsForZone(coins sdk.Coins, zoneVals map[string]bool) error {
 	for _, coin := range coins.Sort() {
 		if coin.Denom == z.BaseDenom {
 			continue
 		}
 
-		for _, v := range zoneVals {
-			if strings.HasPrefix(coin.Denom, v) {
-				// continue 2 levels
-				continue COINS
-			}
+		coinParts := strings.Split(coin.Denom, "/")
+		if len(coinParts) != 2 {
+			return fmt.Errorf("invalid denom for zone: %s", coin.Denom)
 		}
-		return fmt.Errorf("invalid denom for zone: %s", coin.Denom)
 
+		if _, ok := zoneVals[coinParts[0]]; !ok {
+			return fmt.Errorf("invalid denom for zone: %s", coin.Denom)
+		}
 	}
 	return nil
 }
@@ -67,7 +66,7 @@ COINS:
 // memo functionality
 
 // this method exist to make testing easier!
-func (z *Zone) UpdateIntentWithCoins(intent DelegatorIntent, multiplier sdk.Dec, inAmount sdk.Coins, vals []string) DelegatorIntent {
+func (z *Zone) UpdateIntentWithCoins(intent DelegatorIntent, multiplier sdk.Dec, inAmount sdk.Coins, vals map[string]bool) DelegatorIntent {
 	// coinIntent is ordinal
 	return intent.AddOrdinal(multiplier, z.ConvertCoinsToOrdinalIntents(inAmount, vals))
 }
@@ -76,24 +75,24 @@ func (*Zone) UpdateZoneIntentWithMemo(memoIntent ValidatorIntents, intent Delega
 	return intent.AddOrdinal(multiplier, memoIntent)
 }
 
-func (*Zone) ConvertCoinsToOrdinalIntents(coins sdk.Coins, zoneVals []string) ValidatorIntents {
-	// should we be return DelegatorIntent here?
-	out := make(ValidatorIntents, 0)
-COINS:
+func (*Zone) ConvertCoinsToOrdinalIntents(coins sdk.Coins, zoneVals map[string]bool) ValidatorIntents {
+	out := make(ValidatorIntents, 0, len(coins))
 	for _, coin := range coins {
-		for _, v := range zoneVals {
-			// if token share, add amount to
-			if !strings.HasPrefix(coin.Denom, v) {
-				continue
-			}
-			val, ok := out.GetForValoper(v)
-			if !ok {
-				val = &ValidatorIntent{ValoperAddress: v, Weight: sdk.ZeroDec()}
-			}
-			val.Weight = val.Weight.Add(sdk.NewDecFromInt(coin.Amount))
-			out = out.SetForValoper(v, val)
-			continue COINS
+		coinParts := strings.Split(coin.Denom, "/")
+		if len(coinParts) != 2 {
+			continue
 		}
+
+		if _, ok := zoneVals[coinParts[0]]; !ok {
+			continue
+		}
+
+		val, ok := out.GetForValoper(coinParts[0])
+		if !ok {
+			val = &ValidatorIntent{ValoperAddress: coinParts[0], Weight: sdk.ZeroDec()}
+		}
+		val.Weight = val.Weight.Add(sdk.NewDecFromInt(coin.Amount))
+		out = out.SetForValoper(coinParts[0], val)
 	}
 
 	return out
