@@ -60,7 +60,7 @@ func (k Keeper) CalcUserHoldingsAllocations(ctx sdk.Context, zone *icstypes.Zone
 
 	supply := k.bankKeeper.GetSupply(ctx, zone.LocalDenom)
 
-	if zone.HoldingsAllocation == 0 || supply.Amount.IsZero() {
+	if zone.HoldingsAllocation == 0 || !supply.Amount.IsPositive() {
 		k.Logger(ctx).Info("holdings allocation is zero, nothing to allocate")
 		return userAllocations, math.NewIntFromUint64(zone.HoldingsAllocation), icsRewardsAllocations
 	}
@@ -91,7 +91,7 @@ func (k Keeper) CalcUserHoldingsAllocations(ctx sdk.Context, zone *icstypes.Zone
 		return false
 	})
 
-	if zoneAmount.IsZero() {
+	if !zoneAmount.IsPositive() {
 		k.Logger(ctx).Info("zero claims for zone", "zone", zone.ChainId)
 		return userAllocations, math.NewIntFromUint64(zone.HoldingsAllocation), icsRewardsAllocations
 	}

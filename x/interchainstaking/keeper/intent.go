@@ -158,7 +158,7 @@ func (k *Keeper) AggregateDelegatorIntents(ctx sdk.Context, zone *types.Zone) er
 		}
 	}
 
-	if len(aggregate) > 0 && ordinalizedIntentSum.IsZero() {
+	if len(aggregate) > 0 && !ordinalizedIntentSum.IsPositive() {
 		return errors.New("ordinalized intent sum is zero, this may happen if no claims are recorded")
 	}
 
