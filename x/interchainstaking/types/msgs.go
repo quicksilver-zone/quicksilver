@@ -87,6 +87,15 @@ func (msg MsgRequestRedemption) GetSigners() []sdk.AccAddress {
 
 // ----------------------------------------------------------------
 
+var (
+	// regexp defining what an intent looks like:
+	// {value}{address}
+	iexpr = regexp.MustCompile(`(\d\.\d+)(.+1\w+)`)
+	// regexp defining what the intent string looks like:
+	// {intent}(,{intent})...
+	pexpr = regexp.MustCompile(fmt.Sprintf("^%s(,%s)*$", iexpr.String(), iexpr.String()))
+)
+
 // IntentsFromString parses and validates the given string into a slice
 // containing pointers to ValidatorIntent.
 //
@@ -96,12 +105,7 @@ func (msg MsgRequestRedemption) GetSigners() []sdk.AccAddress {
 // Tokens are comma separated, e.g.
 // "0.3cosmosvaloper1xxxxxxxxx,0.3cosmosvaloper1yyyyyyyyy,0.4cosmosvaloper1zzzzzzzzz".
 func IntentsFromString(input string) ([]*ValidatorIntent, error) {
-	// regexp defining what an intent looks like:
-	// {value}{address}
-	iexpr := regexp.MustCompile(`(\d\.\d+)(.+1\w+)`)
-	// regexp defining what the intent string looks like:
-	// {intent}(,{intent})...
-	pexpr := regexp.MustCompile(fmt.Sprintf("^%s(,%s)*$", iexpr.String(), iexpr.String()))
+
 	if !pexpr.MatchString(input) {
 		return nil, errors.New("invalid intents string")
 	}
