@@ -8359,7 +8359,7 @@ __metadata:
     react-icons: 4.12.0
     react-markdown: ^8.0.7
     react-minimal-pie-chart: ^8.4.0
-    remixicon: ^3.5.0
+    remixicon: ^3.7.0
     simplex-noise: ^4.0.1
     three: ^0.159.0
     typescript: 4.9.3
@@ -8628,10 +8628,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"remixicon@npm:^3.5.0":
-  version: 3.5.0
-  resolution: "remixicon@npm:3.5.0"
-  checksum: e03e2be2853453cea5a86f2c02c5fe2e8ed29fbe77ff18264507a0d085c58861887915b5eedd85ff95a003a0281a532f5f6c3b2900cf6db9a24a5fba21699bed
+"remixicon@npm:^3.7.0":
+  version: 3.7.0
+  resolution: "remixicon@npm:3.7.0"
+  checksum: 1ddb41357c04af2b440056b28b8677dbb5a416df56eb60d27c0b373a4d193b2d9a7a3c45c16c6c4922f99b21b0a343e4f907f2394f5cd04154b317ad16975fba
   languageName: node
   linkType: hard
 
