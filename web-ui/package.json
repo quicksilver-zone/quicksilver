@@ -22,7 +22,7 @@
     "@cosmos-kit/leap": "^2.3.7",
     "@cosmos-kit/react": "^2.9.12",
     "@emotion/react": "11.11.1",
-    "@emotion/styled": "11.10.6",
+    "@emotion/styled": "11.11.0",
     "@interchain-ui/react": "1.5.0",
     "@radix-ui/react-icons": "^1.3.0",
     "@tanstack/react-query": "^4.29.12",
