@@ -14,7 +14,7 @@
     "@chakra-ui/system": "2.0.0",
     "@cosmjs/amino": "0.32.1",
     "@cosmjs/cosmwasm-stargate": "0.32.1",
-    "@cosmjs/proto-signing": "^0.31.1",
+    "@cosmjs/proto-signing": "^0.32.1",
     "@cosmjs/stargate": "0.32.1",
     "@cosmos-kit/core": "^2.7.8",
     "@cosmos-kit/cosmostation": "^2.4.11",
