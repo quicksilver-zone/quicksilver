@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@chakra-ui/icons": "^2.1.1",
-    "@chakra-ui/react": "2.5.1",
+    "@chakra-ui/react": "2.8.2",
     "@chakra-ui/system": "2.0.0",
     "@cosmjs/amino": "0.32.1",
     "@cosmjs/cosmwasm-stargate": "0.32.1",
