@@ -105,7 +105,6 @@ var (
 // Tokens are comma separated, e.g.
 // "0.3cosmosvaloper1xxxxxxxxx,0.3cosmosvaloper1yyyyyyyyy,0.4cosmosvaloper1zzzzzzzzz".
 func IntentsFromString(input string) ([]*ValidatorIntent, error) {
-
 	if !pexpr.MatchString(input) {
 		return nil, errors.New("invalid intents string")
 	}
