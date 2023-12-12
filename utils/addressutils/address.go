@@ -66,10 +66,10 @@ func MustAccAddressFromBech32(address, prefix string) sdk.AccAddress {
 // Returns an error if address is zero-length, invalid or the prefix does not match.
 func ValAddressFromBech32(address, prefix string) (sdk.ValAddress, error) {
 	addr, err := AddressFromBech32(address, prefix)
-        if err != nil {
-                return nil, err
-        }
-        return sdk.ValAddress(addr), nil
+	if err != nil {
+		return nil, err
+	}
+	return sdk.ValAddress(addr), nil
 }
 
 // MustValAddressFromBech32 decodes a bech32 encoded address into an sdk.ValAddress, and validates the prefix (hrp).
