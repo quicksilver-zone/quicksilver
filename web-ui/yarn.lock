@@ -152,15 +152,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@chain-registry/types@npm:^0.16.0":
-  version: 0.16.0
-  resolution: "@chain-registry/types@npm:0.16.0"
-  dependencies:
-    "@babel/runtime": ^7.21.0
-  checksum: 494c42f494583cd9aa05c0088191864591ac28909c0323fd0d0d6922b2866c3690c59558391ac3843778275ad308845a791019081d0f65d11d72e0d64071d345
-  languageName: node
-  linkType: hard
-
 "@chain-registry/utils@npm:^1.14.0":
   version: 1.14.0
   resolution: "@chain-registry/utils@npm:1.14.0"
@@ -4734,13 +4725,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"chain-registry@npm:1.19.0":
-  version: 1.19.0
-  resolution: "chain-registry@npm:1.19.0"
+"chain-registry@npm:1.21.0":
+  version: 1.21.0
+  resolution: "chain-registry@npm:1.21.0"
   dependencies:
     "@babel/runtime": ^7.21.0
-    "@chain-registry/types": ^0.16.0
-  checksum: ede52c6e917058e95a4045d54f8fbcb321572db34d3c74c03e2e7f878e9fe0043efeefe9944090b505fba6b87b08ba959dcdec630b2b57b562ed898edb7c93b4
+    "@chain-registry/types": ^0.17.0
+  checksum: 56d22dd9db6ebeb4160adfdc7d6900633d276c92d96acd4b7ee5b6e983bfadc01aa990abdb6333ed4218b4de71230287b994a707b2a691d11804ab5bcc533fc4
   languageName: node
   linkType: hard
 
@@ -8345,7 +8336,7 @@ __metadata:
     "@types/react": 18.2.43
     "@types/react-dom": 18.2.17
     "@types/three": ^0.159.0
-    chain-registry: 1.19.0
+    chain-registry: 1.21.0
     cosmjs-types: 0.5.0
     dayjs: ^1.11.10
     eslint: 8.55.0
