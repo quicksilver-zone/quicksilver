@@ -13,12 +13,14 @@ func NewProtocolData(datatype string, data json.RawMessage) *ProtocolData {
 }
 
 func unmarshalProtocolData[V ProtocolDataI](data json.RawMessage) (ProtocolDataI, error) {
-	var cpd, blank V
-	_ = json.Unmarshal([]byte(`{}`), &blank)
+	var cpd V
 	err := json.Unmarshal(data, &cpd)
 	if err != nil {
 		return nil, fmt.Errorf("unable to unmarshal intermediary %s: %w", reflect.TypeOf(cpd).Name(), err)
 	}
+
+	var blank V
+	_ = json.Unmarshal([]byte(`{}`), &blank)
 	if reflect.DeepEqual(cpd, blank) {
 		return nil, fmt.Errorf("unable to unmarshal %s from empty JSON object", reflect.TypeOf(cpd).Name())
 	}
