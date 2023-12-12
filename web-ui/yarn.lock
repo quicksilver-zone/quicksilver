@@ -4956,13 +4956,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"cosmjs-types@npm:0.5.0":
-  version: 0.5.0
-  resolution: "cosmjs-types@npm:0.5.0"
-  dependencies:
-    long: ^4.0.0
-    protobufjs: ~6.11.2
-  checksum: caface3c6d1fa1d2a848b13629fc1e1fe9afbd231bbea09a2b81ab3a7585937e139101bda6f1e85bff55ad5f7136356eff08b897d484c7f875de0d5da5b23dc0
+"cosmjs-types@npm:0.9.0, cosmjs-types@npm:^0.9.0":
+  version: 0.9.0
+  resolution: "cosmjs-types@npm:0.9.0"
+  checksum: 9b00d169eca334f27418bb80b39e0cff0196af40b0079e1f85536246059279207b853bdb6ec224ead0a02d15d4b7f6bf16bc096d41c436426aa5f8976ed2b430
   languageName: node
   linkType: hard
 
@@ -4983,13 +4980,6 @@ __metadata:
     long: ^4.0.0
     protobufjs: ~6.11.2
   checksum: 99714ec956d2cb2e521d39896c9c9a24cf9df0d370265c203646ea015b51e86472efc0cb11f67a80f0649d178b0bcff77ac659e67fdfc8b2437cd7a42018577f
-  languageName: node
-  linkType: hard
-
-"cosmjs-types@npm:^0.9.0":
-  version: 0.9.0
-  resolution: "cosmjs-types@npm:0.9.0"
-  checksum: 9b00d169eca334f27418bb80b39e0cff0196af40b0079e1f85536246059279207b853bdb6ec224ead0a02d15d4b7f6bf16bc096d41c436426aa5f8976ed2b430
   languageName: node
   linkType: hard
 
@@ -8346,7 +8336,7 @@ __metadata:
     "@types/react-dom": 18.2.17
     "@types/three": ^0.159.0
     chain-registry: 1.19.0
-    cosmjs-types: 0.5.0
+    cosmjs-types: 0.9.0
     dayjs: ^1.11.10
     eslint: 8.55.0
     eslint-config-next: 14.0.4
