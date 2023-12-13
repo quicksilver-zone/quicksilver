@@ -35,7 +35,8 @@ const (
 	ClaimTypeLiquidToken  ClaimType = 1
 	ClaimTypeOsmosisPool  ClaimType = 2
 	ClaimTypeCrescentPool ClaimType = 3
-	ClaimTypeSifchainPool ClaimType = 4
+	ClaimTypeOsmosisLiquidGamm ClaimType = 4
+	ClaimTypeUmeeCollateral ClaimType = 5
 )
 
 var ClaimType_name = map[int32]string{
@@ -129,11 +130,90 @@ type Proof struct {
 }
 ```
 
+### ProtocolData
+
+```
+// KeyedProtocolData is a keyed representation of protocoldata used in the
+// genesis file.
+message KeyedProtocolData {
+  string key = 1;
+  ProtocolData protocol_data = 3;
+}
+
+// ProtocolData is an arbitrary data type held against a given zone for the
+// determination of claim allocaton.
+message ProtocolData {
+  string type = 1;
+  bytes data = 2 [ (gogoproto.casttype) = "encoding/json.RawMessage" ];
+  bool is_latest = 3;
+}
+
+// ProtocolDataType is an enumerated list of types of protocol data.
+enum ProtocolDataType {
+  option (gogoproto.goproto_enum_prefix) = false;
+
+  // Undefined action (per protobuf spec)
+  ProtocolDataTypeUndefined = 0;
+  ProtocolDataTypeConnection = 1;
+  ProtocolDataTypeOsmosisParams = 2;
+  ProtocolDataTypeLiquidToken = 3;
+  ProtocolDataTypeOsmosisPool = 4;
+  ProtocolDataTypeCrescentPool = 5;
+}
+```
+
+### Events
+
+```
+Message ClaimableEvent {
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
+  
+  string event_module = 0;              // module name doing the claim, “govbyproxy”, “participationrewards”, “airdrop” (types.ModuleName)
+  string event_name = 1;                // “epoch”, “proposal/cosmoshub-4/764”, “airdrop/cosmoshub-4”
+  Map<string, int64> heights = 2;       // heights across each chain for this event - when initialised create with the chainID and 0, for each relevant zone. For all zones, use all zones we have a connectionData for; airdrop proofs will require _latest_ (pool contents, etc.) to be submitted by the user.
+  max_claim_time time.Time = 3;         // when can we claim until? (Proposal end vote time, next epoch boundary, airdrop end)
+}
+```
+
 ## Messages
 
 Description of message types that trigger state transitions;
 
-`x/claimsmanager` does not alter state directly, it rather provides the mechanism for other modules to do so.
+### MsgSubmitClaim
+
+```
+// MsgSubmitClaim represents a message type for submitting a participation
+// claim regarding the given zone (chain).
+message MsgSubmitClaim {
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string user_address = 1 [ json_name = "user_address", (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  string zone = 2 [ json_name = "zone" ];
+  string src_zone = 3 [ json_name = "src_zone" ];
+  quicksilver.claimsmanager.v1.ClaimType claim_type = 4 [ json_name = "claim_type" ];
+  repeated quicksilver.claimsmanager.v1.Proof proofs = 5 [ json_name = "proofs" ];
+  string event = 6 [ json_name = "event" ];
+}
+```
+
+### MsgUpdateProtocolData
+
+// MsgUpdateProtocolData represents a message type for updating a 'latest' style protocol data.
+message MsgUpdateProtocolData {
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string type = 1 [ (gogoproto.moretags) = "yaml:\"type\"" ];
+  string data = 2 [
+    (gogoproto.moretags) = "yaml:\"data\"",
+    (gogoproto.casttype) = "encoding/json.RawMessage"
+  ];
+  string key = 3 [ (gogoproto.moretags) = "yaml:\"key\"" ];
+  quicksilver.claimsmanager.v1.Proof proof = 4 [ json_name = "proof" ];
+  string event = 5 [ (gogoproto.moretags) = "yaml:\"event\"" ];
+}
 
 ## Transactions
 
