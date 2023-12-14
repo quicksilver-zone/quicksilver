@@ -44,10 +44,8 @@ function RotateIcon({ isOpen }: { isOpen: boolean }) {
 
 export const VotingSection = ({ chainName }: { chainName: ChainName }) => {
   const [selectedProposal, setSelectedProposal] = useState<Proposal>();
-  const [selectedPeriodOption, setSelectedPeriodOption] =
-    useState('All Periods');
-  const [selectedProposalOption, setSelectedProposalOption] =
-    useState('All Proposals');
+  const [selectedPeriodOption, setSelectedPeriodOption] = useState('All Periods');
+  const [selectedProposalOption, setSelectedProposalOption] = useState('All Proposals');
 
   const { address } = useChain(chainName);
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -84,14 +82,7 @@ export const VotingSection = ({ chainName }: { chainName: ChainName }) => {
   return (
     <>
       <Box mb={16}>
-        <Flex
-          mb={4}
-          alignContent="center"
-          alignItems="center"
-          justifyContent={'space-between'}
-          w="100%"
-          flexDirection={'row'}
-        >
+        <Flex mb={4} alignContent="center" alignItems="center" justifyContent={'space-between'} w="100%" flexDirection={'row'}>
           <InputGroup>
             <Input
               textAlign="right"

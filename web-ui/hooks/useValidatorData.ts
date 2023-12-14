@@ -20,9 +20,7 @@ export const useValidatorData = (chainName: string) => {
 
   const validatorsQuery = cosmosQuery.staking.v1beta1.useValidators({
     request: {
-      status: cosmos.staking.v1beta1.bondStatusToJSON(
-        cosmos.staking.v1beta1.BondStatus.BOND_STATUS_BONDED,
-      ),
+      status: cosmos.staking.v1beta1.bondStatusToJSON(cosmos.staking.v1beta1.BondStatus.BOND_STATUS_BONDED),
       pagination: {
         key: new Uint8Array(),
         offset: 0n,
@@ -35,9 +33,7 @@ export const useValidatorData = (chainName: string) => {
       queryKey: ['validators', chainName],
       enabled: !!rpcQueryClient?.cosmos?.staking?.v1beta1.validator,
       select: ({ validators }) => {
-        const sorted = validators.sort((a, b) =>
-          new BigNumber(b.tokens).minus(a.tokens).toNumber(),
-        );
+        const sorted = validators.sort((a, b) => new BigNumber(b.tokens).minus(a.tokens).toNumber());
         return parseValidators(sorted);
       },
       onError: (error) => {

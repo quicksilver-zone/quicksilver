@@ -1,35 +1,25 @@
-import {
-  Button,
-  Icon,
-  Stack,
-  Text,
-  useColorModeValue,
-} from '@chakra-ui/react';
+import { Button, Icon, Stack, Text, useColorModeValue } from '@chakra-ui/react';
 import { WalletStatus } from '@cosmos-kit/core';
-import React, {
-  MouseEventHandler,
-  ReactNode,
-} from 'react';
+import { useChain, useWalletClient } from '@cosmos-kit/react';
+import React, { MouseEventHandler, ReactNode, useEffect } from 'react';
 import { FiAlertTriangle } from 'react-icons/fi';
 import { IoWallet } from 'react-icons/io5';
 
 import { ConnectWalletType } from '../types';
 
-export const ConnectWalletButton = ({
-  buttonText,
-  isLoading,
-  isDisabled,
-  icon,
-  onClickConnectBtn,
-}: ConnectWalletType) => {
-  const buttonTextColor = useColorModeValue(
-    'primary.700',
-    'primary.50',
-  );
-  const invertButtonTextColor = useColorModeValue(
-    'primary.50',
-    'primary.700',
-  );
+export const ConnectWalletButton = ({ buttonText, isLoading, isDisabled, icon, onClickConnectBtn }: ConnectWalletType) => {
+  const buttonTextColor = useColorModeValue('primary.700', 'primary.50');
+  const invertButtonTextColor = useColorModeValue('primary.50', 'primary.700');
+  const { openView } = useChain('quicksilver');
+  const { status, client } = useWalletClient();
+
+  useEffect(() => {
+    if (status === 'Done') {
+      client?.enable?.(['cosmoshub-4', 'osmosis-1', 'regen-1', 'sommelier-3', 'stargaze-1']);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status]);
+
   return (
     <Button
       variant="solid"
@@ -38,17 +28,37 @@ export const ConnectWalletButton = ({
       isDisabled={isDisabled}
       bgColor="complimentary.900"
       color={invertButtonTextColor}
-      _hover={{
-        bgColor: 'rgba(0,0,0,0.5)',
-        backdropFilter: 'blur(5px)',
-        color: 'white',
+      sx={{
+        position: 'relative',
+        boxShadow: '0 6px 8px rgba(0, 0, 0, 0.3)',
+        borderRadius: 100,
+        _hover: {
+          boxShadow: '0 0 10px #FF9933, 0 0 15px #FFB266',
+          transform: 'scale(1.1)',
+          '&::before': {
+            content: '""',
+            position: 'absolute',
+            top: '-2px',
+            right: '-2px',
+            bottom: '-2px',
+            left: '-2px',
+            zIndex: -1,
+            borderRadius: 'inherit',
+            background: 'linear-gradient(60deg, #FF8000, #FF9933, #FFB266, #FFD9B3, #FFE6CC)',
+            backgroundSize: '350% 350%',
+            animation: 'animatedgradient 12s linear infinite',
+          },
+        },
+        _active: {
+          transform: 'translateY(4px)',
+        },
+        '@keyframes animatedgradient': {
+          '0%': { backgroundPosition: '0% 50%' },
+          '50%': { backgroundPosition: '100% 50%' },
+          '100%': { backgroundPosition: '0% 50%' },
+        },
       }}
-      _active={{
-        bgColor: 'rgba(0,0,0,0.5)',
-        backdropFilter: 'blur(10px)',
-      }}
-      opacity={1}
-      onClick={onClickConnectBtn}
+      onClick={openView}
     >
       <Icon as={icon ? icon : IoWallet} mr={2} />
       {buttonText ? buttonText : 'Connect'}
@@ -56,34 +66,12 @@ export const ConnectWalletButton = ({
   );
 };
 
-export const Disconnected = ({
-  buttonText,
-  onClick,
-}: {
-  buttonText: string;
-  onClick: MouseEventHandler<HTMLButtonElement>;
-}) => {
-  return (
-    <ConnectWalletButton
-      buttonText={buttonText}
-      onClickConnectBtn={onClick}
-    />
-  );
+export const Disconnected = ({ buttonText, onClick }: { buttonText: string; onClick: MouseEventHandler<HTMLButtonElement> }) => {
+  return <ConnectWalletButton buttonText={buttonText} onClickConnectBtn={onClick} />;
 };
 
-export const Connected = ({
-  buttonText,
-  onClick,
-}: {
-  buttonText: string;
-  onClick: MouseEventHandler<HTMLButtonElement>;
-}) => {
-  return (
-    <ConnectWalletButton
-      buttonText={buttonText}
-      onClickConnectBtn={onClick}
-    />
-  );
+export const Connected = ({ buttonText, onClick }: { buttonText: string; onClick: MouseEventHandler<HTMLButtonElement> }) => {
+  return <ConnectWalletButton buttonText={buttonText} onClickConnectBtn={onClick} />;
 };
 
 export const Connecting = () => {
@@ -99,27 +87,13 @@ export const Rejected = ({
   wordOfWarning?: string;
   onClick: MouseEventHandler<HTMLButtonElement>;
 }) => {
-  const bg = useColorModeValue(
-    'orange.200',
-    'orange.300',
-  );
+  const bg = useColorModeValue('orange.200', 'orange.300');
 
   return (
     <Stack>
-      <ConnectWalletButton
-        buttonText={buttonText}
-        isDisabled={false}
-        onClickConnectBtn={onClick}
-      />
+      <ConnectWalletButton buttonText={buttonText} isDisabled={false} onClickConnectBtn={onClick} />
       {wordOfWarning && (
-        <Stack
-          isInline={true}
-          borderRadius="md"
-          bg={bg}
-          color="blackAlpha.900"
-          p={4}
-          spacing={1}
-        >
+        <Stack isInline={true} borderRadius="md" bg={bg} color="blackAlpha.900" p={4} spacing={1}>
           <Icon as={FiAlertTriangle} mt={1} />
           <Text>
             <Text fontWeight="semibold" as="span">
@@ -142,27 +116,13 @@ export const Error = ({
   wordOfWarning?: string;
   onClick: MouseEventHandler<HTMLButtonElement>;
 }) => {
-  const bg = useColorModeValue(
-    'orange.200',
-    'orange.300',
-  );
+  const bg = useColorModeValue('orange.200', 'orange.300');
 
   return (
     <Stack>
-      <ConnectWalletButton
-        buttonText={buttonText}
-        isDisabled={false}
-        onClickConnectBtn={onClick}
-      />
+      <ConnectWalletButton buttonText={buttonText} isDisabled={false} onClickConnectBtn={onClick} />
       {wordOfWarning && (
-        <Stack
-          isInline={true}
-          borderRadius="md"
-          bg={bg}
-          color="blackAlpha.900"
-          p={4}
-          spacing={1}
-        >
+        <Stack isInline={true} borderRadius="md" bg={bg} color="blackAlpha.900" p={4} spacing={1}>
           <Icon as={FiAlertTriangle} mt={1} />
           <Text>
             <Text fontWeight="semibold" as="span">
@@ -176,20 +136,8 @@ export const Error = ({
   );
 };
 
-export const NotExist = ({
-  buttonText,
-  onClick,
-}: {
-  buttonText: string;
-  onClick: MouseEventHandler<HTMLButtonElement>;
-}) => {
-  return (
-    <ConnectWalletButton
-      buttonText={buttonText}
-      isDisabled={false}
-      onClickConnectBtn={onClick}
-    />
-  );
+export const NotExist = ({ buttonText, onClick }: { buttonText: string; onClick: MouseEventHandler<HTMLButtonElement> }) => {
+  return <ConnectWalletButton buttonText={buttonText} isDisabled={false} onClickConnectBtn={onClick} />;
 };
 
 export const WalletConnectComponent = ({
