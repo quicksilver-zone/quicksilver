@@ -1,22 +1,32 @@
-name: Build Web UI
+name: test build
 on: [push]
 
+# Credit to Joseph Chalabi of Chandra Station
+
 jobs:
-  build:
-    name: Test
+  deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 'latest'
+      - name: Checkout Repository
+        uses: actions/checkout@v2
 
-      - name: Run install for quicksilverjs
-        run: | 
-            cd web-ui
-            yarn install
-            
-      - name: Build production bundle for quicksilverjs
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest # or specify a version
+
+      - name: Install Dependencies
         run: |
-            cd web-ui
-            yarn build 
+          cd web-ui
+          bun install
+
+      - name: Build Project
+        run: |
+          cd web-ui
+          bun run build
+
+      - name: Export Project
+        run: |
+          cd web-ui
+          bun export
+
