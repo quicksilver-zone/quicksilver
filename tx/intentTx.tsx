@@ -42,7 +42,7 @@ const showErrorToast = (toast: ReturnType<typeof useToast>, errorMsg: string) =>
 };
 
 export const intentTx = (
-  getSigningStargateClient: (apiUrl: string) => Promise<SigningStargateClient>,
+  getSigningStargateClient: () => Promise<SigningStargateClient>,
   setResp: (resp: string) => any,
   chainName: string,
   chainId: string,
@@ -58,17 +58,19 @@ export const intentTx = (
   return async (event: React.MouseEvent) => {
     event.preventDefault();
     const apiUrl = 'https://rpc.test.quicksilver.zone';
-    const stargateClient = await getSigningStargateClient(apiUrl);
+    const stargateClient = await getSigningStargateClient();
 
     if (!stargateClient || !address) {
       console.error('Stargate client undefined or address undefined.');
       return;
     }
 
+    const intentString = intents.toString();
+
     const { signalIntent } = quicksilver.interchainstaking.v1.MessageComposer.withTypeUrl;
     const msgSignalIntent = signalIntent({
       chainId: chainId,
-      intents: intents,
+      intents: intentString,
       fromAddress: address,
     });
 
@@ -86,7 +88,6 @@ export const intentTx = (
     };
 
     try {
-      stargateClient.registry.register('/quicksilver.interchainstaking.v1.MsgSignalIntent', MsgSignalIntent);
       const response = await stargateClient.signAndBroadcast(address, [msgSignalIntent], fee);
       setResp(JSON.stringify(response, null, 2));
       setIsSigning(false);

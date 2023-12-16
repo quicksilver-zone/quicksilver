@@ -1,5 +1,5 @@
-import { Box, Image, Text, Accordion, AccordionItem, Flex, AccordionPanel, VStack, HStack, Link } from '@chakra-ui/react';
-import React from 'react';
+import { Box, Image, Text, Accordion, AccordionItem, Flex, AccordionPanel, VStack, HStack, Link, SkeletonCircle } from '@chakra-ui/react';
+import React, { useEffect, useState } from 'react';
 import { BsTrophy, BsCoin, BsClock } from 'react-icons/bs';
 import { RiStockLine } from 'react-icons/ri';
 
@@ -16,8 +16,23 @@ type AssetsAccordianProps = {
 
 export const InfoBox: React.FC<AssetsAccordianProps> = ({ selectedOption, displayApr }) => {
   const { data: zone, isLoading: isZoneLoading, isError: isZoneError } = useZoneQuery(selectedOption.chainId);
-  const redemptionRate = zone?.redemptionRate;
-  const unbondingPeriod = (Number(zone?.unbondingPeriod) / 86400000000000).toString() + ' days';
+
+  const renderRedemptionRate = () => {
+    if (!isZoneLoading && zone) {
+      return ` 1 q${selectedOption.value.toUpperCase()} = ${Number(zone.redemptionRate).toFixed(2)} ${selectedOption.value.toUpperCase()}`;
+    } else {
+      return <SkeletonCircle size="2" startColor="complimentary.900" endColor="complimentary.400" />;
+    }
+  };
+
+  const renderUnbondingPeriod = () => {
+    if (!isZoneLoading && zone) {
+      return (Number(zone?.unbondingPeriod) / 86400000000000).toString() + ' days';
+    } else {
+      return <SkeletonCircle size="2" startColor="complimentary.900" endColor="complimentary.400" />;
+    }
+  };
+
   return (
     <Box zIndex={2} position="relative" backdropFilter="blur(30px)" borderRadius="10px" bgColor="rgba(255,255,255,0.1)" flex="2" p={5}>
       {/* <Image
@@ -85,7 +100,7 @@ export const InfoBox: React.FC<AssetsAccordianProps> = ({ selectedOption, displa
                 </Text>
               </Flex>
               <Text pr={2} color="complimentary.900">
-                {unbondingPeriod}
+                {renderUnbondingPeriod()}
               </Text>
             </Flex>
           </h2>
@@ -116,8 +131,7 @@ export const InfoBox: React.FC<AssetsAccordianProps> = ({ selectedOption, displa
                 </Text>
               </Flex>
               <Text pr={2} color="complimentary.900">
-                1 q{selectedOption.value.toUpperCase()} = {Number(redemptionRate).toFixed(2).toString()}{' '}
-                {selectedOption.value.toUpperCase()}
+                {renderRedemptionRate()}
               </Text>
             </Flex>
           </h2>

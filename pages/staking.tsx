@@ -30,6 +30,14 @@ const DynamicStakingBox = dynamic(() => Promise.resolve(StakingBox), {
   ssr: false,
 });
 
+const DynamicInfoBox = dynamic(() => Promise.resolve(InfoBox), {
+  ssr: false,
+});
+
+const DynamicAssetBox = dynamic(() => Promise.resolve(AssetsAccordian), {
+  ssr: false,
+});
+
 export default function Staking() {
   const [selectedNetwork, setSelectedNetwork] = useState(networks[0]);
   const [isModalOpen, setModalOpen] = useState(false);
@@ -54,7 +62,7 @@ export default function Staking() {
         <link rel="icon" href="/quicksilver-app-v2/img/favicon.png" />
       </Head>
       <SlideFade offsetY={'200px'} in={true} style={{ width: '100%' }}>
-        <Container zIndex={2} position="relative" maxW="container.lg" maxH="80vh" h="80vh" mt={{ base: '50px', md: '0px' }}>
+        <Container top={20} zIndex={2} position="relative" maxW="container.lg" maxH="80vh" h="80vh" mt={{ base: '50px', md: '0px' }}>
           {/* <Image
             alt={''}
             src="/quicksilver-app-v2/img/metalmisc2.png"
@@ -105,11 +113,11 @@ export default function Staking() {
               {/* Right Box */}
               <Flex flex="1" direction="column">
                 {/* Top Half (2/3) */}
-                <InfoBox selectedOption={selectedNetwork} displayApr={displayApr} />
+                <DynamicInfoBox selectedOption={selectedNetwork} displayApr={displayApr} />
 
                 <Box h="10px" />
                 {/* Bottom Half (1/3) */}
-                <AssetsAccordian selectedOption={selectedNetwork} balance={balance} qBalance={qBalance} />
+                <DynamicAssetBox selectedOption={selectedNetwork} balance={balance} qBalance={qBalance} />
               </Flex>
             </Flex>
           </Flex>

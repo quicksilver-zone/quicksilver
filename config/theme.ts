@@ -11,7 +11,7 @@ const defaultThemeObject = {
         background: props.colorMode === 'dark' ? '#000000' : '#000000',
         bgGradient:
           props.colorMode === 'dark'
-            ? 'linear(to-r, #000000, #808080)'
+            ? 'linear(to-r, #000000, #000000)'
             : 'linear(to-l, #000000, #000000)',
         color:
           props.colorMode === 'dark' ? 'rgb(255, 255, 255)' : 'rgb(0, 0, 0)',

@@ -12,7 +12,7 @@ export const useGrpcQueryClient = (chainName: string) => {
 
   // Custom logic for setting rpcEndpoint based on the chain name
   if (chainName === 'quicksilver') {
-    grpcEndpoint = 'https://lcd.quicksilver.zone';
+    grpcEndpoint = 'http://135.181.140.225:1317';
   } else if (chainName === 'cosmoshub') {
     grpcEndpoint = 'https://rest.sentry-01.theta-testnet.polypore.xyz';
   } else {

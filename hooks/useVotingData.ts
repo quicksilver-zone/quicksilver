@@ -7,6 +7,7 @@ import {
   useState,
 } from 'react';
 
+import { useGrpcQueryClient } from './useGrpcQueryClient';
 import { useQueryHooks } from './useQueryHooks2';
 import { useRpcQueryClient } from './useRpcQueryClient2';
 import {
@@ -40,8 +41,8 @@ export const useVotingData = (
     useState(false);
 
   const { address } = useChain(chainName);
-  const { rpcQueryClient } =
-    useRpcQueryClient(chainName);
+  const { grpcQueryClient } =
+    useGrpcQueryClient(chainName);
   const { cosmosQuery, isReady, isFetching } =
     useQueryHooks(chainName);
 
@@ -107,12 +108,12 @@ export const useVotingData = (
           address,
         ],
         queryFn: () =>
-          rpcQueryClient?.cosmos.gov.v1.vote({
+        grpcQueryClient?.cosmos.gov.v1.vote({
             proposalId,
             voter: address || '',
           }),
         enabled:
-          !!rpcQueryClient &&
+          !!grpcQueryClient &&
           !!address &&
           !!votedProposalsQuery.data,
         keepPreviousData: true,

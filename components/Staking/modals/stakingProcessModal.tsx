@@ -251,7 +251,7 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
       <ModalOverlay />
       <ChakraModalContent h="48%" maxH={'100%'}>
         <ModalBody borderRadius={4} h="48%" maxH={'100%'}>
-          <ModalCloseButton color="white" />
+          <ModalCloseButton zIndex={1000} color="white" />
           <HStack position={'relative'} h="100%" spacing="48px" align="stretch">
             {/* Left Section */}
             <Flex flexDirection="column" justifyContent="space-between" width="40%" p={4} bg="#1E1C19" height="100%">

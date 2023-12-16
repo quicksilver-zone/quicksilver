@@ -1,4 +1,4 @@
-import { Box, Image, Text, Accordion, AccordionItem, Flex, AccordionButton } from '@chakra-ui/react';
+import { Box, Image, Text, Accordion, AccordionItem, Flex, AccordionButton, SkeletonCircle } from '@chakra-ui/react';
 import React from 'react';
 
 import { shiftDigits } from '@/utils';
@@ -19,6 +19,14 @@ export const AssetsAccordian: React.FC<AssetsAccordianProps> = ({ selectedOption
   const qAssets = shiftDigits(qBalance, -6);
   const qAssetsDisplay = qAssets.includes('.') ? qAssets.substring(0, qAssets.indexOf('.') + 3) : qAssets;
   const balanceDisplay = balance.includes('.') ? balance.substring(0, balance.indexOf('.') + 3) : balance;
+
+  const renderQAssets = () => {
+    if (qBalance) {
+      return qAssetsDisplay;
+    } else {
+      return <SkeletonCircle size="2" startColor="complimentary.900" endColor="complimentary.400" />;
+    }
+  };
 
   return (
     <Box position="relative" backdropFilter="blur(10px)" zIndex={10} borderRadius="10px" bgColor="rgba(255,255,255,0.1)" flex="1" p={5}>
@@ -55,7 +63,7 @@ export const AssetsAccordian: React.FC<AssetsAccordianProps> = ({ selectedOption
                 </Text>
               </Flex>
               <Text pr={2} color="complimentary.900">
-                {qAssetsDisplay}
+                {renderQAssets()}
               </Text>
               <Text pr={2} color="complimentary.900">
                 q{selectedOption.value.toUpperCase()}

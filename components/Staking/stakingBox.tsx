@@ -149,6 +149,8 @@ export const StakingBox = ({ selectedOption, isModalOpen, setModalOpen, setBalan
     }
   };
 
+  const isValidNumber = !isNaN(Number(qAssetsDisplay)) && qAssetsDisplay !== '';
+
   return (
     <Box position="relative" backdropFilter="blur(50px)" bgColor="rgba(255,255,255,0.1)" flex="1" borderRadius="10px" p={5}>
       <Tabs isFitted variant="enclosed" onChange={(index) => setActiveTabIndex(index)}>
