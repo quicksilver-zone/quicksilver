@@ -2,7 +2,7 @@ package types
 
 import (
 	"errors"
-	fmt "fmt"
+	"fmt"
 	"sort"
 
 	sdkmath "cosmossdk.io/math"
@@ -86,16 +86,22 @@ func (vi ValidatorIntents) GetForValoper(valoper string) (*ValidatorIntent, bool
 }
 
 func (vi ValidatorIntents) SetForValoper(valoper string, intent *ValidatorIntent) ValidatorIntents {
-	for idx, i := range vi {
-		if i.ValoperAddress == valoper {
-			vi[idx] = vi[len(vi)-1]
-			vi = vi[:len(vi)-1]
+	idx := -1 // the index of the valoper if found
+	for i, v := range vi {
+		// Search for the valoper.
+		if v.ValoperAddress == valoper {
+			idx = i
 			break
 		}
 	}
-	vi = append(vi, intent)
 
-	return vi.Sort()
+	if idx >= 0 { // We found the valoper so just replace it
+		vi[idx] = intent
+	} else {
+		vi = append(vi, intent)
+		return vi.Sort()
+	}
+	return vi
 }
 
 func (vi ValidatorIntents) MustGetForValoper(valoper string) *ValidatorIntent {

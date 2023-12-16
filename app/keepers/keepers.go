@@ -79,6 +79,7 @@ import (
 	"github.com/quicksilver-zone/quicksilver/x/participationrewards"
 	participationrewardskeeper "github.com/quicksilver-zone/quicksilver/x/participationrewards/keeper"
 	participationrewardstypes "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
+	supplykeeper "github.com/quicksilver-zone/quicksilver/x/supply/keeper"
 	tokenfactorykeeper "github.com/quicksilver-zone/quicksilver/x/tokenfactory/keeper"
 	tokenfactorytypes "github.com/quicksilver-zone/quicksilver/x/tokenfactory/types"
 )
@@ -118,6 +119,7 @@ type AppKeepers struct {
 	ParticipationRewardsKeeper *participationrewardskeeper.Keeper
 	AirdropKeeper              *airdropkeeper.Keeper
 	TokenFactoryKeeper         tokenfactorykeeper.Keeper
+	SupplyKeeper               supplykeeper.Keeper
 
 	// 		IBC keepers
 	IBCKeeper           *ibckeeper.Keeper // IBC Keeper must be a pointer in the app, so we can SetRouter on it correctly
@@ -343,6 +345,14 @@ func (appKeepers *AppKeepers) InitKeepers(
 		scopedTransferKeeper,
 	)
 
+	appKeepers.SupplyKeeper = supplykeeper.NewKeeper(
+		appCodec,
+		appKeepers.keys[icacontrollertypes.StoreKey],
+		appKeepers.AccountKeeper,
+		appKeepers.BankKeeper,
+		appKeepers.StakingKeeper,
+		utils.Keys[[]string](maccPerms),
+	)
 	appKeepers.PacketForwardKeeper.SetTransferKeeper(appKeepers.TransferKeeper)
 	appKeepers.TransferModule = transfer.NewAppModule(appKeepers.TransferKeeper)
 	appKeepers.PacketForwardModule = packetforward.NewAppModule(appKeepers.PacketForwardKeeper)

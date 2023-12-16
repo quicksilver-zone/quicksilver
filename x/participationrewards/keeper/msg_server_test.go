@@ -14,7 +14,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/quicksilver-zone/quicksilver/app"
-	lpfarm "github.com/quicksilver-zone/quicksilver/third-party-chains/crescent-types/lpfarm"
+	lpfarm "github.com/quicksilver-zone/quicksilver/third-party-chains/crescent-types/lpfarm" //nolint:revive
 	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/lockup"
 	umeetypes "github.com/quicksilver-zone/quicksilver/third-party-chains/umee-types/leverage/types"
 	"github.com/quicksilver-zone/quicksilver/utils"

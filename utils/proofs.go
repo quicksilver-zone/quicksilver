@@ -33,7 +33,10 @@ func ValidateProofOps(
 	if proofOps == nil {
 		return errors.New("unable to validate proof. No proof submitted")
 	}
-	connection, _ := ibcKeeper.ConnectionKeeper.GetConnection(ctx, connectionID)
+	connection, ok := ibcKeeper.ConnectionKeeper.GetConnection(ctx, connectionID)
+	if !ok {
+		return errors.New("unable to find connection")
+	}
 
 	csHeight := clienttypes.NewHeight(clienttypes.ParseChainID(chainID), uint64(height)+1)
 	consensusState, found := ibcKeeper.ClientKeeper.GetClientConsensusState(ctx, connection.ClientId, csHeight)

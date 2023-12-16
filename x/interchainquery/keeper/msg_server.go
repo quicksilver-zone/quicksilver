@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"sort"
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -63,15 +62,9 @@ func (k msgServer) SubmitQueryResponse(goCtx context.Context, msg *types.MsgSubm
 	noDelete := false
 	// execute registered callbacks.
 
-	keys := make([]string, 0)
-	for k := range k.callbacks {
-		keys = append(keys, k)
-	}
-
-	sort.Strings(keys)
 	callbackExecuted := false
 
-	for _, key := range keys {
+	for _, key := range utils.Keys[types.QueryCallbacks](k.callbacks) {
 		module := k.callbacks[key]
 		if module.Has(q.CallbackId) {
 			err := module.Call(ctx, q.CallbackId, msg.Result, q)

@@ -2,7 +2,7 @@ run:
   tests: true
   #   # timeout for analysis, e.g. 30s, 5m, default is 1m
   timeout: 10m
-  skip-dirs: 
+  skip-dirs:
     - third-party-chains
 
 linters:
@@ -28,7 +28,7 @@ linters:
     - typecheck
     - tenv
     - unconvert
-    - unparam     # Prefer unparam over revive's unused param. It is more thorough in its checking.
+    - unparam # Prefer unparam over revive's unused param. It is more thorough in its checking.
     - unused
     - misspell
 
@@ -67,6 +67,8 @@ linters-settings:
       - name: if-return
         disabled: true
       - name: max-public-structs
+        disabled: true
+      - name: unchecked-type-assertion
         disabled: true
       - name: import-shadowing
         disabled: true
@@ -110,7 +112,7 @@ linters-settings:
         disabled: true
       - name: defer
         disabled: true
-      - name: unused-parameter       # Disabled in favour of unparam.
+      - name: unused-parameter # Disabled in favour of unparam.
         disabled: true
       - name: unhandled-error # enable later, currently covered by errcheck
         disabled: true
@@ -121,5 +123,3 @@ linters-settings:
           - 'fmt.Print'
           - 'fmt.Println'
           - 'fmt.Fprintf'
-
-

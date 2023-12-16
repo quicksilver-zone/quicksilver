@@ -177,7 +177,7 @@ func (k *Keeper) DistributeToUsersFromModule(ctx sdk.Context, userAllocations []
 	k.Logger(ctx).Info("distribute to users from module", "allocations", userAllocations)
 
 	for _, ua := range userAllocations {
-		if ua.Amount.IsZero() {
+		if !ua.Amount.IsPositive() {
 			continue
 		}
 
@@ -209,7 +209,7 @@ func (k *Keeper) DistributeToUsersFromAddress(ctx sdk.Context, userAllocations [
 	}
 
 	for _, ua := range userAllocations {
-		if ua.Amount.IsZero() {
+		if !ua.Amount.IsPositive() {
 			continue
 		}
 
