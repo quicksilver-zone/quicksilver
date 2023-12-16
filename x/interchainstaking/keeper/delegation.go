@@ -194,7 +194,7 @@ func (k *Keeper) IterateDelegatorDelegations(ctx sdk.Context, chainID string, de
 func (*Keeper) PrepareDelegationMessagesForCoins(zone *types.Zone, allocations map[string]sdkmath.Int) []sdk.Msg {
 	var msgs []sdk.Msg
 	for _, valoper := range utils.Keys(allocations) {
-		if !allocations[valoper].IsZero() {
+		if allocations[valoper].IsPositive() {
 			msgs = append(msgs, &stakingtypes.MsgDelegate{DelegatorAddress: zone.DelegationAddress.Address, ValidatorAddress: valoper, Amount: sdk.NewCoin(zone.BaseDenom, allocations[valoper])})
 		}
 	}
@@ -204,7 +204,7 @@ func (*Keeper) PrepareDelegationMessagesForCoins(zone *types.Zone, allocations m
 func (*Keeper) PrepareDelegationMessagesForShares(zone *types.Zone, coins sdk.Coins) []sdk.Msg {
 	var msgs []sdk.Msg
 	for _, coin := range coins.Sort() {
-		if !coin.IsZero() {
+		if coin.IsPositive() {
 			msgs = append(msgs, &lsmstakingtypes.MsgRedeemTokensForShares{DelegatorAddress: zone.DelegationAddress.Address, Amount: coin})
 		}
 	}

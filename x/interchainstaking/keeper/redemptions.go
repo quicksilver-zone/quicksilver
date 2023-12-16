@@ -142,114 +142,149 @@ func (k *Keeper) GetUnlockedTokensForZone(ctx sdk.Context, zone *types.Zone) (ma
 // a single unbond transaction per delegation.
 func (k *Keeper) HandleQueuedUnbondings(ctx sdk.Context, zone *types.Zone, epoch int64) error {
 	// out here will only ever be in native bond denom
-	valOutCoinsMap := make(map[string]sdk.Coin, 0)
-	txHashes := make(map[string][]string, 0)
+	coinsOutPerValidator := make(map[string]sdk.Coin, 0)
+	// list of withdrawal tx hashes per validator
+	txHashesPerValidator := make(map[string][]string, 0)
 
+	// total amount coins to withdraw
 	totalToWithdraw := sdk.NewCoin(zone.BaseDenom, sdk.ZeroInt())
-	txDistrsMap := make(map[string][]*types.Distribution, 0)
-	txCoinMap := make(map[string]sdk.Coin, 0)
+
+	// map of distributions per withdrawal
+	distributionsPerWithdrawal := make(map[string][]*types.Distribution, 0)
+
+	// map of coins per withdrawal
+	amountToWithdrawPerWithdrawal := make(map[string]sdk.Coin, 0)
+
+	// find total number of unlockedTokens (not locked by previous redelegations) for the given zone
 	_, totalAvailable, err := k.GetUnlockedTokensForZone(ctx, zone)
 	if err != nil {
 		return err
 	}
 
+	// iterate all withdrawal records for the zone in the QUEUED state.
 	k.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, types.WithdrawStatusQueued, func(idx int64, withdrawal types.WithdrawalRecord) bool {
 		k.Logger(ctx).Info("handling queued withdrawal request", "from", withdrawal.Delegator, "to", withdrawal.Recipient, "amount", withdrawal.Amount)
-		if len(withdrawal.Amount) == 0 {
+		if len(withdrawal.Amount) != 1 { // native unbonding can only unbond the baseDenom
 			k.Logger(ctx).Error("withdrawal %s has no amount set; cannot process...", withdrawal.Txhash)
 			return false
 		}
+
+		if !withdrawal.Amount[0].IsPositive() {
+			k.Logger(ctx).Error("withdrawal %s attempting to withdraw non-positive amount; cannot process...", withdrawal.Txhash)
+			return false
+		}
+
+		// native unbonding can only unbond the baseDenom
+		if withdrawal.Amount[0].Denom != zone.BaseDenom {
+			k.Logger(ctx).Error("withdrawal %s attempting to withdraw invalid amount; cannot process...", withdrawal.Txhash)
+			return false
+		}
+
+		// check whether the running total of withdrawals can be satisfied by the available unlocked tokens.
+		// if not return true to stop iterating and return all records up until now.
 		if totalAvailable.LT(totalToWithdraw.Amount.Add(withdrawal.Amount[0].Amount)) {
 			k.Logger(ctx).Error("unable to satisfy further unbondings this epoch")
 			// do not process this or subsequent withdrawals this epoch.
 			return true
 		}
+
+		// increment total to withdraw by the withdrawal amount
 		totalToWithdraw = totalToWithdraw.Add(withdrawal.Amount[0])
 
-		txCoinMap[withdrawal.Txhash] = withdrawal.Amount[0]
-		txDistrsMap[withdrawal.Txhash] = make([]*types.Distribution, 0)
+		// set per withdrawal amount
+		amountToWithdrawPerWithdrawal[withdrawal.Txhash] = withdrawal.Amount[0]
+
+		// initialise empty distribution slice per withdrawal
+		distributionsPerWithdrawal[withdrawal.Txhash] = make([]*types.Distribution, 0)
 		return false
 	})
 
 	// no undelegations to attempt
-	if totalToWithdraw.IsZero() {
+	if len(amountToWithdrawPerWithdrawal) == 0 {
 		return nil
 	}
 
-	allocationsMap, err := k.DeterminePlanForUndelegation(ctx, zone, sdk.NewCoins(totalToWithdraw))
+	tokensAllocatedForWithdrawalPerValidator, err := k.DeterminePlanForUndelegation(ctx, zone, sdk.NewCoins(totalToWithdraw))
 	if err != nil {
 		return err
 	}
-	valopers := utils.Keys(allocationsMap)
+	valopers := utils.Keys(tokensAllocatedForWithdrawalPerValidator)
+	// set current source validator to zero.
 	vidx := 0
 	v := valopers[vidx]
 WITHDRAWAL:
-	for _, hash := range utils.Keys(txCoinMap) {
+	for _, hash := range utils.Keys(amountToWithdrawPerWithdrawal) {
 		for {
-			if txCoinMap[hash].Amount.IsZero() {
+			// if amountToWithdrawPerWithdrawal has been satisified, then continue.
+			if amountToWithdrawPerWithdrawal[hash].Amount.IsZero() {
 				continue WITHDRAWAL
 			}
-			if allocationsMap[v].GT(txCoinMap[hash].Amount) {
-				allocationsMap[v] = allocationsMap[v].Sub(txCoinMap[hash].Amount)
-				txDistrsMap[hash] = append(txDistrsMap[hash], &types.Distribution{Valoper: v, Amount: txCoinMap[hash].Amount.Uint64()})
-				existing, found := valOutCoinsMap[v]
+
+			// if current selected validator allocation for withdrawal can satisfy this withdrawal in totality...
+			if tokensAllocatedForWithdrawalPerValidator[v].GTE(amountToWithdrawPerWithdrawal[hash].Amount) {
+				// sub current withdrawal amount from allocation.
+				tokensAllocatedForWithdrawalPerValidator[v] = tokensAllocatedForWithdrawalPerValidator[v].Sub(amountToWithdrawPerWithdrawal[hash].Amount)
+				// create a distribution from this validator for the withdrawal
+				distributionsPerWithdrawal[hash] = append(distributionsPerWithdrawal[hash], &types.Distribution{Valoper: v, Amount: amountToWithdrawPerWithdrawal[hash].Amount.Uint64()})
+
+				// add the amount and hash to per validator records
+				existing, found := coinsOutPerValidator[v]
 				if !found {
-					valOutCoinsMap[v] = txCoinMap[hash]
-					txHashes[v] = []string{hash}
+					coinsOutPerValidator[v] = amountToWithdrawPerWithdrawal[hash]
+					txHashesPerValidator[v] = []string{hash}
 
 				} else {
-					valOutCoinsMap[v] = existing.Add(txCoinMap[hash])
-					txHashes[v] = append(txHashes[v], hash)
+					coinsOutPerValidator[v] = existing.Add(amountToWithdrawPerWithdrawal[hash])
+					txHashesPerValidator[v] = append(txHashesPerValidator[v], hash)
 				}
-				txCoinMap[hash] = sdk.NewCoin(txCoinMap[hash].Denom, sdk.ZeroInt())
+
+				// set withdrawal amount to zero, and continue to outer loop (next withdrawal record).
+				amountToWithdrawPerWithdrawal[hash] = sdk.NewCoin(amountToWithdrawPerWithdrawal[hash].Denom, sdk.ZeroInt())
 				continue WITHDRAWAL
 			}
 
-			txDistrsMap[hash] = append(txDistrsMap[hash], &types.Distribution{Valoper: v, Amount: allocationsMap[v].Uint64()})
-			txCoinMap[hash] = sdk.NewCoin(txCoinMap[hash].Denom, txCoinMap[hash].Amount.Sub(allocationsMap[v]))
-			existing, found := valOutCoinsMap[v]
+			// otherwise (current validator allocation cannot wholly satisfy current record), allocate entire allocation to this withdrawal.
+			distributionsPerWithdrawal[hash] = append(distributionsPerWithdrawal[hash], &types.Distribution{Valoper: v, Amount: tokensAllocatedForWithdrawalPerValidator[v].Uint64()})
+			amountToWithdrawPerWithdrawal[hash] = sdk.NewCoin(amountToWithdrawPerWithdrawal[hash].Denom, amountToWithdrawPerWithdrawal[hash].Amount.Sub(tokensAllocatedForWithdrawalPerValidator[v]))
+			existing, found := coinsOutPerValidator[v]
 			if !found {
-				valOutCoinsMap[v] = sdk.NewCoin(zone.BaseDenom, allocationsMap[v])
-				txHashes[v] = []string{hash}
-
+				coinsOutPerValidator[v] = sdk.NewCoin(zone.BaseDenom, tokensAllocatedForWithdrawalPerValidator[v])
+				txHashesPerValidator[v] = []string{hash}
 			} else {
-				valOutCoinsMap[v] = existing.Add(sdk.NewCoin(zone.BaseDenom, allocationsMap[v]))
-				txHashes[v] = append(txHashes[v], hash)
+				coinsOutPerValidator[v] = existing.Add(sdk.NewCoin(zone.BaseDenom, tokensAllocatedForWithdrawalPerValidator[v]))
+				txHashesPerValidator[v] = append(txHashesPerValidator[v], hash)
 			}
 
-			allocationsMap[v] = sdk.ZeroInt()
-			if allocationsMap[v].IsZero() {
-				if len(valopers) > vidx+1 {
-					vidx++
-					v = valopers[vidx]
-				} else {
-					if !txCoinMap[hash].Amount.IsZero() {
-						return fmt.Errorf("unable to satisfy unbonding")
-					}
-					continue WITHDRAWAL
-				}
+			// set current val to zero.
+			tokensAllocatedForWithdrawalPerValidator[v] = sdk.ZeroInt()
+			// next validator
+			if len(valopers) > vidx+1 {
+				vidx++
+				v = valopers[vidx]
+			} else if !amountToWithdrawPerWithdrawal[hash].Amount.IsZero() {
+				return fmt.Errorf("unable to satisfy unbonding")
 			}
 		}
 	}
 
-	for _, hash := range utils.Keys(txDistrsMap) {
+	for _, hash := range utils.Keys(distributionsPerWithdrawal) {
 		record, found := k.GetWithdrawalRecord(ctx, zone.ChainId, hash, types.WithdrawStatusQueued)
 		if !found {
 			return errors.New("unable to find withdrawal record")
 		}
-		record.Distribution = txDistrsMap[hash]
+		record.Distribution = distributionsPerWithdrawal[hash]
 		k.UpdateWithdrawalRecordStatus(ctx, &record, types.WithdrawStatusUnbond)
 	}
 
-	if len(txHashes) == 0 {
+	if len(txHashesPerValidator) == 0 {
 		// no records to handle.
 		return nil
 	}
 
 	var msgs []sdk.Msg
-	for _, valoper := range utils.Keys(valOutCoinsMap) {
-		if !valOutCoinsMap[valoper].Amount.IsZero() {
-			msgs = append(msgs, &stakingtypes.MsgUndelegate{DelegatorAddress: zone.DelegationAddress.Address, ValidatorAddress: valoper, Amount: valOutCoinsMap[valoper]})
+	for _, valoper := range utils.Keys(coinsOutPerValidator) {
+		if !coinsOutPerValidator[valoper].Amount.IsZero() {
+			msgs = append(msgs, &stakingtypes.MsgUndelegate{DelegatorAddress: zone.DelegationAddress.Address, ValidatorAddress: valoper, Amount: coinsOutPerValidator[valoper]})
 		}
 	}
 
@@ -260,10 +295,10 @@ WITHDRAWAL:
 		return err
 	}
 
-	for _, valoper := range utils.Keys(valOutCoinsMap) {
-		if !valOutCoinsMap[valoper].Amount.IsZero() {
-			sort.Strings(txHashes[valoper])
-			k.SetUnbondingRecord(ctx, types.UnbondingRecord{ChainId: zone.ChainId, EpochNumber: epoch, Validator: valoper, RelatedTxhash: txHashes[valoper]})
+	for _, valoper := range utils.Keys(coinsOutPerValidator) {
+		if !coinsOutPerValidator[valoper].Amount.IsZero() {
+			sort.Strings(txHashesPerValidator[valoper])
+			k.SetUnbondingRecord(ctx, types.UnbondingRecord{ChainId: zone.ChainId, EpochNumber: epoch, Validator: valoper, RelatedTxhash: txHashesPerValidator[valoper]})
 		}
 	}
 

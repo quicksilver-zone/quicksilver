@@ -1,0 +1,20 @@
+syntax = "proto3";
+package quicksilver.supply.v1;
+
+import "google/api/annotations.proto";
+
+option go_package = "github.com/ingenuity-build/quicksilver/x/supply/types";
+
+// Query defines the gRPC querier service.
+service Query {
+  // Supply provide running epochInfos
+  rpc Supply(QuerySupplyRequest) returns (QuerySupplyResponse) {
+    option (google.api.http).get = "/quicksilver/supply/v1/supply";
+  }
+}
+
+message QuerySupplyRequest {}
+message QuerySupplyResponse {
+  uint64 supply = 1;
+  uint64 circulating_supply = 2;
+}

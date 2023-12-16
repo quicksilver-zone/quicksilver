@@ -9,6 +9,7 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	"github.com/quicksilver-zone/quicksilver/app/upgrades"
+	supplytypes "github.com/quicksilver-zone/quicksilver/x/supply/types"
 )
 
 func (app *Quicksilver) setUpgradeHandlers() {
@@ -50,6 +51,11 @@ func (app *Quicksilver) setUpgradeStoreLoaders() {
 
 		storeUpgrades = &storetypes.StoreUpgrades{
 			Added: []string{packetforwardtypes.ModuleName},
+		}
+
+	case upgrades.V010405rc0UpgradeName:
+		storeUpgrades = &storetypes.StoreUpgrades{
+			Added: []string{supplytypes.ModuleName},
 		}
 	default:
 		// no-op
