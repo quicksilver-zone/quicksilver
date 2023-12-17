@@ -4,8 +4,10 @@ import Head from 'next/head';
 import { useState } from 'react';
 
 import { NetworkSelect } from '@/components';
+import AssetsGrid from '@/components/Assets/assetsGrid';
 import StakingIntent from '@/components/Assets/intents';
 import MyPortfolio from '@/components/Assets/portfolio';
+import QuickBox from '@/components/Assets/quickbox';
 import UnbondingAssetsTable from '@/components/Assets/unbondingTable';
 import { useIntentQuery } from '@/hooks/useQueries';
 
@@ -29,55 +31,18 @@ export default function Home() {
             <Flex
               position="relative"
               backdropFilter="blur(50px)"
-              bgColor="rgba(255,255,255,0.1)" // Slightly more visible background
-              borderRadius="lg" // Using standard size
-              p={6} // Slightly more padding
-              w="sm" // A bit wider for better layout
-              h="sm" // A bit taller for better layout
+              bgColor="rgba(255,255,255,0.1)"
+              borderRadius="10px"
+              p={5}
+              w="md"
+              h="sm"
               flexDir="column"
-              justifyContent="space-around" // Better distribution of space
+              justifyContent="space-around"
               alignItems="center"
             >
-              <Flex
-                justifyContent="center"
-                alignItems="center"
-                flexDir="row"
-                gap={3} // Slightly more gap for visual spacing
-              >
-                <Box minW="10px" minH="10px" borderRadius="full" bgColor="grey" />
-                <Text fontSize="2xl" fontWeight="bold" textAlign="center">
-                  QCK
-                </Text>
-              </Flex>
-              <Flex direction="column" align="stretch" gap={2}>
-                <HStack justifyContent="center">
-                  <Text fontSize="md" fontWeight="normal">
-                    Staking APY:
-                  </Text>
-                  <Text fontSize="md" fontWeight="semibold">
-                    12.37%
-                  </Text>
-                </HStack>
-                <HStack justifyContent="center">
-                  <Text fontSize="md" fontWeight="normal">
-                    Quicksilver Balance:
-                  </Text>
-                  <Text fontSize="md" fontWeight="semibold">
-                    10.123456
-                  </Text>
-                </HStack>
-              </Flex>
-              <ButtonGroup
-                spacing={3} // Consistent spacing
-              >
-                <Button size="md" w="full">
-                  Withdraw
-                </Button>
-                <Button size="md" w="full">
-                  Deposit
-                </Button>
-              </ButtonGroup>
+              <QuickBox />
             </Flex>
+            {/* Portfolio box */}
             <Flex
               alignContent={'center'}
               position="relative"
@@ -85,11 +50,12 @@ export default function Home() {
               bgColor="rgba(255,255,255,0.1)"
               borderRadius="10px"
               p={5}
-              w="sm"
+              w="lg"
               h="sm"
             >
               <MyPortfolio />
             </Flex>
+            {/* Intent box */}
             <Flex
               alignContent={'center'}
               position="relative"
@@ -97,14 +63,21 @@ export default function Home() {
               bgColor="rgba(255,255,255,0.1)"
               borderRadius="10px"
               p={5}
-              w="sm"
+              w="lg"
               h="sm"
             >
               <StakingIntent />
             </Flex>
           </Flex>
           <Spacer />
-          <UnbondingAssetsTable />
+          {/* Assets Grid */}
+          <AssetsGrid />
+          <Spacer />
+          {/* Unbonding Table */}
+          <Box mt="20px">
+            <UnbondingAssetsTable />
+          </Box>
+          <Box h="40px"></Box>
         </Container>
       </SlideFade>
     </>
