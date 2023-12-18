@@ -1,18 +1,32 @@
 import { ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons';
-import { Box, Flex, Text, Button, IconButton, VStack, Image, Heading } from '@chakra-ui/react';
+import { Box, Flex, Text, Button, IconButton, VStack, Image, Heading, SlideFade } from '@chakra-ui/react';
+import { color } from 'framer-motion';
+import { useState } from 'react';
 
-const StakingIntent = () => {
+import { useIntentQuery } from '@/hooks/useQueries';
+
+export interface StakingIntentProps {
+  address: string;
+}
+
+const StakingIntent: React.FC<StakingIntentProps> = ({ address }) => {
+  const { intent, isLoading, isError } = useIntentQuery('cosmoshub', address ?? '');
+
   const validators = [
     { name: 'Validator 1', logo: '/validator1.png', percentage: '30%' },
     { name: 'Validator 2', logo: '/validator2.png', percentage: '40%' },
   ];
 
-  const chains = ['Cosmos', 'Osmosis'];
-  let currentChainIndex = 0;
+  const chains = ['Cosmos', 'Osmosis', 'Stargaze', 'Regen', 'Sommelier'];
+  const [currentChainIndex, setCurrentChainIndex] = useState(0);
 
-  const handleLeftArrowClick = () => {};
+  const handleLeftArrowClick = () => {
+    setCurrentChainIndex((prevIndex) => (prevIndex === 0 ? chains.length - 1 : prevIndex - 1));
+  };
 
-  const handleRightArrowClick = () => {};
+  const handleRightArrowClick = () => {
+    setCurrentChainIndex((prevIndex) => (prevIndex === chains.length - 1 ? 0 : prevIndex + 1));
+  };
 
   return (
     <Box w="full" color="white" borderRadius="lg" p={4} gap={6}>
@@ -28,11 +42,33 @@ const StakingIntent = () => {
         </Flex>
 
         <Flex borderBottom="1px" borderBottomColor="complimentary.900" alignItems="center" justifyContent="space-between">
-          <IconButton variant="ghost" aria-label="Previous chain" icon={<ChevronLeftIcon />} onClick={handleLeftArrowClick} />
-          <Text fontSize="lg" fontWeight="semibold">
-            {chains[currentChainIndex]}
-          </Text>
-          <IconButton variant="ghost" aria-label="Next chain" icon={<ChevronRightIcon />} onClick={handleRightArrowClick} />
+          <IconButton
+            variant="ghost"
+            _hover={{ bgColor: 'transparent', color: 'complimentary.900' }}
+            _active={{
+              transform: 'scale(0.75)',
+              color: 'complimentary.800',
+            }}
+            aria-label="Previous chain"
+            icon={<ChevronLeftIcon w={'25px'} h={'25px'} />}
+            onClick={handleLeftArrowClick}
+          />
+          <SlideFade in={true} key={currentChainIndex}>
+            <Text fontSize="lg" fontWeight="semibold">
+              {chains[currentChainIndex]}
+            </Text>
+          </SlideFade>
+          <IconButton
+            _active={{
+              transform: 'scale(0.75)',
+              color: 'complimentary.800',
+            }}
+            _hover={{ bgColor: 'transparent', color: 'complimentary.900' }}
+            variant="ghost"
+            aria-label="Next chain"
+            icon={<ChevronRightIcon w={'25px'} h={'25px'} />}
+            onClick={handleRightArrowClick}
+          />
         </Flex>
 
         <VStack spacing={2} align="stretch">

@@ -10,7 +10,7 @@ export default function Home() {
     <>
       <Box justifyContent="center" alignItems="center" maxW="5xl">
         <Head>
-          <title>Quick Silver</title>
+          <title>Quicksilver</title>
           <meta name="viewport" content="width=device-width, initial-scale=1.0" />
           <link rel="icon" href="/quicksilver-app-v2/img/favicon.png" />
         </Head>

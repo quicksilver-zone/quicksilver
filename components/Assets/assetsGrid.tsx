@@ -51,10 +51,36 @@ const AssetCard: React.FC<AssetCardProps> = ({ assetName, balance, apy, nativeAs
       </VStack>
 
       <HStack borderBottom="1px" borderBottomColor="complimentary.900" w="full" pb={4} pt={4} spacing={2}>
-        <Button color="white" flex={1} size="sm" variant="outline">
+        <Button
+          _active={{
+            transform: 'scale(0.95)',
+            color: 'complimentary.800',
+          }}
+          _hover={{
+            bgColor: 'rgba(255,128,0, 0.25)',
+            color: 'complimentary.300',
+          }}
+          color="white"
+          flex={1}
+          size="sm"
+          variant="outline"
+        >
           Deposit
         </Button>
-        <Button color="white" flex={1} size="sm" variant="outline">
+        <Button
+          _active={{
+            transform: 'scale(0.95)',
+            color: 'complimentary.800',
+          }}
+          _hover={{
+            bgColor: 'rgba(255,128,0, 0.25)',
+            color: 'complimentary.300',
+          }}
+          color="white"
+          flex={1}
+          size="sm"
+          variant="outline"
+        >
           Withdraw
         </Button>
       </HStack>
@@ -83,10 +109,34 @@ const AssetCard: React.FC<AssetCardProps> = ({ assetName, balance, apy, nativeAs
         </GridItem>
       </Grid>
       <HStack w="full" pb={4} pt={4} spacing={2}>
-        <Button colorScheme="teal" flex={1} size="sm" variant="solid">
+        <Button
+          _active={{
+            transform: 'scale(0.95)',
+            color: 'complimentary.800',
+          }}
+          _hover={{
+            bgColor: 'rgba(255,128,0, 0.25)',
+            color: 'complimentary.300',
+          }}
+          flex={1}
+          size="sm"
+          variant="solid"
+        >
           Deposit
         </Button>
-        <Button colorScheme="red" flex={1} size="sm" variant="solid">
+        <Button
+          _active={{
+            transform: 'scale(0.95)',
+            color: 'complimentary.800',
+          }}
+          _hover={{
+            bgColor: 'rgba(255,128,0, 0.25)',
+            color: 'complimentary.300',
+          }}
+          flex={1}
+          size="sm"
+          variant="solid"
+        >
           Withdraw
         </Button>
       </HStack>

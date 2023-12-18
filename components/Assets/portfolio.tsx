@@ -1,7 +1,37 @@
 import { Box, Flex, Text, Icon, VStack, HStack, Stack, Heading, Divider, Progress } from '@chakra-ui/react';
+import { useChain } from '@cosmos-kit/react';
 import { IoWallet } from 'react-icons/io5';
 
-const MyPortfolio = () => {
+import { useQBalanceQuery } from '@/hooks/useQueries';
+import { PortfolioItem } from '@/pages/assets';
+import { shiftDigits } from '@/utils';
+
+interface MyPortfolioProps {
+  portfolioItems: PortfolioItem[];
+  isWalletConnected: boolean;
+}
+
+const MyPortfolio: React.FC<MyPortfolioProps> = ({ portfolioItems, isWalletConnected }) => {
+  if (!isWalletConnected) {
+    return (
+      <Flex
+        w="100%"
+        h="100%"
+        p={4}
+        borderRadius="lg"
+        flexDirection="column"
+        justifyContent="center"
+        alignItems="center"
+        gap={6}
+        color="white"
+      >
+        <Text fontSize="xl" textAlign="center">
+          Wallet is not connected. Please connect your wallet to view your portfolio.
+        </Text>
+      </Flex>
+    );
+  }
+
   return (
     <Flex w="100%" h="100%" p={4} borderRadius="lg" flexDirection="column" justifyContent="center" alignItems="center" gap={6}>
       <Heading color={'white'} alignSelf="stretch" fontSize="lg" fontWeight="bold" textTransform="uppercase" noOfLines={1}>
@@ -52,14 +82,15 @@ const MyPortfolio = () => {
 
         <Flex justifyContent="flex-start" borderRadius={6} alignItems="flex-start" gap={4}>
           <VStack alignSelf="stretch" h="158px" overflowY="auto" borderRadius={6} alignItems="flex-start" gap={3}>
-            <PortfolioItem title="qOSMO" percentage={0.75} progressBarColor="complimentary.600" />
-            <PortfolioItem title="qATOM" percentage={0.15} progressBarColor="complimentary.700" />
-            <PortfolioItem title="qATOM" percentage={0.15} progressBarColor="complimentary.700" />
-            <PortfolioItem title="qATOM" percentage={0.15} progressBarColor="complimentary.700" />
-            <PortfolioItem title="qATOM" percentage={0.15} progressBarColor="complimentary.700" />
-            <PortfolioItem title="qATOM" percentage={0.15} progressBarColor="complimentary.700" />
-            <PortfolioItem title="qATOM" percentage={0.15} progressBarColor="complimentary.700" />
-            <PortfolioItem title="qATOM" percentage={0.15} progressBarColor="complimentary.700" />
+            {portfolioItems.map((item) => (
+              <PortfolioItem
+                amount={item.amount}
+                key={item.title}
+                title={item.title}
+                percentage={item.percentage}
+                progressBarColor={item.progressBarColor}
+              />
+            ))}
           </VStack>
         </Flex>
       </VStack>
@@ -71,12 +102,13 @@ interface PortfolioItemProps {
   title: string;
   percentage: number;
   progressBarColor: string;
+  amount: string;
 }
 
-const PortfolioItem: React.FC<PortfolioItemProps> = ({ title, percentage, progressBarColor }) => (
+const PortfolioItem: React.FC<PortfolioItemProps> = ({ title, percentage, progressBarColor, amount }) => (
   <Flex alignSelf="stretch" justifyContent="space-between" gap={16} alignItems="center">
     <HStack h="24px" justifyContent="flex-start" alignItems="center" gap={2.75}>
-      <Box w="24px" h="24px" bg="#DEDEDE" borderRadius="full" />
+      <Text>{Number(amount).toFixed(2).toString()}</Text>
       <Text fontSize="md" fontWeight="medium">
         {title}
       </Text>

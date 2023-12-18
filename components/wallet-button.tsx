@@ -1,6 +1,6 @@
 import { Center, Grid, GridItem, Icon } from '@chakra-ui/react';
-import { useChain, useManager, useWallet, useWalletClient } from '@cosmos-kit/react';
-import { MouseEventHandler, useEffect } from 'react';
+import { useChain, useManager } from '@cosmos-kit/react';
+import { MouseEventHandler } from 'react';
 import { FiAlertTriangle } from 'react-icons/fi';
 
 import {
@@ -20,7 +20,7 @@ import {
 } from '@/components';
 
 export const WalletButton: React.FC<{ chainName: string }> = ({ chainName }) => {
-  const { connect, username, address, message, wallet, chain: chainInfo } = useChain(chainName || 'cosmoshub');
+  const { connect, openView, status, username, address, message, wallet, chain: chainInfo } = useChain(chainName || 'cosmoshub');
   const { getChainLogo } = useManager();
 
   const chain = {
@@ -35,17 +35,6 @@ export const WalletButton: React.FC<{ chainName: string }> = ({ chainName }) => 
     e.preventDefault();
     await connect();
   };
-
-  const { openView } = useChain('quicksilver');
-  const { status: WalletStatus, client } = useWalletClient();
-  const { status } = useWallet();
-
-  useEffect(() => {
-    if (WalletStatus === 'Done') {
-      client?.enable?.(['cosmoshub-4', 'osmosis-1', 'regen-1', 'sommelier-3', 'stargaze-1']);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [status]);
 
   const onClickOpenView: MouseEventHandler = (e) => {
     e.preventDefault();
