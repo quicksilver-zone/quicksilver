@@ -75,7 +75,7 @@ const StakingIntent: React.FC<StakingIntentProps> = ({ address }) => {
           {validators.map((validator, index) => (
             <Flex key={index} justifyContent="space-between" w="full" alignItems="center">
               <Flex alignItems="center" gap={2}>
-                <Image src={validator.logo} boxSize="24px" borderRadius="full" />
+                <Image alt="" src={validator.logo} boxSize="24px" borderRadius="full" />
                 <Text fontSize="md">{validator.name}</Text>
               </Flex>
               <Text fontSize="lg" fontWeight="bold">

@@ -92,7 +92,7 @@ export function WithdrawModal() {
         <ModalOverlay />
         <ModalContent bgColor="rgb(32,32,32)">
           <ModalHeader color="white">Withdraw QCK Tokens</ModalHeader>
-          <ModalCloseButton color={'complimentary.400'} />
+          <ModalCloseButton color={'complimentary.900'} />
           <ModalBody>
             {/* Chain Selection Dropdown */}
             <FormControl>

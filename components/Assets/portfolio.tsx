@@ -9,9 +9,10 @@ import { shiftDigits } from '@/utils';
 interface MyPortfolioProps {
   portfolioItems: PortfolioItem[];
   isWalletConnected: boolean;
+  totalValue: number;
 }
 
-const MyPortfolio: React.FC<MyPortfolioProps> = ({ portfolioItems, isWalletConnected }) => {
+const MyPortfolio: React.FC<MyPortfolioProps> = ({ portfolioItems, isWalletConnected, totalValue }) => {
   if (!isWalletConnected) {
     return (
       <Flex
@@ -54,7 +55,7 @@ const MyPortfolio: React.FC<MyPortfolioProps> = ({ portfolioItems, isWalletConne
                   TOTAL
                 </Text>
                 <Text textAlign="right" fontSize="2xl" fontWeight="bold">
-                  $ 1,222.28
+                  ${totalValue.toFixed(2)}
                 </Text>
               </VStack>
 
@@ -82,15 +83,18 @@ const MyPortfolio: React.FC<MyPortfolioProps> = ({ portfolioItems, isWalletConne
 
         <Flex justifyContent="flex-start" borderRadius={6} alignItems="flex-start" gap={4}>
           <VStack alignSelf="stretch" h="158px" overflowY="auto" borderRadius={6} alignItems="flex-start" gap={3}>
-            {portfolioItems.map((item) => (
-              <PortfolioItem
-                amount={item.amount}
-                key={item.title}
-                title={item.title}
-                percentage={item.percentage}
-                progressBarColor={item.progressBarColor}
-              />
-            ))}
+            {portfolioItems
+              .filter((item) => Number(item.amount) > 0) // Filter out items with 0 amount
+              .map((item) => (
+                <PortfolioItem
+                  key={item.title}
+                  title={item.title}
+                  percentage={item.percentage}
+                  progressBarColor={item.progressBarColor}
+                  amount={item.amount}
+                  qTokenPrice={item.qTokenPrice}
+                />
+              ))}
           </VStack>
         </Flex>
       </VStack>
@@ -103,9 +107,10 @@ interface PortfolioItemProps {
   percentage: number;
   progressBarColor: string;
   amount: string;
+  qTokenPrice: number;
 }
 
-const PortfolioItem: React.FC<PortfolioItemProps> = ({ title, percentage, progressBarColor, amount }) => (
+const PortfolioItem: React.FC<PortfolioItemProps> = ({ title, percentage, progressBarColor, amount, qTokenPrice }) => (
   <Flex alignSelf="stretch" justifyContent="space-between" gap={16} alignItems="center">
     <HStack h="24px" justifyContent="flex-start" alignItems="center" gap={2.75}>
       <Text>{Number(amount).toFixed(2).toString()}</Text>

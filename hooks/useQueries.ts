@@ -42,6 +42,23 @@ export const useBalanceQuery = (chainName: string, address: string) => {
   };
 };
 
+
+export const useTokenPriceQuery = (tokenSymbol: string) => {
+  const fetchTokenPrice = async () => {
+    if (!tokenSymbol) {
+      throw new Error('Token symbol is required');
+    }
+
+    const response = await axios.get(`https://api-osmosis.imperator.co/tokens/v2/price/${tokenSymbol}`);
+    return response.data;
+  };
+
+  return useQuery(['tokenPrice', tokenSymbol], fetchTokenPrice, {
+    enabled: !!tokenSymbol,
+    staleTime: 300000, 
+  });
+};
+
 export const useQBalanceQuery = (chainName: string, address: string, qAsset: string) => {
   const { grpcQueryClient } = useGrpcQueryClient(chainName);
   const balanceQuery = useQuery(

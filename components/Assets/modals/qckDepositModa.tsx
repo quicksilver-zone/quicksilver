@@ -91,7 +91,7 @@ export function DepositModal() {
         <ModalOverlay />
         <ModalContent bgColor="rgb(32,32,32)">
           <ModalHeader color="white">Deposit QCK Tokens</ModalHeader>
-          <ModalCloseButton color={'complimentary.400'} />
+          <ModalCloseButton color={'complimentary.900'} />
           <ModalBody>
             {/* Chain Selection Dropdown */}
             <FormControl>
