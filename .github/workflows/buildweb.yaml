@@ -1,0 +1,30 @@
+name: Deploy to GitHub Pages
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest # or specify a version
+
+      - name: Install Dependencies
+        run: | 
+            cd web-ui
+            bun install
+
+      - name: Build Project
+        run: |
+            cd web-ui 
+            bun run build
+
