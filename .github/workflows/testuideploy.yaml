@@ -1,16 +1,16 @@
-name: Deploy to GitHub Pages
+name: Test Deploy to GitHub Pages
 
 on:
   push:
-    branches:
-      - bunDev
+    paths:
+      - web-ui/**
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v1
