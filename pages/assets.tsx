@@ -22,10 +22,6 @@ export interface PortfolioItem {
   qTokenPrice: number;
 }
 
-type RedemptionRates = {
-  [token: string]: string | undefined;
-};
-
 type NumericRedemptionRates = {
   [key: string]: number;
 };
@@ -92,18 +88,21 @@ export default function Home() {
   const [portfolioItems, setPortfolioItems] = useState<PortfolioItem[]>([]);
   const [totalPortfolioValue, setTotalPortfolioValue] = useState(0);
 
+  const redemptionRates: NumericRedemptionRates = useMemo(
+    () => ({
+      atom: CosmosZone?.redemptionRate ? parseFloat(CosmosZone.redemptionRate) : 1,
+      osmo: OsmoZone?.redemptionRate ? parseFloat(OsmoZone.redemptionRate) : 1,
+      stars: StarZone?.redemptionRate ? parseFloat(StarZone.redemptionRate) : 1,
+      regen: RegenZone?.redemptionRate ? parseFloat(RegenZone.redemptionRate) : 1,
+      somm: SommZone?.redemptionRate ? parseFloat(SommZone.redemptionRate) : 1,
+    }),
+    [CosmosZone, OsmoZone, StarZone, RegenZone, SommZone],
+  );
+
   useEffect(() => {
     const updatePortfolioItems = async () => {
       let totalValue = 0;
       let updatedItems = [];
-
-      const redemptionRates: NumericRedemptionRates = {
-        atom: CosmosZone?.redemptionRate ? parseFloat(CosmosZone.redemptionRate) : 1,
-        osmo: OsmoZone?.redemptionRate ? parseFloat(OsmoZone.redemptionRate) : 1,
-        stars: StarZone?.redemptionRate ? parseFloat(StarZone.redemptionRate) : 1,
-        regen: RegenZone?.redemptionRate ? parseFloat(RegenZone.redemptionRate) : 1,
-        somm: SommZone?.redemptionRate ? parseFloat(SommZone.redemptionRate) : 1,
-      };
 
       for (const token of Object.keys(qBalances)) {
         const baseToken = token.replace('q', '').toLowerCase();
@@ -134,7 +133,7 @@ export default function Home() {
     };
 
     updatePortfolioItems();
-  }, [qBalances, CosmosZone, OsmoZone, StarZone, RegenZone, SommZone]);
+  }, [qBalances, CosmosZone, OsmoZone, StarZone, RegenZone, SommZone, redemptionRates]);
 
   return (
     <>
