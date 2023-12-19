@@ -3,8 +3,9 @@ import { useChain } from '@cosmos-kit/react';
 import { IoWallet } from 'react-icons/io5';
 
 import { useQBalanceQuery } from '@/hooks/useQueries';
-import { PortfolioItem } from '@/pages/assets';
 import { shiftDigits } from '@/utils';
+
+import { PortfolioItem } from '@/pages/assets';
 
 interface MyPortfolioProps {
   portfolioItems: PortfolioItem[];
