@@ -104,28 +104,30 @@ export default function Home() {
         regen: RegenZone?.redemptionRate ? parseFloat(RegenZone.redemptionRate) : 1,
         somm: SommZone?.redemptionRate ? parseFloat(SommZone.redemptionRate) : 1,
       };
-      console.log(redemptionRates);
 
       for (const token of Object.keys(qBalances)) {
         const baseToken = token.replace('q', '').toLowerCase();
-        const baseZone = baseToken.toLowerCase;
-
         const price = await fetchTokenPrice(baseToken);
         const qTokenPrice = price * Number(redemptionRates[baseToken]);
-
         const qTokenBalance = qBalances[token];
 
         const itemValue = qTokenBalance * qTokenPrice;
         totalValue += itemValue;
 
         updatedItems.push({
-          title: `q${token.replace('q', '').toUpperCase()}`,
-          percentage: (((itemValue / totalValue) * 100) / 100).toFixed(2), // Calculating percentage based on value
+          title: token.toUpperCase(),
+          percentage: 0, // Temporarily set to 0, will be updated later
           progressBarColor: 'complimentary.700',
           amount: qTokenBalance,
           qTokenPrice: qTokenPrice || 0,
         });
       }
+
+      // Now, calculate the percentage of each item
+      updatedItems = updatedItems.map((item) => ({
+        ...item,
+        percentage: ((((item.amount * item.qTokenPrice) / totalValue) * 100) / 100).toFixed(2),
+      }));
 
       setPortfolioItems(updatedItems);
       setTotalPortfolioValue(totalValue);
