@@ -2,7 +2,7 @@ name: golangci-lint
 on:
   push:
     paths-ignore:
-      - web-ui 
+      - web-ui
     branches:
       - main
   pull_request:
