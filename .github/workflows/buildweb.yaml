@@ -1,4 +1,4 @@
-name: Deploy to GitHub Pages
+name: Build web UI as a test
 
 on:
   pull_request:
