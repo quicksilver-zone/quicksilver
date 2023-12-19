@@ -22,8 +22,7 @@ import { useTx } from '@/hooks';
 import { getCoin } from '@/utils';
 
 const VoteType = cosmos.gov.v1.VoteOption;
-const { vote: composeVoteMessage } =
-  cosmos.gov.v1.MessageComposer.fromPartial;
+const { vote: composeVoteMessage } = cosmos.gov.v1.MessageComposer.fromPartial;
 
 interface VoteModalProps {
   modalControl: UseDisclosureReturn;
@@ -34,19 +33,9 @@ interface VoteModalProps {
   proposalId: bigint;
 }
 
-export const VoteModal: React.FC<
-  VoteModalProps
-> = ({
-  modalControl,
-  chainName,
-  updateVotes,
-  title,
-  vote,
-  proposalId,
-}) => {
+export const VoteModal: React.FC<VoteModalProps> = ({ modalControl, chainName, updateVotes, title, vote, proposalId }) => {
   const [option, setOption] = useState<number>();
-  const [isLoading, setIsLoading] =
-    useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const { tx } = useTx(chainName);
   const { address } = useChain(chainName);
@@ -54,8 +43,7 @@ export const VoteModal: React.FC<
   const coin = getCoin(chainName);
   const { isOpen, onClose } = modalControl;
 
-  const checkIfDisable = (option: number) =>
-    option === vote;
+  const checkIfDisable = (option: number) => option === vote;
 
   const closeModal = () => {
     onClose();
@@ -70,7 +58,7 @@ export const VoteModal: React.FC<
       option,
       proposalId,
       voter: address,
-      metadata: ''
+      metadata: '',
     });
 
     const fee: StdFee = {
@@ -90,77 +78,48 @@ export const VoteModal: React.FC<
   };
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={closeModal}
-      isCentered
-    >
-      <ModalOverlay
-       />
+    <Modal isOpen={isOpen} onClose={closeModal} isCentered>
+      <ModalOverlay />
       <>
-        <ModalContent
-         bgColor="#1A1A1A"
-        >
-          <ModalHeader
-          color="white"
-           mr={4}>
+        <ModalContent bgColor="#1A1A1A">
+          <ModalHeader color="white" mr={4}>
             {title}
           </ModalHeader>
           <ModalCloseButton color="white" />
           <ModalBody>
-            <RadioGroup
-              onChange={(e) =>
-                setOption(Number(e))
-              }
-            >
+            <RadioGroup onChange={(e) => setOption(Number(e))}>
               <Stack>
                 <Radio
                   colorScheme="green"
                   size="lg"
                   value={VoteType.VOTE_OPTION_YES.toString()}
-                  isDisabled={checkIfDisable(
-                    VoteType.VOTE_OPTION_YES,
-                  )}
+                  isDisabled={checkIfDisable(VoteType.VOTE_OPTION_YES)}
                 >
-                  <Text>
-                    Yes
-                    </Text>
+                  <Text>Yes</Text>
                 </Radio>
                 <Radio
                   colorScheme="red"
                   size="lg"
                   value={VoteType.VOTE_OPTION_NO.toString()}
-                  isDisabled={checkIfDisable(
-                    VoteType.VOTE_OPTION_NO,
-                  )}
+                  isDisabled={checkIfDisable(VoteType.VOTE_OPTION_NO)}
                 >
-                <Text>
-                    No
-                    </Text>
+                  <Text>No</Text>
                 </Radio>
                 <Radio
                   colorScheme="red"
                   size="lg"
                   value={VoteType.VOTE_OPTION_NO_WITH_VETO.toString()}
-                  isDisabled={checkIfDisable(
-                    VoteType.VOTE_OPTION_NO_WITH_VETO,
-                  )}
+                  isDisabled={checkIfDisable(VoteType.VOTE_OPTION_NO_WITH_VETO)}
                 >
-                  <Text>
-                    No With Veto
-                    </Text>
+                  <Text>No With Veto</Text>
                 </Radio>
                 <Radio
                   colorScheme="gray"
                   size="lg"
                   value={VoteType.VOTE_OPTION_ABSTAIN.toString()}
-                  isDisabled={checkIfDisable(
-                    VoteType.VOTE_OPTION_ABSTAIN,
-                  )}
+                  isDisabled={checkIfDisable(VoteType.VOTE_OPTION_ABSTAIN)}
                 >
-                 <Text>
-                    Abstain
-                    </Text>
+                  <Text>Abstain</Text>
                 </Radio>
               </Stack>
             </RadioGroup>
@@ -168,9 +127,9 @@ export const VoteModal: React.FC<
 
           <ModalFooter>
             <Button
-             _hover={{
-              bgColor: '#181818',
-            }}
+              _hover={{
+                bgColor: '#181818',
+              }}
               onClick={handleConfirmClick}
               isDisabled={!option || isLoading}
               isLoading={isLoading}

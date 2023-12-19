@@ -23,23 +23,9 @@ import React, { useMemo, useState } from 'react';
 import { PieChart } from 'react-minimal-pie-chart';
 
 import { Votes } from '@/hooks';
-import {
-  decodeUint8Arr,
-  exponentiate,
-  formatDate,
-  getCoin,
-  getExponent,
-  getPercentage,
-} from '@/utils';
+import { decodeUint8Arr, exponentiate, formatDate, getCoin, getExponent, getPercentage } from '@/utils';
 
-import {
-  VoteResult,
-  TimeDisplay,
-  VoteRatio,
-  NewLineText,
-  StatusBadge,
-  VoteOption,
-} from './common';
+import { VoteResult, TimeDisplay, VoteRatio, NewLineText, StatusBadge, VoteOption } from './common';
 import { VoteColor } from './ProposalCard';
 import { VoteModal } from './VoteModal';
 
@@ -104,26 +90,19 @@ export const ProposalModal = ({
 
   const totalVotes = useMemo(() => {
     if (!proposal.finalTallyResult) return 0;
-    const total = Object.values(proposal.finalTallyResult).reduce(
-      (prev, cur) => prev + Number(cur),
-      0,
-    );
+    const total = Object.values(proposal.finalTallyResult).reduce((prev, cur) => prev + Number(cur), 0);
     return total ? total : 0;
   }, [proposal]);
 
-  const vote =
-    votes && proposal.finalTallyResult && votes?.[proposal.id.toString()];
+  const vote = votes && proposal.finalTallyResult && votes?.[proposal.id.toString()];
 
-  const isDepositPeriod =
-    proposal.status === ProposalStatus.PROPOSAL_STATUS_DEPOSIT_PERIOD;
+  const isDepositPeriod = proposal.status === ProposalStatus.PROPOSAL_STATUS_DEPOSIT_PERIOD;
 
-  const isVotingPeriod =
-    proposal.status === ProposalStatus.PROPOSAL_STATUS_VOTING_PERIOD;
+  const isVotingPeriod = proposal.status === ProposalStatus.PROPOSAL_STATUS_VOTING_PERIOD;
 
   const turnout = totalVotes / Number(bondedTokens);
 
-  const minStakedTokens =
-    quorum && exponentiate(quorum * Number(bondedTokens), -exponent).toFixed(6);
+  const minStakedTokens = quorum && exponentiate(quorum * Number(bondedTokens), -exponent).toFixed(6);
 
   const uint8ArrayValue = proposal.messages[0].value;
   const propinfo = decodeUint8Arr(uint8ArrayValue);
@@ -208,26 +187,9 @@ export const ProposalModal = ({
             <ModalCloseButton color="white" />
             <ModalBody>
               <Flex justifyContent="space-between" alignItems="center">
-                <TimeDisplay
-                  title="Submit Time"
-                  time={formatDate(proposal.submitTime)}
-                />
-                <TimeDisplay
-                  title="Voting Starts"
-                  time={
-                    isDepositPeriod
-                      ? 'Not Specified Yet'
-                      : formatDate(proposal.votingStartTime)
-                  }
-                />
-                <TimeDisplay
-                  title="Voting Ends"
-                  time={
-                    isDepositPeriod
-                      ? 'Not Specified Yet'
-                      : formatDate(proposal.votingEndTime)
-                  }
-                />
+                <TimeDisplay title="Submit Time" time={formatDate(proposal.submitTime)} />
+                <TimeDisplay title="Voting Starts" time={isDepositPeriod ? 'Not Specified Yet' : formatDate(proposal.votingStartTime)} />
+                <TimeDisplay title="Voting Ends" time={isDepositPeriod ? 'Not Specified Yet' : formatDate(proposal.votingEndTime)} />
                 <Button
                   isDisabled={!isVotingPeriod}
                   _hover={{
@@ -260,18 +222,14 @@ export const ProposalModal = ({
                         const { value, title, percentage } = dataEntry;
                         if (!totalVotes) return title;
 
-                        const maxValue = Math.max(
-                          ...chartData.map((item) => item.value),
-                        );
+                        const maxValue = Math.max(...chartData.map((item) => item.value));
 
                         if (value !== maxValue) return '';
                         return `${title} ${percentage.toFixed(2)}%`;
                       }}
                       labelStyle={{
                         fontSize: '10px',
-                        fill: totalVotes
-                          ? chartData.sort((a, b) => b.value - a.value)[0].color
-                          : VoteColor.ABSTAIN,
+                        fill: totalVotes ? chartData.sort((a, b) => b.value - a.value)[0].color : VoteColor.ABSTAIN,
                         fontWeight: 'bold',
                       }}
                       labelPosition={0}
@@ -281,9 +239,7 @@ export const ProposalModal = ({
                   <Box pr={2}>
                     <Text
                       color={turnout > (quorum || 0) ? 'green.500' : 'gray.400'}
-                      borderColor={
-                        turnout > (quorum || 0) ? 'green.500' : 'gray.400'
-                      }
+                      borderColor={turnout > (quorum || 0) ? 'green.500' : 'gray.400'}
                       fontWeight="bold"
                       border="1px solid"
                       w="fit-content"
@@ -293,65 +249,34 @@ export const ProposalModal = ({
                       Turnout: {(turnout * 100).toFixed(2)}%
                     </Text>
                     {quorum && (
-                      <Text
-                        color="white"
-                        fontSize="sm"
-                        my={2}
-                        fontWeight="semibold"
-                      >
-                        {`Minimum of staked ${minStakedTokens} ${coin.symbol}(${
-                          quorum * 100
-                        }%) need to vote
+                      <Text color="white" fontSize="sm" my={2} fontWeight="semibold">
+                        {`Minimum of staked ${minStakedTokens} ${coin.symbol}(${quorum * 100}%) need to vote
                     for this proposal to pass.`}
                       </Text>
                     )}
                     <Flex wrap="wrap" gap={4}>
                       <VoteRatio
                         type={VoteOption.YES}
-                        ratio={getPercentage(
-                          proposal.finalTallyResult?.yesCount,
-                          totalVotes,
-                        )}
-                        amount={exponentiate(
-                          proposal.finalTallyResult?.yesCount,
-                          -exponent,
-                        ).toFixed(2)}
+                        ratio={getPercentage(proposal.finalTallyResult?.yesCount, totalVotes)}
+                        amount={exponentiate(proposal.finalTallyResult?.yesCount, -exponent).toFixed(2)}
                         token={coin.symbol}
                       />
                       <VoteRatio
                         type={VoteOption.NO}
-                        ratio={getPercentage(
-                          proposal.finalTallyResult?.noCount,
-                          totalVotes,
-                        )}
-                        amount={exponentiate(
-                          proposal.finalTallyResult?.noCount,
-                          -exponent,
-                        ).toFixed(2)}
+                        ratio={getPercentage(proposal.finalTallyResult?.noCount, totalVotes)}
+                        amount={exponentiate(proposal.finalTallyResult?.noCount, -exponent).toFixed(2)}
                         token={coin.symbol}
                       />
                       <VoteRatio
                         type={VoteOption.NWV}
-                        ratio={getPercentage(
-                          proposal.finalTallyResult?.noWithVetoCount,
-                          totalVotes,
-                        )}
-                        amount={exponentiate(
-                          proposal.finalTallyResult?.noWithVetoCount,
-                          -exponent,
-                        ).toFixed(2)}
+                        ratio={getPercentage(proposal.finalTallyResult?.noWithVetoCount, totalVotes)}
+                        amount={exponentiate(proposal.finalTallyResult?.noWithVetoCount, -exponent).toFixed(2)}
                         token={coin.symbol}
                       />
                       <VoteRatio
                         type={VoteOption.ABSTAIN}
-                        ratio={getPercentage(
-                          proposal.finalTallyResult?.abstainCount,
-                          totalVotes,
-                        )}
-                        amount={exponentiate(
-                          proposal.finalTallyResult?.abstainCount,
-                          -exponent,
-                        ).toFixed(2)}
+                        ratio={getPercentage(proposal.finalTallyResult?.abstainCount, totalVotes)}
+                        amount={exponentiate(proposal.finalTallyResult?.abstainCount, -exponent).toFixed(2)}
                         token={coin.symbol}
                       />
                     </Flex>
@@ -379,13 +304,7 @@ export const ProposalModal = ({
             </ModalBody>
 
             <ModalFooter>
-              <Button
-                _hover={{ bgColor: 'complimentary.900' }}
-                mt={-4}
-                color="white"
-                variant="ghost"
-                onClick={onClose}
-              >
+              <Button _hover={{ bgColor: 'complimentary.900' }} mt={-4} color="white" variant="ghost" onClick={onClose}>
                 Close
               </Button>
             </ModalFooter>
