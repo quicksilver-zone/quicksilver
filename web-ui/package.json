@@ -42,7 +42,7 @@
     "fast-fuzzy": "^1.12.0",
     "framer-motion": "9.0.7",
     "interchain-query": "^1.8.7",
-    "next": "12.2.3",
+    "next": "13.5.1",
     "quicksilverjs": "^0.8.0",
     "react": "18.2.0",
     "react-dom": "18.2.0",
