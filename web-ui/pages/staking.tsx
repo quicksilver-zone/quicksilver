@@ -59,13 +59,13 @@ export default function Staking() {
       <Head>
         <title>Staking</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <link rel="icon" href="/quicksilver-app-v2/img/favicon.png" />
+        <link rel="icon" href="/quicksilver/img/favicon.png" />
       </Head>
       <SlideFade offsetY={'200px'} in={true} style={{ width: '100%' }}>
         <Container top={20} zIndex={2} position="relative" maxW="container.lg" maxH="80vh" h="80vh" mt={{ base: '50px', md: '0px' }}>
           {/* <Image
             alt={''}
-            src="/quicksilver-app-v2/img/metalmisc2.png"
+            src="/quicksilver/img/metalmisc2.png"
             zIndex={-10}
             position="absolute"
             bottom="-10"

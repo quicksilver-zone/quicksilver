@@ -123,7 +123,7 @@ function Home() {
           <Head>
             <title>Assets</title>
             <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-            <link rel="icon" href="/quicksilver-app-v2/img/favicon.png" />
+            <link rel="icon" href="/quicksilver/img/favicon.png" />
           </Head>
           <Flex flexDir={'row'} py={6} alignItems="center" justifyContent={'space-between'} gap="4">
             {/* Quick box */}

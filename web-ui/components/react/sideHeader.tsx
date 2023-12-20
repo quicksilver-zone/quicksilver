@@ -33,7 +33,7 @@ export const SideHeader = () => {
 
   useEffect(() => {
     const handleRouteChange = (url: string) => {
-      const path = url.split('/quicksilver-app-v2/')[1];
+      const path = url.split('/quicksilver/')[1];
       setSelectedPage(path);
     };
 
@@ -93,7 +93,7 @@ export const SideHeader = () => {
           h="75px"
           w="75px"
           borderRadius="full"
-          src="/quicksilver-app-v2/img/networks/quicksilver.svg"
+          src="/quicksilver/img/networks/quicksilver.svg"
           onClick={handleLogoClick}
           cursor="pointer"
           _hover={{
@@ -116,7 +116,7 @@ export const SideHeader = () => {
               {['Staking', 'Governance', 'Defi', 'Assets'].map((item) => (
                 <Box key={item} mb={4} position="relative">
                   <Link
-                    href={`/quicksilver-app-v2/${item.toLowerCase()}`}
+                    href={`/quicksilver/${item.toLowerCase()}`}
                     fontSize="xl"
                     fontWeight="medium"
                     color="white"
@@ -205,7 +205,7 @@ export const SideHeader = () => {
                         }}
                         alt="Staking"
                         h="55px"
-                        src="/quicksilver-app-v2/img/test.png"
+                        src="/quicksilver/img/test.png"
                       />
                     </Box>
                   </Tooltip>
@@ -235,7 +235,7 @@ export const SideHeader = () => {
                         alt="Governance"
                         h="60px"
                         w={'60px'}
-                        src="/quicksilver-app-v2/img/test2.png"
+                        src="/quicksilver/img/test2.png"
                       />
                     </Box>
                   </Tooltip>
@@ -262,7 +262,7 @@ export const SideHeader = () => {
                         }}
                         alt="Assets"
                         h="55px"
-                        src="/quicksilver-app-v2/img/test3.png"
+                        src="/quicksilver/img/test3.png"
                       />
                     </Box>
                   </Tooltip>
@@ -289,7 +289,7 @@ export const SideHeader = () => {
                         }}
                         alt="DeFi"
                         h="55px"
-                        src="/quicksilver-app-v2/img/test4.png"
+                        src="/quicksilver/img/test4.png"
                       />
                     </Box>
                   </Tooltip>
