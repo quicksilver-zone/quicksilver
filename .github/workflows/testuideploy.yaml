@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v1
@@ -18,13 +18,19 @@ jobs:
           bun-version: latest # or specify a version
 
       - name: Install Dependencies
-        run: bun install
+        run: |
+          cd web-ui
+          bun install
 
       - name: Build Project
-        run: bun run build
+        run: |
+          cd web-ui
+          bun run build
 
       - name: Export Project
-        run: bun export
+        run: |
+          cd web-ui
+          bun export
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
