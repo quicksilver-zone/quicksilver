@@ -3,8 +3,8 @@
 module.exports = {
   reactStrictMode: true,
   swcMinify: true,
-  basePath: '/quicksilver-app-v2',
-  assetPrefix: '/quicksilver-app-v2',
+  basePath: '/quicksilver',
+  assetPrefix: '/quicksilver',
   typescript: {
     // !! WARN !!
     // Dangerously allow production builds to successfully complete even if
