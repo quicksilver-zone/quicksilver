@@ -7,9 +7,8 @@ on:
     branches:
       - "main"
       - "develop"
-    paths:
-      - "**.go"
-      - "go.sum"
+    paths-ignore:
+      - "webui/**"
 
 env:
   REGISTRY: quicksilverzone

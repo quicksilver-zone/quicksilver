@@ -4,7 +4,11 @@ on:
   pull_request:
     branches:
       - main
+    paths:
+        - web-ui/**
   push:
+    paths:
+        - web-ui/**
 
 jobs:
   deploy:
