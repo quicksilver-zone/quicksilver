@@ -33,6 +33,7 @@ function CreateCosmosApp({ Component, pageProps }: AppProps) {
 
       return {
         aminoTypes: mergedAminoTypes,
+        //@ts-ignore
         registry: mergedRegistry,
       };
     },
@@ -52,6 +53,7 @@ function CreateCosmosApp({ Component, pageProps }: AppProps) {
       <ChainProvider
         chains={chains}
         assetLists={assets}
+        //@ts-ignore
         wallets={[...keplrWallets, ...cosmostationWallets, ...leapWallets]}
         walletConnectOptions={{
           signClient: {

@@ -1,11 +1,10 @@
-import { Box, Button, ButtonGroup, Container, Flex, HStack, SlideFade, Spacer, Text } from '@chakra-ui/react';
+import { Box, Button, ButtonGroup, Container, Flex, HStack, SlideFade, Spacer, Spinner, Text } from '@chakra-ui/react';
 import { useChain } from '@cosmos-kit/react';
 import axios from 'axios';
 import dynamic from 'next/dynamic';
 import Head from 'next/head';
 import { useEffect, useMemo, useState } from 'react';
 
-import { NetworkSelect } from '@/components';
 import AssetsGrid from '@/components/Assets/assetsGrid';
 import StakingIntent from '@/components/Assets/intents';
 import MyPortfolio from '@/components/Assets/portfolio';
@@ -14,9 +13,9 @@ import UnbondingAssetsTable from '@/components/Assets/unbondingTable';
 import { useIntentQuery, useQBalanceQuery, useTokenPriceQuery, useZoneQuery } from '@/hooks/useQueries';
 import { shiftDigits } from '@/utils';
 
-export interface PortfolioItem {
+export interface PortfolioItemInterface {
   title: string;
-  percentage: number;
+  percentage: string;
   progressBarColor: string;
   amount: string;
   qTokenPrice: number;
@@ -26,31 +25,24 @@ type NumericRedemptionRates = {
   [key: string]: number;
 };
 
-const DynamingPortfolio = dynamic(() => Promise.resolve(MyPortfolio), {
-  ssr: false,
-});
+type BalanceRates = {
+  [key: string]: string;
+};
 
-const DynamicStakingIntent = dynamic(() => Promise.resolve(StakingIntent), {
-  ssr: false,
-});
-
-const DynamicQuickBox = dynamic(() => Promise.resolve(QuickBox), {
-  ssr: false,
-});
-
-const DynamicAssetsGrid = dynamic(() => Promise.resolve(AssetsGrid), {
-  ssr: false,
-});
-
-const DynamicUnbondingTable = dynamic(() => Promise.resolve(UnbondingAssetsTable), {
-  ssr: false,
-});
-
-export default function Home() {
-  const [selectedOption, setSelectedOption] = useState('cosmoshub');
+function Home() {
   const { address } = useChain('quicksilver');
   const { address: qAddress, isWalletConnected } = useChain('quicksilver');
 
+  // Define a function to fetch token price data
+  const fetchTokenPrice = async (token: any) => {
+    try {
+      const response = await axios.get(`https://api-osmosis.imperator.co/tokens/v2/price/${token}`);
+      return response.data.price; // Adjust this according to your API response structure
+    } catch (error) {
+      console.error('Error fetching token price:', error);
+      return null;
+    }
+  };
   const { balance: qAtom, isLoading: qAtomIsLoading, isError: qAtomIsError } = useQBalanceQuery('quicksilver', qAddress ?? '', 'atom');
   const { balance: qOsmo, isLoading: qOsmoIsLoading, isError: qOsmoIsError } = useQBalanceQuery('quicksilver', qAddress ?? '', 'osmo');
   const { balance: qStars, isLoading: qStarsIsLoading, isError: qStarsIsError } = useQBalanceQuery('quicksilver', qAddress ?? '', 'stars');
@@ -63,7 +55,7 @@ export default function Home() {
   const { data: RegenZone, isLoading: isRegenZoneLoading, isError: isRegenZoneError } = useZoneQuery('regen-1');
   const { data: SommZone, isLoading: isSommZoneLoading, isError: isSommZoneError } = useZoneQuery('sommelier-3');
 
-  const qBalances = useMemo(
+  const qBalances: BalanceRates = useMemo(
     () => ({
       qAtom: shiftDigits(qAtom?.balance.amount ?? '', -6),
       qOsmo: shiftDigits(qOsmo?.balance.amount ?? '', -6),
@@ -74,18 +66,7 @@ export default function Home() {
     [qAtom, qOsmo, qStars, qRegen, qSomm],
   );
 
-  // Define a function to fetch token price data
-  const fetchTokenPrice = async (token: any) => {
-    try {
-      const response = await axios.get(`https://api-osmosis.imperator.co/tokens/v2/price/${token}`);
-      return response.data.price; // Adjust this according to your API response structure
-    } catch (error) {
-      console.error('Error fetching token price:', error);
-      return null;
-    }
-  };
-
-  const [portfolioItems, setPortfolioItems] = useState<PortfolioItem[]>([]);
+  const [portfolioItems, setPortfolioItems] = useState<PortfolioItemInterface[]>([]);
   const [totalPortfolioValue, setTotalPortfolioValue] = useState(0);
 
   const redemptionRates: NumericRedemptionRates = useMemo(
@@ -110,12 +91,12 @@ export default function Home() {
         const qTokenPrice = price * Number(redemptionRates[baseToken]);
         const qTokenBalance = qBalances[token];
 
-        const itemValue = qTokenBalance * qTokenPrice;
+        const itemValue = Number(qTokenBalance) * qTokenPrice;
         totalValue += itemValue;
 
         updatedItems.push({
           title: token.toUpperCase(),
-          percentage: 0, // Temporarily set to 0, will be updated later
+          percentage: 0,
           progressBarColor: 'complimentary.700',
           amount: qTokenBalance,
           qTokenPrice: qTokenPrice || 0,
@@ -125,7 +106,7 @@ export default function Home() {
       // Now, calculate the percentage of each item
       updatedItems = updatedItems.map((item) => ({
         ...item,
-        percentage: ((((item.amount * item.qTokenPrice) / totalValue) * 100) / 100).toFixed(2),
+        percentage: ((((Number(item.amount) * item.qTokenPrice) / totalValue) * 100) / 100).toFixed(2),
       }));
 
       setPortfolioItems(updatedItems);
@@ -158,7 +139,7 @@ export default function Home() {
               justifyContent="space-around"
               alignItems="center"
             >
-              <DynamicQuickBox />
+              <QuickBox />
             </Flex>
             {/* Portfolio box */}
             <Flex
@@ -171,7 +152,7 @@ export default function Home() {
               w="lg"
               h="sm"
             >
-              <DynamingPortfolio portfolioItems={portfolioItems} isWalletConnected={isWalletConnected} totalValue={totalPortfolioValue} />
+              <MyPortfolio portfolioItems={portfolioItems} isWalletConnected={isWalletConnected} totalValue={totalPortfolioValue} />
             </Flex>
             {/* Intent box */}
             <Flex
@@ -184,7 +165,7 @@ export default function Home() {
               w="lg"
               h="sm"
             >
-              <DynamicStakingIntent address={address ?? ''} />
+              <StakingIntent address={address ?? ''} />
             </Flex>
           </Flex>
           <Spacer />
@@ -193,7 +174,7 @@ export default function Home() {
           <Spacer />
           {/* Unbonding Table */}
           <Box mt="20px">
-            <DynamicUnbondingTable />
+            <UnbondingAssetsTable />
           </Box>
           <Box h="40px"></Box>
         </Container>
@@ -202,6 +183,11 @@ export default function Home() {
   );
 }
 
-export const AssetsSection = dynamic(() => Promise.resolve(Home), {
+const DynamicAssetsPage = dynamic(() => Promise.resolve(Home), {
   ssr: false,
 });
+const AssetsWrapper = () => {
+  return <DynamicAssetsPage />;
+};
+
+export default AssetsWrapper;
