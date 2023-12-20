@@ -24,11 +24,11 @@ import { useChain } from '@cosmos-kit/react';
 import styled from '@emotion/styled';
 import React, { useEffect, useState } from 'react';
 
+import { MultiModal } from './validatorSelectionModal';
+
 import { useQueryHooks } from '@/hooks';
 import { useZoneQuery } from '@/hooks/useQueries';
 import { liquidStakeTx, unbondLiquidStakeTx } from '@/tx/liquidStakeTx';
-
-import { MultiModal } from './validatorSelectionModal';
 
 const ChakraModalContent = styled(ModalContent)`
   position: relative;
