@@ -23,9 +23,9 @@ import {
 import React, { useEffect } from 'react';
 import { FaSearch } from 'react-icons/fa';
 
-import { useValidatorsQuery, useZoneQuery } from '@/hooks/useQueries';
-
 import { ValidatorsTable } from './validatorTable';
+
+import { useValidatorsQuery, useZoneQuery } from '@/hooks/useQueries';
 
 interface MultiModalProps {
   isOpen: boolean;

@@ -31,7 +31,7 @@ jobs:
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
         with:
-          languages: "go"
+          languages: "go, javascript, typescript"
           queries: +security-and-quality,github/codeql/go/ql/src/experimental/InconsistentCode/DeferInLoop.ql@main,github/codeql/go/ql/src/experimental/Unsafe/WrongUsageOfUnsafe.ql@main,github/codeql/go/ql/src/experimental/CWE-369/DivideByZero.ql@main
           packs: +crypto-com/cosmos-sdk-codeql
           # If you wish to specify custom queries, you can do so here or in a config file.

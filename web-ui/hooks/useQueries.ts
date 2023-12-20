@@ -4,10 +4,11 @@ import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import { cosmos } from 'interchain-query';
 
+import { useGrpcQueryClient } from './useGrpcQueryClient';
+
 import { getCoin } from '@/utils';
 import { parseValidators } from '@/utils/staking';
 
-import { useGrpcQueryClient } from './useGrpcQueryClient';
 
 const BigNumber = require('bignumber.js');
 const Long = require('long');

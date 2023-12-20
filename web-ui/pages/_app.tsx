@@ -17,17 +17,9 @@ import { quicksilverProtoRegistry, quicksilverAminoConverters } from 'quicksilve
 
 import { Header, SideHeader } from '@/components';
 import { defaultTheme } from '@/config';
+import { useRpcQueryClient } from '@/hooks';
 
 import '@interchain-ui/react/styles';
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 2,
-      refetchOnWindowFocus: false,
-    },
-  },
-});
 
 function CreateCosmosApp({ Component, pageProps }: AppProps) {
   const signerOptions: SignerOptions = {
@@ -41,16 +33,27 @@ function CreateCosmosApp({ Component, pageProps }: AppProps) {
 
       return {
         aminoTypes: mergedAminoTypes,
+        //@ts-ignore
         registry: mergedRegistry,
       };
     },
   };
+
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: 2,
+        refetchOnWindowFocus: false,
+      },
+    },
+  });
 
   return (
     <ChakraProvider theme={defaultTheme}>
       <ChainProvider
         chains={chains}
         assetLists={assets}
+        //@ts-ignore
         wallets={[...keplrWallets, ...cosmostationWallets, ...leapWallets]}
         walletConnectOptions={{
           signClient: {
