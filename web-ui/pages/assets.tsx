@@ -10,8 +10,8 @@ import StakingIntent from '@/components/Assets/intents';
 import MyPortfolio from '@/components/Assets/portfolio';
 import QuickBox from '@/components/Assets/quickbox';
 import UnbondingAssetsTable from '@/components/Assets/unbondingTable';
-import { useIntentQuery, useQBalanceQuery, useTokenPriceQuery, useZoneQuery } from '@/hooks/useQueries';
-import { shiftDigits } from '@/utils';
+import { useAPYQuery, useBalanceQuery, useIntentQuery, useQBalanceQuery, useTokenPriceQuery, useZoneQuery } from '@/hooks/useQueries';
+import { shiftDigits, toNumber } from '@/utils';
 
 export interface PortfolioItemInterface {
   title: string;
@@ -29,32 +29,56 @@ type BalanceRates = {
   [key: string]: string;
 };
 
-function Home() {
-  const { address } = useChain('quicksilver');
-  const { address: qAddress, isWalletConnected } = useChain('quicksilver');
+type APYRates = {
+  [key: string]: Number;
+};
 
-  // Define a function to fetch token price data
+function Home() {
+  const { address: qAddress, isWalletConnected } = useChain('quicksilver');
+  const { address } = useChain('quicksilver');
+  // Function to fetch token price from an API
   const fetchTokenPrice = async (token: any) => {
     try {
       const response = await axios.get(`https://api-osmosis.imperator.co/tokens/v2/price/${token}`);
-      return response.data.price; // Adjust this according to your API response structure
+      return response.data.price;
     } catch (error) {
       console.error('Error fetching token price:', error);
       return null;
     }
   };
+
+  // Retrieve balance for each token
   const { balance: qAtom, isLoading: qAtomIsLoading, isError: qAtomIsError } = useQBalanceQuery('quicksilver', qAddress ?? '', 'atom');
   const { balance: qOsmo, isLoading: qOsmoIsLoading, isError: qOsmoIsError } = useQBalanceQuery('quicksilver', qAddress ?? '', 'osmo');
   const { balance: qStars, isLoading: qStarsIsLoading, isError: qStarsIsError } = useQBalanceQuery('quicksilver', qAddress ?? '', 'stars');
   const { balance: qRegen, isLoading: qRegenIsLoading, isError: qRegenIsError } = useQBalanceQuery('quicksilver', qAddress ?? '', 'regen');
   const { balance: qSomm, isLoading: qSommIsLoading, isError: qSommIsError } = useQBalanceQuery('quicksilver', qAddress ?? '', 'somm');
 
+  // Retrieve zone data for each token
   const { data: CosmosZone, isLoading: isCosmosZoneLoading, isError: isCosmosZoneError } = useZoneQuery('cosmoshub-4');
   const { data: OsmoZone, isLoading: isOsmoZoneLoading, isError: isOsmoZoneError } = useZoneQuery('osmosis-1');
   const { data: StarZone, isLoading: isStarZoneLoading, isError: isStarZoneError } = useZoneQuery('stargaze-1');
   const { data: RegenZone, isLoading: isRegenZoneLoading, isError: isRegenZoneError } = useZoneQuery('regen-1');
   const { data: SommZone, isLoading: isSommZoneLoading, isError: isSommZoneError } = useZoneQuery('sommelier-3');
+  // Retrieve APY data for each token
+  const { APY: cosmosAPY, isLoading: isCosmosAPYLoading, isError: isCosmosAPYError } = useAPYQuery('cosmoshub-4');
+  const { APY: osmoAPY, isLoading: isOsmoAPYLoading, isError: isOsmoAPYError } = useAPYQuery('osmosis-1');
+  const { APY: starsAPY, isLoading: isStarsAPYLoading, isError: isStarsAPYError } = useAPYQuery('stargaze-1');
+  const { APY: regenAPY, isLoading: isRegenAPYLoading, isError: isRegenAPYError } = useAPYQuery('regen-1');
+  const { APY: sommAPY, isLoading: isSommAPYLoading, isError: isSommAPYError } = useAPYQuery('sommelier-3');
 
+  // useMemo hook to cache APY data
+  const qAPYRates: APYRates = useMemo(
+    () => ({
+      qAtom: cosmosAPY,
+      qOsmo: osmoAPY,
+      qStars: starsAPY,
+      qRegen: regenAPY,
+      qSomm: sommAPY,
+    }),
+    [cosmosAPY, osmoAPY, starsAPY, regenAPY, sommAPY],
+  );
+  // useMemo hook to cache qBalance data
   const qBalances: BalanceRates = useMemo(
     () => ({
       qAtom: shiftDigits(qAtom?.balance.amount ?? '', -6),
@@ -66,9 +90,7 @@ function Home() {
     [qAtom, qOsmo, qStars, qRegen, qSomm],
   );
 
-  const [portfolioItems, setPortfolioItems] = useState<PortfolioItemInterface[]>([]);
-  const [totalPortfolioValue, setTotalPortfolioValue] = useState(0);
-
+  // useMemo hook to cache redemption rate data
   const redemptionRates: NumericRedemptionRates = useMemo(
     () => ({
       atom: CosmosZone?.redemptionRate ? parseFloat(CosmosZone.redemptionRate) : 1,
@@ -80,19 +102,32 @@ function Home() {
     [CosmosZone, OsmoZone, StarZone, RegenZone, SommZone],
   );
 
+  // State hooks for portfolio items, total portfolio value, and other metrics
+  const [portfolioItems, setPortfolioItems] = useState<PortfolioItemInterface[]>([]);
+  const [totalPortfolioValue, setTotalPortfolioValue] = useState(0);
+  const [averageApy, setAverageAPY] = useState(0);
+  const [totalYearlyYield, setTotalYearlyYield] = useState(0);
+  // useEffect hook to compute portfolio metrics when dependencies change
   useEffect(() => {
     const updatePortfolioItems = async () => {
       let totalValue = 0;
+      let totalYearlyYield = 0;
+      let weightedAPY = 0;
       let updatedItems = [];
-
+      // Loop through each token to compute value, APY, and yield
       for (const token of Object.keys(qBalances)) {
         const baseToken = token.replace('q', '').toLowerCase();
         const price = await fetchTokenPrice(baseToken);
         const qTokenPrice = price * Number(redemptionRates[baseToken]);
         const qTokenBalance = qBalances[token];
-
         const itemValue = Number(qTokenBalance) * qTokenPrice;
+
+        const qTokenAPY = qAPYRates[token] || 0;
+        const yearlyYield = itemValue * Number(qTokenAPY);
+        // Accumulate total values and compute weighted APY
         totalValue += itemValue;
+        totalYearlyYield += yearlyYield;
+        weightedAPY += (itemValue / totalValue) * Number(qTokenAPY);
 
         updatedItems.push({
           title: token.toUpperCase(),
@@ -102,19 +137,35 @@ function Home() {
           qTokenPrice: qTokenPrice || 0,
         });
       }
-
-      // Now, calculate the percentage of each item
-      updatedItems = updatedItems.map((item) => ({
-        ...item,
-        percentage: ((((Number(item.amount) * item.qTokenPrice) / totalValue) * 100) / 100).toFixed(2),
-      }));
-
+      // Recalculate percentages for each item based on total value
+      updatedItems = updatedItems.map((item) => {
+        const itemValue = Number(item.amount) * item.qTokenPrice;
+        return {
+          ...item,
+          percentage: (((itemValue / totalValue) * 100) / 100).toFixed(2),
+        };
+      });
+      // Update state with calculated data
       setPortfolioItems(updatedItems);
       setTotalPortfolioValue(totalValue);
+      setAverageAPY(weightedAPY);
+      setTotalYearlyYield(totalYearlyYield);
     };
 
     updatePortfolioItems();
-  }, [qBalances, CosmosZone, OsmoZone, StarZone, RegenZone, SommZone, redemptionRates]);
+  }, [qBalances, CosmosZone, OsmoZone, StarZone, RegenZone, SommZone, redemptionRates, qAPYRates]);
+
+  // useMemo hook to prepare assets data for the AssetsGrid component
+  const assetsData = useMemo(() => {
+    return Object.keys(qBalances).map((token) => {
+      return {
+        name: token.toUpperCase().replace('Q', 'q'),
+        balance: toNumber(qBalances[token], 2).toString(),
+        apy: parseFloat(qAPYRates[token]?.toFixed(2)) || 0,
+        native: token.replace('q', '').toUpperCase(),
+      };
+    });
+  }, [qBalances, qAPYRates]);
 
   return (
     <>
@@ -152,7 +203,13 @@ function Home() {
               w="lg"
               h="sm"
             >
-              <MyPortfolio portfolioItems={portfolioItems} isWalletConnected={isWalletConnected} totalValue={totalPortfolioValue} />
+              <MyPortfolio
+                portfolioItems={portfolioItems}
+                isWalletConnected={isWalletConnected}
+                totalValue={totalPortfolioValue}
+                averageApy={averageApy}
+                totalYearlyYield={totalYearlyYield}
+              />
             </Flex>
             {/* Intent box */}
             <Flex
@@ -170,7 +227,7 @@ function Home() {
           </Flex>
           <Spacer />
           {/* Assets Grid */}
-          <AssetsGrid />
+          <AssetsGrid assets={assetsData} />
           <Spacer />
           {/* Unbonding Table */}
           <Box mt="20px">
@@ -182,10 +239,11 @@ function Home() {
     </>
   );
 }
-
+// disable ssr in order to use useQuery hooks
 const DynamicAssetsPage = dynamic(() => Promise.resolve(Home), {
   ssr: false,
 });
+
 const AssetsWrapper = () => {
   return <DynamicAssetsPage />;
 };

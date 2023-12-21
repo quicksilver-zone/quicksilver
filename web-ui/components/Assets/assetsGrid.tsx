@@ -1,11 +1,21 @@
+import { shiftDigits } from '@/utils';
 import { Box, SimpleGrid, VStack, Text, Button, Divider, useColorModeValue, HStack, Flex, Grid, GridItem } from '@chakra-ui/react';
 import React from 'react';
 
 interface AssetCardProps {
   assetName: string;
   balance: string;
-  apy: string;
+  apy: number;
   nativeAssetName: string;
+}
+
+interface AssetGridProps {
+  assets: Array<{
+    name: string;
+    balance: string;
+    apy: number;
+    native: string;
+  }>;
 }
 
 const AssetCard: React.FC<AssetCardProps> = ({ assetName, balance, apy, nativeAssetName }) => {
@@ -21,11 +31,11 @@ const AssetCard: React.FC<AssetCardProps> = ({ assetName, balance, apy, nativeAs
               APY:
             </Text>
             <Text fontSize="md" fontWeight="bold" isTruncated>
-              {apy}
+              {shiftDigits(apy.toFixed(2), 2)}%
             </Text>
           </HStack>
         </HStack>
-        <Divider />
+        <Divider bgColor={'complimentary.900'} />
         <Grid mt={4} templateColumns="repeat(2, 1fr)" gap={4} w="full">
           <GridItem>
             <Text fontSize="md" textAlign="left">
@@ -50,64 +60,6 @@ const AssetCard: React.FC<AssetCardProps> = ({ assetName, balance, apy, nativeAs
         </Grid>
       </VStack>
 
-      <HStack borderBottom="1px" borderBottomColor="complimentary.900" w="full" pb={4} pt={4} spacing={2}>
-        <Button
-          _active={{
-            transform: 'scale(0.95)',
-            color: 'complimentary.800',
-          }}
-          _hover={{
-            bgColor: 'rgba(255,128,0, 0.25)',
-            color: 'complimentary.300',
-          }}
-          color="white"
-          flex={1}
-          size="sm"
-          variant="outline"
-        >
-          Deposit
-        </Button>
-        <Button
-          _active={{
-            transform: 'scale(0.95)',
-            color: 'complimentary.800',
-          }}
-          _hover={{
-            bgColor: 'rgba(255,128,0, 0.25)',
-            color: 'complimentary.300',
-          }}
-          color="white"
-          flex={1}
-          size="sm"
-          variant="outline"
-        >
-          Withdraw
-        </Button>
-      </HStack>
-      <HStack w="full" justify="space-between">
-        <VStack>
-          <Text fontWeight="bold" fontSize={'xl'} isTruncated>
-            {nativeAssetName}
-          </Text>
-          <Divider />
-        </VStack>
-        <VStack>
-          <Text fontSize="md" fontWeight="bold" isTruncated></Text>
-          <Text fontSize="xs" fontWeight="light" isTruncated></Text>
-        </VStack>
-      </HStack>
-      <Grid templateColumns="repeat(2, 1fr)" gap={4} w="full">
-        <GridItem>
-          <Text fontSize="md" textAlign="left">
-            ON QUICKSILVER:
-          </Text>
-        </GridItem>
-        <GridItem>
-          <Text fontSize="md" textAlign="right" fontWeight="semibold">
-            {balance}
-          </Text>
-        </GridItem>
-      </Grid>
       <HStack w="full" pb={4} pt={4} spacing={2}>
         <Button
           _active={{
@@ -118,9 +70,10 @@ const AssetCard: React.FC<AssetCardProps> = ({ assetName, balance, apy, nativeAs
             bgColor: 'rgba(255,128,0, 0.25)',
             color: 'complimentary.300',
           }}
+          color="white"
           flex={1}
           size="sm"
-          variant="solid"
+          variant="outline"
         >
           Deposit
         </Button>
@@ -133,9 +86,10 @@ const AssetCard: React.FC<AssetCardProps> = ({ assetName, balance, apy, nativeAs
             bgColor: 'rgba(255,128,0, 0.25)',
             color: 'complimentary.300',
           }}
+          color="white"
           flex={1}
           size="sm"
-          variant="solid"
+          variant="outline"
         >
           Withdraw
         </Button>
@@ -144,19 +98,11 @@ const AssetCard: React.FC<AssetCardProps> = ({ assetName, balance, apy, nativeAs
   );
 };
 
-const AssetsGrid = () => {
-  const assets = [
-    { name: 'qATOM', balance: '0.123', apy: '12.34%', native: 'ATOM' },
-    { name: 'qREGEN', balance: '0.123', apy: '12.34%', native: 'REGEN' },
-    { name: 'qOSMO', balance: '0.123', apy: '12.34%', native: 'OSMO' },
-    { name: 'qSTARS', balance: '0.123', apy: '12.34%', native: 'STARS' },
-    { name: 'qSOMM', balance: '0.123', apy: '12.34%', native: 'SOMM' },
-  ];
-
+const AssetsGrid: React.FC<AssetGridProps> = ({ assets }) => {
   return (
     <>
       <Text fontSize="xl" fontWeight="bold" color="white" mb={4}>
-        Assets (qAssets + Native Balance)
+        qAssets
       </Text>
       <Box overflowX="auto" w="full">
         <Flex gap="8">

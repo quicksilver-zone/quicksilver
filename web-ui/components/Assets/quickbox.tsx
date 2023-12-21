@@ -1,4 +1,4 @@
-import { Box, Flex, Text, Button, VStack, useColorModeValue, HStack, SkeletonCircle } from '@chakra-ui/react';
+import { Box, Flex, Text, Button, VStack, useColorModeValue, HStack, SkeletonCircle, Spinner } from '@chakra-ui/react';
 import { useChain } from '@cosmos-kit/react';
 
 import { defaultChainName } from '@/config';
@@ -21,6 +21,24 @@ const QuickBox = () => {
         <Text fontSize="xl" textAlign="center">
           Wallet is not connected. Please connect your wallet to interact with your QCK tokens.
         </Text>
+      </Flex>
+    );
+  }
+
+  if (!balance) {
+    return (
+      <Flex
+        w="100%"
+        h="100%"
+        p={4}
+        borderRadius="lg"
+        flexDirection="column"
+        justifyContent="center"
+        alignItems="center"
+        gap={6}
+        color="white"
+      >
+        <Spinner w={'200px'} h="200px" color="complimentary.900" />
       </Flex>
     );
   }
