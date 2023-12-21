@@ -3,7 +3,7 @@ import { SigningStargateClient, Coin, StdFee } from '@cosmjs/stargate';
 import { ChainName } from '@cosmos-kit/core';
 import { quicksilver } from 'quicksilverjs';
 import { Dispatch, SetStateAction } from 'react';
-import { cosmos } from '@chalabi/quicksilverjs';
+import { ibc } from 'interchain-query';
 
 const showSuccessToast = (toast: ReturnType<typeof useToast>, txHash: string, chainName: ChainName) => {
   const mintscanUrl = `https://www.mintscan.io/${chainName}/txs/${txHash}`;
@@ -56,13 +56,23 @@ export const ibcWithdrawlTx = async (
       return;
     }
 
-const { transfer } =
+    const { transfer } = ibc.applications.transfer.v1.MessageComposer.withTypeUrl;
 
-    const value: Coin = { amount: unbondAmount.toFixed(0), denom: local_denom };
-    const msgRequestRedemption = requestRedemption({
-      value: value,
-      fromAddress: fromAddress,
-      destinationAddress: dstAddress,
+    const msgIbcTransfer = transfer({
+      sourcePort: 'transfer',
+      sourceChannel: 'channel-0',
+      token: {
+        denom: 'uqck',
+        amount: '7500',
+      },
+      sender: fromAddress,
+      receiver: dstAddress,
+      timeoutHeight: {
+        revisionNumber: BigInt(0),
+        revisionHeight: BigInt(0),
+      },
+      timeoutTimestamp: BigInt(0),
+      memo: '',
     });
 
     const fee: StdFee = {
@@ -75,7 +85,7 @@ const { transfer } =
       gas: '500000',
     };
 
-    const response = await stargateClient.signAndBroadcast(fromAddress, [msgRequestRedemption], fee);
+    const response = await stargateClient.signAndBroadcast(fromAddress, [msgIbcTransfer], fee);
 
     // Handle response
     setResp(JSON.stringify(response, null, 2));

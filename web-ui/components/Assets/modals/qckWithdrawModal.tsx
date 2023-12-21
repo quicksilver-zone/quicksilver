@@ -13,14 +13,21 @@ import {
   Select,
   useDisclosure,
   useToast,
+  Spinner,
 } from '@chakra-ui/react';
 import { ChainName } from '@cosmos-kit/core';
-import { useManager } from '@cosmos-kit/react';
+import { useChain, useManager } from '@cosmos-kit/react';
 import { color } from 'framer-motion';
 import { useState, useMemo, useEffect } from 'react';
 
 import { ChooseChain } from '@/components/react/choose-chain';
 import { handleSelectChainDropdown, ChainOption } from '@/components/types';
+import { useTx } from '@/hooks';
+import { useIbcBalanceQuery } from '@/hooks/useQueries';
+import { getCoin } from '@/utils';
+import { StdFee, coins } from '@cosmjs/stargate';
+import { ibc } from 'interchain-query';
+import BigNumber from 'bignumber.js';
 
 export function WithdrawModal() {
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -28,6 +35,8 @@ export function WithdrawModal() {
 
   const [chainName, setChainName] = useState<ChainName | undefined>('osmosis');
   const { chainRecords, getChainLogo } = useManager();
+  const [amount, setAmount] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const chainOptions = useMemo(() => {
     return chainRecords
@@ -41,7 +50,7 @@ export function WithdrawModal() {
   }, [chainRecords, getChainLogo]);
 
   useEffect(() => {
-    setChainName(window.localStorage.getItem('selected-chain') || 'akash');
+    setChainName(window.localStorage.getItem('selected-chain') || 'osmosis');
   }, []);
 
   const onChainChange: handleSelectChainDropdown = async (selectedValue: ChainOption | null) => {
@@ -55,16 +64,57 @@ export function WithdrawModal() {
 
   const chooseChain = <ChooseChain chainName={chainName} chainInfos={chainOptions} onChange={onChainChange} />;
 
-  const handleDeposit = () => {
-    // Implement deposit logic here
-    // Show toast on success or error
-    toast({
-      title: 'Deposit Successful',
-      status: 'success',
-      duration: 9000,
-      isClosable: true,
+  const fromChain = 'quicksilver';
+  const toChain = chainName;
+
+  const { transfer } = ibc.applications.transfer.v1.MessageComposer.withTypeUrl;
+  const { address, connect, status, message, wallet } = useChain(toChain ?? '');
+  const { address: qAddress } = useChain('quicksilver');
+  const { balance } = useIbcBalanceQuery(fromChain ?? '', address ?? '');
+  const { tx } = useTx(fromChain ?? '');
+
+  const onSubmitClick = async () => {
+    setIsLoading(true);
+
+    const coin = getCoin(fromChain ?? '');
+    const transferAmount = new BigNumber(amount).shiftedBy(6).toString();
+
+    const fee: StdFee = {
+      amount: coins('1000', coin.base),
+      gas: '300000',
+    };
+
+    const sourcePort = 'transfer';
+    const sourceChannel = 'channel-0';
+
+    const token = {
+      denom: 'uqck',
+      amount: transferAmount,
+    };
+
+    const stamp = Date.now();
+    const timeoutInNanos = (stamp + 1.2e6) * 1e6;
+
+    const msg = transfer({
+      sourcePort,
+      sourceChannel,
+      sender: qAddress ?? '',
+      receiver: address ?? '',
+      token,
+      timeoutHeight: undefined,
+      //@ts-ignore
+      timeoutTimestamp: timeoutInNanos,
+      memo: '',
     });
-    onClose(); // Close modal after deposit
+
+    await tx([msg], {
+      fee,
+      onSuccess: () => {
+        setAmount('');
+      },
+    });
+
+    setIsLoading(false);
   };
 
   return (
@@ -101,7 +151,25 @@ export function WithdrawModal() {
             {/* Amount Input */}
             <FormControl mt={4}>
               <FormLabel color="white">Amount</FormLabel>
-              <Input color={'white'} placeholder="Enter amount" />
+              <Input
+                _active={{
+                  borderColor: 'complimentary.900',
+                }}
+                _selected={{
+                  borderColor: 'complimentary.900',
+                }}
+                _hover={{
+                  borderColor: 'complimentary.900',
+                }}
+                _focus={{
+                  borderColor: 'complimentary.900',
+                  boxShadow: '0 0 0 3px #FF8000',
+                }}
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                color={'white'}
+                placeholder="Enter amount"
+              />
             </FormControl>
           </ModalBody>
 
@@ -116,9 +184,11 @@ export function WithdrawModal() {
                 color: 'complimentary.300',
               }}
               mr={3}
-              onClick={handleDeposit}
+              minW="100px"
+              onClick={onSubmitClick}
             >
-              Withdraw
+              {isLoading === true && <Spinner size="sm" />}
+              {isLoading === false && 'Withdraw'}
             </Button>
             <Button
               _active={{

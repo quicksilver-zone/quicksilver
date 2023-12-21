@@ -13,6 +13,7 @@ import {
   Select,
   useDisclosure,
   useToast,
+  Spinner,
 } from '@chakra-ui/react';
 import { ChainName } from '@cosmos-kit/core';
 import { useChain, useManager } from '@cosmos-kit/react';
@@ -152,7 +153,25 @@ export function DepositModal() {
             {/* Amount Input */}
             <FormControl mt={4}>
               <FormLabel color="white">Amount</FormLabel>
-              <Input value={amount} onChange={(e) => setAmount(e.target.value)} color={'white'} placeholder="Enter amount" />
+              <Input
+                _active={{
+                  borderColor: 'complimentary.900',
+                }}
+                _selected={{
+                  borderColor: 'complimentary.900',
+                }}
+                _hover={{
+                  borderColor: 'complimentary.900',
+                }}
+                _focus={{
+                  borderColor: 'complimentary.900',
+                  boxShadow: '0 0 0 3px #FF8000',
+                }}
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                color={'white'}
+                placeholder="Enter amount"
+              />
             </FormControl>
           </ModalBody>
 
@@ -166,10 +185,12 @@ export function DepositModal() {
                 bgColor: 'rgba(255,128,0, 0.25)',
                 color: 'complimentary.300',
               }}
+              minW="100px"
               mr={3}
               onClick={onSubmitClick}
             >
-              Deposit
+              {isLoading === true && <Spinner size="sm" />}
+              {isLoading === false && 'Deposit'}
             </Button>
             <Button
               _active={{

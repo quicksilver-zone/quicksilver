@@ -19,7 +19,7 @@ export const useToaster = () => {
   const toast = useToast({
     position: 'top-right',
     containerStyle: {
-      maxWidth: '150px',
+      maxWidth: '300px',
     },
   });
 
