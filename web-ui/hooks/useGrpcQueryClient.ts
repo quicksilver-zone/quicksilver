@@ -8,18 +8,20 @@ const createGrpcGateWayClient = quicksilver.ClientFactory.createGrpcGateWayClien
 
 export const useGrpcQueryClient = (chainName: string) => {
   let grpcEndpoint: string | HttpEndpoint | undefined;
+  const env = process.env.NEXT_PUBLIC_CHAIN_ENV; 
   const solution = useQueryHooks(chainName);
 
-  // Custom logic for setting rpcEndpoint based on the chain name
-  if (chainName === 'quicksilver') {
-    grpcEndpoint = 'http://135.181.140.225:1317';
-  } else if (chainName === 'cosmoshub') {
-    grpcEndpoint = 'https://rest.sentry-01.theta-testnet.polypore.xyz';
-  } else {
-    grpcEndpoint = solution.rpcEndpoint;
-  }
 
-  grpcEndpoint = solution.rpcEndpoint;
+  const endpoints: { [key: string]: string | undefined } = {
+ 
+    cosmoshub: env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_LCD_ENDPOINT_COSMOSHUB : process.env.NEXT_PUBLIC_MAINNET_LCD_ENDPOINT_COSMOSHUB,
+    sommelier: env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_LCD_ENDPOINT_SOMMELIER : process.env.NEXT_PUBLIC_MAINNET_LCD_ENDPOINT_SOMMELIER,
+    stargaze: env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_LCD_ENDPOINT_STARGAZE : process.env.NEXT_PUBLIC_MAINNET_LCD_ENDPOINT_STARGAZE,
+    regen: env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_LCD_ENDPOINT_REGEN : process.env.NEXT_PUBLIC_MAINNET_LCD_ENDPOINT_REGEN,
+    osmosis: env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_LCD_ENDPOINT_OSMOSIS : process.env.NEXT_PUBLIC_MAINNET_LCD_ENDPOINT_OSMOSIS,
+  };
+
+  grpcEndpoint = endpoints[chainName] || solution.rpcEndpoint;
 
   const grpcQueryClientQuery = useQuery({
     queryKey: ['grpcQueryClient', grpcEndpoint],

@@ -26,21 +26,19 @@ export function WithdrawModal() {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const toast = useToast();
 
-  const [chainName, setChainName] = useState<ChainName | undefined>('akash');
+  const [chainName, setChainName] = useState<ChainName | undefined>('osmosis');
   const { chainRecords, getChainLogo } = useManager();
 
-  const chainOptions = useMemo(
-    () =>
-      chainRecords.map((chainRecord) => {
-        return {
-          chainName: chainRecord?.name,
-          label: chainRecord?.chain.pretty_name,
-          value: chainRecord?.name,
-          icon: getChainLogo(chainRecord.name),
-        };
-      }),
-    [chainRecords, getChainLogo],
-  );
+  const chainOptions = useMemo(() => {
+    return chainRecords
+      .filter((chainRecord) => chainRecord.name === 'osmosis')
+      .map((chainRecord) => ({
+        chainName: chainRecord?.name,
+        label: chainRecord?.chain.pretty_name,
+        value: chainRecord?.name,
+        icon: getChainLogo(chainRecord.name),
+      }));
+  }, [chainRecords, getChainLogo]);
 
   useEffect(() => {
     setChainName(window.localStorage.getItem('selected-chain') || 'akash');

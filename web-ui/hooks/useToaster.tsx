@@ -1,8 +1,4 @@
-import {
-  useToast,
-  Text,
-  Box,
-} from '@chakra-ui/react';
+import { useToast, Text, Box } from '@chakra-ui/react';
 
 export enum ToastType {
   Info = 'info',
@@ -27,14 +23,9 @@ export const useToaster = () => {
     },
   });
 
-  const customToast = ({
-    type,
-    title,
-    message,
-    closable = true,
-    duration = 5000,
-  }: CustomToast) => {
+  const customToast = ({ type, title, message, closable = true, duration = 5000 }: CustomToast) => {
     return toast({
+      position: 'bottom-right',
       title,
       duration,
       status: type,

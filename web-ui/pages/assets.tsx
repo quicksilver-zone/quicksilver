@@ -200,7 +200,7 @@ function Home() {
               bgColor="rgba(255,255,255,0.1)"
               borderRadius="10px"
               p={5}
-              w="lg"
+              w="2xl"
               h="sm"
             >
               <MyPortfolio

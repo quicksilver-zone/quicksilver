@@ -5,7 +5,7 @@ import { defaultChainName } from '@/config';
 import { useAPYQuery, useBalanceQuery, useZoneQuery } from '@/hooks/useQueries';
 import { shiftDigits } from '@/utils';
 
-import { DepositModal } from './modals/qckDepositModa';
+import { DepositModal } from './modals/qckDepositModal';
 import { WithdrawModal } from './modals/qckWithdrawModal';
 
 const QuickBox = () => {

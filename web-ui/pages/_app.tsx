@@ -14,6 +14,7 @@ import { chains, assets } from 'chain-registry';
 import { cosmosAminoConverters, cosmosProtoRegistry } from 'interchain-query';
 import type { AppProps } from 'next/app';
 import { quicksilverProtoRegistry, quicksilverAminoConverters } from 'quicksilverjs';
+import { ibcAminoConverters, ibcProtoRegistry } from 'interchain-query';
 
 import { Header, SideHeader } from '@/components';
 import { defaultTheme } from '@/config';
@@ -23,12 +24,14 @@ import '@interchain-ui/react/styles';
 
 function CreateCosmosApp({ Component, pageProps }: AppProps) {
   const signerOptions: SignerOptions = {
+    //@ts-ignore
     signingStargate: (chain: Chain): SigningStargateClientOptions | undefined => {
-      const mergedRegistry = new Registry([...cosmosProtoRegistry, ...quicksilverProtoRegistry]);
+      const mergedRegistry = new Registry([...cosmosProtoRegistry, ...quicksilverProtoRegistry, ...ibcProtoRegistry]);
 
       const mergedAminoTypes = new AminoTypes({
         ...cosmosAminoConverters,
         ...quicksilverAminoConverters,
+        ...ibcAminoConverters,
       });
 
       return {

@@ -114,7 +114,7 @@ export const getValidatorsFromAPI = async (chainId) => {
 
 export const getAPY = async (chainId: string) => {
     try {
-        const res = await axios.get(`https://data.quicksilver.zone/apr`)
+        const res = await axios.get(`${process.env.NEXT_PUBLIC_QUICKSILVER_DATA_API}/apr`)
         const { chains } = res.data
         if (!chains) {
             return 0

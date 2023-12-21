@@ -8,16 +8,19 @@ const createRPCQueryClient = cosmos.ClientFactory.createRPCQueryClient;
 
 export const useRpcQueryClient = (chainName: string) => {
   let rpcEndpoint: string | HttpEndpoint | undefined;
-  const solution = useQueryHooks(chainName);
 
-  // Custom logic for setting rpcEndpoint based on the chain name
-  if (chainName === 'quicksilver') {
-    rpcEndpoint = 'https://rpc.quicksilver.zone';
-  } else if (chainName === 'cosmoshub') {
-    rpcEndpoint = 'https://rpc.sentry-01.theta-testnet.polypore.xyz';
-  } else {
-    rpcEndpoint = solution.rpcEndpoint;
-  }
+  const env = process.env.NEXT_PUBLIC_CHAIN_ENV; 
+
+  const endpoints: { [key: string]: string | undefined } = {
+    quicksilver: env === 'testnet' ? process.env.TESTNET_RPC_ENDPOINT_QUICKSILVER : process.env.MAINNET_RPC_ENDPOINT_QUICKSILVER,
+    cosmoshub: env === 'testnet' ? process.env.TESTNET_RPC_ENDPOINT_COSMOSHUB : process.env.MAINNET_RPC_ENDPOINT_COSMOSHUB,
+    sommelier: env === 'testnet' ? process.env.TESTNET_RPC_ENDPOINT_SOMMELIER : process.env.MAINNET_RPC_ENDPOINT_SOMMELIER,
+    stargaze: env === 'testnet' ? process.env.TESTNET_RPC_ENDPOINT_STARGAZE : process.env.MAINNET_RP_ENDPOINTC_STARGAZE,
+    regen: env === 'testnet' ? process.env.TESTNET_RPC_ENDPOINT_REGEN : process.env.MAINNET_RPC_ENDPOINT_REGEN,
+    osmosis: env === 'testnet' ? process.env.TESTNET_RPC_ENDPOINT_OSMOSIS : process.env.MAINNET_RPC_ENDPOINT_OSMOSIS,
+  };
+
+  rpcEndpoint = endpoints[chainName];
 
   const rpcQueryClientQuery = useQuery({
     queryKey: ['rpcQueryClient', rpcEndpoint],
