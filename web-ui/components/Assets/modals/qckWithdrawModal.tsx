@@ -186,6 +186,7 @@ export function WithdrawModal() {
               mr={3}
               minW="100px"
               onClick={onSubmitClick}
+              disabled={Number.isNaN(Number(amount))}
             >
               {isLoading === true && <Spinner size="sm" />}
               {isLoading === false && 'Withdraw'}

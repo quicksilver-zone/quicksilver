@@ -188,6 +188,7 @@ export function DepositModal() {
               minW="100px"
               mr={3}
               onClick={onSubmitClick}
+              disabled={!amount}
             >
               {isLoading === true && <Spinner size="sm" />}
               {isLoading === false && 'Deposit'}
