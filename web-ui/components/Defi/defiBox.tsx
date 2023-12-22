@@ -111,7 +111,7 @@ const actionTitles: Record<string, ActionButtonTitle> = {
   vaults: 'Vaults',
 };
 
-const filterCategories = {
+const filterCategories: Record<string, (asset: DefiAsset) => boolean> = {
   All: () => true,
   'Borrowing & Lending': (asset: DefiAsset) => asset.action === 'Borrow' || asset.action === 'Lend',
   Vaults: (asset: DefiAsset) => asset.action === 'Vaults',
@@ -122,7 +122,6 @@ const filterCategories = {
 const DefiTable = () => {
   const [activeFilter, setActiveFilter] = useState<string>('All');
 
-  // Function to handle filter button clicks
   const handleFilterClick = (filter: string) => {
     setActiveFilter(filter);
   };

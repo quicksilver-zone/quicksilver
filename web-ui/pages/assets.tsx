@@ -176,6 +176,9 @@ function Home() {
             <meta name="viewport" content="width=device-width, initial-scale=1.0" />
             <link rel="icon" href="/quicksilver/img/favicon.png" />
           </Head>
+          <Text pb={2} color="white" fontSize="24px">
+            Assets
+          </Text>
           <Flex flexDir={'row'} py={6} alignItems="center" justifyContent={'space-between'} gap="4">
             {/* Quick box */}
             <Flex
