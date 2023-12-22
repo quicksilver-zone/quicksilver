@@ -17,7 +17,7 @@ import {
 } from '@chakra-ui/react';
 import dynamic from 'next/dynamic';
 import Head from 'next/head';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { Header, NetworkSelect, SideHeader } from '@/components';
 import { StakingBox } from '@/components';
@@ -25,6 +25,7 @@ import { InfoBox } from '@/components';
 import { AssetsAccordian } from '@/components';
 import { useAPYQuery } from '@/hooks/useQueries';
 import { networks } from '@/state/chains/prod';
+import { useChain } from '@cosmos-kit/react';
 
 const DynamicStakingBox = dynamic(() => Promise.resolve(StakingBox), {
   ssr: false,
@@ -51,6 +52,13 @@ export default function Staking() {
   } else if (isError) {
     displayApr = 'Error';
   }
+
+  const { connect, isWalletConnected } = useChain(selectedNetwork.chainName);
+
+  useEffect(() => {
+    if (!isWalletConnected) connect();
+    else if (isWalletConnected) return;
+  }, [selectedNetwork]);
 
   const flexDirection = useBreakpointValue({ base: 'column', md: 'row' });
 

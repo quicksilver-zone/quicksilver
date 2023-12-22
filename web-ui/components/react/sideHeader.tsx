@@ -266,6 +266,32 @@ export const SideHeader = () => {
                       />
                     </Box>
                   </Tooltip>
+                  <Tooltip borderLeft="4px solid rgba(255, 128, 0, 0.9)" label="Airdrop" placement="right">
+                    <Box
+                      w="55px"
+                      h="55px"
+                      onClick={() => router.push('/airdrop')}
+                      cursor="pointer"
+                      borderRadius="100px"
+                      boxShadow={
+                        selectedPage === 'aidrop' ? `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}` : ''
+                      }
+                      _hover={{
+                        boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`,
+                        transition: transitionStyle,
+                      }}
+                    >
+                      <Image
+                        filter={selectedPage === 'Airdrop' ? 'contrast(100%)' : 'contrast(50%)'}
+                        _hover={{
+                          filter: 'contrast(100%)',
+                        }}
+                        alt="DeFi"
+                        h="55px"
+                        src="/quicksilver/img/test5.png"
+                      />
+                    </Box>
+                  </Tooltip>
 
                   <Tooltip borderLeft="4px solid rgba(255, 128, 0, 0.9)" label="DeFi" placement="right">
                     <Box
