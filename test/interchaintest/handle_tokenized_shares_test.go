@@ -2,11 +2,24 @@ package interchaintest
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/json"
 	"fmt"
+	"github.com/avast/retry-go/v4"
+	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/types"
+	authTx "github.com/cosmos/cosmos-sdk/x/auth/tx"
+	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/strangelove-ventures/interchaintest/v5"
+	abcitypes "github.com/tendermint/tendermint/abci/types"
+	_ "go.uber.org/zap"
+	_ "path"
+	"path/filepath"
 	"testing"
+	"time"
 
 	transfertypes "github.com/cosmos/ibc-go/v5/modules/apps/transfer/types"
+	istypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 	"github.com/strangelove-ventures/interchaintest/v5/chain/cosmos"
 	"github.com/strangelove-ventures/interchaintest/v5/ibc"
 	"github.com/strangelove-ventures/interchaintest/v5/testreporter"
@@ -14,6 +27,19 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
 )
+
+// TxProposalv1 contains chain proposal transaction detail for gov module v1 (sdk v0.46.0+)
+type TxProposalv1 struct {
+	Messages []json.RawMessage `json:"messages"`
+	Metadata string            `json:"metadata"`
+	Deposit  string            `json:"deposit"`
+	Title    string            `json:"title"`
+	Summary  string            `json:"summary"`
+
+	// SDK v50 only
+	Proposer  string `json:"proposer,omitempty"`
+	Expedited bool   `json:"expedited,omitempty"`
+}
 
 // TestHandleTokenizedShares spins up a Quicksilver and Juno network, initializes an IBC connection between them,
 // and sends an ICS20 token transfer from Quicksilver->Juno and then back from Juno->Quicksilver.
@@ -184,4 +210,134 @@ func TestHandleTokenizedShares(t *testing.T) {
 	junoUpdateBal, err = juno.GetBalance(ctx, junoUserAddr, quicksilverIBCDenom)
 	require.NoError(t, err)
 	require.Equal(t, int64(0), junoUpdateBal)
+
+	content := istypes.RegisterZoneProposal{
+		Title:            "register lstest-1 zone",
+		Description:      "register lstest-1 zone with multisend and lsm enabled",
+		ConnectionId:     "connection-0",
+		BaseDenom:        quicksilver.Config().Denom,
+		LocalDenom:       quicksilver.Config().Denom,
+		AccountPrefix:    "quick",
+		DepositsEnabled:  true,
+		UnbondingEnabled: true,
+		LiquidityModule:  false,
+		ReturnToSender:   true,
+		Decimals:         6,
+	}
+
+	check, err := cdctypes.NewAnyWithValue(&content)
+
+	message := govv1.MsgExecLegacyContent{
+		Content:   check,
+		Authority: "quick10d07y265gmmuvt4z0w9aw880jnsr700j3xrh0p",
+	}
+	msg, err := quicksilver.Config().EncodingConfig.Codec.MarshalInterfaceJSON(&message)
+	fmt.Println("Msg: ", string(msg))
+	require.NoError(t, err)
+
+	proposal := TxProposalv1{
+		Metadata: "none",
+		Deposit:  "500000000" + quicksilver.Config().Denom,
+		Title:    "title",
+		Summary:  "register lstest-1 zone with multisend and lsm enabled",
+	}
+
+	//Appending proposal data in messages
+	proposal.Messages = append(proposal.Messages, msg)
+
+	require.NoError(t, err)
+
+	//Submitting a proposal on Quicksilver
+	proposalID, err := SubmitProposal(ctx, quicksilver, quickUserAddr, proposal)
+
+	require.NoError(t, err)
+
+	heightBeforeVote, err := quicksilver.Height(ctx)
+	require.NoError(t, err, "error fetching height before vote")
+
+	//Voting on the proposal
+	err = quicksilver.VoteOnProposalAllValidators(ctx, proposalID, cosmos.ProposalVoteYes)
+	require.NoError(t, err, "Failed to submit votes")
+
+	//Checking the proposal with matching ID and status.
+	proposalStatusResponse, err := cosmos.PollForProposalStatus(ctx, quicksilver, heightBeforeVote, heightBeforeVote+20, proposalID, cosmos.ProposalStatusPassed)
+	fmt.Println("Proposal status response", proposalStatusResponse)
+	require.NoError(t, err, "Proposal status did not change to passed in expected number of blocks")
+
+	stdout, _, err := quicksilver.Validators[0].ExecQuery(ctx, "interchainstaking", "zones")
+
+	require.NotEmpty(t, stdout)
+	require.NoError(t, err)
+}
+
+func SubmitProposal(ctx context.Context, c *cosmos.CosmosChain, keyName string, prop TxProposalv1) (string, error) {
+	tn := c.Validators[0]
+	if len(c.FullNodes) > 0 {
+		tn = c.FullNodes[0]
+	}
+
+	propJson, err := json.MarshalIndent(prop, "", " ")
+	if err != nil {
+		return "", err
+	}
+
+	hash := sha256.Sum256(propJson)
+	proposalFilename := fmt.Sprintf("%x.json", hash)
+
+	err = tn.WriteFile(ctx, propJson, proposalFilename)
+	if err != nil {
+		return "", fmt.Errorf("writing param change proposal: %w", err)
+	}
+
+	proposalPath := filepath.Join(tn.HomeDir(), proposalFilename)
+
+	command := []string{
+		"gov", "submit-proposal",
+		proposalPath,
+		"--gas", "auto",
+	}
+	txHash, err := tn.ExecTx(ctx, keyName, command...)
+	if err != nil {
+		return txHash, fmt.Errorf("failed to submit gov v1 proposal: %w", err)
+	}
+
+	return TxProposal(tn, txHash)
+}
+
+func TxProposal(tn *cosmos.ChainNode, txHash string) (string, error) {
+	var txResp *types.TxResponse
+	err := retry.Do(func() error {
+		var err error
+		txResp, err = authTx.QueryTx(tn.CliContext(), txHash)
+		fmt.Println("Tx proposal response: ", txResp)
+		return err
+	},
+		// retry for total of 3 seconds
+		retry.Attempts(15),
+		retry.Delay(200*time.Millisecond),
+		retry.DelayType(retry.FixedDelay),
+		retry.LastErrorOnly(true),
+	)
+	if err != nil {
+		return "", fmt.Errorf("failed to get transaction %s: %w", txHash, err)
+	}
+	events := txResp.Events
+	evtSubmitProp := "submit_proposal"
+	proposalID, _ := AttributeValue(events, evtSubmitProp, "proposal_id")
+
+	return proposalID, nil
+}
+
+func AttributeValue(events []abcitypes.Event, eventType, attrKey string) (string, bool) {
+	for _, event := range events {
+		if event.Type != eventType {
+			continue
+		}
+		for _, attr := range event.Attributes {
+			if string(attr.Key) == attrKey {
+				return string(attr.Value), true
+			}
+		}
+	}
+	return "", false
 }
