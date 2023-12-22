@@ -1,6 +1,12 @@
+import { useUnbondingQuery } from '@/hooks/useQueries';
 import { Table, Thead, Tbody, Tr, Th, Td, TableContainer, Text, Box } from '@chakra-ui/react';
 
-const UnbondingAssetsTable = () => {
+interface UnbondingAssetsTableProps {
+  address: string;
+  chainName: string;
+}
+
+const UnbondingAssetsTable: React.FC<UnbondingAssetsTableProps> = ({ address, chainName }) => {
   const unbondingAssets = [
     {
       asset: '10 ATOM',
@@ -31,7 +37,7 @@ const UnbondingAssetsTable = () => {
       completionTime: '2023-01-14',
     },
   ];
-
+  const { unbondingData } = useUnbondingQuery(chainName, address);
   return (
     <>
       <Text fontSize="xl" fontWeight="bold" color="white" mb={4}>

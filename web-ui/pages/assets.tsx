@@ -222,16 +222,16 @@ function Home() {
               w="lg"
               h="sm"
             >
-              <StakingIntent address={address ?? ''} />
+              <StakingIntent isWalletConnected={isWalletConnected} address={address ?? ''} />
             </Flex>
           </Flex>
           <Spacer />
           {/* Assets Grid */}
-          <AssetsGrid assets={assetsData} />
+          <AssetsGrid isWalletConnected={isWalletConnected} assets={assetsData} />
           <Spacer />
           {/* Unbonding Table */}
           <Box mt="20px">
-            <UnbondingAssetsTable />
+            <UnbondingAssetsTable address={qAddress ?? ''} chainName="cosmoshub" />
           </Box>
           <Box h="40px"></Box>
         </Container>

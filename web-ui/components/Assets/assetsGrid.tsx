@@ -1,5 +1,5 @@
 import { shiftDigits } from '@/utils';
-import { Box, SimpleGrid, VStack, Text, Button, Divider, useColorModeValue, HStack, Flex, Grid, GridItem } from '@chakra-ui/react';
+import { Box, SimpleGrid, VStack, Text, Button, Divider, useColorModeValue, HStack, Flex, Grid, GridItem, Spinner } from '@chakra-ui/react';
 import React from 'react';
 import QDepositModal from './modals/qTokenDepositModal';
 import QWithdrawModal from './modals/qTokenWithdrawlModal';
@@ -8,9 +8,11 @@ interface AssetCardProps {
   balance: string;
   apy: number;
   nativeAssetName: string;
+  isWalletConnected: boolean;
 }
 
 interface AssetGridProps {
+  isWalletConnected: boolean;
   assets: Array<{
     name: string;
     balance: string;
@@ -19,7 +21,34 @@ interface AssetGridProps {
   }>;
 }
 
-const AssetCard: React.FC<AssetCardProps> = ({ assetName, balance, apy, nativeAssetName }) => {
+const AssetCard: React.FC<AssetCardProps> = ({ assetName, balance, apy, nativeAssetName, isWalletConnected }) => {
+  if (!isWalletConnected) {
+    return (
+      <Flex direction="column" p={5} borderRadius="lg" align="center" justify="space-around" w="full" h="full">
+        <Text fontSize="xl" textAlign="center">
+          Wallet is not connected. Please connect your wallet to interact with your QCK tokens.
+        </Text>
+      </Flex>
+    );
+  }
+
+  if (!balance || !apy) {
+    return (
+      <Flex
+        w="100%"
+        h="100%"
+        p={4}
+        borderRadius="lg"
+        flexDirection="column"
+        justifyContent="center"
+        alignItems="center"
+        gap={6}
+        color="white"
+      >
+        <Spinner w={'200px'} h="200px" color="complimentary.900" />
+      </Flex>
+    );
+  }
   return (
     <VStack bg={'rgba(255,255,255,0.1)'} p={4} boxShadow="lg" align="center" spacing={4} borderRadius="lg">
       <VStack w="full" align="center" alignItems={'center'} spacing={3}>
@@ -69,7 +98,7 @@ const AssetCard: React.FC<AssetCardProps> = ({ assetName, balance, apy, nativeAs
   );
 };
 
-const AssetsGrid: React.FC<AssetGridProps> = ({ assets }) => {
+const AssetsGrid: React.FC<AssetGridProps> = ({ assets, isWalletConnected }) => {
   return (
     <>
       <Text fontSize="xl" fontWeight="bold" color="white" mb={4}>
@@ -80,7 +109,13 @@ const AssetsGrid: React.FC<AssetGridProps> = ({ assets }) => {
           {assets.map((asset, index) => (
             <Box key={index} minW="350px">
               {' '}
-              <AssetCard assetName={asset.name} nativeAssetName={asset.native} balance={asset.balance} apy={asset.apy} />
+              <AssetCard
+                isWalletConnected={isWalletConnected}
+                assetName={asset.name}
+                nativeAssetName={asset.native}
+                balance={asset.balance}
+                apy={asset.apy}
+              />
             </Box>
           ))}
         </Flex>

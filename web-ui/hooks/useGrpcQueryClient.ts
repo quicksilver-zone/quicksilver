@@ -13,7 +13,7 @@ export const useGrpcQueryClient = (chainName: string) => {
 
 
   const endpoints: { [key: string]: string | undefined } = {
- 
+    quicksilver: env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_LCD_ENDPOINT_QUICKSILVER : process.env.NEXT_PUBLIC_MAINNET_LCD_ENDPOINT_QUICKSILVER,
     cosmoshub: env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_LCD_ENDPOINT_COSMOSHUB : process.env.NEXT_PUBLIC_MAINNET_LCD_ENDPOINT_COSMOSHUB,
     sommelier: env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_LCD_ENDPOINT_SOMMELIER : process.env.NEXT_PUBLIC_MAINNET_LCD_ENDPOINT_SOMMELIER,
     stargaze: env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_LCD_ENDPOINT_STARGAZE : process.env.NEXT_PUBLIC_MAINNET_LCD_ENDPOINT_STARGAZE,
@@ -21,7 +21,11 @@ export const useGrpcQueryClient = (chainName: string) => {
     osmosis: env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_LCD_ENDPOINT_OSMOSIS : process.env.NEXT_PUBLIC_MAINNET_LCD_ENDPOINT_OSMOSIS,
   };
 
+
+
   grpcEndpoint = endpoints[chainName] || solution.rpcEndpoint;
+
+
 
   const grpcQueryClientQuery = useQuery({
     queryKey: ['grpcQueryClient', grpcEndpoint],

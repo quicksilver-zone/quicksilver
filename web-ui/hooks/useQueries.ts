@@ -152,6 +152,46 @@ export const useIntentQuery = (chainName: string, address: string) => {
   };
 };
 
+export const useUnbondingQuery = (chainName: string, address: string) => {
+  const { grpcQueryClient } = useGrpcQueryClient('quicksilver');
+  const { chain } = useChain(chainName);
+  const chainId = chain.chain_id;
+  const unbondingQuery = useQuery(
+    ['unbond', chainName],
+    async () => {
+      if (!grpcQueryClient) {
+        throw new Error('RPC Client not ready');
+      }
+      const nextKey = new Uint8Array()
+     const unbonding = await grpcQueryClient.quicksilver.interchainstaking.v1.withdrawalRecords({
+      delegatorAddress: address,
+      chainId: chainId,
+      pagination: {
+        key: nextKey,
+        offset: Long.fromNumber(0),
+        limit: Long.fromNumber(100),
+        countTotal: true,
+        reverse: false,
+      },
+
+      });
+
+      return unbonding;
+
+    },
+    {
+      enabled: !!grpcQueryClient,
+      staleTime: Infinity,
+    },
+  );
+
+  return {
+    unbondingData: unbondingQuery.data,
+    isLoading: unbondingQuery.isLoading,
+    isError: unbondingQuery.isError,
+  };
+};
+
 export const useValidatorsQuery = (chainName: string) => {
   const { grpcQueryClient } = useGrpcQueryClient(chainName);
 
