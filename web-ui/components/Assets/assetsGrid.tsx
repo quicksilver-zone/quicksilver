@@ -1,7 +1,8 @@
 import { shiftDigits } from '@/utils';
 import { Box, SimpleGrid, VStack, Text, Button, Divider, useColorModeValue, HStack, Flex, Grid, GridItem } from '@chakra-ui/react';
 import React from 'react';
-
+import QDepositModal from './modals/qTokenDepositModal';
+import QWithdrawModal from './modals/qTokenWithdrawlModal';
 interface AssetCardProps {
   assetName: string;
   balance: string;
@@ -61,38 +62,8 @@ const AssetCard: React.FC<AssetCardProps> = ({ assetName, balance, apy, nativeAs
       </VStack>
 
       <HStack w="full" pb={4} pt={4} spacing={2}>
-        <Button
-          _active={{
-            transform: 'scale(0.95)',
-            color: 'complimentary.800',
-          }}
-          _hover={{
-            bgColor: 'rgba(255,128,0, 0.25)',
-            color: 'complimentary.300',
-          }}
-          color="white"
-          flex={1}
-          size="sm"
-          variant="outline"
-        >
-          Deposit
-        </Button>
-        <Button
-          _active={{
-            transform: 'scale(0.95)',
-            color: 'complimentary.800',
-          }}
-          _hover={{
-            bgColor: 'rgba(255,128,0, 0.25)',
-            color: 'complimentary.300',
-          }}
-          color="white"
-          flex={1}
-          size="sm"
-          variant="outline"
-        >
-          Withdraw
-        </Button>
+        <QDepositModal token={assetName} />
+        <QWithdrawModal token={assetName} />
       </HStack>
     </VStack>
   );
