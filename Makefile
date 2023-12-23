@@ -25,6 +25,8 @@ DOCKER_TAG := $(COMMIT_HASH)
 GO_MAJOR_VERSION = $(shell go version | cut -c 14- | cut -d' ' -f1 | cut -d'.' -f1)
 GO_MINOR_VERSION = $(shell go version | cut -c 14- | cut -d' ' -f1 | cut -d'.' -f2)
 
+HERMES_VERSION=v1.7.4
+
 export GO111MODULE = on
 
 # Default target executed when no arguments are given to make.
@@ -534,4 +536,10 @@ proto-setup:
 	@$(DOCKER) build --rm --tag quicksilver-proto:latest --file proto/Dockerfile .
 	@echo "✅ Setup protobuf environment!"
 
+### Other tools
+.PHONY: hermes-build
+
+hermes-build:
+	docker buildx build --platform linux/amd64 --build-arg VERSION=$HERMES_VERSION -f Dockerfile.hermes . -t quicksilverzone/hermes:$HERMES_VERSION
+	docker push quicksilverzone/hermes:$HERMES_VERSION
 
