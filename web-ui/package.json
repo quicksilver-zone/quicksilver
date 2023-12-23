@@ -27,7 +27,7 @@
     "@emotion/react": "11.10.6",
     "@emotion/styled": "11.10.6",
     "@hoangdv2429/quicksilverjs": "^0.0.1",
-    "@interchain-ui/react": "1.5.0",
+    "@interchain-ui/react": "1.18.2",
     "@osmonauts/lcd": "^1.0.3",
     "@radix-ui/react-icons": "^1.3.0",
     "@tanstack/react-query": "^4.29.12",
