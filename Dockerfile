@@ -19,7 +19,7 @@ RUN ARCH=$(uname -m) && WASMVM_VERSION=$(go list -m github.com/CosmWasm/wasmvm |
 COPY . .
 RUN --mount=type=cache,target=/root/.cache/go-build \
     --mount=type=cache,target=/root/go/pkg/mod \
-    BUILD_TAGS=muslc LINK_STATICALLY=true make build
+    LINK_STATICALLY=true make build
 
 # Add to a distroless container
 FROM alpine:3.18
