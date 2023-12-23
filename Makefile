@@ -149,10 +149,10 @@ $(BUILDDIR)/:
 build-docker:
 	DOCKER_BUILDKIT=1 $(DOCKER) build . -f Dockerfile -t quicksilverzone/quicksilver:$(DOCKER_VERSION) -t quicksilverzone/quicksilver:latest
 
-build-docker-local: build
-	DOCKER_BUILDKIT=1 $(DOCKER) build -f Dockerfile.local . -t quicksilverzone/quicksilver:$(DOCKER_VERSION)
+build-docker-xbuild:
+	DOCKER_BUILDKIT=1 $(DOCKER) buildx build --platform linux/amd64 . -f Dockerfile -t quicksilverzone/quicksilver:$(DOCKER_VERSION) -t quicksilverzone/quicksilver:latest
 
-build-docker-release: build-docker
+build-docker-release: build-docker-xbuild
 	$(DOCKER)  run -v /tmp:/tmp quicksilverzone/quicksilver:$(DOCKER_VERSION) cp /usr/local/bin/quicksilverd /tmp/quicksilverd
 	mv /tmp/quicksilverd build/quicksilverd-$(DOCKER_VERSION)-amd64
 
