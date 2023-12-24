@@ -1,0 +1,7 @@
+packs:
+  go:
+    - +crypto-com/cosmos-sdk-codeql
+
+
+
+
