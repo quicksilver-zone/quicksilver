@@ -6,7 +6,6 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"time"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
@@ -138,10 +137,10 @@ func initTendermintConfig() *tmcfg.Config {
 	cfg.P2P.MaxNumInboundPeers = 200
 	cfg.P2P.MaxNumOutboundPeers = 40
 
-	// block times
-	cfg.Consensus.TimeoutCommit = 2 * time.Second                 // 2s blocks, think more on it later
-	cfg.Consensus.SkipTimeoutCommit = false                       // when we have 100% of signatures, block is done, don't wait for the TimeoutCommit
-	cfg.Consensus.PeerGossipSleepDuration = 25 * time.Millisecond // a p2p keepalive more or less
+	// block times (this comes in post-50)
+	//	cfg.Consensus.TimeoutCommit = 2 * time.Second                 // 2s blocks, think more on it later
+	//	cfg.Consensus.SkipTimeoutCommit = false                       // when we have 100% of signatures, block is done, don't wait for the TimeoutCommit
+	//	cfg.Consensus.PeerGossipSleepDuration = 25 * time.Millisecond // a p2p keepalive more or less
 
 	return cfg
 }
