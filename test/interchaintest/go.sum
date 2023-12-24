@@ -285,6 +285,8 @@ github.com/cockroachdb/apd/v2 v2.0.2/go.mod h1:DDxRlzC2lo3/vSlmSoS7JkqbbrARPuFOG
 github.com/coinbase/rosetta-sdk-go v0.7.9 h1:lqllBjMnazTjIqYrOGv8h8jxjg9+hJazIGZr9ZvoCcA=
 github.com/cometbft/cometbft v0.34.27 h1:ri6BvmwjWR0gurYjywcBqRe4bbwc3QVs9KRcCzgh/J0=
 github.com/cometbft/cometbft v0.34.27/go.mod h1:BcCbhKv7ieM0KEddnYXvQZR+pZykTKReJJYf7YC7qhw=
+github.com/cometbft/cometbft v0.34.29 h1:Q4FqMevP9du2pOgryZJHpDV2eA6jg/kMYxBj9ZTY6VQ=
+github.com/cometbft/cometbft v0.34.29/go.mod h1:L9shMfbkZ8B+7JlwANEr+NZbBcn+hBpwdbeYvA5rLCw=
 github.com/cometbft/cometbft-db v0.7.0 h1:uBjbrBx4QzU0zOEnU8KxoDl18dMNgDh+zZRUE0ucsbo=
 github.com/confio/ics23/go v0.9.0 h1:cWs+wdbS2KRPZezoaaj+qBleXgUk5WOQFMP3CQFGTr4=
 github.com/confio/ics23/go v0.9.0/go.mod h1:4LPZ2NYqnYIVRklaozjNR1FScgDJ2s5Xrp+e/mYVRak=
@@ -306,6 +308,8 @@ github.com/cosmos/iavl v0.19.6 h1:XY78yEeNPrEYyNCKlqr9chrwoeSDJ0bV2VjocTk//OU=
 github.com/cosmos/iavl v0.19.6/go.mod h1:X9PKD3J0iFxdmgNLa7b2LYWdsGd90ToV5cAONApkEPw=
 github.com/cosmos/ibc-go/v5 v5.3.1 h1:zuaIWMEoXM9egWmmAqzBPYLvEjYgB6xy6wZoc8xsZ5U=
 github.com/cosmos/ibc-go/v5 v5.3.1/go.mod h1:Q2W1rjtwR738fqFQhE66dZ0frsLlr+Wiezlwei0TMGo=
+github.com/cosmos/ibc-go/v5 v5.3.2 h1:PPSs5hNAjYd8jVfHvXsqfnCYd/r9C7wpu+O2A4TOO5g=
+github.com/cosmos/ibc-go/v5 v5.3.2/go.mod h1:Q2W1rjtwR738fqFQhE66dZ0frsLlr+Wiezlwei0TMGo=
 github.com/cosmos/ledger-cosmos-go v0.12.2 h1:/XYaBlE2BJxtvpkHiBm97gFGSGmYGKunKyF3nNqAXZA=
 github.com/cosmos/ledger-cosmos-go v0.12.2/go.mod h1:ZcqYgnfNJ6lAXe4HPtWgarNEY+B74i+2/8MhZw4ziiI=
 github.com/cpuguy83/go-md2man v1.0.10/go.mod h1:SmD6nW6nTyfqj6ABTjUi3V3JVMnlJmwcJI5acqYI6dE=

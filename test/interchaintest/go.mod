@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/cosmos/ibc-go/v5 v5.3.1
-	github.com/strangelove-ventures/interchaintest/v5 v5.0.0-20220926164354-b3185ba0ead3
+	github.com/strangelove-ventures/ibctest/v5 v5.0.0-20220926164354-b3185ba0ead3
 	github.com/stretchr/testify v1.8.4
 	go.uber.org/zap v1.24.0
 )
@@ -157,7 +157,7 @@ require (
 	github.com/subosito/gotenv v1.4.2 // indirect
 	github.com/syndtr/goleveldb v1.0.1-0.20220721030215-126854af5e6d // indirect
 	github.com/tendermint/go-amino v0.16.0 // indirect
-	github.com/tendermint/tendermint v0.34.28 // indirect
+	github.com/tendermint/tendermint v0.34.29 // indirect
 	github.com/tendermint/tm-db v0.6.8-0.20220506192307-f628bb5dc95b // indirect
 	github.com/tidwall/btree v1.5.0 // indirect
 	github.com/tklauser/go-sysconf v0.3.11 // indirect
@@ -208,8 +208,7 @@ replace (
 	github.com/ChainSafe/go-schnorrkel/1 => github.com/ChainSafe/go-schnorrkel v1.0.0
 	github.com/CosmWasm/wasmd => github.com/notional-labs/wasmd v0.29.0-sdk46.0.20221114145317-d6e67fd50956
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
-	github.com/ingenuity-build => ../../
-	github.com/strangelove-ventures/interchaintest/v5 => github.com/aljo242/interchaintest/v5 v5.0.0-20230619200058-1d4823df8b75
-	github.com/tendermint/tendermint => github.com/cometbft/cometbft v0.34.27
+	github.com/quicksilver-zone/quicksilver => ../../
+	github.com/tendermint/tendermint => github.com/cometbft/cometbft v0.34.29
 	github.com/vedhavyas/go-subkey => github.com/strangelove-ventures/go-subkey v1.0.7
 )
