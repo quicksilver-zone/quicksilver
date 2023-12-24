@@ -1,6 +1,6 @@
 packs:
   go:
-    - +crypto-com/cosmos-sdk-codeql
+    - crypto-com/cosmos-sdk-codeql
 
 
 
