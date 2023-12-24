@@ -2,8 +2,6 @@ name: "CodeQL"
 
 on:
   pull_request:
-    paths:
-      - "**.go"
     branches:
       - main
   push:
@@ -11,8 +9,8 @@ on:
       - main
       - develop
       - release/**
-    paths:
-      - "**.go"
+
+
 
 jobs:
   analyze:
