@@ -47,7 +47,7 @@ func TestDenomFromRequestKey(t *testing.T) {
 			"invalid - empty address",
 			func() (sdk.AccAddress, []byte) {
 				accAddr := sdk.AccAddress{}
-				key := banktypes.CreateAccountBalancesPrefix(accAddr.Bytes())
+				key := banktypes.BalancesPrefix(accAddr.Bytes())
 				key = append(key, []byte(expectedDenom)...)
 				return accAddr, key
 			},
