@@ -311,7 +311,7 @@ func (k *Keeper) SetValidatorForZone(ctx sdk.Context, zone *types.Zone, data []b
 			CommissionRate:  validator.GetCommission(),
 			VotingPower:     validator.Tokens,
 			DelegatorShares: validator.DelegatorShares,
-			Score:           sdk.ZeroDec(),
+			Score:           sdkmath.LegacyZeroDec(),
 			Status:          validator.Status.String(),
 			Jailed:          validator.IsJailed(),
 			JailedSince:     jailTime,

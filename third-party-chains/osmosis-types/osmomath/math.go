@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	sdkmath "cosmossdk.io/math"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // Don't EVER change after initializing
@@ -13,7 +12,7 @@ var powPrecision, _ = sdkmath.LegacyNewDecFromStr("0.00000001")
 
 // Singletons.
 // nolint: deadcode, unused
-var zero sdkmath.LegacyDec = sdk.ZeroDec()
+var zero sdkmath.LegacyDec = sdkmath.LegacyZeroDec()
 
 var (
 	one_half sdkmath.LegacyDec = sdkmath.LegacyMustNewDecFromStr("0.5")

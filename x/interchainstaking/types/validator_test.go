@@ -7,8 +7,6 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 )
@@ -30,7 +28,7 @@ func TestSharesToTokens(t *testing.T) {
 	require.Equal(t, sdkmath.ZeroInt(), nilSharesVal.SharesToTokens(sdkmath.LegacyNewDec(100)))
 
 	nolSharesVal := types.Validator{
-		DelegatorShares: sdk.ZeroDec(),
+		DelegatorShares: sdkmath.LegacyZeroDec(),
 	}
 	require.Equal(t, sdkmath.ZeroInt(), nolSharesVal.SharesToTokens(sdkmath.LegacyNewDec(100)))
 }

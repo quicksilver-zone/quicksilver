@@ -4,8 +4,6 @@ import (
 	"cosmossdk.io/math"
 	sdkmath "cosmossdk.io/math"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/keeper"
 	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 )
@@ -127,26 +125,26 @@ func (suite *KeeperTestSuite) TestGetLiquidStakedSupply() {
 			Malleate: func(icsKeeper *keeper.Keeper) {
 				ctx := suite.chainA.GetContext()
 				validators := icsKeeper.GetValidators(ctx, suite.chainB.ChainID)
-				validators[0].LiquidShares = sdk.ZeroDec()
-				validators[1].LiquidShares = sdk.ZeroDec()
-				validators[2].LiquidShares = sdk.ZeroDec()
-				validators[3].LiquidShares = sdk.ZeroDec()
+				validators[0].LiquidShares = sdkmath.LegacyZeroDec()
+				validators[1].LiquidShares = sdkmath.LegacyZeroDec()
+				validators[2].LiquidShares = sdkmath.LegacyZeroDec()
+				validators[3].LiquidShares = sdkmath.LegacyZeroDec()
 				suite.NoError(icsKeeper.SetValidator(ctx, suite.chainB.ChainID, validators[0]))
 				suite.NoError(icsKeeper.SetValidator(ctx, suite.chainB.ChainID, validators[1]))
 				suite.NoError(icsKeeper.SetValidator(ctx, suite.chainB.ChainID, validators[2]))
 				suite.NoError(icsKeeper.SetValidator(ctx, suite.chainB.ChainID, validators[3]))
 			},
-			Expect: sdk.ZeroDec(),
+			Expect: sdkmath.LegacyZeroDec(),
 		},
 		{
 			Name: "3x 1000000 VP bonded, 1x 1000000 unbonded",
 			Malleate: func(icsKeeper *keeper.Keeper) {
 				ctx := suite.chainA.GetContext()
 				validators := icsKeeper.GetValidators(ctx, suite.chainB.ChainID)
-				validators[0].LiquidShares = sdk.ZeroDec()
+				validators[0].LiquidShares = sdkmath.LegacyZeroDec()
 				validators[1].LiquidShares = sdkmath.LegacyNewDec(5000)
 				validators[2].LiquidShares = sdkmath.LegacyNewDec(5000)
-				validators[3].LiquidShares = sdk.ZeroDec()
+				validators[3].LiquidShares = sdkmath.LegacyZeroDec()
 				suite.NoError(icsKeeper.SetValidator(ctx, suite.chainB.ChainID, validators[0]))
 				suite.NoError(icsKeeper.SetValidator(ctx, suite.chainB.ChainID, validators[1]))
 				suite.NoError(icsKeeper.SetValidator(ctx, suite.chainB.ChainID, validators[2]))
@@ -201,10 +199,10 @@ func (suite *KeeperTestSuite) TestCheckExceedsGlobalCap() {
 				validators[1].VotingPower = math.NewInt(1000)
 				validators[2].VotingPower = math.NewInt(1000)
 				validators[3].VotingPower = math.NewInt(1000)
-				validators[0].LiquidShares = sdk.ZeroDec()
+				validators[0].LiquidShares = sdkmath.LegacyZeroDec()
 				validators[1].LiquidShares = sdkmath.LegacyNewDec(80)
-				validators[2].LiquidShares = sdk.ZeroDec()
-				validators[3].LiquidShares = sdk.ZeroDec()
+				validators[2].LiquidShares = sdkmath.LegacyZeroDec()
+				validators[3].LiquidShares = sdkmath.LegacyZeroDec()
 				suite.NoError(icsKeeper.SetValidator(ctx, suite.chainB.ChainID, validators[0]))
 				suite.NoError(icsKeeper.SetValidator(ctx, suite.chainB.ChainID, validators[1]))
 				suite.NoError(icsKeeper.SetValidator(ctx, suite.chainB.ChainID, validators[2]))
@@ -227,7 +225,7 @@ func (suite *KeeperTestSuite) TestCheckExceedsGlobalCap() {
 				validators[1].VotingPower = math.NewInt(1000)
 				validators[2].VotingPower = math.NewInt(1000)
 				validators[3].VotingPower = math.NewInt(1000)
-				validators[0].LiquidShares = sdk.ZeroDec()
+				validators[0].LiquidShares = sdkmath.LegacyZeroDec()
 				validators[1].LiquidShares = sdkmath.LegacyNewDec(60)
 				validators[2].LiquidShares = sdkmath.LegacyNewDec(60)
 				validators[3].LiquidShares = sdkmath.LegacyNewDec(80)
@@ -253,7 +251,7 @@ func (suite *KeeperTestSuite) TestCheckExceedsGlobalCap() {
 				validators[1].VotingPower = math.NewInt(1000)
 				validators[2].VotingPower = math.NewInt(1000)
 				validators[3].VotingPower = math.NewInt(1000)
-				validators[0].LiquidShares = sdk.ZeroDec()
+				validators[0].LiquidShares = sdkmath.LegacyZeroDec()
 				validators[1].LiquidShares = sdkmath.LegacyNewDec(20)
 				validators[2].LiquidShares = sdkmath.LegacyNewDec(20)
 				validators[3].LiquidShares = sdkmath.LegacyNewDec(10)
@@ -294,10 +292,10 @@ func (suite *KeeperTestSuite) TestCheckExceedsValidatorCap() {
 				validators[1].VotingPower = math.NewInt(1000)
 				validators[2].VotingPower = math.NewInt(1000)
 				validators[3].VotingPower = math.NewInt(1000)
-				validators[0].LiquidShares = sdk.ZeroDec()
+				validators[0].LiquidShares = sdkmath.LegacyZeroDec()
 				validators[1].LiquidShares = sdkmath.LegacyNewDec(20)
-				validators[2].LiquidShares = sdk.ZeroDec()
-				validators[3].LiquidShares = sdk.ZeroDec()
+				validators[2].LiquidShares = sdkmath.LegacyZeroDec()
+				validators[3].LiquidShares = sdkmath.LegacyZeroDec()
 				suite.NoError(icsKeeper.SetValidator(ctx, suite.chainB.ChainID, validators[0]))
 				suite.NoError(icsKeeper.SetValidator(ctx, suite.chainB.ChainID, validators[1]))
 				suite.NoError(icsKeeper.SetValidator(ctx, suite.chainB.ChainID, validators[2]))
@@ -321,7 +319,7 @@ func (suite *KeeperTestSuite) TestCheckExceedsValidatorCap() {
 				validators[1].VotingPower = math.NewInt(1000)
 				validators[2].VotingPower = math.NewInt(1000)
 				validators[3].VotingPower = math.NewInt(1000)
-				validators[0].LiquidShares = sdk.ZeroDec()
+				validators[0].LiquidShares = sdkmath.LegacyZeroDec()
 				validators[1].LiquidShares = sdkmath.LegacyNewDec(600)
 				validators[2].LiquidShares = sdkmath.LegacyNewDec(20)
 				validators[3].LiquidShares = sdkmath.LegacyNewDec(10)
@@ -348,7 +346,7 @@ func (suite *KeeperTestSuite) TestCheckExceedsValidatorCap() {
 				validators[1].VotingPower = math.NewInt(1000)
 				validators[2].VotingPower = math.NewInt(1000)
 				validators[3].VotingPower = math.NewInt(1000)
-				validators[0].LiquidShares = sdk.ZeroDec()
+				validators[0].LiquidShares = sdkmath.LegacyZeroDec()
 				validators[1].LiquidShares = sdkmath.LegacyNewDec(600)
 				validators[2].LiquidShares = sdkmath.LegacyNewDec(20)
 				validators[3].LiquidShares = sdkmath.LegacyNewDec(10)

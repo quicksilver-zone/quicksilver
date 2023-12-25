@@ -96,7 +96,7 @@ func (k *Keeper) AllDelegatorIntentsAsPointer(ctx sdk.Context, zone *types.Zone,
 func (k *Keeper) AggregateDelegatorIntents(ctx sdk.Context, zone *types.Zone) error {
 	snapshot := false
 	aggregate := make(types.ValidatorIntents, 0)
-	ordinalizedIntentSum := sdk.ZeroDec()
+	ordinalizedIntentSum := sdkmath.LegacyZeroDec()
 
 	k.IterateDelegatorIntents(ctx, zone, snapshot, func(_ int64, delIntent types.DelegatorIntent) (stop bool) {
 		balance := sdk.NewCoin(zone.LocalDenom, sdkmath.ZeroInt())

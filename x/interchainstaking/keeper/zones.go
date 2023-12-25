@@ -521,7 +521,7 @@ func (k *Keeper) DistanceToTarget(ctx sdk.Context, zone *types.Zone) (float64, e
 	if err != nil {
 		return 0, err
 	}
-	preSqRt := sdk.ZeroDec()
+	preSqRt := sdkmath.LegacyZeroDec()
 
 	for _, valoper := range zone.Validators {
 		c := current.MustGetForValoper(valoper.ValoperAddress)

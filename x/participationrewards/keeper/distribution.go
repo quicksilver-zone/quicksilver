@@ -131,7 +131,7 @@ func (k *Keeper) AllocateZoneRewards(ctx sdk.Context, tvs TokenValues, allocatio
 func (k *Keeper) SetZoneAllocations(ctx sdk.Context, tvs TokenValues, allocation types.RewardsAllocation) error {
 	k.Logger(ctx).Info("setZoneAllocations", "allocation", allocation)
 
-	otvl := sdk.ZeroDec()
+	otvl := sdkmath.LegacyZeroDec()
 	// pass 1: iterate zones - set tvl & calc overall tvl
 	k.icsKeeper.IterateZones(ctx, func(index int64, zone *icstypes.Zone) (stop bool) {
 		tv, exists := tvs[zone.BaseDenom]
@@ -158,7 +158,7 @@ func (k *Keeper) SetZoneAllocations(ctx sdk.Context, tvs TokenValues, allocation
 	// pass 2: iterate zones - calc zone tvl proportion & set allocations
 	k.icsKeeper.IterateZones(ctx, func(index int64, zone *icstypes.Zone) (stop bool) {
 		if zone.Tvl.IsNil() {
-			zone.Tvl = sdk.ZeroDec()
+			zone.Tvl = sdkmath.LegacyZeroDec()
 		}
 
 		zp := zone.Tvl.Quo(otvl)

@@ -62,7 +62,7 @@ func TestSetForValoper(t *testing.T) {
 
 	// check failed return
 	actual := intents.MustGetForValoper(v3)
-	require.Equal(t, sdk.ZeroDec(), actual.Weight)
+	require.Equal(t, sdkmath.LegacyZeroDec(), actual.Weight)
 }
 
 func TestNormalizeValidatorIntentsDeterminism(t *testing.T) {

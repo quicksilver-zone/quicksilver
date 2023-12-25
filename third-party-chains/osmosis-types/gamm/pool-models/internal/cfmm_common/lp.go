@@ -67,7 +67,7 @@ func CalcExitPool(ctx sdk.Context, pool gamm.PoolI, exitingShares sdkmath.Int, e
 func MaximalExactRatioJoin(p gamm.PoolI, ctx sdk.Context, tokensIn sdk.Coins) (numShares sdkmath.Int, remCoins sdk.Coins, err error) {
 	coinShareRatios := make([]sdkmath.LegacyDec, len(tokensIn))
 	minShareRatio := sdk.MaxSortableDec
-	maxShareRatio := sdk.ZeroDec()
+	maxShareRatio := sdkmath.LegacyZeroDec()
 
 	poolLiquidity := p.GetTotalPoolLiquidity(ctx)
 	totalShares := p.GetTotalShares()
@@ -148,7 +148,7 @@ func BinarySearchSingleAssetJoin(
 		poolWithUpdatedLiquidity := poolWithAddedLiquidityAndShares(tokenIn, sharesIn)
 		swapToDenom := tokenIn.Denom
 		// so now due to correctness of exitPool, we exitPool and swap all remaining assets to base asset
-		exitFee := sdk.ZeroDec()
+		exitFee := sdkmath.LegacyZeroDec()
 		exitedCoins, err := poolWithUpdatedLiquidity.ExitPool(ctx, sharesIn, exitFee)
 		if err != nil {
 			return sdkmath.Int{}, err
@@ -166,7 +166,7 @@ func BinarySearchSingleAssetJoin(
 }
 
 func swapAllCoinsToSingleAsset(pool gamm.PoolI, ctx sdk.Context, inTokens sdk.Coins, swapToDenom string) (sdkmath.Int, error) {
-	swapFee := sdk.ZeroDec()
+	swapFee := sdkmath.LegacyZeroDec()
 	tokenOutAmt := inTokens.AmountOfNoDenomValidation(swapToDenom)
 	for _, coin := range inTokens {
 		if coin.Denom == swapToDenom {

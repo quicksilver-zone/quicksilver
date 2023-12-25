@@ -107,13 +107,13 @@ func (vi ValidatorIntents) SetForValoper(valoper string, intent *ValidatorIntent
 func (vi ValidatorIntents) MustGetForValoper(valoper string) *ValidatorIntent {
 	intent, found := vi.GetForValoper(valoper)
 	if !found || intent == nil {
-		return &ValidatorIntent{ValoperAddress: valoper, Weight: sdk.ZeroDec()}
+		return &ValidatorIntent{ValoperAddress: valoper, Weight: sdkmath.LegacyZeroDec()}
 	}
 	return intent
 }
 
 func (vi ValidatorIntents) Normalize() ValidatorIntents {
-	total := sdk.ZeroDec()
+	total := sdkmath.LegacyZeroDec()
 	for _, i := range vi {
 		total = total.AddMut(i.Weight)
 	}

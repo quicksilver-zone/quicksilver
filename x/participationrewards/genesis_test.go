@@ -9,8 +9,6 @@ import (
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	simapp "github.com/quicksilver-zone/quicksilver/app"
 	"github.com/quicksilver-zone/quicksilver/x/participationrewards"
 	"github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
@@ -76,7 +74,7 @@ func TestParticipationRewardsInitGenesis(t *testing.T) {
 			DistributionProportions: types.DistributionProportions{
 				ValidatorSelectionAllocation: sdkmath.LegacyNewDecWithPrec(5, 1),
 				HoldingsAllocation:           sdkmath.LegacyNewDecWithPrec(5, 1),
-				LockupAllocation:             sdk.ZeroDec(),
+				LockupAllocation:             sdkmath.LegacyZeroDec(),
 			},
 		},
 		ProtocolData: []*types.KeyedProtocolData{kpd},
@@ -87,7 +85,7 @@ func TestParticipationRewardsInitGenesis(t *testing.T) {
 
 	require.Equal(t, app.ParticipationRewardsKeeper.GetParams(ctx).DistributionProportions.ValidatorSelectionAllocation, sdkmath.LegacyNewDecWithPrec(5, 1))
 	require.Equal(t, app.ParticipationRewardsKeeper.GetParams(ctx).DistributionProportions.HoldingsAllocation, sdkmath.LegacyNewDecWithPrec(5, 1))
-	require.Equal(t, app.ParticipationRewardsKeeper.GetParams(ctx).DistributionProportions.LockupAllocation, sdk.ZeroDec())
+	require.Equal(t, app.ParticipationRewardsKeeper.GetParams(ctx).DistributionProportions.LockupAllocation, sdkmath.LegacyZeroDec())
 
 	pd, found := app.ParticipationRewardsKeeper.GetProtocolData(ctx, types.ProtocolDataTypeOsmosisPool, "6")
 	require.True(t, found)

@@ -7,8 +7,6 @@ import (
 
 	"cosmossdk.io/math"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 )
@@ -332,7 +330,7 @@ func TestDetermineAllocationsForRebalancing(t *testing.T) {
 			target: types.ValidatorIntents{
 				&types.ValidatorIntent{
 					ValoperAddress: vals[1],
-					Weight:         sdk.ZeroDec(),
+					Weight:         sdkmath.LegacyZeroDec(),
 				},
 				&types.ValidatorIntent{
 					ValoperAddress: vals[2],
