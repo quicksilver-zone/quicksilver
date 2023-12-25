@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"context"
+
 	"github.com/cometbft/cometbft/libs/log"
 
 	sdkmath "cosmossdk.io/math"
@@ -63,7 +65,7 @@ func NewKeeper(
 // _____________________________________________________________________
 
 // Logger returns a module-specific logger.
-func (Keeper) Logger(ctx sdk.Context) log.Logger {
+func (Keeper) Logger(ctx context.Context) log.Logger {
 	return ctx.Logger().With("module", "x/"+types.ModuleName)
 }
 
@@ -108,7 +110,7 @@ func (k Keeper) GetMinter(ctx sdk.Context) (minter types.Minter) {
 }
 
 // set the minter.
-func (k Keeper) SetMinter(ctx sdk.Context, minter types.Minter) {
+func (k Keeper) SetMinter(ctx context.Context, minter types.Minter) {
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshal(&minter)
 	store.Set(types.MinterKey, b)
@@ -131,7 +133,7 @@ func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
 
 // MintCoins implements an alias call to the underlying supply keeper's
 // MintCoins to be used in BeginBlocker.
-func (k Keeper) MintCoins(ctx sdk.Context, newCoins sdk.Coins) error {
+func (k Keeper) MintCoins(ctx context.Context, newCoins sdk.Coins) error {
 	if newCoins.Empty() {
 		// skip as no coins need to be minted
 		return nil
@@ -146,7 +148,7 @@ func (Keeper) GetProportions(mintedCoin sdk.Coin, ratio sdkmath.LegacyDec) sdk.C
 }
 
 // DistributeMintedCoins implements distribution of minted coins from mint to external modules.
-func (k Keeper) DistributeMintedCoin(ctx sdk.Context, mintedCoin sdk.Coin) error {
+func (k Keeper) DistributeMintedCoin(ctx context.Context, mintedCoin sdk.Coin) error {
 	params := k.GetParams(ctx)
 	proportions := params.DistributionProportions
 
