@@ -137,7 +137,7 @@ func DetermineAllocationsForDelegation(currentAllocations map[string]sdkmath.Int
 	sum := deltas.Sum()
 
 	// unequalSplit is the portion of input that should be distributed in attempt to make targets == 0
-	unequalSplit := sdk.MinInt(sum, input)
+	unequalSplit := sdkmath.MinInt(sum, input)
 
 	if !unequalSplit.IsZero() {
 		for idx := range deltas {

@@ -126,7 +126,7 @@ func TestDetermineAllocationsForDelegation(t *testing.T) {
 				vals[1]: sdkmath.NewInt(650000),
 				vals[2]: sdkmath.NewInt(75000),
 			},
-			target: types.ValidatorIntents{
+			target: types.ValidatorIntents{ValidatorIntents: []*types.ValidatorIntent{
 				{ValoperAddress: vals[0], Weight: sdkmath.LegacyNewDecWithPrec(30, 2)},
 				{ValoperAddress: vals[1], Weight: sdkmath.LegacyNewDecWithPrec(63, 2)},
 				{ValoperAddress: vals[2], Weight: sdkmath.LegacyNewDecWithPrec(7, 2)},
