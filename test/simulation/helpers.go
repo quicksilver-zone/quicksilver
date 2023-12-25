@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"os"
 
+	"cosmossdk.io/log"
 	dbm "github.com/cometbft/cometbft-db"
-	"github.com/cometbft/cometbft/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"

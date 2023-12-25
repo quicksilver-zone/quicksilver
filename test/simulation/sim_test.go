@@ -7,9 +7,9 @@ import (
 	"os"
 	"testing"
 
+	"cosmossdk.io/log"
 	"github.com/CosmWasm/wasmd/x/wasm"
 	dbm "github.com/cometbft/cometbft-db"
-	"github.com/cometbft/cometbft/libs/log"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/store"
