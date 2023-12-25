@@ -3,9 +3,9 @@ package keepers
 import (
 	"github.com/CosmWasm/wasmd/x/wasm"
 	tmos "github.com/cometbft/cometbft/libs/os"
-	packetforward "github.com/strangelove-ventures/packet-forward-middleware/v5/router"
-	packetforwardkeeper "github.com/strangelove-ventures/packet-forward-middleware/v5/router/keeper"
-	packetforwardtypes "github.com/strangelove-ventures/packet-forward-middleware/v5/router/types"
+	packetforward "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v8/router"
+	packetforwardkeeper "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v8/router/keeper"
+	packetforwardtypes "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v8/router/types"
 
 	"cosmossdk.io/store/streaming"
 	storetypes "cosmossdk.io/store/types"
