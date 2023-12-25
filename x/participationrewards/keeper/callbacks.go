@@ -49,7 +49,7 @@ func (k *Keeper) CallbackHandler() Callbacks {
 
 // Call calls callback handler.
 func (c Callbacks) Call(ctx sdk.Context, id string, args []byte, query icqtypes.Query) error {
-	if c.Has(id) {
+	if !c.Has(id) {
 		return fmt.Errorf("callback %s not found", id)
 	}
 	return c.callbacks[id](ctx, c.k, args, query)
