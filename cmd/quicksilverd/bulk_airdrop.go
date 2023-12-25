@@ -15,6 +15,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -66,13 +67,13 @@ func AddZonedropCmd(defaultNodeHome string) *cobra.Command {
 				Duration:    duration,
 				Decay:       decay,
 				Allocation:  0,
-				Actions:     []sdk.Dec{},
+				Actions:     []sdkmath.LegacyDec{},
 				IsConcluded: false,
 			}
 
 			actions := strings.Split(actionString, ",")
 			for _, action := range actions {
-				weight := sdk.MustNewDecFromStr(action)
+				weight := sdkmath.LegacyMustNewDecFromStr(action)
 				airdrop.Actions = append(airdrop.Actions, weight)
 			}
 
@@ -230,7 +231,7 @@ func BulkGenesisAirdropCmd(defaultNodeHome string) *cobra.Command {
 				zoneDrop.Allocation += claimRecord.MaxAllocation
 
 				// add base account for airdrop recipient, containing 1uqck
-				balances := banktypes.Balance{Address: claimRecord.Address, Coins: sdk.NewCoins(sdk.NewCoin("uqck", sdk.OneInt()))}
+				balances := banktypes.Balance{Address: claimRecord.Address, Coins: sdk.NewCoins(sdk.NewCoin("uqck", sdkmath.OneInt()))}
 				addr, _ := sdk.AccAddressFromBech32(claimRecord.Address)
 				genAccount := authtypes.NewBaseAccount(addr, nil, 0, 0)
 
