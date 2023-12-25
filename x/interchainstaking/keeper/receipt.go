@@ -176,7 +176,7 @@ func (k *Keeper) MintAndSendQAsset(ctx sdk.Context, sender sdk.AccAddress, sende
 
 	qAssets := sdk.Coins{}
 	for _, asset := range assets.Sort() {
-		amount := sdk.NewDecFromInt(asset.Amount).Quo(zone.RedemptionRate).TruncateInt()
+		amount := sdkmath.LegacyNewDecFromInt(asset.Amount).Quo(zone.RedemptionRate).TruncateInt()
 		qAssets = qAssets.Add(sdk.NewCoin(zone.LocalDenom, amount))
 	}
 

@@ -13,10 +13,10 @@ import (
 
 // Default ics params.
 var (
-	DefaultDepositInterval      uint64  = 20
-	DefaultValidatorSetInterval uint64  = 200
-	DefaultCommissionRate       sdk.Dec = sdk.MustNewDecFromStr("0.025")
-	DefaultUnbondingEnabled             = false
+	DefaultDepositInterval      uint64            = 20
+	DefaultValidatorSetInterval uint64            = 200
+	DefaultCommissionRate       sdkmath.LegacyDec = sdk.MustNewDecFromStr("0.025")
+	DefaultUnbondingEnabled                       = false
 
 	// KeyDepositInterval is store's key for the DepositInterval option.
 	KeyDepositInterval = []byte("DepositInterval")
@@ -53,7 +53,7 @@ func UnmarshalParams(cdc *codec.LegacyAmino, value []byte) (params Params, err e
 func NewParams(
 	depositInterval uint64,
 	valsetInterval uint64,
-	commissionRate sdk.Dec,
+	commissionRate sdkmath.LegacyDec,
 	unbondingEnabled bool,
 ) Params {
 	return Params{
@@ -147,7 +147,7 @@ func validatePositiveInt(i interface{}) error {
 }
 
 func validateNonNegativeDec(i interface{}) error {
-	dec, ok := i.(sdk.Dec)
+	dec, ok := i.(sdkmath.LegacyDec)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}

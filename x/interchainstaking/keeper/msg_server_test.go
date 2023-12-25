@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -39,7 +40,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 				addr, err := addressutils.EncodeAddressToBech32("cosmos", addressutils.GenerateAccAddressForTest())
 				suite.NoError(err)
 				msg = icstypes.MsgRequestRedemption{
-					Value:              sdk.NewCoin("uqatom", sdk.NewInt(10000000)),
+					Value:              sdk.NewCoin("uqatom", sdkmath.NewInt(10000000)),
 					DestinationAddress: addr,
 					FromAddress:        testAddress,
 				}
@@ -53,7 +54,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 				addr, err := addressutils.EncodeAddressToBech32("cosmos", addressutils.GenerateAccAddressForTest())
 				suite.NoError(err)
 				msg = icstypes.MsgRequestRedemption{
-					Value:              sdk.NewCoin("uqatom", sdk.NewInt(10000000)),
+					Value:              sdk.NewCoin("uqatom", sdkmath.NewInt(10000000)),
 					DestinationAddress: addr,
 					FromAddress:        testAddress,
 				}
@@ -72,7 +73,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 				addr, err := addressutils.EncodeAddressToBech32("cosmos", addressutils.GenerateAccAddressForTest())
 				suite.NoError(err)
 				msg = icstypes.MsgRequestRedemption{
-					Value:              sdk.NewCoin("uqatom", sdk.NewInt(10000000)),
+					Value:              sdk.NewCoin("uqatom", sdkmath.NewInt(10000000)),
 					DestinationAddress: addr,
 					FromAddress:        testAddress,
 				}
@@ -92,7 +93,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 				addr, err := addressutils.EncodeAddressToBech32("cosmos", addressutils.GenerateAccAddressForTest())
 				suite.NoError(err)
 				msg = icstypes.MsgRequestRedemption{
-					Value:              sdk.NewCoin("uqatom", sdk.NewInt(10000000)),
+					Value:              sdk.NewCoin("uqatom", sdkmath.NewInt(10000000)),
 					DestinationAddress: addr,
 					FromAddress:        testAddress,
 				}
@@ -112,7 +113,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 				addr, err := addressutils.EncodeAddressToBech32("cosmos", addressutils.GenerateAccAddressForTest())
 				suite.NoError(err)
 				msg = icstypes.MsgRequestRedemption{
-					Value:              sdk.NewCoin("uqatom", sdk.NewInt(5000000)),
+					Value:              sdk.NewCoin("uqatom", sdkmath.NewInt(5000000)),
 					DestinationAddress: addr,
 					FromAddress:        testAddress,
 				}
@@ -126,7 +127,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 				addr, err := addressutils.EncodeAddressToBech32("cosmos", addressutils.GenerateAccAddressForTest())
 				suite.NoError(err)
 				msg = icstypes.MsgRequestRedemption{
-					Value:              sdk.NewCoin("uqatom", sdk.NewInt(5000000)),
+					Value:              sdk.NewCoin("uqatom", sdkmath.NewInt(5000000)),
 					DestinationAddress: addr,
 					FromAddress:        testAddress,
 				}
@@ -145,7 +146,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 				addr, err := addressutils.EncodeAddressToBech32("cosmos", addressutils.GenerateAccAddressForTest())
 				suite.NoError(err)
 				msg = icstypes.MsgRequestRedemption{
-					Value:              sdk.NewCoin("uqatom", sdk.NewInt(5000000)),
+					Value:              sdk.NewCoin("uqatom", sdkmath.NewInt(5000000)),
 					DestinationAddress: addr,
 					FromAddress:        testAddress,
 				}
@@ -165,7 +166,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 				addr, err := addressutils.EncodeAddressToBech32("cosmos", addressutils.GenerateAccAddressForTest())
 				suite.NoError(err)
 				msg = icstypes.MsgRequestRedemption{
-					Value:              sdk.NewCoin("uqatom", sdk.NewInt(5000000)),
+					Value:              sdk.NewCoin("uqatom", sdkmath.NewInt(5000000)),
 					DestinationAddress: addr,
 					FromAddress:        testAddress,
 				}
@@ -184,7 +185,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 				addr, err := addressutils.EncodeAddressToBech32("cosmos", addressutils.GenerateAccAddressForTest())
 				suite.NoError(err)
 				msg = icstypes.MsgRequestRedemption{
-					Value:              sdk.NewCoin("uatom", sdk.NewInt(10000000)),
+					Value:              sdk.NewCoin("uatom", sdkmath.NewInt(10000000)),
 					DestinationAddress: addr,
 					FromAddress:        testAddress,
 				}
@@ -198,7 +199,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 				addr, err := addressutils.EncodeAddressToBech32("cosmos", addressutils.GenerateAccAddressForTest())
 				suite.NoError(err)
 				msg = icstypes.MsgRequestRedemption{
-					Value:              sdk.NewCoin("uqatom", sdk.NewInt(1000000000)),
+					Value:              sdk.NewCoin("uqatom", sdkmath.NewInt(1000000000)),
 					DestinationAddress: addr,
 					FromAddress:        testAddress,
 				}
@@ -212,7 +213,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 				addr, err := addressutils.EncodeAddressToBech32("bob", addressutils.GenerateAccAddressForTest())
 				suite.NoError(err)
 				msg = icstypes.MsgRequestRedemption{
-					Value:              sdk.NewCoin("uqatom", sdk.OneInt()),
+					Value:              sdk.NewCoin("uqatom", sdkmath.OneInt()),
 					DestinationAddress: addr,
 					FromAddress:        testAddress,
 				}
@@ -226,7 +227,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 				addr, err := addressutils.EncodeAddressToBech32("cosmos", addressutils.GenerateAccAddressForTest())
 				suite.NoError(err)
 				msg = icstypes.MsgRequestRedemption{
-					Value:              sdk.NewCoin("uqatom", sdk.OneInt()),
+					Value:              sdk.NewCoin("uqatom", sdkmath.OneInt()),
 					DestinationAddress: addr,
 					FromAddress:        addr,
 				}
@@ -240,7 +241,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 				addr, err := addressutils.EncodeAddressToBech32("cosmos", addressutils.GenerateAccAddressForTest())
 				suite.NoError(err)
 				msg = icstypes.MsgRequestRedemption{
-					Value:              sdk.NewCoin("uqatom", sdk.NewInt(10000000)),
+					Value:              sdk.NewCoin("uqatom", sdkmath.NewInt(10000000)),
 					DestinationAddress: addr,
 					FromAddress:        testAddress,
 				}
@@ -330,7 +331,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 			for _, delegation := range func(zone icstypes.Zone) []icstypes.Delegation {
 				out := make([]icstypes.Delegation, 0)
 				for _, valoper := range validators {
-					out = append(out, icstypes.NewDelegation(zone.DelegationAddress.Address, valoper, sdk.NewCoin(zone.BaseDenom, sdk.NewInt(3000000))))
+					out = append(out, icstypes.NewDelegation(zone.DelegationAddress.Address, valoper, sdk.NewCoin(zone.BaseDenom, sdkmath.NewInt(3000000))))
 				}
 				return out
 			}(zone) {
@@ -359,7 +360,7 @@ func (suite *KeeperTestSuite) TestSignalIntent() {
 	tests := []struct {
 		name             string
 		malleate         func(suite *KeeperTestSuite) *icstypes.MsgSignalIntent
-		expected         []sdk.Dec
+		expected         []sdkmath.LegacyDec
 		failsValidations bool
 		expectErr        bool
 	}{
@@ -375,7 +376,7 @@ func (suite *KeeperTestSuite) TestSignalIntent() {
 					FromAddress: testAddress,
 				}
 			},
-			[]sdk.Dec{},
+			[]sdkmath.LegacyDec{},
 			true,
 			false,
 		},
@@ -391,7 +392,7 @@ func (suite *KeeperTestSuite) TestSignalIntent() {
 					FromAddress: testAddress,
 				}
 			},
-			[]sdk.Dec{},
+			[]sdkmath.LegacyDec{},
 			true,
 			false,
 		},
@@ -407,7 +408,7 @@ func (suite *KeeperTestSuite) TestSignalIntent() {
 					FromAddress: testAddress,
 				}
 			},
-			[]sdk.Dec{},
+			[]sdkmath.LegacyDec{},
 			false,
 			true,
 		},
@@ -423,7 +424,7 @@ func (suite *KeeperTestSuite) TestSignalIntent() {
 					FromAddress: testAddress,
 				}
 			},
-			[]sdk.Dec{sdk.NewDecWithPrec(1, 0)},
+			[]sdkmath.LegacyDec{sdk.NewDecWithPrec(1, 0)},
 			false,
 			false,
 		},
@@ -443,7 +444,7 @@ func (suite *KeeperTestSuite) TestSignalIntent() {
 					FromAddress: testAddress,
 				}
 			},
-			[]sdk.Dec{
+			[]sdkmath.LegacyDec{
 				sdk.NewDecWithPrec(5, 1),
 				sdk.NewDecWithPrec(2, 1),
 				sdk.NewDecWithPrec(3, 1),

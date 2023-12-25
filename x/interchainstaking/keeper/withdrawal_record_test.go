@@ -15,7 +15,7 @@ func (suite *KeeperTestSuite) TestUpdateWithdrawalRecordsForSlash() {
 		InitialRecords  func(ctx sdk.Context, keeper *icskeeper.Keeper)
 		ExpectedRecords func(ctx sdk.Context, keeper *icskeeper.Keeper) (out []types.WithdrawalRecord)
 		Validator       func(validators []string) string
-		Delta           sdk.Dec
+		Delta           sdkmath.LegacyDec
 		ExpectError     bool
 	}{
 		{

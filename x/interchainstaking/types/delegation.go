@@ -141,12 +141,12 @@ func DetermineAllocationsForDelegation(currentAllocations map[string]sdkmath.Int
 
 	if !unequalSplit.IsZero() {
 		for idx := range deltas {
-			deltas[idx].Amount = sdk.NewDecFromInt(deltas[idx].Amount).QuoInt(sum).MulInt(unequalSplit).TruncateInt()
+			deltas[idx].Amount = sdkmath.LegacyNewDecFromInt(deltas[idx].Amount).QuoInt(sum).MulInt(unequalSplit).TruncateInt()
 		}
 	}
 
 	// equalSplit is the portion of input that should be distributed equally across all validators, once targets are zero.
-	equalSplit := sdk.NewDecFromInt(input.Sub(unequalSplit))
+	equalSplit := sdkmath.LegacyNewDecFromInt(input.Sub(unequalSplit))
 
 	// replace this portion with allocation proportional to targetAllocations!
 	if !equalSplit.IsZero() {
@@ -164,7 +164,7 @@ func DetermineAllocationsForDelegation(currentAllocations map[string]sdkmath.Int
 	// dust is the portion of the input that was truncated in previous calculations; add this to the first validator in the list,
 	// once sorted alphabetically. This will always be a small amount, and will count toward the delta calculations on the next run.
 
-	outSum := sdk.ZeroInt()
+	outSum := sdkmath.ZeroInt()
 	outWeights := make(map[string]sdkmath.Int)
 	for _, delta := range deltas {
 		if !delta.Amount.IsZero() {

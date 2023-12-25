@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/simapp"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -36,7 +37,7 @@ func (suite *KeeperTestSuite) TestStoreGetDeleteValidator() {
 			ValoperAddress:      validator.String(),
 			CommissionRate:      sdk.NewDec(5.0),
 			DelegatorShares:     sdk.NewDec(1000.0),
-			VotingPower:         sdk.NewInt(1000),
+			VotingPower:         sdkmath.NewInt(1000),
 			Status:              stakingtypes.BondStatusBonded,
 			Score:               sdk.NewDec(0),
 			LiquidShares:        sdk.ZeroDec(),
@@ -121,7 +122,7 @@ func (suite *KeeperTestSuite) TestGetActiveValidators() {
 			ValoperAddress:  validator1.String(),
 			CommissionRate:  sdk.NewDec(5.0),
 			DelegatorShares: sdk.NewDec(1000.0),
-			VotingPower:     sdk.NewInt(1000),
+			VotingPower:     sdkmath.NewInt(1000),
 			Status:          stakingtypes.BondStatusBonded,
 			Score:           sdk.NewDec(0),
 		}

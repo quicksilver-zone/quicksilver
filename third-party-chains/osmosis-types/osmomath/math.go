@@ -12,12 +12,12 @@ var powPrecision, _ = sdk.NewDecFromStr("0.00000001")
 
 // Singletons.
 // nolint: deadcode, unused
-var zero sdk.Dec = sdk.ZeroDec()
+var zero sdkmath.LegacyDec = sdk.ZeroDec()
 
 var (
-	one_half sdk.Dec = sdk.MustNewDecFromStr("0.5")
-	one      sdk.Dec = sdk.OneDec()
-	two      sdk.Dec = sdk.MustNewDecFromStr("2")
+	one_half sdkmath.LegacyDec = sdk.MustNewDecFromStr("0.5")
+	one      sdkmath.LegacyDec = sdkmath.LegacyOneDec()
+	two      sdkmath.LegacyDec = sdk.MustNewDecFromStr("2")
 )
 
 // Returns the internal "power precision".
@@ -26,7 +26,7 @@ var (
 // *technically* the error term can be greater than this powPrecision,
 // but for small bases this bound applies. See comments in the PowApprox function
 // for more detail.
-func GetPowPrecision() sdk.Dec {
+func GetPowPrecision() sdkmath.LegacyDec {
 	return powPrecision.Clone()
 }
 
@@ -34,7 +34,7 @@ func GetPowPrecision() sdk.Dec {
 
 // AbsDifferenceWithSign returns | a - b |, (a - b).sign()
 // a is mutated and returned.
-func AbsDifferenceWithSign(a, b sdk.Dec) (sdk.Dec, bool) {
+func AbsDifferenceWithSign(a, b sdkmath.LegacyDec) (sdkmath.LegacyDec, bool) {
 	if a.GTE(b) {
 		return a.SubMut(b), false
 	} else {
@@ -42,7 +42,7 @@ func AbsDifferenceWithSign(a, b sdk.Dec) (sdk.Dec, bool) {
 	}
 }
 
-// func largeBasePow(base sdk.Dec, exp sdk.Dec) sdk.Dec {
+// func largeBasePow(base sdkmath.LegacyDec, exp sdkmath.LegacyDec) sdkmath.LegacyDec {
 // 	// pow requires the base to be <= 2
 // }
 
@@ -50,7 +50,7 @@ func AbsDifferenceWithSign(a, b sdk.Dec) (sdk.Dec, bool) {
 // However since the exponent is not an integer, we must do an approximation algorithm.
 // TODO: In the future, lets add some optimized routines for common exponents, e.g. for common wIn / wOut ratios
 // Many simple exponents like 2:1 pools.
-func Pow(base sdk.Dec, exp sdk.Dec) sdk.Dec {
+func Pow(base sdkmath.LegacyDec, exp sdkmath.LegacyDec) sdkmath.LegacyDec {
 	// Exponentiation of a negative base with an arbitrary real exponent is not closed within the reals.
 	// You can see this by recalling that `i = (-1)^(.5)`. We have to go to complex numbers to define this.
 	// (And would have to implement complex logarithms)
@@ -83,13 +83,13 @@ func Pow(base sdk.Dec, exp sdk.Dec) sdk.Dec {
 
 // Contract: 0 < base <= 2
 // 0 <= exp < 1.
-func PowApprox(base sdk.Dec, exp sdk.Dec, precision sdk.Dec) sdk.Dec {
+func PowApprox(base sdkmath.LegacyDec, exp sdkmath.LegacyDec, precision sdkmath.LegacyDec) sdkmath.LegacyDec {
 	if !base.IsPositive() {
 		panic(fmt.Errorf("base must be greater than 0"))
 	}
 
 	if exp.IsZero() {
-		return sdk.OneDec()
+		return sdkmath.LegacyOneDec()
 	}
 
 	// Common case optimization
@@ -133,8 +133,8 @@ func PowApprox(base sdk.Dec, exp sdk.Dec, precision sdk.Dec) sdk.Dec {
 
 	base = base.Clone()
 	x, xneg := AbsDifferenceWithSign(base, one)
-	term := sdk.OneDec()
-	sum := sdk.OneDec()
+	term := sdkmath.LegacyOneDec()
+	sum := sdkmath.LegacyOneDec()
 	negative := false
 
 	a := exp.Clone()

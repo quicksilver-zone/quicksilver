@@ -9,6 +9,7 @@ import (
 	lsmstakingtypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 
 	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -56,7 +57,7 @@ func (k *Keeper) processRedemptionForLsm(ctx sdk.Context, zone *types.Zone, send
 		msgs = append(msgs, &lsmstakingtypes.MsgTokenizeShares{
 			DelegatorAddress:    zone.DelegationAddress.Address,
 			ValidatorAddress:    valoper,
-			Amount:              sdk.NewCoin(zone.BaseDenom, sdk.NewIntFromUint64(distribution[valoper])),
+			Amount:              sdk.NewCoin(zone.BaseDenom, sdkmath.NewIntFromUint64(distribution[valoper])),
 			TokenizedShareOwner: destination,
 		})
 	}
@@ -115,11 +116,11 @@ func (k *Keeper) queueRedemption(
 // are unlocked and free to redelegate or unbond.
 func (k *Keeper) GetUnlockedTokensForZone(ctx sdk.Context, zone *types.Zone) (map[string]math.Int, math.Int, error) {
 	availablePerValidator := make(map[string]math.Int, len(zone.Validators))
-	total := sdk.ZeroInt()
+	total := sdkmath.ZeroInt()
 	for _, delegation := range k.GetAllDelegations(ctx, zone.ChainId) {
 		thisAvailable, found := availablePerValidator[delegation.ValidatorAddress]
 		if !found {
-			thisAvailable = sdk.ZeroInt()
+			thisAvailable = sdkmath.ZeroInt()
 		}
 		availablePerValidator[delegation.ValidatorAddress] = thisAvailable.Add(delegation.Amount.Amount)
 		total = total.Add(delegation.Amount.Amount)
@@ -127,11 +128,11 @@ func (k *Keeper) GetUnlockedTokensForZone(ctx sdk.Context, zone *types.Zone) (ma
 	for _, redelegation := range k.ZoneRedelegationRecords(ctx, zone.ChainId) {
 		thisAvailable, found := availablePerValidator[redelegation.Destination]
 		if found {
-			availablePerValidator[redelegation.Destination] = thisAvailable.Sub(sdk.NewInt(redelegation.Amount))
-			if availablePerValidator[redelegation.Destination].LT(sdk.ZeroInt()) {
-				return map[string]math.Int{}, sdk.ZeroInt(), fmt.Errorf("negative available amount [chain: %s, validator: %s, amount: %s]; unable to continue", zone.ChainId, redelegation.Destination, availablePerValidator[redelegation.Destination].String())
+			availablePerValidator[redelegation.Destination] = thisAvailable.Sub(sdkmath.NewInt(redelegation.Amount))
+			if availablePerValidator[redelegation.Destination].LT(sdkmath.ZeroInt()) {
+				return map[string]math.Int{}, sdkmath.ZeroInt(), fmt.Errorf("negative available amount [chain: %s, validator: %s, amount: %s]; unable to continue", zone.ChainId, redelegation.Destination, availablePerValidator[redelegation.Destination].String())
 			}
-			total = total.Sub(sdk.NewInt(redelegation.Amount))
+			total = total.Sub(sdkmath.NewInt(redelegation.Amount))
 		}
 	}
 
@@ -147,7 +148,7 @@ func (k *Keeper) HandleQueuedUnbondings(ctx sdk.Context, zone *types.Zone, epoch
 	txHashesPerValidator := make(map[string][]string, 0)
 
 	// total amount coins to withdraw
-	totalToWithdraw := sdk.NewCoin(zone.BaseDenom, sdk.ZeroInt())
+	totalToWithdraw := sdk.NewCoin(zone.BaseDenom, sdkmath.ZeroInt())
 
 	// map of distributions per withdrawal
 	distributionsPerWithdrawal := make(map[string][]*types.Distribution, 0)
@@ -239,7 +240,7 @@ WITHDRAWAL:
 				}
 
 				// set withdrawal amount to zero, and continue to outer loop (next withdrawal record).
-				amountToWithdrawPerWithdrawal[hash] = sdk.NewCoin(amountToWithdrawPerWithdrawal[hash].Denom, sdk.ZeroInt())
+				amountToWithdrawPerWithdrawal[hash] = sdk.NewCoin(amountToWithdrawPerWithdrawal[hash].Denom, sdkmath.ZeroInt())
 				continue WITHDRAWAL
 			}
 
@@ -256,7 +257,7 @@ WITHDRAWAL:
 			}
 
 			// set current val to zero.
-			tokensAllocatedForWithdrawalPerValidator[v] = sdk.ZeroInt()
+			tokensAllocatedForWithdrawalPerValidator[v] = sdkmath.ZeroInt()
 			// next validator
 			if len(valopers) > vidx+1 {
 				vidx++

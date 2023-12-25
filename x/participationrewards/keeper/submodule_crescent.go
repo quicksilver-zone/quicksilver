@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
@@ -64,7 +65,7 @@ func (CrescentModule) Hooks(ctx sdk.Context, k *Keeper) {
 			connectionData.ChainID,
 			icstypes.BankStoreKey,
 			append(lookupKey, []byte(balance.Denom)...),
-			sdk.NewInt(-1),
+			sdkmath.NewInt(-1),
 			rewardstypes.ModuleName,
 			CrescentReserveBalanceUpdateCallbackID,
 			0,
@@ -88,7 +89,7 @@ func (CrescentModule) Hooks(ctx sdk.Context, k *Keeper) {
 			connectionData.ChainID,
 			"store/liquidity/key",
 			poolKey,
-			sdk.NewInt(-1),
+			sdkmath.NewInt(-1),
 			rewardstypes.ModuleName,
 			CrescentPoolUpdateCallbackID,
 			0,
@@ -110,7 +111,7 @@ func (CrescentModule) Hooks(ctx sdk.Context, k *Keeper) {
 			connectionData.ChainID,
 			icstypes.BankStoreKey,
 			append(banktypes.SupplyKey, []byte(supply.PoolCoinDenom)...),
-			sdk.NewInt(-1),
+			sdkmath.NewInt(-1),
 			rewardstypes.ModuleName,
 			CrescentPoolCoinSupplyUpdateCallbackID,
 			0,

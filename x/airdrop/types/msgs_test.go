@@ -220,7 +220,7 @@ func TestMsgIncentivePoolSpendValidateBasic(t *testing.T) {
 		Amount    sdk.Coins
 	}
 
-	validTestCoins := sdk.NewCoins(sdk.NewCoin("test", sdk.NewIntFromUint64(10000)))
+	validTestCoins := sdk.NewCoins(sdk.NewCoin("test", sdkmath.NewIntFromUint64(10000)))
 	addr1 := addressutils.GenerateAccAddressForTest().String()
 	addr2 := addressutils.GenerateAccAddressForTest().String()
 

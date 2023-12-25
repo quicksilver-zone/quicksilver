@@ -71,7 +71,7 @@ func (m MsgMint) ValidateBasic() error {
 		return sdkioerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
 	}
 
-	if !m.Amount.IsValid() || m.Amount.Amount.Equal(sdk.ZeroInt()) {
+	if !m.Amount.IsValid() || m.Amount.Amount.Equal(sdkmath.ZeroInt()) {
 		return sdkioerrors.Wrap(sdkerrors.ErrInvalidCoins, m.Amount.String())
 	}
 
@@ -105,7 +105,7 @@ func (m MsgBurn) ValidateBasic() error {
 		return sdkioerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
 	}
 
-	if !m.Amount.IsValid() || m.Amount.Amount.Equal(sdk.ZeroInt()) {
+	if !m.Amount.IsValid() || m.Amount.Amount.Equal(sdkmath.ZeroInt()) {
 		return sdkioerrors.Wrap(sdkerrors.ErrInvalidCoins, m.Amount.String())
 	}
 

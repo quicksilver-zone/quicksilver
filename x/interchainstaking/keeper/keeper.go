@@ -357,8 +357,8 @@ func (k *Keeper) SetValidatorForZone(ctx sdk.Context, zone *types.Zone, data []b
 				return fmt.Errorf("incoming voting power must be greater than zero, received %s", validator.Tokens)
 			}
 			// determine difference between previous vp/shares ratio and new ratio.
-			prevRatio := val.DelegatorShares.Quo(sdk.NewDecFromInt(val.VotingPower))
-			newRatio := validator.DelegatorShares.Quo(sdk.NewDecFromInt(validator.Tokens))
+			prevRatio := val.DelegatorShares.Quo(sdkmath.LegacyNewDecFromInt(val.VotingPower))
+			newRatio := validator.DelegatorShares.Quo(sdkmath.LegacyNewDecFromInt(validator.Tokens))
 			delta := newRatio.Quo(prevRatio)
 			err = k.UpdateWithdrawalRecordsForSlash(ctx, zone, val.ValoperAddress, delta)
 			if err != nil {
@@ -443,8 +443,8 @@ func (k *Keeper) GetUnbondingEnabled(ctx sdk.Context) bool {
 	return out
 }
 
-func (k *Keeper) GetCommissionRate(ctx sdk.Context) sdk.Dec {
-	var out sdk.Dec
+func (k *Keeper) GetCommissionRate(ctx sdk.Context) sdkmath.LegacyDec {
+	var out sdkmath.LegacyDec
 	k.paramStore.Get(ctx, types.KeyCommissionRate, &out)
 	return out
 }
@@ -510,7 +510,7 @@ func (k *Keeper) EmitPerformanceBalanceQuery(ctx sdk.Context, zone *types.Zone) 
 		zone.ChainId,
 		types.BankStoreKey,
 		append(data, []byte(zone.BaseDenom)...),
-		sdk.NewInt(-1),
+		sdkmath.NewInt(-1),
 		types.ModuleName,
 		"perfbalance",
 		100,
@@ -553,7 +553,7 @@ func (k *Keeper) EmitValidatorQuery(ctx sdk.Context, connectionID, chainID strin
 		chainID,
 		"store/staking/key",
 		data,
-		sdk.NewInt(-1),
+		sdkmath.NewInt(-1),
 		types.ModuleName,
 		"validator",
 		0,
@@ -578,7 +578,7 @@ func (k *Keeper) EmitDepositIntervalQuery(ctx sdk.Context, zone *types.Zone) {
 		zone.ChainId,
 		"cosmos.tx.v1beta1.Service/GetTxsEvent",
 		k.cdc.MustMarshal(&req),
-		sdk.NewInt(-1),
+		sdkmath.NewInt(-1),
 		types.ModuleName,
 		"depositinterval",
 		0,
@@ -597,7 +597,7 @@ func (k *Keeper) EmitSigningInfoQuery(ctx sdk.Context, connectionID, chainID str
 		chainID,
 		"store/slashing/key",
 		data,
-		sdk.NewInt(-1),
+		sdkmath.NewInt(-1),
 		types.ModuleName,
 		"signinginfo",
 		0,
@@ -652,7 +652,7 @@ func (k *Keeper) OverrideRedemptionRateNoCap(ctx sdk.Context, zone *types.Zone) 
 	k.SetZone(ctx, zone)
 }
 
-func (k *Keeper) GetRatio(ctx sdk.Context, zone *types.Zone, epochRewards sdkmath.Int) (sdk.Dec, bool) {
+func (k *Keeper) GetRatio(ctx sdk.Context, zone *types.Zone, epochRewards sdkmath.Int) (sdkmath.LegacyDec, bool) {
 	// native asset amount
 	nativeAssetAmount := k.GetDelegatedAmount(ctx, zone).Amount
 	nativeAssetUnbondingAmount := k.GetUnbondingAmount(ctx, zone).Amount
@@ -665,10 +665,10 @@ func (k *Keeper) GetRatio(ctx sdk.Context, zone *types.Zone, epochRewards sdkmat
 	if qAssetAmount.IsZero() {
 		// ratio 1.0 (default 1:1 ratio between nativeAssets and qAssets)
 		// native assets should not reach zero before qAssets (discount rate asymptote)
-		return sdk.OneDec(), true
+		return sdkmath.LegacyOneDec(), true
 	}
 
-	return sdk.NewDecFromInt(nativeAssetAmount.Add(epochRewards).Add(nativeAssetUnbondingAmount).Add(nativeAssetUnbonded)).Quo(sdk.NewDecFromInt(qAssetAmount)), false
+	return sdkmath.LegacyNewDecFromInt(nativeAssetAmount.Add(epochRewards).Add(nativeAssetUnbondingAmount).Add(nativeAssetUnbonded)).Quo(sdkmath.LegacyNewDecFromInt(qAssetAmount)), false
 }
 
 func (k *Keeper) GetAggregateIntentOrDefault(ctx sdk.Context, zone *types.Zone) (types.ValidatorIntents, error) {

@@ -88,7 +88,7 @@ func TestMsgMint(t *testing.T) {
 	createMsg := func(after func(msg types.MsgMint) types.MsgMint) types.MsgMint {
 		properMsg := *types.NewMsgMint(
 			addr1.String(),
-			sdk.NewCoin("bitcoin", sdk.NewInt(500000000)),
+			sdk.NewCoin("bitcoin", sdkmath.NewInt(500000000)),
 		)
 
 		return after(properMsg)
@@ -127,7 +127,7 @@ func TestMsgMint(t *testing.T) {
 		{
 			name: "zero amount",
 			msg: createMsg(func(msg types.MsgMint) types.MsgMint {
-				msg.Amount = sdk.NewCoin("bitcoin", sdk.ZeroInt())
+				msg.Amount = sdk.NewCoin("bitcoin", sdkmath.ZeroInt())
 				return msg
 			}),
 			expectPass: false,
@@ -135,7 +135,7 @@ func TestMsgMint(t *testing.T) {
 		{
 			name: "negative amount",
 			msg: createMsg(func(msg types.MsgMint) types.MsgMint {
-				msg.Amount.Amount = sdk.NewInt(-10000000)
+				msg.Amount.Amount = sdkmath.NewInt(-10000000)
 				return msg
 			}),
 			expectPass: false,
@@ -160,7 +160,7 @@ func TestMsgBurn(t *testing.T) {
 	// make a proper burn message
 	baseMsg := types.NewMsgBurn(
 		addr1.String(),
-		sdk.NewCoin("bitcoin", sdk.NewInt(500000000)),
+		sdk.NewCoin("bitcoin", sdkmath.NewInt(500000000)),
 	)
 
 	// validate burn message was created as intended
@@ -196,7 +196,7 @@ func TestMsgBurn(t *testing.T) {
 			name: "zero amount",
 			msg: func() *types.MsgBurn {
 				msg := baseMsg
-				msg.Amount.Amount = sdk.ZeroInt()
+				msg.Amount.Amount = sdkmath.ZeroInt()
 				return msg
 			},
 			expectPass: false,
@@ -205,7 +205,7 @@ func TestMsgBurn(t *testing.T) {
 			name: "negative amount",
 			msg: func() *types.MsgBurn {
 				msg := baseMsg
-				msg.Amount.Amount = sdk.NewInt(-10000000)
+				msg.Amount.Amount = sdkmath.NewInt(-10000000)
 				return msg
 			},
 			expectPass: false,

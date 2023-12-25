@@ -253,7 +253,7 @@ func V010402rc6UpgradeHandler(
 					zone.ChainId,
 					"cosmos.staking.v1beta1.Query/DelegatorDelegations",
 					bz,
-					sdk.NewInt(-1),
+					sdkmath.NewInt(-1),
 					icstypes.ModuleName,
 					"delegations",
 					0,

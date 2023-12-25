@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
@@ -30,7 +31,7 @@ func (k Keeper) AllocateValidatorSelectionRewards(ctx sdk.Context) {
 				zone.ChainId,
 				"cosmos.distribution.v1beta1.Query/DelegationTotalRewards",
 				bz,
-				sdk.NewInt(-1),
+				sdkmath.NewInt(-1),
 				types.ModuleName,
 				ValidatorSelectionRewardsCallbackID,
 				0,
@@ -55,7 +56,7 @@ func (k Keeper) getZoneScores(
 
 	zs := types.ZoneScore{
 		ZoneID:           zone.ChainId,
-		TotalVotingPower: sdk.NewInt(0),
+		TotalVotingPower: sdkmath.NewInt(0),
 		ValidatorScores:  make(map[string]*types.Validator),
 	}
 
@@ -83,8 +84,8 @@ func (k Keeper) CalcDistributionScores(ctx sdk.Context, zone icstypes.Zone, zs *
 
 	// calculate total voting power
 	// and determine min/max voting power for zone
-	max := sdk.NewInt(0)
-	min := sdk.NewInt(999999999999999999)
+	max := sdkmath.NewInt(0)
+	min := sdkmath.NewInt(999999999999999999)
 	for _, zoneVal := range zoneValidators {
 		val := zoneVal
 		if val.VotingPower.IsNegative() {
@@ -116,11 +117,11 @@ func (k Keeper) CalcDistributionScores(ctx sdk.Context, zone icstypes.Zone, zs *
 	}
 
 	// calculate power percentage and normalized distribution scores
-	maxp := sdk.NewDecFromInt(max).Quo(sdk.NewDecFromInt(zs.TotalVotingPower))
-	minp := sdk.NewDecFromInt(min).Quo(sdk.NewDecFromInt(zs.TotalVotingPower))
+	maxp := sdkmath.LegacyNewDecFromInt(max).Quo(sdkmath.LegacyNewDecFromInt(zs.TotalVotingPower))
+	minp := sdkmath.LegacyNewDecFromInt(min).Quo(sdkmath.LegacyNewDecFromInt(zs.TotalVotingPower))
 	for _, vs := range zs.ValidatorScores {
 		// calculate power percentage
-		vs.PowerPercentage = sdk.NewDecFromInt(vs.VotingPower).Quo(sdk.NewDecFromInt(zs.TotalVotingPower))
+		vs.PowerPercentage = sdkmath.LegacyNewDecFromInt(vs.VotingPower).Quo(sdkmath.LegacyNewDecFromInt(zs.TotalVotingPower))
 
 		// calculate normalized distribution score
 		vs.DistributionScore = sdk.NewDec(1).Sub(
@@ -276,7 +277,7 @@ func (k Keeper) CalcUserValidatorSelectionAllocations(
 		return userAllocations
 	}
 
-	allocation := sdk.NewDecFromInt(sdk.NewIntFromUint64(zone.ValidatorSelectionAllocation))
+	allocation := sdkmath.LegacyNewDecFromInt(sdkmath.NewIntFromUint64(zone.ValidatorSelectionAllocation))
 	tokensPerPoint := allocation.Quo(sum)
 	bondDenom := k.stakingKeeper.BondDenom(ctx)
 	k.Logger(ctx).Info("tokens per point", "zone", zs.ZoneID, "zone score", sum, "tpp", tokensPerPoint)

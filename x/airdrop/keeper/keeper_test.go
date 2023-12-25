@@ -96,7 +96,7 @@ func (suite *KeeperTestSuite) getZoneDrop() types.ZoneDrop {
 		Duration:   time.Hour,
 		Decay:      30 * time.Minute,
 		Allocation: 1000000000,
-		Actions: []sdk.Dec{
+		Actions: []sdkmath.LegacyDec{
 			0:  sdk.MustNewDecFromStr("0.15"), // 15%
 			1:  sdk.MustNewDecFromStr("0.06"), // 21%
 			2:  sdk.MustNewDecFromStr("0.07"), // 28%
@@ -144,7 +144,7 @@ func (suite *KeeperTestSuite) fundZoneDrop(chainID string, amount uint64) {
 	coins := sdk.NewCoins(
 		sdk.NewCoin(
 			quicksilver.StakingKeeper.BondDenom(ctx),
-			sdk.NewIntFromUint64(amount),
+			sdkmath.NewIntFromUint64(amount),
 		),
 	)
 	// fund zonedrop account

@@ -26,7 +26,7 @@ func TestValidInputs(t *testing.T) {
 		{ValoperAddress: "validator1", Weight: sdk.NewDecWithPrec(5, 1)},
 		{ValoperAddress: "validator2", Weight: sdk.NewDecWithPrec(5, 1)},
 	}
-	amount := sdk.Coins{sdk.NewCoin("token", sdk.NewInt(1000))}
+	amount := sdk.Coins{sdk.NewCoin("token", sdkmath.NewInt(1000))}
 
 	expectedAllocations := map[string]sdkmath.Int{
 		"validator1": sdkmath.NewInt(550),
@@ -63,7 +63,7 @@ func TestMaximumInputs(t *testing.T) {
 		{ValoperAddress: "validator1", Weight: sdk.NewDecWithPrec(5, 1)},
 		{ValoperAddress: "validator2", Weight: sdk.NewDecWithPrec(5, 1)},
 	}
-	amount := sdk.Coins{sdk.NewCoin("token", sdk.NewInt(10000000000))}
+	amount := sdk.Coins{sdk.NewCoin("token", sdkmath.NewInt(10000000000))}
 
 	expectedAllocations := map[string]sdkmath.Int{
 		"validator1": sdkmath.NewInt(5500000000),
@@ -86,7 +86,7 @@ func TestEmptyCurrentAllocations(t *testing.T) {
 		{ValoperAddress: "validator1", Weight: sdk.NewDecWithPrec(5, 1)},
 		{ValoperAddress: "validator2", Weight: sdk.NewDecWithPrec(5, 1)},
 	}
-	amount := sdk.Coins{sdk.NewCoin("token", sdk.NewInt(1000))}
+	amount := sdk.Coins{sdk.NewCoin("token", sdkmath.NewInt(1000))}
 
 	expectedAllocations := map[string]sdkmath.Int{
 		"validator1": sdkmath.NewInt(500),
@@ -109,7 +109,7 @@ func TestEmptyTargetAllocations(t *testing.T) {
 	}
 	currentSum := sdkmath.NewInt(300)
 	targetAllocations := types.ValidatorIntents{}
-	amount := sdk.Coins{sdk.NewCoin("token", sdk.NewInt(1000))}
+	amount := sdk.Coins{sdk.NewCoin("token", sdkmath.NewInt(1000))}
 
 	_, err := types.DetermineAllocationsForDelegation(currentAllocations, currentSum, targetAllocations, amount, make(map[string]sdkmath.Int))
 	require.Error(t, err)
@@ -126,7 +126,7 @@ func TestNonEqualTargetAllocations(t *testing.T) {
 		{ValoperAddress: "validator1", Weight: sdk.NewDecWithPrec(3, 1)},
 		{ValoperAddress: "validator2", Weight: sdk.NewDecWithPrec(7, 1)},
 	}
-	amount := sdk.Coins{sdk.NewCoin("token", sdk.NewInt(1000))}
+	amount := sdk.Coins{sdk.NewCoin("token", sdkmath.NewInt(1000))}
 
 	expectedAllocations := map[string]sdkmath.Int{
 		"validator1": sdkmath.NewInt(290),
@@ -154,7 +154,7 @@ func TestValidInputsWithZeroWeight(t *testing.T) {
 		{ValoperAddress: "validator2", Weight: sdk.NewDecWithPrec(5, 1)},
 		{ValoperAddress: "validator3", Weight: sdk.NewDec(0)},
 	}
-	amount := sdk.Coins{sdk.NewCoin("token", sdk.NewInt(1000))}
+	amount := sdk.Coins{sdk.NewCoin("token", sdkmath.NewInt(1000))}
 
 	expectedAllocations := map[string]sdkmath.Int{
 		"validator1": sdkmath.NewInt(550),
@@ -182,7 +182,7 @@ func TestTargetAllocationsMoreValidators(t *testing.T) {
 		{ValoperAddress: "validator3", Weight: sdk.NewDecWithPrec(5, 1)},
 		{ValoperAddress: "validator4", Weight: sdk.NewDecWithPrec(5, 1)},
 	}
-	amount := sdk.Coins{sdk.NewCoin("token", sdk.NewInt(1000))}
+	amount := sdk.Coins{sdk.NewCoin("token", sdkmath.NewInt(1000))}
 
 	expectedAllocations := map[string]sdkmath.Int{
 		"validator1": sdkmath.NewInt(241),
@@ -211,7 +211,7 @@ func TestCurrentAllocationsMoreValidators(t *testing.T) {
 		{ValoperAddress: "validator1", Weight: sdk.NewDecWithPrec(3, 1)},
 		{ValoperAddress: "validator2", Weight: sdk.NewDecWithPrec(4, 1)},
 	}
-	amount := sdk.Coins{sdk.NewCoin("token", sdk.NewInt(1000))}
+	amount := sdk.Coins{sdk.NewCoin("token", sdkmath.NewInt(1000))}
 
 	expectedAllocations := map[string]sdkmath.Int{
 		"validator1": sdkmath.NewInt(489),

@@ -19,7 +19,7 @@ func TestZoneDrop_ValidateBasic(t *testing.T) {
 		Duration    time.Duration
 		Decay       time.Duration
 		Allocation  uint64
-		Actions     []sdk.Dec
+		Actions     []sdkmath.LegacyDec
 		IsConcluded bool
 	}
 	tests := []struct {
@@ -40,7 +40,7 @@ func TestZoneDrop_ValidateBasic(t *testing.T) {
 				Duration:   -time.Minute,
 				Decay:      -time.Second,
 				Allocation: 0,
-				Actions: []sdk.Dec{
+				Actions: []sdkmath.LegacyDec{
 					sdk.MustNewDecFromStr("0.3"),
 					sdk.MustNewDecFromStr("0.4"),
 					sdk.MustNewDecFromStr("0.5"),
@@ -57,7 +57,7 @@ func TestZoneDrop_ValidateBasic(t *testing.T) {
 				Duration:   0,
 				Decay:      0,
 				Allocation: 0,
-				Actions: []sdk.Dec{
+				Actions: []sdkmath.LegacyDec{
 					sdk.MustNewDecFromStr("0.3"),
 					sdk.MustNewDecFromStr("0.3"),
 					sdk.MustNewDecFromStr("0.3"),
@@ -74,7 +74,7 @@ func TestZoneDrop_ValidateBasic(t *testing.T) {
 				Duration:   time.Hour,
 				Decay:      30 * time.Minute,
 				Allocation: 16400,
-				Actions: []sdk.Dec{
+				Actions: []sdkmath.LegacyDec{
 					sdk.MustNewDecFromStr("0.01"),
 					sdk.MustNewDecFromStr("0.02"),
 					sdk.MustNewDecFromStr("0.03"),
@@ -100,7 +100,7 @@ func TestZoneDrop_ValidateBasic(t *testing.T) {
 				Duration:   time.Hour,
 				Decay:      30 * time.Minute,
 				Allocation: 16400,
-				Actions: []sdk.Dec{
+				Actions: []sdkmath.LegacyDec{
 					sdk.MustNewDecFromStr("0.1"),
 					sdk.MustNewDecFromStr("0.2"),
 					sdk.MustNewDecFromStr("0.3"),

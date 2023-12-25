@@ -55,7 +55,7 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 }
 
 func (k *Keeper) SetDatapointForID(ctx sdk.Context, id string, result []byte, height math.Int) error {
-	mapping := types.DataPoint{Id: id, RemoteHeight: height, LocalHeight: sdk.NewInt(ctx.BlockHeight()), Value: result}
+	mapping := types.DataPoint{Id: id, RemoteHeight: height, LocalHeight: sdkmath.NewInt(ctx.BlockHeight()), Value: result}
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixData)
 	bz := k.cdc.MustMarshal(&mapping)
 	store.Set([]byte(id), bz)
@@ -108,12 +108,12 @@ func (k *Keeper) GetDatapointOrRequest(ctx sdk.Context, module, connectionID, ch
 	val, err := k.GetDatapoint(ctx, module, connectionID, chainID, queryType, request)
 	if err != nil {
 		// no datapoint
-		k.MakeRequest(ctx, connectionID, chainID, queryType, request, sdk.NewInt(-1), "", "", maxAge)
+		k.MakeRequest(ctx, connectionID, chainID, queryType, request, sdkmath.NewInt(-1), "", "", maxAge)
 		return types.DataPoint{}, errors.New("no data; query submitted")
 	}
 
-	if val.LocalHeight.LT(sdk.NewInt(ctx.BlockHeight() - int64(maxAge))) { // this is somewhat arbitrary; TODO: make this better
-		k.MakeRequest(ctx, connectionID, chainID, queryType, request, sdk.NewInt(-1), "", "", maxAge)
+	if val.LocalHeight.LT(sdkmath.NewInt(ctx.BlockHeight() - int64(maxAge))) { // this is somewhat arbitrary; TODO: make this better
+		k.MakeRequest(ctx, connectionID, chainID, queryType, request, sdkmath.NewInt(-1), "", "", maxAge)
 		return types.DataPoint{}, errors.New("stale data; query submitted")
 	}
 	// check ttl
@@ -162,7 +162,7 @@ func (k *Keeper) MakeRequest(
 	} else {
 		// a re-request of an existing query triggers resetting of height to trigger immediately.
 		k.Logger(ctx).Debug("re-request", "LastHeight", existingQuery.LastHeight)
-		existingQuery.LastHeight = sdk.ZeroInt()
+		existingQuery.LastHeight = sdkmath.ZeroInt()
 		k.SetQuery(ctx, existingQuery)
 	}
 }

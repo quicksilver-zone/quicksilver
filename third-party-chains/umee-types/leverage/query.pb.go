@@ -922,7 +922,7 @@ func (m *InspectAccount) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_InspectAccount proto.InternalMessageInfo
 
-// RiskInfo defines a borrower's account health without requiring sdk.Dec formatting.
+// RiskInfo defines a borrower's account health without requiring sdkmath.LegacyDec formatting.
 type RiskInfo struct {
 	// Borrowed is account's borrowed value in USD.
 	Borrowed float64 `protobuf:"fixed64,1,opt,name=Borrowed,proto3" json:"Borrowed,omitempty"`

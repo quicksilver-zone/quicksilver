@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
@@ -62,7 +63,7 @@ func (m *OsmosisModule) Hooks(ctx sdk.Context, k *Keeper) {
 			connectionData.ChainID,
 			"store/gamm/key",
 			m.GetKeyPrefixPools(pool.PoolID),
-			sdk.NewInt(-1),
+			sdkmath.NewInt(-1),
 			types.ModuleName,
 			OsmosisPoolUpdateCallbackID,
 			0,

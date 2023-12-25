@@ -13,11 +13,11 @@ import (
 // ErrTolerance.Compare(a, b) returns true iff:
 // |a - b| <= AdditiveTolerance
 // |a - b| / min(a, b) <= MultiplicativeTolerance
-// Each check is respectively ignored if the entry is nil (sdk.Dec{}, sdkmath.Int{})
+// Each check is respectively ignored if the entry is nil (sdkmath.LegacyDec{}, sdkmath.Int{})
 // Note that if AdditiveTolerance == 0, then this is equivalent to a standard compare.
 type ErrTolerance struct {
 	AdditiveTolerance       sdkmath.Int
-	MultiplicativeTolerance sdk.Dec
+	MultiplicativeTolerance sdkmath.LegacyDec
 }
 
 // Compare returns if actual is within errTolerance of expected.
@@ -49,7 +49,7 @@ func (e ErrTolerance) Compare(expected sdkmath.Int, actual sdkmath.Int) int {
 	}
 	// Check multiplicative tolerance equations
 	if !e.MultiplicativeTolerance.IsNil() && !e.MultiplicativeTolerance.IsZero() {
-		errTerm := sdk.NewDecFromInt(diff).Quo(sdk.NewDecFromInt(sdk.MinInt(expected, actual)))
+		errTerm := sdkmath.LegacyNewDecFromInt(diff).Quo(sdkmath.LegacyNewDecFromInt(sdk.MinInt(expected, actual)))
 		if errTerm.GT(e.MultiplicativeTolerance) {
 			return comparisonSign
 		}

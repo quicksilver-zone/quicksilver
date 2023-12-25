@@ -8,7 +8,6 @@ import (
 	"cosmossdk.io/errors"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
@@ -28,5 +27,5 @@ func (v Validator) GetConsAddr() ([]byte, error) {
 	return pk.Address().Bytes(), nil
 }
 
-func (v Validator) GetCommission() sdk.Dec { return v.Commission.Rate }
-func (v Validator) IsJailed() bool         { return v.Jailed }
+func (v Validator) GetCommission() sdkmath.LegacyDec { return v.Commission.Rate }
+func (v Validator) IsJailed() bool                   { return v.Jailed }

@@ -6,8 +6,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/quicksilver-zone/quicksilver/x/airdrop/types"
 )
 
@@ -50,7 +48,7 @@ func TestGenesisState_Validate(t *testing.T) {
 						Duration:   time.Minute,
 						Decay:      time.Minute,
 						Allocation: 1000000,
-						Actions:    []sdk.Dec{sdk.OneDec()},
+						Actions:    []sdkmath.LegacyDec{sdkmath.LegacyOneDec()},
 					},
 					{
 						ChainId:    "test-1",
@@ -58,7 +56,7 @@ func TestGenesisState_Validate(t *testing.T) {
 						Duration:   time.Hour,
 						Decay:      time.Hour,
 						Allocation: 5000000,
-						Actions:    []sdk.Dec{sdk.OneDec()},
+						Actions:    []sdkmath.LegacyDec{sdkmath.LegacyOneDec()},
 					},
 				},
 				[]*types.ClaimRecord{},
@@ -76,7 +74,7 @@ func TestGenesisState_Validate(t *testing.T) {
 						Duration:   -time.Minute,
 						Decay:      -time.Hour,
 						Allocation: 0,
-						Actions:    []sdk.Dec{},
+						Actions:    []sdkmath.LegacyDec{},
 					},
 				},
 				[]*types.ClaimRecord{},
@@ -94,7 +92,7 @@ func TestGenesisState_Validate(t *testing.T) {
 						Duration:   time.Minute,
 						Decay:      time.Minute,
 						Allocation: 1000000,
-						Actions:    []sdk.Dec{sdk.OneDec()},
+						Actions:    []sdkmath.LegacyDec{sdkmath.LegacyOneDec()},
 					},
 				},
 				[]*types.ClaimRecord{
@@ -125,7 +123,7 @@ func TestGenesisState_Validate(t *testing.T) {
 						Duration:   time.Minute,
 						Decay:      time.Minute,
 						Allocation: 1000000,
-						Actions:    []sdk.Dec{sdk.OneDec()},
+						Actions:    []sdkmath.LegacyDec{sdkmath.LegacyOneDec()},
 					},
 				},
 				[]*types.ClaimRecord{
@@ -155,7 +153,7 @@ func TestGenesisState_Validate(t *testing.T) {
 						Duration:   time.Minute,
 						Decay:      time.Minute,
 						Allocation: 1000000,
-						Actions:    []sdk.Dec{sdk.OneDec()},
+						Actions:    []sdkmath.LegacyDec{sdkmath.LegacyOneDec()},
 					},
 				},
 				[]*types.ClaimRecord{
@@ -185,7 +183,7 @@ func TestGenesisState_Validate(t *testing.T) {
 						Duration:   time.Minute,
 						Decay:      time.Minute,
 						Allocation: 1000000,
-						Actions:    []sdk.Dec{sdk.OneDec()},
+						Actions:    []sdkmath.LegacyDec{sdkmath.LegacyOneDec()},
 					},
 				},
 				[]*types.ClaimRecord{
@@ -216,7 +214,7 @@ func TestGenesisState_Validate(t *testing.T) {
 						Duration:   time.Minute,
 						Decay:      time.Minute,
 						Allocation: 1000000,
-						Actions:    []sdk.Dec{sdk.OneDec()},
+						Actions:    []sdkmath.LegacyDec{sdkmath.LegacyOneDec()},
 					},
 					{
 						ChainId:    "test-2",
@@ -224,7 +222,7 @@ func TestGenesisState_Validate(t *testing.T) {
 						Duration:   time.Hour,
 						Decay:      time.Hour,
 						Allocation: 1000000,
-						Actions:    []sdk.Dec{sdk.OneDec()},
+						Actions:    []sdkmath.LegacyDec{sdkmath.LegacyOneDec()},
 					},
 				},
 				[]*types.ClaimRecord{

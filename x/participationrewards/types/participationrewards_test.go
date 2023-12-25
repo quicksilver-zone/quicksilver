@@ -15,9 +15,9 @@ import (
 
 func TestDistributionProportions_ValidateBasic(t *testing.T) {
 	type fields struct {
-		ValidatorSelectionAllocation sdk.Dec
-		HoldingsAllocation           sdk.Dec
-		LockupAllocation             sdk.Dec
+		ValidatorSelectionAllocation sdkmath.LegacyDec
+		HoldingsAllocation           sdkmath.LegacyDec
+		LockupAllocation             sdkmath.LegacyDec
 	}
 	tests := []struct {
 		name    string

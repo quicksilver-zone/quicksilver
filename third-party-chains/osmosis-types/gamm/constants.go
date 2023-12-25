@@ -26,5 +26,5 @@ var (
 	// SpotPriceSigFigs is the amount of significant figures used in return value of calculate SpotPrice
 	SpotPriceSigFigs = sdk.NewDec(10).Power(SigFigsExponent).TruncateInt()
 	// MaxSpotPrice is the maximum supported spot price. Anything greater than this will error.
-	MaxSpotPrice = sdk.NewDec(2).Power(128).Sub(sdk.OneDec())
+	MaxSpotPrice = sdk.NewDec(2).Power(128).Sub(sdkmath.LegacyOneDec())
 )

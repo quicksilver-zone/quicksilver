@@ -26,9 +26,9 @@ func ParamKeyTable() paramtypes.KeyTable {
 
 // NewParams creates a new ics Params instance.
 func NewParams(
-	validatorSelectionAllocation sdk.Dec,
-	holdingsAllocation sdk.Dec,
-	lockupAllocation sdk.Dec,
+	validatorSelectionAllocation sdkmath.LegacyDec,
+	holdingsAllocation sdkmath.LegacyDec,
+	lockupAllocation sdkmath.LegacyDec,
 	claimsEnabled bool,
 ) Params {
 	return Params{

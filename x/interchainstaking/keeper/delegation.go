@@ -224,7 +224,7 @@ func (k Keeper) DetermineMaximumValidatorAllocations(ctx sdk.Context, zone *type
 		maxBondShares := val.ValidatorBondShares.Mul(caps.ValidatorBondCap).Sub(val.LiquidShares)
 
 		// validator pc max
-		maxLiquidStakedShares := sdk.NewDecFromInt(val.VotingPower).Mul(caps.ValidatorCap).Sub(val.LiquidShares)
+		maxLiquidStakedShares := sdkmath.LegacyNewDecFromInt(val.VotingPower).Mul(caps.ValidatorCap).Sub(val.LiquidShares)
 		out[val.ValoperAddress] = sdkmath.MinInt(maxBondShares.TruncateInt(), maxLiquidStakedShares.TruncateInt())
 	}
 
@@ -281,8 +281,8 @@ func (k *Keeper) WithdrawDelegationRewardsForResponse(ctx sdk.Context, zone *typ
 func (k *Keeper) GetDelegationMap(ctx sdk.Context, chainID string) (out map[string]sdkmath.Int, sum sdkmath.Int, locked map[string]bool, lockedSum sdkmath.Int) {
 	out = make(map[string]sdkmath.Int)
 	locked = make(map[string]bool)
-	sum = sdk.ZeroInt()
-	lockedSum = sdk.ZeroInt()
+	sum = sdkmath.ZeroInt()
+	lockedSum = sdkmath.ZeroInt()
 
 	k.IterateAllDelegations(ctx, chainID, func(delegation types.Delegation) bool {
 		out[delegation.ValidatorAddress] = delegation.Amount.Amount
@@ -300,8 +300,8 @@ func (k *Keeper) GetDelegationMap(ctx sdk.Context, chainID string) (out map[stri
 func (k *Keeper) MakePerformanceDelegation(ctx sdk.Context, zone *types.Zone, validator string) error {
 	// create delegation record in MsgDelegate acknowledgement callback
 	if zone.PerformanceAddress != nil {
-		k.SetPerformanceDelegation(ctx, zone.ChainId, types.NewDelegation(zone.PerformanceAddress.Address, validator, sdk.NewInt64Coin(zone.BaseDenom, 0))) // intentionally zero; we add a record here to stop race conditions
-		msg := stakingtypes.MsgDelegate{DelegatorAddress: zone.PerformanceAddress.Address, ValidatorAddress: validator, Amount: sdk.NewInt64Coin(zone.BaseDenom, 10000)}
+		k.SetPerformanceDelegation(ctx, zone.ChainId, types.NewDelegation(zone.PerformanceAddress.Address, validator, sdkmath.NewInt64Coin(zone.BaseDenom, 0))) // intentionally zero; we add a record here to stop race conditions
+		msg := stakingtypes.MsgDelegate{DelegatorAddress: zone.PerformanceAddress.Address, ValidatorAddress: validator, Amount: sdkmath.NewInt64Coin(zone.BaseDenom, 10000)}
 		return k.SubmitTx(ctx, []sdk.Msg{&msg}, zone.PerformanceAddress, fmt.Sprintf("%s/%s", types.MsgTypePerformance, validator), zone.MessagesPerTx)
 	}
 	return nil

@@ -344,7 +344,7 @@ func (k *Keeper) HandleMsgTransfer(ctx sdk.Context, msg sdk.Msg) error {
 
 	if found && denomTrace.BaseDenom != zone.BaseDenom {
 		// k.Logger(ctx).Error("got withdrawal account and NOT staking denom", "rx", receivedCoin.Denom, "trace_base_denom", denomTrace.BaseDenom, "zone_base_denom", zone.BaseDenom)
-		feeAmount := sdk.NewDecFromInt(receivedCoin.Amount).Mul(k.GetCommissionRate(ctx)).TruncateInt()
+		feeAmount := sdkmath.LegacyNewDecFromInt(receivedCoin.Amount).Mul(k.GetCommissionRate(ctx)).TruncateInt()
 		rewardCoin := receivedCoin.SubAmount(feeAmount)
 		zoneAddress, err := addressutils.AccAddressFromBech32(zone.WithdrawalAddress.Address, "")
 		if err != nil {
@@ -454,7 +454,7 @@ func (k *Keeper) HandleWithdrawForUser(ctx sdk.Context, zone *types.Zone, msg *b
 
 		dlist := make(map[int]struct{})
 		for i, dist := range withdrawalRecord.Distribution {
-			if msg.Amount[0].Amount.Equal(sdk.NewIntFromUint64(dist.Amount)) { // check valoper here too?
+			if msg.Amount[0].Amount.Equal(sdkmath.NewIntFromUint64(dist.Amount)) { // check valoper here too?
 				dlist[i] = struct{}{}
 				// matched amount
 				if len(withdrawalRecord.Distribution) == len(dlist) {
@@ -630,7 +630,7 @@ func (k *Keeper) HandleBeginRedelegate(ctx sdk.Context, msg sdk.Msg, completion 
 		zone.ChainId,
 		"store/staking/key",
 		data,
-		sdk.NewInt(-1),
+		sdkmath.NewInt(-1),
 		types.ModuleName,
 		"delegation",
 		0,
@@ -658,7 +658,7 @@ func (k *Keeper) HandleBeginRedelegate(ctx sdk.Context, msg sdk.Msg, completion 
 		zone.ChainId,
 		"store/staking/key",
 		data,
-		sdk.NewInt(-1),
+		sdkmath.NewInt(-1),
 		types.ModuleName,
 		"delegation",
 		0,
@@ -745,7 +745,7 @@ func (k *Keeper) HandleUndelegate(ctx sdk.Context, msg sdk.Msg, completion time.
 		zone.ChainId,
 		"store/staking/key",
 		data,
-		sdk.NewInt(-1),
+		sdkmath.NewInt(-1),
 		types.ModuleName,
 		"delegation",
 		0,
@@ -860,8 +860,8 @@ func (k *Keeper) HandleFailedUndelegate(ctx sdk.Context, msg sdk.Msg, memo strin
 			}
 			wdr.Distribution = newDistribution
 			amount := wdr.Amount.AmountOf(zone.BaseDenom)
-			wdr.Amount = wdr.Amount.Sub(sdk.NewCoin(zone.BaseDenom, sdk.NewIntFromUint64(relatedAmount)))
-			rr := sdk.NewDecFromInt(wdr.BurnAmount.Amount).Quo(sdk.NewDecFromInt(amount))
+			wdr.Amount = wdr.Amount.Sub(sdk.NewCoin(zone.BaseDenom, sdkmath.NewIntFromUint64(relatedAmount)))
+			rr := sdkmath.LegacyNewDecFromInt(wdr.BurnAmount.Amount).Quo(sdkmath.LegacyNewDecFromInt(amount))
 			relatedQAsset := sdk.NewDec(int64(relatedAmount)).Mul(rr).TruncateInt()
 			wdr.BurnAmount = wdr.BurnAmount.SubAmount(relatedQAsset)
 			k.SetWithdrawalRecord(ctx, wdr)
@@ -871,7 +871,7 @@ func (k *Keeper) HandleFailedUndelegate(ctx sdk.Context, msg sdk.Msg, memo strin
 				Delegator:    wdr.Delegator,
 				Recipient:    wdr.Recipient,
 				Distribution: nil,
-				Amount:       sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewIntFromUint64(relatedAmount))),
+				Amount:       sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdkmath.NewIntFromUint64(relatedAmount))),
 				BurnAmount:   sdk.NewCoin(zone.LocalDenom, relatedQAsset),
 				Txhash:       fmt.Sprintf("%064d", k.GetNextWithdrawalRecordSequence(ctx)),
 				Status:       types.WithdrawStatusQueued,
@@ -1138,7 +1138,7 @@ func (k *Keeper) UpdateDelegationRecordsForAddress(ctx sdk.Context, zone types.Z
 				zone.ChainId,
 				"store/staking/key",
 				data,
-				sdk.NewInt(-1),
+				sdkmath.NewInt(-1),
 				types.ModuleName,
 				"delegation",
 				0,
@@ -1166,7 +1166,7 @@ func (k *Keeper) UpdateDelegationRecordsForAddress(ctx sdk.Context, zone types.Z
 			zone.ChainId,
 			"store/staking/key",
 			data,
-			sdk.NewInt(-1),
+			sdkmath.NewInt(-1),
 			types.ModuleName,
 			"delegation",
 			0,
@@ -1261,7 +1261,7 @@ func (k *Keeper) TriggerRedemptionRate(ctx sdk.Context, zone *types.Zone) error 
 		zone.ChainId,
 		"cosmos.bank.v1beta1.Query/AllBalances",
 		bz,
-		sdk.NewInt(int64(-1)),
+		sdkmath.NewInt(int64(-1)),
 		types.ModuleName,
 		"distributerewards",
 		0,
@@ -1285,7 +1285,7 @@ func DistributeRewardsFromWithdrawAccount(k *Keeper, ctx sdk.Context, args []byt
 	baseDenomAmount := withdrawBalance.Balances.AmountOf(zone.BaseDenom)
 	// calculate fee (fee = amount * rate)
 
-	baseDenomFee := sdk.NewDecFromInt(baseDenomAmount).
+	baseDenomFee := sdkmath.LegacyNewDecFromInt(baseDenomAmount).
 		Mul(k.GetCommissionRate(ctx)).
 		TruncateInt()
 
@@ -1348,7 +1348,7 @@ func (*Keeper) prepareRewardsDistributionMsgs(zone types.Zone, rewards sdkmath.I
 
 func equalLsmCoin(valoper string, amount uint64, lsmAmount sdk.Coin) bool {
 	if strings.HasPrefix(lsmAmount.Denom, valoper) {
-		return lsmAmount.Amount.Equal(sdk.NewIntFromUint64(amount))
+		return lsmAmount.Amount.Equal(sdkmath.NewIntFromUint64(amount))
 	}
 	return false
 }

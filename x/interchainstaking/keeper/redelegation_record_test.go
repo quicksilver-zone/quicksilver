@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"time"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
@@ -200,8 +201,8 @@ func (suite *KeeperTestSuite) TestGCCompletedUnbondings() {
 			},
 		},
 		Recipient:      user1.String(),
-		Amount:         sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))),
-		BurnAmount:     sdk.NewCoin(zone.LocalDenom, sdk.NewInt(1000)),
+		Amount:         sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdkmath.NewInt(1000))),
+		BurnAmount:     sdk.NewCoin(zone.LocalDenom, sdkmath.NewInt(1000)),
 		Txhash:         "1613D2E8FBF7C7294A4D2247B55EE89FB22FC68C62D61050B944F1191DF092BD",
 		Status:         types.WithdrawStatusCompleted,
 		CompletionTime: currentTime.Add(-25 * time.Hour).UTC(),
@@ -222,8 +223,8 @@ func (suite *KeeperTestSuite) TestGCCompletedUnbondings() {
 			},
 		},
 		Recipient:      user2.String(),
-		Amount:         sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))),
-		BurnAmount:     sdk.NewCoin(zone.LocalDenom, sdk.NewInt(1000)),
+		Amount:         sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdkmath.NewInt(1000))),
+		BurnAmount:     sdk.NewCoin(zone.LocalDenom, sdkmath.NewInt(1000)),
 		Txhash:         "91DF093BD1613D2E8FBF7C7294A4D2247B55EE89FB22FC68C62D61050B944F11",
 		Status:         types.WithdrawStatusUnbond,
 		CompletionTime: currentTime.Add(25 * time.Hour).UTC(),
@@ -244,8 +245,8 @@ func (suite *KeeperTestSuite) TestGCCompletedUnbondings() {
 			},
 		},
 		Recipient:      user2.String(),
-		Amount:         sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))),
-		BurnAmount:     sdk.NewCoin(zone.LocalDenom, sdk.NewInt(1000)),
+		Amount:         sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdkmath.NewInt(1000))),
+		BurnAmount:     sdk.NewCoin(zone.LocalDenom, sdkmath.NewInt(1000)),
 		Txhash:         "2247B55EE89FB22FC68C62D61050B944F1191DF093BD1613D2E8FBF7C7294A4D",
 		Status:         types.WithdrawStatusUnbond,
 		CompletionTime: time.Time{},

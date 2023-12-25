@@ -59,7 +59,7 @@ func (suite *KeeperTestSuite) TestKeeper_DelegationStore() {
 		types.NewDelegation(
 			zone.DelegationAddress.Address,
 			zoneValidatorAddresses[0],
-			sdk.NewCoin(zone.BaseDenom, sdk.NewInt(3000000)),
+			sdk.NewCoin(zone.BaseDenom, sdkmath.NewInt(3000000)),
 		),
 	)
 	icsKeeper.SetDelegation(
@@ -68,7 +68,7 @@ func (suite *KeeperTestSuite) TestKeeper_DelegationStore() {
 		types.NewDelegation(
 			zone.DelegationAddress.Address,
 			zoneValidatorAddresses[1],
-			sdk.NewCoin(zone.BaseDenom, sdk.NewInt(17000000)),
+			sdk.NewCoin(zone.BaseDenom, sdkmath.NewInt(17000000)),
 		),
 	)
 	icsKeeper.SetDelegation(
@@ -77,7 +77,7 @@ func (suite *KeeperTestSuite) TestKeeper_DelegationStore() {
 		types.NewDelegation(
 			zone.DelegationAddress.Address,
 			zoneValidatorAddresses[2],
-			sdk.NewCoin(zone.BaseDenom, sdk.NewInt(20000000)),
+			sdk.NewCoin(zone.BaseDenom, sdkmath.NewInt(20000000)),
 		),
 	)
 
@@ -126,77 +126,77 @@ func (suite *KeeperTestSuite) TestUpdateDelegation() {
 	}{
 		{
 			"single update, relative increase +3000",
-			&types.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val1.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(3000))},
+			&types.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val1.String(), Amount: sdk.NewCoin("denom", sdkmath.NewInt(3000))},
 			[]delegationUpdate{
 				{
-					delegation: types.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val1.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(3000))},
+					delegation: types.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val1.String(), Amount: sdk.NewCoin("denom", sdkmath.NewInt(3000))},
 					absolute:   false,
 				},
 			},
-			types.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val1.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(6000))},
+			types.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val1.String(), Amount: sdk.NewCoin("denom", sdkmath.NewInt(6000))},
 		},
 		{
 			"single update, relative increase +3000",
-			&types.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val2.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(3000))},
+			&types.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val2.String(), Amount: sdk.NewCoin("denom", sdkmath.NewInt(3000))},
 			[]delegationUpdate{
 				{
-					delegation: types.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val2.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(3000))},
+					delegation: types.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val2.String(), Amount: sdk.NewCoin("denom", sdkmath.NewInt(3000))},
 					absolute:   true,
 				},
 			},
-			types.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val2.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(3000))},
+			types.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val2.String(), Amount: sdk.NewCoin("denom", sdkmath.NewInt(3000))},
 		},
 		{
 			"multi update, relative increase +3000, +2000",
-			&types.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val3.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(3000))},
+			&types.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val3.String(), Amount: sdk.NewCoin("denom", sdkmath.NewInt(3000))},
 			[]delegationUpdate{
 				{
-					delegation: types.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val3.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(3000))},
+					delegation: types.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val3.String(), Amount: sdk.NewCoin("denom", sdkmath.NewInt(3000))},
 					absolute:   false,
 				},
 				{
-					delegation: types.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val3.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(2000))},
+					delegation: types.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val3.String(), Amount: sdk.NewCoin("denom", sdkmath.NewInt(2000))},
 					absolute:   false,
 				},
 			},
-			types.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val3.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(8000))},
+			types.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val3.String(), Amount: sdk.NewCoin("denom", sdkmath.NewInt(8000))},
 		},
 		{
 			"multi update, relative +3000, absolute +2000",
-			&types.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val4.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(3000))},
+			&types.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val4.String(), Amount: sdk.NewCoin("denom", sdkmath.NewInt(3000))},
 			[]delegationUpdate{
 				{
-					delegation: types.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val4.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(3000))},
+					delegation: types.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val4.String(), Amount: sdk.NewCoin("denom", sdkmath.NewInt(3000))},
 					absolute:   false,
 				},
 				{
-					delegation: types.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val4.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(2000))},
+					delegation: types.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val4.String(), Amount: sdk.NewCoin("denom", sdkmath.NewInt(2000))},
 					absolute:   true,
 				},
 			},
-			types.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val4.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(2000))},
+			types.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val4.String(), Amount: sdk.NewCoin("denom", sdkmath.NewInt(2000))},
 		},
 		{
 			"new delegation, relative increase +10000",
 			nil,
 			[]delegationUpdate{
 				{
-					delegation: types.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val5.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(10000))},
+					delegation: types.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val5.String(), Amount: sdk.NewCoin("denom", sdkmath.NewInt(10000))},
 					absolute:   false,
 				},
 			},
-			types.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val5.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(10000))},
+			types.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val5.String(), Amount: sdk.NewCoin("denom", sdkmath.NewInt(10000))},
 		},
 		{
 			"new delegation, absolute increase +15000",
 			nil,
 			[]delegationUpdate{
 				{
-					delegation: types.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val6.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(15000))},
+					delegation: types.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val6.String(), Amount: sdk.NewCoin("denom", sdkmath.NewInt(15000))},
 					absolute:   true,
 				},
 			},
-			types.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val6.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(15000))},
+			types.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val6.String(), Amount: sdk.NewCoin("denom", sdkmath.NewInt(15000))},
 		},
 	}
 
@@ -245,7 +245,7 @@ func (suite *KeeperTestSuite) TestStoreGetDeleteDelegation() {
 		_, found = qApp.InterchainstakingKeeper.GetDelegation(ctx, zone.ChainId, delegator.String(), validator.String())
 		suite.False(found)
 
-		newDelegation := types.NewDelegation(delegator.String(), validator.String(), sdk.NewCoin("uatom", sdk.NewInt(5000)))
+		newDelegation := types.NewDelegation(delegator.String(), validator.String(), sdk.NewCoin("uatom", sdkmath.NewInt(5000)))
 		qApp.InterchainstakingKeeper.SetDelegation(ctx, zone.ChainId, newDelegation)
 
 		fetchedDelegation, found := qApp.InterchainstakingKeeper.GetDelegation(ctx, zone.ChainId, delegator.String(), validator.String())
@@ -296,7 +296,7 @@ func (suite *KeeperTestSuite) TestFlushOutstandingDelegations() {
 					Amount: sdk.NewCoins(
 						sdk.NewCoin(
 							denom,
-							sdk.NewIntFromUint64(2000000),
+							sdkmath.NewIntFromUint64(2000000),
 						),
 					),
 					FirstSeen: &receiptOneTime,
@@ -310,7 +310,7 @@ func (suite *KeeperTestSuite) TestFlushOutstandingDelegations() {
 					Amount: sdk.NewCoins(
 						sdk.NewCoin(
 							denom,
-							sdk.NewIntFromUint64(100),
+							sdkmath.NewIntFromUint64(100),
 						),
 					),
 					FirstSeen: &receiptTwoTime,
@@ -350,7 +350,7 @@ func (suite *KeeperTestSuite) TestFlushOutstandingDelegations() {
 					Amount: sdk.NewCoins(
 						sdk.NewCoin(
 							denom,
-							sdk.NewIntFromUint64(2000000),
+							sdkmath.NewIntFromUint64(2000000),
 						),
 					),
 					FirstSeen: &receiptOneTime,
@@ -364,7 +364,7 @@ func (suite *KeeperTestSuite) TestFlushOutstandingDelegations() {
 					Amount: sdk.NewCoins(
 						sdk.NewCoin(
 							denom,
-							sdk.NewIntFromUint64(100),
+							sdkmath.NewIntFromUint64(100),
 						),
 					),
 					FirstSeen: &receiptTwoTime,
@@ -401,7 +401,7 @@ func (suite *KeeperTestSuite) TestFlushOutstandingDelegations() {
 					Amount: sdk.NewCoins(
 						sdk.NewCoin(
 							denom,
-							sdk.NewIntFromUint64(2000000),
+							sdkmath.NewIntFromUint64(2000000),
 						),
 					),
 					FirstSeen: &receiptOneTime,
@@ -415,7 +415,7 @@ func (suite *KeeperTestSuite) TestFlushOutstandingDelegations() {
 					Amount: sdk.NewCoins(
 						sdk.NewCoin(
 							denom,
-							sdk.NewIntFromUint64(100),
+							sdkmath.NewIntFromUint64(100),
 						),
 					),
 					FirstSeen: &receiptTwoTime,
@@ -439,7 +439,7 @@ func (suite *KeeperTestSuite) TestFlushOutstandingDelegations() {
 				return true
 			},
 			mockAck:            true,
-			expectedDelegation: sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(2000000))),
+			expectedDelegation: sdk.NewCoins(sdk.NewCoin("uatom", sdkmath.NewInt(2000000))),
 		},
 		{
 			name: "case 4: non-zero delegation balance, 2 pending receipts",
@@ -455,7 +455,7 @@ func (suite *KeeperTestSuite) TestFlushOutstandingDelegations() {
 					Amount: sdk.NewCoins(
 						sdk.NewCoin(
 							denom,
-							sdk.NewIntFromUint64(2000000),
+							sdkmath.NewIntFromUint64(2000000),
 						),
 					),
 					FirstSeen: &receiptOneTime,
@@ -469,7 +469,7 @@ func (suite *KeeperTestSuite) TestFlushOutstandingDelegations() {
 					Amount: sdk.NewCoins(
 						sdk.NewCoin(
 							denom,
-							sdk.NewIntFromUint64(100),
+							sdkmath.NewIntFromUint64(100),
 						),
 					),
 					FirstSeen: &receiptTwoTime,
@@ -493,7 +493,7 @@ func (suite *KeeperTestSuite) TestFlushOutstandingDelegations() {
 				return true
 			},
 			mockAck:            true,
-			expectedDelegation: sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(2000000))),
+			expectedDelegation: sdk.NewCoins(sdk.NewCoin("uatom", sdkmath.NewInt(2000000))),
 		},
 		{
 			name: "case 5: zero delegation balance, 1 pending receipt, 1 excluded receipt",
@@ -509,7 +509,7 @@ func (suite *KeeperTestSuite) TestFlushOutstandingDelegations() {
 					Amount: sdk.NewCoins(
 						sdk.NewCoin(
 							denom,
-							sdk.NewIntFromUint64(2000000),
+							sdkmath.NewIntFromUint64(2000000),
 						),
 					),
 					FirstSeen: &receiptOneTime,
@@ -523,7 +523,7 @@ func (suite *KeeperTestSuite) TestFlushOutstandingDelegations() {
 					Amount: sdk.NewCoins(
 						sdk.NewCoin(
 							denom,
-							sdk.NewIntFromUint64(100),
+							sdkmath.NewIntFromUint64(100),
 						),
 					),
 					FirstSeen: &receiptTwoTime,
@@ -561,7 +561,7 @@ func (suite *KeeperTestSuite) TestFlushOutstandingDelegations() {
 					Amount: sdk.NewCoins(
 						sdk.NewCoin(
 							denom,
-							sdk.NewIntFromUint64(2000000),
+							sdkmath.NewIntFromUint64(2000000),
 						),
 					),
 					FirstSeen: &receiptOneTime,
@@ -575,7 +575,7 @@ func (suite *KeeperTestSuite) TestFlushOutstandingDelegations() {
 					Amount: sdk.NewCoins(
 						sdk.NewCoin(
 							denom,
-							sdk.NewIntFromUint64(100),
+							sdkmath.NewIntFromUint64(100),
 						),
 					),
 					FirstSeen: &receiptOneTime,
@@ -600,7 +600,7 @@ func (suite *KeeperTestSuite) TestFlushOutstandingDelegations() {
 			},
 			// delegation balance == 100, which equals the value of the second receipt.
 			mockAck:            true,
-			expectedDelegation: sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(100))),
+			expectedDelegation: sdk.NewCoins(sdk.NewCoin("uatom", sdkmath.NewInt(100))),
 		},
 	}
 
@@ -661,19 +661,19 @@ func (suite *KeeperTestSuite) TestPerformanceDelegation() {
 	suite.NotEqual(types.Zone{}, zone, "Expecting a non-blank zone")
 
 	// set val
-	val0 := types.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdk.MustNewDecFromStr("1"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded}
+	val0 := types.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdk.MustNewDecFromStr("1"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded}
 	err := quicksilver.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, val0)
 	suite.NoError(err)
 
-	val1 := types.Validator{ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", CommissionRate: sdk.MustNewDecFromStr("1"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded}
+	val1 := types.Validator{ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", CommissionRate: sdk.MustNewDecFromStr("1"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded}
 	err = quicksilver.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, val1)
 	suite.NoError(err)
 
-	val2 := types.Validator{ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", CommissionRate: sdk.MustNewDecFromStr("1"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded}
+	val2 := types.Validator{ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", CommissionRate: sdk.MustNewDecFromStr("1"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded}
 	err = quicksilver.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, val2)
 	suite.NoError(err)
 
-	val3 := types.Validator{ValoperAddress: "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7", CommissionRate: sdk.MustNewDecFromStr("1"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded}
+	val3 := types.Validator{ValoperAddress: "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7", CommissionRate: sdk.MustNewDecFromStr("1"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded}
 	err = quicksilver.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, val3)
 	suite.NoError(err)
 
@@ -684,7 +684,7 @@ func (suite *KeeperTestSuite) TestPerformanceDelegation() {
 	perfDelegation := types.Delegation{
 		DelegationAddress: performanceAddress.Address,
 		ValidatorAddress:  vals[1].ValoperAddress,
-		Amount:            sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000)),
+		Amount:            sdk.NewCoin(zone.BaseDenom, sdkmath.NewInt(1000)),
 	}
 
 	// set and check get perf delegation

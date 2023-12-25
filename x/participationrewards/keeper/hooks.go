@@ -3,6 +3,7 @@ package keeper
 import (
 	"encoding/json"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -39,7 +40,7 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, _ int64)
 			connectionData.ChainID,
 			"cosmos.base.tendermint.v1beta1.Service/GetLatestBlock",
 			bz,
-			sdk.NewInt(-1),
+			sdkmath.NewInt(-1),
 			types.ModuleName,
 			SetEpochBlockCallbackID,
 			0,

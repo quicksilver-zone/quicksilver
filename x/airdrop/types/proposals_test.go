@@ -61,7 +61,7 @@ func TestRegisterZoneDropProposal_ValidateBasic(t *testing.T) {
 					Duration:   time.Hour,
 					Decay:      30 * time.Minute,
 					Allocation: 16400,
-					Actions: []sdk.Dec{
+					Actions: []sdkmath.LegacyDec{
 						sdk.MustNewDecFromStr("0.1"),
 						sdk.MustNewDecFromStr("0.2"),
 						sdk.MustNewDecFromStr("0.3"),

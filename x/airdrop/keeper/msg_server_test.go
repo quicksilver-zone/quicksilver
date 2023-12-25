@@ -108,7 +108,7 @@ func (suite *KeeperTestSuite) Test_msgServer_Claim() {
 					Amount: sdk.NewCoins(
 						sdk.NewCoin(
 							denom,
-							sdk.NewIntFromUint64(2000000), // 20% deposit
+							sdkmath.NewIntFromUint64(2000000), // 20% deposit
 						),
 					),
 				}
@@ -206,7 +206,7 @@ func (suite *KeeperTestSuite) Test_msgServer_Claim() {
 					Amount: sdk.NewCoins(
 						sdk.NewCoin(
 							denom,
-							sdk.NewIntFromUint64(1000000), // 10% deposit (sum 30%)
+							sdkmath.NewIntFromUint64(1000000), // 10% deposit (sum 30%)
 						),
 					),
 				}
@@ -309,7 +309,7 @@ func (suite *KeeperTestSuite) Test_msgServer_Claim() {
 					Intents: []*icstypes.ValidatorIntent{
 						{
 							ValoperAddress: valAddress.String(),
-							Weight:         sdk.OneDec(),
+							Weight:         sdkmath.LegacyOneDec(),
 						},
 					},
 				}
@@ -494,8 +494,8 @@ func (suite *KeeperTestSuite) Test_msgServer_IncentivePoolSpend() {
 	modAccAddr := "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn"
 	userAddress := addressutils.GenerateAccAddressForTest().String()
 	denom := "uatom" // same as test zone setup in keeper_test
-	coins := sdk.NewCoins(sdk.NewCoin(denom, sdk.NewIntFromUint64(1000)))
-	mintCoins := sdk.NewCoins(sdk.NewCoin(denom, sdk.NewIntFromUint64(100000000)))
+	coins := sdk.NewCoins(sdk.NewCoin(denom, sdkmath.NewIntFromUint64(1000)))
+	mintCoins := sdk.NewCoins(sdk.NewCoin(denom, sdkmath.NewIntFromUint64(100000000)))
 
 	// set up mod acct with funds
 	err := appA.BankKeeper.MintCoins(suite.chainA.GetContext(), minttypes.ModuleName, mintCoins)

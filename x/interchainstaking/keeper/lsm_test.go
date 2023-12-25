@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -66,7 +67,7 @@ func (suite *KeeperTestSuite) TestGetTotalStakedSupply() {
 				suite.NoError(icsKeeper.SetValidator(ctx, suite.chainB.ChainID, validators[2]))
 				suite.NoError(icsKeeper.SetValidator(ctx, suite.chainB.ChainID, validators[3]))
 			},
-			Expect: sdk.NewInt(4000000),
+			Expect: sdkmath.NewInt(4000000),
 		},
 		{
 			Name: "3x 1000000 VP bonded, 1x 1000000 unbonded",
@@ -83,7 +84,7 @@ func (suite *KeeperTestSuite) TestGetTotalStakedSupply() {
 				suite.NoError(icsKeeper.SetValidator(ctx, suite.chainB.ChainID, validators[2]))
 				suite.NoError(icsKeeper.SetValidator(ctx, suite.chainB.ChainID, validators[3]))
 			},
-			Expect: sdk.NewInt(3000000),
+			Expect: sdkmath.NewInt(3000000),
 		},
 		{
 			Name: "different vps, total 10000000",
@@ -100,7 +101,7 @@ func (suite *KeeperTestSuite) TestGetTotalStakedSupply() {
 				suite.NoError(icsKeeper.SetValidator(ctx, suite.chainB.ChainID, validators[2]))
 				suite.NoError(icsKeeper.SetValidator(ctx, suite.chainB.ChainID, validators[3]))
 			},
-			Expect: sdk.NewInt(10000000),
+			Expect: sdkmath.NewInt(10000000),
 		},
 	}
 	for _, t := range tcs {
@@ -119,7 +120,7 @@ func (suite *KeeperTestSuite) TestGetLiquidStakedSupply() {
 	tcs := []struct {
 		Name     string
 		Malleate func(icsKeeper *keeper.Keeper)
-		Expect   sdk.Dec
+		Expect   sdkmath.LegacyDec
 	}{
 		{
 			Name: "4x 1000000 VP bonded, 0 liquid",
@@ -273,7 +274,7 @@ func (suite *KeeperTestSuite) TestCheckExceedsGlobalCap() {
 			t.Malleate(icsKeeper)
 			zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
 			suite.True(found)
-			suite.Equal(t.Expect, icsKeeper.CheckExceedsGlobalCap(ctx, &zone, sdk.NewInt(1)))
+			suite.Equal(t.Expect, icsKeeper.CheckExceedsGlobalCap(ctx, &zone, sdkmath.NewInt(1)))
 		})
 	}
 }
@@ -370,9 +371,9 @@ func (suite *KeeperTestSuite) TestCheckExceedsValidatorCap() {
 			zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
 			suite.True(found)
 			if t.ExpectErr {
-				suite.Error(icsKeeper.CheckExceedsValidatorCap(ctx, &zone, validators[1].ValoperAddress, sdk.NewInt(1)))
+				suite.Error(icsKeeper.CheckExceedsValidatorCap(ctx, &zone, validators[1].ValoperAddress, sdkmath.NewInt(1)))
 			} else {
-				suite.NoError(icsKeeper.CheckExceedsValidatorCap(ctx, &zone, validators[1].ValoperAddress, sdk.NewInt(1)))
+				suite.NoError(icsKeeper.CheckExceedsValidatorCap(ctx, &zone, validators[1].ValoperAddress, sdkmath.NewInt(1)))
 			}
 		})
 	}

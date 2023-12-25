@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -273,7 +274,7 @@ func (suite *KeeperTestSuite) TestKeeper_DelegatorIntent() {
 						Intents: types.ValidatorIntents{
 							&types.ValidatorIntent{
 								ValoperAddress: icsKeeper.GetValidators(ctx, suite.chainB.ChainID)[0].ValoperAddress,
-								Weight:         sdk.OneDec(),
+								Weight:         sdkmath.LegacyOneDec(),
 							},
 						},
 					},
@@ -364,7 +365,7 @@ func (suite *KeeperTestSuite) TestKeeper_DelegatorIntents() {
 						Intents: types.ValidatorIntents{
 							&types.ValidatorIntent{
 								ValoperAddress: icsKeeper.GetValidators(ctx, suite.chainB.ChainID)[0].ValoperAddress,
-								Weight:         sdk.OneDec(),
+								Weight:         sdkmath.LegacyOneDec(),
 							},
 						},
 					},
@@ -394,7 +395,7 @@ func (suite *KeeperTestSuite) TestKeeper_DelegatorIntents() {
 						Intents: types.ValidatorIntents{
 							&types.ValidatorIntent{
 								ValoperAddress: icsKeeper.GetValidators(ctx, suite.chainB.ChainID)[0].ValoperAddress,
-								Weight:         sdk.OneDec(),
+								Weight:         sdkmath.LegacyOneDec(),
 							},
 						},
 					},
@@ -496,7 +497,7 @@ func (suite *KeeperTestSuite) TestKeeper_Delegations() {
 				delegation := types.Delegation{
 					DelegationAddress: testAddress,
 					ValidatorAddress:  icsKeeper.GetValidators(ctx, suite.chainB.ChainID)[0].ValoperAddress,
-					Amount:            sdk.NewCoin("denom", sdk.NewInt(15000)),
+					Amount:            sdk.NewCoin("denom", sdkmath.NewInt(15000)),
 				}
 				icsKeeper.SetDelegation(ctx, zone.ChainId, delegation)
 			},

@@ -68,7 +68,7 @@ func (zd *ZoneDrop) ValidateBasic() error {
 			for _, aw := range zd.Actions {
 				weightSum = weightSum.Add(aw)
 			}
-			if !weightSum.Equal(sdk.OneDec()) {
+			if !weightSum.Equal(sdkmath.LegacyOneDec()) {
 				errs["Actions"] = fmt.Errorf("%w, got %s", ErrActionWeights, weightSum)
 			}
 		}

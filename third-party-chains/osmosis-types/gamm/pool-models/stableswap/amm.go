@@ -21,7 +21,7 @@ var (
 // how many units `a` of x do we get out.
 // So we solve the following expression for `a`
 // xy(x^2 + y^2) = (x - a)(y + b)((x - a)^2 + (y + b)^2)
-func solveCfmm(xReserve, yReserve, yIn sdk.Dec) sdk.Dec {
+func solveCfmm(xReserve, yReserve, yIn sdkmath.LegacyDec) sdkmath.LegacyDec {
 	if !yReserve.Add(yIn).IsPositive() {
 		panic("invalid yReserve, yIn combo")
 	}
@@ -136,7 +136,7 @@ func solveCfmm(xReserve, yReserve, yIn sdk.Dec) sdk.Dec {
 	return a
 }
 
-func spotPrice(baseReserve, quoteReserve sdk.Dec) sdk.Dec {
+func spotPrice(baseReserve, quoteReserve sdkmath.LegacyDec) sdkmath.LegacyDec {
 	// y = baseAsset, x = quoteAsset
 	// Define f_{y -> x}(a) as the function that outputs the amount of tokens X you'd get by
 	// trading "a" units of Y against the pool, assuming 0 swap fee, at the current liquidity.
@@ -151,39 +151,39 @@ func spotPrice(baseReserve, quoteReserve sdk.Dec) sdk.Dec {
 
 	// We arbitrarily choose a = 1, and anticipate that this is a small value at the scale of
 	// xReserve & yReserve.
-	a := sdk.OneDec()
+	a := sdkmath.LegacyOneDec()
 	// no need to divide by a, since a = 1.
 	return solveCfmm(baseReserve, quoteReserve, a)
 }
 
 // returns outAmt as a decimal
-func (p *Pool) calcOutAmtGivenIn(tokenIn sdk.Coin, tokenOutDenom string, swapFee sdk.Dec) (sdk.Dec, error) {
+func (p *Pool) calcOutAmtGivenIn(tokenIn sdk.Coin, tokenOutDenom string, swapFee sdkmath.LegacyDec) (sdkmath.LegacyDec, error) {
 	reserves, err := p.getScaledPoolAmts(tokenIn.Denom, tokenOutDenom)
 	if err != nil {
-		return sdk.Dec{}, err
+		return sdkmath.LegacyDec{}, err
 	}
 	tokenInSupply, tokenOutSupply := reserves[0], reserves[1]
 	// We are solving for the amount of token out, hence x = tokenOutSupply, y = tokenInSupply
-	cfmmOut := solveCfmm(tokenOutSupply, tokenInSupply, sdk.NewDecFromInt(tokenIn.Amount))
+	cfmmOut := solveCfmm(tokenOutSupply, tokenInSupply, sdkmath.LegacyNewDecFromInt(tokenIn.Amount))
 	outAmt := p.getDescaledPoolAmt(tokenOutDenom, cfmmOut)
 	return outAmt, nil
 }
 
 // returns inAmt as a decimal
-func (p *Pool) calcInAmtGivenOut(tokenOut sdk.Coin, tokenInDenom string, swapFee sdk.Dec) (sdk.Dec, error) {
+func (p *Pool) calcInAmtGivenOut(tokenOut sdk.Coin, tokenInDenom string, swapFee sdkmath.LegacyDec) (sdkmath.LegacyDec, error) {
 	reserves, err := p.getScaledPoolAmts(tokenInDenom, tokenOut.Denom)
 	if err != nil {
-		return sdk.Dec{}, err
+		return sdkmath.LegacyDec{}, err
 	}
 	tokenInSupply, tokenOutSupply := reserves[0], reserves[1]
 	// We are solving for the amount of token in, cfmm(x,y) = cfmm(x + x_in, y - y_out)
 	// x = tokenInSupply, y = tokenOutSupply, yIn = -tokenOutAmount
-	cfmmIn := solveCfmm(tokenInSupply, tokenOutSupply, sdk.NewDecFromInt(tokenOut.Amount).Neg())
+	cfmmIn := solveCfmm(tokenInSupply, tokenOutSupply, sdkmath.LegacyNewDecFromInt(tokenOut.Amount).Neg())
 	inAmt := p.getDescaledPoolAmt(tokenInDenom, cfmmIn.NegMut())
 	return inAmt, nil
 }
 
-func (p *Pool) calcSingleAssetJoinShares(tokenIn sdk.Coin, swapFee sdk.Dec) (sdkmath.Int, error) {
+func (p *Pool) calcSingleAssetJoinShares(tokenIn sdk.Coin, swapFee sdkmath.LegacyDec) (sdkmath.Int, error) {
 	poolWithAddedLiquidityAndShares := func(newLiquidity sdk.Coin, newShares sdkmath.Int) gamm.PoolI {
 		paCopy := p.Copy()
 		paCopy.updatePoolForJoin(sdk.NewCoins(tokenIn), newShares)
@@ -195,20 +195,20 @@ func (p *Pool) calcSingleAssetJoinShares(tokenIn sdk.Coin, swapFee sdk.Dec) (sdk
 
 // We can mutate pa here
 // TODO: some day switch this to a COW wrapped pa, for better perf
-func (p *Pool) joinPoolSharesInternal(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdkmath.Int, newLiquidity sdk.Coins, err error) {
+func (p *Pool) joinPoolSharesInternal(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdkmath.LegacyDec) (numShares sdkmath.Int, newLiquidity sdk.Coins, err error) {
 	if len(tokensIn) == 1 {
 		numShares, err = p.calcSingleAssetJoinShares(tokensIn[0], swapFee)
 		newLiquidity = tokensIn
 		return numShares, newLiquidity, err
 	} else if len(tokensIn) != p.NumAssets() || !tokensIn.DenomsSubsetOf(p.GetTotalPoolLiquidity(ctx)) {
-		return sdk.ZeroInt(), sdk.NewCoins(), errors.New(
+		return sdkmath.ZeroInt(), sdk.NewCoins(), errors.New(
 			"stableswap pool only supports LP'ing with one asset, or all assets in pool")
 	}
 
 	// Add all exact coins we can (no swap). ctx arg doesn't matter for Stableswap
 	numShares, remCoins, err := cfmm_common.MaximalExactRatioJoin(p, sdk.Context{}, tokensIn)
 	if err != nil {
-		return sdk.ZeroInt(), sdk.NewCoins(), err
+		return sdkmath.ZeroInt(), sdk.NewCoins(), err
 	}
 	p.updatePoolForJoin(tokensIn.Sub(remCoins...), numShares)
 
@@ -216,7 +216,7 @@ func (p *Pool) joinPoolSharesInternal(ctx sdk.Context, tokensIn sdk.Coins, swapF
 		// TODO: Perhaps add a method to skip if this is too small.
 		newShare, err := p.calcSingleAssetJoinShares(coin, swapFee)
 		if err != nil {
-			return sdk.ZeroInt(), sdk.NewCoins(), err
+			return sdkmath.ZeroInt(), sdk.NewCoins(), err
 		}
 		p.updatePoolForJoin(sdk.NewCoins(coin), newShare)
 		numShares = numShares.Add(newShare)

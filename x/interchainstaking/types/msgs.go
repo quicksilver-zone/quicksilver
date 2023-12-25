@@ -133,7 +133,7 @@ func IntentsFromString(input string) ([]*ValidatorIntent, error) {
 		out = append(out, v)
 	}
 
-	if !wsum.Equal(sdk.OneDec()) {
+	if !wsum.Equal(sdkmath.LegacyOneDec()) {
 		return nil, errors.New("combined weight must be 1.0")
 	}
 
@@ -162,7 +162,7 @@ func (msg MsgSignalIntent) ValidateBasic() error {
 		errm["ChainID"] = errors.New("undefined")
 	}
 
-	wantSum := sdk.OneDec()
+	wantSum := sdkmath.LegacyOneDec()
 	weightSum := sdk.NewDec(0)
 	intents, err := IntentsFromString(msg.Intents)
 	if err != nil {
@@ -326,11 +326,11 @@ func ValidatePort(portID string) error {
 }
 
 func (caps LsmCaps) Validate() error {
-	if caps.GlobalCap.GT(sdk.OneDec()) || caps.GlobalCap.LT(sdk.ZeroDec()) {
+	if caps.GlobalCap.GT(sdkmath.LegacyOneDec()) || caps.GlobalCap.LT(sdk.ZeroDec()) {
 		return errors.New("global cap must be between 0 and 1")
 	}
 
-	if caps.ValidatorCap.GT(sdk.OneDec()) || caps.ValidatorCap.LT(sdk.ZeroDec()) {
+	if caps.ValidatorCap.GT(sdkmath.LegacyOneDec()) || caps.ValidatorCap.LT(sdk.ZeroDec()) {
 		return errors.New("validator cap must be between 0 and 1")
 	}
 

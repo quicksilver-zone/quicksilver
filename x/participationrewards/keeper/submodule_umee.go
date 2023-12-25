@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -63,7 +64,7 @@ func (UmeeModule) Hooks(ctx sdk.Context, k *Keeper) {
 			connectionData.ChainID,
 			"store/leverage/key",
 			leveragetypes.KeyReserveAmount(reserves.Denom),
-			sdk.NewInt(-1),
+			sdkmath.NewInt(-1),
 			types.ModuleName,
 			UmeeReservesUpdateCallbackID,
 			0,
@@ -85,7 +86,7 @@ func (UmeeModule) Hooks(ctx sdk.Context, k *Keeper) {
 			connectionData.ChainID,
 			"store/leverage/key",
 			leveragetypes.KeyInterestScalar(interest.Denom),
-			sdk.NewInt(-1),
+			sdkmath.NewInt(-1),
 			types.ModuleName,
 			UmeeInterestScalarUpdateCallbackID,
 			0,
@@ -108,7 +109,7 @@ func (UmeeModule) Hooks(ctx sdk.Context, k *Keeper) {
 			connectionData.ChainID,
 			"store/leverage/key",
 			leveragetypes.KeyUTokenSupply(supply.Denom),
-			sdk.NewInt(-1),
+			sdkmath.NewInt(-1),
 			types.ModuleName,
 			UmeeUTokenSupplyUpdateCallbackID,
 			0,
@@ -133,7 +134,7 @@ func (UmeeModule) Hooks(ctx sdk.Context, k *Keeper) {
 			connectionData.ChainID,
 			icstypes.BankStoreKey,
 			append(accountPrefix, []byte(balance.Denom)...),
-			sdk.NewInt(-1),
+			sdkmath.NewInt(-1),
 			types.ModuleName,
 			UmeeLeverageModuleBalanceUpdateCallbackID,
 			0,
@@ -156,7 +157,7 @@ func (UmeeModule) Hooks(ctx sdk.Context, k *Keeper) {
 			connectionData.ChainID,
 			"store/leverage/key",
 			leveragetypes.KeyAdjustedTotalBorrow(borrows.Denom),
-			sdk.NewInt(-1),
+			sdkmath.NewInt(-1),
 			types.ModuleName,
 			UmeeTotalBorrowsUpdateCallbackID,
 			0,

@@ -4,8 +4,6 @@ import (
 	"fmt"
 
 	"cosmossdk.io/math"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 type RewardsAllocation struct {
@@ -21,16 +19,16 @@ func GetRewardsAllocations(moduleBalance math.Int, proportions DistributionPropo
 		return nil, ErrNothingToAllocate
 	}
 
-	if sum := proportions.Total(); !sum.Equal(sdk.OneDec()) {
+	if sum := proportions.Total(); !sum.Equal(sdkmath.LegacyOneDec()) {
 		return nil, fmt.Errorf("%w: got %v", ErrInvalidTotalProportions, sum)
 	}
 
 	var allocation RewardsAllocation
 
 	// split participation rewards allocations
-	allocation.ValidatorSelection = sdk.NewDecFromInt(moduleBalance).Mul(proportions.ValidatorSelectionAllocation).TruncateInt()
-	allocation.Holdings = sdk.NewDecFromInt(moduleBalance).Mul(proportions.HoldingsAllocation).TruncateInt()
-	allocation.Lockup = sdk.NewDecFromInt(moduleBalance).Mul(proportions.LockupAllocation).TruncateInt()
+	allocation.ValidatorSelection = sdkmath.LegacyNewDecFromInt(moduleBalance).Mul(proportions.ValidatorSelectionAllocation).TruncateInt()
+	allocation.Holdings = sdkmath.LegacyNewDecFromInt(moduleBalance).Mul(proportions.HoldingsAllocation).TruncateInt()
+	allocation.Lockup = sdkmath.LegacyNewDecFromInt(moduleBalance).Mul(proportions.LockupAllocation).TruncateInt()
 
 	// use sum to check total distribution to collect and allocate dust
 	sum := allocation.Lockup.Add(allocation.ValidatorSelection).Add(allocation.Holdings)

@@ -56,7 +56,7 @@ func (k Keeper) CalcUserHoldingsAllocations(ctx sdk.Context, zone *icstypes.Zone
 	userAllocations := make([]types.UserAllocation, 0)
 	icsRewardsAllocations := make([]types.UserAllocation, 0)
 	icsRewardsBalance := sdk.NewCoins()
-	icsRewardsPerAsset := make(map[string]sdk.Dec, 0)
+	icsRewardsPerAsset := make(map[string]sdkmath.LegacyDec, 0)
 
 	supply := k.bankKeeper.GetSupply(ctx, zone.LocalDenom)
 
@@ -97,7 +97,7 @@ func (k Keeper) CalcUserHoldingsAllocations(ctx sdk.Context, zone *icstypes.Zone
 	}
 
 	zoneAllocation := math.NewIntFromUint64(zone.HoldingsAllocation)
-	tokensPerAsset := sdk.NewDecFromInt(zoneAllocation).Quo(sdk.NewDecFromInt(supply.Amount))
+	tokensPerAsset := sdkmath.LegacyNewDecFromInt(zoneAllocation).Quo(sdkmath.LegacyNewDecFromInt(supply.Amount))
 
 	if zone.WithdrawalAddress != nil {
 		// determine ics rewards to be distributed per token.
@@ -106,9 +106,9 @@ func (k Keeper) CalcUserHoldingsAllocations(ctx sdk.Context, zone *icstypes.Zone
 			panic("unable to unmarshal withdrawal address")
 		}
 		icsRewardsBalance = k.bankKeeper.GetAllBalances(ctx, icsRewardsAddr)
-		icsRewardsPerAsset = make(map[string]sdk.Dec, len(icsRewardsBalance))
+		icsRewardsPerAsset = make(map[string]sdkmath.LegacyDec, len(icsRewardsBalance))
 		for _, rewardsAsset := range icsRewardsBalance {
-			icsRewardsPerAsset[rewardsAsset.Denom] = sdk.NewDecFromInt(rewardsAsset.Amount).Quo(sdk.NewDecFromInt(supply.Amount))
+			icsRewardsPerAsset[rewardsAsset.Denom] = sdkmath.LegacyNewDecFromInt(rewardsAsset.Amount).Quo(sdkmath.LegacyNewDecFromInt(supply.Amount))
 		}
 
 		k.Logger(ctx).Info("ics rewards per asset", "zone", zone.ChainId, "icsrpa", icsRewardsPerAsset)
@@ -117,14 +117,14 @@ func (k Keeper) CalcUserHoldingsAllocations(ctx sdk.Context, zone *icstypes.Zone
 
 	for _, address := range utils.Keys(userAmountsMap) {
 		amount := userAmountsMap[address]
-		userAllocation := sdk.NewDecFromInt(amount).Mul(tokensPerAsset).TruncateInt()
+		userAllocation := sdkmath.LegacyNewDecFromInt(amount).Mul(tokensPerAsset).TruncateInt()
 		allocation := types.UserAllocation{
 			Address: address,
 			Amount:  sdk.NewCoin(k.stakingKeeper.BondDenom(ctx), userAllocation),
 		}
 		userAllocations = append(userAllocations, allocation)
 		zoneAllocation = zoneAllocation.Sub(userAllocation)
-		if zoneAllocation.LT(sdk.ZeroInt()) {
+		if zoneAllocation.LT(sdkmath.ZeroInt()) {
 			panic("user allocation overflow")
 		}
 
@@ -132,7 +132,7 @@ func (k Keeper) CalcUserHoldingsAllocations(ctx sdk.Context, zone *icstypes.Zone
 		for _, rewardsAsset := range icsRewardsBalance {
 			icsRewardsAllocation := types.UserAllocation{
 				Address: address,
-				Amount:  sdk.NewCoin(rewardsAsset.Denom, sdk.NewDecFromInt(amount).Mul(icsRewardsPerAsset[rewardsAsset.Denom]).TruncateInt()),
+				Amount:  sdk.NewCoin(rewardsAsset.Denom, sdkmath.LegacyNewDecFromInt(amount).Mul(icsRewardsPerAsset[rewardsAsset.Denom]).TruncateInt()),
 			}
 			icsRewardsAllocations = append(icsRewardsAllocations, icsRewardsAllocation)
 		}

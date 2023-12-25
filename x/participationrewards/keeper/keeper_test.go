@@ -9,6 +9,7 @@ import (
 	testsuite "github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -139,8 +140,8 @@ func (suite *KeeperTestSuite) coreTest() {
 	ctx := suite.chainA.GetContext()
 
 	quicksilver.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zone *icstypes.Zone) (stop bool) {
-		suite.NoError(quicksilver.BankKeeper.MintCoins(ctx, "mint", sdk.NewCoins(sdk.NewCoin(quicksilver.StakingKeeper.BondDenom(ctx), sdk.NewIntFromUint64(zone.HoldingsAllocation)))))
-		suite.NoError(quicksilver.BankKeeper.SendCoinsFromModuleToModule(ctx, "mint", types.ModuleName, sdk.NewCoins(sdk.NewCoin(quicksilver.StakingKeeper.BondDenom(ctx), sdk.NewIntFromUint64(zone.HoldingsAllocation)))))
+		suite.NoError(quicksilver.BankKeeper.MintCoins(ctx, "mint", sdk.NewCoins(sdk.NewCoin(quicksilver.StakingKeeper.BondDenom(ctx), sdkmath.NewIntFromUint64(zone.HoldingsAllocation)))))
+		suite.NoError(quicksilver.BankKeeper.SendCoinsFromModuleToModule(ctx, "mint", types.ModuleName, sdk.NewCoins(sdk.NewCoin(quicksilver.StakingKeeper.BondDenom(ctx), sdkmath.NewIntFromUint64(zone.HoldingsAllocation)))))
 		return false
 	})
 
@@ -153,7 +154,7 @@ func (suite *KeeperTestSuite) coreTest() {
 	zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 	suite.True(found)
 
-	valRewards := make(map[string]sdk.Dec)
+	valRewards := make(map[string]sdkmath.LegacyDec)
 	for _, val := range quicksilver.InterchainstakingKeeper.GetValidators(suite.chainA.GetContext(), suite.chainB.ChainID) {
 		valRewards[val.ValoperAddress] = sdk.NewDec(100000000)
 	}

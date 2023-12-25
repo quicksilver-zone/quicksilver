@@ -63,11 +63,11 @@ func (p Pool) GetId() uint64 {
 	return p.Id
 }
 
-func (p Pool) GetSwapFee(ctx sdk.Context) sdk.Dec {
+func (p Pool) GetSwapFee(ctx sdk.Context) sdkmath.LegacyDec {
 	return p.PoolParams.SwapFee
 }
 
-func (p Pool) GetExitFee(ctx sdk.Context) sdk.Dec {
+func (p Pool) GetExitFee(ctx sdk.Context) sdkmath.LegacyDec {
 	return p.PoolParams.ExitFee
 }
 
@@ -98,8 +98,8 @@ func (p Pool) NumAssets() int {
 }
 
 // getScaledPoolAmts returns scaled amount of pool liquidity based on each asset's precisions
-func (p Pool) getScaledPoolAmts(denoms ...string) ([]sdk.Dec, error) {
-	result := make([]sdk.Dec, len(denoms))
+func (p Pool) getScaledPoolAmts(denoms ...string) ([]sdkmath.LegacyDec, error) {
+	result := make([]sdkmath.LegacyDec, len(denoms))
 	poolLiquidity := p.PoolLiquidity
 	liquidityIndexes := p.getLiquidityIndexMap()
 
@@ -108,16 +108,16 @@ func (p Pool) getScaledPoolAmts(denoms ...string) ([]sdk.Dec, error) {
 
 		amt := poolLiquidity.AmountOf(denom)
 		if amt.IsZero() {
-			return []sdk.Dec{}, fmt.Errorf("denom %s does not exist in pool", denom)
+			return []sdkmath.LegacyDec{}, fmt.Errorf("denom %s does not exist in pool", denom)
 		}
 		scalingFactor := p.GetScalingFactorByLiquidityIndex(liquidityIndex)
-		result[i] = sdk.NewDecFromInt(amt).QuoInt64Mut(int64(scalingFactor))
+		result[i] = sdkmath.LegacyNewDecFromInt(amt).QuoInt64Mut(int64(scalingFactor))
 	}
 	return result, nil
 }
 
 // getDescaledPoolAmts gets descaled amount of given denom and amount
-func (p Pool) getDescaledPoolAmt(denom string, amount sdk.Dec) sdk.Dec {
+func (p Pool) getDescaledPoolAmt(denom string, amount sdkmath.LegacyDec) sdkmath.LegacyDec {
 	liquidityIndexes := p.getLiquidityIndexMap()
 	liquidityIndex := liquidityIndexes[denom]
 
@@ -166,7 +166,7 @@ func (p *Pool) updatePoolForJoin(tokensIn sdk.Coins, newShares sdkmath.Int) {
 }
 
 // TODO: These should all get moved to amm.go
-func (p Pool) CalcOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coins, tokenOutDenom string, swapFee sdk.Dec) (tokenOut sdk.Coin, err error) {
+func (p Pool) CalcOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coins, tokenOutDenom string, swapFee sdkmath.LegacyDec) (tokenOut sdk.Coin, err error) {
 	if tokenIn.Len() != 1 {
 		return sdk.Coin{}, errors.New("stableswap CalcOutAmtGivenIn: tokenIn is of wrong length")
 	}
@@ -183,7 +183,7 @@ func (p Pool) CalcOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coins, tokenOutDeno
 	return sdk.NewCoin(tokenOutDenom, tokenOutAmt), nil
 }
 
-func (p *Pool) SwapOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coins, tokenOutDenom string, swapFee sdk.Dec) (tokenOut sdk.Coin, err error) {
+func (p *Pool) SwapOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coins, tokenOutDenom string, swapFee sdkmath.LegacyDec) (tokenOut sdk.Coin, err error) {
 	tokenOut, err = p.CalcOutAmtGivenIn(ctx, tokenIn, tokenOutDenom, swapFee)
 	if err != nil {
 		return sdk.Coin{}, err
@@ -194,7 +194,7 @@ func (p *Pool) SwapOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coins, tokenOutDen
 	return tokenOut, nil
 }
 
-func (p Pool) CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coins, tokenInDenom string, swapFee sdk.Dec) (tokenIn sdk.Coin, err error) {
+func (p Pool) CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coins, tokenInDenom string, swapFee sdkmath.LegacyDec) (tokenIn sdk.Coin, err error) {
 	if tokenOut.Len() != 1 {
 		return sdk.Coin{}, errors.New("stableswap CalcInAmtGivenOut: tokenOut is of wrong length")
 	}
@@ -214,7 +214,7 @@ func (p Pool) CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coins, tokenInDeno
 	return sdk.NewCoin(tokenInDenom, tokenInAmt), nil
 }
 
-func (p *Pool) SwapInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coins, tokenInDenom string, swapFee sdk.Dec) (tokenIn sdk.Coin, err error) {
+func (p *Pool) SwapInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coins, tokenInDenom string, swapFee sdkmath.LegacyDec) (tokenIn sdk.Coin, err error) {
 	tokenIn, err = p.CalcInAmtGivenOut(ctx, tokenOut, tokenInDenom, swapFee)
 	if err != nil {
 		return sdk.Coin{}, err
@@ -225,10 +225,10 @@ func (p *Pool) SwapInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coins, tokenInDen
 	return tokenIn, nil
 }
 
-func (p Pool) SpotPrice(ctx sdk.Context, baseAssetDenom string, quoteAssetDenom string) (sdk.Dec, error) {
+func (p Pool) SpotPrice(ctx sdk.Context, baseAssetDenom string, quoteAssetDenom string) (sdkmath.LegacyDec, error) {
 	reserves, err := p.getScaledPoolAmts(baseAssetDenom, quoteAssetDenom)
 	if err != nil {
-		return sdk.Dec{}, err
+		return sdkmath.LegacyDec{}, err
 	}
 	scaledSpotPrice := spotPrice(reserves[0], reserves[1])
 	spotPrice := p.getDescaledPoolAmt(baseAssetDenom, scaledSpotPrice)
@@ -242,27 +242,27 @@ func (p Pool) Copy() Pool {
 	return p2
 }
 
-func (p *Pool) CalcJoinPoolShares(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdkmath.Int, newLiquidity sdk.Coins, err error) {
+func (p *Pool) CalcJoinPoolShares(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdkmath.LegacyDec) (numShares sdkmath.Int, newLiquidity sdk.Coins, err error) {
 	pCopy := p.Copy()
 	return pCopy.joinPoolSharesInternal(ctx, tokensIn, swapFee)
 }
 
 // TODO: implement this
-func (*Pool) CalcJoinPoolNoSwapShares(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdkmath.Int, newLiquidity sdk.Coins, err error) {
-	return sdk.ZeroInt(), nil, err
+func (*Pool) CalcJoinPoolNoSwapShares(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdkmath.LegacyDec) (numShares sdkmath.Int, newLiquidity sdk.Coins, err error) {
+	return sdkmath.ZeroInt(), nil, err
 }
 
-func (p *Pool) JoinPool(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdkmath.Int, err error) {
+func (p *Pool) JoinPool(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdkmath.LegacyDec) (numShares sdkmath.Int, err error) {
 	numShares, _, err = p.joinPoolSharesInternal(ctx, tokensIn, swapFee)
 	return numShares, err
 }
 
 // TODO: implement this
-func (*Pool) JoinPoolNoSwap(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdkmath.Int, err error) {
-	return sdk.ZeroInt(), err
+func (*Pool) JoinPoolNoSwap(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdkmath.LegacyDec) (numShares sdkmath.Int, err error) {
+	return sdkmath.ZeroInt(), err
 }
 
-func (p *Pool) ExitPool(ctx sdk.Context, exitingShares sdkmath.Int, exitFee sdk.Dec) (exitingCoins sdk.Coins, err error) {
+func (p *Pool) ExitPool(ctx sdk.Context, exitingShares sdkmath.Int, exitFee sdkmath.LegacyDec) (exitingCoins sdk.Coins, err error) {
 	exitingCoins, err = p.CalcExitPoolCoinsFromShares(ctx, exitingShares, exitFee)
 	if err != nil {
 		return sdk.Coins{}, err
@@ -274,7 +274,7 @@ func (p *Pool) ExitPool(ctx sdk.Context, exitingShares sdkmath.Int, exitFee sdk.
 	return exitingCoins, nil
 }
 
-func (p Pool) CalcExitPoolCoinsFromShares(ctx sdk.Context, exitingShares sdkmath.Int, exitFee sdk.Dec) (exitingCoins sdk.Coins, err error) {
+func (p Pool) CalcExitPoolCoinsFromShares(ctx sdk.Context, exitingShares sdkmath.Int, exitFee sdkmath.LegacyDec) (exitingCoins sdk.Coins, err error) {
 	return cfmm_common.CalcExitPool(ctx, &p, exitingShares, exitFee)
 }
 

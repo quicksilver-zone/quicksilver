@@ -52,7 +52,7 @@ func TestNormalizeIntentWithOneIntent(t *testing.T) {
 	di.Intents = append(di.Intents, &types.ValidatorIntent{ValoperAddress: vals[0], Weight: sdk.NewDec(1000)})
 	di = di.Normalize()
 	require.Equal(t, len(di.Intents), 1)
-	require.Equal(t, di.Intents[0].Weight, sdk.OneDec())
+	require.Equal(t, di.Intents[0].Weight, sdkmath.LegacyOneDec())
 }
 
 func TestNormalizeIntentWithEqualIntents(t *testing.T) {
@@ -64,9 +64,9 @@ func TestNormalizeIntentWithEqualIntents(t *testing.T) {
 
 	di = di.Normalize()
 	require.Equal(t, len(di.Intents), 3)
-	require.Equal(t, di.Intents[0].Weight, sdk.OneDec().Quo(sdk.NewDec(3)))
-	require.Equal(t, di.Intents[1].Weight, sdk.OneDec().Quo(sdk.NewDec(3)))
-	require.Equal(t, di.Intents[2].Weight, sdk.OneDec().Quo(sdk.NewDec(3)))
+	require.Equal(t, di.Intents[0].Weight, sdkmath.LegacyOneDec().Quo(sdk.NewDec(3)))
+	require.Equal(t, di.Intents[1].Weight, sdkmath.LegacyOneDec().Quo(sdk.NewDec(3)))
+	require.Equal(t, di.Intents[2].Weight, sdkmath.LegacyOneDec().Quo(sdk.NewDec(3)))
 }
 
 func TestNormalizeIntentWithNonEqualIntents(t *testing.T) {
@@ -84,13 +84,13 @@ func TestNormalizeIntentWithNonEqualIntents(t *testing.T) {
 
 func TestOrdinalizeIntentWithEqualIntents(t *testing.T) {
 	di := types.DelegatorIntent{Delegator: addressutils.GenerateAccAddressForTest().String(), Intents: []*types.ValidatorIntent{
-		{ValoperAddress: vals[0], Weight: sdk.OneDec().Quo(sdk.NewDec(3))},
-		{ValoperAddress: vals[1], Weight: sdk.OneDec().Quo(sdk.NewDec(3))},
-		{ValoperAddress: vals[2], Weight: sdk.OneDec().Quo(sdk.NewDec(3))},
+		{ValoperAddress: vals[0], Weight: sdkmath.LegacyOneDec().Quo(sdk.NewDec(3))},
+		{ValoperAddress: vals[1], Weight: sdkmath.LegacyOneDec().Quo(sdk.NewDec(3))},
+		{ValoperAddress: vals[2], Weight: sdkmath.LegacyOneDec().Quo(sdk.NewDec(3))},
 	}}
 	di = di.Ordinalize(sdk.NewDec(3000))
 	require.Equal(t, len(di.Intents), 3)
-	require.Equal(t, sdk.NewInt(1000), di.MustIntentForValoper(vals[0]).Weight.RoundInt())
+	require.Equal(t, sdkmath.NewInt(1000), di.MustIntentForValoper(vals[0]).Weight.RoundInt())
 }
 
 func TestOrdinalizeIntentWithNonEqualIntents(t *testing.T) {
@@ -100,18 +100,18 @@ func TestOrdinalizeIntentWithNonEqualIntents(t *testing.T) {
 		{ValoperAddress: vals[2], Weight: sdk.NewDec(35).Quo(sdk.NewDec(50))},
 	}}
 	di = di.Ordinalize(sdk.NewDec(3000))
-	require.Equal(t, di.MustIntentForValoper(vals[0]).Weight.RoundInt(), sdk.NewInt(300))
-	require.Equal(t, di.MustIntentForValoper(vals[1]).Weight.RoundInt(), sdk.NewInt(600))
-	require.Equal(t, di.MustIntentForValoper(vals[2]).Weight.RoundInt(), sdk.NewInt(2100))
+	require.Equal(t, di.MustIntentForValoper(vals[0]).Weight.RoundInt(), sdkmath.NewInt(300))
+	require.Equal(t, di.MustIntentForValoper(vals[1]).Weight.RoundInt(), sdkmath.NewInt(600))
+	require.Equal(t, di.MustIntentForValoper(vals[2]).Weight.RoundInt(), sdkmath.NewInt(2100))
 }
 
 func TestAddOrdinal(t *testing.T) {
 	di := types.DelegatorIntent{
 		Delegator: addressutils.GenerateAccAddressForTest().String(),
 		Intents: []*types.ValidatorIntent{
-			{ValoperAddress: vals[0], Weight: sdk.OneDec().Quo(sdk.NewDec(3))},
-			{ValoperAddress: vals[1], Weight: sdk.OneDec().Quo(sdk.NewDec(3))},
-			{ValoperAddress: vals[2], Weight: sdk.OneDec().Quo(sdk.NewDec(3))},
+			{ValoperAddress: vals[0], Weight: sdkmath.LegacyOneDec().Quo(sdk.NewDec(3))},
+			{ValoperAddress: vals[1], Weight: sdkmath.LegacyOneDec().Quo(sdk.NewDec(3))},
+			{ValoperAddress: vals[2], Weight: sdkmath.LegacyOneDec().Quo(sdk.NewDec(3))},
 		},
 	}
 
@@ -135,9 +135,9 @@ func TestAddOrdinal(t *testing.T) {
 
 func TestAddOrdinalWithNewVal(t *testing.T) {
 	di := types.DelegatorIntent{Delegator: addressutils.GenerateAccAddressForTest().String(), Intents: []*types.ValidatorIntent{
-		{ValoperAddress: vals[0], Weight: sdk.OneDec().Quo(sdk.NewDec(3))},
-		{ValoperAddress: vals[1], Weight: sdk.OneDec().Quo(sdk.NewDec(3))},
-		{ValoperAddress: vals[2], Weight: sdk.OneDec().Quo(sdk.NewDec(3))},
+		{ValoperAddress: vals[0], Weight: sdkmath.LegacyOneDec().Quo(sdk.NewDec(3))},
+		{ValoperAddress: vals[1], Weight: sdkmath.LegacyOneDec().Quo(sdk.NewDec(3))},
+		{ValoperAddress: vals[2], Weight: sdkmath.LegacyOneDec().Quo(sdk.NewDec(3))},
 	}}
 
 	newIntents := types.ValidatorIntents{

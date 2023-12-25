@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -41,7 +42,7 @@ func (suite *KeeperTestSuite) TestHandleReceiptTransactionGood() {
 	hash2 := randomutils.GenerateRandomHashAsHex(64)
 
 	before := suite.GetQuicksilverApp(suite.chainA).BankKeeper.GetSupply(ctx, zone.LocalDenom)
-	suite.Equal(sdk.NewCoin(zone.LocalDenom, sdk.ZeroInt()), before)
+	suite.Equal(sdk.NewCoin(zone.LocalDenom, sdkmath.ZeroInt()), before)
 	// rr is 1.0
 	err = icsKeeper.HandleReceiptTransaction(ctx, transaction, hash, zone)
 	suite.NoError(err)
@@ -78,7 +79,7 @@ func (suite *KeeperTestSuite) TestHandleReceiptTransactionBadRecipient() {
 	hash := randomutils.GenerateRandomHashAsHex(64)
 
 	before := suite.GetQuicksilverApp(suite.chainA).BankKeeper.GetSupply(ctx, zone.LocalDenom)
-	suite.Equal(sdk.NewCoin(zone.LocalDenom, sdk.ZeroInt()), before)
+	suite.Equal(sdk.NewCoin(zone.LocalDenom, sdkmath.ZeroInt()), before)
 
 	err = icsKeeper.HandleReceiptTransaction(ctx, transaction, hash, zone)
 	// suite.ErrorContains(err, "no sender found. Ignoring")
@@ -110,7 +111,7 @@ func (suite *KeeperTestSuite) TestHandleReceiptTransactionBadMessageType() {
 	hash := randomutils.GenerateRandomHashAsHex(64)
 
 	before := suite.GetQuicksilverApp(suite.chainA).BankKeeper.GetSupply(ctx, zone.LocalDenom)
-	suite.Equal(sdk.NewCoin(zone.LocalDenom, sdk.ZeroInt()), before)
+	suite.Equal(sdk.NewCoin(zone.LocalDenom, sdkmath.ZeroInt()), before)
 
 	err = icsKeeper.HandleReceiptTransaction(ctx, transaction, hash, zone)
 	// suite.ErrorContains(err, "no sender found. Ignoring")
@@ -146,7 +147,7 @@ func (suite *KeeperTestSuite) TestHandleReceiptMixedMessageTypeGood() {
 	hash := randomutils.GenerateRandomHashAsHex(64)
 
 	before := suite.GetQuicksilverApp(suite.chainA).BankKeeper.GetSupply(ctx, zone.LocalDenom)
-	suite.Equal(sdk.NewCoin(zone.LocalDenom, sdk.ZeroInt()), before)
+	suite.Equal(sdk.NewCoin(zone.LocalDenom, sdkmath.ZeroInt()), before)
 
 	err = icsKeeper.HandleReceiptTransaction(ctx, transaction, hash, zone)
 	suite.NoError(err)
@@ -180,7 +181,7 @@ func (suite *KeeperTestSuite) TestHandleReceiptTransactionBadMixedSender() { // 
 	hash := randomutils.GenerateRandomHashAsHex(64)
 
 	before := suite.GetQuicksilverApp(suite.chainA).BankKeeper.GetSupply(ctx, zone.LocalDenom)
-	suite.Equal(sdk.NewCoin(zone.LocalDenom, sdk.ZeroInt()), before)
+	suite.Equal(sdk.NewCoin(zone.LocalDenom, sdkmath.ZeroInt()), before)
 
 	err = icsKeeper.HandleReceiptTransaction(ctx, transaction, hash, zone)
 	// suite.ErrorContains(err, "sender mismatch: expected")
@@ -212,13 +213,13 @@ func (suite *KeeperTestSuite) TestHandleReceiptTransactionBadDenom() {
 	hash := randomutils.GenerateRandomHashAsHex(64)
 
 	before := suite.GetQuicksilverApp(suite.chainA).BankKeeper.GetSupply(ctx, zone.LocalDenom)
-	suite.Equal(sdk.NewCoin(zone.LocalDenom, sdk.ZeroInt()), before)
+	suite.Equal(sdk.NewCoin(zone.LocalDenom, sdkmath.ZeroInt()), before)
 
 	err = icsKeeper.HandleReceiptTransaction(ctx, transaction, hash, zone)
 	suite.ErrorContains(err, "unable to validate coins. Ignoring")
 
 	after := suite.GetQuicksilverApp(suite.chainA).BankKeeper.GetSupply(ctx, zone.LocalDenom)
-	suite.Equal(sdk.NewCoin(zone.LocalDenom, sdk.ZeroInt()), after)
+	suite.Equal(sdk.NewCoin(zone.LocalDenom, sdkmath.ZeroInt()), after)
 }
 
 // func (suite *KeeperTestSuite) TestMintQAsset() {
@@ -338,7 +339,7 @@ func (suite *KeeperTestSuite) TestSendTokenIBC() {
 		sender := suite.chainA.SenderAccount.GetAddress()
 		receiver := addressutils.GenerateAddressForTestWithPrefix("cosmos")
 
-		amount := sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))
+		amount := sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(100))
 		err := quicksilver.BankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(amount))
 		suite.NoError(err)
 		err = quicksilver.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, sender, sdk.NewCoins(amount))
@@ -357,7 +358,7 @@ func (suite *KeeperTestSuite) TestSendTokenIBC() {
 		portID := types.TransferPort
 		channelID := suite.path.EndpointA.ChannelID
 
-		ibcAmount := transfertypes.GetTransferCoin(portID, channelID, sdk.DefaultBondDenom, sdk.NewInt(100))
+		ibcAmount := transfertypes.GetTransferCoin(portID, channelID, sdk.DefaultBondDenom, sdkmath.NewInt(100))
 
 		err = quicksilver.BankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(ibcAmount))
 		suite.NoError(err)

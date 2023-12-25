@@ -160,7 +160,7 @@ func (k *Keeper) GetClaimableAmountForAction(ctx sdk.Context, chainID, address s
 	// airdrop has started to decay, calculate claimable portion
 	elapsedDecayTime := ctx.BlockTime().Sub(zd.StartTime.Add(zd.Duration))
 	decayPercent := sdk.NewDec(elapsedDecayTime.Nanoseconds()).QuoInt64(zd.Decay.Nanoseconds())
-	claimablePercent := sdk.OneDec().Sub(decayPercent)
+	claimablePercent := sdkmath.LegacyOneDec().Sub(decayPercent)
 	amount = claimablePercent.MulInt64(amount).TruncateInt64()
 
 	return uint64(amount), nil

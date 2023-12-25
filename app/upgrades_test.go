@@ -133,7 +133,7 @@ func (s *AppTestSuite) initTestZone() {
 		Amount: sdk.NewCoins(
 			sdk.NewCoin(
 				"ujunox",
-				sdk.NewIntFromUint64(2000000), // 20% deposit
+				sdkmath.NewIntFromUint64(2000000), // 20% deposit
 			),
 		),
 	}
@@ -169,7 +169,7 @@ func (s *AppTestSuite) initTestZone() {
 	s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetRedelegationRecord(s.chainA.GetContext(), rdRecord)
 
 	delRecord := icstypes.Delegation{
-		Amount:            sdk.NewCoin(zone.BaseDenom, sdk.NewInt(17000)),
+		Amount:            sdk.NewCoin(zone.BaseDenom, sdkmath.NewInt(17000)),
 		DelegationAddress: "juno1z89utvygweg5l56fsk8ak7t6hh88fd0azcjpz5",
 		Height:            10,
 		ValidatorAddress:  "junovaloper185hgkqs8q8ysnc8cvkgd8j2knnq2m0ah6ae73gntv9ampgwpmrxqlfzywn",
@@ -186,8 +186,8 @@ func (s *AppTestSuite) initTestZone() {
 			{Valoper: "junovaloper1z89utvygweg5l56fsk8ak7t6hh88fd0aa9ywed", Amount: 1000000},
 		},
 		Recipient:  "juno1z89utvygweg5l56fsk8ak7t6hh88fd0azcjpz5",
-		Amount:     sdk.NewCoins(sdk.NewCoin("ujunox", sdk.NewInt(4000000))),
-		BurnAmount: sdk.NewCoin("ujunox", sdk.NewInt(4000000)),
+		Amount:     sdk.NewCoins(sdk.NewCoin("ujunox", sdkmath.NewInt(4000000))),
+		BurnAmount: sdk.NewCoin("ujunox", sdkmath.NewInt(4000000)),
 		Txhash:     "7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
 		Status:     icstypes.WithdrawStatusQueued,
 	}
@@ -227,7 +227,7 @@ func (s *AppTestSuite) TestV010402rc1UpgradeHandler() {
 					ValoperAddress:  "junovaloper185hgkqs8q8ysnc8cvkgd8j2knnq2m0ah6ae73gntv9ampgwpmrxqlfzywn",
 					CommissionRate:  sdk.MustNewDecFromStr("0.2"),
 					DelegatorShares: sdk.NewDec(2000),
-					VotingPower:     sdk.NewInt(2000),
+					VotingPower:     sdkmath.NewInt(2000),
 					Score:           sdk.NewDec(0),
 					Status:          stakingtypes.BondStatusBonded,
 				},
@@ -236,7 +236,7 @@ func (s *AppTestSuite) TestV010402rc1UpgradeHandler() {
 					ValoperAddress:  "junovaloper1z89utvygweg5l56fsk8ak7t6hh88fd0aa9ywed",
 					CommissionRate:  sdk.MustNewDecFromStr("0.2"),
 					DelegatorShares: sdk.NewDec(2000),
-					VotingPower:     sdk.NewInt(3000),
+					VotingPower:     sdkmath.NewInt(3000),
 					Score:           sdk.NewDec(0),
 					Status:          stakingtypes.BondStatusBonded,
 				},
@@ -249,7 +249,7 @@ func (s *AppTestSuite) TestV010402rc1UpgradeHandler() {
 					ValoperAddress:  "osmovaloper1zxavllftfx3a3y5ldfyze7jnu5uyuktsfx2jcc",
 					CommissionRate:  sdk.MustNewDecFromStr("0.2"),
 					DelegatorShares: sdk.NewDec(2000),
-					VotingPower:     sdk.NewInt(2000),
+					VotingPower:     sdkmath.NewInt(2000),
 					Score:           sdk.NewDec(0),
 					Status:          stakingtypes.BondStatusBonded,
 				},
@@ -257,7 +257,7 @@ func (s *AppTestSuite) TestV010402rc1UpgradeHandler() {
 					ValoperAddress:  "osmovaloper13eq5c99ym05jn02e78l8cac2fagzgdhh4294zk",
 					CommissionRate:  sdk.MustNewDecFromStr("0.2"),
 					DelegatorShares: sdk.NewDec(2000),
-					VotingPower:     sdk.NewInt(3000),
+					VotingPower:     sdkmath.NewInt(3000),
 					Score:           sdk.NewDec(0),
 					Status:          stakingtypes.BondStatusBonded,
 				},
@@ -313,11 +313,11 @@ func (s *AppTestSuite) TestV010402rc3UpgradeHandler() {
 	}
 
 	app.ParticipationRewardsKeeper.SetProtocolData(ctx, prtypes.GetProtocolDataKey(prtypes.ProtocolDataType(pdType), []byte("rege-redwood-1")), &prData)
-	val0 := icstypes.Validator{ValoperAddress: "osmovaloper1zxavllftfx3a3y5ldfyze7jnu5uyuktsfx2jcc", CommissionRate: sdk.MustNewDecFromStr("1"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded}
+	val0 := icstypes.Validator{ValoperAddress: "osmovaloper1zxavllftfx3a3y5ldfyze7jnu5uyuktsfx2jcc", CommissionRate: sdk.MustNewDecFromStr("1"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded}
 	err := app.InterchainstakingKeeper.SetValidator(ctx, upgrades.OsmosisTestnetChainID, val0)
 	s.Require().NoError(err)
 
-	val1 := icstypes.Validator{ValoperAddress: "osmovaloper13eq5c99ym05jn02e78l8cac2fagzgdhh4294zk", CommissionRate: sdk.MustNewDecFromStr("1"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded}
+	val1 := icstypes.Validator{ValoperAddress: "osmovaloper13eq5c99ym05jn02e78l8cac2fagzgdhh4294zk", CommissionRate: sdk.MustNewDecFromStr("1"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded}
 	err = app.InterchainstakingKeeper.SetValidator(ctx, upgrades.OsmosisTestnetChainID, val1)
 	s.Require().NoError(err)
 
@@ -446,13 +446,13 @@ func (s *AppTestSuite) TestV010404beta7UpgradeHandler() {
 //	zone, _ := app.InterchainstakingKeeper.GetZone(ctx, "osmosis-1")
 //	osmodels := []icstypes.Delegation{
 //		{
-//			Amount:            sdk.NewCoin(zone.BaseDenom, sdk.NewInt(17000)),
+//			Amount:            sdk.NewCoin(zone.BaseDenom, sdkmath.NewInt(17000)),
 //			DelegationAddress: "osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44",
 //			Height:            10,
 //			ValidatorAddress:  "osmovaloper1clpqr4nrk4khgkxj78fcwwh6dl3uw4ep88n0y4",
 //			RedelegationEnd:   -62135596800,
 //		}, {
-//			Amount:            sdk.NewCoin(zone.BaseDenom, sdk.NewInt(17005)),
+//			Amount:            sdk.NewCoin(zone.BaseDenom, sdkmath.NewInt(17005)),
 //			DelegationAddress: "osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44",
 //			Height:            11,
 //			ValidatorAddress:  "osmovaloper1hjct6q7npsspsg3dgvzk3sdf89spmlpf6t4agt",
@@ -581,13 +581,13 @@ func (s *AppTestSuite) TestV010404beta7UpgradeHandler() {
 //	zone, _ := app.InterchainstakingKeeper.GetZone(ctx, "osmosis-1")
 //	osmodels := []icstypes.Delegation{
 //		{
-//			Amount:            sdk.NewCoin(zone.BaseDenom, sdk.NewInt(17000)),
+//			Amount:            sdk.NewCoin(zone.BaseDenom, sdkmath.NewInt(17000)),
 //			DelegationAddress: "osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44",
 //			Height:            10,
 //			ValidatorAddress:  "osmovaloper1clpqr4nrk4khgkxj78fcwwh6dl3uw4ep88n0y4",
 //			RedelegationEnd:   -62135596800,
 //		}, {
-//			Amount:            sdk.NewCoin(zone.BaseDenom, sdk.NewInt(17005)),
+//			Amount:            sdk.NewCoin(zone.BaseDenom, sdkmath.NewInt(17005)),
 //			DelegationAddress: "osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44",
 //			Height:            11,
 //			ValidatorAddress:  "osmovaloper1hjct6q7npsspsg3dgvzk3sdf89spmlpf6t4agt",

@@ -18,7 +18,7 @@ func TestRoundtripDelegationMarshalToUnmarshal(t *testing.T) {
 	del1 := types.NewDelegation(
 		"cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0",
 		"cosmos1ssrxxe4xsls57ehrkswlkhlkcverf0p0fpgyhzqw0hfdqj92ynxsw29r6e",
-		sdk.NewCoin("uqck", sdk.NewInt(300)),
+		sdk.NewCoin("uqck", sdkmath.NewInt(300)),
 	)
 
 	wantDelAddr := sdk.AccAddress([]byte{0x84, 0xbf, 0xf8, 0x4c, 0x7d, 0xda, 0xd1, 0x1c, 0xb8, 0xc0, 0x73, 0x86, 0xe9, 0x19, 0x28, 0xc5, 0x67, 0x5c, 0xa4, 0xbc})
@@ -122,27 +122,27 @@ func TestDetermineAllocationsForDelegation(t *testing.T) {
 	}{
 		{
 			current: map[string]sdkmath.Int{
-				vals[0]: sdk.NewInt(350000),
-				vals[1]: sdk.NewInt(650000),
-				vals[2]: sdk.NewInt(75000),
+				vals[0]: sdkmath.NewInt(350000),
+				vals[1]: sdkmath.NewInt(650000),
+				vals[2]: sdkmath.NewInt(75000),
 			},
 			target: types.ValidatorIntents{
 				{ValoperAddress: vals[0], Weight: sdk.NewDecWithPrec(30, 2)},
 				{ValoperAddress: vals[1], Weight: sdk.NewDecWithPrec(63, 2)},
 				{ValoperAddress: vals[2], Weight: sdk.NewDecWithPrec(7, 2)},
 			},
-			inAmount: sdk.NewCoins(sdk.NewCoin("uqck", sdk.NewInt(50000))),
+			inAmount: sdk.NewCoins(sdk.NewCoin("uqck", sdkmath.NewInt(50000))),
 			expected: map[string]sdkmath.Int{
-				vals[1]: sdk.NewInt(47000),
-				vals[2]: sdk.NewInt(3000),
+				vals[1]: sdkmath.NewInt(47000),
+				vals[2]: sdkmath.NewInt(3000),
 			},
 		},
 		{
 			current: map[string]sdkmath.Int{
-				vals[0]: sdk.NewInt(52),
-				vals[1]: sdk.NewInt(24),
-				vals[2]: sdk.NewInt(20),
-				vals[3]: sdk.NewInt(4),
+				vals[0]: sdkmath.NewInt(52),
+				vals[1]: sdkmath.NewInt(24),
+				vals[2]: sdkmath.NewInt(20),
+				vals[3]: sdkmath.NewInt(4),
 			},
 			target: types.ValidatorIntents{
 				{ValoperAddress: vals[0], Weight: sdk.NewDecWithPrec(50, 2)},
@@ -150,19 +150,19 @@ func TestDetermineAllocationsForDelegation(t *testing.T) {
 				{ValoperAddress: vals[2], Weight: sdk.NewDecWithPrec(15, 2)},
 				{ValoperAddress: vals[3], Weight: sdk.NewDecWithPrec(10, 2)},
 			},
-			inAmount: sdk.NewCoins(sdk.NewCoin("uqck", sdk.NewInt(20))),
+			inAmount: sdk.NewCoins(sdk.NewCoin("uqck", sdkmath.NewInt(20))),
 			expected: map[string]sdkmath.Int{
-				vals[3]: sdk.NewInt(7),
-				vals[1]: sdk.NewInt(5),
-				vals[0]: sdk.NewInt(8),
+				vals[3]: sdkmath.NewInt(7),
+				vals[1]: sdkmath.NewInt(5),
+				vals[0]: sdkmath.NewInt(8),
 			},
 		},
 		{
 			current: map[string]sdkmath.Int{
-				vals[0]: sdk.NewInt(52),
-				vals[1]: sdk.NewInt(24),
-				vals[2]: sdk.NewInt(20),
-				vals[3]: sdk.NewInt(3),
+				vals[0]: sdkmath.NewInt(52),
+				vals[1]: sdkmath.NewInt(24),
+				vals[2]: sdkmath.NewInt(20),
+				vals[3]: sdkmath.NewInt(3),
 			},
 			target: types.ValidatorIntents{
 				{ValoperAddress: vals[0], Weight: sdk.NewDecWithPrec(50, 2)},
@@ -170,12 +170,12 @@ func TestDetermineAllocationsForDelegation(t *testing.T) {
 				{ValoperAddress: vals[2], Weight: sdk.NewDecWithPrec(15, 2)},
 				{ValoperAddress: vals[3], Weight: sdk.NewDecWithPrec(10, 2)},
 			},
-			inAmount: sdk.NewCoins(sdk.NewCoin("uqck", sdk.NewInt(50))),
+			inAmount: sdk.NewCoins(sdk.NewCoin("uqck", sdkmath.NewInt(50))),
 			expected: map[string]sdkmath.Int{
-				vals[0]: sdk.NewInt(27),
-				vals[1]: sdk.NewInt(12),
-				vals[2]: sdk.NewInt(1),
-				vals[3]: sdk.NewInt(10),
+				vals[0]: sdkmath.NewInt(27),
+				vals[1]: sdkmath.NewInt(12),
+				vals[2]: sdkmath.NewInt(1),
+				vals[3]: sdkmath.NewInt(10),
 			},
 		},
 	}
