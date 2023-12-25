@@ -49,7 +49,7 @@ func (k *Keeper) DeleteZoneDrop(ctx sdk.Context, chainID string) {
 func (k Keeper) IterateZoneDrops(ctx sdk.Context, fn func(index int64, zoneDrop types.ZoneDrop) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 
-	iterator := sdk.KVStorePrefixIterator(store, types.KeyPrefixZoneDrop)
+	iterator := storetypes.KVStorePrefixIterator(store, types.KeyPrefixZoneDrop)
 	defer iterator.Close()
 
 	i := int64(0)

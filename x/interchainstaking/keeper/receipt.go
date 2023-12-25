@@ -349,7 +349,7 @@ func (k *Keeper) DeleteReceipt(ctx sdk.Context, chainID, txHash string) {
 // IterateReceipts iterate through receipts.
 func (k *Keeper) IterateReceipts(ctx sdk.Context, fn func(index int64, receiptInfo types.Receipt) (stop bool)) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixReceipt)
-	iterator := sdk.KVStorePrefixIterator(store, nil)
+	iterator := storetypes.KVStorePrefixIterator(store, nil)
 	defer iterator.Close()
 
 	i := int64(0)
@@ -376,7 +376,7 @@ func (k *Keeper) AllReceipts(ctx sdk.Context) []types.Receipt {
 // IterateZoneReceipts iterates through receipts of the given zone.
 func (k *Keeper) IterateZoneReceipts(ctx sdk.Context, chainID string, fn func(index int64, receiptInfo types.Receipt) (stop bool)) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixReceipt)
-	iterator := sdk.KVStorePrefixIterator(store, []byte(chainID))
+	iterator := storetypes.KVStorePrefixIterator(store, []byte(chainID))
 	defer iterator.Close()
 
 	i := int64(0)

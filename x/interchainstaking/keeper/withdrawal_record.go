@@ -85,7 +85,7 @@ func (k *Keeper) DeleteWithdrawalRecord(ctx sdk.Context, chainID, txhash string,
 func (k *Keeper) IteratePrefixedWithdrawalRecords(ctx sdk.Context, prefixBytes []byte, fn func(index int64, record types.WithdrawalRecord) (stop bool)) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixWithdrawalRecord)
 
-	iterator := sdk.KVStorePrefixIterator(store, prefixBytes)
+	iterator := storetypes.KVStorePrefixIterator(store, prefixBytes)
 	defer iterator.Close()
 
 	i := int64(0)
@@ -183,7 +183,7 @@ func (k *Keeper) DeleteUnbondingRecord(ctx sdk.Context, chainID, validator strin
 func (k *Keeper) IteratePrefixedUnbondingRecords(ctx sdk.Context, prefixBytes []byte, fn func(index int64, record types.UnbondingRecord) (stop bool)) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixUnbondingRecord)
 
-	iterator := sdk.KVStorePrefixIterator(store, prefixBytes)
+	iterator := storetypes.KVStorePrefixIterator(store, prefixBytes)
 	defer iterator.Close()
 
 	i := int64(0)

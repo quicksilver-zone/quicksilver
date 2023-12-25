@@ -9,7 +9,6 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/store"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func GatherAllKeysFromStore(storeObj store.KVStore) []string {
@@ -30,7 +29,7 @@ func GatherValuesFromStore[T any](storeObj store.KVStore, keyStart []byte, keyEn
 }
 
 func GatherValuesFromStorePrefix[T any](storeObj store.KVStore, prefix []byte, parseValue func([]byte) (T, error)) ([]T, error) {
-	iterator := sdk.KVStorePrefixIterator(storeObj, prefix)
+	iterator := storetypes.KVStorePrefixIterator(storeObj, prefix)
 	defer iterator.Close()
 	return gatherValuesFromIteratorWithStop(iterator, parseValue, noStopFn)
 }
