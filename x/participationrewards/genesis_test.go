@@ -74,8 +74,8 @@ func TestParticipationRewardsInitGenesis(t *testing.T) {
 	genesisState := types.GenesisState{
 		Params: types.Params{
 			DistributionProportions: types.DistributionProportions{
-				ValidatorSelectionAllocation: sdk.NewDecWithPrec(5, 1),
-				HoldingsAllocation:           sdk.NewDecWithPrec(5, 1),
+				ValidatorSelectionAllocation: sdkmath.LegacyNewDecWithPrec(5, 1),
+				HoldingsAllocation:           sdkmath.LegacyNewDecWithPrec(5, 1),
 				LockupAllocation:             sdk.ZeroDec(),
 			},
 		},
@@ -85,8 +85,8 @@ func TestParticipationRewardsInitGenesis(t *testing.T) {
 
 	participationrewards.InitGenesis(ctx, app.ParticipationRewardsKeeper, genesisState)
 
-	require.Equal(t, app.ParticipationRewardsKeeper.GetParams(ctx).DistributionProportions.ValidatorSelectionAllocation, sdk.NewDecWithPrec(5, 1))
-	require.Equal(t, app.ParticipationRewardsKeeper.GetParams(ctx).DistributionProportions.HoldingsAllocation, sdk.NewDecWithPrec(5, 1))
+	require.Equal(t, app.ParticipationRewardsKeeper.GetParams(ctx).DistributionProportions.ValidatorSelectionAllocation, sdkmath.LegacyNewDecWithPrec(5, 1))
+	require.Equal(t, app.ParticipationRewardsKeeper.GetParams(ctx).DistributionProportions.HoldingsAllocation, sdkmath.LegacyNewDecWithPrec(5, 1))
 	require.Equal(t, app.ParticipationRewardsKeeper.GetParams(ctx).DistributionProportions.LockupAllocation, sdk.ZeroDec())
 
 	pd, found := app.ParticipationRewardsKeeper.GetProtocolData(ctx, types.ProtocolDataTypeOsmosisPool, "6")

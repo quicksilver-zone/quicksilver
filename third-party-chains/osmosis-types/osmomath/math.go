@@ -3,21 +3,22 @@ package osmomath
 import (
 	"fmt"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // Don't EVER change after initializing
 // TODO: Analyze choice here.
-var powPrecision, _ = sdk.NewDecFromStr("0.00000001")
+var powPrecision, _ = sdkmath.LegacyNewDecFromStr("0.00000001")
 
 // Singletons.
 // nolint: deadcode, unused
 var zero sdkmath.LegacyDec = sdk.ZeroDec()
 
 var (
-	one_half sdkmath.LegacyDec = sdk.MustNewDecFromStr("0.5")
+	one_half sdkmath.LegacyDec = sdkmath.LegacyMustNewDecFromStr("0.5")
 	one      sdkmath.LegacyDec = sdkmath.LegacyOneDec()
-	two      sdkmath.LegacyDec = sdk.MustNewDecFromStr("2")
+	two      sdkmath.LegacyDec = sdkmath.LegacyMustNewDecFromStr("2")
 )
 
 // Returns the internal "power precision".
@@ -138,7 +139,7 @@ func PowApprox(base sdkmath.LegacyDec, exp sdkmath.LegacyDec, precision sdkmath.
 	negative := false
 
 	a := exp.Clone()
-	bigK := sdk.NewDec(0)
+	bigK := sdkmath.LegacyNewDec(0)
 	// TODO: Document this computation via taylor expansion
 	for i := int64(1); term.GTE(precision); i++ {
 		// At each iteration, we need two values, i and i-1.
@@ -146,7 +147,7 @@ func PowApprox(base sdkmath.LegacyDec, exp sdkmath.LegacyDec, precision sdkmath.
 		// On this line, bigK == i-1.
 		c, cneg := AbsDifferenceWithSign(a, bigK)
 		// On this line, bigK == i.
-		bigK.Set(sdk.NewDec(i)) // TODO: O(n) bigint allocation happens
+		bigK.Set(sdkmath.LegacyNewDec(i)) // TODO: O(n) bigint allocation happens
 		term.MulMut(c).MulMut(x).QuoMut(bigK)
 
 		// a is mutated on absDifferenceWithSign, reset

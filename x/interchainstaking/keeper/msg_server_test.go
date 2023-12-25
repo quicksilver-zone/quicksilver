@@ -61,7 +61,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 
 				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
 				suite.True(found)
-				zone.RedemptionRate = sdk.MustNewDecFromStr("0.95")
+				zone.RedemptionRate = sdkmath.LegacyMustNewDecFromStr("0.95")
 				suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetZone(suite.chainA.GetContext(), &zone)
 			},
 			"",
@@ -80,8 +80,8 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 
 				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
 				suite.True(found)
-				zone.LastRedemptionRate = sdk.MustNewDecFromStr("1.05")
-				zone.RedemptionRate = sdk.MustNewDecFromStr("1.1")
+				zone.LastRedemptionRate = sdkmath.LegacyMustNewDecFromStr("1.05")
+				zone.RedemptionRate = sdkmath.LegacyMustNewDecFromStr("1.1")
 				suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetZone(suite.chainA.GetContext(), &zone)
 			},
 			"",
@@ -100,8 +100,8 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 
 				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
 				suite.True(found)
-				zone.LastRedemptionRate = sdk.MustNewDecFromStr("1.1")
-				zone.RedemptionRate = sdk.MustNewDecFromStr("1.05")
+				zone.LastRedemptionRate = sdkmath.LegacyMustNewDecFromStr("1.1")
+				zone.RedemptionRate = sdkmath.LegacyMustNewDecFromStr("1.05")
 				suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetZone(suite.chainA.GetContext(), &zone)
 			},
 			"",
@@ -134,7 +134,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 
 				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
 				suite.True(found)
-				zone.RedemptionRate = sdk.MustNewDecFromStr("0.99999")
+				zone.RedemptionRate = sdkmath.LegacyMustNewDecFromStr("0.99999")
 				suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetZone(suite.chainA.GetContext(), &zone)
 			},
 			"",
@@ -153,8 +153,8 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 
 				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
 				suite.True(found)
-				zone.LastRedemptionRate = sdk.MustNewDecFromStr("1.049999")
-				zone.RedemptionRate = sdk.MustNewDecFromStr("1.099999")
+				zone.LastRedemptionRate = sdkmath.LegacyMustNewDecFromStr("1.049999")
+				zone.RedemptionRate = sdkmath.LegacyMustNewDecFromStr("1.099999")
 				suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetZone(suite.chainA.GetContext(), &zone)
 			},
 			"",
@@ -424,7 +424,7 @@ func (suite *KeeperTestSuite) TestSignalIntent() {
 					FromAddress: testAddress,
 				}
 			},
-			[]sdkmath.LegacyDec{sdk.NewDecWithPrec(1, 0)},
+			[]sdkmath.LegacyDec{sdkmath.LegacyNewDecWithPrec(1, 0)},
 			false,
 			false,
 		},
@@ -445,9 +445,9 @@ func (suite *KeeperTestSuite) TestSignalIntent() {
 				}
 			},
 			[]sdkmath.LegacyDec{
-				sdk.NewDecWithPrec(5, 1),
-				sdk.NewDecWithPrec(2, 1),
-				sdk.NewDecWithPrec(3, 1),
+				sdkmath.LegacyNewDecWithPrec(5, 1),
+				sdkmath.LegacyNewDecWithPrec(2, 1),
+				sdkmath.LegacyNewDecWithPrec(3, 1),
 			},
 			false,
 			false,
@@ -704,9 +704,9 @@ func (suite *KeeperTestSuite) TestSetLsmCaps() {
 				return &icstypes.MsgGovSetLsmCaps{
 					ChainId: s.chainB.ChainID,
 					Caps: &icstypes.LsmCaps{
-						ValidatorCap:     sdk.NewDecWithPrec(50, 2),
-						ValidatorBondCap: sdk.NewDec(250),
-						GlobalCap:        sdk.NewDecWithPrec(25, 2),
+						ValidatorCap:     sdkmath.LegacyNewDecWithPrec(50, 2),
+						ValidatorBondCap: sdkmath.LegacyNewDec(250),
+						GlobalCap:        sdkmath.LegacyNewDecWithPrec(25, 2),
 					},
 					Authority: testAddress,
 				}
@@ -719,9 +719,9 @@ func (suite *KeeperTestSuite) TestSetLsmCaps() {
 				return &icstypes.MsgGovSetLsmCaps{
 					ChainId: "unknownzone-1",
 					Caps: &icstypes.LsmCaps{
-						ValidatorCap:     sdk.NewDecWithPrec(50, 2),
-						ValidatorBondCap: sdk.NewDec(250),
-						GlobalCap:        sdk.NewDecWithPrec(25, 2),
+						ValidatorCap:     sdkmath.LegacyNewDecWithPrec(50, 2),
+						ValidatorBondCap: sdkmath.LegacyNewDec(250),
+						GlobalCap:        sdkmath.LegacyNewDecWithPrec(25, 2),
 					},
 					Authority: testAddress,
 				}
@@ -738,9 +738,9 @@ func (suite *KeeperTestSuite) TestSetLsmCaps() {
 				return &icstypes.MsgGovSetLsmCaps{
 					ChainId: s.chainB.ChainID,
 					Caps: &icstypes.LsmCaps{
-						ValidatorCap:     sdk.NewDecWithPrec(50, 2),
-						ValidatorBondCap: sdk.NewDec(250),
-						GlobalCap:        sdk.NewDecWithPrec(25, 2),
+						ValidatorCap:     sdkmath.LegacyNewDecWithPrec(50, 2),
+						ValidatorBondCap: sdkmath.LegacyNewDec(250),
+						GlobalCap:        sdkmath.LegacyNewDecWithPrec(25, 2),
 					},
 					Authority: testAddress,
 				}
@@ -753,9 +753,9 @@ func (suite *KeeperTestSuite) TestSetLsmCaps() {
 				return &icstypes.MsgGovSetLsmCaps{
 					ChainId: s.chainB.ChainID,
 					Caps: &icstypes.LsmCaps{
-						ValidatorCap:     sdk.NewDecWithPrec(50, 2),
-						ValidatorBondCap: sdk.NewDec(250),
-						GlobalCap:        sdk.NewDecWithPrec(25, 2),
+						ValidatorCap:     sdkmath.LegacyNewDecWithPrec(50, 2),
+						ValidatorBondCap: sdkmath.LegacyNewDec(250),
+						GlobalCap:        sdkmath.LegacyNewDecWithPrec(25, 2),
 					},
 					Authority: "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn",
 				}

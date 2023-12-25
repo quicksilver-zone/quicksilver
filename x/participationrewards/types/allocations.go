@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
 )
 
 type RewardsAllocation struct {

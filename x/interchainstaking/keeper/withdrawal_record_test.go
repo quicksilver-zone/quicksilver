@@ -62,7 +62,7 @@ func (suite *KeeperTestSuite) TestUpdateWithdrawalRecordsForSlash() {
 				}
 				return out
 			},
-			Delta:     sdk.NewDecWithPrec(100, 2).Quo(sdk.NewDecWithPrec(95, 2)),
+			Delta:     sdkmath.LegacyNewDecWithPrec(100, 2).Quo(sdkmath.LegacyNewDecWithPrec(95, 2)),
 			Validator: func(validators []string) string { return validators[1] },
 
 			ExpectError: false,
@@ -142,7 +142,7 @@ func (suite *KeeperTestSuite) TestUpdateWithdrawalRecordsForSlash() {
 				}
 				return out
 			},
-			Delta:       sdk.NewDecWithPrec(100, 2).Quo(sdk.NewDecWithPrec(95, 2)),
+			Delta:       sdkmath.LegacyNewDecWithPrec(100, 2).Quo(sdkmath.LegacyNewDecWithPrec(95, 2)),
 			Validator:   func(validators []string) string { return validators[1] },
 			ExpectError: false,
 		},
@@ -184,7 +184,7 @@ func (suite *KeeperTestSuite) TestUpdateWithdrawalRecordsForSlash() {
 				}
 				return out
 			},
-			Delta:       sdk.NewDecWithPrec(100, 2).Quo(sdk.NewDecWithPrec(95, 2)),
+			Delta:       sdkmath.LegacyNewDecWithPrec(100, 2).Quo(sdkmath.LegacyNewDecWithPrec(95, 2)),
 			Validator:   func(validators []string) string { return validators[1] },
 			ExpectError: true,
 		},
@@ -227,7 +227,7 @@ func (suite *KeeperTestSuite) TestUpdateWithdrawalRecordsForSlash() {
 				}
 				return out
 			},
-			Delta:       sdk.NewDecWithPrec(100, 2).Quo(sdk.NewDecWithPrec(95, 2)),
+			Delta:       sdkmath.LegacyNewDecWithPrec(100, 2).Quo(sdkmath.LegacyNewDecWithPrec(95, 2)),
 			Validator:   func(validators []string) string { return validators[1] },
 			ExpectError: true,
 		},

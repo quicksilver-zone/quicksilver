@@ -34,15 +34,15 @@ func (k *Keeper) HandleClaim(ctx sdk.Context, cr types.ClaimRecord, action types
 	case types.ActionInitialClaim:
 		return k.handleInitial(ctx, &cr, action)
 	case types.ActionDepositT1:
-		return k.handleDeposit(ctx, &cr, action, sdk.MustNewDecFromStr(tier1))
+		return k.handleDeposit(ctx, &cr, action, sdkmath.LegacyMustNewDecFromStr(tier1))
 	case types.ActionDepositT2:
-		return k.handleDeposit(ctx, &cr, action, sdk.MustNewDecFromStr(tier2))
+		return k.handleDeposit(ctx, &cr, action, sdkmath.LegacyMustNewDecFromStr(tier2))
 	case types.ActionDepositT3:
-		return k.handleDeposit(ctx, &cr, action, sdk.MustNewDecFromStr(tier3))
+		return k.handleDeposit(ctx, &cr, action, sdkmath.LegacyMustNewDecFromStr(tier3))
 	case types.ActionDepositT4:
-		return k.handleDeposit(ctx, &cr, action, sdk.MustNewDecFromStr(tier4))
+		return k.handleDeposit(ctx, &cr, action, sdkmath.LegacyMustNewDecFromStr(tier4))
 	case types.ActionDepositT5:
-		return k.handleDeposit(ctx, &cr, action, sdk.MustNewDecFromStr(tier5))
+		return k.handleDeposit(ctx, &cr, action, sdkmath.LegacyMustNewDecFromStr(tier5))
 	case types.ActionStakeQCK:
 		return k.handleBondedDelegation(ctx, &cr, action)
 	case types.ActionSignalIntent:
@@ -284,7 +284,7 @@ func (k *Keeper) verifyOsmosisLP(ctx sdk.Context, proofs []*cmtypes.Proof, cr ty
 	}
 
 	// calculate target amount
-	dThreshold := sdk.MustNewDecFromStr(tier4)
+	dThreshold := sdkmath.LegacyMustNewDecFromStr(tier4)
 	if err := k.verifyDeposit(ctx, cr, dThreshold); err != nil {
 		return fmt.Errorf("%w, must reach at least %s of %d", err, tier4, cr.BaseValue)
 	}

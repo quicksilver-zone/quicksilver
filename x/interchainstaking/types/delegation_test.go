@@ -50,15 +50,15 @@ func TestSetForValoper(t *testing.T) {
 	v3 := addressutils.GenerateValAddressForTest().String()
 
 	intents := types.ValidatorIntents{
-		{ValoperAddress: v1, Weight: sdk.NewDecWithPrec(10, 1)},
-		{ValoperAddress: v2, Weight: sdk.NewDecWithPrec(90, 1)},
+		{ValoperAddress: v1, Weight: sdkmath.LegacyNewDecWithPrec(10, 1)},
+		{ValoperAddress: v2, Weight: sdkmath.LegacyNewDecWithPrec(90, 1)},
 	}
 
-	intents = intents.SetForValoper(v1, &types.ValidatorIntent{ValoperAddress: v1, Weight: sdk.NewDecWithPrec(40, 1)})
-	intents = intents.SetForValoper(v2, &types.ValidatorIntent{ValoperAddress: v2, Weight: sdk.NewDecWithPrec(60, 1)})
+	intents = intents.SetForValoper(v1, &types.ValidatorIntent{ValoperAddress: v1, Weight: sdkmath.LegacyNewDecWithPrec(40, 1)})
+	intents = intents.SetForValoper(v2, &types.ValidatorIntent{ValoperAddress: v2, Weight: sdkmath.LegacyNewDecWithPrec(60, 1)})
 
-	require.Equal(t, sdk.NewDecWithPrec(40, 1), intents.MustGetForValoper(v1).Weight)
-	require.Equal(t, sdk.NewDecWithPrec(60, 1), intents.MustGetForValoper(v2).Weight)
+	require.Equal(t, sdkmath.LegacyNewDecWithPrec(40, 1), intents.MustGetForValoper(v1).Weight)
+	require.Equal(t, sdkmath.LegacyNewDecWithPrec(60, 1), intents.MustGetForValoper(v2).Weight)
 
 	// check failed return
 	actual := intents.MustGetForValoper(v3)
@@ -78,17 +78,17 @@ func TestNormalizeValidatorIntentsDeterminism(t *testing.T) {
 		{
 			name: "case 1",
 			intents: types.ValidatorIntents{
-				{ValoperAddress: v1, Weight: sdk.NewDecWithPrec(10, 1)},
-				{ValoperAddress: v2, Weight: sdk.NewDecWithPrec(90, 1)},
+				{ValoperAddress: v1, Weight: sdkmath.LegacyNewDecWithPrec(10, 1)},
+				{ValoperAddress: v2, Weight: sdkmath.LegacyNewDecWithPrec(90, 1)},
 			},
 		},
 		{
 			name: "case 2",
 			intents: types.ValidatorIntents{
-				{ValoperAddress: v1, Weight: sdk.NewDecWithPrec(10, 1)},
-				{ValoperAddress: v2, Weight: sdk.NewDecWithPrec(90, 1)},
-				{ValoperAddress: v3, Weight: sdk.NewDecWithPrec(90, 1)},
-				{ValoperAddress: v4, Weight: sdk.NewDecWithPrec(90, 1)},
+				{ValoperAddress: v1, Weight: sdkmath.LegacyNewDecWithPrec(10, 1)},
+				{ValoperAddress: v2, Weight: sdkmath.LegacyNewDecWithPrec(90, 1)},
+				{ValoperAddress: v3, Weight: sdkmath.LegacyNewDecWithPrec(90, 1)},
+				{ValoperAddress: v4, Weight: sdkmath.LegacyNewDecWithPrec(90, 1)},
 			},
 		},
 	}
@@ -127,9 +127,9 @@ func TestDetermineAllocationsForDelegation(t *testing.T) {
 				vals[2]: sdkmath.NewInt(75000),
 			},
 			target: types.ValidatorIntents{
-				{ValoperAddress: vals[0], Weight: sdk.NewDecWithPrec(30, 2)},
-				{ValoperAddress: vals[1], Weight: sdk.NewDecWithPrec(63, 2)},
-				{ValoperAddress: vals[2], Weight: sdk.NewDecWithPrec(7, 2)},
+				{ValoperAddress: vals[0], Weight: sdkmath.LegacyNewDecWithPrec(30, 2)},
+				{ValoperAddress: vals[1], Weight: sdkmath.LegacyNewDecWithPrec(63, 2)},
+				{ValoperAddress: vals[2], Weight: sdkmath.LegacyNewDecWithPrec(7, 2)},
 			},
 			inAmount: sdk.NewCoins(sdk.NewCoin("uqck", sdkmath.NewInt(50000))),
 			expected: map[string]sdkmath.Int{
@@ -145,10 +145,10 @@ func TestDetermineAllocationsForDelegation(t *testing.T) {
 				vals[3]: sdkmath.NewInt(4),
 			},
 			target: types.ValidatorIntents{
-				{ValoperAddress: vals[0], Weight: sdk.NewDecWithPrec(50, 2)},
-				{ValoperAddress: vals[1], Weight: sdk.NewDecWithPrec(25, 2)},
-				{ValoperAddress: vals[2], Weight: sdk.NewDecWithPrec(15, 2)},
-				{ValoperAddress: vals[3], Weight: sdk.NewDecWithPrec(10, 2)},
+				{ValoperAddress: vals[0], Weight: sdkmath.LegacyNewDecWithPrec(50, 2)},
+				{ValoperAddress: vals[1], Weight: sdkmath.LegacyNewDecWithPrec(25, 2)},
+				{ValoperAddress: vals[2], Weight: sdkmath.LegacyNewDecWithPrec(15, 2)},
+				{ValoperAddress: vals[3], Weight: sdkmath.LegacyNewDecWithPrec(10, 2)},
 			},
 			inAmount: sdk.NewCoins(sdk.NewCoin("uqck", sdkmath.NewInt(20))),
 			expected: map[string]sdkmath.Int{
@@ -165,10 +165,10 @@ func TestDetermineAllocationsForDelegation(t *testing.T) {
 				vals[3]: sdkmath.NewInt(3),
 			},
 			target: types.ValidatorIntents{
-				{ValoperAddress: vals[0], Weight: sdk.NewDecWithPrec(50, 2)},
-				{ValoperAddress: vals[1], Weight: sdk.NewDecWithPrec(25, 2)},
-				{ValoperAddress: vals[2], Weight: sdk.NewDecWithPrec(15, 2)},
-				{ValoperAddress: vals[3], Weight: sdk.NewDecWithPrec(10, 2)},
+				{ValoperAddress: vals[0], Weight: sdkmath.LegacyNewDecWithPrec(50, 2)},
+				{ValoperAddress: vals[1], Weight: sdkmath.LegacyNewDecWithPrec(25, 2)},
+				{ValoperAddress: vals[2], Weight: sdkmath.LegacyNewDecWithPrec(15, 2)},
+				{ValoperAddress: vals[3], Weight: sdkmath.LegacyNewDecWithPrec(10, 2)},
 			},
 			inAmount: sdk.NewCoins(sdk.NewCoin("uqck", sdkmath.NewInt(50))),
 			expected: map[string]sdkmath.Int{

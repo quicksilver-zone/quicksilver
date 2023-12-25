@@ -9,7 +9,9 @@ import (
 
 	"github.com/ingenuity-build/multierror"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 
@@ -115,7 +117,7 @@ func IntentsFromString(input string) ([]*ValidatorIntent, error) {
 	istrs := strings.Split(input, ",")
 	for i, istr := range istrs {
 		wstr := iexpr.ReplaceAllString(istr, "$1")
-		weight, err := sdk.NewDecFromStr(wstr)
+		weight, err := sdkmath.LegacyNewDecFromStr(wstr)
 		if err != nil {
 			return nil, fmt.Errorf("intent token [%v]: %w", i, err)
 		}
@@ -163,7 +165,7 @@ func (msg MsgSignalIntent) ValidateBasic() error {
 	}
 
 	wantSum := sdkmath.LegacyOneDec()
-	weightSum := sdk.NewDec(0)
+	weightSum := sdkmath.LegacyNewDec(0)
 	intents, err := IntentsFromString(msg.Intents)
 	if err != nil {
 		errm["Intents"] = err

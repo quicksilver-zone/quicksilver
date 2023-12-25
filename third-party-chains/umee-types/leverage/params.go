@@ -3,9 +3,9 @@ package types
 import (
 	"fmt"
 
+	sdkmath "cosmossdk.io/math"
 	"gopkg.in/yaml.v3"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
@@ -66,11 +66,11 @@ func ParamKeyTable() paramtypes.KeyTable {
 // DefaultParams returns a default set of parameters.
 func DefaultParams() Params {
 	return Params{
-		CompleteLiquidationThreshold: sdk.MustNewDecFromStr("0.4"),
-		MinimumCloseFactor:           sdk.MustNewDecFromStr("0.05"),
-		OracleRewardFactor:           sdk.MustNewDecFromStr("0.01"),
-		SmallLiquidationSize:         sdk.MustNewDecFromStr("500.00"),
-		DirectLiquidationFee:         sdk.MustNewDecFromStr("0.05"),
+		CompleteLiquidationThreshold: sdkmath.LegacyMustNewDecFromStr("0.4"),
+		MinimumCloseFactor:           sdkmath.LegacyMustNewDecFromStr("0.05"),
+		OracleRewardFactor:           sdkmath.LegacyMustNewDecFromStr("0.01"),
+		SmallLiquidationSize:         sdkmath.LegacyMustNewDecFromStr("500.00"),
+		DirectLiquidationFee:         sdkmath.LegacyMustNewDecFromStr("0.05"),
 	}
 }
 

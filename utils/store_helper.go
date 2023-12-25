@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/gogo/protobuf/proto"
 	db "github.com/tendermint/tm-db"
 

@@ -156,7 +156,7 @@ func (suite *KeeperTestSuite) coreTest() {
 
 	valRewards := make(map[string]sdkmath.LegacyDec)
 	for _, val := range quicksilver.InterchainstakingKeeper.GetValidators(suite.chainA.GetContext(), suite.chainB.ChainID) {
-		valRewards[val.ValoperAddress] = sdk.NewDec(100000000)
+		valRewards[val.ValoperAddress] = sdkmath.LegacyNewDec(100000000)
 	}
 
 	suite.executeValidatorSelectionRewardsCallback(zone.PerformanceAddress.Address, valRewards)
@@ -246,22 +246,22 @@ func (suite *KeeperTestSuite) setupTestZones() {
 		Validators: []*icstypes.Validator{
 			{
 				ValoperAddress:  "osmovaloper1clpqr4nrk4khgkxj78fcwwh6dl3uw4ep88n0y4",
-				CommissionRate:  sdk.MustNewDecFromStr("0.1"),
-				DelegatorShares: sdk.NewDec(200032604739),
+				CommissionRate:  sdkmath.LegacyMustNewDecFromStr("0.1"),
+				DelegatorShares: sdkmath.LegacyNewDec(200032604739),
 				VotingPower:     math.NewInt(200032604739),
 				Score:           sdk.ZeroDec(),
 			},
 			{
 				ValoperAddress:  "osmovaloper1hjct6q7npsspsg3dgvzk3sdf89spmlpf6t4agt",
-				CommissionRate:  sdk.MustNewDecFromStr("0.1"),
-				DelegatorShares: sdk.NewDec(200032604734),
+				CommissionRate:  sdkmath.LegacyMustNewDecFromStr("0.1"),
+				DelegatorShares: sdkmath.LegacyNewDec(200032604734),
 				VotingPower:     math.NewInt(200032604734),
 				Score:           sdk.ZeroDec(),
 			},
 			{
 				ValoperAddress:  "osmovaloper15urq2dtp9qce4fyc85m6upwm9xul3049wh9czc",
-				CommissionRate:  sdk.MustNewDecFromStr("0.1"),
-				DelegatorShares: sdk.NewDec(200032604738),
+				CommissionRate:  sdkmath.LegacyMustNewDecFromStr("0.1"),
+				DelegatorShares: sdkmath.LegacyNewDec(200032604738),
 				VotingPower:     math.NewInt(200032604738),
 				Score:           sdk.ZeroDec(),
 			},
@@ -296,22 +296,22 @@ func (suite *KeeperTestSuite) setupTestZones() {
 	cosmosVals := []icstypes.Validator{
 		{
 			ValoperAddress:  "cosmosvaloper1759teakrsvnx7rnur8ezc4qaq8669nhtgukm0x",
-			CommissionRate:  sdk.MustNewDecFromStr("0.1"),
-			DelegatorShares: sdk.NewDec(200032604739),
+			CommissionRate:  sdkmath.LegacyMustNewDecFromStr("0.1"),
+			DelegatorShares: sdkmath.LegacyNewDec(200032604739),
 			VotingPower:     math.NewInt(200032604739),
 			Score:           sdk.ZeroDec(),
 		},
 		{
 			ValoperAddress:  "cosmosvaloper1jtjjyxtqk0fj85ud9cxk368gr8cjdsftvdt5jl",
-			CommissionRate:  sdk.MustNewDecFromStr("0.1"),
-			DelegatorShares: sdk.NewDec(200032604734),
+			CommissionRate:  sdkmath.LegacyMustNewDecFromStr("0.1"),
+			DelegatorShares: sdkmath.LegacyNewDec(200032604734),
 			VotingPower:     math.NewInt(200032604734),
 			Score:           sdk.ZeroDec(),
 		},
 		{
 			ValoperAddress:  "cosmosvaloper1q86m0zq0p52h4puw5pg5xgc3c5e2mq52y6mth0",
-			CommissionRate:  sdk.MustNewDecFromStr("0.1"),
-			DelegatorShares: sdk.NewDec(200032604738),
+			CommissionRate:  sdkmath.LegacyMustNewDecFromStr("0.1"),
+			DelegatorShares: sdkmath.LegacyNewDec(200032604738),
 			VotingPower:     math.NewInt(200032604738),
 			Score:           sdk.ZeroDec(),
 		},
@@ -619,15 +619,15 @@ func (suite *KeeperTestSuite) setupTestIntents() {
 		icstypes.ValidatorIntents{
 			{
 				ValoperAddress: vals[0].ValoperAddress,
-				Weight:         sdk.MustNewDecFromStr("0.3"),
+				Weight:         sdkmath.LegacyMustNewDecFromStr("0.3"),
 			},
 			{
 				ValoperAddress: vals[1].ValoperAddress,
-				Weight:         sdk.MustNewDecFromStr("0.4"),
+				Weight:         sdkmath.LegacyMustNewDecFromStr("0.4"),
 			},
 			{
 				ValoperAddress: vals[2].ValoperAddress,
-				Weight:         sdk.MustNewDecFromStr("0.3"),
+				Weight:         sdkmath.LegacyMustNewDecFromStr("0.3"),
 			},
 		},
 	)

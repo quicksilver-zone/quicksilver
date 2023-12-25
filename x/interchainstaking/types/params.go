@@ -6,8 +6,8 @@ import (
 
 	"gopkg.in/yaml.v2"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
@@ -15,7 +15,7 @@ import (
 var (
 	DefaultDepositInterval      uint64            = 20
 	DefaultValidatorSetInterval uint64            = 200
-	DefaultCommissionRate       sdkmath.LegacyDec = sdk.MustNewDecFromStr("0.025")
+	DefaultCommissionRate       sdkmath.LegacyDec = sdkmath.LegacyMustNewDecFromStr("0.025")
 	DefaultUnbondingEnabled                       = false
 
 	// KeyDepositInterval is store's key for the DepositInterval option.

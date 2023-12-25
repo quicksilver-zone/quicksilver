@@ -463,7 +463,7 @@ func (suite *KeeperTestSuite) TestGetRatio() {
 				return out
 			},
 			supply:   math.NewInt(10000000),
-			expected: sdk.NewDecWithPrec(75, 2),
+			expected: sdkmath.LegacyNewDecWithPrec(75, 2),
 		},
 		{
 			name: "multi unbonding withdrawal, delegation, gt 1.0",
@@ -483,7 +483,7 @@ func (suite *KeeperTestSuite) TestGetRatio() {
 				return out
 			},
 			supply:   math.NewInt(22500000),
-			expected: sdk.NewDec(4).Quo(sdk.NewDec(3)),
+			expected: sdkmath.LegacyNewDec(4).Quo(sdkmath.LegacyNewDec(3)),
 		},
 	}
 
@@ -558,7 +558,7 @@ func (suite *KeeperTestSuite) TestUpdateRedemptionRate() {
 
 	zone, found = icsKeeper.GetZone(ctx, suite.chainB.ChainID)
 	suite.True(found)
-	suite.Equal(sdk.NewDecWithPrec(101, 2), zone.RedemptionRate)
+	suite.Equal(sdkmath.LegacyNewDecWithPrec(101, 2), zone.RedemptionRate)
 
 	// add >2%; cap at 2%
 	icsKeeper.UpdateRedemptionRate(ctx, &zone, sdkmath.NewInt(500))
@@ -571,14 +571,14 @@ func (suite *KeeperTestSuite) TestUpdateRedemptionRate() {
 	zone, found = icsKeeper.GetZone(ctx, suite.chainB.ChainID)
 	suite.True(found)
 	// should be capped at 2% increase. (1.01*1.02 == 1.0302)
-	suite.Equal(sdk.NewDecWithPrec(10302, 4), zone.RedemptionRate)
+	suite.Equal(sdkmath.LegacyNewDecWithPrec(10302, 4), zone.RedemptionRate)
 
 	// add nothing, still cap at 2%
 	icsKeeper.UpdateRedemptionRate(ctx, &zone, sdkmath.ZeroInt())
 	zone, found = icsKeeper.GetZone(ctx, suite.chainB.ChainID)
 	suite.True(found)
 	// should be capped at 2% increase. (1.01*1.02*1.02 == 1.050804)
-	suite.Equal(sdk.NewDecWithPrec(1050804, 6), zone.RedemptionRate)
+	suite.Equal(sdkmath.LegacyNewDecWithPrec(1050804, 6), zone.RedemptionRate)
 
 	delegationA.Amount.Amount = delegationA.Amount.Amount.SubRaw(500)
 	delegationB.Amount.Amount = delegationB.Amount.Amount.SubRaw(500)
@@ -592,7 +592,7 @@ func (suite *KeeperTestSuite) TestUpdateRedemptionRate() {
 	zone, found = icsKeeper.GetZone(ctx, suite.chainB.ChainID)
 	suite.True(found)
 
-	suite.Equal(sdk.NewDecWithPrec(9982638, 7), zone.RedemptionRate)
+	suite.Equal(sdkmath.LegacyNewDecWithPrec(9982638, 7), zone.RedemptionRate)
 }
 
 func (suite *KeeperTestSuite) TestOverrideRedemptionRateNoCap() {
@@ -636,7 +636,7 @@ func (suite *KeeperTestSuite) TestOverrideRedemptionRateNoCap() {
 
 	zone, found = icsKeeper.GetZone(ctx, suite.chainB.ChainID)
 	suite.True(found)
-	suite.Equal(sdk.NewDecWithPrec(101, 2), zone.RedemptionRate)
+	suite.Equal(sdkmath.LegacyNewDecWithPrec(101, 2), zone.RedemptionRate)
 
 	// add >2%; no cap
 	delegationA.Amount.Amount = delegationA.Amount.Amount.AddRaw(166)
@@ -649,13 +649,13 @@ func (suite *KeeperTestSuite) TestOverrideRedemptionRateNoCap() {
 
 	zone, found = icsKeeper.GetZone(ctx, suite.chainB.ChainID)
 	suite.True(found)
-	suite.Equal(sdk.NewDecWithPrec(1176666666666666667, 18), zone.RedemptionRate)
+	suite.Equal(sdkmath.LegacyNewDecWithPrec(1176666666666666667, 18), zone.RedemptionRate)
 
 	// add nothing, no change
 	icsKeeper.OverrideRedemptionRateNoCap(ctx, &zone)
 	zone, found = icsKeeper.GetZone(ctx, suite.chainB.ChainID)
 	suite.True(found)
-	suite.Equal(sdk.NewDecWithPrec(1176666666666666667, 18), zone.RedemptionRate)
+	suite.Equal(sdkmath.LegacyNewDecWithPrec(1176666666666666667, 18), zone.RedemptionRate)
 
 	delegationA.Amount.Amount = delegationA.Amount.Amount.SubRaw(500)
 	delegationB.Amount.Amount = delegationB.Amount.Amount.SubRaw(500)
@@ -667,7 +667,7 @@ func (suite *KeeperTestSuite) TestOverrideRedemptionRateNoCap() {
 	zone, found = icsKeeper.GetZone(ctx, suite.chainB.ChainID)
 	suite.True(found)
 
-	suite.Equal(sdk.NewDecWithPrec(676666666666666667, 18), zone.RedemptionRate)
+	suite.Equal(sdkmath.LegacyNewDecWithPrec(676666666666666667, 18), zone.RedemptionRate)
 }
 
 func (suite *KeeperTestSuite) TestGetChainIDFromContext() {

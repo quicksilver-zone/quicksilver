@@ -12,7 +12,7 @@ import (
 )
 
 var (
-	cubeRootTwo, _   = sdk.NewDec(2).ApproxRoot(3)
+	cubeRootTwo, _   = sdkmath.LegacyNewDec(2).ApproxRoot(3)
 	threeCubeRootTwo = cubeRootTwo.MulInt64(3)
 )
 

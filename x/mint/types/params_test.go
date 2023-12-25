@@ -5,6 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/quicksilver-zone/quicksilver/x/mint/types"
@@ -25,15 +26,15 @@ func TestParamsValidate(t *testing.T) {
 			name: "invalid mint denom",
 			params: types.Params{
 				MintDenom:               "", // empty string
-				GenesisEpochProvisions:  sdk.NewDec(200000000 / 122),
-				EpochIdentifier:         "day",                     // 1 day
-				ReductionPeriodInEpochs: 365,                       // 1 year
-				ReductionFactor:         sdk.NewDecWithPrec(75, 2), // 0.75
+				GenesisEpochProvisions:  sdkmath.LegacyNewDec(200000000 / 122),
+				EpochIdentifier:         "day",                               // 1 day
+				ReductionPeriodInEpochs: 365,                                 // 1 year
+				ReductionFactor:         sdkmath.LegacyNewDecWithPrec(75, 2), // 0.75
 				DistributionProportions: types.DistributionProportions{
-					Staking:              sdk.NewDecWithPrec(3, 1), // 0.3
-					PoolIncentives:       sdk.NewDecWithPrec(3, 1), // 0.3
-					ParticipationRewards: sdk.NewDecWithPrec(3, 1), // 0.3
-					CommunityPool:        sdk.NewDecWithPrec(1, 1), // 0.1
+					Staking:              sdkmath.LegacyNewDecWithPrec(3, 1), // 0.3
+					PoolIncentives:       sdkmath.LegacyNewDecWithPrec(3, 1), // 0.3
+					ParticipationRewards: sdkmath.LegacyNewDecWithPrec(3, 1), // 0.3
+					CommunityPool:        sdkmath.LegacyNewDecWithPrec(1, 1), // 0.1
 				},
 				MintingRewardsDistributionStartEpoch: 0,
 			},
@@ -43,15 +44,15 @@ func TestParamsValidate(t *testing.T) {
 			name: "invalid genesis epoch provisions",
 			params: types.Params{
 				MintDenom:               sdk.DefaultBondDenom,
-				GenesisEpochProvisions:  sdk.NewDec(-1),            // negative
-				EpochIdentifier:         "day",                     // 1 day
-				ReductionPeriodInEpochs: 365,                       // 1 year
-				ReductionFactor:         sdk.NewDecWithPrec(75, 2), // 0.75
+				GenesisEpochProvisions:  sdkmath.LegacyNewDec(-1),            // negative
+				EpochIdentifier:         "day",                               // 1 day
+				ReductionPeriodInEpochs: 365,                                 // 1 year
+				ReductionFactor:         sdkmath.LegacyNewDecWithPrec(75, 2), // 0.75
 				DistributionProportions: types.DistributionProportions{
-					Staking:              sdk.NewDecWithPrec(3, 1), // 0.3
-					PoolIncentives:       sdk.NewDecWithPrec(3, 1), // 0.3
-					ParticipationRewards: sdk.NewDecWithPrec(3, 1), // 0.3
-					CommunityPool:        sdk.NewDecWithPrec(1, 1), // 0.1
+					Staking:              sdkmath.LegacyNewDecWithPrec(3, 1), // 0.3
+					PoolIncentives:       sdkmath.LegacyNewDecWithPrec(3, 1), // 0.3
+					ParticipationRewards: sdkmath.LegacyNewDecWithPrec(3, 1), // 0.3
+					CommunityPool:        sdkmath.LegacyNewDecWithPrec(1, 1), // 0.1
 				},
 				MintingRewardsDistributionStartEpoch: 0,
 			},
@@ -61,15 +62,15 @@ func TestParamsValidate(t *testing.T) {
 			name: "invalid epoch reduction period",
 			params: types.Params{
 				MintDenom:               sdk.DefaultBondDenom,
-				GenesisEpochProvisions:  sdk.NewDec(-1),
-				EpochIdentifier:         "day",                     // 1 day
-				ReductionPeriodInEpochs: -1,                        // negative
-				ReductionFactor:         sdk.NewDecWithPrec(75, 2), // 0.75
+				GenesisEpochProvisions:  sdkmath.LegacyNewDec(-1),
+				EpochIdentifier:         "day",                               // 1 day
+				ReductionPeriodInEpochs: -1,                                  // negative
+				ReductionFactor:         sdkmath.LegacyNewDecWithPrec(75, 2), // 0.75
 				DistributionProportions: types.DistributionProportions{
-					Staking:              sdk.NewDecWithPrec(3, 1), // 0.3
-					PoolIncentives:       sdk.NewDecWithPrec(3, 1), // 0.3
-					ParticipationRewards: sdk.NewDecWithPrec(3, 1), // 0.3
-					CommunityPool:        sdk.NewDecWithPrec(1, 1), // 0.1
+					Staking:              sdkmath.LegacyNewDecWithPrec(3, 1), // 0.3
+					PoolIncentives:       sdkmath.LegacyNewDecWithPrec(3, 1), // 0.3
+					ParticipationRewards: sdkmath.LegacyNewDecWithPrec(3, 1), // 0.3
+					CommunityPool:        sdkmath.LegacyNewDecWithPrec(1, 1), // 0.1
 				},
 				MintingRewardsDistributionStartEpoch: 0,
 			},
@@ -79,15 +80,15 @@ func TestParamsValidate(t *testing.T) {
 			name: "invalid reduction factor 1",
 			params: types.Params{
 				MintDenom:               sdk.DefaultBondDenom,
-				GenesisEpochProvisions:  sdk.NewDec(-1),
-				EpochIdentifier:         "day",                      // 1 day
-				ReductionPeriodInEpochs: 365,                        // 1 year
-				ReductionFactor:         sdk.NewDecWithPrec(-75, 2), // negative
+				GenesisEpochProvisions:  sdkmath.LegacyNewDec(-1),
+				EpochIdentifier:         "day",                                // 1 day
+				ReductionPeriodInEpochs: 365,                                  // 1 year
+				ReductionFactor:         sdkmath.LegacyNewDecWithPrec(-75, 2), // negative
 				DistributionProportions: types.DistributionProportions{
-					Staking:              sdk.NewDecWithPrec(3, 1), // 0.3
-					PoolIncentives:       sdk.NewDecWithPrec(3, 1), // 0.3
-					ParticipationRewards: sdk.NewDecWithPrec(3, 1), // 0.3
-					CommunityPool:        sdk.NewDecWithPrec(1, 1), // 0.1
+					Staking:              sdkmath.LegacyNewDecWithPrec(3, 1), // 0.3
+					PoolIncentives:       sdkmath.LegacyNewDecWithPrec(3, 1), // 0.3
+					ParticipationRewards: sdkmath.LegacyNewDecWithPrec(3, 1), // 0.3
+					CommunityPool:        sdkmath.LegacyNewDecWithPrec(1, 1), // 0.1
 				},
 				MintingRewardsDistributionStartEpoch: 0,
 			},
@@ -97,15 +98,15 @@ func TestParamsValidate(t *testing.T) {
 			name: "invalid reduction factor 2",
 			params: types.Params{
 				MintDenom:               sdk.DefaultBondDenom,
-				GenesisEpochProvisions:  sdk.NewDec(-1),            // negative
-				EpochIdentifier:         "day",                     // 1 day
-				ReductionPeriodInEpochs: 365,                       // 1 year
-				ReductionFactor:         sdk.NewDecWithPrec(75, 1), // greater than 1
+				GenesisEpochProvisions:  sdkmath.LegacyNewDec(-1),            // negative
+				EpochIdentifier:         "day",                               // 1 day
+				ReductionPeriodInEpochs: 365,                                 // 1 year
+				ReductionFactor:         sdkmath.LegacyNewDecWithPrec(75, 1), // greater than 1
 				DistributionProportions: types.DistributionProportions{
-					Staking:              sdk.NewDecWithPrec(3, 1), // 0.3
-					PoolIncentives:       sdk.NewDecWithPrec(3, 1), // 0.3
-					ParticipationRewards: sdk.NewDecWithPrec(3, 1), // 0.3
-					CommunityPool:        sdk.NewDecWithPrec(1, 1), // 0.1
+					Staking:              sdkmath.LegacyNewDecWithPrec(3, 1), // 0.3
+					PoolIncentives:       sdkmath.LegacyNewDecWithPrec(3, 1), // 0.3
+					ParticipationRewards: sdkmath.LegacyNewDecWithPrec(3, 1), // 0.3
+					CommunityPool:        sdkmath.LegacyNewDecWithPrec(1, 1), // 0.1
 				},
 				MintingRewardsDistributionStartEpoch: 0,
 			},
@@ -115,15 +116,15 @@ func TestParamsValidate(t *testing.T) {
 			name: "invalid distribution proportions 1",
 			params: types.Params{
 				MintDenom:               sdk.DefaultBondDenom,
-				GenesisEpochProvisions:  sdk.NewDec(-1),            // negative
-				EpochIdentifier:         "day",                     // 1 day
-				ReductionPeriodInEpochs: 365,                       // 1 year
-				ReductionFactor:         sdk.NewDecWithPrec(75, 2), // 0.75
+				GenesisEpochProvisions:  sdkmath.LegacyNewDec(-1),            // negative
+				EpochIdentifier:         "day",                               // 1 day
+				ReductionPeriodInEpochs: 365,                                 // 1 year
+				ReductionFactor:         sdkmath.LegacyNewDecWithPrec(75, 2), // 0.75
 				DistributionProportions: types.DistributionProportions{
-					Staking:              sdk.NewDecWithPrec(-3, 1), // -0.3
-					PoolIncentives:       sdk.NewDecWithPrec(3, 1),  // 0.3
-					ParticipationRewards: sdk.NewDecWithPrec(3, 1),  // 0.3
-					CommunityPool:        sdk.NewDecWithPrec(1, 1),  // 0.1
+					Staking:              sdkmath.LegacyNewDecWithPrec(-3, 1), // -0.3
+					PoolIncentives:       sdkmath.LegacyNewDecWithPrec(3, 1),  // 0.3
+					ParticipationRewards: sdkmath.LegacyNewDecWithPrec(3, 1),  // 0.3
+					CommunityPool:        sdkmath.LegacyNewDecWithPrec(1, 1),  // 0.1
 				},
 				MintingRewardsDistributionStartEpoch: 0,
 			},
@@ -133,15 +134,15 @@ func TestParamsValidate(t *testing.T) {
 			name: "invalid distribution proportions 2",
 			params: types.Params{
 				MintDenom:               sdk.DefaultBondDenom,
-				GenesisEpochProvisions:  sdk.NewDec(-1),            // negative
-				EpochIdentifier:         "day",                     // 1 day
-				ReductionPeriodInEpochs: 365,                       // 1 year
-				ReductionFactor:         sdk.NewDecWithPrec(75, 2), // 0.75
+				GenesisEpochProvisions:  sdkmath.LegacyNewDec(-1),            // negative
+				EpochIdentifier:         "day",                               // 1 day
+				ReductionPeriodInEpochs: 365,                                 // 1 year
+				ReductionFactor:         sdkmath.LegacyNewDecWithPrec(75, 2), // 0.75
 				DistributionProportions: types.DistributionProportions{
-					Staking:              sdk.NewDecWithPrec(3, 1),  // 0.3
-					PoolIncentives:       sdk.NewDecWithPrec(-3, 1), // -0.3
-					ParticipationRewards: sdk.NewDecWithPrec(3, 1),  // 0.3
-					CommunityPool:        sdk.NewDecWithPrec(1, 1),  // 0.1
+					Staking:              sdkmath.LegacyNewDecWithPrec(3, 1),  // 0.3
+					PoolIncentives:       sdkmath.LegacyNewDecWithPrec(-3, 1), // -0.3
+					ParticipationRewards: sdkmath.LegacyNewDecWithPrec(3, 1),  // 0.3
+					CommunityPool:        sdkmath.LegacyNewDecWithPrec(1, 1),  // 0.1
 				},
 				MintingRewardsDistributionStartEpoch: 0,
 			},
@@ -151,15 +152,15 @@ func TestParamsValidate(t *testing.T) {
 			name: "invalid distribution proportions 3",
 			params: types.Params{
 				MintDenom:               sdk.DefaultBondDenom,
-				GenesisEpochProvisions:  sdk.NewDec(-1),            // negative
-				EpochIdentifier:         "day",                     // 1 day
-				ReductionPeriodInEpochs: 365,                       // 1 year
-				ReductionFactor:         sdk.NewDecWithPrec(75, 2), // 0.75
+				GenesisEpochProvisions:  sdkmath.LegacyNewDec(-1),            // negative
+				EpochIdentifier:         "day",                               // 1 day
+				ReductionPeriodInEpochs: 365,                                 // 1 year
+				ReductionFactor:         sdkmath.LegacyNewDecWithPrec(75, 2), // 0.75
 				DistributionProportions: types.DistributionProportions{
-					Staking:              sdk.NewDecWithPrec(3, 1),  // 0.3
-					PoolIncentives:       sdk.NewDecWithPrec(3, 1),  // 0.3
-					ParticipationRewards: sdk.NewDecWithPrec(-3, 1), // -0.3
-					CommunityPool:        sdk.NewDecWithPrec(1, 1),  // 0.1
+					Staking:              sdkmath.LegacyNewDecWithPrec(3, 1),  // 0.3
+					PoolIncentives:       sdkmath.LegacyNewDecWithPrec(3, 1),  // 0.3
+					ParticipationRewards: sdkmath.LegacyNewDecWithPrec(-3, 1), // -0.3
+					CommunityPool:        sdkmath.LegacyNewDecWithPrec(1, 1),  // 0.1
 				},
 				MintingRewardsDistributionStartEpoch: 0,
 			},
@@ -169,15 +170,15 @@ func TestParamsValidate(t *testing.T) {
 			name: "invalid distribution proportions 4",
 			params: types.Params{
 				MintDenom:               sdk.DefaultBondDenom,
-				GenesisEpochProvisions:  sdk.NewDec(-1),            // negative
-				EpochIdentifier:         "day",                     // 1 day
-				ReductionPeriodInEpochs: 365,                       // 1 year
-				ReductionFactor:         sdk.NewDecWithPrec(75, 2), // 0.75
+				GenesisEpochProvisions:  sdkmath.LegacyNewDec(-1),            // negative
+				EpochIdentifier:         "day",                               // 1 day
+				ReductionPeriodInEpochs: 365,                                 // 1 year
+				ReductionFactor:         sdkmath.LegacyNewDecWithPrec(75, 2), // 0.75
 				DistributionProportions: types.DistributionProportions{
-					Staking:              sdk.NewDecWithPrec(3, 1),  // 0.3
-					PoolIncentives:       sdk.NewDecWithPrec(3, 1),  // 0.3
-					ParticipationRewards: sdk.NewDecWithPrec(3, 1),  // 0.3
-					CommunityPool:        sdk.NewDecWithPrec(-1, 1), // -0.1
+					Staking:              sdkmath.LegacyNewDecWithPrec(3, 1),  // 0.3
+					PoolIncentives:       sdkmath.LegacyNewDecWithPrec(3, 1),  // 0.3
+					ParticipationRewards: sdkmath.LegacyNewDecWithPrec(3, 1),  // 0.3
+					CommunityPool:        sdkmath.LegacyNewDecWithPrec(-1, 1), // -0.1
 				},
 				MintingRewardsDistributionStartEpoch: 0,
 			},
@@ -187,15 +188,15 @@ func TestParamsValidate(t *testing.T) {
 			name: "invalid distribution proportions 5",
 			params: types.Params{
 				MintDenom:               sdk.DefaultBondDenom,
-				GenesisEpochProvisions:  sdk.NewDec(-1),            // negative
-				EpochIdentifier:         "day",                     // 1 day
-				ReductionPeriodInEpochs: 365,                       // 1 year
-				ReductionFactor:         sdk.NewDecWithPrec(75, 2), // 0.75
+				GenesisEpochProvisions:  sdkmath.LegacyNewDec(-1),            // negative
+				EpochIdentifier:         "day",                               // 1 day
+				ReductionPeriodInEpochs: 365,                                 // 1 year
+				ReductionFactor:         sdkmath.LegacyNewDecWithPrec(75, 2), // 0.75
 				DistributionProportions: types.DistributionProportions{
-					Staking:              sdk.NewDecWithPrec(3, 1), // 0.3
-					PoolIncentives:       sdk.NewDecWithPrec(3, 1), // 0.3
-					ParticipationRewards: sdk.NewDecWithPrec(3, 1), // 0.3
-					CommunityPool:        sdk.NewDecWithPrec(3, 1), // 0.3
+					Staking:              sdkmath.LegacyNewDecWithPrec(3, 1), // 0.3
+					PoolIncentives:       sdkmath.LegacyNewDecWithPrec(3, 1), // 0.3
+					ParticipationRewards: sdkmath.LegacyNewDecWithPrec(3, 1), // 0.3
+					CommunityPool:        sdkmath.LegacyNewDecWithPrec(3, 1), // 0.3
 				},
 				MintingRewardsDistributionStartEpoch: 0,
 			},
@@ -205,15 +206,15 @@ func TestParamsValidate(t *testing.T) {
 			name: "invalid distribution start epoch",
 			params: types.Params{
 				MintDenom:               sdk.DefaultBondDenom,
-				GenesisEpochProvisions:  sdk.NewDec(-1),            // negative
-				EpochIdentifier:         "day",                     // 1 day
-				ReductionPeriodInEpochs: 365,                       // 1 year
-				ReductionFactor:         sdk.NewDecWithPrec(75, 2), // 0.75
+				GenesisEpochProvisions:  sdkmath.LegacyNewDec(-1),            // negative
+				EpochIdentifier:         "day",                               // 1 day
+				ReductionPeriodInEpochs: 365,                                 // 1 year
+				ReductionFactor:         sdkmath.LegacyNewDecWithPrec(75, 2), // 0.75
 				DistributionProportions: types.DistributionProportions{
-					Staking:              sdk.NewDecWithPrec(3, 1), // 0.3
-					PoolIncentives:       sdk.NewDecWithPrec(3, 1), // 0.3
-					ParticipationRewards: sdk.NewDecWithPrec(3, 1), // 0.3
-					CommunityPool:        sdk.NewDecWithPrec(1, 1), // 0.3
+					Staking:              sdkmath.LegacyNewDecWithPrec(3, 1), // 0.3
+					PoolIncentives:       sdkmath.LegacyNewDecWithPrec(3, 1), // 0.3
+					ParticipationRewards: sdkmath.LegacyNewDecWithPrec(3, 1), // 0.3
+					CommunityPool:        sdkmath.LegacyNewDecWithPrec(1, 1), // 0.3
 				},
 				MintingRewardsDistributionStartEpoch: -1, // negative
 			},
@@ -236,7 +237,7 @@ func TestParamsValidate(t *testing.T) {
 // rewards proportion equals to the value set by
 // parameter for participation rewards.
 func TestGetDistributionProportions(t *testing.T) {
-	expected := sdk.NewDecWithPrec(4, 1)
+	expected := sdkmath.LegacyNewDecWithPrec(4, 1)
 
 	params := types.Params{
 		DistributionProportions: types.DistributionProportions{

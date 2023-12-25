@@ -7,6 +7,7 @@ import (
 	"github.com/cometbft/cometbft/libs/log"
 
 	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
 
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"

@@ -225,19 +225,19 @@ func (s *AppTestSuite) TestV010402rc1UpgradeHandler() {
 			zone.Validators = []*icstypes.Validator{
 				{
 					ValoperAddress:  "junovaloper185hgkqs8q8ysnc8cvkgd8j2knnq2m0ah6ae73gntv9ampgwpmrxqlfzywn",
-					CommissionRate:  sdk.MustNewDecFromStr("0.2"),
-					DelegatorShares: sdk.NewDec(2000),
+					CommissionRate:  sdkmath.LegacyMustNewDecFromStr("0.2"),
+					DelegatorShares: sdkmath.LegacyNewDec(2000),
 					VotingPower:     sdkmath.NewInt(2000),
-					Score:           sdk.NewDec(0),
+					Score:           sdkmath.LegacyNewDec(0),
 					Status:          stakingtypes.BondStatusBonded,
 				},
 
 				{
 					ValoperAddress:  "junovaloper1z89utvygweg5l56fsk8ak7t6hh88fd0aa9ywed",
-					CommissionRate:  sdk.MustNewDecFromStr("0.2"),
-					DelegatorShares: sdk.NewDec(2000),
+					CommissionRate:  sdkmath.LegacyMustNewDecFromStr("0.2"),
+					DelegatorShares: sdkmath.LegacyNewDec(2000),
 					VotingPower:     sdkmath.NewInt(3000),
-					Score:           sdk.NewDec(0),
+					Score:           sdkmath.LegacyNewDec(0),
 					Status:          stakingtypes.BondStatusBonded,
 				},
 			}
@@ -247,18 +247,18 @@ func (s *AppTestSuite) TestV010402rc1UpgradeHandler() {
 			zone.Validators = []*icstypes.Validator{
 				{
 					ValoperAddress:  "osmovaloper1zxavllftfx3a3y5ldfyze7jnu5uyuktsfx2jcc",
-					CommissionRate:  sdk.MustNewDecFromStr("0.2"),
-					DelegatorShares: sdk.NewDec(2000),
+					CommissionRate:  sdkmath.LegacyMustNewDecFromStr("0.2"),
+					DelegatorShares: sdkmath.LegacyNewDec(2000),
 					VotingPower:     sdkmath.NewInt(2000),
-					Score:           sdk.NewDec(0),
+					Score:           sdkmath.LegacyNewDec(0),
 					Status:          stakingtypes.BondStatusBonded,
 				},
 				{
 					ValoperAddress:  "osmovaloper13eq5c99ym05jn02e78l8cac2fagzgdhh4294zk",
-					CommissionRate:  sdk.MustNewDecFromStr("0.2"),
-					DelegatorShares: sdk.NewDec(2000),
+					CommissionRate:  sdkmath.LegacyMustNewDecFromStr("0.2"),
+					DelegatorShares: sdkmath.LegacyNewDec(2000),
 					VotingPower:     sdkmath.NewInt(3000),
-					Score:           sdk.NewDec(0),
+					Score:           sdkmath.LegacyNewDec(0),
 					Status:          stakingtypes.BondStatusBonded,
 				},
 			}
@@ -313,11 +313,11 @@ func (s *AppTestSuite) TestV010402rc3UpgradeHandler() {
 	}
 
 	app.ParticipationRewardsKeeper.SetProtocolData(ctx, prtypes.GetProtocolDataKey(prtypes.ProtocolDataType(pdType), []byte("rege-redwood-1")), &prData)
-	val0 := icstypes.Validator{ValoperAddress: "osmovaloper1zxavllftfx3a3y5ldfyze7jnu5uyuktsfx2jcc", CommissionRate: sdk.MustNewDecFromStr("1"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded}
+	val0 := icstypes.Validator{ValoperAddress: "osmovaloper1zxavllftfx3a3y5ldfyze7jnu5uyuktsfx2jcc", CommissionRate: sdkmath.LegacyMustNewDecFromStr("1"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded}
 	err := app.InterchainstakingKeeper.SetValidator(ctx, upgrades.OsmosisTestnetChainID, val0)
 	s.Require().NoError(err)
 
-	val1 := icstypes.Validator{ValoperAddress: "osmovaloper13eq5c99ym05jn02e78l8cac2fagzgdhh4294zk", CommissionRate: sdk.MustNewDecFromStr("1"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded}
+	val1 := icstypes.Validator{ValoperAddress: "osmovaloper13eq5c99ym05jn02e78l8cac2fagzgdhh4294zk", CommissionRate: sdkmath.LegacyMustNewDecFromStr("1"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded}
 	err = app.InterchainstakingKeeper.SetValidator(ctx, upgrades.OsmosisTestnetChainID, val1)
 	s.Require().NoError(err)
 

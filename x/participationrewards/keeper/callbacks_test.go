@@ -291,7 +291,7 @@ func (suite *KeeperTestSuite) executeUmeeTotalBorrowsUpdateCallback() {
 	query, found := prk.IcqKeeper.GetQuery(ctx, qid)
 	suite.True(found, "qid: %s", qid)
 
-	data := sdk.NewDec(150000)
+	data := sdkmath.LegacyNewDec(150000)
 	resp, err := data.Marshal()
 	suite.NoError(err)
 	expectedData, err := json.Marshal(data)
@@ -333,7 +333,7 @@ func (suite *KeeperTestSuite) executeUmeeInterestScalarUpdateCallback() {
 	query, found := prk.IcqKeeper.GetQuery(ctx, qid)
 	suite.True(found, "qid: %s", qid)
 
-	data := sdk.NewDec(1)
+	data := sdkmath.LegacyNewDec(1)
 	resp, err := data.Marshal()
 	suite.NoError(err)
 	expectedData, err := json.Marshal(data)

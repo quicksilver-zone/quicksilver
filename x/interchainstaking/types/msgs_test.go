@@ -21,15 +21,15 @@ func TestIntentsFromString(t *testing.T) {
 	wantIntents := []*types.ValidatorIntent{
 		{
 			ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0",
-			Weight:         sdk.MustNewDecFromStr("0.3"),
+			Weight:         sdkmath.LegacyMustNewDecFromStr("0.3"),
 		},
 		{
 			ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf",
-			Weight:         sdk.MustNewDecFromStr("0.3"),
+			Weight:         sdkmath.LegacyMustNewDecFromStr("0.3"),
 		},
 		{
 			ValoperAddress: "cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll",
-			Weight:         sdk.MustNewDecFromStr("0.4"),
+			Weight:         sdkmath.LegacyMustNewDecFromStr("0.4"),
 		},
 	}
 	intentsSlice, err := types.IntentsFromString(intents)
@@ -564,47 +564,47 @@ func TestGovSetLsmCaps(t *testing.T) {
 	}{
 		{
 			Name: "valid",
-			Msg:  types.MsgGovSetLsmCaps{Title: "test", Description: "test", ChainId: "chain-1", Caps: &types.LsmCaps{ValidatorCap: sdkmath.LegacyOneDec(), ValidatorBondCap: sdk.NewDec(250), GlobalCap: sdk.NewDecWithPrec(50, 2)}, Authority: addressutils.GenerateAddressForTestWithPrefix("quick")},
+			Msg:  types.MsgGovSetLsmCaps{Title: "test", Description: "test", ChainId: "chain-1", Caps: &types.LsmCaps{ValidatorCap: sdkmath.LegacyOneDec(), ValidatorBondCap: sdkmath.LegacyNewDec(250), GlobalCap: sdkmath.LegacyNewDecWithPrec(50, 2)}, Authority: addressutils.GenerateAddressForTestWithPrefix("quick")},
 			Err:  "",
 		},
 		{
 			Name: "invalid empty chain id",
-			Msg:  types.MsgGovSetLsmCaps{Title: "test", Description: "test", Caps: &types.LsmCaps{ValidatorCap: sdkmath.LegacyOneDec(), ValidatorBondCap: sdk.NewDec(250), GlobalCap: sdk.NewDecWithPrec(50, 2)}, Authority: addressutils.GenerateAddressForTestWithPrefix("quick")},
+			Msg:  types.MsgGovSetLsmCaps{Title: "test", Description: "test", Caps: &types.LsmCaps{ValidatorCap: sdkmath.LegacyOneDec(), ValidatorBondCap: sdkmath.LegacyNewDec(250), GlobalCap: sdkmath.LegacyNewDecWithPrec(50, 2)}, Authority: addressutils.GenerateAddressForTestWithPrefix("quick")},
 			Err:  "invalid chain id",
 		},
 		{
 			Name: "invalid bad authority",
-			Msg:  types.MsgGovSetLsmCaps{Title: "test", Description: "test", Caps: &types.LsmCaps{ValidatorCap: sdkmath.LegacyOneDec(), ValidatorBondCap: sdk.NewDec(250), GlobalCap: sdk.NewDecWithPrec(50, 2)}, Authority: "raa"},
+			Msg:  types.MsgGovSetLsmCaps{Title: "test", Description: "test", Caps: &types.LsmCaps{ValidatorCap: sdkmath.LegacyOneDec(), ValidatorBondCap: sdkmath.LegacyNewDec(250), GlobalCap: sdkmath.LegacyNewDecWithPrec(50, 2)}, Authority: "raa"},
 			Err:  "decoding bech32 failed: invalid bech32 string length 3",
 		},
 		{
 			Name: "invalid validator cap < 0",
-			Msg:  types.MsgGovSetLsmCaps{Title: "test", Description: "test", ChainId: "chain-1", Caps: &types.LsmCaps{ValidatorCap: sdkmath.LegacyOneDec().Neg(), ValidatorBondCap: sdk.NewDec(250), GlobalCap: sdk.NewDecWithPrec(50, 2)}, Authority: addressutils.GenerateAddressForTestWithPrefix("quick")},
+			Msg:  types.MsgGovSetLsmCaps{Title: "test", Description: "test", ChainId: "chain-1", Caps: &types.LsmCaps{ValidatorCap: sdkmath.LegacyOneDec().Neg(), ValidatorBondCap: sdkmath.LegacyNewDec(250), GlobalCap: sdkmath.LegacyNewDecWithPrec(50, 2)}, Authority: addressutils.GenerateAddressForTestWithPrefix("quick")},
 			Err:  "validator cap must be between 0 and 1",
 		},
 		{
 			Name: "invalid validator cap > 1",
-			Msg:  types.MsgGovSetLsmCaps{Title: "test", Description: "test", ChainId: "chain-1", Caps: &types.LsmCaps{ValidatorCap: sdk.NewDec(250), ValidatorBondCap: sdk.NewDec(250), GlobalCap: sdk.NewDecWithPrec(50, 2)}, Authority: addressutils.GenerateAddressForTestWithPrefix("quick")},
+			Msg:  types.MsgGovSetLsmCaps{Title: "test", Description: "test", ChainId: "chain-1", Caps: &types.LsmCaps{ValidatorCap: sdkmath.LegacyNewDec(250), ValidatorBondCap: sdkmath.LegacyNewDec(250), GlobalCap: sdkmath.LegacyNewDecWithPrec(50, 2)}, Authority: addressutils.GenerateAddressForTestWithPrefix("quick")},
 			Err:  "validator cap must be between 0 and 1",
 		},
 		{
 			Name: "invalid negative bond cap",
-			Msg:  types.MsgGovSetLsmCaps{Title: "test", Description: "test", ChainId: "chain-1", Caps: &types.LsmCaps{ValidatorCap: sdkmath.LegacyOneDec(), ValidatorBondCap: sdk.NewDec(250).Neg(), GlobalCap: sdk.NewDecWithPrec(50, 2)}, Authority: addressutils.GenerateAddressForTestWithPrefix("quick")},
+			Msg:  types.MsgGovSetLsmCaps{Title: "test", Description: "test", ChainId: "chain-1", Caps: &types.LsmCaps{ValidatorCap: sdkmath.LegacyOneDec(), ValidatorBondCap: sdkmath.LegacyNewDec(250).Neg(), GlobalCap: sdkmath.LegacyNewDecWithPrec(50, 2)}, Authority: addressutils.GenerateAddressForTestWithPrefix("quick")},
 			Err:  "validator bond cap must be greater than 0",
 		},
 		{
 			Name: "invalid zero bond cap",
-			Msg:  types.MsgGovSetLsmCaps{Title: "test", Description: "test", ChainId: "chain-1", Caps: &types.LsmCaps{ValidatorCap: sdkmath.LegacyOneDec(), ValidatorBondCap: sdk.ZeroDec(), GlobalCap: sdk.NewDecWithPrec(50, 2)}, Authority: addressutils.GenerateAddressForTestWithPrefix("quick")},
+			Msg:  types.MsgGovSetLsmCaps{Title: "test", Description: "test", ChainId: "chain-1", Caps: &types.LsmCaps{ValidatorCap: sdkmath.LegacyOneDec(), ValidatorBondCap: sdk.ZeroDec(), GlobalCap: sdkmath.LegacyNewDecWithPrec(50, 2)}, Authority: addressutils.GenerateAddressForTestWithPrefix("quick")},
 			Err:  "validator bond cap must be greater than 0",
 		},
 		{
 			Name: "invalid - global cap > 1",
-			Msg:  types.MsgGovSetLsmCaps{Title: "test", Description: "test", ChainId: "chain-1", Caps: &types.LsmCaps{ValidatorCap: sdkmath.LegacyOneDec(), ValidatorBondCap: sdk.NewDec(250), GlobalCap: sdk.NewDecWithPrec(50, 1)}, Authority: addressutils.GenerateAddressForTestWithPrefix("quick")},
+			Msg:  types.MsgGovSetLsmCaps{Title: "test", Description: "test", ChainId: "chain-1", Caps: &types.LsmCaps{ValidatorCap: sdkmath.LegacyOneDec(), ValidatorBondCap: sdkmath.LegacyNewDec(250), GlobalCap: sdkmath.LegacyNewDecWithPrec(50, 1)}, Authority: addressutils.GenerateAddressForTestWithPrefix("quick")},
 			Err:  "global cap must be between 0 and 1",
 		},
 		{
 			Name: "invalid - global cap < 0",
-			Msg:  types.MsgGovSetLsmCaps{Title: "test", Description: "test", ChainId: "chain-1", Caps: &types.LsmCaps{ValidatorCap: sdkmath.LegacyOneDec(), ValidatorBondCap: sdk.NewDec(250), GlobalCap: sdk.NewDecWithPrec(50, 2).Neg()}, Authority: addressutils.GenerateAddressForTestWithPrefix("quick")},
+			Msg:  types.MsgGovSetLsmCaps{Title: "test", Description: "test", ChainId: "chain-1", Caps: &types.LsmCaps{ValidatorCap: sdkmath.LegacyOneDec(), ValidatorBondCap: sdkmath.LegacyNewDec(250), GlobalCap: sdkmath.LegacyNewDecWithPrec(50, 2).Neg()}, Authority: addressutils.GenerateAddressForTestWithPrefix("quick")},
 			Err:  "global cap must be between 0 and 1",
 		},
 	}

@@ -3,7 +3,7 @@ package gamm
 import (
 	"cosmossdk.io/math"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkmath "cosmossdk.io/math"
 )
 
 const (
@@ -24,7 +24,7 @@ var (
 	InitPoolSharesSupply = OneShare.MulRaw(100)
 
 	// SpotPriceSigFigs is the amount of significant figures used in return value of calculate SpotPrice
-	SpotPriceSigFigs = sdk.NewDec(10).Power(SigFigsExponent).TruncateInt()
+	SpotPriceSigFigs = sdkmath.LegacyNewDec(10).Power(SigFigsExponent).TruncateInt()
 	// MaxSpotPrice is the maximum supported spot price. Anything greater than this will error.
-	MaxSpotPrice = sdk.NewDec(2).Power(128).Sub(sdkmath.LegacyOneDec())
+	MaxSpotPrice = sdkmath.LegacyNewDec(2).Power(128).Sub(sdkmath.LegacyOneDec())
 )

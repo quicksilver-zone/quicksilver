@@ -24,7 +24,7 @@ func BenchmarkEpochProvision(b *testing.B) {
 
 	s1 := rand.NewSource(100)
 	r1 := rand.New(s1)
-	minter.EpochProvisions = sdk.NewDec(r1.Int63n(1000000))
+	minter.EpochProvisions = sdkmath.LegacyNewDec(r1.Int63n(1000000))
 
 	// run the EpochProvision function b.N times
 	for n := 0; n < b.N; n++ {
@@ -48,10 +48,10 @@ func BenchmarkNextEpochProvisions(b *testing.B) {
 func TestEpochProvision(t *testing.T) {
 	params := types.DefaultParams()
 	minter := types.DefaultInitialMinter()
-	minter.EpochProvisions = sdk.NewDecWithPrec(75, 2)
+	minter.EpochProvisions = sdkmath.LegacyNewDecWithPrec(75, 2)
 
 	actual := minter.NextEpochProvisions(params)
-	require.Equal(t, sdk.NewDecWithPrec(5625, 4), actual)
+	require.Equal(t, sdkmath.LegacyNewDecWithPrec(5625, 4), actual)
 	require.Equal(t, sdk.NewCoin(params.MintDenom, actual.TruncateInt()), minter.EpochProvision(params))
 }
 
@@ -69,7 +69,7 @@ func TestMinterValidate(t *testing.T) {
 		{
 			"negative",
 			types.Minter{
-				EpochProvisions: sdk.NewDec(-1),
+				EpochProvisions: sdkmath.LegacyNewDec(-1),
 			},
 			false,
 		},

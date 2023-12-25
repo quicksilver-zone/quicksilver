@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"github.com/cometbft/cometbft/proto/tendermint/crypto"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	staking "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -258,7 +259,7 @@ func (suite *KeeperTestSuite) Test_msgServer_Claim() {
 				del := staking.Delegation{
 					DelegatorAddress: userAddress,
 					ValidatorAddress: valAddress.String(),
-					Shares:           sdk.MustNewDecFromStr("10.0"),
+					Shares:           sdkmath.LegacyMustNewDecFromStr("10.0"),
 				}
 				appA.StakingKeeper.SetDelegation(
 					suite.chainA.GetContext(),

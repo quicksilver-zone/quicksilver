@@ -23,8 +23,8 @@ func TestValidInputs(t *testing.T) {
 	}
 	currentSum := sdkmath.NewInt(300)
 	targetAllocations := types.ValidatorIntents{
-		{ValoperAddress: "validator1", Weight: sdk.NewDecWithPrec(5, 1)},
-		{ValoperAddress: "validator2", Weight: sdk.NewDecWithPrec(5, 1)},
+		{ValoperAddress: "validator1", Weight: sdkmath.LegacyNewDecWithPrec(5, 1)},
+		{ValoperAddress: "validator2", Weight: sdkmath.LegacyNewDecWithPrec(5, 1)},
 	}
 	amount := sdk.Coins{sdk.NewCoin("token", sdkmath.NewInt(1000))}
 
@@ -60,8 +60,8 @@ func TestMaximumInputs(t *testing.T) {
 	}
 	currentSum := sdkmath.NewInt(3000000000)
 	targetAllocations := types.ValidatorIntents{
-		{ValoperAddress: "validator1", Weight: sdk.NewDecWithPrec(5, 1)},
-		{ValoperAddress: "validator2", Weight: sdk.NewDecWithPrec(5, 1)},
+		{ValoperAddress: "validator1", Weight: sdkmath.LegacyNewDecWithPrec(5, 1)},
+		{ValoperAddress: "validator2", Weight: sdkmath.LegacyNewDecWithPrec(5, 1)},
 	}
 	amount := sdk.Coins{sdk.NewCoin("token", sdkmath.NewInt(10000000000))}
 
@@ -83,8 +83,8 @@ func TestEmptyCurrentAllocations(t *testing.T) {
 	currentAllocations := map[string]sdkmath.Int{}
 	currentSum := sdkmath.ZeroInt()
 	targetAllocations := types.ValidatorIntents{
-		{ValoperAddress: "validator1", Weight: sdk.NewDecWithPrec(5, 1)},
-		{ValoperAddress: "validator2", Weight: sdk.NewDecWithPrec(5, 1)},
+		{ValoperAddress: "validator1", Weight: sdkmath.LegacyNewDecWithPrec(5, 1)},
+		{ValoperAddress: "validator2", Weight: sdkmath.LegacyNewDecWithPrec(5, 1)},
 	}
 	amount := sdk.Coins{sdk.NewCoin("token", sdkmath.NewInt(1000))}
 
@@ -123,8 +123,8 @@ func TestNonEqualTargetAllocations(t *testing.T) {
 	}
 	currentSum := sdkmath.NewInt(300)
 	targetAllocations := types.ValidatorIntents{
-		{ValoperAddress: "validator1", Weight: sdk.NewDecWithPrec(3, 1)},
-		{ValoperAddress: "validator2", Weight: sdk.NewDecWithPrec(7, 1)},
+		{ValoperAddress: "validator1", Weight: sdkmath.LegacyNewDecWithPrec(3, 1)},
+		{ValoperAddress: "validator2", Weight: sdkmath.LegacyNewDecWithPrec(7, 1)},
 	}
 	amount := sdk.Coins{sdk.NewCoin("token", sdkmath.NewInt(1000))}
 
@@ -150,9 +150,9 @@ func TestValidInputsWithZeroWeight(t *testing.T) {
 	}
 	currentSum := sdkmath.NewInt(300)
 	targetAllocations := types.ValidatorIntents{
-		{ValoperAddress: "validator1", Weight: sdk.NewDecWithPrec(5, 1)},
-		{ValoperAddress: "validator2", Weight: sdk.NewDecWithPrec(5, 1)},
-		{ValoperAddress: "validator3", Weight: sdk.NewDec(0)},
+		{ValoperAddress: "validator1", Weight: sdkmath.LegacyNewDecWithPrec(5, 1)},
+		{ValoperAddress: "validator2", Weight: sdkmath.LegacyNewDecWithPrec(5, 1)},
+		{ValoperAddress: "validator3", Weight: sdkmath.LegacyNewDec(0)},
 	}
 	amount := sdk.Coins{sdk.NewCoin("token", sdkmath.NewInt(1000))}
 
@@ -177,10 +177,10 @@ func TestTargetAllocationsMoreValidators(t *testing.T) {
 	}
 	currentSum := sdkmath.NewInt(300)
 	targetAllocations := types.ValidatorIntents{
-		{ValoperAddress: "validator1", Weight: sdk.NewDecWithPrec(5, 1)},
-		{ValoperAddress: "validator2", Weight: sdk.NewDecWithPrec(5, 1)},
-		{ValoperAddress: "validator3", Weight: sdk.NewDecWithPrec(5, 1)},
-		{ValoperAddress: "validator4", Weight: sdk.NewDecWithPrec(5, 1)},
+		{ValoperAddress: "validator1", Weight: sdkmath.LegacyNewDecWithPrec(5, 1)},
+		{ValoperAddress: "validator2", Weight: sdkmath.LegacyNewDecWithPrec(5, 1)},
+		{ValoperAddress: "validator3", Weight: sdkmath.LegacyNewDecWithPrec(5, 1)},
+		{ValoperAddress: "validator4", Weight: sdkmath.LegacyNewDecWithPrec(5, 1)},
 	}
 	amount := sdk.Coins{sdk.NewCoin("token", sdkmath.NewInt(1000))}
 
@@ -208,8 +208,8 @@ func TestCurrentAllocationsMoreValidators(t *testing.T) {
 	}
 	currentSum := sdkmath.NewInt(600)
 	targetAllocations := types.ValidatorIntents{
-		{ValoperAddress: "validator1", Weight: sdk.NewDecWithPrec(3, 1)},
-		{ValoperAddress: "validator2", Weight: sdk.NewDecWithPrec(4, 1)},
+		{ValoperAddress: "validator1", Weight: sdkmath.LegacyNewDecWithPrec(3, 1)},
+		{ValoperAddress: "validator2", Weight: sdkmath.LegacyNewDecWithPrec(4, 1)},
 	}
 	amount := sdk.Coins{sdk.NewCoin("token", sdkmath.NewInt(1000))}
 

@@ -5,8 +5,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/quicksilver-zone/quicksilver/x/mint/types"
 )
 
@@ -15,7 +13,7 @@ func TestGenesisValidate(t *testing.T) {
 	invalidParams.Params.MintDenom = "" // cannot be empty
 
 	invalidMinter := types.DefaultGenesis()
-	invalidMinter.Minter.EpochProvisions = sdk.NewDec(-1) // cannot be empty
+	invalidMinter.Minter.EpochProvisions = sdkmath.LegacyNewDec(-1) // cannot be empty
 
 	tests := []struct {
 		name    string

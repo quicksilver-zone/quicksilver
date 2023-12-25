@@ -6,7 +6,6 @@ import (
 	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
@@ -105,8 +104,8 @@ func FuzzValsetCallback(f *testing.F) {
 			return stakingtypes.QueryValidatorsResponse{Validators: in}
 		},
 		func(in stakingtypes.Validators) stakingtypes.QueryValidatorsResponse {
-			in[1].DelegatorShares = in[1].DelegatorShares.Add(sdk.NewDec(1000))
-			in[2].DelegatorShares = in[2].DelegatorShares.Add(sdk.NewDec(2000))
+			in[1].DelegatorShares = in[1].DelegatorShares.Add(sdkmath.LegacyNewDec(1000))
+			in[2].DelegatorShares = in[2].DelegatorShares.Add(sdkmath.LegacyNewDec(2000))
 			return stakingtypes.QueryValidatorsResponse{Validators: in}
 		},
 		func(in stakingtypes.Validators) stakingtypes.QueryValidatorsResponse {
@@ -124,8 +123,8 @@ func FuzzValsetCallback(f *testing.F) {
 			return stakingtypes.QueryValidatorsResponse{Validators: in}
 		},
 		func(in stakingtypes.Validators) stakingtypes.QueryValidatorsResponse {
-			in[0].Commission.CommissionRates.Rate = sdk.NewDecWithPrec(5, 1)
-			in[2].Commission.CommissionRates.Rate = sdk.NewDecWithPrec(5, 2)
+			in[0].Commission.CommissionRates.Rate = sdkmath.LegacyNewDecWithPrec(5, 1)
+			in[2].Commission.CommissionRates.Rate = sdkmath.LegacyNewDecWithPrec(5, 2)
 			return stakingtypes.QueryValidatorsResponse{Validators: in}
 		},
 		func(in stakingtypes.Validators) stakingtypes.QueryValidatorsResponse {

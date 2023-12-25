@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"math/rand"
 
+	sdkmath "cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 
@@ -36,19 +38,19 @@ func genDistributionProportions(r *rand.Rand) types.DistributionProportions {
 	communityPool := left - participationRewards
 
 	return types.DistributionProportions{
-		Staking:              sdk.NewDecWithPrec(staking, 2),
-		PoolIncentives:       sdk.NewDecWithPrec(poolIncentives, 2),
-		ParticipationRewards: sdk.NewDecWithPrec(participationRewards, 2),
-		CommunityPool:        sdk.NewDecWithPrec(communityPool, 2),
+		Staking:              sdkmath.LegacyNewDecWithPrec(staking, 2),
+		PoolIncentives:       sdkmath.LegacyNewDecWithPrec(poolIncentives, 2),
+		ParticipationRewards: sdkmath.LegacyNewDecWithPrec(participationRewards, 2),
+		CommunityPool:        sdkmath.LegacyNewDecWithPrec(communityPool, 2),
 	}
 }
 
 func genEpochProvisions(r *rand.Rand) sdkmath.LegacyDec {
-	return sdk.NewDec(int64(r.Intn(maxInt64)))
+	return sdkmath.LegacyNewDec(int64(r.Intn(maxInt64)))
 }
 
 func genReductionFactor(r *rand.Rand) sdkmath.LegacyDec {
-	return sdk.NewDecWithPrec(int64(r.Intn(10)), 1)
+	return sdkmath.LegacyNewDecWithPrec(int64(r.Intn(10)), 1)
 }
 
 func genReductionPeriodInEpochs(r *rand.Rand) int64 {

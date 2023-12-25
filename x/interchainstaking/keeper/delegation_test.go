@@ -661,19 +661,19 @@ func (suite *KeeperTestSuite) TestPerformanceDelegation() {
 	suite.NotEqual(types.Zone{}, zone, "Expecting a non-blank zone")
 
 	// set val
-	val0 := types.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdk.MustNewDecFromStr("1"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded}
+	val0 := types.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdkmath.LegacyMustNewDecFromStr("1"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded}
 	err := quicksilver.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, val0)
 	suite.NoError(err)
 
-	val1 := types.Validator{ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", CommissionRate: sdk.MustNewDecFromStr("1"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded}
+	val1 := types.Validator{ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", CommissionRate: sdkmath.LegacyMustNewDecFromStr("1"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded}
 	err = quicksilver.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, val1)
 	suite.NoError(err)
 
-	val2 := types.Validator{ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", CommissionRate: sdk.MustNewDecFromStr("1"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded}
+	val2 := types.Validator{ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", CommissionRate: sdkmath.LegacyMustNewDecFromStr("1"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded}
 	err = quicksilver.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, val2)
 	suite.NoError(err)
 
-	val3 := types.Validator{ValoperAddress: "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7", CommissionRate: sdk.MustNewDecFromStr("1"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded}
+	val3 := types.Validator{ValoperAddress: "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7", CommissionRate: sdkmath.LegacyMustNewDecFromStr("1"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded}
 	err = quicksilver.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, val3)
 	suite.NoError(err)
 
@@ -782,33 +782,33 @@ func (suite *KeeperTestSuite) TestDetermineMaximumValidatorAllocations() {
 	quicksilver := suite.GetQuicksilverApp(suite.chainA)
 	ctx := suite.chainA.GetContext()
 
-	quicksilver.InterchainstakingKeeper.SetLsmCaps(ctx, suite.chainB.ChainID, types.LsmCaps{GlobalCap: sdk.NewDecWithPrec(50, 2), ValidatorBondCap: sdk.NewDec(50), ValidatorCap: sdk.NewDecWithPrec(50, 2)})
+	quicksilver.InterchainstakingKeeper.SetLsmCaps(ctx, suite.chainB.ChainID, types.LsmCaps{GlobalCap: sdkmath.LegacyNewDecWithPrec(50, 2), ValidatorBondCap: sdkmath.LegacyNewDec(50), ValidatorCap: sdkmath.LegacyNewDecWithPrec(50, 2)})
 
 	zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 
 	validators := quicksilver.InterchainstakingKeeper.GetValidators(ctx, zone.ChainId)
 	// val 0: constraint by validator cap - 50% of 1000 = 500 - 450 = 50.
 	validators[0].VotingPower = sdkmath.NewInt(1000)
-	validators[0].ValidatorBondShares = sdk.NewDec(200)
-	validators[0].LiquidShares = sdk.NewDec(450)
+	validators[0].ValidatorBondShares = sdkmath.LegacyNewDec(200)
+	validators[0].LiquidShares = sdkmath.LegacyNewDec(450)
 	_ = quicksilver.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, validators[0])
 
 	// val 1: constraint by validator cap, with zero liquid shares - 50% of 1000 = 500 - 0 = 500.
 	validators[1].VotingPower = sdkmath.NewInt(1000)
-	validators[1].ValidatorBondShares = sdk.NewDec(200)
-	validators[1].LiquidShares = sdk.NewDec(0)
+	validators[1].ValidatorBondShares = sdkmath.LegacyNewDec(200)
+	validators[1].LiquidShares = sdkmath.LegacyNewDec(0)
 	_ = quicksilver.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, validators[1])
 
 	// val 2: constraint by valbond cap - 50 * 2 = 100 - 50 = 50.
 	validators[2].VotingPower = sdkmath.NewInt(1000)
-	validators[2].ValidatorBondShares = sdk.NewDec(2)
-	validators[2].LiquidShares = sdk.NewDec(50)
+	validators[2].ValidatorBondShares = sdkmath.LegacyNewDec(2)
+	validators[2].LiquidShares = sdkmath.LegacyNewDec(50)
 	_ = quicksilver.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, validators[2])
 
 	// val 3: constraint by valbond cap, zero ls - 50 * 2 = 100 - 0 = 100.
 	validators[3].VotingPower = sdkmath.NewInt(1000)
-	validators[3].ValidatorBondShares = sdk.NewDec(2)
-	validators[3].LiquidShares = sdk.NewDec(0)
+	validators[3].ValidatorBondShares = sdkmath.LegacyNewDec(2)
+	validators[3].LiquidShares = sdkmath.LegacyNewDec(0)
 	_ = quicksilver.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, validators[3])
 
 	suite.True(found)

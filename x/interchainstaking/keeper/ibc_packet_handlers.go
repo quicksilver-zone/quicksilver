@@ -862,7 +862,7 @@ func (k *Keeper) HandleFailedUndelegate(ctx sdk.Context, msg sdk.Msg, memo strin
 			amount := wdr.Amount.AmountOf(zone.BaseDenom)
 			wdr.Amount = wdr.Amount.Sub(sdk.NewCoin(zone.BaseDenom, sdkmath.NewIntFromUint64(relatedAmount)))
 			rr := sdkmath.LegacyNewDecFromInt(wdr.BurnAmount.Amount).Quo(sdkmath.LegacyNewDecFromInt(amount))
-			relatedQAsset := sdk.NewDec(int64(relatedAmount)).Mul(rr).TruncateInt()
+			relatedQAsset := sdkmath.LegacyNewDec(int64(relatedAmount)).Mul(rr).TruncateInt()
 			wdr.BurnAmount = wdr.BurnAmount.SubAmount(relatedQAsset)
 			k.SetWithdrawalRecord(ctx, wdr)
 			// create a new record with the failed amount

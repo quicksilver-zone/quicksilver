@@ -39,10 +39,10 @@ func TestDetermineAllocationsForUndelegation(t *testing.T) {
 				vals[3]: sdkmath.NewInt(1000),
 			},
 			targetAllocations: types.ValidatorIntents{
-				&types.ValidatorIntent{ValoperAddress: vals[0], Weight: sdk.NewDecWithPrec(25, 2)},
-				&types.ValidatorIntent{ValoperAddress: vals[1], Weight: sdk.NewDecWithPrec(25, 2)},
-				&types.ValidatorIntent{ValoperAddress: vals[2], Weight: sdk.NewDecWithPrec(25, 2)},
-				&types.ValidatorIntent{ValoperAddress: vals[3], Weight: sdk.NewDecWithPrec(25, 2)},
+				&types.ValidatorIntent{ValoperAddress: vals[0], Weight: sdkmath.LegacyNewDecWithPrec(25, 2)},
+				&types.ValidatorIntent{ValoperAddress: vals[1], Weight: sdkmath.LegacyNewDecWithPrec(25, 2)},
+				&types.ValidatorIntent{ValoperAddress: vals[2], Weight: sdkmath.LegacyNewDecWithPrec(25, 2)},
+				&types.ValidatorIntent{ValoperAddress: vals[3], Weight: sdkmath.LegacyNewDecWithPrec(25, 2)},
 			},
 			amount: sdk.NewCoins(sdk.NewCoin("uatom", sdkmath.NewInt(1000))),
 			expected: map[string]sdkmath.Int{
@@ -68,10 +68,10 @@ func TestDetermineAllocationsForUndelegation(t *testing.T) {
 				vals[3]: sdkmath.NewInt(750),
 			},
 			targetAllocations: types.ValidatorIntents{
-				&types.ValidatorIntent{ValoperAddress: vals[0], Weight: sdk.NewDecWithPrec(25, 2)},
-				&types.ValidatorIntent{ValoperAddress: vals[1], Weight: sdk.NewDecWithPrec(25, 2)},
-				&types.ValidatorIntent{ValoperAddress: vals[2], Weight: sdk.NewDecWithPrec(25, 2)},
-				&types.ValidatorIntent{ValoperAddress: vals[3], Weight: sdk.NewDecWithPrec(25, 2)},
+				&types.ValidatorIntent{ValoperAddress: vals[0], Weight: sdkmath.LegacyNewDecWithPrec(25, 2)},
+				&types.ValidatorIntent{ValoperAddress: vals[1], Weight: sdkmath.LegacyNewDecWithPrec(25, 2)},
+				&types.ValidatorIntent{ValoperAddress: vals[2], Weight: sdkmath.LegacyNewDecWithPrec(25, 2)},
+				&types.ValidatorIntent{ValoperAddress: vals[3], Weight: sdkmath.LegacyNewDecWithPrec(25, 2)},
 			},
 			amount: sdk.NewCoins(sdk.NewCoin("uatom", sdkmath.NewInt(1000))),
 			expected: map[string]sdkmath.Int{
@@ -96,10 +96,10 @@ func TestDetermineAllocationsForUndelegation(t *testing.T) {
 				vals[3]: sdkmath.NewInt(1000),
 			},
 			targetAllocations: types.ValidatorIntents{
-				&types.ValidatorIntent{ValoperAddress: vals[0], Weight: sdk.NewDecWithPrec(50, 2)},
-				&types.ValidatorIntent{ValoperAddress: vals[1], Weight: sdk.NewDecWithPrec(20, 2)},
-				&types.ValidatorIntent{ValoperAddress: vals[2], Weight: sdk.NewDecWithPrec(15, 2)},
-				&types.ValidatorIntent{ValoperAddress: vals[3], Weight: sdk.NewDecWithPrec(5, 2)},
+				&types.ValidatorIntent{ValoperAddress: vals[0], Weight: sdkmath.LegacyNewDecWithPrec(50, 2)},
+				&types.ValidatorIntent{ValoperAddress: vals[1], Weight: sdkmath.LegacyNewDecWithPrec(20, 2)},
+				&types.ValidatorIntent{ValoperAddress: vals[2], Weight: sdkmath.LegacyNewDecWithPrec(15, 2)},
+				&types.ValidatorIntent{ValoperAddress: vals[3], Weight: sdkmath.LegacyNewDecWithPrec(5, 2)},
 			},
 			amount: sdk.NewCoins(sdk.NewCoin("uatom", sdkmath.NewInt(300))),
 			expected: map[string]sdkmath.Int{
@@ -124,10 +124,10 @@ func TestDetermineAllocationsForUndelegation(t *testing.T) {
 				vals[3]: sdkmath.NewInt(401),
 			},
 			targetAllocations: types.ValidatorIntents{
-				&types.ValidatorIntent{ValoperAddress: vals[0], Weight: sdk.NewDecWithPrec(10, 2)},
-				&types.ValidatorIntent{ValoperAddress: vals[1], Weight: sdk.NewDecWithPrec(20, 2)},
-				&types.ValidatorIntent{ValoperAddress: vals[2], Weight: sdk.NewDecWithPrec(30, 2)},
-				&types.ValidatorIntent{ValoperAddress: vals[3], Weight: sdk.NewDecWithPrec(40, 2)},
+				&types.ValidatorIntent{ValoperAddress: vals[0], Weight: sdkmath.LegacyNewDecWithPrec(10, 2)},
+				&types.ValidatorIntent{ValoperAddress: vals[1], Weight: sdkmath.LegacyNewDecWithPrec(20, 2)},
+				&types.ValidatorIntent{ValoperAddress: vals[2], Weight: sdkmath.LegacyNewDecWithPrec(30, 2)},
+				&types.ValidatorIntent{ValoperAddress: vals[3], Weight: sdkmath.LegacyNewDecWithPrec(40, 2)},
 			},
 			amount: sdk.NewCoins(sdk.NewCoin("uatom", sdkmath.NewInt(100))),
 			expected: map[string]sdkmath.Int{
@@ -152,10 +152,10 @@ func TestDetermineAllocationsForUndelegation(t *testing.T) {
 				vals[3]: sdkmath.NewInt(1000),
 			},
 			targetAllocations: types.ValidatorIntents{
-				&types.ValidatorIntent{ValoperAddress: vals[0], Weight: sdk.NewDecWithPrec(25, 2)},
-				&types.ValidatorIntent{ValoperAddress: vals[1], Weight: sdk.NewDecWithPrec(25, 2)},
-				&types.ValidatorIntent{ValoperAddress: vals[2], Weight: sdk.NewDecWithPrec(25, 2)},
-				&types.ValidatorIntent{ValoperAddress: vals[3], Weight: sdk.NewDecWithPrec(25, 2)},
+				&types.ValidatorIntent{ValoperAddress: vals[0], Weight: sdkmath.LegacyNewDecWithPrec(25, 2)},
+				&types.ValidatorIntent{ValoperAddress: vals[1], Weight: sdkmath.LegacyNewDecWithPrec(25, 2)},
+				&types.ValidatorIntent{ValoperAddress: vals[2], Weight: sdkmath.LegacyNewDecWithPrec(25, 2)},
+				&types.ValidatorIntent{ValoperAddress: vals[3], Weight: sdkmath.LegacyNewDecWithPrec(25, 2)},
 			},
 			amount: sdk.NewCoins(sdk.NewCoin("uatom", sdkmath.NewInt(1000))),
 			expected: map[string]sdkmath.Int{
@@ -180,10 +180,10 @@ func TestDetermineAllocationsForUndelegation(t *testing.T) {
 				vals[3]: sdkmath.NewInt(1000),
 			},
 			targetAllocations: types.ValidatorIntents{
-				&types.ValidatorIntent{ValoperAddress: vals[0], Weight: sdk.NewDecWithPrec(25, 2)},
-				&types.ValidatorIntent{ValoperAddress: vals[1], Weight: sdk.NewDecWithPrec(25, 2)},
-				&types.ValidatorIntent{ValoperAddress: vals[2], Weight: sdk.NewDecWithPrec(25, 2)},
-				&types.ValidatorIntent{ValoperAddress: vals[3], Weight: sdk.NewDecWithPrec(25, 2)},
+				&types.ValidatorIntent{ValoperAddress: vals[0], Weight: sdkmath.LegacyNewDecWithPrec(25, 2)},
+				&types.ValidatorIntent{ValoperAddress: vals[1], Weight: sdkmath.LegacyNewDecWithPrec(25, 2)},
+				&types.ValidatorIntent{ValoperAddress: vals[2], Weight: sdkmath.LegacyNewDecWithPrec(25, 2)},
+				&types.ValidatorIntent{ValoperAddress: vals[3], Weight: sdkmath.LegacyNewDecWithPrec(25, 2)},
 			},
 			amount: sdk.NewCoins(sdk.NewCoin("uatom", sdkmath.NewInt(1000))),
 			expected: map[string]sdkmath.Int{
@@ -208,10 +208,10 @@ func TestDetermineAllocationsForUndelegation(t *testing.T) {
 				vals[3]: sdkmath.NewInt(1000),
 			},
 			targetAllocations: types.ValidatorIntents{
-				&types.ValidatorIntent{ValoperAddress: vals[0], Weight: sdk.NewDecWithPrec(25, 2)},
-				&types.ValidatorIntent{ValoperAddress: vals[1], Weight: sdk.NewDecWithPrec(25, 2)},
-				&types.ValidatorIntent{ValoperAddress: vals[2], Weight: sdk.NewDecWithPrec(25, 2)},
-				&types.ValidatorIntent{ValoperAddress: vals[3], Weight: sdk.NewDecWithPrec(25, 2)},
+				&types.ValidatorIntent{ValoperAddress: vals[0], Weight: sdkmath.LegacyNewDecWithPrec(25, 2)},
+				&types.ValidatorIntent{ValoperAddress: vals[1], Weight: sdkmath.LegacyNewDecWithPrec(25, 2)},
+				&types.ValidatorIntent{ValoperAddress: vals[2], Weight: sdkmath.LegacyNewDecWithPrec(25, 2)},
+				&types.ValidatorIntent{ValoperAddress: vals[3], Weight: sdkmath.LegacyNewDecWithPrec(25, 2)},
 			},
 			amount: sdk.NewCoins(sdk.NewCoin("uatom", sdkmath.NewInt(1000))),
 			expected: map[string]sdkmath.Int{

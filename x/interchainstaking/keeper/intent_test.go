@@ -41,19 +41,19 @@ func (suite *KeeperTestSuite) TestKeeper_IntentStore() {
 			Intents: icstypes.ValidatorIntents{
 				{
 					ValoperAddress: zoneValidatorAddresses[0].ValoperAddress,
-					Weight:         sdk.MustNewDecFromStr("0.25"),
+					Weight:         sdkmath.LegacyMustNewDecFromStr("0.25"),
 				},
 				{
 					ValoperAddress: zoneValidatorAddresses[1].ValoperAddress,
-					Weight:         sdk.MustNewDecFromStr("0.25"),
+					Weight:         sdkmath.LegacyMustNewDecFromStr("0.25"),
 				},
 				{
 					ValoperAddress: zoneValidatorAddresses[2].ValoperAddress,
-					Weight:         sdk.MustNewDecFromStr("0.25"),
+					Weight:         sdkmath.LegacyMustNewDecFromStr("0.25"),
 				},
 				{
 					ValoperAddress: zoneValidatorAddresses[3].ValoperAddress,
-					Weight:         sdk.MustNewDecFromStr("0.25"),
+					Weight:         sdkmath.LegacyMustNewDecFromStr("0.25"),
 				},
 			},
 		},
@@ -68,19 +68,19 @@ func (suite *KeeperTestSuite) TestKeeper_IntentStore() {
 			Intents: icstypes.ValidatorIntents{
 				{
 					ValoperAddress: zoneValidatorAddresses[0].ValoperAddress,
-					Weight:         sdk.MustNewDecFromStr("0.25"),
+					Weight:         sdkmath.LegacyMustNewDecFromStr("0.25"),
 				},
 				{
 					ValoperAddress: zoneValidatorAddresses[1].ValoperAddress,
-					Weight:         sdk.MustNewDecFromStr("0.25"),
+					Weight:         sdkmath.LegacyMustNewDecFromStr("0.25"),
 				},
 				{
 					ValoperAddress: zoneValidatorAddresses[2].ValoperAddress,
-					Weight:         sdk.MustNewDecFromStr("0.25"),
+					Weight:         sdkmath.LegacyMustNewDecFromStr("0.25"),
 				},
 				{
 					ValoperAddress: zoneValidatorAddresses[3].ValoperAddress,
-					Weight:         sdk.MustNewDecFromStr("0.25"),
+					Weight:         sdkmath.LegacyMustNewDecFromStr("0.25"),
 				},
 			},
 		},
@@ -95,15 +95,15 @@ func (suite *KeeperTestSuite) TestKeeper_IntentStore() {
 			Intents: icstypes.ValidatorIntents{
 				{
 					ValoperAddress: zoneValidatorAddresses[0].ValoperAddress,
-					Weight:         sdk.MustNewDecFromStr("0.5"),
+					Weight:         sdkmath.LegacyMustNewDecFromStr("0.5"),
 				},
 				{
 					ValoperAddress: zoneValidatorAddresses[1].ValoperAddress,
-					Weight:         sdk.MustNewDecFromStr("0.3"),
+					Weight:         sdkmath.LegacyMustNewDecFromStr("0.3"),
 				},
 				{
 					ValoperAddress: zoneValidatorAddresses[2].ValoperAddress,
-					Weight:         sdk.MustNewDecFromStr("0.2"),
+					Weight:         sdkmath.LegacyMustNewDecFromStr("0.2"),
 				},
 			},
 		},
@@ -165,7 +165,7 @@ func (suite *KeeperTestSuite) TestAggregateIntent() {
 				// four delegators each at 25%
 				out := icstypes.ValidatorIntents{}
 				for _, val := range qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId) {
-					out = append(out, &icstypes.ValidatorIntent{ValoperAddress: val, Weight: sdkmath.LegacyOneDec().Quo(sdk.NewDec(4))})
+					out = append(out, &icstypes.ValidatorIntent{ValoperAddress: val, Weight: sdkmath.LegacyOneDec().Quo(sdkmath.LegacyNewDec(4))})
 				}
 				return out.Sort()
 			},
@@ -182,7 +182,7 @@ func (suite *KeeperTestSuite) TestAggregateIntent() {
 				// four delegators each at 25%
 				out := icstypes.ValidatorIntents{}
 				for _, val := range qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId) {
-					out = append(out, &icstypes.ValidatorIntent{ValoperAddress: val, Weight: sdkmath.LegacyOneDec().Quo(sdk.NewDec(4))})
+					out = append(out, &icstypes.ValidatorIntent{ValoperAddress: val, Weight: sdkmath.LegacyOneDec().Quo(sdkmath.LegacyNewDec(4))})
 				}
 				return out.Sort()
 			},
@@ -210,7 +210,7 @@ func (suite *KeeperTestSuite) TestAggregateIntent() {
 				// four delegators each at 25%
 				out := icstypes.ValidatorIntents{}
 				for _, val := range qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId) {
-					out = append(out, &icstypes.ValidatorIntent{ValoperAddress: val, Weight: sdkmath.LegacyOneDec().Quo(sdk.NewDec(4))})
+					out = append(out, &icstypes.ValidatorIntent{ValoperAddress: val, Weight: sdkmath.LegacyOneDec().Quo(sdkmath.LegacyNewDec(4))})
 				}
 
 				return out.Sort()
@@ -243,7 +243,7 @@ func (suite *KeeperTestSuite) TestAggregateIntent() {
 				// four delegators each at 25%
 				out := icstypes.ValidatorIntents{}
 				for _, val := range qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId) {
-					out = append(out, &icstypes.ValidatorIntent{ValoperAddress: val, Weight: sdkmath.LegacyOneDec().Quo(sdk.NewDec(4))})
+					out = append(out, &icstypes.ValidatorIntent{ValoperAddress: val, Weight: sdkmath.LegacyOneDec().Quo(sdkmath.LegacyNewDec(4))})
 				}
 				return out.Sort()
 			},
@@ -267,8 +267,8 @@ func (suite *KeeperTestSuite) TestAggregateIntent() {
 			},
 			// expected: func(zone icstypes.Zone) icstypes.ValidatorIntents {
 			// 	out := icstypes.ValidatorIntents{}
-			// 	out = append(out, &icstypes.ValidatorIntent{ValoperAddress: zone.GetValidatorsAddressesAsSlice()[0], Weight: sdkmath.LegacyOneDec().Quo(sdk.NewDec(2))})
-			// 	out = append(out, &icstypes.ValidatorIntent{ValoperAddress: zone.GetValidatorsAddressesAsSlice()[1], Weight: sdkmath.LegacyOneDec().Quo(sdk.NewDec(2))})
+			// 	out = append(out, &icstypes.ValidatorIntent{ValoperAddress: zone.GetValidatorsAddressesAsSlice()[0], Weight: sdkmath.LegacyOneDec().Quo(sdkmath.LegacyNewDec(2))})
+			// 	out = append(out, &icstypes.ValidatorIntent{ValoperAddress: zone.GetValidatorsAddressesAsSlice()[1], Weight: sdkmath.LegacyOneDec().Quo(sdkmath.LegacyNewDec(2))})
 
 			// 	return out.Sort()
 			// },
@@ -276,7 +276,7 @@ func (suite *KeeperTestSuite) TestAggregateIntent() {
 				// four delegators each at 25%
 				out := icstypes.ValidatorIntents{}
 				for _, val := range qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId) {
-					out = append(out, &icstypes.ValidatorIntent{ValoperAddress: val, Weight: sdkmath.LegacyOneDec().Quo(sdk.NewDec(4))})
+					out = append(out, &icstypes.ValidatorIntent{ValoperAddress: val, Weight: sdkmath.LegacyOneDec().Quo(sdkmath.LegacyNewDec(4))})
 				}
 				return out.Sort()
 			},
@@ -299,8 +299,8 @@ func (suite *KeeperTestSuite) TestAggregateIntent() {
 			},
 			// expected: func(zone icstypes.Zone) icstypes.ValidatorIntents {
 			// 	out := icstypes.ValidatorIntents{}
-			// 	out = append(out, &icstypes.ValidatorIntent{ValoperAddress: zone.GetValidatorsAddressesAsSlice()[0], Weight: sdkmath.LegacyOneDec().Quo(sdk.NewDec(2))})
-			// 	out = append(out, &icstypes.ValidatorIntent{ValoperAddress: zone.GetValidatorsAddressesAsSlice()[1], Weight: sdkmath.LegacyOneDec().Quo(sdk.NewDec(2))})
+			// 	out = append(out, &icstypes.ValidatorIntent{ValoperAddress: zone.GetValidatorsAddressesAsSlice()[0], Weight: sdkmath.LegacyOneDec().Quo(sdkmath.LegacyNewDec(2))})
+			// 	out = append(out, &icstypes.ValidatorIntent{ValoperAddress: zone.GetValidatorsAddressesAsSlice()[1], Weight: sdkmath.LegacyOneDec().Quo(sdkmath.LegacyNewDec(2))})
 
 			// 	return out.Sort()
 			// },
@@ -308,7 +308,7 @@ func (suite *KeeperTestSuite) TestAggregateIntent() {
 				// four delegators each at 25%
 				out := icstypes.ValidatorIntents{}
 				for _, val := range qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId) {
-					out = append(out, &icstypes.ValidatorIntent{ValoperAddress: val, Weight: sdkmath.LegacyOneDec().Quo(sdk.NewDec(4))})
+					out = append(out, &icstypes.ValidatorIntent{ValoperAddress: val, Weight: sdkmath.LegacyOneDec().Quo(sdkmath.LegacyNewDec(4))})
 				}
 				return out.Sort()
 			},
@@ -418,7 +418,7 @@ func (suite *KeeperTestSuite) TestAggregateIntent() {
 // 				out := icstypes.ValidatorIntents{}
 // 				out = append(out, &icstypes.ValidatorIntent{ValoperAddress: zone.GetValidatorsAddressesAsSlice()[0], Weight: sdkmath.LegacyOneDec()})
 // 				// only remote assets are considered, thus user2 balance is ignored...
-// 				// out = append(out, &icstypes.ValidatorIntent{ValoperAddress: zone.GetValidatorsAddressesAsSlice()[1], Weight: sdkmath.LegacyOneDec().Quo(sdk.NewDec(2))})
+// 				// out = append(out, &icstypes.ValidatorIntent{ValoperAddress: zone.GetValidatorsAddressesAsSlice()[1], Weight: sdkmath.LegacyOneDec().Quo(sdkmath.LegacyNewDec(2))})
 // 				return out.Sort()
 // 			},
 // 		},
@@ -468,18 +468,18 @@ func (suite *KeeperTestSuite) TestAggregateIntent() {
 // func TestDefaultIntent(t *testing.T) {
 // 	zone := types.Zone{ConnectionId: "connection-0", ChainId: "cosmoshub-4", AccountPrefix: "cosmos", LocalDenom: "uqatom", BaseDenom: "uatom"}
 // 	zone.Validators = append(zone.Validators,
-// 		&types.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
-// 		&types.Validator{ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
-// 		&types.Validator{ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
-// 		&types.Validator{ValoperAddress: "cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
-// 		&types.Validator{ValoperAddress: "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+// 		&types.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdkmath.LegacyMustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+// 		&types.Validator{ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", CommissionRate: sdkmath.LegacyMustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+// 		&types.Validator{ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", CommissionRate: sdkmath.LegacyMustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+// 		&types.Validator{ValoperAddress: "cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll", CommissionRate: sdkmath.LegacyMustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+// 		&types.Validator{ValoperAddress: "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7", CommissionRate: sdkmath.LegacyMustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
 // 	)
 
 // 	out := zone.DefaultAggregateIntents()
 // 	require.Equal(t, len(out), 5)
 // 	for _, v := range out {
-// 		if !v.Weight.Equal(sdk.NewDecWithPrec(2, 1)) {
-// 			t.Errorf("Expected %v, got %v", sdk.NewDecWithPrec(2, 1), v.Weight)
+// 		if !v.Weight.Equal(sdkmath.LegacyNewDecWithPrec(2, 1)) {
+// 			t.Errorf("Expected %v, got %v", sdkmath.LegacyNewDecWithPrec(2, 1), v.Weight)
 // 		}
 // 	}
 // }
@@ -487,19 +487,19 @@ func (suite *KeeperTestSuite) TestAggregateIntent() {
 // func TestDefaultIntentWithJailed(t *testing.T) {
 // 	zone := types.Zone{ConnectionId: "connection-0", ChainId: "cosmoshub-4", AccountPrefix: "cosmos", LocalDenom: "uqatom", BaseDenom: "uatom"}
 // 	zone.Validators = append(zone.Validators,
-// 		&types.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded, Jailed: true},
-// 		&types.Validator{ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
-// 		&types.Validator{ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
-// 		&types.Validator{ValoperAddress: "cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
-// 		&types.Validator{ValoperAddress: "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+// 		&types.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdkmath.LegacyMustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded, Jailed: true},
+// 		&types.Validator{ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", CommissionRate: sdkmath.LegacyMustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+// 		&types.Validator{ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", CommissionRate: sdkmath.LegacyMustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+// 		&types.Validator{ValoperAddress: "cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll", CommissionRate: sdkmath.LegacyMustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+// 		&types.Validator{ValoperAddress: "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7", CommissionRate: sdkmath.LegacyMustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
 // 	)
 
 // 	out := zone.DefaultAggregateIntents()
 // 	require.Equal(t, len(out), 4)
 
 // 	for _, v := range out {
-// 		if !v.Weight.Equal(sdk.NewDecWithPrec(25, 2)) {
-// 			t.Errorf("Expected %v, got %v", sdk.NewDecWithPrec(25, 2), v.Weight)
+// 		if !v.Weight.Equal(sdkmath.LegacyNewDecWithPrec(25, 2)) {
+// 			t.Errorf("Expected %v, got %v", sdkmath.LegacyNewDecWithPrec(25, 2), v.Weight)
 // 		}
 // 	}
 // }
@@ -507,19 +507,19 @@ func (suite *KeeperTestSuite) TestAggregateIntent() {
 // func TestDefaultIntentWithTombstoned(t *testing.T) {
 // 	zone := types.Zone{ConnectionId: "connection-0", ChainId: "cosmoshub-4", AccountPrefix: "cosmos", LocalDenom: "uqatom", BaseDenom: "uatom"}
 // 	zone.Validators = append(zone.Validators,
-// 		&types.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded, Tombstoned: true},
-// 		&types.Validator{ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
-// 		&types.Validator{ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
-// 		&types.Validator{ValoperAddress: "cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
-// 		&types.Validator{ValoperAddress: "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+// 		&types.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdkmath.LegacyMustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded, Tombstoned: true},
+// 		&types.Validator{ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", CommissionRate: sdkmath.LegacyMustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+// 		&types.Validator{ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", CommissionRate: sdkmath.LegacyMustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+// 		&types.Validator{ValoperAddress: "cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll", CommissionRate: sdkmath.LegacyMustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+// 		&types.Validator{ValoperAddress: "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7", CommissionRate: sdkmath.LegacyMustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
 // 	)
 
 // 	out := zone.DefaultAggregateIntents()
 // 	require.Equal(t, len(out), 4)
 
 // 	for _, v := range out {
-// 		if !v.Weight.Equal(sdk.NewDecWithPrec(25, 2)) {
-// 			t.Errorf("Expected %v, got %v", sdk.NewDecWithPrec(25, 2), v.Weight)
+// 		if !v.Weight.Equal(sdkmath.LegacyNewDecWithPrec(25, 2)) {
+// 			t.Errorf("Expected %v, got %v", sdkmath.LegacyNewDecWithPrec(25, 2), v.Weight)
 // 		}
 // 	}
 // }
@@ -527,19 +527,19 @@ func (suite *KeeperTestSuite) TestAggregateIntent() {
 // func TestDefaultIntentWithCommission100(t *testing.T) {
 // 	zone := types.Zone{ConnectionId: "connection-0", ChainId: "cosmoshub-4", AccountPrefix: "cosmos", LocalDenom: "uqatom", BaseDenom: "uatom"}
 // 	zone.Validators = append(zone.Validators,
-// 		&types.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdk.MustNewDecFromStr("1"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
-// 		&types.Validator{ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
-// 		&types.Validator{ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
-// 		&types.Validator{ValoperAddress: "cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
-// 		&types.Validator{ValoperAddress: "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+// 		&types.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdkmath.LegacyMustNewDecFromStr("1"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+// 		&types.Validator{ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", CommissionRate: sdkmath.LegacyMustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+// 		&types.Validator{ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", CommissionRate: sdkmath.LegacyMustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+// 		&types.Validator{ValoperAddress: "cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll", CommissionRate: sdkmath.LegacyMustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+// 		&types.Validator{ValoperAddress: "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7", CommissionRate: sdkmath.LegacyMustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
 // 	)
 
 // 	out := zone.DefaultAggregateIntents()
 // 	require.Equal(t, len(out), 4)
 
 // 	for _, v := range out {
-// 		if !v.Weight.Equal(sdk.NewDecWithPrec(25, 2)) {
-// 			t.Errorf("Expected %v, got %v", sdk.NewDecWithPrec(25, 2), v.Weight)
+// 		if !v.Weight.Equal(sdkmath.LegacyNewDecWithPrec(25, 2)) {
+// 			t.Errorf("Expected %v, got %v", sdkmath.LegacyNewDecWithPrec(25, 2), v.Weight)
 // 		}
 // 	}
 // }
@@ -547,19 +547,19 @@ func (suite *KeeperTestSuite) TestAggregateIntent() {
 // func TestDefaultIntentWithOneUnbondedOneUnbonding(t *testing.T) {
 // 	zone := types.Zone{ConnectionId: "connection-0", ChainId: "cosmoshub-4", AccountPrefix: "cosmos", LocalDenom: "uqatom", BaseDenom: "uatom"}
 // 	zone.Validators = append(zone.Validators,
-// 		&types.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusUnbonded},
-// 		&types.Validator{ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusUnbonding},
-// 		&types.Validator{ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
-// 		&types.Validator{ValoperAddress: "cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
-// 		&types.Validator{ValoperAddress: "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+// 		&types.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdkmath.LegacyMustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusUnbonded},
+// 		&types.Validator{ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", CommissionRate: sdkmath.LegacyMustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusUnbonding},
+// 		&types.Validator{ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", CommissionRate: sdkmath.LegacyMustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+// 		&types.Validator{ValoperAddress: "cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll", CommissionRate: sdkmath.LegacyMustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+// 		&types.Validator{ValoperAddress: "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7", CommissionRate: sdkmath.LegacyMustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
 // 	)
 
 // 	out := zone.DefaultAggregateIntents()
 // 	require.Equal(t, len(out), 3)
 
 // 	for _, v := range out {
-// 		if !v.Weight.Equal(sdkmath.LegacyOneDec().Quo(sdk.NewDec(3))) {
-// 			t.Errorf("Expected %v, got %v", sdkmath.LegacyOneDec().Quo(sdk.NewDec(3)), v.Weight)
+// 		if !v.Weight.Equal(sdkmath.LegacyOneDec().Quo(sdkmath.LegacyNewDec(3))) {
+// 			t.Errorf("Expected %v, got %v", sdkmath.LegacyOneDec().Quo(sdkmath.LegacyNewDec(3)), v.Weight)
 // 		}
 // 	}
 // }

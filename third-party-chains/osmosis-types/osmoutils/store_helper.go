@@ -7,6 +7,7 @@ import (
 	"github.com/gogo/protobuf/proto"
 	db "github.com/tendermint/tm-db"
 
+	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

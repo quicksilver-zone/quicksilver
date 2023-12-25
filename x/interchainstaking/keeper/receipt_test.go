@@ -50,7 +50,7 @@ func (suite *KeeperTestSuite) TestHandleReceiptTransactionGood() {
 	after := suite.GetQuicksilverApp(suite.chainA).BankKeeper.GetSupply(ctx, zone.LocalDenom)
 	suite.Equal(sdk.NewCoin(zone.LocalDenom, math.NewInt(1000000)), after)
 
-	zone.RedemptionRate = sdk.NewDecWithPrec(12, 1)
+	zone.RedemptionRate = sdkmath.LegacyNewDecWithPrec(12, 1)
 	err = icsKeeper.HandleReceiptTransaction(ctx, transaction, hash2, zone)
 	suite.NoError(err)
 

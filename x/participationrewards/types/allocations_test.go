@@ -6,8 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/math"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkmath "cosmossdk.io/math"
 
 	"github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 )
@@ -34,9 +33,9 @@ func TestGetRewardsAllocations(t *testing.T) {
 			args{
 				sdkmath.NewInt(0),
 				types.DistributionProportions{
-					ValidatorSelectionAllocation: sdk.MustNewDecFromStr("0.34"),
-					HoldingsAllocation:           sdk.MustNewDecFromStr("0.33"),
-					LockupAllocation:             sdk.MustNewDecFromStr("0.33"),
+					ValidatorSelectionAllocation: sdkmath.LegacyMustNewDecFromStr("0.34"),
+					HoldingsAllocation:           sdkmath.LegacyMustNewDecFromStr("0.33"),
+					LockupAllocation:             sdkmath.LegacyMustNewDecFromStr("0.33"),
 				},
 			},
 			nil,
@@ -47,9 +46,9 @@ func TestGetRewardsAllocations(t *testing.T) {
 			args{
 				sdkmath.NewInt(1000000000),
 				types.DistributionProportions{
-					ValidatorSelectionAllocation: sdk.MustNewDecFromStr("0.5"),
-					HoldingsAllocation:           sdk.MustNewDecFromStr("0.5"),
-					LockupAllocation:             sdk.MustNewDecFromStr("0.5"),
+					ValidatorSelectionAllocation: sdkmath.LegacyMustNewDecFromStr("0.5"),
+					HoldingsAllocation:           sdkmath.LegacyMustNewDecFromStr("0.5"),
+					LockupAllocation:             sdkmath.LegacyMustNewDecFromStr("0.5"),
 				},
 			},
 			nil,
@@ -60,9 +59,9 @@ func TestGetRewardsAllocations(t *testing.T) {
 			args{
 				sdkmath.NewInt(1000000000),
 				types.DistributionProportions{
-					ValidatorSelectionAllocation: sdk.MustNewDecFromStr("0.3"),
-					HoldingsAllocation:           sdk.MustNewDecFromStr("0.3"),
-					LockupAllocation:             sdk.MustNewDecFromStr("0.3"),
+					ValidatorSelectionAllocation: sdkmath.LegacyMustNewDecFromStr("0.3"),
+					HoldingsAllocation:           sdkmath.LegacyMustNewDecFromStr("0.3"),
+					LockupAllocation:             sdkmath.LegacyMustNewDecFromStr("0.3"),
 				},
 			},
 			nil,
@@ -73,9 +72,9 @@ func TestGetRewardsAllocations(t *testing.T) {
 			args{
 				sdkmath.NewInt(1000000000),
 				types.DistributionProportions{
-					ValidatorSelectionAllocation: sdk.MustNewDecFromStr("0.34"),
-					HoldingsAllocation:           sdk.MustNewDecFromStr("0.33"),
-					LockupAllocation:             sdk.MustNewDecFromStr("0.33"),
+					ValidatorSelectionAllocation: sdkmath.LegacyMustNewDecFromStr("0.34"),
+					HoldingsAllocation:           sdkmath.LegacyMustNewDecFromStr("0.33"),
+					LockupAllocation:             sdkmath.LegacyMustNewDecFromStr("0.33"),
 				},
 			},
 			&types.RewardsAllocation{
@@ -90,9 +89,9 @@ func TestGetRewardsAllocations(t *testing.T) {
 			args{
 				sdkmath.NewInt(1000000000),
 				types.DistributionProportions{
-					ValidatorSelectionAllocation: sdk.MustNewDecFromStr("0.5"),
-					HoldingsAllocation:           sdk.MustNewDecFromStr("0.25"),
-					LockupAllocation:             sdk.MustNewDecFromStr("0.25"),
+					ValidatorSelectionAllocation: sdkmath.LegacyMustNewDecFromStr("0.5"),
+					HoldingsAllocation:           sdkmath.LegacyMustNewDecFromStr("0.25"),
+					LockupAllocation:             sdkmath.LegacyMustNewDecFromStr("0.25"),
 				},
 			},
 			&types.RewardsAllocation{
@@ -107,9 +106,9 @@ func TestGetRewardsAllocations(t *testing.T) {
 			args{
 				sdkmath.NewInt(1000000000),
 				types.DistributionProportions{
-					ValidatorSelectionAllocation: sdk.MustNewDecFromStr("0.6"),
-					HoldingsAllocation:           sdk.MustNewDecFromStr("0.4"),
-					LockupAllocation:             sdk.MustNewDecFromStr("0"),
+					ValidatorSelectionAllocation: sdkmath.LegacyMustNewDecFromStr("0.6"),
+					HoldingsAllocation:           sdkmath.LegacyMustNewDecFromStr("0.4"),
+					LockupAllocation:             sdkmath.LegacyMustNewDecFromStr("0"),
 				},
 			},
 			&types.RewardsAllocation{
@@ -124,9 +123,9 @@ func TestGetRewardsAllocations(t *testing.T) {
 			args{
 				sdkmath.NewInt(164133471813),
 				types.DistributionProportions{
-					ValidatorSelectionAllocation: sdk.MustNewDecFromStr("0.34"),
-					HoldingsAllocation:           sdk.MustNewDecFromStr("0.33"),
-					LockupAllocation:             sdk.MustNewDecFromStr("0.33"),
+					ValidatorSelectionAllocation: sdkmath.LegacyMustNewDecFromStr("0.34"),
+					HoldingsAllocation:           sdkmath.LegacyMustNewDecFromStr("0.33"),
+					LockupAllocation:             sdkmath.LegacyMustNewDecFromStr("0.33"),
 				},
 			},
 			&types.RewardsAllocation{
@@ -141,9 +140,9 @@ func TestGetRewardsAllocations(t *testing.T) {
 			args{
 				sdkmath.NewInt(164133471813),
 				types.DistributionProportions{
-					ValidatorSelectionAllocation: sdk.MustNewDecFromStr("0.5"),
-					HoldingsAllocation:           sdk.MustNewDecFromStr("0.25"),
-					LockupAllocation:             sdk.MustNewDecFromStr("0.25"),
+					ValidatorSelectionAllocation: sdkmath.LegacyMustNewDecFromStr("0.5"),
+					HoldingsAllocation:           sdkmath.LegacyMustNewDecFromStr("0.25"),
+					LockupAllocation:             sdkmath.LegacyMustNewDecFromStr("0.25"),
 				},
 			},
 			&types.RewardsAllocation{
@@ -158,9 +157,9 @@ func TestGetRewardsAllocations(t *testing.T) {
 			args{
 				sdkmath.NewInt(164133471813),
 				types.DistributionProportions{
-					ValidatorSelectionAllocation: sdk.MustNewDecFromStr("0.6"),
-					HoldingsAllocation:           sdk.MustNewDecFromStr("0.4"),
-					LockupAllocation:             sdk.MustNewDecFromStr("0"),
+					ValidatorSelectionAllocation: sdkmath.LegacyMustNewDecFromStr("0.6"),
+					HoldingsAllocation:           sdkmath.LegacyMustNewDecFromStr("0.4"),
+					LockupAllocation:             sdkmath.LegacyMustNewDecFromStr("0"),
 				},
 			},
 			&types.RewardsAllocation{

@@ -3,8 +3,7 @@ package keeper_test
 import (
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
+	sdkmath "cosmossdk.io/math"
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	"github.com/quicksilver-zone/quicksilver/x/airdrop/keeper"
 	"github.com/quicksilver-zone/quicksilver/x/airdrop/types"
@@ -20,17 +19,17 @@ func (suite *KeeperTestSuite) TestHandleRegisterZoneDropProposal() {
 		Decay:      30 * time.Minute,
 		Allocation: 1000000000,
 		Actions: []sdkmath.LegacyDec{
-			0:  sdk.MustNewDecFromStr("0.15"), // 15%
-			1:  sdk.MustNewDecFromStr("0.06"), // 21%
-			2:  sdk.MustNewDecFromStr("0.07"), // 28%
-			3:  sdk.MustNewDecFromStr("0.08"), // 36%
-			4:  sdk.MustNewDecFromStr("0.09"), // 45%
-			5:  sdk.MustNewDecFromStr("0.1"),  // 55%
-			6:  sdk.MustNewDecFromStr("0.15"), // 70%
-			7:  sdk.MustNewDecFromStr("0.05"), // 75%
-			8:  sdk.MustNewDecFromStr("0.1"),  // 85%
-			9:  sdk.MustNewDecFromStr("0.1"),  // 95%
-			10: sdk.MustNewDecFromStr("0.05"), // 100%
+			0:  sdkmath.LegacyMustNewDecFromStr("0.15"), // 15%
+			1:  sdkmath.LegacyMustNewDecFromStr("0.06"), // 21%
+			2:  sdkmath.LegacyMustNewDecFromStr("0.07"), // 28%
+			3:  sdkmath.LegacyMustNewDecFromStr("0.08"), // 36%
+			4:  sdkmath.LegacyMustNewDecFromStr("0.09"), // 45%
+			5:  sdkmath.LegacyMustNewDecFromStr("0.1"),  // 55%
+			6:  sdkmath.LegacyMustNewDecFromStr("0.15"), // 70%
+			7:  sdkmath.LegacyMustNewDecFromStr("0.05"), // 75%
+			8:  sdkmath.LegacyMustNewDecFromStr("0.1"),  // 85%
+			9:  sdkmath.LegacyMustNewDecFromStr("0.1"),  // 95%
+			10: sdkmath.LegacyMustNewDecFromStr("0.05"), // 100%
 		},
 		IsConcluded: false,
 	}
@@ -59,17 +58,17 @@ func (suite *KeeperTestSuite) TestHandleRegisterZoneDropProposal() {
 					Decay:      30 * time.Minute,
 					Allocation: 1000000000,
 					Actions: []sdkmath.LegacyDec{
-						0:  sdk.MustNewDecFromStr("0.15"), // 15%
-						1:  sdk.MustNewDecFromStr("0.06"), // 21%
-						2:  sdk.MustNewDecFromStr("0.07"), // 28%
-						3:  sdk.MustNewDecFromStr("0.08"), // 36%
-						4:  sdk.MustNewDecFromStr("0.09"), // 45%
-						5:  sdk.MustNewDecFromStr("0.1"),  // 55%
-						6:  sdk.MustNewDecFromStr("0.15"), // 70%
-						7:  sdk.MustNewDecFromStr("0.05"), // 75%
-						8:  sdk.MustNewDecFromStr("0.1"),  // 85%
-						9:  sdk.MustNewDecFromStr("0.1"),  // 95%
-						10: sdk.MustNewDecFromStr("0.05"), // 100%
+						0:  sdkmath.LegacyMustNewDecFromStr("0.15"), // 15%
+						1:  sdkmath.LegacyMustNewDecFromStr("0.06"), // 21%
+						2:  sdkmath.LegacyMustNewDecFromStr("0.07"), // 28%
+						3:  sdkmath.LegacyMustNewDecFromStr("0.08"), // 36%
+						4:  sdkmath.LegacyMustNewDecFromStr("0.09"), // 45%
+						5:  sdkmath.LegacyMustNewDecFromStr("0.1"),  // 55%
+						6:  sdkmath.LegacyMustNewDecFromStr("0.15"), // 70%
+						7:  sdkmath.LegacyMustNewDecFromStr("0.05"), // 75%
+						8:  sdkmath.LegacyMustNewDecFromStr("0.1"),  // 85%
+						9:  sdkmath.LegacyMustNewDecFromStr("0.1"),  // 95%
+						10: sdkmath.LegacyMustNewDecFromStr("0.05"), // 100%
 					},
 					IsConcluded: false,
 				}
@@ -104,17 +103,17 @@ func (suite *KeeperTestSuite) TestHandleRegisterZoneDropProposal() {
 					Decay:      30 * time.Minute,
 					Allocation: 1000000000,
 					Actions: []sdkmath.LegacyDec{
-						0:  sdk.MustNewDecFromStr("0.15"), // 15%
-						1:  sdk.MustNewDecFromStr("0.06"), // 21%
-						2:  sdk.MustNewDecFromStr("0.07"), // 28%
-						3:  sdk.MustNewDecFromStr("0.08"), // 36%
-						4:  sdk.MustNewDecFromStr("0.09"), // 45%
-						5:  sdk.MustNewDecFromStr("0.1"),  // 55%
-						6:  sdk.MustNewDecFromStr("0.15"), // 70%
-						7:  sdk.MustNewDecFromStr("0.05"), // 75%
-						8:  sdk.MustNewDecFromStr("0.1"),  // 85%
-						9:  sdk.MustNewDecFromStr("0.1"),  // 95%
-						10: sdk.MustNewDecFromStr("0.05"), // 100%
+						0:  sdkmath.LegacyMustNewDecFromStr("0.15"), // 15%
+						1:  sdkmath.LegacyMustNewDecFromStr("0.06"), // 21%
+						2:  sdkmath.LegacyMustNewDecFromStr("0.07"), // 28%
+						3:  sdkmath.LegacyMustNewDecFromStr("0.08"), // 36%
+						4:  sdkmath.LegacyMustNewDecFromStr("0.09"), // 45%
+						5:  sdkmath.LegacyMustNewDecFromStr("0.1"),  // 55%
+						6:  sdkmath.LegacyMustNewDecFromStr("0.15"), // 70%
+						7:  sdkmath.LegacyMustNewDecFromStr("0.05"), // 75%
+						8:  sdkmath.LegacyMustNewDecFromStr("0.1"),  // 85%
+						9:  sdkmath.LegacyMustNewDecFromStr("0.1"),  // 95%
+						10: sdkmath.LegacyMustNewDecFromStr("0.05"), // 100%
 					},
 					IsConcluded: false,
 				}
