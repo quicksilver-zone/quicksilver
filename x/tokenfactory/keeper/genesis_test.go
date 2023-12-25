@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
@@ -47,7 +46,7 @@ func (suite *KeeperTestSuite) TestGenesis() {
 	tokenfactoryModuleAccount := app.AccountKeeper.GetAccount(suite.Ctx, app.AccountKeeper.GetModuleAddress(types.ModuleName))
 	suite.Require().Nil(tokenfactoryModuleAccount)
 
-	app.TokenFactoryKeeper.SetParams(suite.Ctx, types.Params{DenomCreationFee: sdk.Coins{sdkmath.NewInt64Coin("uqck", 100)}})
+	app.TokenFactoryKeeper.SetParams(suite.Ctx, types.Params{DenomCreationFee: sdk.Coins{sdk.NewInt64Coin("uqck", 100)}})
 	app.TokenFactoryKeeper.InitGenesis(suite.Ctx, genesisState)
 
 	// check that the module account is now initialized

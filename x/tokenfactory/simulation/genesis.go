@@ -6,8 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	sdkmath "cosmossdk.io/math"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 
@@ -21,7 +19,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 
 	tokenfactoryGenesis := types.DefaultGenesis()
 	// use bond denom for simulation
-	tokenfactoryGenesis.Params.DenomCreationFee = sdk.NewCoins(sdkmath.NewInt64Coin(sdk.DefaultBondDenom, feeAmt))
+	tokenfactoryGenesis.Params.DenomCreationFee = sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, feeAmt))
 	err := tokenfactoryGenesis.Validate()
 	if err != nil {
 		panic(err)

@@ -3,7 +3,6 @@ package types
 import (
 	"fmt"
 
-	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
@@ -55,6 +54,6 @@ func validateDenomCreationFee(i interface{}) error {
 
 func DefaultParams() Params {
 	return NewParams(
-		sdk.NewCoins(sdkmath.NewInt64Coin(BaseCoinUnit, 10_000_000)),
+		sdk.NewCoins(sdk.NewInt64Coin(BaseCoinUnit, 10_000_000)),
 	)
 }

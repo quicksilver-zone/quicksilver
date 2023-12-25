@@ -733,9 +733,9 @@ func (suite *KeeperTestSuite) TestHandleRewardsCallbackNonDelegator() {
 
 		response := distrtypes.QueryDelegationTotalRewardsResponse{
 			Rewards: []distrtypes.DelegationDelegatorReward{
-				{ValidatorAddress: suite.chainB.Vals.Validators[0].String(), Reward: sdkmath.LegacyNewDecCoins(sdkmath.LegacyNewDecCoin("uatom", sdkmath.NewInt((1000))))},
+				{ValidatorAddress: suite.chainB.Vals.Validators[0].String(), Reward: sdk.NewDecCoins(sdk.NewDecCoin("uatom", sdkmath.NewInt((1000))))},
 			},
-			Total: sdkmath.LegacyNewDecCoins(sdkmath.LegacyNewDecCoin("uatom", sdkmath.NewInt((1000)))),
+			Total: sdk.NewDecCoins(sdk.NewDecCoin("uatom", sdkmath.NewInt((1000)))),
 		}
 		reqbz, err := quicksilver.AppCodec().Marshal(&queryReq)
 		suite.NoError(err)
@@ -796,9 +796,9 @@ func (suite *KeeperTestSuite) TestHandleValideRewardsCallback() {
 
 		response := distrtypes.QueryDelegationTotalRewardsResponse{
 			Rewards: []distrtypes.DelegationDelegatorReward{
-				{ValidatorAddress: suite.chainB.Vals.Validators[0].String(), Reward: sdkmath.LegacyNewDecCoins(sdkmath.LegacyNewDecCoin("uatom", sdkmath.NewInt((1000))))},
+				{ValidatorAddress: suite.chainB.Vals.Validators[0].String(), Reward: sdk.NewDecCoins(sdk.NewDecCoin("uatom", sdkmath.NewInt((1000))))},
 			},
-			Total: sdkmath.LegacyNewDecCoins(sdkmath.LegacyNewDecCoin("uatom", sdkmath.NewInt((1000)))),
+			Total: sdk.NewDecCoins(sdk.NewDecCoin("uatom", sdkmath.NewInt((1000)))),
 		}
 		reqbz, err := quicksilver.AppCodec().Marshal(&queryReq)
 		suite.NoError(err)

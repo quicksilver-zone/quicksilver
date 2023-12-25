@@ -32,14 +32,14 @@ func TestCalcExitPool(t *testing.T) {
 	emptyContext := sdk.Context{}
 
 	twoStablePoolAssets := sdk.NewCoins(
-		sdkmath.NewInt64Coin("foo", 1000000000),
-		sdkmath.NewInt64Coin("bar", 1000000000),
+		sdk.NewInt64Coin("foo", 1000000000),
+		sdk.NewInt64Coin("bar", 1000000000),
 	)
 
 	threeBalancerPoolAssets := []balancer.PoolAsset{
-		{Token: sdkmath.NewInt64Coin("foo", 2000000000), Weight: sdkmath.NewIntFromUint64(5)},
-		{Token: sdkmath.NewInt64Coin("bar", 3000000000), Weight: sdkmath.NewIntFromUint64(5)},
-		{Token: sdkmath.NewInt64Coin("baz", 4000000000), Weight: sdkmath.NewIntFromUint64(5)},
+		{Token: sdk.NewInt64Coin("foo", 2000000000), Weight: sdkmath.NewIntFromUint64(5)},
+		{Token: sdk.NewInt64Coin("bar", 3000000000), Weight: sdkmath.NewIntFromUint64(5)},
+		{Token: sdk.NewInt64Coin("baz", 4000000000), Weight: sdkmath.NewIntFromUint64(5)},
 	}
 
 	// create these pools used for testing
@@ -143,8 +143,8 @@ func TestMaximalExactRatioJoin(t *testing.T) {
 	emptyContext := sdk.Context{}
 
 	balancerPoolAsset := []balancer.PoolAsset{
-		{Token: sdkmath.NewInt64Coin("foo", 100), Weight: sdkmath.NewIntFromUint64(5)},
-		{Token: sdkmath.NewInt64Coin("bar", 100), Weight: sdkmath.NewIntFromUint64(5)},
+		{Token: sdk.NewInt64Coin("foo", 100), Weight: sdkmath.NewIntFromUint64(5)},
+		{Token: sdk.NewInt64Coin("bar", 100), Weight: sdkmath.NewIntFromUint64(5)},
 	}
 
 	tests := []struct {

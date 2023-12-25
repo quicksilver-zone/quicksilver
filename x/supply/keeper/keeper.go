@@ -4,10 +4,9 @@ import (
 	"fmt"
 
 	"cosmossdk.io/log"
-
 	"cosmossdk.io/math"
-
 	storetypes "cosmossdk.io/store/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"

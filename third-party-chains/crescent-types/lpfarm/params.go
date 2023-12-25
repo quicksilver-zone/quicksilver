@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"time"
 
-	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/cosmos/cosmos-sdk/types/address"
@@ -28,7 +27,7 @@ const (
 )
 
 var (
-	DefaultPrivatePlanCreationFee = sdk.NewCoins(sdkmath.NewInt64Coin(sdk.DefaultBondDenom, 100_000000))
+	DefaultPrivatePlanCreationFee = sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100_000000))
 	DefaultFeeCollector           = sdk.AccAddress(address.Module(ModuleName, []byte("FeeCollector")))
 
 	RewardsPoolAddress = address.Module(ModuleName, []byte("RewardsPool"))

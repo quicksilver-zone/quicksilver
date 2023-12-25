@@ -491,39 +491,39 @@ func intentFromDecSlice(in map[string]sdkmath.LegacyDec) types.DelegatorIntent {
 // 	}{
 // 		{
 // 			distribution: map[string]sdk.Coin{
-// 				"val1": sdkmath.NewInt64Coin("uatom", 3),
-// 				"val2": sdkmath.NewInt64Coin("uatom", 3),
+// 				"val1": sdk.NewInt64Coin("uatom", 3),
+// 				"val2": sdk.NewInt64Coin("uatom", 3),
 // 			},
 // 			diff: map[string]cosmosmath.Int{
 // 				"val1": sdkmath.NewInt(-1),
 // 				"val2": sdkmath.NewInt(1),
 // 			},
 // 			expectedDistribution: map[string]sdk.Coin{
-// 				"val1": sdkmath.NewInt64Coin("uatom", 4),
-// 				"val2": sdkmath.NewInt64Coin("uatom", 2),
+// 				"val1": sdk.NewInt64Coin("uatom", 4),
+// 				"val2": sdk.NewInt64Coin("uatom", 2),
 // 			},
 // 			expectedRemainder: sdkmath.ZeroInt(),
 // 		},
 
 // 		{
 // 			distribution: map[string]sdk.Coin{
-// 				"val1": sdkmath.NewInt64Coin("uatom", 1),
-// 				"val2": sdkmath.NewInt64Coin("uatom", 5),
+// 				"val1": sdk.NewInt64Coin("uatom", 1),
+// 				"val2": sdk.NewInt64Coin("uatom", 5),
 // 			},
 // 			diff: map[string]cosmosmath.Int{
 // 				"val1": sdkmath.NewInt(-1),
 // 				"val2": sdkmath.NewInt(1),
 // 			},
 // 			expectedDistribution: map[string]sdk.Coin{
-// 				"val1": sdkmath.NewInt64Coin("uatom", 2),
-// 				"val2": sdkmath.NewInt64Coin("uatom", 4),
+// 				"val1": sdk.NewInt64Coin("uatom", 2),
+// 				"val2": sdk.NewInt64Coin("uatom", 4),
 // 			},
 // 			expectedRemainder: sdkmath.ZeroInt(),
 // 		},
 // 		{
 // 			distribution: map[string]sdk.Coin{
-// 				"val1": sdkmath.NewInt64Coin("uatom", 1),
-// 				"val2": sdkmath.NewInt64Coin("uatom", 5),
+// 				"val1": sdk.NewInt64Coin("uatom", 1),
+// 				"val2": sdk.NewInt64Coin("uatom", 5),
 // 			},
 // 			diff: map[string]cosmosmath.Int{
 // 				"val1": sdkmath.NewInt(2),
@@ -532,15 +532,15 @@ func intentFromDecSlice(in map[string]sdkmath.LegacyDec) types.DelegatorIntent {
 // 				"val4": sdkmath.NewInt(0),
 // 			},
 // 			expectedDistribution: map[string]sdk.Coin{
-// 				"val2": sdkmath.NewInt64Coin("uatom", 3),
+// 				"val2": sdk.NewInt64Coin("uatom", 3),
 // 			},
 // 			expectedRemainder: sdkmath.NewInt(3),
 // 		},
 // 		{
 // 			distribution: map[string]sdk.Coin{
-// 				"val1": sdkmath.NewInt64Coin("uatom", 1),
-// 				"val2": sdkmath.NewInt64Coin("uatom", 5),
-// 				"val3": sdkmath.NewInt64Coin("uatom", 0),
+// 				"val1": sdk.NewInt64Coin("uatom", 1),
+// 				"val2": sdk.NewInt64Coin("uatom", 5),
+// 				"val3": sdk.NewInt64Coin("uatom", 0),
 // 			},
 // 			diff: map[string]cosmosmath.Int{
 // 				"val1": sdkmath.NewInt(2),
@@ -549,8 +549,8 @@ func intentFromDecSlice(in map[string]sdkmath.LegacyDec) types.DelegatorIntent {
 // 				"val4": sdkmath.NewInt(0),
 // 			},
 // 			expectedDistribution: map[string]sdk.Coin{
-// 				"val2": sdkmath.NewInt64Coin("uatom", 3),
-// 				"val3": sdkmath.NewInt64Coin("uatom", 3),
+// 				"val2": sdk.NewInt64Coin("uatom", 3),
+// 				"val3": sdk.NewInt64Coin("uatom", 3),
 // 			},
 // 			expectedRemainder: sdkmath.ZeroInt(),
 // 		},

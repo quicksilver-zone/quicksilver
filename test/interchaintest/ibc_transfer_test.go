@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
 	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 	"github.com/strangelove-ventures/interchaintest/v8"
 	"github.com/strangelove-ventures/interchaintest/v8/chain/cosmos"
@@ -130,7 +131,7 @@ func TestQuicksilverJunoIBCTransfer(t *testing.T) {
 	transfer := ibc.WalletAmount{
 		Address: junoUserAddr,
 		Denom:   quicksilver.Config().Denom,
-		Amount:  transferAmount,
+		Amount:  sdkmath.NewInt(transferAmount),
 	}
 
 	quickChannels, err := r.GetChannels(ctx, eRep, quicksilver.Config().ChainID)
@@ -153,7 +154,7 @@ func TestQuicksilverJunoIBCTransfer(t *testing.T) {
 	// Assert that the funds are no longer present in user acc on Juno and are in the user acc on Juno
 	quicksilverUpdateBal, err := quicksilver.GetBalance(ctx, quickUserAddr, quicksilver.Config().Denom)
 	require.NoError(t, err)
-	require.Equal(t, quicksilverOrigBal-transferAmount, quicksilverUpdateBal)
+	require.Equal(t, quicksilverOrigBal.Sub(sdkmath.NewInt(transferAmount)), quicksilverUpdateBal)
 
 	junoUpdateBal, err := juno.GetBalance(ctx, junoUserAddr, quicksilverIBCDenom)
 	require.NoError(t, err)
@@ -163,7 +164,7 @@ func TestQuicksilverJunoIBCTransfer(t *testing.T) {
 	transfer = ibc.WalletAmount{
 		Address: quickUserAddr,
 		Denom:   quicksilverIBCDenom,
-		Amount:  transferAmount,
+		Amount:  sdkmath.NewInt(transferAmount),
 	}
 
 	transferTx, err = juno.SendIBCTransfer(ctx, quickChannels[0].Counterparty.ChannelID, junoUserAddr, transfer, ibc.TransferOptions{})

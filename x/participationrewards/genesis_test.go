@@ -8,7 +8,6 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 
 	simapp "github.com/quicksilver-zone/quicksilver/app"
@@ -18,7 +17,7 @@ import (
 
 func TestParticipationRewardsExportGenesis(t *testing.T) {
 	app := simapp.Setup(t, false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(false)
 
 	chainStartTime := ctx.BlockTime()
 
@@ -47,7 +46,7 @@ func TestParticipationRewardsExportGenesis(t *testing.T) {
 func TestParticipationRewardsInitGenesis(t *testing.T) {
 	// setup params
 	app := simapp.Setup(t, false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(false)
 
 	now := time.Now()
 	ctx = ctx.WithBlockHeight(1)
