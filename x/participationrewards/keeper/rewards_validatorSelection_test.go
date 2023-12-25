@@ -245,7 +245,10 @@ func (suite *KeeperTestSuite) TestCalcUserValidatorSelectionAllocations() {
 			}
 
 			userAllocations := appA.ParticipationRewardsKeeper.CalcUserValidatorSelectionAllocations(ctx, &zone, zs)
-			suite.Equal(tt.want(appA.StakingKeeper.BondDenom(ctx)), userAllocations)
+
+			denom, err := appA.StakingKeeper.BondDenom(ctx)
+			suite.Require().NoError(err)
+			suite.Equal(tt.want(denom), userAllocations)
 		})
 	}
 }

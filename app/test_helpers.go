@@ -107,7 +107,7 @@ func Setup(t *testing.T, isCheckTx bool) *Quicksilver {
 
 		// Initialize the chain
 		app.InitChain(
-			abci.RequestInitChain{
+			&abci.RequestInitChain{
 				ChainId:         "mercury-1",
 				Validators:      []abci.ValidatorUpdate{},
 				ConsensusParams: DefaultConsensusParams,

@@ -108,7 +108,7 @@ func TestAppStateDeterminism(t *testing.T) {
 			db := dbm.NewMemDB()
 
 			quicksilver := app.NewQuicksilver(
-				log.NewTMLogger(log.NewSyncWriter(os.Stdout)),
+				log.NewLogger(os.Stdout),
 				db,
 				nil,
 				true,

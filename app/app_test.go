@@ -45,7 +45,7 @@ func TestQuicksilverExport(t *testing.T) {
 	}
 	db := dbm.NewMemDB()
 	quicksilver := app.NewQuicksilver(
-		log.NewTMLogger(log.NewSyncWriter(os.Stdout)),
+		log.NewTestLogger(log.NewSyncWriter(os.Stdout)),
 		db,
 		nil,
 		true,
@@ -67,7 +67,7 @@ func TestQuicksilverExport(t *testing.T) {
 
 	// Initialize the chain
 	quicksilver.InitChain(
-		abci.RequestInitChain{
+		&abci.RequestInitChain{
 			ChainId:       "quicksilver-1",
 			Validators:    []abci.ValidatorUpdate{},
 			AppStateBytes: stateBytes,
@@ -76,7 +76,7 @@ func TestQuicksilverExport(t *testing.T) {
 	quicksilver.Commit()
 
 	// Making a new app object with the db, so that initchain hasn't been called
-	app2 := app.NewQuicksilver(log.NewTMLogger(log.NewSyncWriter(os.Stdout)),
+	app2 := app.NewQuicksilver(log.NewTestLogger(log.NewSyncWriter(os.Stdout)),
 		db,
 		nil,
 		true,

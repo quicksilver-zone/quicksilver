@@ -616,7 +616,7 @@ func (suite *KeeperTestSuite) setupTestIntents() {
 	suite.addIntent(
 		testAddress,
 		zone,
-		icstypes.ValidatorIntents{
+		icstypes.ValidatorIntents{ValidatorIntents: []icstypes.ValidatorIntent{
 			{
 				ValoperAddress: vals[0].ValoperAddress,
 				Weight:         sdkmath.LegacyMustNewDecFromStr("0.3"),
