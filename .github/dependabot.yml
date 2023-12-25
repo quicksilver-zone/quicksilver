@@ -19,7 +19,7 @@ updates:
       interval: daily
     open-pull-requests-limit: 20
     ignore:
-      - github.com/cosmos/cosmos-sdk
+      - "github.com/cosmos/cosmos-sdk"
     labels:
       - automerge
       - dependencies
