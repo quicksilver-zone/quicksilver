@@ -5,7 +5,9 @@ import (
 	"fmt"
 
 	sdkmath "cosmossdk.io/math"
+	storetypes "cosmossdk.io/store/types"
 	"github.com/gogo/protobuf/proto"
+
 	db "github.com/tendermint/tm-db"
 
 	"cosmossdk.io/store"

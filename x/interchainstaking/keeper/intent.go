@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 
+	storetypes "cosmossdk.io/store/types"
 	"github.com/ingenuity-build/multierror"
 
 	sdkmath "cosmossdk.io/math"

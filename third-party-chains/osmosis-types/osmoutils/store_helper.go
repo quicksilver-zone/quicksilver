@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 
+	storetypes "cosmossdk.io/store/types"
 	"github.com/gogo/protobuf/proto"
 	db "github.com/tendermint/tm-db"
 
