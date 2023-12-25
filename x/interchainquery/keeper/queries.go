@@ -6,6 +6,7 @@ import (
 	"github.com/cometbft/cometbft/crypto"
 
 	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
 
 	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"

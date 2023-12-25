@@ -3,6 +3,7 @@ package keeper
 import (
 	"github.com/cometbft/cometbft/libs/log"
 
+	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"

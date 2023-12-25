@@ -3,6 +3,7 @@ package types
 import (
 	"fmt"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/ingenuity-build/multierror"
 
 	"github.com/cosmos/cosmos-sdk/types/bech32"
