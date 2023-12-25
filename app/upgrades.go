@@ -5,7 +5,7 @@ import (
 
 	packetforwardtypes "github.com/strangelove-ventures/packet-forward-middleware/v5/router/types"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	storetypes "cosmossdk.io/store/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	"github.com/quicksilver-zone/quicksilver/app/upgrades"

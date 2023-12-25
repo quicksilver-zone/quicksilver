@@ -5,7 +5,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authz "github.com/cosmos/cosmos-sdk/x/authz/module"
 	"github.com/cosmos/cosmos-sdk/x/bank"
-	"github.com/cosmos/cosmos-sdk/x/capability"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	"github.com/cosmos/cosmos-sdk/x/distribution"
 	distrclient "github.com/cosmos/cosmos-sdk/x/distribution/client"
@@ -18,9 +17,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
-	"github.com/cosmos/ibc-go/v5/modules/apps/transfer"
-	ibc "github.com/cosmos/ibc-go/v5/modules/core"
-	interchainquery "github.com/ingenuity-build/quicksilver/x/interchainquery"
+	"github.com/cosmos/ibc-go/modules/capability"
+	"github.com/cosmos/ibc-go/v8/modules/apps/transfer"
+	ibc "github.com/cosmos/ibc-go/v8/modules/core"
+	interchainquery "github.com/quicksilver-zone/quicksilver/x/interchainquery"
 )
 
 // TODO: Import a bunch of custom modules like cosmwasm and osmosis

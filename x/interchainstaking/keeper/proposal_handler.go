@@ -11,9 +11,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	icatypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/types"
-	ibcexported "github.com/cosmos/ibc-go/v5/modules/core/exported"
-	tmclienttypes "github.com/cosmos/ibc-go/v5/modules/light-clients/07-tendermint/types"
+	icatypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/types"
+	ibcexported "github.com/cosmos/ibc-go/v8/modules/core/exported"
+	tmclienttypes "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint/types"
 
 	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 )
