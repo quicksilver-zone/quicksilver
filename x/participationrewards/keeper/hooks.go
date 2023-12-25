@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 
 	sdkmath "cosmossdk.io/math"
-	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
+	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	epochstypes "github.com/quicksilver-zone/quicksilver/x/epochs/types"
@@ -22,7 +22,7 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, _ int64)
 	}
 
 	k.IteratePrefixedProtocolDatas(ctx, types.GetPrefixProtocolDataKey(types.ProtocolDataTypeConnection), func(index int64, _ []byte, data types.ProtocolData) (stop bool) {
-		blockQuery := tmservice.GetLatestBlockRequest{}
+		blockQuery := cmtservice.GetLatestBlockRequest{}
 		bz := k.cdc.MustMarshal(&blockQuery)
 
 		iConnectionData, err := types.UnmarshalProtocolData(types.ProtocolDataTypeConnection, data.Data)
