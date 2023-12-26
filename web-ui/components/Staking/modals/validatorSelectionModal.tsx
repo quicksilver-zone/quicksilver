@@ -26,6 +26,7 @@ import { FaSearch } from 'react-icons/fa';
 import { ValidatorsTable } from './validatorTable';
 
 import { useValidatorsQuery, useZoneQuery } from '@/hooks/useQueries';
+import { useValidatorLogos } from '@/hooks';
 
 interface MultiModalProps {
   isOpen: boolean;
@@ -48,6 +49,7 @@ export const MultiModal: React.FC<MultiModalProps> = ({
   const [searchTerm, setSearchTerm] = React.useState<string>('');
 
   const { validatorsData, isLoading, isError } = useValidatorsQuery(selectedChainName);
+  const { data: logos, isLoading: isFetchingLogos } = useValidatorLogos(selectedChainName, validatorsData || []);
 
   const validators = validatorsData;
   const handleValidatorClick = (validator: { name: string; operatorAddress: string }) => {
@@ -184,6 +186,7 @@ export const MultiModal: React.FC<MultiModalProps> = ({
                 </Box>
               </Flex>
               <ValidatorsTable
+                logos={logos || []}
                 validators={validators || []}
                 onValidatorClick={(validator) => {
                   const isSelected = selectedValidators.some((v) => v.name === validator.name);

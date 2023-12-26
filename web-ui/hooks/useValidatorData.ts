@@ -3,9 +3,11 @@ import { cosmos } from 'interchain-query';
 import { useEffect, useMemo, useState } from 'react';
 
 import { parseValidators } from '@/utils/staking';
+import { ExtendedValidator, getLogoUrls } from '@/utils';
 
 import { useQueryHooks } from './useQueryHooks';
 import { useRpcQueryClient } from './useRpcQueryClient';
+import { useQuery } from '@tanstack/react-query';
 
 (BigInt.prototype as any).toJSON = function () {
   return this.toString();
@@ -72,4 +74,18 @@ export const useValidatorData = (chainName: string) => {
     isLoading,
     refetch,
   };
+};
+
+export const useValidatorLogos = (
+  chainName: string,
+  validators: ExtendedValidator[]
+) => {
+  const { data, isLoading } = useQuery({
+    queryKey: ['validatorLogos', chainName],
+    queryFn: () => getLogoUrls(validators, chainName),
+    enabled: validators.length > 0,
+    staleTime: Infinity,
+  });
+
+  return { data, isLoading };
 };

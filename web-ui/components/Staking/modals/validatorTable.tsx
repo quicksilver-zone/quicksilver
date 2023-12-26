@@ -1,4 +1,18 @@
-import { Box, Table, TableCaption, Tbody, Td, Th, Thead, Tr, Flex, TableContainer } from '@chakra-ui/react';
+import {
+  Box,
+  Table,
+  TableCaption,
+  Tbody,
+  Td,
+  Th,
+  Thead,
+  Tr,
+  Flex,
+  TableContainer,
+  Image,
+  SkeletonText,
+  SkeletonCircle,
+} from '@chakra-ui/react';
 import React from 'react';
 
 import { ParsedValidator as Validator } from '@/utils';
@@ -8,7 +22,8 @@ export const ValidatorsTable: React.FC<{
   onValidatorClick: (validator: { name: string; operatorAddress: string }) => void;
   selectedValidators: { name: string; operatorAddress: string }[];
   searchTerm?: string;
-}> = ({ validators, onValidatorClick, selectedValidators, searchTerm }) => {
+  logos: any;
+}> = ({ validators, onValidatorClick, selectedValidators, searchTerm, logos }) => {
   const [sortedValidators, setSortedValidators] = React.useState<Validator[]>([]);
   const [sortBy, setSortBy] = React.useState<string | null>(null);
   const [sortOrder, setSortOrder] = React.useState<'asc' | 'desc'>('asc');
@@ -149,7 +164,7 @@ export const ValidatorsTable: React.FC<{
             <Tbody borderRadius={'10px'}>
               {sortedValidators.map((validator, index) => {
                 const votingPowerPercentage = totalVotingPower > 0 ? ((validator.votingPower || 0) / totalVotingPower) * 100 : 0;
-
+                const validatorLogo = logos[validator.address];
                 return (
                   <Tr
                     cursor="pointer"
@@ -167,14 +182,38 @@ export const ValidatorsTable: React.FC<{
                     style={{ maxHeight: '50px' }}
                   >
                     <Td
+                      maxW={'200px'}
                       border="1px solid rgba(255,128,0, 0.25)"
                       color="white"
                       style={{
                         whiteSpace: 'nowrap',
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
-                      }} // Apply overflow handling to table cells
+                      }}
                     >
+                      {!validatorLogo && (
+                        <SkeletonCircle
+                          boxSize="26px"
+                          objectFit="cover"
+                          marginRight="8px"
+                          display="inline-block"
+                          verticalAlign="middle"
+                          startColor="complimentary.900"
+                          endColor="complimentary.100"
+                        />
+                      )}
+                      {validatorLogo && (
+                        <Image
+                          borderRadius={'full'}
+                          src={validatorLogo}
+                          alt={validator.name}
+                          boxSize="26px"
+                          objectFit="cover"
+                          marginRight="8px"
+                          display="inline-block"
+                          verticalAlign="middle"
+                        />
+                      )}
                       {(validator.name.length || 0) > 20 ? validator.name.substring(0, 14) || '' + '...' : validator.name || ''}
                     </Td>
                     <Td border="1px solid rgba(255,128,0, 0.25)" color="white">

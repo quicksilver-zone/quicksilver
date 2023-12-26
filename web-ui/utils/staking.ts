@@ -76,7 +76,7 @@ export const extendValidators = (validators: ParsedValidator[] = [], chainMetada
 
     return {
       ...validator,
-      apr,
+
     };
   });
 };
