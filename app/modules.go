@@ -219,7 +219,7 @@ func simulationModules(
 		participationrewards.NewAppModule(appCodec, app.ParticipationRewardsKeeper),
 		airdrop.NewAppModule(appCodec, app.AirdropKeeper),
 		tokenfactory.NewAppModule(app.TokenFactoryKeeper, app.AccountKeeper, app.BankKeeper),
-		//supply.NewAppModule(appCodec, app.SupplyKeeper),
+		// supply.NewAppModule(appCodec, app.SupplyKeeper),
 		// wasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
 	}
 }

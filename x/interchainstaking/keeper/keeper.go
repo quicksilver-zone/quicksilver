@@ -344,7 +344,7 @@ func (k *Keeper) SetValidatorForZone(ctx sdk.Context, zone *types.Zone, data []b
 			val.Jailed = true
 			val.JailedSince = ctx.BlockTime()
 
-			// be defensive, so we don't get divison weirdness!
+			// be defensive, so we don't get division weirdness!
 			if !val.VotingPower.IsPositive() {
 				return fmt.Errorf("existing voting power must be greater than zero, received %s", val.VotingPower)
 			}

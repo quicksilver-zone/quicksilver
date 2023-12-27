@@ -275,7 +275,7 @@ func SigningInfoCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes
 	valSigningInfo := slashingtypes.ValidatorSigningInfo{}
 	if len(args) == 0 {
 		k.Logger(ctx).Error("unable to find signing info for validator", "query", query.Request)
-		return nil //errors.New("attempted to unmarshal zero length byte slice (10)")
+		return nil
 	}
 	err := k.cdc.Unmarshal(args, &valSigningInfo)
 	if err != nil {
