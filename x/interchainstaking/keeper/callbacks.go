@@ -274,6 +274,7 @@ func SigningInfoCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes
 
 	valSigningInfo := slashingtypes.ValidatorSigningInfo{}
 	if len(args) == 0 {
+		k.Logger(ctx).Error("unable to find signing info for validator", "query", query.Request)
 		return errors.New("attempted to unmarshal zero length byte slice (10)")
 	}
 	err := k.cdc.Unmarshal(args, &valSigningInfo)
@@ -281,7 +282,7 @@ func SigningInfoCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes
 		return err
 	}
 	if valSigningInfo.Tombstoned {
-		consAddr, err := sdk.ConsAddressFromBech32(valSigningInfo.Address)
+		consAddr, err := addressutils.AddressFromBech32(valSigningInfo.Address, "")
 		if err != nil {
 			return err
 		}
@@ -297,6 +298,7 @@ func SigningInfoCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes
 			return err
 		}
 		val, found := k.GetValidator(ctx, zone.ChainId, valAddrBytes)
+		// NOTE: this shouldn't be reachable, but keeping here as it doesn't do any harm.
 		if !found {
 			err := k.SetValidator(ctx, zone.ChainId, types.Validator{
 				ValoperAddress: valAddr,
@@ -312,11 +314,9 @@ func SigningInfoCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes
 				return err
 			}
 		}
-		k.Logger(ctx).Info("%q on chainID: %q was found to already have been tombstoned, added information", val.ValoperAddress, zone.ChainId)
+		k.Logger(ctx).Info(fmt.Sprintf("%q on chainID: %q was found to already have been tombstoned, added information", val.ValoperAddress, zone.ChainId))
 
-		return nil
 	}
-
 	return nil
 }
 

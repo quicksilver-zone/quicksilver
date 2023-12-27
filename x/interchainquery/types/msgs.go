@@ -33,7 +33,7 @@ func (msg MsgSubmitQueryResponse) ValidateBasic() error {
 
 	// TODO: is there a chain validation spec in ICS?
 	chainParts := strings.Split(msg.ChainId, "-")
-	if len(chainParts) < 2 {
+	if len(chainParts) < 2 && msg.ChainId != "provider" {
 		return errors.New("chainID must be of form XXXX-N")
 	}
 

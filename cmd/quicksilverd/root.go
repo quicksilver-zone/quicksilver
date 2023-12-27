@@ -42,7 +42,8 @@ import (
 )
 
 const (
-	EnvPrefix = "QUICK"
+	EnvPrefix         = "QUICK"
+	FlagSupplyEnabled = "supply.enabled"
 )
 
 type appCreator struct {
@@ -134,8 +135,8 @@ func initTendermintConfig() *tmcfg.Config {
 	cfg := tmcfg.DefaultConfig()
 
 	// peers
-	cfg.P2P.MaxNumInboundPeers = 200
-	cfg.P2P.MaxNumOutboundPeers = 40
+	cfg.P2P.MaxNumInboundPeers = 30
+	cfg.P2P.MaxNumOutboundPeers = 20
 
 	// block times (this comes in post-50)
 	//	cfg.Consensus.TimeoutCommit = 2 * time.Second                 // 2s blocks, think more on it later
@@ -262,6 +263,7 @@ func (ac appCreator) newApp(
 		appOpts,
 		wasmOpts,
 		false,
+		cast.ToBool(appOpts.Get(FlagSupplyEnabled)),
 		baseapp.SetPruning(pruningOpts),
 		baseapp.SetMinGasPrices(cast.ToString(appOpts.Get(server.FlagMinGasPrices))),
 		baseapp.SetHaltHeight(cast.ToUint64(appOpts.Get(server.FlagHaltHeight))),
@@ -276,6 +278,7 @@ func (ac appCreator) newApp(
 
 func addModuleInitFlags(startCmd *cobra.Command) {
 	crisis.AddModuleInitFlags(startCmd)
+	startCmd.Flags().Bool(FlagSupplyEnabled, false, "Enable supply module endpoint")
 }
 
 func (ac appCreator) appExport(
@@ -310,6 +313,7 @@ func (ac appCreator) appExport(
 		wasm.EnableAllProposals,
 		appOpts,
 		emptyWasmOpts,
+		false,
 		false,
 	)
 
