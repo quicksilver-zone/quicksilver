@@ -6,8 +6,8 @@ import { cosmos } from 'interchain-query';
 
 import { useGrpcQueryClient } from './useGrpcQueryClient';
 
-import { getCoin } from '@/utils';
-import { parseValidators } from '@/utils/staking';
+import { getCoin, getLogoUrls } from '@/utils';
+import { ExtendedValidator, parseValidators } from '@/utils/staking';
 
 
 const BigNumber = require('bignumber.js');
@@ -317,4 +317,64 @@ export const useZoneQuery = (chainId: string) => {
       enabled: !!chainId,
     }
   );
+};
+
+export const useValidatorLogos = (
+  chainName: string,
+  validators: ExtendedValidator[]
+) => {
+  const { data, isLoading } = useQuery({
+    queryKey: ['validatorLogos', chainName],
+    queryFn: () => getLogoUrls(validators, chainName),
+    enabled: validators.length > 0,
+    staleTime: Infinity,
+  });
+
+  return { data, isLoading };
+};
+
+export const useMissedBlocks = (chainName: string) => {
+  const { grpcQueryClient } = useGrpcQueryClient(chainName);
+
+  const fetchMissedBlocks = async () => {
+    if (!grpcQueryClient) {
+      throw new Error('RPC Client not ready');
+    }
+
+    let allMissedBlocks: any[] = [];
+    let nextKey = new Uint8Array();
+
+    do {
+      const response = await grpcQueryClient.cosmos.slashing.v1beta1.signingInfos({
+        pagination: {
+          key: nextKey,
+          offset: Long.fromNumber(0),
+          limit: Long.fromNumber(100),
+          countTotal: true,
+          reverse: false,
+        },
+      });
+
+      allMissedBlocks = allMissedBlocks.concat(response.info);
+      nextKey = response.pagination.next_key;
+    } while (nextKey && nextKey.length > 0);
+
+    return allMissedBlocks;
+  };
+
+  const missedBlocksQuery = useQuery({
+    queryKey: ['missedBlocks', chainName],
+    queryFn: fetchMissedBlocks,
+    enabled: !!grpcQueryClient,
+    staleTime: Infinity,
+    onError: (error) => {
+      console.error('Error in fetching Missed Blocks:', error);
+    },
+  });
+
+  return {
+    missedBlocksData: missedBlocksQuery.data,
+    isLoading: missedBlocksQuery.isLoading,
+    isError: missedBlocksQuery.isError,
+  };
 };
