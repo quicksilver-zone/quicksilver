@@ -72,6 +72,13 @@ jobs:
   test:
     runs-on: ubuntu-latest
     name: test quicksilver
+    strategy:
+      matrix:
+        arch: [amd64]
+        targetos: [linux, windows, darwin]
+        include:
+          - targetos: darwin
+            arch: arm64
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5

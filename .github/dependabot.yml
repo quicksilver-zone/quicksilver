@@ -1,25 +1,25 @@
 version: 2
 updates:
-  #- package-ecosystem: npm
-  #  directory: "web-ui"
-  #  schedule:
-  #    interval: daily
-  #  open-pull-requests-limit: 10
   - package-ecosystem: npm
-    directory: "quicksilverjs"
+    directory: "web-ui"
     schedule:
       interval: daily
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 20
   - package-ecosystem: github-actions
     directory: "/"
     schedule:
       interval: daily
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 20
+    labels:
+      - automerge
+      - dependencies
   - package-ecosystem: gomod
     directory: "/"
     schedule:
       interval: daily
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 20
+    ignore:
+      - dependency-name: "github.com/cosmos/cosmos-sdk"
     labels:
       - automerge
       - dependencies
