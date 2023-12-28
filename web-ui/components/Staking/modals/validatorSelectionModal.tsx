@@ -52,7 +52,6 @@ export const MultiModal: React.FC<MultiModalProps> = ({
   const { validatorsData, isLoading, isError } = useValidatorsQuery(selectedChainName);
 
   const { missedBlocksData } = useMissedBlocks(selectedChainName);
-  console.log(missedBlocksData);
   const { data: logos, isLoading: isFetchingLogos } = useValidatorLogos(selectedChainName, validatorsData || []);
 
   const validators = validatorsData;

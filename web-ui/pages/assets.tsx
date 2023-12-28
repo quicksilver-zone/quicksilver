@@ -34,8 +34,7 @@ type APYRates = {
 };
 
 function Home() {
-  const { address: qAddress, isWalletConnected } = useChain('quicksilver');
-  const { address } = useChain('quicksilver');
+  const { address, isWalletConnected } = useChain('quicksilver');
   // Function to fetch token price from an API
   const fetchTokenPrice = async (token: any) => {
     try {
@@ -47,25 +46,31 @@ function Home() {
     }
   };
 
+  const COSMOSHUB_CHAIN_ID = process.env.NEXT_PUBLIC_COSMOSHUB_CHAIN_ID;
+  const OSMOSIS_CHAIN_ID = process.env.NEXT_PUBLIC_OSMOSIS_CHAIN_ID;
+  const STARGAZE_CHAIN_ID = process.env.NEXT_PUBLIC_STARGAZE_CHAIN_ID;
+  const REGEN_CHAIN_ID = process.env.NEXT_PUBLIC_REGEN_CHAIN_ID;
+  const SOMMELIER_CHAIN_ID = process.env.NEXT_PUBLIC_SOMMELIER_CHAIN_ID;
+
   // Retrieve balance for each token
-  const { balance: qAtom, isLoading: qAtomIsLoading, isError: qAtomIsError } = useQBalanceQuery('quicksilver', qAddress ?? '', 'atom');
-  const { balance: qOsmo, isLoading: qOsmoIsLoading, isError: qOsmoIsError } = useQBalanceQuery('quicksilver', qAddress ?? '', 'osmo');
-  const { balance: qStars, isLoading: qStarsIsLoading, isError: qStarsIsError } = useQBalanceQuery('quicksilver', qAddress ?? '', 'stars');
-  const { balance: qRegen, isLoading: qRegenIsLoading, isError: qRegenIsError } = useQBalanceQuery('quicksilver', qAddress ?? '', 'regen');
-  const { balance: qSomm, isLoading: qSommIsLoading, isError: qSommIsError } = useQBalanceQuery('quicksilver', qAddress ?? '', 'somm');
+  const { balance: qAtom, isLoading: qAtomIsLoading, isError: qAtomIsError } = useQBalanceQuery('quicksilver', address ?? '', 'atom');
+  const { balance: qOsmo, isLoading: qOsmoIsLoading, isError: qOsmoIsError } = useQBalanceQuery('quicksilver', address ?? '', 'osmo');
+  const { balance: qStars, isLoading: qStarsIsLoading, isError: qStarsIsError } = useQBalanceQuery('quicksilver', address ?? '', 'stars');
+  const { balance: qRegen, isLoading: qRegenIsLoading, isError: qRegenIsError } = useQBalanceQuery('quicksilver', address ?? '', 'regen');
+  const { balance: qSomm, isLoading: qSommIsLoading, isError: qSommIsError } = useQBalanceQuery('quicksilver', address ?? '', 'somm');
 
   // Retrieve zone data for each token
-  const { data: CosmosZone, isLoading: isCosmosZoneLoading, isError: isCosmosZoneError } = useZoneQuery('cosmoshub-4');
-  const { data: OsmoZone, isLoading: isOsmoZoneLoading, isError: isOsmoZoneError } = useZoneQuery('osmosis-1');
-  const { data: StarZone, isLoading: isStarZoneLoading, isError: isStarZoneError } = useZoneQuery('stargaze-1');
-  const { data: RegenZone, isLoading: isRegenZoneLoading, isError: isRegenZoneError } = useZoneQuery('regen-1');
-  const { data: SommZone, isLoading: isSommZoneLoading, isError: isSommZoneError } = useZoneQuery('sommelier-3');
+  const { data: CosmosZone, isLoading: isCosmosZoneLoading, isError: isCosmosZoneError } = useZoneQuery(COSMOSHUB_CHAIN_ID ?? '');
+  const { data: OsmoZone, isLoading: isOsmoZoneLoading, isError: isOsmoZoneError } = useZoneQuery(OSMOSIS_CHAIN_ID ?? '');
+  const { data: StarZone, isLoading: isStarZoneLoading, isError: isStarZoneError } = useZoneQuery(STARGAZE_CHAIN_ID ?? '');
+  const { data: RegenZone, isLoading: isRegenZoneLoading, isError: isRegenZoneError } = useZoneQuery(REGEN_CHAIN_ID ?? '');
+  const { data: SommZone, isLoading: isSommZoneLoading, isError: isSommZoneError } = useZoneQuery(SOMMELIER_CHAIN_ID ?? '');
   // Retrieve APY data for each token
-  const { APY: cosmosAPY, isLoading: isCosmosAPYLoading, isError: isCosmosAPYError } = useAPYQuery('cosmoshub-4');
-  const { APY: osmoAPY, isLoading: isOsmoAPYLoading, isError: isOsmoAPYError } = useAPYQuery('osmosis-1');
-  const { APY: starsAPY, isLoading: isStarsAPYLoading, isError: isStarsAPYError } = useAPYQuery('stargaze-1');
-  const { APY: regenAPY, isLoading: isRegenAPYLoading, isError: isRegenAPYError } = useAPYQuery('regen-1');
-  const { APY: sommAPY, isLoading: isSommAPYLoading, isError: isSommAPYError } = useAPYQuery('sommelier-3');
+  const { APY: cosmosAPY, isLoading: isCosmosAPYLoading, isError: isCosmosAPYError } = useAPYQuery(COSMOSHUB_CHAIN_ID);
+  const { APY: osmoAPY, isLoading: isOsmoAPYLoading, isError: isOsmoAPYError } = useAPYQuery(OSMOSIS_CHAIN_ID);
+  const { APY: starsAPY, isLoading: isStarsAPYLoading, isError: isStarsAPYError } = useAPYQuery(STARGAZE_CHAIN_ID);
+  const { APY: regenAPY, isLoading: isRegenAPYLoading, isError: isRegenAPYError } = useAPYQuery(REGEN_CHAIN_ID);
+  const { APY: sommAPY, isLoading: isSommAPYLoading, isError: isSommAPYError } = useAPYQuery(SOMMELIER_CHAIN_ID);
 
   // useMemo hook to cache APY data
   const qAPYRates: APYRates = useMemo(
@@ -255,7 +260,7 @@ function Home() {
           <Spacer />
           {/* Unbonding Table */}
           <Box mt="20px">
-            <UnbondingAssetsTable isWalletConnected={isWalletConnected} address={qAddress ?? ''} chainName="cosmoshub" />
+            <UnbondingAssetsTable isWalletConnected={isWalletConnected} address={address ?? ''} chainName="cosmoshub" />
           </Box>
           <Box h="40px"></Box>
         </Container>

@@ -41,6 +41,50 @@ export const networks = [
     },
   ];
 
+  export const testNetworks = [
+    {
+      value: 'ATOM',
+      logo: '/quicksilver/img/networks/atom.svg',
+      qlogo: '/quicksilver/img/networks/qatom.svg',
+      name: 'Cosmos Hub',
+      chainName: 'cosmoshub',
+      chainId: 'provider',
+    },
+    {
+      value: 'OSMO',
+      logo: '/quicksilver/img/networks/osmosis.svg',
+      qlogo: '/quicksilver/img/networks/qosmo.svg',
+      name: 'Osmosis',
+      chainName: 'osmosis',
+      chainId: 'osmo-test-5',
+    },
+    {
+      value: 'STARS',
+      logo: '/quicksilver/img/networks/stargaze.svg',
+      qlogo: '/quicksilver/img/networks/qstars.svg',
+      name: 'Stargaze',
+      chainName: 'stargaze',
+      chainId: 'elgafar-1',
+    },
+    {
+      value: 'REGEN',
+      logo: '/quicksilver/img/networks/regen.svg',
+      qlogo: '/quicksilver/img/networks/regen.svg',
+      name: 'Regen',
+      chainName: 'regen',
+      chainId: 'regen-redwood-1',
+    },
+    {
+      value: 'SOMM',
+      logo: '/quicksilver/img/networks/sommelier.png',
+      qlogo: '/quicksilver/img/networks/sommelier.png',
+      name: 'Sommelier',
+      chainName: 'sommelier',
+      chainId: 'sommelier-3',
+    },
+  ];
+
+
 export const ProdQuickSilverChainInfo = {
     chainId: "quicksilver-2",
     chainName: "Quicksilver Protocol",

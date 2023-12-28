@@ -24,7 +24,7 @@ import { StakingBox } from '@/components';
 import { InfoBox } from '@/components';
 import { AssetsAccordian } from '@/components';
 import { useAPYQuery } from '@/hooks/useQueries';
-import { networks } from '@/state/chains/prod';
+import { networks as prodNetworks, testNetworks as devNetworks } from '@/state/chains/prod';
 import { useChain } from '@cosmos-kit/react';
 
 const DynamicStakingBox = dynamic(() => Promise.resolve(StakingBox), {
@@ -38,6 +38,8 @@ const DynamicInfoBox = dynamic(() => Promise.resolve(InfoBox), {
 const DynamicAssetBox = dynamic(() => Promise.resolve(AssetsAccordian), {
   ssr: false,
 });
+
+const networks = process.env.NEXT_PUBLIC_CHAIN_ENV === 'mainnet' ? prodNetworks : devNetworks;
 
 export default function Staking() {
   const [selectedNetwork, setSelectedNetwork] = useState(networks[0]);
