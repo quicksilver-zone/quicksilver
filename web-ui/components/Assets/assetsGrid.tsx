@@ -22,16 +22,6 @@ interface AssetGridProps {
 }
 
 const AssetCard: React.FC<AssetCardProps> = ({ assetName, balance, apy, nativeAssetName, isWalletConnected }) => {
-  if (!isWalletConnected) {
-    return (
-      <Flex direction="column" p={5} borderRadius="lg" align="center" justify="space-around" w="full" h="full">
-        <Text fontSize="xl" textAlign="center">
-          Wallet is not connected. Please connect your wallet to interact with your QCK tokens.
-        </Text>
-      </Flex>
-    );
-  }
-
   if (!balance || !apy) {
     return (
       <Flex
@@ -104,22 +94,41 @@ const AssetsGrid: React.FC<AssetGridProps> = ({ assets, isWalletConnected }) => 
       <Text fontSize="xl" fontWeight="bold" color="white" mb={4}>
         qAssets
       </Text>
-      <Box overflowX="auto" w="full">
-        <Flex gap="8">
-          {assets.map((asset, index) => (
-            <Box key={index} minW="350px">
-              {' '}
-              <AssetCard
-                isWalletConnected={isWalletConnected}
-                assetName={asset.name}
-                nativeAssetName={asset.native}
-                balance={asset.balance}
-                apy={asset.apy}
-              />
-            </Box>
-          ))}
+      {!isWalletConnected && (
+        <Flex
+          backdropFilter="blur(50px)"
+          bgColor="rgba(255,255,255,0.1)"
+          direction="column"
+          p={5}
+          borderRadius="lg"
+          align="center"
+          justify="space-around"
+          w="full"
+          h="200px"
+        >
+          <Text fontSize="xl" textAlign="center">
+            Wallet is not connected! Please connect your wallet to interact with your qAssets.
+          </Text>
         </Flex>
-      </Box>
+      )}
+      {isWalletConnected && (
+        <Box overflowX="auto" w="full">
+          <Flex gap="8">
+            {assets.map((asset, index) => (
+              <Box key={index} minW="350px">
+                {' '}
+                <AssetCard
+                  isWalletConnected={isWalletConnected}
+                  assetName={asset.name}
+                  nativeAssetName={asset.native}
+                  balance={asset.balance}
+                  apy={asset.apy}
+                />
+              </Box>
+            ))}
+          </Flex>
+        </Box>
+      )}
     </>
   );
 };

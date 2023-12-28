@@ -149,11 +149,6 @@ export const ValidatorsTable: React.FC<{
                     <span>Commission</span>
                   </Tooltip>
                 </Th>
-                <Th border="1px solid rgba(255,128,0, 0.25)" color="white" fontSize={'16px'}>
-                  <Tooltip label="Number of blocks missed by the validator" placement="top">
-                    <span>Missed</span>
-                  </Tooltip>
-                </Th>
 
                 <Th
                   border="1px solid rgba(255,128,0, 0.25)"
@@ -182,9 +177,7 @@ export const ValidatorsTable: React.FC<{
                       <Td border="1px solid rgba(255,128,0, 0.25)">
                         <SkeletonText mt="4" noOfLines={1} spacing="4" />
                       </Td>
-                      <Td border="1px solid rgba(255,128,0, 0.25)">
-                        <SkeletonText mt="4" noOfLines={1} spacing="4" />
-                      </Td>
+
                       <Td border="1px solid rgba(255,128,0, 0.25)">
                         <SkeletonText mt="4" noOfLines={1} spacing="4" />
                       </Td>
@@ -249,7 +242,7 @@ export const ValidatorsTable: React.FC<{
                         <Td border="1px solid rgba(255,128,0, 0.25)" color="white">
                           {validator.commission ? validator.commission : 'N/A'}
                         </Td>
-                        <Td border="1px solid rgba(255,128,0, 0.25)">{}</Td>
+
                         <Td border="1px solid rgba(255,128,0, 0.25)" color="white">
                           {`${votingPowerPercentage.toFixed(2)}%`}
                         </Td>

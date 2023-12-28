@@ -50,7 +50,7 @@ export const MultiModal: React.FC<MultiModalProps> = ({
   const [searchTerm, setSearchTerm] = React.useState<string>('');
 
   const { validatorsData, isLoading, isError } = useValidatorsQuery(selectedChainName);
-  console.log(validatorsData);
+
   const { missedBlocksData } = useMissedBlocks(selectedChainName);
   console.log(missedBlocksData);
   const { data: logos, isLoading: isFetchingLogos } = useValidatorLogos(selectedChainName, validatorsData || []);

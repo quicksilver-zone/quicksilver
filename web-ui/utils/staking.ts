@@ -8,12 +8,8 @@ import * as bech32 from 'bech32';
 import * as CryptoJS from 'crypto-js';
 
 import { decodeUint8Arr, isGreaterThanZero, shiftDigits, toNumber } from '.';
-import { Any } from 'interchain-query/google/protobuf/any';
-
-interface ConsensusPubkey {
-  '@type': string;
-  key: string; 
-}
+import { Any } from 'cosmjs-types/google/protobuf/any';
+import { AnySDKType } from 'interchain-query/google/protobuf/any';
 
 
 const DAY_TO_SECONDS = 24 * 60 * 60;
@@ -67,24 +63,29 @@ export const parseValidators = (validators: Validator[]) => {
   });
 };
 
-
-function getValconsAddress(consensusPubkeyAny: any, valconsPrefix: string) {
-  const consensusPubkey = consensusPubkeyAny as ConsensusPubkey;
-  
-  if (!consensusPubkey || !consensusPubkey.key) {
-    return ''; 
+function getValconsAddress(consensus_pubkey: any, valconsPrefix: string) {
+  if (!consensus_pubkey || typeof consensus_pubkey.key !== 'string') {
+    console.error('Invalid or missing consensus public key');
+    return '';
   }
 
-  const consensusPubkeyBytes = new Uint8Array(consensusPubkeyAny!.value);
-  const decoded = Buffer.from(consensusPubkeyBytes).toString('base64');
+  try {
+    // Decode the Base64 key directly to bytes
+    const decoded = Buffer.from(consensus_pubkey.key, 'base64');
+    
+    // Convert bytes to Bech32 words
+    const valconsWords = bech32.bech32.toWords(new Uint8Array(decoded));
 
-  const bytes = CryptoJS.enc.Base64.parse(decoded);
-  
-  const valconsWords: number[] = bech32.bech32.toWords(Array.from(new Uint8Array(bytes.words)));
-  const valconsAddress: string = bech32.bech32.encode(valconsPrefix, valconsWords);
+    // Encode to Bech32 with the given prefix
+    const valconsAddress = bech32.bech32.encode(valconsPrefix, valconsWords);
 
-  return valconsAddress;
+    return valconsAddress;
+  } catch (error) {
+    console.error('Error in generating valcons address:', error);
+    return '';
+  }
 }
+
 
 export type ExtendedValidator = ReturnType<typeof extendValidators>[0];
 
@@ -163,3 +164,15 @@ export const parseAnnualProvisions = (data: QueryAnnualProvisionsResponse) => {
   const res = shiftDigits(decodeUint8Arr(data?.annualProvisions), -18);
   return isGreaterThanZero(res) ? res : null;
 };
+function wordArrayToUint8Array(wordArray: CryptoJS.lib.WordArray) {
+  const words = wordArray.words;
+  const sigBytes = wordArray.sigBytes;
+  const u8 = new Uint8Array(sigBytes);
+
+  for (let i = 0; i < sigBytes; i++) {
+    const byte = (words[i >>> 2] >>> (24 - (i % 4) * 8)) & 0xff;
+    u8[i] = byte;
+  }
+
+  return u8;
+}

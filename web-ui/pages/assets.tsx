@@ -180,53 +180,74 @@ function Home() {
             Assets
           </Text>
           <Flex flexDir={'row'} py={6} alignItems="center" justifyContent={'space-between'} gap="4">
-            {/* Quick box */}
-            <Flex
-              position="relative"
-              backdropFilter="blur(50px)"
-              bgColor="rgba(255,255,255,0.1)"
-              borderRadius="10px"
-              p={5}
-              w="md"
-              h="sm"
-              flexDir="column"
-              justifyContent="space-around"
-              alignItems="center"
-            >
-              <QuickBox />
-            </Flex>
-            {/* Portfolio box */}
-            <Flex
-              alignContent={'center'}
-              position="relative"
-              backdropFilter="blur(50px)"
-              bgColor="rgba(255,255,255,0.1)"
-              borderRadius="10px"
-              p={5}
-              w="2xl"
-              h="sm"
-            >
-              <MyPortfolio
-                portfolioItems={portfolioItems}
-                isWalletConnected={isWalletConnected}
-                totalValue={totalPortfolioValue}
-                averageApy={averageApy}
-                totalYearlyYield={totalYearlyYield}
-              />
-            </Flex>
-            {/* Intent box */}
-            <Flex
-              alignContent={'center'}
-              position="relative"
-              backdropFilter="blur(50px)"
-              bgColor="rgba(255,255,255,0.1)"
-              borderRadius="10px"
-              p={5}
-              w="lg"
-              h="sm"
-            >
-              <StakingIntent isWalletConnected={isWalletConnected} address={address ?? ''} />
-            </Flex>
+            {!isWalletConnected && (
+              <Flex
+                w="100%"
+                backdropFilter="blur(50px)"
+                bgColor="rgba(255,255,255,0.1)"
+                h="sm"
+                p={4}
+                borderRadius="lg"
+                flexDirection="column"
+                justifyContent="center"
+                alignItems="center"
+                gap={6}
+                color="white"
+              >
+                <Text fontSize="xl" textAlign="center">
+                  Wallet is not connected! Please connect your wallet to view the Assets Section.
+                </Text>
+              </Flex>
+            )}
+            {isWalletConnected && (
+              <>
+                <Flex
+                  position="relative"
+                  backdropFilter="blur(50px)"
+                  bgColor="rgba(255,255,255,0.1)"
+                  borderRadius="10px"
+                  p={5}
+                  w="sm"
+                  h="sm"
+                  flexDir="column"
+                  justifyContent="space-around"
+                  alignItems="center"
+                >
+                  <QuickBox />
+                </Flex>
+
+                <Flex
+                  alignContent={'center'}
+                  position="relative"
+                  backdropFilter="blur(50px)"
+                  bgColor="rgba(255,255,255,0.1)"
+                  borderRadius="10px"
+                  p={5}
+                  w="2xl"
+                  h="sm"
+                >
+                  <MyPortfolio
+                    portfolioItems={portfolioItems}
+                    isWalletConnected={isWalletConnected}
+                    totalValue={totalPortfolioValue}
+                    averageApy={averageApy}
+                    totalYearlyYield={totalYearlyYield}
+                  />
+                </Flex>
+                <Flex
+                  alignContent={'center'}
+                  position="relative"
+                  backdropFilter="blur(50px)"
+                  bgColor="rgba(255,255,255,0.1)"
+                  borderRadius="10px"
+                  p={5}
+                  w="lg"
+                  h="sm"
+                >
+                  <StakingIntent isWalletConnected={isWalletConnected} address={address ?? ''} />
+                </Flex>
+              </>
+            )}
           </Flex>
           <Spacer />
           {/* Assets Grid */}
@@ -234,7 +255,7 @@ function Home() {
           <Spacer />
           {/* Unbonding Table */}
           <Box mt="20px">
-            <UnbondingAssetsTable address={qAddress ?? ''} chainName="cosmoshub" />
+            <UnbondingAssetsTable isWalletConnected={isWalletConnected} address={qAddress ?? ''} chainName="cosmoshub" />
           </Box>
           <Box h="40px"></Box>
         </Container>

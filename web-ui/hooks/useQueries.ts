@@ -340,10 +340,10 @@ export const useMissedBlocks = (chainName: string) => {
     if (!grpcQueryClient) {
       throw new Error('RPC Client not ready');
     }
-
+  
     let allMissedBlocks: any[] = [];
     let nextKey = new Uint8Array();
-
+  
     do {
       const response = await grpcQueryClient.cosmos.slashing.v1beta1.signingInfos({
         pagination: {
@@ -354,14 +354,22 @@ export const useMissedBlocks = (chainName: string) => {
           reverse: false,
         },
       });
-
-      allMissedBlocks = allMissedBlocks.concat(response.info);
+  
+      // Filter out entries without an address
+      const filteredMissedBlocks = response.info.filter(block => {
+        const hasAddress = block.address && block.address.trim() !== '';
+        const notTombstoned = !block.tombstoned;
+        const notJailed = new Date(block.jailed_until) <= new Date(); // Check if jailed_until is in the past
+        return hasAddress && notTombstoned && notJailed;
+      });
+      
+      allMissedBlocks = allMissedBlocks.concat(filteredMissedBlocks);
       nextKey = response.pagination.next_key;
     } while (nextKey && nextKey.length > 0);
-
+  
     return allMissedBlocks;
   };
-
+  
   const missedBlocksQuery = useQuery({
     queryKey: ['missedBlocks', chainName],
     queryFn: fetchMissedBlocks,
