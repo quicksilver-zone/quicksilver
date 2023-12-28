@@ -66,11 +66,11 @@ function Home() {
   const { data: RegenZone, isLoading: isRegenZoneLoading, isError: isRegenZoneError } = useZoneQuery(REGEN_CHAIN_ID ?? '');
   const { data: SommZone, isLoading: isSommZoneLoading, isError: isSommZoneError } = useZoneQuery(SOMMELIER_CHAIN_ID ?? '');
   // Retrieve APY data for each token
-  const { APY: cosmosAPY, isLoading: isCosmosAPYLoading, isError: isCosmosAPYError } = useAPYQuery(COSMOSHUB_CHAIN_ID);
-  const { APY: osmoAPY, isLoading: isOsmoAPYLoading, isError: isOsmoAPYError } = useAPYQuery(OSMOSIS_CHAIN_ID);
-  const { APY: starsAPY, isLoading: isStarsAPYLoading, isError: isStarsAPYError } = useAPYQuery(STARGAZE_CHAIN_ID);
-  const { APY: regenAPY, isLoading: isRegenAPYLoading, isError: isRegenAPYError } = useAPYQuery(REGEN_CHAIN_ID);
-  const { APY: sommAPY, isLoading: isSommAPYLoading, isError: isSommAPYError } = useAPYQuery(SOMMELIER_CHAIN_ID);
+  const { APY: cosmosAPY, isLoading: isCosmosAPYLoading, isError: isCosmosAPYError } = useAPYQuery('cosmoshub-4');
+  const { APY: osmoAPY, isLoading: isOsmoAPYLoading, isError: isOsmoAPYError } = useAPYQuery('osmosis-1');
+  const { APY: starsAPY, isLoading: isStarsAPYLoading, isError: isStarsAPYError } = useAPYQuery('stargaze-1');
+  const { APY: regenAPY, isLoading: isRegenAPYLoading, isError: isRegenAPYError } = useAPYQuery('regen-1');
+  const { APY: sommAPY, isLoading: isSommAPYLoading, isError: isSommAPYError } = useAPYQuery('sommelier-3');
 
   // useMemo hook to cache APY data
   const qAPYRates: APYRates = useMemo(
