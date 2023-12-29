@@ -125,6 +125,7 @@ export const liquidStakeTx = (
 
     try {
       const response = await stargateClient.signAndBroadcast(address, [msgSend], fee, memo);
+
       setResp(JSON.stringify(response, null, 2));
       setIsSigning(false);
       showSuccessToast(toast, response.transactionHash, chainName);

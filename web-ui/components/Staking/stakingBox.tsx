@@ -48,7 +48,20 @@ type StakingBoxProps = {
 export const StakingBox = ({ selectedOption, isModalOpen, setModalOpen, setBalance, setQBalance }: StakingBoxProps) => {
   const [activeTabIndex, setActiveTabIndex] = useState(0);
   const [tokenAmount, setTokenAmount] = useState<string>('0');
-  const { address } = useChain(selectedOption.chainName);
+  let newChainName: string | undefined;
+  if (selectedOption?.chainId === 'provider') {
+    newChainName = 'cosmoshubtestnet';
+  } else if (selectedOption?.chainId === 'elgafar-1') {
+    newChainName = 'stargazetestnet';
+  } else if (selectedOption?.chainId === 'osmo-test-5') {
+    newChainName = 'osmosistestnet';
+  } else if (selectedOption?.chainId === 'regen-redwood-1') {
+    newChainName = 'regen';
+  } else {
+    // Default case
+    newChainName = selectedOption?.chainName;
+  }
+  const { address } = useChain(newChainName);
   const { address: qAddress } = useChain('quicksilver');
   const exp = getExponent(selectedOption.chainName);
   const { balance, isLoading } = useBalanceQuery(selectedOption.chainName, address ?? '');
@@ -103,7 +116,7 @@ export const StakingBox = ({ selectedOption, isModalOpen, setModalOpen, setBalan
   const [isError, setIsError] = useState<boolean>(false);
   const [transactionStatus, setTransactionStatus] = useState('Pending');
 
-  const { getSigningStargateClient } = useChain('quicksilver');
+  const { getSigningStargateClient } = useChain('quicksilvertestnet');
 
   const isCalculationDataLoaded = tokenAmount && !isNaN(Number(tokenAmount)) && zone && !isNaN(Number(zone.redemptionRate));
 

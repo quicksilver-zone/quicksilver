@@ -359,7 +359,7 @@ export const useMissedBlocks = (chainName: string) => {
       const filteredMissedBlocks = response.info.filter(block => {
         const hasAddress = block.address && block.address.trim() !== '';
         const notTombstoned = !block.tombstoned;
-        const notJailed = new Date(block.jailed_until) <= new Date(); // Check if jailed_until is in the past
+        const notJailed = new Date(block.jailed_until) <= new Date();
         return hasAddress && notTombstoned && notJailed;
       });
       

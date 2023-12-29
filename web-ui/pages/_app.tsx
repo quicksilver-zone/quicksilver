@@ -51,9 +51,81 @@ function CreateCosmosApp({ Component, pageProps }: AppProps) {
     },
   });
 
+  const env = process.env.NEXT_PUBLIC_CHAIN_ENV;
+
+  const rpcEnndpoints = {
+    quicksilver:
+      env === 'testnet'
+        ? process.env.NEXT_PUBLIC_TESTNET_LCD_ENDPOINT_QUICKSILVER
+        : process.env.NEXT_PUBLIC_MAINNET_LCD_ENDPOINT_QUICKSILVER,
+    cosmoshub:
+      env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_LCD_ENDPOINT_COSMOSHUB : process.env.NEXT_PUBLIC_MAINNET_LCD_ENDPOINT_COSMOSHUB,
+    sommelier:
+      env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_LCD_ENDPOINT_SOMMELIER : process.env.NEXT_PUBLIC_MAINNET_LCD_ENDPOINT_SOMMELIER,
+    stargaze:
+      env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_LCD_ENDPOINT_STARGAZE : process.env.NEXT_PUBLIC_MAINNET_LCD_ENDPOINT_STARGAZE,
+    regen: env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_LCD_ENDPOINT_REGEN : process.env.NEXT_PUBLIC_MAINNET_LCD_ENDPOINT_REGEN,
+    osmosis:
+      env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_LCD_ENDPOINT_OSMOSIS : process.env.NEXT_PUBLIC_MAINNET_LCD_ENDPOINT_OSMOSIS,
+  };
+
+  const lcdEnndpoints = {
+    quicksilver:
+      env === 'testnet'
+        ? process.env.NEXT_PUBLIC_TESTNET_RPC_ENDPOINT_QUICKSILVER
+        : process.env.NEXT_PUBLIC_MAINNET_RPC_ENDPOINT_QUICKSILVER,
+    cosmoshub:
+      env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_RPC_ENDPOINT_COSMOSHUB : process.env.NEXT_PUBLIC_MAINNET_RPC_ENDPOINT_COSMOSHUB,
+    sommelier:
+      env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_RPC_ENDPOINT_SOMMELIER : process.env.NEXT_PUBLIC_MAINNET_RPC_ENDPOINT_SOMMELIER,
+    stargaze:
+      env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_RPC_ENDPOINT_STARGAZE : process.env.NEXT_PUBLIC_MAINNET_RPC_ENDPOINT_STARGAZE,
+    regen: env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_RPC_ENDPOINT_REGEN : process.env.NEXT_PUBLIC_MAINNET_RPC_ENDPOINT_REGEN,
+    osmosis:
+      env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_RPC_ENDPOINT_OSMOSIS : process.env.NEXT_PUBLIC_MAINNET_RPC_ENDPOINT_OSMOSIS,
+  };
+
   return (
     <ChakraProvider theme={defaultTheme}>
       <ChainProvider
+        endpointOptions={{
+          isLazy: true,
+          endpoints: {
+            quicksilver: {
+              rpc: [rpcEnndpoints.quicksilver ?? ''],
+              rest: [lcdEnndpoints.quicksilver ?? ''],
+            },
+            quicksilvertestnet: {
+              rest: ['https://quick.api.t.stavr.tech/'],
+              rpc: ['http://quick.rpc.t.stavr.tech:20027'],
+            },
+            cosmoshub: {
+              rpc: [rpcEnndpoints.cosmoshub ?? ''],
+              rest: [lcdEnndpoints.cosmoshub ?? ''],
+            },
+
+            sommelier: {
+              rpc: [rpcEnndpoints.sommelier ?? ''],
+              rest: [lcdEnndpoints.sommelier ?? ''],
+            },
+            stargaze: {
+              rpc: [rpcEnndpoints.stargaze ?? ''],
+              rest: [lcdEnndpoints.stargaze ?? ''],
+            },
+            regen: {
+              rpc: [rpcEnndpoints.regen ?? ''],
+              rest: [lcdEnndpoints.regen ?? ''],
+            },
+            osmosis: {
+              rpc: [rpcEnndpoints.osmosis ?? ''],
+              rest: [lcdEnndpoints.osmosis ?? ''],
+            },
+            osmosistestnet: {
+              rpc: ['https://rpc.osmotest5.osmosis.zone'],
+              rest: ['https://lcd.osmotest5.osmosis.zone'],
+            },
+          },
+        }}
         chains={chains}
         assetLists={assets}
         //@ts-ignore
