@@ -2,7 +2,6 @@ package types
 
 import (
 	"errors"
-	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -31,10 +30,8 @@ func (msg MsgSubmitQueryResponse) ValidateBasic() error {
 		return errors.New("height must be non-negative")
 	}
 
-	// TODO: is there a chain validation spec in ICS?
-	chainParts := strings.Split(msg.ChainId, "-")
-	if len(chainParts) < 2 && msg.ChainId != "provider" {
-		return errors.New("chainID must be of form XXXX-N")
+	if len(msg.ChainId) < 2 {
+		return errors.New("invalid chain id")
 	}
 
 	if len(msg.QueryId) != 64 {
