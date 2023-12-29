@@ -38,6 +38,11 @@ jobs:
         with:
           bun-version: latest
 
+      - name: Setup Environment File
+        run: |
+          cd web-ui
+          cp .env.development .env
+
       - name: Install Dependencies
         run: |
           cd web-ui
