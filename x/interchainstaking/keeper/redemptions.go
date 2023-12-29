@@ -6,8 +6,6 @@ import (
 	"sort"
 	"time"
 
-	lsmstakingtypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
-
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -16,6 +14,7 @@ import (
 	"github.com/quicksilver-zone/quicksilver/utils"
 	epochstypes "github.com/quicksilver-zone/quicksilver/x/epochs/types"
 	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
+	lsmstakingtypes "github.com/quicksilver-zone/quicksilver/x/lsmtypes"
 )
 
 // processRedemptionForLsm will determine based on user intent, the tokens to return to the user, generate Redeem message and send them.
@@ -25,6 +24,7 @@ func (k *Keeper) processRedemptionForLsm(ctx sdk.Context, zone *types.Zone, send
 	msgs := make([]*lsmstakingtypes.MsgTokenizeShares, 0)
 	var err error
 	intents := intent.Intents
+
 	if !found || len(intents) == 0 {
 		// if user has no intent set (this can happen if redeeming tokens that were obtained offchain), use global intent.
 		// Note: this can be improved; user will receive a bunch of tokens.
@@ -40,7 +40,6 @@ func (k *Keeper) processRedemptionForLsm(ctx sdk.Context, zone *types.Zone, send
 	if err != nil {
 		return err
 	}
-
 	for _, intent := range intents.Sort() {
 		thisAmount := intent.Weight.MulInt(nativeTokens).TruncateInt()
 		if thisAmount.GT(availablePerValidator[intent.ValoperAddress]) {
@@ -51,6 +50,10 @@ func (k *Keeper) processRedemptionForLsm(ctx sdk.Context, zone *types.Zone, send
 	}
 
 	distribution[intents[0].ValoperAddress] += outstanding.Uint64()
+
+	if distribution[intents[0].ValoperAddress] > availablePerValidator[intents[0].ValoperAddress].Uint64() {
+		return errors.New("unable to satisfy unbond request (2); delegations may be locked")
+	}
 
 	for _, valoper := range utils.Keys(distribution) {
 		msgs = append(msgs, &lsmstakingtypes.MsgTokenizeShares{
@@ -110,20 +113,27 @@ func (k *Keeper) queueRedemption(
 	return nil
 }
 
-// GetUnlockedTokensForZone will iterate over all delegation records for a zone, and then remove the
-// locked tokens (those actively being redelegated), returning a slice of int64 staking tokens that
-// are unlocked and free to redelegate or unbond.
+// GetUnlockedTokensForZone will iterate over all validators for a zone, summing delegated amounts,
+// and then remove the locked tokens (those actively being redelegated), returning a slice of int64
+// staking tokens that are unlocked and free to redelegate or unbond.
 func (k *Keeper) GetUnlockedTokensForZone(ctx sdk.Context, zone *types.Zone) (map[string]math.Int, math.Int, error) {
-	availablePerValidator := make(map[string]math.Int, len(zone.Validators))
+	validators := k.GetValidators(ctx, zone.ChainId)
+
+	availablePerValidator := make(map[string]math.Int, len(validators))
 	total := sdk.ZeroInt()
-	for _, delegation := range k.GetAllDelegations(ctx, zone.ChainId) {
-		thisAvailable, found := availablePerValidator[delegation.ValidatorAddress]
+	// for each validator, fetch delegated amount.
+	for _, validator := range validators {
+		delegation, found := k.GetDelegation(ctx, zone.ChainId, zone.DelegationAddress.Address, validator.ValoperAddress)
 		if !found {
-			thisAvailable = sdk.ZeroInt()
+			availablePerValidator[validator.ValoperAddress] = sdk.ZeroInt()
+		} else {
+			availablePerValidator[validator.ValoperAddress] = delegation.Amount.Amount
+			total = total.Add(delegation.Amount.Amount)
 		}
-		availablePerValidator[delegation.ValidatorAddress] = thisAvailable.Add(delegation.Amount.Amount)
-		total = total.Add(delegation.Amount.Amount)
 	}
+
+	// for each redelegation, remove the amount being redelegated to from the destination,
+	// as this cannot be available for unbonding or redelegation.
 	for _, redelegation := range k.ZoneRedelegationRecords(ctx, zone.ChainId) {
 		thisAvailable, found := availablePerValidator[redelegation.Destination]
 		if found {

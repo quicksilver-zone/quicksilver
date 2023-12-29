@@ -3,7 +3,7 @@ package quicksilver.supply.v1;
 
 import "google/api/annotations.proto";
 
-option go_package = "github.com/ingenuity-build/quicksilver/x/supply/types";
+option go_package = "github.com/quicksilver-zone/quicksilver/x/supply/types";
 
 // Query defines the gRPC querier service.
 service Query {

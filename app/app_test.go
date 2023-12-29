@@ -56,6 +56,7 @@ func TestQuicksilverExport(t *testing.T) {
 		app.EmptyAppOptions{},
 		app.GetWasmOpts(app.EmptyAppOptions{}),
 		false,
+		false,
 	)
 
 	genesisState := app.NewDefaultGenesisState()
@@ -86,6 +87,7 @@ func TestQuicksilverExport(t *testing.T) {
 		wasm.EnableAllProposals,
 		app.EmptyAppOptions{},
 		app.GetWasmOpts(app.EmptyAppOptions{}),
+		false,
 		false,
 	)
 	_, err = app2.ExportAppStateAndValidators(false, []string{})
