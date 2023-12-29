@@ -1,8 +1,6 @@
 package types
 
 import (
-	"strings"
-
 	"github.com/ingenuity-build/multierror"
 )
 
@@ -26,16 +24,8 @@ func (lpd *LiquidAllowedDenomProtocolData) ValidateBasic() error {
 		errs["ChainID"] = ErrUndefinedAttribute
 	}
 
-	if len(strings.Split(lpd.ChainID, "-")) < 2 {
-		errs["ChainID"] = ErrInvalidChainID
-	}
-
 	if lpd.RegisteredZoneChainID == "" {
 		errs["RegisteredZoneChainID"] = ErrUndefinedAttribute
-	}
-
-	if len(strings.Split(lpd.RegisteredZoneChainID, "-")) < 2 {
-		errs["RegisteredZoneChainID"] = ErrInvalidChainID
 	}
 
 	if lpd.QAssetDenom == "" {

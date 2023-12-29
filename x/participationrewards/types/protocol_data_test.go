@@ -81,26 +81,6 @@ func TestLiquidProtocolData_ValidateBasic(t *testing.T) {
 			},
 			false,
 		},
-		{
-			"liquid_invalid_chainid",
-			types.LiquidAllowedDenomProtocolData{
-				ChainID:               "badzone",
-				IbcDenom:              "ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3",
-				QAssetDenom:           "uqstake",
-				RegisteredZoneChainID: "testzone-1",
-			},
-			true,
-		},
-		{
-			"liquid_invalid_rzchainid",
-			types.LiquidAllowedDenomProtocolData{
-				ChainID:               "somechain-1",
-				IbcDenom:              "ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3",
-				QAssetDenom:           "uqstake",
-				RegisteredZoneChainID: "badzone",
-			},
-			true,
-		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
