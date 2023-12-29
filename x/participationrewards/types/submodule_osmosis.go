@@ -3,7 +3,6 @@ package types
 import (
 	"encoding/json"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/ingenuity-build/multierror"
@@ -95,7 +94,7 @@ func (opd *OsmosisPoolProtocolData) ValidateBasic() error {
 	for _, ibcdenom := range utils.Keys(opd.Denoms) {
 		el := fmt.Sprintf("Denoms[%s]", ibcdenom)
 
-		if opd.Denoms[ibcdenom].ChainID == "" || len(strings.Split(opd.Denoms[ibcdenom].ChainID, "-")) < 2 {
+		if opd.Denoms[ibcdenom].ChainID == "" {
 			errs[el+" key"] = fmt.Errorf("%w, chainID", ErrInvalidChainID)
 		}
 
