@@ -1,10 +1,14 @@
-name: Test Deploy to GitHub Pages
+name: Build & Deploy web-ui with dev environment to Github Pages
 
 on:
   push:
+    branches:
+      - bunDev
     paths:
       - web-ui/**
   pull_request:
+    branches:
+      - bunDev
     paths:
       - web-ui/**
 
@@ -32,7 +36,7 @@ jobs:
       - name: Setup Bun
         uses: oven-sh/setup-bun@v1
         with:
-          bun-version: latest # or specify a version
+          bun-version: latest
 
       - name: Install Dependencies
         run: |
