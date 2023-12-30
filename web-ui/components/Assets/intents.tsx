@@ -11,16 +11,32 @@ export interface StakingIntentProps {
 }
 
 const StakingIntent: React.FC<StakingIntentProps> = ({ address, isWalletConnected }) => {
-  const { intent, isLoading, isError } = useIntentQuery('cosmoshub', address ?? '');
-
   const validators = [
     { name: 'Validator 1', logo: '/validator1.png', percentage: '30%' },
     { name: 'Validator 2', logo: '/validator2.png', percentage: '40%' },
   ];
 
-  const chains = ['Cosmos', 'Osmosis', 'Stargaze', 'Regen', 'Sommelier'];
+  const chains = ['Stargaze', 'Cosmos', 'Osmosis', 'Regen', 'Sommelier'];
   const [currentChainIndex, setCurrentChainIndex] = useState(0);
 
+  const currentChainName = chains[currentChainIndex];
+  let newChainName: string | undefined;
+  if (currentChainName === 'Cosmos') {
+    newChainName = 'cosmoshub';
+  } else if (currentChainName === 'Osmosis') {
+    newChainName = 'osmosistestnet';
+  } else if (currentChainName === 'Stargaze') {
+    newChainName = 'stargazetestnet';
+  } else if (currentChainName === 'Regen') {
+    newChainName = 'regen';
+  } else if (currentChainName === 'Sommelier') {
+    newChainName = 'sommelier-3';
+  } else {
+    // Default case
+    newChainName = currentChainName;
+  }
+  const { intent, isLoading, isError } = useIntentQuery(newChainName, address ?? '');
+  console.log(intent);
   const handleLeftArrowClick = () => {
     setCurrentChainIndex((prevIndex) => (prevIndex === 0 ? chains.length - 1 : prevIndex - 1));
   };

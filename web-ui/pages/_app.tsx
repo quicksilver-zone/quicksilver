@@ -96,8 +96,8 @@ function CreateCosmosApp({ Component, pageProps }: AppProps) {
               rest: [lcdEnndpoints.quicksilver ?? ''],
             },
             quicksilvertestnet: {
-              rest: ['https://quick.api.t.stavr.tech/'],
-              rpc: ['http://quick.rpc.t.stavr.tech:20027'],
+              rest: ['https://lcd.test.quicksilver.zone/'],
+              rpc: ['https://rpc.test.quicksilver.zone'],
             },
             cosmoshub: {
               rpc: [rpcEnndpoints.cosmoshub ?? ''],

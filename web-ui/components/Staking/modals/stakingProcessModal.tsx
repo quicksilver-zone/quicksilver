@@ -434,6 +434,7 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
                           {validator.name}
                         </Text>
                         <Input
+                          color={'white'}
                           type="number"
                           width="55px"
                           placeholder=""

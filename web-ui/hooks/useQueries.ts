@@ -135,7 +135,7 @@ export const useIntentQuery = (chainName: string, address: string) => {
         throw new Error('RPC Client not ready');
       }
 
-      const intent = await axios.get(`https://quicksilver-rest.publicnode.com/quicksilver/interchainstaking/v1/zones/${chainId}/delegator_intent/${address}`)
+      const intent = await axios.get(`https://lcd.test.quicksilver.zone/quicksilver/interchainstaking/v1/zones/${chainId}/delegator_intent/${address}`)
 
       return intent;
     },
