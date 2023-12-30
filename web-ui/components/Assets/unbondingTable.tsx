@@ -39,6 +39,7 @@ const UnbondingAssetsTable: React.FC<UnbondingAssetsTableProps> = ({ address, ch
     },
   ];
   const { unbondingData } = useUnbondingQuery(chainName, address);
+  const noUnbondingAssets = isWalletConnected && unbondingData?.withdrawals.length === 0;
   return (
     <>
       <Text fontSize="xl" fontWeight="bold" color="white" mb={4}>
@@ -63,7 +64,7 @@ const UnbondingAssetsTable: React.FC<UnbondingAssetsTableProps> = ({ address, ch
           </Text>
         </Flex>
       )}
-      {unbondingData?.withdrawals.length === 0 && (
+      {noUnbondingAssets && (
         <Flex
           w="100%"
           backdropFilter="blur(50px)"
@@ -82,7 +83,7 @@ const UnbondingAssetsTable: React.FC<UnbondingAssetsTableProps> = ({ address, ch
           </Text>
         </Flex>
       )}
-      {isWalletConnected && (
+      {isWalletConnected && !noUnbondingAssets && (
         <Box bgColor="rgba(255,255,255,0.1)" p={4} borderRadius="lg">
           <TableContainer h={'200px'} overflowY={'auto'}>
             <Table variant="simple" color="white">

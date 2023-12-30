@@ -26,7 +26,7 @@ export const networks = [
     {
       value: 'REGEN',
       logo: '/quicksilver/img/networks/regen.svg',
-      qlogo: '/quicksilver/img/networks/regen.svg',
+      qlogo: '/quicksilver/img/networks/qregen.png',
       name: 'Regen',
       chainName: 'regen',
       chainId: 'regen-1',
@@ -69,7 +69,7 @@ export const networks = [
     {
       value: 'REGEN',
       logo: '/quicksilver/img/networks/regen.svg',
-      qlogo: '/quicksilver/img/networks/regen.svg',
+      qlogo: '/quicksilver/img/networks/qregen.png',
       name: 'Regen',
       chainName: 'regen',
       chainId: 'regen-redwood-1',

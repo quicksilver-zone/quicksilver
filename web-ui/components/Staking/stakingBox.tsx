@@ -116,7 +116,7 @@ export const StakingBox = ({ selectedOption, isModalOpen, setModalOpen, setBalan
   const [isError, setIsError] = useState<boolean>(false);
   const [transactionStatus, setTransactionStatus] = useState('Pending');
 
-  const { getSigningStargateClient } = useChain('quicksilvertestnet');
+  const { getSigningStargateClient } = useChain('quicksilver');
 
   const isCalculationDataLoaded = tokenAmount && !isNaN(Number(tokenAmount)) && zone && !isNaN(Number(zone.redemptionRate));
 
@@ -341,7 +341,9 @@ export const StakingBox = ({ selectedOption, isModalOpen, setModalOpen, setBalan
                   </Stat>
                   <Spacer /> {/* This pushes the next Stat component to the right */}
                   <Stat py={4} textAlign="right" color="white">
-                    <StatNumber textColor="complimentary.900">{(Number(tokenAmount) / Number(zone?.redemptionRate)).toFixed(2)}</StatNumber>
+                    <StatNumber textColor="complimentary.900">
+                      {(Number(tokenAmount) / (Number(zone?.redemptionRate) || 1)).toFixed(2)}
+                    </StatNumber>
                   </Stat>
                 </HStack>
                 <Button
@@ -469,7 +471,9 @@ export const StakingBox = ({ selectedOption, isModalOpen, setModalOpen, setBalan
                   </Stat>
                   <Spacer /> {/* This pushes the next Stat component to the right */}
                   <Stat py={4} textAlign="right" color="white">
-                    <StatNumber textColor="complimentary.900">{(Number(tokenAmount) * Number(zone?.redemptionRate)).toFixed(2)}</StatNumber>
+                    <StatNumber textColor="complimentary.900">
+                      {(Number(tokenAmount) * Number(zone?.redemptionRate || 1)).toFixed(2)}
+                    </StatNumber>
                   </Stat>
                 </HStack>
                 <Button

@@ -121,8 +121,8 @@ function CreateCosmosApp({ Component, pageProps }: AppProps) {
               rest: [lcdEnndpoints.osmosis ?? ''],
             },
             osmosistestnet: {
-              rpc: ['https://rpc.osmotest5.osmosis.zone'],
-              rest: ['https://lcd.osmotest5.osmosis.zone'],
+              rpc: [rpcEnndpoints.osmosis ?? ''],
+              rest: [lcdEnndpoints.osmosis ?? ''],
             },
           },
         }}
