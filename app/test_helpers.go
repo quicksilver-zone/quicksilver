@@ -123,7 +123,7 @@ func GetAppWithContext(t *testing.T, init bool) (*Quicksilver, sdk.Context) {
 	t.Helper()
 
 	app := Setup(t, !init)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "mercury-1", Time: time.Now().UTC()})
+	ctx := app.BaseApp.NewContext(false)
 	return app, ctx
 }
 

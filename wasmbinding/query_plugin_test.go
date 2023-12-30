@@ -4,10 +4,8 @@ import (
 	"encoding/hex"
 	"fmt"
 	"testing"
-	"time"
 
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/golang/protobuf/proto" // nolint:staticcheck
 	"github.com/stretchr/testify/suite"
 
@@ -34,7 +32,7 @@ type StargateTestSuite struct {
 
 func (s *StargateTestSuite) SetupTest() {
 	s.app = app.Setup(s.T(), false)
-	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "quicksilver-1", Time: time.Now().UTC()})
+	s.ctx = s.app.BaseApp.NewContext(false)
 }
 
 func TestStargateTestSuite(t *testing.T) {

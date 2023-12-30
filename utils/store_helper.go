@@ -8,7 +8,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	"github.com/gogo/protobuf/proto"
 
-	db "github.com/tendermint/tm-db"
+	db "github.com/cometbft/cometbft-db"
 
 	"cosmossdk.io/store"
 )

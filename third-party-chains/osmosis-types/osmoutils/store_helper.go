@@ -5,8 +5,8 @@ import (
 	"fmt"
 
 	storetypes "cosmossdk.io/store/types"
+	db "github.com/cometbft/cometbft-db"
 	"github.com/gogo/protobuf/proto"
-	db "github.com/tendermint/tm-db"
 
 	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/store"

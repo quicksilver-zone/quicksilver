@@ -11,7 +11,6 @@ import (
 	sdkmath "cosmossdk.io/math"
 	"github.com/CosmWasm/wasmd/x/wasm"
 	dbm "github.com/cometbft/cometbft-db"
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/exp/maps"
 
@@ -47,7 +46,7 @@ func TestKeeperWithZonesRoundTrip(t *testing.T) {
 
 	chainID := "quicksilver-1"
 	kpr := quicksilver.InterchainstakingKeeper
-	ctx := quicksilver.NewContext(true, tmproto.Header{Height: quicksilver.LastBlockHeight()})
+	ctx := quicksilver.NewContext(truefdddgg)
 
 	// 1. Check for a zone without having stored anything.
 	zone, ok := kpr.GetZone(ctx, chainID)

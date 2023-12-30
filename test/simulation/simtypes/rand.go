@@ -87,7 +87,7 @@ func RandomDecAmount(r *rand.Rand, max sdkmath.LegacyDec) sdkmath.LegacyDec {
 		randInt = big.NewInt(0).Rand(r, max.BigInt())
 	}
 
-	return sdkmath.LegacyNewDecFromBigIntWithPrec(randInt, sdk.Precision)
+	return sdkmath.LegacyNewDecFromBigIntWithPrec(randInt, sdkmath.LegacyPrecision)
 }
 
 // RandTimestamp generates a random timestamp.
