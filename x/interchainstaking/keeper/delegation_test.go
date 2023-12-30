@@ -863,7 +863,6 @@ func (suite *KeeperTestSuite) TestDetermineMaximumValidatorAllocationsFromFixtur
 
 	// bonded w/ 0 bonded, 0 liquid = = 0
 	suite.Equal(allocations["cosmosvaloper1yl8t2nle6nsrxyvy6tx4yhyerezcucmxcpzswx"], sdkmath.NewInt(0))
-
 }
 
 func (suite *KeeperTestSuite) TestDelegationPlanLsmFixture() {
