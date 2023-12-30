@@ -208,17 +208,17 @@ func TestCurrentAllocationsMoreValidators(t *testing.T) {
 	}
 	currentSum := sdkmath.NewInt(600)
 	targetAllocations := types.ValidatorIntents{
-		{ValoperAddress: "validator1", Weight: sdk.NewDecWithPrec(3, 1)},
-		{ValoperAddress: "validator2", Weight: sdk.NewDecWithPrec(4, 1)},
+		{ValoperAddress: "validator1", Weight: sdk.NewDecWithPrec(43, 2)},
+		{ValoperAddress: "validator2", Weight: sdk.NewDecWithPrec(57, 2)},
 	}
 	amount := sdk.Coins{sdk.NewCoin("token", sdk.NewInt(1000))}
 
 	expectedAllocations := map[string]sdkmath.Int{
-		"validator1": sdkmath.NewInt(489),
-		"validator2": sdkmath.NewInt(511),
+		"validator1": sdkmath.NewInt(453),
+		"validator2": sdkmath.NewInt(547),
 	}
 
-	result, err := types.DetermineAllocationsForDelegation(currentAllocations, currentSum, targetAllocations, amount, make(map[string]sdkmath.Int))
+	result, err := types.DetermineAllocationsForDelegation(currentAllocations, currentSum, targetAllocations.Normalize(), amount, make(map[string]sdkmath.Int))
 	require.NoError(t, err)
 
 	if !reflect.DeepEqual(result, expectedAllocations) {
