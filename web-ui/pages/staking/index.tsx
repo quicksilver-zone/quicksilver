@@ -68,13 +68,6 @@ export default function Staking() {
     displayApr = 'Error';
   }
 
-  const { connect, isWalletConnected } = useChain(selectedNetwork.chainName);
-
-  useEffect(() => {
-    if (!isWalletConnected) connect();
-    else if (isWalletConnected) return;
-  }, [selectedNetwork]);
-
   const flexDirection = useBreakpointValue({ base: 'column', md: 'row' });
 
   return (

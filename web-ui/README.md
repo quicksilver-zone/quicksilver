@@ -39,7 +39,7 @@ Please ensure your IDE is configured to use Typescript v4.9.3
 
 **UI/UX**
 
-- customize wallet connect modal / Utilize useChains solution for pre 2.3 from cosmos kit
+- customize wallet connect modal
 
 - Finish Mobile breakpoints
 

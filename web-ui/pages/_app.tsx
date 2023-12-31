@@ -7,7 +7,7 @@ import { SignerOptions, WalletViewProps } from '@cosmos-kit/core';
 import { wallets as cosmostationWallets } from '@cosmos-kit/cosmostation';
 import { wallets as keplrWallets } from '@cosmos-kit/keplr';
 import { wallets as leapWallets } from '@cosmos-kit/leap';
-import { ChainProvider } from '@cosmos-kit/react';
+import { ChainProvider, ThemeCustomizationProps } from '@cosmos-kit/react';
 import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { chains, assets } from 'chain-registry';
@@ -18,7 +18,6 @@ import { ibcAminoConverters, ibcProtoRegistry } from 'interchain-query';
 
 import { Header, SideHeader } from '@/components';
 import { defaultTheme } from '@/config';
-import { useRpcQueryClient } from '@/hooks';
 
 import '@interchain-ui/react/styles';
 
@@ -85,6 +84,51 @@ function CreateCosmosApp({ Component, pageProps }: AppProps) {
       env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_LCD_ENDPOINT_OSMOSIS : process.env.NEXT_PUBLIC_MAINNET_LCD_ENDPOINT_OSMOSIS,
   };
 
+  const modalThemeOverrides: ThemeCustomizationProps = {
+    overrides: {
+      'connect-modal': {
+        bg: {
+          light: 'black',
+          dark: 'black',
+        },
+        color: {
+          light: '#FFFFFF',
+          dark: '#FFFFFF',
+        },
+      },
+      'connect-modal-wallet-button': {
+        bg: {
+          light: '#FF8000',
+          dark: '#FF8000',
+        },
+        hoverBg: {
+          light: '#FF8000',
+          dark: '#FF8000',
+        },
+        hoverBorderColor: {
+          light: '#FFFFFF',
+          dark: '#FFFFFF',
+        },
+        color: {
+          light: '#000000', // light theme text color
+          dark: '#FFFFFF', // dark theme text color
+        },
+      },
+      'connect-modal-qr-code': {
+        bg: {
+          light: '#FFFFFF',
+          dark: '#FFFFFF',
+        },
+        color: {
+          light: '#000000',
+          dark: '#000000',
+        },
+      },
+      // You can add overrides for other components if necessary
+    },
+    // You can also specify 'defaultTheme', 'themeDefs', and 'customTheme' if needed
+  };
+
   return (
     <ChakraProvider theme={defaultTheme}>
       <ChainProvider
@@ -125,6 +169,7 @@ function CreateCosmosApp({ Component, pageProps }: AppProps) {
             },
           },
         }}
+        modalTheme={modalThemeOverrides}
         chains={chains}
         assetLists={assets}
         //@ts-ignore
