@@ -26,7 +26,7 @@ export const useRpcQueryClient = (chainName: string) => {
     queryKey: ['rpcQueryClient', rpcEndpoint],
     queryFn: () => {
 
-      return createRPCQueryClient({ rpcEndpoint: rpcEndpoint || 'https://lcd.quicksilver.zone' });
+      return createRPCQueryClient({ rpcEndpoint: rpcEndpoint || '' });
     },
     enabled: !!rpcEndpoint,
     staleTime: Infinity,

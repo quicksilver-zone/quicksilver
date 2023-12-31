@@ -53,23 +53,7 @@ function CreateCosmosApp({ Component, pageProps }: AppProps) {
 
   const env = process.env.NEXT_PUBLIC_CHAIN_ENV;
 
-  const rpcEnndpoints = {
-    quicksilver:
-      env === 'testnet'
-        ? process.env.NEXT_PUBLIC_TESTNET_LCD_ENDPOINT_QUICKSILVER
-        : process.env.NEXT_PUBLIC_MAINNET_LCD_ENDPOINT_QUICKSILVER,
-    cosmoshub:
-      env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_LCD_ENDPOINT_COSMOSHUB : process.env.NEXT_PUBLIC_MAINNET_LCD_ENDPOINT_COSMOSHUB,
-    sommelier:
-      env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_LCD_ENDPOINT_SOMMELIER : process.env.NEXT_PUBLIC_MAINNET_LCD_ENDPOINT_SOMMELIER,
-    stargaze:
-      env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_LCD_ENDPOINT_STARGAZE : process.env.NEXT_PUBLIC_MAINNET_LCD_ENDPOINT_STARGAZE,
-    regen: env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_LCD_ENDPOINT_REGEN : process.env.NEXT_PUBLIC_MAINNET_LCD_ENDPOINT_REGEN,
-    osmosis:
-      env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_LCD_ENDPOINT_OSMOSIS : process.env.NEXT_PUBLIC_MAINNET_LCD_ENDPOINT_OSMOSIS,
-  };
-
-  const lcdEnndpoints = {
+  const rpcEndpoints = {
     quicksilver:
       env === 'testnet'
         ? process.env.NEXT_PUBLIC_TESTNET_RPC_ENDPOINT_QUICKSILVER
@@ -85,6 +69,22 @@ function CreateCosmosApp({ Component, pageProps }: AppProps) {
       env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_RPC_ENDPOINT_OSMOSIS : process.env.NEXT_PUBLIC_MAINNET_RPC_ENDPOINT_OSMOSIS,
   };
 
+  const lcdEndpoints = {
+    quicksilver:
+      env === 'testnet'
+        ? process.env.NEXT_PUBLIC_TESTNET_LCD_ENDPOINT_QUICKSILVER
+        : process.env.NEXT_PUBLIC_MAINNET_LCD_ENDPOINT_QUICKSILVER,
+    cosmoshub:
+      env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_LCD_ENDPOINT_COSMOSHUB : process.env.NEXT_PUBLIC_MAINNET_LCD_ENDPOINT_COSMOSHUB,
+    sommelier:
+      env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_LCD_ENDPOINT_SOMMELIER : process.env.NEXT_PUBLIC_MAINNET_LCD_ENDPOINT_SOMMELIER,
+    stargaze:
+      env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_LCD_ENDPOINT_STARGAZE : process.env.NEXT_PUBLIC_MAINNET_LCD_ENDPOINT_STARGAZE,
+    regen: env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_LCD_ENDPOINT_REGEN : process.env.NEXT_PUBLIC_MAINNET_LCD_ENDPOINT_REGEN,
+    osmosis:
+      env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_LCD_ENDPOINT_OSMOSIS : process.env.NEXT_PUBLIC_MAINNET_LCD_ENDPOINT_OSMOSIS,
+  };
+
   return (
     <ChakraProvider theme={defaultTheme}>
       <ChainProvider
@@ -92,37 +92,36 @@ function CreateCosmosApp({ Component, pageProps }: AppProps) {
           isLazy: true,
           endpoints: {
             quicksilver: {
-              rpc: [rpcEnndpoints.quicksilver ?? ''],
-              rest: [lcdEnndpoints.quicksilver ?? ''],
+              rpc: [rpcEndpoints.quicksilver ?? ''],
+              rest: [lcdEndpoints.quicksilver ?? ''],
             },
             quicksilvertestnet: {
               rest: ['https://lcd.test.quicksilver.zone/'],
               rpc: ['https://rpc.test.quicksilver.zone'],
             },
             cosmoshub: {
-              rpc: [rpcEnndpoints.cosmoshub ?? ''],
-              rest: [lcdEnndpoints.cosmoshub ?? ''],
+              rpc: [rpcEndpoints.cosmoshub ?? ''],
+              rest: [lcdEndpoints.cosmoshub ?? ''],
             },
-
             sommelier: {
-              rpc: [rpcEnndpoints.sommelier ?? ''],
-              rest: [lcdEnndpoints.sommelier ?? ''],
+              rpc: [rpcEndpoints.sommelier ?? ''],
+              rest: [lcdEndpoints.sommelier ?? ''],
             },
             stargaze: {
-              rpc: [rpcEnndpoints.stargaze ?? ''],
-              rest: [lcdEnndpoints.stargaze ?? ''],
+              rpc: [rpcEndpoints.stargaze ?? ''],
+              rest: [lcdEndpoints.stargaze ?? ''],
             },
             regen: {
-              rpc: [rpcEnndpoints.regen ?? ''],
-              rest: [lcdEnndpoints.regen ?? ''],
+              rpc: [rpcEndpoints.regen ?? ''],
+              rest: [lcdEndpoints.regen ?? ''],
             },
             osmosis: {
-              rpc: [rpcEnndpoints.osmosis ?? ''],
-              rest: [lcdEnndpoints.osmosis ?? ''],
+              rpc: [rpcEndpoints.osmosis ?? ''],
+              rest: [lcdEndpoints.osmosis ?? ''],
             },
             osmosistestnet: {
-              rpc: [rpcEnndpoints.osmosis ?? ''],
-              rest: [lcdEnndpoints.osmosis ?? ''],
+              rpc: [rpcEndpoints.osmosis ?? ''],
+              rest: [lcdEndpoints.osmosis ?? ''],
             },
           },
         }}

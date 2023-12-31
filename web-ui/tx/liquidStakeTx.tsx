@@ -84,7 +84,7 @@ export const liquidStakeTx = (
 
   if (validatorsSelect.length > 0) {
     validatorsSelect.forEach((val) => {
-      memoBuffer = Buffer.concat([memoBuffer, addValidator(val.address, val.intent / 100)]);
+      memoBuffer = Buffer.concat([memoBuffer, addValidator(val.address, val.intent)]);
     });
     memoBuffer = Buffer.concat([Buffer.from([0x02, memoBuffer.length]), memoBuffer]);
   }

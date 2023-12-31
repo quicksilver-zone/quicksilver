@@ -1,12 +1,14 @@
 import { HttpEndpoint } from '@cosmjs/stargate';
 import { quicksilver } from '@hoangdv2429/quicksilverjs';
-import { useQuery } from '@tanstack/react-query';
+import { QueryClient, useQuery } from '@tanstack/react-query';
 
 import { useQueryHooks } from './useQueryHooks';
 
 const createGrpcGateWayClient = quicksilver.ClientFactory.createGrpcGateWayClient;
 
 export const useGrpcQueryClient = (chainName: string) => {
+
+  
   let grpcEndpoint: string | HttpEndpoint | undefined;
   const env = process.env.NEXT_PUBLIC_CHAIN_ENV; 
   const solution = useQueryHooks(chainName);
@@ -20,7 +22,6 @@ export const useGrpcQueryClient = (chainName: string) => {
     regen: env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_LCD_ENDPOINT_REGEN : process.env.NEXT_PUBLIC_MAINNET_LCD_ENDPOINT_REGEN,
     osmosis: env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_LCD_ENDPOINT_OSMOSIS : process.env.NEXT_PUBLIC_MAINNET_LCD_ENDPOINT_OSMOSIS,
   };
-
 
 
   grpcEndpoint = endpoints[chainName] || solution.rpcEndpoint;
