@@ -20,6 +20,8 @@ import { Header, SideHeader } from '@/components';
 import { defaultTheme } from '@/config';
 import { useRpcQueryClient } from '@/hooks';
 
+import '@interchain-ui/react/styles';
+
 function CreateCosmosApp({ Component, pageProps }: AppProps) {
   const signerOptions: SignerOptions = {
     //@ts-ignore
