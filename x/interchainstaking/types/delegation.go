@@ -181,6 +181,10 @@ func DetermineAllocationsForDelegation(currentAllocations map[string]sdkmath.Int
 			thisAllocation := proportionalAllocation.Mul(targetAllocation.Weight).TruncateInt()
 			// if there is a cap...
 			if hasMax {
+				// belt and braces.
+				if max.LT(sdk.ZeroInt()) {
+					return nil, errors.New("maxCanAllocate underflow")
+				}
 				// determine if cap is breached
 				if delta.Amount.Add(thisAllocation).GTE(max) {
 					// if so, truncate and remove from target allocations for next round
@@ -212,6 +216,10 @@ func DetermineAllocationsForDelegation(currentAllocations map[string]sdkmath.Int
 			outSum = outSum.Add(delta.Amount)
 		}
 	}
+	if outSum.GT(input) {
+		return nil, errors.New("outSum overflow; cannot be greater than input amount")
+	}
+
 	dust := input.Sub(outSum)
 	if !dust.IsZero() {
 		outWeights[deltas[0].ValoperAddress] = outWeights[deltas[0].ValoperAddress].Add(dust)
