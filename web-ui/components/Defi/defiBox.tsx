@@ -16,6 +16,7 @@ import {
   useColorModeValue,
   ButtonGroup,
   HStack,
+  Link,
 } from '@chakra-ui/react';
 import { ChevronDownIcon, ExternalLinkIcon } from '@chakra-ui/icons';
 import { useDefiData } from '@/hooks/useQueries';
@@ -111,7 +112,7 @@ const DefiTable = () => {
           </Thead>
           <Tbody>
             {filteredData.map((asset, index) => (
-              <Tr _even={{ bg: 'rgba(255, 128, 0, 0.1)' }} borderBottomColor={'transparent'}>
+              <Tr _even={{ bg: 'rgba(255, 128, 0, 0.1)' }} key={index} borderBottomColor={'transparent'}>
                 <Td borderBottomColor="transparent">
                   <Flex align="center">
                     <Box w="2rem" h="2rem" bg="gray.200" rounded="full" mr={2}></Box>
@@ -126,9 +127,11 @@ const DefiTable = () => {
                 </Td>
                 <Td borderBottomColor="transparent">{asset.provider}</Td>
                 <Td borderBottomColor="transparent">
-                  <Button backgroundColor="rgba(255, 128, 0, 0.8)" rightIcon={<ExternalLinkIcon />} variant="ghost">
-                    {actionTitles[asset.action.toLowerCase().replace(/\s+/g, '-') as keyof typeof actionTitles]}
-                  </Button>
+                  <Link href={asset.link} isExternal={true} _hover={{ textDecoration: 'none' }}>
+                    <Button backgroundColor="rgba(255, 128, 0, 0.8)" rightIcon={<ExternalLinkIcon />} variant="ghost">
+                      {actionTitles[asset.action.toLowerCase().replace(/\s+/g, '-') as keyof typeof actionTitles]}
+                    </Button>
+                  </Link>
                 </Td>
               </Tr>
             ))}

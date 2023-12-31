@@ -19,17 +19,29 @@ export const InfoBox: React.FC<AssetsAccordianProps> = ({ selectedOption, displa
 
   const renderRedemptionRate = () => {
     if (!isZoneLoading && zone) {
-      return ` 1 q${selectedOption.value.toUpperCase()} = ${Number(zone.redemptionRate).toFixed(2)} ${selectedOption.value.toUpperCase()}`;
+      return (
+        <Text color={'complimentary.900'}>
+          1 q{selectedOption.value.toUpperCase()} = {Number(zone.redemptionRate).toFixed(2)} {selectedOption.value.toUpperCase()}
+        </Text>
+      );
     } else {
-      return <SkeletonCircle size="2" startColor="complimentary.900" endColor="complimentary.400" />;
+      return (
+        <Box display="inline-block">
+          <SkeletonCircle size="2" startColor="complimentary.900" endColor="complimentary.400" />
+        </Box>
+      );
     }
   };
 
   const renderUnbondingPeriod = () => {
     if (!isZoneLoading && zone) {
-      return (Number(zone?.unbondingPeriod) / 86400000000000).toString() + ' days';
+      return <Text color={'complimentary.900'}>{(Number(zone?.unbondingPeriod) / 86400000000000).toString()} days</Text>;
     } else {
-      return <SkeletonCircle size="2" startColor="complimentary.900" endColor="complimentary.400" />;
+      return (
+        <Box display="inline-block">
+          <SkeletonCircle size="2" startColor="complimentary.900" endColor="complimentary.400" />
+        </Box>
+      );
     }
   };
 
@@ -72,8 +84,6 @@ export const InfoBox: React.FC<AssetsAccordianProps> = ({ selectedOption, displa
             <Flex borderTopColor={'transparent'} alignItems="center" justifyContent="space-between" width="100%" py={2}>
               <Flex flexDirection="row" flex="1" alignItems="center">
                 <Box mr="16px">
-                  {' '}
-                  {/* Adjusts right margin */}
                   <BsCoin color="#FF8000" size="24px" />
                 </Box>
                 <Text fontSize="16px" color={'white'}>
@@ -87,23 +97,21 @@ export const InfoBox: React.FC<AssetsAccordianProps> = ({ selectedOption, displa
           </h2>
         </AccordionItem>
         <AccordionItem pt={2} mb={2}>
-          <h2>
-            <Flex borderTopColor={'transparent'} alignItems="center" justifyContent="space-between" width="100%" py={2}>
-              <Flex flexDirection="row" flex="1" alignItems="center">
-                <Box mr="16px">
-                  {' '}
-                  {/* Adjusts right margin */}
-                  <BsClock color="#FF8000" size="24px" />
-                </Box>
-                <Text fontSize="16px" color={'white'}>
-                  Unbonding
-                </Text>
-              </Flex>
-              <Text pr={2} color="complimentary.900">
-                {renderUnbondingPeriod()}
+          <Flex borderTopColor={'transparent'} alignItems="center" justifyContent="space-between" width="100%" py={2}>
+            <Flex flexDirection="row" flex="1" alignItems="center">
+              <Box mr="16px">
+                {' '}
+                {/* Adjusts right margin */}
+                <BsClock color="#FF8000" size="24px" />
+              </Box>
+              <Text fontSize="16px" color={'white'}>
+                Unbonding
               </Text>
             </Flex>
-          </h2>
+
+            {renderUnbondingPeriod()}
+          </Flex>
+
           <AccordionPanel alignItems="center" justifyItems="center" color="white" pb={4}>
             <VStack spacing={2} width="100%">
               <HStack justifyContent="space-between" width="100%">
@@ -118,23 +126,20 @@ export const InfoBox: React.FC<AssetsAccordianProps> = ({ selectedOption, displa
           </AccordionPanel>
         </AccordionItem>
         <AccordionItem pt={2} mb={2} borderBottom={'none'}>
-          <h2>
-            <Flex borderTopColor={'transparent'} alignItems="center" justifyContent="space-between" width="100%" py={2}>
-              <Flex flexDirection="row" flex="1" alignItems="center">
-                <Box mr="16px">
-                  {' '}
-                  {/* Adjusts right margin */}
-                  <RiStockLine color="#FF8000" size="24px" />
-                </Box>
-                <Text fontSize="16px" color={'white'}>
-                  Value of 1 q{selectedOption.value.toUpperCase()}
-                </Text>
-              </Flex>
-              <Text pr={2} color="complimentary.900">
-                {renderRedemptionRate()}
+          <Flex borderTopColor={'transparent'} alignItems="center" justifyContent="space-between" width="100%" py={2}>
+            <Flex flexDirection="row" flex="1" alignItems="center">
+              <Box mr="16px">
+                {' '}
+                {/* Adjusts right margin */}
+                <RiStockLine color="#FF8000" size="24px" />
+              </Box>
+              <Text fontSize="16px" color={'white'}>
+                Value of 1 q{selectedOption.value.toUpperCase()}
               </Text>
             </Flex>
-          </h2>
+
+            {renderRedemptionRate()}
+          </Flex>
         </AccordionItem>
       </Accordion>
 

@@ -36,7 +36,7 @@ const StakingIntent: React.FC<StakingIntentProps> = ({ address, isWalletConnecte
     newChainName = currentChainName;
   }
   const { intent, isLoading, isError } = useIntentQuery(newChainName, address ?? '');
-  console.log(intent);
+
   const handleLeftArrowClick = () => {
     setCurrentChainIndex((prevIndex) => (prevIndex === 0 ? chains.length - 1 : prevIndex - 1));
   };
