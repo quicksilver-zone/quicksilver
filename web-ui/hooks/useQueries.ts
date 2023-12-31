@@ -31,7 +31,7 @@ export const useBalanceQuery = (chainName: string, address: string) => {
       return balance;
     },
     {
-      enabled: !!grpcQueryClient,
+      enabled: !!grpcQueryClient && !!address,
       staleTime: Infinity,
     },
   );
@@ -66,7 +66,7 @@ export const useIbcBalanceQuery = (chainName: string, address: string) => {
       return balance;
     },
     {
-      enabled: !!grpcQueryClient,
+      enabled: !!grpcQueryClient && !!address,
       staleTime: Infinity,
     },
   );
@@ -112,7 +112,7 @@ export const useQBalanceQuery = (chainName: string, address: string, qAsset: str
       return balance;
     },
     {
-      enabled: !!grpcQueryClient,
+      enabled: !!grpcQueryClient && !!address,
       staleTime: Infinity,
     },
   );
@@ -140,7 +140,7 @@ export const useIntentQuery = (chainName: string, address: string) => {
       return intent;
     },
     {
-      enabled: !!grpcQueryClient,
+      enabled: !!grpcQueryClient && !!address,
       staleTime: Infinity,
     },
   );
@@ -180,7 +180,7 @@ export const useUnbondingQuery = (chainName: string, address: string) => {
 
     },
     {
-      enabled: !!grpcQueryClient,
+      enabled: !!grpcQueryClient && !!address,
       staleTime: Infinity,
     },
   );

@@ -1,17 +1,15 @@
-import { HttpEndpoint } from '@cosmjs/stargate';
 import { quicksilver } from '@hoangdv2429/quicksilverjs';
-import { QueryClient, useQuery } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 
-import { useQueryHooks } from './useQueryHooks';
 
 const createGrpcGateWayClient = quicksilver.ClientFactory.createGrpcGateWayClient;
 
 export const useGrpcQueryClient = (chainName: string) => {
 
   
-  let grpcEndpoint: string | HttpEndpoint | undefined;
+  let grpcEndpoint: string | undefined;
   const env = process.env.NEXT_PUBLIC_CHAIN_ENV; 
-  const solution = useQueryHooks(chainName);
+
 
 
   const endpoints: { [key: string]: string | undefined } = {
@@ -24,7 +22,7 @@ export const useGrpcQueryClient = (chainName: string) => {
   };
 
 
-  grpcEndpoint = endpoints[chainName] || solution.rpcEndpoint;
+  grpcEndpoint = endpoints[chainName];
 
 
 

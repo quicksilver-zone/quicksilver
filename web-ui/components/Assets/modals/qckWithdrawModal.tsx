@@ -70,7 +70,7 @@ export function WithdrawModal() {
   const { transfer } = ibc.applications.transfer.v1.MessageComposer.withTypeUrl;
   const { address, connect, status, message, wallet } = useChain(toChain ?? '');
   const { address: qAddress } = useChain('quicksilver');
-  const { balance } = useIbcBalanceQuery(fromChain ?? '', address ?? '');
+  const { balance } = useIbcBalanceQuery(fromChain ?? '', qAddress ?? '');
   const { tx } = useTx(fromChain ?? '');
 
   const onSubmitClick = async () => {
