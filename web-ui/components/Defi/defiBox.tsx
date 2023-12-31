@@ -18,6 +18,7 @@ import {
   HStack,
 } from '@chakra-ui/react';
 import { ChevronDownIcon, ExternalLinkIcon } from '@chakra-ui/icons';
+import { useDefiData } from '@/hooks/useQueries';
 type ActionButtonTitle = 'Add Liquidity' | 'Borrow' | 'Lend' | 'Mint Stablecoin' | 'Vaults';
 interface DefiAsset {
   id: string;
@@ -28,81 +29,6 @@ interface DefiAsset {
   action: string;
 }
 
-const fakeData: DefiAsset[] = [
-  {
-    id: '1',
-    assetPair: 'qATOM - ATOM',
-    apy: 0.56,
-    tvl: '$416.87',
-    provider: 'Radiyum',
-    action: 'Add Liquidity',
-  },
-  {
-    id: '1',
-    assetPair: 'qATOM - ATOM',
-    apy: 10,
-    tvl: '$20006.87',
-    provider: 'Osmosis',
-    action: 'Mint Stablecoin',
-  },
-  {
-    id: '1',
-    assetPair: 'qATOM - ATOM',
-    apy: 10,
-    tvl: '$20006.87',
-    provider: 'Osmosis',
-    action: 'Lend',
-  },
-  {
-    id: '1',
-    assetPair: 'qATOM - ATOM',
-    apy: 0.56,
-    tvl: '$416.87',
-    provider: 'Radiyum',
-    action: 'Borrow',
-  },
-  {
-    id: '1',
-    assetPair: 'qATOM - ATOM',
-    apy: 0.56,
-    tvl: '$416.87',
-    provider: 'Radiyum',
-    action: 'add-liquidity',
-  },
-  {
-    id: '1',
-    assetPair: 'qATOM - ATOM',
-    apy: 0.56,
-    tvl: '$416.87',
-    provider: 'Radiyum',
-    action: 'add-liquidity',
-  },
-  {
-    id: '1',
-    assetPair: 'qATOM - ATOM',
-    apy: 0.56,
-    tvl: '$416.87',
-    provider: 'Radiyum',
-    action: 'Vaults',
-  },
-  {
-    id: '1',
-    assetPair: 'qATOM - ATOM',
-    apy: 0.56,
-    tvl: '$416.87',
-    provider: 'Radiyum',
-    action: 'add-liquidity',
-  },
-  {
-    id: '1',
-    assetPair: 'qATOM - ATOM',
-    apy: 0.56,
-    tvl: '$416.87',
-    provider: 'Radiyum',
-    action: 'add-liquidity',
-  },
-];
-
 const actionTitles: Record<string, ActionButtonTitle> = {
   'add-liquidity': 'Add Liquidity',
   borrow: 'Borrow',
@@ -111,22 +37,36 @@ const actionTitles: Record<string, ActionButtonTitle> = {
   vaults: 'Vaults',
 };
 
-const filterCategories: Record<string, (asset: DefiAsset) => boolean> = {
+interface DefiData {
+  assetPair: string;
+  apy: number;
+  tvl: number;
+  provider: string;
+  action: string;
+}
+
+const filterCategories: Record<string, (data: DefiData) => boolean> = {
   All: () => true,
-  'Borrowing & Lending': (asset: DefiAsset) => asset.action === 'Borrow' || asset.action === 'Lend',
-  Vaults: (asset: DefiAsset) => asset.action === 'Vaults',
-  'Liquidity Providers': (asset: DefiAsset) => asset.action === 'Add Liquidity',
-  'Mint Stable Coins': (asset: DefiAsset) => asset.action === 'Mint Stablecoin',
+  'Borrowing & Lending': (data: DefiData) => data.action === 'Borrow' || data.action === 'Lend',
+  Vaults: (data: DefiData) => data.action === 'Vaults',
+  'Liquidity Providers': (data: DefiData) => data.action === 'Add Liquidity',
+  'Mint Stable Coins': (data: DefiData) => data.action === 'Mint Stablecoin',
+};
+
+const formatApy = (apy: number) => {
+  return `${(apy * 100).toFixed(2)}%`; // Converts to percentage and formats to 2 decimal places
 };
 
 const DefiTable = () => {
+  const { defi, isLoading, isError } = useDefiData();
+
   const [activeFilter, setActiveFilter] = useState<string>('All');
 
   const handleFilterClick = (filter: string) => {
     setActiveFilter(filter);
   };
 
-  const filteredData = fakeData.filter(filterCategories[activeFilter]);
+  const filteredData = defi ? defi.filter(filterCategories[activeFilter]) : [];
 
   return (
     <Box backdropFilter="blur(50px)" bgColor="rgba(255,255,255,0.1)" flex="1" borderRadius="10px" p={6} rounded="md">
@@ -154,7 +94,7 @@ const DefiTable = () => {
       </Stack>
       <Box maxH={'480px'} overflow={'auto'}>
         <Table color={'white'} variant="simple">
-          <Thead>
+          <Thead position="sticky">
             <Tr>
               <Th color={'complimentary.900'}>
                 Asset Pair <ChevronDownIcon />
@@ -171,7 +111,7 @@ const DefiTable = () => {
           </Thead>
           <Tbody>
             {filteredData.map((asset, index) => (
-              <Tr _even={{ bg: 'rgba(255, 128, 0, 0.1)' }} key={asset.id} borderBottomColor={'transparent'}>
+              <Tr _even={{ bg: 'rgba(255, 128, 0, 0.1)' }} borderBottomColor={'transparent'}>
                 <Td borderBottomColor="transparent">
                   <Flex align="center">
                     <Box w="2rem" h="2rem" bg="gray.200" rounded="full" mr={2}></Box>
@@ -179,7 +119,7 @@ const DefiTable = () => {
                   </Flex>
                 </Td>
                 <Td borderBottom="0" borderBottomColor="transparent" isNumeric>
-                  {asset.apy}%
+                  {formatApy(asset.apy)}
                 </Td>
                 <Td borderBottomColor="transparent" isNumeric>
                   {asset.tvl}

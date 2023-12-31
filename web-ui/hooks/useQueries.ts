@@ -386,3 +386,32 @@ export const useMissedBlocks = (chainName: string) => {
     isError: missedBlocksQuery.isError,
   };
 };
+interface DefiData {
+    assetPair: string;
+    provider: string;
+    action: string;
+    apy: number;
+    tvl: number;
+    link: string;
+}
+export const useDefiData = () => {
+  const query = useQuery<DefiData[]>(
+    ['defi'],
+    async () => {
+      const res = await axios.get('https://data.test.quicksilver.zone/defi');
+      if (!res.data || res.data.length === 0) {
+        throw new Error('Failed to query defi');
+      }
+      return res.data;
+    },
+    {
+      staleTime: Infinity,
+    }
+  );
+
+  return {
+    defi: query.data,
+    isLoading: query.isLoading,
+    isError: query.isError,
+  };
+};

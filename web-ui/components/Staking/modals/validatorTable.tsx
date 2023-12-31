@@ -119,7 +119,7 @@ export const ValidatorsTable: React.FC<{
         <TableContainer>
           <Table mb={2} border="1px solid rgba(255,128,0, 0.25)" variant="simple" height="lg">
             <TableCaption>Active validators</TableCaption>
-            <Thead>
+            <Thead position="sticky">
               <Tr>
                 <Th
                   border="1px solid rgba(255,128,0, 0.25)"

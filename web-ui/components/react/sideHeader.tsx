@@ -52,7 +52,7 @@ export const SideHeader = () => {
     if (isMobile) {
       onOpen();
     } else {
-      router.push('/');
+      router.push('/staking');
     }
   };
 

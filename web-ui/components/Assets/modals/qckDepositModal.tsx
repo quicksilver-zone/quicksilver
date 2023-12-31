@@ -27,7 +27,6 @@ import { useTx } from '@/hooks';
 import BigNumber from 'bignumber.js';
 import { getCoin, getIbcInfo } from '@/utils';
 import { StdFee, coins } from '@cosmjs/stargate';
-import { store } from '@interchain-ui/react';
 
 export function DepositModal() {
   const { isOpen, onOpen, onClose } = useDisclosure();
