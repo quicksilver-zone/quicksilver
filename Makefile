@@ -25,6 +25,8 @@ DOCKER_TAG := $(COMMIT_HASH)
 GO_MAJOR_VERSION = $(shell go version | cut -c 14- | cut -d' ' -f1 | cut -d'.' -f1)
 GO_MINOR_VERSION = $(shell go version | cut -c 14- | cut -d' ' -f1 | cut -d'.' -f2)
 
+HERMES_VERSION=v1.7.4
+
 export GO111MODULE = on
 
 # Default target executed when no arguments are given to make.
@@ -102,10 +104,7 @@ endif
 build_tags += $(BUILD_TAGS)
 build_tags := $(strip $(build_tags))
 
-whitespace :=
-whitespace += $(whitespace)
-comma := ,
-build_tags_comma_sep := $(subst $(whitespace),$(comma),$(build_tags))
+build_tags_comma_sep := $(shell echo $(build_tags) | sed 's/ /,/g')
 ldflags += -X "github.com/cosmos/cosmos-sdk/version.BuildTags=$(build_tags_comma_sep)"
 
 ifeq (,$(findstring nostrip,$(COSMOS_BUILD_OPTIONS)))
@@ -147,12 +146,12 @@ $(BUILDDIR)/:
 	mkdir -p $(BUILDDIR)/
 
 build-docker:
-	DOCKER_BUILDKIT=1 $(DOCKER) build . -f Dockerfile -t quicksilverzone/quicksilver:$(DOCKER_VERSION) -t quicksilverzone/quicksilver:latest
+	$(DOCKER) build . -f Dockerfile -t quicksilverzone/quicksilver:$(DOCKER_VERSION) -t quicksilverzone/quicksilver:latest
 
-build-docker-local: build
-	DOCKER_BUILDKIT=1 $(DOCKER) build -f Dockerfile.local . -t quicksilverzone/quicksilver:$(DOCKER_VERSION)
+build-docker-xbuild:
+	$(DOCKER) buildx build --platform linux/amd64 . -f Dockerfile -t quicksilverzone/quicksilver:$(DOCKER_VERSION) -t quicksilverzone/quicksilver:latest
 
-build-docker-release: build-docker
+build-docker-release: build-docker-xbuild
 	$(DOCKER)  run -v /tmp:/tmp quicksilverzone/quicksilver:$(DOCKER_VERSION) cp /usr/local/bin/quicksilverd /tmp/quicksilverd
 	mv /tmp/quicksilverd build/quicksilverd-$(DOCKER_VERSION)-amd64
 
@@ -537,4 +536,10 @@ proto-setup:
 	@$(DOCKER) build --rm --tag quicksilver-proto:latest --file proto/Dockerfile .
 	@echo "✅ Setup protobuf environment!"
 
+### Other tools
+.PHONY: hermes-build
+
+hermes-build:
+	docker buildx build --platform linux/amd64 --build-arg VERSION=$HERMES_VERSION -f Dockerfile.hermes . -t quicksilverzone/hermes:$HERMES_VERSION
+	docker push quicksilverzone/hermes:$HERMES_VERSION
 

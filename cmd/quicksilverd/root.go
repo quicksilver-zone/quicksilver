@@ -42,7 +42,8 @@ import (
 )
 
 const (
-	EnvPrefix = "QUICK"
+	EnvPrefix         = "QUICK"
+	FlagSupplyEnabled = "supply.enabled"
 )
 
 type appCreator struct {
@@ -134,8 +135,8 @@ func initTendermintConfig() *tmcfg.Config {
 	cfg := tmcfg.DefaultConfig()
 
 	// peers
-	cfg.P2P.MaxNumInboundPeers = 200
-	cfg.P2P.MaxNumOutboundPeers = 40
+	cfg.P2P.MaxNumInboundPeers = 30
+	cfg.P2P.MaxNumOutboundPeers = 20
 
 	// seeds
 	cfg.P2P.Seeds = "940c0dc153b0e344de6368d101a97fd4d9e69eff@seeds.cros-nest.com:25656,ade4d8bc8cbe014af6ebdf3cb7b1e9ad36f412c0@seeds.polkachu.com:11156,20e1000e88125698264454a884812746c2eb4807@seeds.lavenderfive.com:11156,babc3f3f7804933265ec9c40ad94f4da8e9e0017@seed.rhinostake.com:11156,ebc272824924ea1a27ea3183dd0b9ba713494f83@quicksilver-mainnet-seed.autostake.com:27026,8542cd7e6bf9d260fef543bc49e59be5a3fa9074@seed.publicnode.com:26656,a85a651a3cf1746694560c5b6f76d566c04ca581@quicksilver-seed.takeshi.team:10456,559e316b30830ddd5e93617592ef70330ecce86d@seed-quicksilver.ibs.team:16656,95fe6a416dff4150e0394f8b429743db60ea1327@seed-node.mms.team:27656"
@@ -265,6 +266,7 @@ func (ac appCreator) newApp(
 		appOpts,
 		wasmOpts,
 		false,
+		cast.ToBool(appOpts.Get(FlagSupplyEnabled)),
 		baseapp.SetPruning(pruningOpts),
 		baseapp.SetMinGasPrices(cast.ToString(appOpts.Get(server.FlagMinGasPrices))),
 		baseapp.SetHaltHeight(cast.ToUint64(appOpts.Get(server.FlagHaltHeight))),
@@ -279,6 +281,7 @@ func (ac appCreator) newApp(
 
 func addModuleInitFlags(startCmd *cobra.Command) {
 	crisis.AddModuleInitFlags(startCmd)
+	startCmd.Flags().Bool(FlagSupplyEnabled, false, "Enable supply module endpoint")
 }
 
 func (ac appCreator) appExport(
@@ -313,6 +316,7 @@ func (ac appCreator) appExport(
 		wasm.EnableAllProposals,
 		appOpts,
 		emptyWasmOpts,
+		false,
 		false,
 	)
 

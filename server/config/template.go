@@ -10,4 +10,8 @@ const DefaultConfigTemplate = `
 certificate-path = "{{ .TLS.CertificatePath }}"
 # Key path defines the key.pem file path for the TLS configuration.
 key-path = "{{ .TLS.KeyPath }}"
+
+[supply]
+# The supply module endpoint is resource intensive, and should never be opened publicly.
+enabled = "{{ .Supply.Enabled }}"
 `

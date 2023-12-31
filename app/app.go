@@ -115,6 +115,7 @@ func NewQuicksilver(
 	appOpts servertypes.AppOptions,
 	wasmOpts []wasm.Option,
 	mock bool,
+	enableSupplyEndpoint bool,
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) *Quicksilver {
 	appCodec := encodingConfig.Marshaler
@@ -162,6 +163,7 @@ func NewQuicksilver(
 		wasmConfig,
 		enabledProposals,
 		wasmOpts,
+		enableSupplyEndpoint,
 	)
 
 	// ****  Module Options ****/

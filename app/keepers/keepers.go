@@ -154,6 +154,7 @@ func NewAppKeepers(
 	wasmConfig wasm.Config,
 	wasmEnabledProposals []wasm.ProposalType,
 	wasmOpts []wasm.Option,
+	supplyEndpointEnabled bool,
 ) AppKeepers {
 	appKeepers := AppKeepers{}
 
@@ -183,6 +184,7 @@ func NewAppKeepers(
 		wasmConfig,
 		wasmEnabledProposals,
 		wasmOpts,
+		supplyEndpointEnabled,
 	)
 
 	appKeepers.SetupHooks()
@@ -206,6 +208,7 @@ func (appKeepers *AppKeepers) InitKeepers(
 	wasmConfig wasm.Config,
 	wasmEnabledProposals []wasm.ProposalType,
 	wasmOpts []wasm.Option,
+	supplyEndpointEnabled bool,
 ) {
 	// Add 'normal' keepers
 	proofOpsFn := utils.ValidateProofOps
@@ -352,6 +355,7 @@ func (appKeepers *AppKeepers) InitKeepers(
 		appKeepers.BankKeeper,
 		appKeepers.StakingKeeper,
 		utils.Keys[[]string](maccPerms),
+		supplyEndpointEnabled,
 	)
 	appKeepers.PacketForwardKeeper.SetTransferKeeper(appKeepers.TransferKeeper)
 	appKeepers.TransferModule = transfer.NewAppModule(appKeepers.TransferKeeper)

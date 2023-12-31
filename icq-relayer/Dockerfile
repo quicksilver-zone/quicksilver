@@ -1,4 +1,4 @@
-FROM 1.20.11-alpine3.18 as build
+FROM golang:1.21.5-alpine3.18 as build
 
 WORKDIR /src/app
 
@@ -13,7 +13,7 @@ COPY . .
 
 RUN go build
 
-FROM alpine:edge
+FROM alpine:3.19
 
 RUN apk add --no-cache ca-certificates
 
