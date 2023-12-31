@@ -474,6 +474,16 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
                     <Text fontWeight={'bold'} fontSize="lg" w="250px" textAlign={'left'} color="white">
                       You’re going to liquid stake {tokenAmount} {selectedOption?.value} on Quicksilver
                     </Text>
+                    {selectedValidators.length > 0 && (
+                      <Flex mt={2} textAlign={'left'} alignItems="baseline" gap="2">
+                        <Text mt={2} textAlign={'left'} fontWeight={'bold'} fontSize="lg" color="white">
+                          {selectedValidators.length === 1 ? 'Selected Validator:' : 'Selected Validators:'}
+                        </Text>
+                        <Text color="complimentary.900">
+                          {selectedValidators.length === 1 ? selectedValidators[0].name : `${selectedValidators.length} / 8`}
+                        </Text>
+                      </Flex>
+                    )}
                     <HStack mt={2} textAlign={'left'} fontWeight={'light'} fontSize="lg" color="white">
                       <Text fontWeight={'bold'}>Receiving:</Text>
                       <Text color="complimentary.900">

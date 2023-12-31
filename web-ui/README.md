@@ -33,32 +33,34 @@ Please ensure your IDE is configured to use Typescript v4.9.3
 
 ### Development ToDo
 
-**Staking Page**
+**Governance**
 
-- figure out a better way to fit the custom weight Ui into the modal.
-
-- need to handle number displays better, sometimes they show NaN or undefined but quickly render
-
-- need to update any QS endpoints that will potentially be outdated with the coming of 1.4
+- add liquid staked governance (when its built)
 
 **UI/UX**
 
-- customize wallet connect modal
+- customize wallet connect modal / Utilize useChains solution for pre 2.3 from cosmos kit
 
-- threejs liquid metal sphere landing page
+- Finish Mobile breakpoints
 
-- Mobile breakpoints
-
-**Defi**
-
-- design
-
-- build
-
-**Assets**
-
-- design
-
-- build
+- find different assets for side bar
 
 **Mobile Menu**
+
+- design
+
+- font size / style / decorations
+
+**DevOps**
+
+- make onboarding networks seamless
+
+**Assets Page**
+
+- claim rewards claim.test.quicksilver.zone/address/current \*/epoch
+
+**Staking Page**
+
+- validator route app.quicksilver.zone/staking/chainId/valoperAddress
+
+- fix succesful transaction on staking modal not taking you to final step
