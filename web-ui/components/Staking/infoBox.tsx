@@ -33,6 +33,22 @@ export const InfoBox: React.FC<AssetsAccordianProps> = ({ selectedOption, displa
     }
   };
 
+  const renderApy = () => {
+    if (displayApr) {
+      return (
+        <Text pr={2} color="complimentary.900">
+          {displayApr}
+        </Text>
+      );
+    } else {
+      return (
+        <Box display="inline-block">
+          <SkeletonCircle size="2" startColor="complimentary.900" endColor="complimentary.400" />
+        </Box>
+      );
+    }
+  };
+
   const renderUnbondingPeriod = () => {
     if (!isZoneLoading && zone) {
       return <Text color={'complimentary.900'}>{(Number(zone?.unbondingPeriod) / 86400000000000).toString()} days</Text>;
@@ -72,9 +88,7 @@ export const InfoBox: React.FC<AssetsAccordianProps> = ({ selectedOption, displa
                   Rewards
                 </Text>
               </Flex>
-              <Text pr={2} color="complimentary.900">
-                {displayApr}
-              </Text>
+              {renderApy()}
             </Flex>
           </h2>
         </AccordionItem>

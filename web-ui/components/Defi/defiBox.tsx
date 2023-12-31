@@ -17,6 +17,8 @@ import {
   ButtonGroup,
   HStack,
   Link,
+  Center,
+  Spinner,
 } from '@chakra-ui/react';
 import { ChevronDownIcon, ExternalLinkIcon } from '@chakra-ui/icons';
 import { useDefiData } from '@/hooks/useQueries';
@@ -93,48 +95,78 @@ const DefiTable = () => {
           </Button>
         ))}
       </Stack>
-      <Box maxH={'480px'} overflow={'auto'}>
+      <Box maxH={'480px'} minH={'480px'} overflow={'auto'}>
         <Table color={'white'} variant="simple">
           <Thead position="sticky">
             <Tr>
               <Th color={'complimentary.900'}>
                 Asset Pair <ChevronDownIcon />
               </Th>
-              <Th color={'complimentary.900'} isNumeric>
+              <Th textAlign={'center'} color={'complimentary.900'} isNumeric>
                 APY <ChevronDownIcon />
               </Th>
-              <Th color={'complimentary.900'} isNumeric>
+              <Th textAlign={'center'} color={'complimentary.900'} isNumeric>
                 TVL <ChevronDownIcon />
               </Th>
-              <Th color={'complimentary.900'}>Provider</Th>
-              <Th color={'complimentary.900'}>Action</Th>
+              <Th textAlign={'center'} color={'complimentary.900'}>
+                Provider
+              </Th>
+              <Th textAlign={'center'} color={'complimentary.900'}>
+                Action
+              </Th>
             </Tr>
           </Thead>
+
           <Tbody>
-            {filteredData.map((asset, index) => (
-              <Tr _even={{ bg: 'rgba(255, 128, 0, 0.1)' }} key={index} borderBottomColor={'transparent'}>
-                <Td borderBottomColor="transparent">
-                  <Flex align="center">
-                    <Box w="2rem" h="2rem" bg="gray.200" rounded="full" mr={2}></Box>
-                    <Text>{asset.assetPair}</Text>
-                  </Flex>
-                </Td>
-                <Td borderBottom="0" borderBottomColor="transparent" isNumeric>
-                  {formatApy(asset.apy)}
-                </Td>
-                <Td borderBottomColor="transparent" isNumeric>
-                  {asset.tvl}
-                </Td>
-                <Td borderBottomColor="transparent">{asset.provider}</Td>
-                <Td borderBottomColor="transparent">
-                  <Link href={asset.link} isExternal={true} _hover={{ textDecoration: 'none' }}>
-                    <Button backgroundColor="rgba(255, 128, 0, 0.8)" rightIcon={<ExternalLinkIcon />} variant="ghost">
-                      {actionTitles[asset.action.toLowerCase().replace(/\s+/g, '-') as keyof typeof actionTitles]}
-                    </Button>
-                  </Link>
+            {isLoading && !defi && (
+              <Tr>
+                <Td colSpan={5}>
+                  {' '}
+                  {/* Span across all columns */}
+                  <Center my={42}>
+                    <Spinner size="4xl" color="complimentary.900" />
+                  </Center>
                 </Td>
               </Tr>
-            ))}
+            )}
+            {defi &&
+              filteredData.map((asset, index) => (
+                <Tr _even={{ bg: 'rgba(255, 128, 0, 0.1)' }} key={index} borderBottomColor={'transparent'}>
+                  <Td borderBottomColor="transparent">
+                    <Flex align="center">
+                      <Box w="2rem" h="2rem" bg="gray.200" rounded="full" mr={2}></Box>
+                      <Text>{asset.assetPair}</Text>
+                    </Flex>
+                  </Td>
+                  <Td textAlign={'center'} borderBottom="0" borderBottomColor="transparent" isNumeric>
+                    {formatApy(asset.apy)}
+                  </Td>
+                  <Td textAlign={'center'} borderBottomColor="transparent" isNumeric>
+                    {asset.tvl}
+                  </Td>
+                  <Td textAlign={'center'} borderBottomColor="transparent">
+                    {asset.provider}
+                  </Td>
+                  <Td textAlign={'center'} borderBottomColor="transparent">
+                    <Link href={asset.link} isExternal={true} _hover={{ textDecoration: 'none' }}>
+                      <Button minW="150px" backgroundColor="rgba(255, 128, 0, 0.8)" rightIcon={<ExternalLinkIcon />} variant="ghost">
+                        {actionTitles[asset.action.toLowerCase().replace(/\s+/g, '-') as keyof typeof actionTitles]}
+                      </Button>
+                    </Link>
+                  </Td>
+                </Tr>
+              ))}
+            {defi && filteredData.length === 0 && (
+              <Tr>
+                <Td colSpan={5}>
+                  {' '}
+                  {/* Span across all columns */}
+                  <Center my={4}>
+                    <Text color="complimentary.900">No entries found for this category, please check back later!</Text>
+                  </Center>
+                </Td>
+              </Tr>
+            )}
           </Tbody>
         </Table>
       </Box>
