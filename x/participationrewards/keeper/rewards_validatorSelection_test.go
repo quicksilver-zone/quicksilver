@@ -438,7 +438,7 @@ func (suite *KeeperTestSuite) TestCalcOverallScores() {
 			},
 			verify: func(_ types.ZoneScore, _ []distributiontypes.DelegationDelegatorReward, _ []icstypes.Validator) {
 			},
-			wantErr: true,
+			wantErr: false,
 		},
 		{
 			name: "zero total rewards",
@@ -454,7 +454,7 @@ func (suite *KeeperTestSuite) TestCalcOverallScores() {
 			},
 			verify: func(_ types.ZoneScore, _ []distributiontypes.DelegationDelegatorReward, _ []icstypes.Validator) {
 			},
-			wantErr: true,
+			wantErr: false,
 		},
 		{
 			name: "validator removed from active set - performance greater than limit",

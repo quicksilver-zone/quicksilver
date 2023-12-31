@@ -76,6 +76,16 @@ func (vi ValidatorIntents) Sort() ValidatorIntents {
 	return vi
 }
 
+func (vi ValidatorIntents) Remove(valoper string) ValidatorIntents {
+	for i, v := range vi {
+		if v.ValoperAddress == valoper {
+			vi[i] = vi[len(vi)-1]
+			return vi[:len(vi)-1]
+		}
+	}
+	return vi
+}
+
 func (vi ValidatorIntents) GetForValoper(valoper string) (*ValidatorIntent, bool) {
 	for _, i := range vi {
 		if i.ValoperAddress == valoper {
@@ -136,29 +146,63 @@ func DetermineAllocationsForDelegation(currentAllocations map[string]sdkmath.Int
 	deltas, _ := CalculateAllocationDeltas(currentAllocations, map[string]bool{}, currentSum.Add(amount[0].Amount), targetAllocations, maxCanAllocate)
 	sum := deltas.Sum()
 
-	// unequalSplit is the portion of input that should be distributed in attempt to make targets == 0
-	unequalSplit := sdk.MinInt(sum, input)
+	// unequalAllocation is the portion of input that should be distributed in attempt to make targets == 0 (that is, in line with intent).
+	unequalAllocation := sdk.MinInt(sum, input)
 
-	if !unequalSplit.IsZero() {
+	if !unequalAllocation.IsZero() {
 		for idx := range deltas {
-			deltas[idx].Amount = sdk.NewDecFromInt(deltas[idx].Amount).QuoInt(sum).MulInt(unequalSplit).TruncateInt()
+			deltas[idx].Amount = sdk.NewDecFromInt(deltas[idx].Amount).QuoInt(sum).MulInt(unequalAllocation).TruncateInt()
 		}
 	}
 
-	// equalSplit is the portion of input that should be distributed equally across all validators, once targets are zero.
-	equalSplit := sdk.NewDecFromInt(input.Sub(unequalSplit))
+	// proportionalAllocation is the portion of input that should be distributed proportionally to intent,  once targets are zero, respecting caps.
+	proportionalAllocation := sdk.NewDecFromInt(input.Sub(unequalAllocation))
 
-	// replace this portion with allocation proportional to targetAllocations!
-	if !equalSplit.IsZero() {
-		for _, targetAllocation := range targetAllocations.Sort() {
+	rounds := 0
+	// set maximum number of rounds, in case we get stuck in a weird loop we cannot resolve. If we exit the after this point, the remainder will be treated as dust.
+	maxRounds := 10
+	for ok := proportionalAllocation.IsPositive(); ok; ok = proportionalAllocation.IsPositive() && rounds < maxRounds {
+		// normalise targetAllocations, so maxed caps are handled nicely.
+		targetAllocations = targetAllocations.Normalize().Sort()
+		// initialise roundAllocation
+		roundAllocation := sdk.ZeroInt()
+		// for each target
+		for _, targetAllocation := range targetAllocations {
+			// does this target validator have a cap?
+			max, hasMax := maxCanAllocate[targetAllocation.ValoperAddress]
+			// does it have an existing allocation?
 			delta, found := deltas.GetForValoper(targetAllocation.GetValoperAddress())
-			if found {
-				delta.Amount = delta.Amount.Add(equalSplit.Mul(targetAllocation.Weight).TruncateInt())
-			} else {
-				delta = &AllocationDelta{ValoperAddress: targetAllocation.GetValoperAddress(), Amount: equalSplit.Mul(targetAllocation.Weight).TruncateInt()}
+			if !found {
+				// no existing delta, create new delta with zero
+				delta = &AllocationDelta{ValoperAddress: targetAllocation.GetValoperAddress(), Amount: sdk.ZeroInt()}
 				deltas = append(deltas, delta)
 			}
+			// allocate to this validator based on weight
+			thisAllocation := proportionalAllocation.Mul(targetAllocation.Weight).TruncateInt()
+			// if there is a cap...
+			if hasMax {
+				// belt and braces.
+				if max.LT(sdk.ZeroInt()) {
+					return nil, errors.New("maxCanAllocate underflow")
+				}
+				// determine if cap is breached
+				if delta.Amount.Add(thisAllocation).GTE(max) {
+					// if so, truncate and remove from target allocations for next round
+					thisAllocation = max.Sub(delta.Amount)
+					delta.Amount = max
+					targetAllocations = targetAllocations.Remove(delta.ValoperAddress)
+				} else {
+					// if not, increase delta
+					delta.Amount = delta.Amount.Add(thisAllocation)
+				}
+			}
+			// track round allocations to deduct from running total
+			roundAllocation = roundAllocation.Add(thisAllocation)
 		}
+		// deduct from running total
+		proportionalAllocation = proportionalAllocation.Sub(sdk.NewDecFromInt(roundAllocation))
+		// bail after N rounds
+		rounds++
 	}
 
 	// dust is the portion of the input that was truncated in previous calculations; add this to the first validator in the list,
@@ -172,6 +216,10 @@ func DetermineAllocationsForDelegation(currentAllocations map[string]sdkmath.Int
 			outSum = outSum.Add(delta.Amount)
 		}
 	}
+	if outSum.GT(input) {
+		return nil, errors.New("outSum overflow; cannot be greater than input amount")
+	}
+
 	dust := input.Sub(outSum)
 	if !dust.IsZero() {
 		outWeights[deltas[0].ValoperAddress] = outWeights[deltas[0].ValoperAddress].Add(dust)

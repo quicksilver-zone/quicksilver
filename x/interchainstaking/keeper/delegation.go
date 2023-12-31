@@ -225,7 +225,7 @@ func (k Keeper) DetermineMaximumValidatorAllocations(ctx sdk.Context, zone *type
 
 		// validator pc max
 		maxLiquidStakedShares := sdk.NewDecFromInt(val.VotingPower).Mul(caps.ValidatorCap).Sub(val.LiquidShares)
-		out[val.ValoperAddress] = sdkmath.MinInt(maxBondShares.TruncateInt(), maxLiquidStakedShares.TruncateInt())
+		out[val.ValoperAddress] = sdkmath.MaxInt(sdk.ZeroInt(), sdkmath.MinInt(maxBondShares.TruncateInt(), maxLiquidStakedShares.TruncateInt()))
 	}
 
 	return out
