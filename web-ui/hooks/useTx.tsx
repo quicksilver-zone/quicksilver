@@ -1,10 +1,19 @@
-import { ToastId } from '@chakra-ui/react';
+import { Box, color, Link, ToastId, useToast, Text } from '@chakra-ui/react';
 import { isDeliverTxSuccess, StdFee } from '@cosmjs/stargate';
 import { useChain } from '@cosmos-kit/react';
 import { cosmos } from 'interchain-query';
 import { TxRaw } from 'interchain-query/cosmos/tx/v1beta1/tx';
 
 import { useToaster, ToastType, type CustomToast } from './useToaster';
+import { ChainName } from '@cosmos-kit/core';
+import { on } from 'events';
+import { isExternal } from 'util/types';
+
+interface TxResult {
+  success: boolean;
+  txHash?: string;
+  error?: string;
+}
 
 interface Msg {
   typeUrl: string;
@@ -13,6 +22,7 @@ interface Msg {
 
 export interface TxOptions {
   fee?: StdFee | null;
+  memo?: string;
   toast?: Partial<CustomToast>;
   onSuccess?: () => void;
 }
@@ -26,19 +36,18 @@ export enum TxStatus {
 const txRaw = cosmos.tx.v1beta1.TxRaw;
 
 export const useTx = (chainName: string) => {
-  const { address, getSigningStargateClient, estimateFee } =
-    useChain(chainName);
+  const { address, getSigningStargateClient, estimateFee } = useChain(chainName);
 
   const toaster = useToaster();
 
-  const tx = async (msgs: Msg[], options: TxOptions) => {
+  const tx = async (msgs: Msg[], options: TxOptions): Promise<TxResult> => {
     if (!address) {
       toaster.toast({
         type: ToastType.Error,
         title: 'Wallet not connected',
         message: 'Please connect your wallet',
       });
-      return;
+      return { success: false, error: 'Wallet not connected' };
     }
 
     let signed: TxRaw;
@@ -50,10 +59,7 @@ export const useTx = (chainName: string) => {
         fee = options.fee;
         client = await getSigningStargateClient();
       } else {
-        const [_fee, _client] = await Promise.all([
-          estimateFee(msgs),
-          getSigningStargateClient(),
-        ]);
+        const [_fee, _client] = await Promise.all([estimateFee(msgs), getSigningStargateClient()]);
         fee = _fee;
         client = _client;
       }
@@ -65,7 +71,7 @@ export const useTx = (chainName: string) => {
         message: e?.message || 'An unexpected error has occured',
         type: ToastType.Error,
       });
-      return;
+      return { success: false, error: 'An unexpected error has occured' };
     }
 
     let broadcastToastId: ToastId;
@@ -88,7 +94,10 @@ export const useTx = (chainName: string) => {
               title: options.toast?.title || TxStatus.Successful,
               type: options.toast?.type || ToastType.Success,
               message: options.toast?.message,
+              chainName: chainName,
+              txHash: res?.transactionHash,
             });
+            return { success: true, txHash: res.transactionHash };
           } else {
             toaster.toast({
               title: TxStatus.Failed,
@@ -96,6 +105,7 @@ export const useTx = (chainName: string) => {
               type: ToastType.Error,
               duration: 10000,
             });
+            return { success: false, error: res.rawLog };
           }
         })
         .catch((err) => {
@@ -105,10 +115,13 @@ export const useTx = (chainName: string) => {
             type: ToastType.Error,
             duration: 10000,
           });
+          return { success: false, error: err.message };
         })
         .finally(() => toaster.close(broadcastToastId));
+      return { success: false, error: 'Client not initialized or transaction not signed' };
     } else {
       toaster.close(broadcastToastId);
+      return { success: false, error: 'Client not initialized or transaction not signed' };
     }
   };
 

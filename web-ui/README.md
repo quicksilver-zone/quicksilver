@@ -39,8 +39,6 @@ Please ensure your IDE is configured to use Typescript v4.9.3
 
 **UI/UX**
 
-- customize wallet connect modal
-
 - Finish Mobile breakpoints
 
 - find different assets for side bar
