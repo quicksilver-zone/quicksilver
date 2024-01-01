@@ -54,7 +54,7 @@ export const StakingBox = ({ selectedOption, isModalOpen, setModalOpen, setBalan
   const [tokenAmount, setTokenAmount] = useState<string>('0');
   let newChainName: string | undefined;
   if (selectedOption?.chainId === 'provider') {
-    newChainName = 'rsprovidertestnet';
+    newChainName = 'cosmoshub';
   } else if (selectedOption?.chainId === 'elgafar-1') {
     newChainName = 'stargazetestnet';
   } else if (selectedOption?.chainId === 'osmo-test-5') {
