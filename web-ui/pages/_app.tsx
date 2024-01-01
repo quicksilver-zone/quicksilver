@@ -10,7 +10,7 @@ import { wallets as leapWallets } from '@cosmos-kit/leap';
 import { ChainProvider, ThemeCustomizationProps } from '@cosmos-kit/react';
 import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
-import { chains, assets } from 'chain-registry';
+import { chains, assets } from '@chalabi/chain-registry';
 import { cosmosAminoConverters, cosmosProtoRegistry } from 'interchain-query';
 import type { AppProps } from 'next/app';
 import { quicksilverProtoRegistry, quicksilverAminoConverters } from 'quicksilverjs';
@@ -88,45 +88,113 @@ function CreateCosmosApp({ Component, pageProps }: AppProps) {
     overrides: {
       'connect-modal': {
         bg: {
-          light: 'black',
-          dark: 'black',
+          light: 'rgba(0,0,0,0.75)',
+          dark: 'rgba(32,32,32,0.9)',
+        },
+        activeBg: {
+          light: 'rgba(0,0,0,0.75)',
+          dark: 'rgba(32,32,32,0.9)',
         },
         color: {
+          light: '#FFFFFF',
+          dark: '#FFFFFF',
+        },
+      },
+      'clipboard-copy-text': {
+        bg: {
+          light: '#FFFFFF',
+          dark: '#FFFFFF',
+        },
+      },
+      'connect-modal-qr-code-shadow': {
+        bg: {
+          light: '#FFFFFF',
+          dark: '#FFFFFF',
+        },
+      },
+      button: {
+        bg: {
+          light: '#FF8000',
+          dark: '#FF8000',
+        },
+      },
+      'connect-modal-head-title': {
+        bg: {
+          light: '#FFFFFF',
+          dark: '#FFFFFF',
+        },
+      },
+      'connect-modal-wallet-button-label': {
+        bg: {
+          light: '#FFFFFF',
+          dark: '#FFFFFF',
+        },
+      },
+      'connect-modal-wallet-button-sublogo': {
+        bg: {
+          light: '#FFFFFF',
+          dark: '#FFFFFF',
+        },
+      },
+      'connect-modal-qr-code-loading': {
+        bg: {
           light: '#FFFFFF',
           dark: '#FFFFFF',
         },
       },
       'connect-modal-wallet-button': {
         bg: {
-          light: '#FF8000',
-          dark: '#FF8000',
+          light: 'rgba(55,55,55,0.9)',
+          dark: 'rgba(55,55,55,0.9',
         },
         hoverBg: {
           light: '#FF8000',
           dark: '#FF8000',
         },
         hoverBorderColor: {
+          light: 'black',
+          dark: 'black',
+        },
+        activeBorderColor: {
           light: '#FFFFFF',
           dark: '#FFFFFF',
         },
         color: {
-          light: '#000000', // light theme text color
-          dark: '#FFFFFF', // dark theme text color
+          light: '#000000',
+          dark: '#FFFFFF',
         },
       },
       'connect-modal-qr-code': {
         bg: {
-          light: '#FFFFFF',
-          dark: '#FFFFFF',
+          light: '',
+          dark: 'blue',
         },
         color: {
           light: '#000000',
           dark: '#000000',
         },
       },
-      // You can add overrides for other components if necessary
+      'connect-modal-install-button': {
+        bg: {
+          light: '#F0F0F0', // Example background color for light theme
+          dark: '#FF8000', // Example background color for dark theme
+        },
+        // Other properties for 'connect-modal-install-button' if needed
+      },
+      'connect-modal-qr-code-error': {
+        bg: {
+          light: '#FFEEEE', // Example background color for light theme
+          dark: '#FFFFFF', // Example background color for dark theme
+        },
+        // Other properties for 'connect-modal-qr-code-error' if needed
+      },
+      'connect-modal-qr-code-error-button': {
+        bg: {
+          light: '#FFCCCC', // Example background color for light theme
+          dark: '#552222', // Example background color for dark theme
+        },
+      },
     },
-    // You can also specify 'defaultTheme', 'themeDefs', and 'customTheme' if needed
   };
 
   return (

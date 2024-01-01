@@ -116,7 +116,10 @@ export const StakingBox = ({ selectedOption, isModalOpen, setModalOpen, setBalan
   const [isError, setIsError] = useState<boolean>(false);
   const [transactionStatus, setTransactionStatus] = useState('Pending');
 
-  const { getSigningStargateClient } = useChain('quicksilver');
+  const env = process.env.NEXT_PUBLIC_CHAIN_ENV;
+  const quicksilverChainName = env === 'testnet' ? 'quicksilvertestnet' : 'quicksilver';
+
+  const { getSigningStargateClient } = useChain(quicksilverChainName);
 
   const isCalculationDataLoaded = tokenAmount && !isNaN(Number(tokenAmount)) && zone && !isNaN(Number(zone.redemptionRate));
 

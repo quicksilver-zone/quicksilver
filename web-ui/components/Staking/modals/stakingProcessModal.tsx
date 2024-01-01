@@ -85,7 +85,7 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
 
   let newChainName: string | undefined;
   if (selectedOption?.chainId === 'provider') {
-    newChainName = 'cosmoshub';
+    newChainName = 'rsprovidertestnet';
   } else if (selectedOption?.chainId === 'elgafar-1') {
     newChainName = 'stargazetestnet';
   } else if (selectedOption?.chainId === 'osmo-test-5') {
@@ -97,7 +97,7 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
     newChainName = selectedOption?.chainName;
   }
 
-  const { address, getSigningStargateClient } = useChain(newChainName || '');
+  const { address, getSigningStargateClient } = useChain(newChainName ?? '');
 
   const labels = ['Choose validators', `Set weights`, `Sign & Submit`, `Receive q${selectedOption?.value}`];
   const [isModalOpen, setModalOpen] = useState(false);
