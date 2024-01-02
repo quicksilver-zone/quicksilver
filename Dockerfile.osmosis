@@ -9,7 +9,7 @@ RUN apk add git
 # Needed by github.com/zondax/hid
 RUN apk add linux-headers
 
-RUN git clone https://github.com/osmosis-labs/osmosis /osmosis --branch v21.1.2
+RUN git clone https://github.com/osmosis-labs/osmosis /osmosis --branch v21.1.4
 WORKDIR /osmosis
 
 RUN ARCH=$(uname -m) && WASMVM_VERSION=$(go list -m github.com/CosmWasm/wasmvm | sed 's/.* //') && \
@@ -27,15 +27,11 @@ RUN BUILD_TAGS=muslc LINK_STATICALLY=true make build
 
 FROM alpine:3.18
 
-RUN apt update && apt install bash -y
+RUN apk add --no-cache bash ca-certificates jq
 COPY --from=build /osmosis/build/osmosisd /bin/osmosisd
 
-RUN useradd --system -m -d /osmosis --uid 1000 osmosis
+RUN adduser -S -h /osmosis -D osmosis -u 1000
 WORKDIR /osmosis
 
 USER osmosis
-
-EXPOSE 26656
-EXPOSE 26657
-EXPOSE 1317
 
