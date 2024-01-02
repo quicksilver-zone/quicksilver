@@ -20,7 +20,7 @@ export default function Home() {
             <meta name="viewport" content="width=device-width, initial-scale=1.0" />
             <link rel="icon" href="/img/favicon.png" />
           </Head>
-          <Box maxHeight="3xl" width="100%" padding={2}>
+          <Box maxHeight="3xl" width="100%" padding={2} mt={{ base: 10, md: 0 }}>
             <Text pb={2} color="white" fontSize="24px">
               Proposals
             </Text>

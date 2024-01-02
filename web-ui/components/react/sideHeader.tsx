@@ -44,7 +44,22 @@ export const SideHeader = () => {
   const commonBoxShadowColor = 'rgba(255, 128, 0, 0.25)';
   const toggleSocialLinks = () => setShowSocialLinks(!showSocialLinks);
 
-  const isMobile = useBreakpointValue({ base: true, md: false });
+  const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' && window.innerWidth < 1274);
+
+  // Handle window resize
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 1274);
+    };
+
+    // Set up event listener
+    window.addEventListener('resize', handleResize);
+
+    // Clean up
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
   const transitionStyle = 'all 0.3s ease';
   const { isOpen, onOpen, onClose } = useDisclosure();
 
@@ -77,19 +92,19 @@ export const SideHeader = () => {
   return (
     <Box
       w={isMobile ? 'auto' : 'fit-content'}
-      h={{ base: 'fit-content', md: '95vh' }}
+      h={isMobile ? 'fit-content' : '95vh'}
       backdropFilter="blur(10px)"
-      borderRadius={{ base: 'full', md: 100 }}
+      borderRadius={isMobile ? 'full' : 100}
       zIndex={10}
       top={6}
       left={6}
       position="fixed"
       bgColor="rgba(214, 219, 220, 0.1)"
     >
-      <Flex direction="column" align="center" zIndex={10} justifyContent="space-between" py={{ base: 0, md: 4 }} height="100%">
+      <Flex direction="column" align="center" zIndex={10} justifyContent="space-between" py={{ base: 0, 1274: 0, md: 4 }} height="100%">
         <Image
           alt="logo"
-          mt={{ base: 0, md: '-10px' }}
+          mt={{ base: 0, 1274: 0, md: '-10px' }}
           h="75px"
           w="75px"
           borderRadius="full"

@@ -175,7 +175,16 @@ function Home() {
   return (
     <>
       <SlideFade offsetY={'200px'} in={true} style={{ width: '100%' }}>
-        <Container flexDir={'column'} top={20} zIndex={2} position="relative" justifyContent="center" alignItems="center" maxW="6xl">
+        <Container
+          flexDir={'column'}
+          top={20}
+          mt={{ base: 10, md: 0 }}
+          zIndex={2}
+          position="relative"
+          justifyContent="center"
+          alignItems="center"
+          maxW="6xl"
+        >
           <Head>
             <title>Assets</title>
             <meta name="viewport" content="width=device-width, initial-scale=1.0" />

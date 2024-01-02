@@ -19,6 +19,7 @@ import {
   Link,
   Center,
   Spinner,
+  useBreakpointValue,
 } from '@chakra-ui/react';
 import { ChevronDownIcon, ExternalLinkIcon } from '@chakra-ui/icons';
 import { useDefiData } from '@/hooks/useQueries';
@@ -64,37 +65,71 @@ const DefiTable = () => {
   const { defi, isLoading, isError } = useDefiData();
 
   const [activeFilter, setActiveFilter] = useState<string>('All');
+  const filterOptions = Object.keys(filterCategories);
+
+  const handleFilterChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    setActiveFilter(event.target.value);
+  };
 
   const handleFilterClick = (filter: string) => {
     setActiveFilter(filter);
   };
-
+  const isMobile = useBreakpointValue({ base: true, 1013: true, md: false });
   const filteredData = defi ? defi.filter(filterCategories[activeFilter]) : [];
 
   return (
     <Box backdropFilter="blur(50px)" bgColor="rgba(255,255,255,0.1)" flex="1" borderRadius="10px" p={6} rounded="md">
-      <Stack direction="row" spacing={2} mb={6} justifyContent="space-between">
-        {Object.keys(filterCategories).map((filter) => (
-          <Button
-            key={filter}
-            onClick={() => handleFilterClick(filter)}
-            isActive={activeFilter === filter}
-            _active={{
-              transform: 'scale(0.95)',
-            }}
-            _hover={{
-              bgColor: 'rgba(255,128,0, 0.25)',
-              color: 'complimentary.300',
-            }}
-            color="white"
-            minW={'180px'}
-            colorScheme={activeFilter === filter ? 'orange' : 'gray'}
-            variant={activeFilter === filter ? 'solid' : 'outline'}
-          >
-            {filter}
-          </Button>
-        ))}
-      </Stack>
+      {isMobile ? (
+        <Select
+          _active={{
+            borderColor: 'complimentary.900',
+          }}
+          _selected={{
+            borderColor: 'complimentary.900',
+          }}
+          _hover={{
+            borderColor: 'complimentary.900',
+          }}
+          _focus={{
+            borderColor: 'complimentary.900',
+            boxShadow: '0 0 0 3px #FF8000',
+          }}
+          color="complimentary.900"
+          textAlign={'center'}
+          onChange={handleFilterChange}
+          value={activeFilter}
+          mb={6}
+        >
+          {filterOptions.map((filter) => (
+            <option key={filter} value={filter}>
+              {filter}
+            </option>
+          ))}
+        </Select>
+      ) : (
+        <Stack direction="row" spacing={2} mb={6} justifyContent="space-between">
+          {filterOptions.map((filter) => (
+            <Button
+              key={filter}
+              onClick={() => handleFilterClick(filter)}
+              isActive={activeFilter === filter}
+              _active={{
+                transform: 'scale(0.95)',
+              }}
+              _hover={{
+                bgColor: 'rgba(255,128,0, 0.25)',
+                color: 'complimentary.300',
+              }}
+              color="white"
+              minW={'180px'}
+              colorScheme={activeFilter === filter ? 'orange' : 'gray'}
+              variant={activeFilter === filter ? 'solid' : 'outline'}
+            >
+              {filter}
+            </Button>
+          ))}
+        </Stack>
+      )}
       <Box maxH={'480px'} minH={'480px'} overflow={'auto'}>
         <Table color={'white'} variant="simple">
           <Thead position="sticky">
