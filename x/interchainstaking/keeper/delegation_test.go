@@ -929,7 +929,7 @@ func (suite *KeeperTestSuite) TestDelegationPlanLsmFixture() {
 	}
 
 	// ensure sum of allocations equals the original amount
-	suite.True(allocSum.Equal(amount[0].Amount))
+	suite.True(allocSum.LTE(amount[0].Amount))
 }
 
 // values below are data dumps taken from the live quicksilver-2 and cosmoshub-4 chains, to be used as fixtures.

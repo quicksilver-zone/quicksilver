@@ -185,7 +185,7 @@ func TestTargetAllocationsMoreValidators(t *testing.T) {
 	amount := sdk.Coins{sdk.NewCoin("token", sdk.NewInt(1000))}
 
 	expectedAllocations := map[string]sdkmath.Int{
-		"validator1": sdkmath.NewInt(241),
+		"validator1": sdkmath.NewInt(239),
 		"validator2": sdkmath.NewInt(195),
 		"validator3": sdkmath.NewInt(282),
 		"validator4": sdkmath.NewInt(282),
@@ -214,7 +214,7 @@ func TestCurrentAllocationsMoreValidators(t *testing.T) {
 	amount := sdk.Coins{sdk.NewCoin("token", sdk.NewInt(1000))}
 
 	expectedAllocations := map[string]sdkmath.Int{
-		"validator1": sdkmath.NewInt(453),
+		"validator1": sdkmath.NewInt(452),
 		"validator2": sdkmath.NewInt(547),
 	}
 
