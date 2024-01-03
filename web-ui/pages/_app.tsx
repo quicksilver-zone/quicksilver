@@ -7,28 +7,30 @@ import { SignerOptions, WalletViewProps } from '@cosmos-kit/core';
 import { wallets as cosmostationWallets } from '@cosmos-kit/cosmostation';
 import { wallets as keplrWallets } from '@cosmos-kit/keplr';
 import { wallets as leapWallets } from '@cosmos-kit/leap';
-import { ChainProvider } from '@cosmos-kit/react';
+import { ChainProvider, ThemeCustomizationProps } from '@cosmos-kit/react';
 import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
-import { chains, assets } from 'chain-registry';
+import { chains, assets } from '@chalabi/chain-registry';
 import { cosmosAminoConverters, cosmosProtoRegistry } from 'interchain-query';
 import type { AppProps } from 'next/app';
 import { quicksilverProtoRegistry, quicksilverAminoConverters } from 'quicksilverjs';
+import { ibcAminoConverters, ibcProtoRegistry } from 'interchain-query';
 
 import { Header, SideHeader } from '@/components';
 import { defaultTheme } from '@/config';
-import { useRpcQueryClient } from '@/hooks';
 
 import '@interchain-ui/react/styles';
 
 function CreateCosmosApp({ Component, pageProps }: AppProps) {
   const signerOptions: SignerOptions = {
+    //@ts-ignore
     signingStargate: (chain: Chain): SigningStargateClientOptions | undefined => {
-      const mergedRegistry = new Registry([...cosmosProtoRegistry, ...quicksilverProtoRegistry]);
+      const mergedRegistry = new Registry([...cosmosProtoRegistry, ...quicksilverProtoRegistry, ...ibcProtoRegistry]);
 
       const mergedAminoTypes = new AminoTypes({
         ...cosmosAminoConverters,
         ...quicksilverAminoConverters,
+        ...ibcAminoConverters,
       });
 
       return {
@@ -48,9 +50,194 @@ function CreateCosmosApp({ Component, pageProps }: AppProps) {
     },
   });
 
+  const env = process.env.NEXT_PUBLIC_CHAIN_ENV;
+
+  const rpcEndpoints = {
+    quicksilver:
+      env === 'testnet'
+        ? process.env.NEXT_PUBLIC_TESTNET_RPC_ENDPOINT_QUICKSILVER
+        : process.env.NEXT_PUBLIC_MAINNET_RPC_ENDPOINT_QUICKSILVER,
+    cosmoshub:
+      env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_RPC_ENDPOINT_COSMOSHUB : process.env.NEXT_PUBLIC_MAINNET_RPC_ENDPOINT_COSMOSHUB,
+    sommelier:
+      env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_RPC_ENDPOINT_SOMMELIER : process.env.NEXT_PUBLIC_MAINNET_RPC_ENDPOINT_SOMMELIER,
+    stargaze:
+      env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_RPC_ENDPOINT_STARGAZE : process.env.NEXT_PUBLIC_MAINNET_RPC_ENDPOINT_STARGAZE,
+    regen: env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_RPC_ENDPOINT_REGEN : process.env.NEXT_PUBLIC_MAINNET_RPC_ENDPOINT_REGEN,
+    osmosis:
+      env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_RPC_ENDPOINT_OSMOSIS : process.env.NEXT_PUBLIC_MAINNET_RPC_ENDPOINT_OSMOSIS,
+  };
+
+  const lcdEndpoints = {
+    quicksilver:
+      env === 'testnet'
+        ? process.env.NEXT_PUBLIC_TESTNET_LCD_ENDPOINT_QUICKSILVER
+        : process.env.NEXT_PUBLIC_MAINNET_LCD_ENDPOINT_QUICKSILVER,
+    cosmoshub:
+      env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_LCD_ENDPOINT_COSMOSHUB : process.env.NEXT_PUBLIC_MAINNET_LCD_ENDPOINT_COSMOSHUB,
+    sommelier:
+      env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_LCD_ENDPOINT_SOMMELIER : process.env.NEXT_PUBLIC_MAINNET_LCD_ENDPOINT_SOMMELIER,
+    stargaze:
+      env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_LCD_ENDPOINT_STARGAZE : process.env.NEXT_PUBLIC_MAINNET_LCD_ENDPOINT_STARGAZE,
+    regen: env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_LCD_ENDPOINT_REGEN : process.env.NEXT_PUBLIC_MAINNET_LCD_ENDPOINT_REGEN,
+    osmosis:
+      env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_LCD_ENDPOINT_OSMOSIS : process.env.NEXT_PUBLIC_MAINNET_LCD_ENDPOINT_OSMOSIS,
+  };
+
+  const modalThemeOverrides: ThemeCustomizationProps = {
+    overrides: {
+      'connect-modal': {
+        bg: {
+          light: 'rgba(0,0,0,0.75)',
+          dark: 'rgba(32,32,32,0.9)',
+        },
+        activeBg: {
+          light: 'rgba(0,0,0,0.75)',
+          dark: 'rgba(32,32,32,0.9)',
+        },
+        color: {
+          light: '#FFFFFF',
+          dark: '#FFFFFF',
+        },
+      },
+      'clipboard-copy-text': {
+        bg: {
+          light: '#FFFFFF',
+          dark: '#FFFFFF',
+        },
+      },
+      'connect-modal-qr-code-shadow': {
+        bg: {
+          light: '#FFFFFF',
+          dark: '#FFFFFF',
+        },
+      },
+      button: {
+        bg: {
+          light: '#FF8000',
+          dark: '#FF8000',
+        },
+      },
+      'connect-modal-head-title': {
+        bg: {
+          light: '#FFFFFF',
+          dark: '#FFFFFF',
+        },
+      },
+      'connect-modal-wallet-button-label': {
+        bg: {
+          light: '#FFFFFF',
+          dark: '#FFFFFF',
+        },
+      },
+      'connect-modal-wallet-button-sublogo': {
+        bg: {
+          light: '#FFFFFF',
+          dark: '#FFFFFF',
+        },
+      },
+      'connect-modal-qr-code-loading': {
+        bg: {
+          light: '#FFFFFF',
+          dark: '#FFFFFF',
+        },
+      },
+      'connect-modal-wallet-button': {
+        bg: {
+          light: 'rgba(55,55,55,0.9)',
+          dark: 'rgba(55,55,55,0.9',
+        },
+        hoverBg: {
+          light: '#FF8000',
+          dark: '#FF8000',
+        },
+        hoverBorderColor: {
+          light: 'black',
+          dark: 'black',
+        },
+        activeBorderColor: {
+          light: '#FFFFFF',
+          dark: '#FFFFFF',
+        },
+        color: {
+          light: '#000000',
+          dark: '#FFFFFF',
+        },
+      },
+      'connect-modal-qr-code': {
+        bg: {
+          light: '',
+          dark: 'blue',
+        },
+        color: {
+          light: '#000000',
+          dark: '#000000',
+        },
+      },
+      'connect-modal-install-button': {
+        bg: {
+          light: '#F0F0F0', // Example background color for light theme
+          dark: '#FF8000', // Example background color for dark theme
+        },
+        // Other properties for 'connect-modal-install-button' if needed
+      },
+      'connect-modal-qr-code-error': {
+        bg: {
+          light: '#FFEEEE', // Example background color for light theme
+          dark: '#FFFFFF', // Example background color for dark theme
+        },
+        // Other properties for 'connect-modal-qr-code-error' if needed
+      },
+      'connect-modal-qr-code-error-button': {
+        bg: {
+          light: '#FFCCCC', // Example background color for light theme
+          dark: '#552222', // Example background color for dark theme
+        },
+      },
+    },
+  };
+
   return (
     <ChakraProvider theme={defaultTheme}>
       <ChainProvider
+        endpointOptions={{
+          isLazy: true,
+          endpoints: {
+            quicksilver: {
+              rpc: [rpcEndpoints.quicksilver ?? ''],
+              rest: [lcdEndpoints.quicksilver ?? ''],
+            },
+            quicksilvertestnet: {
+              rest: ['https://lcd.test.quicksilver.zone/'],
+              rpc: ['https://rpc.test.quicksilver.zone'],
+            },
+            cosmoshub: {
+              rpc: [rpcEndpoints.cosmoshub ?? ''],
+              rest: [lcdEndpoints.cosmoshub ?? ''],
+            },
+            sommelier: {
+              rpc: [rpcEndpoints.sommelier ?? ''],
+              rest: [lcdEndpoints.sommelier ?? ''],
+            },
+            stargaze: {
+              rpc: [rpcEndpoints.stargaze ?? ''],
+              rest: [lcdEndpoints.stargaze ?? ''],
+            },
+            regen: {
+              rpc: [rpcEndpoints.regen ?? ''],
+              rest: [lcdEndpoints.regen ?? ''],
+            },
+            osmosis: {
+              rpc: [rpcEndpoints.osmosis ?? ''],
+              rest: [lcdEndpoints.osmosis ?? ''],
+            },
+            osmosistestnet: {
+              rpc: [rpcEndpoints.osmosis ?? ''],
+              rest: [lcdEndpoints.osmosis ?? ''],
+            },
+          },
+        }}
+        modalTheme={modalThemeOverrides}
         chains={chains}
         assetLists={assets}
         //@ts-ignore
@@ -71,15 +258,7 @@ function CreateCosmosApp({ Component, pageProps }: AppProps) {
       >
         <QueryClientProvider client={queryClient}>
           <ReactQueryDevtools initialIsOpen={true} />
-          <Box
-            w="100vw"
-            h="100vh"
-            bgImage="url('https://s3-alpha-sig.figma.com/quicksilver-app-v2/img/555d/db64/f5bf65e93a15603069e8e865d5f6d60d?Expires=1694995200&Signature=fYfmbqDdOGRYtSeEsOkavPhhkaNQK1UFFfICaUaM1k9OVEpACsoWOcK2upjRW7Tfs-pPTJBuQuvcmF9gBjosh5-Al2xTWHYzDlR~CYJNzsXcseIEnVf7H8lCdJqhZY-T0r~lmbJK5-CmbulWfOaubc-wyY3C-oM3b1RanGV1TqmPZto5bbHwf56jDYqK86HedVMXbUCOlzkeBw2R93AkmNDMOdDbKa9rIKqxil64DuQQAfIFxWm1Rc69Jc1-4K-bunsS~kfz8bSET6TIGmR15nCo~ibfISG72YYKAa7zz6XqUY6GKmmG-Yhj9XyyYb7Jy02r5axNei3DRD78SBe~6w__&Key-Pair-Id=APKAQ4GOSFWCVNEHN3O4')"
-            bgSize="fit"
-            bgPosition="right center"
-            bgAttachment="fixed"
-            bgRepeat="no-repeat"
-          >
+          <Box w="100vw" h="100vh" bgSize="fit" bgPosition="right center" bgAttachment="fixed" bgRepeat="no-repeat">
             <Flex justifyContent={'space-between'} alignItems={'center'}>
               <Header chainName="quicksilver" />
               <SideHeader />

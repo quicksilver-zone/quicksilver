@@ -6,8 +6,8 @@ import { cosmos } from 'interchain-query';
 
 import { useGrpcQueryClient } from './useGrpcQueryClient';
 
-import { getCoin } from '@/utils';
-import { parseValidators } from '@/utils/staking';
+import { getCoin, getLogoUrls } from '@/utils';
+import { ExtendedValidator, parseValidators } from '@/utils/staking';
 
 
 const BigNumber = require('bignumber.js');
@@ -31,7 +31,42 @@ export const useBalanceQuery = (chainName: string, address: string) => {
       return balance;
     },
     {
-      enabled: !!grpcQueryClient,
+      enabled: !!grpcQueryClient && !!address,
+      staleTime: Infinity,
+    },
+  );
+
+  return {
+    balance: balanceQuery.data,
+    isLoading: balanceQuery.isLoading,
+    isError: balanceQuery.isError,
+  };
+};
+
+export const useIbcBalanceQuery = (chainName: string, address: string) => {
+  const { grpcQueryClient } = useGrpcQueryClient(chainName);
+  const balanceQuery = useQuery(
+    ['balance', address],
+    async () => {
+      if (!grpcQueryClient) {
+        throw new Error('RPC Client not ready');
+      }
+      const nextKey = new Uint8Array()
+      const balance = await grpcQueryClient.cosmos.bank.v1beta1.allBalances({
+        address: address || '',
+        pagination: {
+          key: nextKey,
+          offset: Long.fromNumber(0),
+          limit: Long.fromNumber(100),
+          countTotal: true,
+          reverse: false,
+        },
+      });
+
+      return balance;
+    },
+    {
+      enabled: !!grpcQueryClient && !!address,
       staleTime: Infinity,
     },
   );
@@ -77,7 +112,7 @@ export const useQBalanceQuery = (chainName: string, address: string, qAsset: str
       return balance;
     },
     {
-      enabled: !!grpcQueryClient,
+      enabled: !!grpcQueryClient && !!address,
       staleTime: Infinity,
     },
   );
@@ -100,12 +135,12 @@ export const useIntentQuery = (chainName: string, address: string) => {
         throw new Error('RPC Client not ready');
       }
 
-      const intent = await axios.get(`https://quicksilver-rest.publicnode.com/quicksilver/interchainstaking/v1/zones/${chainId}/delegator_intent/${address}`)
+      const intent = await axios.get(`https://lcd.test.quicksilver.zone/quicksilver/interchainstaking/v1/zones/${chainId}/delegator_intent/${address}`)
 
       return intent;
     },
     {
-      enabled: !!grpcQueryClient,
+      enabled: !!grpcQueryClient && !!address,
       staleTime: Infinity,
     },
   );
@@ -114,6 +149,46 @@ export const useIntentQuery = (chainName: string, address: string) => {
     intent: intentQuery.data,
     isLoading: intentQuery.isLoading,
     isError: intentQuery.isError,
+  };
+};
+
+export const useUnbondingQuery = (chainName: string, address: string) => {
+  const { grpcQueryClient } = useGrpcQueryClient('quicksilver');
+  const { chain } = useChain(chainName);
+  const chainId = chain.chain_id;
+  const unbondingQuery = useQuery(
+    ['unbond', chainName],
+    async () => {
+      if (!grpcQueryClient) {
+        throw new Error('RPC Client not ready');
+      }
+      const nextKey = new Uint8Array()
+     const unbonding = await grpcQueryClient.quicksilver.interchainstaking.v1.withdrawalRecords({
+      delegatorAddress: address,
+      chainId: chainId,
+      pagination: {
+        key: nextKey,
+        offset: Long.fromNumber(0),
+        limit: Long.fromNumber(100),
+        countTotal: true,
+        reverse: false,
+      },
+
+      });
+
+      return unbonding;
+
+    },
+    {
+      enabled: !!grpcQueryClient && !!address,
+      staleTime: Infinity,
+    },
+  );
+
+  return {
+    unbondingData: unbondingQuery.data,
+    isLoading: unbondingQuery.isLoading,
+    isError: unbondingQuery.isError,
   };
 };
 
@@ -242,4 +317,101 @@ export const useZoneQuery = (chainId: string) => {
       enabled: !!chainId,
     }
   );
+};
+
+export const useValidatorLogos = (
+  chainName: string,
+  validators: ExtendedValidator[]
+) => {
+  const { data, isLoading } = useQuery({
+    queryKey: ['validatorLogos', chainName],
+    queryFn: () => getLogoUrls(validators, chainName),
+    enabled: validators.length > 0,
+    staleTime: Infinity,
+  });
+
+  return { data, isLoading };
+};
+
+export const useMissedBlocks = (chainName: string) => {
+  const { grpcQueryClient } = useGrpcQueryClient(chainName);
+
+  const fetchMissedBlocks = async () => {
+    if (!grpcQueryClient) {
+      throw new Error('RPC Client not ready');
+    }
+  
+    let allMissedBlocks: any[] = [];
+    let nextKey = new Uint8Array();
+  
+    do {
+      const response = await grpcQueryClient.cosmos.slashing.v1beta1.signingInfos({
+        pagination: {
+          key: nextKey,
+          offset: Long.fromNumber(0),
+          limit: Long.fromNumber(100),
+          countTotal: true,
+          reverse: false,
+        },
+      });
+  
+      // Filter out entries without an address
+      const filteredMissedBlocks = response.info.filter(block => {
+        const hasAddress = block.address && block.address.trim() !== '';
+        const notTombstoned = !block.tombstoned;
+        const notJailed = new Date(block.jailed_until) <= new Date();
+        return hasAddress && notTombstoned && notJailed;
+      });
+      
+      allMissedBlocks = allMissedBlocks.concat(filteredMissedBlocks);
+      nextKey = response.pagination.next_key;
+    } while (nextKey && nextKey.length > 0);
+  
+    return allMissedBlocks;
+  };
+  
+  const missedBlocksQuery = useQuery({
+    queryKey: ['missedBlocks', chainName],
+    queryFn: fetchMissedBlocks,
+    enabled: !!grpcQueryClient,
+    staleTime: Infinity,
+    onError: (error) => {
+      console.error('Error in fetching Missed Blocks:', error);
+    },
+  });
+
+  return {
+    missedBlocksData: missedBlocksQuery.data,
+    isLoading: missedBlocksQuery.isLoading,
+    isError: missedBlocksQuery.isError,
+  };
+};
+interface DefiData {
+    assetPair: string;
+    provider: string;
+    action: string;
+    apy: number;
+    tvl: number;
+    link: string;
+}
+export const useDefiData = () => {
+  const query = useQuery<DefiData[]>(
+    ['defi'],
+    async () => {
+      const res = await axios.get('https://data.test.quicksilver.zone/defi');
+      if (!res.data || res.data.length === 0) {
+        throw new Error('Failed to query defi');
+      }
+      return res.data;
+    },
+    {
+      staleTime: Infinity,
+    }
+  );
+
+  return {
+    defi: query.data,
+    isLoading: query.isLoading,
+    isError: query.isError,
+  };
 };

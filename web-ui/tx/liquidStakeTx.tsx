@@ -4,8 +4,8 @@ import { coins, Coin, SigningStargateClient } from '@cosmjs/stargate';
 import { ChainName, Dispatch } from '@cosmos-kit/core';
 import { quicksilver } from '@hoangdv2429/quicksilverjs';
 import { bech32 } from 'bech32';
-import { assets } from 'chain-registry';
-import chains from 'chain-registry';
+import { assets } from '@chalabi/chain-registry';
+import chains from '@chalabi/chain-registry';
 import { cosmos } from 'interchain-query';
 import { Zone } from 'quicksilverjs/types/codegen/quicksilver/interchainstaking/v1/interchainstaking';
 import { SetStateAction } from 'react';
@@ -84,7 +84,7 @@ export const liquidStakeTx = (
 
   if (validatorsSelect.length > 0) {
     validatorsSelect.forEach((val) => {
-      memoBuffer = Buffer.concat([memoBuffer, addValidator(val.address, val.intent / 100)]);
+      memoBuffer = Buffer.concat([memoBuffer, addValidator(val.address, val.intent)]);
     });
     memoBuffer = Buffer.concat([Buffer.from([0x02, memoBuffer.length]), memoBuffer]);
   }
@@ -125,6 +125,7 @@ export const liquidStakeTx = (
 
     try {
       const response = await stargateClient.signAndBroadcast(address, [msgSend], fee, memo);
+
       setResp(JSON.stringify(response, null, 2));
       setIsSigning(false);
       showSuccessToast(toast, response.transactionHash, chainName);

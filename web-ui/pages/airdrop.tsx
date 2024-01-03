@@ -1,3 +1,4 @@
+import AirdropSection from '@/components/Airdrop/airdropSection';
 import DefiTable from '@/components/Defi/defiBox';
 import { ExternalLinkIcon } from '@chakra-ui/icons';
 import { Box, Button, Container, Flex, Stack, Table, Tbody, Td, Th, Thead, Tr, Text, SlideFade } from '@chakra-ui/react';
@@ -18,14 +19,14 @@ export default function Home() {
           maxW="5xl"
         >
           <Head>
-            <title>DeFi</title>
+            <title>Airdrop</title>
             <meta name="viewport" content="width=device-width, initial-scale=1.0" />
             <link rel="icon" href="/quicksilver/img/favicon.png" />
           </Head>
           <Text pb={2} color="white" fontSize="24px">
-            DeFi Opportunities
+            Airdrop
           </Text>
-          <DefiTable />
+          <AirdropSection />
         </Container>
       </SlideFade>
     </>
