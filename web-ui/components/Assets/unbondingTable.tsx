@@ -87,13 +87,23 @@ const UnbondingAssetsTable: React.FC<UnbondingAssetsTableProps> = ({ address, ch
         <Box bgColor="rgba(255,255,255,0.1)" p={4} borderRadius="lg">
           <TableContainer h={'200px'} overflowY={'auto'}>
             <Table variant="simple" color="white">
-              <Thead>
+              <Thead boxShadow="0px 0.5px 0px 0px rgba(255,255,255,1)" position={'sticky'} bgColor="#1A1A1A" top="0" zIndex="0">
                 <Tr>
-                  <Th color="complimentary.900">Asset</Th>
-                  <Th color="complimentary.900">Status</Th>
-                  <Th color="complimentary.900">Redemption Amount</Th>
-                  <Th color="complimentary.900">Unstaked On</Th>
-                  <Th color="complimentary.900">Completion Time</Th>
+                  <Th borderBottomColor={'transparent'} color="complimentary.900">
+                    Asset
+                  </Th>
+                  <Th borderBottomColor={'transparent'} color="complimentary.900">
+                    Status
+                  </Th>
+                  <Th borderBottomColor={'transparent'} color="complimentary.900">
+                    Redemption Amount
+                  </Th>
+                  <Th borderBottomColor={'transparent'} color="complimentary.900">
+                    Unstaked On
+                  </Th>
+                  <Th borderBottomColor={'transparent'} color="complimentary.900">
+                    Completion Time
+                  </Th>
                 </Tr>
               </Thead>
               <Tbody>
