@@ -527,6 +527,18 @@ func (k *Keeper) HandleMaturedUnbondings(ctx sdk.Context, zone *types.Zone) erro
 	return nil
 }
 
+func (k *Keeper) GetInflightUnbondingAmount(ctx sdk.Context, zone *types.Zone) sdk.Coin {
+	outCoin := sdk.NewCoin(zone.BaseDenom, sdk.ZeroInt())
+	k.IterateZoneWithdrawalRecords(ctx, zone.ChainId, func(idx int64, withdrawal types.WithdrawalRecord) bool {
+		if (withdrawal.Status == types.WithdrawStatusUnbond && ctx.BlockTime().After(withdrawal.CompletionTime) && withdrawal.Acknowledged) || // status unbond, completion has pass
+			withdrawal.Status == types.WithdrawStatusSend { // already in state send.
+			outCoin = outCoin.Add(withdrawal.Amount[0])
+		}
+		return false
+	})
+	return outCoin
+}
+
 func (k *Keeper) HandleTokenizedShares(ctx sdk.Context, msg sdk.Msg, sharesAmount sdk.Coin, memo string) error {
 	var err error
 	k.Logger(ctx).Info("received MsgTokenizeShares acknowledgement")
