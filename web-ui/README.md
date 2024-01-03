@@ -41,11 +41,17 @@ Please ensure your IDE is configured to use Typescript v4.9.3
 
 - Finish Mobile breakpoints
 
+- focus on mobile landscape breakpoints, (mainly staking page)
+
 - find different assets for side bar
 
 **Mobile Menu**
 
 - design
+
+- connect wallet button
+
+- graphic elements
 
 - font size / style / decorations
 
@@ -57,7 +63,13 @@ Please ensure your IDE is configured to use Typescript v4.9.3
 
 - claim rewards claim.test.quicksilver.zone/address/current \*/epoch
 
+- intent query
+
+- unbonding query
+
 **Staking Page**
+
+- check memo intent creation
 
 - validator route app.quicksilver.zone/staking/chainId/valoperAddress
 

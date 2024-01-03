@@ -269,7 +269,7 @@ function Home() {
           <Spacer />
           {/* Unbonding Table */}
           <Box mt="20px">
-            <UnbondingAssetsTable isWalletConnected={isWalletConnected} address={address ?? ''} chainName="cosmoshub" />
+            <UnbondingAssetsTable isWalletConnected={isWalletConnected} address={address ?? ''} chainName="osmosistestnet" />
           </Box>
           <Box h="40px"></Box>
         </Container>

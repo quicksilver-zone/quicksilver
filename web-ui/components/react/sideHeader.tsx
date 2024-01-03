@@ -101,10 +101,9 @@ export const SideHeader = () => {
       position="fixed"
       bgColor="rgba(214, 219, 220, 0.1)"
     >
-      <Flex direction="column" align="center" zIndex={10} justifyContent="space-between" py={{ base: 0, 1274: 0, md: 4 }} height="100%">
+      <Flex direction="column" align="center" zIndex={10} justifyContent="space-between" height="100%">
         <Image
           alt="logo"
-          mt={{ base: 0, 1274: 0, md: '-10px' }}
           h="75px"
           w="75px"
           borderRadius="full"
@@ -122,10 +121,10 @@ export const SideHeader = () => {
 
         <Drawer isOpen={isOpen} placement="left" onClose={onClose}>
           <DrawerOverlay />
-          <DrawerContent bgColor="black">
+          <DrawerContent bgColor="rgba(32,32,32,1)">
             <DrawerCloseButton color="white" />
-            <DrawerHeader textDecoration={'underline'} fontSize="3xl" letterSpacing={4} lineHeight={2} color="white">
-              Quicksilver
+            <DrawerHeader fontSize="3xl" letterSpacing={4} lineHeight={2} color="white">
+              QUICKSILVER
             </DrawerHeader>
             <DrawerBody>
               {['Staking', 'Governance', 'Defi', 'Assets'].map((item) => (
