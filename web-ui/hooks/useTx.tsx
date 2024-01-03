@@ -9,12 +9,6 @@ import { ChainName } from '@cosmos-kit/core';
 import { on } from 'events';
 import { isExternal } from 'util/types';
 
-interface TxResult {
-  success: boolean;
-  txHash?: string;
-  error?: string;
-}
-
 interface Msg {
   typeUrl: string;
   value: any;
@@ -40,14 +34,14 @@ export const useTx = (chainName: string) => {
 
   const toaster = useToaster();
 
-  const tx = async (msgs: Msg[], options: TxOptions): Promise<TxResult> => {
+  const tx = async (msgs: Msg[], options: TxOptions) => {
     if (!address) {
       toaster.toast({
         type: ToastType.Error,
         title: 'Wallet not connected',
         message: 'Please connect your wallet',
       });
-      return { success: false, error: 'Wallet not connected' };
+      return;
     }
 
     let signed: TxRaw;
@@ -63,7 +57,7 @@ export const useTx = (chainName: string) => {
         fee = _fee;
         client = _client;
       }
-      signed = await client.sign(address, msgs, fee, '');
+      signed = await client.sign(address, msgs, fee, options.memo || '');
     } catch (e: any) {
       console.error(e);
       toaster.toast({
@@ -71,7 +65,7 @@ export const useTx = (chainName: string) => {
         message: e?.message || 'An unexpected error has occured',
         type: ToastType.Error,
       });
-      return { success: false, error: 'An unexpected error has occured' };
+      return;
     }
 
     let broadcastToastId: ToastId;
@@ -87,6 +81,7 @@ export const useTx = (chainName: string) => {
       await client
         .broadcastTx(Uint8Array.from(txRaw.encode(signed).finish()))
         .then((res) => {
+          //@ts-ignore
           if (isDeliverTxSuccess(res)) {
             if (options.onSuccess) options.onSuccess();
 
@@ -97,7 +92,6 @@ export const useTx = (chainName: string) => {
               chainName: chainName,
               txHash: res?.transactionHash,
             });
-            return { success: true, txHash: res.transactionHash };
           } else {
             toaster.toast({
               title: TxStatus.Failed,
@@ -105,7 +99,6 @@ export const useTx = (chainName: string) => {
               type: ToastType.Error,
               duration: 10000,
             });
-            return { success: false, error: res.rawLog };
           }
         })
         .catch((err) => {
@@ -115,13 +108,10 @@ export const useTx = (chainName: string) => {
             type: ToastType.Error,
             duration: 10000,
           });
-          return { success: false, error: err.message };
         })
         .finally(() => toaster.close(broadcastToastId));
-      return { success: false, error: 'Client not initialized or transaction not signed' };
     } else {
       toaster.close(broadcastToastId);
-      return { success: false, error: 'Client not initialized or transaction not signed' };
     }
   };
 

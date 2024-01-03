@@ -152,30 +152,31 @@ export const StakingBox = ({ selectedOption, isModalOpen, setModalOpen, setBalan
     event.preventDefault();
     setIsSigning(true);
     try {
-      const result = await tx([msgRequestRedemption], { fee });
-
-      if (result.success) {
-        // Transaction was successful
-        setTransactionStatus('Success');
-      } else {
-        // Transaction failed
-        setIsError(true);
-        setTransactionStatus('Failed');
-      }
+      const result = await tx([msgRequestRedemption], {
+        fee,
+        onSuccess: () => {
+          setTransactionStatus('Success');
+        },
+      });
     } catch (error) {
       console.error('Transaction failed', error);
-      setIsError(true);
       setTransactionStatus('Failed');
+      setIsError(true);
     } finally {
       setIsSigning(false);
     }
+  };
+
+  const handleTabsChange = (index: number) => {
+    setActiveTabIndex(index);
+    setTokenAmount('');
   };
 
   const isValidNumber = !isNaN(Number(qAssetsDisplay)) && qAssetsDisplay !== '';
 
   return (
     <Box position="relative" backdropFilter="blur(50px)" bgColor="rgba(255,255,255,0.1)" flex="1" borderRadius="10px" p={5}>
-      <Tabs isFitted variant="enclosed" onChange={(index) => setActiveTabIndex(index)}>
+      <Tabs isFitted variant="enclosed" onChange={handleTabsChange}>
         <TabList mt={'4'} mb="1em" overflow="hidden" borderBottomColor="transparent" bg="rgba(255,255,255,0.1)" p={2} borderRadius="25px">
           <Tab
             borderRadius="25px"
@@ -417,10 +418,10 @@ export const StakingBox = ({ selectedOption, isModalOpen, setModalOpen, setBalan
                         // Set error for invalid or non-positive numbers
                         setInputError(true);
                         setTokenAmount('');
-                      } else if (inputValue > maxStakingAmount) {
+                      } else if (inputValue > maxUnstakingAmount) {
                         // Limit the input to the max staking amount
                         setInputError(false);
-                        setTokenAmount(maxStakingAmount.toString());
+                        setTokenAmount(maxUnstakingAmount.toString());
                       } else {
                         // Valid input
                         setInputError(false);
@@ -513,7 +514,7 @@ export const StakingBox = ({ selectedOption, isModalOpen, setModalOpen, setBalan
                     bgColor: 'complimentary.1000',
                   }}
                   onClick={handleLiquidUnstake}
-                  isDisabled={Number(tokenAmount) === 0 || !address || isSigning}
+                  isDisabled={Number(tokenAmount) === 0 || !address || isSigning || Number(qBalance?.balance.amount) === 0}
                 >
                   {isSigning ? (
                     <Spinner thickness="2px" speed="0.65s" emptyColor="gray.200" color="complimentary.900" size="sm" />

@@ -29,6 +29,13 @@ import { MultiModal } from './validatorSelectionModal';
 import { useQueryHooks, useTx } from '@/hooks';
 import { useZoneQuery } from '@/hooks/useQueries';
 import { liquidStakeTx, unbondLiquidStakeTx } from '@/tx/liquidStakeTx';
+import { bech32 } from 'bech32';
+import { shiftDigits } from '@/utils';
+import { coins, StdFee } from '@cosmjs/amino';
+import { assets } from 'chain-registry';
+import { cosmos } from 'interchain-query';
+import chains from '@chalabi/chain-registry';
+import { TxResponse } from 'interchain-query/cosmos/base/abci/v1beta1/abci';
 
 const ChakraModalContent = styled(ModalContent)`
   position: relative;
@@ -173,43 +180,79 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
 
   const { data: zone, isLoading: isZoneLoading, isError: isZoneError } = useZoneQuery(selectedOption?.chainId ?? '');
 
+  const valToByte = (val: number) => {
+    if (val > 1) {
+      val = 1;
+    }
+    if (val < 0) {
+      val = 0;
+    }
+    return Math.abs(val * 200);
+  };
+
+  const addValidator = (valAddr: string, weight: number) => {
+    let { words } = bech32.decode(valAddr);
+    let wordsUint8Array = new Uint8Array(bech32.fromWords(words));
+    let weightByte = valToByte(weight);
+    return Buffer.concat([Buffer.from([weightByte]), wordsUint8Array]);
+  };
+
+  let memoBuffer = Buffer.alloc(0);
+
+  if (intents.length > 0) {
+    intents.forEach((val) => {
+      memoBuffer = Buffer.concat([memoBuffer, addValidator(val.address, val.intent)]);
+    });
+    memoBuffer = Buffer.concat([Buffer.from([0x02, memoBuffer.length]), memoBuffer]);
+  }
+
+  let memo = memoBuffer.length > 0 && selectedValidators.length > 0 ? memoBuffer.toString('base64') : '';
+
+  const numericAmount = Number(tokenAmount);
+  const smallestUnitAmount = numericAmount * Math.pow(10, 6);
+
+  const { send } = cosmos.bank.v1beta1.MessageComposer.withTypeUrl;
+  const msgSend = send({
+    fromAddress: address ?? '',
+    toAddress: zone?.depositAddress?.address ?? '',
+    amount: coins(smallestUnitAmount.toFixed(0), zone?.baseDenom ?? ''),
+  });
+
+  const mainTokens = assets.find(({ chain_name }) => chain_name === newChainName);
+  const fees = chains.chains.find(({ chain_name }) => chain_name === newChainName)?.fees?.fee_tokens;
+  const mainDenom = mainTokens?.assets[0].base ?? '';
+  const fixedMinGasPrice = fees?.find(({ denom }) => denom === mainDenom)?.average_gas_price ?? '';
+  const feeAmount = shiftDigits(fixedMinGasPrice, 6);
+
+  const fee: StdFee = {
+    amount: [
+      {
+        denom: mainDenom,
+        amount: feeAmount.toString(),
+      },
+    ],
+    gas: '500000',
+  };
+
+  const { tx } = useTx(newChainName ?? '');
+
   const handleLiquidStake = async (event: React.MouseEvent) => {
-    const numericAmount = Number(tokenAmount);
-    const smallestUnitAmount = numericAmount * Math.pow(10, 6);
-
+    event.preventDefault();
+    setIsSigning(true);
+    setTransactionStatus('Pending');
     try {
-      setIsSigning(true);
-      const response = await liquidStakeTx(
-        getSigningStargateClient,
-        setResp,
-        newChainName || '',
-        selectedOption?.chainId || '',
-        address,
-        toast,
-        setIsError,
-        setIsSigning,
-        intents,
-        smallestUnitAmount,
-        zone,
-      )(event);
-
-      // Parse the response
-      const parsedResponse = JSON.parse(resp);
-
-      if (parsedResponse && parsedResponse.code === 0) {
-        // Successful transaction
-        setStep(4);
-        setTransactionStatus('Success');
-      } else {
-        // Unsuccessful transaction
-        setIsError(true);
-        setTransactionStatus('Failed');
-      }
+      const result = await tx([msgSend], {
+        memo,
+        fee,
+        onSuccess: () => {
+          setStep(4);
+          setTransactionStatus('Success');
+        },
+      });
     } catch (error) {
       console.error('Transaction failed', error);
-      setIsSigning(false);
-      setIsError(true);
       setTransactionStatus('Failed');
+      setIsError(true);
     } finally {
       setIsSigning(false);
     }
