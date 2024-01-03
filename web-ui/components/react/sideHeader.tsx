@@ -219,7 +219,7 @@ export const SideHeader = () => {
                         }}
                         alt="Staking"
                         h="55px"
-                        src="/quicksilver/img/test.png"
+                        src="/quicksilver/img/liquid.png"
                       />
                     </Box>
                   </Tooltip>
@@ -276,7 +276,7 @@ export const SideHeader = () => {
                         }}
                         alt="Assets"
                         h="55px"
-                        src="/quicksilver/img/test3.png"
+                        src="/quicksilver/img/assets.png"
                       />
                     </Box>
                   </Tooltip>

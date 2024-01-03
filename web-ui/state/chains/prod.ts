@@ -10,7 +10,7 @@ export const networks = [
     {
       value: 'OSMO',
       logo: '/quicksilver/img/networks/osmosis.svg',
-      qlogo: '/quicksilver/img/networks/qosmo.svg',
+      qlogo: '/quicksilver/img/networks/qosmo.png',
       name: 'Osmosis',
       chainName: 'osmosis',
       chainId: 'osmosis-1',
@@ -18,7 +18,7 @@ export const networks = [
     {
       value: 'STARS',
       logo: '/quicksilver/img/networks/stargaze.svg',
-      qlogo: '/quicksilver/img/networks/qstars.svg',
+      qlogo: '/quicksilver/img/networks/qstars.png',
       name: 'Stargaze',
       chainName: 'stargaze',
       chainId: 'stargaze-1',
@@ -34,7 +34,7 @@ export const networks = [
     {
       value: 'SOMM',
       logo: '/quicksilver/img/networks/sommelier.png',
-      qlogo: '/quicksilver/img/networks/sommelier.png',
+      qlogo: '/quicksilver/img/networks/qsomm.png',
       name: 'Sommelier',
       chainName: 'sommelier',
       chainId: 'sommelier-3',
@@ -53,7 +53,7 @@ export const networks = [
     {
       value: 'OSMO',
       logo: '/quicksilver/img/networks/osmosis.svg',
-      qlogo: '/quicksilver/img/networks/qosmo.svg',
+      qlogo: '/quicksilver/img/networks/qosmo.png',
       name: 'Osmosis',
       chainName: 'osmosis',
       chainId: 'osmo-test-5',
@@ -61,7 +61,7 @@ export const networks = [
     {
       value: 'STARS',
       logo: '/quicksilver/img/networks/stargaze.svg',
-      qlogo: '/quicksilver/img/networks/qstars.svg',
+      qlogo: '/quicksilver/img/networks/qstars.png',
       name: 'Stargaze',
       chainName: 'stargaze',
       chainId: 'elgafar-1',
@@ -77,7 +77,7 @@ export const networks = [
     {
       value: 'SOMM',
       logo: '/quicksilver/img/networks/sommelier.png',
-      qlogo: '/quicksilver/img/networks/sommelier.png',
+      qlogo: '/quicksilver/img/networks/qsomm.png',
       name: 'Sommelier',
       chainName: 'sommelier',
       chainId: 'sommelier-3',

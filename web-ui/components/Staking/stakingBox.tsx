@@ -398,10 +398,35 @@ export const StakingBox = ({ selectedOption, isModalOpen, setModalOpen, setBalan
                     }}
                     color="complimentary.900"
                     textAlign={'right'}
-                    placeholder="amount"
+                    placeholder={inputError ? 'Invalid Number' : 'amount'}
+                    _placeholder={{
+                      color: inputError ? 'red.500' : 'grey',
+                    }}
                     value={tokenAmount}
                     type="text"
-                    onChange={(e) => setTokenAmount(e.target.value)}
+                    onChange={(e) => {
+                      // Allow any numeric input
+                      const validNumberPattern = /^\d*\.?\d*$/;
+                      if (validNumberPattern.test(e.target.value)) {
+                        setTokenAmount(e.target.value);
+                      }
+                    }}
+                    onBlur={() => {
+                      let inputValue = parseFloat(tokenAmount);
+                      if (isNaN(inputValue) || inputValue <= 0) {
+                        // Set error for invalid or non-positive numbers
+                        setInputError(true);
+                        setTokenAmount('');
+                      } else if (inputValue > maxStakingAmount) {
+                        // Limit the input to the max staking amount
+                        setInputError(false);
+                        setTokenAmount(maxStakingAmount.toString());
+                      } else {
+                        // Valid input
+                        setInputError(false);
+                        setTokenAmount(inputValue.toString());
+                      }
+                    }}
                   />
                   <Flex w="100%" flexDirection="row" py={4} mb={-4} justifyContent="space-between" alignItems="center">
                     {address ? (
