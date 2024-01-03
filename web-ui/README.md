@@ -70,3 +70,5 @@ Please ensure your IDE is configured to use Typescript v4.9.3
 - validator route app.quicksilver.zone/staking/chainId/valoperAddress
 
 - fix succesful transaction on staking modal not taking you to final step
+
+- add LSM for cosmoshub
