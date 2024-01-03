@@ -39,15 +39,11 @@ Please ensure your IDE is configured to use Typescript v4.9.3
 
 **UI/UX**
 
-- Finish Mobile breakpoints
-
 - focus on mobile landscape breakpoints, (mainly staking page)
 
 - find different assets for side bar
 
 **Mobile Menu**
-
-- design
 
 - connect wallet button
 

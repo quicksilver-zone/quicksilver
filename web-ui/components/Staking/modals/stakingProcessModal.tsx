@@ -85,11 +85,11 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
 
   let newChainName: string | undefined;
   if (selectedOption?.chainId === 'provider') {
-    newChainName = 'cosmoshub';
+    newChainName = 'rsprovidertestnet';
   } else if (selectedOption?.chainId === 'elgafar-1') {
     newChainName = 'stargazetestnet';
   } else if (selectedOption?.chainId === 'osmo-test-5') {
-    newChainName = 'osmosistestnet';
+    newChainName = 'osmosistestnet4';
   } else if (selectedOption?.chainId === 'regen-redwood-1') {
     newChainName = 'regen';
   } else {
