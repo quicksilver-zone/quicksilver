@@ -1,12 +1,9 @@
 package interchaintest
 
 import (
-	"encoding/json"
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/quicksilver-zone/quicksilver/app"
 	"github.com/strangelove-ventures/interchaintest/v5/ibc"
-	"time"
 )
 
 var (
@@ -40,30 +37,18 @@ var (
 func createConfig() (ibc.ChainConfig, error) {
 	encodingConfig := app.MakeEncodingConfig()
 	return ibc.ChainConfig{
-			Type:           "cosmos",
-			Name:           "quicksilver",
-			ChainID:        "quicksilver-2",
-			Images:         []ibc.DockerImage{QuicksilverImage},
-			Bin:            "quicksilverd",
-			Bech32Prefix:   "quick",
-			Denom:          "uqck",
-			GasPrices:      "0.0uqck",
-			GasAdjustment:  1.1,
-			TrustingPeriod: "112h",
-			NoHostMount:    false,
-			ModifyGenesis: func(chainCfg ibc.ChainConfig, bytes []byte) ([]byte, error) {
-				genesis := app.GenesisState{}
-				err := json.Unmarshal(bytes, &genesis)
-				if err != nil {
-					return nil, err
-				}
-
-				gov := govtypes.DefaultGenesisState()
-				gov.VotingParams.VotingPeriod = time.Minute
-				genesis["gov"] = encodingConfig.Marshaler.MustMarshalJSON(gov)
-
-				return json.MarshalIndent(genesis, "", "")
-			},
+			Type:                "cosmos",
+			Name:                "quicksilver",
+			ChainID:             "quicksilver-2",
+			Images:              []ibc.DockerImage{QuicksilverImage},
+			Bin:                 "quicksilverd",
+			Bech32Prefix:        "quick",
+			Denom:               "uqck",
+			GasPrices:           "0.0uqck",
+			GasAdjustment:       1.1,
+			TrustingPeriod:      "112h",
+			NoHostMount:         false,
+			ModifyGenesis:       nil,
 			ConfigFileOverrides: nil,
 			EncodingConfig: &simappparams.EncodingConfig{
 				InterfaceRegistry: encodingConfig.InterfaceRegistry,
@@ -71,24 +56,24 @@ func createConfig() (ibc.ChainConfig, error) {
 				TxConfig:          encodingConfig.TxConfig,
 				Amino:             encodingConfig.Amino,
 			},
-			SidecarConfigs: []ibc.SidecarConfig{
-				{
-					ProcessName:      "icq",
-					Image:            ICQImage,
-					Ports:            []string{"2112"},
-					StartCmd:         []string{"interchain-queries", "run", "--home", "/var/sidecar-processes/icq"},
-					PreStart:         true,
-					ValidatorProcess: false,
-				},
-				{
-					ProcessName:      "xcc",
-					Image:            XccLookupImage,
-					Ports:            []string{"3033"},
-					StartCmd:         []string{"/xcc", "-a", "serve", "-f", "/var/sidecar/processes/xcc/config.yaml"},
-					PreStart:         true,
-					ValidatorProcess: false,
-				},
-			},
+			//SidecarConfigs: []ibc.SidecarConfig{
+			//	{
+			//		ProcessName:      "icq",
+			//		Image:            ICQImage,
+			//		Ports:            []string{"2112"},
+			//		StartCmd:         []string{"interchain-queries", "run", "--home", "/var/sidecar-processes/icq"},
+			//		PreStart:         true,
+			//		ValidatorProcess: false,
+			//	},
+			//	{
+			//		ProcessName:      "xcc",
+			//		Image:            XccLookupImage,
+			//		Ports:            []string{"3033"},
+			//		StartCmd:         []string{"/xcc", "-a", "serve", "-f", "/var/sidecar/processes/xcc/config.yaml"},
+			//		PreStart:         true,
+			//		ValidatorProcess: false,
+			//	},
+			//},
 		},
 		nil
 }

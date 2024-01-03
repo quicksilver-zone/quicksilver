@@ -2,47 +2,25 @@ package interchaintest
 
 import (
 	"context"
-	"crypto/sha256"
-	"encoding/json"
 	"fmt"
-	"github.com/avast/retry-go/v4"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/types"
-	authTx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-	"github.com/strangelove-ventures/interchaintest/v5"
-	abcitypes "github.com/tendermint/tendermint/abci/types"
-	_ "go.uber.org/zap"
-	_ "path"
-	"path/filepath"
-	"testing"
-	"time"
-
 	transfertypes "github.com/cosmos/ibc-go/v5/modules/apps/transfer/types"
 	istypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
+	"github.com/strangelove-ventures/interchaintest/v5"
 	"github.com/strangelove-ventures/interchaintest/v5/chain/cosmos"
 	"github.com/strangelove-ventures/interchaintest/v5/ibc"
 	"github.com/strangelove-ventures/interchaintest/v5/testreporter"
 	"github.com/strangelove-ventures/interchaintest/v5/testutil"
 	"github.com/stretchr/testify/require"
+	_ "go.uber.org/zap"
 	"go.uber.org/zap/zaptest"
+	_ "path"
+	"testing"
+	"time"
 )
 
-// TxProposalv1 contains chain proposal transaction detail for gov module v1 (sdk v0.46.0+)
-type TxProposalv1 struct {
-	Messages []json.RawMessage `json:"messages"`
-	Metadata string            `json:"metadata"`
-	Deposit  string            `json:"deposit"`
-	Title    string            `json:"title"`
-	Summary  string            `json:"summary"`
-
-	// SDK v50 only
-	Proposer  string `json:"proposer,omitempty"`
-	Expedited bool   `json:"expedited,omitempty"`
-}
-
-// TestHandleTokenizedShares spins up a Quicksilver and Juno network, initializes an IBC connection between them,
-// and sends an ICS20 token transfer from Quicksilver->Juno and then back from Juno->Quicksilver.
+// TestHandleTokenizedShares
 func TestHandleTokenizedShares(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
@@ -57,6 +35,22 @@ func TestHandleTokenizedShares(t *testing.T) {
 	config, err := createConfig()
 	require.NoError(t, err)
 
+	modifyGenesis := []cosmos.GenesisKV{
+		{
+			Key:   "app_state.gov.voting_params.voting_period",
+			Value: "20s",
+		},
+		{
+			Key:   "app_state.staking.params.unbonding_time",
+			Value: "60s",
+		},
+		{
+			Key:   "app_state.interchainstaking.params.unbonding_enabled",
+			Value: true,
+		},
+	}
+	config.ModifyGenesis = cosmos.ModifyGenesis(modifyGenesis)
+
 	cf := interchaintest.NewBuiltinChainFactory(zaptest.NewLogger(t), []*interchaintest.ChainSpec{
 		{
 			Name:          "quicksilver",
@@ -69,6 +63,14 @@ func TestHandleTokenizedShares(t *testing.T) {
 			Version:       "v14.1.0",
 			NumValidators: &numVals,
 			NumFullNodes:  &numFullNodes,
+			ChainConfig: ibc.ChainConfig{
+				ModifyGenesis: cosmos.ModifyGenesis([]cosmos.GenesisKV{
+					{
+						Key:   "app_state.staking.params.unbonding_time",
+						Value: "60s",
+					},
+				}),
+			},
 			//ChainConfig: ibc.ChainConfig{
 			//	GasPrices: "0.0uatom",
 			//},
@@ -185,6 +187,17 @@ func TestHandleTokenizedShares(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, transferAmount, junoUpdateBal)
 
+	// Create new clients
+	err = r.CreateClients(ctx, eRep, pathQuicksilverJuno, ibc.CreateClientOptions{TrustingPeriod: "330h"})
+	require.NoError(t, err)
+
+	// Create a new connection
+	err = r.CreateConnections(ctx, eRep, pathQuicksilverJuno)
+	require.NoError(t, err)
+
+	connections, err := r.GetConnections(ctx, eRep, quicksilver.Config().ChainID)
+	require.NoError(t, err)
+
 	// Compose an IBC transfer and send from Quicksilver -> Juno
 	transfer = ibc.WalletAmount{
 		Address: quickUserAddr,
@@ -211,9 +224,9 @@ func TestHandleTokenizedShares(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, int64(0), junoUpdateBal)
 
-	content := istypes.RegisterZoneProposal{
-		Title:            "register lstest-1 zone",
-		Description:      "register lstest-1 zone with multisend and lsm enabled",
+	registerProposal := istypes.RegisterZoneProposal{
+		Title:            "Register zone",
+		Description:      "Register zone",
 		ConnectionId:     "connection-0",
 		BaseDenom:        quicksilver.Config().Denom,
 		LocalDenom:       quicksilver.Config().Denom,
@@ -225,7 +238,7 @@ func TestHandleTokenizedShares(t *testing.T) {
 		Decimals:         6,
 	}
 
-	check, err := cdctypes.NewAnyWithValue(&content)
+	check, err := cdctypes.NewAnyWithValue(&registerProposal)
 
 	message := govv1.MsgExecLegacyContent{
 		Content:   check,
@@ -252,92 +265,84 @@ func TestHandleTokenizedShares(t *testing.T) {
 
 	require.NoError(t, err)
 
-	heightBeforeVote, err := quicksilver.Height(ctx)
-	require.NoError(t, err, "error fetching height before vote")
-
 	//Voting on the proposal
 	err = quicksilver.VoteOnProposalAllValidators(ctx, proposalID, cosmos.ProposalVoteYes)
 	require.NoError(t, err, "Failed to submit votes")
 
+	heightAfterVote, err := quicksilver.Height(ctx)
+	require.NoError(t, err, "error fetching height before vote")
+
 	//Checking the proposal with matching ID and status.
-	proposalStatusResponse, err := cosmos.PollForProposalStatus(ctx, quicksilver, heightBeforeVote, heightBeforeVote+20, proposalID, cosmos.ProposalStatusPassed)
-	fmt.Println("Proposal status response", proposalStatusResponse)
+	_, err = cosmos.PollForProposalStatus(ctx, quicksilver, heightAfterVote, heightAfterVote+20, proposalID, cosmos.ProposalStatusPassed)
 	require.NoError(t, err, "Proposal status did not change to passed in expected number of blocks")
-
-	stdout, _, err := quicksilver.Validators[0].ExecQuery(ctx, "interchainstaking", "zones")
-
-	require.NotEmpty(t, stdout)
+	time.Sleep(10 * time.Second)
+	zone, err := QueryZones(ctx, quicksilver)
 	require.NoError(t, err)
-}
 
-func SubmitProposal(ctx context.Context, c *cosmos.CosmosChain, keyName string, prop TxProposalv1) (string, error) {
-	tn := c.Validators[0]
-	if len(c.FullNodes) > 0 {
-		tn = c.FullNodes[0]
-	}
+	//Deposit Address Check
+	depositAddress := zone[0].DepositAddress.Address
+	icaAddr, err := QueryZoneICAAddress(ctx, quicksilver, depositAddress, connections[0].ID)
+	require.NoError(t, err)
+	require.NotEmpty(t, icaAddr)
 
-	propJson, err := json.MarshalIndent(prop, "", " ")
-	if err != nil {
-		return "", err
-	}
+	//Withdrawl Address Check
+	withdralAddress := zone[0].WithdrawalAddress.Address
+	icaAddr, err = QueryZoneICAAddress(ctx, quicksilver, withdralAddress, connections[0].ID)
+	require.NoError(t, err)
+	require.NotEmpty(t, icaAddr)
 
-	hash := sha256.Sum256(propJson)
-	proposalFilename := fmt.Sprintf("%x.json", hash)
+	//Delegation Address Check
+	delegationAddress := zone[0].DelegationAddress.Address
+	icaAddr, err = QueryZoneICAAddress(ctx, quicksilver, delegationAddress, connections[0].ID)
+	require.NoError(t, err)
+	require.NotEmpty(t, icaAddr)
 
-	err = tn.WriteFile(ctx, propJson, proposalFilename)
-	if err != nil {
-		return "", fmt.Errorf("writing param change proposal: %w", err)
-	}
+	//Performance Address Check
+	performanceAddress := zone[0].DelegationAddress.Address
+	icaAddr, err = QueryZoneICAAddress(ctx, quicksilver, performanceAddress, connections[0].ID)
+	require.NoError(t, err)
+	require.NotEmpty(t, icaAddr)
 
-	proposalPath := filepath.Join(tn.HomeDir(), proposalFilename)
+	var updateZoneValue []*istypes.UpdateZoneValue
+	updateZoneValue = append(updateZoneValue, &istypes.UpdateZoneValue{
+		Key:   "",
+		Value: "",
+	})
 
-	command := []string{
-		"gov", "submit-proposal",
-		proposalPath,
-		"--gas", "auto",
-	}
-	txHash, err := tn.ExecTx(ctx, keyName, command...)
-	if err != nil {
-		return txHash, fmt.Errorf("failed to submit gov v1 proposal: %w", err)
-	}
+	validators, err := QueryStakingValidators(ctx, quicksilver)
+	fmt.Println(validators)
+	require.NoError(t, err)
 
-	return TxProposal(tn, txHash)
-}
-
-func TxProposal(tn *cosmos.ChainNode, txHash string) (string, error) {
-	var txResp *types.TxResponse
-	err := retry.Do(func() error {
-		var err error
-		txResp, err = authTx.QueryTx(tn.CliContext(), txHash)
-		fmt.Println("Tx proposal response: ", txResp)
-		return err
-	},
-		// retry for total of 3 seconds
-		retry.Attempts(15),
-		retry.Delay(200*time.Millisecond),
-		retry.DelayType(retry.FixedDelay),
-		retry.LastErrorOnly(true),
+	delegateTx, err := RequestStakingDelegate(
+		ctx,
+		quicksilver,
+		validators[0].OperatorAddress,
+		quickUserAddr,
+		"1000"+quicksilver.Config().Denom,
 	)
-	if err != nil {
-		return "", fmt.Errorf("failed to get transaction %s: %w", txHash, err)
-	}
-	events := txResp.Events
-	evtSubmitProp := "submit_proposal"
-	proposalID, _ := AttributeValue(events, evtSubmitProp, "proposal_id")
+	fmt.Println(delegateTx)
+	require.NoError(t, err)
 
-	return proposalID, nil
-}
+	delegation, err := QueryStakingDelegation(ctx, quicksilver, validators[0].OperatorAddress, quickUserAddr)
+	fmt.Println(delegation)
+	require.NoError(t, err)
 
-func AttributeValue(events []abcitypes.Event, eventType, attrKey string) (string, bool) {
-	for _, event := range events {
-		if event.Type != eventType {
-			continue
-		}
-		for _, attr := range event.Attributes {
-			if string(attr.Key) == attrKey {
-				return string(attr.Value), true
-			}
-		}
-	}
-	return "", false
+	unbondTx, err := RequestStakingUnbond(
+		ctx,
+		quicksilver,
+		validators[0].OperatorAddress,
+		quickUserAddr,
+		"1000"+quicksilver.Config().Denom,
+	)
+	fmt.Println(unbondTx)
+	require.NoError(t, err)
+
+	response, err := RequestICSRedeem(
+		ctx,
+		quicksilver,
+		quickUserAddr,
+		"1000"+quicksilver.Config().Denom,
+	)
+	fmt.Println(response)
+	require.NoError(t, err)
 }
