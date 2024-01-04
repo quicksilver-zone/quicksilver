@@ -455,6 +455,7 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
                       _hover={{
                         bgColor: 'complimentary.500',
                       }}
+                      minW={'100px'}
                       onClick={() => {
                         setUseDefaultWeights(true);
                         advanceStep();
@@ -464,6 +465,7 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
                     </Button>
                     {selectedValidators.length > 1 && (
                       <Button
+                        minW={'100px'}
                         _hover={{
                           bgColor: 'complimentary.500',
                         }}

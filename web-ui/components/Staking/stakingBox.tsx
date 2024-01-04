@@ -255,8 +255,9 @@ export const StakingBox = ({ selectedOption, isModalOpen, setModalOpen, setBalan
                 {selectedOption.name === 'Cosmos Hub' && (
                   <Flex textAlign={'left'} justifyContent={'flex-start'}>
                     <HStack>
-                      <Text fontWeight="light" textAlign="center" color="white">
-                        Use natively staked {selectedOption.value}?
+                      <Text fontWeight="medium" textAlign="center" color="white">
+                        Use natively staked&nbsp;
+                        <span style={{ color: '#FF8000' }}>{selectedOption.value}</span>?
                       </Text>
                       <Switch
                         _active={{
@@ -454,7 +455,7 @@ export const StakingBox = ({ selectedOption, isModalOpen, setModalOpen, setBalan
                         {delegationsResponse?.map((delegation, index) => {
                           const validator = validatorsData?.find((v) => v.address === delegation.delegation.validator_address);
                           const isSelected = validator && validator.address === selectedValidator;
-                          const validatorLogo = logos[validator?.address ?? ''];
+                          const validatorLogo = logos[delegation.delegation.validator_address ?? ''];
 
                           return (
                             <Box
