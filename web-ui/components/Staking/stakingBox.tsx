@@ -21,12 +21,26 @@ import {
   useToast,
   SlideFade,
   Spinner,
+  FormControl,
+  FormLabel,
+  Switch,
+  Tooltip,
+  Image,
+  Icon,
+  SkeletonCircle,
 } from '@chakra-ui/react';
 import { useChain } from '@cosmos-kit/react';
 import React, { useEffect, useState } from 'react';
 
-import { useBalanceQuery, useQBalanceQuery, useZoneQuery } from '@/hooks/useQueries';
-import { unbondLiquidStakeTx } from '@/tx/liquidStakeTx';
+import {
+  useBalanceQuery,
+  useNativeStakeQuery,
+  useQBalanceQuery,
+  useValidatorLogos,
+  useValidatorsQuery,
+  useZoneQuery,
+} from '@/hooks/useQueries';
+
 import { getExponent } from '@/utils';
 import { shiftDigits } from '@/utils';
 
@@ -34,6 +48,9 @@ import StakingProcessModal from './modals/stakingProcessModal';
 import { Coin, StdFee } from '@cosmjs/amino';
 import { quicksilver } from 'quicksilverjs';
 import { useTx } from '@/hooks';
+
+import { InfoOutlineIcon } from '@chakra-ui/icons';
+import TransferProcessModal from './modals/transferProcessModal';
 
 type StakingBoxProps = {
   selectedOption: {
@@ -54,7 +71,7 @@ export const StakingBox = ({ selectedOption, isModalOpen, setModalOpen, setBalan
   const [tokenAmount, setTokenAmount] = useState<string>('0');
   let newChainName: string | undefined;
   if (selectedOption?.chainId === 'provider') {
-    newChainName = 'cosmoshubtestnet';
+    newChainName = 'rsprovidertestnet';
   } else if (selectedOption?.chainId === 'elgafar-1') {
     newChainName = 'stargazetestnet';
   } else if (selectedOption?.chainId === 'osmo-test-5') {
@@ -111,10 +128,6 @@ export const StakingBox = ({ selectedOption, isModalOpen, setModalOpen, setBalan
 
   const maxUnstakingAmount = truncateToThreeDecimals(Number(qAssetsDisplay));
   const halfUnstakingAmount = maxUnstakingAmount / 2;
-
-  const [resp, setResp] = useState('');
-
-  const toast = useToast();
 
   const [isSigning, setIsSigning] = useState<boolean>(false);
 
@@ -174,6 +187,24 @@ export const StakingBox = ({ selectedOption, isModalOpen, setModalOpen, setBalan
 
   const isValidNumber = !isNaN(Number(qAssetsDisplay)) && qAssetsDisplay !== '';
 
+  const { delegations, delegationsIsError, delegationsIsLoading } = useNativeStakeQuery(newChainName, address ?? '');
+  const delegationsResponse = delegations?.delegation_responses;
+  const nativeStakedAmount = delegationsResponse?.reduce((acc, delegationResponse) => {
+    const amount = Number(delegationResponse?.balance?.amount) || 0;
+    return acc + amount;
+  }, 0);
+
+  const [useNativeStake, setUseNativeStake] = useState(false);
+
+  const handleSwitchChange = (event: { target: { checked: boolean | ((prevState: boolean) => boolean) } }) => {
+    setUseNativeStake(event.target.checked);
+  };
+
+  const { validatorsData, isLoading: validatorsDataLoading, isError: validatorsDataError } = useValidatorsQuery(newChainName);
+
+  const { data: logos, isLoading: isFetchingLogos } = useValidatorLogos(newChainName, validatorsData || []);
+  const [selectedValidator, setSelectedValidator] = useState<string | null>(null);
+
   return (
     <Box position="relative" backdropFilter="blur(50px)" bgColor="rgba(255,255,255,0.1)" flex="1" borderRadius="10px" p={5}>
       <Tabs isFitted variant="enclosed" onChange={handleTabsChange}>
@@ -221,154 +252,265 @@ export const StakingBox = ({ selectedOption, isModalOpen, setModalOpen, setBalan
                   Stake your {selectedOption.value.toUpperCase()} tokens in exchange for q{selectedOption.value.toUpperCase()} which you can
                   deploy around the ecosystem. You can liquid stake half of your balance, if you&apos;re going to LP.
                 </Text>
-                <Flex flexDirection="column" w="100%">
-                  <Stat py={4} textAlign="left" color="white">
-                    <StatLabel>Amount to stake:</StatLabel>
-                    <StatNumber>{selectedOption.value.toUpperCase()} </StatNumber>
-                  </Stat>
-                  <Input
-                    _active={{
-                      borderColor: 'complimentary.900',
-                    }}
-                    _selected={{
-                      borderColor: 'complimentary.900',
-                    }}
-                    _hover={{
-                      borderColor: 'complimentary.900',
-                    }}
-                    _focus={{
-                      borderColor: 'complimentary.900',
-                      boxShadow: '0 0 0 3px #FF8000',
-                    }}
-                    color="complimentary.900"
-                    textAlign={'right'}
-                    placeholder={inputError ? 'Invalid Number' : 'amount'}
-                    _placeholder={{
-                      color: inputError ? 'red.500' : 'grey',
-                    }}
-                    value={tokenAmount}
-                    type="text"
-                    onChange={(e) => {
-                      // Allow any numeric input
-                      const validNumberPattern = /^\d*\.?\d*$/;
-                      if (validNumberPattern.test(e.target.value)) {
-                        setTokenAmount(e.target.value);
-                      }
-                    }}
-                    onBlur={() => {
-                      let inputValue = parseFloat(tokenAmount);
-                      if (isNaN(inputValue) || inputValue <= 0) {
-                        // Set error for invalid or non-positive numbers
-                        setInputError(true);
-                        setTokenAmount('');
-                      } else if (inputValue > maxStakingAmount) {
-                        // Limit the input to the max staking amount
-                        setInputError(false);
-                        setTokenAmount(maxStakingAmount.toString());
-                      } else {
-                        // Valid input
-                        setInputError(false);
-                        setTokenAmount(inputValue.toString());
-                      }
-                    }}
-                  />
+                {selectedOption.name === 'Cosmos Hub' && (
+                  <Flex textAlign={'left'} justifyContent={'flex-start'}>
+                    <HStack>
+                      <Text fontWeight="light" textAlign="center" color="white">
+                        Use natively staked {selectedOption.value}?
+                      </Text>
+                      <Switch
+                        _active={{
+                          borderColor: 'complimentary.900',
+                        }}
+                        _selected={{
+                          borderColor: 'complimentary.900',
+                        }}
+                        _hover={{
+                          borderColor: 'complimentary.900',
+                        }}
+                        _focus={{
+                          borderColor: 'complimentary.900',
+                          boxShadow: '0 0 0 3px #FF8000',
+                        }}
+                        isDisabled={!nativeStakedAmount}
+                        isChecked={useNativeStake}
+                        onChange={handleSwitchChange}
+                        id="use-natively-staked"
+                        colorScheme="orange"
+                      />
 
-                  <Flex w="100%" flexDirection="row" py={4} mb={-4} justifyContent="space-between" alignItems="center">
-                    <Flex mb={-4} alignItems="center" justifyContent={'center'} gap={4} flexDirection={'row'}>
-                      {address ? (
-                        <>
-                          <Text color="white" fontWeight="light">
-                            Tokens available:{' '}
-                          </Text>
-                          {isLoading ? (
-                            <Skeleton startColor="complimentary.900" endColor="complimentary.400">
-                              <SkeletonText w={'95px'} noOfLines={1} skeletonHeight={'18px'} />
-                            </Skeleton>
-                          ) : (
-                            <Text color="complimentary.900" fontWeight="light">
-                              {address
-                                ? balance?.balance?.amount && Number(balance?.balance?.amount) !== 0
-                                  ? `${truncatedBalance} ${selectedOption.value.toUpperCase()}`
-                                  : `Get ${selectedOption.value.toUpperCase()} tokens here`
-                                : '0'}
-                            </Text>
-                          )}
-                        </>
-                      ) : (
-                        <Text color="complimentary.900" fontWeight="light">
-                          Connect your wallet to stake
-                        </Text>
-                      )}
-                    </Flex>
-                    <HStack mb={-4} spacing={2}>
-                      <Button
-                        _hover={{
-                          bgColor: 'rgba(255,255,255,0.05)',
-                          backdropFilter: 'blur(10px)',
-                        }}
-                        _active={{
-                          bgColor: 'rgba(255,255,255,0.05)',
-                          backdropFilter: 'blur(10px)',
-                        }}
-                        color="complimentary.900"
-                        variant="ghost"
-                        w="60px"
-                        h="30px"
-                        onClick={() => setTokenAmount(maxHalfStakingAmount.toString())}
-                        isDisabled={!balance || Number(balance) < 1}
+                      <Tooltip
+                        label={
+                          !address
+                            ? 'Please connect your wallet to enable this option.'
+                            : !nativeStakedAmount
+                            ? "You don't have any native staked tokens."
+                            : `You currently have ${shiftDigits(nativeStakedAmount, -6)} ${
+                                selectedOption.value
+                              } natively staked to ${delegationsResponse?.length} validators. You can tokenize your shares and transfer them to quicksilver by clicking the switch and selecting a validator.`
+                        }
                       >
-                        half
-                      </Button>
-                      <Button
-                        _hover={{
-                          bgColor: 'rgba(255,255,255,0.05)',
-                          backdropFilter: 'blur(10px)',
-                        }}
-                        _active={{
-                          bgColor: 'rgba(255,255,255,0.05)',
-                          backdropFilter: 'blur(10px)',
-                        }}
-                        color="complimentary.900"
-                        variant="ghost"
-                        w="60px"
-                        h="30px"
-                        onClick={() => setTokenAmount(maxStakingAmount.toString())}
-                        isDisabled={!balance || Number(balance) < 1}
-                      >
-                        max
-                      </Button>
+                        <InfoOutlineIcon color="complimentary.900" />
+                      </Tooltip>
                     </HStack>
                   </Flex>
-                </Flex>
-                <Divider bgColor="complimentary.900" />
-                <HStack justifyContent="space-between" alignItems="left" w="100%" mt={-8}>
-                  <Stat textAlign="left" color="white">
-                    <StatLabel>What you&apos;ll get</StatLabel>
-                    <StatNumber>q{selectedOption.value.toUpperCase()}:</StatNumber>
-                  </Stat>
-                  <Spacer /> {/* This pushes the next Stat component to the right */}
-                  <Stat py={4} textAlign="right" color="white">
-                    <StatNumber textColor="complimentary.900">
-                      {(Number(tokenAmount) / (Number(zone?.redemptionRate) || 1)).toFixed(2)}
-                    </StatNumber>
-                  </Stat>
-                </HStack>
-                <Button
-                  width="100%"
-                  _hover={{
-                    bgColor: 'complimentary.1000',
-                  }}
-                  onClick={() => setModalOpen(true)}
-                  isDisabled={Number(tokenAmount) === 0 || !address}
-                >
-                  Liquid stake
-                </Button>
-                <StakingProcessModal
-                  tokenAmount={tokenAmount}
-                  isOpen={isModalOpen}
-                  onClose={() => setModalOpen(false)}
-                  selectedOption={selectedOption}
-                />
+                )}
+                {!useNativeStake && (
+                  <>
+                    <Flex flexDirection="column" w="100%">
+                      <Stat py={4} textAlign="left" color="white">
+                        <StatLabel>Amount to stake:</StatLabel>
+                        <StatNumber>{selectedOption.value.toUpperCase()} </StatNumber>
+                      </Stat>
+                      <Input
+                        _active={{
+                          borderColor: 'complimentary.900',
+                        }}
+                        _selected={{
+                          borderColor: 'complimentary.900',
+                        }}
+                        _hover={{
+                          borderColor: 'complimentary.900',
+                        }}
+                        _focus={{
+                          borderColor: 'complimentary.900',
+                          boxShadow: '0 0 0 3px #FF8000',
+                        }}
+                        color="complimentary.900"
+                        textAlign={'right'}
+                        placeholder={inputError ? 'Invalid Number' : 'amount'}
+                        _placeholder={{
+                          color: inputError ? 'red.500' : 'grey',
+                        }}
+                        value={tokenAmount}
+                        type="text"
+                        onChange={(e) => {
+                          // Allow any numeric input
+                          const validNumberPattern = /^\d*\.?\d*$/;
+                          if (validNumberPattern.test(e.target.value)) {
+                            setTokenAmount(e.target.value);
+                          }
+                        }}
+                        onBlur={() => {
+                          let inputValue = parseFloat(tokenAmount);
+                          if (isNaN(inputValue) || inputValue <= 0) {
+                            // Set error for invalid or non-positive numbers
+                            setInputError(true);
+                            setTokenAmount('');
+                          } else if (inputValue > maxStakingAmount) {
+                            // Limit the input to the max staking amount
+                            setInputError(false);
+                            setTokenAmount(maxStakingAmount.toString());
+                          } else {
+                            // Valid input
+                            setInputError(false);
+                            setTokenAmount(inputValue.toString());
+                          }
+                        }}
+                      />
+
+                      <Flex w="100%" flexDirection="row" py={4} mb={-4} justifyContent="space-between" alignItems="center">
+                        <Flex mb={-4} alignItems="center" justifyContent={'center'} gap={4} flexDirection={'row'}>
+                          {address ? (
+                            <>
+                              <Text color="white" fontWeight="light">
+                                Tokens available:{' '}
+                              </Text>
+                              {isLoading ? (
+                                <Skeleton startColor="complimentary.900" endColor="complimentary.400">
+                                  <SkeletonText w={'95px'} noOfLines={1} skeletonHeight={'18px'} />
+                                </Skeleton>
+                              ) : (
+                                <Text color="complimentary.900" fontWeight="light">
+                                  {address
+                                    ? balance?.balance?.amount && Number(balance?.balance?.amount) !== 0
+                                      ? `${truncatedBalance} ${selectedOption.value.toUpperCase()}`
+                                      : `Get ${selectedOption.value.toUpperCase()} tokens here`
+                                    : '0'}
+                                </Text>
+                              )}
+                            </>
+                          ) : (
+                            <Text color="complimentary.900" fontWeight="light">
+                              Connect your wallet to stake
+                            </Text>
+                          )}
+                        </Flex>
+                        <HStack mb={-4} spacing={2}>
+                          <Button
+                            _hover={{
+                              bgColor: 'rgba(255,255,255,0.05)',
+                              backdropFilter: 'blur(10px)',
+                            }}
+                            _active={{
+                              bgColor: 'rgba(255,255,255,0.05)',
+                              backdropFilter: 'blur(10px)',
+                            }}
+                            color="complimentary.900"
+                            variant="ghost"
+                            w="60px"
+                            h="30px"
+                            onClick={() => setTokenAmount(maxHalfStakingAmount.toString())}
+                            isDisabled={!balance || Number(balance) < 1}
+                          >
+                            half
+                          </Button>
+                          <Button
+                            _hover={{
+                              bgColor: 'rgba(255,255,255,0.05)',
+                              backdropFilter: 'blur(10px)',
+                            }}
+                            _active={{
+                              bgColor: 'rgba(255,255,255,0.05)',
+                              backdropFilter: 'blur(10px)',
+                            }}
+                            color="complimentary.900"
+                            variant="ghost"
+                            w="60px"
+                            h="30px"
+                            onClick={() => setTokenAmount(maxStakingAmount.toString())}
+                            isDisabled={!balance || Number(balance) < 1}
+                          >
+                            max
+                          </Button>
+                        </HStack>
+                      </Flex>
+                    </Flex>
+                    <Divider bgColor="complimentary.900" />
+                    <HStack justifyContent="space-between" alignItems="left" w="100%" mt={-8}>
+                      <Stat textAlign="left" color="white">
+                        <StatLabel>What you&apos;ll get</StatLabel>
+                        <StatNumber>q{selectedOption.value.toUpperCase()}:</StatNumber>
+                      </Stat>
+                      <Spacer /> {/* This pushes the next Stat component to the right */}
+                      <Stat py={4} textAlign="right" color="white">
+                        <StatNumber textColor="complimentary.900">
+                          {(Number(tokenAmount) / (Number(zone?.redemptionRate) || 1)).toFixed(2)}
+                        </StatNumber>
+                      </Stat>
+                    </HStack>
+                    <Button
+                      width="100%"
+                      _hover={{
+                        bgColor: 'complimentary.1000',
+                      }}
+                      onClick={() => setModalOpen(true)}
+                      isDisabled={Number(tokenAmount) === 0 || !address}
+                    >
+                      Liquid stake
+                    </Button>
+                    <StakingProcessModal
+                      tokenAmount={tokenAmount}
+                      isOpen={isModalOpen}
+                      onClose={() => setModalOpen(false)}
+                      selectedOption={selectedOption}
+                    />
+                  </>
+                )}
+                {useNativeStake && (
+                  <Flex flexDirection="column" w="100%">
+                    <VStack spacing={8} align="center">
+                      <Box maxH="300px" overflowY="scroll" w="fit-content" mb={8}>
+                        {delegationsResponse?.map((delegation, index) => {
+                          const validator = validatorsData?.find((v) => v.address === delegation.delegation.validator_address);
+                          const isSelected = validator && validator.address === selectedValidator;
+                          const validatorLogo = logos[validator?.address ?? ''];
+
+                          return (
+                            <Box
+                              borderRadius={'md'}
+                              as="button"
+                              w="full"
+                              onClick={() => setSelectedValidator(validator?.address ?? '')}
+                              _hover={{ bg: 'rgba(255, 128, 0, 0.25)' }}
+                              bg={isSelected ? 'rgba(255, 128, 0, 0.25)' : 'transparent'}
+                              key={index}
+                              mb={2}
+                            >
+                              <Flex py={2} align="center">
+                                <Box boxSize="50px" borderRadius="md" ml={4}>
+                                  {!validatorLogo ? (
+                                    <SkeletonCircle size="8" startColor="complimentary.900" endColor="complimentary.400" />
+                                  ) : (
+                                    <Image
+                                      src={validatorLogo}
+                                      alt={validator?.name}
+                                      boxSize="50px"
+                                      objectFit="cover"
+                                      borderRadius={'full'}
+                                    />
+                                  )}
+                                </Box>
+                                <VStack align="start" ml={2}>
+                                  <Text fontSize="md">{validator ? validator.name : 'Validator'}</Text>
+                                  <Text color={'complimentary.900'} fontSize="md">
+                                    {shiftDigits(delegation.balance.amount, -6)} {selectedOption.value}
+                                  </Text>
+                                </VStack>
+                              </Flex>
+                            </Box>
+                          );
+                        })}
+                      </Box>
+                    </VStack>
+                    <Button
+                      width="100%"
+                      _hover={{
+                        bgColor: 'complimentary.1000',
+                      }}
+                      onClick={() => setModalOpen(true)}
+                      isDisabled={!selectedValidator || !address}
+                    >
+                      Transfer Existing Delegation
+                    </Button>
+                    <TransferProcessModal
+                      tokenAmount={tokenAmount}
+                      isOpen={isModalOpen}
+                      onClose={() => setModalOpen(false)}
+                      selectedOption={selectedOption}
+                    />
+                  </Flex>
+                )}
               </VStack>
             </TabPanel>
           </SlideFade>

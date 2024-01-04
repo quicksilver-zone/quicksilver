@@ -133,7 +133,7 @@ interface PortfolioItemProps {
 }
 
 const PortfolioItem: React.FC<PortfolioItemProps> = ({ title, percentage, progressBarColor, amount, qTokenPrice }) => (
-  <Flex alignSelf="stretch" justifyContent="space-between" gap={16} alignItems="center">
+  <Flex alignSelf="stretch" justifyContent="flex-start" gap={16} alignItems="center">
     <HStack h="24px" justifyContent="flex-start" alignItems="center" gap={2.75}>
       <Tooltip label={`Price: ${qTokenPrice.toFixed(2)}`} placement="top">
         <Text>{Number(amount).toFixed(2).toString()}</Text>
@@ -149,7 +149,7 @@ const PortfolioItem: React.FC<PortfolioItemProps> = ({ title, percentage, progre
       </Box>
       <Tooltip label={`Value: $${(qTokenPrice * Number(amount)).toFixed(2)}`}>
         <Text w="44px" textAlign="right" fontSize="sm" fontWeight="normal">
-          {`${percentage * 100}%`}
+          {`${(percentage * 100).toFixed(0)}%`}
         </Text>
       </Tooltip>
     </HStack>

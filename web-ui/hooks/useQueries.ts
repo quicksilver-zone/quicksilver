@@ -386,6 +386,7 @@ export const useMissedBlocks = (chainName: string) => {
     isError: missedBlocksQuery.isError,
   };
 };
+
 interface DefiData {
     assetPair: string;
     provider: string;
@@ -415,3 +416,38 @@ export const useDefiData = () => {
     isError: query.isError,
   };
 };
+
+export const useNativeStakeQuery = (chainName: string, address: string) => {
+  const { grpcQueryClient } = useGrpcQueryClient(chainName);
+  const delegationQuery = useQuery(
+    ['delegations', address],
+    async () => {
+      if (!grpcQueryClient) {
+        throw new Error('RPC Client not ready');
+      }
+      const nextKey = new Uint8Array()
+      const balance = await grpcQueryClient.cosmos.staking.v1beta1.delegatorDelegations({
+        delegatorAddr: address || '',
+        pagination: {
+          key: nextKey,
+          offset: Long.fromNumber(0),
+          limit: Long.fromNumber(100),
+          countTotal: true,
+          reverse: false,
+        },
+      });
+
+      return balance;
+    },
+    {
+      enabled: !!grpcQueryClient && !!address,
+      staleTime: Infinity,
+    },
+  );
+
+  return {
+    delegations: delegationQuery.data,
+    delegationsIsLoading: delegationQuery.isLoading,
+    delegationsIsError: delegationQuery.isError,
+  };
+}
