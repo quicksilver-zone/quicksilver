@@ -725,14 +725,17 @@ func (k *Keeper) Rebalance(ctx sdk.Context, zone *types.Zone, epochNumber int64)
 	rebalances := types.DetermineAllocationsForRebalancing(currentAllocations, currentLocked, currentSum, lockedSum, targetAllocations, maxCanAllocate, k.Logger(ctx)).RemoveDuplicates()
 	msgs := make([]sdk.Msg, 0)
 	for _, rebalance := range rebalances {
-		msgs = append(msgs, &stakingtypes.MsgBeginRedelegate{DelegatorAddress: zone.DelegationAddress.Address, ValidatorSrcAddress: rebalance.Source, ValidatorDstAddress: rebalance.Target, Amount: sdk.NewCoin(zone.BaseDenom, rebalance.Amount)})
-		k.SetRedelegationRecord(ctx, types.RedelegationRecord{
-			ChainId:     zone.ChainId,
-			EpochNumber: epochNumber,
-			Source:      rebalance.Source,
-			Destination: rebalance.Target,
-			Amount:      rebalance.Amount.Int64(),
-		})
+		if rebalance.Amount.GTE(sdk.NewInt(1_000_000)) {
+			// don't redelegate dust; TODO: config per zone
+			msgs = append(msgs, &stakingtypes.MsgBeginRedelegate{DelegatorAddress: zone.DelegationAddress.Address, ValidatorSrcAddress: rebalance.Source, ValidatorDstAddress: rebalance.Target, Amount: sdk.NewCoin(zone.BaseDenom, rebalance.Amount)})
+			k.SetRedelegationRecord(ctx, types.RedelegationRecord{
+				ChainId:     zone.ChainId,
+				EpochNumber: epochNumber,
+				Source:      rebalance.Source,
+				Destination: rebalance.Target,
+				Amount:      rebalance.Amount.Int64(),
+			})
+		}
 	}
 	if len(msgs) == 0 {
 		k.Logger(ctx).Debug("No rebalancing required")
