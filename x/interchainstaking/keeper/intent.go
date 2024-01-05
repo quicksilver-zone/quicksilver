@@ -209,9 +209,6 @@ func (k *Keeper) UpdateDelegatorIntent(ctx sdk.Context, delegator sdk.AccAddress
 
 	// inAmount is ordinal with respect to the redemption rate, so we must scale
 	baseBalance := zone.RedemptionRate.Mul(sdk.NewDecFromInt(claimAmt))
-	if baseBalance.IsZero() {
-		return nil
-	}
 
 	if updateWithCoin {
 		delIntent = zone.UpdateIntentWithCoins(delIntent, baseBalance, inAmount, utils.StringSliceToMap(k.GetValidatorAddresses(ctx, zone.ChainId)))
