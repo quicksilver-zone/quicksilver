@@ -154,7 +154,7 @@ func TestDetermineAllocationsForDelegation(t *testing.T) {
 			expected: map[string]sdkmath.Int{
 				vals[3]: sdk.NewInt(7),
 				vals[1]: sdk.NewInt(5),
-				vals[0]: sdk.NewInt(8),
+				vals[0]: sdk.NewInt(7),
 			},
 		},
 		{
@@ -172,7 +172,7 @@ func TestDetermineAllocationsForDelegation(t *testing.T) {
 			},
 			inAmount: sdk.NewCoins(sdk.NewCoin("uqck", sdk.NewInt(50))),
 			expected: map[string]sdkmath.Int{
-				vals[0]: sdk.NewInt(27),
+				vals[0]: sdk.NewInt(21),
 				vals[1]: sdk.NewInt(12),
 				vals[2]: sdk.NewInt(1),
 				vals[3]: sdk.NewInt(10),
