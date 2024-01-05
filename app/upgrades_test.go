@@ -4,20 +4,21 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/math"
 	"github.com/stretchr/testify/suite"
 
-	ibctesting "github.com/cosmos/ibc-go/v5/testing"
-	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
-	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
-
-	"github.com/quicksilver-zone/quicksilver/app/upgrades"
+	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
+
+	ibctesting "github.com/cosmos/ibc-go/v5/testing"
+
+	"github.com/quicksilver-zone/quicksilver/app/upgrades"
+	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
+	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 )
 
 func init() {
