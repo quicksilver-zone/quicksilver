@@ -22,9 +22,33 @@ export const AssetsAccordian: React.FC<AssetsAccordianProps> = ({ selectedOption
 
   const renderQAssets = () => {
     if (qBalance) {
-      return qAssetsDisplay;
+      return (
+        <Text pr={2} color="complimentary.900">
+          {qAssetsDisplay}
+        </Text>
+      );
     } else {
-      return <SkeletonCircle size="2" startColor="complimentary.900" endColor="complimentary.400" />;
+      return (
+        <Box mr={2} display="inline-block">
+          <SkeletonCircle size="2" startColor="complimentary.900" endColor="complimentary.400" />
+        </Box>
+      );
+    }
+  };
+
+  const renderAssets = () => {
+    if (Number(balance) > 0.000001) {
+      return (
+        <Text pr={2} color="complimentary.900">
+          {balanceDisplay}
+        </Text>
+      );
+    } else {
+      return (
+        <Box mr={2} display="inline-block">
+          <SkeletonCircle size="2" startColor="complimentary.900" endColor="complimentary.400" />
+        </Box>
+      );
     }
   };
 
@@ -43,9 +67,7 @@ export const AssetsAccordian: React.FC<AssetsAccordianProps> = ({ selectedOption
                   Available to stake
                 </Text>
               </Flex>
-              <Text pr={2} color="complimentary.900">
-                {balanceDisplay}
-              </Text>
+              {renderAssets()}
               <Text pr={2} color="complimentary.900">
                 {selectedOption.value.toUpperCase()}
               </Text>
@@ -62,9 +84,8 @@ export const AssetsAccordian: React.FC<AssetsAccordianProps> = ({ selectedOption
                   Liquid Staked
                 </Text>
               </Flex>
-              <Text pr={2} color="complimentary.900">
-                {renderQAssets()}
-              </Text>
+
+              {renderQAssets()}
               <Text pr={2} color="complimentary.900">
                 q{selectedOption.value.toUpperCase()}
               </Text>

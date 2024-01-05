@@ -19,6 +19,7 @@ import {
   Spinner,
   InputGroup,
   InputLeftElement,
+  Link,
 } from '@chakra-ui/react';
 import React, { useEffect } from 'react';
 import { FaSearch } from 'react-icons/fa';
@@ -26,6 +27,7 @@ import { FaSearch } from 'react-icons/fa';
 import { ValidatorsTable } from './validatorTable';
 
 import { useValidatorsQuery, useZoneQuery } from '@/hooks/useQueries';
+import { useMissedBlocks, useValidatorLogos } from '@/hooks/useQueries';
 
 interface MultiModalProps {
   isOpen: boolean;
@@ -48,6 +50,9 @@ export const MultiModal: React.FC<MultiModalProps> = ({
   const [searchTerm, setSearchTerm] = React.useState<string>('');
 
   const { validatorsData, isLoading, isError } = useValidatorsQuery(selectedChainName);
+
+  const { missedBlocksData } = useMissedBlocks(selectedChainName);
+  const { data: logos, isLoading: isFetchingLogos } = useValidatorLogos(selectedChainName, validatorsData || []);
 
   const validators = validatorsData;
   const handleValidatorClick = (validator: { name: string; operatorAddress: string }) => {
@@ -104,7 +109,8 @@ export const MultiModal: React.FC<MultiModalProps> = ({
               <AccordionPanel textAlign="left" alignContent="center" justifyContent="center" mt={-2}>
                 <Text fontWeight="light" pl={6} maxW="95%" color="white" fontSize="16px" letterSpacing={'wider'}>
                   Choose which validator(s) you would like to liquid stake to. You can select from the list below or utilize the quick
-                  select to pick the highest ranked validators. To learn more about rainkings click here.
+                  select to pick the highest ranked validators. To learn more about rankings read the{' '}
+                  <Link textDecor={'underline'}>Validator Selection Doc</Link>.
                 </Text>
               </AccordionPanel>
             </AccordionItem>
@@ -114,7 +120,7 @@ export const MultiModal: React.FC<MultiModalProps> = ({
         <Divider bgColor="complimentary.900" alignSelf="center" w="88%" m="auto" />
         <ModalBody bgColor="#1A1A1A" borderRadius={'6px'} justifyContent="center">
           {isLoading ? (
-            <Box display="flex" justifyContent="center" alignItems="center" height="200px">
+            <Box minH={'md'} display="flex" justifyContent="center" alignItems="center" height="200px">
               <Spinner h="50px" w="50px" color="complimentary.900" />
             </Box>
           ) : (
@@ -184,6 +190,7 @@ export const MultiModal: React.FC<MultiModalProps> = ({
                 </Box>
               </Flex>
               <ValidatorsTable
+                logos={logos || []}
                 validators={validators || []}
                 onValidatorClick={(validator) => {
                   const isSelected = selectedValidators.some((v) => v.name === validator.name);
@@ -209,7 +216,12 @@ export const MultiModal: React.FC<MultiModalProps> = ({
             </Box>
           )}
           <Text mt={'2'} fontSize={'sm'} fontWeight={'light'}>
-            {selectedValidators.length} / 8 Validators Selected
+            <>
+              <Text as="span" color="complimentary.900">
+                {selectedValidators.length}
+              </Text>
+              {' / 8 Validators Selected'}
+            </>
           </Text>
         </ModalBody>
         <ModalFooter></ModalFooter>

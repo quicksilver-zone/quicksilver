@@ -17,14 +17,15 @@ import {
 } from '@chakra-ui/react';
 import dynamic from 'next/dynamic';
 import Head from 'next/head';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { Header, NetworkSelect, SideHeader } from '@/components';
 import { StakingBox } from '@/components';
 import { InfoBox } from '@/components';
 import { AssetsAccordian } from '@/components';
 import { useAPYQuery } from '@/hooks/useQueries';
-import { networks } from '@/state/chains/prod';
+import { networks as prodNetworks, testNetworks as devNetworks } from '@/state/chains/prod';
+import { useChain } from '@cosmos-kit/react';
 
 const DynamicStakingBox = dynamic(() => Promise.resolve(StakingBox), {
   ssr: false,
@@ -38,10 +39,25 @@ const DynamicAssetBox = dynamic(() => Promise.resolve(AssetsAccordian), {
   ssr: false,
 });
 
+const networks = process.env.NEXT_PUBLIC_CHAIN_ENV === 'mainnet' ? prodNetworks : devNetworks;
+
 export default function Staking() {
   const [selectedNetwork, setSelectedNetwork] = useState(networks[0]);
   const [isModalOpen, setModalOpen] = useState(false);
-  const { APY, isLoading, isError } = useAPYQuery(selectedNetwork.chainId);
+  let newChainId;
+  if (selectedNetwork.chainId === 'provider') {
+    newChainId = 'cosmoshub-4';
+  } else if (selectedNetwork.chainId === 'elgafar-1') {
+    newChainId = 'stargaze-1';
+  } else if (selectedNetwork.chainId === 'osmo-test-5') {
+    newChainId = 'osmosis-1';
+  } else if (selectedNetwork.chainId === 'regen-redwood-1') {
+    newChainId = 'regen-1';
+  } else {
+    // Default case
+    newChainId = selectedNetwork.chainId;
+  }
+  const { APY, isLoading, isError } = useAPYQuery(newChainId);
   const [balance, setBalance] = useState('');
   const [qBalance, setQBalance] = useState('');
 
@@ -59,13 +75,13 @@ export default function Staking() {
       <Head>
         <title>Staking</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <link rel="icon" href="/quicksilver-app-v2/img/favicon.png" />
+        <link rel="icon" href="/quicksilver/img/favicon.png" />
       </Head>
       <SlideFade offsetY={'200px'} in={true} style={{ width: '100%' }}>
-        <Container top={20} zIndex={2} position="relative" maxW="container.lg" maxH="80vh" h="80vh" mt={{ base: '50px', md: '0px' }}>
+        <Container top={20} zIndex={2} position="relative" maxW="container.lg" maxH="80vh" h="80vh" mt={{ base: '50px', md: '30px' }}>
           {/* <Image
             alt={''}
-            src="/quicksilver-app-v2/img/metalmisc2.png"
+            src="/quicksilver/img/metalmisc2.png"
             zIndex={-10}
             position="absolute"
             bottom="-10"

@@ -1,16 +1,26 @@
-name: Test Deploy to GitHub Pages
+name: Build & Deploy web-ui with dev environment to Github Pages
 
 on:
   push:
+    branches:
+      - bunDev
+    paths:
+      - web-ui/**
+  pull_request:
+    branches:
+      - bunDev
     paths:
       - web-ui/**
 
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
+  actions: write
+  deployments: write
+  pull-requests: write
 
 concurrency:
   group: "pages"
@@ -26,7 +36,12 @@ jobs:
       - name: Setup Bun
         uses: oven-sh/setup-bun@v1
         with:
-          bun-version: latest # or specify a version
+          bun-version: latest
+
+      - name: Setup Environment File
+        run: |
+          cd web-ui
+          cp .env.development .env
 
       - name: Install Dependencies
         run: |
@@ -47,4 +62,4 @@ jobs:
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./out
+          publish_dir: ./web-ui/out
