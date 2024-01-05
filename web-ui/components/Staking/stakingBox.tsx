@@ -20,6 +20,7 @@ import {
   SkeletonText,
   useToast,
   SlideFade,
+  Spinner,
 } from '@chakra-ui/react';
 import { useChain } from '@cosmos-kit/react';
 import React, { useEffect, useState } from 'react';
@@ -30,6 +31,9 @@ import { getExponent } from '@/utils';
 import { shiftDigits } from '@/utils';
 
 import StakingProcessModal from './modals/stakingProcessModal';
+import { Coin, StdFee } from '@cosmjs/amino';
+import { quicksilver } from 'quicksilverjs';
+import { useTx } from '@/hooks';
 
 type StakingBoxProps = {
   selectedOption: {
@@ -48,7 +52,20 @@ type StakingBoxProps = {
 export const StakingBox = ({ selectedOption, isModalOpen, setModalOpen, setBalance, setQBalance }: StakingBoxProps) => {
   const [activeTabIndex, setActiveTabIndex] = useState(0);
   const [tokenAmount, setTokenAmount] = useState<string>('0');
-  const { address } = useChain(selectedOption.chainName);
+  let newChainName: string | undefined;
+  if (selectedOption?.chainId === 'provider') {
+    newChainName = 'cosmoshub';
+  } else if (selectedOption?.chainId === 'elgafar-1') {
+    newChainName = 'stargazetestnet';
+  } else if (selectedOption?.chainId === 'osmo-test-5') {
+    newChainName = 'osmosistestnet';
+  } else if (selectedOption?.chainId === 'regen-redwood-1') {
+    newChainName = 'regen';
+  } else {
+    // Default case
+    newChainName = selectedOption?.chainName;
+  }
+  const { address } = useChain(newChainName);
   const { address: qAddress } = useChain('quicksilver');
   const exp = getExponent(selectedOption.chainName);
   const { balance, isLoading } = useBalanceQuery(selectedOption.chainName, address ?? '');
@@ -100,48 +117,53 @@ export const StakingBox = ({ selectedOption, isModalOpen, setModalOpen, setBalan
   const toast = useToast();
 
   const [isSigning, setIsSigning] = useState<boolean>(false);
+
   const [isError, setIsError] = useState<boolean>(false);
   const [transactionStatus, setTransactionStatus] = useState('Pending');
 
-  const { getSigningStargateClient } = useChain('quicksilver');
+  const env = process.env.NEXT_PUBLIC_CHAIN_ENV;
+  const quicksilverChainName = env === 'testnet' ? 'quicksilvertestnet' : 'quicksilver';
 
   const isCalculationDataLoaded = tokenAmount && !isNaN(Number(tokenAmount)) && zone && !isNaN(Number(zone.redemptionRate));
 
+  const { requestRedemption } = quicksilver.interchainstaking.v1.MessageComposer.withTypeUrl;
+  const numericAmount = Number(tokenAmount);
+  const smallestUnitAmount = numericAmount * Math.pow(10, 6);
+  const value: Coin = { amount: smallestUnitAmount.toFixed(0), denom: zone?.localDenom ?? '' };
+  const msgRequestRedemption = requestRedemption({
+    value: value,
+    fromAddress: qAddress ?? '',
+    destinationAddress: address ?? '',
+  });
+
+  const fee: StdFee = {
+    amount: [
+      {
+        denom: 'uqck',
+        amount: '7500',
+      },
+    ],
+    gas: '500000',
+  };
+
+  const { tx } = useTx(quicksilverChainName);
+
   const handleLiquidUnstake = async (event: React.MouseEvent) => {
     event.preventDefault();
-    const numericAmount = Number(tokenAmount);
-    const smallestUnitAmount = numericAmount * Math.pow(10, 6);
-
+    setIsSigning(true);
     try {
-      setIsSigning(true);
-      const response = await unbondLiquidStakeTx(
-        // destination address
-        address ?? '', // from address
-        qAddress ?? '',
-        smallestUnitAmount, // amount to unbond
-        zone?.localDenom ?? '', // local denomination of the token
-        getSigningStargateClient,
-        setResp,
-        toast,
-        setIsError,
-        setIsSigning,
-        selectedOption?.chainName || '',
-      );
+      const result = await tx([msgRequestRedemption], { fee });
 
-      const parsedResponse = JSON.parse(resp);
-
-      // Parse the response
-      if (parsedResponse && parsedResponse.code === 0) {
-        // Successful transaction
+      if (result.success) {
+        // Transaction was successful
         setTransactionStatus('Success');
       } else {
-        // Unsuccessful transaction
+        // Transaction failed
         setIsError(true);
         setTransactionStatus('Failed');
       }
     } catch (error) {
       console.error('Transaction failed', error);
-      setIsSigning(false);
       setIsError(true);
       setTransactionStatus('Failed');
     } finally {
@@ -233,26 +255,23 @@ export const StakingBox = ({ selectedOption, isModalOpen, setModalOpen, setBalan
                       }
                     }}
                     onBlur={() => {
-                      // Validation on blur
                       let inputValue = parseFloat(tokenAmount);
-                      if (!isNaN(inputValue)) {
-                        if (inputValue < 1) {
-                          setInputError(true);
-                          setTokenAmount(''); // Clear the input
-                        } else if (inputValue <= maxStakingAmount) {
-                          setInputError(false);
-                          // Optionally, adjust the input to fit within the max limit
-                          setTokenAmount(Math.min(inputValue, maxStakingAmount).toString());
-                        } else {
-                          setInputError(true);
-                          setTokenAmount(maxStakingAmount.toString()); // Set to max limit
-                        }
-                      } else {
+                      if (isNaN(inputValue) || inputValue <= 0) {
+                        // Set error for invalid or non-positive numbers
                         setInputError(true);
-                        setTokenAmount(''); // Clear the input for non-numeric values
+                        setTokenAmount('');
+                      } else if (inputValue > maxStakingAmount) {
+                        // Limit the input to the max staking amount
+                        setInputError(false);
+                        setTokenAmount(maxStakingAmount.toString());
+                      } else {
+                        // Valid input
+                        setInputError(false);
+                        setTokenAmount(inputValue.toString());
                       }
                     }}
                   />
+
                   <Flex w="100%" flexDirection="row" py={4} mb={-4} justifyContent="space-between" alignItems="center">
                     <Flex mb={-4} alignItems="center" justifyContent={'center'} gap={4} flexDirection={'row'}>
                       {address ? (
@@ -328,7 +347,9 @@ export const StakingBox = ({ selectedOption, isModalOpen, setModalOpen, setBalan
                   </Stat>
                   <Spacer /> {/* This pushes the next Stat component to the right */}
                   <Stat py={4} textAlign="right" color="white">
-                    <StatNumber textColor="complimentary.900">{(Number(tokenAmount) / Number(zone?.redemptionRate)).toFixed(2)}</StatNumber>
+                    <StatNumber textColor="complimentary.900">
+                      {(Number(tokenAmount) / (Number(zone?.redemptionRate) || 1)).toFixed(2)}
+                    </StatNumber>
                   </Stat>
                 </HStack>
                 <Button
@@ -456,7 +477,9 @@ export const StakingBox = ({ selectedOption, isModalOpen, setModalOpen, setBalan
                   </Stat>
                   <Spacer /> {/* This pushes the next Stat component to the right */}
                   <Stat py={4} textAlign="right" color="white">
-                    <StatNumber textColor="complimentary.900">{(Number(tokenAmount) * Number(zone?.redemptionRate)).toFixed(2)}</StatNumber>
+                    <StatNumber textColor="complimentary.900">
+                      {(Number(tokenAmount) * Number(zone?.redemptionRate || 1)).toFixed(2)}
+                    </StatNumber>
                   </Stat>
                 </HStack>
                 <Button
@@ -465,9 +488,13 @@ export const StakingBox = ({ selectedOption, isModalOpen, setModalOpen, setBalan
                     bgColor: 'complimentary.1000',
                   }}
                   onClick={handleLiquidUnstake}
-                  isDisabled={Number(tokenAmount) === 0 || !address}
+                  isDisabled={Number(tokenAmount) === 0 || !address || isSigning}
                 >
-                  Unstake
+                  {isSigning ? (
+                    <Spinner thickness="2px" speed="0.65s" emptyColor="gray.200" color="complimentary.900" size="sm" />
+                  ) : (
+                    'Unstake'
+                  )}
                 </Button>
               </VStack>
             </TabPanel>

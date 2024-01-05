@@ -33,6 +33,19 @@ const SelectOptions = ({ data, value, onChange }: ChangeChainMenuType) => {
     control: (provided: SystemStyleObject) => ({
       ...provided,
       height: 12,
+      _active: {
+        borderColor: 'complimentary.900',
+      },
+      _selected: {
+        borderColor: 'complimentary.900',
+      },
+      _hover: {
+        borderColor: 'complimentary.900',
+      },
+      _focus: {
+        borderColor: 'complimentary.900',
+        boxShadow: '0 0 0 3px #FF8000',
+      },
     }),
     menu: (provided: SystemStyleObject) => ({
       ...provided,
@@ -43,6 +56,15 @@ const SelectOptions = ({ data, value, onChange }: ChangeChainMenuType) => {
       boxShadow: '0 1px 5px #FF8000',
       borderRadius: '0.3rem',
       color: 'white',
+      _active: {
+        borderColor: 'complimentary.900',
+      },
+      _selected: {
+        borderColor: 'complimentary.900',
+      },
+      _hover: {
+        borderColor: 'complimentary.900',
+      },
     }),
     menuList: (provided: SystemStyleObject) => ({
       ...provided,
@@ -52,6 +74,19 @@ const SelectOptions = ({ data, value, onChange }: ChangeChainMenuType) => {
       borderRadius: 'none',
       color: 'white',
       p: 2,
+      _active: {
+        borderColor: 'complimentary.900',
+      },
+      _selected: {
+        borderColor: 'complimentary.900',
+      },
+      _hover: {
+        borderColor: 'complimentary.900',
+      },
+      _focus: {
+        borderColor: 'complimentary.900',
+        boxShadow: '0 0 0 3px #FF8000',
+      },
       // For Firefox
       scrollbarWidth: 'auto',
       scrollbarColor: useColorModeValue('rgba(0,0,0,0.3) rgba(0,0,0,0.2)', 'rgba(255,255,255,0.2) rgba(255,255,255,0.1)'),
@@ -90,8 +125,15 @@ const SelectOptions = ({ data, value, onChange }: ChangeChainMenuType) => {
           mt: 2,
         },
         _active: {
-          bg: 'primary.50',
+          bg: 'complimentary.900',
         },
+        _hover: {
+          bg: 'complimentary.700',
+        },
+        _selected: {
+          bg: 'complimentary.900',
+        },
+
         _disabled: { bg: 'transparent', _hover: { bg: 'transparent' } },
       };
     },
@@ -102,7 +144,15 @@ const SelectOptions = ({ data, value, onChange }: ChangeChainMenuType) => {
   const DropdownIndicator = ({ ...props }: DropdownIndicatorProps<ChainOption, false, GroupBase<ChainOption>>) => {
     return (
       <chakraComponents.DropdownIndicator {...props}>
-        <Icon as={FiChevronDown} w={6} h={6} color="complimentary.900" />
+        <Icon
+          as={FiChevronDown}
+          w={6}
+          h={6}
+          cursor={'pointer'}
+          borderRadius={'full'}
+          _hover={{ bgColor: 'rgba(255,255,255,0.15)' }}
+          color="complimentary.900"
+        />
       </chakraComponents.DropdownIndicator>
     );
   };

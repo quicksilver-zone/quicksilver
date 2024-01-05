@@ -33,7 +33,7 @@ export const SideHeader = () => {
 
   useEffect(() => {
     const handleRouteChange = (url: string) => {
-      const path = url.split('/quicksilver-app-v2/')[1];
+      const path = url.split('/quicksilver/')[1];
       setSelectedPage(path);
     };
 
@@ -44,7 +44,22 @@ export const SideHeader = () => {
   const commonBoxShadowColor = 'rgba(255, 128, 0, 0.25)';
   const toggleSocialLinks = () => setShowSocialLinks(!showSocialLinks);
 
-  const isMobile = useBreakpointValue({ base: true, md: false });
+  const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' && window.innerWidth < 1274);
+
+  // Handle window resize
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 1274);
+    };
+
+    // Set up event listener
+    window.addEventListener('resize', handleResize);
+
+    // Clean up
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
   const transitionStyle = 'all 0.3s ease';
   const { isOpen, onOpen, onClose } = useDisclosure();
 
@@ -52,7 +67,7 @@ export const SideHeader = () => {
     if (isMobile) {
       onOpen();
     } else {
-      router.push('/');
+      router.push('/staking');
     }
   };
 
@@ -77,23 +92,22 @@ export const SideHeader = () => {
   return (
     <Box
       w={isMobile ? 'auto' : 'fit-content'}
-      h={{ base: 'fit-content', md: '95vh' }}
+      h={isMobile ? 'fit-content' : '95vh'}
       backdropFilter="blur(10px)"
-      borderRadius={{ base: 'full', md: 100 }}
+      borderRadius={isMobile ? 'full' : 100}
       zIndex={10}
       top={6}
       left={6}
       position="fixed"
       bgColor="rgba(214, 219, 220, 0.1)"
     >
-      <Flex direction="column" align="center" zIndex={10} justifyContent="space-between" py={{ base: 0, md: 4 }} height="100%">
+      <Flex direction="column" align="center" zIndex={10} justifyContent="space-between" height="100%">
         <Image
           alt="logo"
-          mt={{ base: 0, md: '-10px' }}
           h="75px"
           w="75px"
           borderRadius="full"
-          src="/quicksilver-app-v2/img/networks/quicksilver.svg"
+          src="/quicksilver/img/networks/quicksilver.svg"
           onClick={handleLogoClick}
           cursor="pointer"
           _hover={{
@@ -107,16 +121,16 @@ export const SideHeader = () => {
 
         <Drawer isOpen={isOpen} placement="left" onClose={onClose}>
           <DrawerOverlay />
-          <DrawerContent bgColor="black">
+          <DrawerContent bgColor="rgba(32,32,32,1)">
             <DrawerCloseButton color="white" />
-            <DrawerHeader textDecoration={'underline'} fontSize="3xl" letterSpacing={4} lineHeight={2} color="white">
-              Quicksilver
+            <DrawerHeader fontSize="3xl" letterSpacing={4} lineHeight={2} color="white">
+              QUICKSILVER
             </DrawerHeader>
             <DrawerBody>
               {['Staking', 'Governance', 'Defi', 'Assets'].map((item) => (
                 <Box key={item} mb={4} position="relative">
                   <Link
-                    href={`/quicksilver-app-v2/${item.toLowerCase()}`}
+                    href={`/quicksilver/${item.toLowerCase()}`}
                     fontSize="xl"
                     fontWeight="medium"
                     color="white"
@@ -205,7 +219,7 @@ export const SideHeader = () => {
                         }}
                         alt="Staking"
                         h="55px"
-                        src="/quicksilver-app-v2/img/test.png"
+                        src="/quicksilver/img/test.png"
                       />
                     </Box>
                   </Tooltip>
@@ -235,7 +249,7 @@ export const SideHeader = () => {
                         alt="Governance"
                         h="60px"
                         w={'60px'}
-                        src="/quicksilver-app-v2/img/test2.png"
+                        src="/quicksilver/img/test2.png"
                       />
                     </Box>
                   </Tooltip>
@@ -262,7 +276,33 @@ export const SideHeader = () => {
                         }}
                         alt="Assets"
                         h="55px"
-                        src="/quicksilver-app-v2/img/test3.png"
+                        src="/quicksilver/img/test3.png"
+                      />
+                    </Box>
+                  </Tooltip>
+                  <Tooltip borderLeft="4px solid rgba(255, 128, 0, 0.9)" label="Airdrop" placement="right">
+                    <Box
+                      w="55px"
+                      h="55px"
+                      onClick={() => router.push('/airdrop')}
+                      cursor="pointer"
+                      borderRadius="100px"
+                      boxShadow={
+                        selectedPage === 'aidrop' ? `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}` : ''
+                      }
+                      _hover={{
+                        boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`,
+                        transition: transitionStyle,
+                      }}
+                    >
+                      <Image
+                        filter={selectedPage === 'Airdrop' ? 'contrast(100%)' : 'contrast(50%)'}
+                        _hover={{
+                          filter: 'contrast(100%)',
+                        }}
+                        alt="DeFi"
+                        h="55px"
+                        src="/quicksilver/img/test5.png"
                       />
                     </Box>
                   </Tooltip>
@@ -289,7 +329,7 @@ export const SideHeader = () => {
                         }}
                         alt="DeFi"
                         h="55px"
-                        src="/quicksilver-app-v2/img/test4.png"
+                        src="/quicksilver/img/test4.png"
                       />
                     </Box>
                   </Tooltip>

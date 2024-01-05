@@ -24,10 +24,13 @@ export const useQueryHooks = (
     },
   });
 
+
+  const rpcEndpoint = chainName === 'quicksilver' ? 'https://rpc.quicksilver.zone' : rpcEndpointQuery.data;
+
   const rpcClientQuery = useRpcClient({
-    rpcEndpoint: rpcEndpointQuery.data || '',
+    rpcEndpoint: rpcEndpoint || '',
     options: {
-      enabled: !!rpcEndpointQuery.data,
+      enabled: !!rpcEndpoint,
       staleTime: Infinity,
       queryKeyHashFn: (queryKey) => {
         return JSON.stringify(
@@ -53,6 +56,6 @@ export const useQueryHooks = (
     cosmosQuery,
     isReady,
     isFetching,
-    rpcEndpoint: rpcEndpointQuery.data,
+    rpcEndpoint: rpcEndpoint,
   };
 };
