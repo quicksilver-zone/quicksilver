@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -46,7 +47,6 @@ func V010405UpgradeHandler(
 	appKeepers *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-
 		appKeepers.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zone *icstypes.Zone) (stop bool) {
 			// add new fields
 			zone.DepositsEnabled = true
@@ -80,7 +80,7 @@ func V010405UpgradeHandler(
 
 				// trigger a valset refresh to update all vals.
 				query := stakingtypes.QueryValidatorsRequest{}
-				appKeepers.InterchainstakingKeeper.EmitValSetQuery(ctx, zone.ConnectionId, zone.ChainId, query, math.NewInt(-1))
+				_ = appKeepers.InterchainstakingKeeper.EmitValSetQuery(ctx, zone.ConnectionId, zone.ChainId, query, math.NewInt(-1))
 			}
 			zone.Validators = nil
 			appKeepers.InterchainstakingKeeper.SetZone(ctx, zone)
@@ -113,7 +113,6 @@ func V010405UpgradeHandler(
 // Migrate the outstanding testnet incentives with misplaced wallets.
 // N.B. these assets are only returning to their original testnet addresses.
 func migrateTestnetIncentives(ctx sdk.Context, appKeepers *keepers.AppKeepers) error {
-
 	migrations := map[string]string{
 		"quick1qlckz3nplj3sf323n4ma7n75fmv60lpclq5ccc": "quick15dhqkz3mxxg4tt3m8uz5yy3mzfckgzzh5hpaqp",
 		"quick1edavtxhdfs8luyvedgkjcxjc9dtvks3ve7etku": "quick1dz3y9k9harjal8nyqg3vl570aj7slaemmxgn86",

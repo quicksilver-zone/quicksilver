@@ -60,7 +60,6 @@ func (s *AppTestSuite) SetupTest() {
 
 	s.coordinator.CurrentTime = time.Now().UTC()
 	s.coordinator.UpdateTime()
-
 }
 
 func (s *AppTestSuite) TestV010405UpgradeHandler() {
