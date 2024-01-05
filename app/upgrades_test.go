@@ -180,5 +180,4 @@ func (s *AppTestSuite) TestV010405UpgradeHandler() {
 	s.True(ok)
 	s.Equal(int64(1712880000), pva.EndTime)
 	s.Equal(10, len(pva.VestingPeriods))
-
 }
