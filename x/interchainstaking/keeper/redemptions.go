@@ -14,74 +14,73 @@ import (
 	"github.com/quicksilver-zone/quicksilver/utils"
 	epochstypes "github.com/quicksilver-zone/quicksilver/x/epochs/types"
 	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
-	lsmstakingtypes "github.com/quicksilver-zone/quicksilver/x/lsmtypes"
 )
 
 // processRedemptionForLsm will determine based on user intent, the tokens to return to the user, generate Redeem message and send them.
-func (k *Keeper) processRedemptionForLsm(ctx sdk.Context, zone *types.Zone, sender sdk.AccAddress, destination string, nativeTokens math.Int, burnAmount sdk.Coin, hash string) error {
-	intent, found := k.GetDelegatorIntent(ctx, zone, sender.String(), false)
-	// msgs is slice of MsgTokenizeShares, so we can handle dust allocation later.
-	msgs := make([]*lsmstakingtypes.MsgTokenizeShares, 0)
-	var err error
-	intents := intent.Intents
+// func (k *Keeper) processRedemptionForLsm(ctx sdk.Context, zone *types.Zone, sender sdk.AccAddress, destination string, nativeTokens math.Int, burnAmount sdk.Coin, hash string) error {
+// 	intent, found := k.GetDelegatorIntent(ctx, zone, sender.String(), false)
+// 	// msgs is slice of MsgTokenizeShares, so we can handle dust allocation later.
+// 	msgs := make([]*lsmstakingtypes.MsgTokenizeShares, 0)
+// 	var err error
+// 	intents := intent.Intents
 
-	if !found || len(intents) == 0 {
-		// if user has no intent set (this can happen if redeeming tokens that were obtained offchain), use global intent.
-		// Note: this can be improved; user will receive a bunch of tokens.
-		intents, err = k.GetAggregateIntentOrDefault(ctx, zone)
-		if err != nil {
-			return err
-		}
-	}
-	outstanding := nativeTokens
-	distribution := make(map[string]uint64, 0)
+// 	if !found || len(intents) == 0 {
+// 		// if user has no intent set (this can happen if redeeming tokens that were obtained offchain), use global intent.
+// 		// Note: this can be improved; user will receive a bunch of tokens.
+// 		intents, err = k.GetAggregateIntentOrDefault(ctx, zone)
+// 		if err != nil {
+// 			return err
+// 		}
+// 	}
+// 	outstanding := nativeTokens
+// 	distribution := make(map[string]uint64, 0)
 
-	availablePerValidator, _, err := k.GetUnlockedTokensForZone(ctx, zone)
-	if err != nil {
-		return err
-	}
-	for _, intent := range intents.Sort() {
-		thisAmount := intent.Weight.MulInt(nativeTokens).TruncateInt()
-		if thisAmount.GT(availablePerValidator[intent.ValoperAddress]) {
-			return errors.New("unable to satisfy unbond request; delegations may be locked")
-		}
-		distribution[intent.ValoperAddress] = thisAmount.Uint64()
-		outstanding = outstanding.Sub(thisAmount)
-	}
+// 	availablePerValidator, _, err := k.GetUnlockedTokensForZone(ctx, zone)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	for _, intent := range intents.Sort() {
+// 		thisAmount := intent.Weight.MulInt(nativeTokens).TruncateInt()
+// 		if thisAmount.GT(availablePerValidator[intent.ValoperAddress]) {
+// 			return errors.New("unable to satisfy unbond request; delegations may be locked")
+// 		}
+// 		distribution[intent.ValoperAddress] = thisAmount.Uint64()
+// 		outstanding = outstanding.Sub(thisAmount)
+// 	}
 
-	distribution[intents[0].ValoperAddress] += outstanding.Uint64()
+// 	distribution[intents[0].ValoperAddress] += outstanding.Uint64()
 
-	if distribution[intents[0].ValoperAddress] > availablePerValidator[intents[0].ValoperAddress].Uint64() {
-		return errors.New("unable to satisfy unbond request (2); delegations may be locked")
-	}
+// 	if distribution[intents[0].ValoperAddress] > availablePerValidator[intents[0].ValoperAddress].Uint64() {
+// 		return errors.New("unable to satisfy unbond request (2); delegations may be locked")
+// 	}
 
-	for _, valoper := range utils.Keys(distribution) {
-		msgs = append(msgs, &lsmstakingtypes.MsgTokenizeShares{
-			DelegatorAddress:    zone.DelegationAddress.Address,
-			ValidatorAddress:    valoper,
-			Amount:              sdk.NewCoin(zone.BaseDenom, sdk.NewIntFromUint64(distribution[valoper])),
-			TokenizedShareOwner: destination,
-		})
-	}
+// 	for _, valoper := range utils.Keys(distribution) {
+// 		msgs = append(msgs, &lsmstakingtypes.MsgTokenizeShares{
+// 			DelegatorAddress:    zone.DelegationAddress.Address,
+// 			ValidatorAddress:    valoper,
+// 			Amount:              sdk.NewCoin(zone.BaseDenom, sdk.NewIntFromUint64(distribution[valoper])),
+// 			TokenizedShareOwner: destination,
+// 		})
+// 	}
 
-	sdkMsgs := make([]sdk.Msg, 0)
-	for _, msg := range msgs {
-		sdkMsgs = append(sdkMsgs, sdk.Msg(msg))
-	}
-	distributions := make([]*types.Distribution, 0)
+// 	sdkMsgs := make([]sdk.Msg, 0)
+// 	for _, msg := range msgs {
+// 		sdkMsgs = append(sdkMsgs, sdk.Msg(msg))
+// 	}
+// 	distributions := make([]*types.Distribution, 0)
 
-	for valoper, amount := range distribution {
-		newDistribution := types.Distribution{
-			Valoper: valoper,
-			Amount:  amount,
-		}
-		distributions = append(distributions, &newDistribution)
-	}
+// 	for valoper, amount := range distribution {
+// 		newDistribution := types.Distribution{
+// 			Valoper: valoper,
+// 			Amount:  amount,
+// 		}
+// 		distributions = append(distributions, &newDistribution)
+// 	}
 
-	k.AddWithdrawalRecord(ctx, zone.ChainId, sender.String(), distributions, destination, sdk.Coins{}, burnAmount, hash, types.WithdrawStatusTokenize, time.Unix(0, 0), k.EpochsKeeper.GetEpochInfo(ctx, epochstypes.EpochIdentifierEpoch).CurrentEpoch)
+// 	k.AddWithdrawalRecord(ctx, zone.ChainId, sender.String(), distributions, destination, sdk.Coins{}, burnAmount, hash, types.WithdrawStatusTokenize, time.Unix(0, 0), k.EpochsKeeper.GetEpochInfo(ctx, epochstypes.EpochIdentifierEpoch).CurrentEpoch)
 
-	return k.SubmitTx(ctx, sdkMsgs, zone.DelegationAddress, hash, zone.MessagesPerTx)
-}
+// 	return k.SubmitTx(ctx, sdkMsgs, zone.DelegationAddress, hash, zone.MessagesPerTx)
+// }
 
 // queueRedemption will determine based on zone intent, the tokens to unbond, and add a withdrawal record with status QUEUED.
 func (k *Keeper) queueRedemption(
