@@ -90,9 +90,9 @@ func V010405UpgradeHandler(
 		// set lsm caps
 		appKeepers.InterchainstakingKeeper.SetLsmCaps(ctx, "cosmoshub-4",
 			icstypes.LsmCaps{
-				ValidatorCap:     sdk.NewDecWithPrec(50, 2),
+				ValidatorCap:     sdk.NewDecWithPrec(100, 2),
 				ValidatorBondCap: sdk.NewDec(250),
-				GlobalCap:        sdk.NewDecWithPrec(50, 2),
+				GlobalCap:        sdk.NewDecWithPrec(25, 2),
 			},
 		)
 
