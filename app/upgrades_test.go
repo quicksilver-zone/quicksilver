@@ -119,7 +119,7 @@ func (s *AppTestSuite) InitV145TestZones() {
 func addVestingAccount(ctx sdk.Context, ak *authkeeper.AccountKeeper, address string, numPeriods int64, periodLength int64, total int64) {
 	start := int64(1704240000)
 	duration := numPeriods * periodLength
-	perPeriod := int64(total / numPeriods)
+	perPeriod := total / numPeriods
 	dust := total - (perPeriod * numPeriods)
 
 	periods := make(vestingtypes.Periods, 0, numPeriods)
