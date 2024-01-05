@@ -60,7 +60,7 @@
   "devDependencies": {
     "@testing-library/react": "^14.0.0",
     "@types/node": "18.11.9",
-    "@types/react": "18.0.25",
+    "@types/react": "18.2.46",
     "@types/react-dom": "18.0.9",
     "@types/three": "^0.160.0",
     "eslint": "8.28.0",
