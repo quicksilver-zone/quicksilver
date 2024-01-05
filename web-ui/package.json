@@ -19,7 +19,7 @@
     "@chalabi/quicksilverjs": "0.0.2",
     "@cosmjs/amino": "0.32.2",
     "@cosmjs/cosmwasm-stargate": "0.32.2",
-    "@cosmjs/proto-signing": "0.28.0",
+    "@cosmjs/proto-signing": "0.32.2",
     "@cosmjs/stargate": "0.32.2",
     "@cosmos-kit/core": "^2.0.3",
     "@cosmos-kit/cosmostation": "^2.0.3",
