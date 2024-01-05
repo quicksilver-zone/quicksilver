@@ -317,9 +317,11 @@ func (k *Keeper) FlushOutstandingDelegations(ctx sdk.Context, zone *types.Zone, 
 		return false
 	})
 
+	pendingAmount = pendingAmount.Add(k.GetInflightUnbondingAmount(ctx, zone))
+
 	coinsToFlush, hasNeg := sdk.NewCoins(delAddrBalance).SafeSub(pendingAmount...)
 	if hasNeg || coinsToFlush.IsZero() {
-		k.Logger(ctx).Debug("delegate account balance negative, setting outdated reciepts")
+		k.Logger(ctx).Debug("delegate account balance negative, setting outdated receipts")
 		k.SetReceiptsCompleted(ctx, zone.ChainId, exclusionTime, ctx.BlockTime(), delAddrBalance.Denom)
 		return nil
 	}

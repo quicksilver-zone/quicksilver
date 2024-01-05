@@ -4,8 +4,13 @@ import { QueryDelegationTotalRewardsResponse } from 'interchain-query/cosmos/dis
 import { QueryAnnualProvisionsResponse } from 'interchain-query/cosmos/mint/v1beta1/query';
 import { QueryDelegatorDelegationsResponse, QueryParamsResponse } from 'interchain-query/cosmos/staking/v1beta1/query';
 import { Pool, Validator } from 'interchain-query/cosmos/staking/v1beta1/staking';
+import * as bech32 from 'bech32';
+import * as CryptoJS from 'crypto-js';
 
 import { decodeUint8Arr, isGreaterThanZero, shiftDigits, toNumber } from '.';
+import { Any } from 'cosmjs-types/google/protobuf/any';
+import { AnySDKType } from 'interchain-query/google/protobuf/any';
+
 
 const DAY_TO_SECONDS = 24 * 60 * 60;
 const ZERO = '0';
@@ -30,26 +35,57 @@ export const calcStakingApr = ({ pool, commission, communityTax, annualProvision
 
 export type ParsedValidator = ReturnType<typeof parseValidators>[0];
 
+function extractValconsPrefix(operatorAddress: string): string {
+  const prefixEndIndex = operatorAddress.indexOf('valoper');
+  const chainPrefix = operatorAddress.substring(0, prefixEndIndex);
+  return `${chainPrefix}valcons`;
+}
+
+
 export const parseValidators = (validators: Validator[]) => {
   return validators.map((validator) => {
-
     const commissionRate = validator.commission?.commission_rates?.rate || ZERO;
-
-
-    // If you need to convert to percentage, for example
     const commissionPercentage = parseFloat(commissionRate) * 100;
 
+    const valconsPrefix = extractValconsPrefix(validator.operator_address);
+    const valconsAddress = getValconsAddress(validator.consensus_pubkey, valconsPrefix);
 
     return {
+      consensusPubkey: validator.consensus_pubkey || '',
+      valconsAddress, 
       description: validator.description?.details || '',
       name: validator.description?.moniker || '',
       identity: validator.description?.identity || '',
       address: validator.operator_address || '',
-      commission: commissionPercentage.toFixed() + '%', // Assuming you want to display as percentage
+      commission: commissionPercentage.toFixed() + '%',
       votingPower: toNumber(shiftDigits(validator.tokens, -6, 0), 0),
     };
   });
 };
+
+function getValconsAddress(consensus_pubkey: any, valconsPrefix: string) {
+  if (!consensus_pubkey || typeof consensus_pubkey.key !== 'string') {
+    console.error('Invalid or missing consensus public key');
+    return '';
+  }
+
+  try {
+    // Decode the Base64 key directly to bytes
+    const decoded = Buffer.from(consensus_pubkey.key, 'base64');
+    
+    // Convert bytes to Bech32 words
+    const valconsWords = bech32.bech32.toWords(new Uint8Array(decoded));
+
+    // Encode to Bech32 with the given prefix
+    const valconsAddress = bech32.bech32.encode(valconsPrefix, valconsWords);
+
+    return valconsAddress;
+  } catch (error) {
+    console.error('Error in generating valcons address:', error);
+    return '';
+  }
+}
+
 
 export type ExtendedValidator = ReturnType<typeof extendValidators>[0];
 
@@ -76,7 +112,7 @@ export const extendValidators = (validators: ParsedValidator[] = [], chainMetada
 
     return {
       ...validator,
-      apr,
+
     };
   });
 };
@@ -128,3 +164,15 @@ export const parseAnnualProvisions = (data: QueryAnnualProvisionsResponse) => {
   const res = shiftDigits(decodeUint8Arr(data?.annualProvisions), -18);
   return isGreaterThanZero(res) ? res : null;
 };
+function wordArrayToUint8Array(wordArray: CryptoJS.lib.WordArray) {
+  const words = wordArray.words;
+  const sigBytes = wordArray.sigBytes;
+  const u8 = new Uint8Array(sigBytes);
+
+  for (let i = 0; i < sigBytes; i++) {
+    const byte = (words[i >>> 2] >>> (24 - (i % 4) * 8)) & 0xff;
+    u8[i] = byte;
+  }
+
+  return u8;
+}

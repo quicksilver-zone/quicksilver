@@ -5,7 +5,9 @@ import { Menu, MenuButton, MenuList, MenuItem, Button, Flex, Image, Text, useDis
 import React, { Dispatch, SetStateAction, useState } from 'react';
 import { BsArrowDown } from 'react-icons/bs';
 
-import { networks } from '@/state/chains/prod';
+import { networks as prodNetworks, testNetworks as devNetworks } from '@/state/chains/prod';
+
+const networks = process.env.NEXT_PUBLIC_CHAIN_ENV === 'mainnet' ? prodNetworks : devNetworks;
 
 interface CustomMenuProps {
   buttonTextColor?: string;
