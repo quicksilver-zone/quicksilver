@@ -2593,10 +2593,10 @@ func (suite *KeeperTestSuite) TestDelegationAccountBalanceCallback() {
 
 		zone, _ := app.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 		zone.WithdrawalWaitgroup = 2
-		zone.DelegationAddress.Balance = sdk.NewCoins(sdk.NewCoin("uatom", math.NewInt(500)))
+		zone.DelegationAddress.Balance = sdk.NewCoins(sdk.NewCoin("uatom", math.NewInt(500_000_000)))
 		app.InterchainstakingKeeper.SetZone(ctx, &zone)
 
-		response := sdk.NewCoin("uatom", sdk.NewInt(10))
+		response := sdk.NewCoin("uatom", sdk.NewInt(500_000_000))
 		respbz, err := app.AppCodec().Marshal(&response)
 		suite.Require().NoError(err)
 
@@ -2610,7 +2610,7 @@ func (suite *KeeperTestSuite) TestDelegationAccountBalanceCallback() {
 		ctx = suite.chainA.GetContext()
 		zone, _ = app.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 		suite.Equal(uint32(5), zone.WithdrawalWaitgroup) // initial 2 is reduced to 1, but incremented by 4 (4x delegation messages) == 5
-		suite.Equal(sdk.NewInt(10), zone.DelegationAddress.Balance.AmountOf("uatom"))
+		suite.Equal(sdk.NewInt(500_000_000), zone.DelegationAddress.Balance.AmountOf("uatom"))
 	})
 }
 
