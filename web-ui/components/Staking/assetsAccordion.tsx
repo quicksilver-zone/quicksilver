@@ -62,7 +62,7 @@ export const AssetsAccordian: React.FC<AssetsAccordianProps> = ({ selectedOption
           <h2>
             <AccordionButton _hover={{ cursor: 'default' }} borderRadius={'10px'} borderTopColor={'transparent'}>
               <Flex p={1} flexDirection="row" flex="1" alignItems="center">
-                <Image alt="atom" src={selectedOption.logo} boxSize="35px" mr={2} />
+                <Image alt="atom" src={selectedOption.logo} borderRadius={'full'} boxSize="35px" mr={2} />
                 <Text fontSize="16px" color={'white'}>
                   Available to stake
                 </Text>

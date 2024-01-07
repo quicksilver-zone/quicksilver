@@ -16,15 +16,15 @@ const StakingIntent: React.FC<StakingIntentProps> = ({ address, isWalletConnecte
     { name: 'Validator 2', logo: '/validator2.png', percentage: '40%' },
   ];
 
-  const chains = ['Stargaze', 'Cosmos', 'Osmosis', 'Regen', 'Sommelier'];
+  const chains = ['Cosmos', 'Stargaze', 'Osmosis', 'Regen', 'Sommelier'];
   const [currentChainIndex, setCurrentChainIndex] = useState(0);
 
   const currentChainName = chains[currentChainIndex];
   let newChainName: string | undefined;
   if (currentChainName === 'Cosmos') {
-    newChainName = 'cosmoshub';
+    newChainName = 'rsprovidertestnet';
   } else if (currentChainName === 'Osmosis') {
-    newChainName = 'osmosis';
+    newChainName = 'osmosistestnet';
   } else if (currentChainName === 'Stargaze') {
     newChainName = 'stargaze';
   } else if (currentChainName === 'Regen') {
@@ -36,6 +36,7 @@ const StakingIntent: React.FC<StakingIntentProps> = ({ address, isWalletConnecte
     newChainName = currentChainName;
   }
   const { intent, isLoading, isError } = useIntentQuery(newChainName, address ?? '');
+  console.log(intent);
 
   const handleLeftArrowClick = () => {
     setCurrentChainIndex((prevIndex) => (prevIndex === 0 ? chains.length - 1 : prevIndex - 1));

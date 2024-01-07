@@ -73,8 +73,6 @@ const AirdropSection = () => {
     // What to render if isBeta is true
     <Flex
       w="100%"
-      backdropFilter="blur(50px)"
-      bgColor="rgba(255,255,255,0.1)"
       h="sm"
       p={4}
       borderRadius="lg"
@@ -83,13 +81,34 @@ const AirdropSection = () => {
       alignItems="center"
       gap={6}
       color="white"
+      position="relative" // Add position relative to position the pseudo-element
+      _before={{
+        // Using _before to create a pseudo-element for the background
+        content: '""',
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundImage: "url('/quicksilver/img/underConstruction.png')", // Replace with the path to your image
+        backgroundSize: 'contain',
+        backgroundPosition: 'center',
+        backdropFilter: 'blur(10px)', // This blurs the background
+        filter: 'contrast(0.5)', // This reduces the contrast
+        opacity: 0.2, // This reduces the opacity
+        borderRadius: 'lg', // Ensures the borderRadius matches the container
+      }}
     >
-      <Text fontSize="xl" fontWeight="bold">
-        The Airdrop page is under construction
-      </Text>
-      <Text fontSize="xl" fontWeight="bold">
-        Please check back later
-      </Text>
+      <Box position="relative" zIndex="docked">
+        {' '}
+        {/* Ensure the content is above the background */}
+        <Text fontSize="xl" fontWeight="bold">
+          The Airdrop page is under construction
+        </Text>
+        <Text fontSize="xl" fontWeight="bold">
+          Please check back later
+        </Text>
+      </Box>
     </Flex>
   ) : (
     <VStack spacing={4} align="stretch">

@@ -12,6 +12,7 @@ import QuickBox from '@/components/Assets/quickbox';
 import UnbondingAssetsTable from '@/components/Assets/unbondingTable';
 import { useAPYQuery, useBalanceQuery, useIntentQuery, useQBalanceQuery, useTokenPriceQuery, useZoneQuery } from '@/hooks/useQueries';
 import { shiftDigits, toNumber } from '@/utils';
+import RewardsClaim from '@/components/Assets/rewardsClaim';
 
 export interface PortfolioItemInterface {
   title: string;
@@ -86,11 +87,11 @@ function Home() {
   // useMemo hook to cache qBalance data
   const qBalances: BalanceRates = useMemo(
     () => ({
-      qAtom: shiftDigits(qAtom?.balance.amount ?? '', -6),
-      qOsmo: shiftDigits(qOsmo?.balance.amount ?? '', -6),
-      qStars: shiftDigits(qStars?.balance.amount ?? '', -6),
-      qRegen: shiftDigits(qRegen?.balance.amount ?? '', -6),
-      qSomm: shiftDigits(qSomm?.balance.amount ?? '', -6),
+      qAtom: shiftDigits(qAtom?.balance?.amount ?? '', -6),
+      qOsmo: shiftDigits(qOsmo?.balance?.amount ?? '', -6),
+      qStars: shiftDigits(qStars?.balance?.amount ?? '', -6),
+      qRegen: shiftDigits(qRegen?.balance?.amount ?? '', -6),
+      qSomm: shiftDigits(qSomm?.balance?.amount ?? '', -6),
     }),
     [qAtom, qOsmo, qStars, qRegen, qSomm],
   );
@@ -193,6 +194,7 @@ function Home() {
           <Text pb={2} color="white" fontSize="24px">
             Assets
           </Text>
+
           <Flex flexDir={'row'} py={6} alignItems="center" justifyContent={'space-between'} gap="4">
             {!isWalletConnected && (
               <Flex
@@ -264,12 +266,14 @@ function Home() {
             )}
           </Flex>
           <Spacer />
+          <RewardsClaim address={address ?? ''} />
+          <Spacer />
           {/* Assets Grid */}
           <AssetsGrid isWalletConnected={isWalletConnected} assets={assetsData} />
           <Spacer />
           {/* Unbonding Table */}
           <Box mt="20px">
-            <UnbondingAssetsTable isWalletConnected={isWalletConnected} address={address ?? ''} chainName="osmosistestnet" />
+            <UnbondingAssetsTable isWalletConnected={isWalletConnected} address={address ?? ''} />
           </Box>
           <Box h="40px"></Box>
         </Container>

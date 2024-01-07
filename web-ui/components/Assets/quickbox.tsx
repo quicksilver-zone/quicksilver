@@ -11,7 +11,7 @@ import { WithdrawModal } from './modals/qckWithdrawModal';
 const QuickBox = () => {
   const { address, isWalletConnected } = useChain(defaultChainName);
   const { balance, isLoading } = useBalanceQuery(defaultChainName, address ?? '');
-  const tokenBalance = Number(shiftDigits(balance?.balance.amount ?? '', -6))
+  const tokenBalance = Number(shiftDigits(balance?.balance?.amount ?? '', -6))
     .toFixed(2)
     .toString();
 

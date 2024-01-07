@@ -1,5 +1,5 @@
 import { shiftDigits } from '@/utils';
-import { Box, Flex, Text, Icon, VStack, HStack, Heading, Spinner, Tooltip } from '@chakra-ui/react';
+import { Box, Flex, Text, Icon, VStack, HStack, Heading, Spinner, Tooltip, Grid } from '@chakra-ui/react';
 
 interface PortfolioItemInterface {
   title: string;
@@ -104,7 +104,7 @@ const MyPortfolio: React.FC<MyPortfolioProps> = ({ portfolioItems, isWalletConne
         </Flex>
 
         <Flex justifyContent="flex-start" borderRadius={6} alignItems="flex-start" gap={4}>
-          <VStack alignSelf="stretch" h="158px" overflowY="auto" borderRadius={6} alignItems="flex-start" gap={3}>
+          <VStack alignSelf="stretch" h="158px" mr={4} overflowY="auto" borderRadius={6} alignItems="center" gap={3}>
             {portfolioItems
               .filter((item) => Number(item.amount) > 0)
               .map((item) => (
@@ -133,27 +133,23 @@ interface PortfolioItemProps {
 }
 
 const PortfolioItem: React.FC<PortfolioItemProps> = ({ title, percentage, progressBarColor, amount, qTokenPrice }) => (
-  <Flex alignSelf="stretch" justifyContent="flex-start" gap={16} alignItems="center">
-    <HStack h="24px" justifyContent="flex-start" alignItems="center" gap={2.75}>
-      <Tooltip label={`Price: ${qTokenPrice.toFixed(2)}`} placement="top">
-        <Text>{Number(amount).toFixed(2).toString()}</Text>
-      </Tooltip>
-      <Text fontSize="md" fontWeight="medium">
-        {title}
+  <Grid templateColumns="auto 1fr auto auto" gap={4} alignItems="center" width="100%">
+    <Tooltip label={`Price: ${qTokenPrice.toFixed(2)}`} placement="top">
+      <Text textAlign="left" minWidth="80px">
+        {Number(amount).toFixed(1)}
       </Text>
-    </HStack>
-    <HStack justifyContent="center" alignItems="center" gap={4}>
-      <Box w="121px" h="8px" pos="relative">
-        <Box w="121px" h="8px" pos="absolute" bg="complimentary.100" borderRadius="md" />
-        <Box w={`${percentage * 100}%`} h="8px" pos="absolute" bg={progressBarColor} borderRadius="md" />
-      </Box>
-      <Tooltip label={`Value: $${(qTokenPrice * Number(amount)).toFixed(2)}`}>
-        <Text w="44px" textAlign="right" fontSize="sm" fontWeight="normal">
-          {`${(percentage * 100).toFixed(0)}%`}
-        </Text>
-      </Tooltip>
-    </HStack>
-  </Flex>
+    </Tooltip>
+    <Text textAlign={'left'} fontSize="md" fontWeight="medium">
+      {title}
+    </Text>
+    <Box w="121px" h="8px" pos="relative">
+      <Box w="121px" h="8px" pos="absolute" bg="complimentary.100" borderRadius="md" />
+      <Box w={`${percentage * 100}%`} h="8px" pos="absolute" bg={progressBarColor} borderRadius="md" />
+    </Box>
+    <Tooltip label={`Value: $${(qTokenPrice * Number(amount)).toFixed(2)}`}>
+      <Text textAlign="right" minWidth="50px">{`${(percentage * 100).toFixed(0)}%`}</Text>
+    </Tooltip>
+  </Grid>
 );
 
 export default MyPortfolio;

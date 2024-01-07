@@ -9,6 +9,69 @@ import { useGrpcQueryClient } from './useGrpcQueryClient';
 import { getCoin, getLogoUrls } from '@/utils';
 import { ExtendedValidator, parseValidators } from '@/utils/staking';
 
+type WithdrawalRecord = {
+  chain_id: string;
+  delegator: string;
+  distribution: { valoper: string; amount: string }[];
+  recipient: string;
+  amount: { denom: string; amount: string }[];
+  burn_amount: { denom: string; amount: string };
+  txhash: string;
+  status: number;
+  completion_time: string;
+  requeued: boolean;
+  acknowledged: boolean;
+  epoch_number: string;
+};
+
+type WithdrawalsResponse = {
+  withdrawals: WithdrawalRecord[];
+  pagination: any; 
+};
+
+type UseWithdrawalsQueryReturnType = {
+  data: WithdrawalsResponse | undefined;
+  isLoading: boolean;
+  isError: boolean;
+};
+
+type Amount = {
+  denom: string;
+  amount: string;
+};
+
+
+type Asset = {
+  [key: string]: Amount[];
+};
+
+
+type Errors = {
+  Errors: any; 
+};
+
+
+type LiquidRewardsData = {
+  messages: any[]; 
+  assets: {
+    [key: string]: [
+      {
+        Type: string;
+        Amount: Amount[];
+      }
+    ];
+  };
+  errors: Errors;
+};
+
+
+type UseLiquidRewardsQueryReturnType = {
+  liquidRewards: LiquidRewardsData | undefined;
+  isLoading: boolean;
+  isError: boolean;
+};
+
+
 
 const BigNumber = require('bignumber.js');
 const Long = require('long');
@@ -127,7 +190,22 @@ export const useQBalanceQuery = (chainName: string, address: string, qAsset: str
 export const useIntentQuery = (chainName: string, address: string) => {
   const { grpcQueryClient } = useGrpcQueryClient('quicksilver');
   const { chain } = useChain(chainName);
-  const chainId = chain.chain_id;
+  const env = process.env.NEXT_PUBLIC_CHAIN_ENV;
+  const baseApiUrl = env === 'testnet' ? 'https://lcd.test.quicksilver.zone' : 'https://lcd.quicksilver.zone';
+  let chainId = chain.chain_id;
+  if (chainName === 'osmosistestnet') {
+    chainId = 'osmo-test-5';
+  } else if (chainName === 'cosmoshubtestnet') {
+    chainId = 'provider';
+  } else if (chainName === 'stargazetestnet') {
+    chainId = 'elgafar-1';
+  } else if (chainName === 'osmo-test-5') {
+    chainId = 'osmosistestnet';
+ 
+  } else {
+
+    chainId = chain.chain_id;
+  }
   const intentQuery = useQuery(
     ['intent', chainName],
     async () => {
@@ -135,7 +213,7 @@ export const useIntentQuery = (chainName: string, address: string) => {
         throw new Error('RPC Client not ready');
       }
 
-      const intent = await axios.get(`https://lcd.quicksilver.zone/quicksilver/interchainstaking/v1/zones/${chainId}/delegator_intent/${address}`)
+      const intent = await axios.get(`${baseApiUrl}/quicksilver/interchainstaking/v1/zones/${chainId}/delegator_intent/${address}`)
 
       return intent;
     },
@@ -152,35 +230,57 @@ export const useIntentQuery = (chainName: string, address: string) => {
   };
 };
 
-export const useUnbondingQuery = (chainName: string, address: string) => {
-  const { grpcQueryClient } = useGrpcQueryClient('quicksilver');
-  const { chain } = useChain(chainName);
-  const chainId = chain.chain_id;
-  const unbondingQuery = useQuery(
-    ['unbond', chainName],
+export const useLiquidRewardsQuery = (address: string): UseLiquidRewardsQueryReturnType => {
+  const liquidRewardsQuery = useQuery(
+    ['liquidRewards', address],
     async () => {
-      if (!grpcQueryClient) {
-        throw new Error('RPC Client not ready');
+      if (!address) {
+        throw new Error('Address is not avaialble');
       }
-      const nextKey = new Uint8Array()
-     const unbonding = await grpcQueryClient.quicksilver.interchainstaking.v1.withdrawalRecords({
-      delegatorAddress: address,
-      chainId: chainId,
-      pagination: {
-        key: nextKey,
-        offset: Long.fromNumber(0),
-        limit: Long.fromNumber(100),
-        countTotal: true,
-        reverse: false,
-      },
 
-      });
-
-      return unbonding;
-
+      const response = await axios.get<LiquidRewardsData>(`https://claim.test.quicksilver.zone/${address}/current`);
+      return response.data;
     },
     {
-      enabled: !!grpcQueryClient && !!address,
+      enabled:!!address,
+      staleTime: Infinity,
+    },
+  );
+
+  return {
+    liquidRewards: liquidRewardsQuery.data,
+    isLoading: liquidRewardsQuery.isLoading,
+    isError: liquidRewardsQuery.isError,
+  };
+
+}
+
+export const useUnbondingQuery = (chainName: string, address: string) => {
+  const env = process.env.NEXT_PUBLIC_CHAIN_ENV;
+  const baseApiUrl = env === 'testnet' ? 'https://lcd.test.quicksilver.zone' : 'https://lcd.quicksilver.zone';
+  
+  const { chain } = useChain(chainName);
+  let chainId = chain.chain_id;
+  if (chainName === 'osmosistestnet') {
+    chainId = 'osmo-test-5';
+  } else if (chainName === 'stargazetestnet') {
+    chainId = 'elgafar-1';
+  } else if (chainName === 'osmo-test-5') {
+    chainId = 'osmosistestnet';
+ 
+  } else {
+
+    chainId = chain.chain_id;
+  }
+  const unbondingQuery = useQuery(
+    ['unbond', chainName, address],
+    async () => {
+      const url = `${baseApiUrl}/quicksilver/interchainstaking/v1/zones/${chainId}/withdrawal_records/${address}`;
+      const response = await axios.get<WithdrawalsResponse>(url);
+      return response.data; 
+    },
+    {
+      enabled: !!chainId && !!address, 
       staleTime: Infinity,
     },
   );
@@ -191,6 +291,7 @@ export const useUnbondingQuery = (chainName: string, address: string) => {
     isError: unbondingQuery.isError,
   };
 };
+
 
 export const useValidatorsQuery = (chainName: string) => {
   const { grpcQueryClient } = useGrpcQueryClient(chainName);
@@ -222,7 +323,7 @@ export const useValidatorsQuery = (chainName: string) => {
       do {
         const response = await fetchValidators(nextKey);
         allValidators = allValidators.concat(response.validators);
-        nextKey = response.pagination.next_key;
+        nextKey = response.pagination?.next_key ?? new Uint8Array();
       } while (nextKey && nextKey.length > 0);
       const sorted = allValidators.sort((a, b) => new BigNumber(b.tokens).minus(a.tokens).toNumber());
       return parseValidators(sorted);
@@ -359,12 +460,12 @@ export const useMissedBlocks = (chainName: string) => {
       const filteredMissedBlocks = response.info.filter(block => {
         const hasAddress = block.address && block.address.trim() !== '';
         const notTombstoned = !block.tombstoned;
-        const notJailed = new Date(block.jailed_until) <= new Date();
-        return hasAddress && notTombstoned && notJailed;
+    
+        return hasAddress && notTombstoned;
       });
       
       allMissedBlocks = allMissedBlocks.concat(filteredMissedBlocks);
-      nextKey = response.pagination.next_key;
+      nextKey = response.pagination?.next_key ?? new Uint8Array();
     } while (nextKey && nextKey.length > 0);
   
     return allMissedBlocks;

@@ -88,6 +88,8 @@ export const StakingBox = ({
     newChainName = 'osmosistestnet';
   } else if (selectedOption?.chainId === 'regen-redwood-1') {
     newChainName = 'regen';
+  } else if (selectedOption?.chainId === 'osmosis-1') {
+    newChainName = 'stargazetestnet';
   } else {
     // Default case
     newChainName = selectedOption?.chainName;
