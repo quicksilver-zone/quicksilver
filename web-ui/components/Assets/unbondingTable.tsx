@@ -39,6 +39,7 @@ const UnbondingAssetsTable: React.FC<UnbondingAssetsTableProps> = ({ address, ch
     },
   ];
   const { unbondingData } = useUnbondingQuery(chainName, address);
+  console.log(unbondingData);
   const noUnbondingAssets = isWalletConnected && unbondingData?.withdrawals.length === 0;
   return (
     <>

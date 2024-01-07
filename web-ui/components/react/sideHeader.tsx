@@ -199,8 +199,8 @@ export const SideHeader = () => {
                 <VStack justifyContent="center" alignItems="center" spacing={16}>
                   <Tooltip borderLeft="4px solid rgba(255, 128, 0, 0.9)" label="Staking" placement="right">
                     <Box
-                      w="55px"
-                      h="55px"
+                      w="60px"
+                      h="60px"
                       onClick={() => router.push('/staking')}
                       cursor="pointer"
                       borderRadius="100px"
@@ -218,7 +218,8 @@ export const SideHeader = () => {
                           filter: 'contrast(100%)',
                         }}
                         alt="Staking"
-                        h="55px"
+                        h="60px"
+                        w="60px"
                         src="/quicksilver/img/liquid.png"
                       />
                     </Box>
@@ -226,8 +227,8 @@ export const SideHeader = () => {
 
                   <Tooltip borderLeft="4px solid rgba(255, 128, 0, 0.9)" label="Governance" placement="right">
                     <Box
-                      w="55px"
-                      h="55px"
+                      w="60px"
+                      h="60px"
                       onClick={() => router.push('/governance')}
                       cursor="pointer"
                       borderRadius="100px"
@@ -248,8 +249,8 @@ export const SideHeader = () => {
                         }}
                         alt="Governance"
                         h="60px"
-                        w={'60px'}
-                        src="/quicksilver/img/test2.png"
+                        w="65px"
+                        src="/quicksilver/img/governance.png"
                       />
                     </Box>
                   </Tooltip>
@@ -296,13 +297,13 @@ export const SideHeader = () => {
                       }}
                     >
                       <Image
-                        filter={selectedPage === 'Airdrop' ? 'contrast(100%)' : 'contrast(50%)'}
+                        filter={selectedPage === 'airdrop' ? 'contrast(100%)' : 'contrast(50%)'}
                         _hover={{
                           filter: 'contrast(100%)',
                         }}
                         alt="DeFi"
                         h="55px"
-                        src="/quicksilver/img/test5.png"
+                        src="/quicksilver/img/airdrop.png"
                       />
                     </Box>
                   </Tooltip>
@@ -329,7 +330,7 @@ export const SideHeader = () => {
                         }}
                         alt="DeFi"
                         h="55px"
-                        src="/quicksilver/img/test4.png"
+                        src="/quicksilver/img/defi.png"
                       />
                     </Box>
                   </Tooltip>

@@ -41,8 +41,6 @@ Please ensure your IDE is configured to use Typescript v4.9.3
 
 - focus on mobile landscape breakpoints, (mainly staking page)
 
-- find different assets for side bar
-
 **Mobile Menu**
 
 - connect wallet button

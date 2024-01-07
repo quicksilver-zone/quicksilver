@@ -24,13 +24,13 @@ const StakingIntent: React.FC<StakingIntentProps> = ({ address, isWalletConnecte
   if (currentChainName === 'Cosmos') {
     newChainName = 'cosmoshub';
   } else if (currentChainName === 'Osmosis') {
-    newChainName = 'osmosistestnet';
+    newChainName = 'osmosis';
   } else if (currentChainName === 'Stargaze') {
-    newChainName = 'stargazetestnet';
+    newChainName = 'stargaze';
   } else if (currentChainName === 'Regen') {
     newChainName = 'regen';
   } else if (currentChainName === 'Sommelier') {
-    newChainName = 'sommelier-3';
+    newChainName = 'sommelier';
   } else {
     // Default case
     newChainName = currentChainName;

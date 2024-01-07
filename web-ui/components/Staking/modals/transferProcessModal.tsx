@@ -66,11 +66,17 @@ const ChakraModalContent = styled(ModalContent)`
   }
 `;
 
+interface SelectedValidator {
+  operatorAddress: string;
+  moniker: string;
+  tokenAmount: string;
+}
+
 interface StakingModalProps {
   isOpen: boolean;
   onClose: () => void;
   children?: React.ReactNode;
-  tokenAmount: string;
+  selectedValidator: SelectedValidator;
   selectedOption?: {
     name: string;
     value: string;
@@ -80,7 +86,7 @@ interface StakingModalProps {
   };
 }
 
-export const TransferProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClose, selectedOption, tokenAmount }) => {
+export const TransferProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClose, selectedOption, selectedValidator }) => {
   const [step, setStep] = React.useState(1);
   const getProgressColor = (circleStep: number) => {
     if (step >= circleStep) return 'complimentary.900';
@@ -100,212 +106,19 @@ export const TransferProcessModal: React.FC<StakingModalProps> = ({ isOpen, onCl
   } else if (selectedOption?.chainId === 'regen-redwood-1') {
     newChainName = 'regen';
   } else {
-    // Default case
     newChainName = selectedOption?.chainName;
   }
 
-  const { address, getSigningStargateClient } = useChain(newChainName || '');
-
-  const labels = ['Choose validators', `Set weights`, `Sign & Submit`, `Receive q${selectedOption?.value}`];
-  const [isModalOpen, setModalOpen] = useState(false);
-
-  const [selectedValidators, setSelectedValidators] = React.useState<{ name: string; operatorAddress: string }[]>([]);
-
-  const [resp, setResp] = useState('');
-
-  const advanceStep = () => {
-    if (selectedValidators.length > 0) {
-      setStep((prevStep) => prevStep + 1);
-    }
-  };
-
-  const retreatStep = () => {
-    if (step === 3 && check) {
-      setStep(1); // If on step 3 and checkbox is checked, go back to step 1
-    } else {
-      setStep((prevStep) => Math.max(prevStep - 1, 1)); // Otherwise, go to the previous step
-    }
-  };
-
-  const toast = useToast();
-
-  const totalWeights = 1;
-  const numberOfValidators = selectedValidators.length;
-
-  // Calculate the weight for each validator
-  const weightPerValidator = numberOfValidators ? (totalWeights / numberOfValidators).toFixed(4) : '0';
-
-  const [weights, setWeights] = useState<{ [key: string]: number }>({});
-  const [totalWeight, setTotalWeight] = useState<string>('0');
-
-  const [isCustomValid, setIsCustomValid] = useState(true);
-  const [defaultWeight, setDefaultWeight] = useState(0);
-
-  useEffect(() => {
-    // Update the state when selectedValidators changes
-    setIsCustomValid(selectedValidators.length === 0);
-  }, [selectedValidators]);
-
-  // Modify the handleWeightChange function
-  const handleWeightChange = (e: React.ChangeEvent<HTMLInputElement>, validatorName: string) => {
-    const value = Number(e.target.value);
-    setWeights({
-      ...weights,
-      [validatorName]: value,
-    });
-
-    // Update the total weight as string
-    const newTotalWeight = Object.values({ ...weights, [validatorName]: value }).reduce((acc, val) => acc + val, 0);
-    setTotalWeight(newTotalWeight.toString());
-
-    setIsCustomValid(newTotalWeight === 100); // Validation for custom weights
-  };
-
-  // Calculate defaultWeight as string
-  useEffect(() => {
-    setDefaultWeight(1 / numberOfValidators);
-  }, [numberOfValidators]);
-
-  const [useDefaultWeights, setUseDefaultWeights] = useState(true);
-
-  interface ValidatorsSelect {
-    address: string;
-    intent: number;
-  }
-
-  const intents: ValidatorsSelect[] = selectedValidators.map((validator) => ({
-    address: validator.operatorAddress,
-    intent: useDefaultWeights ? defaultWeight : weights[validator.operatorAddress] || 0,
-  }));
-
   const { data: zone, isLoading: isZoneLoading, isError: isZoneError } = useZoneQuery(selectedOption?.chainId ?? '');
-
-  const valToByte = (val: number) => {
-    if (val > 1) {
-      val = 1;
-    }
-    if (val < 0) {
-      val = 0;
-    }
-    return Math.abs(val * 200);
-  };
-
-  const addValidator = (valAddr: string, weight: number) => {
-    let { words } = bech32.decode(valAddr);
-    let wordsUint8Array = new Uint8Array(bech32.fromWords(words));
-    let weightByte = valToByte(weight);
-    return Buffer.concat([Buffer.from([weightByte]), wordsUint8Array]);
-  };
-
-  let memoBuffer = Buffer.alloc(0);
-
-  if (intents.length > 0) {
-    intents.forEach((val) => {
-      memoBuffer = Buffer.concat([memoBuffer, addValidator(val.address, val.intent)]);
-    });
-    memoBuffer = Buffer.concat([Buffer.from([0x02, memoBuffer.length]), memoBuffer]);
-  }
-
-  let memo = memoBuffer.length > 0 && selectedValidators.length > 0 ? memoBuffer.toString('base64') : '';
-
-  const numericAmount = Number(tokenAmount);
-  const smallestUnitAmount = numericAmount * Math.pow(10, 6);
-
-  const { send } = cosmos.bank.v1beta1.MessageComposer.withTypeUrl;
-  const msgSend = send({
-    fromAddress: address ?? '',
-    toAddress: zone?.depositAddress?.address ?? '',
-    amount: coins(smallestUnitAmount.toFixed(0), zone?.baseDenom ?? ''),
-  });
-
-  const mainTokens = assets.find(({ chain_name }) => chain_name === newChainName);
-  const fees = chains.chains.find(({ chain_name }) => chain_name === newChainName)?.fees?.fee_tokens;
-  const mainDenom = mainTokens?.assets[0].base ?? '';
-  const fixedMinGasPrice = fees?.find(({ denom }) => denom === mainDenom)?.average_gas_price ?? '';
-  const feeAmount = shiftDigits(fixedMinGasPrice, 6);
-
-  const fee: StdFee = {
-    amount: [
-      {
-        denom: mainDenom,
-        amount: feeAmount.toString(),
-      },
-    ],
-    gas: '500000',
-  };
-
-  const { tx } = useTx(newChainName ?? '');
-
-  const handleLiquidStake = async (event: React.MouseEvent) => {
-    event.preventDefault();
-    setIsSigning(true);
-    setTransactionStatus('Pending');
-    try {
-      const result = await tx([msgSend], {
-        memo,
-        fee,
-        onSuccess: () => {
-          setStep(4);
-          setTransactionStatus('Success');
-        },
-      });
-    } catch (error) {
-      console.error('Transaction failed', error);
-      setTransactionStatus('Failed');
-      setIsError(true);
-    } finally {
-      setIsSigning(false);
-    }
-  };
-
-  //placehoder for transaction status
+  const labels = ['Tokenize Shares', `Transfer`, `Receive q${selectedOption?.value}`];
   const [transactionStatus, setTransactionStatus] = useState('Pending');
-
-  useEffect(() => {
-    setSelectedValidators([]);
-    setStep(1);
-    setIsError(false);
-    setIsSigning(false);
-    setUseDefaultWeights(true);
-  }, [selectedOption?.chainName]);
-
-  const [isCustomWeight, setIsCustomWeight] = useState(false);
-
-  const handleCustomWeightMode = () => {
-    setIsCustomWeight(true);
-    setUseDefaultWeights(false);
-  };
-
-  const handleNextInCustomWeightMode = () => {
-    if (isCustomValid) {
-      setIsCustomWeight(false);
-      advanceStep();
-    }
-  };
-
-  const [check, setCheck] = useState(false);
-
-  const handleCheck = () => {
-    setCheck(!check);
-  };
-
-  const handleStepOneButtonClick = () => {
-    // Check if only one validator is selected
-    if (selectedValidators.length === 1) {
-      setUseDefaultWeights(true);
-      setStep(3); // Skip directly to step 3
-    } else if (check) {
-      // If checkbox is checked, skip directly to step 3
-      setStep(3);
+  function truncateString(str: string, num: number) {
+    if (str.length > num) {
+      return str.slice(0, num) + '...';
     } else {
-      // If checkbox is not checked, consider the state of selectedValidators
-      if (selectedValidators.length === 0) {
-        setModalOpen(true);
-      } else {
-        advanceStep();
-      }
+      return str;
     }
-  };
+  }
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} size={{ base: '3xl', md: '2xl' }}>
@@ -318,12 +131,14 @@ export const TransferProcessModal: React.FC<StakingModalProps> = ({ isOpen, onCl
             <Flex flexDirection="column" justifyContent="space-between" width="40%" p={4} bg="#1E1C19" height="100%">
               <Box position="relative">
                 <Stat>
-                  <StatLabel color="rgba(255,255,255,0.5)">LIQUID STAKING</StatLabel>
+                  <StatLabel color="rgba(255,255,255,0.5)">TRANSFER DELEGATION</StatLabel>
+                  <StatNumber color="white">{truncateString(selectedValidator.moniker, 13)}</StatNumber>
                   <StatNumber color="white">
-                    {tokenAmount} {selectedOption?.value}
+                    {shiftDigits(selectedValidator.tokenAmount, -6)}&nbsp;
+                    {selectedOption?.value}
                   </StatNumber>
                 </Stat>
-                {[1, 2, 3, 4].map((circleStep, index) => (
+                {[1, 2, 3].map((circleStep, index) => (
                   <Flex key={circleStep} align="center" mt={10} mb={circleStep !== 4 ? '48px' : '0'}>
                     <Circle
                       size="36px"
@@ -338,7 +153,7 @@ export const TransferProcessModal: React.FC<StakingModalProps> = ({ isOpen, onCl
                       borderColor="rgba(255,255,255,0.5)"
                     >
                       {circleStep}
-                      {circleStep !== 4 && (
+                      {circleStep !== 3 && (
                         <>
                           <Box
                             width="2px"
@@ -369,110 +184,44 @@ export const TransferProcessModal: React.FC<StakingModalProps> = ({ isOpen, onCl
               </Box>
             </Flex>
 
-            {/* Right Section */}
             <Flex width="67%" flexDirection="column" justifyContent="center" alignItems="center">
               {step === 1 && (
                 <>
                   <Flex maxW="300px" flexDirection={'column'} justifyContent={'left'} alignItems={'center'}>
                     <Text textAlign={'left'} fontWeight={'bold'} fontSize="lg" color="white">
-                      Choose Validators
+                      Tokenize Shares
                     </Text>
                     <Text mt={2} textAlign={'center'} fontWeight={'light'} fontSize="lg" color="white">
-                      Select up to 8 validators to split your liquid delegation between.
+                      Tokenize your delegation in order to transfer it to Quicksilver
                     </Text>
                   </Flex>
-                  {selectedValidators.length > 0 && (
-                    <>
-                      <Button
-                        mt={2}
-                        color="white"
-                        _hover={{
-                          bgColor: 'rgba(255, 128, 0, 0.25)',
-                        }}
-                        variant="ghost"
-                        width="35%"
-                        size="xs"
-                        onClick={() => setModalOpen(true)}
-                      >
-                        Reselect Validators
-                      </Button>
-                      <Text mt={'2'} fontSize={'sm'} fontWeight={'light'}>
-                        {selectedValidators.length} / 8 Validators Selected
-                      </Text>
-                    </>
-                  )}
+
                   <Button
                     mt={4}
                     width="55%"
                     _hover={{
                       bgColor: 'complimentary.500',
                     }}
-                    onClick={handleStepOneButtonClick}
-                  >
-                    {check ? 'Sign & Submit' : selectedValidators.length > 0 ? 'Next' : 'Choose Validators'}
-                  </Button>
-                  {selectedValidators.length === 0 && (
-                    <Flex mt={'6'} flexDir={'row'} gap="3">
-                      <Checkbox
-                        _selected={{ bgColor: 'transparent' }}
-                        _active={{
-                          borderColor: 'complimentary.900',
-                        }}
-                        _hover={{
-                          borderColor: 'complimentary.900',
-                        }}
-                        _focus={{
-                          borderColor: 'complimentary.900',
-                          boxShadow: '0 0 0 3px #FF8000',
-                        }}
-                        isChecked={check}
-                        onChange={handleCheck}
-                        colorScheme="orange"
-                      />
-                      <Text>Proceed with existing intent?</Text>
-                    </Flex>
-                  )}
-                  <MultiModal
-                    isOpen={isModalOpen}
-                    onClose={() => setModalOpen(false)}
-                    selectedChainName={selectedOption?.chainName || ''}
-                    selectedValidators={selectedValidators}
-                    selectedChainId={selectedOption?.chainId || ''}
-                    setSelectedValidators={setSelectedValidators}
-                  />
+                  ></Button>
                 </>
               )}
-              {step === 2 && !isCustomWeight && (
+              {step === 2 && (
                 <>
                   <Text textAlign={'left'} fontWeight={'bold'} fontSize="lg" color="white">
-                    Set Weights
+                    Send to Quicksilver
                   </Text>
                   <Text mt={2} textAlign={'center'} fontWeight={'light'} fontSize="lg" color="white">
                     Specifying weights allows you to choose how much of your liquid delegation goes to each validator.
                   </Text>
-                  <HStack mt={4} justifyContent={'center'} alignItems={'center'}>
-                    <Button
-                      _hover={{
-                        bgColor: 'complimentary.500',
-                      }}
-                      onClick={() => {
-                        setUseDefaultWeights(true);
-                        advanceStep();
-                      }}
-                    >
-                      Equal
-                    </Button>
-                    {selectedValidators.length > 1 && (
-                      <Button
-                        _hover={{
-                          bgColor: 'complimentary.500',
-                        }}
-                        onClick={handleCustomWeightMode}
-                      >
-                        Custom
-                      </Button>
-                    )}
-                  </HStack>
+
+                  <Button
+                    _hover={{
+                      bgColor: 'complimentary.500',
+                    }}
+                  >
+                    Equal
+                  </Button>
+
                   <Button
                     position={'absolute'}
                     bottom={3}
@@ -487,133 +236,13 @@ export const TransferProcessModal: React.FC<StakingModalProps> = ({ isOpen, onCl
                     }}
                     color="white"
                     variant="none"
-                    onClick={retreatStep}
                   >
                     ←
                   </Button>
-                </>
-              )}
-              {step === 2 && isCustomWeight && (
-                <>
-                  <Text textAlign={'left'} fontWeight={'bold'} fontSize="lg" color="white">
-                    Set Custom Weights
-                  </Text>
-                  <Text mt={2} textAlign={'center'} fontWeight={'light'} fontSize="lg" color="white">
-                    The total weight must equal 100
-                  </Text>
-                  <Grid mt={2} templateColumns={`repeat(${Math.ceil(Math.sqrt(selectedValidators.length))}, 1fr)`} gap={8}>
-                    {selectedValidators.map((validator, index) => (
-                      <Flex key={validator.operatorAddress} flexDirection={'column'} alignItems={'center'}>
-                        <Text fontSize="sm" color="white" mb={2}>
-                          {validator.name.split(' ').length > 1 && validator.name.length > 9
-                            ? `${validator.name.split(' ')[0]}...`
-                            : validator.name}
-                        </Text>
-                        <Input
-                          _active={{
-                            borderColor: 'complimentary.900',
-                          }}
-                          _selected={{
-                            borderColor: 'complimentary.900',
-                          }}
-                          _hover={{
-                            borderColor: 'complimentary.900',
-                          }}
-                          _focus={{
-                            borderColor: 'complimentary.900',
-                            boxShadow: '0 0 0 3px #FF8000',
-                          }}
-                          color="complimentary.900"
-                          type="number"
-                          width="55px"
-                          placeholder="0"
-                          onChange={(e) => handleWeightChange(e, validator.operatorAddress)}
-                        />
-                      </Flex>
-                    ))}
-                  </Grid>
-                  <Flex mt={4} justifyContent={'space-between'} width={'100%'} alignItems={'center'}>
-                    <Button
-                      bgColor="none"
-                      _hover={{
-                        bgColor: 'none',
-                        color: 'complimentary.900',
-                      }}
-                      _selected={{
-                        bgColor: 'none',
-                      }}
-                      color="white"
-                      variant="none"
-                      onClick={() => {
-                        setIsCustomWeight(false);
-                      }}
-                    >
-                      ←
-                    </Button>
-                    <Button isDisabled={!isCustomValid} onClick={handleNextInCustomWeightMode}>
-                      Next
-                    </Button>
-                  </Flex>
                 </>
               )}
 
               {step === 3 && (
-                <>
-                  <Box justifyContent={'center'}>
-                    <Text fontWeight={'bold'} fontSize="lg" w="250px" textAlign={'left'} color="white">
-                      You’re going to liquid stake {tokenAmount} {selectedOption?.value} on Quicksilver
-                    </Text>
-                    {selectedValidators.length > 0 && (
-                      <Flex mt={2} textAlign={'left'} alignItems="baseline" gap="2">
-                        <Text mt={2} textAlign={'left'} fontWeight={'bold'} fontSize="lg" color="white">
-                          {selectedValidators.length === 1 ? 'Selected Validator:' : 'Selected Validators:'}
-                        </Text>
-                        <Text color="complimentary.900">
-                          {selectedValidators.length === 1 ? selectedValidators[0].name : `${selectedValidators.length} / 8`}
-                        </Text>
-                      </Flex>
-                    )}
-                    <HStack mt={2} textAlign={'left'} fontWeight={'light'} fontSize="lg" color="white">
-                      <Text fontWeight={'bold'}>Receiving:</Text>
-                      <Text color="complimentary.900">
-                        {(Number(tokenAmount) / Number(zone?.redemptionRate)).toFixed(2)} q{selectedOption?.value}
-                      </Text>
-                    </HStack>
-                    <Text mt={2} textAlign={'left'} fontWeight={'hairline'}>
-                      Processing time: ~2 minutes
-                    </Text>
-                    <Button
-                      w="55%"
-                      _hover={{
-                        bgColor: 'complimentary.500',
-                      }}
-                      mt={4}
-                      onClick={(event) => handleLiquidStake(event)}
-                    >
-                      {isError ? 'Try Again' : isSigning ? <Spinner /> : 'Confirm'}
-                    </Button>
-                  </Box>
-                  <Button
-                    position={'absolute'}
-                    bottom={3}
-                    left={'51%'}
-                    bgColor="none"
-                    _hover={{
-                      bgColor: 'none',
-                      color: 'complimentary.900',
-                    }}
-                    _selected={{
-                      bgColor: 'none',
-                    }}
-                    color="white"
-                    variant="none"
-                    onClick={retreatStep}
-                  >
-                    ←
-                  </Button>
-                </>
-              )}
-              {step === 4 && (
                 <>
                   <Box justifyContent={'center'}>
                     <Flex maxW="300px" flexDirection={'column'} justifyContent={'left'} alignItems={'center'}>

@@ -26,6 +26,8 @@ interface AirdropAccordionItemProps {
   defaultIsOpen?: boolean;
 }
 
+const isBeta = true;
+
 const AirdropAccordionItem: React.FC<AirdropAccordionItemProps> = ({ index, defaultIsOpen }) => {
   const { isOpen, onToggle } = useDisclosure({ defaultIsOpen });
 
@@ -67,7 +69,29 @@ const AirdropAccordionItem: React.FC<AirdropAccordionItemProps> = ({ index, defa
 const AirdropSection = () => {
   const { isOpen, onToggle } = useDisclosure();
 
-  return (
+  return isBeta ? (
+    // What to render if isBeta is true
+    <Flex
+      w="100%"
+      backdropFilter="blur(50px)"
+      bgColor="rgba(255,255,255,0.1)"
+      h="sm"
+      p={4}
+      borderRadius="lg"
+      flexDirection="column"
+      justifyContent="center"
+      alignItems="center"
+      gap={6}
+      color="white"
+    >
+      <Text fontSize="xl" fontWeight="bold">
+        The Airdrop page is under construction
+      </Text>
+      <Text fontSize="xl" fontWeight="bold">
+        Please check back later
+      </Text>
+    </Flex>
+  ) : (
     <VStack spacing={4} align="stretch">
       <Box bg={'rgba(255,255,255,0.1)'} p={5} shadow="md" borderRadius="lg">
         <Flex justifyContent="space-between" alignItems="center" mb={5}>

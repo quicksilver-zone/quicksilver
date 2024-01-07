@@ -70,6 +70,9 @@ export default function Staking() {
 
   const flexDirection = useBreakpointValue({ base: 'column', md: 'row' });
 
+  const [isStakingModalOpen, setStakingModalOpen] = useState(false);
+  const [isTransferModalOpen, setTransferModalOpen] = useState(false);
+
   return (
     <>
       <Head>
@@ -119,8 +122,10 @@ export default function Staking() {
               {/* Staking Box*/}
               <DynamicStakingBox
                 selectedOption={selectedNetwork}
-                isModalOpen={isModalOpen}
-                setModalOpen={setModalOpen}
+                isStakingModalOpen={isStakingModalOpen}
+                setStakingModalOpen={setStakingModalOpen}
+                isTransferModalOpen={isTransferModalOpen}
+                setTransferModalOpen={setTransferModalOpen}
                 setBalance={setBalance}
                 setQBalance={setQBalance}
               />

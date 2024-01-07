@@ -45,6 +45,7 @@ const defaultThemeObject = {
       800: '#FF8C1A',
       900: '#FF8000',
       1000: '#b35a02',
+      1100: '#804001',
     },
     background: {
       start: 'rgb(214, 219, 220)',

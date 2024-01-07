@@ -208,10 +208,16 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
 
   let memo = memoBuffer.length > 0 && selectedValidators.length > 0 ? memoBuffer.toString('base64') : '';
 
-  const numericAmount = Number(tokenAmount);
+  let numericAmount = Number(tokenAmount);
+
+  if (isNaN(numericAmount) || numericAmount <= 0) {
+    numericAmount = 0;
+  }
+
   const smallestUnitAmount = numericAmount * Math.pow(10, 6);
 
   const { send } = cosmos.bank.v1beta1.MessageComposer.withTypeUrl;
+
   const msgSend = send({
     fromAddress: address ?? '',
     toAddress: zone?.depositAddress?.address ?? '',
@@ -628,7 +634,7 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
                       <Button
                         w="55%"
                         _hover={{
-                          bgColor: '#181818',
+                          bgColor: 'complimentary.500',
                         }}
                         mt={4}
                         onClick={() => setStep(1)}

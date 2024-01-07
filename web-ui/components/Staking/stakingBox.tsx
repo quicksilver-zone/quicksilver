@@ -30,7 +30,7 @@ import {
   SkeletonCircle,
 } from '@chakra-ui/react';
 import { useChain } from '@cosmos-kit/react';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
 import {
   useBalanceQuery,
@@ -60,13 +60,23 @@ type StakingBoxProps = {
     chainName: string;
     chainId: string;
   };
-  isModalOpen: boolean;
-  setModalOpen: (isOpen: boolean) => void;
+  isStakingModalOpen: boolean;
+  setStakingModalOpen: (isOpen: boolean) => void;
+  isTransferModalOpen: boolean;
+  setTransferModalOpen: (isOpen: boolean) => void;
   setBalance: (balance: string) => void;
   setQBalance: (qBalance: string) => void;
 };
 
-export const StakingBox = ({ selectedOption, isModalOpen, setModalOpen, setBalance, setQBalance }: StakingBoxProps) => {
+export const StakingBox = ({
+  selectedOption,
+  isStakingModalOpen,
+  setStakingModalOpen,
+  isTransferModalOpen,
+  setTransferModalOpen,
+  setBalance,
+  setQBalance,
+}: StakingBoxProps) => {
   const [activeTabIndex, setActiveTabIndex] = useState(0);
   const [tokenAmount, setTokenAmount] = useState<string>('0');
   let newChainName: string | undefined;
@@ -82,6 +92,13 @@ export const StakingBox = ({ selectedOption, isModalOpen, setModalOpen, setBalan
     // Default case
     newChainName = selectedOption?.chainName;
   }
+
+  const openStakingModal = () => setStakingModalOpen(true);
+  const closeStakingModal = () => setStakingModalOpen(false);
+
+  const openTransferModal = () => setTransferModalOpen(true);
+  const closeTransferModal = () => setTransferModalOpen(false);
+
   const { address } = useChain(newChainName);
   const { address: qAddress } = useChain('quicksilver');
   const exp = getExponent(selectedOption.chainName);
@@ -205,6 +222,26 @@ export const StakingBox = ({ selectedOption, isModalOpen, setModalOpen, setBalan
   const { data: logos, isLoading: isFetchingLogos } = useValidatorLogos(newChainName, validatorsData || []);
   const [selectedValidator, setSelectedValidator] = useState<string | null>(null);
 
+  const [isBottomVisible, setIsBottomVisible] = useState(true);
+
+  const handleScroll = useCallback((event: React.UIEvent<HTMLDivElement>) => {
+    const target = event.target as HTMLDivElement;
+    const isBottom = target.scrollHeight - target.scrollTop === target.clientHeight;
+    setIsBottomVisible(!isBottom);
+  }, []);
+
+  interface SelectedValidator {
+    operatorAddress: string;
+    moniker: string;
+    tokenAmount: string;
+  }
+
+  const [selectedValidatorData, setSelectedValidatorData] = useState<SelectedValidator>({
+    operatorAddress: '',
+    moniker: '',
+    tokenAmount: '',
+  });
+
   return (
     <Box position="relative" backdropFilter="blur(50px)" bgColor="rgba(255,255,255,0.1)" flex="1" borderRadius="10px" p={5}>
       <Tabs isFitted variant="enclosed" onChange={handleTabsChange}>
@@ -254,32 +291,7 @@ export const StakingBox = ({ selectedOption, isModalOpen, setModalOpen, setBalan
                 </Text>
                 {selectedOption.name === 'Cosmos Hub' && (
                   <Flex textAlign={'left'} justifyContent={'flex-start'}>
-                    <HStack>
-                      <Text fontWeight="medium" textAlign="center" color="white">
-                        Use natively staked&nbsp;
-                        <span style={{ color: '#FF8000' }}>{selectedOption.value}</span>?
-                      </Text>
-                      <Switch
-                        _active={{
-                          borderColor: 'complimentary.900',
-                        }}
-                        _selected={{
-                          borderColor: 'complimentary.900',
-                        }}
-                        _hover={{
-                          borderColor: 'complimentary.900',
-                        }}
-                        _focus={{
-                          borderColor: 'complimentary.900',
-                          boxShadow: '0 0 0 3px #FF8000',
-                        }}
-                        isDisabled={!nativeStakedAmount}
-                        isChecked={useNativeStake}
-                        onChange={handleSwitchChange}
-                        id="use-natively-staked"
-                        colorScheme="orange"
-                      />
-
+                    {!nativeStakedAmount && (
                       <Tooltip
                         label={
                           !address
@@ -291,9 +303,77 @@ export const StakingBox = ({ selectedOption, isModalOpen, setModalOpen, setBalan
                               } natively staked to ${delegationsResponse?.length} validators. You can tokenize your shares and transfer them to quicksilver by clicking the switch and selecting a validator.`
                         }
                       >
-                        <InfoOutlineIcon color="complimentary.900" />
+                        <HStack>
+                          <Text fontWeight="hairline" textAlign="center" color="whiteAlpha.800">
+                            Use natively staked&nbsp;
+                            <span style={{ color: '#FF8000' }}>{selectedOption.value}</span>?
+                          </Text>
+                          <Switch
+                            _active={{
+                              borderColor: 'complimentary.900',
+                            }}
+                            _selected={{
+                              borderColor: 'complimentary.900',
+                            }}
+                            _hover={{
+                              borderColor: 'complimentary.900',
+                            }}
+                            _focus={{
+                              borderColor: 'complimentary.900',
+                              boxShadow: '0 0 0 3px #FF8000',
+                            }}
+                            isDisabled={!nativeStakedAmount || !logos}
+                            isChecked={useNativeStake}
+                            onChange={handleSwitchChange}
+                            id="use-natively-staked"
+                            colorScheme="orange"
+                          />
+                          <InfoOutlineIcon color="complimentary.1100" />
+                        </HStack>
                       </Tooltip>
-                    </HStack>
+                    )}
+                    {nativeStakedAmount > 0 && (
+                      <HStack>
+                        <Text fontWeight="medium" textAlign="center" color="white">
+                          Use natively staked&nbsp;
+                          <span style={{ color: '#FF8000' }}>{selectedOption.value}</span>?
+                        </Text>
+                        <Switch
+                          _active={{
+                            borderColor: 'complimentary.900',
+                          }}
+                          _selected={{
+                            borderColor: 'complimentary.900',
+                          }}
+                          _hover={{
+                            borderColor: 'complimentary.900',
+                          }}
+                          _focus={{
+                            borderColor: 'complimentary.900',
+                            boxShadow: '0 0 0 3px #FF8000',
+                          }}
+                          isDisabled={!nativeStakedAmount || !logos}
+                          isChecked={useNativeStake}
+                          onChange={handleSwitchChange}
+                          id="use-natively-staked"
+                          colorScheme="orange"
+                        />
+
+                        <Tooltip
+                          label={
+                            !address
+                              ? 'Please connect your wallet to enable this option.'
+                              : !nativeStakedAmount
+                              ? "You don't have any native staked tokens."
+                              : `You currently have ${shiftDigits(nativeStakedAmount, -6)} ${
+                                  selectedOption.value
+                                } natively staked to ${delegationsResponse?.length} validators. You can tokenize your shares and transfer them to quicksilver by clicking the switch and selecting a validator.`
+                          }
+                        >
+                          <InfoOutlineIcon color="complimentary.900" />
+                        </Tooltip>
+                      </HStack>
+                    )}
                   </Flex>
                 )}
                 {!useNativeStake && (
@@ -328,24 +408,27 @@ export const StakingBox = ({ selectedOption, isModalOpen, setModalOpen, setBalan
                         onChange={(e) => {
                           // Allow any numeric input
                           const validNumberPattern = /^\d*\.?\d*$/;
-                          if (validNumberPattern.test(e.target.value)) {
+                          if (validNumberPattern.test(e.target.value) || e.target.value === '') {
                             setTokenAmount(e.target.value);
                           }
                         }}
                         onBlur={() => {
-                          let inputValue = parseFloat(tokenAmount);
-                          if (isNaN(inputValue) || inputValue <= 0) {
-                            // Set error for invalid or non-positive numbers
+                          // Check if the input is a lone period or incomplete number format
+                          if (tokenAmount === '.') {
                             setInputError(true);
                             setTokenAmount('');
-                          } else if (inputValue > maxStakingAmount) {
-                            // Limit the input to the max staking amount
-                            setInputError(false);
-                            setTokenAmount(maxStakingAmount.toString());
                           } else {
-                            // Valid input
-                            setInputError(false);
-                            setTokenAmount(inputValue.toString());
+                            let inputValue = parseFloat(tokenAmount);
+                            if (isNaN(inputValue) || inputValue <= 0) {
+                              setInputError(true);
+                              setTokenAmount('');
+                            } else if (inputValue > maxUnstakingAmount) {
+                              setInputError(false);
+                              setTokenAmount(maxUnstakingAmount.toString());
+                            } else {
+                              setInputError(false);
+                              setTokenAmount(inputValue.toString());
+                            }
                           }
                         }}
                       />
@@ -435,15 +518,15 @@ export const StakingBox = ({ selectedOption, isModalOpen, setModalOpen, setBalan
                       _hover={{
                         bgColor: 'complimentary.1000',
                       }}
-                      onClick={() => setModalOpen(true)}
+                      onClick={openStakingModal}
                       isDisabled={Number(tokenAmount) === 0 || !address}
                     >
                       Liquid stake
                     </Button>
                     <StakingProcessModal
                       tokenAmount={tokenAmount}
-                      isOpen={isModalOpen}
-                      onClose={() => setModalOpen(false)}
+                      isOpen={isStakingModalOpen}
+                      onClose={closeStakingModal}
                       selectedOption={selectedOption}
                     />
                   </>
@@ -451,47 +534,67 @@ export const StakingBox = ({ selectedOption, isModalOpen, setModalOpen, setBalan
                 {useNativeStake && (
                   <Flex flexDirection="column" w="100%">
                     <VStack spacing={8} align="center">
-                      <Box maxH="300px" overflowY="scroll" w="fit-content" mb={8}>
-                        {delegationsResponse?.map((delegation, index) => {
-                          const validator = validatorsData?.find((v) => v.address === delegation.delegation.validator_address);
-                          const isSelected = validator && validator.address === selectedValidator;
-                          const validatorLogo = logos[delegation.delegation.validator_address ?? ''];
+                      <Box position="relative" mb={8}>
+                        <Box className="custom-scroll" maxH="290px" overflowY="scroll" w="fit-content" onScroll={handleScroll}>
+                          {delegationsResponse?.map((delegation, index) => {
+                            const validator = validatorsData?.find((v) => v.address === delegation.delegation.validator_address);
+                            const isSelected = validator && validator.address === selectedValidator;
+                            const validatorLogo = logos[delegation?.delegation.validator_address];
 
-                          return (
-                            <Box
-                              borderRadius={'md'}
-                              as="button"
-                              w="full"
-                              onClick={() => setSelectedValidator(validator?.address ?? '')}
-                              _hover={{ bg: 'rgba(255, 128, 0, 0.25)' }}
-                              bg={isSelected ? 'rgba(255, 128, 0, 0.25)' : 'transparent'}
-                              key={index}
-                              mb={2}
-                            >
-                              <Flex py={2} align="center">
-                                <Box boxSize="50px" borderRadius="md" ml={4}>
-                                  {!validatorLogo ? (
-                                    <SkeletonCircle size="8" startColor="complimentary.900" endColor="complimentary.400" />
-                                  ) : (
-                                    <Image
-                                      src={validatorLogo}
-                                      alt={validator?.name}
-                                      boxSize="50px"
-                                      objectFit="cover"
-                                      borderRadius={'full'}
-                                    />
-                                  )}
-                                </Box>
-                                <VStack align="start" ml={2}>
-                                  <Text fontSize="md">{validator ? validator.name : 'Validator'}</Text>
-                                  <Text color={'complimentary.900'} fontSize="md">
-                                    {shiftDigits(delegation.balance.amount, -6)} {selectedOption.value}
-                                  </Text>
-                                </VStack>
-                              </Flex>
-                            </Box>
-                          );
-                        })}
+                            return (
+                              <Box
+                                borderRadius={'md'}
+                                as="button"
+                                w="full"
+                                onClick={() => {
+                                  setSelectedValidator(validator?.address ?? '');
+                                  setSelectedValidatorData({
+                                    operatorAddress: delegation.delegation.validator_address,
+                                    moniker: validator?.name ?? '',
+                                    tokenAmount: delegation.balance.amount,
+                                  });
+                                }}
+                                _hover={{ bg: 'rgba(255, 128, 0, 0.25)' }}
+                                bg={isSelected ? 'rgba(255, 128, 0, 0.25)' : 'transparent'}
+                                key={index}
+                                mb={2}
+                              >
+                                <Flex py={2} align="center">
+                                  <Box boxSize="50px" borderRadius="md" ml={4}>
+                                    {!validatorLogo ? (
+                                      <SkeletonCircle size="8" startColor="complimentary.900" endColor="complimentary.400" />
+                                    ) : (
+                                      <Image
+                                        src={validatorLogo}
+                                        alt={validator?.name}
+                                        boxSize="50px"
+                                        objectFit="cover"
+                                        borderRadius={'full'}
+                                      />
+                                    )}
+                                  </Box>
+                                  <VStack align="start" ml={2}>
+                                    <Text fontSize="md">{validator ? validator.name : 'Validator'}</Text>
+                                    <Text color={'complimentary.900'} fontSize="md">
+                                      {shiftDigits(delegation.balance.amount, -6)} {selectedOption.value}
+                                    </Text>
+                                  </VStack>
+                                </Flex>
+                              </Box>
+                            );
+                          })}
+                        </Box>
+                        {isBottomVisible && (
+                          <Box
+                            position="absolute"
+                            bottom="0"
+                            left="0"
+                            right="0"
+                            height="70px"
+                            bgGradient="linear(to top, #1A1A1A, transparent)"
+                            zIndex="1"
+                          />
+                        )}
                       </Box>
                     </VStack>
                     <Button
@@ -499,15 +602,15 @@ export const StakingBox = ({ selectedOption, isModalOpen, setModalOpen, setBalan
                       _hover={{
                         bgColor: 'complimentary.1000',
                       }}
-                      onClick={() => setModalOpen(true)}
+                      onClick={openTransferModal}
                       isDisabled={!selectedValidator || !address}
                     >
                       Transfer Existing Delegation
                     </Button>
                     <TransferProcessModal
-                      tokenAmount={tokenAmount}
-                      isOpen={isModalOpen}
-                      onClose={() => setModalOpen(false)}
+                      selectedValidator={selectedValidatorData}
+                      isOpen={isTransferModalOpen}
+                      onClose={closeTransferModal}
                       selectedOption={selectedOption}
                     />
                   </Flex>
