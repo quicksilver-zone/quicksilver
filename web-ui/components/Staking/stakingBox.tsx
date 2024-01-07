@@ -79,21 +79,6 @@ export const StakingBox = ({
 }: StakingBoxProps) => {
   const [activeTabIndex, setActiveTabIndex] = useState(0);
   const [tokenAmount, setTokenAmount] = useState<string>('0');
-  let newChainName: string | undefined;
-  if (selectedOption?.chainId === 'provider') {
-    newChainName = 'rsprovidertestnet';
-  } else if (selectedOption?.chainId === 'elgafar-1') {
-    newChainName = 'stargazetestnet';
-  } else if (selectedOption?.chainId === 'osmo-test-5') {
-    newChainName = 'osmosistestnet';
-  } else if (selectedOption?.chainId === 'regen-redwood-1') {
-    newChainName = 'regen';
-  } else if (selectedOption?.chainId === 'osmosis-1') {
-    newChainName = 'stargazetestnet';
-  } else {
-    // Default case
-    newChainName = selectedOption?.chainName;
-  }
 
   const openStakingModal = () => setStakingModalOpen(true);
   const closeStakingModal = () => setStakingModalOpen(false);
@@ -101,7 +86,7 @@ export const StakingBox = ({
   const openTransferModal = () => setTransferModalOpen(true);
   const closeTransferModal = () => setTransferModalOpen(false);
 
-  const { address } = useChain(newChainName);
+  const { address } = useChain(selectedOption.chainName);
   const { address: qAddress } = useChain('quicksilver');
   const exp = getExponent(selectedOption.chainName);
   const { balance, isLoading } = useBalanceQuery(selectedOption.chainName, address ?? '');
@@ -206,7 +191,7 @@ export const StakingBox = ({
 
   const isValidNumber = !isNaN(Number(qAssetsDisplay)) && qAssetsDisplay !== '';
 
-  const { delegations, delegationsIsError, delegationsIsLoading } = useNativeStakeQuery(newChainName, address ?? '');
+  const { delegations, delegationsIsError, delegationsIsLoading } = useNativeStakeQuery(selectedOption.chainName, address ?? '');
   const delegationsResponse = delegations?.delegation_responses;
   const nativeStakedAmount = delegationsResponse?.reduce((acc, delegationResponse) => {
     const amount = Number(delegationResponse?.balance?.amount) || 0;
@@ -219,9 +204,9 @@ export const StakingBox = ({
     setUseNativeStake(event.target.checked);
   };
 
-  const { validatorsData, isLoading: validatorsDataLoading, isError: validatorsDataError } = useValidatorsQuery(newChainName);
+  const { validatorsData, isLoading: validatorsDataLoading, isError: validatorsDataError } = useValidatorsQuery(selectedOption.chainName);
 
-  const { data: logos, isLoading: isFetchingLogos } = useValidatorLogos(newChainName, validatorsData || []);
+  const { data: logos, isLoading: isFetchingLogos } = useValidatorLogos(selectedOption.chainName, validatorsData || []);
   const [selectedValidator, setSelectedValidator] = useState<string | null>(null);
 
   const [isBottomVisible, setIsBottomVisible] = useState(true);

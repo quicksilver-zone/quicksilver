@@ -22,9 +22,9 @@ const StakingIntent: React.FC<StakingIntentProps> = ({ address, isWalletConnecte
   const currentChainName = chains[currentChainIndex];
   let newChainName: string | undefined;
   if (currentChainName === 'Cosmos') {
-    newChainName = 'rsprovidertestnet';
+    newChainName = 'cosmoshub';
   } else if (currentChainName === 'Osmosis') {
-    newChainName = 'osmosistestnet';
+    newChainName = 'osmosis';
   } else if (currentChainName === 'Stargaze') {
     newChainName = 'stargaze';
   } else if (currentChainName === 'Regen') {

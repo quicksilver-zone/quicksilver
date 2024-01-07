@@ -31,11 +31,11 @@ const UnbondingAssetsTable: React.FC<UnbondingAssetsTableProps> = ({ address, is
   const currentChainName = chains[currentChainIndex];
   let newChainName: string | undefined;
   if (currentChainName === 'Cosmos') {
-    newChainName = 'rsprovidertestnet';
+    newChainName = 'cosmoshub';
   } else if (currentChainName === 'Osmosis') {
-    newChainName = 'osmosistestnet';
+    newChainName = 'osmosis';
   } else if (currentChainName === 'Stargaze') {
-    newChainName = 'stargazetestnet';
+    newChainName = 'stargaze';
   } else if (currentChainName === 'Regen') {
     newChainName = 'regen';
   } else if (currentChainName === 'Sommelier') {
