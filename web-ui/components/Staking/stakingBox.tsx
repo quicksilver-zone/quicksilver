@@ -87,6 +87,7 @@ export const StakingBox = ({
   const closeTransferModal = () => setTransferModalOpen(false);
 
   const { address } = useChain(selectedOption.chainName);
+  console.log(address);
   const { address: qAddress } = useChain('quicksilver');
   const exp = getExponent(selectedOption.chainName);
   const { balance, isLoading } = useBalanceQuery(selectedOption.chainName, address ?? '');
