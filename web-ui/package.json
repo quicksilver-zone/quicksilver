@@ -55,7 +55,7 @@
     "react-minimal-pie-chart": "^8.4.0",
     "remixicon": "^3.5.0",
     "simplex-noise": "^4.0.1",
-    "three": "^0.156.1"
+    "three": "^0.160.0"
   },
   "devDependencies": {
     "@testing-library/react": "^14.0.0",
