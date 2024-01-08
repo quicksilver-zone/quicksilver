@@ -34,7 +34,7 @@ import { shiftDigits } from '@/utils';
 import { coins, StdFee } from '@cosmjs/amino';
 import { assets } from 'chain-registry';
 import { cosmos } from 'interchain-query';
-import chains from '@chalabi/chain-registry';
+import chains from 'chain-registry';
 import { TxResponse } from 'interchain-query/cosmos/base/abci/v1beta1/abci';
 
 const ChakraModalContent = styled(ModalContent)`

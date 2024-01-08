@@ -59,7 +59,7 @@ Please ensure your IDE is configured to use Typescript v4.9.3
 
 - intent query
 
-- unbonding query
+- fix ibc transactions and ibc transaction amino registry
 
 **Staking Page**
 
@@ -67,4 +67,6 @@ Please ensure your IDE is configured to use Typescript v4.9.3
 
 - validator route app.quicksilver.zone/staking/chainId/valoperAddress
 
-- add LSM for cosmoshub
+**Defi Page**
+
+- fix some of the links

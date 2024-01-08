@@ -10,10 +10,11 @@ import { wallets as leapWallets } from '@cosmos-kit/leap';
 import { ChainProvider, ThemeCustomizationProps } from '@cosmos-kit/react';
 import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
-import { chains, assets } from '@chalabi/chain-registry';
-import { cosmosAminoConverters, cosmosProtoRegistry } from 'interchain-query';
+import { chains, assets } from 'chain-registry';
+
 import type { AppProps } from 'next/app';
 import { quicksilverProtoRegistry, quicksilverAminoConverters } from 'quicksilverjs';
+import { cosmosAminoConverters, cosmosProtoRegistry } from 'stridejs';
 import { ibcAminoConverters, ibcProtoRegistry } from 'interchain-query';
 
 import { Header, SideHeader } from '@/components';
@@ -25,6 +26,7 @@ function CreateCosmosApp({ Component, pageProps }: AppProps) {
   const signerOptions: SignerOptions = {
     //@ts-ignore
     signingStargate: (chain: Chain): SigningStargateClientOptions | undefined => {
+      //@ts-ignore
       const mergedRegistry = new Registry([...cosmosProtoRegistry, ...quicksilverProtoRegistry, ...ibcProtoRegistry]);
 
       const mergedAminoTypes = new AminoTypes({

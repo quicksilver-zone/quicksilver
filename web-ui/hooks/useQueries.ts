@@ -106,6 +106,42 @@ export const useBalanceQuery = (chainName: string, address: string) => {
   };
 };
 
+export const useAllBalancesQuery = (chainName: string, address: string) => {
+  const { grpcQueryClient } = useGrpcQueryClient(chainName);
+
+  const balanceQuery = useQuery(
+    ['balances', address],
+    async () => {
+      if (!grpcQueryClient) {
+        throw new Error('RPC Client not ready');
+      }
+      const nextKey = new Uint8Array()
+      const balance = await grpcQueryClient.cosmos.bank.v1beta1.allBalances({
+        address: address || '',
+        pagination: {
+          key: nextKey,
+          offset: Long.fromNumber(0),
+          limit: Long.fromNumber(100),
+          countTotal: true,
+          reverse: false,
+        },
+      });
+      console.log(balance)
+      return balance;
+    },
+    {
+      enabled: !!grpcQueryClient && !!address,
+      staleTime: Infinity,
+    },
+  );
+
+  return {
+    balance: balanceQuery.data,
+    isLoading: balanceQuery.isLoading,
+    isError: balanceQuery.isError,
+  };
+};
+
 export const useIbcBalanceQuery = (chainName: string, address: string) => {
   const { grpcQueryClient } = useGrpcQueryClient(chainName);
   const balanceQuery = useQuery(

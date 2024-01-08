@@ -23,6 +23,7 @@ import {
 import { useChain } from '@cosmos-kit/react';
 import styled from '@emotion/styled';
 import React, { useEffect, useState } from 'react';
+import { MsgTokenizeShares } from '@chalabi/quicksilverjs/dist/codegen/quicksilver/lsm-types/v1/types';
 
 import { MultiModal } from './validatorSelectionModal';
 
@@ -33,9 +34,10 @@ import { bech32 } from 'bech32';
 import { shiftDigits } from '@/utils';
 import { coins, StdFee } from '@cosmjs/amino';
 import { assets } from 'chain-registry';
-import { cosmos } from 'interchain-query';
+
 import chains from '@chalabi/chain-registry';
 import { TxResponse } from 'interchain-query/cosmos/base/abci/v1beta1/abci';
+import { cosmos } from 'stridejs';
 
 const ChakraModalContent = styled(ModalContent)`
   position: relative;
@@ -84,10 +86,27 @@ interface StakingModalProps {
     chainName: string;
     chainId: string;
   };
+  address: string;
+  isTokenized: boolean;
 }
 
-export const TransferProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClose, selectedOption, selectedValidator }) => {
-  const [step, setStep] = React.useState(1);
+export const TransferProcessModal: React.FC<StakingModalProps> = ({
+  isOpen,
+  onClose,
+  selectedOption,
+  selectedValidator,
+  address,
+  isTokenized,
+}) => {
+  useEffect(() => {
+    if (isTokenized === true) {
+      setStep(2);
+    }
+    if (isTokenized === undefined) {
+      setStep(1);
+    }
+  });
+  const [step, setStep] = useState(1);
   const getProgressColor = (circleStep: number) => {
     if (step >= circleStep) return 'complimentary.900';
     return 'rgba(255,255,255,0.2)';
@@ -119,6 +138,89 @@ export const TransferProcessModal: React.FC<StakingModalProps> = ({ isOpen, onCl
       return str;
     }
   }
+
+  const { tokenizeShares } = cosmos.staking.v1beta1.MessageComposer.withTypeUrl;
+
+  const msg = tokenizeShares({
+    delegatorAddress: address,
+    validatorAddress: selectedValidator.operatorAddress,
+    amount: {
+      denom: 'u' + selectedOption?.value.toLowerCase(),
+      amount: selectedValidator.tokenAmount.toString(),
+    },
+    tokenizedShareOwner: address,
+  });
+
+  const mainTokens = assets.find(({ chain_name }) => chain_name === newChainName);
+  const fees = chains.chains.find(({ chain_name }) => chain_name === newChainName)?.fees?.fee_tokens;
+  const mainDenom = mainTokens?.assets[0].base ?? '';
+  const fixedMinGasPrice = fees?.find(({ denom }) => denom === mainDenom)?.high_gas_price ?? '';
+  const feeAmount = shiftDigits(fixedMinGasPrice, 6);
+
+  const fee: StdFee = {
+    amount: [
+      {
+        denom: mainDenom,
+        amount: feeAmount.toString(),
+      },
+    ],
+    gas: '1926657',
+  };
+
+  const { tx } = useTx(newChainName ?? '');
+
+  const hanleTokenizeShares = async (event: React.MouseEvent) => {
+    event.preventDefault();
+    setIsSigning(true);
+    setTransactionStatus('Pending');
+    try {
+      const result = await tx([msg], {
+        fee,
+        onSuccess: () => {
+          setStep(2);
+          setTransactionStatus('Success');
+        },
+      });
+    } catch (error) {
+      console.error('Transaction failed', error);
+      setTransactionStatus('Failed');
+      setIsError(true);
+    } finally {
+      setIsSigning(false);
+    }
+  };
+  const { send } = cosmos.bank.v1beta1.MessageComposer.withTypeUrl;
+
+  let numericAmount = selectedValidator.tokenAmount;
+  if (isNaN(Number(numericAmount)) || Number(numericAmount) <= 0) {
+    numericAmount = '0';
+  }
+  const msgSend = send({
+    fromAddress: address ?? '',
+    toAddress: zone?.depositAddress?.address ?? '',
+    amount: coins(numericAmount, zone?.baseDenom ?? ''),
+  });
+
+  const handleSend = async (event: React.MouseEvent) => {
+    event.preventDefault();
+    setIsSigning(true);
+    setTransactionStatus('Pending');
+    try {
+      const result = await tx([msgSend], {
+        fee,
+        onSuccess: () => {
+          setStep(3);
+          setTransactionStatus('Success');
+        },
+      });
+    } catch (error) {
+      console.error('Transaction failed', error);
+      setTransactionStatus('Failed');
+      setIsError(true);
+    } finally {
+      setIsSigning(false);
+    }
+  };
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} size={{ base: '3xl', md: '2xl' }}>
@@ -202,42 +304,26 @@ export const TransferProcessModal: React.FC<StakingModalProps> = ({ isOpen, onCl
                     _hover={{
                       bgColor: 'complimentary.500',
                     }}
-                  ></Button>
+                    onClick={hanleTokenizeShares}
+                  >
+                    {isError ? 'Try Again' : isSigning ? <Spinner /> : 'Tokenize Shares'}
+                  </Button>
                 </>
               )}
               {step === 2 && (
                 <>
-                  <Text textAlign={'left'} fontWeight={'bold'} fontSize="lg" color="white">
-                    Send to Quicksilver
+                  <Text textAlign={'center'} fontWeight={'bold'} fontSize="lg" color="white">
+                    Send your tokenized shares to Quicksilver
                   </Text>
-                  <Text mt={2} textAlign={'center'} fontWeight={'light'} fontSize="lg" color="white">
-                    Specifying weights allows you to choose how much of your liquid delegation goes to each validator.
-                  </Text>
-
                   <Button
+                    mt={4}
+                    width="55%"
                     _hover={{
                       bgColor: 'complimentary.500',
                     }}
+                    onClick={handleSend}
                   >
-                    Equal
-                  </Button>
-
-                  <Button
-                    position={'absolute'}
-                    bottom={3}
-                    left={'51%'}
-                    bgColor="none"
-                    _hover={{
-                      bgColor: 'none',
-                      color: 'complimentary.900',
-                    }}
-                    _selected={{
-                      bgColor: 'none',
-                    }}
-                    color="white"
-                    variant="none"
-                  >
-                    ←
+                    {isError ? 'Try Again' : isSigning ? <Spinner /> : 'Transfer'}
                   </Button>
                 </>
               )}

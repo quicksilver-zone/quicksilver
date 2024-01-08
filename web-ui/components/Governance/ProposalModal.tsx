@@ -107,8 +107,6 @@ export const ProposalModal = ({
   const uint8ArrayValue = proposal.messages[0].value;
   const propinfo = decodeUint8Arr(uint8ArrayValue);
 
-  console.log(propinfo);
-
   const getTitleFromDecoded = (decodedStr: string) => {
     return decodedStr.slice(0, 250).match(/[A-Z][A-Za-z].*(?=\u0012)/)?.[0];
   };

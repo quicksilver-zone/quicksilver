@@ -55,6 +55,7 @@
     "react-minimal-pie-chart": "^8.4.0",
     "remixicon": "^3.5.0",
     "simplex-noise": "^4.0.1",
+    "stridejs": "^0.8.0-alpha.5",
     "three": "^0.156.1"
   },
   "devDependencies": {

@@ -25,14 +25,10 @@ interface RewardsClaimInterface {
 
 export const RewardsClaim: React.FC<RewardsClaimInterface> = ({ address }) => {
   const { liquidRewards, isLoading } = useLiquidRewardsQuery(address);
-  console.log(liquidRewards);
+
   const { isOpen, onOpen, onClose } = useDisclosure();
 
-  // Example function to handle reward claiming
-  const handleClaimRewards = () => {
-    console.log('Claiming rewards...');
-    // Here you would trigger the actual reward claiming process
-  };
+  const handleClaimRewards = () => {};
 
   return (
     <>
@@ -40,20 +36,16 @@ export const RewardsClaim: React.FC<RewardsClaimInterface> = ({ address }) => {
         Participation Rewards
       </Text>
       <Flex
-        flexDirection={['column', 'column', 'row']} // Stack vertically on smaller screens, horizontally on larger
+        flexDirection={['column', 'column', 'row']}
         justifyContent="space-between"
         alignItems="flex-start"
         bgColor="rgba(255,255,255,0.1)"
         p="4"
         borderRadius="lg"
         mb="4"
-        gap="6" // Spacing between children
+        gap="6"
       >
-        <VStack
-          flex="1" // Take up 1/3 of the space
-          spacing="3.5"
-          alignItems="flex-start"
-        >
+        <VStack flex="1" spacing="3.5" alignItems="flex-start">
           <Text color="white" fontSize="base" fontWeight="normal">
             Stake with validators with a high PR score to earn QCK rewards. Automatic claiming of rewards is{' '}
             <Text as="span" textDecoration="underline">
@@ -66,16 +58,7 @@ export const RewardsClaim: React.FC<RewardsClaimInterface> = ({ address }) => {
           </Button>
         </VStack>
 
-        <Box
-          flex="2" // Take up 2/3 of the space for the center column
-          overflowY="auto"
-          maxH="300px"
-          p="4"
-          borderRadius="lg"
-          border="1px"
-          borderColor="white"
-          maxW={'200px'}
-        >
+        <Box flex="2" overflowY="auto" maxH="300px" p="4" borderRadius="lg" border="1px" borderColor="white" maxW={'200px'}>
           <Stack spacing={4}>
             {!isLoading &&
               liquidRewards?.assets?.['rhye-2']?.map((assetGroup) =>
@@ -89,11 +72,7 @@ export const RewardsClaim: React.FC<RewardsClaimInterface> = ({ address }) => {
           </Stack>
         </Box>
 
-        <VStack
-          flex="1" // Take up 1/3 of the space for the right column
-          spacing="3.5"
-          alignItems="flex-end"
-        >
+        <VStack flex="1" spacing="3.5" alignItems="flex-end">
           <Button size="lg" colorScheme="blue" onClick={handleClaimRewards} isDisabled={isLoading || !liquidRewards}>
             Claim All Rewards
           </Button>

@@ -31,8 +31,9 @@ import {
 } from '@chakra-ui/react';
 import { useChain } from '@cosmos-kit/react';
 import React, { useCallback, useEffect, useState } from 'react';
-
+import { FaStar } from 'react-icons/fa';
 import {
+  useAllBalancesQuery,
   useBalanceQuery,
   useNativeStakeQuery,
   useQBalanceQuery,
@@ -87,10 +88,12 @@ export const StakingBox = ({
   const closeTransferModal = () => setTransferModalOpen(false);
 
   const { address } = useChain(selectedOption.chainName);
-  console.log(address);
+
   const { address: qAddress } = useChain('quicksilver');
   const exp = getExponent(selectedOption.chainName);
   const { balance, isLoading } = useBalanceQuery(selectedOption.chainName, address ?? '');
+  const { balance: allBalances, isLoading: allBalancesIsLoading } = useAllBalancesQuery(selectedOption.chainName, address ?? '');
+
   const {
     balance: qBalance,
     isLoading: qIsLoading,
@@ -205,6 +208,10 @@ export const StakingBox = ({
     setUseNativeStake(event.target.checked);
   };
 
+  useEffect(() => {
+    setUseNativeStake(false);
+  }, [selectedOption]);
+
   const { validatorsData, isLoading: validatorsDataLoading, isError: validatorsDataError } = useValidatorsQuery(selectedOption.chainName);
 
   const { data: logos, isLoading: isFetchingLogos } = useValidatorLogos(selectedOption.chainName, validatorsData || []);
@@ -222,12 +229,14 @@ export const StakingBox = ({
     operatorAddress: string;
     moniker: string;
     tokenAmount: string;
+    isTokenized: boolean;
   }
 
   const [selectedValidatorData, setSelectedValidatorData] = useState<SelectedValidator>({
     operatorAddress: '',
     moniker: '',
     tokenAmount: '',
+    isTokenized: false,
   });
 
   return (
@@ -296,26 +305,30 @@ export const StakingBox = ({
                             Use natively staked&nbsp;
                             <span style={{ color: '#FF8000' }}>{selectedOption.value}</span>?
                           </Text>
-                          <Switch
-                            _active={{
-                              borderColor: 'complimentary.900',
-                            }}
-                            _selected={{
-                              borderColor: 'complimentary.900',
-                            }}
-                            _hover={{
-                              borderColor: 'complimentary.900',
-                            }}
-                            _focus={{
-                              borderColor: 'complimentary.900',
-                              boxShadow: '0 0 0 3px #FF8000',
-                            }}
-                            isDisabled={!nativeStakedAmount || !logos}
-                            isChecked={useNativeStake}
-                            onChange={handleSwitchChange}
-                            id="use-natively-staked"
-                            colorScheme="orange"
-                          />
+                          {delegationsIsLoading && <SkeletonCircle size="4" startColor="complimentary.900" endColor="complimentary.400" />}
+                          {!delegationsIsLoading && !delegationsIsError && nativeStakedAmount && (
+                            <Switch
+                              _active={{
+                                borderColor: 'complimentary.900',
+                              }}
+                              _selected={{
+                                borderColor: 'complimentary.900',
+                              }}
+                              _hover={{
+                                borderColor: 'complimentary.900',
+                              }}
+                              _focus={{
+                                borderColor: 'complimentary.900',
+                                boxShadow: '0 0 0 3px #FF8000',
+                              }}
+                              isDisabled={!nativeStakedAmount || !logos}
+                              isChecked={useNativeStake}
+                              onChange={handleSwitchChange}
+                              id="use-natively-staked"
+                              colorScheme="orange"
+                            />
+                          )}
+
                           <InfoOutlineIcon color="complimentary.1100" />
                         </HStack>
                       </Tooltip>
@@ -524,53 +537,79 @@ export const StakingBox = ({
                     <VStack spacing={8} align="center">
                       <Box position="relative" mb={8}>
                         <Box className="custom-scroll" maxH="290px" overflowY="scroll" w="fit-content" onScroll={handleScroll}>
-                          {delegationsResponse?.map((delegation, index) => {
-                            const validator = validatorsData?.find((v) => v.address === delegation.delegation.validator_address);
-                            const isSelected = validator && validator.address === selectedValidator;
-                            const validatorLogo = logos[delegation?.delegation.validator_address];
+                          {/* Combine delegationsResponse with valoper entries from allBalances */}
+                          {delegationsResponse
+                            ?.concat(
+                              allBalances?.balances
+                                .filter((balance) => balance.denom.includes('valoper'))
+                                .map((balance) => ({
+                                  delegation: {
+                                    validator_address: balance.denom.split('/')[0], // Extracting the valoper address
+                                  },
+                                  balance: {
+                                    amount: balance.amount,
+                                  },
+                                  isTokenized: true, // Additional property to identify valoper entries
+                                })),
+                            )
+                            .map((delegation, index) => {
+                              const validator = validatorsData?.find((v) => v.address === delegation.delegation.validator_address);
+                              const isSelected = validator && validator.address === selectedValidator;
+                              const validatorLogo = logos[delegation.delegation.validator_address];
 
-                            return (
-                              <Box
-                                borderRadius={'md'}
-                                as="button"
-                                w="full"
-                                onClick={() => {
-                                  setSelectedValidator(validator?.address ?? '');
-                                  setSelectedValidatorData({
-                                    operatorAddress: delegation.delegation.validator_address,
-                                    moniker: validator?.name ?? '',
-                                    tokenAmount: delegation.balance.amount,
-                                  });
-                                }}
-                                _hover={{ bg: 'rgba(255, 128, 0, 0.25)' }}
-                                bg={isSelected ? 'rgba(255, 128, 0, 0.25)' : 'transparent'}
-                                key={index}
-                                mb={2}
-                              >
-                                <Flex py={2} align="center">
-                                  <Box boxSize="50px" borderRadius="md" ml={4}>
-                                    {!validatorLogo ? (
-                                      <SkeletonCircle size="8" startColor="complimentary.900" endColor="complimentary.400" />
-                                    ) : (
-                                      <Image
-                                        src={validatorLogo}
-                                        alt={validator?.name}
-                                        boxSize="50px"
-                                        objectFit="cover"
-                                        borderRadius={'full'}
-                                      />
-                                    )}
-                                  </Box>
-                                  <VStack align="start" ml={2}>
-                                    <Text fontSize="md">{validator ? validator.name : 'Validator'}</Text>
-                                    <Text color={'complimentary.900'} fontSize="md">
-                                      {shiftDigits(delegation.balance.amount, -6)} {selectedOption.value}
-                                    </Text>
-                                  </VStack>
-                                </Flex>
-                              </Box>
-                            );
-                          })}
+                              return (
+                                <Box
+                                  borderRadius={'md'}
+                                  as="button"
+                                  w="full"
+                                  onClick={() => {
+                                    setSelectedValidator(validator?.address ?? '');
+                                    setSelectedValidatorData({
+                                      operatorAddress: delegation.delegation.validator_address,
+                                      moniker: validator?.name ?? '',
+                                      tokenAmount: delegation.balance.amount,
+                                      isTokenized: delegation.isTokenized,
+                                    });
+                                  }}
+                                  _hover={{ bg: 'rgba(255, 128, 0, 0.25)' }}
+                                  bg={isSelected ? 'rgba(255, 128, 0, 0.25)' : 'transparent'}
+                                  key={index}
+                                  mb={2}
+                                >
+                                  <Flex py={2} align="center">
+                                    <Box boxSize="50px" borderRadius="md" ml={4}>
+                                      {!validatorLogo ? (
+                                        <SkeletonCircle size="8" startColor="complimentary.900" endColor="complimentary.400" />
+                                      ) : (
+                                        <Image
+                                          src={validatorLogo}
+                                          alt={validator?.name}
+                                          boxSize="50px"
+                                          objectFit="cover"
+                                          borderRadius={'full'}
+                                        />
+                                      )}
+                                    </Box>
+                                    <VStack align="start" ml={2}>
+                                      <HStack>
+                                        <Text fontSize="md">{validator?.name ?? 'Validator'}</Text>
+                                        {delegation.isTokenized && (
+                                          <Tooltip
+                                            label="This share is tokenized and can be transferred to quicksilver."
+                                            aria-label="Tokenized Share"
+                                          >
+                                            <Icon name="star" color="yellow.400" ml={2} />
+                                          </Tooltip>
+                                        )}
+                                      </HStack>
+                                      <Text color={'complimentary.900'} fontSize="md">
+                                        {shiftDigits(delegation.balance.amount, -6)} {selectedOption.value}
+                                      </Text>
+                                    </VStack>
+                                  </Flex>
+                                </Box>
+                              );
+                            })}
                         </Box>
                         {isBottomVisible && (
                           <Box
@@ -596,10 +635,12 @@ export const StakingBox = ({
                       Transfer Existing Delegation
                     </Button>
                     <TransferProcessModal
+                      address={address ?? ''}
                       selectedValidator={selectedValidatorData}
                       isOpen={isTransferModalOpen}
                       onClose={closeTransferModal}
                       selectedOption={selectedOption}
+                      isTokenized={selectedValidatorData.isTokenized}
                     />
                   </Flex>
                 )}
