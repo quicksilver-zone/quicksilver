@@ -53,6 +53,10 @@ Please ensure your IDE is configured to use Typescript v4.9.3
 
 - make onboarding networks seamless
 
+- double check all rounding
+
+- add link for purchasing tokens from osmosis
+
 **Assets Page**
 
 - claim rewards claim.test.quicksilver.zone/address/current \*/epoch
@@ -68,5 +72,3 @@ Please ensure your IDE is configured to use Typescript v4.9.3
 - validator route app.quicksilver.zone/staking/chainId/valoperAddress
 
 **Defi Page**
-
-- fix some of the links

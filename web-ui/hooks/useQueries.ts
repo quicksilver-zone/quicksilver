@@ -109,7 +109,7 @@ export const useBalanceQuery = (chainName: string, address: string) => {
 export const useAllBalancesQuery = (chainName: string, address: string) => {
   const { grpcQueryClient } = useGrpcQueryClient(chainName);
 
-  const balanceQuery = useQuery(
+  const balancesQuery = useQuery(
     ['balances', address],
     async () => {
       if (!grpcQueryClient) {
@@ -126,7 +126,7 @@ export const useAllBalancesQuery = (chainName: string, address: string) => {
           reverse: false,
         },
       });
-      console.log(balance)
+
       return balance;
     },
     {
@@ -136,9 +136,9 @@ export const useAllBalancesQuery = (chainName: string, address: string) => {
   );
 
   return {
-    balance: balanceQuery.data,
-    isLoading: balanceQuery.isLoading,
-    isError: balanceQuery.isError,
+    balance: balancesQuery.data,
+    isLoading: balancesQuery.isLoading,
+    isError: balancesQuery.isError,
   };
 };
 

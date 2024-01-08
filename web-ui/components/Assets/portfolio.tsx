@@ -133,21 +133,25 @@ interface PortfolioItemProps {
 }
 
 const PortfolioItem: React.FC<PortfolioItemProps> = ({ title, percentage, progressBarColor, amount, qTokenPrice }) => (
-  <Grid templateColumns="auto 1fr auto auto" gap={4} alignItems="center" width="100%">
-    <Tooltip label={`Price: ${qTokenPrice.toFixed(2)}`} placement="top">
-      <Text textAlign="left" minWidth="80px">
-        {Number(amount).toFixed(1)}
+  <Grid templateColumns="2fr 6fr 1fr" gap={4} alignItems="center" width="100%">
+    <HStack spacing={-5}>
+      <Tooltip label={`Price: ${qTokenPrice.toFixed(2)}`} placement="top">
+        <Text textAlign="left" minWidth="50px">
+          {Number(amount).toFixed(1)}
+        </Text>
+      </Tooltip>
+      <Text textAlign={'left'} fontSize="md" fontWeight="medium">
+        {title}
       </Text>
-    </Tooltip>
-    <Text textAlign={'left'} fontSize="md" fontWeight="medium">
-      {title}
-    </Text>
-    <Box w="121px" h="8px" pos="relative">
-      <Box w="121px" h="8px" pos="absolute" bg="complimentary.100" borderRadius="md" />
+    </HStack>
+    <Box w="100%" h="8px" pos="relative">
+      <Box w="100%" h="8px" pos="absolute" bg="complimentary.100" borderRadius="md" />
       <Box w={`${percentage * 100}%`} h="8px" pos="absolute" bg={progressBarColor} borderRadius="md" />
     </Box>
     <Tooltip label={`Value: $${(qTokenPrice * Number(amount)).toFixed(2)}`}>
-      <Text textAlign="right" minWidth="50px">{`${(percentage * 100).toFixed(0)}%`}</Text>
+      <Text textAlign="right" minWidth="50px">
+        {`${(percentage * 100).toFixed(0)}%`}
+      </Text>
     </Tooltip>
   </Grid>
 );

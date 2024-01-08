@@ -14,7 +14,8 @@ import { chains, assets } from 'chain-registry';
 
 import type { AppProps } from 'next/app';
 import { quicksilverProtoRegistry, quicksilverAminoConverters } from 'quicksilverjs';
-import { cosmosAminoConverters, cosmosProtoRegistry } from 'stridejs';
+import { cosmosAminoConverters as cosmosAminoConvertersStride, cosmosProtoRegistry as cosmosProtoRegistryStride } from 'stridejs';
+import { cosmos, cosmosAminoConverters, cosmosProtoRegistry } from 'interchain-query';
 import { ibcAminoConverters, ibcProtoRegistry } from 'interchain-query';
 
 import { Header, SideHeader } from '@/components';
@@ -27,9 +28,15 @@ function CreateCosmosApp({ Component, pageProps }: AppProps) {
     //@ts-ignore
     signingStargate: (chain: Chain): SigningStargateClientOptions | undefined => {
       //@ts-ignore
-      const mergedRegistry = new Registry([...cosmosProtoRegistry, ...quicksilverProtoRegistry, ...ibcProtoRegistry]);
+      const mergedRegistry = new Registry([
+        ...cosmosProtoRegistryStride,
+        ...quicksilverProtoRegistry,
+        ...ibcProtoRegistry,
+        ...cosmosProtoRegistry,
+      ]);
 
       const mergedAminoTypes = new AminoTypes({
+        ...cosmosAminoConvertersStride,
         ...cosmosAminoConverters,
         ...quicksilverAminoConverters,
         ...ibcAminoConverters,
@@ -256,6 +263,7 @@ function CreateCosmosApp({ Component, pageProps }: AppProps) {
             },
           },
         }}
+        //@ts-ignore
         signerOptions={signerOptions}
       >
         <QueryClientProvider client={queryClient}>
