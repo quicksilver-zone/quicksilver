@@ -240,6 +240,16 @@ export const StakingBox = ({
     isTokenized: false,
   });
 
+  const isWalletConnected = !!address;
+  const isLiquidStakeDisabled = Number(tokenAmount) === 0 || !isWalletConnected || Number(tokenAmount) < 0.1;
+
+  let liquidStakeTooltip = '';
+  if (!isWalletConnected) {
+    liquidStakeTooltip = 'Connect your wallet to stake';
+  } else if (Number(tokenAmount) < 0.1) {
+    liquidStakeTooltip = 'Minimum amount to stake is 0.1';
+  }
+
   return (
     <Box position="relative" backdropFilter="blur(50px)" bgColor="rgba(255,255,255,0.1)" flex="1" borderRadius="10px" p={5}>
       <Tabs isFitted variant="enclosed" onChange={handleTabsChange}>
@@ -424,9 +434,9 @@ export const StakingBox = ({
                             if (isNaN(inputValue) || inputValue <= 0) {
                               setInputError(true);
                               setTokenAmount('');
-                            } else if (inputValue > maxUnstakingAmount) {
+                            } else if (inputValue > maxStakingAmount) {
                               setInputError(false);
-                              setTokenAmount(maxUnstakingAmount.toString());
+                              setTokenAmount(maxStakingAmount.toString());
                             } else {
                               setInputError(false);
                               setTokenAmount(inputValue.toString());
@@ -524,16 +534,18 @@ export const StakingBox = ({
                         </StatNumber>
                       </Stat>
                     </HStack>
-                    <Button
-                      width="100%"
-                      _hover={{
-                        bgColor: 'complimentary.1000',
-                      }}
-                      onClick={openStakingModal}
-                      isDisabled={Number(tokenAmount) === 0 || !address}
-                    >
-                      Liquid stake
-                    </Button>
+                    <Tooltip hasArrow label={liquidStakeTooltip} isDisabled={!isLiquidStakeDisabled}>
+                      <Button
+                        width="100%"
+                        _hover={{
+                          bgColor: 'complimentary.1000',
+                        }}
+                        onClick={openStakingModal}
+                        isDisabled={Number(tokenAmount) === 0 || !address || Number(tokenAmount) < 0.1}
+                      >
+                        Liquid stake
+                      </Button>
+                    </Tooltip>
                     <StakingProcessModal
                       tokenAmount={tokenAmount}
                       isOpen={isStakingModalOpen}
