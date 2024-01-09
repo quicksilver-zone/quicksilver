@@ -83,6 +83,11 @@ func V010406UpgradeHandler(
 				_ = appKeepers.InterchainstakingKeeper.EmitValSetQuery(ctx, zone.ConnectionId, zone.ChainId, query, math.NewInt(-1))
 			}
 
+			appKeepers.InterchainstakingKeeper.SetAddressZoneMapping(ctx, zone.DepositAddress.Address, zone.ChainId)
+			appKeepers.InterchainstakingKeeper.SetAddressZoneMapping(ctx, zone.DelegationAddress.Address, zone.ChainId)
+			appKeepers.InterchainstakingKeeper.SetAddressZoneMapping(ctx, zone.PerformanceAddress.Address, zone.ChainId)
+			appKeepers.InterchainstakingKeeper.SetAddressZoneMapping(ctx, zone.WithdrawalAddress.Address, zone.ChainId)
+
 			zone.Validators = nil
 			appKeepers.InterchainstakingKeeper.SetZone(ctx, zone)
 			return false
