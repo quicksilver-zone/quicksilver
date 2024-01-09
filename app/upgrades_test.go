@@ -73,7 +73,6 @@ func (s *AppTestSuite) SetupTest() {
 }
 
 func (s *AppTestSuite) InitV146TestZones() {
-
 	cosmosWithdrawal := addressutils.GenerateAddressForTestWithPrefix("cosmos")
 	cosmosPerformance := addressutils.GenerateAddressForTestWithPrefix("cosmos")
 	cosmosDeposit := addressutils.GenerateAddressForTestWithPrefix("cosmos")
@@ -269,5 +268,4 @@ func (s *AppTestSuite) TestV010406UpgradeHandler() {
 	noTestZone, found := app.InterchainstakingKeeper.GetZoneForAccount(ctx, addressutils.GenerateAddressForTestWithPrefix("cosmos"))
 	s.False(found)
 	s.Nil(noTestZone)
-
 }
