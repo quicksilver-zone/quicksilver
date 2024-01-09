@@ -73,6 +73,11 @@ func (s *AppTestSuite) SetupTest() {
 }
 
 func (s *AppTestSuite) InitV146TestZones() {
+
+	cosmosWithdrawal := addressutils.GenerateAddressForTestWithPrefix("cosmos")
+	cosmosPerformance := addressutils.GenerateAddressForTestWithPrefix("cosmos")
+	cosmosDeposit := addressutils.GenerateAddressForTestWithPrefix("cosmos")
+	cosmosDelegate := addressutils.GenerateAddressForTestWithPrefix("cosmos")
 	// cosmos zone
 	zone := icstypes.Zone{
 		ConnectionId:    "connection-77001",
@@ -82,9 +87,33 @@ func (s *AppTestSuite) InitV146TestZones() {
 		BaseDenom:       "uatom",
 		MultiSend:       false,
 		LiquidityModule: false,
+		WithdrawalAddress: &icstypes.ICAAccount{
+			Address:           cosmosWithdrawal,
+			PortName:          "icacontroller-cosmoshub-4.withdrawal",
+			WithdrawalAddress: cosmosWithdrawal,
+		},
+		DelegationAddress: &icstypes.ICAAccount{
+			Address:           cosmosDelegate,
+			PortName:          "icacontroller-cosmoshub-4.delegate",
+			WithdrawalAddress: cosmosWithdrawal,
+		},
+		DepositAddress: &icstypes.ICAAccount{
+			Address:           cosmosDeposit,
+			PortName:          "icacontroller-cosmoshub-4.deposit",
+			WithdrawalAddress: cosmosWithdrawal,
+		},
+		PerformanceAddress: &icstypes.ICAAccount{
+			Address:           cosmosPerformance,
+			PortName:          "icacontroller-cosmoshub-4.performance",
+			WithdrawalAddress: cosmosWithdrawal,
+		},
 	}
 	s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetZone(s.chainA.GetContext(), &zone)
 
+	osmoWithdrawal := addressutils.GenerateAddressForTestWithPrefix("osmo")
+	osmoPerformance := addressutils.GenerateAddressForTestWithPrefix("osmo")
+	osmoDeposit := addressutils.GenerateAddressForTestWithPrefix("osmo")
+	osmoDelegate := addressutils.GenerateAddressForTestWithPrefix("osmo")
 	// osmosis zone
 	zone = icstypes.Zone{
 		ConnectionId:    "connection-77002",
@@ -94,9 +123,35 @@ func (s *AppTestSuite) InitV146TestZones() {
 		BaseDenom:       "uosmo",
 		MultiSend:       false,
 		LiquidityModule: false,
+		WithdrawalAddress: &icstypes.ICAAccount{
+			Address:           osmoWithdrawal,
+			PortName:          "icacontroller-osmosis-1.withdrawal",
+			WithdrawalAddress: osmoWithdrawal,
+		},
+		DelegationAddress: &icstypes.ICAAccount{
+			Address:           osmoDelegate,
+			PortName:          "icacontroller-osmosis-1.delegate",
+			WithdrawalAddress: osmoWithdrawal,
+		},
+		DepositAddress: &icstypes.ICAAccount{
+			Address:           osmoDeposit,
+			PortName:          "icacontroller-osmosis-1.deposit",
+			WithdrawalAddress: osmoWithdrawal,
+		},
+		PerformanceAddress: &icstypes.ICAAccount{
+			Address:           osmoPerformance,
+			PortName:          "icacontroller-osmosis-1.performance",
+			WithdrawalAddress: osmoWithdrawal,
+		},
 	}
 	s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetZone(s.chainA.GetContext(), &zone)
 	// uni-5 zone
+
+	junoWithdrawal := addressutils.GenerateAddressForTestWithPrefix("juno")
+	junoPerformance := addressutils.GenerateAddressForTestWithPrefix("juno")
+	junoDeposit := addressutils.GenerateAddressForTestWithPrefix("juno")
+	junoDelegate := addressutils.GenerateAddressForTestWithPrefix("juno")
+
 	zone = icstypes.Zone{
 		ConnectionId:    "connection-77003",
 		ChainId:         "juno-1",
@@ -105,6 +160,26 @@ func (s *AppTestSuite) InitV146TestZones() {
 		BaseDenom:       "ujuno",
 		MultiSend:       false,
 		LiquidityModule: false,
+		WithdrawalAddress: &icstypes.ICAAccount{
+			Address:           junoWithdrawal,
+			PortName:          "icacontroller-juno-1.withdrawal",
+			WithdrawalAddress: junoWithdrawal,
+		},
+		DelegationAddress: &icstypes.ICAAccount{
+			Address:           junoDelegate,
+			PortName:          "icacontroller-juno-1.delegate",
+			WithdrawalAddress: junoWithdrawal,
+		},
+		DepositAddress: &icstypes.ICAAccount{
+			Address:           junoDeposit,
+			PortName:          "icacontroller-juno-1.deposit",
+			WithdrawalAddress: junoWithdrawal,
+		},
+		PerformanceAddress: &icstypes.ICAAccount{
+			Address:           junoPerformance,
+			PortName:          "icacontroller-juno-1.performance",
+			WithdrawalAddress: junoWithdrawal,
+		},
 	}
 	s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetZone(s.chainA.GetContext(), &zone)
 
@@ -182,4 +257,17 @@ func (s *AppTestSuite) TestV010406UpgradeHandler() {
 	s.True(ok)
 	s.Equal(int64(1712880000), pva.EndTime)
 	s.Equal(10, len(pva.VestingPeriods))
+
+	ctestZone, found := app.InterchainstakingKeeper.GetZoneForAccount(ctx, cosmosZone.DepositAddress.Address)
+	s.True(found)
+	s.Equal(ctestZone.ChainId, cosmosZone.ChainId)
+
+	otestZone, found := app.InterchainstakingKeeper.GetZoneForAccount(ctx, osmoZone.PerformanceAddress.Address)
+	s.True(found)
+	s.Equal(otestZone.ChainId, osmoZone.ChainId)
+
+	noTestZone, found := app.InterchainstakingKeeper.GetZoneForAccount(ctx, addressutils.GenerateAddressForTestWithPrefix("cosmos"))
+	s.False(found)
+	s.Nil(noTestZone)
+
 }
