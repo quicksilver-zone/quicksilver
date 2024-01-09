@@ -14,8 +14,8 @@ export interface StakingIntentProps {
 
 const StakingIntent: React.FC<StakingIntentProps> = ({ address, isWalletConnected }) => {
   const validators = [
-    { name: 'Validator 1', logo: '/validator1.png', percentage: '30%' },
-    { name: 'Validator 2', logo: '/validator2.png', percentage: '40%' },
+    { name: '', logo: '', percentage: '' },
+    { name: '', logo: '', percentage: '' },
   ];
   const networks = process.env.NEXT_PUBLIC_CHAIN_ENV === 'mainnet' ? prodNetworks : devNetworks;
 
@@ -114,7 +114,6 @@ const StakingIntent: React.FC<StakingIntentProps> = ({ address, isWalletConnecte
           {validators.map((validator, index) => (
             <Flex key={index} justifyContent="space-between" w="full" alignItems="center">
               <Flex alignItems="center" gap={2}>
-                <Image alt="" src={validator.logo} boxSize="24px" borderRadius="full" />
                 <Text fontSize="md">{validator.name}</Text>
               </Flex>
               <Text fontSize="lg" fontWeight="bold">

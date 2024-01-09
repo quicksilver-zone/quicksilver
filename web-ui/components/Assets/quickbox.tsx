@@ -2,14 +2,17 @@ import { Box, Flex, Text, Button, VStack, useColorModeValue, HStack, SkeletonCir
 import { useChain } from '@cosmos-kit/react';
 
 import { defaultChainName } from '@/config';
-import { useAPYQuery, useBalanceQuery, useZoneQuery } from '@/hooks/useQueries';
+import { useAPYQuery, useBalanceQuery, useParamsQuery, useZoneQuery } from '@/hooks/useQueries';
 import { shiftDigits } from '@/utils';
+import { BsCoin } from 'react-icons/bs';
 
 import { DepositModal } from './modals/qckDepositModal';
 import { WithdrawModal } from './modals/qckWithdrawModal';
 
 const QuickBox = () => {
   const { address, isWalletConnected } = useChain(defaultChainName);
+  const { params } = useParamsQuery(defaultChainName);
+  console.log(params);
   const { balance, isLoading } = useBalanceQuery(defaultChainName, address ?? '');
   const tokenBalance = Number(shiftDigits(balance?.balance?.amount ?? '', -6))
     .toFixed(2)
@@ -48,7 +51,7 @@ const QuickBox = () => {
       <VStack spacing={6}>
         {' '}
         <HStack>
-          <Box w={6} h={6} borderRadius="full" bg="gray.300" />
+          <BsCoin color="#FF8000" size={30} />
           <Text fontSize="3xl" fontWeight="bold">
             QCK
           </Text>
@@ -56,7 +59,10 @@ const QuickBox = () => {
         <HStack>
           <Text fontSize="2xl" fontWeight="bold"></Text>
           <Text fontSize="md" fontWeight="normal">
-            STAKING APY
+            STAKING APY:
+          </Text>
+          <Text fontSize="lg" fontWeight="semibold">
+            39.12%
           </Text>
         </HStack>
         <VStack spacing={1} alignItems="flex-start" w="full">
@@ -68,12 +74,6 @@ const QuickBox = () => {
                 {tokenBalance}
               </Text>
             )}
-          </HStack>
-          <HStack gap={2}>
-            <Text fontSize="sm">NON-NATIVE:</Text>
-            <Text fontSize="lg" fontWeight="semibold">
-              10.12
-            </Text>
           </HStack>
         </VStack>
         <DepositModal />

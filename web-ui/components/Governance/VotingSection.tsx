@@ -51,7 +51,6 @@ export const VotingSection = ({ chainName }: { chainName: ChainName }) => {
   const { address } = useChain(chainName);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { data, isLoading, refetch } = useVotingData(chainName);
-  console.log(data);
   const [searchTerm, setSearchTerm] = useState('');
 
   const filteredProposals = useMemo(() => {

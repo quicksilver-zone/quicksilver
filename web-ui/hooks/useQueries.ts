@@ -106,6 +106,37 @@ export const useBalanceQuery = (chainName: string, address: string) => {
   };
 };
 
+export const useParamsQuery = (chainName: string) => {
+  const { grpcQueryClient } = useGrpcQueryClient(chainName);
+
+  const paramsQuery = useQuery(
+    ['params'],
+    async () => {
+      if (!grpcQueryClient) {
+        throw new Error('RPC Client not ready');
+      }
+
+      const params = await grpcQueryClient.cosmos.mint.v1beta1.inflation({
+
+
+      });
+
+      return params;
+    },
+    {
+      enabled: !!grpcQueryClient,
+      staleTime: Infinity,
+    },
+  );
+
+  return {
+    params: paramsQuery.data,
+    isLoading: paramsQuery.isLoading,
+    isError: paramsQuery.isError,
+  };
+
+}
+
 export const useAllBalancesQuery = (chainName: string, address: string) => {
   const { grpcQueryClient } = useGrpcQueryClient(chainName);
 
