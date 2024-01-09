@@ -101,16 +101,16 @@ export const useVotingData = (
 
     const votesQueries = useQueries({
       queries: (votedProposalsQuery.data || []).map(({ proposalId }) => {
-        console.log('proposal_id', proposalId); // Add this line to check proposal_id
+      
         return {
           queryKey: ['voteQuery', proposalId, address],
           queryFn: () => {
-            console.log('Query function called with proposal_id:', proposalId); // Check if proposal_id is valid here
+           
             if (!grpcQueryClient || !proposalId || !address) {
               throw new Error("Required information for query is missing");
             }
             return grpcQueryClient.cosmos.gov.v1.vote({
-              proposalId,
+              proposal_id: proposalId,
               voter: address || '',
             });
           },
