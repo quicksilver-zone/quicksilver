@@ -144,8 +144,8 @@ func (s *AppTestSuite) TestV010406UpgradeHandler() {
 	s.InitV146TestZones()
 	app := s.GetQuicksilverApp(s.chainA)
 
-	handler := upgrades.V010406UpgradeHandler(app.mm, 
-app.configurator, &app.AppKeepers)
+	handler := upgrades.V010406UpgradeHandler(app.mm,
+		app.configurator, &app.AppKeepers)
 	ctx := s.chainA.GetContext()
 
 	_, err := handler(ctx, types.Plan{}, app.mm.GetVersionMap())
