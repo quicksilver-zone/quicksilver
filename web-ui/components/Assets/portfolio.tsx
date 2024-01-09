@@ -104,7 +104,7 @@ const MyPortfolio: React.FC<MyPortfolioProps> = ({ portfolioItems, isWalletConne
         </Flex>
 
         <Flex justifyContent="flex-start" borderRadius={6} alignItems="flex-start" gap={4}>
-          <VStack alignSelf="stretch" h="158px" mr={4} overflowY="auto" borderRadius={6} alignItems="center" gap={3}>
+          <VStack alignSelf="stretch" h="158px" overflowY="auto" borderRadius={6} alignItems="center" gap={3}>
             {portfolioItems
               .filter((item) => Number(item.amount) > 0)
               .map((item) => (
