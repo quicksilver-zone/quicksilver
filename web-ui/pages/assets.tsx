@@ -80,6 +80,7 @@ function Home() {
   const { APY: starsAPY, isLoading: isStarsAPYLoading, isError: isStarsAPYError } = useAPYQuery('stargaze-1');
   const { APY: regenAPY, isLoading: isRegenAPYLoading, isError: isRegenAPYError } = useAPYQuery('regen-1');
   const { APY: sommAPY, isLoading: isSommAPYLoading, isError: isSommAPYError } = useAPYQuery('sommelier-3');
+  const { APY: quickAPY, isLoading: isQuickAPYLoading, isError: isQuickAPYError } = useAPYQuery('quicksilver-2');
 
   // useMemo hook to cache APY data
   const qAPYRates: APYRates = useMemo(
@@ -238,7 +239,7 @@ function Home() {
                   justifyContent="space-around"
                   alignItems="center"
                 >
-                  <QuickBox />
+                  <QuickBox stakingApy={quickAPY} />
                 </Flex>
 
                 <Flex

@@ -29,6 +29,7 @@ import { MdPrivacyTip } from 'react-icons/md';
 export const SideHeader = () => {
   const router = useRouter();
   const [selectedPage, setSelectedPage] = useState('');
+
   const [showSocialLinks, setShowSocialLinks] = useState(false);
 
   useEffect(() => {
@@ -46,13 +47,11 @@ export const SideHeader = () => {
 
   const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' && window.innerWidth < 1274);
 
-  // Handle window resize
   useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth < 1274);
     };
 
-    // Set up event listener
     window.addEventListener('resize', handleResize);
 
     // Clean up
@@ -289,7 +288,7 @@ export const SideHeader = () => {
                       cursor="pointer"
                       borderRadius="100px"
                       boxShadow={
-                        selectedPage === 'aidrop' ? `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}` : ''
+                        selectedPage === 'airdrop' ? `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}` : ''
                       }
                       _hover={{
                         boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`,

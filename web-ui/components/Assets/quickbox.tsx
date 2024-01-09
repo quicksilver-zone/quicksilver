@@ -9,10 +9,13 @@ import { BsCoin } from 'react-icons/bs';
 import { DepositModal } from './modals/qckDepositModal';
 import { WithdrawModal } from './modals/qckWithdrawModal';
 
-const QuickBox = () => {
+interface QuickBoxProps {
+  stakingApy?: number;
+}
+
+const QuickBox: React.FC<QuickBoxProps> = ({ stakingApy }) => {
   const { address, isWalletConnected } = useChain(defaultChainName);
-  const { params } = useParamsQuery(defaultChainName);
-  console.log(params);
+
   const { balance, isLoading } = useBalanceQuery(defaultChainName, address ?? '');
   const tokenBalance = Number(shiftDigits(balance?.balance?.amount ?? '', -6))
     .toFixed(2)
@@ -46,6 +49,28 @@ const QuickBox = () => {
     );
   }
 
+  const decimalValue = parseFloat(stakingApy?.toString() ?? '0');
+  const percentageValue = decimalValue * 100;
+  const percentageString = percentageValue.toString();
+
+  const truncatedPercentage = percentageString.slice(0, percentageString.indexOf('.') + 3);
+
+  const quickStakingApy = () => {
+    if (stakingApy) {
+      return (
+        <Text fontSize="lg" fontWeight="semibold">
+          {truncatedPercentage}%
+        </Text>
+      );
+    } else {
+      return (
+        <Box display="inline-block">
+          <SkeletonCircle size="8" startColor="complimentary.900" endColor="complimentary.400" />
+        </Box>
+      );
+    }
+  };
+
   return (
     <Flex direction="column" p={5} borderRadius="lg" align="center" justify="space-around" w="full" h="full">
       <VStack spacing={6}>
@@ -61,9 +86,7 @@ const QuickBox = () => {
           <Text fontSize="md" fontWeight="normal">
             STAKING APY:
           </Text>
-          <Text fontSize="lg" fontWeight="semibold">
-            39.12%
-          </Text>
+          {quickStakingApy()}
         </HStack>
         <VStack spacing={1} alignItems="flex-start" w="full">
           <HStack gap={2}>

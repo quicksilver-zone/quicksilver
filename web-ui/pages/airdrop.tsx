@@ -1,7 +1,5 @@
 import AirdropSection from '@/components/Airdrop/airdropSection';
-import DefiTable from '@/components/Defi/defiBox';
-import { ExternalLinkIcon } from '@chakra-ui/icons';
-import { Box, Button, Container, Flex, Stack, Table, Tbody, Td, Th, Thead, Tr, Text, SlideFade } from '@chakra-ui/react';
+import { Container, Text, SlideFade } from '@chakra-ui/react';
 import Head from 'next/head';
 
 export default function Home() {
