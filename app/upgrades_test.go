@@ -72,7 +72,7 @@ func (s *AppTestSuite) SetupTest() {
 	s.coordinator.UpdateTime()
 }
 
-func (s *AppTestSuite) InitV145TestZones() {
+func (s *AppTestSuite) InitV146TestZones() {
 	// cosmos zone
 	zone := icstypes.Zone{
 		ConnectionId:    "connection-77001",
@@ -140,11 +140,12 @@ func addVestingAccount(ctx sdk.Context, ak *authkeeper.AccountKeeper, address st
 	ak.SetAccount(ctx, vest)
 }
 
-func (s *AppTestSuite) TestV010405UpgradeHandler() {
-	s.InitV145TestZones()
+func (s *AppTestSuite) TestV010406UpgradeHandler() {
+	s.InitV146TestZones()
 	app := s.GetQuicksilverApp(s.chainA)
 
-	handler := upgrades.V010405UpgradeHandler(app.mm, app.configurator, &app.AppKeepers)
+	handler := upgrades.V010406UpgradeHandler(app.mm, 
+app.configurator, &app.AppKeepers)
 	ctx := s.chainA.GetContext()
 
 	_, err := handler(ctx, types.Plan{}, app.mm.GetVersionMap())
