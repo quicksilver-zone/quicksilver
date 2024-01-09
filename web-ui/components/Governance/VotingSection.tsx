@@ -29,6 +29,7 @@ import { useVotingData } from '@/hooks';
 import { DisconnectedContent, Loader } from './common';
 import { ProposalCard } from './ProposalCard';
 import { ProposalModal } from './ProposalModal';
+import { decodeUint8Arr } from '@/utils';
 
 function RotateIcon({ isOpen }: { isOpen: boolean }) {
   return (
@@ -50,16 +51,50 @@ export const VotingSection = ({ chainName }: { chainName: ChainName }) => {
   const { address } = useChain(chainName);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { data, isLoading, refetch } = useVotingData(chainName);
+  console.log(data);
   const [searchTerm, setSearchTerm] = useState('');
 
   const filteredProposals = useMemo(() => {
     if (!data?.proposals) return [];
-    return data.proposals.filter(
-      (proposal) =>
-        proposal.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        proposal.summary.toLowerCase().includes(searchTerm.toLowerCase()),
-    );
-  }, [data, searchTerm]);
+
+    return data.proposals.filter((proposal) => {
+      const decodedContent = decodeUint8Arr(proposal.messages[0].value);
+      const contentToSearch = decodedContent.toLowerCase();
+      const titleMatches = proposal.title.toLowerCase().includes(searchTerm.toLowerCase());
+      const contentMatches = contentToSearch.includes(searchTerm.toLowerCase());
+
+      let periodMatches = true;
+      let proposalMatches = true;
+
+      // Constants for proposal status (these values might be different in your application)
+      const VOTING_PERIOD_STATUS = 2; // Example value for 'Voting Period'
+      const PASSED_STATUS = 3; // Example value for 'Passed'
+      const REJECTED_STATUS = 4; // Example value for 'Rejected'
+
+      // Filter by period
+      switch (selectedPeriodOption) {
+        case 'Voting Period':
+          periodMatches = proposal.status === VOTING_PERIOD_STATUS;
+          break;
+        case 'Passed':
+          periodMatches = proposal.status === PASSED_STATUS;
+          break;
+        case 'Rejected':
+          periodMatches = proposal.status === REJECTED_STATUS;
+          break;
+        default:
+          periodMatches = true;
+      }
+
+      // Filter by proposal type (e.g., voted)
+      if (selectedProposalOption === 'Voted') {
+        const userVote = data?.votes?.[proposal.id.toString()];
+        proposalMatches = userVote !== undefined;
+      }
+
+      return titleMatches && contentMatches && periodMatches && proposalMatches;
+    });
+  }, [data, searchTerm, selectedPeriodOption, selectedProposalOption]);
 
   const content = address ? (
     <Stack spacing={4}>
@@ -139,6 +174,17 @@ export const VotingSection = ({ chainName }: { chainName: ChainName }) => {
                       }}
                       color="white"
                       bgColor="#181818"
+                      onClick={() => setSelectedPeriodOption('All Periods')}
+                    >
+                      All Periods
+                    </MenuItem>
+                    <MenuItem
+                      borderRadius={'5px'}
+                      _hover={{
+                        bgColor: 'rgba(255,128,0, 0.25)',
+                      }}
+                      color="white"
+                      bgColor="#181818"
                       onClick={() => setSelectedPeriodOption('Voting Period')}
                     >
                       Voting Period
@@ -186,7 +232,19 @@ export const VotingSection = ({ chainName }: { chainName: ChainName }) => {
                   >
                     {selectedProposalOption}
                   </MenuButton>
+
                   <MenuList borderColor="black" bgColor="#181818" minW="150px">
+                    <MenuItem
+                      borderRadius={'5px'}
+                      _hover={{
+                        bgColor: 'rgba(255,128,0, 0.25)',
+                      }}
+                      color="white"
+                      bgColor="#181818"
+                      onClick={() => setSelectedProposalOption('All Proposals')}
+                    >
+                      All Proposals
+                    </MenuItem>
                     <MenuItem
                       borderRadius={'5px'}
                       _hover={{
