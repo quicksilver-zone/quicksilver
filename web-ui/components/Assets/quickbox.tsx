@@ -61,7 +61,7 @@ const QuickBox = () => {
         </HStack>
         <VStack spacing={1} alignItems="flex-start" w="full">
           <HStack gap={2}>
-            <Text fontSize="sm">QUICKSILVER BALANCE:</Text>
+            <Text fontSize="sm">ON QUICKSILVER:</Text>
             {isLoading === true && !balance && <SkeletonCircle size="2" startColor="complimentary.900" endColor="complimentary.400" />}
             {!isLoading && balance && (
               <Text fontSize="lg" fontWeight="semibold">
@@ -70,7 +70,7 @@ const QuickBox = () => {
             )}
           </HStack>
           <HStack gap={2}>
-            <Text fontSize="sm">NON-NATIVE BALANCE:</Text>
+            <Text fontSize="sm">NON-NATIVE:</Text>
             <Text fontSize="lg" fontWeight="semibold">
               10.12
             </Text>

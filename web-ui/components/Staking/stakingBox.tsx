@@ -542,19 +542,24 @@ export const StakingBox = ({
                             ?.concat(
                               allBalances?.balances
                                 .filter((balance) => balance.denom.includes('valoper'))
-                                .map((balance) => ({
-                                  delegation: {
-                                    validator_address: balance.denom.split('/')[0], // Extracting the valoper address
-                                  },
-                                  balance: {
-                                    amount: balance.amount,
-                                  },
-                                  isTokenized: true, // Additional property to identify valoper entries
-                                })),
+                                .map((balance) => {
+                                  const [validatorAddress, uniqueId] = balance.denom.split('/');
+                                  return {
+                                    delegation: {
+                                      validator_address: validatorAddress,
+                                      unique_id: uniqueId, // Including the unique ID
+                                    },
+                                    balance: {
+                                      amount: balance.amount,
+                                    },
+                                    isTokenized: true,
+                                  };
+                                }),
                             )
                             .map((delegation, index) => {
                               const validator = validatorsData?.find((v) => v.address === delegation.delegation.validator_address);
-                              const isSelected = validator && validator.address === selectedValidator;
+                              const uniqueKey = `${delegation.delegation.validator_address}-${delegation.delegation.unique_id}`;
+                              const isSelected = uniqueKey === selectedValidator;
                               const validatorLogo = logos[delegation.delegation.validator_address];
 
                               return (
@@ -563,7 +568,7 @@ export const StakingBox = ({
                                   as="button"
                                   w="full"
                                   onClick={() => {
-                                    setSelectedValidator(validator?.address ?? '');
+                                    setSelectedValidator(uniqueKey);
                                     setSelectedValidatorData({
                                       operatorAddress: delegation.delegation.validator_address,
                                       moniker: validator?.name ?? '',
@@ -573,7 +578,7 @@ export const StakingBox = ({
                                   }}
                                   _hover={{ bg: 'rgba(255, 128, 0, 0.25)' }}
                                   bg={isSelected ? 'rgba(255, 128, 0, 0.25)' : 'transparent'}
-                                  key={index}
+                                  key={uniqueKey}
                                   mb={2}
                                 >
                                   <Flex py={2} align="center">
@@ -598,7 +603,9 @@ export const StakingBox = ({
                                             label="This share is tokenized and can be transferred to quicksilver."
                                             aria-label="Tokenized Share"
                                           >
-                                            <Icon name="star" color="yellow.400" ml={2} />
+                                            <Box>
+                                              <FaStar color="#FF8000" />
+                                            </Box>
                                           </Tooltip>
                                         )}
                                       </HStack>

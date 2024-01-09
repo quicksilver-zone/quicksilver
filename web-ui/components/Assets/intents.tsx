@@ -2,8 +2,10 @@ import { ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons';
 import { Box, Flex, Text, Button, IconButton, VStack, Image, Heading, SlideFade, Spinner } from '@chakra-ui/react';
 import { color } from 'framer-motion';
 import { useState } from 'react';
-
+import SignalIntentModal from './modals/signalIntentProcess';
 import { useIntentQuery } from '@/hooks/useQueries';
+
+import { networks as prodNetworks, testNetworks as devNetworks } from '@/state/chains/prod';
 
 export interface StakingIntentProps {
   address: string;
@@ -15,34 +17,25 @@ const StakingIntent: React.FC<StakingIntentProps> = ({ address, isWalletConnecte
     { name: 'Validator 1', logo: '/validator1.png', percentage: '30%' },
     { name: 'Validator 2', logo: '/validator2.png', percentage: '40%' },
   ];
+  const networks = process.env.NEXT_PUBLIC_CHAIN_ENV === 'mainnet' ? prodNetworks : devNetworks;
 
-  const chains = ['Cosmos', 'Stargaze', 'Osmosis', 'Regen', 'Sommelier'];
+  const chains = ['Cosmos', 'Osmosis', 'Stargaze', 'Regen', 'Sommelier'];
   const [currentChainIndex, setCurrentChainIndex] = useState(0);
 
-  const currentChainName = chains[currentChainIndex];
-  let newChainName: string | undefined;
-  if (currentChainName === 'Cosmos') {
-    newChainName = 'cosmoshub';
-  } else if (currentChainName === 'Osmosis') {
-    newChainName = 'osmosis';
-  } else if (currentChainName === 'Stargaze') {
-    newChainName = 'stargaze';
-  } else if (currentChainName === 'Regen') {
-    newChainName = 'regen';
-  } else if (currentChainName === 'Sommelier') {
-    newChainName = 'sommelier';
-  } else {
-    // Default case
-    newChainName = currentChainName;
-  }
-  const { intent, isLoading, isError } = useIntentQuery(newChainName, address ?? '');
+  const [isSignalIntentModalOpen, setIsSignalIntentModalOpen] = useState(false);
+  const openSignalIntentModal = () => setIsSignalIntentModalOpen(true);
+  const closeSignalIntentModal = () => setIsSignalIntentModalOpen(false);
+
+  const currentNetwork = networks[currentChainIndex];
+
+  const { intent, isLoading, isError } = useIntentQuery(currentNetwork.chainName, address ?? '');
 
   const handleLeftArrowClick = () => {
-    setCurrentChainIndex((prevIndex) => (prevIndex === 0 ? chains.length - 1 : prevIndex - 1));
+    setCurrentChainIndex((prevIndex) => (prevIndex === 0 ? networks.length - 1 : prevIndex - 1));
   };
 
   const handleRightArrowClick = () => {
-    setCurrentChainIndex((prevIndex) => (prevIndex === chains.length - 1 ? 0 : prevIndex + 1));
+    setCurrentChainIndex((prevIndex) => (prevIndex === networks.length - 1 ? 0 : prevIndex + 1));
   };
 
   if (!isWalletConnected) {
@@ -80,10 +73,11 @@ const StakingIntent: React.FC<StakingIntentProps> = ({ address, isWalletConnecte
           <Heading fontSize="lg" fontWeight="bold" textTransform="uppercase">
             Stake Intent
           </Heading>
-          <Button color="GrayText" variant="link">
+          <Button color="GrayText" _hover={{ color: 'complimentary.900' }} variant="link" onClick={openSignalIntentModal}>
             Edit Intent
             <ChevronRightIcon />
           </Button>
+          <SignalIntentModal selectedOption={currentNetwork} isOpen={isSignalIntentModalOpen} onClose={closeSignalIntentModal} />
         </Flex>
 
         <Flex borderBottom="1px" borderBottomColor="complimentary.900" alignItems="center" justifyContent="space-between">

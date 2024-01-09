@@ -10,7 +10,15 @@ import StakingIntent from '@/components/Assets/intents';
 import MyPortfolio from '@/components/Assets/portfolio';
 import QuickBox from '@/components/Assets/quickbox';
 import UnbondingAssetsTable from '@/components/Assets/unbondingTable';
-import { useAPYQuery, useBalanceQuery, useIntentQuery, useQBalanceQuery, useTokenPriceQuery, useZoneQuery } from '@/hooks/useQueries';
+import {
+  useAPYQuery,
+  useBalanceQuery,
+  useIntentQuery,
+  useLiquidRewardsQuery,
+  useQBalanceQuery,
+  useTokenPriceQuery,
+  useZoneQuery,
+} from '@/hooks/useQueries';
 import { shiftDigits, toNumber } from '@/utils';
 import RewardsClaim from '@/components/Assets/rewardsClaim';
 
@@ -161,7 +169,6 @@ function Home() {
     updatePortfolioItems();
   }, [qBalances, CosmosZone, OsmoZone, StarZone, RegenZone, SommZone, redemptionRates, qAPYRates]);
 
-  // useMemo hook to prepare assets data for the AssetsGrid component
   const assetsData = useMemo(() => {
     return Object.keys(qBalances).map((token) => {
       return {
@@ -172,6 +179,8 @@ function Home() {
       };
     });
   }, [qBalances, qAPYRates]);
+
+  const { liquidRewards, isLoading } = useLiquidRewardsQuery(address ?? '');
 
   return (
     <>
@@ -269,7 +278,7 @@ function Home() {
           {/* <RewardsClaim address={address ?? ''} />
           <Spacer /> */}
           {/* Assets Grid */}
-          <AssetsGrid isWalletConnected={isWalletConnected} assets={assetsData} />
+          <AssetsGrid nonNative={liquidRewards} isWalletConnected={isWalletConnected} assets={assetsData} />
           <Spacer />
           {/* Unbonding Table */}
           <Box mt="20px">

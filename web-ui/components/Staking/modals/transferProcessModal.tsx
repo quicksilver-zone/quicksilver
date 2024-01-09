@@ -42,6 +42,7 @@ import { cosmos } from 'stridejs';
 const ChakraModalContent = styled(ModalContent)`
   position: relative;
   background: none;
+  max-height: 400px;
   &::before,
   &::after {
     z-index: -1;

@@ -35,6 +35,8 @@ Please ensure your IDE is configured to use Typescript v4.9.3
 
 **Governance**
 
+- add filters and search
+
 - add liquid staked governance (when its built)
 
 **UI/UX**
@@ -53,7 +55,7 @@ Please ensure your IDE is configured to use Typescript v4.9.3
 
 - make onboarding networks seamless
 
-- double check all rounding
+- double check all rounding - staking modal
 
 - add link for purchasing tokens from osmosis
 
@@ -71,4 +73,14 @@ Please ensure your IDE is configured to use Typescript v4.9.3
 
 - validator route app.quicksilver.zone/staking/chainId/valoperAddress
 
+- for lsm tokenized share denoms, sort by entire denom including the /<numbers> at the end
+
 **Defi Page**
+
+claim rewards - rewards get claimed at epoch after your submit tx its not immediate
+
+no solid way to track rewards rn
+
+add social links
+
+- side header social link button to close to the bottom
