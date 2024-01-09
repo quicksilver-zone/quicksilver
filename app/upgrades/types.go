@@ -23,6 +23,7 @@ const (
 	// mainnet upgrades
 	V010217UpgradeName = "v1.2.17"
 	V010405UpgradeName = "v1.4.5"
+	V010406UpgradeName = "v1.4.6"
 )
 
 // Upgrade defines a struct containing necessary fields that a SoftwareUpgradeProposal
