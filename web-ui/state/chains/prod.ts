@@ -1,3 +1,28 @@
+export const ibcDenomMapping = {
+    osmosis: {
+      qATOM: 'ibc/123',
+      qOSMO: 'ibc/123',
+      qSTARS: 'ibc/123',
+      qREGEN: 'ibc/123',
+      qSOMM: 'ibc/123',
+    },
+    umee: {
+      qATOM: 'ibc/123',
+      qOSMO: 'ibc/123',
+      qSTARS: 'ibc/123',
+      qREGEN: 'ibc/123',
+      qSOMM: 'ibc/123',
+    },
+    secretnetwork: {
+      qATOM: 'ibc/123',
+      qOSMO: 'ibc/123',
+      qSTARS: 'ibc/123',
+      qREGEN: 'ibc/123',
+      qSOMM: 'ibc/123',
+    },
+  };
+
+
 export const networks = [
     {
       value: 'ATOM',

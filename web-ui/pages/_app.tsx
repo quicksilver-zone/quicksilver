@@ -16,7 +16,7 @@ import type { AppProps } from 'next/app';
 import { quicksilverProtoRegistry, quicksilverAminoConverters } from 'quicksilverjs';
 import { cosmosAminoConverters as cosmosAminoConvertersStride, cosmosProtoRegistry as cosmosProtoRegistryStride } from 'stridejs';
 import { cosmos, cosmosAminoConverters, cosmosProtoRegistry } from 'interchain-query';
-import { ibcAminoConverters, ibcProtoRegistry } from 'interchain-query';
+import { ibcAminoConverters, ibcProtoRegistry } from '@chalabi/quicksilverjs';
 
 import { Header, SideHeader } from '@/components';
 import { defaultTheme } from '@/config';

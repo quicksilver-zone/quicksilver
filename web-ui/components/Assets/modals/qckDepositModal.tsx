@@ -21,7 +21,7 @@ import { useState, useMemo, useEffect } from 'react';
 
 import { ChooseChain } from '@/components/react/choose-chain';
 import { handleSelectChainDropdown, ChainOption } from '@/components/types';
-import { ibc } from 'interchain-query';
+import { ibc } from '@chalabi/quicksilverjs';
 import { useBalanceQuery, useIbcBalanceQuery } from '@/hooks/useQueries';
 import { useTx } from '@/hooks';
 import BigNumber from 'bignumber.js';
@@ -97,8 +97,7 @@ export function DepositModal() {
       gas: '500000',
     };
 
-    const sourcePort = 'transfer';
-    const sourceChannel = 'channel-0';
+    const { sourcePort, sourceChannel } = getIbcInfo(fromChain ?? '', toChain ?? '');
 
     const token = {
       denom: 'ibc/635CB83EF1DFE598B10A3E90485306FD0D47D34217A4BE5FD9977FA010A5367D',

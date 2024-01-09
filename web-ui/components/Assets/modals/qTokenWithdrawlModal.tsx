@@ -21,13 +21,13 @@ import { useState, useMemo, useEffect } from 'react';
 
 import { ChooseChain } from '@/components/react/choose-chain';
 import { handleSelectChainDropdown, ChainOption } from '@/components/types';
-import { ibc } from 'interchain-query';
+import { ibc } from '@chalabi/quicksilverjs';
 import { useBalanceQuery, useIbcBalanceQuery } from '@/hooks/useQueries';
 import { useTx } from '@/hooks';
 import BigNumber from 'bignumber.js';
 import { getCoin, getIbcInfo } from '@/utils';
 import { StdFee, coins } from '@cosmjs/stargate';
-import { store } from '@interchain-ui/react';
+import { ibcDenomMapping } from '@/state/chains/prod';
 
 interface QDepositModalProps {
   token: string;
@@ -91,11 +91,39 @@ const QWithdrawModal: React.FC<QDepositModalProps> = ({ token }) => {
       gas: '300000',
     };
 
-    const sourcePort = 'transfer';
-    const sourceChannel = 'channel-0';
+    const { sourcePort, sourceChannel } = getIbcInfo(fromChain ?? '', toChain ?? '');
 
-    const token = {
-      denom: 'ibc/635CB83EF1DFE598B10A3E90485306FD0D47D34217A4BE5FD9977FA010A5367D',
+    // Function to get the correct IBC denom trace based on chain and token
+    type ChainDenomMappingKeys = keyof typeof ibcDenomMapping;
+
+    type TokenKeys = keyof (typeof ibcDenomMapping)['osmosis'];
+
+    const getIbcDenom = (chainName: string, token: string) => {
+      const chain = chainName as ChainDenomMappingKeys;
+      const chainDenoms = ibcDenomMapping[chain];
+
+      if (token in chainDenoms) {
+        return chainDenoms[token as TokenKeys];
+      }
+
+      return undefined;
+    };
+
+    const ibcDenom = getIbcDenom(fromChain ?? '', token);
+    if (!ibcDenom) {
+      toast({
+        title: 'Error',
+        description: `No IBC denom trace found for ${token} on chain ${fromChain}`,
+        status: 'error',
+        duration: 9000,
+        isClosable: true,
+      });
+      setIsLoading(false);
+      return;
+    }
+
+    const ibcToken = {
+      denom: ibcDenom ?? '',
       amount: transferAmount,
     };
 
@@ -107,7 +135,7 @@ const QWithdrawModal: React.FC<QDepositModalProps> = ({ token }) => {
       sourceChannel,
       sender: address ?? '',
       receiver: qAddress ?? '',
-      token,
+      token: ibcToken,
       timeoutHeight: undefined,
       //@ts-ignore
       timeoutTimestamp: timeoutInNanos,

@@ -15,14 +15,14 @@ import {
 } from '@chakra-ui/react';
 import { coins, StdFee } from '@cosmjs/stargate';
 import { useChain } from '@cosmos-kit/react';
-import { cosmos } from 'interchain-query';
+import { cosmos } from 'quicksilverjs';
 import { useState } from 'react';
 
 import { useTx } from '@/hooks';
 import { getCoin } from '@/utils';
 
-const VoteType = cosmos.gov.v1.VoteOption;
-const { vote: composeVoteMessage } = cosmos.gov.v1.MessageComposer.fromPartial;
+const VoteType = cosmos.gov.v1beta1.VoteOption;
+const { vote: composeVoteMessage } = cosmos.gov.v1beta1.MessageComposer.withTypeUrl;
 
 interface VoteModalProps {
   modalControl: UseDisclosureReturn;
@@ -30,7 +30,7 @@ interface VoteModalProps {
   updateVotes: () => void;
   vote: number | undefined;
   title: string;
-  proposalId: bigint;
+  proposalId: BigInt;
 }
 
 export const VoteModal: React.FC<VoteModalProps> = ({ modalControl, chainName, updateVotes, title, vote, proposalId }) => {
@@ -58,11 +58,10 @@ export const VoteModal: React.FC<VoteModalProps> = ({ modalControl, chainName, u
       option,
       proposalId,
       voter: address,
-      metadata: '',
     });
 
     const fee: StdFee = {
-      amount: coins('1000', coin.base),
+      amount: coins('5000', coin.base),
       gas: '100000',
     };
 

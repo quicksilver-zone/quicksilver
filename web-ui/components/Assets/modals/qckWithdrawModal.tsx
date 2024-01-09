@@ -24,9 +24,9 @@ import { ChooseChain } from '@/components/react/choose-chain';
 import { handleSelectChainDropdown, ChainOption } from '@/components/types';
 import { useTx } from '@/hooks';
 import { useIbcBalanceQuery } from '@/hooks/useQueries';
-import { getCoin } from '@/utils';
+import { getCoin, getIbcInfo } from '@/utils';
 import { StdFee, coins } from '@cosmjs/stargate';
-import { ibc } from 'interchain-query';
+import { ibc } from '@chalabi/quicksilverjs';
 import BigNumber from 'bignumber.js';
 
 export function WithdrawModal() {
@@ -84,8 +84,7 @@ export function WithdrawModal() {
       gas: '300000',
     };
 
-    const sourcePort = 'transfer';
-    const sourceChannel = 'channel-0';
+    const { sourcePort, sourceChannel } = getIbcInfo(fromChain ?? '', toChain ?? '');
 
     const token = {
       denom: 'uqck',

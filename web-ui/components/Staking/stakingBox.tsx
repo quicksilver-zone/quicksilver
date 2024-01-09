@@ -28,6 +28,7 @@ import {
   Image,
   Icon,
   SkeletonCircle,
+  Link,
 } from '@chakra-ui/react';
 import { useChain } from '@cosmos-kit/react';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -447,11 +448,20 @@ export const StakingBox = ({
                                 </Skeleton>
                               ) : (
                                 <Text color="complimentary.900" fontWeight="light">
-                                  {address
-                                    ? balance?.balance?.amount && Number(balance?.balance?.amount) !== 0
-                                      ? `${truncatedBalance} ${selectedOption.value.toUpperCase()}`
-                                      : `Get ${selectedOption.value.toUpperCase()} tokens here`
-                                    : '0'}
+                                  {address ? (
+                                    balance?.balance?.amount && Number(balance?.balance?.amount) !== 0 ? (
+                                      `${truncatedBalance} ${selectedOption.value.toUpperCase()}`
+                                    ) : (
+                                      <Link
+                                        href={`https://app.osmosis.zone/?from=USDC&to=${selectedOption.value.toUpperCase()}`}
+                                        isExternal
+                                      >
+                                        Get {selectedOption.value.toUpperCase()} tokens here
+                                      </Link>
+                                    )
+                                  ) : (
+                                    '0'
+                                  )}
                                 </Text>
                               )}
                             </>
