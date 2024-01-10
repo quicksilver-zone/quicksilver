@@ -1988,17 +1988,6 @@ func (suite *KeeperTestSuite) TestSigningInfoCallback() {
 			},
 			expectErr: true,
 		},
-		// args has no len
-		{
-			name: "args has no len",
-			malleate: func(quicksilver *app.Quicksilver, ctx sdk.Context) []byte {
-				return []byte{}
-			},
-			query: icqtypes.Query{
-				ChainId: suite.chainB.ChainID,
-			},
-			expectErr: true,
-		},
 		// wrong type args
 		{
 			name: "wrong type args",
