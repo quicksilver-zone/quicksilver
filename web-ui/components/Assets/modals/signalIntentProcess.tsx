@@ -21,13 +21,15 @@ import { useChain } from '@cosmos-kit/react';
 import styled from '@emotion/styled';
 import React, { useEffect, useState } from 'react';
 
-import { MultiModal } from '@/components/Staking';
-
+import { IntentMultiModal } from './intentMultiModal';
 import { coins, StdFee } from '@cosmjs/amino';
 import { assets } from 'chain-registry';
 
-import { quicksilver } from '@chalabi/quicksilverjs';
+import { quicksilver } from 'quicksilverjs';
 import { useTx } from '@/hooks';
+
+import { ValidatorIntent } from 'quicksilverjs/types/codegen/quicksilver/interchainstaking/v1/interchainstaking';
+import { bech32 } from 'bech32';
 
 const ChakraModalContent = styled(ModalContent)`
   position: relative;
@@ -159,20 +161,43 @@ export const SignalIntentModal: React.FC<StakingModalProps> = ({ isOpen, onClose
 
   const [useDefaultWeights, setUseDefaultWeights] = useState(true);
 
-  interface ValidatorsSelect {
-    valoperAddress: string;
-    weight: string;
-  }
-
-  const intents: ValidatorsSelect[] = selectedValidators.map((validator) => ({
+  const intents: ValidatorIntent[] = selectedValidators.map((validator) => ({
     valoperAddress: validator.operatorAddress,
     weight: (useDefaultWeights ? defaultWeight : weights[validator.operatorAddress]).toString() || '0',
   }));
 
+  const valToByte = (val: number) => {
+    if (val > 1) {
+      val = 1;
+    }
+    if (val < 0) {
+      val = 0;
+    }
+    return Math.abs(val * 200);
+  };
+
+  const addValidator = (valAddr: string, weight: number) => {
+    let { words } = bech32.decode(valAddr);
+    let wordsUint8Array = new Uint8Array(bech32.fromWords(words));
+    let weightByte = valToByte(weight);
+    return Buffer.concat([Buffer.from([weightByte]), wordsUint8Array]);
+  };
+
+  let memoBuffer = Buffer.alloc(0);
+
+  if (intents.length > 0) {
+    intents.forEach((val) => {
+      memoBuffer = Buffer.concat([memoBuffer, addValidator(val.valoperAddress, Number(val.weight))]);
+    });
+    memoBuffer = Buffer.concat([Buffer.from([0x02, memoBuffer.length]), memoBuffer]);
+  }
+
+  let memo = memoBuffer.length > 0 && selectedValidators.length > 0 ? memoBuffer.toString('base64') : '';
+
   const { signalIntent } = quicksilver.interchainstaking.v1.MessageComposer.withTypeUrl;
   const msgSignalIntent = signalIntent({
     chainId: selectedOption?.chainId ?? '',
-    intents: JSON.stringify(intents),
+    intents: memo,
     fromAddress: address ?? '',
   });
 
@@ -328,7 +353,7 @@ export const SignalIntentModal: React.FC<StakingModalProps> = ({ isOpen, onClose
                       Choose Validators
                     </Text>
                     <Text mt={2} textAlign={'center'} fontWeight={'light'} fontSize="lg" color="white">
-                      Select up to 8 validators to split your liquid delegation between.
+                      Select the validators you would like to split your liquid delegation between.
                     </Text>
                   </Flex>
                   {selectedValidators.length > 0 && (
@@ -347,7 +372,7 @@ export const SignalIntentModal: React.FC<StakingModalProps> = ({ isOpen, onClose
                         Reselect Validators
                       </Button>
                       <Text mt={'2'} fontSize={'sm'} fontWeight={'light'}>
-                        {selectedValidators.length} / 8 Validators Selected
+                        {selectedValidators.length} Validators Selected
                       </Text>
                     </>
                   )}
@@ -362,7 +387,7 @@ export const SignalIntentModal: React.FC<StakingModalProps> = ({ isOpen, onClose
                     {check ? 'Sign & Submit' : selectedValidators.length > 0 ? 'Next' : 'Choose Validators'}
                   </Button>
 
-                  <MultiModal
+                  <IntentMultiModal
                     isOpen={isModalOpen}
                     onClose={() => setModalOpen(false)}
                     selectedChainName={selectedOption?.chainName || ''}
@@ -503,7 +528,7 @@ export const SignalIntentModal: React.FC<StakingModalProps> = ({ isOpen, onClose
                           {selectedValidators.length === 1 ? 'Selected Validator:' : 'Selected Validators:'}
                         </Text>
                         <Text color="complimentary.900">
-                          {selectedValidators.length === 1 ? selectedValidators[0].name : `${selectedValidators.length} / 8`}
+                          {selectedValidators.length === 1 ? selectedValidators[0].name : `${selectedValidators.length}`}
                         </Text>
                       </Flex>
                     )}

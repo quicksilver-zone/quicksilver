@@ -65,12 +65,10 @@ export const intentTx = (
       return;
     }
 
-    const intentString = intents.toString();
-
     const { signalIntent } = quicksilver.interchainstaking.v1.MessageComposer.withTypeUrl;
     const msgSignalIntent = signalIntent({
       chainId: chainId,
-      intents: intentString,
+      intents: intents,
       fromAddress: address,
     });
 
