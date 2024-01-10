@@ -35,8 +35,6 @@ Please ensure your IDE is configured to use Typescript v4.9.3
 
 **Governance**
 
-- add filters and search
-
 - add liquid staked governance (when its built)
 
 **UI/UX**
@@ -64,7 +62,3 @@ Please ensure your IDE is configured to use Typescript v4.9.3
 claim rewards - rewards get claimed at epoch after your submit tx its not immediate
 
 no solid way to track rewards rn
-
-**Staking Page**
-
-- validator route app.quicksilver.zone/staking/chainId/valoperAddress
