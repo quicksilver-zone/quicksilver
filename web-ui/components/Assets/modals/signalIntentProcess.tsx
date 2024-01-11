@@ -452,7 +452,7 @@ export const SignalIntentModal: React.FC<StakingModalProps> = ({ isOpen, onClose
                     <Grid
                       templateColumns="repeat(auto-fill, minmax(120px, 1fr))"
                       gap={8}
-                      maxWidth="120px" // This ensures that no more than 4 items (120px each) are in a row
+                      maxWidth="400px" // This ensures that no more than 4 items (120px each) are in a row
                     >
                       {selectedValidators.map((validator, index) => (
                         <Flex key={validator.operatorAddress} flexDirection={'column'} alignItems={'center'}>
