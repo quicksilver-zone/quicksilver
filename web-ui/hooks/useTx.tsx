@@ -72,7 +72,7 @@ export const useTx = (chainName: string) => {
 
     broadcastToastId = toaster.toast({
       title: TxStatus.Broadcasting,
-      message: 'Waiting for transaction to be included in the block',
+      message: 'Waiting for transaction to be included in a block',
       type: ToastType.Loading,
       duration: 999999,
     });

@@ -27,6 +27,7 @@ import { useTx } from '@/hooks';
 import BigNumber from 'bignumber.js';
 import { getCoin, getIbcInfo } from '@/utils';
 import { StdFee, coins } from '@cosmjs/stargate';
+import { ibcDenomDepositMapping } from '@/state/chains/prod';
 
 export interface QDepositModalProps {
   token: string;
@@ -92,38 +93,14 @@ const QDepositModal: React.FC<QDepositModalProps> = ({ token }) => {
 
     const { sourcePort, sourceChannel } = getIbcInfo(fromChain ?? '', toChain ?? '');
 
-    const ibcDenomMapping = {
-      osmosis: {
-        qATOM: 'ibc/123',
-        qOSMO: 'ibc/123',
-        qSTARS: 'ibc/123',
-        qREGEN: 'ibc/123',
-        qSOMM: 'ibc/123',
-      },
-      umee: {
-        qATOM: 'ibc/123',
-        qOSMO: 'ibc/123',
-        qSTARS: 'ibc/123',
-        qREGEN: 'ibc/123',
-        qSOMM: 'ibc/123',
-      },
-      secretnetwork: {
-        qATOM: 'ibc/123',
-        qOSMO: 'ibc/123',
-        qSTARS: 'ibc/123',
-        qREGEN: 'ibc/123',
-        qSOMM: 'ibc/123',
-      },
-    };
-
     // Function to get the correct IBC denom trace based on chain and token
-    type ChainDenomMappingKeys = keyof typeof ibcDenomMapping;
+    type ChainDenomMappingKeys = keyof typeof ibcDenomDepositMapping;
 
-    type TokenKeys = keyof (typeof ibcDenomMapping)['osmosis'];
+    type TokenKeys = keyof (typeof ibcDenomDepositMapping)['osmosis'];
 
     const getIbcDenom = (chainName: string, token: string) => {
       const chain = chainName as ChainDenomMappingKeys;
-      const chainDenoms = ibcDenomMapping[chain];
+      const chainDenoms = ibcDenomDepositMapping[chain];
 
       if (token in chainDenoms) {
         return chainDenoms[token as TokenKeys];

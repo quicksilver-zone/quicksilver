@@ -27,7 +27,7 @@ import { useTx } from '@/hooks';
 import BigNumber from 'bignumber.js';
 import { getCoin, getIbcInfo } from '@/utils';
 import { StdFee, coins } from '@cosmjs/stargate';
-import { ibcDenomMapping } from '@/state/chains/prod';
+import { ibcDenomWithdrawMapping } from '@/state/chains/prod';
 
 interface QDepositModalProps {
   token: string;
@@ -94,13 +94,13 @@ const QWithdrawModal: React.FC<QDepositModalProps> = ({ token }) => {
     const { sourcePort, sourceChannel } = getIbcInfo(fromChain ?? '', toChain ?? '');
 
     // Function to get the correct IBC denom trace based on chain and token
-    type ChainDenomMappingKeys = keyof typeof ibcDenomMapping;
+    type ChainDenomMappingKeys = keyof typeof ibcDenomWithdrawMapping;
 
-    type TokenKeys = keyof (typeof ibcDenomMapping)['osmosis'];
+    type TokenKeys = keyof (typeof ibcDenomWithdrawMapping)['osmosis'];
 
     const getIbcDenom = (chainName: string, token: string) => {
       const chain = chainName as ChainDenomMappingKeys;
-      const chainDenoms = ibcDenomMapping[chain];
+      const chainDenoms = ibcDenomWithdrawMapping[chain];
 
       if (token in chainDenoms) {
         return chainDenoms[token as TokenKeys];

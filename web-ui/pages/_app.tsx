@@ -244,6 +244,10 @@ function CreateCosmosApp({ Component, pageProps }: AppProps) {
               rpc: [rpcEndpoints.osmosis ?? ''],
               rest: [lcdEndpoints.osmosis ?? ''],
             },
+            umee: {
+              rpc: ['https://rpc-umee-ia.cosmosia.notional.ventures/'],
+              rest: ['https://api-umee-ia.cosmosia.notional.ventures/'],
+            },
           },
         }}
         modalTheme={modalThemeOverrides}
