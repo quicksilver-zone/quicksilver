@@ -173,10 +173,14 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
     intent: number;
   }
 
-  const intents: ValidatorsSelect[] = selectedValidators.map((validator) => ({
-    address: validator.operatorAddress,
-    intent: useDefaultWeights ? defaultWeight : weights[validator.operatorAddress] || 0,
-  }));
+  const intents: ValidatorsSelect[] = selectedValidators.map((validator) => {
+    const weightAsFraction = useDefaultWeights ? defaultWeight : (weights[validator.operatorAddress] ?? 0) / 100;
+
+    return {
+      address: validator.operatorAddress,
+      intent: weightAsFraction,
+    };
+  });
 
   const { data: zone, isLoading: isZoneLoading, isError: isZoneError } = useZoneQuery(selectedOption?.chainId ?? '');
 

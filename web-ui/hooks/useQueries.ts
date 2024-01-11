@@ -116,7 +116,7 @@ export const useParamsQuery = (chainName: string) => {
         throw new Error('RPC Client not ready');
       }
 
-      const params = await grpcQueryClient.cosmos.mint.v1beta1.inflation({
+      const params = await grpcQueryClient.cosmos.mint.v1beta1.annualProvisions({
 
 
       });
@@ -294,6 +294,7 @@ export const useIntentQuery = (chainName: string, address: string) => {
     intent: intentQuery.data,
     isLoading: intentQuery.isLoading,
     isError: intentQuery.isError,
+    refetch: intentQuery.refetch,
   };
 };
 

@@ -1,12 +1,13 @@
 import { ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons';
-import { Box, Flex, Text, Button, IconButton, VStack, Image, Heading, SlideFade, Spinner } from '@chakra-ui/react';
+import { Box, Flex, Text, Button, IconButton, VStack, Image, Heading, SlideFade, Spinner, SkeletonCircle } from '@chakra-ui/react';
 import { color } from 'framer-motion';
-import { useState } from 'react';
+import { JSXElementConstructor, Key, ReactElement, ReactFragment, ReactPortal, useState } from 'react';
 
 import SignalIntentModal from './modals/signalIntentProcess';
 
-import { useIntentQuery } from '@/hooks/useQueries';
+import { useIntentQuery, useValidatorLogos, useValidatorsQuery } from '@/hooks/useQueries';
 import { networks as prodNetworks, testNetworks as devNetworks } from '@/state/chains/prod';
+import { truncateString } from '@/utils';
 
 export interface StakingIntentProps {
   address: string;
@@ -14,10 +15,6 @@ export interface StakingIntentProps {
 }
 
 const StakingIntent: React.FC<StakingIntentProps> = ({ address, isWalletConnected }) => {
-  const validators = [
-    { name: '', logo: '', percentage: '' },
-    { name: '', logo: '', percentage: '' },
-  ];
   const networks = process.env.NEXT_PUBLIC_CHAIN_ENV === 'mainnet' ? prodNetworks : devNetworks;
 
   const chains = ['Cosmos', 'Osmosis', 'Stargaze', 'Regen', 'Sommelier'];
@@ -29,7 +26,38 @@ const StakingIntent: React.FC<StakingIntentProps> = ({ address, isWalletConnecte
 
   const currentNetwork = networks[currentChainIndex];
 
-  const { intent, isLoading, isError } = useIntentQuery(currentNetwork.chainName, address ?? '');
+  const { validatorsData } = useValidatorsQuery(currentNetwork.chainName);
+  const { data: validatorLogos } = useValidatorLogos(currentNetwork.chainName, validatorsData || []);
+
+  const { intent, isLoading, isError, refetch } = useIntentQuery(currentNetwork.chainName, address ?? '');
+
+  interface ValidatorDetails {
+    moniker: string;
+    logoUrl: string | undefined;
+  }
+
+  interface ValidatorMap {
+    [valoper_address: string]: ValidatorDetails;
+  }
+
+  const validatorsMap: ValidatorMap =
+    validatorsData?.reduce((map: ValidatorMap, validatorInfo) => {
+      map[validatorInfo.address] = {
+        moniker: validatorInfo.name,
+        logoUrl: validatorLogos?.[validatorInfo.address],
+      };
+      return map;
+    }, {}) || {};
+
+  const validatorsWithDetails =
+    intent?.data?.intent.intents.map((validatorIntent: { valoper_address: string; weight: string }) => {
+      const validatorDetails = validatorsMap[validatorIntent.valoper_address];
+      return {
+        moniker: validatorDetails?.moniker || '...',
+        logoUrl: validatorDetails?.logoUrl,
+        percentage: `${(parseFloat(validatorIntent.weight) * 100).toFixed(2)}%`,
+      };
+    }) || [];
 
   const handleLeftArrowClick = () => {
     setCurrentChainIndex((prevIndex) => (prevIndex === 0 ? networks.length - 1 : prevIndex - 1));
@@ -78,7 +106,12 @@ const StakingIntent: React.FC<StakingIntentProps> = ({ address, isWalletConnecte
             Edit Intent
             <ChevronRightIcon />
           </Button>
-          <SignalIntentModal selectedOption={currentNetwork} isOpen={isSignalIntentModalOpen} onClose={closeSignalIntentModal} />
+          <SignalIntentModal
+            refetch={refetch}
+            selectedOption={currentNetwork}
+            isOpen={isSignalIntentModalOpen}
+            onClose={closeSignalIntentModal}
+          />
         </Flex>
 
         <Flex borderBottom="1px" borderBottomColor="complimentary.900" alignItems="center" justifyContent="space-between">
@@ -111,17 +144,39 @@ const StakingIntent: React.FC<StakingIntentProps> = ({ address, isWalletConnecte
           />
         </Flex>
 
-        <VStack spacing={2} align="stretch">
-          {validators.map((validator, index) => (
-            <Flex key={index} justifyContent="space-between" w="full" alignItems="center">
-              <Flex alignItems="center" gap={2}>
-                <Text fontSize="md">{validator.name}</Text>
+        <VStack pb={4} overflowY="auto" gap={4} spacing={2} align="stretch" maxH="250px">
+          {validatorsWithDetails.map(
+            (validator: { logoUrl: string; moniker: string; percentage: string }, index: Key | null | undefined) => (
+              <Flex key={index} justifyContent="space-between" w="full" alignItems="center">
+                <Flex alignItems="center" gap={2}>
+                  {validator.logoUrl ? (
+                    <Image
+                      borderRadius={'full'}
+                      src={validator.logoUrl}
+                      alt={validator.moniker}
+                      boxSize="26px"
+                      objectFit="cover"
+                      marginRight="8px"
+                    />
+                  ) : (
+                    <SkeletonCircle
+                      boxSize="26px"
+                      objectFit="cover"
+                      marginRight="8px"
+                      display="inline-block"
+                      verticalAlign="middle"
+                      startColor="complimentary.900"
+                      endColor="complimentary.100"
+                    />
+                  )}
+                  <Text fontSize="md">{truncateString(validator.moniker ?? '', 20)}</Text>
+                </Flex>
+                <Text fontSize="lg" fontWeight="bold">
+                  {validator.percentage}
+                </Text>
               </Flex>
-              <Text fontSize="lg" fontWeight="bold">
-                {validator.percentage}
-              </Text>
-            </Flex>
-          ))}
+            ),
+          )}
         </VStack>
       </VStack>
     </Box>

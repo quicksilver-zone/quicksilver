@@ -282,7 +282,7 @@ function Home() {
           <AssetsGrid nonNative={liquidRewards} isWalletConnected={isWalletConnected} assets={assetsData} />
           <Spacer />
           {/* Unbonding Table */}
-          <Box mt="20px">
+          <Box h="full" w="full" mt="20px">
             <UnbondingAssetsTable isWalletConnected={isWalletConnected} address={address ?? ''} />
           </Box>
           <Box h="40px"></Box>

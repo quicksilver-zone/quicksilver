@@ -64,7 +64,7 @@ interface StakingModalProps {
   isOpen: boolean;
   onClose: () => void;
   children?: React.ReactNode;
-
+  refetch: () => void;
   selectedOption?: {
     name: string;
     value: string;
@@ -74,7 +74,7 @@ interface StakingModalProps {
   };
 }
 
-export const SignalIntentModal: React.FC<StakingModalProps> = ({ isOpen, onClose, selectedOption }) => {
+export const SignalIntentModal: React.FC<StakingModalProps> = ({ isOpen, onClose, selectedOption, refetch }) => {
   const [step, setStep] = React.useState(1);
   const getProgressColor = (circleStep: number) => {
     if (step >= circleStep) return 'complimentary.900';
@@ -98,7 +98,7 @@ export const SignalIntentModal: React.FC<StakingModalProps> = ({ isOpen, onClose
     newChainName = selectedOption?.chainName;
   }
 
-  const { address, getSigningStargateClient } = useChain(newChainName || '');
+  const { address, getSigningStargateClient } = useChain('quicksilver' || '');
 
   const labels = ['Choose validators', `Set weights`, `Sign & Submit`, `Receive q${selectedOption?.value}`];
   const [isModalOpen, setModalOpen] = useState(false);
@@ -160,43 +160,21 @@ export const SignalIntentModal: React.FC<StakingModalProps> = ({ isOpen, onClose
 
   const [useDefaultWeights, setUseDefaultWeights] = useState(true);
 
-  const intents: ValidatorIntent[] = selectedValidators.map((validator) => ({
-    valoperAddress: validator.operatorAddress,
-    weight: (useDefaultWeights ? defaultWeight : weights[validator.operatorAddress]).toString() || '0',
-  }));
+  const intents: ValidatorIntent[] = selectedValidators.map((validator) => {
+    const weightAsFraction = useDefaultWeights ? defaultWeight : (weights[validator.operatorAddress] ?? 0) / 100;
 
-  const valToByte = (val: number) => {
-    if (val > 1) {
-      val = 1;
-    }
-    if (val < 0) {
-      val = 0;
-    }
-    return Math.abs(val * 200);
-  };
+    return {
+      valoperAddress: validator.operatorAddress,
+      weight: weightAsFraction.toString(),
+    };
+  });
 
-  const addValidator = (valAddr: string, weight: number) => {
-    let { words } = bech32.decode(valAddr);
-    let wordsUint8Array = new Uint8Array(bech32.fromWords(words));
-    let weightByte = valToByte(weight);
-    return Buffer.concat([Buffer.from([weightByte]), wordsUint8Array]);
-  };
-
-  let memoBuffer = Buffer.alloc(0);
-
-  if (intents.length > 0) {
-    intents.forEach((val) => {
-      memoBuffer = Buffer.concat([memoBuffer, addValidator(val.valoperAddress, Number(val.weight))]);
-    });
-    memoBuffer = Buffer.concat([Buffer.from([0x02, memoBuffer.length]), memoBuffer]);
-  }
-
-  let memo = memoBuffer.length > 0 && selectedValidators.length > 0 ? memoBuffer.toString('base64') : '';
+  const formattedIntentsString = intents.map((intent) => `${intent.weight}${intent.valoperAddress}`).join(',');
 
   const { signalIntent } = quicksilver.interchainstaking.v1.MessageComposer.withTypeUrl;
   const msgSignalIntent = signalIntent({
     chainId: selectedOption?.chainId ?? '',
-    intents: memo,
+    intents: formattedIntentsString,
     fromAddress: address ?? '',
   });
 
@@ -213,7 +191,7 @@ export const SignalIntentModal: React.FC<StakingModalProps> = ({ isOpen, onClose
     gas: '500000',
   };
 
-  const { tx } = useTx(newChainName ?? '');
+  const { tx } = useTx('quicksilver' ?? '');
 
   const [transactionStatus, setTransactionStatus] = useState('Pending');
 
@@ -225,8 +203,8 @@ export const SignalIntentModal: React.FC<StakingModalProps> = ({ isOpen, onClose
       const result = await tx([msgSignalIntent], {
         fee,
         onSuccess: () => {
-          setStep(4);
-          setTransactionStatus('Success');
+          refetch();
+          onClose();
         },
       });
     } catch (error) {
@@ -460,7 +438,11 @@ export const SignalIntentModal: React.FC<StakingModalProps> = ({ isOpen, onClose
                   <Box overflowY="auto" maxH="160px">
                     {' '}
                     {/* Set a maximum height to make the box scrollable */}
-                    <Grid templateColumns={`repeat(${Math.ceil(Math.sqrt(selectedValidators.length))}, 1fr)`} gap={8}>
+                    <Grid
+                      templateColumns="repeat(auto-fill, minmax(120px, 1fr))"
+                      gap={8}
+                      maxWidth="120px" // This ensures that no more than 4 items (120px each) are in a row
+                    >
                       {selectedValidators.map((validator, index) => (
                         <Flex key={validator.operatorAddress} flexDirection={'column'} alignItems={'center'}>
                           <Text fontSize="sm" color="white" mb={2}>
