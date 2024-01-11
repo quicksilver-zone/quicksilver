@@ -29,6 +29,7 @@ import { MdPrivacyTip } from 'react-icons/md';
 export const SideHeader = () => {
   const router = useRouter();
   const [selectedPage, setSelectedPage] = useState('');
+
   const [showSocialLinks, setShowSocialLinks] = useState(false);
 
   useEffect(() => {
@@ -46,13 +47,11 @@ export const SideHeader = () => {
 
   const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' && window.innerWidth < 1274);
 
-  // Handle window resize
   useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth < 1274);
     };
 
-    // Set up event listener
     window.addEventListener('resize', handleResize);
 
     // Clean up
@@ -127,7 +126,7 @@ export const SideHeader = () => {
               QUICKSILVER
             </DrawerHeader>
             <DrawerBody>
-              {['Staking', 'Governance', 'Defi', 'Assets'].map((item) => (
+              {['Staking', 'Governance', 'Defi', 'Assets', 'Airdrop'].map((item) => (
                 <Box key={item} mb={4} position="relative">
                   <Link
                     href={`/quicksilver/${item.toLowerCase()}`}
@@ -199,8 +198,8 @@ export const SideHeader = () => {
                 <VStack justifyContent="center" alignItems="center" spacing={16}>
                   <Tooltip borderLeft="4px solid rgba(255, 128, 0, 0.9)" label="Staking" placement="right">
                     <Box
-                      w="55px"
-                      h="55px"
+                      w="60px"
+                      h="60px"
                       onClick={() => router.push('/staking')}
                       cursor="pointer"
                       borderRadius="100px"
@@ -218,16 +217,17 @@ export const SideHeader = () => {
                           filter: 'contrast(100%)',
                         }}
                         alt="Staking"
-                        h="55px"
-                        src="/quicksilver/img/test.png"
+                        h="60px"
+                        w="60px"
+                        src="/quicksilver/img/liquid.png"
                       />
                     </Box>
                   </Tooltip>
 
                   <Tooltip borderLeft="4px solid rgba(255, 128, 0, 0.9)" label="Governance" placement="right">
                     <Box
-                      w="55px"
-                      h="55px"
+                      w="60px"
+                      h="60px"
                       onClick={() => router.push('/governance')}
                       cursor="pointer"
                       borderRadius="100px"
@@ -248,8 +248,8 @@ export const SideHeader = () => {
                         }}
                         alt="Governance"
                         h="60px"
-                        w={'60px'}
-                        src="/quicksilver/img/test2.png"
+                        w="65px"
+                        src="/quicksilver/img/governance.png"
                       />
                     </Box>
                   </Tooltip>
@@ -276,7 +276,7 @@ export const SideHeader = () => {
                         }}
                         alt="Assets"
                         h="55px"
-                        src="/quicksilver/img/test3.png"
+                        src="/quicksilver/img/assets.png"
                       />
                     </Box>
                   </Tooltip>
@@ -288,7 +288,7 @@ export const SideHeader = () => {
                       cursor="pointer"
                       borderRadius="100px"
                       boxShadow={
-                        selectedPage === 'aidrop' ? `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}` : ''
+                        selectedPage === 'airdrop' ? `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}` : ''
                       }
                       _hover={{
                         boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`,
@@ -296,13 +296,13 @@ export const SideHeader = () => {
                       }}
                     >
                       <Image
-                        filter={selectedPage === 'Airdrop' ? 'contrast(100%)' : 'contrast(50%)'}
+                        filter={selectedPage === 'airdrop' ? 'contrast(100%)' : 'contrast(50%)'}
                         _hover={{
                           filter: 'contrast(100%)',
                         }}
                         alt="DeFi"
                         h="55px"
-                        src="/quicksilver/img/test5.png"
+                        src="/quicksilver/img/airdrop.png"
                       />
                     </Box>
                   </Tooltip>
@@ -329,7 +329,7 @@ export const SideHeader = () => {
                         }}
                         alt="DeFi"
                         h="55px"
-                        src="/quicksilver/img/test4.png"
+                        src="/quicksilver/img/defi.png"
                       />
                     </Box>
                   </Tooltip>
@@ -342,6 +342,7 @@ export const SideHeader = () => {
                 <VStack justifyContent="center" alignItems="center" spacing={16}>
                   <Tooltip borderLeft="4px solid rgba(255, 128, 0, 0.9)" label="About" placement="right">
                     <Box
+                      onClick={() => router.push('/about')}
                       _hover={{
                         cursor: 'pointer',
                         boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`,
@@ -350,52 +351,61 @@ export const SideHeader = () => {
                       <FaInfo size={'25px'} color="rgb(255, 128, 0)" />
                     </Box>
                   </Tooltip>
-                  <Tooltip borderLeft="4px solid rgba(255, 128, 0, 0.9)" label="Docs" placement="right">
-                    <Box
-                      _hover={{
-                        cursor: 'pointer',
-                        boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`,
-                        transition: transitionStyle,
-                      }}
-                    >
-                      <IoIosDocument size={'25px'} color="rgba(255, 128, 0, 0.9)" />
-                    </Box>
-                  </Tooltip>
+                  <Link href="https://docs.quicksilver.zone/" isExternal>
+                    <Tooltip borderLeft="4px solid rgba(255, 128, 0, 0.9)" label="Docs" placement="right">
+                      <Box
+                        _hover={{
+                          cursor: 'pointer',
+                          boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`,
+                          transition: transitionStyle,
+                        }}
+                      >
+                        <IoIosDocument size={'25px'} color="rgba(255, 128, 0, 0.9)" />
+                      </Box>
+                    </Tooltip>
+                  </Link>
                   <Tooltip borderLeft="4px solid rgba(255, 128, 0, 0.9)" label="Discord" placement="right">
-                    <Box
-                      _hover={{
-                        cursor: 'pointer',
-                        boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`,
-                        transition: transitionStyle,
-                      }}
-                    >
-                      <FaDiscord size={'25px'} color="rgb(255, 128, 0)" />
-                    </Box>
+                    <Link href="https://discord.com/invite/xrSmYMDVrQ" isExternal>
+                      <Box
+                        _hover={{
+                          cursor: 'pointer',
+                          boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`,
+                          transition: transitionStyle,
+                        }}
+                      >
+                        <FaDiscord size={'25px'} color="rgb(255, 128, 0)" />
+                      </Box>
+                    </Link>
                   </Tooltip>
                   <Tooltip borderLeft="4px solid rgba(255, 128, 0, 0.9)" label="Github" placement="right">
-                    <Box
-                      _hover={{
-                        cursor: 'pointer',
-                        boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`,
-                        transition: transitionStyle,
-                      }}
-                    >
-                      <FaGithub size={'25px'} color="rgb(255, 128, 0)" />
-                    </Box>
+                    <Link href="https://github.com/quicksilver-zone/quicksilver" isExternal>
+                      <Box
+                        _hover={{
+                          cursor: 'pointer',
+                          boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`,
+                          transition: transitionStyle,
+                        }}
+                      >
+                        <FaGithub size={'25px'} color="rgb(255, 128, 0)" />
+                      </Box>
+                    </Link>
                   </Tooltip>
                   <Tooltip borderLeft="4px solid rgba(255, 128, 0, 0.9)" label="Twitter" placement="right">
-                    <Box
-                      _hover={{
-                        cursor: 'pointer',
-                        boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`,
-                        transition: transitionStyle,
-                      }}
-                    >
-                      <FaTwitter size={'25px'} color="rgb(255, 128, 0)" />
-                    </Box>
+                    <Link href="https://twitter.com/quicksilverzone" isExternal>
+                      <Box
+                        _hover={{
+                          cursor: 'pointer',
+                          boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`,
+                          transition: transitionStyle,
+                        }}
+                      >
+                        <FaTwitter size={'25px'} color="rgb(255, 128, 0)" />
+                      </Box>
+                    </Link>
                   </Tooltip>
                   <Tooltip borderLeft="4px solid rgba(255, 128, 0, 0.9)" label="Privacy Policy" placement="right">
                     <Box
+                      onClick={() => router.push('/privacy-policy')}
                       _hover={{
                         cursor: 'pointer',
                         boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 15px 5px ${commonBoxShadowColor}`,
@@ -418,6 +428,10 @@ export const SideHeader = () => {
             icon={showSocialLinks ? <ArrowBackIcon /> : <HamburgerIcon />}
             aria-label="Toggle View"
             onClick={toggleSocialLinks}
+            mb={4}
+            _hover={{
+              bgColor: 'complimentary.500',
+            }}
           />
         )}
       </Flex>

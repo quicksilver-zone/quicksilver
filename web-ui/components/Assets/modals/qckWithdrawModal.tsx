@@ -15,19 +15,18 @@ import {
   useToast,
   Spinner,
 } from '@chakra-ui/react';
+import { ibc } from '@chalabi/quicksilverjs';
+import { StdFee, coins } from '@cosmjs/stargate';
 import { ChainName } from '@cosmos-kit/core';
 import { useChain, useManager } from '@cosmos-kit/react';
-import { color } from 'framer-motion';
+import BigNumber from 'bignumber.js';
 import { useState, useMemo, useEffect } from 'react';
 
 import { ChooseChain } from '@/components/react/choose-chain';
 import { handleSelectChainDropdown, ChainOption } from '@/components/types';
 import { useTx } from '@/hooks';
 import { useIbcBalanceQuery } from '@/hooks/useQueries';
-import { getCoin } from '@/utils';
-import { StdFee, coins } from '@cosmjs/stargate';
-import { ibc } from 'interchain-query';
-import BigNumber from 'bignumber.js';
+import { getCoin, getIbcInfo } from '@/utils';
 
 export function WithdrawModal() {
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -84,8 +83,7 @@ export function WithdrawModal() {
       gas: '300000',
     };
 
-    const sourcePort = 'transfer';
-    const sourceChannel = 'channel-0';
+    const { sourcePort, sourceChannel } = getIbcInfo(fromChain ?? '', toChain ?? '');
 
     const token = {
       denom: 'uqck',

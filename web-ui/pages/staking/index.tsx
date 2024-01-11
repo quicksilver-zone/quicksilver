@@ -15,6 +15,7 @@ import {
   Spinner,
   SkeletonCircle,
 } from '@chakra-ui/react';
+import { useChain } from '@cosmos-kit/react';
 import dynamic from 'next/dynamic';
 import Head from 'next/head';
 import { useEffect, useState } from 'react';
@@ -25,7 +26,6 @@ import { InfoBox } from '@/components';
 import { AssetsAccordian } from '@/components';
 import { useAPYQuery } from '@/hooks/useQueries';
 import { networks as prodNetworks, testNetworks as devNetworks } from '@/state/chains/prod';
-import { useChain } from '@cosmos-kit/react';
 
 const DynamicStakingBox = dynamic(() => Promise.resolve(StakingBox), {
   ssr: false,
@@ -69,6 +69,9 @@ export default function Staking() {
   }
 
   const flexDirection = useBreakpointValue({ base: 'column', md: 'row' });
+
+  const [isStakingModalOpen, setStakingModalOpen] = useState(false);
+  const [isTransferModalOpen, setTransferModalOpen] = useState(false);
 
   return (
     <>
@@ -119,8 +122,10 @@ export default function Staking() {
               {/* Staking Box*/}
               <DynamicStakingBox
                 selectedOption={selectedNetwork}
-                isModalOpen={isModalOpen}
-                setModalOpen={setModalOpen}
+                isStakingModalOpen={isStakingModalOpen}
+                setStakingModalOpen={setStakingModalOpen}
+                isTransferModalOpen={isTransferModalOpen}
+                setTransferModalOpen={setTransferModalOpen}
                 setBalance={setBalance}
                 setQBalance={setQBalance}
               />

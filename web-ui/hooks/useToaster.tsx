@@ -34,7 +34,7 @@ export const useToaster = () => {
           <Text fontSize="sm" color="white">
             {message}
           </Text>
-          <Link href={mintscanUrl} isExternal color="complimentary.900">
+          <Link href={mintscanUrl} isExternal color="white">
             View on Mintscan
           </Link>
         </Box>

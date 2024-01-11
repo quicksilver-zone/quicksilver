@@ -1,14 +1,18 @@
-import { shiftDigits } from '@/utils';
 import { Box, SimpleGrid, VStack, Text, Button, Divider, useColorModeValue, HStack, Flex, Grid, GridItem, Spinner } from '@chakra-ui/react';
 import React from 'react';
+
 import QDepositModal from './modals/qTokenDepositModal';
 import QWithdrawModal from './modals/qTokenWithdrawlModal';
+
+import { shiftDigits } from '@/utils';
+
 interface AssetCardProps {
   assetName: string;
   balance: string;
   apy: number;
   nativeAssetName: string;
   isWalletConnected: boolean;
+  nonNative: LiquidRewardsData | undefined;
 }
 
 interface AssetGridProps {
@@ -19,9 +23,50 @@ interface AssetGridProps {
     apy: number;
     native: string;
   }>;
+  nonNative: LiquidRewardsData | undefined;
 }
 
-const AssetCard: React.FC<AssetCardProps> = ({ assetName, balance, apy, nativeAssetName, isWalletConnected }) => {
+type Amount = {
+  denom: string;
+  amount: string;
+};
+
+type Asset = {
+  [key: string]: Amount[];
+};
+
+type Errors = {
+  Errors: any;
+};
+
+type LiquidRewardsData = {
+  messages: any[];
+  assets: {
+    [key: string]: [
+      {
+        Type: string;
+        Amount: Amount[];
+      },
+    ];
+  };
+  errors: Errors;
+};
+
+type UseLiquidRewardsQueryReturnType = {
+  liquidRewards: LiquidRewardsData | undefined;
+  isLoading: boolean;
+  isError: boolean;
+};
+
+const AssetCard: React.FC<AssetCardProps> = ({ assetName, balance, apy, nativeAssetName, isWalletConnected, nonNative }) => {
+  const nonNativeBalance = nonNative?.assets['quicksilver-2']
+    ? nonNative.assets['quicksilver-2'][0].Amount.find((amount) => amount.denom === `uq${nativeAssetName.toLowerCase()}`)
+    : undefined;
+
+  const formattedNonNativeBalance = nonNativeBalance
+    ? shiftDigits(nonNativeBalance.amount, -6) // Assuming the amount is in micro units
+    : '0';
+
   if (!balance || !apy) {
     return (
       <Flex
@@ -74,7 +119,7 @@ const AssetCard: React.FC<AssetCardProps> = ({ assetName, balance, apy, nativeAs
           </GridItem>
           <GridItem>
             <Text fontSize="md" textAlign="right" fontWeight="semibold">
-              {balance}
+              {formattedNonNativeBalance}
             </Text>
           </GridItem>
         </Grid>
@@ -88,7 +133,7 @@ const AssetCard: React.FC<AssetCardProps> = ({ assetName, balance, apy, nativeAs
   );
 };
 
-const AssetsGrid: React.FC<AssetGridProps> = ({ assets, isWalletConnected }) => {
+const AssetsGrid: React.FC<AssetGridProps> = ({ assets, isWalletConnected, nonNative }) => {
   return (
     <>
       <Text fontSize="xl" fontWeight="bold" color="white" mb={4}>
@@ -116,13 +161,13 @@ const AssetsGrid: React.FC<AssetGridProps> = ({ assets, isWalletConnected }) => 
           <Flex gap="8">
             {assets.map((asset, index) => (
               <Box key={index} minW="350px">
-                {' '}
                 <AssetCard
                   isWalletConnected={isWalletConnected}
                   assetName={asset.name}
                   nativeAssetName={asset.native}
                   balance={asset.balance}
                   apy={asset.apy}
+                  nonNative={nonNative}
                 />
               </Box>
             ))}

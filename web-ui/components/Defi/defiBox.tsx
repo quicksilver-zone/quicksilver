@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { ChevronDownIcon, ExternalLinkIcon } from '@chakra-ui/icons';
 import {
   Box,
   Button,
@@ -21,7 +21,8 @@ import {
   Spinner,
   useBreakpointValue,
 } from '@chakra-ui/react';
-import { ChevronDownIcon, ExternalLinkIcon } from '@chakra-ui/icons';
+import React, { useState } from 'react';
+
 import { useDefiData } from '@/hooks/useQueries';
 type ActionButtonTitle = 'Add Liquidity' | 'Borrow' | 'Lend' | 'Mint Stablecoin' | 'Vaults';
 interface DefiAsset {

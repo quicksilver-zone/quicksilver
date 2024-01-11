@@ -1,3 +1,5 @@
+import { useAccordionStyles } from '@chakra-ui/accordion';
+import { CheckIcon, ChevronDownIcon, ChevronRightIcon, InfoOutlineIcon } from '@chakra-ui/icons';
 import {
   Accordion,
   AccordionItem,
@@ -17,14 +19,14 @@ import {
   Badge,
   useDisclosure,
 } from '@chakra-ui/react';
-import { CheckIcon, ChevronDownIcon, ChevronRightIcon, InfoOutlineIcon } from '@chakra-ui/icons';
-import { useAccordionStyles } from '@chakra-ui/accordion';
 import { useState } from 'react';
 
 interface AirdropAccordionItemProps {
   index: number;
   defaultIsOpen?: boolean;
 }
+
+const isBeta = true;
 
 const AirdropAccordionItem: React.FC<AirdropAccordionItemProps> = ({ index, defaultIsOpen }) => {
   const { isOpen, onToggle } = useDisclosure({ defaultIsOpen });
@@ -67,7 +69,46 @@ const AirdropAccordionItem: React.FC<AirdropAccordionItemProps> = ({ index, defa
 const AirdropSection = () => {
   const { isOpen, onToggle } = useDisclosure();
 
-  return (
+  return isBeta ? (
+    // What to render if isBeta is true
+    <Flex
+      w="100%"
+      h="sm"
+      p={4}
+      borderRadius="lg"
+      flexDirection="column"
+      justifyContent="center"
+      alignItems="center"
+      gap={6}
+      color="white"
+      position="relative"
+      _before={{
+        content: '""',
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundImage: "url('/quicksilver/img/underConstruction.png')",
+        backgroundSize: 'contain',
+        backgroundPosition: 'center',
+        backdropFilter: 'blur(10px)',
+        filter: 'contrast(0.5)',
+        opacity: 0.2,
+        borderRadius: 'lg',
+      }}
+    >
+      <Box position="relative" zIndex="docked">
+        {' '}
+        <Text fontSize="xl" fontWeight="bold">
+          The Airdrop page is under construction
+        </Text>
+        <Text fontSize="xl" fontWeight="bold">
+          Please check back later
+        </Text>
+      </Box>
+    </Flex>
+  ) : (
     <VStack spacing={4} align="stretch">
       <Box bg={'rgba(255,255,255,0.1)'} p={5} shadow="md" borderRadius="lg">
         <Flex justifyContent="space-between" alignItems="center" mb={5}>

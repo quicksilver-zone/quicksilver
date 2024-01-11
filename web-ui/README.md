@@ -39,15 +39,9 @@ Please ensure your IDE is configured to use Typescript v4.9.3
 
 **UI/UX**
 
-- Finish Mobile breakpoints
-
 - focus on mobile landscape breakpoints, (mainly staking page)
 
-- find different assets for side bar
-
 **Mobile Menu**
-
-- design
 
 - connect wallet button
 
@@ -65,12 +59,6 @@ Please ensure your IDE is configured to use Typescript v4.9.3
 
 - intent query
 
-- unbonding query
+claim rewards - rewards get claimed at epoch after your submit tx its not immediate
 
-**Staking Page**
-
-- check memo intent creation
-
-- validator route app.quicksilver.zone/staking/chainId/valoperAddress
-
-- fix succesful transaction on staking modal not taking you to final step
+no solid way to track rewards rn

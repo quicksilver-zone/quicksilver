@@ -220,10 +220,10 @@ func DetermineAllocationsForDelegation(currentAllocations map[string]sdkmath.Int
 		return nil, errors.New("outSum overflow; cannot be greater than input amount")
 	}
 
-	// dust := input.Sub(outSum)
-	// if !dust.IsZero() {
-	// 	outWeights[deltas[0].ValoperAddress] = outWeights[deltas[0].ValoperAddress].Add(dust)
-	// }
+	dust := input.Sub(outSum)
+	if !dust.IsZero() {
+		outWeights[deltas[0].ValoperAddress] = outWeights[deltas[0].ValoperAddress].Add(dust)
+	}
 
 	return outWeights, nil
 }

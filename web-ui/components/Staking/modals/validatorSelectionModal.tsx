@@ -28,7 +28,6 @@ import { ValidatorsTable } from './validatorTable';
 
 import { useValidatorsQuery, useZoneQuery } from '@/hooks/useQueries';
 import { useMissedBlocks, useValidatorLogos } from '@/hooks/useQueries';
-
 interface MultiModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -51,7 +50,6 @@ export const MultiModal: React.FC<MultiModalProps> = ({
 
   const { validatorsData, isLoading, isError } = useValidatorsQuery(selectedChainName);
 
-  const { missedBlocksData } = useMissedBlocks(selectedChainName);
   const { data: logos, isLoading: isFetchingLogos } = useValidatorLogos(selectedChainName, validatorsData || []);
 
   const validators = validatorsData;

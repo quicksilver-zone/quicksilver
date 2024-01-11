@@ -1,7 +1,8 @@
-import { Asset, AssetList } from '@chain-registry/types';
 import { asset_lists as assetLists } from '@chain-registry/assets';
-import { Coin } from 'interchain-query/cosmos/base/v1beta1/coin';
+import { Asset, AssetList } from '@chain-registry/types';
 import { assets, ibc } from 'chain-registry';
+import { Coin } from 'interchain-query/cosmos/base/v1beta1/coin';
+
 import { shiftDigits } from './maths';
 
 export const truncateDenom = (denom: string) => {

@@ -81,8 +81,14 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 		return nil, fmt.Errorf("unable to send coins to escrow account: %w", err)
 	}
 
-	if err := k.queueRedemption(ctx, zone, sender, msg.DestinationAddress, nativeTokens, msg.Value, hashString); err != nil {
-		return nil, fmt.Errorf("unable to queue redemption: %w", err)
+	if zone.LiquidityModule {
+		if err := k.processRedemptionForLsm(ctx, zone, sender, msg.DestinationAddress, nativeTokens, msg.Value, hashString); err != nil {
+			return nil, fmt.Errorf("unable to process redemption for LSM: %w", err)
+		}
+	} else {
+		if err := k.queueRedemption(ctx, zone, sender, msg.DestinationAddress, nativeTokens, msg.Value, hashString); err != nil {
+			return nil, fmt.Errorf("unable to queue redemption: %w", err)
+		}
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{

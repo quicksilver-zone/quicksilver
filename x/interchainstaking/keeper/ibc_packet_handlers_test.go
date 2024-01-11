@@ -1535,19 +1535,19 @@ func (suite *KeeperTestSuite) TestRebalanceDueToIntentChange() {
 		quicksilver.InterchainstakingKeeper.DeleteValidator(ctx, zone.ChainId, valoper)
 	}
 
-	val0 := types.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdk.MustNewDecFromStr("1"), VotingPower: sdk.NewInt(2_000_000_000), Status: stakingtypes.BondStatusBonded}
+	val0 := types.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdk.MustNewDecFromStr("1"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded}
 	err := quicksilver.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, val0)
 	suite.NoError(err)
 
-	val1 := types.Validator{ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", CommissionRate: sdk.MustNewDecFromStr("1"), VotingPower: sdk.NewInt(2_000_000_000), Status: stakingtypes.BondStatusBonded}
+	val1 := types.Validator{ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", CommissionRate: sdk.MustNewDecFromStr("1"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded}
 	err = quicksilver.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, val1)
 	suite.NoError(err)
 
-	val2 := types.Validator{ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", CommissionRate: sdk.MustNewDecFromStr("1"), VotingPower: sdk.NewInt(2_000_000_000), Status: stakingtypes.BondStatusBonded}
+	val2 := types.Validator{ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", CommissionRate: sdk.MustNewDecFromStr("1"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded}
 	err = quicksilver.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, val2)
 	suite.NoError(err)
 
-	val3 := types.Validator{ValoperAddress: "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7", CommissionRate: sdk.MustNewDecFromStr("1"), VotingPower: sdk.NewInt(2_000_000_000), Status: stakingtypes.BondStatusBonded}
+	val3 := types.Validator{ValoperAddress: "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7", CommissionRate: sdk.MustNewDecFromStr("1"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded}
 	err = quicksilver.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, val3)
 	suite.NoError(err)
 
@@ -1557,25 +1557,25 @@ func (suite *KeeperTestSuite) TestRebalanceDueToIntentChange() {
 		{
 			DelegationAddress: zone.DelegationAddress.Address,
 			ValidatorAddress:  vals[0].ValoperAddress,
-			Amount:            sdk.NewCoin("uatom", sdk.NewInt(1_000_000_000)),
+			Amount:            sdk.NewCoin("uatom", sdk.NewInt(1000)),
 			RedelegationEnd:   0,
 		},
 		{
 			DelegationAddress: zone.DelegationAddress.Address,
 			ValidatorAddress:  vals[1].ValoperAddress,
-			Amount:            sdk.NewCoin("uatom", sdk.NewInt(1_000_000_000)),
+			Amount:            sdk.NewCoin("uatom", sdk.NewInt(1000)),
 			RedelegationEnd:   0,
 		},
 		{
 			DelegationAddress: zone.DelegationAddress.Address,
 			ValidatorAddress:  vals[2].ValoperAddress,
-			Amount:            sdk.NewCoin("uatom", sdk.NewInt(1_000_000_000)),
+			Amount:            sdk.NewCoin("uatom", sdk.NewInt(1000)),
 			RedelegationEnd:   0,
 		},
 		{
 			DelegationAddress: zone.DelegationAddress.Address,
 			ValidatorAddress:  vals[3].ValoperAddress,
-			Amount:            sdk.NewCoin("uatom", sdk.NewInt(1_000_000_000)),
+			Amount:            sdk.NewCoin("uatom", sdk.NewInt(1000)),
 			RedelegationEnd:   0,
 		},
 	}

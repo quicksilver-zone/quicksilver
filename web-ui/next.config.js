@@ -10,15 +10,14 @@ module.exports = {
       {
         source: '/',
         destination: '/staking',
-        permanent: true, // Change to false if temporary redirect
+        permanent: true,
       },
     ];
   },
   typescript: {
-    // !! WARN !!
-    // Dangerously allow production builds to successfully complete even if
-    // your project has type errors.
-    // !! WARN !!
+    // !! WARN !! //
+    // There are no fatal errors in this project, this option is used as a workaround due to the amalgamation of packages we are using //
+    // This option will be removed once all dependencies are updated to use the lates versions //
     ignoreBuildErrors: true,
   },
 };

@@ -105,7 +105,7 @@ export const InfoBox: React.FC<AssetsAccordianProps> = ({ selectedOption, displa
                 </Text>
               </Flex>
               <Text pr={2} color="complimentary.900">
-                Low
+                3% of Rewards
               </Text>
             </Flex>
           </h2>

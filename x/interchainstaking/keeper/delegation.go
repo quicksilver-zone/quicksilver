@@ -195,10 +195,7 @@ func (*Keeper) PrepareDelegationMessagesForCoins(zone *types.Zone, allocations m
 	var msgs []sdk.Msg
 	for _, valoper := range utils.Keys(allocations) {
 		if allocations[valoper].IsPositive() {
-			if allocations[valoper].GTE(sdk.NewInt(1_000_000)) {
-				// don't delegate tiny amounts. TODO: make configurable per zone.
-				msgs = append(msgs, &stakingtypes.MsgDelegate{DelegatorAddress: zone.DelegationAddress.Address, ValidatorAddress: valoper, Amount: sdk.NewCoin(zone.BaseDenom, allocations[valoper])})
-			}
+			msgs = append(msgs, &stakingtypes.MsgDelegate{DelegatorAddress: zone.DelegationAddress.Address, ValidatorAddress: valoper, Amount: sdk.NewCoin(zone.BaseDenom, allocations[valoper])})
 		}
 	}
 	return msgs
@@ -208,7 +205,6 @@ func (*Keeper) PrepareDelegationMessagesForShares(zone *types.Zone, coins sdk.Co
 	var msgs []sdk.Msg
 	for _, coin := range coins.Sort() {
 		if coin.IsPositive() {
-			// no min amount here.
 			msgs = append(msgs, &lsmstakingtypes.MsgRedeemTokensForShares{DelegatorAddress: zone.DelegationAddress.Address, Amount: coin})
 		}
 	}
@@ -321,11 +317,9 @@ func (k *Keeper) FlushOutstandingDelegations(ctx sdk.Context, zone *types.Zone, 
 		return false
 	})
 
-	pendingAmount = pendingAmount.Add(k.GetInflightUnbondingAmount(ctx, zone))
-
 	coinsToFlush, hasNeg := sdk.NewCoins(delAddrBalance).SafeSub(pendingAmount...)
 	if hasNeg || coinsToFlush.IsZero() {
-		k.Logger(ctx).Debug("delegate account balance negative, setting outdated receipts")
+		k.Logger(ctx).Debug("delegate account balance negative, setting outdated reciepts")
 		k.SetReceiptsCompleted(ctx, zone.ChainId, exclusionTime, ctx.BlockTime(), delAddrBalance.Denom)
 		return nil
 	}

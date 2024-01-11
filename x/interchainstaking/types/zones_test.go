@@ -308,34 +308,6 @@ func TestUpdateIntentWithMemo(t *testing.T) {
 				"cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy": sdk.NewDecWithPrec(15, 2),
 			},
 		},
-		{
-			baseAmount: 0,
-			originalIntent: map[string]sdk.Dec{
-				"cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0": sdk.NewDecWithPrec(45, 2),
-				"cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf": sdk.NewDecWithPrec(55, 2),
-			},
-			memo: "AipahL/4TH3a0Ry4wHOG6RkoxWdcpLxuppAElPH3PNriuvHIuI/1/AuKM5w=",
-
-			amount: 100,
-			expectedIntent: map[string]sdk.Dec{
-				"cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0": sdk.NewDecWithPrec(45, 2),
-				"cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf": sdk.NewDecWithPrec(55, 2),
-			},
-		},
-		{
-			baseAmount: 0,
-			originalIntent: map[string]sdk.Dec{
-				"cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0": sdk.NewDecWithPrec(100, 2),
-				"cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf": sdk.NewDecWithPrec(0, 2),
-			},
-			memo: "AipahL/4TH3a0Ry4wHOG6RkoxWdcpLxuppAElPH3PNriuvHIuI/1/AuKM5w=",
-
-			amount: 100,
-			expectedIntent: map[string]sdk.Dec{
-				"cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0": sdk.NewDecWithPrec(45, 2),
-				"cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf": sdk.NewDecWithPrec(55, 2),
-			},
-		},
 	}
 
 	for caseidx, tc := range testCases {

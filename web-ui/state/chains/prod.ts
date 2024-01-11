@@ -1,3 +1,51 @@
+export const ibcDenomDepositMapping = {
+    osmosis: {
+      qATOM: 'qatom',
+      qOSMO: 'qosmo',
+      qSTARS: 'qstars',
+      qREGEN: 'qregen',
+      qSOMM: 'qsomm',
+    },
+    umee: {
+        qATOM: 'qatom',
+        qOSMO: 'qosmo',
+        qSTARS: 'qstars',
+        qREGEN: 'qregen',
+        qSOMM: 'qsomm',
+    },
+    secretnetwork: {
+        qATOM: 'qatom',
+        qOSMO: 'qosmo',
+        qSTARS: 'qstars',
+        qREGEN: 'qregen',
+        qSOMM: 'qsomm',
+    },
+  };
+
+  export const ibcDenomWithdrawMapping = {
+    osmosis: {
+      qATOM: 'ibc/FA602364BEC305A696CBDF987058E99D8B479F0318E47314C49173E8838C5BAC',
+      qOSMO: 'ibc/42D24879D4569CE6477B7E88206ADBFE47C222C6CAD51A54083E4A72594269FC',
+      qSTARS: 'ibc/46C83BB054E12E189882B5284542DB605D94C99827E367C9192CF0579CD5BC83',
+      qREGEN: 'ibc/79A676508A2ECA1021EDDC7BB9CF70CEEC9514C478DA526A5A8B3E78506C2206',
+      qSOMM: 'ibc/EAF76AD1EEF7B16D167D87711FB26ABE881AC7D9F7E6D0CF313D5FA530417208',
+    },
+    umee: {
+      qATOM: 'ibc/454725EA4029BAA99C293904336DE9A4B84E2BF7D83B9C56EE6B03E8A65FB5A1',
+      qOSMO: 'ibc/123',
+      qSTARS: 'ibc/123',
+      qREGEN: 'ibc/123',
+      qSOMM: 'ibc/123',
+    },
+    secretnetwork: {
+      qATOM: 'ibc/97048A1FAFF5D84D4A5DDD9976AD332A3CAD99C81BC5C0C2B82A50E4C2131FB2',
+      qOSMO: 'ibc/123',
+      qSTARS: 'ibc/123',
+      qREGEN: 'ibc/123',
+      qSOMM: 'ibc/123',
+    },
+  };
+
 export const networks = [
     {
       value: 'ATOM',
@@ -10,7 +58,7 @@ export const networks = [
     {
       value: 'OSMO',
       logo: '/quicksilver/img/networks/osmosis.svg',
-      qlogo: '/quicksilver/img/networks/qosmo.svg',
+      qlogo: '/quicksilver/img/networks/qosmo.png',
       name: 'Osmosis',
       chainName: 'osmosis',
       chainId: 'osmosis-1',
@@ -18,7 +66,7 @@ export const networks = [
     {
       value: 'STARS',
       logo: '/quicksilver/img/networks/stargaze.svg',
-      qlogo: '/quicksilver/img/networks/qstars.svg',
+      qlogo: '/quicksilver/img/networks/qstars.png',
       name: 'Stargaze',
       chainName: 'stargaze',
       chainId: 'stargaze-1',
@@ -34,7 +82,7 @@ export const networks = [
     {
       value: 'SOMM',
       logo: '/quicksilver/img/networks/sommelier.png',
-      qlogo: '/quicksilver/img/networks/sommelier.png',
+      qlogo: '/quicksilver/img/networks/qsomm.png',
       name: 'Sommelier',
       chainName: 'sommelier',
       chainId: 'sommelier-3',
@@ -53,15 +101,15 @@ export const networks = [
     {
       value: 'OSMO',
       logo: '/quicksilver/img/networks/osmosis.svg',
-      qlogo: '/quicksilver/img/networks/qosmo.svg',
+      qlogo: '/quicksilver/img/networks/qosmo.png',
       name: 'Osmosis',
-      chainName: 'osmosis',
+      chainName: 'osmosistestnet',
       chainId: 'osmo-test-5',
     },
     {
       value: 'STARS',
       logo: '/quicksilver/img/networks/stargaze.svg',
-      qlogo: '/quicksilver/img/networks/qstars.svg',
+      qlogo: '/quicksilver/img/networks/qstars.png',
       name: 'Stargaze',
       chainName: 'stargaze',
       chainId: 'elgafar-1',
@@ -77,7 +125,7 @@ export const networks = [
     {
       value: 'SOMM',
       logo: '/quicksilver/img/networks/sommelier.png',
-      qlogo: '/quicksilver/img/networks/sommelier.png',
+      qlogo: '/quicksilver/img/networks/qsomm.png',
       name: 'Sommelier',
       chainName: 'sommelier',
       chainId: 'sommelier-3',

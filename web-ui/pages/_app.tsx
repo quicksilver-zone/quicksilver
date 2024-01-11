@@ -1,6 +1,7 @@
 import '../styles/globals.css';
 import { Chain } from '@chain-registry/types';
 import { Box, ChakraProvider, Container, Fade, Flex } from '@chakra-ui/react';
+import { ibcAminoConverters, ibcProtoRegistry } from '@chalabi/quicksilverjs';
 import { Registry } from '@cosmjs/proto-signing';
 import { SigningStargateClientOptions, AminoTypes } from '@cosmjs/stargate';
 import { SignerOptions, WalletViewProps } from '@cosmos-kit/core';
@@ -10,11 +11,11 @@ import { wallets as leapWallets } from '@cosmos-kit/leap';
 import { ChainProvider, ThemeCustomizationProps } from '@cosmos-kit/react';
 import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
-import { chains, assets } from '@chalabi/chain-registry';
-import { cosmosAminoConverters, cosmosProtoRegistry } from 'interchain-query';
+import { chains, assets } from 'chain-registry';
+import { cosmos, cosmosAminoConverters, cosmosProtoRegistry } from 'interchain-query';
 import type { AppProps } from 'next/app';
 import { quicksilverProtoRegistry, quicksilverAminoConverters } from 'quicksilverjs';
-import { ibcAminoConverters, ibcProtoRegistry } from 'interchain-query';
+import { cosmosAminoConverters as cosmosAminoConvertersStride, cosmosProtoRegistry as cosmosProtoRegistryStride } from 'stridejs';
 
 import { Header, SideHeader } from '@/components';
 import { defaultTheme } from '@/config';
@@ -25,9 +26,16 @@ function CreateCosmosApp({ Component, pageProps }: AppProps) {
   const signerOptions: SignerOptions = {
     //@ts-ignore
     signingStargate: (chain: Chain): SigningStargateClientOptions | undefined => {
-      const mergedRegistry = new Registry([...cosmosProtoRegistry, ...quicksilverProtoRegistry, ...ibcProtoRegistry]);
+      //@ts-ignore
+      const mergedRegistry = new Registry([
+        ...cosmosProtoRegistryStride,
+        ...quicksilverProtoRegistry,
+        ...ibcProtoRegistry,
+        ...cosmosProtoRegistry,
+      ]);
 
       const mergedAminoTypes = new AminoTypes({
+        ...cosmosAminoConvertersStride,
         ...cosmosAminoConverters,
         ...quicksilverAminoConverters,
         ...ibcAminoConverters,
@@ -235,6 +243,10 @@ function CreateCosmosApp({ Component, pageProps }: AppProps) {
               rpc: [rpcEndpoints.osmosis ?? ''],
               rest: [lcdEndpoints.osmosis ?? ''],
             },
+            umee: {
+              rpc: ['https://rpc-umee-ia.cosmosia.notional.ventures/'],
+              rest: ['https://api-umee-ia.cosmosia.notional.ventures/'],
+            },
           },
         }}
         modalTheme={modalThemeOverrides}
@@ -254,6 +266,7 @@ function CreateCosmosApp({ Component, pageProps }: AppProps) {
             },
           },
         }}
+        //@ts-ignore
         signerOptions={signerOptions}
       >
         <QueryClientProvider client={queryClient}>

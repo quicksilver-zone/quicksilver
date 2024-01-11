@@ -17,8 +17,9 @@ type AssetsAccordianProps = {
 
 export const AssetsAccordian: React.FC<AssetsAccordianProps> = ({ selectedOption, balance, qBalance }) => {
   const qAssets = shiftDigits(qBalance, -6);
+
   const qAssetsDisplay = qAssets.includes('.') ? qAssets.substring(0, qAssets.indexOf('.') + 3) : qAssets;
-  const balanceDisplay = balance.includes('.') ? balance.substring(0, balance.indexOf('.') + 3) : balance;
+  const balanceDisplay = balance.includes('.') ? balance.substring(0, balance.indexOf('.') + 4) : balance;
 
   const renderQAssets = () => {
     if (qBalance) {
@@ -62,7 +63,7 @@ export const AssetsAccordian: React.FC<AssetsAccordianProps> = ({ selectedOption
           <h2>
             <AccordionButton _hover={{ cursor: 'default' }} borderRadius={'10px'} borderTopColor={'transparent'}>
               <Flex p={1} flexDirection="row" flex="1" alignItems="center">
-                <Image alt="atom" src={selectedOption.logo} boxSize="35px" mr={2} />
+                <Image alt="atom" src={selectedOption.logo} borderRadius={'full'} boxSize="35px" mr={2} />
                 <Text fontSize="16px" color={'white'}>
                   Available to stake
                 </Text>

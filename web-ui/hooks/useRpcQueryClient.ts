@@ -35,7 +35,7 @@ export const useRpcQueryClient = (chainName: string) => {
     }
   });
 
-  console.log('RPC Query Client:', rpcQueryClientQuery.data);
+ 
 
   return {
     rpcQueryClient: rpcQueryClientQuery.data,

@@ -10,23 +10,23 @@ import {
   FormControl,
   FormLabel,
   Input,
-  Select,
   useDisclosure,
   useToast,
   Spinner,
 } from '@chakra-ui/react';
+import { ibc } from '@chalabi/quicksilverjs';
+import { StdFee } from '@cosmjs/stargate';
 import { ChainName } from '@cosmos-kit/core';
 import { useChain, useManager } from '@cosmos-kit/react';
+import BigNumber from 'bignumber.js';
+import { assets, chains } from 'chain-registry';
 import { useState, useMemo, useEffect } from 'react';
 
 import { ChooseChain } from '@/components/react/choose-chain';
 import { handleSelectChainDropdown, ChainOption } from '@/components/types';
-import { ibc } from 'interchain-query';
-import { useBalanceQuery, useIbcBalanceQuery } from '@/hooks/useQueries';
 import { useTx } from '@/hooks';
-import BigNumber from 'bignumber.js';
-import { getCoin, getIbcInfo } from '@/utils';
-import { StdFee, coins } from '@cosmjs/stargate';
+import { useIbcBalanceQuery } from '@/hooks/useQueries';
+import { getCoin, getIbcInfo, shiftDigits } from '@/utils';
 
 export function DepositModal() {
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -80,13 +80,23 @@ export function DepositModal() {
     const coin = getCoin(fromChain ?? '');
     const transferAmount = new BigNumber(amount).shiftedBy(6).toString();
 
+    const mainTokens = assets.find(({ chain_name }) => chain_name === chainName);
+    const fees = chains.find(({ chain_name }) => chain_name === chainName)?.fees?.fee_tokens;
+    const mainDenom = mainTokens?.assets[0].base ?? '';
+    const fixedMinGasPrice = fees?.find(({ denom }) => denom === mainDenom)?.average_gas_price ?? '';
+    const feeAmount = shiftDigits(fixedMinGasPrice, 6);
+
     const fee: StdFee = {
-      amount: coins('1000', coin.base),
-      gas: '300000',
+      amount: [
+        {
+          denom: mainDenom,
+          amount: feeAmount.toString(),
+        },
+      ],
+      gas: '500000',
     };
 
-    const sourcePort = 'transfer';
-    const sourceChannel = 'channel-0';
+    const { sourcePort, sourceChannel } = getIbcInfo(fromChain ?? '', toChain ?? '');
 
     const token = {
       denom: 'ibc/635CB83EF1DFE598B10A3E90485306FD0D47D34217A4BE5FD9977FA010A5367D',

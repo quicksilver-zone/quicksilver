@@ -302,55 +302,55 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 			}
 		})
 
-		// run tests with LSM enabled. - disabled until we decide to use LSM unbonding.
-		// tt.name += "_LSM_enabled"
-		// suite.Run(tt.name, func() {
-		// 	suite.SetupTest()
-		// 	suite.setupTestZones()
+		// run tests with LSM enabled.
+		tt.name += "_LSM_enabled"
+		suite.Run(tt.name, func() {
+			suite.SetupTest()
+			suite.setupTestZones()
 
-		// 	ctx := suite.chainA.GetContext()
+			ctx := suite.chainA.GetContext()
 
-		// 	params := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetParams(ctx)
-		// 	params.UnbondingEnabled = true
-		// 	suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetParams(ctx, params)
+			params := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetParams(ctx)
+			params.UnbondingEnabled = true
+			suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetParams(ctx, params)
 
-		// 	err := suite.GetQuicksilverApp(suite.chainA).BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(sdk.NewCoin("uqatom", math.NewInt(10000000))))
-		// 	suite.NoError(err)
-		// 	err = suite.GetQuicksilverApp(suite.chainA).BankKeeper.SendCoinsFromModuleToAccount(ctx, icstypes.ModuleName, testAccount, sdk.NewCoins(sdk.NewCoin("uqatom", math.NewInt(10000000))))
-		// 	suite.NoError(err)
+			err := suite.GetQuicksilverApp(suite.chainA).BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(sdk.NewCoin("uqatom", math.NewInt(10000000))))
+			suite.NoError(err)
+			err = suite.GetQuicksilverApp(suite.chainA).BankKeeper.SendCoinsFromModuleToAccount(ctx, icstypes.ModuleName, testAccount, sdk.NewCoins(sdk.NewCoin("uqatom", math.NewInt(10000000))))
+			suite.NoError(err)
 
-		// 	// enable LSM
-		// 	zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
-		// 	suite.True(found)
-		// 	zone.LiquidityModule = true
-		// 	zone.UnbondingEnabled = true
-		// 	suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetZone(ctx, &zone)
+			// enable LSM
+			zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+			suite.True(found)
+			zone.LiquidityModule = true
+			zone.UnbondingEnabled = true
+			suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetZone(ctx, &zone)
 
-		// 	validators := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetValidatorAddresses(ctx, suite.chainB.ChainID)
-		// 	for _, delegation := range func(zone icstypes.Zone) []icstypes.Delegation {
-		// 		out := make([]icstypes.Delegation, 0)
-		// 		for _, valoper := range validators {
-		// 			out = append(out, icstypes.NewDelegation(zone.DelegationAddress.Address, valoper, sdk.NewCoin(zone.BaseDenom, sdk.NewInt(3000000))))
-		// 		}
-		// 		return out
-		// 	}(zone) {
-		// 		suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetDelegation(ctx, zone.ChainId, delegation)
-		// 	}
+			validators := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetValidatorAddresses(ctx, suite.chainB.ChainID)
+			for _, delegation := range func(zone icstypes.Zone) []icstypes.Delegation {
+				out := make([]icstypes.Delegation, 0)
+				for _, valoper := range validators {
+					out = append(out, icstypes.NewDelegation(zone.DelegationAddress.Address, valoper, sdk.NewCoin(zone.BaseDenom, sdk.NewInt(3000000))))
+				}
+				return out
+			}(zone) {
+				suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetDelegation(ctx, zone.ChainId, delegation)
+			}
 
-		// 	tt.malleate()
+			tt.malleate()
 
-		// 	msgSrv := icskeeper.NewMsgServerImpl(suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper)
-		// 	res, err := msgSrv.RequestRedemption(sdk.WrapSDKContext(suite.chainA.GetContext()), &msg)
+			msgSrv := icskeeper.NewMsgServerImpl(suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper)
+			res, err := msgSrv.RequestRedemption(sdk.WrapSDKContext(suite.chainA.GetContext()), &msg)
 
-		// 	if tt.expectErrLsm != "" {
-		// 		suite.Errorf(err, tt.expectErrLsm)
-		// 		suite.Nil(res)
-		// 		suite.T().Logf("Error: %v", err)
-		// 	} else {
-		// 		suite.NoError(err)
-		// 		suite.NotNil(res)
-		// 	}
-		// })
+			if tt.expectErrLsm != "" {
+				suite.Errorf(err, tt.expectErrLsm)
+				suite.Nil(res)
+				suite.T().Logf("Error: %v", err)
+			} else {
+				suite.NoError(err)
+				suite.NotNil(res)
+			}
+		})
 
 	}
 }
