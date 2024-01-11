@@ -189,7 +189,7 @@ function Home() {
         <Container
           flexDir={'column'}
           top={20}
-          mt={{ base: 10, md: 0 }}
+          mt={{ base: 10, md: 10 }}
           zIndex={2}
           position="relative"
           justifyContent="center"

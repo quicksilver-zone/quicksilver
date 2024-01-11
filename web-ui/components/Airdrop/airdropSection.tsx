@@ -89,7 +89,7 @@ const AirdropSection = () => {
         left: 0,
         right: 0,
         bottom: 0,
-        backgroundImage: "url('/quicksilver/img/underConstruction.png')",
+
         backgroundSize: 'contain',
         backgroundPosition: 'center',
         backdropFilter: 'blur(10px)',
