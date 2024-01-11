@@ -17,19 +17,18 @@ import {
   Input,
   Grid,
 } from '@chakra-ui/react';
+import { coins, StdFee } from '@cosmjs/amino';
 import { useChain } from '@cosmos-kit/react';
 import styled from '@emotion/styled';
+import { bech32 } from 'bech32';
+import { assets } from 'chain-registry';
+import { quicksilver } from 'quicksilverjs';
+import { ValidatorIntent } from 'quicksilverjs/types/codegen/quicksilver/interchainstaking/v1/interchainstaking';
 import React, { useEffect, useState } from 'react';
 
 import { IntentMultiModal } from './intentMultiModal';
-import { coins, StdFee } from '@cosmjs/amino';
-import { assets } from 'chain-registry';
 
-import { quicksilver } from 'quicksilverjs';
 import { useTx } from '@/hooks';
-
-import { ValidatorIntent } from 'quicksilverjs/types/codegen/quicksilver/interchainstaking/v1/interchainstaking';
-import { bech32 } from 'bech32';
 
 const ChakraModalContent = styled(ModalContent)`
   position: relative;

@@ -1,13 +1,13 @@
 import { Box, Flex, Text, Button, VStack, useColorModeValue, HStack, SkeletonCircle, Spinner } from '@chakra-ui/react';
 import { useChain } from '@cosmos-kit/react';
-
-import { defaultChainName } from '@/config';
-import { useAPYQuery, useBalanceQuery, useParamsQuery, useZoneQuery } from '@/hooks/useQueries';
-import { shiftDigits } from '@/utils';
 import { BsCoin } from 'react-icons/bs';
 
 import { DepositModal } from './modals/qckDepositModal';
 import { WithdrawModal } from './modals/qckWithdrawModal';
+
+import { defaultChainName } from '@/config';
+import { useAPYQuery, useBalanceQuery, useParamsQuery, useZoneQuery } from '@/hooks/useQueries';
+import { shiftDigits } from '@/utils';
 
 interface QuickBoxProps {
   stakingApy?: number;

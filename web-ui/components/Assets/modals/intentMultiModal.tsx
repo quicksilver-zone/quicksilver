@@ -21,13 +21,12 @@ import {
   InputLeftElement,
   Link,
 } from '@chakra-ui/react';
-import React, { useEffect } from 'react';
+import React from 'react';
 import { FaSearch } from 'react-icons/fa';
 
 import { ValidatorsTable } from '@/components/Staking/modals/validatorTable';
-
 import { useValidatorsQuery, useZoneQuery } from '@/hooks/useQueries';
-import { useMissedBlocks, useValidatorLogos } from '@/hooks/useQueries';
+import { useValidatorLogos } from '@/hooks/useQueries';
 
 interface MultiModalProps {
   isOpen: boolean;

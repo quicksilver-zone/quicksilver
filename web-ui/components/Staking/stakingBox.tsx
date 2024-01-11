@@ -1,3 +1,4 @@
+import { InfoOutlineIcon } from '@chakra-ui/icons';
 import {
   Box,
   Tabs,
@@ -30,9 +31,16 @@ import {
   SkeletonCircle,
   Link,
 } from '@chakra-ui/react';
+import { Coin, StdFee } from '@cosmjs/amino';
 import { useChain } from '@cosmos-kit/react';
+import { quicksilver } from 'quicksilverjs';
 import React, { useCallback, useEffect, useState } from 'react';
 import { FaStar } from 'react-icons/fa';
+
+import StakingProcessModal from './modals/stakingProcessModal';
+import TransferProcessModal from './modals/transferProcessModal';
+
+import { useTx } from '@/hooks';
 import {
   useAllBalancesQuery,
   useBalanceQuery,
@@ -42,17 +50,8 @@ import {
   useValidatorsQuery,
   useZoneQuery,
 } from '@/hooks/useQueries';
-
 import { getExponent } from '@/utils';
 import { shiftDigits } from '@/utils';
-
-import StakingProcessModal from './modals/stakingProcessModal';
-import { Coin, StdFee } from '@cosmjs/amino';
-import { quicksilver } from 'quicksilverjs';
-import { useTx } from '@/hooks';
-
-import { InfoOutlineIcon } from '@chakra-ui/icons';
-import TransferProcessModal from './modals/transferProcessModal';
 
 type StakingBoxProps = {
   selectedOption: {

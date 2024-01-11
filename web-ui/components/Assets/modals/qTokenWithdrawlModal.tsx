@@ -15,19 +15,19 @@ import {
   useToast,
   Spinner,
 } from '@chakra-ui/react';
+import { ibc } from '@chalabi/quicksilverjs';
+import { StdFee, coins } from '@cosmjs/stargate';
 import { ChainName } from '@cosmos-kit/core';
 import { useChain, useManager } from '@cosmos-kit/react';
+import BigNumber from 'bignumber.js';
 import { useState, useMemo, useEffect } from 'react';
 
 import { ChooseChain } from '@/components/react/choose-chain';
 import { handleSelectChainDropdown, ChainOption } from '@/components/types';
-import { ibc } from '@chalabi/quicksilverjs';
-import { useBalanceQuery, useIbcBalanceQuery } from '@/hooks/useQueries';
 import { useTx } from '@/hooks';
-import BigNumber from 'bignumber.js';
-import { getCoin, getIbcInfo } from '@/utils';
-import { StdFee, coins } from '@cosmjs/stargate';
+import { useIbcBalanceQuery } from '@/hooks/useQueries';
 import { ibcDenomWithdrawMapping } from '@/state/chains/prod';
+import { getCoin, getIbcInfo } from '@/utils';
 
 interface QDepositModalProps {
   token: string;

@@ -1,8 +1,9 @@
-import { useUnbondingQuery } from '@/hooks/useQueries';
-import { shiftDigits } from '@/utils';
 import { ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons';
 import { Table, Thead, Tbody, Tr, Th, Td, TableContainer, Text, Box, Flex, IconButton, Spinner } from '@chakra-ui/react';
 import { useState } from 'react';
+
+import { useUnbondingQuery } from '@/hooks/useQueries';
+import { shiftDigits } from '@/utils';
 
 const statusCodes = new Map<number, string>([
   [2, 'QUEUED'],

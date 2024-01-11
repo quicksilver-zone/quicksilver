@@ -1,3 +1,5 @@
+import { useAccordionStyles } from '@chakra-ui/accordion';
+import { CheckIcon, ChevronDownIcon, ChevronRightIcon, InfoOutlineIcon } from '@chakra-ui/icons';
 import {
   Accordion,
   AccordionItem,
@@ -17,8 +19,6 @@ import {
   Badge,
   useDisclosure,
 } from '@chakra-ui/react';
-import { CheckIcon, ChevronDownIcon, ChevronRightIcon, InfoOutlineIcon } from '@chakra-ui/icons';
-import { useAccordionStyles } from '@chakra-ui/accordion';
 import { useState } from 'react';
 
 interface AirdropAccordionItemProps {

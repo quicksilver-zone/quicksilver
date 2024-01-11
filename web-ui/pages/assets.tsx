@@ -9,6 +9,7 @@ import AssetsGrid from '@/components/Assets/assetsGrid';
 import StakingIntent from '@/components/Assets/intents';
 import MyPortfolio from '@/components/Assets/portfolio';
 import QuickBox from '@/components/Assets/quickbox';
+import RewardsClaim from '@/components/Assets/rewardsClaim';
 import UnbondingAssetsTable from '@/components/Assets/unbondingTable';
 import {
   useAPYQuery,
@@ -20,7 +21,6 @@ import {
   useZoneQuery,
 } from '@/hooks/useQueries';
 import { shiftDigits, toNumber } from '@/utils';
-import RewardsClaim from '@/components/Assets/rewardsClaim';
 
 export interface PortfolioItemInterface {
   title: string;

@@ -1,8 +1,11 @@
-import { shiftDigits } from '@/utils';
 import { Box, SimpleGrid, VStack, Text, Button, Divider, useColorModeValue, HStack, Flex, Grid, GridItem, Spinner } from '@chakra-ui/react';
 import React from 'react';
+
 import QDepositModal from './modals/qTokenDepositModal';
 import QWithdrawModal from './modals/qTokenWithdrawlModal';
+
+import { shiftDigits } from '@/utils';
+
 interface AssetCardProps {
   assetName: string;
   balance: string;

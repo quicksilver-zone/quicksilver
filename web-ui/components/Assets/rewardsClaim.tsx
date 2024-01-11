@@ -1,3 +1,4 @@
+import { ArrowForwardIcon, InfoIcon } from '@chakra-ui/icons';
 import {
   Box,
   Flex,
@@ -14,9 +15,9 @@ import {
   ModalCloseButton,
   ModalHeader,
 } from '@chakra-ui/react';
-import { ArrowForwardIcon, InfoIcon } from '@chakra-ui/icons';
-import { useLiquidRewardsQuery } from '@/hooks/useQueries';
 import { Key } from 'react';
+
+import { useLiquidRewardsQuery } from '@/hooks/useQueries';
 import { shiftDigits } from '@/utils';
 
 interface RewardsClaimInterface {

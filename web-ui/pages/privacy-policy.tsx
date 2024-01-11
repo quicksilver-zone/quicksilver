@@ -36,10 +36,10 @@ const PrivacyPolicyPage = () => {
             Information We Collect
           </Heading>
           <Text fontSize="md" color="gray.200">
-            When you visit our website (https://app.quicksilver.zone), and more generally, use any of our services (the "Services", which
-            include the Website), we appreciate that you are trusting us with your personal information. We take your privacy very
-            seriously. In this privacy notice, we seek to explain to you in the clearest way possible what information we collect, how we
-            use it, and what rights you have in relation to it.
+            When you visit our website (https://app.quicksilver.zone), and more generally, use any of our services (the
+            &ldquo;Services&rdquo;, which include the Website), we appreciate that you are trusting us with your personal information. We
+            take your privacy very seriously. In this privacy notice, we seek to explain to you in the clearest way possible what
+            information we collect, how we use it, and what rights you have in relation to it.
           </Text>
           <Heading as="h2" size="lg" mt={4}>
             Cookies and Tracking Technologies

@@ -1,6 +1,7 @@
-import AirdropSection from '@/components/Airdrop/airdropSection';
 import { Container, Text, SlideFade } from '@chakra-ui/react';
 import Head from 'next/head';
+
+import AirdropSection from '@/components/Airdrop/airdropSection';
 
 export default function Home() {
   return (

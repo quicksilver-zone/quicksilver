@@ -2,9 +2,10 @@ import { ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons';
 import { Box, Flex, Text, Button, IconButton, VStack, Image, Heading, SlideFade, Spinner } from '@chakra-ui/react';
 import { color } from 'framer-motion';
 import { useState } from 'react';
-import SignalIntentModal from './modals/signalIntentProcess';
-import { useIntentQuery } from '@/hooks/useQueries';
 
+import SignalIntentModal from './modals/signalIntentProcess';
+
+import { useIntentQuery } from '@/hooks/useQueries';
 import { networks as prodNetworks, testNetworks as devNetworks } from '@/state/chains/prod';
 
 export interface StakingIntentProps {

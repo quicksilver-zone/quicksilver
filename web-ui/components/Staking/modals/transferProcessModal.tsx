@@ -20,24 +20,21 @@ import {
   Grid,
   Checkbox,
 } from '@chakra-ui/react';
+import chains from '@chalabi/chain-registry';
+import { MsgTokenizeShares } from '@chalabi/quicksilverjs/dist/codegen/quicksilver/lsm-types/v1/types';
+import { coins, StdFee } from '@cosmjs/amino';
 import { useChain } from '@cosmos-kit/react';
 import styled from '@emotion/styled';
+import { bech32 } from 'bech32';
+import { assets } from 'chain-registry';
+import { TxResponse } from 'interchain-query/cosmos/base/abci/v1beta1/abci';
 import React, { useEffect, useState } from 'react';
-import { MsgTokenizeShares } from '@chalabi/quicksilverjs/dist/codegen/quicksilver/lsm-types/v1/types';
-
-import { MultiModal } from './validatorSelectionModal';
+import { cosmos } from 'stridejs';
 
 import { useQueryHooks, useTx } from '@/hooks';
 import { useZoneQuery } from '@/hooks/useQueries';
 import { liquidStakeTx, unbondLiquidStakeTx } from '@/tx/liquidStakeTx';
-import { bech32 } from 'bech32';
 import { shiftDigits } from '@/utils';
-import { coins, StdFee } from '@cosmjs/amino';
-import { assets } from 'chain-registry';
-
-import chains from '@chalabi/chain-registry';
-import { TxResponse } from 'interchain-query/cosmos/base/abci/v1beta1/abci';
-import { cosmos } from 'stridejs';
 
 const ChakraModalContent = styled(ModalContent)`
   position: relative;
@@ -106,7 +103,7 @@ export const TransferProcessModal: React.FC<StakingModalProps> = ({
     if (isTokenized === undefined) {
       setStep(1);
     }
-  });
+  }, [isTokenized, selectedValidator]);
   const [step, setStep] = useState(1);
   const getProgressColor = (circleStep: number) => {
     if (step >= circleStep) return 'complimentary.900';

@@ -33,7 +33,7 @@ export default function Home() {
                 />
               </Box>
               <Text fontSize="48px" fontWeight="bold" color="white">
-                YOU WON'T BE BACK
+                YOU WON&apos;T BE BACK
               </Text>
               <Text fontSize="20px" color="white">
                 Access to this site is not permitted from your current location in the US or the UK.

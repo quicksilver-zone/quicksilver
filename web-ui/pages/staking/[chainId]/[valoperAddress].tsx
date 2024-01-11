@@ -1,8 +1,4 @@
 import { Container, Text, SlideFade, Image, Box, Center, VStack, SkeletonCircle } from '@chakra-ui/react';
-import Head from 'next/head';
-
-import { useRouter } from 'next/router';
-
 import {
   Tabs,
   TabList,
@@ -24,22 +20,21 @@ import {
   Tooltip,
   Link,
 } from '@chakra-ui/react';
+import { Coin, StdFee, coins } from '@cosmjs/amino';
 import { useChain } from '@cosmos-kit/react';
+import { bech32 } from 'bech32';
+import { assets, chains } from 'chain-registry';
+import Head from 'next/head';
+import { useRouter } from 'next/router';
+import { cosmos, quicksilver } from 'quicksilverjs';
 import React, { useEffect, useState } from 'react';
 
+import { useTx } from '@/hooks';
 import { useBalanceQuery, useQBalanceQuery, useValidatorLogos, useValidatorsQuery, useZoneQuery } from '@/hooks/useQueries';
-
+import { networks as prodNetworks, testNetworks as devNetworks } from '@/state/chains/prod';
 import { getExponent } from '@/utils';
 import { shiftDigits } from '@/utils';
 
-import { Coin, StdFee, coins } from '@cosmjs/amino';
-import { cosmos, quicksilver } from 'quicksilverjs';
-import { useTx } from '@/hooks';
-
-import { networks as prodNetworks, testNetworks as devNetworks } from '@/state/chains/prod';
-
-import { bech32 } from 'bech32';
-import { assets, chains } from 'chain-registry';
 
 function StakingWithValidator() {
   const router = useRouter();

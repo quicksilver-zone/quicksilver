@@ -9,7 +9,6 @@ import {
 
 import { useGrpcQueryClient } from './useGrpcQueryClient';
 import { useQueryHooks } from './useQueryHooks2';
-
 import {
   parseProposals,
   parseQuorum,

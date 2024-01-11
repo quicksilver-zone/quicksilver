@@ -1,5 +1,6 @@
-import { shiftDigits } from '@/utils';
 import { Box, Flex, Text, Icon, VStack, HStack, Heading, Spinner, Tooltip, Grid } from '@chakra-ui/react';
+
+import { shiftDigits } from '@/utils';
 
 interface PortfolioItemInterface {
   title: string;

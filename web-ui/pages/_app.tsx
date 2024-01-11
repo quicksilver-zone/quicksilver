@@ -1,6 +1,7 @@
 import '../styles/globals.css';
 import { Chain } from '@chain-registry/types';
 import { Box, ChakraProvider, Container, Fade, Flex } from '@chakra-ui/react';
+import { ibcAminoConverters, ibcProtoRegistry } from '@chalabi/quicksilverjs';
 import { Registry } from '@cosmjs/proto-signing';
 import { SigningStargateClientOptions, AminoTypes } from '@cosmjs/stargate';
 import { SignerOptions, WalletViewProps } from '@cosmos-kit/core';
@@ -11,12 +12,10 @@ import { ChainProvider, ThemeCustomizationProps } from '@cosmos-kit/react';
 import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { chains, assets } from 'chain-registry';
-
+import { cosmos, cosmosAminoConverters, cosmosProtoRegistry } from 'interchain-query';
 import type { AppProps } from 'next/app';
 import { quicksilverProtoRegistry, quicksilverAminoConverters } from 'quicksilverjs';
 import { cosmosAminoConverters as cosmosAminoConvertersStride, cosmosProtoRegistry as cosmosProtoRegistryStride } from 'stridejs';
-import { cosmos, cosmosAminoConverters, cosmosProtoRegistry } from 'interchain-query';
-import { ibcAminoConverters, ibcProtoRegistry } from '@chalabi/quicksilverjs';
 
 import { Header, SideHeader } from '@/components';
 import { defaultTheme } from '@/config';
