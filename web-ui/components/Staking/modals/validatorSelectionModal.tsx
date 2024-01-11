@@ -28,7 +28,6 @@ import { ValidatorsTable } from './validatorTable';
 
 import { useValidatorsQuery, useZoneQuery } from '@/hooks/useQueries';
 import { useMissedBlocks, useValidatorLogos } from '@/hooks/useQueries';
-
 interface MultiModalProps {
   isOpen: boolean;
   onClose: () => void;
