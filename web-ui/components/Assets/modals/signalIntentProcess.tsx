@@ -124,9 +124,6 @@ export const SignalIntentModal: React.FC<StakingModalProps> = ({ isOpen, onClose
   const totalWeights = 1;
   const numberOfValidators = selectedValidators.length;
 
-  // Calculate the weight for each validator
-  const weightPerValidator = numberOfValidators ? (totalWeights / numberOfValidators).toFixed(4) : '0';
-
   const [weights, setWeights] = useState<{ [key: string]: number }>({});
   const [totalWeight, setTotalWeight] = useState<string>('0');
 
@@ -160,14 +157,28 @@ export const SignalIntentModal: React.FC<StakingModalProps> = ({ isOpen, onClose
 
   const [useDefaultWeights, setUseDefaultWeights] = useState(true);
 
-  const intents: ValidatorIntent[] = selectedValidators.map((validator) => {
-    const weightAsFraction = useDefaultWeights ? defaultWeight : (weights[validator.operatorAddress] ?? 0) / 100;
+  const weightPerValidator = (totalWeights / numberOfValidators).toFixed(4);
 
+  // Assign weights to each validator, except the last one
+  let intents = selectedValidators.slice(0, -1).map((validator) => {
     return {
       valoperAddress: validator.operatorAddress,
-      weight: weightAsFraction.toString(),
+      weight: weightPerValidator,
     };
   });
+
+  // Calculate the remaining weight for the last validator
+  const totalAssignedWeight = intents.reduce((sum, intent) => sum + parseFloat(intent.weight), 0);
+  const remainingWeight = (1 - totalAssignedWeight).toFixed(4);
+
+  // Assign the remaining weight to the last validator
+  if (selectedValidators.length > 0) {
+    const lastValidator = selectedValidators[selectedValidators.length - 1];
+    intents.push({
+      valoperAddress: lastValidator.operatorAddress,
+      weight: remainingWeight,
+    });
+  }
 
   const formattedIntentsString = intents.map((intent) => `${intent.weight}${intent.valoperAddress}`).join(',');
 
