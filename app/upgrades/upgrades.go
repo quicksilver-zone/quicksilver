@@ -25,8 +25,8 @@ func Upgrades() []Upgrade {
 
 		// v1.2: this needs to be present to support upgrade on mainnet
 		{UpgradeName: V010217UpgradeName, CreateUpgradeHandler: NoOpHandler},
-
 		{UpgradeName: V010405UpgradeName, CreateUpgradeHandler: NoOpHandler},
+		{UpgradeName: V010406UpgradeName, CreateUpgradeHandler: V010406UpgradeHandler},
 	}
 }
 
@@ -41,7 +41,7 @@ func NoOpHandler(
 	}
 }
 
-func V010405UpgradeHandler(
+func V010406UpgradeHandler(
 	mm *module.Manager,
 	configurator module.Configurator,
 	appKeepers *keepers.AppKeepers,
@@ -82,6 +82,12 @@ func V010405UpgradeHandler(
 				query := stakingtypes.QueryValidatorsRequest{}
 				_ = appKeepers.InterchainstakingKeeper.EmitValSetQuery(ctx, zone.ConnectionId, zone.ChainId, query, math.NewInt(-1))
 			}
+
+			appKeepers.InterchainstakingKeeper.SetAddressZoneMapping(ctx, zone.DepositAddress.Address, zone.ChainId)
+			appKeepers.InterchainstakingKeeper.SetAddressZoneMapping(ctx, zone.DelegationAddress.Address, zone.ChainId)
+			appKeepers.InterchainstakingKeeper.SetAddressZoneMapping(ctx, zone.PerformanceAddress.Address, zone.ChainId)
+			appKeepers.InterchainstakingKeeper.SetAddressZoneMapping(ctx, zone.WithdrawalAddress.Address, zone.ChainId)
+
 			zone.Validators = nil
 			appKeepers.InterchainstakingKeeper.SetZone(ctx, zone)
 			return false
