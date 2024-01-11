@@ -35,7 +35,6 @@ import { networks as prodNetworks, testNetworks as devNetworks } from '@/state/c
 import { getExponent } from '@/utils';
 import { shiftDigits } from '@/utils';
 
-
 function StakingWithValidator() {
   const router = useRouter();
   const { chainId, valoperAddress } = router.query;
