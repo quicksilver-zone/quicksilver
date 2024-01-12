@@ -1,5 +1,18 @@
 import { ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons';
-import { Box, Flex, Text, Button, IconButton, VStack, Image, Heading, SlideFade, Spinner, SkeletonCircle } from '@chakra-ui/react';
+import {
+  Box,
+  Flex,
+  Text,
+  Button,
+  IconButton,
+  VStack,
+  Image,
+  Heading,
+  SlideFade,
+  Spinner,
+  SkeletonCircle,
+  SkeletonText,
+} from '@chakra-ui/react';
 import { color } from 'framer-motion';
 import { JSXElementConstructor, Key, ReactElement, ReactFragment, ReactPortal, useState } from 'react';
 
@@ -53,7 +66,7 @@ const StakingIntent: React.FC<StakingIntentProps> = ({ address, isWalletConnecte
     intent?.data?.intent.intents.map((validatorIntent: { valoper_address: string; weight: string }) => {
       const validatorDetails = validatorsMap[validatorIntent.valoper_address];
       return {
-        moniker: validatorDetails?.moniker || '...',
+        moniker: validatorDetails?.moniker,
         logoUrl: validatorDetails?.logoUrl,
         percentage: `${(parseFloat(validatorIntent.weight) * 100).toFixed(2)}%`,
       };
@@ -169,7 +182,18 @@ const StakingIntent: React.FC<StakingIntentProps> = ({ address, isWalletConnecte
                       endColor="complimentary.100"
                     />
                   )}
-                  <Text fontSize="md">{truncateString(validator.moniker ?? '', 20)}</Text>
+                  {validator.moniker ? (
+                    <Text fontSize="md">{truncateString(validator.moniker, 20)}</Text>
+                  ) : (
+                    <SkeletonText
+                      display="inline-block"
+                      verticalAlign="middle"
+                      startColor="complimentary.900"
+                      endColor="complimentary.100"
+                      noOfLines={1}
+                      width="100px"
+                    />
+                  )}
                 </Flex>
                 <Text fontSize="lg" fontWeight="bold">
                   {validator.percentage}

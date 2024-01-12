@@ -25,6 +25,7 @@ import { useState, useEffect } from 'react';
 import { FaDiscord, FaTwitter, FaGithub, FaInfo } from 'react-icons/fa';
 import { IoIosDocument } from 'react-icons/io';
 import { MdPrivacyTip } from 'react-icons/md';
+import { WalletButton } from '../wallet-button';
 
 export const SideHeader = () => {
   const router = useRouter();
@@ -126,7 +127,7 @@ export const SideHeader = () => {
               QUICKSILVER
             </DrawerHeader>
             <DrawerBody>
-              {['Staking', 'Governance', 'Defi', 'Assets', 'Airdrop'].map((item) => (
+              {['Airdrop', 'Assets', 'Defi', 'Governance', 'Staking'].map((item) => (
                 <Box key={item} mb={4} position="relative">
                   <Link
                     href={`/quicksilver/${item.toLowerCase()}`}
@@ -158,6 +159,7 @@ export const SideHeader = () => {
                   </Link>
                 </Box>
               ))}
+              <WalletButton chainName={'quicksilver'} />
               <HStack mt={'50px'} alignContent={'center'} justifyContent={'space-around'}>
                 <Box
                   _hover={{

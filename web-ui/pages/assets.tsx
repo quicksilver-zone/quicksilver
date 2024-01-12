@@ -205,7 +205,7 @@ function Home() {
             Assets
           </Text>
 
-          <Flex flexDir={'row'} py={6} alignItems="center" justifyContent={'space-between'} gap="4">
+          <Flex flexDir={{ base: 'column', md: 'row' }} py={6} alignItems="center" justifyContent={'space-between'} gap="4">
             {!isWalletConnected && (
               <Flex
                 w="100%"
@@ -233,7 +233,7 @@ function Home() {
                   bgColor="rgba(255,255,255,0.1)"
                   borderRadius="10px"
                   p={5}
-                  w="sm"
+                  w={{ base: 'full', md: 'sm' }}
                   h="sm"
                   flexDir="column"
                   justifyContent="space-around"
@@ -249,7 +249,7 @@ function Home() {
                   bgColor="rgba(255,255,255,0.1)"
                   borderRadius="10px"
                   p={5}
-                  w="2xl"
+                  w={{ base: 'full', md: '2xl' }}
                   h="sm"
                 >
                   <MyPortfolio
@@ -267,7 +267,7 @@ function Home() {
                   bgColor="rgba(255,255,255,0.1)"
                   borderRadius="10px"
                   p={5}
-                  w="lg"
+                  w={{ base: 'full', md: 'lg' }}
                   h="sm"
                 >
                   <StakingIntent isWalletConnected={isWalletConnected} address={address ?? ''} />
@@ -275,9 +275,9 @@ function Home() {
               </>
             )}
           </Flex>
+          {/* <Spacer />
+          <RewardsClaim address={address ?? ''} /> */}
           <Spacer />
-          {/* <RewardsClaim address={address ?? ''} />
-          <Spacer /> */}
           {/* Assets Grid */}
           <AssetsGrid nonNative={liquidRewards} isWalletConnected={isWalletConnected} assets={assetsData} />
           <Spacer />

@@ -178,14 +178,22 @@ const DefiTable = () => {
                     {formatApy(asset.apy)}
                   </Td>
                   <Td textAlign={'center'} borderBottomColor="transparent" isNumeric>
-                    {asset.tvl}
+                    ${asset.tvl.toLocaleString()}
                   </Td>
                   <Td textAlign={'center'} borderBottomColor="transparent">
                     {asset.provider}
                   </Td>
                   <Td textAlign={'center'} borderBottomColor="transparent">
                     <Link href={asset.link} isExternal={true} _hover={{ textDecoration: 'none' }}>
-                      <Button minW="150px" backgroundColor="rgba(255, 128, 0, 0.8)" rightIcon={<ExternalLinkIcon />} variant="ghost">
+                      <Button
+                        _hover={{
+                          bgColor: 'complimentary.1000',
+                        }}
+                        minW="150px"
+                        backgroundColor="rgba(255, 128, 0, 0.8)"
+                        rightIcon={<ExternalLinkIcon />}
+                        variant="ghost"
+                      >
                         {actionTitles[asset.action.toLowerCase().replace(/\s+/g, '-') as keyof typeof actionTitles]}
                       </Button>
                     </Link>
