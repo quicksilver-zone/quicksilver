@@ -275,8 +275,8 @@ function Home() {
               </>
             )}
           </Flex>
-          {/* <Spacer />
-          <RewardsClaim address={address ?? ''} /> */}
+          <Spacer />
+          <RewardsClaim address={address ?? ''} />
           <Spacer />
           {/* Assets Grid */}
           <AssetsGrid nonNative={liquidRewards} isWalletConnected={isWalletConnected} assets={assetsData} />

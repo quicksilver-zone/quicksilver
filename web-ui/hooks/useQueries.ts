@@ -41,9 +41,10 @@ type Amount = {
 };
 
 
-type Asset = {
-  [key: string]: Amount[];
-};
+interface Asset {
+  Type: string;
+  Amount: AssetAmount[];
+}
 
 
 type Errors = {
@@ -70,6 +71,49 @@ type UseLiquidRewardsQueryReturnType = {
   isLoading: boolean;
   isError: boolean;
 };
+
+interface ProofOp {
+  type: string;
+  key: Uint8Array;  // Updated to Uint8Array
+  data: Uint8Array; // Updated to Uint8Array
+}
+
+interface Proof {
+  key: Uint8Array;  // Updated to Uint8Array
+  data: Uint8Array; // Updated to Uint8Array
+  proof_ops: {
+    ops: ProofOp[];
+  };
+  height: Long; // Assuming height is a number
+  proof_type: string;
+}
+
+interface Message {
+  user_address: string;
+  zone: string;
+  src_zone: string;
+  claim_type: number;
+  proofs: Proof[];
+  // Remove height and proof_type if they are not needed here
+}
+
+interface AssetAmount {
+  denom: string;
+  amount: string;
+}
+
+interface LiquidEpochData {
+  messages: Message[];
+  assets: { [key: string]: Asset[] };
+  errors: Record<string, unknown>; 
+}
+
+// Type for the useLiquidEpochQuery return
+interface UseLiquidEpochQueryReturnType {
+  liquidEpoch: LiquidEpochData | undefined;
+  isLoading: boolean;
+  isError: boolean;
+}
 
 
 
@@ -322,6 +366,36 @@ export const useLiquidRewardsQuery = (address: string): UseLiquidRewardsQueryRet
   };
 
 }
+
+export const useLiquidEpochQuery = (address: string): UseLiquidEpochQueryReturnType => {
+  const liquidEpochQuery = useQuery(
+    ['liquidEpoch', address],
+    async () => {
+      if (!address) {
+        throw new Error('Address is not available');
+      }
+
+      const response = await axios.get<LiquidEpochData>(`https://claim.test.quicksilver.zone/${address}/epoch`);
+
+
+      if (response.data.messages.length === 0) {
+        console.log('No messages found'); 
+      }
+
+      return response.data;
+    },
+    {
+      enabled: !!address,
+      staleTime: Infinity,
+    },
+  );
+
+  return {
+    liquidEpoch: liquidEpochQuery.data,
+    isLoading: liquidEpochQuery.isLoading,
+    isError: liquidEpochQuery.isError,
+  };
+};
 
 export const useUnbondingQuery = (chainName: string, address: string) => {
   const env = process.env.NEXT_PUBLIC_CHAIN_ENV;

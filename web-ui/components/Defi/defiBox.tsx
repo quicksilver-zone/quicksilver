@@ -13,7 +13,7 @@ import {
   Text,
   Select,
   Stack,
-  useColorModeValue,
+  Image,
   ButtonGroup,
   HStack,
   Link,
@@ -59,7 +59,7 @@ const filterCategories: Record<string, (data: DefiData) => boolean> = {
 };
 
 const formatApy = (apy: number) => {
-  return `${(apy * 100).toFixed(2)}%`; // Converts to percentage and formats to 2 decimal places
+  return `${(apy * 100).toFixed(2)}%`;
 };
 
 const DefiTable = () => {
@@ -77,6 +77,18 @@ const DefiTable = () => {
   };
   const isMobile = useBreakpointValue({ base: true, 1013: true, md: false });
   const filteredData = defi ? defi.filter(filterCategories[activeFilter]) : [];
+
+  type ProviderKey = 'osmosis' | 'ux' | 'shade';
+
+  const providerIcons: Record<ProviderKey, string> = {
+    osmosis: '/quicksilver/img/osmoIcon.svg',
+    ux: '/quicksilver/img/ux.png',
+    shade: '/quicksilver/img/shd.svg',
+  };
+
+  const isProviderKey = (key: string): key is ProviderKey => {
+    return key in providerIcons;
+  };
 
   return (
     <Box backdropFilter="blur(50px)" bgColor="rgba(255,255,255,0.1)" flex="1" borderRadius="10px" p={6} rounded="md">
@@ -168,9 +180,18 @@ const DefiTable = () => {
             {defi &&
               filteredData.map((asset, index) => (
                 <Tr _even={{ bg: 'rgba(255, 128, 0, 0.1)' }} key={index} borderBottomColor={'transparent'}>
-                  <Td borderBottomColor="transparent">
+                  <Td textAlign={'center'} borderBottomColor="transparent">
                     <Flex align="center">
-                      <Box w="2rem" h="2rem" bg="gray.200" rounded="full" mr={2}></Box>
+                      <Box w="2rem" h="2rem" rounded="full" mr={2}>
+                        {isProviderKey(asset.provider.toLowerCase()) && (
+                          <Image
+                            src={providerIcons[asset.provider.toLowerCase() as ProviderKey]}
+                            alt={asset.provider}
+                            boxSize="100%"
+                            objectFit="cover"
+                          />
+                        )}
+                      </Box>
                       <Text>{asset.assetPair}</Text>
                     </Flex>
                   </Td>
