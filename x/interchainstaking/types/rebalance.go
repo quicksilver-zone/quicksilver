@@ -9,8 +9,6 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/quicksilver-zone/quicksilver/v7/utils"
 )
 
@@ -48,7 +46,7 @@ func CalculateAllocationDeltas(
 
 		target, ok := targetAllocations.GetForValoper(valoper)
 		if !ok {
-			target = &ValidatorIntent{ValoperAddress: valoper, Weight: sdk.ZeroDec()}
+			target = &ValidatorIntent{ValoperAddress: valoper, Weight: sdkmath.LegacyZeroDec()}
 		}
 		targetAmount := target.Weight.MulInt(currentSum).TruncateInt()
 

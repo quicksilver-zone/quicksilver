@@ -90,7 +90,7 @@ func (*Zone) ConvertCoinsToOrdinalIntents(coins sdk.Coins, zoneVals map[string]b
 
 		val, ok := out.GetForValoper(coinParts[0])
 		if !ok {
-			val = &ValidatorIntent{ValoperAddress: coinParts[0], Weight: sdk.ZeroDec()}
+			val = &ValidatorIntent{ValoperAddress: coinParts[0], Weight: sdkmath.LegacyZeroDec()}
 		}
 		val.Weight = val.Weight.Add(sdkmath.LegacyNewDecFromInt(coin.Amount))
 		out = out.SetForValoper(coinParts[0], val)
@@ -195,7 +195,7 @@ func (z *Zone) validatorIntentsFromBytes(coins sdk.Coins, weightBytes []byte) (v
 		}
 		val, ok := validatorIntents.GetForValoper(valAddr)
 		if !ok {
-			val = &ValidatorIntent{ValoperAddress: valAddr, Weight: sdk.ZeroDec()}
+			val = &ValidatorIntent{ValoperAddress: valAddr, Weight: sdkmath.LegacyZeroDec()}
 		}
 		val.Weight = val.Weight.Add(coinWeight)
 		validatorIntents = validatorIntents.SetForValoper(valAddr, val)

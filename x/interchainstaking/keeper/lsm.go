@@ -7,6 +7,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 
 	"cosmossdk.io/store/prefix"
+	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
@@ -72,7 +73,7 @@ func (k Keeper) AllLsmCaps(ctx sdk.Context) map[string]types.LsmCaps {
 }
 
 func (k Keeper) GetLiquidStakedSupply(ctx sdk.Context, zone *types.Zone) sdk.Dec {
-	out := sdk.ZeroDec()
+	out := sdkmath.LegacyZeroDec()
 	for _, val := range k.GetActiveValidators(ctx, zone.ChainId) {
 		if val.Status == stakingtypes.BondStatusBonded {
 			out = out.Add(val.LiquidShares)

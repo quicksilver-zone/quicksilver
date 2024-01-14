@@ -248,7 +248,7 @@ func (k Keeper) CalcUserValidatorSelectionAllocations(
 		uSum := sdkmath.LegacyNewDec(0)
 		for _, intent := range di.GetIntents() {
 			// calc overall user score
-			score := sdk.ZeroDec()
+			score := sdkmath.LegacyZeroDec()
 			if vs, exists := zs.ValidatorScores[intent.ValoperAddress]; exists {
 				if !vs.Score.IsNil() {
 					score = intent.Weight.Mul(vs.Score)

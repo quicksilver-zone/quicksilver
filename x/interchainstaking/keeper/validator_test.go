@@ -40,8 +40,8 @@ func (suite *KeeperTestSuite) TestStoreGetDeleteValidator() {
 			VotingPower:         sdkmath.NewInt(1000),
 			Status:              stakingtypes.BondStatusBonded,
 			Score:               sdkmath.LegacyNewDec(0),
-			LiquidShares:        sdk.ZeroDec(),
-			ValidatorBondShares: sdk.ZeroDec(),
+			LiquidShares:        sdkmath.LegacyZeroDec(),
+			ValidatorBondShares: sdkmath.LegacyZeroDec(),
 		}
 		err = app.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, newValidator)
 		suite.NoError(err)

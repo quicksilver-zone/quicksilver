@@ -30,7 +30,7 @@ func TestSharesToTokens(t *testing.T) {
 	require.Equal(t, sdkmath.ZeroInt(), nilSharesVal.SharesToTokens(sdkmath.LegacyNewDec(100)))
 
 	nolSharesVal := types.Validator{
-		DelegatorShares: sdk.ZeroDec(),
+		DelegatorShares: sdkmath.LegacyZeroDec(),
 	}
 	require.Equal(t, sdkmath.ZeroInt(), nolSharesVal.SharesToTokens(sdkmath.LegacyNewDec(100)))
 }

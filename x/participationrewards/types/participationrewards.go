@@ -43,7 +43,7 @@ func (dp *DistributionProportions) ValidateBasic() error {
 	if len(errs) == 0 {
 		totalProportions := dp.Total()
 
-		if !totalProportions.Equal(sdkmath.OneDec()) {
+		if !totalProportions.Equal(sdkmath.LegacyOneDec()) {
 			errs["TotalProportions"] = fmt.Errorf("%w, got %v", ErrInvalidTotalProportions, totalProportions)
 		}
 	}

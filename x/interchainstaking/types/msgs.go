@@ -112,7 +112,7 @@ func IntentsFromString(input string) ([]*ValidatorIntent, error) {
 
 	out := []*ValidatorIntent{}
 
-	wsum := sdk.ZeroDec()
+	wsum := sdkmath.LegacyZeroDec()
 	istrs := strings.Split(input, ",")
 	for i, istr := range istrs {
 		wstr := iexpr.ReplaceAllString(istr, "$1")
@@ -327,15 +327,15 @@ func ValidatePort(portID string) error {
 }
 
 func (caps LsmCaps) Validate() error {
-	if caps.GlobalCap.GT(sdk.OneDec()) || caps.GlobalCap.LT(sdk.ZeroDec()) {
+	if caps.GlobalCap.GT(sdk.OneDec()) || caps.GlobalCap.LT(sdkmath.LegacyZeroDec()) {
 		return errors.New("global cap must be between 0 and 1")
 	}
 
-	if caps.ValidatorCap.GT(sdk.OneDec()) || caps.ValidatorCap.LT(sdk.ZeroDec()) {
+	if caps.ValidatorCap.GT(sdk.OneDec()) || caps.ValidatorCap.LT(sdkmath.LegacyZeroDec()) {
 		return errors.New("validator cap must be between 0 and 1")
 	}
 
-	if caps.ValidatorBondCap.LTE(sdk.ZeroDec()) {
+	if caps.ValidatorBondCap.LTE(sdkmath.LegacyZeroDec()) {
 		return errors.New("validator bond cap must be greater than 0")
 	}
 

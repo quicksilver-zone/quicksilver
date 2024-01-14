@@ -86,7 +86,7 @@ func (di DelegatorIntent) MustIntentForValoper(valoper string) *ValidatorIntent 
 }
 
 func (di DelegatorIntent) Normalize() DelegatorIntent {
-	summedWeight := sdk.ZeroDec()
+	summedWeight := sdkmath.LegacyZeroDec()
 	// cached sorted intents as we don't modify in the first iteration.
 	sortedIntents := di.SortedIntents()
 	for _, i := range sortedIntents {

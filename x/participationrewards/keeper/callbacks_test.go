@@ -95,7 +95,7 @@ func (suite *KeeperTestSuite) executeValidatorSelectionRewardsCallback(performan
 
 	var respJSON strings.Builder
 	respJSON.Write([]byte(`{"rewards":[`))
-	total := sdk.ZeroDec()
+	total := sdkmath.LegacyZeroDec()
 	i := 0
 	for val, amount := range valRewards {
 		if i > 0 {

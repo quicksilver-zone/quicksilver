@@ -17,7 +17,7 @@ import (
 )
 
 // a helper function used to multiply coins
-func mulCoins(coins sdk.Coins, multiplier sdk.Dec) sdk.Coins {
+func mulCoins(coins sdk.Coins, multiplier sdkmath.LegacyDec) sdk.Coins {
 	outCoins := sdk.Coins{}
 	for _, coin := range coins {
 		outCoin := sdk.NewCoin(coin.Denom, multiplier.MulInt(coin.Amount).TruncateInt())
@@ -45,7 +45,7 @@ func TestCalcExitPool(t *testing.T) {
 	// create these pools used for testing
 	twoAssetPool, err := stableswap.NewStableswapPool(
 		1,
-		stableswap.PoolParams{ExitFee: sdk.ZeroDec()},
+		stableswap.PoolParams{ExitFee: sdkmath.LegacyZeroDec()},
 		twoStablePoolAssets,
 		[]uint64{1, 1},
 		"",
@@ -54,7 +54,7 @@ func TestCalcExitPool(t *testing.T) {
 
 	threeAssetPool, err := balancer.NewBalancerPool(
 		1,
-		balancer.PoolParams{SwapFee: sdk.ZeroDec(), ExitFee: sdk.ZeroDec()},
+		balancer.PoolParams{SwapFee: sdkmath.LegacyZeroDec(), ExitFee: sdkmath.LegacyZeroDec()},
 		threeBalancerPoolAssets,
 		"",
 		time.Now(),
@@ -72,7 +72,7 @@ func TestCalcExitPool(t *testing.T) {
 
 	threeAssetPoolWithExitFee, err := balancer.NewBalancerPool(
 		1,
-		balancer.PoolParams{SwapFee: sdk.ZeroDec(), ExitFee: sdkmath.LegacyMustNewDecFromStr("0.0002")},
+		balancer.PoolParams{SwapFee: sdkmath.LegacyZeroDec(), ExitFee: sdkmath.LegacyMustNewDecFromStr("0.0002")},
 		threeBalancerPoolAssets,
 		"",
 		time.Now(),
@@ -133,7 +133,7 @@ func TestCalcExitPool(t *testing.T) {
 			require.NoError(t, err, "test: %v", test.name)
 
 			// exitCoins = ( (1 - exitFee) * exitingShares / poolTotalShares ) * poolTotalLiquidity
-			expExitCoins := mulCoins(test.pool.GetTotalPoolLiquidity(emptyContext), (sdk.OneDec().Sub(exitFee)).MulInt(test.exitingShares).QuoInt(test.pool.GetTotalShares()))
+			expExitCoins := mulCoins(test.pool.GetTotalPoolLiquidity(emptyContext), (sdkmath.LegacyOneDec().Sub(exitFee)).MulInt(test.exitingShares).QuoInt(test.pool.GetTotalShares()))
 			require.Equal(t, expExitCoins.Sort().String(), exitCoins.Sort().String(), "test: %v", test.name)
 		}
 	}
@@ -159,7 +159,7 @@ func TestMaximalExactRatioJoin(t *testing.T) {
 			pool: func() gamm.PoolI {
 				balancerPool, err := balancer.NewBalancerPool(
 					1,
-					balancer.PoolParams{SwapFee: sdk.ZeroDec(), ExitFee: sdk.ZeroDec()},
+					balancer.PoolParams{SwapFee: sdkmath.LegacyZeroDec(), ExitFee: sdkmath.LegacyZeroDec()},
 					balancerPoolAsset,
 					"",
 					time.Now(),
@@ -176,7 +176,7 @@ func TestMaximalExactRatioJoin(t *testing.T) {
 			pool: func() gamm.PoolI {
 				balancerPool, err := balancer.NewBalancerPool(
 					1,
-					balancer.PoolParams{SwapFee: sdk.ZeroDec(), ExitFee: sdk.ZeroDec()},
+					balancer.PoolParams{SwapFee: sdkmath.LegacyZeroDec(), ExitFee: sdkmath.LegacyZeroDec()},
 					balancerPoolAsset,
 					"",
 					time.Now(),
@@ -193,7 +193,7 @@ func TestMaximalExactRatioJoin(t *testing.T) {
 	for _, test := range tests {
 		balancerPool, err := balancer.NewBalancerPool(
 			1,
-			balancer.PoolParams{SwapFee: sdk.ZeroDec(), ExitFee: sdk.ZeroDec()},
+			balancer.PoolParams{SwapFee: sdkmath.LegacyZeroDec(), ExitFee: sdkmath.LegacyZeroDec()},
 			balancerPoolAsset,
 			"",
 			time.Now(),

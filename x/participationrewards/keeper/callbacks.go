@@ -212,7 +212,7 @@ func UmeeTotalBorrowsUpdateCallback(ctx sdk.Context, k *Keeper, response []byte,
 		return fmt.Errorf("unexpected query request prefix %q, want %q", g, w)
 	}
 
-	totalBorrows := sdk.ZeroDec()
+	totalBorrows := sdkmath.LegacyZeroDec()
 	if err := totalBorrows.Unmarshal(response); err != nil {
 		return err
 	}
@@ -249,7 +249,7 @@ func UmeeInterestScalarUpdateCallback(ctx sdk.Context, k *Keeper, response []byt
 		return fmt.Errorf("unexpected query request prefix %q, want %q", g, w)
 	}
 
-	interestScalar := sdk.ZeroDec()
+	interestScalar := sdkmath.LegacyZeroDec()
 	if err := interestScalar.Unmarshal(response); err != nil {
 		return err
 	}

@@ -594,7 +594,7 @@ func TestGovSetLsmCaps(t *testing.T) {
 		},
 		{
 			Name: "invalid zero bond cap",
-			Msg:  types.MsgGovSetLsmCaps{Title: "test", Description: "test", ChainId: "chain-1", Caps: &types.LsmCaps{ValidatorCap: sdk.OneDec(), ValidatorBondCap: sdk.ZeroDec(), GlobalCap: sdkmath.LegacyNewDecWithPrec(50, 2)}, Authority: addressutils.GenerateAddressForTestWithPrefix("quick")},
+			Msg:  types.MsgGovSetLsmCaps{Title: "test", Description: "test", ChainId: "chain-1", Caps: &types.LsmCaps{ValidatorCap: sdk.OneDec(), ValidatorBondCap: sdkmath.LegacyZeroDec(), GlobalCap: sdkmath.LegacyNewDecWithPrec(50, 2)}, Authority: addressutils.GenerateAddressForTestWithPrefix("quick")},
 			Err:  "validator bond cap must be greater than 0",
 		},
 		{
