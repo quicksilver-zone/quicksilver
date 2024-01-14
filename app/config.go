@@ -45,7 +45,7 @@ func DefaultConfig() network.Config {
 }
 
 func NewAppConstructor(encCfg EncodingConfig) network.AppConstructor {
-	return func(val network.Validator) servertypes.Application {
+	return func(val network.ValidatorI) servertypes.Application {
 		return NewQuicksilver(
 			val.Ctx.Logger,
 			dbm.NewMemDB(),
@@ -60,8 +60,8 @@ func NewAppConstructor(encCfg EncodingConfig) network.AppConstructor {
 			GetWasmOpts(EmptyAppOptions{}),
 			false,
 			false,
-			baseapp.SetPruning(purningtypes.NewPruningOptionsFromString(val.AppConfig.Pruning)),
-			// baseapp.SetMinGasPrices(val.AppConfig.MinGasPrices),
+			baseapp.SetPruning(purningtypes.NewPruningOptionsFromString(val.AppConfig().Pruning)),
+			// baseapp.SetMinGasPrices(val.AppConfig().MinGasPrices),
 		)
 	}
 }

@@ -46,7 +46,6 @@ func NewAnteHandler(options HandlerOptions) sdk.AnteHandler {
 		ante.NewSetUpContextDecorator(),
 		wasmkeeper.NewLimitSimulationGasDecorator(options.WasmConfig.SimulationGasLimit),
 		wasmkeeper.NewCountTXDecorator(options.TxCounterStoreKey),
-
 		ante.NewExtensionOptionsDecorator(options.ExtensionOptionChecker),
 		//		ante.NewMempoolFeeDecorator(),
 		ante.NewValidateBasicDecorator(),

@@ -438,7 +438,7 @@ func (k *Keeper) GetUnbondingEnabled(ctx sdk.Context) bool {
 	return out
 }
 
-func (k *Keeper) GetCommissionRate(ctx sdk.Context) sdk.Dec {
+func (k *Keeper) GetCommissionRate(ctx sdk.Context) sdkmath.LegacyDec {
 	var out sdk.Dec
 	k.paramStore.Get(ctx, types.KeyCommissionRate, &out)
 	return out
@@ -664,7 +664,7 @@ func (k *Keeper) GetRatio(ctx sdk.Context, zone *types.Zone, epochRewards sdkmat
 	if qAssetAmount.IsZero() {
 		// ratio 1.0 (default 1:1 ratio between nativeAssets and qAssets)
 		// native assets should not reach zero before qAssets (discount rate asymptote)
-		return sdk.OneDec(), true
+		return sdkmath.LegacyOneDec(), true
 	}
 
 	return sdkmath.LegacyNewDecFromInt(nativeAssetAmount.Add(epochRewards).Add(nativeAssetUnbondingAmount).Add(nativeAssetUnbonded)).Quo(sdkmath.LegacyNewDecFromInt(qAssetAmount)), false

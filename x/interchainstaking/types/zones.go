@@ -67,12 +67,12 @@ func (z *Zone) ValidateCoinsForZone(coins sdk.Coins, zoneVals map[string]bool) e
 // memo functionality
 
 // this method exist to make testing easier!
-func (z *Zone) UpdateIntentWithCoins(intent DelegatorIntent, multiplier sdk.Dec, inAmount sdk.Coins, vals map[string]bool) DelegatorIntent {
+func (z *Zone) UpdateIntentWithCoins(intent DelegatorIntent, multiplier sdkmath.LegacyDec, inAmount sdk.Coins, vals map[string]bool) DelegatorIntent {
 	// coinIntent is ordinal
 	return intent.AddOrdinal(multiplier, z.ConvertCoinsToOrdinalIntents(inAmount, vals))
 }
 
-func (*Zone) UpdateZoneIntentWithMemo(memoIntent ValidatorIntents, intent DelegatorIntent, multiplier sdk.Dec) DelegatorIntent {
+func (*Zone) UpdateZoneIntentWithMemo(memoIntent ValidatorIntents, intent DelegatorIntent, multiplier sdkmath.LegacyDec) DelegatorIntent {
 	return intent.AddOrdinal(multiplier, memoIntent)
 }
 

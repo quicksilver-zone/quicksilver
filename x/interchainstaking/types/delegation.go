@@ -147,7 +147,10 @@ func DetermineAllocationsForDelegation(currentAllocations map[string]sdkmath.Int
 	sum := deltas.Sum()
 
 	// unequalAllocation is the portion of input that should be distributed in attempt to make targets == 0 (that is, in line with intent).
-	unequalAllocation := sdk.MinInt(sum, input)
+	unequalAllocation := sum
+	if input.LT(sum) {
+		unequalAllocation = input
+	}
 
 	if !unequalAllocation.IsZero() {
 		for idx := range deltas {

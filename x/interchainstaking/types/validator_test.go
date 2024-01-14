@@ -7,8 +7,6 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/quicksilver-zone/quicksilver/v7/utils/addressutils"
 	"github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking/types"
 )
@@ -52,7 +50,7 @@ func TestNormalizeIntentWithOneIntent(t *testing.T) {
 	di.Intents = append(di.Intents, &types.ValidatorIntent{ValoperAddress: vals[0], Weight: sdkmath.LegacyNewDec(1000)})
 	di = di.Normalize()
 	require.Equal(t, len(di.Intents), 1)
-	require.Equal(t, di.Intents[0].Weight, sdk.OneDec())
+	require.Equal(t, di.Intents[0].Weight, sdkmath.LegacyOneDec())
 }
 
 func TestNormalizeIntentWithEqualIntents(t *testing.T) {
@@ -64,9 +62,9 @@ func TestNormalizeIntentWithEqualIntents(t *testing.T) {
 
 	di = di.Normalize()
 	require.Equal(t, len(di.Intents), 3)
-	require.Equal(t, di.Intents[0].Weight, sdk.OneDec().Quo(sdkmath.LegacyNewDec(3)))
-	require.Equal(t, di.Intents[1].Weight, sdk.OneDec().Quo(sdkmath.LegacyNewDec(3)))
-	require.Equal(t, di.Intents[2].Weight, sdk.OneDec().Quo(sdkmath.LegacyNewDec(3)))
+	require.Equal(t, di.Intents[0].Weight, sdkmath.LegacyOneDec().Quo(sdkmath.LegacyNewDec(3)))
+	require.Equal(t, di.Intents[1].Weight, sdkmath.LegacyOneDec().Quo(sdkmath.LegacyNewDec(3)))
+	require.Equal(t, di.Intents[2].Weight, sdkmath.LegacyOneDec().Quo(sdkmath.LegacyNewDec(3)))
 }
 
 func TestNormalizeIntentWithNonEqualIntents(t *testing.T) {
@@ -84,9 +82,9 @@ func TestNormalizeIntentWithNonEqualIntents(t *testing.T) {
 
 func TestOrdinalizeIntentWithEqualIntents(t *testing.T) {
 	di := types.DelegatorIntent{Delegator: addressutils.GenerateAccAddressForTest().String(), Intents: []*types.ValidatorIntent{
-		{ValoperAddress: vals[0], Weight: sdk.OneDec().Quo(sdkmath.LegacyNewDec(3))},
-		{ValoperAddress: vals[1], Weight: sdk.OneDec().Quo(sdkmath.LegacyNewDec(3))},
-		{ValoperAddress: vals[2], Weight: sdk.OneDec().Quo(sdkmath.LegacyNewDec(3))},
+		{ValoperAddress: vals[0], Weight: sdkmath.LegacyOneDec().Quo(sdkmath.LegacyNewDec(3))},
+		{ValoperAddress: vals[1], Weight: sdkmath.LegacyOneDec().Quo(sdkmath.LegacyNewDec(3))},
+		{ValoperAddress: vals[2], Weight: sdkmath.LegacyOneDec().Quo(sdkmath.LegacyNewDec(3))},
 	}}
 	di = di.Ordinalize(sdkmath.LegacyNewDec(3000))
 	require.Equal(t, len(di.Intents), 3)
@@ -109,9 +107,9 @@ func TestAddOrdinal(t *testing.T) {
 	di := types.DelegatorIntent{
 		Delegator: addressutils.GenerateAccAddressForTest().String(),
 		Intents: []*types.ValidatorIntent{
-			{ValoperAddress: vals[0], Weight: sdk.OneDec().Quo(sdkmath.LegacyNewDec(3))},
-			{ValoperAddress: vals[1], Weight: sdk.OneDec().Quo(sdkmath.LegacyNewDec(3))},
-			{ValoperAddress: vals[2], Weight: sdk.OneDec().Quo(sdkmath.LegacyNewDec(3))},
+			{ValoperAddress: vals[0], Weight: sdkmath.LegacyOneDec().Quo(sdkmath.LegacyNewDec(3))},
+			{ValoperAddress: vals[1], Weight: sdkmath.LegacyOneDec().Quo(sdkmath.LegacyNewDec(3))},
+			{ValoperAddress: vals[2], Weight: sdkmath.LegacyOneDec().Quo(sdkmath.LegacyNewDec(3))},
 		},
 	}
 
@@ -135,9 +133,8 @@ func TestAddOrdinal(t *testing.T) {
 
 func TestAddOrdinalWithNewVal(t *testing.T) {
 	di := types.DelegatorIntent{Delegator: addressutils.GenerateAccAddressForTest().String(), Intents: []*types.ValidatorIntent{
-		{ValoperAddress: vals[0], Weight: sdk.OneDec().Quo(sdkmath.LegacyNewDec(3))},
-		{ValoperAddress: vals[1], Weight: sdk.OneDec().Quo(sdkmath.LegacyNewDec(3))},
-		{ValoperAddress: vals[2], Weight: sdk.OneDec().Quo(sdkmath.LegacyNewDec(3))},
+		{ValoperAddress: vals[1], Weight: sdkmath.LegacyOneDec().Quo(sdkmath.LegacyNewDec(3))},
+		{ValoperAddress: vals[2], Weight: sdkmath.LegacyOneDec().Quo(sdkmath.LegacyNewDec(3))},
 	}}
 
 	newIntents := types.ValidatorIntents{

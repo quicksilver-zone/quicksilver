@@ -117,7 +117,6 @@ func TestAppStateDeterminism(t *testing.T) {
 				app.DefaultNodeHome,
 				simulation.FlagPeriodValue,
 				app.MakeEncodingConfig(),
-				wasm.EnableAllProposals,
 				app.EmptyAppOptions{},
 				app.GetWasmOpts(app.EmptyAppOptions{}),
 				false,

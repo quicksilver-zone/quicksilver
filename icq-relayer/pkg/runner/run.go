@@ -117,8 +117,10 @@ func Run(cfg *config.Config, home string) error {
 		metrics.SendQueue.WithLabelValues("send-queue").Set(float64(len(sendQueue[c.ChainID])))
 	}
 
-	query := tmquery.MustParse(fmt.Sprintf("message.module='%s'", "interchainquery"))
-
+	query, err := tmquery.Parse(fmt.Sprintf("message.module='%s'", "interchainquery"))
+	if err != nil {
+		// handle error
+	}
 	wg := &sync.WaitGroup{}
 	defer wg.Wait()
 
