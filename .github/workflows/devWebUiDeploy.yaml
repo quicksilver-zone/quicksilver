@@ -8,7 +8,7 @@ on:
       - web-ui/**
   pull_request:
     branches:
-      - bunDev
+      - bunDev2
     paths:
       - web-ui/**
 
