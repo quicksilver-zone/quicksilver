@@ -150,6 +150,37 @@ export const useBalanceQuery = (chainName: string, address: string) => {
   };
 };
 
+export const useAuthChecker = (address: string) => {
+  const authQuery = useQuery(
+    ['auth', address],
+    async () => {
+      if (!address) {
+        throw new Error('Address is undefined or null');
+      }
+
+      try {
+        const url = `https://lcd.quicksilver.zone/cosmos/authz/v1beta1/grants?granter=${address}&grantee=quick1c4vz0535677xpdksxh5um7zqqwfsw7245ppdaj&msgTypeUrl=/quicksilver.participationrewards.v1.MsgSubmitClaim`;
+        const response = await axios.get(url);
+        return { data: response.data, error: null };
+      } catch (error) {
+        // Capture and return error
+        return { data: null, error: error };
+      }
+    },
+    {
+      enabled: !!address,
+      staleTime: Infinity,
+    },
+  );
+
+  return {
+    authData: authQuery.data?.data,
+    authError: authQuery.data?.error,
+    isLoading: authQuery.isLoading,
+    isError: authQuery.isError,
+  };
+};
+
 export const useParamsQuery = (chainName: string) => {
   const { grpcQueryClient } = useGrpcQueryClient(chainName);
 
@@ -379,7 +410,7 @@ export const useLiquidEpochQuery = (address: string): UseLiquidEpochQueryReturnT
 
 
       if (response.data.messages.length === 0) {
-        console.log('No messages found'); 
+        console.error('No messages found'); 
       }
 
       return response.data;

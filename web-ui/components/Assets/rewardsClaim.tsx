@@ -1,4 +1,4 @@
-import { ArrowForwardIcon, InfoIcon } from '@chakra-ui/icons';
+import { ArrowForwardIcon, CloseIcon, InfoIcon } from '@chakra-ui/icons';
 import {
   Box,
   Flex,
@@ -14,10 +14,13 @@ import {
   Stack,
   ModalCloseButton,
   ModalHeader,
+  HStack,
+  Checkbox,
+  Spinner,
 } from '@chakra-ui/react';
 import { Key, useState } from 'react';
 
-import { useLiquidEpochQuery, useLiquidRewardsQuery } from '@/hooks/useQueries';
+import { useAuthChecker, useLiquidEpochQuery, useLiquidRewardsQuery } from '@/hooks/useQueries';
 import { shiftDigits } from '@/utils';
 import { quicksilver } from 'quicksilverjs';
 import { useTx } from '@/hooks';
@@ -29,18 +32,20 @@ import { MsgGrant } from 'interchain-query/cosmos/authz/v1beta1/tx';
 
 interface RewardsClaimInterface {
   address: string;
+  onClose: () => void;
 }
 
 function transformProofs(proofs: any[]) {
   return proofs.map((proof) => ({
-    key: proof.key, // Convert from base64 to Uint8Array if needed
-    data: proof.data, // Convert from base64 to Uint8Array if needed
+    key: proof.key,
+    data: proof.data,
     proofOps: proof.proof_ops
       ? {
+          //@ts-ignore
           ops: proof.proof_ops.ops.map((op) => ({
             type: op.type,
-            key: op.key, // Convert from base64 to Uint8Array if needed
-            data: op.data, // Convert from base64 to Uint8Array if needed
+            key: op.key,
+            data: op.data,
           })),
         }
       : undefined,
@@ -49,7 +54,7 @@ function transformProofs(proofs: any[]) {
   }));
 }
 
-export const RewardsClaim: React.FC<RewardsClaimInterface> = ({ address }) => {
+export const RewardsClaim: React.FC<RewardsClaimInterface> = ({ address, onClose }) => {
   const { tx } = useTx('quicksilver' ?? '');
 
   const [transactionStatus, setTransactionStatus] = useState('Pending');
@@ -57,9 +62,6 @@ export const RewardsClaim: React.FC<RewardsClaimInterface> = ({ address }) => {
   const [isError, setIsError] = useState<boolean>(false);
   const { liquidRewards, isLoading } = useLiquidRewardsQuery(address);
   const { liquidEpoch, isLoading: isEpochLoading } = useLiquidEpochQuery(address);
-  console.log(liquidEpoch);
-
-  const { isOpen, onOpen, onClose } = useDisclosure();
 
   const { submitClaim } = quicksilver.participationrewards.v1.MessageComposer.withTypeUrl;
 
@@ -142,66 +144,65 @@ export const RewardsClaim: React.FC<RewardsClaimInterface> = ({ address }) => {
     }
   };
 
+  const [isOpen, setIsOpen] = useState(false);
+
+  const [check, setCheck] = useState(false);
+
+  const [autoClaimEnabled, setAutoClaimEnabled] = useState(false);
+
+  const handleAutoClaimToggle = () => {
+    setAutoClaimEnabled(!autoClaimEnabled);
+  };
+
+  const transactionHandler = autoClaimEnabled ? handleAutoClaimRewards : handleClaimRewards;
+
   return (
-    <>
-      <Text fontSize="xl" fontWeight="bold" color="white" mb={4}>
-        Participation Rewards
-      </Text>
-      <Flex
-        flexDirection={['column', 'column', 'row']}
-        justifyContent="space-between"
-        alignItems="flex-start"
-        bgColor="rgba(255,255,255,0.1)"
-        p="4"
-        borderRadius="lg"
-        mb="4"
-        gap="6"
-      >
-        <VStack flex="1" spacing="3.5" alignItems="flex-start">
-          <Text color="white" fontSize="base" fontWeight="normal">
-            Stake with validators with a high PR score to earn QCK rewards. Automatic claiming of rewards is{' '}
-            <Text as="span" textDecoration="underline">
-              required
-            </Text>{' '}
-            for the protocol to consider your validator staking intent.
+    <Box bgColor="rgb(32,32,32)" maxW={'sm'} p="4" borderRadius="lg" mb="4">
+      <Flex direction="column" alignItems="flex-end">
+        <CloseIcon color="white" cursor="pointer" onClick={onClose} _hover={{ color: 'complimentary.900' }} />
+        <VStack alignItems="flex-start" spacing="2">
+          <Text fontSize="xl" fontWeight="bold" color="white">
+            Participation Rewards
           </Text>
-          <Button leftIcon={<InfoIcon />} variant="link" colorScheme="blue" onClick={onOpen}>
-            Learn more about Participation Rewards
-          </Button>
-        </VStack>
-
-        <Box flex="2" overflowY="auto" maxH="300px" p="4" borderRadius="lg" border="1px" borderColor="white" maxW={'200px'}>
-          <Stack spacing={4}>
-            {!isLoading &&
-              liquidRewards?.assets?.['rhye-2']?.map((assetGroup) =>
-                assetGroup.Amount.map((asset, index) => (
-                  <Text key={index} color="white" fontSize="sm">
-                    {Number(shiftDigits(asset.amount, -6)).toLocaleString()} {asset.denom.toUpperCase().slice(1)}
-                  </Text>
-                )),
-              )}
-            {isLoading && <Text>Loading rewards...</Text>}
-          </Stack>
-        </Box>
-
-        <VStack flex="1" spacing="3.5" alignItems="flex-end">
-          <Button size="lg" colorScheme="blue" onClick={handleClaimRewards} isDisabled={isLoading || !liquidRewards}>
-            Claim All Rewards
-          </Button>
+          <Text pb={2} color="white" fontSize="md">
+            Claim your participation rewards. Rewards will be sent to your wallet at the next epoch.
+          </Text>
+          <HStack gap={8} justifyContent={'space-between'}>
+            <Checkbox
+              _selected={{ bgColor: 'transparent' }}
+              _active={{
+                borderColor: 'complimentary.900',
+              }}
+              _hover={{
+                borderColor: 'complimentary.900',
+              }}
+              _focus={{
+                borderColor: 'complimentary.900',
+                boxShadow: '0 0 0 3px #FF8000',
+              }}
+              isChecked={autoClaimEnabled}
+              onChange={handleAutoClaimToggle}
+              colorScheme="orange"
+            >
+              <Text color="white" fontSize="sm">
+                Enable Automatic Claiming
+              </Text>
+            </Checkbox>
+            <Button
+              _hover={{
+                bgColor: 'complimentary.500',
+              }}
+              minW={'120px'}
+              onClick={transactionHandler}
+              size="sm"
+              alignSelf="end"
+            >
+              {isError ? 'Try Again' : isSigning ? <Spinner /> : 'Claim Rewards'}
+            </Button>
+          </HStack>
         </VStack>
       </Flex>
-
-      <Modal isOpen={isOpen} onClose={onClose} isCentered>
-        <ModalOverlay />
-        <ModalContent backgroundColor="gray.800" color="white">
-          <ModalHeader>Participation Rewards</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            <Text>More information about participation rewards...</Text>
-          </ModalBody>
-        </ModalContent>
-      </Modal>
-    </>
+    </Box>
   );
 };
 

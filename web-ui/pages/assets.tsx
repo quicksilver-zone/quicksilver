@@ -13,6 +13,7 @@ import RewardsClaim from '@/components/Assets/rewardsClaim';
 import UnbondingAssetsTable from '@/components/Assets/unbondingTable';
 import {
   useAPYQuery,
+  useAuthChecker,
   useBalanceQuery,
   useIntentQuery,
   useLiquidRewardsQuery,
@@ -182,6 +183,24 @@ function Home() {
   }, [qBalances, qAPYRates]);
 
   const { liquidRewards, isLoading } = useLiquidRewardsQuery(address ?? '');
+  const { authData, authError } = useAuthChecker(address ?? '');
+
+  const [showRewardsClaim, setShowRewardsClaim] = useState(false);
+  const [userClosedRewardsClaim, setUserClosedRewardsClaim] = useState(false);
+
+  useEffect(() => {
+    if (!authData && authError && !userClosedRewardsClaim) {
+      setShowRewardsClaim(true);
+    } else {
+      setShowRewardsClaim(false);
+    }
+  }, [authData, authError, userClosedRewardsClaim]);
+
+  // Function to close the RewardsClaim component
+  const closeRewardsClaim = () => {
+    setShowRewardsClaim(false);
+    setUserClosedRewardsClaim(true);
+  };
 
   return (
     <>
@@ -275,8 +294,7 @@ function Home() {
               </>
             )}
           </Flex>
-          <Spacer />
-          <RewardsClaim address={address ?? ''} />
+
           <Spacer />
           {/* Assets Grid */}
           <AssetsGrid nonNative={liquidRewards} isWalletConnected={isWalletConnected} assets={assetsData} />
@@ -287,6 +305,11 @@ function Home() {
           </Box>
           <Box h="40px"></Box>
         </Container>
+        {showRewardsClaim && (
+          <SlideFade in={showRewardsClaim} offsetY="20px" style={{ position: 'fixed', right: '20px', bottom: '20px', zIndex: 10 }}>
+            <RewardsClaim address={address ?? ''} onClose={closeRewardsClaim} />
+          </SlideFade>
+        )}
       </SlideFade>
     </>
   );
