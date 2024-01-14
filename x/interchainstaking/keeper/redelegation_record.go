@@ -43,7 +43,7 @@ func (k *Keeper) DeleteRedelegationRecordByKey(ctx sdk.Context, key []byte) {
 func (k *Keeper) IteratePrefixedRedelegationRecords(ctx sdk.Context, prefixBytes []byte, fn func(index int64, key []byte, record types.RedelegationRecord) (stop bool)) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixRedelegationRecord)
 
-	iterator := sdk.KVStorePrefixIterator(store, prefixBytes)
+	iterator := storetypes.KVStorePrefixIterator(store, prefixBytes)
 	defer iterator.Close()
 
 	i := int64(0)

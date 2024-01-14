@@ -5,7 +5,6 @@ import (
 
 	"github.com/ingenuity-build/multierror"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 )
 
@@ -64,11 +63,11 @@ func (zd *ZoneDrop) ValidateBasic() error {
 		if len(zd.Actions) > len(Action_name)-1 {
 			errs["Action"] = fmt.Errorf("exceeds number of defined actions (%d)", len(Action_name)-1)
 		} else {
-			weightSum := sdk.ZeroDec()
+			weightSum := sdkmath.LegacyZeroDec()
 			for _, aw := range zd.Actions {
 				weightSum = weightSum.Add(aw)
 			}
-			if !weightSum.Equal(sdk.OneDec()) {
+			if !weightSum.Equal(sdkmath.LegacyOneDec()) {
 				errs["Actions"] = fmt.Errorf("%w, got %s", ErrActionWeights, weightSum)
 			}
 		}

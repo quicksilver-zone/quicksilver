@@ -61,7 +61,7 @@ func (k *Keeper) DeleteClaimRecord(ctx sdk.Context, chainID, address string) err
 func (k *Keeper) IterateClaimRecords(ctx sdk.Context, chainID string, fn func(index int64, cr types.ClaimRecord) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 
-	iterator := sdk.KVStorePrefixIterator(store, types.GetPrefixClaimRecord(chainID))
+	iterator := storetypes.KVStorePrefixIterator(store, types.GetPrefixClaimRecord(chainID))
 	defer iterator.Close()
 
 	i := int64(0)
@@ -84,7 +84,7 @@ func (k *Keeper) AllClaimRecords(ctx sdk.Context) []*types.ClaimRecord {
 
 	store := ctx.KVStore(k.storeKey)
 
-	iterator := sdk.KVStorePrefixIterator(store, types.KeyPrefixClaimRecord)
+	iterator := storetypes.KVStorePrefixIterator(store, types.KeyPrefixClaimRecord)
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
@@ -111,7 +111,7 @@ func (k *Keeper) AllZoneClaimRecords(ctx sdk.Context, chainID string) []*types.C
 func (k *Keeper) ClearClaimRecords(ctx sdk.Context, chainID string) {
 	store := ctx.KVStore(k.storeKey)
 
-	iterator := sdk.KVStorePrefixIterator(store, types.GetPrefixClaimRecord(chainID))
+	iterator := storetypes.KVStorePrefixIterator(store, types.GetPrefixClaimRecord(chainID))
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {

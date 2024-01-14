@@ -29,7 +29,7 @@ func GatherValuesFromStore[T any](storeObj store.KVStore, keyStart, keyEnd []byt
 }
 
 func GatherValuesFromStorePrefix[T any](storeObj store.KVStore, prefix []byte, parseValue func([]byte) (T, error)) ([]T, error) {
-	iterator := sdk.KVStorePrefixIterator(storeObj, prefix)
+	iterator := storetypes.KVStorePrefixIterator(storeObj, prefix)
 	defer iterator.Close()
 	return gatherValuesFromIteratorWithStop(iterator, parseValue, noStopFn)
 }

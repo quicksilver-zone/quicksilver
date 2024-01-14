@@ -31,8 +31,8 @@ func ParamKeyTable() paramtypes.KeyTable {
 }
 
 func NewParams(
-	mintDenom string, genesisEpochProvisions sdk.Dec, epochIdentifier string,
-	reductionPeriodInEpochs int64, reductionFactor sdk.Dec,
+	mintDenom string, genesisEpochProvisions sdkmath.LegacyDec, epochIdentifier string,
+	reductionPeriodInEpochs int64, reductionFactor sdkmath.LegacyDec,
 	distrProportions DistributionProportions, mintingRewardsDistributionStartEpoch int64,
 ) Params {
 	return Params{
@@ -119,7 +119,7 @@ func validateMintDenom(i interface{}) error {
 }
 
 func validateGenesisEpochProvisions(i interface{}) error {
-	v, ok := i.(sdk.Dec)
+	v, ok := i.(sdkmath.LegacyDec)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
@@ -145,12 +145,12 @@ func validateReductionPeriodInEpochs(i interface{}) error {
 }
 
 func validateReductionFactor(i interface{}) error {
-	v, ok := i.(sdk.Dec)
+	v, ok := i.(sdkmath.LegacyDec)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
-	if v.GT(sdk.OneDec()) {
+	if v.GT(sdkmath.LegacyOneDec()) {
 		return errors.New("reduction factor cannot be greater than 1")
 	}
 

@@ -3,8 +3,6 @@ package gamm
 import (
 	"cosmossdk.io/math"
 	sdkmath "cosmossdk.io/math"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 const (
@@ -27,5 +25,5 @@ var (
 	// SpotPriceSigFigs is the amount of significant figures used in return value of calculate SpotPrice
 	SpotPriceSigFigs = sdkmath.LegacyNewDec(10).Power(SigFigsExponent).TruncateInt()
 	// MaxSpotPrice is the maximum supported spot price. Anything greater than this will error.
-	MaxSpotPrice = sdkmath.LegacyNewDec(2).Power(128).Sub(sdk.OneDec())
+	MaxSpotPrice = sdkmath.LegacyNewDec(2).Power(128).Sub(sdkmath.LegacyOneDec())
 )

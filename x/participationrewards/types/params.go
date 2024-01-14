@@ -6,7 +6,6 @@ import (
 	"gopkg.in/yaml.v2"
 
 	sdkmath "cosmossdk.io/math"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
@@ -27,9 +26,9 @@ func ParamKeyTable() paramtypes.KeyTable {
 
 // NewParams creates a new ics Params instance.
 func NewParams(
-	validatorSelectionAllocation sdk.Dec,
-	holdingsAllocation sdk.Dec,
-	lockupAllocation sdk.Dec,
+	validatorSelectionAllocation sdkmath.LegacyDec,
+	holdingsAllocation sdkmath.LegacyDec,
+	lockupAllocation sdkmath.LegacyDec,
 	claimsEnabled bool,
 ) Params {
 	return Params{

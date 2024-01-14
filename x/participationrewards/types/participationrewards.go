@@ -7,6 +7,7 @@ import (
 	"github.com/ingenuity-build/multierror"
 
 	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -42,7 +43,7 @@ func (dp *DistributionProportions) ValidateBasic() error {
 	if len(errs) == 0 {
 		totalProportions := dp.Total()
 
-		if !totalProportions.Equal(sdk.OneDec()) {
+		if !totalProportions.Equal(sdkmath.OneDec()) {
 			errs["TotalProportions"] = fmt.Errorf("%w, got %v", ErrInvalidTotalProportions, totalProportions)
 		}
 	}
@@ -54,7 +55,7 @@ func (dp *DistributionProportions) ValidateBasic() error {
 	return nil
 }
 
-func (dp *DistributionProportions) Total() sdk.Dec {
+func (dp *DistributionProportions) Total() sdkmath.LegacyDec {
 	return dp.ValidatorSelectionAllocation.Add(dp.HoldingsAllocation).Add(dp.LockupAllocation)
 }
 
@@ -142,9 +143,9 @@ type ZoneScore struct {
 // of zone scores. It contains all relevant Validator scoring metrics with a
 // pointer reference to the actual Validator (embedded).
 type Validator struct {
-	PowerPercentage   sdk.Dec
-	PerformanceScore  sdk.Dec
-	DistributionScore sdk.Dec
+	PowerPercentage   sdkmath.LegacyDec
+	PerformanceScore  sdkmath.LegacyDec
+	DistributionScore sdkmath.LegacyDec
 
 	*icstypes.Validator
 }
@@ -153,5 +154,5 @@ type Validator struct {
 // distribution. It contains the user address and individual score.
 type UserScore struct {
 	Address string
-	Score   sdk.Dec
+	Score   sdkmath.LegacyDec
 }

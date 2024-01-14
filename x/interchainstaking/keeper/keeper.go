@@ -167,7 +167,7 @@ func (k *Keeper) GetConnectionForPort(ctx sdk.Context, port string) (string, err
 func (k *Keeper) IteratePortConnections(ctx sdk.Context, cb func(pc types.PortConnectionTuple) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 
-	iterator := sdk.KVStorePrefixIterator(store, types.KeyPrefixPortMapping)
+	iterator := storetypes.KVStorePrefixIterator(store, types.KeyPrefixPortMapping)
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {

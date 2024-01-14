@@ -360,7 +360,7 @@ func (suite *KeeperTestSuite) TestSignalIntent() {
 	tests := []struct {
 		name             string
 		malleate         func(suite *KeeperTestSuite) *icstypes.MsgSignalIntent
-		expected         []sdk.Dec
+		expected         []sdkmath.LegacyDec
 		failsValidations bool
 		expectErr        bool
 	}{
@@ -376,7 +376,7 @@ func (suite *KeeperTestSuite) TestSignalIntent() {
 					FromAddress: testAddress,
 				}
 			},
-			[]sdk.Dec{},
+			[]sdkmath.LegacyDec{},
 			true,
 			false,
 		},
@@ -392,7 +392,7 @@ func (suite *KeeperTestSuite) TestSignalIntent() {
 					FromAddress: testAddress,
 				}
 			},
-			[]sdk.Dec{},
+			[]sdkmath.LegacyDec{},
 			true,
 			false,
 		},
@@ -408,7 +408,7 @@ func (suite *KeeperTestSuite) TestSignalIntent() {
 					FromAddress: testAddress,
 				}
 			},
-			[]sdk.Dec{},
+			[]sdkmath.LegacyDec{},
 			false,
 			true,
 		},
@@ -424,7 +424,7 @@ func (suite *KeeperTestSuite) TestSignalIntent() {
 					FromAddress: testAddress,
 				}
 			},
-			[]sdk.Dec{sdkmath.LegacyNewDecWithPrec(1, 0)},
+			[]sdkmath.LegacyDec{sdkmath.LegacyNewDecWithPrec(1, 0)},
 			false,
 			false,
 		},
@@ -444,7 +444,7 @@ func (suite *KeeperTestSuite) TestSignalIntent() {
 					FromAddress: testAddress,
 				}
 			},
-			[]sdk.Dec{
+			[]sdkmath.LegacyDec{
 				sdkmath.LegacyNewDecWithPrec(5, 1),
 				sdkmath.LegacyNewDecWithPrec(2, 1),
 				sdkmath.LegacyNewDecWithPrec(3, 1),

@@ -23,7 +23,7 @@ func (k Keeper) IterateUserMappedAccounts(ctx sdk.Context, localAddress []byte, 
 	}
 
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.GetRemoteAddressPrefix(localAddress))
+	iterator := storetypes.KVStorePrefixIterator(store, types.GetRemoteAddressPrefix(localAddress))
 	defer iterator.Close()
 
 	i := int64(0)

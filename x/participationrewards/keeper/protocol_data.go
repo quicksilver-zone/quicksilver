@@ -47,7 +47,7 @@ func (k *Keeper) DeleteProtocolData(ctx sdk.Context, key []byte) {
 // IteratePrefixedProtocolDatas iterate through protocol data with the given prefix and perform the provided function.
 func (k *Keeper) IteratePrefixedProtocolDatas(ctx sdk.Context, key []byte, fn func(index int64, key []byte, data types.ProtocolData) (stop bool)) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixProtocolData)
-	iterator := sdk.KVStorePrefixIterator(store, key)
+	iterator := storetypes.KVStorePrefixIterator(store, key)
 	defer iterator.Close()
 
 	i := int64(0)
@@ -65,7 +65,7 @@ func (k *Keeper) IteratePrefixedProtocolDatas(ctx sdk.Context, key []byte, fn fu
 // IterateAllProtocolDatas iterates through protocol data and perform the provided function.
 func (k *Keeper) IterateAllProtocolDatas(ctx sdk.Context, fn func(index int64, key string, data types.ProtocolData) (stop bool)) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixProtocolData)
-	iterator := sdk.KVStorePrefixIterator(store, nil)
+	iterator := storetypes.KVStorePrefixIterator(store, nil)
 	defer iterator.Close()
 
 	i := int64(0)

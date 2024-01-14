@@ -8,7 +8,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	sdkmath "cosmossdk.io/math"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/quicksilver-zone/quicksilver/v7/x/airdrop/types"
 )
@@ -20,7 +19,7 @@ func TestZoneDrop_ValidateBasic(t *testing.T) {
 		Duration    time.Duration
 		Decay       time.Duration
 		Allocation  uint64
-		Actions     []sdk.Dec
+		Actions     []sdkmath.LegacyDec
 		IsConcluded bool
 	}
 	tests := []struct {
@@ -41,7 +40,7 @@ func TestZoneDrop_ValidateBasic(t *testing.T) {
 				Duration:   -time.Minute,
 				Decay:      -time.Second,
 				Allocation: 0,
-				Actions: []sdk.Dec{
+				Actions: []sdkmath.LegacyDec{
 					sdkmath.LegacyMustNewDecFromStr("0.3"),
 					sdkmath.LegacyMustNewDecFromStr("0.4"),
 					sdkmath.LegacyMustNewDecFromStr("0.5"),
@@ -58,7 +57,7 @@ func TestZoneDrop_ValidateBasic(t *testing.T) {
 				Duration:   0,
 				Decay:      0,
 				Allocation: 0,
-				Actions: []sdk.Dec{
+				Actions: []sdkmath.LegacyDec{
 					sdkmath.LegacyMustNewDecFromStr("0.3"),
 					sdkmath.LegacyMustNewDecFromStr("0.3"),
 					sdkmath.LegacyMustNewDecFromStr("0.3"),
@@ -75,7 +74,7 @@ func TestZoneDrop_ValidateBasic(t *testing.T) {
 				Duration:   time.Hour,
 				Decay:      30 * time.Minute,
 				Allocation: 16400,
-				Actions: []sdk.Dec{
+				Actions: []sdkmath.LegacyDec{
 					sdkmath.LegacyMustNewDecFromStr("0.01"),
 					sdkmath.LegacyMustNewDecFromStr("0.02"),
 					sdkmath.LegacyMustNewDecFromStr("0.03"),
@@ -101,7 +100,7 @@ func TestZoneDrop_ValidateBasic(t *testing.T) {
 				Duration:   time.Hour,
 				Decay:      30 * time.Minute,
 				Allocation: 16400,
-				Actions: []sdk.Dec{
+				Actions: []sdkmath.LegacyDec{
 					sdkmath.LegacyMustNewDecFromStr("0.1"),
 					sdkmath.LegacyMustNewDecFromStr("0.2"),
 					sdkmath.LegacyMustNewDecFromStr("0.3"),

@@ -68,7 +68,7 @@ func TestQuicksilverExport(t *testing.T) {
 
 	// Initialize the chain
 	quicksilver.InitChain(
-		abci.RequestInitChain{
+		&abci.RequestInitChain{
 			ChainId:       "quicksilver-1",
 			Validators:    []abci.ValidatorUpdate{},
 			AppStateBytes: stateBytes,
@@ -85,7 +85,6 @@ func TestQuicksilverExport(t *testing.T) {
 		app.DefaultNodeHome,
 		0,
 		app.MakeEncodingConfig(),
-		wasm.EnableAllProposals,
 		app.EmptyAppOptions{},
 		app.GetWasmOpts(app.EmptyAppOptions{}),
 		false,

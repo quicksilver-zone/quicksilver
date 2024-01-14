@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"cosmossdk.io/store/prefix"
+	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/quicksilver-zone/quicksilver/v7/x/claimsmanager/types"
@@ -69,7 +70,7 @@ func (k Keeper) IterateClaims(ctx sdk.Context, chainID string, fn func(index int
 	}
 
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.GetPrefixClaim(chainID))
+	iterator := storetypes.KVStorePrefixIterator(store, types.GetPrefixClaim(chainID))
 	defer iterator.Close()
 
 	i := int64(0)
@@ -92,7 +93,7 @@ func (k Keeper) IterateUserClaims(ctx sdk.Context, chainID, address string, fn f
 	}
 
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.GetPrefixUserClaim(chainID, address))
+	iterator := storetypes.KVStorePrefixIterator(store, types.GetPrefixUserClaim(chainID, address))
 	defer iterator.Close()
 
 	i := int64(0)
@@ -115,7 +116,7 @@ func (k Keeper) IterateLastEpochClaims(ctx sdk.Context, chainID string, fn func(
 	}
 
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.GetPrefixLastEpochClaim(chainID))
+	iterator := storetypes.KVStorePrefixIterator(store, types.GetPrefixLastEpochClaim(chainID))
 	defer iterator.Close()
 
 	i := int64(0)
@@ -138,7 +139,7 @@ func (k Keeper) IterateLastEpochUserClaims(ctx sdk.Context, chainID, address str
 	}
 
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.GetPrefixLastEpochUserClaim(chainID, address))
+	iterator := storetypes.KVStorePrefixIterator(store, types.GetPrefixLastEpochUserClaim(chainID, address))
 	defer iterator.Close()
 
 	i := int64(0)
@@ -161,7 +162,7 @@ func (k Keeper) IterateAllLastEpochClaims(ctx sdk.Context, fn func(index int64, 
 	}
 
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.KeyPrefixLastEpochClaim)
+	iterator := storetypes.KVStorePrefixIterator(store, types.KeyPrefixLastEpochClaim)
 	defer iterator.Close()
 
 	i := int64(0)
@@ -184,7 +185,7 @@ func (k Keeper) IterateAllClaims(ctx sdk.Context, fn func(index int64, key []byt
 	}
 
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.KeyPrefixClaim)
+	iterator := storetypes.KVStorePrefixIterator(store, types.KeyPrefixClaim)
 	defer iterator.Close()
 
 	i := int64(0)
@@ -204,7 +205,7 @@ func (k Keeper) AllClaims(ctx sdk.Context) []*types.Claim {
 	var claims []*types.Claim
 
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.KeyPrefixClaim)
+	iterator := storetypes.KVStorePrefixIterator(store, types.KeyPrefixClaim)
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
@@ -256,7 +257,7 @@ func (k Keeper) AllZoneLastEpochUserClaims(ctx sdk.Context, chainID, address str
 // ClearClaims deletes all the current epoch claims of the given zone.
 func (k Keeper) ClearClaims(ctx sdk.Context, chainID string) {
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.GetPrefixClaim(chainID))
+	iterator := storetypes.KVStorePrefixIterator(store, types.GetPrefixClaim(chainID))
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
@@ -268,7 +269,7 @@ func (k Keeper) ClearClaims(ctx sdk.Context, chainID string) {
 // ClearLastEpochClaims deletes all the last epoch claims of the given zone.
 func (k Keeper) ClearLastEpochClaims(ctx sdk.Context, chainID string) {
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.GetPrefixLastEpochClaim(chainID))
+	iterator := storetypes.KVStorePrefixIterator(store, types.GetPrefixLastEpochClaim(chainID))
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
@@ -282,7 +283,7 @@ func (k Keeper) ArchiveAndGarbageCollectClaims(ctx sdk.Context, chainID string) 
 	k.ClearLastEpochClaims(ctx, chainID)
 
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.GetPrefixClaim(chainID))
+	iterator := storetypes.KVStorePrefixIterator(store, types.GetPrefixClaim(chainID))
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {

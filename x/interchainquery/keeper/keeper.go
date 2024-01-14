@@ -78,7 +78,7 @@ func (k *Keeper) GetDatapointForID(ctx sdk.Context, id string) (types.DataPoint,
 // IterateDatapoints iterate through datapoints.
 func (k Keeper) IterateDatapoints(ctx sdk.Context, fn func(index int64, dp types.DataPoint) (stop bool)) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixData)
-	iterator := sdk.KVStorePrefixIterator(store, nil)
+	iterator := storetypes.KVStorePrefixIterator(store, nil)
 	defer iterator.Close()
 
 	i := int64(0)
