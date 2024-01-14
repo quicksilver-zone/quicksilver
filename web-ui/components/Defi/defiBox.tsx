@@ -1,4 +1,4 @@
-import { ChevronDownIcon, ExternalLinkIcon } from '@chakra-ui/icons';
+import { ChevronDownIcon, ChevronUpIcon, ExternalLinkIcon } from '@chakra-ui/icons';
 import {
   Box,
   Button,
@@ -17,6 +17,7 @@ import {
   ButtonGroup,
   HStack,
   Link,
+  Tooltip,
   Center,
   Spinner,
   useBreakpointValue,
@@ -24,15 +25,8 @@ import {
 import React, { useState } from 'react';
 
 import { useDefiData } from '@/hooks/useQueries';
+
 type ActionButtonTitle = 'Add Liquidity' | 'Borrow' | 'Lend' | 'Mint Stablecoin' | 'Vaults';
-interface DefiAsset {
-  id: string;
-  assetPair: string;
-  apy: number;
-  tvl: string;
-  provider: string;
-  action: string;
-}
 
 const actionTitles: Record<string, ActionButtonTitle> = {
   'add-liquidity': 'Add Liquidity',
@@ -48,7 +42,11 @@ interface DefiData {
   tvl: number;
   provider: string;
   action: string;
+  link: string;
 }
+
+type SortOrder = 'asc' | 'desc';
+type SortableColumn = 'apy' | 'tvl';
 
 const filterCategories: Record<string, (data: DefiData) => boolean> = {
   All: () => true,
@@ -89,6 +87,34 @@ const DefiTable = () => {
   const isProviderKey = (key: string): key is ProviderKey => {
     return key in providerIcons;
   };
+
+  const [sortColumn, setSortColumn] = useState<SortableColumn | null>(null);
+  const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
+
+  const sortData = (data: DefiData[], column: SortableColumn | null, order: SortOrder) => {
+    if (!column) return data;
+    return [...data].sort((a, b) => {
+      let comparison = 0;
+      if (column === 'apy' || column === 'tvl') {
+        comparison = a[column] - b[column];
+      } else {
+        comparison = a[column] > b[column] ? 1 : -1;
+      }
+
+      return order === 'asc' ? comparison : -comparison;
+    });
+  };
+
+  const handleSort = (column: SortableColumn) => {
+    if (sortColumn === column) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortColumn(column);
+      setSortOrder('asc');
+    }
+  };
+
+  const sortedData = sortData(filteredData, sortColumn, sortOrder);
 
   return (
     <Box backdropFilter="blur(50px)" bgColor="rgba(255,255,255,0.1)" flex="1" borderRadius="10px" p={6} rounded="md">
@@ -147,14 +173,12 @@ const DefiTable = () => {
         <Table color={'white'} variant="simple">
           <Thead position="sticky">
             <Tr>
-              <Th color={'complimentary.900'}>
-                Asset Pair <ChevronDownIcon />
+              <Th color={'complimentary.900'}>Asset Pair</Th>
+              <Th textAlign={'center'} color={'complimentary.900'} isNumeric onClick={() => handleSort('apy')}>
+                APY {sortColumn === 'apy' ? sortOrder === 'asc' ? <ChevronUpIcon /> : <ChevronDownIcon /> : <ChevronDownIcon />}
               </Th>
-              <Th textAlign={'center'} color={'complimentary.900'} isNumeric>
-                APY <ChevronDownIcon />
-              </Th>
-              <Th textAlign={'center'} color={'complimentary.900'} isNumeric>
-                TVL <ChevronDownIcon />
+              <Th textAlign={'center'} color={'complimentary.900'} isNumeric onClick={() => handleSort('tvl')}>
+                TVL {sortColumn === 'tvl' ? sortOrder === 'asc' ? <ChevronUpIcon /> : <ChevronDownIcon /> : <ChevronDownIcon />}
               </Th>
               <Th textAlign={'center'} color={'complimentary.900'}>
                 Provider
@@ -178,20 +202,10 @@ const DefiTable = () => {
               </Tr>
             )}
             {defi &&
-              filteredData.map((asset, index) => (
+              sortedData.map((asset, index) => (
                 <Tr _even={{ bg: 'rgba(255, 128, 0, 0.1)' }} key={index} borderBottomColor={'transparent'}>
                   <Td textAlign={'center'} borderBottomColor="transparent">
                     <Flex align="center">
-                      <Box w="2rem" h="2rem" rounded="full" mr={2}>
-                        {isProviderKey(asset.provider.toLowerCase()) && (
-                          <Image
-                            src={providerIcons[asset.provider.toLowerCase() as ProviderKey]}
-                            alt={asset.provider}
-                            boxSize="100%"
-                            objectFit="cover"
-                          />
-                        )}
-                      </Box>
                       <Text>{asset.assetPair}</Text>
                     </Flex>
                   </Td>
@@ -201,8 +215,17 @@ const DefiTable = () => {
                   <Td textAlign={'center'} borderBottomColor="transparent" isNumeric>
                     ${asset.tvl.toLocaleString()}
                   </Td>
-                  <Td textAlign={'center'} borderBottomColor="transparent">
-                    {asset.provider}
+                  <Td borderBottomColor="transparent">
+                    <Center>
+                      {isProviderKey(asset.provider.toLowerCase()) && (
+                        <Image
+                          src={providerIcons[asset.provider.toLowerCase() as ProviderKey]}
+                          alt={asset.provider}
+                          boxSize="2rem"
+                          objectFit="cover"
+                        />
+                      )}
+                    </Center>
                   </Td>
                   <Td textAlign={'center'} borderBottomColor="transparent">
                     <Link href={asset.link} isExternal={true} _hover={{ textDecoration: 'none' }}>

@@ -18,11 +18,12 @@ import {
   RejectedWarn,
   WalletConnectComponent,
 } from '@/components';
+import { useDrawerControl } from '@/state/useDrawerController';
 
 export const WalletButton: React.FC<{ chainName: string }> = ({ chainName }) => {
   const { connect, openView, status, username, address, message, wallet, chain: chainInfo } = useChain(chainName || 'cosmoshub');
   const { getChainLogo } = useManager();
-
+  const { closeDrawer } = useDrawerControl();
   const chain = {
     chainName,
     label: chainInfo.pretty_name,
@@ -32,12 +33,12 @@ export const WalletButton: React.FC<{ chainName: string }> = ({ chainName }) => 
 
   // Events
   const onClickConnect: MouseEventHandler = async (e) => {
-    e.preventDefault();
+    closeDrawer();
     await connect();
   };
 
   const onClickOpenView: MouseEventHandler = (e) => {
-    e.preventDefault();
+    closeDrawer();
     openView();
   };
 
