@@ -60,13 +60,13 @@ func (k Keeper) GetDenomPrefixStore(ctx sdk.Context, denom string) sdk.KVStore {
 }
 
 // GetCreatorPrefixStore returns the substore for a specific creator address.
-func (k Keeper) GetCreatorPrefixStore(ctx sdk.Context, creator string) sdk.KVStore {
+func (k Keeper) GetCreatorPrefixStore(ctx sdk.Context, creator string) storetypes.KVStore {
 	store := ctx.KVStore(k.storeKey)
 	return prefix.NewStore(store, types.GetCreatorPrefix(creator))
 }
 
 // GetCreatorsPrefixStore returns the substore that contains a list of creators.
-func (k Keeper) GetCreatorsPrefixStore(ctx sdk.Context) sdk.KVStore {
+func (k Keeper) GetCreatorsPrefixStore(ctx sdk.Context) storetypes.KVStore {
 	store := ctx.KVStore(k.storeKey)
 	return prefix.NewStore(store, types.GetCreatorsPrefix())
 }

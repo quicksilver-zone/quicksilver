@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"cosmossdk.io/log"
+	sdkmath "cosmossdk.io/math"
 	"github.com/CosmWasm/wasmd/x/wasm"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/crypto/secp256k1"
@@ -107,7 +108,7 @@ func Setup(t *testing.T, isCheckTx bool) *Quicksilver {
 
 		// Initialize the chain
 		app.InitChain(
-			abci.RequestInitChain{
+			&abci.RequestInitChain{
 				ChainId:         "mercury-1",
 				Validators:      []abci.ValidatorUpdate{},
 				ConsensusParams: DefaultConsensusParams,
@@ -123,7 +124,7 @@ func GetAppWithContext(t *testing.T, init bool) (*Quicksilver, sdk.Context) {
 	t.Helper()
 
 	app := Setup(t, !init)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "mercury-1", Time: time.Now().UTC()})
+	ctx := app.BaseApp.NewContext(false)
 	return app, ctx
 }
 
@@ -176,11 +177,11 @@ func GenesisStateWithValSet(t *testing.T,
 			Jailed:          false,
 			Status:          stakingtypes.Bonded,
 			Tokens:          bondAmt,
-			DelegatorShares: sdk.OneDec(),
+			DelegatorShares: sdkmath.OneDec(),
 			Description:     stakingtypes.Description{},
 			UnbondingHeight: int64(0),
 			UnbondingTime:   time.Unix(0, 0).UTC(),
-			Commission:      stakingtypes.NewCommission(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
+			Commission:      stakingtypes.NewCommission(sdkmath.LegacyZeroDec(), sdkmath.LegacyZeroDec(), sdkmath.LegacyZeroDec()),
 		}
 		validators = append(validators, validator)
 		delegations = append(delegations, stakingtypes.NewDelegation(genAccs[0].GetAddress(), val.Address.Bytes(), sdk.OneDec()))
