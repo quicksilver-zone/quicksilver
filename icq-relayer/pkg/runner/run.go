@@ -644,7 +644,6 @@ func submitClientUpdate(client, submitClient *lensclient.ChainClient, query Quer
 
 	msg := &clienttypes.MsgUpdateClient{
 		ClientId: clientId.(string), // needs to be passed in as part of request.
-		Header:   anyHeader,
 		Signer:   submitClient.MustEncodeAccAddr(from),
 	}
 
@@ -804,7 +803,7 @@ func unique(msgSlice []sdk.Msg, logger log.Logger) []sdk.Msg {
 }
 
 func Close() error {
-	query := tmquery.MustParse(fmt.Sprintf("message.module='%s'", "interchainquery"))
+	query := cmtquery.MustParse(fmt.Sprintf("message.module='%s'", "interchainquery"))
 
 	for _, chainClient := range globalCfg.Cl {
 		err := chainClient.RPCClient.Unsubscribe(ctx, chainClient.Config.ChainID+"-icq", query.String())

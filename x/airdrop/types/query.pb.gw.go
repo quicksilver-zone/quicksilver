@@ -694,17 +694,17 @@ func RegisterQueryHandlerClient(ctx context.Context, mux *runtime.ServeMux, clie
 }
 
 var (
-	pattern_Query_Params_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"quicksilver", "airdrop", "v1", "params"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_Params_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"quicksilver", "airdrop", "v1", "params"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_ZoneDrop_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"quicksilver", "airdrop", "v1", "zonedrop", "chain_id"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_ZoneDrop_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"quicksilver", "airdrop", "v1", "zonedrop", "chain_id"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_AccountBalance_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"quicksilver", "airdrop", "v1", "accountbalance", "chain_id"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_AccountBalance_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"quicksilver", "airdrop", "v1", "accountbalance", "chain_id"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_ZoneDrops_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"quicksilver", "airdrop", "v1", "zonedrops", "status"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_ZoneDrops_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"quicksilver", "airdrop", "v1", "zonedrops", "status"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_ClaimRecord_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 1, 0, 4, 1, 5, 5}, []string{"quicksilver", "airdrop", "v1", "claimrecord", "chain_id", "address"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_ClaimRecord_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 1, 0, 4, 1, 5, 5}, []string{"quicksilver", "airdrop", "v1", "claimrecord", "chain_id", "address"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_ClaimRecords_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"quicksilver", "airdrop", "v1", "claimrecords", "chain_id"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_ClaimRecords_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"quicksilver", "airdrop", "v1", "claimrecords", "chain_id"}, "", runtime.AssumeColonVerbOpt(false)))
 )
 
 var (

@@ -16,7 +16,7 @@ done
 cd ..
 
 # move proto files to the right places
-cp -r github.com/quicksilver-zone/quicksilver/* ./
+cp -r github.com/quicksilver-zone/quicksilver/v7/* ./
 rm -rf github.com
 
 go mod tidy
