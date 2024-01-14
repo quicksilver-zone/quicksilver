@@ -122,7 +122,7 @@ func (k *Keeper) handleOsmosisLP(ctx sdk.Context, cr *types.ClaimRecord, action 
 // -------------
 
 // verifyDeposit.
-func (k *Keeper) verifyDeposit(ctx sdk.Context, cr types.ClaimRecord, threshold sdk.Dec) error {
+func (k *Keeper) verifyDeposit(ctx sdk.Context, cr types.ClaimRecord, threshold sdkmath.LegacyDec) error {
 	addr, err := sdk.AccAddressFromBech32(cr.Address)
 	if err != nil {
 		return err

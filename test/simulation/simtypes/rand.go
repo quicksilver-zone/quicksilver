@@ -75,19 +75,19 @@ func RandomAmount(r *rand.Rand, max sdkmath.Int) sdkmath.Int {
 
 // RandomDecAmount generates a random decimal amount
 // Note: The range of RandomDecAmount includes max, and is, in fact, biased to return max as well as 0.
-func RandomDecAmount(r *rand.Rand, max sdk.Dec) sdk.Dec {
+func RandomDecAmount(r *rand.Rand, max sdkmath.LegacyDec) sdkmath.LegacyDec {
 	randInt := big.NewInt(0)
 
 	switch r.Intn(10) {
 	case 0:
-		return sdkmath.LegacyNewDecFromBigIntWithPrec(randInt, sdk.Precision)
+		return sdkmath.LegacyNewDecFromBigIntWithPrec(randInt, sdkmath.LegacyPrecision)
 	case 1:
 		randInt = max.BigInt() // the underlying big int with all precision bits.
 	default: // NOTE: there are 10 total cases.
 		randInt = big.NewInt(0).Rand(r, max.BigInt())
 	}
 
-	return sdkmath.LegacyNewDecFromBigIntWithPrec(randInt, sdk.Precision)
+	return sdkmath.LegacyNewDecFromBigIntWithPrec(randInt, sdkmath.LegacyPrecision)
 }
 
 // RandTimestamp generates a random timestamp.
