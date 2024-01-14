@@ -9,10 +9,10 @@ import (
 	"path/filepath"
 	"strings"
 
+	"cosmossdk.io/log"
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/cometbft/cometbft/libs/log"
 	tmos "github.com/cometbft/cometbft/libs/os"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/prometheus/client_golang/prometheus"
@@ -41,10 +41,10 @@ import (
 	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
 	ibctestingtypes "github.com/cosmos/ibc-go/v8/testing/types"
 
-	"github.com/quicksilver-zone/quicksilver/app/keepers"
-	"github.com/quicksilver-zone/quicksilver/docs"
-	airdroptypes "github.com/quicksilver-zone/quicksilver/x/airdrop/types"
-	interchainstakingtypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
+	"github.com/quicksilver-zone/quicksilver/v7/app/keepers"
+	"github.com/quicksilver-zone/quicksilver/v7/docs"
+	airdroptypes "github.com/quicksilver-zone/quicksilver/v7/x/airdrop/types"
+	interchainstakingtypes "github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking/types"
 )
 
 func Init() {

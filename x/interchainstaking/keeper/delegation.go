@@ -12,9 +12,9 @@ import (
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	"github.com/quicksilver-zone/quicksilver/utils"
-	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
-	lsmstakingtypes "github.com/quicksilver-zone/quicksilver/x/lsmtypes"
+	"github.com/quicksilver-zone/quicksilver/v7/utils"
+	"github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking/types"
+	lsmstakingtypes "github.com/quicksilver-zone/quicksilver/v7/x/lsmtypes"
 )
 
 // GetDelegation returns a specific delegation.

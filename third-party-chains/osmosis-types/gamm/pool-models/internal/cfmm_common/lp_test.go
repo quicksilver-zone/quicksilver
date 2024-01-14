@@ -10,10 +10,10 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/gamm"
-	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/gamm/pool-models/balancer"
-	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/gamm/pool-models/internal/cfmm_common"
-	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/gamm/pool-models/stableswap"
+	"github.com/quicksilver-zone/quicksilver/v7/third-party-chains/osmosis-types/gamm"
+	"github.com/quicksilver-zone/quicksilver/v7/third-party-chains/osmosis-types/gamm/pool-models/balancer"
+	"github.com/quicksilver-zone/quicksilver/v7/third-party-chains/osmosis-types/gamm/pool-models/internal/cfmm_common"
+	"github.com/quicksilver-zone/quicksilver/v7/third-party-chains/osmosis-types/gamm/pool-models/stableswap"
 )
 
 // a helper function used to multiply coins
@@ -63,7 +63,7 @@ func TestCalcExitPool(t *testing.T) {
 
 	twoAssetPoolWithExitFee, err := stableswap.NewStableswapPool(
 		1,
-		stableswap.PoolParams{ExitFee: sdk.MustNewDecFromStr("0.0001")},
+		stableswap.PoolParams{ExitFee: sdkmath.LegacyMustNewDecFromStr("0.0001")},
 		twoStablePoolAssets,
 		[]uint64{1, 1},
 		"",
@@ -72,7 +72,7 @@ func TestCalcExitPool(t *testing.T) {
 
 	threeAssetPoolWithExitFee, err := balancer.NewBalancerPool(
 		1,
-		balancer.PoolParams{SwapFee: sdk.ZeroDec(), ExitFee: sdk.MustNewDecFromStr("0.0002")},
+		balancer.PoolParams{SwapFee: sdk.ZeroDec(), ExitFee: sdkmath.LegacyMustNewDecFromStr("0.0002")},
 		threeBalancerPoolAssets,
 		"",
 		time.Now(),

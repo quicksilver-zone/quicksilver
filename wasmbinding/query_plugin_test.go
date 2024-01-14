@@ -6,11 +6,13 @@ import (
 	"testing"
 	"time"
 
+	sdkmath "cosmossdk.io/math"
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/golang/protobuf/proto" // nolint:staticcheck
 	"github.com/stretchr/testify/suite"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -18,9 +20,9 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	"github.com/quicksilver-zone/quicksilver/app"
-	"github.com/quicksilver-zone/quicksilver/wasmbinding"
-	epochtypes "github.com/quicksilver-zone/quicksilver/x/epochs/types"
+	"github.com/quicksilver-zone/quicksilver/v7/app"
+	"github.com/quicksilver-zone/quicksilver/v7/wasmbinding"
+	epochtypes "github.com/quicksilver-zone/quicksilver/v7/x/epochs/types"
 )
 
 type StargateTestSuite struct {

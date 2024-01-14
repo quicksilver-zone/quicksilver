@@ -14,8 +14,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 
-	"github.com/quicksilver-zone/quicksilver/x/supply/keeper"
-	"github.com/quicksilver-zone/quicksilver/x/supply/types"
+	"github.com/quicksilver-zone/quicksilver/v7/x/supply/keeper"
+	"github.com/quicksilver-zone/quicksilver/v7/x/supply/types"
 )
 
 var (

@@ -19,7 +19,7 @@ import (
 	"github.com/cosmos/ibc-go/modules/capability"
 	"github.com/cosmos/ibc-go/v8/modules/apps/transfer"
 	ibc "github.com/cosmos/ibc-go/v8/modules/core"
-	interchainquery "github.com/ingenuity-build/quicksilver/v6/x/interchainquery"
+	interchainquery "github.com/quicksilver-zone/quicksilver/v7/x/interchainquery"
 )
 
 // TODO: Import a bunch of custom modules like cosmwasm and osmosis

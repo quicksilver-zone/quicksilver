@@ -6,11 +6,12 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 
-	"github.com/quicksilver-zone/quicksilver/app"
-	"github.com/quicksilver-zone/quicksilver/x/mint/simulation"
-	"github.com/quicksilver-zone/quicksilver/x/mint/types"
+	"github.com/quicksilver-zone/quicksilver/v7/app"
+	"github.com/quicksilver-zone/quicksilver/v7/x/mint/simulation"
+	"github.com/quicksilver-zone/quicksilver/v7/x/mint/types"
 )
 
 func TestDecodeStore(t *testing.T) {

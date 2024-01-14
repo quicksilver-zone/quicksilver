@@ -8,8 +8,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
-	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
-	"github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
+	icstypes "github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking/types"
+	"github.com/quicksilver-zone/quicksilver/v7/x/participationrewards/types"
 )
 
 // AllocateValidatorSelectionRewards utilizes IBC to query the performance

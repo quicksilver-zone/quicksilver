@@ -5,13 +5,13 @@ import "gogoproto/gogo.proto";
 import "quicksilver/airdrop/v1/airdrop.proto";
 import "quicksilver/airdrop/v1/params.proto";
 
-option go_package = "github.com/quicksilver-zone/quicksilver/x/airdrop/types";
+option go_package = "github.com/quicksilver-zone/quicksilver/v7/x/airdrop/types";
 
 // GenesisState defines the airdrop module's genesis state.
 message GenesisState {
   option (gogoproto.goproto_getters) = false;
 
-  Params params = 1 [(gogoproto.nullable) = false];
+  Params params = 1 [ (gogoproto.nullable) = false ];
   repeated ZoneDrop zone_drops = 2;
   repeated ClaimRecord claim_records = 3;
 }

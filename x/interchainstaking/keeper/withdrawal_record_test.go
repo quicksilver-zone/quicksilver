@@ -6,8 +6,8 @@ import (
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	icskeeper "github.com/quicksilver-zone/quicksilver/x/interchainstaking/keeper"
-	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
+	icskeeper "github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking/keeper"
+	"github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking/types"
 )
 
 func (suite *KeeperTestSuite) TestUpdateWithdrawalRecordsForSlash() {

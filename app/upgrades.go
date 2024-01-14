@@ -8,8 +8,8 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 
-	"github.com/quicksilver-zone/quicksilver/app/upgrades"
-	supplytypes "github.com/quicksilver-zone/quicksilver/x/supply/types"
+	"github.com/quicksilver-zone/quicksilver/v7/app/upgrades"
+	supplytypes "github.com/quicksilver-zone/quicksilver/v7/x/supply/types"
 )
 
 func (app *Quicksilver) setUpgradeHandlers() {

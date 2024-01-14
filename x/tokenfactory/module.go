@@ -24,10 +24,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
-	"github.com/quicksilver-zone/quicksilver/x/tokenfactory/client/cli"
-	"github.com/quicksilver-zone/quicksilver/x/tokenfactory/keeper"
-	"github.com/quicksilver-zone/quicksilver/x/tokenfactory/simulation"
-	"github.com/quicksilver-zone/quicksilver/x/tokenfactory/types"
+	"github.com/quicksilver-zone/quicksilver/v7/x/tokenfactory/client/cli"
+	"github.com/quicksilver-zone/quicksilver/v7/x/tokenfactory/keeper"
+	"github.com/quicksilver-zone/quicksilver/v7/x/tokenfactory/simulation"
+	"github.com/quicksilver-zone/quicksilver/v7/x/tokenfactory/types"
 )
 
 var (

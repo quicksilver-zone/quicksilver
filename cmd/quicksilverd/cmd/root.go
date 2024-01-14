@@ -7,11 +7,11 @@ import (
 	"os"
 	"path/filepath"
 
+	"cosmossdk.io/log"
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	tmcfg "github.com/cometbft/cometbft/config"
 	tmcli "github.com/cometbft/cometbft/libs/cli"
-	"github.com/cometbft/cometbft/libs/log"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/spf13/cast"
@@ -36,9 +36,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 
-	"github.com/quicksilver-zone/quicksilver/app"
-	quicksilverconfig "github.com/quicksilver-zone/quicksilver/cmd/quicksilverd/config"
-	servercfg "github.com/quicksilver-zone/quicksilver/server/config"
+	"github.com/quicksilver-zone/quicksilver/v7/app"
+	quicksilverconfig "github.com/quicksilver-zone/quicksilver/v7/cmd/quicksilverd/config"
+	servercfg "github.com/quicksilver-zone/quicksilver/v7/server/config"
 )
 
 const (

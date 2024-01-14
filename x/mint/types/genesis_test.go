@@ -3,9 +3,10 @@ package types_test
 import (
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
-	"github.com/quicksilver-zone/quicksilver/x/mint/types"
+	"github.com/quicksilver-zone/quicksilver/v7/x/mint/types"
 )
 
 func TestGenesisValidate(t *testing.T) {

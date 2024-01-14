@@ -4,7 +4,7 @@ package quicksilver.interchainquery.v1;
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/quicksilver-zone/quicksilver/x/interchainquery/types";
+option go_package = "github.com/quicksilver-zone/quicksilver/v7/x/interchainquery/types";
 
 message Query {
   string id = 1;
@@ -45,5 +45,5 @@ message DataPoint {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable) = false
   ];
-  bytes value = 4 [(gogoproto.jsontag) = "result,omitempty"];
+  bytes value = 4 [ (gogoproto.jsontag) = "result,omitempty" ];
 }

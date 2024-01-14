@@ -10,8 +10,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
-	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
+	"github.com/quicksilver-zone/quicksilver/v7/utils/addressutils"
+	"github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking/types"
 )
 
 func TestIntentsFromString(t *testing.T) {
@@ -21,15 +21,15 @@ func TestIntentsFromString(t *testing.T) {
 	wantIntents := []*types.ValidatorIntent{
 		{
 			ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0",
-			Weight:         sdk.MustNewDecFromStr("0.3"),
+			Weight:         sdkmath.LegacyMustNewDecFromStr("0.3"),
 		},
 		{
 			ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf",
-			Weight:         sdk.MustNewDecFromStr("0.3"),
+			Weight:         sdkmath.LegacyMustNewDecFromStr("0.3"),
 		},
 		{
 			ValoperAddress: "cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll",
-			Weight:         sdk.MustNewDecFromStr("0.4"),
+			Weight:         sdkmath.LegacyMustNewDecFromStr("0.4"),
 		},
 	}
 	intentsSlice, err := types.IntentsFromString(intents)

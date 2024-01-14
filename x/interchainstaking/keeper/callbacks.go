@@ -28,10 +28,10 @@ import (
 	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
 	tmclienttypes "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint"
 
-	"github.com/quicksilver-zone/quicksilver/utils"
-	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
-	icqtypes "github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
-	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
+	"github.com/quicksilver-zone/quicksilver/v7/utils"
+	"github.com/quicksilver-zone/quicksilver/v7/utils/addressutils"
+	icqtypes "github.com/quicksilver-zone/quicksilver/v7/x/interchainquery/types"
+	"github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking/types"
 )
 
 // ___________________________________________________________________________________________________
@@ -564,7 +564,7 @@ func AccountBalanceCallback(k *Keeper, ctx sdk.Context, args []byte, query icqty
 	}
 
 	// Ensure that the coin is valid.
-	// Please see https://github.com/quicksilver-zone/quicksilver-incognito/issues/80
+	// Please see https://github.com/quicksilver-zone/quicksilver/v7-incognito/issues/80
 	if err := coin.Validate(); err != nil {
 		k.Logger(ctx).Error("invalid coin for zone", "zone", zone.ChainId, "err", err)
 		return err
@@ -607,7 +607,7 @@ func DelegationAccountBalanceCallback(k *Keeper, ctx sdk.Context, args []byte, q
 	}
 
 	// Ensure that the coin is valid.
-	// Please see https://github.com/quicksilver-zone/quicksilver-incognito/issues/80
+	// Please see https://github.com/quicksilver-zone/quicksilver/v7-incognito/issues/80
 	if err := coin.Validate(); err != nil {
 		k.Logger(ctx).Debug("invalid coin for zone", "zone", zone.ChainId, "err", err)
 		return err

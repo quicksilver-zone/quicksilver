@@ -1,16 +1,17 @@
 package keeper
 
 import (
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
 
+	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
-	airdroptypes "github.com/quicksilver-zone/quicksilver/x/airdrop/types"
-	"github.com/quicksilver-zone/quicksilver/x/mint/types"
-	participationrewards "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
+	airdroptypes "github.com/quicksilver-zone/quicksilver/v7/x/airdrop/types"
+	"github.com/quicksilver-zone/quicksilver/v7/x/mint/types"
+	participationrewards "github.com/quicksilver-zone/quicksilver/v7/x/participationrewards/types"
 )
 
 // Keeper of the mint store.

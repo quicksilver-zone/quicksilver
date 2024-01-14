@@ -11,10 +11,10 @@ import (
 	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/quicksilver-zone/quicksilver/utils"
-	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
-	prtypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
-	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
+	"github.com/quicksilver-zone/quicksilver/v7/utils"
+	"github.com/quicksilver-zone/quicksilver/v7/utils/addressutils"
+	prtypes "github.com/quicksilver-zone/quicksilver/v7/x/claimsmanager/types"
+	"github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking/types"
 )
 
 func (*Keeper) getStoreKey(zone *types.Zone, snapshot bool) []byte {

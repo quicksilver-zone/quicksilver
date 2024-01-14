@@ -20,14 +20,14 @@ import (
 	tmclienttypes "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint"
 	ibctesting "github.com/cosmos/ibc-go/v8/testing"
 
-	"github.com/quicksilver-zone/quicksilver/app"
-	umeetypes "github.com/quicksilver-zone/quicksilver/third-party-chains/umee-types/leverage/types"
-	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
-	cmtypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
-	epochtypes "github.com/quicksilver-zone/quicksilver/x/epochs/types"
-	ics "github.com/quicksilver-zone/quicksilver/x/interchainstaking"
-	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
-	"github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
+	"github.com/quicksilver-zone/quicksilver/v7/app"
+	umeetypes "github.com/quicksilver-zone/quicksilver/v7/third-party-chains/umee-types/leverage/types"
+	"github.com/quicksilver-zone/quicksilver/v7/utils/addressutils"
+	cmtypes "github.com/quicksilver-zone/quicksilver/v7/x/claimsmanager/types"
+	epochtypes "github.com/quicksilver-zone/quicksilver/v7/x/epochs/types"
+	ics "github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking"
+	icstypes "github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking/types"
+	"github.com/quicksilver-zone/quicksilver/v7/x/participationrewards/types"
 )
 
 var (
@@ -246,21 +246,21 @@ func (suite *KeeperTestSuite) setupTestZones() {
 		Validators: []*icstypes.Validator{
 			{
 				ValoperAddress:  "osmovaloper1clpqr4nrk4khgkxj78fcwwh6dl3uw4ep88n0y4",
-				CommissionRate:  sdk.MustNewDecFromStr("0.1"),
+				CommissionRate:  sdkmath.LegacyMustNewDecFromStr("0.1"),
 				DelegatorShares: sdkmath.LegacyNewDec(200032604739),
 				VotingPower:     math.NewInt(200032604739),
 				Score:           sdk.ZeroDec(),
 			},
 			{
 				ValoperAddress:  "osmovaloper1hjct6q7npsspsg3dgvzk3sdf89spmlpf6t4agt",
-				CommissionRate:  sdk.MustNewDecFromStr("0.1"),
+				CommissionRate:  sdkmath.LegacyMustNewDecFromStr("0.1"),
 				DelegatorShares: sdkmath.LegacyNewDec(200032604734),
 				VotingPower:     math.NewInt(200032604734),
 				Score:           sdk.ZeroDec(),
 			},
 			{
 				ValoperAddress:  "osmovaloper15urq2dtp9qce4fyc85m6upwm9xul3049wh9czc",
-				CommissionRate:  sdk.MustNewDecFromStr("0.1"),
+				CommissionRate:  sdkmath.LegacyMustNewDecFromStr("0.1"),
 				DelegatorShares: sdkmath.LegacyNewDec(200032604738),
 				VotingPower:     math.NewInt(200032604738),
 				Score:           sdk.ZeroDec(),
@@ -296,21 +296,21 @@ func (suite *KeeperTestSuite) setupTestZones() {
 	cosmosVals := []icstypes.Validator{
 		{
 			ValoperAddress:  "cosmosvaloper1759teakrsvnx7rnur8ezc4qaq8669nhtgukm0x",
-			CommissionRate:  sdk.MustNewDecFromStr("0.1"),
+			CommissionRate:  sdkmath.LegacyMustNewDecFromStr("0.1"),
 			DelegatorShares: sdkmath.LegacyNewDec(200032604739),
 			VotingPower:     math.NewInt(200032604739),
 			Score:           sdk.ZeroDec(),
 		},
 		{
 			ValoperAddress:  "cosmosvaloper1jtjjyxtqk0fj85ud9cxk368gr8cjdsftvdt5jl",
-			CommissionRate:  sdk.MustNewDecFromStr("0.1"),
+			CommissionRate:  sdkmath.LegacyMustNewDecFromStr("0.1"),
 			DelegatorShares: sdkmath.LegacyNewDec(200032604734),
 			VotingPower:     math.NewInt(200032604734),
 			Score:           sdk.ZeroDec(),
 		},
 		{
 			ValoperAddress:  "cosmosvaloper1q86m0zq0p52h4puw5pg5xgc3c5e2mq52y6mth0",
-			CommissionRate:  sdk.MustNewDecFromStr("0.1"),
+			CommissionRate:  sdkmath.LegacyMustNewDecFromStr("0.1"),
 			DelegatorShares: sdkmath.LegacyNewDec(200032604738),
 			VotingPower:     math.NewInt(200032604738),
 			Score:           sdk.ZeroDec(),
@@ -619,15 +619,15 @@ func (suite *KeeperTestSuite) setupTestIntents() {
 		icstypes.ValidatorIntents{
 			{
 				ValoperAddress: vals[0].ValoperAddress,
-				Weight:         sdk.MustNewDecFromStr("0.3"),
+				Weight:         sdkmath.LegacyMustNewDecFromStr("0.3"),
 			},
 			{
 				ValoperAddress: vals[1].ValoperAddress,
-				Weight:         sdk.MustNewDecFromStr("0.4"),
+				Weight:         sdkmath.LegacyMustNewDecFromStr("0.4"),
 			},
 			{
 				ValoperAddress: vals[2].ValoperAddress,
-				Weight:         sdk.MustNewDecFromStr("0.3"),
+				Weight:         sdkmath.LegacyMustNewDecFromStr("0.3"),
 			},
 		},
 	)

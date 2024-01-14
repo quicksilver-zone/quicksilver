@@ -17,10 +17,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
-	"github.com/quicksilver-zone/quicksilver/x/epochs/client/cli"
-	"github.com/quicksilver-zone/quicksilver/x/epochs/keeper"
-	"github.com/quicksilver-zone/quicksilver/x/epochs/simulation"
-	"github.com/quicksilver-zone/quicksilver/x/epochs/types"
+	"github.com/quicksilver-zone/quicksilver/v7/x/epochs/client/cli"
+	"github.com/quicksilver-zone/quicksilver/v7/x/epochs/keeper"
+	"github.com/quicksilver-zone/quicksilver/v7/x/epochs/simulation"
+	"github.com/quicksilver-zone/quicksilver/v7/x/epochs/types"
 )
 
 var (

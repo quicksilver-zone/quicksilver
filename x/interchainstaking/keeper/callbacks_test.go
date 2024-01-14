@@ -30,11 +30,11 @@ import (
 	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
 	lightclienttypes "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint"
 
-	"github.com/quicksilver-zone/quicksilver/app"
-	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
-	icqtypes "github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
-	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/keeper"
-	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
+	"github.com/quicksilver-zone/quicksilver/v7/app"
+	"github.com/quicksilver-zone/quicksilver/v7/utils/addressutils"
+	icqtypes "github.com/quicksilver-zone/quicksilver/v7/x/interchainquery/types"
+	"github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking/keeper"
+	icstypes "github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking/types"
 )
 
 // ValSetCallback
@@ -395,19 +395,19 @@ func (suite *KeeperTestSuite) TestHandleValidatorCallbackNilValue() {
 func (suite *KeeperTestSuite) TestHandleValidatorCallback() {
 	newVal := addressutils.GenerateAddressForTestWithPrefix("cosmosvaloper")
 	zone := icstypes.Zone{ConnectionId: "connection-0", ChainId: "cosmoshub-4", AccountPrefix: "cosmos", LocalDenom: "uqatom", BaseDenom: "uatom", Is_118: true}
-	err := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetValidator(suite.chainA.GetContext(), zone.ChainId, icstypes.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), DelegatorShares: sdkmath.LegacyNewDec(2000)})
+	err := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetValidator(suite.chainA.GetContext(), zone.ChainId, icstypes.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdkmath.LegacyMustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), DelegatorShares: sdkmath.LegacyNewDec(2000)})
 	suite.NoError(err)
 
-	err = suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetValidator(suite.chainA.GetContext(), zone.ChainId, icstypes.Validator{ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), DelegatorShares: sdkmath.LegacyNewDec(2000)})
+	err = suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetValidator(suite.chainA.GetContext(), zone.ChainId, icstypes.Validator{ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", CommissionRate: sdkmath.LegacyMustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), DelegatorShares: sdkmath.LegacyNewDec(2000)})
 	suite.NoError(err)
 
-	err = suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetValidator(suite.chainA.GetContext(), zone.ChainId, icstypes.Validator{ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), DelegatorShares: sdkmath.LegacyNewDec(2000)})
+	err = suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetValidator(suite.chainA.GetContext(), zone.ChainId, icstypes.Validator{ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", CommissionRate: sdkmath.LegacyMustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), DelegatorShares: sdkmath.LegacyNewDec(2000)})
 	suite.NoError(err)
 
-	err = suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetValidator(suite.chainA.GetContext(), zone.ChainId, icstypes.Validator{ValoperAddress: "cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), DelegatorShares: sdkmath.LegacyNewDec(2000)})
+	err = suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetValidator(suite.chainA.GetContext(), zone.ChainId, icstypes.Validator{ValoperAddress: "cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll", CommissionRate: sdkmath.LegacyMustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), DelegatorShares: sdkmath.LegacyNewDec(2000)})
 	suite.NoError(err)
 
-	err = suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetValidator(suite.chainA.GetContext(), zone.ChainId, icstypes.Validator{ValoperAddress: "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), DelegatorShares: sdkmath.LegacyNewDec(2000)})
+	err = suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetValidator(suite.chainA.GetContext(), zone.ChainId, icstypes.Validator{ValoperAddress: "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7", CommissionRate: sdkmath.LegacyMustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), DelegatorShares: sdkmath.LegacyNewDec(2000)})
 	suite.NoError(err)
 
 	tests := []struct {
@@ -417,23 +417,23 @@ func (suite *KeeperTestSuite) TestHandleValidatorCallback() {
 	}{
 		{
 			name:      "valid - no-op",
-			validator: stakingtypes.Validator{OperatorAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", Jailed: false, Status: stakingtypes.Bonded, Tokens: sdkmath.NewInt(2000), DelegatorShares: sdkmath.LegacyNewDec(2000), Commission: stakingtypes.NewCommission(sdk.MustNewDecFromStr("0.2"), sdk.MustNewDecFromStr("0.2"), sdk.MustNewDecFromStr("0.2"))},
-			expected:  icstypes.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), DelegatorShares: sdkmath.LegacyNewDec(2000), Score: sdk.ZeroDec(), Status: "BOND_STATUS_BONDED", LiquidShares: sdk.ZeroDec(), ValidatorBondShares: sdk.ZeroDec()},
+			validator: stakingtypes.Validator{OperatorAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", Jailed: false, Status: stakingtypes.Bonded, Tokens: sdkmath.NewInt(2000), DelegatorShares: sdkmath.LegacyNewDec(2000), Commission: stakingtypes.NewCommission(sdkmath.LegacyMustNewDecFromStr("0.2"), sdkmath.LegacyMustNewDecFromStr("0.2"), sdkmath.LegacyMustNewDecFromStr("0.2"))},
+			expected:  icstypes.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdkmath.LegacyMustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), DelegatorShares: sdkmath.LegacyNewDec(2000), Score: sdk.ZeroDec(), Status: "BOND_STATUS_BONDED", LiquidShares: sdk.ZeroDec(), ValidatorBondShares: sdk.ZeroDec()},
 		},
 		{
 			name:      "valid - +2000 tokens/shares",
-			validator: stakingtypes.Validator{OperatorAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", Jailed: false, Status: stakingtypes.Bonded, Tokens: sdkmath.NewInt(4000), DelegatorShares: sdkmath.LegacyNewDec(4000), Commission: stakingtypes.NewCommission(sdk.MustNewDecFromStr("0.2"), sdk.MustNewDecFromStr("0.2"), sdk.MustNewDecFromStr("0.2"))},
-			expected:  icstypes.Validator{ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(4000), DelegatorShares: sdkmath.LegacyNewDec(4000), Score: sdk.ZeroDec(), Status: "BOND_STATUS_BONDED", LiquidShares: sdk.ZeroDec(), ValidatorBondShares: sdk.ZeroDec()},
+			validator: stakingtypes.Validator{OperatorAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", Jailed: false, Status: stakingtypes.Bonded, Tokens: sdkmath.NewInt(4000), DelegatorShares: sdkmath.LegacyNewDec(4000), Commission: stakingtypes.NewCommission(sdkmath.LegacyMustNewDecFromStr("0.2"), sdkmath.LegacyMustNewDecFromStr("0.2"), sdkmath.LegacyMustNewDecFromStr("0.2"))},
+			expected:  icstypes.Validator{ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", CommissionRate: sdkmath.LegacyMustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(4000), DelegatorShares: sdkmath.LegacyNewDec(4000), Score: sdk.ZeroDec(), Status: "BOND_STATUS_BONDED", LiquidShares: sdk.ZeroDec(), ValidatorBondShares: sdk.ZeroDec()},
 		},
 		{
 			name:      "valid - inc. commission",
-			validator: stakingtypes.Validator{OperatorAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", Jailed: false, Status: stakingtypes.Bonded, Tokens: sdkmath.NewInt(2000), DelegatorShares: sdkmath.LegacyNewDec(2000), Commission: stakingtypes.NewCommission(sdk.MustNewDecFromStr("0.5"), sdk.MustNewDecFromStr("0.2"), sdk.MustNewDecFromStr("0.2"))},
-			expected:  icstypes.Validator{ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", CommissionRate: sdk.MustNewDecFromStr("0.5"), VotingPower: sdkmath.NewInt(2000), DelegatorShares: sdkmath.LegacyNewDec(2000), Score: sdk.ZeroDec(), Status: "BOND_STATUS_BONDED", LiquidShares: sdk.ZeroDec(), ValidatorBondShares: sdk.ZeroDec()},
+			validator: stakingtypes.Validator{OperatorAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", Jailed: false, Status: stakingtypes.Bonded, Tokens: sdkmath.NewInt(2000), DelegatorShares: sdkmath.LegacyNewDec(2000), Commission: stakingtypes.NewCommission(sdkmath.LegacyMustNewDecFromStr("0.5"), sdkmath.LegacyMustNewDecFromStr("0.2"), sdkmath.LegacyMustNewDecFromStr("0.2"))},
+			expected:  icstypes.Validator{ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", CommissionRate: sdkmath.LegacyMustNewDecFromStr("0.5"), VotingPower: sdkmath.NewInt(2000), DelegatorShares: sdkmath.LegacyNewDec(2000), Score: sdk.ZeroDec(), Status: "BOND_STATUS_BONDED", LiquidShares: sdk.ZeroDec(), ValidatorBondShares: sdk.ZeroDec()},
 		},
 		{
 			name:      "valid - new validator",
-			validator: stakingtypes.Validator{OperatorAddress: newVal, Jailed: false, Status: stakingtypes.Bonded, Tokens: sdkmath.NewInt(3000), DelegatorShares: sdkmath.LegacyNewDec(3050), Commission: stakingtypes.NewCommission(sdk.MustNewDecFromStr("0.25"), sdk.MustNewDecFromStr("0.2"), sdk.MustNewDecFromStr("0.2"))},
-			expected:  icstypes.Validator{ValoperAddress: newVal, CommissionRate: sdk.MustNewDecFromStr("0.25"), VotingPower: sdkmath.NewInt(3000), DelegatorShares: sdkmath.LegacyNewDec(3050), Score: sdk.ZeroDec(), Status: "BOND_STATUS_BONDED", LiquidShares: sdk.ZeroDec(), ValidatorBondShares: sdk.ZeroDec()},
+			validator: stakingtypes.Validator{OperatorAddress: newVal, Jailed: false, Status: stakingtypes.Bonded, Tokens: sdkmath.NewInt(3000), DelegatorShares: sdkmath.LegacyNewDec(3050), Commission: stakingtypes.NewCommission(sdkmath.LegacyMustNewDecFromStr("0.25"), sdkmath.LegacyMustNewDecFromStr("0.2"), sdkmath.LegacyMustNewDecFromStr("0.2"))},
+			expected:  icstypes.Validator{ValoperAddress: newVal, CommissionRate: sdkmath.LegacyMustNewDecFromStr("0.25"), VotingPower: sdkmath.NewInt(3000), DelegatorShares: sdkmath.LegacyNewDec(3050), Score: sdk.ZeroDec(), Status: "BOND_STATUS_BONDED", LiquidShares: sdk.ZeroDec(), ValidatorBondShares: sdk.ZeroDec()},
 		},
 	}
 
@@ -483,7 +483,7 @@ func (suite *KeeperTestSuite) TestHandleValidatorCallbackJailedWithSlashing() {
 			name: "jailed; single distribution",
 			validator: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) *stakingtypes.Validator {
 				vals := qs.InterchainstakingKeeper.GetValidators(ctx, zone.ChainId)
-				return &stakingtypes.Validator{OperatorAddress: vals[0].ValoperAddress, ConsensusPubkey: pkAny, Jailed: true, Status: stakingtypes.Bonded, Tokens: vals[0].VotingPower.Mul(sdkmath.NewInt(19)).Quo(sdkmath.NewInt(20)), DelegatorShares: vals[0].DelegatorShares, Commission: stakingtypes.NewCommission(vals[0].CommissionRate, sdk.MustNewDecFromStr("0.5"), sdk.MustNewDecFromStr("0.5"))}
+				return &stakingtypes.Validator{OperatorAddress: vals[0].ValoperAddress, ConsensusPubkey: pkAny, Jailed: true, Status: stakingtypes.Bonded, Tokens: vals[0].VotingPower.Mul(sdkmath.NewInt(19)).Quo(sdkmath.NewInt(20)), DelegatorShares: vals[0].DelegatorShares, Commission: stakingtypes.NewCommission(vals[0].CommissionRate, sdkmath.LegacyMustNewDecFromStr("0.5"), sdkmath.LegacyMustNewDecFromStr("0.5"))}
 			},
 			expected: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) *icstypes.Validator {
 				vals := qs.InterchainstakingKeeper.GetValidators(ctx, zone.ChainId)
@@ -533,7 +533,7 @@ func (suite *KeeperTestSuite) TestHandleValidatorCallbackJailedWithSlashing() {
 			name: "jailed; multi distribution",
 			validator: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) *stakingtypes.Validator {
 				vals := qs.InterchainstakingKeeper.GetValidators(ctx, zone.ChainId)
-				return &stakingtypes.Validator{OperatorAddress: vals[0].ValoperAddress, ConsensusPubkey: pkAny, Jailed: true, Status: stakingtypes.Bonded, Tokens: vals[0].VotingPower.Mul(sdkmath.NewInt(19)).Quo(sdkmath.NewInt(20)), DelegatorShares: vals[0].DelegatorShares, Commission: stakingtypes.NewCommission(vals[0].CommissionRate, sdk.MustNewDecFromStr("0.5"), sdk.MustNewDecFromStr("0.5"))}
+				return &stakingtypes.Validator{OperatorAddress: vals[0].ValoperAddress, ConsensusPubkey: pkAny, Jailed: true, Status: stakingtypes.Bonded, Tokens: vals[0].VotingPower.Mul(sdkmath.NewInt(19)).Quo(sdkmath.NewInt(20)), DelegatorShares: vals[0].DelegatorShares, Commission: stakingtypes.NewCommission(vals[0].CommissionRate, sdkmath.LegacyMustNewDecFromStr("0.5"), sdkmath.LegacyMustNewDecFromStr("0.5"))}
 			},
 			expected: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) *icstypes.Validator {
 				vals := qs.InterchainstakingKeeper.GetValidators(ctx, zone.ChainId)
@@ -591,7 +591,7 @@ func (suite *KeeperTestSuite) TestHandleValidatorCallbackJailedWithSlashing() {
 			name: "jailed; multi distribution, unrelated validators - no-op",
 			validator: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) *stakingtypes.Validator {
 				vals := qs.InterchainstakingKeeper.GetValidators(ctx, zone.ChainId)
-				return &stakingtypes.Validator{OperatorAddress: vals[0].ValoperAddress, ConsensusPubkey: pkAny, Jailed: true, Status: stakingtypes.Bonded, Tokens: vals[0].VotingPower.Mul(sdkmath.NewInt(19)).Quo(sdkmath.NewInt(20)), DelegatorShares: vals[0].DelegatorShares, Commission: stakingtypes.NewCommission(vals[0].CommissionRate, sdk.MustNewDecFromStr("0.5"), sdk.MustNewDecFromStr("0.5"))}
+				return &stakingtypes.Validator{OperatorAddress: vals[0].ValoperAddress, ConsensusPubkey: pkAny, Jailed: true, Status: stakingtypes.Bonded, Tokens: vals[0].VotingPower.Mul(sdkmath.NewInt(19)).Quo(sdkmath.NewInt(20)), DelegatorShares: vals[0].DelegatorShares, Commission: stakingtypes.NewCommission(vals[0].CommissionRate, sdkmath.LegacyMustNewDecFromStr("0.5"), sdkmath.LegacyMustNewDecFromStr("0.5"))}
 			},
 			expected: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) *icstypes.Validator {
 				vals := qs.InterchainstakingKeeper.GetValidators(ctx, zone.ChainId)
@@ -733,9 +733,9 @@ func (suite *KeeperTestSuite) TestHandleRewardsCallbackNonDelegator() {
 
 		response := distrtypes.QueryDelegationTotalRewardsResponse{
 			Rewards: []distrtypes.DelegationDelegatorReward{
-				{ValidatorAddress: suite.chainB.Vals.Validators[0].String(), Reward: sdk.DecNewCoins(sdkmath.LegacyNewDecCoin("uatom", sdkmath.NewInt((1000))))},
+				{ValidatorAddress: suite.chainB.Vals.Validators[0].String(), Reward: sdk.NewDecCoins(sdk.NewDecCoin("uatom", sdkmath.NewInt((1000))))},
 			},
-			Total: sdk.DecNewCoins(sdkmath.LegacyNewDecCoin("uatom", sdkmath.NewInt((1000)))),
+			Total: sdk.NewDecCoins(sdk.NewDecCoin("uatom", sdkmath.NewInt((1000)))),
 		}
 		reqbz, err := quicksilver.AppCodec().Marshal(&queryReq)
 		suite.NoError(err)
@@ -796,9 +796,9 @@ func (suite *KeeperTestSuite) TestHandleValideRewardsCallback() {
 
 		response := distrtypes.QueryDelegationTotalRewardsResponse{
 			Rewards: []distrtypes.DelegationDelegatorReward{
-				{ValidatorAddress: suite.chainB.Vals.Validators[0].String(), Reward: sdk.DecNewCoins(sdkmath.LegacyNewDecCoin("uatom", sdkmath.NewInt((1000))))},
+				{ValidatorAddress: suite.chainB.Vals.Validators[0].String(), Reward: sdk.NewDecCoins(sdk.NewDecCoin("uatom", sdkmath.NewInt((1000))))},
 			},
-			Total: sdk.DecNewCoins(sdkmath.LegacyNewDecCoin("uatom", sdkmath.NewInt((1000)))),
+			Total: sdk.NewDecCoins(sdk.NewDecCoin("uatom", sdkmath.NewInt((1000)))),
 		}
 		reqbz, err := quicksilver.AppCodec().Marshal(&queryReq)
 		suite.NoError(err)
@@ -825,7 +825,7 @@ func (suite *KeeperTestSuite) TestHandleDistributeRewardsCallback() {
 	zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctxA, suite.chainB.ChainID)
 	suite.True(found)
 	params := quicksilver.InterchainstakingKeeper.GetParams(ctxA)
-	commisionRate := sdk.MustNewDecFromStr("0.2")
+	commisionRate := sdkmath.LegacyMustNewDecFromStr("0.2")
 	params.CommissionRate = commisionRate
 	quicksilver.InterchainstakingKeeper.SetParams(ctxA, params)
 
@@ -891,7 +891,7 @@ func (suite *KeeperTestSuite) TestHandleDistributeRewardsCallback() {
 				// total_unbonding = 0
 				// epoch_rewards = balances * (1 - commission_rate) = 1_000_000 * 0.8
 				// Therefore, ratio should be 1.008
-				ratio := sdk.MustNewDecFromStr("1.008")
+				ratio := sdkmath.LegacyMustNewDecFromStr("1.008")
 				suite.Equal(ratio.Mul(prevRedemptionRate), redemptionRate)
 			},
 			pass: true,
@@ -1402,7 +1402,7 @@ func (suite *KeeperTestSuite) TestAccountBalanceCallbackNil() {
 }
 
 // Ensures that a fuzz vector which resulted in a crash of ValidatorReq.Pagination crashing
-// doesn't creep back up. Please see https://github.com/quicksilver-zone/quicksilver-incognito/issues/82
+// doesn't creep back up. Please see https://github.com/quicksilver-zone/quicksilver/v7-incognito/issues/82
 func TestValsetCallbackNilValidatorReqPagination(t *testing.T) {
 	suite := new(KeeperTestSuite)
 	suite.SetT(t)
@@ -2233,13 +2233,13 @@ func (suite *KeeperTestSuite) TestDepositLsmTxCallback() {
 		err := quicksilver.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, icstypes.Validator{
 			ValoperAddress:      "cosmosvaloper1gg7w8w2y9jfv76a2yyahe42y09g9ry2raa5rqf",
 			CommissionRate:      sdkmath.LegacyNewDecWithPrec(1, 1),
-			DelegatorShares:     sdk.MustNewDecFromStr("4235376641.000000000000000000"),
+			DelegatorShares:     sdkmath.LegacyMustNewDecFromStr("4235376641.000000000000000000"),
 			VotingPower:         sdkmath.NewInt(4235376641),
 			Status:              "BOND_STATUS_BONDED",
 			Jailed:              false,
 			Tombstoned:          false,
-			ValidatorBondShares: sdk.MustNewDecFromStr("1000000.000000000000000000"),
-			LiquidShares:        sdk.MustNewDecFromStr("4234076641.000000000000000000"),
+			ValidatorBondShares: sdkmath.LegacyMustNewDecFromStr("1000000.000000000000000000"),
+			LiquidShares:        sdkmath.LegacyMustNewDecFromStr("4234076641.000000000000000000"),
 		})
 		suite.NoError(err)
 
@@ -2331,13 +2331,13 @@ func (suite *KeeperTestSuite) TestDepositTxCallback2() {
 		err := quicksilver.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, icstypes.Validator{
 			ValoperAddress:      "cosmosvaloper1gg7w8w2y9jfv76a2yyahe42y09g9ry2raa5rqf",
 			CommissionRate:      sdkmath.LegacyNewDecWithPrec(1, 1),
-			DelegatorShares:     sdk.MustNewDecFromStr("4235376641.000000000000000000"),
+			DelegatorShares:     sdkmath.LegacyMustNewDecFromStr("4235376641.000000000000000000"),
 			VotingPower:         sdkmath.NewInt(4235376641),
 			Status:              "BOND_STATUS_BONDED",
 			Jailed:              false,
 			Tombstoned:          false,
-			ValidatorBondShares: sdk.MustNewDecFromStr("1000000.000000000000000000"),
-			LiquidShares:        sdk.MustNewDecFromStr("4234076641.000000000000000000"),
+			ValidatorBondShares: sdkmath.LegacyMustNewDecFromStr("1000000.000000000000000000"),
+			LiquidShares:        sdkmath.LegacyMustNewDecFromStr("4234076641.000000000000000000"),
 		})
 		suite.NoError(err)
 

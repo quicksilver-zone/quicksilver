@@ -3,6 +3,7 @@ package types
 import (
 	"errors"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -13,7 +14,7 @@ var (
 
 // NewMinter returns a new Minter object with the given epoch
 // provisions values.
-func NewMinter(epochProvisions sdk.Dec) Minter {
+func NewMinter(epochProvisions sdkmath.LegacyDec) Minter {
 	return Minter{
 		EpochProvisions: epochProvisions,
 	}

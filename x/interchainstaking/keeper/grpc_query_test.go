@@ -9,10 +9,10 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
-	"github.com/quicksilver-zone/quicksilver/utils/randomutils"
-	epochstypes "github.com/quicksilver-zone/quicksilver/x/epochs/types"
-	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
+	"github.com/quicksilver-zone/quicksilver/v7/utils/addressutils"
+	"github.com/quicksilver-zone/quicksilver/v7/utils/randomutils"
+	epochstypes "github.com/quicksilver-zone/quicksilver/v7/x/epochs/types"
+	"github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking/types"
 )
 
 var delegatorAddress = "quick16pxh2v4hr28h2gkntgfk8qgh47pfmjfhzgeure"

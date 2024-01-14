@@ -3,10 +3,11 @@ package umeetypes
 import (
 	"fmt"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/quicksilver-zone/quicksilver/third-party-chains/umee-types/leverage/types"
-	participationrewardstypes "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
+	"github.com/quicksilver-zone/quicksilver/v7/third-party-chains/umee-types/leverage/types"
+	participationrewardstypes "github.com/quicksilver-zone/quicksilver/v7/x/participationrewards/types"
 )
 
 type ParticipationRewardsKeeper interface {

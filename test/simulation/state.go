@@ -25,7 +25,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	simappparams "github.com/cosmos/ibc-go/v8/testing/simapp/params"
 
-	"github.com/quicksilver-zone/quicksilver/app"
+	"github.com/quicksilver-zone/quicksilver/v7/app"
 )
 
 // AppStateFn returns the initial application state using a genesis or the simulation parameters.

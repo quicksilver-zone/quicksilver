@@ -7,10 +7,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
-	"github.com/quicksilver-zone/quicksilver/app"
-	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
-	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
-	"github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
+	"github.com/quicksilver-zone/quicksilver/v7/app"
+	"github.com/quicksilver-zone/quicksilver/v7/utils/addressutils"
+	icstypes "github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking/types"
+	"github.com/quicksilver-zone/quicksilver/v7/x/participationrewards/types"
 )
 
 var (
@@ -451,7 +451,7 @@ func (suite *KeeperTestSuite) TestCalcOverallScores() {
 			delegatorRewards: func(ctx sdk.Context, appA *app.Quicksilver, chainID string) distributiontypes.QueryDelegationTotalRewardsResponse {
 				zone, _ := appA.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 				valAddress := appA.InterchainstakingKeeper.GetValidatorAddresses(ctx, chainID)[0]
-				return distributiontypes.QueryDelegationTotalRewardsResponse{Rewards: []distributiontypes.DelegationDelegatorReward{{ValidatorAddress: valAddress, Reward: sdk.NewDecCoins(sdk.NewDecCoin(zone.BaseDenom, sdkmath.NewInt(1)))}}, Total: sdk.DecNewCoins(sdkmath.LegacyNewDecCoin(zone.BaseDenom, sdkmath.NewInt(0)))}
+				return distributiontypes.QueryDelegationTotalRewardsResponse{Rewards: []distributiontypes.DelegationDelegatorReward{{ValidatorAddress: valAddress, Reward: sdk.NewDecCoins(sdk.NewDecCoin(zone.BaseDenom, sdkmath.NewInt(1)))}}, Total: sdk.NewDecCoins(sdk.LegacyNewDecCoin(zone.BaseDenom, sdkmath.NewInt(0)))}
 			},
 			verify: func(_ types.ZoneScore, _ []distributiontypes.DelegationDelegatorReward, _ []icstypes.Validator) {
 			},
@@ -486,9 +486,9 @@ func (suite *KeeperTestSuite) TestCalcOverallScores() {
 				inactiveAddress := appA.InterchainstakingKeeper.GetValidatorAddresses(ctx, chainID)[0]
 				activeAddress := appA.InterchainstakingKeeper.GetValidatorAddresses(ctx, chainID)[1]
 				return distributiontypes.QueryDelegationTotalRewardsResponse{Rewards: []distributiontypes.DelegationDelegatorReward{
-					{ValidatorAddress: inactiveAddress, Reward: sdk.DecNewCoins(sdkmath.LegacyNewDecCoin(zone.BaseDenom, sdkmath.NewInt(1)))},
-					{ValidatorAddress: activeAddress, Reward: sdk.DecNewCoins(sdkmath.LegacyNewDecCoin(zone.BaseDenom, sdkmath.NewInt(10)))},
-				}, Total: sdk.DecNewCoins(sdkmath.LegacyNewDecCoin(zone.BaseDenom, sdkmath.NewInt(11)))}
+					{ValidatorAddress: inactiveAddress, Reward: sdk.DecNewCoins(sdk.LegacyNewDecCoin(zone.BaseDenom, sdkmath.NewInt(1)))},
+					{ValidatorAddress: activeAddress, Reward: sdk.DecNewCoins(sdk.LegacyNewDecCoin(zone.BaseDenom, sdkmath.NewInt(10)))},
+				}, Total: sdk.NewDecCoins(sdk.NewDecCoin(zone.BaseDenom, sdkmath.NewInt(11)))}
 			},
 			verify: func(zs types.ZoneScore, delegatorRewards []distributiontypes.DelegationDelegatorReward, validators []icstypes.Validator) {
 				suite.True(zs.ValidatorScores[delegatorRewards[0].ValidatorAddress] == nil)
@@ -536,10 +536,10 @@ func (suite *KeeperTestSuite) TestCalcOverallScores() {
 				zone, _ := appA.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 				validators := appA.InterchainstakingKeeper.GetValidatorAddresses(ctx, chainID)
 				return distributiontypes.QueryDelegationTotalRewardsResponse{Rewards: []distributiontypes.DelegationDelegatorReward{
-					{ValidatorAddress: validators[0], Reward: sdk.DecNewCoins(sdkmath.LegacyNewDecCoin(zone.BaseDenom, sdkmath.NewInt(5)))},
-					{ValidatorAddress: validators[1], Reward: sdk.DecNewCoins(sdkmath.LegacyNewDecCoin(zone.BaseDenom, sdkmath.NewInt(10)))},
-					{ValidatorAddress: validators[2], Reward: sdk.DecNewCoins(sdkmath.LegacyNewDecCoin(zone.BaseDenom, sdkmath.NewInt(15)))},
-				}, Total: sdk.DecNewCoins(sdkmath.LegacyNewDecCoin(zone.BaseDenom, sdkmath.NewInt(30)))}
+					{ValidatorAddress: validators[0], Reward: sdk.NewDecCoins(sdk.NewDecCoin(zone.BaseDenom, sdkmath.NewInt(5)))},
+					{ValidatorAddress: validators[1], Reward: sdk.NewDecCoins(sdk.NewDecCoin(zone.BaseDenom, sdkmath.NewInt(10)))},
+					{ValidatorAddress: validators[2], Reward: sdk.NewDecCoins(sdk.NewDecCoin(zone.BaseDenom, sdkmath.NewInt(15)))},
+				}, Total: sdk.NewDecCoins(sdk.NewDecCoin(zone.BaseDenom, sdkmath.NewInt(30)))}
 			},
 			verify: func(zs types.ZoneScore, delegatorRewards []distributiontypes.DelegationDelegatorReward, validators []icstypes.Validator) {
 				suite.Equal(strings.TrimRight(zs.ValidatorScores[delegatorRewards[0].ValidatorAddress].PerformanceScore.String(), "0"), "0.5")

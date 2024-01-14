@@ -8,8 +8,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	lpfarm "github.com/quicksilver-zone/quicksilver/third-party-chains/crescent-types/lpfarm"
-	participationrewardstypes "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
+	lpfarm "github.com/quicksilver-zone/quicksilver/v7/third-party-chains/crescent-types/lpfarm"
+	participationrewardstypes "github.com/quicksilver-zone/quicksilver/v7/x/participationrewards/types"
 )
 
 type ParticipationRewardsKeeper interface {

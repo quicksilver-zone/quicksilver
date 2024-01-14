@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
 
 	sdkmath "cosmossdk.io/math"
 
@@ -32,13 +32,13 @@ import (
 	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
 	ibctmtypes "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint"
 
-	"github.com/quicksilver-zone/quicksilver/utils"
-	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
-	epochskeeper "github.com/quicksilver-zone/quicksilver/x/epochs/keeper"
-	interchainquerykeeper "github.com/quicksilver-zone/quicksilver/x/interchainquery/keeper"
-	icqtypes "github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
-	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
-	lsmstakingtypes "github.com/quicksilver-zone/quicksilver/x/lsmtypes"
+	"github.com/quicksilver-zone/quicksilver/v7/utils"
+	"github.com/quicksilver-zone/quicksilver/v7/utils/addressutils"
+	epochskeeper "github.com/quicksilver-zone/quicksilver/v7/x/epochs/keeper"
+	interchainquerykeeper "github.com/quicksilver-zone/quicksilver/v7/x/interchainquery/keeper"
+	icqtypes "github.com/quicksilver-zone/quicksilver/v7/x/interchainquery/types"
+	"github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking/types"
+	lsmstakingtypes "github.com/quicksilver-zone/quicksilver/v7/x/lsmtypes"
 )
 
 // Keeper of this module maintains collections of registered zones.

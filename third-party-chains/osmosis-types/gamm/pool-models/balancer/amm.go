@@ -8,8 +8,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/gamm"
-	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/osmomath"
+	"github.com/quicksilver-zone/quicksilver/v7/third-party-chains/osmosis-types/gamm"
+	"github.com/quicksilver-zone/quicksilver/v7/third-party-chains/osmosis-types/osmomath"
 )
 
 // subPoolAssetWeights subtracts the weights of two different pool asset slices.

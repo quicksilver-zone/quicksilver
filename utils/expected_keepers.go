@@ -5,7 +5,7 @@ import (
 
 	ibctmtypes "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint"
 
-	claimsmanagertypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
+	claimsmanagertypes "github.com/quicksilver-zone/quicksilver/v7/x/claimsmanager/types"
 )
 
 type ClaimsManagerKeeper interface {

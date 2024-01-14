@@ -8,8 +8,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/gamm"
-	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/osmoutils"
+	"github.com/quicksilver-zone/quicksilver/v7/third-party-chains/osmosis-types/gamm"
+	"github.com/quicksilver-zone/quicksilver/v7/third-party-chains/osmosis-types/osmoutils"
 )
 
 const errMsgFormatSharesLargerThanMax = "%s resulted shares is larger than the max amount of %s"

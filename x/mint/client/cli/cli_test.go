@@ -11,8 +11,8 @@ import (
 	tmcli "github.com/cometbft/cometbft/libs/cli"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/quicksilver-zone/quicksilver/app"
-	"github.com/quicksilver-zone/quicksilver/x/mint/client/cli"
+	"github.com/quicksilver-zone/quicksilver/v7/app"
+	"github.com/quicksilver-zone/quicksilver/v7/x/mint/client/cli"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"

@@ -7,8 +7,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	cmdcfg "github.com/quicksilver-zone/quicksilver/cmd/quicksilverd/config"
-	"github.com/quicksilver-zone/quicksilver/x/tokenfactory/types"
+	cmdcfg "github.com/quicksilver-zone/quicksilver/v7/cmd/quicksilverd/config"
+	"github.com/quicksilver-zone/quicksilver/v7/x/tokenfactory/types"
 )
 
 func TestDeconstructDenom(t *testing.T) {

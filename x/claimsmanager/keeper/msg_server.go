@@ -1,7 +1,7 @@
 package keeper
 
 import (
-	"github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
+	"github.com/quicksilver-zone/quicksilver/v7/x/claimsmanager/types"
 )
 
 type msgServer struct {

@@ -20,8 +20,8 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/quicksilver-zone/quicksilver/icq-relayer/pkg/config"
-	"github.com/quicksilver-zone/quicksilver/icq-relayer/prommetrics"
+	"github.com/quicksilver-zone/quicksilver/v7/icq-relayer/pkg/config"
+	"github.com/quicksilver-zone/quicksilver/v7/icq-relayer/prommetrics"
 
 	"github.com/go-kit/log"
 
@@ -32,7 +32,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	querytypes "github.com/cosmos/cosmos-sdk/types/query"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
-	qstypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
+	qstypes "github.com/quicksilver-zone/quicksilver/v7/x/interchainquery/types"
 	lensclient "github.com/strangelove-ventures/lens/client"
 	lensquery "github.com/strangelove-ventures/lens/client/query"
 	"google.golang.org/grpc/metadata"

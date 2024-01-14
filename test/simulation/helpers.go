@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
 	dbm "github.com/cosmos/cosmos-db"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -16,8 +16,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
-	"github.com/quicksilver-zone/quicksilver/app"
-	"github.com/quicksilver-zone/quicksilver/app/helpers"
+	"github.com/quicksilver-zone/quicksilver/v7/app"
+	"github.com/quicksilver-zone/quicksilver/v7/app/helpers"
 )
 
 // SetupSimulation creates the config, db (levelDB), temporary directory and logger for

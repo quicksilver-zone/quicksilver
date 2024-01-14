@@ -5,8 +5,9 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/quicksilver-zone/quicksilver/x/airdrop/keeper"
-	"github.com/quicksilver-zone/quicksilver/x/airdrop/types"
+	sdkmath "cosmossdk.io/math"
+	"github.com/quicksilver-zone/quicksilver/v7/x/airdrop/keeper"
+	"github.com/quicksilver-zone/quicksilver/v7/x/airdrop/types"
 )
 
 // InitGenesis initializes the airdrop module's state from a provided genesis

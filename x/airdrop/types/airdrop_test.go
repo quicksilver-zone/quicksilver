@@ -7,9 +7,10 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/quicksilver-zone/quicksilver/x/airdrop/types"
+	"github.com/quicksilver-zone/quicksilver/v7/x/airdrop/types"
 )
 
 func TestZoneDrop_ValidateBasic(t *testing.T) {
@@ -41,9 +42,9 @@ func TestZoneDrop_ValidateBasic(t *testing.T) {
 				Decay:      -time.Second,
 				Allocation: 0,
 				Actions: []sdk.Dec{
-					sdk.MustNewDecFromStr("0.3"),
-					sdk.MustNewDecFromStr("0.4"),
-					sdk.MustNewDecFromStr("0.5"),
+					sdkmath.LegacyMustNewDecFromStr("0.3"),
+					sdkmath.LegacyMustNewDecFromStr("0.4"),
+					sdkmath.LegacyMustNewDecFromStr("0.5"),
 				},
 				IsConcluded: false,
 			},
@@ -58,9 +59,9 @@ func TestZoneDrop_ValidateBasic(t *testing.T) {
 				Decay:      0,
 				Allocation: 0,
 				Actions: []sdk.Dec{
-					sdk.MustNewDecFromStr("0.3"),
-					sdk.MustNewDecFromStr("0.3"),
-					sdk.MustNewDecFromStr("0.3"),
+					sdkmath.LegacyMustNewDecFromStr("0.3"),
+					sdkmath.LegacyMustNewDecFromStr("0.3"),
+					sdkmath.LegacyMustNewDecFromStr("0.3"),
 				},
 				IsConcluded: false,
 			},
@@ -75,18 +76,18 @@ func TestZoneDrop_ValidateBasic(t *testing.T) {
 				Decay:      30 * time.Minute,
 				Allocation: 16400,
 				Actions: []sdk.Dec{
-					sdk.MustNewDecFromStr("0.01"),
-					sdk.MustNewDecFromStr("0.02"),
-					sdk.MustNewDecFromStr("0.03"),
-					sdk.MustNewDecFromStr("0.04"),
-					sdk.MustNewDecFromStr("0.06"),
-					sdk.MustNewDecFromStr("0.07"),
-					sdk.MustNewDecFromStr("0.08"),
-					sdk.MustNewDecFromStr("0.09"),
-					sdk.MustNewDecFromStr("0.1"),
-					sdk.MustNewDecFromStr("0.2"),
-					sdk.MustNewDecFromStr("0.3"),
-					sdk.MustNewDecFromStr("0.1"),
+					sdkmath.LegacyMustNewDecFromStr("0.01"),
+					sdkmath.LegacyMustNewDecFromStr("0.02"),
+					sdkmath.LegacyMustNewDecFromStr("0.03"),
+					sdkmath.LegacyMustNewDecFromStr("0.04"),
+					sdkmath.LegacyMustNewDecFromStr("0.06"),
+					sdkmath.LegacyMustNewDecFromStr("0.07"),
+					sdkmath.LegacyMustNewDecFromStr("0.08"),
+					sdkmath.LegacyMustNewDecFromStr("0.09"),
+					sdkmath.LegacyMustNewDecFromStr("0.1"),
+					sdkmath.LegacyMustNewDecFromStr("0.2"),
+					sdkmath.LegacyMustNewDecFromStr("0.3"),
+					sdkmath.LegacyMustNewDecFromStr("0.1"),
 				},
 				IsConcluded: false,
 			},
@@ -101,10 +102,10 @@ func TestZoneDrop_ValidateBasic(t *testing.T) {
 				Decay:      30 * time.Minute,
 				Allocation: 16400,
 				Actions: []sdk.Dec{
-					sdk.MustNewDecFromStr("0.1"),
-					sdk.MustNewDecFromStr("0.2"),
-					sdk.MustNewDecFromStr("0.3"),
-					sdk.MustNewDecFromStr("0.4"),
+					sdkmath.LegacyMustNewDecFromStr("0.1"),
+					sdkmath.LegacyMustNewDecFromStr("0.2"),
+					sdkmath.LegacyMustNewDecFromStr("0.3"),
+					sdkmath.LegacyMustNewDecFromStr("0.4"),
 				},
 				IsConcluded: false,
 			},

@@ -3,8 +3,8 @@ package interchainquery
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/quicksilver-zone/quicksilver/x/interchainquery/keeper"
-	"github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
+	"github.com/quicksilver-zone/quicksilver/v7/x/interchainquery/keeper"
+	"github.com/quicksilver-zone/quicksilver/v7/x/interchainquery/types"
 )
 
 // InitGenesis initializes the capability module's state from a provided genesis

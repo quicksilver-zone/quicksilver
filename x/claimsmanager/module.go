@@ -17,9 +17,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
-	"github.com/quicksilver-zone/quicksilver/x/claimsmanager/client/cli"
-	"github.com/quicksilver-zone/quicksilver/x/claimsmanager/keeper"
-	"github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
+	"github.com/quicksilver-zone/quicksilver/v7/x/claimsmanager/client/cli"
+	"github.com/quicksilver-zone/quicksilver/v7/x/claimsmanager/keeper"
+	"github.com/quicksilver-zone/quicksilver/v7/x/claimsmanager/types"
 )
 
 var (

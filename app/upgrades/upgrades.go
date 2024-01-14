@@ -12,11 +12,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	"github.com/quicksilver-zone/quicksilver/app/keepers"
-	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
-	epochtypes "github.com/quicksilver-zone/quicksilver/x/epochs/types"
-	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
-	prtypes "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
+	"github.com/quicksilver-zone/quicksilver/v7/app/keepers"
+	"github.com/quicksilver-zone/quicksilver/v7/utils/addressutils"
+	epochtypes "github.com/quicksilver-zone/quicksilver/v7/x/epochs/types"
+	icstypes "github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking/types"
+	prtypes "github.com/quicksilver-zone/quicksilver/v7/x/participationrewards/types"
 )
 
 func Upgrades() []Upgrade {

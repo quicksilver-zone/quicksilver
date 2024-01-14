@@ -1,18 +1,19 @@
 package keeper_test
 
 import (
+	sdkmath "cosmossdk.io/math"
 	"github.com/cometbft/cometbft/proto/tendermint/crypto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	staking "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
-	"github.com/quicksilver-zone/quicksilver/x/airdrop/keeper"
-	"github.com/quicksilver-zone/quicksilver/x/airdrop/types"
-	cmtypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
-	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
-	minttypes "github.com/quicksilver-zone/quicksilver/x/mint/types"
+	"github.com/quicksilver-zone/quicksilver/v7/utils/addressutils"
+	"github.com/quicksilver-zone/quicksilver/v7/x/airdrop/keeper"
+	"github.com/quicksilver-zone/quicksilver/v7/x/airdrop/types"
+	cmtypes "github.com/quicksilver-zone/quicksilver/v7/x/claimsmanager/types"
+	icstypes "github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking/types"
+	minttypes "github.com/quicksilver-zone/quicksilver/v7/x/mint/types"
 )
 
 func (suite *KeeperTestSuite) Test_msgServer_Claim() {
@@ -258,7 +259,7 @@ func (suite *KeeperTestSuite) Test_msgServer_Claim() {
 				del := staking.Delegation{
 					DelegatorAddress: userAddress,
 					ValidatorAddress: valAddress.String(),
-					Shares:           sdk.MustNewDecFromStr("10.0"),
+					Shares:           sdkmath.LegacyMustNewDecFromStr("10.0"),
 				}
 				appA.StakingKeeper.SetDelegation(
 					suite.chainA.GetContext(),

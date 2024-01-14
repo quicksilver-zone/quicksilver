@@ -6,7 +6,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/quicksilver-zone/quicksilver/x/supply/types"
+	"github.com/quicksilver-zone/quicksilver/v7/x/supply/types"
 )
 
 var _ types.QueryServer = Querier{}

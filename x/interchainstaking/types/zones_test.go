@@ -9,9 +9,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	"github.com/quicksilver-zone/quicksilver/utils"
-	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
-	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
+	"github.com/quicksilver-zone/quicksilver/v7/utils"
+	"github.com/quicksilver-zone/quicksilver/v7/utils/addressutils"
+	"github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking/types"
 )
 
 func TestIsDelegateAddress(t *testing.T) {
@@ -128,12 +128,12 @@ func TestCoinsToIntent(t *testing.T) {
 func TestDecodeMemo(t *testing.T) {
 	zone := types.Zone{ConnectionId: "connection-0", ChainId: "cosmoshub-4", AccountPrefix: "cosmos", LocalDenom: "uqatom", BaseDenom: "uatom", Is_118: true}
 	zone.Validators = append(zone.Validators,
-		&types.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
-		&types.Validator{ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
-		&types.Validator{ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
-		&types.Validator{ValoperAddress: "cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
-		&types.Validator{ValoperAddress: "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
-		&types.Validator{ValoperAddress: "cosmosvaloper1qaa9zej9a0ge3ugpx3pxyx602lxh3ztqgfnp42", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+		&types.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdkmath.LegacyMustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+		&types.Validator{ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", CommissionRate: sdkmath.LegacyMustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+		&types.Validator{ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", CommissionRate: sdkmath.LegacyMustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+		&types.Validator{ValoperAddress: "cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll", CommissionRate: sdkmath.LegacyMustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+		&types.Validator{ValoperAddress: "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7", CommissionRate: sdkmath.LegacyMustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+		&types.Validator{ValoperAddress: "cosmosvaloper1qaa9zej9a0ge3ugpx3pxyx602lxh3ztqgfnp42", CommissionRate: sdkmath.LegacyMustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
 	)
 
 	testCases := []struct {
@@ -240,12 +240,12 @@ func TestDecodeMemo(t *testing.T) {
 func TestUpdateIntentWithMemo(t *testing.T) {
 	zone := types.Zone{ConnectionId: "connection-0", ChainId: "cosmoshub-4", AccountPrefix: "cosmos", LocalDenom: "uqatom", BaseDenom: "uatom", Is_118: true}
 	zone.Validators = append(zone.Validators,
-		&types.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
-		&types.Validator{ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
-		&types.Validator{ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
-		&types.Validator{ValoperAddress: "cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
-		&types.Validator{ValoperAddress: "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
-		&types.Validator{ValoperAddress: "cosmosvaloper1qaa9zej9a0ge3ugpx3pxyx602lxh3ztqgfnp42", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+		&types.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdkmath.LegacyMustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+		&types.Validator{ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", CommissionRate: sdkmath.LegacyMustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+		&types.Validator{ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", CommissionRate: sdkmath.LegacyMustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+		&types.Validator{ValoperAddress: "cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll", CommissionRate: sdkmath.LegacyMustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+		&types.Validator{ValoperAddress: "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7", CommissionRate: sdkmath.LegacyMustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+		&types.Validator{ValoperAddress: "cosmosvaloper1qaa9zej9a0ge3ugpx3pxyx602lxh3ztqgfnp42", CommissionRate: sdkmath.LegacyMustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
 	)
 
 	testCases := []struct {
@@ -328,12 +328,12 @@ func TestUpdateIntentWithMemo(t *testing.T) {
 func TestUpdateIntentWithMemoBad(t *testing.T) {
 	zone := types.Zone{ConnectionId: "connection-0", ChainId: "cosmoshub-4", AccountPrefix: "cosmos", LocalDenom: "uqatom", BaseDenom: "uatom", Is_118: true}
 	zone.Validators = append(zone.Validators,
-		&types.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
-		&types.Validator{ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
-		&types.Validator{ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
-		&types.Validator{ValoperAddress: "cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
-		&types.Validator{ValoperAddress: "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
-		&types.Validator{ValoperAddress: "cosmosvaloper1qaa9zej9a0ge3ugpx3pxyx602lxh3ztqgfnp42", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+		&types.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdkmath.LegacyMustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+		&types.Validator{ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", CommissionRate: sdkmath.LegacyMustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+		&types.Validator{ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", CommissionRate: sdkmath.LegacyMustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+		&types.Validator{ValoperAddress: "cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll", CommissionRate: sdkmath.LegacyMustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+		&types.Validator{ValoperAddress: "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7", CommissionRate: sdkmath.LegacyMustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+		&types.Validator{ValoperAddress: "cosmosvaloper1qaa9zej9a0ge3ugpx3pxyx602lxh3ztqgfnp42", CommissionRate: sdkmath.LegacyMustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
 	)
 
 	testCases := []struct {
@@ -364,12 +364,12 @@ func TestUpdateIntentWithMemoBad(t *testing.T) {
 func TestUpdateIntentWithCoins(t *testing.T) {
 	zone := types.Zone{ConnectionId: "connection-0", ChainId: "cosmoshub-4", AccountPrefix: "cosmos", LocalDenom: "uqatom", BaseDenom: "uatom", Is_118: true}
 	zone.Validators = append(zone.Validators,
-		&types.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
-		&types.Validator{ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
-		&types.Validator{ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
-		&types.Validator{ValoperAddress: "cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
-		&types.Validator{ValoperAddress: "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
-		&types.Validator{ValoperAddress: "cosmosvaloper1qaa9zej9a0ge3ugpx3pxyx602lxh3ztqgfnp42", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+		&types.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdkmath.LegacyMustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+		&types.Validator{ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", CommissionRate: sdkmath.LegacyMustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+		&types.Validator{ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", CommissionRate: sdkmath.LegacyMustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+		&types.Validator{ValoperAddress: "cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll", CommissionRate: sdkmath.LegacyMustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+		&types.Validator{ValoperAddress: "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7", CommissionRate: sdkmath.LegacyMustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+		&types.Validator{ValoperAddress: "cosmosvaloper1qaa9zej9a0ge3ugpx3pxyx602lxh3ztqgfnp42", CommissionRate: sdkmath.LegacyMustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
 	)
 	testCases := []struct {
 		baseAmount     int
@@ -472,12 +472,12 @@ func intentFromDecSlice(in map[string]sdkmath.LegacyDec) types.DelegatorIntent {
 // 	d1 = append(d1, &types.Delegation{DelegationAddress: "cosmos1user1237", ValidatorAddress: "cosmos12345667890", Amount: sdkmath.LegacyNewDec(200)})
 
 // 	i1 := []types.DelegatorIntent{}
-// 	i1 = append(i1, types.DelegatorIntent{Delegator: "cosmos1user1234", Intents: []*types.ValidatorIntent{{ValoperAddress: "cosmos12345667890", Weight: sdk.MustNewDecFromStr("0.5")}, {ValoperAddress: "cosmos987654321", Weight: sdk.MustNewDecFromStr("0.5")}}})
+// 	i1 = append(i1, types.DelegatorIntent{Delegator: "cosmos1user1234", Intents: []*types.ValidatorIntent{{ValoperAddress: "cosmos12345667890", Weight: sdkmath.LegacyMustNewDecFromStr("0.5")}, {ValoperAddress: "cosmos987654321", Weight: sdkmath.LegacyMustNewDecFromStr("0.5")}}})
 // 	i1 = append(i1, types.DelegatorIntent{Delegator: "cosmos1user1235", Intents: []*types.ValidatorIntent{{ValoperAddress: "cosmos12345667890", Weight: sdkmath.LegacyNewDec(1)}}})
 // 	i1 = append(i1, types.DelegatorIntent{Delegator: "cosmos1user1236", Intents: []*types.ValidatorIntent{{ValoperAddress: "cosmos12345667890", Weight: sdkmath.LegacyNewDec(1)}}})
 // 	i1 = append(i1, types.DelegatorIntent{Delegator: "cosmos1user1237", Intents: []*types.ValidatorIntent{{ValoperAddress: "cosmos12345667890", Weight: sdkmath.LegacyNewDec(1)}}})
 
-// 	zone.Validators = append(zone.Validators, &types.Validator{ValoperAddress: "cosmos12345667890", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdkmath.LegacyNewDec(2000), Delegations: d1})
+// 	zone.Validators = append(zone.Validators, &types.Validator{ValoperAddress: "cosmos12345667890", CommissionRate: sdkmath.LegacyMustNewDecFromStr("0.2"), VotingPower: sdkmath.LegacyNewDec(2000), Delegations: d1})
 
 // 	require.Equal(t, 0, 0)
 // }

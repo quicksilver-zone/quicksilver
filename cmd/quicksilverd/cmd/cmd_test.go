@@ -10,8 +10,8 @@ import (
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 	"github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 
-	"github.com/quicksilver-zone/quicksilver/app"
-	quicksilverd "github.com/quicksilver-zone/quicksilver/cmd/quicksilverd" //nolint:revive
+	"github.com/quicksilver-zone/quicksilver/v7/app"
+	quicksilverd "github.com/quicksilver-zone/quicksilver/v7/cmd/quicksilverd" //nolint:revive
 )
 
 func TestInitCmd(t *testing.T) {

@@ -11,9 +11,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	"github.com/quicksilver-zone/quicksilver/app"
-	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
-	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
+	"github.com/quicksilver-zone/quicksilver/v7/app"
+	"github.com/quicksilver-zone/quicksilver/v7/utils/addressutils"
+	"github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking/types"
 )
 
 func (suite *KeeperTestSuite) TestKeeper_DelegationStore() {
@@ -661,19 +661,19 @@ func (suite *KeeperTestSuite) TestPerformanceDelegation() {
 	suite.NotEqual(types.Zone{}, zone, "Expecting a non-blank zone")
 
 	// set val
-	val0 := types.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdk.MustNewDecFromStr("1"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded}
+	val0 := types.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdkmath.LegacyMustNewDecFromStr("1"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded}
 	err := quicksilver.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, val0)
 	suite.NoError(err)
 
-	val1 := types.Validator{ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", CommissionRate: sdk.MustNewDecFromStr("1"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded}
+	val1 := types.Validator{ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", CommissionRate: sdkmath.LegacyMustNewDecFromStr("1"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded}
 	err = quicksilver.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, val1)
 	suite.NoError(err)
 
-	val2 := types.Validator{ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", CommissionRate: sdk.MustNewDecFromStr("1"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded}
+	val2 := types.Validator{ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", CommissionRate: sdkmath.LegacyMustNewDecFromStr("1"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded}
 	err = quicksilver.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, val2)
 	suite.NoError(err)
 
-	val3 := types.Validator{ValoperAddress: "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7", CommissionRate: sdk.MustNewDecFromStr("1"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded}
+	val3 := types.Validator{ValoperAddress: "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7", CommissionRate: sdkmath.LegacyMustNewDecFromStr("1"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded}
 	err = quicksilver.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, val3)
 	suite.NoError(err)
 
@@ -865,7 +865,7 @@ func (suite *KeeperTestSuite) TestDetermineMaximumValidatorAllocationsFromFixtur
 	suite.Equal(allocations["cosmosvaloper1yl8t2nle6nsrxyvy6tx4yhyerezcucmxcpzswx"], sdkmath.NewInt(0))
 
 	// bonded, zero validator bond and 103139060236.136823421589631187 liquid; overallocated.
-	// ref: https://github.com/quicksilver-zone/quicksilver/issues/981
+	// ref: https://github.com/quicksilver-zone/quicksilver/v7/issues/981
 	suite.Equal(allocations["cosmosvaloper1cymmn6xh0nns7uwlwwl2jtemn3haa7w56pz8pm"], sdkmath.NewInt(0))
 }
 

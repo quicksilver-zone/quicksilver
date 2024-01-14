@@ -6,8 +6,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 
-	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
-	participationrewardstypes "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
+	icstypes "github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking/types"
+	participationrewardstypes "github.com/quicksilver-zone/quicksilver/v7/x/participationrewards/types"
 )
 
 // AccountKeeper defines the contract required for account APIs.

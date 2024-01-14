@@ -12,12 +12,12 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
-	liquiditytypes "github.com/quicksilver-zone/quicksilver/third-party-chains/crescent-types/liquidity/types"
-	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/gamm"
-	umeetypes "github.com/quicksilver-zone/quicksilver/third-party-chains/umee-types/leverage/types"
-	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
-	icqtypes "github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
-	"github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
+	liquiditytypes "github.com/quicksilver-zone/quicksilver/v7/third-party-chains/crescent-types/liquidity/types"
+	"github.com/quicksilver-zone/quicksilver/v7/third-party-chains/osmosis-types/gamm"
+	umeetypes "github.com/quicksilver-zone/quicksilver/v7/third-party-chains/umee-types/leverage/types"
+	"github.com/quicksilver-zone/quicksilver/v7/utils/addressutils"
+	icqtypes "github.com/quicksilver-zone/quicksilver/v7/x/interchainquery/types"
+	"github.com/quicksilver-zone/quicksilver/v7/x/participationrewards/types"
 )
 
 const (

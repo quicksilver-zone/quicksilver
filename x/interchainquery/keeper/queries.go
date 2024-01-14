@@ -3,6 +3,7 @@ package keeper
 import (
 	"fmt"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/cometbft/cometbft/crypto"
 
 	"cosmossdk.io/math"
@@ -10,7 +11,7 @@ import (
 	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
+	"github.com/quicksilver-zone/quicksilver/v7/x/interchainquery/types"
 )
 
 func GenerateQueryHash(connectionID, chainID, queryType string, request []byte, module string) string {

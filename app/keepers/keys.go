@@ -23,15 +23,15 @@ import (
 	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 	ibchost "github.com/cosmos/ibc-go/v8/modules/core/24-host"
 
-	airdroptypes "github.com/quicksilver-zone/quicksilver/x/airdrop/types"
-	claimsmanagertypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
-	epochstypes "github.com/quicksilver-zone/quicksilver/x/epochs/types"
-	interchainquerytypes "github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
-	interchainstakingtypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
-	minttypes "github.com/quicksilver-zone/quicksilver/x/mint/types"
-	participationrewardstypes "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
-	supplytypes "github.com/quicksilver-zone/quicksilver/x/supply/types"
-	tokenfactorytypes "github.com/quicksilver-zone/quicksilver/x/tokenfactory/types"
+	airdroptypes "github.com/quicksilver-zone/quicksilver/v7/x/airdrop/types"
+	claimsmanagertypes "github.com/quicksilver-zone/quicksilver/v7/x/claimsmanager/types"
+	epochstypes "github.com/quicksilver-zone/quicksilver/v7/x/epochs/types"
+	interchainquerytypes "github.com/quicksilver-zone/quicksilver/v7/x/interchainquery/types"
+	interchainstakingtypes "github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking/types"
+	minttypes "github.com/quicksilver-zone/quicksilver/v7/x/mint/types"
+	participationrewardstypes "github.com/quicksilver-zone/quicksilver/v7/x/participationrewards/types"
+	supplytypes "github.com/quicksilver-zone/quicksilver/v7/x/supply/types"
+	tokenfactorytypes "github.com/quicksilver-zone/quicksilver/v7/x/tokenfactory/types"
 )
 
 // TODO: We need to automate this, by bundling with a module struct...

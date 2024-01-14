@@ -8,9 +8,9 @@ import (
 
 	ibctmtypes "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint"
 
-	claimsmanagertypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
-	interchainquerytypes "github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
-	interchainstakingtypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
+	claimsmanagertypes "github.com/quicksilver-zone/quicksilver/v7/x/claimsmanager/types"
+	interchainquerytypes "github.com/quicksilver-zone/quicksilver/v7/x/interchainquery/types"
+	interchainstakingtypes "github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking/types"
 )
 
 // AccountKeeper defines the contract required for account APIs.

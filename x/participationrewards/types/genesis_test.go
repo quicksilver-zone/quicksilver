@@ -3,11 +3,10 @@ package types_test
 import (
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
+	"github.com/quicksilver-zone/quicksilver/v7/x/participationrewards/types"
 )
 
 func TestGenesisState(t *testing.T) {
@@ -15,9 +14,9 @@ func TestGenesisState(t *testing.T) {
 	testGenesisState := types.GenesisState{
 		Params: types.Params{
 			DistributionProportions: types.DistributionProportions{
-				ValidatorSelectionAllocation: sdk.MustNewDecFromStr("0.34"),
-				HoldingsAllocation:           sdk.MustNewDecFromStr("0.33"),
-				LockupAllocation:             sdk.MustNewDecFromStr("0.33"),
+				ValidatorSelectionAllocation: sdkmath.LegacyMustNewDecFromStr("0.34"),
+				HoldingsAllocation:           sdkmath.LegacyMustNewDecFromStr("0.33"),
+				LockupAllocation:             sdkmath.LegacyMustNewDecFromStr("0.33"),
 			},
 		},
 	}
@@ -27,18 +26,18 @@ func TestGenesisState(t *testing.T) {
 	newGenesisState := types.NewGenesisState(
 		types.Params{
 			DistributionProportions: types.DistributionProportions{
-				ValidatorSelectionAllocation: sdk.MustNewDecFromStr("0.5"),
-				HoldingsAllocation:           sdk.MustNewDecFromStr("0.3"),
-				LockupAllocation:             sdk.MustNewDecFromStr("0.2"),
+				ValidatorSelectionAllocation: sdkmath.LegacyMustNewDecFromStr("0.5"),
+				HoldingsAllocation:           sdkmath.LegacyMustNewDecFromStr("0.3"),
+				LockupAllocation:             sdkmath.LegacyMustNewDecFromStr("0.2"),
 			},
 		},
 	)
 	testGenesisState = types.GenesisState{
 		Params: types.Params{
 			DistributionProportions: types.DistributionProportions{
-				ValidatorSelectionAllocation: sdk.MustNewDecFromStr("0.5"),
-				HoldingsAllocation:           sdk.MustNewDecFromStr("0.3"),
-				LockupAllocation:             sdk.MustNewDecFromStr("0.2"),
+				ValidatorSelectionAllocation: sdkmath.LegacyMustNewDecFromStr("0.5"),
+				HoldingsAllocation:           sdkmath.LegacyMustNewDecFromStr("0.3"),
+				LockupAllocation:             sdkmath.LegacyMustNewDecFromStr("0.2"),
 			},
 		},
 	}

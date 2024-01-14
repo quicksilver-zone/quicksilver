@@ -5,13 +5,13 @@ import (
 	"math"
 	"sort"
 
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
 
 	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/quicksilver-zone/quicksilver/utils"
+	"github.com/quicksilver-zone/quicksilver/v7/utils"
 )
 
 // CalculateAllocationDeltas determines, for the current delegations, in delta between actual allocations and the target intent.

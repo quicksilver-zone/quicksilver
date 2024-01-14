@@ -4,10 +4,8 @@ import (
 	"encoding/json"
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/quicksilver-zone/quicksilver/x/participationrewards/keeper"
-	"github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
+	"github.com/quicksilver-zone/quicksilver/v7/x/participationrewards/keeper"
+	"github.com/quicksilver-zone/quicksilver/v7/x/participationrewards/types"
 )
 
 func (suite *KeeperTestSuite) TestCalcTokenValues() {
@@ -70,8 +68,8 @@ func (suite *KeeperTestSuite) TestCalcTokenValues() {
 				},
 			},
 			expectedTvs: keeper.TokenValues{
-				"uatom": sdk.MustNewDecFromStr("18.680609802053228677"),
-				"uosmo": sdk.MustNewDecFromStr("1.000000000000000000"),
+				"uatom": sdkmath.LegacyMustNewDecFromStr("18.680609802053228677"),
+				"uosmo": sdkmath.LegacyMustNewDecFromStr("1.000000000000000000"),
 			},
 		},
 	}

@@ -7,10 +7,10 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/server"
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
-	"github.com/quicksilver-zone/quicksilver/v6/cmd/quicksilverd/cmd"
+	"github.com/quicksilver-zone/quicksilver/v7/cmd/quicksilverd/cmd"
 
-	cmdcfg "github.com/quicksilver-zone/quicksilver/cmd/quicksilverd/config"
-	"github.com/quicksilver-zone/quicksilver/v6/app"
+	"github.com/quicksilver-zone/quicksilver/v7/app"
+	cmdcfg "github.com/quicksilver-zone/quicksilver/v7/cmd/quicksilverd/config"
 )
 
 func main() {

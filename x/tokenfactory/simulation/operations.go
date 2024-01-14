@@ -3,6 +3,7 @@ package simulation
 import (
 	"math/rand"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -11,10 +12,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	simappparams "github.com/cosmos/ibc-go/v8/testing/simapp/params"
 
-	"github.com/quicksilver-zone/quicksilver/test/simulation/simtypes"
-	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/osmoutils"
-	"github.com/quicksilver-zone/quicksilver/x/tokenfactory/keeper"
-	"github.com/quicksilver-zone/quicksilver/x/tokenfactory/types"
+	"github.com/quicksilver-zone/quicksilver/v7/test/simulation/simtypes"
+	"github.com/quicksilver-zone/quicksilver/v7/third-party-chains/osmosis-types/osmoutils"
+	"github.com/quicksilver-zone/quicksilver/v7/x/tokenfactory/keeper"
+	"github.com/quicksilver-zone/quicksilver/v7/x/tokenfactory/types"
 )
 
 const (

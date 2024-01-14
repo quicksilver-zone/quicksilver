@@ -4,10 +4,11 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
 
 	"cosmossdk.io/math"
 
+	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -15,7 +16,7 @@ import (
 
 	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
 
-	"github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
+	"github.com/quicksilver-zone/quicksilver/v7/x/interchainquery/types"
 )
 
 // Keeper of this module maintains collections of registered zones.

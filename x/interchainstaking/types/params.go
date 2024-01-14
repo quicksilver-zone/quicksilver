@@ -15,7 +15,7 @@ import (
 var (
 	DefaultDepositInterval      uint64  = 20
 	DefaultValidatorSetInterval uint64  = 200
-	DefaultCommissionRate       sdk.Dec = sdk.MustNewDecFromStr("0.025")
+	DefaultCommissionRate       sdk.Dec = sdkmath.LegacyMustNewDecFromStr("0.025")
 	DefaultUnbondingEnabled             = false
 
 	// KeyDepositInterval is store's key for the DepositInterval option.

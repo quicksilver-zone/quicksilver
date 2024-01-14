@@ -14,9 +14,9 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	epochtypes "github.com/quicksilver-zone/quicksilver/x/epochs/types"
-	minttypes "github.com/quicksilver-zone/quicksilver/x/mint/types"
-	tokenfactorytypes "github.com/quicksilver-zone/quicksilver/x/tokenfactory/types"
+	epochtypes "github.com/quicksilver-zone/quicksilver/v7/x/epochs/types"
+	minttypes "github.com/quicksilver-zone/quicksilver/v7/x/mint/types"
+	tokenfactorytypes "github.com/quicksilver-zone/quicksilver/v7/x/tokenfactory/types"
 )
 
 // stargateWhitelist keeps whitelist and its deterministic

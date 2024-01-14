@@ -18,9 +18,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
-	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/client/cli"
-	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/keeper"
-	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
+	"github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking/client/cli"
+	"github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking/keeper"
+	"github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking/types"
 )
 
 var (

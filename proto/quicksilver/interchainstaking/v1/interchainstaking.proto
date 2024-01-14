@@ -6,7 +6,7 @@ import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "google/protobuf/timestamp.proto";
 
-option go_package = "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types";
+option go_package = "github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking/types";
 
 message Zone {
   string connection_id = 1;
@@ -29,22 +29,30 @@ message Zone {
     (gogoproto.nullable) = false
   ];
   repeated Validator validators = 12;
-  repeated ValidatorIntent aggregate_intent = 13 [(gogoproto.castrepeated) = "ValidatorIntents"];
+  repeated ValidatorIntent aggregate_intent = 13
+      [ (gogoproto.castrepeated) = "ValidatorIntents" ];
   bool multi_send = 14; // deprecated
   bool liquidity_module = 15;
   uint32 withdrawal_waitgroup = 16;
   bytes ibc_next_validators_hash = 17;
-  uint64 validator_selection_allocation = 18 [(gogoproto.jsontag) = "validator_selection_allocation,string,omitempty"];
-  uint64 holdings_allocation = 19 [(gogoproto.jsontag) = "holdings_allocation,string,omitempty"];
-  int64 last_epoch_height = 20 [(gogoproto.jsontag) = "last_epoch_height,string,omitempty"]; // deprecated
+  uint64 validator_selection_allocation = 18
+      [ (gogoproto.jsontag) =
+            "validator_selection_allocation,string,omitempty" ];
+  uint64 holdings_allocation = 19
+      [ (gogoproto.jsontag) = "holdings_allocation,string,omitempty" ];
+  int64 last_epoch_height = 20
+      [ (gogoproto.jsontag) =
+            "last_epoch_height,string,omitempty" ]; // deprecated
   string tvl = 21 [
     (cosmos_proto.scalar) = "cosmos.Dec",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable) = false
   ];
-  int64 unbonding_period = 22 [(gogoproto.jsontag) = "unbonding_period,string,omitempty"];
-  int64 messages_per_tx = 23 [(gogoproto.jsontag) = "messages_per_tx,string,omitempty"];
-  int64 decimals = 24 [(gogoproto.jsontag) = "decimals,string,omitempty"];
+  int64 unbonding_period = 22
+      [ (gogoproto.jsontag) = "unbonding_period,string,omitempty" ];
+  int64 messages_per_tx = 23
+      [ (gogoproto.jsontag) = "messages_per_tx,string,omitempty" ];
+  int64 decimals = 24 [ (gogoproto.jsontag) = "decimals,string,omitempty" ];
   bool unbonding_enabled = 25;
   bool deposits_enabled = 26;
   bool return_to_sender = 27;
@@ -76,7 +84,7 @@ message LsmCaps {
 }
 
 message ICAAccount {
-  string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string address = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
   // balance defines the different coins this balance holds.
   repeated cosmos.base.v1beta1.Coin balance = 2 [
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
@@ -94,9 +102,9 @@ message Distribution {
 
 message WithdrawalRecord {
   string chain_id = 1;
-  string delegator = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string delegator = 2 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
   repeated Distribution distribution = 3;
-  string recipient = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string recipient = 4 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
   repeated cosmos.base.v1beta1.Coin amount = 5 [
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
     (gogoproto.nullable) = false
@@ -108,10 +116,8 @@ message WithdrawalRecord {
   ];
   string txhash = 7;
   int32 status = 8;
-  google.protobuf.Timestamp completion_time = 9 [
-    (gogoproto.nullable) = false,
-    (gogoproto.stdtime) = true
-  ];
+  google.protobuf.Timestamp completion_time = 9
+      [ (gogoproto.nullable) = false, (gogoproto.stdtime) = true ];
   bool requeued = 10;
   bool acknowledged = 11;
   int64 epoch_number = 12;
@@ -120,25 +126,23 @@ message WithdrawalRecord {
 message UnbondingRecord {
   string chain_id = 1;
   int64 epoch_number = 2;
-  string validator = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string validator = 3 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
   repeated string related_txhash = 4;
 }
 
 message RedelegationRecord {
   string chain_id = 1;
   int64 epoch_number = 2;
-  string source = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  string destination = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string source = 3 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  string destination = 4 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
   int64 amount = 5;
-  google.protobuf.Timestamp completion_time = 6 [
-    (gogoproto.nullable) = false,
-    (gogoproto.stdtime) = true
-  ];
+  google.protobuf.Timestamp completion_time = 6
+      [ (gogoproto.nullable) = false, (gogoproto.stdtime) = true ];
 }
 
 message TransferRecord {
-  string sender = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  string recipient = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string sender = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  string recipient = 2 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
   cosmos.base.v1beta1.Coin amount = 3 [
     (cosmos_proto.scalar) = "cosmos.Coin",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin",
@@ -147,7 +151,7 @@ message TransferRecord {
 }
 
 message Validator {
-  string valoper_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string valoper_address = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
   string commission_rate = 2 [
     (cosmos_proto.scalar) = "cosmos.Dec",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
@@ -171,10 +175,8 @@ message Validator {
   string status = 6;
   bool jailed = 7;
   bool tombstoned = 8;
-  google.protobuf.Timestamp jailed_since = 9 [
-    (gogoproto.nullable) = false,
-    (gogoproto.stdtime) = true
-  ];
+  google.protobuf.Timestamp jailed_since = 9
+      [ (gogoproto.nullable) = false, (gogoproto.stdtime) = true ];
   // Number of shares self bonded from the validator
   string validator_bond_shares = 10 [
     (gogoproto.moretags) = "yaml:\"validator_bond_shares\"",
@@ -190,8 +192,9 @@ message Validator {
 }
 
 message DelegatorIntent {
-  string delegator = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  repeated ValidatorIntent intents = 2 [(gogoproto.castrepeated) = "ValidatorIntents"];
+  string delegator = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  repeated ValidatorIntent intents = 2
+      [ (gogoproto.castrepeated) = "ValidatorIntents" ];
 }
 
 message ValidatorIntent {
@@ -208,8 +211,10 @@ message ValidatorIntent {
 }
 
 message Delegation {
-  string delegation_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  string validator_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string delegation_address = 1
+      [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  string validator_address = 2
+      [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
   cosmos.base.v1beta1.Coin amount = 3 [
     (cosmos_proto.scalar) = "cosmos.Coin",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin",
@@ -226,18 +231,14 @@ message PortConnectionTuple {
 
 message Receipt {
   string chain_id = 1;
-  string sender = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string sender = 2 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
   string txhash = 3;
   repeated cosmos.base.v1beta1.Coin amount = 4 [
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
     (gogoproto.nullable) = false
   ];
-  google.protobuf.Timestamp first_seen = 5 [
-    (gogoproto.nullable) = true,
-    (gogoproto.stdtime) = true
-  ];
-  google.protobuf.Timestamp completed = 6 [
-    (gogoproto.nullable) = true,
-    (gogoproto.stdtime) = true
-  ];
+  google.protobuf.Timestamp first_seen = 5
+      [ (gogoproto.nullable) = true, (gogoproto.stdtime) = true ];
+  google.protobuf.Timestamp completed = 6
+      [ (gogoproto.nullable) = true, (gogoproto.stdtime) = true ];
 }

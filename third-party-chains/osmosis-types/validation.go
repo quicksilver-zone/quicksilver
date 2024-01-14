@@ -6,11 +6,12 @@ import (
 
 	"cosmossdk.io/math"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	osmosislockuptypes "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/lockup"
-	"github.com/quicksilver-zone/quicksilver/utils"
-	participationrewardstypes "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
+	osmosislockuptypes "github.com/quicksilver-zone/quicksilver/v7/third-party-chains/osmosis-types/lockup"
+	"github.com/quicksilver-zone/quicksilver/v7/utils"
+	participationrewardstypes "github.com/quicksilver-zone/quicksilver/v7/x/participationrewards/types"
 )
 
 type ParticipationRewardsKeeper interface {

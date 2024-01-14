@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 
-	"github.com/quicksilver-zone/quicksilver/app/keepers"
+	"github.com/quicksilver-zone/quicksilver/v7/app/keepers"
 )
 
 // upgrade name consts: vMMmmppUpgradeName (M=Major, m=minor, p=patch).

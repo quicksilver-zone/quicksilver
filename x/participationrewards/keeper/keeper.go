@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
 
 	sdkmath "cosmossdk.io/math"
 
@@ -16,14 +16,14 @@ import (
 
 	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
 
-	config "github.com/quicksilver-zone/quicksilver/cmd/quicksilverd/config" //nolint:revive
-	crescenttypes "github.com/quicksilver-zone/quicksilver/third-party-chains/crescent-types"
-	osmosistypes "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types"
-	umeetypes "github.com/quicksilver-zone/quicksilver/third-party-chains/umee-types"
-	"github.com/quicksilver-zone/quicksilver/utils"
-	cmtypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
-	epochskeeper "github.com/quicksilver-zone/quicksilver/x/epochs/keeper"
-	"github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
+	config "github.com/quicksilver-zone/quicksilver/v7/cmd/quicksilverd/config" //nolint:revive
+	crescenttypes "github.com/quicksilver-zone/quicksilver/v7/third-party-chains/crescent-types"
+	osmosistypes "github.com/quicksilver-zone/quicksilver/v7/third-party-chains/osmosis-types"
+	umeetypes "github.com/quicksilver-zone/quicksilver/v7/third-party-chains/umee-types"
+	"github.com/quicksilver-zone/quicksilver/v7/utils"
+	cmtypes "github.com/quicksilver-zone/quicksilver/v7/x/claimsmanager/types"
+	epochskeeper "github.com/quicksilver-zone/quicksilver/v7/x/epochs/keeper"
+	"github.com/quicksilver-zone/quicksilver/v7/x/participationrewards/types"
 )
 
 // UserAllocation is an internal keeper struct to track transient state for

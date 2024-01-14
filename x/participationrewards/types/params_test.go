@@ -3,9 +3,8 @@ package types
 import (
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestParams_Validate(t *testing.T) {
@@ -29,9 +28,9 @@ func TestParams_Validate(t *testing.T) {
 			"valid",
 			fields{
 				DistributionProportions: DistributionProportions{
-					ValidatorSelectionAllocation: sdk.MustNewDecFromStr("0.34"),
-					HoldingsAllocation:           sdk.MustNewDecFromStr("0.33"),
-					LockupAllocation:             sdk.MustNewDecFromStr("0.33"),
+					ValidatorSelectionAllocation: sdkmath.LegacyMustNewDecFromStr("0.34"),
+					HoldingsAllocation:           sdkmath.LegacyMustNewDecFromStr("0.33"),
+					LockupAllocation:             sdkmath.LegacyMustNewDecFromStr("0.33"),
 				},
 				ClaimsEnabled: false,
 			},
@@ -59,9 +58,9 @@ func TestParams(t *testing.T) {
 	// test default params
 	testParams := Params{
 		DistributionProportions: DistributionProportions{
-			ValidatorSelectionAllocation: sdk.MustNewDecFromStr("0.34"),
-			HoldingsAllocation:           sdk.MustNewDecFromStr("0.33"),
-			LockupAllocation:             sdk.MustNewDecFromStr("0.33"),
+			ValidatorSelectionAllocation: sdkmath.LegacyMustNewDecFromStr("0.34"),
+			HoldingsAllocation:           sdkmath.LegacyMustNewDecFromStr("0.33"),
+			LockupAllocation:             sdkmath.LegacyMustNewDecFromStr("0.33"),
 		},
 		ClaimsEnabled: false,
 	}

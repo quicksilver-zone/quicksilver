@@ -7,16 +7,17 @@ import (
 	"testing"
 	"time"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/suite"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	ibctesting "github.com/cosmos/ibc-go/v8/testing"
 
-	"github.com/quicksilver-zone/quicksilver/app"
-	"github.com/quicksilver-zone/quicksilver/x/airdrop/types"
-	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
-	minttypes "github.com/quicksilver-zone/quicksilver/x/mint/types"
+	"github.com/quicksilver-zone/quicksilver/v7/app"
+	"github.com/quicksilver-zone/quicksilver/v7/x/airdrop/types"
+	icstypes "github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking/types"
+	minttypes "github.com/quicksilver-zone/quicksilver/v7/x/mint/types"
 )
 
 func init() {
@@ -97,17 +98,17 @@ func (suite *KeeperTestSuite) getZoneDrop() types.ZoneDrop {
 		Decay:      30 * time.Minute,
 		Allocation: 1000000000,
 		Actions: []sdk.Dec{
-			0:  sdk.MustNewDecFromStr("0.15"), // 15%
-			1:  sdk.MustNewDecFromStr("0.06"), // 21%
-			2:  sdk.MustNewDecFromStr("0.07"), // 28%
-			3:  sdk.MustNewDecFromStr("0.08"), // 36%
-			4:  sdk.MustNewDecFromStr("0.09"), // 45%
-			5:  sdk.MustNewDecFromStr("0.1"),  // 55%
-			6:  sdk.MustNewDecFromStr("0.15"), // 70%
-			7:  sdk.MustNewDecFromStr("0.05"), // 75%
-			8:  sdk.MustNewDecFromStr("0.1"),  // 85%
-			9:  sdk.MustNewDecFromStr("0.1"),  // 95%
-			10: sdk.MustNewDecFromStr("0.05"), // 100%
+			0:  sdkmath.LegacyMustNewDecFromStr("0.15"), // 15%
+			1:  sdkmath.LegacyMustNewDecFromStr("0.06"), // 21%
+			2:  sdkmath.LegacyMustNewDecFromStr("0.07"), // 28%
+			3:  sdkmath.LegacyMustNewDecFromStr("0.08"), // 36%
+			4:  sdkmath.LegacyMustNewDecFromStr("0.09"), // 45%
+			5:  sdkmath.LegacyMustNewDecFromStr("0.1"),  // 55%
+			6:  sdkmath.LegacyMustNewDecFromStr("0.15"), // 70%
+			7:  sdkmath.LegacyMustNewDecFromStr("0.05"), // 75%
+			8:  sdkmath.LegacyMustNewDecFromStr("0.1"),  // 85%
+			9:  sdkmath.LegacyMustNewDecFromStr("0.1"),  // 95%
+			10: sdkmath.LegacyMustNewDecFromStr("0.05"), // 100%
 		},
 		IsConcluded: false,
 	}

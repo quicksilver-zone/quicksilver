@@ -7,8 +7,8 @@ import (
 	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
 	ibcexported "github.com/cosmos/ibc-go/v8/modules/core/exported"
 
-	claimsmanagertypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
-	epochstypes "github.com/quicksilver-zone/quicksilver/x/epochs/types"
+	claimsmanagertypes "github.com/quicksilver-zone/quicksilver/v7/x/claimsmanager/types"
+	epochstypes "github.com/quicksilver-zone/quicksilver/v7/x/epochs/types"
 )
 
 // ChannelKeeper defines the expected IBC channel keeper.

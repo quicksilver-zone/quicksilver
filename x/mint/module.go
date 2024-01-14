@@ -17,10 +17,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
-	"github.com/quicksilver-zone/quicksilver/x/mint/client/cli"
-	"github.com/quicksilver-zone/quicksilver/x/mint/keeper"
-	"github.com/quicksilver-zone/quicksilver/x/mint/simulation"
-	"github.com/quicksilver-zone/quicksilver/x/mint/types"
+	"github.com/quicksilver-zone/quicksilver/v7/x/mint/client/cli"
+	"github.com/quicksilver-zone/quicksilver/v7/x/mint/keeper"
+	"github.com/quicksilver-zone/quicksilver/v7/x/mint/simulation"
+	"github.com/quicksilver-zone/quicksilver/v7/x/mint/types"
 )
 
 var (

@@ -17,9 +17,9 @@ import (
 	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
 	tmclienttypes "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint"
 
-	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
-	icskeeper "github.com/quicksilver-zone/quicksilver/x/interchainstaking/keeper"
-	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
+	"github.com/quicksilver-zone/quicksilver/v7/utils/addressutils"
+	icskeeper "github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking/keeper"
+	icstypes "github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking/types"
 )
 
 func (suite *KeeperTestSuite) TestRequestRedemption() {
@@ -61,7 +61,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 
 				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
 				suite.True(found)
-				zone.RedemptionRate = sdk.MustNewDecFromStr("0.95")
+				zone.RedemptionRate = sdkmath.LegacyMustNewDecFromStr("0.95")
 				suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetZone(suite.chainA.GetContext(), &zone)
 			},
 			"",
@@ -80,8 +80,8 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 
 				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
 				suite.True(found)
-				zone.LastRedemptionRate = sdk.MustNewDecFromStr("1.05")
-				zone.RedemptionRate = sdk.MustNewDecFromStr("1.1")
+				zone.LastRedemptionRate = sdkmath.LegacyMustNewDecFromStr("1.05")
+				zone.RedemptionRate = sdkmath.LegacyMustNewDecFromStr("1.1")
 				suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetZone(suite.chainA.GetContext(), &zone)
 			},
 			"",
@@ -100,8 +100,8 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 
 				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
 				suite.True(found)
-				zone.LastRedemptionRate = sdk.MustNewDecFromStr("1.1")
-				zone.RedemptionRate = sdk.MustNewDecFromStr("1.05")
+				zone.LastRedemptionRate = sdkmath.LegacyMustNewDecFromStr("1.1")
+				zone.RedemptionRate = sdkmath.LegacyMustNewDecFromStr("1.05")
 				suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetZone(suite.chainA.GetContext(), &zone)
 			},
 			"",
@@ -134,7 +134,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 
 				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
 				suite.True(found)
-				zone.RedemptionRate = sdk.MustNewDecFromStr("0.99999")
+				zone.RedemptionRate = sdkmath.LegacyMustNewDecFromStr("0.99999")
 				suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetZone(suite.chainA.GetContext(), &zone)
 			},
 			"",
@@ -153,8 +153,8 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 
 				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
 				suite.True(found)
-				zone.LastRedemptionRate = sdk.MustNewDecFromStr("1.049999")
-				zone.RedemptionRate = sdk.MustNewDecFromStr("1.099999")
+				zone.LastRedemptionRate = sdkmath.LegacyMustNewDecFromStr("1.049999")
+				zone.RedemptionRate = sdkmath.LegacyMustNewDecFromStr("1.099999")
 				suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetZone(suite.chainA.GetContext(), &zone)
 			},
 			"",

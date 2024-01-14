@@ -7,10 +7,10 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/log"
 	"github.com/CosmWasm/wasmd/x/wasm"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/crypto/secp256k1"
-	"github.com/cometbft/cometbft/libs/log"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	tmtypes "github.com/cometbft/cometbft/types"
 	dbm "github.com/cosmos/cosmos-db"
