@@ -1,11 +1,10 @@
 package main
 
 import (
-	"errors"
 	"os"
 	"path/filepath"
 
-	"github.com/cosmos/cosmos-sdk/server"
+	"cosmossdk.io/log"
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 	"github.com/quicksilver-zone/quicksilver/v7/cmd/quicksilverd/cmd"
 
@@ -23,16 +22,9 @@ func main() {
 	}
 	app.DefaultNodeHome = filepath.Join(userHomeDir, ".quicksilverd")
 
-	rootCmd, _ := cmd.NewRootCmd()
-
-	if err := svrcmd.Execute(rootCmd, "QUICKSILVERD", app.DefaultNodeHome); err != nil {
-		var exitError *server.ErrorCode
-		if errors.As(err, &exitError) {
-			os.Exit(exitError.Code)
-		}
-
+	rootCmd := cmd.NewRootCmd()
+	if err := svrcmd.Execute(rootCmd, "", app.DefaultNodeHome); err != nil {
+		log.NewLogger(rootCmd.OutOrStderr()).Error("failure when running app", "err", err)
 		os.Exit(1)
 	}
-
-	os.Exit(0)
 }
