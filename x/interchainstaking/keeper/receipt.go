@@ -9,6 +9,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 
 	"cosmossdk.io/store/prefix"
+	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -143,7 +144,7 @@ func (k *Keeper) SendTokenIBC(ctx sdk.Context, senderAccAddress sdk.AccAddress, 
 		return errors.New("unable to find remote transfer connection")
 	}
 
-	return k.TransferKeeper.SendTransfer(
+	return k.TransferKeeper.Send(
 		ctx,
 		srcPort,
 		srcChannel,
@@ -284,7 +285,7 @@ func (k *Keeper) SubmitTx(ctx sdk.Context, msgs []sdk.Msg, account *types.ICAAcc
 		msgs = msgs[chunkSize:]
 
 		// build and submit message for this chunk
-		data, err := icatypes.SerializeCosmosTx(k.cdc, msgsChunk)
+		data, err := icatypes.SerializeCosmosTx(k.cdc, msgsChunk, "")
 		if err != nil {
 			return err
 		}
