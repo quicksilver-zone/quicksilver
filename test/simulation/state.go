@@ -23,7 +23,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	simappparams "osmossdk.io/simapp/params"
+	simappparams "github.com/ibc-go/testing/simapp/paramssimapp/params"
 
 	"github.com/quicksilver-zone/quicksilver/app"
 )

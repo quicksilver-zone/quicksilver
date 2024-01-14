@@ -9,7 +9,7 @@ import (
 	sdksimtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
-	simappparams "osmossdk.io/simapp/params"
+	simappparams "github.com/ibc-go/testing/simapp/paramssimapp/params"
 
 	"github.com/quicksilver-zone/quicksilver/test/simulation/simtypes"
 	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/osmoutils"
