@@ -24,9 +24,9 @@ import (
 var poolFee int64 = 1000000000 // nolint:unused
 
 var defaultFunds = sdk.NewCoins( // nolint:unused
-	sdkmath.NewInt64Coin("qck", 333000000),
-	sdkmath.NewInt64Coin("umai", 555000000+2*poolFee),
-	sdkmath.NewInt64Coin("uck", 999000000),
+	sdk.NewInt64Coin("qck", 333000000),
+	sdk.NewInt64Coin("umai", 555000000+2*poolFee),
+	sdk.NewInt64Coin("uck", 999000000),
 )
 
 func SetupCustomApp(t *testing.T, addr sdk.AccAddress) (*app.Quicksilver, sdk.Context) {

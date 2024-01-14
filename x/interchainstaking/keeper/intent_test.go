@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -388,7 +389,7 @@ func (suite *KeeperTestSuite) TestAggregateIntent() {
 // 				}
 // 			},
 // 			balances: func(denom string) map[string]sdk.Coins {
-// 				return map[string]sdk.Coins{user1.String(): sdk.NewCoins(sdk.NewCoin(denom, sdk.OneInt()))}
+// 				return map[string]sdk.Coins{user1.String(): sdk.NewCoins(sdk.NewCoin(denom, sdkmath.OneInt()))}
 // 			},
 // 			expected: func(zone icstypes.Zone) icstypes.ValidatorIntents {
 // 				out := icstypes.ValidatorIntents{}

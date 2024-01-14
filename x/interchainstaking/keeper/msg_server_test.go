@@ -213,7 +213,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 				addr, err := addressutils.EncodeAddressToBech32("bob", addressutils.GenerateAccAddressForTest())
 				suite.NoError(err)
 				msg = icstypes.MsgRequestRedemption{
-					Value:              sdk.NewCoin("uqatom", sdk.OneInt()),
+					Value:              sdk.NewCoin("uqatom", sdkmath.OneInt()),
 					DestinationAddress: addr,
 					FromAddress:        testAddress,
 				}
@@ -227,7 +227,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 				addr, err := addressutils.EncodeAddressToBech32("cosmos", addressutils.GenerateAccAddressForTest())
 				suite.NoError(err)
 				msg = icstypes.MsgRequestRedemption{
-					Value:              sdk.NewCoin("uqatom", sdk.OneInt()),
+					Value:              sdk.NewCoin("uqatom", sdkmath.OneInt()),
 					DestinationAddress: addr,
 					FromAddress:        addr,
 				}

@@ -23,6 +23,7 @@ import (
 	tmservice "github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
@@ -36,7 +37,6 @@ import (
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	capabilitykeeper "github.com/cosmos/ibc-go/modules/capability/keeper"
-	"github.com/cosmos/ibc-go/v8/testing/simapp"
 
 	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
 	ibctestingtypes "github.com/cosmos/ibc-go/v8/testing/types"
@@ -73,18 +73,16 @@ var (
 )
 
 var (
+	_ runtime.AppI            = (*Quicksilver)(nil)
 	_ servertypes.Application = (*Quicksilver)(nil)
-	_ simapp.App              = (*Quicksilver)(nil)
 )
 
 // Quicksilver implements an extended ABCI application.
 type Quicksilver struct {
 	*baseapp.BaseApp
-	keepers.AppKeepers
-
-	// encoding
-	cdc               *codec.LegacyAmino
+	legacyAmino       *codec.LegacyAmino
 	appCodec          codec.Codec
+	txConfig          client.TxConfig
 	interfaceRegistry types.InterfaceRegistry
 
 	invCheckPeriod uint

@@ -44,7 +44,7 @@ func (suite *KeeperTestSuite) TestMintDenomMsg() {
 			ctx := suite.Ctx.WithEventManager(sdk.NewEventManager())
 			suite.Require().Equal(0, len(ctx.EventManager().Events()))
 			// Test mint message
-			_, err := suite.msgServer.Mint(sdk.WrapSDKContext(ctx), types.NewMsgMint(tc.admin, sdkmath.NewInt64Coin(tc.mintDenom, 10)))
+			_, err := suite.msgServer.Mint(sdk.WrapSDKContext(ctx), types.NewMsgMint(tc.admin, sdk.NewInt64Coin(tc.mintDenom, 10)))
 			suite.Require().ErrorIs(err, tc.expectedError)
 			// Ensure current number and type of event is emitted
 			suite.AssertEventEmitted(ctx, types.TypeMsgMint, tc.expectedMessageEvents)
@@ -57,7 +57,7 @@ func (suite *KeeperTestSuite) TestBurnDenomMsg() {
 	// Create a denom.
 	suite.CreateDefaultDenom()
 	// mint 10 default token for testAcc[0]
-	_, err := suite.msgServer.Mint(sdk.WrapSDKContext(suite.Ctx), types.NewMsgMint(suite.TestAccs[0].String(), sdkmath.NewInt64Coin(suite.defaultDenom, 10)))
+	_, err := suite.msgServer.Mint(sdk.WrapSDKContext(suite.Ctx), types.NewMsgMint(suite.TestAccs[0].String(), sdk.NewInt64Coin(suite.defaultDenom, 10)))
 	suite.Require().NoError(err)
 
 	for _, tc := range []struct {
@@ -88,7 +88,7 @@ func (suite *KeeperTestSuite) TestBurnDenomMsg() {
 			ctx := suite.Ctx.WithEventManager(sdk.NewEventManager())
 			suite.Require().Equal(0, len(ctx.EventManager().Events()))
 			// Test burn message
-			_, err := suite.msgServer.Burn(sdk.WrapSDKContext(ctx), types.NewMsgBurn(tc.admin, sdkmath.NewInt64Coin(tc.burnDenom, 10)))
+			_, err := suite.msgServer.Burn(sdk.WrapSDKContext(ctx), types.NewMsgBurn(tc.admin, sdk.NewInt64Coin(tc.burnDenom, 10)))
 			suite.Require().ErrorIs(err, tc.expectedError)
 			// Ensure current number and type of event is emitted
 			suite.AssertEventEmitted(ctx, types.TypeMsgBurn, tc.expectedMessageEvents)
@@ -168,7 +168,7 @@ func (suite *KeeperTestSuite) TestChangeAdminDenomMsg() {
 			expectedChangeAdminPass: true,
 			expectedMessageEvents:   1,
 			msgMint: func(denom string) *types.MsgMint {
-				return types.NewMsgMint(suite.TestAccs[1].String(), sdkmath.NewInt64Coin(denom, 5))
+				return types.NewMsgMint(suite.TestAccs[1].String(), sdk.NewInt64Coin(denom, 5))
 			},
 			expectedMintPass: true,
 		},
@@ -182,7 +182,7 @@ func (suite *KeeperTestSuite) TestChangeAdminDenomMsg() {
 			res, err := suite.msgServer.CreateDenom(sdk.WrapSDKContext(ctx), types.NewMsgCreateDenom(suite.TestAccs[0].String(), "bitcoin"))
 			suite.Require().NoError(err)
 			testDenom := res.GetNewTokenDenom()
-			_, err = suite.msgServer.Mint(sdk.WrapSDKContext(ctx), types.NewMsgMint(suite.TestAccs[0].String(), sdkmath.NewInt64Coin(testDenom, 10)))
+			_, err = suite.msgServer.Mint(sdk.WrapSDKContext(ctx), types.NewMsgMint(suite.TestAccs[0].String(), sdk.NewInt64Coin(testDenom, 10)))
 			suite.Require().NoError(err)
 
 			// Test change admin message

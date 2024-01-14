@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -15,9 +16,9 @@ import (
 
 func TestDistributionProportions_ValidateBasic(t *testing.T) {
 	type fields struct {
-		ValidatorSelectionAllocation sdk.Dec
-		HoldingsAllocation           sdk.Dec
-		LockupAllocation             sdk.Dec
+		ValidatorSelectionAllocation sdkmath.LegacyDec
+		HoldingsAllocation           sdkmath.LegacyDec
+		LockupAllocation             sdkmath.LegacyDec
 	}
 	tests := []struct {
 		name    string
@@ -32,27 +33,26 @@ func TestDistributionProportions_ValidateBasic(t *testing.T) {
 		{
 			"invalid_proportions_gt",
 			fields{
-				ValidatorSelectionAllocation: sdk.MustNewDecFromStr("0.5"),
-				HoldingsAllocation:           sdk.MustNewDecFromStr("0.5"),
-				LockupAllocation:             sdk.MustNewDecFromStr("0.5"),
-			},
-			true,
+				ValidatorSelectionAllocation: sdkmath.LegacyMustNewDecFromStr("0.5"),
+				ValidatorSelectionAllocation: sdkmath.LegacyMustNewDecFromStr("0.5"),
+				HoldingsAllocation:           sdkmath.LegacyMustNewDecFromStr("0.5"),
+				LockupAllocation:             sdkmath.LegacyMustNewDecFromStr("0.5"),
 		},
 		{
 			"invalid_proportions_lt",
 			fields{
-				ValidatorSelectionAllocation: sdk.MustNewDecFromStr("0.3"),
-				HoldingsAllocation:           sdk.MustNewDecFromStr("0.3"),
-				LockupAllocation:             sdk.MustNewDecFromStr("0.3"),
+				ValidatorSelectionAllocation: sdkmath.LegacyMustNewDecFromStr("0.3"),
+				HoldingsAllocation:           sdkmath.LegacyMustNewDecFromStr("0.3"),
+				LockupAllocation:             sdkmath.LegacyMustNewDecFromStr("0.3"),
 			},
 			true,
 		},
 		{
 			"invalid_proportions_negative",
 			fields{
-				ValidatorSelectionAllocation: sdk.MustNewDecFromStr("-0.4"),
-				HoldingsAllocation:           sdk.MustNewDecFromStr("-0.3"),
-				LockupAllocation:             sdk.MustNewDecFromStr("-0.3"),
+				ValidatorSelectionAllocation: sdkmath.MustNewDecFromStr("-0.4"),
+				HoldingsAllocation:           sdkmath.MustNewDecFromStr("-0.3"),
+				LockupAllocation:             sdkmath.MustNewDecFromStr("-0.3"),
 			},
 			true,
 		},

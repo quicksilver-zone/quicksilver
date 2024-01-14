@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -99,7 +100,7 @@ func AddGenesisAirdropCmd(defaultNodeHome string) *cobra.Command {
 			appState[types.ModuleName] = airdropGenStateBz
 
 			// add base account for airdrop recipient, containing 1uqck
-			balances := banktypes.Balance{Address: addr.String(), Coins: sdk.NewCoins(sdk.NewCoin("uqck", sdk.OneInt()))}
+			balances := banktypes.Balance{Address: addr.String(), Coins: sdk.NewCoins(sdk.NewCoin("uqck", sdkmath.OneInt()))}
 			genAccount := authtypes.NewBaseAccount(addr, nil, 0, 0)
 
 			if err := genAccount.Validate(); err != nil {

@@ -129,7 +129,7 @@ func (suite *KeeperTestSuite) TestCalcUserHoldingsAllocations() {
 				},
 			},
 			[]types.UserAllocation{},
-			sdk.OneInt(),
+			sdkmath.OneInt(),
 			sdk.NewCoins(),
 			"",
 		},
@@ -166,7 +166,7 @@ func (suite *KeeperTestSuite) TestCalcUserHoldingsAllocations() {
 					Amount:  sdk.NewCoin("testcoin", sdkmath.NewInt(600)), // 1000/1500 (0.66666) * 900 = 600
 				},
 			},
-			sdk.OneInt(),
+			sdkmath.OneInt(),
 			sdk.NewCoins(),
 			"",
 		},
@@ -224,7 +224,7 @@ func (suite *KeeperTestSuite) TestCalcUserHoldingsAllocations() {
 					Amount:  sdk.NewCoin("testcoin3", sdkmath.NewInt(100)), // 1000/1500 (0.66666) * 150 = 100
 				},
 			},
-			sdk.OneInt(),
+			sdkmath.OneInt(),
 			sdk.NewCoins(sdk.NewCoin("testcoin2", sdkmath.NewIntFromUint64(1))),
 			"",
 		},

@@ -57,7 +57,7 @@ func (k Keeper) CalcUserHoldingsAllocations(ctx sdk.Context, zone *icstypes.Zone
 	userAllocations := make([]types.UserAllocation, 0)
 	icsRewardsAllocations := make([]types.UserAllocation, 0)
 	icsRewardsBalance := sdk.NewCoins()
-	icsRewardsPerAsset := make(map[string]sdk.Dec, 0)
+	icsRewardsPerAsset := make(map[string]sdkmath.LegacyDec, 0)
 
 	supply := k.bankKeeper.GetSupply(ctx, zone.LocalDenom)
 
@@ -107,7 +107,7 @@ func (k Keeper) CalcUserHoldingsAllocations(ctx sdk.Context, zone *icstypes.Zone
 			panic("unable to unmarshal withdrawal address")
 		}
 		icsRewardsBalance = k.bankKeeper.GetAllBalances(ctx, icsRewardsAddr)
-		icsRewardsPerAsset = make(map[string]sdk.Dec, len(icsRewardsBalance))
+		icsRewardsPerAsset = make(map[string]sdkmath.LegacyDec, len(icsRewardsBalance))
 		for _, rewardsAsset := range icsRewardsBalance {
 			icsRewardsPerAsset[rewardsAsset.Denom] = sdkmath.LegacyNewDecFromInt(rewardsAsset.Amount).Quo(sdkmath.LegacyNewDecFromInt(supply.Amount))
 		}

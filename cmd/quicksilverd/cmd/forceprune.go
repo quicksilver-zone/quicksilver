@@ -114,11 +114,11 @@ func pruneBlockStoreAndGetHeights(dbPath string, fullHeight int64) (
 	currentHeight = bs.Height()
 
 	fmt.Println("Pruning Block Store ...")
-	prunedBlocks, err := bs.PruneBlocks(currentHeight - fullHeight)
+	pruned, evidencePoint, err := bs.PruneBlocks(currentHeight - fullHeight)
 	if err != nil {
 		return 0, 0, err
 	}
-	fmt.Println("Pruned Block Store ...", prunedBlocks)
+	fmt.Println("Pruned Block Store ...", pruned, evidencePoint)
 
 	// N.B: We duplicate the call to db_bs.Close() on top of
 	// the call in defer statement above to make sure that the resources

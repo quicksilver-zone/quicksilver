@@ -1734,7 +1734,7 @@ func (suite *KeeperTestSuite) TestRebalanceDueToDelegationChange() {
 
 	quicksilver.InterchainstakingKeeper.IterateAllDelegations(ctx, zone.ChainId, func(delegation types.Delegation) bool {
 		if delegation.ValidatorAddress == val0.ValoperAddress {
-			delegation.Amount = delegation.Amount.Add(sdkmath.NewInt64Coin("uatom", 4000))
+			delegation.Amount = delegation.Amount.Add(sdk.NewInt64Coin("uatom", 4000))
 			quicksilver.InterchainstakingKeeper.SetDelegation(ctx, zone.ChainId, delegation)
 		}
 		return false
@@ -1770,11 +1770,11 @@ func (suite *KeeperTestSuite) TestRebalanceDueToDelegationChange() {
 	// change validator delegation to trigger transitive redelegations which should fail rebalance
 	quicksilver.InterchainstakingKeeper.IterateAllDelegations(ctx, zone.ChainId, func(delegation types.Delegation) bool {
 		if delegation.ValidatorAddress == val0.ValoperAddress {
-			delegation.Amount = delegation.Amount.Sub(sdkmath.NewInt64Coin("uatom", 4000))
+			delegation.Amount = delegation.Amount.Sub(sdk.NewInt64Coin("uatom", 4000))
 			quicksilver.InterchainstakingKeeper.SetDelegation(ctx, zone.ChainId, delegation)
 		}
 		if delegation.ValidatorAddress == val1.ValoperAddress {
-			delegation.Amount = delegation.Amount.Add(sdkmath.NewInt64Coin("uatom", 4000))
+			delegation.Amount = delegation.Amount.Add(sdk.NewInt64Coin("uatom", 4000))
 			quicksilver.InterchainstakingKeeper.SetDelegation(ctx, zone.ChainId, delegation)
 		}
 

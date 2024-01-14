@@ -1052,7 +1052,7 @@ func (suite *KeeperTestSuite) TestAllBalancesCallback() {
 		reqbz, err := quicksilver.AppCodec().Marshal(&queryReq)
 		suite.NoError(err)
 
-		response := banktypes.QueryAllBalancesResponse{Balances: sdk.NewCoins(sdk.NewCoin("uqck", sdk.OneInt()))}
+		response := banktypes.QueryAllBalancesResponse{Balances: sdk.NewCoins(sdk.NewCoin("uqck", sdkmath.OneInt()))}
 		respbz, err := quicksilver.AppCodec().Marshal(&response)
 		suite.NoError(err)
 
@@ -1102,7 +1102,7 @@ func (suite *KeeperTestSuite) TestAllBalancesCallbackWithExistingWg() {
 		reqbz, err := quicksilver.AppCodec().Marshal(&queryReq)
 		suite.NoError(err)
 
-		response := banktypes.QueryAllBalancesResponse{Balances: sdk.NewCoins(sdk.NewCoin("uqck", sdk.OneInt()))}
+		response := banktypes.QueryAllBalancesResponse{Balances: sdk.NewCoins(sdk.NewCoin("uqck", sdkmath.OneInt()))}
 		respbz, err := quicksilver.AppCodec().Marshal(&response)
 		suite.NoError(err)
 
@@ -1146,7 +1146,7 @@ func (suite *KeeperTestSuite) TestAllBalancesCallbackExistingBalanceNowNil() {
 		ctx := suite.chainA.GetContext()
 
 		zone, _ := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
-		zone.DepositAddress.Balance = sdk.NewCoins(sdk.NewCoin("uqck", sdk.OneInt()))
+		zone.DepositAddress.Balance = sdk.NewCoins(sdk.NewCoin("uqck", sdkmath.OneInt()))
 		quicksilver.InterchainstakingKeeper.SetZone(ctx, &zone)
 
 		queryReq := banktypes.QueryAllBalancesRequest{
@@ -1194,7 +1194,7 @@ func (suite *KeeperTestSuite) TestAllBalancesCallbackExistingBalanceNowNil() {
 		ctx := suite.chainA.GetContext()
 
 		zone, _ := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
-		zone.WithdrawalAddress.Balance = sdk.NewCoins(sdk.NewCoin("uqck", sdk.OneInt()))
+		zone.WithdrawalAddress.Balance = sdk.NewCoins(sdk.NewCoin("uqck", sdkmath.OneInt()))
 		quicksilver.InterchainstakingKeeper.SetZone(ctx, &zone)
 
 		queryReq := banktypes.QueryAllBalancesRequest{
@@ -1251,7 +1251,7 @@ func (suite *KeeperTestSuite) TestAllBalancesCallbackMulti() {
 		reqbz, err := quicksilver.AppCodec().Marshal(&queryReq)
 		suite.NoError(err)
 
-		response := banktypes.QueryAllBalancesResponse{Balances: sdk.NewCoins(sdk.NewCoin("uqck", sdk.OneInt()), sdk.NewCoin("stake", sdk.OneInt()))}
+		response := banktypes.QueryAllBalancesResponse{Balances: sdk.NewCoins(sdk.NewCoin("uqck", sdkmath.OneInt()), sdk.NewCoin("stake", sdkmath.OneInt()))}
 		respbz, err := quicksilver.AppCodec().Marshal(&response)
 		suite.NoError(err)
 

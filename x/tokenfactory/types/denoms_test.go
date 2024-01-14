@@ -7,7 +7,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	cmdcfg "github.com/quicksilver-zone/quicksilver/cmd/config"
+	cmdcfg "github.com/quicksilver-zone/quicksilver/cmd/quicksilverd/config"
 	"github.com/quicksilver-zone/quicksilver/x/tokenfactory/types"
 )
 
