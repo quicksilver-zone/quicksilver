@@ -7,9 +7,10 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/server"
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
+	"github.com/quicksilver-zone/quicksilver/v6/cmd/quicksilverd/cmd"
 
-	"github.com/quicksilver-zone/quicksilver/app"
 	cmdcfg "github.com/quicksilver-zone/quicksilver/cmd/quicksilverd/config"
+	"github.com/quicksilver-zone/quicksilver/v6/app"
 )
 
 func main() {
@@ -22,7 +23,7 @@ func main() {
 	}
 	app.DefaultNodeHome = filepath.Join(userHomeDir, ".quicksilverd")
 
-	rootCmd, _ := NewRootCmd()
+	rootCmd, _ := cmd.NewRootCmd()
 
 	if err := svrcmd.Execute(rootCmd, "QUICKSILVERD", app.DefaultNodeHome); err != nil {
 		var exitError *server.ErrorCode

@@ -1,8 +1,9 @@
-package types
+package config
 
 import (
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -46,7 +47,7 @@ func SetBip44CoinType(config *sdk.Config) {
 
 // RegisterDenoms registers the base and display denominations to the SDK.
 func RegisterDenoms() {
-	if err := sdk.RegisterDenom(DisplayDenom, sdk.OneDec()); err != nil {
+	if err := sdk.RegisterDenom(DisplayDenom, sdmath.LegacyOneDec()); err != nil {
 		panic(err)
 	}
 
