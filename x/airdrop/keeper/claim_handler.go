@@ -70,7 +70,7 @@ func (k *Keeper) handleInitial(ctx sdk.Context, cr *types.ClaimRecord, action ty
 }
 
 // handleDeposit.
-func (k *Keeper) handleDeposit(ctx sdk.Context, cr *types.ClaimRecord, action types.Action, threshold sdk.Dec) (uint64, error) {
+func (k *Keeper) handleDeposit(ctx sdk.Context, cr *types.ClaimRecord, action types.Action, threshold sdkmath.LegacyDec) (uint64, error) {
 	if err := k.verifyDeposit(ctx, *cr, threshold); err != nil {
 		return 0, err
 	}

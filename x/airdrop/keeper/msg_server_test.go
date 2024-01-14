@@ -310,7 +310,7 @@ func (suite *KeeperTestSuite) Test_msgServer_Claim() {
 					Intents: []*icstypes.ValidatorIntent{
 						{
 							ValoperAddress: valAddress.String(),
-							Weight:         sdk.OneDec(),
+							Weight:         sdkmath.LegacyOneDec(),
 						},
 					},
 				}

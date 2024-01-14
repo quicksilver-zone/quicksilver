@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	sdkmath "cosmossdk.io/math"
+	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 
@@ -161,7 +162,7 @@ func (k *Keeper) GetClaimableAmountForAction(ctx sdk.Context, chainID, address s
 	// airdrop has started to decay, calculate claimable portion
 	elapsedDecayTime := ctx.BlockTime().Sub(zd.StartTime.Add(zd.Duration))
 	decayPercent := sdkmath.LegacyNewDec(elapsedDecayTime.Nanoseconds()).QuoInt64(zd.Decay.Nanoseconds())
-	claimablePercent := sdk.OneDec().Sub(decayPercent)
+	claimablePercent := sdkmath.LegacyOneDec().Sub(decayPercent)
 	amount = claimablePercent.MulInt64(amount).TruncateInt64()
 
 	return uint64(amount), nil

@@ -67,7 +67,7 @@ func AddZonedropCmd(defaultNodeHome string) *cobra.Command {
 				Duration:    duration,
 				Decay:       decay,
 				Allocation:  0,
-				Actions:     []sdkmath.LegacDec{},
+				Actions:     []sdkmath.LegacyDec{},
 				IsConcluded: false,
 			}
 

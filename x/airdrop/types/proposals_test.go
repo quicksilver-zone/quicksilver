@@ -7,7 +7,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	sdkmath "cosmossdk.io/math"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/quicksilver-zone/quicksilver/v7/x/airdrop/types"
 )
@@ -62,7 +61,7 @@ func TestRegisterZoneDropProposal_ValidateBasic(t *testing.T) {
 					Duration:   time.Hour,
 					Decay:      30 * time.Minute,
 					Allocation: 16400,
-					Actions: []sdk.Dec{
+					Actions: []sdkmath.LegacyDec{
 						sdkmath.LegacyMustNewDecFromStr("0.1"),
 						sdkmath.LegacyMustNewDecFromStr("0.2"),
 						sdkmath.LegacyMustNewDecFromStr("0.3"),

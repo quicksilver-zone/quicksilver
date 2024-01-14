@@ -54,7 +54,7 @@ func (Keeper) Logger(ctx sdk.Context) log.Logger {
 }
 
 // GetDenomPrefixStore returns the substore for a specific denom.
-func (k Keeper) GetDenomPrefixStore(ctx sdk.Context, denom string) sdk.KVStore {
+func (k Keeper) GetDenomPrefixStore(ctx sdk.Context, denom string) storetypes.KVStore {
 	store := ctx.KVStore(k.storeKey)
 	return prefix.NewStore(store, types.GetDenomPrefixStore(denom))
 }
