@@ -144,7 +144,7 @@ func (suite *KeeperTestSuite) fundZoneDrop(chainID string, amount uint64) {
 	coins := sdk.NewCoins(
 		sdk.NewCoin(
 			quicksilver.StakingKeeper.BondDenom(ctx),
-			sdk.NewIntFromUint64(amount),
+			sdkmath.NewIntFromUint64(amount),
 		),
 	)
 	// fund zonedrop account

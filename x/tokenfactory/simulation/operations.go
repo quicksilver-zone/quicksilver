@@ -160,7 +160,7 @@ func SimulateMsgMint(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keepe
 			return sdksimtypes.NoOpMsg(types.ModuleName, TypeMsgMint, "account is not admin"), nil, nil
 		}
 
-		mintAmount, err := simtypes.RandPositiveInt(r, sdk.NewIntFromUint64(1000_000000))
+		mintAmount, err := simtypes.RandPositiveInt(r, sdkmath.NewIntFromUint64(1000_000000))
 		if err != nil {
 			return sdksimtypes.NoOpMsg(types.ModuleName, TypeMsgMint, "error creating random sdkmath.Int"), nil, err
 		}

@@ -13,6 +13,7 @@ import (
 	"google.golang.org/protobuf/encoding/protowire"
 
 	sdkioerrors "cosmossdk.io/errors"
+	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -259,7 +260,7 @@ func DepositIntervalCallback(k *Keeper, ctx sdk.Context, args []byte, query icqt
 			continue
 		}
 		k.Logger(ctx).Info("Found previously unhandled tx. Processing.", "txhash", txn.TxHash)
-		k.ICQKeeper.MakeRequest(ctx, query.ConnectionId, query.ChainId, "tendermint.Tx", hashBytes, sdk.NewInt(-1), types.ModuleName, "deposittx", 0)
+		k.ICQKeeper.MakeRequest(ctx, query.ConnectionId, query.ChainId, "tendermint.Tx", hashBytes, sdkmath.NewInt(-1), types.ModuleName, "deposittx", 0)
 	}
 	return nil
 }
@@ -671,7 +672,7 @@ func DelegationAccountBalancesCallback(k *Keeper, ctx sdk.Context, args []byte, 
 			zone.ChainId,
 			types.BankStoreKey,
 			append(banktypes.CreateAccountBalancesPrefix(addressBytes), []byte(coin.Denom)...),
-			sdk.NewInt(-1),
+			sdkmath.NewInt(-1),
 			types.ModuleName,
 			"delegationaccountbalance",
 			0,

@@ -111,7 +111,7 @@ func (p Pool) getScaledPoolAmts(denoms ...string) ([]sdk.Dec, error) {
 			return []sdk.Dec{}, fmt.Errorf("denom %s does not exist in pool", denom)
 		}
 		scalingFactor := p.GetScalingFactorByLiquidityIndex(liquidityIndex)
-		result[i] = sdk.NewDecFromInt(amt).QuoInt64Mut(int64(scalingFactor))
+		result[i] = sdkmath.LegacyNewDecFromInt(amt).QuoInt64Mut(int64(scalingFactor))
 	}
 	return result, nil
 }
@@ -249,7 +249,7 @@ func (p *Pool) CalcJoinPoolShares(ctx sdk.Context, tokensIn sdk.Coins, swapFee s
 
 // TODO: implement this
 func (*Pool) CalcJoinPoolNoSwapShares(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdkmath.Int, newLiquidity sdk.Coins, err error) {
-	return sdk.ZeroInt(), nil, err
+	return sdkmath.ZeroInt(), nil, err
 }
 
 func (p *Pool) JoinPool(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdkmath.Int, err error) {
@@ -259,7 +259,7 @@ func (p *Pool) JoinPool(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (n
 
 // TODO: implement this
 func (*Pool) JoinPoolNoSwap(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdkmath.Int, err error) {
-	return sdk.ZeroInt(), err
+	return sdkmath.ZeroInt(), err
 }
 
 func (p *Pool) ExitPool(ctx sdk.Context, exitingShares sdkmath.Int, exitFee sdk.Dec) (exitingCoins sdk.Coins, err error) {

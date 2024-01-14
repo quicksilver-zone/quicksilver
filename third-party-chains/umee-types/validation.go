@@ -29,7 +29,7 @@ func ExchangeUToken(ctx sdk.Context, uToken sdk.Coin, prKeeper ParticipationRewa
 	if err != nil {
 		return sdk.Coin{}, err
 	}
-	tokenAmount := sdk.NewDecFromInt(uToken.Amount).Mul(exchangeRate).TruncateInt()
+	tokenAmount := sdkmath.LegacyNewDecFromInt(uToken.Amount).Mul(exchangeRate).TruncateInt()
 	return sdk.NewCoin(tokenDenom, tokenAmount), nil
 }
 
@@ -52,7 +52,7 @@ func DeriveExchangeRate(ctx sdk.Context, denom string, prKeeper ParticipationRew
 		return sdk.ZeroDec(), err
 	}
 
-	reserveAmount := sdk.NewDecFromInt(intamount)
+	reserveAmount := sdkmath.LegacyNewDecFromInt(intamount)
 
 	// get leverage module balance
 	balancePD, ok := prKeeper.GetProtocolData(ctx, participationrewardstypes.ProtocolDataTypeUmeeLeverageModuleBalance, denom)
@@ -70,7 +70,7 @@ func DeriveExchangeRate(ctx sdk.Context, denom string, prKeeper ParticipationRew
 	if err != nil {
 		return sdk.ZeroDec(), err
 	}
-	moduleBalance := sdk.NewDecFromInt(intamount)
+	moduleBalance := sdkmath.LegacyNewDecFromInt(intamount)
 
 	// get interest scalar
 	interestPD, ok := prKeeper.GetProtocolData(ctx, participationrewardstypes.ProtocolDataTypeUmeeInterestScalar, denom)

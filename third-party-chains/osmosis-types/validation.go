@@ -20,18 +20,18 @@ type ParticipationRewardsKeeper interface {
 func DetermineApplicableTokensInPool(ctx sdk.Context, prKeeper ParticipationRewardsKeeper, lock osmosislockuptypes.PeriodLock, chainID string) (math.Int, error) {
 	gammtoken, err := lock.SingleCoin()
 	if err != nil {
-		return sdk.ZeroInt(), err
+		return sdkmath.ZeroInt(), err
 	}
 
 	poolID := gammtoken.Denom[strings.LastIndex(gammtoken.Denom, "/")+1:]
 	pd, ok := prKeeper.GetProtocolData(ctx, participationrewardstypes.ProtocolDataTypeOsmosisPool, poolID)
 	if !ok {
-		return sdk.ZeroInt(), fmt.Errorf("unable to obtain protocol data for poolID=%s", poolID)
+		return sdkmath.ZeroInt(), fmt.Errorf("unable to obtain protocol data for poolID=%s", poolID)
 	}
 
 	ipool, err := participationrewardstypes.UnmarshalProtocolData(participationrewardstypes.ProtocolDataTypeOsmosisPool, pd.Data)
 	if err != nil {
-		return sdk.ZeroInt(), err
+		return sdkmath.ZeroInt(), err
 	}
 	pool, _ := ipool.(*participationrewardstypes.OsmosisPoolProtocolData)
 
@@ -44,20 +44,20 @@ func DetermineApplicableTokensInPool(ctx sdk.Context, prKeeper ParticipationRewa
 	}
 
 	if poolDenom == "" {
-		return sdk.ZeroInt(), fmt.Errorf("invalid zone, pool zone must match %s", chainID)
+		return sdkmath.ZeroInt(), fmt.Errorf("invalid zone, pool zone must match %s", chainID)
 	}
 
 	poolData, err := pool.GetPool()
 	if err != nil {
-		return sdk.ZeroInt(), err
+		return sdkmath.ZeroInt(), err
 	}
 	// calculate user gamm ratio and LP asset amount
 	ugamm := gammtoken.Amount          // user's gamm amount
 	pgamm := poolData.GetTotalShares() // total pool gamm amount
 	if pgamm.IsZero() {
-		return sdk.ZeroInt(), fmt.Errorf("empty pool, %s", poolID)
+		return sdkmath.ZeroInt(), fmt.Errorf("empty pool, %s", poolID)
 	}
-	uratio := sdk.NewDecFromInt(ugamm).QuoInt(pgamm)
+	uratio := sdkmath.LegacyNewDecFromInt(ugamm).QuoInt(pgamm)
 
 	zasset := poolData.GetTotalPoolLiquidity(ctx).AmountOf(poolDenom) // pool zone asset amount
 	uAmount := uratio.MulInt(zasset).TruncateInt()

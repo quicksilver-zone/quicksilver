@@ -50,7 +50,7 @@ func InitGenesis(ctx sdk.Context, k *keeper.Keeper, genState types.GenesisState)
 			sdk.NewCoins(
 				sdk.NewCoin(
 					k.BondDenom(ctx),
-					sdk.NewIntFromUint64(zd.Allocation),
+					sdkmath.NewIntFromUint64(zd.Allocation),
 				),
 			),
 		)

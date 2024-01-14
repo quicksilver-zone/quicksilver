@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	sdkmath "cosmossdk.io/math"
 	tmservice "github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
@@ -162,7 +163,7 @@ func (suite *KeeperTestSuite) executeUmeeReservesUpdateCallback() {
 	query, found := prk.IcqKeeper.GetQuery(ctx, qid)
 	suite.True(found, "qid: %s", qid)
 
-	data := sdk.NewInt(100000)
+	data := sdkmath.NewInt(100000)
 	resp, err := data.Marshal()
 	suite.NoError(err)
 	expectedData, err := json.Marshal(data)
@@ -206,7 +207,7 @@ func (suite *KeeperTestSuite) executeUmeeLeverageModuleBalanceUpdateCallback() {
 	query, found := prk.IcqKeeper.GetQuery(ctx, qid)
 	suite.True(found, "qid: %s", qid)
 
-	data := sdk.NewInt(1400000)
+	data := sdkmath.NewInt(1400000)
 	resp, err := data.Marshal()
 	suite.NoError(err)
 	expectedData, err := json.Marshal(data)
@@ -248,7 +249,7 @@ func (suite *KeeperTestSuite) executeUmeeUTokenSupplyUpdateCallback() {
 	query, found := prk.IcqKeeper.GetQuery(ctx, qid)
 	suite.True(found, "qid: %s", qid)
 
-	data := sdk.NewInt(100000)
+	data := sdkmath.NewInt(100000)
 	resp, err := data.Marshal()
 	suite.NoError(err)
 	expectedData, err := json.Marshal(data)
@@ -290,7 +291,7 @@ func (suite *KeeperTestSuite) executeUmeeTotalBorrowsUpdateCallback() {
 	query, found := prk.IcqKeeper.GetQuery(ctx, qid)
 	suite.True(found, "qid: %s", qid)
 
-	data := sdk.NewDec(150000)
+	data := sdkmath.LegacyNewDec(150000)
 	resp, err := data.Marshal()
 	suite.NoError(err)
 	expectedData, err := json.Marshal(data)
@@ -332,7 +333,7 @@ func (suite *KeeperTestSuite) executeUmeeInterestScalarUpdateCallback() {
 	query, found := prk.IcqKeeper.GetQuery(ctx, qid)
 	suite.True(found, "qid: %s", qid)
 
-	data := sdk.NewDec(1)
+	data := sdkmath.LegacyNewDec(1)
 	resp, err := data.Marshal()
 	suite.NoError(err)
 	expectedData, err := json.Marshal(data)
@@ -418,7 +419,7 @@ func (suite *KeeperTestSuite) executeCrescentPoolCoinSupplyUpdateCallback() {
 	query, found := prk.IcqKeeper.GetQuery(ctx, qid)
 	suite.Require().True(found, "qid: %s", qid)
 
-	data := sdk.NewInt(100000)
+	data := sdkmath.NewInt(100000)
 	resp, err := data.Marshal()
 	suite.Require().NoError(err)
 	expectedData, err := json.Marshal(data)
@@ -461,7 +462,7 @@ func (suite *KeeperTestSuite) executeCrescentReserveBalanceUpdateCallback() {
 	query, found := prk.IcqKeeper.GetQuery(ctx, qid)
 	suite.Require().True(found, "qid: %s", qid)
 
-	data := sdk.NewInt(1000000)
+	data := sdkmath.NewInt(1000000)
 	resp, err := data.Marshal()
 	suite.Require().NoError(err)
 	expectedData, err := json.Marshal(data)

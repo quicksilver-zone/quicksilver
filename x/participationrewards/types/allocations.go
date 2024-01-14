@@ -28,9 +28,9 @@ func GetRewardsAllocations(moduleBalance math.Int, proportions DistributionPropo
 	var allocation RewardsAllocation
 
 	// split participation rewards allocations
-	allocation.ValidatorSelection = sdk.NewDecFromInt(moduleBalance).Mul(proportions.ValidatorSelectionAllocation).TruncateInt()
-	allocation.Holdings = sdk.NewDecFromInt(moduleBalance).Mul(proportions.HoldingsAllocation).TruncateInt()
-	allocation.Lockup = sdk.NewDecFromInt(moduleBalance).Mul(proportions.LockupAllocation).TruncateInt()
+	allocation.ValidatorSelection = sdkmath.LegacyNewDecFromInt(moduleBalance).Mul(proportions.ValidatorSelectionAllocation).TruncateInt()
+	allocation.Holdings = sdkmath.LegacyNewDecFromInt(moduleBalance).Mul(proportions.HoldingsAllocation).TruncateInt()
+	allocation.Lockup = sdkmath.LegacyNewDecFromInt(moduleBalance).Mul(proportions.LockupAllocation).TruncateInt()
 
 	// use sum to check total distribution to collect and allocate dust
 	sum := allocation.Lockup.Add(allocation.ValidatorSelection).Add(allocation.Holdings)

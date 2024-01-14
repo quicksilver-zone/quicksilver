@@ -30,7 +30,7 @@ func (k Keeper) AllocateValidatorSelectionRewards(ctx sdk.Context) {
 				zone.ChainId,
 				"cosmos.distribution.v1beta1.Query/DelegationTotalRewards",
 				bz,
-				sdk.NewInt(-1),
+				sdkmath.NewInt(-1),
 				types.ModuleName,
 				ValidatorSelectionRewardsCallbackID,
 				0,
@@ -55,7 +55,7 @@ func (k Keeper) getZoneScores(
 
 	zs := types.ZoneScore{
 		ZoneID:           zone.ChainId,
-		TotalVotingPower: sdk.NewInt(0),
+		TotalVotingPower: sdkmath.NewInt(0),
 		ValidatorScores:  make(map[string]*types.Validator),
 	}
 
@@ -83,8 +83,8 @@ func (k Keeper) CalcDistributionScores(ctx sdk.Context, zone icstypes.Zone, zs *
 
 	// calculate total voting power
 	// and determine min/max voting power for zone
-	max := sdk.NewInt(0)
-	min := sdk.NewInt(999999999999999999)
+	max := sdkmath.NewInt(0)
+	min := sdkmath.NewInt(999999999999999999)
 	for _, zoneVal := range zoneValidators {
 		val := zoneVal
 		if val.VotingPower.IsNegative() {
@@ -116,16 +116,16 @@ func (k Keeper) CalcDistributionScores(ctx sdk.Context, zone icstypes.Zone, zs *
 	}
 
 	// calculate power percentage and normalized distribution scores
-	maxp := sdk.NewDecFromInt(max).Quo(sdk.NewDecFromInt(zs.TotalVotingPower))
-	minp := sdk.NewDecFromInt(min).Quo(sdk.NewDecFromInt(zs.TotalVotingPower))
+	maxp := sdkmath.LegacyNewDecFromInt(max).Quo(sdkmath.LegacyNewDecFromInt(zs.TotalVotingPower))
+	minp := sdkmath.LegacyNewDecFromInt(min).Quo(sdkmath.LegacyNewDecFromInt(zs.TotalVotingPower))
 	for _, vs := range zs.ValidatorScores {
 		// calculate power percentage
-		vs.PowerPercentage = sdk.NewDecFromInt(vs.VotingPower).Quo(sdk.NewDecFromInt(zs.TotalVotingPower))
+		vs.PowerPercentage = sdkmath.LegacyNewDecFromInt(vs.VotingPower).Quo(sdkmath.LegacyNewDecFromInt(zs.TotalVotingPower))
 
 		// calculate normalized distribution score
-		vs.DistributionScore = sdk.NewDec(1).Sub(
+		vs.DistributionScore = sdkmath.LegacyNewDec(1).Sub(
 			vs.PowerPercentage.Sub(minp).Mul(
-				sdk.NewDec(1).Quo(maxp),
+				sdkmath.LegacyNewDec(1).Quo(maxp),
 			),
 		)
 
@@ -171,7 +171,7 @@ func (k Keeper) CalcOverallScores(
 		return nil
 	}
 
-	expected := total.Quo(sdk.NewDec(int64(len(rewards))))
+	expected := total.Quo(sdkmath.LegacyNewDec(int64(len(rewards))))
 
 	k.Logger(ctx).Info(
 		"performance account rewards",
@@ -181,7 +181,7 @@ func (k Keeper) CalcOverallScores(
 	)
 
 	msgs := make([]sdk.Msg, 0)
-	limit := sdk.NewDec(1.0)
+	limit := sdkmath.LegacyNewDec(1.0)
 	for _, reward := range rewards {
 		vs, exists := zs.ValidatorScores[reward.ValidatorAddress]
 		if !exists {
@@ -240,11 +240,11 @@ func (k Keeper) CalcUserValidatorSelectionAllocations(
 		return userAllocations
 	}
 
-	sum := sdk.NewDec(0)
+	sum := sdkmath.LegacyNewDec(0)
 	userScores := make([]types.UserScore, 0)
 	// obtain snapshotted intents of last epoch boundary
 	k.icsKeeper.IterateDelegatorIntents(ctx, zone, true, func(_ int64, di icstypes.DelegatorIntent) (stop bool) {
-		uSum := sdk.NewDec(0)
+		uSum := sdkmath.LegacyNewDec(0)
 		for _, intent := range di.GetIntents() {
 			// calc overall user score
 			score := sdk.ZeroDec()
@@ -272,7 +272,7 @@ func (k Keeper) CalcUserValidatorSelectionAllocations(
 		return userAllocations
 	}
 
-	allocation := sdk.NewDecFromInt(sdk.NewIntFromUint64(zone.ValidatorSelectionAllocation))
+	allocation := sdkmath.LegacyNewDecFromInt(sdkmath.NewIntFromUint64(zone.ValidatorSelectionAllocation))
 	tokensPerPoint := allocation.Quo(sum)
 	bondDenom := k.stakingKeeper.BondDenom(ctx)
 	k.Logger(ctx).Info("tokens per point", "zone", zs.ZoneID, "zone score", sum, "tpp", tokensPerPoint)

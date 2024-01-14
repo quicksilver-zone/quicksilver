@@ -3,6 +3,7 @@ package types_test
 import (
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -78,38 +79,38 @@ func TestCoinsToIntent(t *testing.T) {
 	}{
 		{
 			amount: sdk.NewCoins(
-				sdk.NewCoin("cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0/1", sdk.NewInt(45)),
-				sdk.NewCoin("cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf/16", sdk.NewInt(55)),
+				sdk.NewCoin("cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0/1", sdkmath.NewInt(45)),
+				sdk.NewCoin("cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf/16", sdkmath.NewInt(55)),
 			),
 			expectedIntent: map[string]sdk.Dec{
-				"cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0": sdk.NewDec(45),
-				"cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf": sdk.NewDec(55),
+				"cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0": sdkmath.LegacyNewDec(45),
+				"cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf": sdkmath.LegacyNewDec(55),
 			},
 		},
 		{
 			amount: sdk.NewCoins(
-				sdk.NewCoin("cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0/1", sdk.NewInt(350)),
-				sdk.NewCoin("cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf/16", sdk.NewInt(350)),
-				sdk.NewCoin("cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy/6", sdk.NewInt(300)),
+				sdk.NewCoin("cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0/1", sdkmath.NewInt(350)),
+				sdk.NewCoin("cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf/16", sdkmath.NewInt(350)),
+				sdk.NewCoin("cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy/6", sdkmath.NewInt(300)),
 			),
 			expectedIntent: map[string]sdk.Dec{
-				"cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0": sdk.NewDec(350),
-				"cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf": sdk.NewDec(350),
-				"cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy": sdk.NewDec(300),
+				"cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0": sdkmath.LegacyNewDec(350),
+				"cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf": sdkmath.LegacyNewDec(350),
+				"cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy": sdkmath.LegacyNewDec(300),
 			},
 		},
 		{
 			amount: sdk.NewCoins(
-				sdk.NewCoin("cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0/1", sdk.NewInt(3900)),
-				sdk.NewCoin("cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf/16", sdk.NewInt(5500)),
-				sdk.NewCoin("cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy/6", sdk.NewInt(3000)),
-				sdk.NewCoin("cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll/2", sdk.NewInt(500)),
+				sdk.NewCoin("cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0/1", sdkmath.NewInt(3900)),
+				sdk.NewCoin("cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf/16", sdkmath.NewInt(5500)),
+				sdk.NewCoin("cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy/6", sdkmath.NewInt(3000)),
+				sdk.NewCoin("cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll/2", sdkmath.NewInt(500)),
 			),
 			expectedIntent: map[string]sdk.Dec{
-				"cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0": sdk.NewDec(3900),
-				"cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf": sdk.NewDec(5500),
-				"cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy": sdk.NewDec(3000),
-				"cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll": sdk.NewDec(500),
+				"cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0": sdkmath.LegacyNewDec(3900),
+				"cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf": sdkmath.LegacyNewDec(5500),
+				"cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy": sdkmath.LegacyNewDec(3000),
+				"cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll": sdkmath.LegacyNewDec(500),
 			},
 		},
 	}
@@ -127,12 +128,12 @@ func TestCoinsToIntent(t *testing.T) {
 func TestDecodeMemo(t *testing.T) {
 	zone := types.Zone{ConnectionId: "connection-0", ChainId: "cosmoshub-4", AccountPrefix: "cosmos", LocalDenom: "uqatom", BaseDenom: "uatom", Is_118: true}
 	zone.Validators = append(zone.Validators,
-		&types.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
-		&types.Validator{ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
-		&types.Validator{ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
-		&types.Validator{ValoperAddress: "cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
-		&types.Validator{ValoperAddress: "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
-		&types.Validator{ValoperAddress: "cosmosvaloper1qaa9zej9a0ge3ugpx3pxyx602lxh3ztqgfnp42", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+		&types.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+		&types.Validator{ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+		&types.Validator{ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+		&types.Validator{ValoperAddress: "cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+		&types.Validator{ValoperAddress: "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+		&types.Validator{ValoperAddress: "cosmosvaloper1qaa9zej9a0ge3ugpx3pxyx602lxh3ztqgfnp42", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
 	)
 
 	testCases := []struct {
@@ -147,8 +148,8 @@ func TestDecodeMemo(t *testing.T) {
 			memo:   "AipahL/4TH3a0Ry4wHOG6RkoxWdcpLxuppAElPH3PNriuvHIuI/1/AuKM5w=",
 			amount: 100,
 			expectedIntent: map[string]sdk.Dec{
-				"cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0": sdk.NewDec(45),
-				"cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf": sdk.NewDec(55),
+				"cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0": sdkmath.LegacyNewDec(45),
+				"cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf": sdkmath.LegacyNewDec(55),
 			},
 			expectedMemoFields: types.MemoFields{
 				2: types.MemoField{ID: 2, Data: []uint8{0x5a, 0x84, 0xbf, 0xf8, 0x4c, 0x7d, 0xda, 0xd1, 0x1c, 0xb8, 0xc0, 0x73, 0x86, 0xe9, 0x19, 0x28, 0xc5, 0x67, 0x5c, 0xa4, 0xbc, 0x6e, 0xa6, 0x90, 0x4, 0x94, 0xf1, 0xf7, 0x3c, 0xda, 0xe2, 0xba, 0xf1, 0xc8, 0xb8, 0x8f, 0xf5, 0xfc, 0xb, 0x8a, 0x33, 0x9c}},
@@ -158,9 +159,9 @@ func TestDecodeMemo(t *testing.T) {
 			memo:   "Aj9GhL/4TH3a0Ry4wHOG6RkoxWdcpLxGppAElPH3PNriuvHIuI/1/AuKM5w8r/n1pxbN1wEwTq5vx/QsgP3upYQ=",
 			amount: 1000,
 			expectedIntent: map[string]sdk.Dec{
-				"cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0": sdk.NewDec(350),
-				"cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf": sdk.NewDec(350),
-				"cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy": sdk.NewDec(300),
+				"cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0": sdkmath.LegacyNewDec(350),
+				"cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf": sdkmath.LegacyNewDec(350),
+				"cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy": sdkmath.LegacyNewDec(300),
 			},
 
 			expectedMemoFields: types.MemoFields{
@@ -171,10 +172,10 @@ func TestDecodeMemo(t *testing.T) {
 			memo:   "AlROhL/4TH3a0Ry4wHOG6RkoxWdcpLw0ppAElPH3PNriuvHIuI/1/AuKM5w8r/n1pxbN1wEwTq5vx/QsgP3upYQK7EkpebEEzVgFDJYdIBcOLCYxjvw=",
 			amount: 10,
 			expectedIntent: map[string]sdk.Dec{
-				"cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0": sdk.NewDecWithPrec(39, 1),
-				"cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf": sdk.NewDecWithPrec(26, 1),
-				"cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy": sdk.NewDec(3),
-				"cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll": sdk.NewDecWithPrec(5, 1),
+				"cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0": sdkmath.LegacyNewDecWithPrec(39, 1),
+				"cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf": sdkmath.LegacyNewDecWithPrec(26, 1),
+				"cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy": sdkmath.LegacyNewDec(3),
+				"cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll": sdkmath.LegacyNewDecWithPrec(5, 1),
 			},
 			expectedMemoFields: types.MemoFields{
 				2: types.MemoField{ID: 2, Data: []uint8{0x4e, 0x84, 0xbf, 0xf8, 0x4c, 0x7d, 0xda, 0xd1, 0x1c, 0xb8, 0xc0, 0x73, 0x86, 0xe9, 0x19, 0x28, 0xc5, 0x67, 0x5c, 0xa4, 0xbc, 0x34, 0xa6, 0x90, 0x4, 0x94, 0xf1, 0xf7, 0x3c, 0xda, 0xe2, 0xba, 0xf1, 0xc8, 0xb8, 0x8f, 0xf5, 0xfc, 0xb, 0x8a, 0x33, 0x9c, 0x3c, 0xaf, 0xf9, 0xf5, 0xa7, 0x16, 0xcd, 0xd7, 0x1, 0x30, 0x4e, 0xae, 0x6f, 0xc7, 0xf4, 0x2c, 0x80, 0xfd, 0xee, 0xa5, 0x84, 0xa, 0xec, 0x49, 0x29, 0x79, 0xb1, 0x4, 0xcd, 0x58, 0x5, 0xc, 0x96, 0x1d, 0x20, 0x17, 0xe, 0x2c, 0x26, 0x31, 0x8e, 0xfc}},
@@ -185,8 +186,8 @@ func TestDecodeMemo(t *testing.T) {
 			memo:   "AipahL/4TH3a0Ry4wHOG6RkoxWdcpLxuppAElPH3PNriuvHIuI/1/AuKM5wAAgEC",
 			amount: 100,
 			expectedIntent: map[string]sdk.Dec{
-				"cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0": sdk.NewDec(45),
-				"cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf": sdk.NewDec(55),
+				"cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0": sdkmath.LegacyNewDec(45),
+				"cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf": sdkmath.LegacyNewDec(55),
 			},
 			expectedMemoFields: types.MemoFields{
 				0: types.MemoField{ID: 0, Data: []uint8{0x1, 0x2}},
@@ -219,7 +220,7 @@ func TestDecodeMemo(t *testing.T) {
 				return
 			}
 
-			validatorIntents, found := memoFields.Intent(sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(int64(tc.amount)))), &zone)
+			validatorIntents, found := memoFields.Intent(sdk.NewCoins(sdk.NewCoin("uatom", sdkmath.NewInt(int64(tc.amount)))), &zone)
 			if len(tc.expectedIntent) > 0 {
 				require.True(t, found)
 				for _, v := range validatorIntents {
@@ -239,12 +240,12 @@ func TestDecodeMemo(t *testing.T) {
 func TestUpdateIntentWithMemo(t *testing.T) {
 	zone := types.Zone{ConnectionId: "connection-0", ChainId: "cosmoshub-4", AccountPrefix: "cosmos", LocalDenom: "uqatom", BaseDenom: "uatom", Is_118: true}
 	zone.Validators = append(zone.Validators,
-		&types.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
-		&types.Validator{ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
-		&types.Validator{ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
-		&types.Validator{ValoperAddress: "cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
-		&types.Validator{ValoperAddress: "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
-		&types.Validator{ValoperAddress: "cosmosvaloper1qaa9zej9a0ge3ugpx3pxyx602lxh3ztqgfnp42", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+		&types.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+		&types.Validator{ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+		&types.Validator{ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+		&types.Validator{ValoperAddress: "cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+		&types.Validator{ValoperAddress: "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+		&types.Validator{ValoperAddress: "cosmosvaloper1qaa9zej9a0ge3ugpx3pxyx602lxh3ztqgfnp42", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
 	)
 
 	testCases := []struct {
@@ -257,55 +258,55 @@ func TestUpdateIntentWithMemo(t *testing.T) {
 		{
 			baseAmount: 100,
 			originalIntent: map[string]sdk.Dec{
-				"cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0": sdk.NewDecWithPrec(45, 2),
-				"cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf": sdk.NewDecWithPrec(55, 2),
+				"cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0": sdkmath.LegacyNewDecWithPrec(45, 2),
+				"cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf": sdkmath.LegacyNewDecWithPrec(55, 2),
 			},
 			memo: "AipahL/4TH3a0Ry4wHOG6RkoxWdcpLxuppAElPH3PNriuvHIuI/1/AuKM5w=",
 
 			amount: 100,
 			expectedIntent: map[string]sdk.Dec{
-				"cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0": sdk.NewDecWithPrec(45, 2),
-				"cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf": sdk.NewDecWithPrec(55, 2),
+				"cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0": sdkmath.LegacyNewDecWithPrec(45, 2),
+				"cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf": sdkmath.LegacyNewDecWithPrec(55, 2),
 			},
 		},
 		{
 			baseAmount: 100,
 			originalIntent: map[string]sdk.Dec{
-				"cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0": sdk.NewDecWithPrec(45, 2),
-				"cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf": sdk.NewDecWithPrec(55, 2),
+				"cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0": sdkmath.LegacyNewDecWithPrec(45, 2),
+				"cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf": sdkmath.LegacyNewDecWithPrec(55, 2),
 			},
 			memo:   "AipahL/4TH3a0Ry4wHOG6RkoxWdcpLxuppAElPH3PNriuvHIuI/1/AuKM5w=",
 			amount: 1000,
 			expectedIntent: map[string]sdk.Dec{
-				"cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0": sdk.NewDecWithPrec(45, 2),
-				"cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf": sdk.NewDecWithPrec(55, 2),
+				"cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0": sdkmath.LegacyNewDecWithPrec(45, 2),
+				"cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf": sdkmath.LegacyNewDecWithPrec(55, 2),
 			},
 		},
 		{
 			baseAmount: 100,
 			originalIntent: map[string]sdk.Dec{
-				"cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0": sdk.NewDecWithPrec(25, 2),
-				"cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf": sdk.NewDecWithPrec(75, 2),
+				"cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0": sdkmath.LegacyNewDecWithPrec(25, 2),
+				"cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf": sdkmath.LegacyNewDecWithPrec(75, 2),
 			},
 			memo:   "AipahL/4TH3a0Ry4wHOG6RkoxWdcpLxuppAElPH3PNriuvHIuI/1/AuKM5w=",
 			amount: 100,
 			expectedIntent: map[string]sdk.Dec{
-				"cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0": sdk.NewDecWithPrec(35, 2),
-				"cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf": sdk.NewDecWithPrec(65, 2),
+				"cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0": sdkmath.LegacyNewDecWithPrec(35, 2),
+				"cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf": sdkmath.LegacyNewDecWithPrec(65, 2),
 			},
 		},
 		{
 			baseAmount: 1000,
 			originalIntent: map[string]sdk.Dec{
-				"cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0": sdk.NewDecWithPrec(25, 2),
-				"cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf": sdk.NewDecWithPrec(75, 2),
+				"cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0": sdkmath.LegacyNewDecWithPrec(25, 2),
+				"cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf": sdkmath.LegacyNewDecWithPrec(75, 2),
 			},
 			memo:   "Aj9GhL/4TH3a0Ry4wHOG6RkoxWdcpLxGppAElPH3PNriuvHIuI/1/AuKM5w8r/n1pxbN1wEwTq5vx/QsgP3upYQ=",
 			amount: 1000,
 			expectedIntent: map[string]sdk.Dec{
-				"cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0": sdk.NewDecWithPrec(30, 2),
-				"cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf": sdk.NewDecWithPrec(55, 2),
-				"cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy": sdk.NewDecWithPrec(15, 2),
+				"cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0": sdkmath.LegacyNewDecWithPrec(30, 2),
+				"cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf": sdkmath.LegacyNewDecWithPrec(55, 2),
+				"cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy": sdkmath.LegacyNewDecWithPrec(15, 2),
 			},
 		},
 	}
@@ -313,9 +314,9 @@ func TestUpdateIntentWithMemo(t *testing.T) {
 	for caseidx, tc := range testCases {
 		memoFields, err := zone.DecodeMemo(tc.memo)
 		require.NoError(t, err)
-		memoIntent, found := memoFields.Intent(sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(int64(tc.amount)))), &zone)
+		memoIntent, found := memoFields.Intent(sdk.NewCoins(sdk.NewCoin("uatom", sdkmath.NewInt(int64(tc.amount)))), &zone)
 		require.True(t, found)
-		intent := zone.UpdateZoneIntentWithMemo(memoIntent, intentFromDecSlice(tc.originalIntent), sdk.NewDec(int64(tc.baseAmount)))
+		intent := zone.UpdateZoneIntentWithMemo(memoIntent, intentFromDecSlice(tc.originalIntent), sdkmath.LegacyNewDec(int64(tc.baseAmount)))
 		for idx, v := range intent.Intents.Sort() {
 			if !tc.expectedIntent[v.ValoperAddress].Equal(v.Weight) {
 				t.Errorf("Case [%d:%d] -> Got %v expected %v", caseidx, idx, v.Weight, tc.expectedIntent[v.ValoperAddress])
@@ -327,12 +328,12 @@ func TestUpdateIntentWithMemo(t *testing.T) {
 func TestUpdateIntentWithMemoBad(t *testing.T) {
 	zone := types.Zone{ConnectionId: "connection-0", ChainId: "cosmoshub-4", AccountPrefix: "cosmos", LocalDenom: "uqatom", BaseDenom: "uatom", Is_118: true}
 	zone.Validators = append(zone.Validators,
-		&types.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
-		&types.Validator{ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
-		&types.Validator{ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
-		&types.Validator{ValoperAddress: "cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
-		&types.Validator{ValoperAddress: "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
-		&types.Validator{ValoperAddress: "cosmosvaloper1qaa9zej9a0ge3ugpx3pxyx602lxh3ztqgfnp42", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+		&types.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+		&types.Validator{ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+		&types.Validator{ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+		&types.Validator{ValoperAddress: "cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+		&types.Validator{ValoperAddress: "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+		&types.Validator{ValoperAddress: "cosmosvaloper1qaa9zej9a0ge3ugpx3pxyx602lxh3ztqgfnp42", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
 	)
 
 	testCases := []struct {
@@ -345,8 +346,8 @@ func TestUpdateIntentWithMemoBad(t *testing.T) {
 		{
 			baseAmount: 100,
 			originalIntent: map[string]sdk.Dec{
-				"cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0": sdk.NewDecWithPrec(45, 2),
-				"cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf": sdk.NewDecWithPrec(55, 2),
+				"cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0": sdkmath.LegacyNewDecWithPrec(45, 2),
+				"cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf": sdkmath.LegacyNewDecWithPrec(55, 2),
 			},
 			memo:     "WoS/+Ex92tEcuMBzhukZKMVnXKS8bqaQBJT",
 			amount:   100,
@@ -363,12 +364,12 @@ func TestUpdateIntentWithMemoBad(t *testing.T) {
 func TestUpdateIntentWithCoins(t *testing.T) {
 	zone := types.Zone{ConnectionId: "connection-0", ChainId: "cosmoshub-4", AccountPrefix: "cosmos", LocalDenom: "uqatom", BaseDenom: "uatom", Is_118: true}
 	zone.Validators = append(zone.Validators,
-		&types.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
-		&types.Validator{ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
-		&types.Validator{ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
-		&types.Validator{ValoperAddress: "cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
-		&types.Validator{ValoperAddress: "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
-		&types.Validator{ValoperAddress: "cosmosvaloper1qaa9zej9a0ge3ugpx3pxyx602lxh3ztqgfnp42", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+		&types.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+		&types.Validator{ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+		&types.Validator{ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+		&types.Validator{ValoperAddress: "cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+		&types.Validator{ValoperAddress: "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+		&types.Validator{ValoperAddress: "cosmosvaloper1qaa9zej9a0ge3ugpx3pxyx602lxh3ztqgfnp42", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdkmath.NewInt(2000), Status: stakingtypes.BondStatusBonded},
 	)
 	testCases := []struct {
 		baseAmount     int
@@ -379,70 +380,70 @@ func TestUpdateIntentWithCoins(t *testing.T) {
 		{
 			baseAmount: 100,
 			originalIntent: map[string]sdk.Dec{
-				"cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0": sdk.NewDecWithPrec(45, 2),
-				"cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf": sdk.NewDecWithPrec(55, 2),
+				"cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0": sdkmath.LegacyNewDecWithPrec(45, 2),
+				"cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf": sdkmath.LegacyNewDecWithPrec(55, 2),
 			},
 			amount: sdk.NewCoins(
-				sdk.NewCoin("cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0/1", sdk.NewInt(450)),
-				sdk.NewCoin("cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf/2", sdk.NewInt(550)),
+				sdk.NewCoin("cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0/1", sdkmath.NewInt(450)),
+				sdk.NewCoin("cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf/2", sdkmath.NewInt(550)),
 			),
 			expectedIntent: map[string]sdk.Dec{
-				"cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0": sdk.NewDecWithPrec(45, 2),
-				"cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf": sdk.NewDecWithPrec(55, 2),
+				"cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0": sdkmath.LegacyNewDecWithPrec(45, 2),
+				"cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf": sdkmath.LegacyNewDecWithPrec(55, 2),
 			},
 		},
 		{
 			baseAmount: 100,
 			originalIntent: map[string]sdk.Dec{
-				"cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0": sdk.NewDecWithPrec(45, 2),
-				"cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf": sdk.NewDecWithPrec(55, 2),
+				"cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0": sdkmath.LegacyNewDecWithPrec(45, 2),
+				"cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf": sdkmath.LegacyNewDecWithPrec(55, 2),
 			},
 			amount: sdk.NewCoins(
-				sdk.NewCoin("cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0/1", sdk.NewInt(45000)),
-				sdk.NewCoin("cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf/2", sdk.NewInt(55000)),
+				sdk.NewCoin("cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0/1", sdkmath.NewInt(45000)),
+				sdk.NewCoin("cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf/2", sdkmath.NewInt(55000)),
 			),
 			expectedIntent: map[string]sdk.Dec{
-				"cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0": sdk.NewDecWithPrec(45, 2),
-				"cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf": sdk.NewDecWithPrec(55, 2),
+				"cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0": sdkmath.LegacyNewDecWithPrec(45, 2),
+				"cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf": sdkmath.LegacyNewDecWithPrec(55, 2),
 			},
 		},
 		{
 			baseAmount: 100,
 			originalIntent: map[string]sdk.Dec{
-				"cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0": sdk.NewDecWithPrec(25, 2),
-				"cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf": sdk.NewDecWithPrec(75, 2),
+				"cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0": sdkmath.LegacyNewDecWithPrec(25, 2),
+				"cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf": sdkmath.LegacyNewDecWithPrec(75, 2),
 			},
 			amount: sdk.NewCoins(
-				sdk.NewCoin("cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0/1", sdk.NewInt(45)),
-				sdk.NewCoin("cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf/2", sdk.NewInt(55)),
+				sdk.NewCoin("cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0/1", sdkmath.NewInt(45)),
+				sdk.NewCoin("cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf/2", sdkmath.NewInt(55)),
 			),
 			expectedIntent: map[string]sdk.Dec{
-				"cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0": sdk.NewDecWithPrec(35, 2),
-				"cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf": sdk.NewDecWithPrec(65, 2),
+				"cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0": sdkmath.LegacyNewDecWithPrec(35, 2),
+				"cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf": sdkmath.LegacyNewDecWithPrec(65, 2),
 			},
 		},
 		{
 			baseAmount: 1000,
 			originalIntent: map[string]sdk.Dec{
-				"cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0": sdk.NewDecWithPrec(25, 2),
-				"cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf": sdk.NewDecWithPrec(75, 2),
+				"cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0": sdkmath.LegacyNewDecWithPrec(25, 2),
+				"cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf": sdkmath.LegacyNewDecWithPrec(75, 2),
 			},
 			amount: sdk.NewCoins(
-				sdk.NewCoin("cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0/1", sdk.NewInt(350)),
-				sdk.NewCoin("cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf/2", sdk.NewInt(350)),
-				sdk.NewCoin("cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy/4", sdk.NewInt(300)),
+				sdk.NewCoin("cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0/1", sdkmath.NewInt(350)),
+				sdk.NewCoin("cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf/2", sdkmath.NewInt(350)),
+				sdk.NewCoin("cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy/4", sdkmath.NewInt(300)),
 			),
 			expectedIntent: map[string]sdk.Dec{
-				"cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0": sdk.NewDecWithPrec(30, 2),
-				"cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf": sdk.NewDecWithPrec(55, 2),
-				"cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy": sdk.NewDecWithPrec(15, 2),
+				"cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0": sdkmath.LegacyNewDecWithPrec(30, 2),
+				"cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf": sdkmath.LegacyNewDecWithPrec(55, 2),
+				"cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy": sdkmath.LegacyNewDecWithPrec(15, 2),
 			},
 		},
 	}
 	valAddresses := []string{"cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", "cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll", "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7"}
 
 	for _, tc := range testCases {
-		intent := zone.UpdateIntentWithCoins(intentFromDecSlice(tc.originalIntent), sdk.NewDec(int64(tc.baseAmount)), tc.amount, utils.StringSliceToMap(valAddresses))
+		intent := zone.UpdateIntentWithCoins(intentFromDecSlice(tc.originalIntent), sdkmath.LegacyNewDec(int64(tc.baseAmount)), tc.amount, utils.StringSliceToMap(valAddresses))
 		for _, v := range intent.Intents {
 			if !tc.expectedIntent[v.ValoperAddress].Equal(v.Weight) {
 				t.Errorf("Got %v expected %v", v.Weight, tc.expectedIntent[v.ValoperAddress])
@@ -465,18 +466,18 @@ func intentFromDecSlice(in map[string]sdk.Dec) types.DelegatorIntent {
 // func TestDetermineStateIntentDiff(t *testing.T) {
 // 	zone := types.Zone{}
 // 	d1 := []*types.Delegation{}
-// 	d1 = append(d1, &types.Delegation{DelegationAddress: "cosmos1user1234", ValidatorAddress: "cosmos12345667890", Amount: sdk.NewDec(1000)})
-// 	d1 = append(d1, &types.Delegation{DelegationAddress: "cosmos1user1235", ValidatorAddress: "cosmos12345667890", Amount: sdk.NewDec(500)})
-// 	d1 = append(d1, &types.Delegation{DelegationAddress: "cosmos1user1236", ValidatorAddress: "cosmos12345667890", Amount: sdk.NewDec(300)})
-// 	d1 = append(d1, &types.Delegation{DelegationAddress: "cosmos1user1237", ValidatorAddress: "cosmos12345667890", Amount: sdk.NewDec(200)})
+// 	d1 = append(d1, &types.Delegation{DelegationAddress: "cosmos1user1234", ValidatorAddress: "cosmos12345667890", Amount: sdkmath.LegacyNewDec(1000)})
+// 	d1 = append(d1, &types.Delegation{DelegationAddress: "cosmos1user1235", ValidatorAddress: "cosmos12345667890", Amount: sdkmath.LegacyNewDec(500)})
+// 	d1 = append(d1, &types.Delegation{DelegationAddress: "cosmos1user1236", ValidatorAddress: "cosmos12345667890", Amount: sdkmath.LegacyNewDec(300)})
+// 	d1 = append(d1, &types.Delegation{DelegationAddress: "cosmos1user1237", ValidatorAddress: "cosmos12345667890", Amount: sdkmath.LegacyNewDec(200)})
 
 // 	i1 := []types.DelegatorIntent{}
 // 	i1 = append(i1, types.DelegatorIntent{Delegator: "cosmos1user1234", Intents: []*types.ValidatorIntent{{ValoperAddress: "cosmos12345667890", Weight: sdk.MustNewDecFromStr("0.5")}, {ValoperAddress: "cosmos987654321", Weight: sdk.MustNewDecFromStr("0.5")}}})
-// 	i1 = append(i1, types.DelegatorIntent{Delegator: "cosmos1user1235", Intents: []*types.ValidatorIntent{{ValoperAddress: "cosmos12345667890", Weight: sdk.NewDec(1)}}})
-// 	i1 = append(i1, types.DelegatorIntent{Delegator: "cosmos1user1236", Intents: []*types.ValidatorIntent{{ValoperAddress: "cosmos12345667890", Weight: sdk.NewDec(1)}}})
-// 	i1 = append(i1, types.DelegatorIntent{Delegator: "cosmos1user1237", Intents: []*types.ValidatorIntent{{ValoperAddress: "cosmos12345667890", Weight: sdk.NewDec(1)}}})
+// 	i1 = append(i1, types.DelegatorIntent{Delegator: "cosmos1user1235", Intents: []*types.ValidatorIntent{{ValoperAddress: "cosmos12345667890", Weight: sdkmath.LegacyNewDec(1)}}})
+// 	i1 = append(i1, types.DelegatorIntent{Delegator: "cosmos1user1236", Intents: []*types.ValidatorIntent{{ValoperAddress: "cosmos12345667890", Weight: sdkmath.LegacyNewDec(1)}}})
+// 	i1 = append(i1, types.DelegatorIntent{Delegator: "cosmos1user1237", Intents: []*types.ValidatorIntent{{ValoperAddress: "cosmos12345667890", Weight: sdkmath.LegacyNewDec(1)}}})
 
-// 	zone.Validators = append(zone.Validators, &types.Validator{ValoperAddress: "cosmos12345667890", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewDec(2000), Delegations: d1})
+// 	zone.Validators = append(zone.Validators, &types.Validator{ValoperAddress: "cosmos12345667890", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdkmath.LegacyNewDec(2000), Delegations: d1})
 
 // 	require.Equal(t, 0, 0)
 // }
@@ -490,68 +491,68 @@ func intentFromDecSlice(in map[string]sdk.Dec) types.DelegatorIntent {
 // 	}{
 // 		{
 // 			distribution: map[string]sdk.Coin{
-// 				"val1": sdk.NewInt64Coin("uatom", 3),
-// 				"val2": sdk.NewInt64Coin("uatom", 3),
+// 				"val1": sdkmath.NewInt64Coin("uatom", 3),
+// 				"val2": sdkmath.NewInt64Coin("uatom", 3),
 // 			},
 // 			diff: map[string]cosmosmath.Int{
-// 				"val1": sdk.NewInt(-1),
-// 				"val2": sdk.NewInt(1),
+// 				"val1": sdkmath.NewInt(-1),
+// 				"val2": sdkmath.NewInt(1),
 // 			},
 // 			expectedDistribution: map[string]sdk.Coin{
-// 				"val1": sdk.NewInt64Coin("uatom", 4),
-// 				"val2": sdk.NewInt64Coin("uatom", 2),
+// 				"val1": sdkmath.NewInt64Coin("uatom", 4),
+// 				"val2": sdkmath.NewInt64Coin("uatom", 2),
 // 			},
-// 			expectedRemainder: sdk.ZeroInt(),
+// 			expectedRemainder: sdkmath.ZeroInt(),
 // 		},
 
 // 		{
 // 			distribution: map[string]sdk.Coin{
-// 				"val1": sdk.NewInt64Coin("uatom", 1),
-// 				"val2": sdk.NewInt64Coin("uatom", 5),
+// 				"val1": sdkmath.NewInt64Coin("uatom", 1),
+// 				"val2": sdkmath.NewInt64Coin("uatom", 5),
 // 			},
 // 			diff: map[string]cosmosmath.Int{
-// 				"val1": sdk.NewInt(-1),
-// 				"val2": sdk.NewInt(1),
+// 				"val1": sdkmath.NewInt(-1),
+// 				"val2": sdkmath.NewInt(1),
 // 			},
 // 			expectedDistribution: map[string]sdk.Coin{
-// 				"val1": sdk.NewInt64Coin("uatom", 2),
-// 				"val2": sdk.NewInt64Coin("uatom", 4),
+// 				"val1": sdkmath.NewInt64Coin("uatom", 2),
+// 				"val2": sdkmath.NewInt64Coin("uatom", 4),
 // 			},
-// 			expectedRemainder: sdk.ZeroInt(),
+// 			expectedRemainder: sdkmath.ZeroInt(),
 // 		},
 // 		{
 // 			distribution: map[string]sdk.Coin{
-// 				"val1": sdk.NewInt64Coin("uatom", 1),
-// 				"val2": sdk.NewInt64Coin("uatom", 5),
+// 				"val1": sdkmath.NewInt64Coin("uatom", 1),
+// 				"val2": sdkmath.NewInt64Coin("uatom", 5),
 // 			},
 // 			diff: map[string]cosmosmath.Int{
-// 				"val1": sdk.NewInt(2),
-// 				"val2": sdk.NewInt(2),
-// 				"val3": sdk.NewInt(-4),
-// 				"val4": sdk.NewInt(0),
+// 				"val1": sdkmath.NewInt(2),
+// 				"val2": sdkmath.NewInt(2),
+// 				"val3": sdkmath.NewInt(-4),
+// 				"val4": sdkmath.NewInt(0),
 // 			},
 // 			expectedDistribution: map[string]sdk.Coin{
-// 				"val2": sdk.NewInt64Coin("uatom", 3),
+// 				"val2": sdkmath.NewInt64Coin("uatom", 3),
 // 			},
-// 			expectedRemainder: sdk.NewInt(3),
+// 			expectedRemainder: sdkmath.NewInt(3),
 // 		},
 // 		{
 // 			distribution: map[string]sdk.Coin{
-// 				"val1": sdk.NewInt64Coin("uatom", 1),
-// 				"val2": sdk.NewInt64Coin("uatom", 5),
-// 				"val3": sdk.NewInt64Coin("uatom", 0),
+// 				"val1": sdkmath.NewInt64Coin("uatom", 1),
+// 				"val2": sdkmath.NewInt64Coin("uatom", 5),
+// 				"val3": sdkmath.NewInt64Coin("uatom", 0),
 // 			},
 // 			diff: map[string]cosmosmath.Int{
-// 				"val1": sdk.NewInt(2),
-// 				"val2": sdk.NewInt(2),
-// 				"val3": sdk.NewInt(-4),
-// 				"val4": sdk.NewInt(0),
+// 				"val1": sdkmath.NewInt(2),
+// 				"val2": sdkmath.NewInt(2),
+// 				"val3": sdkmath.NewInt(-4),
+// 				"val4": sdkmath.NewInt(0),
 // 			},
 // 			expectedDistribution: map[string]sdk.Coin{
-// 				"val2": sdk.NewInt64Coin("uatom", 3),
-// 				"val3": sdk.NewInt64Coin("uatom", 3),
+// 				"val2": sdkmath.NewInt64Coin("uatom", 3),
+// 				"val3": sdkmath.NewInt64Coin("uatom", 3),
 // 			},
-// 			expectedRemainder: sdk.ZeroInt(),
+// 			expectedRemainder: sdkmath.ZeroInt(),
 // 		},
 // 	}
 

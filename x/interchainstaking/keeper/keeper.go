@@ -352,8 +352,8 @@ func (k *Keeper) SetValidatorForZone(ctx sdk.Context, zone *types.Zone, data []b
 				return fmt.Errorf("incoming voting power must be greater than zero, received %s", validator.Tokens)
 			}
 			// determine difference between previous vp/shares ratio and new ratio.
-			prevRatio := val.DelegatorShares.Quo(sdk.NewDecFromInt(val.VotingPower))
-			newRatio := validator.DelegatorShares.Quo(sdk.NewDecFromInt(validator.Tokens))
+			prevRatio := val.DelegatorShares.Quo(sdkmath.LegacyNewDecFromInt(val.VotingPower))
+			newRatio := validator.DelegatorShares.Quo(sdkmath.LegacyNewDecFromInt(validator.Tokens))
 			delta := newRatio.Quo(prevRatio)
 			err = k.UpdateWithdrawalRecordsForSlash(ctx, zone, val.ValoperAddress, delta)
 			if err != nil {
@@ -505,7 +505,7 @@ func (k *Keeper) EmitPerformanceBalanceQuery(ctx sdk.Context, zone *types.Zone) 
 		zone.ChainId,
 		types.BankStoreKey,
 		append(data, []byte(zone.BaseDenom)...),
-		sdk.NewInt(-1),
+		sdkmath.NewInt(-1),
 		types.ModuleName,
 		"perfbalance",
 		100,
@@ -551,7 +551,7 @@ func (k *Keeper) EmitValidatorQuery(ctx sdk.Context, connectionID, chainID strin
 		chainID,
 		"store/staking/key",
 		data,
-		sdk.NewInt(-1),
+		sdkmath.NewInt(-1),
 		types.ModuleName,
 		"validator",
 		0,
@@ -576,7 +576,7 @@ func (k *Keeper) EmitDepositIntervalQuery(ctx sdk.Context, zone *types.Zone) {
 		zone.ChainId,
 		"cosmos.tx.v1beta1.Service/GetTxsEvent",
 		k.cdc.MustMarshal(&req),
-		sdk.NewInt(-1),
+		sdkmath.NewInt(-1),
 		types.ModuleName,
 		"depositinterval",
 		0,
@@ -596,7 +596,7 @@ func (k *Keeper) EmitSigningInfoQuery(ctx sdk.Context, connectionID, chainID str
 		chainID,
 		"store/slashing/key",
 		data,
-		sdk.NewInt(-1),
+		sdkmath.NewInt(-1),
 		types.ModuleName,
 		"signinginfo",
 		0,
@@ -628,12 +628,12 @@ func (k *Keeper) UpdateRedemptionRate(ctx sdk.Context, zone *types.Zone, epochRe
 	// TODO: make max deltas params.
 	// soft cap redemption rate, instead of panicking.
 	delta := ratio.Quo(zone.RedemptionRate)
-	if delta.GT(sdk.NewDecWithPrec(102, 2)) {
+	if delta.GT(sdkmath.LegacyNewDecWithPrec(102, 2)) {
 		k.Logger(ctx).Error("ratio diverged by more than 2% upwards in the last epoch; capping at 1.02...")
-		ratio = zone.RedemptionRate.Mul(sdk.NewDecWithPrec(102, 2))
-	} else if delta.LT(sdk.NewDecWithPrec(95, 2)) && !isZero { // we allow a bigger downshift if all assets were withdrawn and we revert to zero.
+		ratio = zone.RedemptionRate.Mul(sdkmath.LegacyNewDecWithPrec(102, 2))
+	} else if delta.LT(sdkmath.LegacyNewDecWithPrec(95, 2)) && !isZero { // we allow a bigger downshift if all assets were withdrawn and we revert to zero.
 		k.Logger(ctx).Error("ratio diverged by more than 5% downwards in the last epoch; 5% is the theoretical max if _all_ controlled tokens were tombstoned. capping at 0.95...")
-		ratio = zone.RedemptionRate.Mul(sdk.NewDecWithPrec(95, 2))
+		ratio = zone.RedemptionRate.Mul(sdkmath.LegacyNewDecWithPrec(95, 2))
 	}
 
 	zone.LastRedemptionRate = zone.RedemptionRate
@@ -667,7 +667,7 @@ func (k *Keeper) GetRatio(ctx sdk.Context, zone *types.Zone, epochRewards sdkmat
 		return sdk.OneDec(), true
 	}
 
-	return sdk.NewDecFromInt(nativeAssetAmount.Add(epochRewards).Add(nativeAssetUnbondingAmount).Add(nativeAssetUnbonded)).Quo(sdk.NewDecFromInt(qAssetAmount)), false
+	return sdkmath.LegacyNewDecFromInt(nativeAssetAmount.Add(epochRewards).Add(nativeAssetUnbondingAmount).Add(nativeAssetUnbonded)).Quo(sdkmath.LegacyNewDecFromInt(qAssetAmount)), false
 }
 
 func (k *Keeper) GetAggregateIntentOrDefault(ctx sdk.Context, zone *types.Zone) (types.ValidatorIntents, error) {

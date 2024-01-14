@@ -91,7 +91,7 @@ func (*Zone) ConvertCoinsToOrdinalIntents(coins sdk.Coins, zoneVals map[string]b
 		if !ok {
 			val = &ValidatorIntent{ValoperAddress: coinParts[0], Weight: sdk.ZeroDec()}
 		}
-		val.Weight = val.Weight.Add(sdk.NewDecFromInt(coin.Amount))
+		val.Weight = val.Weight.Add(sdkmath.LegacyNewDecFromInt(coin.Amount))
 		out = out.SetForValoper(coinParts[0], val)
 	}
 
@@ -183,7 +183,7 @@ func (z *Zone) validatorIntentsFromBytes(coins sdk.Coins, weightBytes []byte) (v
 		if rawWeight > 200 {
 			return validatorIntents, fmt.Errorf("out of bounds value received in memo intent message; expected 0-200, got %d", rawWeight)
 		}
-		sdkWeight := sdk.NewDecFromInt(sdk.NewInt(rawWeight)).QuoInt(sdk.NewInt(200))
+		sdkWeight := sdkmath.LegacyNewDecFromInt(sdkmath.NewInt(rawWeight)).QuoInt(sdkmath.NewInt(200))
 		coinWeight := sdkWeight.MulInt(coins.AmountOf(z.BaseDenom))
 		index++
 		address := weightBytes[index : index+20]

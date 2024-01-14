@@ -140,7 +140,7 @@ func (k *Keeper) verifyDeposit(ctx sdk.Context, cr types.ClaimRecord, threshold 
 	}
 
 	// sum gross deposits amount
-	gdAmount := sdk.NewInt(0)
+	gdAmount := sdkmath.NewInt(0)
 	for _, rcpt := range receipts {
 		gdAmount = gdAmount.Add(rcpt.Amount.AmountOf(zone.BaseDenom))
 	}
@@ -237,7 +237,7 @@ func (k *Keeper) verifyOsmosisLP(ctx sdk.Context, proofs []*cmtypes.Proof, cr ty
 		return errors.New("unable to find Osmosis zone")
 	}
 
-	uAmount := sdk.ZeroInt()
+	uAmount := sdkmath.ZeroInt()
 	dupCheck := make(map[string]struct{})
 	for i, p := range proofs {
 		proof := p
@@ -406,7 +406,7 @@ func (k *Keeper) getClaimAmountAndUpdateRecord(ctx sdk.Context, cr *types.ClaimR
 
 func (k *Keeper) sendCoins(ctx sdk.Context, cr types.ClaimRecord, amount uint64) (sdk.Coins, error) {
 	coins := sdk.NewCoins(
-		sdk.NewCoin(k.BondDenom(ctx), sdk.NewIntFromUint64(amount)),
+		sdk.NewCoin(k.BondDenom(ctx), sdkmath.NewIntFromUint64(amount)),
 	)
 
 	addr, err := sdk.AccAddressFromBech32(cr.Address)

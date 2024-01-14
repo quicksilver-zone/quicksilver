@@ -138,7 +138,7 @@ func (k *Keeper) SetZoneAllocations(ctx sdk.Context, tvs TokenValues, allocation
 			k.Logger(ctx).Error(fmt.Sprintf("unable to obtain token value for zone %s", zone.ChainId))
 			return false
 		}
-		ztvl := sdk.NewDecFromInt(k.icsKeeper.GetDelegatedAmount(ctx, zone).Amount.Add(k.icsKeeper.GetDelegationsInProcess(ctx, zone.ChainId))).Mul(tv)
+		ztvl := sdkmath.LegacyNewDecFromInt(k.icsKeeper.GetDelegatedAmount(ctx, zone).Amount.Add(k.icsKeeper.GetDelegationsInProcess(ctx, zone.ChainId))).Mul(tv)
 		zone.Tvl = ztvl
 		k.icsKeeper.SetZone(ctx, zone)
 
@@ -163,8 +163,8 @@ func (k *Keeper) SetZoneAllocations(ctx sdk.Context, tvs TokenValues, allocation
 		zp := zone.Tvl.Quo(otvl)
 		k.Logger(ctx).Info("zone proportion", "zone", zone.ChainId, "proportion", zp)
 
-		zone.ValidatorSelectionAllocation = sdk.NewDecFromInt(allocation.ValidatorSelection).Mul(zp).TruncateInt().Uint64()
-		zone.HoldingsAllocation = sdk.NewDecFromInt(allocation.Holdings).Mul(zp).TruncateInt().Uint64()
+		zone.ValidatorSelectionAllocation = sdkmath.LegacyNewDecFromInt(allocation.ValidatorSelection).Mul(zp).TruncateInt().Uint64()
+		zone.HoldingsAllocation = sdkmath.LegacyNewDecFromInt(allocation.Holdings).Mul(zp).TruncateInt().Uint64()
 		k.icsKeeper.SetZone(ctx, zone)
 		return false
 	})

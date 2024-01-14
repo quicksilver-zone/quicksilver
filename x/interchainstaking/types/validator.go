@@ -34,10 +34,10 @@ func (v Validator) GetAddressBytes() ([]byte, error) {
 
 func (v Validator) SharesToTokens(shares sdk.Dec) sdkmath.Int {
 	if v.DelegatorShares.IsNil() || v.DelegatorShares.IsZero() {
-		return sdk.ZeroInt()
+		return sdkmath.ZeroInt()
 	}
 
-	return sdk.NewDecFromInt(v.VotingPower).Quo(v.DelegatorShares).Mul(shares).TruncateInt()
+	return sdkmath.LegacyNewDecFromInt(v.VotingPower).Quo(v.DelegatorShares).Mul(shares).TruncateInt()
 }
 
 func (di DelegatorIntent) AddOrdinal(multiplier sdk.Dec, intents ValidatorIntents) DelegatorIntent {

@@ -12,7 +12,7 @@ import (
 )
 
 var (
-	cubeRootTwo, _   = sdk.NewDec(2).ApproxRoot(3)
+	cubeRootTwo, _   = sdkmath.LegacyNewDec(2).ApproxRoot(3)
 	threeCubeRootTwo = cubeRootTwo.MulInt64(3)
 )
 
@@ -164,7 +164,7 @@ func (p *Pool) calcOutAmtGivenIn(tokenIn sdk.Coin, tokenOutDenom string, swapFee
 	}
 	tokenInSupply, tokenOutSupply := reserves[0], reserves[1]
 	// We are solving for the amount of token out, hence x = tokenOutSupply, y = tokenInSupply
-	cfmmOut := solveCfmm(tokenOutSupply, tokenInSupply, sdk.NewDecFromInt(tokenIn.Amount))
+	cfmmOut := solveCfmm(tokenOutSupply, tokenInSupply, sdkmath.LegacyNewDecFromInt(tokenIn.Amount))
 	outAmt := p.getDescaledPoolAmt(tokenOutDenom, cfmmOut)
 	return outAmt, nil
 }
@@ -178,7 +178,7 @@ func (p *Pool) calcInAmtGivenOut(tokenOut sdk.Coin, tokenInDenom string, swapFee
 	tokenInSupply, tokenOutSupply := reserves[0], reserves[1]
 	// We are solving for the amount of token in, cfmm(x,y) = cfmm(x + x_in, y - y_out)
 	// x = tokenInSupply, y = tokenOutSupply, yIn = -tokenOutAmount
-	cfmmIn := solveCfmm(tokenInSupply, tokenOutSupply, sdk.NewDecFromInt(tokenOut.Amount).Neg())
+	cfmmIn := solveCfmm(tokenInSupply, tokenOutSupply, sdkmath.LegacyNewDecFromInt(tokenOut.Amount).Neg())
 	inAmt := p.getDescaledPoolAmt(tokenInDenom, cfmmIn.NegMut())
 	return inAmt, nil
 }
@@ -201,14 +201,14 @@ func (p *Pool) joinPoolSharesInternal(ctx sdk.Context, tokensIn sdk.Coins, swapF
 		newLiquidity = tokensIn
 		return numShares, newLiquidity, err
 	} else if len(tokensIn) != p.NumAssets() || !tokensIn.DenomsSubsetOf(p.GetTotalPoolLiquidity(ctx)) {
-		return sdk.ZeroInt(), sdk.NewCoins(), errors.New(
+		return sdkmath.ZeroInt(), sdk.NewCoins(), errors.New(
 			"stableswap pool only supports LP'ing with one asset, or all assets in pool")
 	}
 
 	// Add all exact coins we can (no swap). ctx arg doesn't matter for Stableswap
 	numShares, remCoins, err := cfmm_common.MaximalExactRatioJoin(p, sdk.Context{}, tokensIn)
 	if err != nil {
-		return sdk.ZeroInt(), sdk.NewCoins(), err
+		return sdkmath.ZeroInt(), sdk.NewCoins(), err
 	}
 	p.updatePoolForJoin(tokensIn.Sub(remCoins...), numShares)
 
@@ -216,7 +216,7 @@ func (p *Pool) joinPoolSharesInternal(ctx sdk.Context, tokensIn sdk.Coins, swapF
 		// TODO: Perhaps add a method to skip if this is too small.
 		newShare, err := p.calcSingleAssetJoinShares(coin, swapFee)
 		if err != nil {
-			return sdk.ZeroInt(), sdk.NewCoins(), err
+			return sdkmath.ZeroInt(), sdk.NewCoins(), err
 		}
 		p.updatePoolForJoin(sdk.NewCoins(coin), newShare)
 		numShares = numShares.Add(newShare)

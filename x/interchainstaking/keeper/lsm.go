@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
 
 	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -81,7 +82,7 @@ func (k Keeper) GetLiquidStakedSupply(ctx sdk.Context, zone *types.Zone) sdk.Dec
 }
 
 func (k Keeper) GetTotalStakedSupply(ctx sdk.Context, zone *types.Zone) math.Int {
-	out := sdk.ZeroInt()
+	out := sdkmath.ZeroInt()
 	for _, val := range k.GetActiveValidators(ctx, zone.ChainId) {
 		if val.Status == stakingtypes.BondStatusBonded {
 			out = out.Add(val.VotingPower)
@@ -98,8 +99,8 @@ func (k Keeper) CheckExceedsGlobalCap(ctx sdk.Context, zone *types.Zone, amount 
 	}
 
 	liquidSupply := k.GetLiquidStakedSupply(ctx, zone)
-	totalSupply := sdk.NewDecFromInt(k.GetTotalStakedSupply(ctx, zone))
-	amountDec := sdk.NewDecFromInt(amount)
+	totalSupply := sdkmath.LegacyNewDecFromInt(k.GetTotalStakedSupply(ctx, zone))
+	amountDec := sdkmath.LegacyNewDecFromInt(amount)
 	return liquidSupply.Add(amountDec).Quo(totalSupply).GT(caps.GlobalCap)
 }
 
@@ -124,9 +125,9 @@ func (k Keeper) CheckExceedsValidatorCap(ctx sdk.Context, zone *types.Zone, vali
 	}
 
 	// Calculate the liquid shares and tokens
-	amountDec := sdk.NewDecFromInt(amount)
+	amountDec := sdkmath.LegacyNewDecFromInt(amount)
 	liquidShares := val.LiquidShares.Add(amountDec)
-	tokens := sdk.NewDecFromInt(val.VotingPower).Add(amountDec)
+	tokens := sdkmath.LegacyNewDecFromInt(val.VotingPower).Add(amountDec)
 
 	if liquidShares.Quo(tokens).GT(caps.ValidatorCap) {
 		return errors.New("exceeds validator cap")
@@ -156,7 +157,7 @@ func (k Keeper) CheckExceedsValidatorBondCap(ctx sdk.Context, zone *types.Zone, 
 
 	maxShares := val.ValidatorBondShares.Mul(caps.ValidatorBondCap)
 
-	amountDec := sdk.NewDecFromInt(amount)
+	amountDec := sdkmath.LegacyNewDecFromInt(amount)
 	liquidShares := val.LiquidShares.Add(amountDec)
 
 	if liquidShares.GT(maxShares) {

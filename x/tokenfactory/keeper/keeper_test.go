@@ -20,7 +20,7 @@ import (
 
 var (
 	SecondaryDenom  = "ura"
-	SecondaryAmount = sdk.NewInt(100000000)
+	SecondaryAmount = sdkmath.NewInt(100000000)
 )
 
 type KeeperTestSuite struct {

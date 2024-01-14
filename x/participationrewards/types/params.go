@@ -13,9 +13,9 @@ var (
 	KeyDistributionProportions = []byte("DistributionProportions")
 	KeyClaimsEnabled           = []byte("ClaimsEnabled")
 
-	DefaultValidatorSelectionAllocation = sdk.NewDecWithPrec(34, 2)
-	DefaultHoldingsAllocation           = sdk.NewDecWithPrec(33, 2)
-	DefaultLockupAllocation             = sdk.NewDecWithPrec(33, 2)
+	DefaultValidatorSelectionAllocation = sdkmath.LegacyNewDecWithPrec(34, 2)
+	DefaultHoldingsAllocation           = sdkmath.LegacyNewDecWithPrec(33, 2)
+	DefaultLockupAllocation             = sdkmath.LegacyNewDecWithPrec(33, 2)
 	DefaultClaimsEnabled                = false
 )
 

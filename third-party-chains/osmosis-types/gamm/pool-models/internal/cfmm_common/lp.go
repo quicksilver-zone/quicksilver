@@ -29,7 +29,7 @@ func CalcExitPool(ctx sdk.Context, pool gamm.PoolI, exitingShares sdkmath.Int, e
 		oneSubExitFee := sdk.OneDec().SubMut(exitFee)
 		refundedShares = oneSubExitFee.MulIntMut(exitingShares)
 	} else {
-		refundedShares = sdk.NewDecFromInt(exitingShares)
+		refundedShares = sdkmath.LegacyNewDecFromInt(exitingShares)
 	}
 
 	shareOutRatio := refundedShares.QuoInt(totalShares)
@@ -40,7 +40,7 @@ func CalcExitPool(ctx sdk.Context, pool gamm.PoolI, exitingShares sdkmath.Int, e
 	for _, asset := range poolLiquidity {
 		// round down here, due to not wanting to over-exit
 		exitAmt := shareOutRatio.MulInt(asset.Amount).TruncateInt()
-		if exitAmt.LTE(sdk.ZeroInt()) {
+		if exitAmt.LTE(sdkmath.ZeroInt()) {
 			continue
 		}
 		if exitAmt.GTE(asset.Amount) {
@@ -76,7 +76,7 @@ func MaximalExactRatioJoin(p gamm.PoolI, ctx sdk.Context, tokensIn sdk.Coins) (n
 		// Note: QuoInt implements floor division, unlike Quo
 		// This is because it calls the native golang routine big.Int.Quo
 		// https://pkg.go.dev/math/big#Int.Quo
-		shareRatio := sdk.NewDecFromInt(coin.Amount).QuoInt(poolLiquidity.AmountOfNoDenomValidation(coin.Denom))
+		shareRatio := sdkmath.LegacyNewDecFromInt(coin.Amount).QuoInt(poolLiquidity.AmountOfNoDenomValidation(coin.Denom))
 		if shareRatio.LT(minShareRatio) {
 			minShareRatio = shareRatio
 		}
@@ -133,13 +133,13 @@ func BinarySearchSingleAssetJoin(
 	ctx := sdk.Context{}
 	// Need to get something that makes the result correct within 1 LP share
 	// If we fail to reach it within maxIterations, we return an error
-	correctnessThreshold := sdk.NewInt(2)
+	correctnessThreshold := sdkmath.NewInt(2)
 	maxIterations := 300
 	// upperbound of number of LP shares = existingShares * tokenIn.Amount / pool.totalLiquidity.AmountOf(tokenIn.Denom)
 	existingTokenLiquidity := pool.GetTotalPoolLiquidity(ctx).AmountOf(tokenIn.Denom)
 	existingLPShares := pool.GetTotalShares()
-	LPShareUpperBound := sdk.NewDecFromInt(existingLPShares.Mul(tokenIn.Amount)).QuoInt(existingTokenLiquidity).Ceil().TruncateInt()
-	LPShareLowerBound := sdk.ZeroInt()
+	LPShareUpperBound := sdkmath.LegacyNewDecFromInt(existingLPShares.Mul(tokenIn.Amount)).QuoInt(existingTokenLiquidity).Ceil().TruncateInt()
+	LPShareLowerBound := sdkmath.ZeroInt()
 
 	// Creates a pool with tokenIn liquidity added, where it created `sharesIn` number of shares.
 	// Returns how many tokens you'd get, if you then exited all of `sharesIn` for tokenIn.Denom

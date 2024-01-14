@@ -107,11 +107,11 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 				periodAmount := sdk.Coins{}
 				dust := sdk.Coins{}
 				for _, coin := range vestingAmt {
-					periodCoin := sdk.NewCoin(coin.Denom, coin.Amount.Quo(sdk.NewInt(periodCount)))
+					periodCoin := sdk.NewCoin(coin.Denom, coin.Amount.Quo(sdkmath.NewInt(periodCount)))
 					periodAmount = append(periodAmount, periodCoin)
 					// if there was truncation, determine the extent and add to the last period
-					if !periodCoin.Amount.Mul(sdk.NewInt(periodCount)).Equal(coin.Amount) { // truncation happened!
-						dust = append(dust, sdk.NewCoin(coin.Denom, coin.Amount.Sub(periodCoin.Amount.Mul(sdk.NewInt(periodCount)))))
+					if !periodCoin.Amount.Mul(sdkmath.NewInt(periodCount)).Equal(coin.Amount) { // truncation happened!
+						dust = append(dust, sdk.NewCoin(coin.Denom, coin.Amount.Sub(periodCoin.Amount.Mul(sdkmath.NewInt(periodCount)))))
 					}
 				}
 				for _, period := range vestingPeriods {

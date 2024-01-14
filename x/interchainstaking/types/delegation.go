@@ -151,12 +151,12 @@ func DetermineAllocationsForDelegation(currentAllocations map[string]sdkmath.Int
 
 	if !unequalAllocation.IsZero() {
 		for idx := range deltas {
-			deltas[idx].Amount = sdk.NewDecFromInt(deltas[idx].Amount).QuoInt(sum).MulInt(unequalAllocation).TruncateInt()
+			deltas[idx].Amount = sdkmath.LegacyNewDecFromInt(deltas[idx].Amount).QuoInt(sum).MulInt(unequalAllocation).TruncateInt()
 		}
 	}
 
 	// proportionalAllocation is the portion of input that should be distributed proportionally to intent,  once targets are zero, respecting caps.
-	proportionalAllocation := sdk.NewDecFromInt(input.Sub(unequalAllocation))
+	proportionalAllocation := sdkmath.LegacyNewDecFromInt(input.Sub(unequalAllocation))
 
 	rounds := 0
 	// set maximum number of rounds, in case we get stuck in a weird loop we cannot resolve. If we exit the after this point, the remainder will be treated as dust.
@@ -165,7 +165,7 @@ func DetermineAllocationsForDelegation(currentAllocations map[string]sdkmath.Int
 		// normalise targetAllocations, so maxed caps are handled nicely.
 		targetAllocations = targetAllocations.Normalize().Sort()
 		// initialise roundAllocation
-		roundAllocation := sdk.ZeroInt()
+		roundAllocation := sdkmath.ZeroInt()
 		// for each target
 		for _, targetAllocation := range targetAllocations {
 			// does this target validator have a cap?
@@ -174,7 +174,7 @@ func DetermineAllocationsForDelegation(currentAllocations map[string]sdkmath.Int
 			delta, found := deltas.GetForValoper(targetAllocation.GetValoperAddress())
 			if !found {
 				// no existing delta, create new delta with zero
-				delta = &AllocationDelta{ValoperAddress: targetAllocation.GetValoperAddress(), Amount: sdk.ZeroInt()}
+				delta = &AllocationDelta{ValoperAddress: targetAllocation.GetValoperAddress(), Amount: sdkmath.ZeroInt()}
 				deltas = append(deltas, delta)
 			}
 			// allocate to this validator based on weight
@@ -182,7 +182,7 @@ func DetermineAllocationsForDelegation(currentAllocations map[string]sdkmath.Int
 			// if there is a cap...
 			if hasMax {
 				// belt and braces.
-				if max.LT(sdk.ZeroInt()) {
+				if max.LT(sdkmath.ZeroInt()) {
 					return nil, errors.New("maxCanAllocate underflow")
 				}
 				// determine if cap is breached
@@ -200,7 +200,7 @@ func DetermineAllocationsForDelegation(currentAllocations map[string]sdkmath.Int
 			roundAllocation = roundAllocation.Add(thisAllocation)
 		}
 		// deduct from running total
-		proportionalAllocation = proportionalAllocation.Sub(sdk.NewDecFromInt(roundAllocation))
+		proportionalAllocation = proportionalAllocation.Sub(sdkmath.LegacyNewDecFromInt(roundAllocation))
 		// bail after N rounds
 		rounds++
 	}
@@ -208,7 +208,7 @@ func DetermineAllocationsForDelegation(currentAllocations map[string]sdkmath.Int
 	// dust is the portion of the input that was truncated in previous calculations; add this to the first validator in the list,
 	// once sorted alphabetically. This will always be a small amount, and will count toward the delta calculations on the next run.
 
-	outSum := sdk.ZeroInt()
+	outSum := sdkmath.ZeroInt()
 	outWeights := make(map[string]sdkmath.Int)
 	for _, delta := range deltas {
 		if !delta.Amount.IsZero() {

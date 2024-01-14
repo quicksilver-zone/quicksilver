@@ -65,7 +65,7 @@ func (suite *KeeperTestSuite) TestMakeRequest() {
 		suite.chainB.ChainID,
 		"cosmos.staking.v1beta1.Query/Validators",
 		bz,
-		sdk.NewInt(200),
+		sdkmath.NewInt(200),
 		"",
 		"",
 		0,
@@ -77,7 +77,7 @@ func (suite *KeeperTestSuite) TestMakeRequest() {
 	suite.Equal(suite.path.EndpointB.ConnectionID, query.ConnectionId)
 	suite.Equal(suite.chainB.ChainID, query.ChainId)
 	suite.Equal("cosmos.staking.v1beta1.Query/Validators", query.QueryType)
-	suite.Equal(sdk.NewInt(200), query.Period)
+	suite.Equal(sdkmath.NewInt(200), query.Period)
 	suite.Equal("", query.CallbackId)
 
 	suite.GetSimApp(suite.chainA).InterchainQueryKeeper.MakeRequest(
@@ -86,7 +86,7 @@ func (suite *KeeperTestSuite) TestMakeRequest() {
 		suite.chainB.ChainID,
 		"cosmos.staking.v1beta1.Query/Validators",
 		bz,
-		sdk.NewInt(200),
+		sdkmath.NewInt(200),
 		"",
 		"",
 		0,
@@ -115,7 +115,7 @@ func (suite *KeeperTestSuite) TestSubmitQueryResponse() {
 					suite.chainB.ChainID,
 					"cosmos.staking.v1beta1.Query/Validators",
 					bz,
-					sdk.NewInt(200),
+					sdkmath.NewInt(200),
 					"",
 					0,
 				),
@@ -130,7 +130,7 @@ func (suite *KeeperTestSuite) TestSubmitQueryResponse() {
 					suite.chainB.ChainID,
 					"cosmos.staking.v1beta1.Query/Validators",
 					bz,
-					sdk.NewInt(200),
+					sdkmath.NewInt(200),
 					"",
 					10,
 				),
@@ -145,7 +145,7 @@ func (suite *KeeperTestSuite) TestSubmitQueryResponse() {
 					suite.chainB.ChainID,
 					"cosmos.staking.v1beta1.Query/Validators",
 					bz,
-					sdk.NewInt(-200),
+					sdkmath.NewInt(-200),
 					"",
 					0,
 				),
@@ -160,7 +160,7 @@ func (suite *KeeperTestSuite) TestSubmitQueryResponse() {
 					suite.chainB.ChainID,
 					"cosmos.staking.v1beta1.Query/Validators",
 					bz,
-					sdk.NewInt(100),
+					sdkmath.NewInt(100),
 					"",
 					0,
 				),
@@ -205,7 +205,7 @@ func (suite *KeeperTestSuite) TestDataPoints() {
 		suite.chainA.GetContext(),
 		id,
 		suite.GetSimApp(suite.chainB).AppCodec().MustMarshalJSON(&qvr),
-		sdk.NewInt(suite.chainB.CurrentHeader.Height),
+		sdkmath.NewInt(suite.chainB.CurrentHeader.Height),
 	)
 	suite.NoError(err)
 

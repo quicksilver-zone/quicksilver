@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -19,7 +20,7 @@ func TestWithdrawalRecord_DelayCompletion(t *testing.T) {
 		ChainId:        "test",
 		Delegator:      "test",
 		Recipient:      "test",
-		BurnAmount:     sdk.NewCoin("test", sdk.NewInt(10000)),
+		BurnAmount:     sdk.NewCoin("test", sdkmath.NewInt(10000)),
 		Txhash:         "test",
 		Status:         types.WithdrawStatusSend,
 		CompletionTime: ctx.BlockTime(),

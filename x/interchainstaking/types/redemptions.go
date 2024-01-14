@@ -2,6 +2,7 @@ package types
 
 import (
 	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -10,7 +11,7 @@ func DetermineAllocationsForUndelegation(currentAllocations map[string]math.Int,
 	// this is brooooken
 	input := amount[0].Amount
 	underAllocated, overAllocated := CalculateAllocationDeltas(currentAllocations, lockedAllocations, currentSum /* .Sub(input) */, targetAllocations, make(map[string]math.Int))
-	outSum := sdk.ZeroInt()
+	outSum := sdkmath.ZeroInt()
 	outWeights := make(map[string]math.Int)
 
 	// deltas: +ve is below target; -ve is above target.
@@ -29,11 +30,11 @@ func DetermineAllocationsForUndelegation(currentAllocations map[string]math.Int,
 	if !overAllocationSplit.IsZero() {
 		for idx := range overAllocated {
 			// use Amount+1 in the line below to avoid 1 remaining where truncation leaves 1 remaining - e.g. 1000 => 333/333/333 + 1.
-			outWeights[overAllocated[idx].ValoperAddress] = sdk.NewDecFromInt(overAllocated[idx].Amount.Add(math.OneInt())).Quo(sdk.NewDecFromInt(sum)).Mul(sdk.NewDecFromInt(overAllocationSplit)).TruncateInt()
+			outWeights[overAllocated[idx].ValoperAddress] = sdkmath.LegacyNewDecFromInt(overAllocated[idx].Amount.Add(math.OneInt())).Quo(sdkmath.LegacyNewDecFromInt(sum)).Mul(sdkmath.LegacyNewDecFromInt(overAllocationSplit)).TruncateInt()
 			if outWeights[overAllocated[idx].ValoperAddress].GT(availablePerValidator[overAllocated[idx].ValoperAddress]) {
 				// use up all of overAllocated[idx] and set available to zero.
 				outWeights[overAllocated[idx].ValoperAddress] = availablePerValidator[overAllocated[idx].ValoperAddress]
-				availablePerValidator[overAllocated[idx].ValoperAddress] = sdk.ZeroInt()
+				availablePerValidator[overAllocated[idx].ValoperAddress] = sdkmath.ZeroInt()
 			} else {
 				// or don't, and reduce available as appropriate.
 				availablePerValidator[overAllocated[idx].ValoperAddress] = availablePerValidator[overAllocated[idx].ValoperAddress].Sub(outWeights[overAllocated[idx].ValoperAddress])
@@ -57,7 +58,7 @@ func DetermineAllocationsForUndelegation(currentAllocations map[string]math.Int,
 	deltas.Sort()
 
 	maxValue := deltas.MaxDelta()
-	sum = sdk.ZeroInt()
+	sum = sdkmath.ZeroInt()
 
 	// drop all deltas such that the maximum value is zero, and invert.
 	for idx := range deltas {
@@ -71,15 +72,15 @@ func DetermineAllocationsForUndelegation(currentAllocations map[string]math.Int,
 
 	if !unequalSplit.IsZero() {
 		for idx := range deltas {
-			allocation := sdk.NewDecFromInt(deltas[idx].Amount).Quo(sdk.NewDecFromInt(sum)).Mul(sdk.NewDecFromInt(unequalSplit)).TruncateInt()
+			allocation := sdkmath.LegacyNewDecFromInt(deltas[idx].Amount).Quo(sdkmath.LegacyNewDecFromInt(sum)).Mul(sdkmath.LegacyNewDecFromInt(unequalSplit)).TruncateInt()
 			_, ok := availablePerValidator[deltas[idx].ValoperAddress]
 			if !ok {
-				availablePerValidator[deltas[idx].ValoperAddress] = sdk.ZeroInt()
+				availablePerValidator[deltas[idx].ValoperAddress] = sdkmath.ZeroInt()
 			}
 
 			if allocation.GT(availablePerValidator[deltas[idx].ValoperAddress]) {
 				allocation = availablePerValidator[deltas[idx].ValoperAddress]
-				availablePerValidator[deltas[idx].ValoperAddress] = sdk.ZeroInt()
+				availablePerValidator[deltas[idx].ValoperAddress] = sdkmath.ZeroInt()
 			} else {
 				availablePerValidator[deltas[idx].ValoperAddress] = availablePerValidator[deltas[idx].ValoperAddress].Sub(allocation)
 			}
@@ -87,7 +88,7 @@ func DetermineAllocationsForUndelegation(currentAllocations map[string]math.Int,
 			deltas[idx].Amount = deltas[idx].Amount.Sub(allocation)
 			value, ok := outWeights[deltas[idx].ValoperAddress]
 			if !ok {
-				value = sdk.ZeroInt()
+				value = sdkmath.ZeroInt()
 			}
 
 			outWeights[deltas[idx].ValoperAddress] = value.Add(allocation)
@@ -111,14 +112,14 @@ func DetermineAllocationsForUndelegation(currentAllocations map[string]math.Int,
 
 		origin := input
 		for idx := range weights {
-			perValidatorAmount := sdk.NewDecFromInt(origin).Mul(weights[idx].Weight).TruncateInt()
+			perValidatorAmount := sdkmath.LegacyNewDecFromInt(origin).Mul(weights[idx].Weight).TruncateInt()
 			value, ok := outWeights[weights[idx].ValoperAddress]
 			if !ok {
-				value = sdk.ZeroInt()
+				value = sdkmath.ZeroInt()
 			}
 			if perValidatorAmount.GT(availablePerValidator[weights[idx].ValoperAddress]) {
 				perValidatorAmount = availablePerValidator[weights[idx].ValoperAddress]
-				availablePerValidator[weights[idx].ValoperAddress] = sdk.ZeroInt()
+				availablePerValidator[weights[idx].ValoperAddress] = sdkmath.ZeroInt()
 			} else {
 				availablePerValidator[weights[idx].ValoperAddress] = availablePerValidator[weights[idx].ValoperAddress].Sub(perValidatorAmount)
 			}

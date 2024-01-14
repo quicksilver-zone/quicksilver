@@ -36,7 +36,7 @@ func (k Keeper) NewQuery(
 		QueryType:    queryType,
 		Request:      request,
 		Period:       period,
-		LastHeight:   sdk.ZeroInt(),
+		LastHeight:   sdkmath.ZeroInt(),
 		CallbackId:   callbackID,
 		Ttl:          ttl,
 	}

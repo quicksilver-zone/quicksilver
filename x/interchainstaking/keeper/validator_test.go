@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	sdkmath "cosmossdk.io/math"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -34,11 +35,11 @@ func (suite *KeeperTestSuite) TestStoreGetDeleteValidator() {
 
 		newValidator := types.Validator{
 			ValoperAddress:      validator.String(),
-			CommissionRate:      sdk.NewDec(5.0),
-			DelegatorShares:     sdk.NewDec(1000.0),
-			VotingPower:         sdk.NewInt(1000),
+			CommissionRate:      sdkmath.LegacyNewDec(5.0),
+			DelegatorShares:     sdkmath.LegacyNewDec(1000.0),
+			VotingPower:         sdkmath.NewInt(1000),
 			Status:              stakingtypes.BondStatusBonded,
-			Score:               sdk.NewDec(0),
+			Score:               sdkmath.LegacyNewDec(0),
 			LiquidShares:        sdk.ZeroDec(),
 			ValidatorBondShares: sdk.ZeroDec(),
 		}
@@ -119,11 +120,11 @@ func (suite *KeeperTestSuite) TestGetActiveValidators() {
 
 		newValidator1 := types.Validator{
 			ValoperAddress:  validator1.String(),
-			CommissionRate:  sdk.NewDec(5.0),
-			DelegatorShares: sdk.NewDec(1000.0),
-			VotingPower:     sdk.NewInt(1000),
+			CommissionRate:  sdkmath.LegacyNewDec(5.0),
+			DelegatorShares: sdkmath.LegacyNewDec(1000.0),
+			VotingPower:     sdkmath.NewInt(1000),
 			Status:          stakingtypes.BondStatusBonded,
-			Score:           sdk.NewDec(0),
+			Score:           sdkmath.LegacyNewDec(0),
 		}
 		newValidator2 := newValidator1
 		newValidator2.ValoperAddress = validator2.String()

@@ -52,7 +52,7 @@ func RandPositiveInt(r *rand.Rand, max sdkmath.Int) (sdkmath.Int, error) {
 
 	max = max.Sub(sdk.OneInt())
 
-	return sdk.NewIntFromBigInt(new(big.Int).Rand(r, max.BigInt())).Add(sdkmath.OneInt()), nil
+	return sdkmath.NewIntFromBigInt(new(big.Int).Rand(r, max.BigInt())).Add(sdkmath.OneInt()), nil
 }
 
 // RandomAmount generates a random amount.
@@ -70,7 +70,7 @@ func RandomAmount(r *rand.Rand, max sdkmath.Int) sdkmath.Int {
 		randInt = big.NewInt(0).Rand(r, max.BigInt()) // up to max - 1
 	}
 
-	return sdk.NewIntFromBigInt(randInt)
+	return sdkmath.NewIntFromBigInt(randInt)
 }
 
 // RandomDecAmount generates a random decimal amount
@@ -80,14 +80,14 @@ func RandomDecAmount(r *rand.Rand, max sdk.Dec) sdk.Dec {
 
 	switch r.Intn(10) {
 	case 0:
-		return sdk.NewDecFromBigIntWithPrec(randInt, sdk.Precision)
+		return sdkmath.LegacyNewDecFromBigIntWithPrec(randInt, sdk.Precision)
 	case 1:
 		randInt = max.BigInt() // the underlying big int with all precision bits.
 	default: // NOTE: there are 10 total cases.
 		randInt = big.NewInt(0).Rand(r, max.BigInt())
 	}
 
-	return sdk.NewDecFromBigIntWithPrec(randInt, sdk.Precision)
+	return sdkmath.LegacyNewDecFromBigIntWithPrec(randInt, sdk.Precision)
 }
 
 // RandTimestamp generates a random timestamp.

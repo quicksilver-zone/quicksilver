@@ -32,14 +32,14 @@ func TestCalcExitPool(t *testing.T) {
 	emptyContext := sdk.Context{}
 
 	twoStablePoolAssets := sdk.NewCoins(
-		sdk.NewInt64Coin("foo", 1000000000),
-		sdk.NewInt64Coin("bar", 1000000000),
+		sdkmath.NewInt64Coin("foo", 1000000000),
+		sdkmath.NewInt64Coin("bar", 1000000000),
 	)
 
 	threeBalancerPoolAssets := []balancer.PoolAsset{
-		{Token: sdk.NewInt64Coin("foo", 2000000000), Weight: sdk.NewIntFromUint64(5)},
-		{Token: sdk.NewInt64Coin("bar", 3000000000), Weight: sdk.NewIntFromUint64(5)},
-		{Token: sdk.NewInt64Coin("baz", 4000000000), Weight: sdk.NewIntFromUint64(5)},
+		{Token: sdkmath.NewInt64Coin("foo", 2000000000), Weight: sdkmath.NewIntFromUint64(5)},
+		{Token: sdkmath.NewInt64Coin("bar", 3000000000), Weight: sdkmath.NewIntFromUint64(5)},
+		{Token: sdkmath.NewInt64Coin("baz", 4000000000), Weight: sdkmath.NewIntFromUint64(5)},
 	}
 
 	// create these pools used for testing
@@ -106,7 +106,7 @@ func TestCalcExitPool(t *testing.T) {
 		{
 			name:          "three-asset pool, valid exiting shares",
 			pool:          &threeAssetPool,
-			exitingShares: sdk.NewIntFromUint64(3000000000000),
+			exitingShares: sdkmath.NewIntFromUint64(3000000000000),
 			expError:      false,
 		},
 		{
@@ -118,7 +118,7 @@ func TestCalcExitPool(t *testing.T) {
 		{
 			name:          "three-asset pool with exit fee, valid exiting shares",
 			pool:          &threeAssetPoolWithExitFee,
-			exitingShares: sdk.NewIntFromUint64(7000000000000),
+			exitingShares: sdkmath.NewIntFromUint64(7000000000000),
 			expError:      false,
 		},
 	}
@@ -143,8 +143,8 @@ func TestMaximalExactRatioJoin(t *testing.T) {
 	emptyContext := sdk.Context{}
 
 	balancerPoolAsset := []balancer.PoolAsset{
-		{Token: sdk.NewInt64Coin("foo", 100), Weight: sdk.NewIntFromUint64(5)},
-		{Token: sdk.NewInt64Coin("bar", 100), Weight: sdk.NewIntFromUint64(5)},
+		{Token: sdkmath.NewInt64Coin("foo", 100), Weight: sdkmath.NewIntFromUint64(5)},
+		{Token: sdkmath.NewInt64Coin("bar", 100), Weight: sdkmath.NewIntFromUint64(5)},
 	}
 
 	tests := []struct {
@@ -167,8 +167,8 @@ func TestMaximalExactRatioJoin(t *testing.T) {
 				require.NoError(t, err)
 				return &balancerPool
 			},
-			tokensIn:    sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(10)), sdk.NewCoin("bar", sdk.NewInt(10))),
-			expNumShare: sdk.NewIntFromUint64(10000000000000000000),
+			tokensIn:    sdk.NewCoins(sdk.NewCoin("foo", sdkmath.NewInt(10)), sdk.NewCoin("bar", sdkmath.NewInt(10))),
+			expNumShare: sdkmath.NewIntFromUint64(10000000000000000000),
 			expRemCoin:  sdk.Coins{},
 		},
 		{
@@ -184,9 +184,9 @@ func TestMaximalExactRatioJoin(t *testing.T) {
 				require.NoError(t, err)
 				return &balancerPool
 			},
-			tokensIn:    sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(10)), sdk.NewCoin("bar", sdk.NewInt(11))),
-			expNumShare: sdk.NewIntFromUint64(10000000000000000000),
-			expRemCoin:  sdk.NewCoins(sdk.NewCoin("bar", sdk.NewIntFromUint64(1))),
+			tokensIn:    sdk.NewCoins(sdk.NewCoin("foo", sdkmath.NewInt(10)), sdk.NewCoin("bar", sdkmath.NewInt(11))),
+			expNumShare: sdkmath.NewIntFromUint64(10000000000000000000),
+			expRemCoin:  sdk.NewCoins(sdk.NewCoin("bar", sdkmath.NewIntFromUint64(1))),
 		},
 	}
 

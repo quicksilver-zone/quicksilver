@@ -178,7 +178,7 @@ func (s *StargateTestSuite) TestConvertProtoToJsonMarshal() {
 			originalResponse:    "0a090a036261721202333012050a03666f6f",
 			protoResponseStruct: &banktypes.QueryAllBalancesResponse{},
 			expectedProtoResponse: &banktypes.QueryAllBalancesResponse{
-				Balances: sdk.NewCoins(sdk.NewCoin("bar", sdk.NewInt(30))),
+				Balances: sdk.NewCoins(sdk.NewCoin("bar", sdkmath.NewInt(30))),
 				Pagination: &query.PageResponse{
 					NextKey: []byte("foo"),
 				},
@@ -267,7 +267,7 @@ func (s *StargateTestSuite) TestDeterministicJsonMarshal() {
 			&banktypes.QueryAllBalancesResponse{},
 			func() proto.Message {
 				return &banktypes.QueryAllBalancesResponse{
-					Balances: sdk.NewCoins(sdk.NewCoin("bar", sdk.NewInt(30))),
+					Balances: sdk.NewCoins(sdk.NewCoin("bar", sdkmath.NewInt(30))),
 					Pagination: &query.PageResponse{
 						NextKey: []byte("foo"),
 					},

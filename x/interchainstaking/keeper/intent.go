@@ -114,7 +114,7 @@ func (k *Keeper) AggregateDelegatorIntents(ctx sdk.Context, zone *types.Zone) er
 			return false
 		})
 
-		valIntents := delIntent.Ordinalize(sdk.NewDecFromInt(balance.Amount)).Intents
+		valIntents := delIntent.Ordinalize(sdkmath.LegacyNewDecFromInt(balance.Amount)).Intents
 		k.Logger(ctx).Debug(
 			"intents - ordinalized",
 			"user", delIntent.Delegator,
@@ -142,7 +142,7 @@ func (k *Keeper) AggregateDelegatorIntents(ctx sdk.Context, zone *types.Zone) er
 	// power, in the event claims cannot be made properly.
 	supply := k.BankKeeper.GetSupply(ctx, zone.LocalDenom)
 	defaults := k.DefaultAggregateIntents(ctx, zone.ChainId)
-	nonVotingSupply := sdk.NewDecFromInt(supply.Amount).Sub(ordinalizedIntentSum)
+	nonVotingSupply := sdkmath.LegacyNewDecFromInt(supply.Amount).Sub(ordinalizedIntentSum)
 	di := types.DelegatorIntent{Delegator: "", Intents: defaults}
 	di = di.Ordinalize(nonVotingSupply)
 	defaults = di.Intents
@@ -208,7 +208,7 @@ func (k *Keeper) UpdateDelegatorIntent(ctx sdk.Context, delegator sdk.AccAddress
 	})
 
 	// inAmount is ordinal with respect to the redemption rate, so we must scale
-	baseBalance := zone.RedemptionRate.Mul(sdk.NewDecFromInt(claimAmt))
+	baseBalance := zone.RedemptionRate.Mul(sdkmath.LegacyNewDecFromInt(claimAmt))
 	if baseBalance.IsZero() {
 		return nil
 	}

@@ -49,15 +49,15 @@ func NewParams(
 func DefaultParams() Params {
 	return NewParams(
 		sdk.DefaultBondDenom,
-		sdk.NewDec(200000000/122),
+		sdkmath.LegacyNewDec(200000000/122),
 		"day",
 		365,
-		sdk.NewDecWithPrec(75, 2),
+		sdkmath.LegacyNewDecWithPrec(75, 2),
 		DistributionProportions{
-			Staking:              sdk.NewDecWithPrec(3, 1), // 0.3
-			PoolIncentives:       sdk.NewDecWithPrec(3, 1), // 0.3
-			ParticipationRewards: sdk.NewDecWithPrec(3, 1), // 0.3
-			CommunityPool:        sdk.NewDecWithPrec(1, 1), // 0.1
+			Staking:              sdkmath.LegacyNewDecWithPrec(3, 1), // 0.3
+			PoolIncentives:       sdkmath.LegacyNewDecWithPrec(3, 1), // 0.3
+			ParticipationRewards: sdkmath.LegacyNewDecWithPrec(3, 1), // 0.3
+			CommunityPool:        sdkmath.LegacyNewDecWithPrec(1, 1), // 0.1
 		},
 		0,
 	)

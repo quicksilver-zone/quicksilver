@@ -235,7 +235,7 @@ func (k *Keeper) UpdateWithdrawalRecordsForSlash(ctx sdk.Context, zone *types.Zo
 			if d.Valoper != valoper {
 				continue
 			}
-			distAmount := sdk.NewDec(int64(d.Amount))
+			distAmount := sdkmath.LegacyNewDec(int64(d.Amount))
 			if distAmount.IsNegative() {
 				err = fmt.Errorf("distAmount cannot be negative; suspected overflow")
 				return true

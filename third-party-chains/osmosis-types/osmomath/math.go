@@ -8,7 +8,7 @@ import (
 
 // Don't EVER change after initializing
 // TODO: Analyze choice here.
-var powPrecision, _ = sdk.NewDecFromStr("0.00000001")
+var powPrecision, _ = sdkmath.LegacyNewDecFromStr("0.00000001")
 
 // Singletons.
 // nolint: deadcode, unused
@@ -138,7 +138,7 @@ func PowApprox(base sdk.Dec, exp sdk.Dec, precision sdk.Dec) sdk.Dec {
 	negative := false
 
 	a := exp.Clone()
-	bigK := sdk.NewDec(0)
+	bigK := sdkmath.LegacyNewDec(0)
 	// TODO: Document this computation via taylor expansion
 	for i := int64(1); term.GTE(precision); i++ {
 		// At each iteration, we need two values, i and i-1.
@@ -146,7 +146,7 @@ func PowApprox(base sdk.Dec, exp sdk.Dec, precision sdk.Dec) sdk.Dec {
 		// On this line, bigK == i-1.
 		c, cneg := AbsDifferenceWithSign(a, bigK)
 		// On this line, bigK == i.
-		bigK.Set(sdk.NewDec(i)) // TODO: O(n) bigint allocation happens
+		bigK.Set(sdkmath.LegacyNewDec(i)) // TODO: O(n) bigint allocation happens
 		term.MulMut(c).MulMut(x).QuoMut(bigK)
 
 		// a is mutated on absDifferenceWithSign, reset

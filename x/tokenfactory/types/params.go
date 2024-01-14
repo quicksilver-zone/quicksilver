@@ -54,6 +54,6 @@ func validateDenomCreationFee(i interface{}) error {
 
 func DefaultParams() Params {
 	return NewParams(
-		sdk.NewCoins(sdk.NewInt64Coin(BaseCoinUnit, 10_000_000)),
+		sdk.NewCoins(sdkmath.NewInt64Coin(BaseCoinUnit, 10_000_000)),
 	)
 }

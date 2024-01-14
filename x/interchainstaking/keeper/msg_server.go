@@ -68,7 +68,7 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 
 	// get min of LastRedemptionRate (N-1) and RedemptionRate (N)
 	rate := sdk.MinDec(zone.LastRedemptionRate, zone.RedemptionRate)
-	nativeTokens := sdk.NewDecFromInt(msg.Value.Amount).Mul(rate).TruncateInt()
+	nativeTokens := sdkmath.LegacyNewDecFromInt(msg.Value.Amount).Mul(rate).TruncateInt()
 	outTokens := sdk.NewCoin(zone.BaseDenom, nativeTokens)
 	k.Logger(ctx).Info("tokens to distribute", "amount", outTokens)
 

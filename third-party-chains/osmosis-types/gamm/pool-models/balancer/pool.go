@@ -49,7 +49,7 @@ func NewBalancerPool(poolId uint64, balancerPoolParams PoolParams, assets []Pool
 		Address:            poolAddr.String(),
 		Id:                 poolId,
 		PoolParams:         PoolParams{},
-		TotalWeight:        sdk.ZeroInt(),
+		TotalWeight:        sdkmath.ZeroInt(),
 		TotalShares:        sdk.NewCoin(gamm.GetPoolShareDenom(poolId), gamm.InitPoolSharesSupply),
 		PoolAssets:         nil,
 		FuturePoolGovernor: futureGovernor,
@@ -139,7 +139,7 @@ func (p *Pool) SetInitialPoolAssets(PoolAssets []PoolAsset) error {
 
 	// TODO: Refactor this into PoolAsset.validate()
 	for _, asset := range PoolAssets {
-		if asset.Token.Amount.LTE(sdk.ZeroInt()) {
+		if asset.Token.Amount.LTE(sdkmath.ZeroInt()) {
 			return fmt.Errorf("can't add the zero or negative balance of token")
 		}
 
@@ -179,7 +179,7 @@ func (p *Pool) setInitialPoolParams(params PoolParams, sortedAssets []PoolAsset,
 		for i, v := range sortedAssets {
 			initialWeights[i] = PoolAsset{
 				Weight: v.Weight,
-				Token:  sdk.Coin{Denom: v.Token.Denom, Amount: sdk.ZeroInt()},
+				Token:  sdk.Coin{Denom: v.Token.Denom, Amount: sdkmath.ZeroInt()},
 			}
 		}
 		params.SmoothWeightChangeParams.InitialPoolWeights = initialWeights
@@ -292,7 +292,7 @@ func (p *Pool) UpdatePoolAssetBalance(coin sdk.Coin) error {
 		return err
 	}
 
-	if coin.Amount.LTE(sdk.ZeroInt()) {
+	if coin.Amount.LTE(sdkmath.ZeroInt()) {
 		return fmt.Errorf("can't set the pool's balance of a token to be zero or negative")
 	}
 
@@ -371,7 +371,7 @@ func (p *Pool) updateAllWeights(newWeights []PoolAsset) {
 	if len(p.PoolAssets) != len(newWeights) {
 		panic("updateAllWeights called with invalid input, len(newWeights) != len(existingWeights)")
 	}
-	totalWeight := sdk.ZeroInt()
+	totalWeight := sdkmath.ZeroInt()
 	for i, asset := range p.PoolAssets {
 		if asset.Token.Denom != newWeights[i].Token.Denom {
 			panic(fmt.Sprintf("updateAllWeights called with invalid input, "+
@@ -431,7 +431,7 @@ func (p *Pool) PokePool(blockTime time.Time) {
 		// case 3: t > start_time + duration: w(t) = target_pool_weights
 
 		shiftedBlockTime := blockTime.Sub(params.StartTime).Milliseconds()
-		percentDurationElapsed := sdk.NewDec(shiftedBlockTime).QuoInt64(params.Duration.Milliseconds())
+		percentDurationElapsed := sdkmath.LegacyNewDec(shiftedBlockTime).QuoInt64(params.Duration.Milliseconds())
 
 		// If the duration elapsed is equal to the total time, or a rounding error
 		// makes it seem like it is, just set to target weight.
@@ -488,8 +488,8 @@ func (p Pool) CalcOutAmtGivenIn(
 		return sdk.Coin{}, err
 	}
 
-	tokenAmountInAfterFee := sdk.NewDecFromInt(tokenIn.Amount).Mul(sdk.OneDec().Sub(swapFee))
-	poolTokenInBalance := sdk.NewDecFromInt(poolAssetIn.Token.Amount)
+	tokenAmountInAfterFee := sdkmath.LegacyNewDecFromInt(tokenIn.Amount).Mul(sdk.OneDec().Sub(swapFee))
+	poolTokenInBalance := sdkmath.LegacyNewDecFromInt(poolAssetIn.Token.Amount)
 	poolPostSwapInBalance := poolTokenInBalance.Add(tokenAmountInAfterFee)
 
 	// deduct swapfee on the tokensIn
@@ -497,9 +497,9 @@ func (p Pool) CalcOutAmtGivenIn(
 	tokenAmountOut := solveConstantFunctionInvariant(
 		poolTokenInBalance,
 		poolPostSwapInBalance,
-		sdk.NewDecFromInt(poolAssetIn.Weight),
-		sdk.NewDecFromInt(poolAssetOut.Token.Amount),
-		sdk.NewDecFromInt(poolAssetOut.Weight),
+		sdkmath.LegacyNewDecFromInt(poolAssetIn.Weight),
+		sdkmath.LegacyNewDecFromInt(poolAssetOut.Token.Amount),
+		sdkmath.LegacyNewDecFromInt(poolAssetOut.Weight),
 	)
 
 	// We ignore the decimal component, as we round down the token amount out.
@@ -544,12 +544,12 @@ func (p Pool) CalcInAmtGivenOut(
 	}
 
 	// delta balanceOut is positive(tokens inside the pool decreases)
-	poolTokenOutBalance := sdk.NewDecFromInt(poolAssetOut.Token.Amount)
-	poolPostSwapOutBalance := poolTokenOutBalance.Sub(sdk.NewDecFromInt(tokenOut.Amount))
+	poolTokenOutBalance := sdkmath.LegacyNewDecFromInt(poolAssetOut.Token.Amount)
+	poolPostSwapOutBalance := poolTokenOutBalance.Sub(sdkmath.LegacyNewDecFromInt(tokenOut.Amount))
 	// (x_0)(y_0) = (x_0 + in)(y_0 - out)
 	tokenAmountIn := solveConstantFunctionInvariant(
-		poolTokenOutBalance, poolPostSwapOutBalance, sdk.NewDecFromInt(poolAssetOut.Weight),
-		sdk.NewDecFromInt(poolAssetIn.Token.Amount), sdk.NewDecFromInt(poolAssetIn.Weight)).Neg()
+		poolTokenOutBalance, poolPostSwapOutBalance, sdkmath.LegacyNewDecFromInt(poolAssetOut.Weight),
+		sdkmath.LegacyNewDecFromInt(poolAssetIn.Token.Amount), sdkmath.LegacyNewDecFromInt(poolAssetIn.Weight)).Neg()
 
 	// We deduct a swap fee on the input asset. The swap happens by following the invariant curve on the input * (1 - swap fee)
 	// and then the swap fee is added to the pool.
@@ -620,8 +620,8 @@ func (p Pool) SpotPrice(ctx sdk.Context, baseAsset, quoteAsset string) (spotPric
 
 	// spot_price = (Base_supply / Weight_base) / (Quote_supply / Weight_quote)
 	// spot_price = (weight_quote / weight_base) * (base_supply / quote_supply)
-	invWeightRatio := sdk.NewDecFromInt(quote.Weight).Quo(sdk.NewDecFromInt(base.Weight))
-	supplyRatio := sdk.NewDecFromInt(base.Token.Amount).Quo(sdk.NewDecFromInt(quote.Token.Amount))
+	invWeightRatio := sdkmath.LegacyNewDecFromInt(quote.Weight).Quo(sdkmath.LegacyNewDecFromInt(base.Weight))
+	supplyRatio := sdkmath.LegacyNewDecFromInt(base.Token.Amount).Quo(sdkmath.LegacyNewDecFromInt(quote.Token.Amount))
 	spotPrice = supplyRatio.Mul(invWeightRatio)
 
 	return spotPrice, err
@@ -631,19 +631,19 @@ func (p Pool) SpotPrice(ctx sdk.Context, baseAsset, quoteAsset string) (spotPric
 func (p *Pool) calcSingleAssetJoin(tokenIn sdk.Coin, swapFee sdk.Dec, tokenInPoolAsset PoolAsset, totalShares sdkmath.Int) (numShares sdkmath.Int, err error) {
 	_, err = p.GetPoolAsset(tokenIn.Denom)
 	if err != nil {
-		return sdk.ZeroInt(), err
+		return sdkmath.ZeroInt(), err
 	}
 
 	totalWeight := p.GetTotalWeight()
 	if totalWeight.IsZero() {
-		return sdk.ZeroInt(), errors.New("pool misconfigured, total weight = 0")
+		return sdkmath.ZeroInt(), errors.New("pool misconfigured, total weight = 0")
 	}
-	normalizedWeight := sdk.NewDecFromInt(tokenInPoolAsset.Weight).Quo(sdk.NewDecFromInt(totalWeight))
+	normalizedWeight := sdkmath.LegacyNewDecFromInt(tokenInPoolAsset.Weight).Quo(sdkmath.LegacyNewDecFromInt(totalWeight))
 	return calcPoolSharesOutGivenSingleAssetIn(
-		sdk.NewDecFromInt(tokenInPoolAsset.Token.Amount),
+		sdkmath.LegacyNewDecFromInt(tokenInPoolAsset.Token.Amount),
 		normalizedWeight,
-		sdk.NewDecFromInt(totalShares),
-		sdk.NewDecFromInt(tokenIn.Amount),
+		sdkmath.LegacyNewDecFromInt(totalShares),
+		sdkmath.LegacyNewDecFromInt(tokenIn.Amount),
 		swapFee,
 	).TruncateInt(), nil
 }
@@ -698,13 +698,13 @@ func (p *Pool) CalcJoinPoolShares(ctx sdk.Context, tokensIn sdk.Coins, swapFee s
 	// 1) get all 'pool assets' (aka current pool liquidity + balancer weight)
 	poolAssetsByDenom, err := getPoolAssetsByDenom(p.GetAllPoolAssets())
 	if err != nil {
-		return sdk.ZeroInt(), sdk.NewCoins(), err
+		return sdkmath.ZeroInt(), sdk.NewCoins(), err
 	}
 
 	// check to make sure the input denom exists in the pool
 	err = ensureDenomInPool(poolAssetsByDenom, tokensIn)
 	if err != nil {
-		return sdk.ZeroInt(), sdk.NewCoins(), err
+		return sdkmath.ZeroInt(), sdk.NewCoins(), err
 	}
 
 	totalShares := p.GetTotalShares()
@@ -712,13 +712,13 @@ func (p *Pool) CalcJoinPoolShares(ctx sdk.Context, tokensIn sdk.Coins, swapFee s
 		// 2) Single token provided, so do single asset join and exit.
 		numShares, err = p.calcSingleAssetJoin(tokensIn[0], swapFee, poolAssetsByDenom[tokensIn[0].Denom], totalShares)
 		if err != nil {
-			return sdk.ZeroInt(), sdk.NewCoins(), err
+			return sdkmath.ZeroInt(), sdk.NewCoins(), err
 		}
 		// we join all the tokens.
 		tokensJoined = tokensIn
 		return numShares, tokensJoined, nil
 	} else if tokensIn.Len() != p.NumAssets() {
-		return sdk.ZeroInt(), sdk.NewCoins(), errors.New("balancer pool only supports LP'ing with one asset or all assets in pool")
+		return sdkmath.ZeroInt(), sdk.NewCoins(), errors.New("balancer pool only supports LP'ing with one asset or all assets in pool")
 	}
 
 	// 3) JoinPoolNoSwap with as many tokens as we can. (What is in perfect ratio)
@@ -727,12 +727,12 @@ func (p *Pool) CalcJoinPoolShares(ctx sdk.Context, tokensIn sdk.Coins, swapFee s
 	// if remaining coins is empty, logic is done (we joined all tokensIn)
 	numShares, tokensJoined, err = p.CalcJoinPoolNoSwapShares(ctx, tokensIn, swapFee)
 	if err != nil {
-		return sdk.ZeroInt(), sdk.NewCoins(), err
+		return sdkmath.ZeroInt(), sdk.NewCoins(), err
 	}
 
 	// safely ends the calculation if all input tokens are successfully LP'd
 	if tokensJoined.IsAnyGT(tokensIn) {
-		return sdk.ZeroInt(), sdk.NewCoins(), errors.New("an error has occurred, more coins joined than tokens passed in")
+		return sdkmath.ZeroInt(), sdk.NewCoins(), errors.New("an error has occurred, more coins joined than tokens passed in")
 	} else if tokensJoined.IsEqual(tokensIn) {
 		return numShares, tokensJoined, nil
 	}
@@ -743,7 +743,7 @@ func (p *Pool) CalcJoinPoolShares(ctx sdk.Context, tokensIn sdk.Coins, swapFee s
 	// * We add the joined coins to our "current pool liquidity" object (poolAssetsByDenom)
 	// * We increment a variable for our "newTotalShares" to add in the shares that've been added.
 	if err := updateIntermediaryPoolAssetsLiquidity(tokensJoined, poolAssetsByDenom); err != nil {
-		return sdk.ZeroInt(), sdk.NewCoins(), err
+		return sdkmath.ZeroInt(), sdk.NewCoins(), err
 	}
 	newTotalShares := totalShares.Add(numShares)
 
@@ -751,14 +751,14 @@ func (p *Pool) CalcJoinPoolShares(ctx sdk.Context, tokensIn sdk.Coins, swapFee s
 	remainingTokensIn := tokensIn.Sub(tokensJoined...)
 	newNumSharesFromRemaining, newLiquidityFromRemaining, err := p.calcJoinSingleAssetTokensIn(remainingTokensIn, newTotalShares, poolAssetsByDenom, swapFee)
 	if err != nil {
-		return sdk.ZeroInt(), sdk.NewCoins(), err
+		return sdkmath.ZeroInt(), sdk.NewCoins(), err
 	}
 	// update total amount LP'd variable, and total new LP shares variable, run safety check, and return
 	numShares = numShares.Add(newNumSharesFromRemaining)
 	tokensJoined = tokensJoined.Add(newLiquidityFromRemaining...)
 
 	if tokensJoined.IsAnyGT(tokensIn) {
-		return sdk.ZeroInt(), sdk.NewCoins(), errors.New("an error has occurred, more coins joined than token In")
+		return sdkmath.ZeroInt(), sdk.NewCoins(), errors.New("an error has occurred, more coins joined than token In")
 	}
 
 	return numShares, tokensJoined, nil
@@ -777,17 +777,17 @@ func (p *Pool) CalcJoinPoolNoSwapShares(ctx sdk.Context, tokensIn sdk.Coins, swa
 	// get all 'pool assets' (aka current pool liquidity + balancer weight)
 	poolAssetsByDenom, err := getPoolAssetsByDenom(p.GetAllPoolAssets())
 	if err != nil {
-		return sdk.ZeroInt(), sdk.NewCoins(), err
+		return sdkmath.ZeroInt(), sdk.NewCoins(), err
 	}
 
 	err = ensureDenomInPool(poolAssetsByDenom, tokensIn)
 	if err != nil {
-		return sdk.ZeroInt(), sdk.NewCoins(), err
+		return sdkmath.ZeroInt(), sdk.NewCoins(), err
 	}
 
 	// ensure that there aren't too many or too few assets in `tokensIn`
 	if tokensIn.Len() != p.NumAssets() {
-		return sdk.ZeroInt(), sdk.NewCoins(), errors.New("no-swap joins require LP'ing with all assets in pool")
+		return sdkmath.ZeroInt(), sdk.NewCoins(), errors.New("no-swap joins require LP'ing with all assets in pool")
 	}
 
 	// execute a no-swap join with as many tokens as possible given a perfect ratio:
@@ -795,13 +795,13 @@ func (p *Pool) CalcJoinPoolNoSwapShares(ctx sdk.Context, tokensIn sdk.Coins, swa
 	// * remainingTokensIn is how many coins we have left to join that have not already been used.
 	numShares, remainingTokensIn, err := cfmm_common.MaximalExactRatioJoin(p, ctx, tokensIn)
 	if err != nil {
-		return sdk.ZeroInt(), sdk.NewCoins(), err
+		return sdkmath.ZeroInt(), sdk.NewCoins(), err
 	}
 
 	// ensure that no more tokens have been joined than is possible with the given `tokensIn`
 	tokensJoined = tokensIn.Sub(remainingTokensIn...)
 	if tokensJoined.IsAnyGT(tokensIn) {
-		return sdk.ZeroInt(), sdk.NewCoins(), errors.New("an error has occurred, more coins joined than token In")
+		return sdkmath.ZeroInt(), sdk.NewCoins(), errors.New("an error has occurred, more coins joined than token In")
 	}
 
 	return numShares, tokensJoined, nil
@@ -816,12 +816,12 @@ func (p *Pool) CalcJoinPoolNoSwapShares(ctx sdk.Context, tokensIn sdk.Coins, swa
 // by mimicking individually single asset joining each.
 // or error if fails to calculate join for any of the tokensIn.
 func (p *Pool) calcJoinSingleAssetTokensIn(tokensIn sdk.Coins, totalShares sdkmath.Int, poolAssetsByDenom map[string]PoolAsset, swapFee sdk.Dec) (sdkmath.Int, sdk.Coins, error) {
-	totalNewShares := sdk.ZeroInt()
+	totalNewShares := sdkmath.ZeroInt()
 	totalNewLiquidity := sdk.NewCoins()
 	for _, coin := range tokensIn {
 		newShares, err := p.calcSingleAssetJoin(coin, swapFee, poolAssetsByDenom[coin.Denom], totalShares.Add(totalNewShares))
 		if err != nil {
-			return sdk.ZeroInt(), sdk.Coins{}, err
+			return sdkmath.ZeroInt(), sdk.Coins{}, err
 		}
 
 		totalNewLiquidity = totalNewLiquidity.Add(coin)
@@ -872,15 +872,15 @@ func (p *Pool) CalcTokenInShareAmountOut(
 		return sdkmath.Int{}, err
 	}
 
-	normalizedWeight := sdk.NewDecFromInt(poolAssetIn.Weight).Quo(sdk.NewDecFromInt(p.GetTotalWeight()))
+	normalizedWeight := sdkmath.LegacyNewDecFromInt(poolAssetIn.Weight).Quo(sdkmath.LegacyNewDecFromInt(p.GetTotalWeight()))
 
 	// We round up tokenInAmount, as this is whats charged for the swap, for the precise amount out.
 	// Otherwise, the pool would under-charge by this rounding error.
 	tokenInAmount = calcSingleAssetInGivenPoolSharesOut(
-		sdk.NewDecFromInt(poolAssetIn.Token.Amount),
+		sdkmath.LegacyNewDecFromInt(poolAssetIn.Token.Amount),
 		normalizedWeight,
-		sdk.NewDecFromInt(p.GetTotalShares()),
-		sdk.NewDecFromInt(shareOutAmount),
+		sdkmath.LegacyNewDecFromInt(p.GetTotalShares()),
+		sdkmath.LegacyNewDecFromInt(shareOutAmount),
 		swapFee,
 	).Ceil().TruncateInt()
 
@@ -901,13 +901,13 @@ func (p *Pool) JoinPoolTokenInMaxShareAmountOut(
 		return sdkmath.Int{}, err
 	}
 
-	normalizedWeight := sdk.NewDecFromInt(poolAssetIn.Weight).Quo(sdk.NewDecFromInt(p.GetTotalWeight()))
+	normalizedWeight := sdkmath.LegacyNewDecFromInt(poolAssetIn.Weight).Quo(sdkmath.LegacyNewDecFromInt(p.GetTotalWeight()))
 
 	tokenInAmount = calcSingleAssetInGivenPoolSharesOut(
-		sdk.NewDecFromInt(poolAssetIn.Token.Amount),
+		sdkmath.LegacyNewDecFromInt(poolAssetIn.Token.Amount),
 		normalizedWeight,
-		sdk.NewDecFromInt(p.GetTotalShares()),
-		sdk.NewDecFromInt(shareOutAmount),
+		sdkmath.LegacyNewDecFromInt(p.GetTotalShares()),
+		sdkmath.LegacyNewDecFromInt(shareOutAmount),
 		p.GetSwapFee(ctx),
 	).TruncateInt()
 
@@ -935,10 +935,10 @@ func (p *Pool) ExitSwapExactAmountOut(
 	}
 
 	sharesIn := calcPoolSharesInGivenSingleAssetOut(
-		sdk.NewDecFromInt(poolAssetOut.Token.Amount),
-		sdk.NewDecFromInt(poolAssetOut.Weight).Quo(sdk.NewDecFromInt(p.TotalWeight)),
-		sdk.NewDecFromInt(p.GetTotalShares()),
-		sdk.NewDecFromInt(tokenOut.Amount),
+		sdkmath.LegacyNewDecFromInt(poolAssetOut.Token.Amount),
+		sdkmath.LegacyNewDecFromInt(poolAssetOut.Weight).Quo(sdkmath.LegacyNewDecFromInt(p.TotalWeight)),
+		sdkmath.LegacyNewDecFromInt(p.GetTotalShares()),
+		sdkmath.LegacyNewDecFromInt(tokenOut.Amount),
 		p.GetSwapFee(ctx),
 		p.GetExitFee(ctx),
 	).TruncateInt()

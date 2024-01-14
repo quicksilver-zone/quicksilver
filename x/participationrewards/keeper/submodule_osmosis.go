@@ -62,7 +62,7 @@ func (m *OsmosisModule) Hooks(ctx sdk.Context, k *Keeper) {
 			connectionData.ChainID,
 			"store/gamm/key",
 			m.GetKeyPrefixPools(pool.PoolID),
-			sdk.NewInt(-1),
+			sdkmath.NewInt(-1),
 			types.ModuleName,
 			OsmosisPoolUpdateCallbackID,
 			0,

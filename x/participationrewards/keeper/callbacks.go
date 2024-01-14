@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	sdkmath "cosmossdk.io/math"
 	tmservice "github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
@@ -170,7 +171,7 @@ func OsmosisPoolUpdateCallback(ctx sdk.Context, k *Keeper, response []byte, quer
 }
 
 func UmeeReservesUpdateCallback(ctx sdk.Context, k *Keeper, response []byte, query icqtypes.Query) error {
-	reserveAmount := sdk.ZeroInt()
+	reserveAmount := sdkmath.ZeroInt()
 	if err := reserveAmount.Unmarshal(response); err != nil {
 		return err
 	}
@@ -281,7 +282,7 @@ func UmeeInterestScalarUpdateCallback(ctx sdk.Context, k *Keeper, response []byt
 }
 
 func UmeeUTokenSupplyUpdateCallback(ctx sdk.Context, k *Keeper, response []byte, query icqtypes.Query) error {
-	supplyAmount := sdk.ZeroInt()
+	supplyAmount := sdkmath.ZeroInt()
 	if err := supplyAmount.Unmarshal(response); err != nil {
 		return err
 	}
@@ -404,7 +405,7 @@ func SetEpochBlockCallback(ctx sdk.Context, k *Keeper, args []byte, query icqtyp
 		query.ChainId,
 		"ibc.ClientUpdate",
 		heightInBytes,
-		sdk.NewInt(-1),
+		sdkmath.NewInt(-1),
 		types.ModuleName,
 		"",
 		0,
@@ -459,7 +460,7 @@ func CrescentPoolUpdateCallback(ctx sdk.Context, k *Keeper, response []byte, que
 }
 
 func CrescentPoolCoinSupplyUpdateCallback(ctx sdk.Context, k *Keeper, response []byte, query icqtypes.Query) error {
-	supplyAmount := sdk.ZeroInt()
+	supplyAmount := sdkmath.ZeroInt()
 	if err := supplyAmount.Unmarshal(response); err != nil {
 		return err
 	} else if !supplyAmount.IsPositive() {
