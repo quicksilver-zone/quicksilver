@@ -73,7 +73,7 @@ const DefiTable = () => {
   const handleFilterClick = (filter: string) => {
     setActiveFilter(filter);
   };
-  const isMobile = useBreakpointValue({ base: true, 1013: true, md: false });
+  const isMobile = useBreakpointValue({ base: true, sm: true, md: false });
   const filteredData = defi ? defi.filter(filterCategories[activeFilter]) : [];
 
   type ProviderKey = 'osmosis' | 'ux' | 'shade';
@@ -174,11 +174,59 @@ const DefiTable = () => {
           <Thead position="sticky">
             <Tr>
               <Th color={'complimentary.900'}>Asset Pair</Th>
-              <Th textAlign={'center'} color={'complimentary.900'} isNumeric onClick={() => handleSort('apy')}>
-                APY {sortColumn === 'apy' ? sortOrder === 'asc' ? <ChevronUpIcon /> : <ChevronDownIcon /> : <ChevronDownIcon />}
+              <Th
+                textAlign={'center'}
+                color={'complimentary.900'}
+                isNumeric
+                onClick={() => handleSort('apy')}
+                style={{ cursor: 'pointer' }}
+              >
+                APY{' '}
+                {sortColumn === 'apy' ? (
+                  sortOrder === 'asc' ? (
+                    <ChevronUpIcon
+                      _hover={{ color: 'complimentary.700', transform: 'scale(1.5)' }}
+                      _active={{ color: 'complimentary.500' }}
+                    />
+                  ) : (
+                    <ChevronDownIcon
+                      _hover={{ color: 'complimentary.700', transform: 'scale(1.5)' }}
+                      _active={{ color: 'complimentary.500' }}
+                    />
+                  )
+                ) : (
+                  <ChevronDownIcon
+                    _hover={{ color: 'complimentary.700', transform: 'scale(1.5)' }}
+                    _active={{ color: 'complimentary.500' }}
+                  />
+                )}
               </Th>
-              <Th textAlign={'center'} color={'complimentary.900'} isNumeric onClick={() => handleSort('tvl')}>
-                TVL {sortColumn === 'tvl' ? sortOrder === 'asc' ? <ChevronUpIcon /> : <ChevronDownIcon /> : <ChevronDownIcon />}
+              <Th
+                textAlign={'center'}
+                color={'complimentary.900'}
+                isNumeric
+                style={{ cursor: 'pointer' }}
+                onClick={() => handleSort('tvl')}
+              >
+                TVL{' '}
+                {sortColumn === 'tvl' ? (
+                  sortOrder === 'asc' ? (
+                    <ChevronUpIcon
+                      _hover={{ color: 'complimentary.700', transform: 'scale(1.5)' }}
+                      _active={{ color: 'complimentary.500' }}
+                    />
+                  ) : (
+                    <ChevronDownIcon
+                      _hover={{ color: 'complimentary.700', transform: 'scale(1.5)' }}
+                      _active={{ color: 'complimentary.500' }}
+                    />
+                  )
+                ) : (
+                  <ChevronDownIcon
+                    _hover={{ color: 'complimentary.700', transform: 'scale(1.5)' }}
+                    _active={{ color: 'complimentary.500' }}
+                  />
+                )}
               </Th>
               <Th textAlign={'center'} color={'complimentary.900'}>
                 Provider
@@ -216,16 +264,18 @@ const DefiTable = () => {
                     ${asset.tvl.toLocaleString()}
                   </Td>
                   <Td borderBottomColor="transparent">
-                    <Center>
-                      {isProviderKey(asset.provider.toLowerCase()) && (
-                        <Image
-                          src={providerIcons[asset.provider.toLowerCase() as ProviderKey]}
-                          alt={asset.provider}
-                          boxSize="2rem"
-                          objectFit="cover"
-                        />
-                      )}
-                    </Center>
+                    {isProviderKey(asset.provider.toLowerCase()) && (
+                      <Tooltip label={`${asset.provider}`}>
+                        <Center>
+                          <Image
+                            src={providerIcons[asset.provider.toLowerCase() as ProviderKey]}
+                            alt={asset.provider}
+                            boxSize="2rem"
+                            objectFit="cover"
+                          />
+                        </Center>
+                      </Tooltip>
+                    )}
                   </Td>
                   <Td textAlign={'center'} borderBottomColor="transparent">
                     <Link href={asset.link} isExternal={true} _hover={{ textDecoration: 'none' }}>
