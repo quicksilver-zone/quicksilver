@@ -3,7 +3,7 @@ package keeper
 import (
 	"encoding/json"
 
-	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
+	tmservice "github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	epochstypes "github.com/quicksilver-zone/quicksilver/x/epochs/types"

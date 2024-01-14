@@ -25,25 +25,25 @@ import (
 
 	"github.com/go-kit/log"
 
+	abcitypes "github.com/cometbft/cometbft/abci/types"
+	tmquery "github.com/cometbft/cometbft/libs/pubsub/query"
+	"github.com/cometbft/cometbft/proto/tendermint/crypto"
+	coretypes "github.com/cometbft/cometbft/rpc/core/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	querytypes "github.com/cosmos/cosmos-sdk/types/query"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	qstypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 	lensclient "github.com/strangelove-ventures/lens/client"
 	lensquery "github.com/strangelove-ventures/lens/client/query"
-	abcitypes "github.com/tendermint/tendermint/abci/types"
-	tmquery "github.com/tendermint/tendermint/libs/pubsub/query"
-	"github.com/tendermint/tendermint/proto/tendermint/crypto"
-	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 	"google.golang.org/grpc/metadata"
 
-	clienttypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
-	tmclient "github.com/cosmos/ibc-go/v5/modules/light-clients/07-tendermint/types"
+	cmtjson "github.com/cometbft/cometbft/libs/json"
+	jsonrpcclient "github.com/cometbft/cometbft/rpc/jsonrpc/client"
+	jsonrpctypes "github.com/cometbft/cometbft/rpc/jsonrpc/types"
+	tmtypes "github.com/cometbft/cometbft/types"
+	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
+	tmclient "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint/types"
 	"github.com/dgraph-io/ristretto"
-	cmtjson "github.com/tendermint/tendermint/libs/json"
-	jsonrpcclient "github.com/tendermint/tendermint/rpc/jsonrpc/client"
-	jsonrpctypes "github.com/tendermint/tendermint/rpc/jsonrpc/types"
-	tmtypes "github.com/tendermint/tendermint/types"
 )
 
 type Clients []*lensclient.ChainClient

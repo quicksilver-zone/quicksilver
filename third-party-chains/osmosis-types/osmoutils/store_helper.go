@@ -4,10 +4,10 @@ import (
 	"errors"
 	"fmt"
 
+	db "github.com/cosmos/cosmos-db"
 	"github.com/gogo/protobuf/proto"
-	db "github.com/tendermint/tm-db"
 
-	"github.com/cosmos/cosmos-sdk/store"
+	"cosmossdk.io/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
