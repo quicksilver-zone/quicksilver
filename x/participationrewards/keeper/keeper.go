@@ -16,7 +16,7 @@ import (
 
 	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
 
-	config "github.com/quicksilver-zone/quicksilver/cmd/config" //nolint:revive
+	config "github.com/quicksilver-zone/quicksilver/cmd/quicksilverd/config" //nolint:revive
 	crescenttypes "github.com/quicksilver-zone/quicksilver/third-party-chains/crescent-types"
 	osmosistypes "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types"
 	umeetypes "github.com/quicksilver-zone/quicksilver/third-party-chains/umee-types"

@@ -60,7 +60,7 @@ import (
 	ibchost "github.com/cosmos/ibc-go/v8/modules/core/24-host"
 	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
 
-	appconfig "github.com/quicksilver-zone/quicksilver/cmd/config"
+	appconfig "github.com/quicksilver-zone/quicksilver/cmd/quicksilverd/config"
 	"github.com/quicksilver-zone/quicksilver/utils"
 	"github.com/quicksilver-zone/quicksilver/wasmbinding"
 	airdropkeeper "github.com/quicksilver-zone/quicksilver/x/airdrop/keeper"

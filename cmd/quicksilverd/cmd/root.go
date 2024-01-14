@@ -37,7 +37,7 @@ import (
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 
 	"github.com/quicksilver-zone/quicksilver/app"
-	quicksilverconfig "github.com/quicksilver-zone/quicksilver/cmd/config"
+	quicksilverconfig "github.com/quicksilver-zone/quicksilver/cmd/quicksilverd/config"
 	servercfg "github.com/quicksilver-zone/quicksilver/server/config"
 )
 

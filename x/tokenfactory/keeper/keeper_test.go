@@ -13,7 +13,7 @@ import (
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 
 	"github.com/quicksilver-zone/quicksilver/app"
-	cmdcfg "github.com/quicksilver-zone/quicksilver/cmd/config"
+	cmdcfg "github.com/quicksilver-zone/quicksilver/cmd/quicksilverd/config"
 	"github.com/quicksilver-zone/quicksilver/x/tokenfactory/keeper"
 	"github.com/quicksilver-zone/quicksilver/x/tokenfactory/types"
 )
