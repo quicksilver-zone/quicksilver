@@ -3,7 +3,7 @@ name: Build & Deploy web-ui with dev environment to Github Pages
 on:
   push:
     branches:
-      - bunDev
+      - bunDev2
     paths:
       - web-ui/**
   pull_request:
