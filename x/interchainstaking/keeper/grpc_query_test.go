@@ -274,7 +274,7 @@ func (suite *KeeperTestSuite) TestKeeper_DelegatorIntent() {
 						Intents: types.ValidatorIntents{
 							&types.ValidatorIntent{
 								ValoperAddress: icsKeeper.GetValidators(ctx, suite.chainB.ChainID)[0].ValoperAddress,
-								Weight:         sdk.OneDec(),
+								Weight:         sdkmath.LegacyOneDec(),
 							},
 						},
 					},
@@ -365,7 +365,7 @@ func (suite *KeeperTestSuite) TestKeeper_DelegatorIntents() {
 						Intents: types.ValidatorIntents{
 							&types.ValidatorIntent{
 								ValoperAddress: icsKeeper.GetValidators(ctx, suite.chainB.ChainID)[0].ValoperAddress,
-								Weight:         sdk.OneDec(),
+								Weight:         sdkmath.LegacyOneDec(),
 							},
 						},
 					},
@@ -395,7 +395,7 @@ func (suite *KeeperTestSuite) TestKeeper_DelegatorIntents() {
 						Intents: types.ValidatorIntents{
 							&types.ValidatorIntent{
 								ValoperAddress: icsKeeper.GetValidators(ctx, suite.chainB.ChainID)[0].ValoperAddress,
-								Weight:         sdk.OneDec(),
+								Weight:         sdkmath.LegacyOneDec(),
 							},
 						},
 					},

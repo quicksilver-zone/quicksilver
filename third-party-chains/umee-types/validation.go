@@ -35,7 +35,7 @@ func ExchangeUToken(ctx sdk.Context, uToken sdk.Coin, prKeeper ParticipationRewa
 }
 
 // DeriveExchangeRate calculated the token:uToken exchange rate of a base token denom.
-func DeriveExchangeRate(ctx sdk.Context, denom string, prKeeper ParticipationRewardsKeeper) (sdk.Dec, error) {
+func DeriveExchangeRate(ctx sdk.Context, denom string, prKeeper ParticipationRewardsKeeper) (sdkmath.LegacyDec, error) {
 	// Get reserves
 	reservesPD, ok := prKeeper.GetProtocolData(ctx, participationrewardstypes.ProtocolDataTypeUmeeReserves, denom)
 	if !ok {
@@ -128,7 +128,7 @@ func DeriveExchangeRate(ctx sdk.Context, denom string, prKeeper ParticipationRew
 
 	// Handle uToken supply == 0 case
 	if !uTokenSupply.IsPositive() {
-		return sdk.OneDec(), nil
+		return sdkmath.LegacyOneDec(), nil
 	}
 
 	// Derive exchange rate

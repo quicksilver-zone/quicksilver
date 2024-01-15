@@ -43,7 +43,7 @@ func (m Minter) Validate() error {
 }
 
 // NextEpochProvisions returns the epoch provisions.
-func (m Minter) NextEpochProvisions(params Params) sdk.Dec {
+func (m Minter) NextEpochProvisions(params Params) sdkmath.LegacyDec {
 	return m.EpochProvisions.Mul(params.ReductionFactor)
 }
 

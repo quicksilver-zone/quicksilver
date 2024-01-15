@@ -184,7 +184,7 @@ func validateDistributionProportions(i interface{}) error {
 	}
 
 	totalProportions := v.Staking.Add(v.PoolIncentives).Add(v.CommunityPool).Add(v.ParticipationRewards)
-	if !totalProportions.Equal(sdk.OneDec()) {
+	if !totalProportions.Equal(sdkmath.LegacyOneDec()) {
 		return errors.New("total distributions ratio should be 1")
 	}
 

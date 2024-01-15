@@ -48,7 +48,7 @@ func (suite *KeeperTestSuite) TestHandleMsgTransferGood() {
 		amount           sdk.Coin
 		fcAmount         math.Int
 		withdrawalAmount math.Int
-		feeAmount        *sdk.Dec
+		feeAmount        *sdkmath.LegacyDec
 	}{
 		{
 			name:             "staking denom - all goes to fc",

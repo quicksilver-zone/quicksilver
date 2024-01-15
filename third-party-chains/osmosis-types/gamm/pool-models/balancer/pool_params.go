@@ -3,12 +3,12 @@ package balancer
 import (
 	"errors"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkmath "cosmossdk.io/math"
 
 	"github.com/quicksilver-zone/quicksilver/v7/third-party-chains/osmosis-types/gamm"
 )
 
-func NewPoolParams(swapFee, exitFee sdk.Dec, params *SmoothWeightChangeParams) PoolParams {
+func NewPoolParams(swapFee, exitFee sdkmath.LegacyDec, params *SmoothWeightChangeParams) PoolParams {
 	return PoolParams{
 		SwapFee:                  swapFee,
 		ExitFee:                  exitFee,
@@ -21,7 +21,7 @@ func (params PoolParams) Validate(poolWeights []PoolAsset) error {
 		return gamm.ErrNegativeExitFee
 	}
 
-	if params.ExitFee.GTE(sdk.OneDec()) {
+	if params.ExitFee.GTE(sdkmath.LegacyOneDec()) {
 		return gamm.ErrTooMuchExitFee
 	}
 
@@ -29,7 +29,7 @@ func (params PoolParams) Validate(poolWeights []PoolAsset) error {
 		return gamm.ErrNegativeSwapFee
 	}
 
-	if params.SwapFee.GTE(sdk.OneDec()) {
+	if params.SwapFee.GTE(sdkmath.LegacyOneDec()) {
 		return gamm.ErrTooMuchSwapFee
 	}
 
@@ -69,10 +69,10 @@ func (params PoolParams) Validate(poolWeights []PoolAsset) error {
 	return nil
 }
 
-func (params PoolParams) GetPoolSwapFee() sdk.Dec {
+func (params PoolParams) GetPoolSwapFee() sdkmath.LegacyDec {
 	return params.SwapFee
 }
 
-func (params PoolParams) GetPoolExitFee() sdk.Dec {
+func (params PoolParams) GetPoolExitFee() sdkmath.LegacyDec {
 	return params.ExitFee
 }

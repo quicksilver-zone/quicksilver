@@ -154,7 +154,7 @@ func (suite *KeeperTestSuite) coreTest() {
 	zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 	suite.True(found)
 
-	valRewards := make(map[string]sdk.Dec)
+	valRewards := make(map[string]sdkmath.LegacyDec)
 	for _, val := range quicksilver.InterchainstakingKeeper.GetValidators(suite.chainA.GetContext(), suite.chainB.ChainID) {
 		valRewards[val.ValoperAddress] = sdkmath.LegacyNewDec(100000000)
 	}

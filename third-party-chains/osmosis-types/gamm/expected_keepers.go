@@ -2,17 +2,16 @@ package gamm
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 // AccountKeeper defines the account contract that must be fulfilled when
 // creating a x/gamm keeper.
 type AccountKeeper interface {
-	NewAccount(sdk.Context, authtypes.AccountI) authtypes.AccountI
+	NewAccount(sdk.Context, sdk.AccountI) sdk.AccountI
 
-	GetAccount(ctx sdk.Context, addr sdk.AccAddress) authtypes.AccountI
-	SetAccount(ctx sdk.Context, acc authtypes.AccountI)
+	GetAccount(ctx sdk.Context, addr sdk.AccAddress) sdk.AccountI
+	SetAccount(ctx sdk.Context, acc sdk.AccountI)
 
 	GetModuleAddressAndPermissions(moduleName string) (addr sdk.AccAddress, permissions []string)
 }

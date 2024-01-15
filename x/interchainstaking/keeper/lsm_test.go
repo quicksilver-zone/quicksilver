@@ -4,8 +4,6 @@ import (
 	"cosmossdk.io/math"
 	sdkmath "cosmossdk.io/math"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking/keeper"
 	"github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking/types"
 )
@@ -120,7 +118,7 @@ func (suite *KeeperTestSuite) TestGetLiquidStakedSupply() {
 	tcs := []struct {
 		Name     string
 		Malleate func(icsKeeper *keeper.Keeper)
-		Expect   sdk.Dec
+		Expect   sdkmath.LegacyDec
 	}{
 		{
 			Name: "4x 1000000 VP bonded, 0 liquid",

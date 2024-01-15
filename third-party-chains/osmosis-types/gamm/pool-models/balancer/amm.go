@@ -57,7 +57,7 @@ func addPoolAssetWeights(base []PoolAsset, other []PoolAsset) []PoolAsset {
 }
 
 // assumes 0 < d < 1
-func poolAssetsMulDec(base []PoolAsset, d sdk.Dec) []PoolAsset {
+func poolAssetsMulDec(base []PoolAsset, d sdkmath.LegacyDec) []PoolAsset {
 	newWeights := make([]PoolAsset, len(base))
 	for i, asset := range base {
 		// TODO: This can adversarially panic at the moment! (as can Pool.TotalWeight)
@@ -98,8 +98,8 @@ func solveConstantFunctionInvariant(
 	tokenBalanceFixedAfter,
 	tokenWeightFixed,
 	tokenBalanceUnknownBefore,
-	tokenWeightUnknown sdk.Dec,
-) sdk.Dec {
+	tokenWeightUnknown sdkmath.LegacyDec,
+) sdkmath.LegacyDec {
 	// weightRatio = (weightX/weightY)
 	weightRatio := tokenWeightFixed.Quo(tokenWeightUnknown)
 
@@ -108,7 +108,7 @@ func solveConstantFunctionInvariant(
 
 	// amountY = balanceY * (1 - (y ^ weightRatio))
 	yToWeightRatio := osmomath.Pow(y, weightRatio)
-	paranthetical := sdk.OneDec().Sub(yToWeightRatio)
+	paranthetical := sdkmath.LegacyOneDec().Sub(yToWeightRatio)
 	amountY := tokenBalanceUnknownBefore.Mul(paranthetical)
 	return amountY
 }
@@ -120,8 +120,8 @@ func calcPoolSharesOutGivenSingleAssetIn(
 	normalizedTokenWeightIn,
 	poolShares,
 	tokenAmountIn,
-	swapFee sdk.Dec,
-) sdk.Dec {
+	swapFee sdkmath.LegacyDec,
+) sdkmath.LegacyDec {
 	// deduct swapfee on the in asset.
 	// We don't charge swap fee on the token amount that we imagine as unswapped (the normalized weight).
 	// So effective_swapfee = swapfee * (1 - normalized_token_weight)
@@ -141,7 +141,7 @@ func calcPoolSharesOutGivenSingleAssetIn(
 		tokenBalanceIn,
 		normalizedTokenWeightIn,
 		poolShares,
-		sdk.OneDec()).Neg()
+		sdkmath.LegacyOneDec()).Neg()
 	return poolAmountOut
 }
 
@@ -187,8 +187,8 @@ func updateIntermediaryPoolAssetsLiquidity(liquidity sdk.Coins, poolAssetsByDeno
 
 // feeRatio returns the fee ratio that is defined as follows:
 // 1 - ((1 - normalizedTokenWeightOut) * swapFee)
-func feeRatio(normalizedWeight, swapFee sdk.Dec) sdk.Dec {
-	return sdk.OneDec().Sub((sdk.OneDec().Sub(normalizedWeight)).Mul(swapFee))
+func feeRatio(normalizedWeight, swapFee sdkmath.LegacyDec) sdkmath.LegacyDec {
+	return sdkmath.LegacyOneDec().Sub((sdkmath.LegacyOneDec().Sub(normalizedWeight)).Mul(swapFee))
 }
 
 // calcSingleAssetInGivenPoolSharesOut returns token amount in with fee included
@@ -198,11 +198,11 @@ func calcSingleAssetInGivenPoolSharesOut(
 	normalizedTokenWeightIn,
 	totalPoolSharesSupply,
 	sharesAmountOut,
-	swapFee sdk.Dec,
-) sdk.Dec {
+	swapFee sdkmath.LegacyDec,
+) sdkmath.LegacyDec {
 	// delta balanceIn is negative(tokens inside the pool increases)
 	// pool weight is always 1
-	tokenAmountIn := solveConstantFunctionInvariant(totalPoolSharesSupply.Add(sharesAmountOut), totalPoolSharesSupply, sdk.OneDec(), tokenBalanceIn, normalizedTokenWeightIn).Neg()
+	tokenAmountIn := solveConstantFunctionInvariant(totalPoolSharesSupply.Add(sharesAmountOut), totalPoolSharesSupply, sdkmath.LegacyOneDec(), tokenBalanceIn, normalizedTokenWeightIn).Neg()
 	// deduct swapfee on the in asset
 	tokenAmountInFeeIncluded := tokenAmountIn.Quo(feeRatio(normalizedTokenWeightIn, swapFee))
 	return tokenAmountInFeeIncluded
@@ -217,17 +217,17 @@ func calcPoolSharesInGivenSingleAssetOut(
 	totalPoolSharesSupply,
 	tokenAmountOut,
 	swapFee,
-	exitFee sdk.Dec,
-) sdk.Dec {
+	exitFee sdkmath.LegacyDec,
+) sdkmath.LegacyDec {
 	tokenAmountOutFeeIncluded := tokenAmountOut.Quo(feeRatio(normalizedTokenWeightOut, swapFee))
 
 	// delta poolSupply is positive(total pool shares decreases)
 	// pool weight is always 1
-	sharesIn := solveConstantFunctionInvariant(tokenBalanceOut.Sub(tokenAmountOutFeeIncluded), tokenBalanceOut, normalizedTokenWeightOut, totalPoolSharesSupply, sdk.OneDec())
+	sharesIn := solveConstantFunctionInvariant(tokenBalanceOut.Sub(tokenAmountOutFeeIncluded), tokenBalanceOut, normalizedTokenWeightOut, totalPoolSharesSupply, sdkmath.LegacyOneDec())
 
 	// charge exit fee on the pool token side
 	// pAi = pAiAfterExitFee/(1-exitFee)
-	sharesInFeeIncluded := sharesIn.Quo(sdk.OneDec().Sub(exitFee))
+	sharesInFeeIncluded := sharesIn.Quo(sdkmath.LegacyOneDec().Sub(exitFee))
 	return sharesInFeeIncluded
 }
 

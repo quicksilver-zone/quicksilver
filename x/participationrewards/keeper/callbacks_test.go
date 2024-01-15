@@ -7,7 +7,6 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	tmservice "github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -75,7 +74,7 @@ func (suite *KeeperTestSuite) executeOsmosisPoolUpdateCallback() {
 	suite.Equal(want, oppd)
 }
 
-func (suite *KeeperTestSuite) executeValidatorSelectionRewardsCallback(performanceAddress string, valRewards map[string]sdk.Dec) {
+func (suite *KeeperTestSuite) executeValidatorSelectionRewardsCallback(performanceAddress string, valRewards map[string]sdkmath.LegacyDec) {
 	prk := suite.GetQuicksilverApp(suite.chainA).ParticipationRewardsKeeper
 	ctx := suite.chainA.GetContext()
 

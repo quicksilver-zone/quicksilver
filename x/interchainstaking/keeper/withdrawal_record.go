@@ -9,6 +9,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 
 	"cosmossdk.io/store/prefix"
+	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking/types"
@@ -226,7 +227,7 @@ func (k *Keeper) AllZoneUnbondingRecords(ctx sdk.Context, chainID string) []type
 	return records
 }
 
-func (k *Keeper) UpdateWithdrawalRecordsForSlash(ctx sdk.Context, zone *types.Zone, valoper string, delta sdk.Dec) error {
+func (k *Keeper) UpdateWithdrawalRecordsForSlash(ctx sdk.Context, zone *types.Zone, valoper string, delta sdkmath.LegacyDec) error {
 	var err error
 	k.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, types.WithdrawStatusUnbond, func(_ int64, record types.WithdrawalRecord) bool {
 		recordSubAmount := sdkmath.ZeroInt()

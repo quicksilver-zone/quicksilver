@@ -15,7 +15,7 @@ import (
 	"github.com/quicksilver-zone/quicksilver/v7/x/participationrewards/types"
 )
 
-type TokenValues map[string]sdk.Dec
+type TokenValues map[string]sdkmath.LegacyDec
 
 func (k *Keeper) CalcTokenValues(ctx sdk.Context) (TokenValues, error) {
 	k.Logger(ctx).Info("calcTokenValues")
@@ -32,10 +32,10 @@ func (k *Keeper) CalcTokenValues(ctx sdk.Context) (TokenValues, error) {
 	baseDenom := osmoParams.(*types.OsmosisParamsProtocolData).BaseDenom
 	baseChain := osmoParams.(*types.OsmosisParamsProtocolData).BaseChain
 
-	tvs := make(map[string]sdk.Dec)
+	tvs := make(map[string]sdkmath.LegacyDec)
 
 	// add base value
-	tvs[baseDenom] = sdk.OneDec()
+	tvs[baseDenom] = sdkmath.LegacyOneDec()
 
 	// capture errors from iteratora
 	errs := make(map[string]error)

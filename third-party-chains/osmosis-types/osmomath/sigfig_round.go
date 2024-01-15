@@ -2,14 +2,12 @@ package osmomath
 
 import (
 	sdkmath "cosmossdk.io/math"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-var pointOne = sdk.OneDec().QuoInt64(10)
+var pointOne = sdkmath.LegacyOneDec().QuoInt64(10)
 
 // SigFigRound rounds to a specified significant figure.
-func SigFigRound(d sdk.Dec, tenToSigFig sdkmath.Int) sdk.Dec {
+func SigFigRound(d sdkmath.LegacyDec, tenToSigFig sdkmath.Int) sdkmath.LegacyDec {
 	if d.IsZero() {
 		return d
 	}

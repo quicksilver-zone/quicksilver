@@ -5,7 +5,6 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
@@ -92,7 +91,7 @@ func (p Params) Validate() error {
 }
 
 func validateLiquidationThreshold(i interface{}) error {
-	v, ok := i.(sdk.Dec)
+	v, ok := i.(sdkmath.LegacyDec)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
@@ -101,7 +100,7 @@ func validateLiquidationThreshold(i interface{}) error {
 		return fmt.Errorf("complete liquidation threshold must be positive: %d", v)
 	}
 
-	if v.GT(sdk.OneDec()) {
+	if v.GT(sdkmath.LegacyOneDec()) {
 		return fmt.Errorf("complete liquidation threshold cannot exceed 1: %d", v)
 	}
 
@@ -109,7 +108,7 @@ func validateLiquidationThreshold(i interface{}) error {
 }
 
 func validateMinimumCloseFactor(i interface{}) error {
-	v, ok := i.(sdk.Dec)
+	v, ok := i.(sdkmath.LegacyDec)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
@@ -117,7 +116,7 @@ func validateMinimumCloseFactor(i interface{}) error {
 	if v.IsNegative() {
 		return fmt.Errorf("minimum close factor cannot be negative: %d", v)
 	}
-	if v.GT(sdk.OneDec()) {
+	if v.GT(sdkmath.LegacyOneDec()) {
 		return fmt.Errorf("minimum close factor cannot exceed 1: %d", v)
 	}
 
@@ -125,7 +124,7 @@ func validateMinimumCloseFactor(i interface{}) error {
 }
 
 func validateOracleRewardFactor(i interface{}) error {
-	v, ok := i.(sdk.Dec)
+	v, ok := i.(sdkmath.LegacyDec)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
@@ -133,7 +132,7 @@ func validateOracleRewardFactor(i interface{}) error {
 	if v.IsNegative() {
 		return fmt.Errorf("oracle reward factor cannot be negative: %d", v)
 	}
-	if v.GT(sdk.OneDec()) {
+	if v.GT(sdkmath.LegacyOneDec()) {
 		return fmt.Errorf("oracle reward factor cannot exceed 1: %d", v)
 	}
 
@@ -141,7 +140,7 @@ func validateOracleRewardFactor(i interface{}) error {
 }
 
 func validateSmallLiquidationSize(i interface{}) error {
-	v, ok := i.(sdk.Dec)
+	v, ok := i.(sdkmath.LegacyDec)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
@@ -154,7 +153,7 @@ func validateSmallLiquidationSize(i interface{}) error {
 }
 
 func validateDirectLiquidationFee(i interface{}) error {
-	v, ok := i.(sdk.Dec)
+	v, ok := i.(sdkmath.LegacyDec)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
@@ -162,7 +161,7 @@ func validateDirectLiquidationFee(i interface{}) error {
 	if v.IsNegative() {
 		return fmt.Errorf("direct liquidation fee cannot be negative: %d", v)
 	}
-	if v.GTE(sdk.OneDec()) {
+	if v.GTE(sdkmath.LegacyOneDec()) {
 		return fmt.Errorf("direct liquidation fee must be less than 1: %d", v)
 	}
 

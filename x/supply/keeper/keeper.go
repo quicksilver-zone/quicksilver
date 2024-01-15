@@ -7,7 +7,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/quicksilver-zone/quicksilver/v7/x/supply/types"
@@ -54,7 +53,7 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 
 func (k Keeper) CalculateCirculatingSupply(ctx sdk.Context, baseDenom string, excludeAddresses []string) math.Int {
 	nonCirculating := math.ZeroInt()
-	k.accountKeeper.IterateAccounts(ctx, func(account authtypes.AccountI) (stop bool) {
+	k.accountKeeper.IterateAccounts(ctx, func(account sdk.AccountI) (stop bool) {
 		for _, addr := range excludeAddresses {
 			if addr == account.GetAddress().String() {
 				// matched excluded address

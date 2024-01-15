@@ -8,7 +8,6 @@ import (
 	"github.com/gogo/protobuf/proto"
 
 	"cosmossdk.io/store"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func GatherAllKeysFromStore(storeObj store.KVStore) []string {
@@ -125,15 +124,15 @@ func MustGet(storeObj store.KVStore, key []byte, result proto.Message) {
 }
 
 // MustSetDec sets dec value to store at key. Panics on any error.
-func MustSetDec(storeObj store.KVStore, key []byte, value sdk.Dec) {
-	MustSet(storeObj, key, &sdk.DecProto{
+func MustSetDec(storeObj store.KVStore, key []byte, value sdkmath.LegacyDec) {
+	MustSet(storeObj, key, &sdkmath.LegacyDecProto{
 		Dec: value,
 	})
 }
 
 // MustGetDec gets dec value from store at key. Panics on any error.
-func MustGetDec(storeObj store.KVStore, key []byte) sdk.Dec {
-	result := &sdk.DecProto{}
+func MustGetDec(storeObj store.KVStore, key []byte) sdkmath.LegacyDec {
+	result := &sdkmath.LegacyDecProto{}
 	MustGet(storeObj, key, result)
 	return result.Dec
 }

@@ -486,8 +486,8 @@ func (suite *KeeperTestSuite) TestCalcOverallScores() {
 				inactiveAddress := appA.InterchainstakingKeeper.GetValidatorAddresses(ctx, chainID)[0]
 				activeAddress := appA.InterchainstakingKeeper.GetValidatorAddresses(ctx, chainID)[1]
 				return distributiontypes.QueryDelegationTotalRewardsResponse{Rewards: []distributiontypes.DelegationDelegatorReward{
-					{ValidatorAddress: inactiveAddress, Reward: sdk.DecNewCoins(sdk.LegacyNewDecCoin(zone.BaseDenom, sdkmath.NewInt(1)))},
-					{ValidatorAddress: activeAddress, Reward: sdk.DecNewCoins(sdk.LegacyNewDecCoin(zone.BaseDenom, sdkmath.NewInt(10)))},
+					{ValidatorAddress: inactiveAddress, Reward: sdkmath.LegacyDecNewCoins(sdk.LegacyNewDecCoin(zone.BaseDenom, sdkmath.NewInt(1)))},
+					{ValidatorAddress: activeAddress, Reward: sdkmath.LegacyDecNewCoins(sdk.LegacyNewDecCoin(zone.BaseDenom, sdkmath.NewInt(10)))},
 				}, Total: sdk.NewDecCoins(sdk.NewDecCoin(zone.BaseDenom, sdkmath.NewInt(11)))}
 			},
 			verify: func(zs types.ZoneScore, delegatorRewards []distributiontypes.DelegationDelegatorReward, validators []icstypes.Validator) {

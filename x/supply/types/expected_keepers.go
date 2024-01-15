@@ -2,13 +2,12 @@ package types // noalias
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // AccountKeeper defines the contract required for account APIs.
 type AccountKeeper interface {
 	GetModuleAddress(moduleName string) sdk.AccAddress
-	IterateAccounts(ctx sdk.Context, cb func(account authtypes.AccountI) (stop bool))
+	IterateAccounts(ctx sdk.Context, cb func(account sdk.AccountI) (stop bool))
 }
 
 // BankKeeper defines the contract needed to be fulfilled for banking and supply

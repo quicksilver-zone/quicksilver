@@ -44,11 +44,11 @@ func genDistributionProportions(r *rand.Rand) types.DistributionProportions {
 	}
 }
 
-func genEpochProvisions(r *rand.Rand) sdk.Dec {
+func genEpochProvisions(r *rand.Rand) sdkmath.LegacyDec {
 	return sdkmath.LegacyNewDec(int64(r.Intn(maxInt64)))
 }
 
-func genReductionFactor(r *rand.Rand) sdk.Dec {
+func genReductionFactor(r *rand.Rand) sdkmath.LegacyDec {
 	return sdkmath.LegacyNewDecWithPrec(int64(r.Intn(10)), 1)
 }
 
@@ -63,7 +63,7 @@ func genMintintRewardsDistributionStartEpoch(r *rand.Rand) int64 {
 // RandomizedGenState generates a random GenesisState for mint.
 func RandomizedGenState(simState *module.SimulationState) {
 	// minter
-	var epochProvisions sdk.Dec
+	var epochProvisions sdkmath.LegacyDec
 	simState.AppParams.GetOrGenerate(
 		simState.Cdc, epochProvisionsKey, &epochProvisions, simState.Rand,
 		func(r *rand.Rand) {
@@ -79,7 +79,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 		},
 	)
 
-	var reductionFactor sdk.Dec
+	var reductionFactor sdkmath.LegacyDec
 	simState.AppParams.GetOrGenerate(
 		simState.Cdc, reductionFactorKey, &reductionFactor, simState.Rand,
 		func(r *rand.Rand) {

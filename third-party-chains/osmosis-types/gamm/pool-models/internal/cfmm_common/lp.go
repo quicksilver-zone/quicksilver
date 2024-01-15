@@ -15,7 +15,7 @@ import (
 const errMsgFormatSharesLargerThanMax = "%s resulted shares is larger than the max amount of %s"
 
 // CalcExitPool returns how many tokens should come out, when exiting k LP shares against a "standard" CFMM
-func CalcExitPool(ctx sdk.Context, pool gamm.PoolI, exitingShares sdkmath.Int, exitFee sdk.Dec) (sdk.Coins, error) {
+func CalcExitPool(ctx sdk.Context, pool gamm.PoolI, exitingShares sdkmath.Int, exitFee sdkmath.LegacyDec) (sdk.Coins, error) {
 	totalShares := pool.GetTotalShares()
 	if exitingShares.GTE(totalShares) {
 		return sdk.Coins{}, sdkioerrors.Wrapf(gamm.ErrLimitMaxAmount, errMsgFormatSharesLargerThanMax, exitingShares, totalShares)
@@ -23,10 +23,10 @@ func CalcExitPool(ctx sdk.Context, pool gamm.PoolI, exitingShares sdkmath.Int, e
 
 	// refundedShares = exitingShares * (1 - exit fee)
 	// with 0 exit fee optimization
-	var refundedShares sdk.Dec
+	var refundedShares sdkmath.LegacyDec
 	if !exitFee.IsZero() {
 		// exitingShares * (1 - exit fee)
-		oneSubExitFee := sdk.OneDec().SubMut(exitFee)
+		oneSubExitFee := sdkmath.LegacyOneDec().SubMut(exitFee)
 		refundedShares = oneSubExitFee.MulIntMut(exitingShares)
 	} else {
 		refundedShares = sdkmath.LegacyNewDecFromInt(exitingShares)
@@ -65,8 +65,8 @@ func CalcExitPool(ctx sdk.Context, pool gamm.PoolI, exitingShares sdkmath.Int, e
 //  2. get the minimal share ratio that would work as the benchmark for all tokens.
 //  3. calculate the number of shares that could be joined (total share * min share ratio), return the remaining coins
 func MaximalExactRatioJoin(p gamm.PoolI, ctx sdk.Context, tokensIn sdk.Coins) (numShares sdkmath.Int, remCoins sdk.Coins, err error) {
-	coinShareRatios := make([]sdk.Dec, len(tokensIn))
-	minShareRatio := sdk.MaxSortableDec
+	coinShareRatios := make([]sdkmath.LegacyDec, len(tokensIn))
+	minShareRatio := sdkmath.LegacyMaxSortableDec
 	maxShareRatio := sdkmath.LegacyZeroDec()
 
 	poolLiquidity := p.GetTotalPoolLiquidity(ctx)
@@ -86,7 +86,7 @@ func MaximalExactRatioJoin(p gamm.PoolI, ctx sdk.Context, tokensIn sdk.Coins) (n
 		coinShareRatios[i] = shareRatio
 	}
 
-	if minShareRatio.Equal(sdk.MaxSortableDec) {
+	if minShareRatio.Equal(sdkmath.LegacyMaxSortableDec) {
 		return numShares, remCoins, errors.New("unexpected error in MaximalExactRatioJoin")
 	}
 
@@ -157,7 +157,7 @@ func BinarySearchSingleAssetJoin(
 		return swapAllCoinsToSingleAsset(poolWithUpdatedLiquidity, ctx, exitedCoins, swapToDenom)
 	}
 	// TODO: Come back and revisit err tolerance
-	errTolerance := osmoutils.ErrTolerance{AdditiveTolerance: correctnessThreshold, MultiplicativeTolerance: sdk.Dec{}}
+	errTolerance := osmoutils.ErrTolerance{AdditiveTolerance: correctnessThreshold, MultiplicativeTolerance: sdkmath.LegacyDec{}}
 	numLPShares, err = osmoutils.BinarySearch(
 		estimateCoinOutGivenShares,
 		LPShareLowerBound, LPShareUpperBound, tokenIn.Amount, errTolerance, maxIterations)

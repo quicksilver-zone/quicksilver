@@ -544,7 +544,7 @@ func (k *Keeper) DefaultAggregateIntents(ctx sdk.Context, chainID string) types.
 	k.IterateValidators(ctx, chainID, func(index int64, validator types.Validator) (stop bool) {
 		if validator.CommissionRate.LTE(sdkmath.LegacyNewDecWithPrec(5, 1)) { // 50%; make this a param.
 			if !validator.Jailed && !validator.Tombstoned && validator.Status == stakingtypes.BondStatusBonded {
-				out = append(out, &types.ValidatorIntent{ValoperAddress: validator.GetValoperAddress(), Weight: sdk.OneDec()})
+				out = append(out, &types.ValidatorIntent{ValoperAddress: validator.GetValoperAddress(), Weight: sdkmath.LegacyOneDec()})
 			}
 		}
 		return false

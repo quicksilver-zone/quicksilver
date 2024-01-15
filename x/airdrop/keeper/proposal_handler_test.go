@@ -4,7 +4,6 @@ import (
 	"time"
 
 	sdkmath "cosmossdk.io/math"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/quicksilver-zone/quicksilver/v7/utils/addressutils"
 	"github.com/quicksilver-zone/quicksilver/v7/x/airdrop/keeper"
@@ -104,7 +103,7 @@ func (suite *KeeperTestSuite) TestHandleRegisterZoneDropProposal() {
 					Duration:   time.Hour,
 					Decay:      30 * time.Minute,
 					Allocation: 1000000000,
-					Actions: []sdk.Dec{
+					Actions: []sdkmath.LegacyDec{
 						0:  sdkmath.LegacyMustNewDecFromStr("0.15"), // 15%
 						1:  sdkmath.LegacyMustNewDecFromStr("0.06"), // 21%
 						2:  sdkmath.LegacyMustNewDecFromStr("0.07"), // 28%

@@ -439,7 +439,7 @@ func (k *Keeper) GetUnbondingEnabled(ctx sdk.Context) bool {
 }
 
 func (k *Keeper) GetCommissionRate(ctx sdk.Context) sdkmath.LegacyDec {
-	var out sdk.Dec
+	var out sdkmath.LegacyDec
 	k.paramStore.Get(ctx, types.KeyCommissionRate, &out)
 	return out
 }
@@ -651,7 +651,7 @@ func (k *Keeper) OverrideRedemptionRateNoCap(ctx sdk.Context, zone *types.Zone) 
 	k.SetZone(ctx, zone)
 }
 
-func (k *Keeper) GetRatio(ctx sdk.Context, zone *types.Zone, epochRewards sdkmath.Int) (sdk.Dec, bool) {
+func (k *Keeper) GetRatio(ctx sdk.Context, zone *types.Zone, epochRewards sdkmath.Int) (sdkmath.LegacyDec, bool) {
 	// native asset amount
 	nativeAssetAmount := k.GetDelegatedAmount(ctx, zone).Amount
 	nativeAssetUnbondingAmount := k.GetUnbondingAmount(ctx, zone).Amount

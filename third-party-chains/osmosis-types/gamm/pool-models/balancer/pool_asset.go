@@ -17,8 +17,8 @@ import (
 )
 
 type poolAssetPretty struct {
-	Token  sdk.Coin `json:"token" yaml:"token"`
-	Weight sdk.Dec  `json:"weight" yaml:"weight"`
+	Token  sdk.Coin          `json:"token" yaml:"token"`
+	Weight sdkmath.LegacyDec `json:"weight" yaml:"weight"`
 }
 
 // validates a pool asset, to check if it has a valid weight.

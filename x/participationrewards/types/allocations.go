@@ -6,7 +6,6 @@ import (
 	"cosmossdk.io/math"
 
 	sdkmath "cosmossdk.io/math"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 type RewardsAllocation struct {
@@ -22,7 +21,7 @@ func GetRewardsAllocations(moduleBalance math.Int, proportions DistributionPropo
 		return nil, ErrNothingToAllocate
 	}
 
-	if sum := proportions.Total(); !sum.Equal(sdk.OneDec()) {
+	if sum := proportions.Total(); !sum.Equal(sdkmath.LegacyOneDec()) {
 		return nil, fmt.Errorf("%w: got %v", ErrInvalidTotalProportions, sum)
 	}
 
