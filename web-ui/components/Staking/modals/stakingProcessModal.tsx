@@ -124,14 +124,11 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
     }
   };
 
-  const totalWeights = 1;
   const numberOfValidators = selectedValidators.length;
 
   // Calculate the weight for each validator
-  const weightPerValidator = numberOfValidators ? (totalWeights / numberOfValidators).toFixed(4) : '0';
 
   const [weights, setWeights] = useState<{ [key: string]: number }>({});
-  const [totalWeight, setTotalWeight] = useState<string>('0');
 
   const [isCustomValid, setIsCustomValid] = useState(true);
   const [defaultWeight, setDefaultWeight] = useState(0);
@@ -144,16 +141,27 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
   // Modify the handleWeightChange function
   const handleWeightChange = (e: React.ChangeEvent<HTMLInputElement>, validatorName: string) => {
     const value = Number(e.target.value);
-    setWeights({
-      ...weights,
+    setWeights((prevWeights) => ({
+      ...prevWeights,
       [validatorName]: value,
-    });
+    }));
 
     // Update the total weight as string
     const newTotalWeight = Object.values({ ...weights, [validatorName]: value }).reduce((acc, val) => acc + val, 0);
-    setTotalWeight(newTotalWeight.toString());
 
-    setIsCustomValid(newTotalWeight === 100); // Validation for custom weights
+    setIsCustomValid(newTotalWeight === 100);
+  };
+
+  const calculateIntents = () => {
+    return selectedValidators.map((validator) => {
+      // For each validator, calculate the weight based on whether default weights are used
+      const weight = useDefaultWeights ? defaultWeight : weights[validator.operatorAddress];
+
+      return {
+        address: validator.operatorAddress,
+        intent: weight.toFixed(4), // Ensure 4 decimal places
+      };
+    });
   };
 
   // Calculate defaultWeight as string
@@ -162,6 +170,19 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
   }, [numberOfValidators]);
 
   const [useDefaultWeights, setUseDefaultWeights] = useState(true);
+
+  useEffect(() => {
+    if (!useDefaultWeights && selectedValidators.length > 0) {
+      const totalWeight = calculateIntents().reduce((acc, intent) => acc + parseFloat(intent.intent), 0);
+      if (totalWeight !== 1) {
+        const lastValidator = selectedValidators[selectedValidators.length - 1];
+        setWeights((prevWeights) => ({
+          ...prevWeights,
+          [lastValidator.operatorAddress]: (1 - (totalWeight - (weights[lastValidator.operatorAddress] ?? 0) / 100)) * 100,
+        }));
+      }
+    }
+  }, [selectedValidators, weights, useDefaultWeights]);
 
   interface ValidatorsSelect {
     address: string;
@@ -176,6 +197,8 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
       intent: weightAsFraction,
     };
   });
+
+  console.log(intents);
 
   const { data: zone } = useZoneQuery(selectedOption?.chainId ?? '');
 
@@ -310,6 +333,20 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
         advanceStep();
       }
     }
+  };
+
+  type Weights = {
+    [key: string]: number;
+  };
+
+  const handleEqualWeightAssignment = () => {
+    const numberOfValidators = selectedValidators.length;
+    const equalWeight = (1 / numberOfValidators).toFixed(4);
+
+    // Update the state with new weights
+    setDefaultWeight(Number(equalWeight));
+    setUseDefaultWeights(true);
+    advanceStep();
   };
 
   return (
@@ -461,10 +498,7 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
                         bgColor: 'complimentary.500',
                       }}
                       minW={'100px'}
-                      onClick={() => {
-                        setUseDefaultWeights(true);
-                        advanceStep();
-                      }}
+                      onClick={handleEqualWeightAssignment}
                     >
                       Equal
                     </Button>
