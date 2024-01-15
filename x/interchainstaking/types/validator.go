@@ -3,7 +3,6 @@ package types
 import (
 	sdkmath "cosmossdk.io/math"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 )
 
@@ -32,7 +31,7 @@ func (v Validator) GetAddressBytes() ([]byte, error) {
 //	return true
 // }
 
-func (v Validator) SharesToTokens(shares sdk.Dec) sdkmath.Int {
+func (v Validator) SharesToTokens(shares sdkmath.LegacyDec) sdkmath.Int {
 	if v.DelegatorShares.IsNil() || v.DelegatorShares.IsZero() {
 		return sdkmath.ZeroInt()
 	}
@@ -40,7 +39,7 @@ func (v Validator) SharesToTokens(shares sdk.Dec) sdkmath.Int {
 	return sdkmath.LegacyNewDecFromInt(v.VotingPower).Quo(v.DelegatorShares).Mul(shares).TruncateInt()
 }
 
-func (di DelegatorIntent) AddOrdinal(multiplier sdk.Dec, intents ValidatorIntents) DelegatorIntent {
+func (di DelegatorIntent) AddOrdinal(multiplier sdkmath.LegacyDec, intents ValidatorIntents) DelegatorIntent {
 	if len(intents) == 0 {
 		return di
 	}
@@ -105,7 +104,7 @@ func (di DelegatorIntent) Normalize() DelegatorIntent {
 	return di
 }
 
-func (di DelegatorIntent) Ordinalize(multiple sdk.Dec) DelegatorIntent {
+func (di DelegatorIntent) Ordinalize(multiple sdkmath.LegacyDec) DelegatorIntent {
 	for idx, i := range di.SortedIntents() {
 		di.Intents[idx].Weight = i.Weight.Mul(multiple)
 	}
