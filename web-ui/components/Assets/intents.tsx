@@ -42,7 +42,7 @@ const StakingIntent: React.FC<StakingIntentProps> = ({ address, isWalletConnecte
   const { validatorsData } = useValidatorsQuery(currentNetwork.chainName);
   const { data: validatorLogos } = useValidatorLogos(currentNetwork.chainName, validatorsData || []);
 
-  const { intent, isLoading, isError, refetch } = useIntentQuery(currentNetwork.chainName, address ?? '');
+  const { intent, refetch } = useIntentQuery(currentNetwork.chainName, address ?? '');
 
   interface ValidatorDetails {
     moniker: string;
