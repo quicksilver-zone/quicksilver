@@ -16,7 +16,7 @@ export default function Home() {
       <SlideFade offsetY={'200px'} in={true} style={{ width: '100%' }}>
         <Container
           flexDir={'column'}
-          mt={{ base: 10, md: 10 }}
+          mt={{ base: 10, 1279: 10, md: 0 }}
           top={20}
           zIndex={2}
           position="relative"

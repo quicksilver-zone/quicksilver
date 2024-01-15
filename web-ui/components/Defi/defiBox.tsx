@@ -241,7 +241,7 @@ const DefiTable = () => {
                   {' '}
                   {/* Span across all columns */}
                   <Center my={42}>
-                    <Spinner size="4xl" color="complimentary.900" />
+                    <Spinner size="xl" color="complimentary.900" />
                   </Center>
                 </Td>
               </Tr>
