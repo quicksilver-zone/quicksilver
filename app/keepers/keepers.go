@@ -6,6 +6,7 @@ import (
 	packetforward "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v8/packetforward"
 	packetforwardkeeper "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v8/packetforward/keeper"
 	packetforwardtypes "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v8/packetforward/types"
+	"github.com/spf13/cast"
 
 	"cosmossdk.io/store/streaming"
 	storetypes "cosmossdk.io/store/types"
@@ -17,7 +18,10 @@ import (
 	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/runtime"
+	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -148,12 +152,8 @@ func NewAppKeepers(
 	skipUpgradeHeights map[int64]bool,
 	mock bool,
 	homePath string,
-	invCheckPeriod uint,
 	appOpts servertypes.AppOptions,
 	wasmDir string,
-	wasmConfig wasm.Config,
-	wasmEnabledProposals []wasm.ProposalType,
-	wasmOpts []wasm.Option,
 	supplyEndpointEnabled bool,
 ) AppKeepers {
 	appKeepers := AppKeepers{}
@@ -177,13 +177,8 @@ func NewAppKeepers(
 		blockedAddresses,
 		skipUpgradeHeights,
 		mock,
-		homePath,
-		invCheckPeriod,
 		appOpts,
 		wasmDir,
-		wasmConfig,
-		wasmEnabledProposals,
-		wasmOpts,
 		supplyEndpointEnabled,
 	)
 
@@ -238,13 +233,17 @@ func (appKeepers *AppKeepers) InitKeepers(
 
 	// TODO: Make a SetInvCheckPeriod fn on CrisisKeeper.
 	// IMO, its bad design atm that it requires this in state machine initialization
-	appKeepers.CrisisKeeper = crisiskeeper.NewKeeper(
-		appKeepers.GetSubspace(crisistypes.ModuleName), invCheckPeriod, appKeepers.BankKeeper, authtypes.FeeCollectorName,
-	)
-
-	appKeepers.UpgradeKeeper = upgradekeeper.NewKeeper(
-		skipUpgradeHeights, appKeepers.keys[upgradetypes.StoreKey], appCodec, homePath, bApp, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-	)
+	invCheckPeriod = cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod))
+	appKeepers.CrisisKeeper = crisiskeeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys[crisistypes.StoreKey]), invCheckPeriod,
+		appKeepers.BankKeeper, authtypes.FeeCollectorName, authtypes.NewModuleAddress(govtypes.ModuleName).String(), appKeepers.AccountKeeper.AddressCodec())
+	// get skipUpgradeHeights from the app options
+	skipUpgradeHeights := map[int64]bool{}
+	for _, h := range cast.ToIntSlice(appOpts.Get(server.FlagUnsafeSkipUpgrades)) {
+		skipUpgradeHeights[int64(h)] = true
+	}
+	homePath := cast.ToString(appOpts.Get(flags.FlagHome))
+	// set the governance module account as the authority for conducting upgrades
+	app.UpgradeKeeper = upgradekeeper.NewKeeper(skipUpgradeHeights, runtime.NewKVStoreService(keys[upgradetypes.StoreKey]), appCodec, homePath, app.BaseApp, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 
 	// use custom account for contracts
 	appKeepers.AccountKeeper = authkeeper.NewAccountKeeper(
@@ -264,35 +263,13 @@ func (appKeepers *AppKeepers) InitKeepers(
 		blockedAddresses,
 	)
 
-	stakingKeeper := stakingkeeper.NewKeeper(
-		appCodec,
-		appKeepers.keys[stakingtypes.StoreKey],
-		appKeepers.AccountKeeper,
-		appKeepers.BankKeeper,
-		appKeepers.GetSubspace(stakingtypes.ModuleName),
-	)
-	appKeepers.StakingKeeper = &stakingKeeper
-
-	appKeepers.DistrKeeper = distrkeeper.NewKeeper(
-		appCodec,
-		appKeepers.keys[distrtypes.StoreKey],
-		appKeepers.GetSubspace(distrtypes.ModuleName),
-		appKeepers.AccountKeeper,
-		appKeepers.BankKeeper,
-		appKeepers.StakingKeeper,
-		authtypes.FeeCollectorName,
+	appKeepers.StakingKeeper = stakingkeeper.NewKeeper(
+		appCodec, runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), app.AccountKeeper, app.BankKeeper, authtypes.NewModuleAddress(govtypes.ModuleName).String(), authcodec.NewBech32Codec(sdk.Bech32PrefixValAddr), authcodec.NewBech32Codec(sdk.Bech32PrefixConsAddr),
 	)
 
-	appKeepers.MintKeeper = mintkeeper.NewKeeper(
-		appCodec,
-		appKeepers.keys[minttypes.StoreKey],
-		appKeepers.GetSubspace(minttypes.ModuleName),
-		appKeepers.AccountKeeper,
-		appKeepers.BankKeeper,
-		appKeepers.DistrKeeper,
-		&appKeepers.EpochsKeeper,
-		authtypes.FeeCollectorName,
-	)
+	appKeepers.DistrKeeper = distrkeeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys[distrtypes.StoreKey]), app.AccountKeeper, app.BankKeeper, app.StakingKeeper, authtypes.FeeCollectorName, authtypes.NewModuleAddress(govtypes.ModuleName).String())
+
+	appKeepers.MintKeeper = mintkeeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys[minttypes.StoreKey]), app.StakingKeeper, app.AccountKeeper, app.BankKeeper, authtypes.FeeCollectorName, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 
 	appKeepers.SlashingKeeper = slashingkeeper.NewKeeper(
 		appCodec,
