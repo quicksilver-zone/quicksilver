@@ -24,7 +24,7 @@ func DetermineAllocationsForUndelegation(currentAllocations map[string]math.Int,
 
 	sum := overAllocated.Sum()
 
-	overAllocationSplit := sdk.MinInt(sum, input)
+	overAllocationSplit := sdkmath.MinInt(sum, input)
 
 	// if the sum of 'overallocated' validators > 0 (else div/nil), try to use these to satisfy the unbonding first.
 	if !overAllocationSplit.IsZero() {

@@ -121,11 +121,6 @@ func (am AppModule) Name() string {
 // QuerierRoute returns the capability module's query routing key.
 func (AppModule) QuerierRoute() string { return types.QuerierRoute }
 
-// LegacyQuerierHandler returns the capability module's Querier.
-func (AppModule) LegacyQuerierHandler(_ *codec.LegacyAmino) sdk.Querier {
-	return nil
-}
-
 // RegisterServices registers a GRPC query service to respond to the
 // module-specific GRPC queries.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
@@ -181,10 +176,6 @@ func (AppModule) GenerateGenesisState(_ *module.SimulationState) {
 // ProposalContents doesn't return any content functions for governance proposals.
 func (AppModule) ProposalContents(_ module.SimulationState) []simtypes.WeightedProposalContent {
 	return nil
-}
-
-// RegisterStoreDecoder registers a decoder for supply module's types.
-func (AppModule) RegisterStoreDecoder(_ storetypes.StoreDecoderRegistry) {
 }
 
 // WeightedOperations returns the all the gov module operations with their respective weights.
