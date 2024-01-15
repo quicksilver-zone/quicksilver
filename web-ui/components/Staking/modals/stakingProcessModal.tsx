@@ -198,8 +198,6 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
     };
   });
 
-  console.log(intents);
-
   const { data: zone } = useZoneQuery(selectedOption?.chainId ?? '');
 
   const valToByte = (val: number) => {
