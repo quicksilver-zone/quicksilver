@@ -21,13 +21,13 @@ import {
   InputLeftElement,
   Link,
 } from '@chakra-ui/react';
-import React, { useEffect } from 'react';
+import React from 'react';
 import { FaSearch } from 'react-icons/fa';
 
 import { ValidatorsTable } from './validatorTable';
 
-import { useValidatorsQuery, useZoneQuery } from '@/hooks/useQueries';
-import { useMissedBlocks, useValidatorLogos } from '@/hooks/useQueries';
+import { useValidatorsQuery } from '@/hooks/useQueries';
+import { useValidatorLogos } from '@/hooks/useQueries';
 interface MultiModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -44,13 +44,12 @@ export const MultiModal: React.FC<MultiModalProps> = ({
   selectedChainName,
   selectedValidators,
   setSelectedValidators,
-  selectedChainId,
 }) => {
   const [searchTerm, setSearchTerm] = React.useState<string>('');
 
-  const { validatorsData, isLoading, isError } = useValidatorsQuery(selectedChainName);
+  const { validatorsData, isLoading } = useValidatorsQuery(selectedChainName);
 
-  const { data: logos, isLoading: isFetchingLogos } = useValidatorLogos(selectedChainName, validatorsData || []);
+  const { data: logos } = useValidatorLogos(selectedChainName, validatorsData || []);
 
   const validators = validatorsData;
   const handleValidatorClick = (validator: { name: string; operatorAddress: string }) => {
@@ -83,8 +82,6 @@ export const MultiModal: React.FC<MultiModalProps> = ({
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="2xl">
-      {/* Set the size here */}
-
       <ModalContent borderRadius={'10px'} maxHeight="70vh" bgColor="#1A1A1A">
         <ModalHeader borderRadius="10px" bgColor="#1A1A1A" p={0}>
           <Accordion allowToggle>
@@ -114,7 +111,7 @@ export const MultiModal: React.FC<MultiModalProps> = ({
             </AccordionItem>
           </Accordion>
         </ModalHeader>
-        <ModalCloseButton color="white" /> {/* Positioning by default should be top right */}
+        <ModalCloseButton color="white" />
         <Divider bgColor="complimentary.900" alignSelf="center" w="88%" m="auto" />
         <ModalBody bgColor="#1A1A1A" borderRadius={'6px'} justifyContent="center">
           {isLoading ? (

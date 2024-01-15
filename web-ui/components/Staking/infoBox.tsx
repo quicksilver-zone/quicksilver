@@ -1,5 +1,5 @@
-import { Box, Image, Text, Accordion, AccordionItem, Flex, AccordionPanel, VStack, HStack, Link, SkeletonCircle } from '@chakra-ui/react';
-import React, { useEffect, useState } from 'react';
+import { Box, Text, Accordion, AccordionItem, Flex, AccordionPanel, VStack, HStack, Link, SkeletonCircle } from '@chakra-ui/react';
+import React from 'react';
 import { BsTrophy, BsCoin, BsClock } from 'react-icons/bs';
 import { RiStockLine } from 'react-icons/ri';
 

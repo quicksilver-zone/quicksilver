@@ -1,34 +1,15 @@
-import { ArrowForwardIcon, CloseIcon, InfoIcon } from '@chakra-ui/icons';
-import {
-  Box,
-  Flex,
-  Text,
-  VStack,
-  Button,
-  Switch,
-  useDisclosure,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalBody,
-  Stack,
-  ModalCloseButton,
-  ModalHeader,
-  HStack,
-  Checkbox,
-  Spinner,
-} from '@chakra-ui/react';
-import { Key, useState } from 'react';
+import { CloseIcon } from '@chakra-ui/icons';
+import { Box, Flex, Text, VStack, Button, HStack, Checkbox, Spinner } from '@chakra-ui/react';
+import { useState } from 'react';
 
-import { useAuthChecker, useLiquidEpochQuery, useLiquidRewardsQuery } from '@/hooks/useQueries';
-import { shiftDigits } from '@/utils';
+import { useLiquidEpochQuery } from '@/hooks/useQueries';
+
 import { quicksilver } from 'quicksilverjs';
 import { useTx } from '@/hooks';
 import { StdFee } from '@cosmjs/amino';
 import { assets } from 'chain-registry';
 import { cosmos } from 'interchain-query';
 import { Grant, GenericAuthorization } from 'interchain-query/cosmos/authz/v1beta1/authz';
-import { MsgGrant } from 'interchain-query/cosmos/authz/v1beta1/tx';
 
 interface RewardsClaimInterface {
   address: string;
@@ -57,11 +38,10 @@ function transformProofs(proofs: any[]) {
 export const RewardsClaim: React.FC<RewardsClaimInterface> = ({ address, onClose }) => {
   const { tx } = useTx('quicksilver' ?? '');
 
-  const [transactionStatus, setTransactionStatus] = useState('Pending');
   const [isSigning, setIsSigning] = useState<boolean>(false);
   const [isError, setIsError] = useState<boolean>(false);
-  const { liquidRewards, isLoading } = useLiquidRewardsQuery(address);
-  const { liquidEpoch, isLoading: isEpochLoading } = useLiquidEpochQuery(address);
+
+  const { liquidEpoch } = useLiquidEpochQuery(address);
 
   const { submitClaim } = quicksilver.participationrewards.v1.MessageComposer.withTypeUrl;
 
@@ -93,7 +73,7 @@ export const RewardsClaim: React.FC<RewardsClaimInterface> = ({ address, onClose
   const handleAutoClaimRewards = async (event: React.MouseEvent) => {
     event.preventDefault();
     setIsSigning(true);
-    setTransactionStatus('Pending');
+
     try {
       const result = await tx([msgGrant], {
         fee,
@@ -101,7 +81,7 @@ export const RewardsClaim: React.FC<RewardsClaimInterface> = ({ address, onClose
       });
     } catch (error) {
       console.error('Transaction failed', error);
-      setTransactionStatus('Failed');
+
       setIsError(true);
     } finally {
       setIsSigning(false);
@@ -111,7 +91,6 @@ export const RewardsClaim: React.FC<RewardsClaimInterface> = ({ address, onClose
   const handleClaimRewards = async (event: React.MouseEvent) => {
     event.preventDefault();
     setIsSigning(true);
-    setTransactionStatus('Pending');
 
     if (!liquidEpoch || liquidEpoch.messages.length === 0) {
       console.error('No epoch data available or no messages to claim');
@@ -137,16 +116,12 @@ export const RewardsClaim: React.FC<RewardsClaimInterface> = ({ address, onClose
       });
     } catch (error) {
       console.error('Transaction failed', error);
-      setTransactionStatus('Failed');
+
       setIsError(true);
     } finally {
       setIsSigning(false);
     }
   };
-
-  const [isOpen, setIsOpen] = useState(false);
-
-  const [check, setCheck] = useState(false);
 
   const [autoClaimEnabled, setAutoClaimEnabled] = useState(false);
 

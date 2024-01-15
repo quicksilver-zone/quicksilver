@@ -15,7 +15,6 @@ import {
   Divider,
   Heading,
   useColorMode,
-  useColorModeValue,
 } from '@chakra-ui/react';
 import { cosmos } from 'interchain-query';
 import { Proposal } from 'interchain-query/cosmos/gov/v1/gov';
@@ -52,7 +51,6 @@ export const ProposalModal = ({
 }) => {
   const [showMore, setShowMore] = useState(false);
   const voteModalControl = useDisclosure();
-  const { colorMode } = useColorMode();
 
   const coin = getCoin(chainName);
   const exponent = getExponent(chainName);

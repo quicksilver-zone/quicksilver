@@ -10,7 +10,6 @@ import {
   FormControl,
   FormLabel,
   Input,
-  Select,
   useDisclosure,
   useToast,
   Spinner,
@@ -30,7 +29,6 @@ import { getCoin, getIbcInfo } from '@/utils';
 
 export function WithdrawModal() {
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const toast = useToast();
 
   const [chainName, setChainName] = useState<ChainName | undefined>('osmosis');
   const { chainRecords, getChainLogo } = useManager();
@@ -67,9 +65,9 @@ export function WithdrawModal() {
   const toChain = chainName;
 
   const { transfer } = ibc.applications.transfer.v1.MessageComposer.withTypeUrl;
-  const { address, connect, status, message, wallet } = useChain(toChain ?? '');
+  const { address } = useChain(toChain ?? '');
   const { address: qAddress } = useChain('quicksilver');
-  const { balance } = useIbcBalanceQuery(fromChain ?? '', qAddress ?? '');
+
   const { tx } = useTx(fromChain ?? '');
 
   const onSubmitClick = async () => {

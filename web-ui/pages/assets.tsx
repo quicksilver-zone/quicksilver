@@ -1,4 +1,4 @@
-import { Box, Button, ButtonGroup, Container, Flex, HStack, SlideFade, Spacer, Spinner, Text } from '@chakra-ui/react';
+import { Box, Container, Flex, SlideFade, Spacer, Text } from '@chakra-ui/react';
 import { useChain } from '@cosmos-kit/react';
 import axios from 'axios';
 import dynamic from 'next/dynamic';
@@ -11,16 +11,7 @@ import MyPortfolio from '@/components/Assets/portfolio';
 import QuickBox from '@/components/Assets/quickbox';
 import RewardsClaim from '@/components/Assets/rewardsClaim';
 import UnbondingAssetsTable from '@/components/Assets/unbondingTable';
-import {
-  useAPYQuery,
-  useAuthChecker,
-  useBalanceQuery,
-  useIntentQuery,
-  useLiquidRewardsQuery,
-  useQBalanceQuery,
-  useTokenPriceQuery,
-  useZoneQuery,
-} from '@/hooks/useQueries';
+import { useAPYQuery, useAuthChecker, useLiquidRewardsQuery, useQBalanceQuery, useZoneQuery } from '@/hooks/useQueries';
 import { shiftDigits, toNumber } from '@/utils';
 
 export interface PortfolioItemInterface {
@@ -63,25 +54,25 @@ function Home() {
   const SOMMELIER_CHAIN_ID = process.env.NEXT_PUBLIC_SOMMELIER_CHAIN_ID;
 
   // Retrieve balance for each token
-  const { balance: qAtom, isLoading: qAtomIsLoading, isError: qAtomIsError } = useQBalanceQuery('quicksilver', address ?? '', 'atom');
-  const { balance: qOsmo, isLoading: qOsmoIsLoading, isError: qOsmoIsError } = useQBalanceQuery('quicksilver', address ?? '', 'osmo');
-  const { balance: qStars, isLoading: qStarsIsLoading, isError: qStarsIsError } = useQBalanceQuery('quicksilver', address ?? '', 'stars');
-  const { balance: qRegen, isLoading: qRegenIsLoading, isError: qRegenIsError } = useQBalanceQuery('quicksilver', address ?? '', 'regen');
-  const { balance: qSomm, isLoading: qSommIsLoading, isError: qSommIsError } = useQBalanceQuery('quicksilver', address ?? '', 'somm');
+  const { balance: qAtom } = useQBalanceQuery('quicksilver', address ?? '', 'atom');
+  const { balance: qOsmo } = useQBalanceQuery('quicksilver', address ?? '', 'osmo');
+  const { balance: qStars } = useQBalanceQuery('quicksilver', address ?? '', 'stars');
+  const { balance: qRegen } = useQBalanceQuery('quicksilver', address ?? '', 'regen');
+  const { balance: qSomm } = useQBalanceQuery('quicksilver', address ?? '', 'somm');
 
   // Retrieve zone data for each token
-  const { data: CosmosZone, isLoading: isCosmosZoneLoading, isError: isCosmosZoneError } = useZoneQuery(COSMOSHUB_CHAIN_ID ?? '');
-  const { data: OsmoZone, isLoading: isOsmoZoneLoading, isError: isOsmoZoneError } = useZoneQuery(OSMOSIS_CHAIN_ID ?? '');
-  const { data: StarZone, isLoading: isStarZoneLoading, isError: isStarZoneError } = useZoneQuery(STARGAZE_CHAIN_ID ?? '');
-  const { data: RegenZone, isLoading: isRegenZoneLoading, isError: isRegenZoneError } = useZoneQuery(REGEN_CHAIN_ID ?? '');
-  const { data: SommZone, isLoading: isSommZoneLoading, isError: isSommZoneError } = useZoneQuery(SOMMELIER_CHAIN_ID ?? '');
+  const { data: CosmosZone } = useZoneQuery(COSMOSHUB_CHAIN_ID ?? '');
+  const { data: OsmoZone } = useZoneQuery(OSMOSIS_CHAIN_ID ?? '');
+  const { data: StarZone } = useZoneQuery(STARGAZE_CHAIN_ID ?? '');
+  const { data: RegenZone } = useZoneQuery(REGEN_CHAIN_ID ?? '');
+  const { data: SommZone } = useZoneQuery(SOMMELIER_CHAIN_ID ?? '');
   // Retrieve APY data for each token
-  const { APY: cosmosAPY, isLoading: isCosmosAPYLoading, isError: isCosmosAPYError } = useAPYQuery('cosmoshub-4');
-  const { APY: osmoAPY, isLoading: isOsmoAPYLoading, isError: isOsmoAPYError } = useAPYQuery('osmosis-1');
-  const { APY: starsAPY, isLoading: isStarsAPYLoading, isError: isStarsAPYError } = useAPYQuery('stargaze-1');
-  const { APY: regenAPY, isLoading: isRegenAPYLoading, isError: isRegenAPYError } = useAPYQuery('regen-1');
-  const { APY: sommAPY, isLoading: isSommAPYLoading, isError: isSommAPYError } = useAPYQuery('sommelier-3');
-  const { APY: quickAPY, isLoading: isQuickAPYLoading, isError: isQuickAPYError } = useAPYQuery('quicksilver-2');
+  const { APY: cosmosAPY } = useAPYQuery('cosmoshub-4');
+  const { APY: osmoAPY } = useAPYQuery('osmosis-1');
+  const { APY: starsAPY } = useAPYQuery('stargaze-1');
+  const { APY: regenAPY } = useAPYQuery('regen-1');
+  const { APY: sommAPY } = useAPYQuery('sommelier-3');
+  const { APY: quickAPY } = useAPYQuery('quicksilver-2');
 
   // useMemo hook to cache APY data
   const qAPYRates: APYRates = useMemo(
@@ -182,7 +173,7 @@ function Home() {
     });
   }, [qBalances, qAPYRates]);
 
-  const { liquidRewards, isLoading } = useLiquidRewardsQuery(address ?? '');
+  const { liquidRewards } = useLiquidRewardsQuery(address ?? '');
   const { authData, authError } = useAuthChecker(address ?? '');
 
   const [showRewardsClaim, setShowRewardsClaim] = useState(false);

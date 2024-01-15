@@ -1,15 +1,13 @@
 import { Box, Text, Link, useToast } from '@chakra-ui/react';
-import { getSigningQuicksilverClient, quicksilver } from '@chalabi/quicksilverjs';
+import { quicksilver } from '@chalabi/quicksilverjs';
 import { ValidatorIntent } from '@chalabi/quicksilverjs/dist/codegen/quicksilver/interchainstaking/v1/interchainstaking';
-import { MsgSignalIntent } from '@chalabi/quicksilverjs/dist/codegen/quicksilver/interchainstaking/v1/messages';
-import { StdFee } from '@cosmjs/amino';
-import { HttpEndpoint, SigningStargateClient } from '@cosmjs/stargate';
-import { ChainName, Dispatch } from '@cosmos-kit/core';
-import { useChain } from '@cosmos-kit/react';
-import { assets, chains } from 'chain-registry';
-import { SetStateAction } from 'react';
 
-import { useQueryHooks } from '@/hooks';
+import { StdFee } from '@cosmjs/amino';
+import { SigningStargateClient } from '@cosmjs/stargate';
+import { ChainName, Dispatch } from '@cosmos-kit/core';
+
+import { assets } from 'chain-registry';
+import { SetStateAction } from 'react';
 
 const showSuccessToast = (toast: ReturnType<typeof useToast>, txHash: string, chainName: ChainName) => {
   const mintscanUrl = `https://www.mintscan.io/${chainName}/txs/${txHash}`;

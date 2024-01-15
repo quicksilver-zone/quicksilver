@@ -13,9 +13,7 @@ import {
   Stat,
   StatLabel,
   StatNumber,
-  Toast,
   Spinner,
-  useToast,
   Input,
   Grid,
   Checkbox,
@@ -27,15 +25,16 @@ import { bech32 } from 'bech32';
 import { assets } from 'chain-registry';
 import chains from 'chain-registry';
 import { cosmos } from 'interchain-query';
-import { TxResponse } from 'interchain-query/cosmos/base/abci/v1beta1/abci';
+
 import React, { useEffect, useState } from 'react';
 
 import { MultiModal } from './validatorSelectionModal';
 
-import { useQueryHooks, useTx } from '@/hooks';
 import { useZoneQuery } from '@/hooks/useQueries';
-import { liquidStakeTx, unbondLiquidStakeTx } from '@/tx/liquidStakeTx';
+
 import { shiftDigits } from '@/utils';
+
+import { useTx } from '@/hooks';
 
 const ChakraModalContent = styled(ModalContent)`
   position: relative;
@@ -104,14 +103,12 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
     newChainName = selectedOption?.chainName;
   }
 
-  const { address, getSigningStargateClient } = useChain(newChainName || '');
+  const { address } = useChain(newChainName || '');
 
   const labels = ['Choose validators', `Set weights`, `Sign & Submit`, `Receive q${selectedOption?.value}`];
   const [isModalOpen, setModalOpen] = useState(false);
 
   const [selectedValidators, setSelectedValidators] = React.useState<{ name: string; operatorAddress: string }[]>([]);
-
-  const [resp, setResp] = useState('');
 
   const advanceStep = () => {
     if (selectedValidators.length > 0) {
@@ -126,8 +123,6 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
       setStep((prevStep) => Math.max(prevStep - 1, 1)); // Otherwise, go to the previous step
     }
   };
-
-  const toast = useToast();
 
   const totalWeights = 1;
   const numberOfValidators = selectedValidators.length;
@@ -182,7 +177,7 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
     };
   });
 
-  const { data: zone, isLoading: isZoneLoading, isError: isZoneError } = useZoneQuery(selectedOption?.chainId ?? '');
+  const { data: zone } = useZoneQuery(selectedOption?.chainId ?? '');
 
   const valToByte = (val: number) => {
     if (val > 1) {

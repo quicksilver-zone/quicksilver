@@ -1,6 +1,5 @@
 import { Flex, Box, Image } from '@chakra-ui/react';
 
-import WalletTest from './wallet-test';
 import { WalletButton } from '../wallet-button';
 
 export const Header: React.FC<{ chainName: string }> = ({ chainName }) => {

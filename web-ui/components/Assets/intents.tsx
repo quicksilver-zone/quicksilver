@@ -13,8 +13,8 @@ import {
   SkeletonCircle,
   SkeletonText,
 } from '@chakra-ui/react';
-import { color } from 'framer-motion';
-import { JSXElementConstructor, Key, ReactElement, ReactFragment, ReactPortal, useState } from 'react';
+
+import { Key, useState } from 'react';
 
 import SignalIntentModal from './modals/signalIntentProcess';
 

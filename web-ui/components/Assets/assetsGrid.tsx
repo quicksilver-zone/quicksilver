@@ -1,4 +1,4 @@
-import { Box, SimpleGrid, VStack, Text, Button, Divider, useColorModeValue, HStack, Flex, Grid, GridItem, Spinner } from '@chakra-ui/react';
+import { Box, VStack, Text, Divider, HStack, Flex, Grid, GridItem, Spinner } from '@chakra-ui/react';
 import React from 'react';
 
 import QDepositModal from './modals/qTokenDepositModal';
@@ -31,10 +31,6 @@ type Amount = {
   amount: string;
 };
 
-type Asset = {
-  [key: string]: Amount[];
-};
-
 type Errors = {
   Errors: any;
 };
@@ -50,12 +46,6 @@ type LiquidRewardsData = {
     ];
   };
   errors: Errors;
-};
-
-type UseLiquidRewardsQueryReturnType = {
-  liquidRewards: LiquidRewardsData | undefined;
-  isLoading: boolean;
-  isError: boolean;
 };
 
 const AssetCard: React.FC<AssetCardProps> = ({ assetName, balance, apy, nativeAssetName, isWalletConnected, nonNative }) => {

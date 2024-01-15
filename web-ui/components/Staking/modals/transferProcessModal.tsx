@@ -13,27 +13,22 @@ import {
   Stat,
   StatLabel,
   StatNumber,
-  Toast,
   Spinner,
-  useToast,
-  Input,
-  Grid,
-  Checkbox,
 } from '@chakra-ui/react';
 import chains from '@chalabi/chain-registry';
-import { MsgTokenizeShares } from '@chalabi/quicksilverjs/dist/codegen/quicksilver/lsm-types/v1/types';
+
 import { coins, StdFee } from '@cosmjs/amino';
-import { useChain } from '@cosmos-kit/react';
+
 import styled from '@emotion/styled';
-import { bech32 } from 'bech32';
+
 import { assets } from 'chain-registry';
-import { TxResponse } from 'interchain-query/cosmos/base/abci/v1beta1/abci';
+
 import React, { useEffect, useState } from 'react';
 import { cosmos } from 'stridejs';
 
-import { useQueryHooks, useTx } from '@/hooks';
+import { useTx } from '@/hooks';
 import { useZoneQuery } from '@/hooks/useQueries';
-import { liquidStakeTx, unbondLiquidStakeTx } from '@/tx/liquidStakeTx';
+
 import { shiftDigits } from '@/utils';
 
 const ChakraModalContent = styled(ModalContent)`
@@ -126,7 +121,7 @@ export const TransferProcessModal: React.FC<StakingModalProps> = ({
     newChainName = selectedOption?.chainName;
   }
 
-  const { data: zone, isLoading: isZoneLoading, isError: isZoneError } = useZoneQuery(selectedOption?.chainId ?? '');
+  const { data: zone } = useZoneQuery(selectedOption?.chainId ?? '');
   const labels = ['Tokenize Shares', `Transfer`, `Receive q${selectedOption?.value}`];
   const [transactionStatus, setTransactionStatus] = useState('Pending');
   function truncateString(str: string, num: number) {
@@ -162,7 +157,7 @@ export const TransferProcessModal: React.FC<StakingModalProps> = ({
         amount: feeAmount.toString(),
       },
     ],
-    gas: '1926657',
+    gas: '200000',
   };
 
   const { tx } = useTx(newChainName ?? '');
