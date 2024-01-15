@@ -26,7 +26,7 @@
     "@cosmos-kit/keplr": "^2.0.3",
     "@cosmos-kit/leap": "^2.0.3",
     "@cosmos-kit/react": "^2.0.3",
-    "@emotion/react": "11.10.6",
+    "@emotion/react": "11.11.3",
     "@emotion/styled": "11.10.6",
     "@hoangdv2429/quicksilverjs": "^0.0.1",
     "@interchain-ui/react": "1.5.0",
