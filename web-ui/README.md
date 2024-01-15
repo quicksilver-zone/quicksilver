@@ -43,20 +43,13 @@ Please ensure your IDE is configured to use Typescript v4.9.3
 
 **Mobile Menu**
 
-- connect wallet button
-
 - graphic elements
-
-- font size / style / decorations
 
 **DevOps**
 
 - make onboarding networks seamless
 
-**Participation Rewards**
-
-- authz tx
-
 **Blockers**
 
 - main net reward current & epoch queries
+- update grantee address in query & tx

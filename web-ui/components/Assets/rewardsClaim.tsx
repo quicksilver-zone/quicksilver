@@ -10,6 +10,7 @@ import { StdFee } from '@cosmjs/amino';
 import { assets } from 'chain-registry';
 import { cosmos } from 'interchain-query';
 import { Grant, GenericAuthorization } from 'interchain-query/cosmos/authz/v1beta1/authz';
+import { MsgSubmitClaim } from 'quicksilverjs/types/codegen/quicksilver/participationrewards/v1/messages';
 
 interface RewardsClaimInterface {
   address: string;
@@ -47,14 +48,23 @@ export const RewardsClaim: React.FC<RewardsClaimInterface> = ({ address, onClose
 
   const { grant } = cosmos.authz.v1beta1.MessageComposer.withTypeUrl;
 
+  const msgTypeUrl = '/quicksilver.participationrewards.v1.MsgSubmitClaim';
+
+  const genericAuth = {
+    msg: msgTypeUrl,
+  };
+
+  const binaryMessage = GenericAuthorization.encode(genericAuth).finish();
+
   const msgGrant = grant({
-    granter: 'quick1c4vz0535677xpdksxh5um7zqqwfsw7245ppdaj',
-    grantee: address,
-    grant: Grant.fromPartial({
-      authorization: GenericAuthorization.fromPartial({
-        msg: '/quicksilver.participationrewards.v1.MsgSubmitClaim',
-      }),
-    }),
+    granter: address,
+    grantee: 'quick1dv3v662kd3pp6pxfagck4zyysas82adsdhugaf',
+    grant: {
+      authorization: {
+        typeUrl: '/cosmos.authz.v1beta1.GenericAuthorization',
+        value: binaryMessage,
+      },
+    },
   });
 
   const mainTokens = assets.find(({ chain_name }) => chain_name === 'quicksilver');

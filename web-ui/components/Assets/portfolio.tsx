@@ -1,4 +1,4 @@
-import { Box, Flex, Text, VStack, HStack, Heading, Spinner, Tooltip, Grid } from '@chakra-ui/react';
+import { Box, Flex, Text, VStack, HStack, Heading, Spinner, Tooltip, Grid, Center } from '@chakra-ui/react';
 
 import { abbreviateNumber, shiftDigits } from '@/utils';
 
@@ -149,10 +149,12 @@ const PortfolioItem: React.FC<PortfolioItemProps> = ({ title, percentage, progre
           {title}
         </Text>
       </HStack>
-      <Flex ml="80px" w="80%" h="8px" pos="relative" justifyContent={'flex-start'}>
-        <Box w="100%" h="8px" pos="absolute" bg="complimentary.100" borderRadius="md" />
-        <Box w={`${percentage * 100}%`} h="8px" pos="absolute" bg={progressBarColor} borderRadius="md" />
-      </Flex>
+      <Center>
+        <Flex ml="80px" w="100%" h="8px" pos="relative" justifyContent={'flex-start'}>
+          <Box w="100%" h="8px" pos="absolute" bg="complimentary.100" borderRadius="md" />
+          <Box w={`${percentage * 100}%`} h="8px" pos="absolute" bg={progressBarColor} borderRadius="md" />
+        </Flex>
+      </Center>
       <Tooltip label={`Value: $${(qTokenPrice * Number(amount)).toFixed(2)}`}>
         <Text textAlign="right" minWidth="50px">
           {`${(percentage * 100).toFixed(0)}%`}
