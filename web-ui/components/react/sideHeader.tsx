@@ -131,7 +131,7 @@ export const SideHeader = () => {
                 {['Airdrop', 'Assets', 'Defi', 'Governance', 'Staking'].map((item) => (
                   <Box key={item} mb={4} position="relative">
                     <Link
-                      href={`/quicksilver/${item.toLowerCase()}`}
+                      href={`/${item.toLowerCase()}`}
                       fontSize="xl"
                       fontWeight="medium"
                       color="white"
