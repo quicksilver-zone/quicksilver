@@ -22,7 +22,7 @@ import { defaultTheme } from '@/config';
 
 import '@interchain-ui/react/styles';
 
-function CreateCosmosApp({ Component, pageProps }: AppProps) {
+function QuickApp({ Component, pageProps }: AppProps) {
   const signerOptions: SignerOptions = {
     //@ts-ignore
     signingStargate: (chain: Chain): SigningStargateClientOptions | undefined => {
@@ -284,4 +284,4 @@ function CreateCosmosApp({ Component, pageProps }: AppProps) {
   );
 }
 
-export default CreateCosmosApp;
+export default QuickApp;
