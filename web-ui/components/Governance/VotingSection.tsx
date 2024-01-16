@@ -2,9 +2,7 @@ import { ChevronDownIcon } from '@chakra-ui/icons';
 import {
   Box,
   Flex,
-  Heading,
   Input,
-  Text,
   InputGroup,
   InputLeftElement,
   Stack,
@@ -16,7 +14,6 @@ import {
   Menu,
   MenuButton,
   MenuItem,
-  AccordionIcon,
 } from '@chakra-ui/react';
 import { ChainName } from '@cosmos-kit/core';
 import { useChain } from '@cosmos-kit/react';

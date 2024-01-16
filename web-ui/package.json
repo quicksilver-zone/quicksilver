@@ -60,14 +60,13 @@
     "react-minimal-pie-chart": "^8.4.0",
     "remixicon": "^4.0.1",
     "simplex-noise": "^4.0.1",
-    "stridejs": "^0.8.0-alpha.5",
-    "three": "^0.156.1"
+    "stridejs": "^0.8.0-alpha.5"
   },
   "devDependencies": {
     "@testing-library/react": "^14.0.0",
     "@types/node": "20.11.0",
     "@types/react": "18.0.25",
-    "@types/react-dom": "18.2.18",
+    "@types/react-dom": "18.0.9",
     "@types/three": "^0.155.1",
     "eslint": "8.28.0",
     "eslint-config-next": "13.0.5",

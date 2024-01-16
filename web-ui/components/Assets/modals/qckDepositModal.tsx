@@ -11,7 +11,6 @@ import {
   FormLabel,
   Input,
   useDisclosure,
-  useToast,
   Spinner,
 } from '@chakra-ui/react';
 import { ibc } from '@chalabi/quicksilverjs';
@@ -30,7 +29,6 @@ import { getCoin, getIbcInfo, shiftDigits } from '@/utils';
 
 export function DepositModal() {
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const toast = useToast();
 
   const [chainName, setChainName] = useState<ChainName | undefined>('osmosis');
   const { chainRecords, getChainLogo } = useManager();
@@ -67,17 +65,14 @@ export function DepositModal() {
   const toChain = 'quicksilver';
 
   const { transfer } = ibc.applications.transfer.v1.MessageComposer.withTypeUrl;
-  const { address, connect, status, message, wallet } = useChain(fromChain ?? '');
+  const { address } = useChain(fromChain ?? '');
   const { address: qAddress } = useChain('quicksilver');
   const { balance } = useIbcBalanceQuery(fromChain ?? '', address ?? '');
   const { tx } = useTx(fromChain ?? '');
-  const qckBalance =
-    balance?.balances.find((b) => b.denom === 'ibc/635CB83EF1DFE598B10A3E90485306FD0D47D34217A4BE5FD9977FA010A5367D')?.amount ?? '';
 
   const onSubmitClick = async () => {
     setIsLoading(true);
 
-    const coin = getCoin(fromChain ?? '');
     const transferAmount = new BigNumber(amount).shiftedBy(6).toString();
 
     const mainTokens = assets.find(({ chain_name }) => chain_name === chainName);

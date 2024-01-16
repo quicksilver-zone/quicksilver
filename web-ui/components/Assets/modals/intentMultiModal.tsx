@@ -25,7 +25,7 @@ import React from 'react';
 import { FaSearch } from 'react-icons/fa';
 
 import { ValidatorsTable } from '@/components/Staking/modals/validatorTable';
-import { useValidatorsQuery, useZoneQuery } from '@/hooks/useQueries';
+import { useValidatorsQuery } from '@/hooks/useQueries';
 import { useValidatorLogos } from '@/hooks/useQueries';
 
 interface MultiModalProps {
@@ -44,13 +44,12 @@ export const IntentMultiModal: React.FC<MultiModalProps> = ({
   selectedChainName,
   selectedValidators,
   setSelectedValidators,
-  selectedChainId,
 }) => {
   const [searchTerm, setSearchTerm] = React.useState<string>('');
 
-  const { validatorsData, isLoading, isError } = useValidatorsQuery(selectedChainName);
+  const { validatorsData, isLoading } = useValidatorsQuery(selectedChainName);
 
-  const { data: logos, isLoading: isFetchingLogos } = useValidatorLogos(selectedChainName, validatorsData || []);
+  const { data: logos } = useValidatorLogos(selectedChainName, validatorsData || []);
 
   const validators = validatorsData;
   const handleValidatorClick = (validator: { name: string; operatorAddress: string }) => {
@@ -64,17 +63,6 @@ export const IntentMultiModal: React.FC<MultiModalProps> = ({
 
       return alreadySelected ? prevState.filter((v) => v.name !== validator.name) : [...prevState, validator];
     });
-  };
-
-  const handleQuickSelect = (count: number) => {
-    if (!validatorsData || !validators) return;
-
-    const topValidators = validators.slice(0, count).map((validator) => ({
-      name: validator.name,
-      operatorAddress: validator.address,
-    }));
-
-    setSelectedValidators(topValidators);
   };
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -179,8 +167,13 @@ export const IntentMultiModal: React.FC<MultiModalProps> = ({
                   onClick={onClose}
                   h="30px"
                   w="25%"
+                  _active={{
+                    transform: 'scale(0.95)',
+                    color: 'complimentary.800',
+                  }}
                   _hover={{
-                    bgColor: '#181818',
+                    bgColor: 'rgba(255,128,0, 0.25)',
+                    color: 'complimentary.300',
                   }}
                 >
                   Return
