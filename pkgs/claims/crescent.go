@@ -5,17 +5,19 @@ import (
 	"fmt"
 	"time"
 
+	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	liquiditytypes "github.com/ingenuity-build/quicksilver/third-party-chains/crescent-types/liquidity/types"
-	lpfarmtypes "github.com/ingenuity-build/quicksilver/third-party-chains/crescent-types/lpfarm"
-	"github.com/ingenuity-build/quicksilver/utils/addressutils"
-	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
-	prewards "github.com/ingenuity-build/quicksilver/x/participationrewards/types"
+	liquiditytypes "github.com/quicksilver-zone/quicksilver/third-party-chains/crescent-types/liquidity/types"
+	lpfarmtypes "github.com/quicksilver-zone/quicksilver/third-party-chains/crescent-types/lpfarm"
+	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
+	cmtypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
+	prewards "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 
 	"github.com/ingenuity-build/xcclookup/pkgs/failsim"
@@ -27,6 +29,7 @@ func CrescentClaim(
 	cfg types.Config,
 	poolsManager *types.CacheManager[prewards.CrescentPoolProtocolData],
 	tokensManager *types.CacheManager[prewards.LiquidAllowedDenomProtocolData],
+	zonesManager *types.CacheManager[icstypes.Zone],
 	address string,
 	chain string,
 	height int64,
@@ -103,15 +106,7 @@ func CrescentClaim(
 	}
 
 	// add GetFiltered to CacheManager, to allow filtered lookups on a single field == value
-	tokens := func(in []prewards.LiquidAllowedDenomProtocolData) map[string]TokenTuple {
-		out := make(map[string]TokenTuple)
-		for _, i := range in {
-			if i.ChainID == chain {
-				out[i.IbcDenom] = TokenTuple{denom: i.QAssetDenom, chain: i.RegisteredZoneChainID}
-			}
-		}
-		return out
-	}(tokensManager.Get(ctx))
+	tokens := GetTokenMap(tokensManager.Get(ctx), zonesManager.Get(ctx), chain, "")
 
 	msg := map[string]prewards.MsgSubmitClaim{}
 	assets := map[string]sdk.Coins{}
@@ -136,7 +131,7 @@ func CrescentClaim(
 		bankQuery, err := client.ABCIQueryWithOptions(
 			ctx, "/store/bank/key",
 			lookupKey,
-			rpcclient.ABCIQueryOptions{Height: abciquery.Response.Height, Prove: true},
+			rpcclient.ABCIQueryOptions{Height: height, Prove: true},
 		)
 		fmt.Println("Querying for value", "prefix", accountPrefix, "denom", poolCoinDenom) // debug?
 		// 9:
@@ -182,7 +177,7 @@ func CrescentClaim(
 				Key:       bankQuery.Response.Key,
 				ProofOps:  bankQuery.Response.ProofOps,
 				Height:    bankQuery.Response.Height,
-				ProofType: prewards.ProofTypeBank,
+				ProofType: prewards.ProofTypeLPFarm,
 			}
 
 			chainMsg.Proofs = append(chainMsg.Proofs, &proof)
@@ -217,7 +212,7 @@ func CrescentClaim(
 
 			positionKey := lpfarmtypes.GetPositionKey(farmerAddr, position.Denom)
 
-			abciquery, err := client.ABCIQueryWithOptions(
+			positionQuery, err := client.ABCIQueryWithOptions(
 				ctx,
 				"/store/lpfarm/key",
 				positionKey,
@@ -237,7 +232,7 @@ func CrescentClaim(
 			}
 			fmt.Println("prepared query for position...")
 			positionResponse := lpfarmtypes.Position{}
-			err = marshaler.Unmarshal(abciquery.Response.Value, &positionResponse)
+			err = marshaler.Unmarshal(positionQuery.Response.Value, &positionResponse)
 			// 10:
 			err = failsim.FailureHook(failures, 10, err, "ABCIQuery: position response")
 			if err != nil {
@@ -351,11 +346,11 @@ func CrescentClaim(
 			chainMsg := msg[tuple.chain]
 
 			proof := cmtypes.Proof{
-				Data:      abciquery.Response.Value,
-				Key:       abciquery.Response.Key,
-				ProofOps:  abciquery.Response.ProofOps,
-				Height:    abciquery.Response.Height,
-				ProofType: prewards.ProofTypePosition,
+				Data:      positionQuery.Response.Value,
+				Key:       positionQuery.Response.Key,
+				ProofOps:  positionQuery.Response.ProofOps,
+				Height:    positionQuery.Response.Height,
+				ProofType: prewards.ProofTypeLPFarm,
 			}
 
 			chainMsg.Proofs = append(chainMsg.Proofs, &proof)

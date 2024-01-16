@@ -6,16 +6,20 @@ import (
 	"strconv"
 	"time"
 
+	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
+
 	"github.com/cosmos/btcutil/bech32"
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/ingenuity-build/multierror"
-	osmogamm "github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/gamm"
-	osmolockup "github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/lockup"
-	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
-	prewards "github.com/ingenuity-build/quicksilver/x/participationrewards/types"
+	osmogamm "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/gamm"
+	osmolockup "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/lockup"
+	cmtypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
+	prewards "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 
 	"github.com/ingenuity-build/xcclookup/pkgs/failsim"
@@ -29,6 +33,7 @@ func OsmosisClaim(
 	cfg types.Config,
 	poolsManager *types.CacheManager[prewards.OsmosisPoolProtocolData],
 	tokensManager *types.CacheManager[prewards.LiquidAllowedDenomProtocolData],
+	zonesManager *types.CacheManager[icstypes.Zone],
 	address string,
 	chain string,
 	height int64,
@@ -186,15 +191,8 @@ func OsmosisClaim(
 	fmt.Println("unmarshalled query response...")
 
 	// add GetFiltered to CacheManager, to allow filtered lookups on a single field == value
-	tokens := func(in []prewards.LiquidAllowedDenomProtocolData) map[string]TokenTuple {
-		out := make(map[string]TokenTuple)
-		for _, i := range in {
-			if i.ChainID == chain {
-				out[i.IbcDenom] = TokenTuple{denom: i.QAssetDenom, chain: i.RegisteredZoneChainID}
-			}
-		}
-		return out
-	}(tokensManager.Get(ctx))
+	tokens := GetTokenMap(tokensManager.Get(ctx), zonesManager.Get(ctx), chain, "")
+
 	fmt.Println("got relevant tokens...")
 
 	pools := poolMap{}
@@ -217,13 +215,75 @@ func OsmosisClaim(
 	fmt.Println("got relevant pools...")
 
 	var errors map[string]error
+	var poolCoinDenom string
 
-OUTER:
-	for _, lockup := range queryResponse.Locks { // for each lock in response
-		for chainID, chainPools := range pools { // iterate over chains - are we doing all chains?
-			for _, p := range chainPools { // iterate over the pools for this chain
-				fmt.Printf("chekcing gamm/pool/%d...\n", p.GetId())
-				if fmt.Sprintf("gamm/pool/%d", p.GetId()) == lockup.Coins.GetDenomByIndex(0) {
+	for chainID, chainPools := range pools { // iterate over chains - are we doing all chains?
+		for _, p := range chainPools { // iterate over the pools for this chain
+			// fetching unbonded gamm tokens from account
+			poolCoinDenom = fmt.Sprintf("gamm/pool/%d", p.GetId())
+
+			accountPrefix := banktypes.CreateAccountBalancesPrefix(addrBytes)
+			lookupKey := append(accountPrefix, []byte(poolCoinDenom)...)
+
+			bankQuery, err := client.ABCIQueryWithOptions(
+				ctx, "/store/bank/key",
+				lookupKey,
+				rpcclient.ABCIQueryOptions{Height: abciquery.Response.Height, Prove: true},
+			)
+			fmt.Println("Querying for value", "prefix", accountPrefix, "denom", poolCoinDenom) // debug?
+			// 7:
+			err = failsim.FailureHook(failures, 7, err, fmt.Sprintf("unable to query for value of denom %q on %q", poolCoinDenom, chain))
+			if err != nil {
+				return nil, nil, err
+			}
+
+			amount, err := bankkeeper.UnmarshalBalanceCompat(marshaler, bankQuery.Response.Value, poolCoinDenom)
+			if err != nil {
+				return nil, nil, err
+			}
+			// 8:
+			err = failsim.FailureHook(failures, 8, err, fmt.Sprintf("ABCIQuery: value of denom %q on chain %q", poolCoinDenom, chain))
+			if err != nil {
+				return nil, nil, err
+			}
+
+			if amount.IsZero() {
+				fmt.Println("no unbonded tokens found for denom: " + poolCoinDenom)
+			} else {
+				fmt.Printf("found assets in bank account for zone %q...\n", chainID)
+				if _, ok := msg[chainID]; !ok {
+					msg[chainID] = prewards.MsgSubmitClaim{
+						UserAddress: address,
+						Zone:        chainID,
+						SrcZone:     chain,
+						ClaimType:   cmtypes.ClaimTypeOsmosisPool,
+						Proofs:      make([]*cmtypes.Proof, 0),
+					}
+				}
+
+				if _, ok := assets[chain]; !ok {
+					assets[chain] = sdk.Coins{}
+				}
+
+				assets[chain] = assets[chain].Add(amount)
+
+				chainMsg := msg[chainID]
+
+				proof := cmtypes.Proof{
+					Data:      bankQuery.Response.Value,
+					Key:       bankQuery.Response.Key,
+					ProofOps:  bankQuery.Response.ProofOps,
+					Height:    bankQuery.Response.Height,
+					ProofType: prewards.ProofTypeBank,
+				}
+
+				chainMsg.Proofs = append(chainMsg.Proofs, &proof)
+
+				msg[chainID] = chainMsg
+			}
+			for _, lockup := range queryResponse.Locks { // for each lock in response
+				// checking locked coins
+				if poolCoinDenom == lockup.Coins.GetDenomByIndex(0) {
 					// perhaps counter intuitively, we want to group messages by chainID - the chain we are claiming for
 					// and assets by chain - the chain on which they are located.
 					fmt.Printf("found assets for zone %q...\n", chainID)
@@ -307,7 +367,8 @@ OUTER:
 					chainMsg.Proofs = append(chainMsg.Proofs, &proof)
 					fmt.Println("obtained relevant proofs...")
 					msg[chainID] = chainMsg
-					continue OUTER
+					//nolint:staticcheck // SA1019 ignore this!
+					break
 				}
 			}
 		}

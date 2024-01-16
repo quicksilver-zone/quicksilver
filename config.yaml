@@ -1,7 +1,8 @@
-source_chain: quicktest-1
-source_lcd: https://lcd.dev.quicksilver.zone
+source_chain: rhye-2
+source_lcd: https://lcd.test.quicksilver.zone
 chains:
-  quickgaia-1: http://dev01.quicksilver.zone:21401
-  quickstar-1: http://dev01.quicksilver.zone:22401
-  quickosmo-1: http://dev01.quicksilver.zone:23101
-  quicktest-1: https://rpc.dev.quicksilver.zone:443
+  provider: https://rpc.provider.test.quicksilver.zone:443
+  elgafar-1: https://rpc.elgafar-1.test.quicksilver.zone:443
+  osmo-test-5: https://rpc.osmo-test-5.test.quicksilver.zone:443
+  regen-redwood-1: https://rpc.regen-redwood-1.test.quicksilver.zone:443
+  rhye-2: https://rpc.test.quicksilver.zone:443

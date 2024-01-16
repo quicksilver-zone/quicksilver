@@ -6,8 +6,10 @@ import (
 	"fmt"
 	"net/http"
 
+	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
+
 	"github.com/gorilla/mux"
-	prewards "github.com/ingenuity-build/quicksilver/x/participationrewards/types"
+	prewards "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 
 	"github.com/ingenuity-build/xcclookup/pkgs/claims"
 	"github.com/ingenuity-build/xcclookup/pkgs/types"
@@ -21,6 +23,7 @@ func GetAirdropHandler(
 	osmosisParamsManager *types.CacheManager[prewards.OsmosisParamsProtocolData],
 	umeeParamsManager *types.CacheManager[prewards.UmeeParamsProtocolData],
 	tokensManager *types.CacheManager[prewards.LiquidAllowedDenomProtocolData],
+	zonesManager *types.CacheManager[icstypes.Zone],
 ) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, req *http.Request) {
 		vars := mux.Vars(req)
@@ -41,6 +44,7 @@ func GetAirdropHandler(
 			cfg,
 			poolsManager,
 			tokensManager,
+			zonesManager,
 			vars["address"],
 			chain,
 			0,
@@ -63,6 +67,7 @@ func GetAirdropHandler(
 			ctx,
 			cfg,
 			tokensManager,
+			zonesManager,
 			vars["address"],
 			umeeParamsManager.Get(ctx)[0].ChainID,
 			0,
@@ -86,6 +91,7 @@ func GetAirdropHandler(
 				ctx,
 				cfg,
 				tokensManager,
+				zonesManager,
 				vars["address"],
 				con,
 				0,

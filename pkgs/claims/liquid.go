@@ -5,15 +5,17 @@ import (
 	"fmt"
 	"time"
 
+	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
+
 	"github.com/cosmos/btcutil/bech32"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	osmolockup "github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/lockup"
-	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
-	prewards "github.com/ingenuity-build/quicksilver/x/participationrewards/types"
+	osmolockup "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/lockup"
+	cmtypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
+	prewards "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 
 	"github.com/ingenuity-build/xcclookup/pkgs/failsim"
@@ -25,11 +27,33 @@ type TokenTuple struct {
 	chain string
 }
 
+func GetTokenMap(in []prewards.LiquidAllowedDenomProtocolData, zones []icstypes.Zone, chain, keyPrefix string) map[string]TokenTuple {
+	out := make(map[string]TokenTuple)
+	for _, i := range in {
+		if i.ChainID == chain && ZoneOnboarded(zones, i) {
+			out[keyPrefix+i.IbcDenom] = TokenTuple{denom: i.QAssetDenom, chain: i.RegisteredZoneChainID}
+		} else {
+			fmt.Printf("Zone not found: %s for LiquidToken: %s\n", i.RegisteredZoneChainID, i.IbcDenom)
+		}
+	}
+	return out
+}
+
+func ZoneOnboarded(zones []icstypes.Zone, token prewards.LiquidAllowedDenomProtocolData) bool {
+	for _, zone := range zones {
+		if zone.ChainId == token.RegisteredZoneChainID {
+			return true
+		}
+	}
+	return false
+}
+
 func LiquidClaim(
 	ctx context.Context,
 	cfg types.Config,
 	// poolsManager *types.CacheManager[prewards.OsmosisPoolProtocolData],
 	tokensManager *types.CacheManager[prewards.LiquidAllowedDenomProtocolData],
+	zonesManager *types.CacheManager[icstypes.Zone],
 	address string,
 	connection prewards.ConnectionProtocolData,
 	height int64,
@@ -112,15 +136,7 @@ func LiquidClaim(
 	}
 
 	// add GetFiltered to CacheManager, to allow filtered lookups on a single field == value
-	tokens := func(in []prewards.LiquidAllowedDenomProtocolData) map[string]TokenTuple {
-		out := make(map[string]TokenTuple)
-		for _, i := range in {
-			if i.ChainID == chain {
-				out[i.IbcDenom] = TokenTuple{denom: i.QAssetDenom, chain: i.RegisteredZoneChainID}
-			}
-		}
-		return out
-	}(tokensManager.Get(ctx))
+	tokens := GetTokenMap(tokensManager.Get(ctx), zonesManager.Get(ctx), chain, "")
 
 	msg := map[string]prewards.MsgSubmitClaim{}
 	assets := map[string]sdk.Coins{}
@@ -129,8 +145,6 @@ func LiquidClaim(
 		tuple, ok := tokens[coin.Denom]
 		if !ok {
 			fmt.Println("not dealing with token for chain", chain, coin.Denom)
-			// token is not present in list of allowed tokens, ignore.
-			// TODO: handle gamm tokens here, if chain is osmosis
 			continue
 		}
 
@@ -188,83 +202,6 @@ func LiquidClaim(
 
 		msg[tuple.chain] = chainMsg
 	}
-
-	// 	pools := poolMap{}
-	// 	// filter by pool id - query this from Quicksilver (and cache hourly)
-	// 	for _, pool := range poolsManager.Get() {
-	// 		for chain := range pool.Zones {
-	// 			if _, ok := pools[chain]; !ok {
-	// 				pools[chain] = make([]osmogamm.PoolI, 0)
-	// 			}
-	// 			poolData, err := pool.GetPool()
-	// 			if err != nil {
-	// 				return nil, nil, err
-	// 			}
-	// 			pools[chain] = append(pools[chain], poolData)
-	// 		}
-	// 	}
-
-	// OUTER:
-	// 	for _, lockup := range queryResponse.Locks { // for each lock in response
-	// 		for chainID, chainPools := range pools { // iterate over chains - are we doing all chains?
-	// 			for _, p := range chainPools { // iterate over the pools for this chain
-	// 				if fmt.Sprintf("gamm/pool/%d", p.GetId()) == lockup.Coins.GetDenomByIndex(0) {
-	// 					if _, ok := msg[chainID]; !ok {
-	// 						msg[chainID] = prewards.MsgSubmitClaim{
-	// 							UserAddress: address,
-	// 							Zone:        chainID,
-	// 							SrcZone:     chain,
-	// 							ClaimType:   prewards.ClaimTypeOsmosisPool,
-	// 							Proofs:      make([]*prewards.Proof, 0),
-	// 						}
-	// 					}
-
-	// 					if _, ok := msg[chainID]; !ok {
-	// 						assets[chainID] = sdk.Coins{}
-	// 					}
-
-	// 					abciquery, err := client.ABCIQueryWithOptions(
-	// 						context.Background(), "/store/lockup/key",
-	// 						append(osmolockup.KeyPrefixPeriodLock, append(osmolockup.KeyIndexSeparator, sdk.Uint64ToBigEndian(lockup.ID)...)...),
-	// 						rpcclient.ABCIQueryOptions{Height: abciquery.Response.Height, Prove: true},
-	// 					)
-	// 					if err != nil {
-	// 						return nil, nil, err
-	// 					}
-	// 					lockupResponse := osmolockup.PeriodLock{}
-	// 					err = marshaler.Unmarshal(abciquery.Response.Value, &lockupResponse)
-	// 					if err != nil {
-	// 						return nil, nil, err
-	// 					}
-	// 					gammCoins := lockupResponse.Coins
-	// 					gammShares := gammCoins.AmountOf("gamm/pool/" + strconv.Itoa(int(p.GetId())))
-
-	// 					exitedCoins, err := p.CalcExitPoolCoinsFromShares(sdk.Context{}, gammShares, sdk.ZeroDec())
-	// 					if err != nil {
-	// 						return nil, nil, err
-	// 					}
-
-	// 					assets[chainID] = assets[chainID].Add(exitedCoins...)
-
-	// 					chainMsg := msg[chainID]
-
-	// 					proof := prewards.Proof{
-	// 						Data:     abciquery.Response.Value,
-	// 						Key:      abciquery.Response.Key,
-	// 						ProofOps: abciquery.Response.ProofOps,
-	// 						Height:   abciquery.Response.Height,
-	// 					}
-
-	// 					chainMsg.Proofs = append(chainMsg.Proofs, &proof)
-
-	// 					msg[chainID] = chainMsg
-	// 					continue OUTER
-
-	// 				}
-
-	// 			}
-	// 		}
-	// 	}
 
 	return msg, assets, nil
 }

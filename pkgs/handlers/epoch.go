@@ -6,15 +6,17 @@ import (
 	"fmt"
 	"net/http"
 
+	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/gorilla/mux"
 
 	"github.com/ingenuity-build/multierror"
-	prewards "github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 	"github.com/ingenuity-build/xcclookup/pkgs/claims"
 	"github.com/ingenuity-build/xcclookup/pkgs/failsim"
 	"github.com/ingenuity-build/xcclookup/pkgs/types"
+	prewards "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 )
 
 func GetEpochHandler(
@@ -27,6 +29,7 @@ func GetEpochHandler(
 	umeeParamsManager *types.CacheManager[prewards.UmeeParamsProtocolData],
 	crescentParamsManager *types.CacheManager[prewards.CrescentParamsProtocolData],
 	tokensManager *types.CacheManager[prewards.LiquidAllowedDenomProtocolData],
+	zonesManager *types.CacheManager[icstypes.Zone],
 ) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, req *http.Request) {
 		// simFailure hooks: 0-1
@@ -101,7 +104,7 @@ func GetEpochHandler(
 					errors["OsmosisHeight"] = err
 				} else {
 					fmt.Println("fetch osmosis claim...")
-					messages, assets, err = claims.OsmosisClaim(ctx, cfg, osmosisPoolsManager, tokensManager, vars["address"], chain, height)
+					messages, assets, err = claims.OsmosisClaim(ctx, cfg, osmosisPoolsManager, tokensManager, zonesManager, vars["address"], chain, height)
 					if err != nil {
 						errors["OsmosisClaim"] = err
 					}
@@ -124,7 +127,7 @@ func GetEpochHandler(
 					errors["UmeeHeight"] = err
 				} else {
 					fmt.Println("fetch umee claim...")
-					messages, assets, err = claims.UmeeClaim(ctx, cfg, tokensManager, vars["address"], chain, height)
+					messages, assets, err = claims.UmeeClaim(ctx, cfg, tokensManager, zonesManager, vars["address"], chain, height)
 					if err != nil {
 						errors["UmeeClaim"] = err
 					}
@@ -144,10 +147,10 @@ func GetEpochHandler(
 			} else {
 				fmt.Println("check crescent last epoch height...")
 				if height, err = ValidateHeight(connections, chain, failAt); err != nil {
-					errors["UmeeHeight"] = err
+					errors["CrescentHeight"] = err
 				} else {
 					fmt.Println("fetch crescent claim...")
-					messages, assets, err = claims.CrescentClaim(ctx, cfg, crescentPoolsManager, tokensManager, vars["address"], chain, height)
+					messages, assets, err = claims.CrescentClaim(ctx, cfg, crescentPoolsManager, tokensManager, zonesManager, vars["address"], chain, height)
 					if err != nil {
 						errors["CrescentClaim"] = err
 					}
@@ -159,7 +162,7 @@ func GetEpochHandler(
 		// liquid for all zones; config should hold osmosis chainid.
 		fmt.Println("fetch liquid claims...")
 		for _, con := range connections {
-			liquidMessages, assets, err := claims.LiquidClaim(ctx, cfg, tokensManager, vars["address"], con, con.LastEpoch)
+			liquidMessages, assets, err := claims.LiquidClaim(ctx, cfg, tokensManager, zonesManager, vars["address"], con, con.LastEpoch)
 			if err != nil {
 				errors[fmt.Sprintf("LiquidClaim:%s", con.ChainID)] = err
 				continue

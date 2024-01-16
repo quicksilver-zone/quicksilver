@@ -8,7 +8,7 @@ import (
 
 	"github.com/ingenuity-build/xcclookup/pkgs/types"
 
-	prewards "github.com/ingenuity-build/quicksilver/x/participationrewards/types"
+	prewards "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 )
 
 type CacheOutput struct {

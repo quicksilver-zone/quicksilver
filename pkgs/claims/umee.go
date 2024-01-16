@@ -5,16 +5,18 @@ import (
 	"fmt"
 	"time"
 
+	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	leverage "github.com/ingenuity-build/quicksilver/third-party-chains/umee-types/leverage"
-	leveragetypes "github.com/ingenuity-build/quicksilver/third-party-chains/umee-types/leverage/types"
-	"github.com/ingenuity-build/quicksilver/utils/addressutils"
-	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
-	prewards "github.com/ingenuity-build/quicksilver/x/participationrewards/types"
+	leverage "github.com/quicksilver-zone/quicksilver/third-party-chains/umee-types/leverage"
+	leveragetypes "github.com/quicksilver-zone/quicksilver/third-party-chains/umee-types/leverage/types"
+	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
+	cmtypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
+	prewards "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 
 	"github.com/ingenuity-build/xcclookup/pkgs/failsim"
@@ -25,6 +27,7 @@ func UmeeClaim(
 	ctx context.Context,
 	cfg types.Config,
 	tokensManager *types.CacheManager[prewards.LiquidAllowedDenomProtocolData],
+	zonesManager *types.CacheManager[icstypes.Zone],
 	address string,
 	chain string,
 	height int64,
@@ -104,7 +107,7 @@ func UmeeClaim(
 	leveragequery := leverage.QueryAccountBalances{Address: umeeAddress}
 	bytes = marshaler.MustMarshal(&leveragequery)
 	// query for AllBalances; then iterate, match against accepted balances and requery with proof.
-	abciquery, err = client.ABCIQueryWithOptions(
+	leverageaccountbalancesquery, err := client.ABCIQueryWithOptions(
 		ctx,
 		"/umee.leverage.v1.Query/AccountBalances",
 		bytes,
@@ -116,21 +119,13 @@ func UmeeClaim(
 		return nil, nil, err
 	}
 	leverageQueryResponse := leverage.QueryAccountBalancesResponse{}
-	err = marshaler.Unmarshal(abciquery.Response.Value, &leverageQueryResponse)
+	err = marshaler.Unmarshal(leverageaccountbalancesquery.Response.Value, &leverageQueryResponse)
 	if err != nil {
 		return nil, nil, err
 	}
 
 	// add GetFiltered to CacheManager, to allow filtered lookups on a single field == value
-	tokens := func(in []prewards.LiquidAllowedDenomProtocolData) map[string]TokenTuple {
-		out := make(map[string]TokenTuple)
-		for _, i := range in {
-			if i.ChainID == chain {
-				out[leveragetypes.UTokenPrefix+i.IbcDenom] = TokenTuple{denom: i.QAssetDenom, chain: i.RegisteredZoneChainID}
-			}
-		}
-		return out
-	}(tokensManager.Get(ctx))
+	tokens := GetTokenMap(tokensManager.Get(ctx), zonesManager.Get(ctx), chain, leveragetypes.UTokenPrefix)
 
 	msg := map[string]prewards.MsgSubmitClaim{}
 	assets := map[string]sdk.Coins{}
@@ -159,7 +154,7 @@ func UmeeClaim(
 
 		accountPrefix := banktypes.CreateAccountBalancesPrefix(addrBytes)
 		lookupKey := append(accountPrefix, []byte(coin.GetDenom())...)
-		abciquery, err := client.ABCIQueryWithOptions(
+		bankquery, err := client.ABCIQueryWithOptions(
 			ctx,
 			"/store/bank/key",
 			lookupKey,
@@ -172,7 +167,7 @@ func UmeeClaim(
 			return nil, nil, err
 		}
 
-		amount, err := bankkeeper.UnmarshalBalanceCompat(marshaler, abciquery.Response.Value, tuple.denom)
+		amount, err := bankkeeper.UnmarshalBalanceCompat(marshaler, bankquery.Response.Value, tuple.denom)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -188,10 +183,10 @@ func UmeeClaim(
 		chainMsg := msg[tuple.chain]
 
 		proof := cmtypes.Proof{
-			Data:      abciquery.Response.Value,
-			Key:       abciquery.Response.Key,
-			ProofOps:  abciquery.Response.ProofOps,
-			Height:    abciquery.Response.Height,
+			Data:      bankquery.Response.Value,
+			Key:       bankquery.Response.Key,
+			ProofOps:  bankquery.Response.ProofOps,
+			Height:    bankquery.Response.Height,
 			ProofType: prewards.ProofTypeBank, // module name of proof.
 		}
 
@@ -223,11 +218,11 @@ func UmeeClaim(
 		}
 
 		lookupKey := leveragetypes.KeyCollateralAmount(addrBytes, coin.GetDenom())
-		abciquery, err := client.ABCIQueryWithOptions(
+		leveragequery, err := client.ABCIQueryWithOptions(
 			ctx,
 			"/store/leverage/key",
 			lookupKey,
-			rpcclient.ABCIQueryOptions{Height: abciquery.Response.Height, Prove: true},
+			rpcclient.ABCIQueryOptions{Height: leverageaccountbalancesquery.Response.Height, Prove: true},
 		)
 		fmt.Println("Querying for value", "prefix", lookupKey) // debug?
 		// 7:
@@ -236,7 +231,7 @@ func UmeeClaim(
 			return nil, nil, err
 		}
 
-		amount, err := bankkeeper.UnmarshalBalanceCompat(marshaler, abciquery.Response.Value, tuple.denom)
+		amount, err := bankkeeper.UnmarshalBalanceCompat(marshaler, leveragequery.Response.Value, tuple.denom)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -252,10 +247,10 @@ func UmeeClaim(
 		chainMsg := msg[tuple.chain]
 
 		proof := cmtypes.Proof{
-			Data:      abciquery.Response.Value,
-			Key:       abciquery.Response.Key,
-			ProofOps:  abciquery.Response.ProofOps,
-			Height:    abciquery.Response.Height,
+			Data:      leveragequery.Response.Value,
+			Key:       leveragequery.Response.Key,
+			ProofOps:  leveragequery.Response.ProofOps,
+			Height:    leveragequery.Response.Height,
 			ProofType: prewards.ProofTypeLeverage, // module name of proof.
 		}
 

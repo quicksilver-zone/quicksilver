@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ingenuity-build/multierror"
-	prewards "github.com/ingenuity-build/quicksilver/x/participationrewards/types"
+	prewards "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 	tmhttp "github.com/tendermint/tendermint/rpc/client/http"
 	libclient "github.com/tendermint/tendermint/rpc/jsonrpc/client"
 )
