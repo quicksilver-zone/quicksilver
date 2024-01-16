@@ -345,8 +345,13 @@ export const SignalIntentModal: React.FC<StakingModalProps> = ({ isOpen, onClose
                   <Button
                     mt={4}
                     width="55%"
+                    _active={{
+                      transform: 'scale(0.95)',
+                      color: 'complimentary.800',
+                    }}
                     _hover={{
-                      bgColor: 'complimentary.500',
+                      bgColor: 'rgba(255,128,0, 0.25)',
+                      color: 'complimentary.300',
                     }}
                     onClick={handleStepOneButtonClick}
                   >
@@ -373,7 +378,14 @@ export const SignalIntentModal: React.FC<StakingModalProps> = ({ isOpen, onClose
                   </Text>
                   <HStack mt={4} justifyContent={'center'} alignItems={'center'}>
                     <Button
-                      _hover={{ bgColor: 'complimentary.500' }}
+                      _active={{
+                        transform: 'scale(0.95)',
+                        color: 'complimentary.800',
+                      }}
+                      _hover={{
+                        bgColor: 'rgba(255,128,0, 0.25)',
+                        color: 'complimentary.300',
+                      }}
                       minW={'100px'}
                       onClick={() => {
                         setWeights({});
@@ -386,8 +398,13 @@ export const SignalIntentModal: React.FC<StakingModalProps> = ({ isOpen, onClose
                     {selectedValidators.length > 1 && (
                       <Button
                         minW={'100px'}
+                        _active={{
+                          transform: 'scale(0.95)',
+                          color: 'complimentary.800',
+                        }}
                         _hover={{
-                          bgColor: 'complimentary.500',
+                          bgColor: 'rgba(255,128,0, 0.25)',
+                          color: 'complimentary.300',
                         }}
                         onClick={handleCustomWeightMode}
                       >
@@ -480,7 +497,18 @@ export const SignalIntentModal: React.FC<StakingModalProps> = ({ isOpen, onClose
                     >
                       ←
                     </Button>
-                    <Button isDisabled={!isCustomValid} onClick={handleNextInCustomWeightMode}>
+                    <Button
+                      _active={{
+                        transform: 'scale(0.95)',
+                        color: 'complimentary.800',
+                      }}
+                      _hover={{
+                        bgColor: 'rgba(255,128,0, 0.25)',
+                        color: 'complimentary.300',
+                      }}
+                      isDisabled={!isCustomValid}
+                      onClick={handleNextInCustomWeightMode}
+                    >
                       Next
                     </Button>
                   </Flex>
@@ -507,8 +535,13 @@ export const SignalIntentModal: React.FC<StakingModalProps> = ({ isOpen, onClose
                     </Text>
                     <Button
                       w="55%"
+                      _active={{
+                        transform: 'scale(0.95)',
+                        color: 'complimentary.800',
+                      }}
                       _hover={{
-                        bgColor: 'complimentary.500',
+                        bgColor: 'rgba(255,128,0, 0.25)',
+                        color: 'complimentary.300',
                       }}
                       mt={4}
                       onClick={handleSignalIntent}

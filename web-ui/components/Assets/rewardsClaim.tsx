@@ -174,8 +174,13 @@ export const RewardsClaim: React.FC<RewardsClaimInterface> = ({ address, onClose
               </Text>
             </Checkbox>
             <Button
+              _active={{
+                transform: 'scale(0.95)',
+                color: 'complimentary.800',
+              }}
               _hover={{
-                bgColor: 'complimentary.500',
+                bgColor: 'rgba(255,128,0, 0.25)',
+                color: 'complimentary.300',
               }}
               minW={'120px'}
               onClick={transactionHandler}

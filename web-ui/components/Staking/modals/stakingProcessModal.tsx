@@ -444,8 +444,13 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
                   <Button
                     mt={4}
                     width="55%"
+                    _active={{
+                      transform: 'scale(0.95)',
+                      color: 'complimentary.800',
+                    }}
                     _hover={{
-                      bgColor: 'complimentary.500',
+                      bgColor: 'rgba(255,128,0, 0.25)',
+                      color: 'complimentary.300',
                     }}
                     onClick={handleStepOneButtonClick}
                   >
@@ -492,8 +497,13 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
                   </Text>
                   <HStack mt={4} justifyContent={'center'} alignItems={'center'}>
                     <Button
+                      _active={{
+                        transform: 'scale(0.95)',
+                        color: 'complimentary.800',
+                      }}
                       _hover={{
-                        bgColor: 'complimentary.500',
+                        bgColor: 'rgba(255,128,0, 0.25)',
+                        color: 'complimentary.300',
                       }}
                       minW={'100px'}
                       onClick={handleEqualWeightAssignment}
@@ -503,8 +513,13 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
                     {selectedValidators.length > 1 && (
                       <Button
                         minW={'100px'}
+                        _active={{
+                          transform: 'scale(0.95)',
+                          color: 'complimentary.800',
+                        }}
                         _hover={{
-                          bgColor: 'complimentary.500',
+                          bgColor: 'rgba(255,128,0, 0.25)',
+                          color: 'complimentary.300',
                         }}
                         onClick={handleCustomWeightMode}
                       >
@@ -589,7 +604,18 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
                     >
                       ←
                     </Button>
-                    <Button isDisabled={!isCustomValid} onClick={handleNextInCustomWeightMode}>
+                    <Button
+                      _active={{
+                        transform: 'scale(0.95)',
+                        color: 'complimentary.800',
+                      }}
+                      _hover={{
+                        bgColor: 'rgba(255,128,0, 0.25)',
+                        color: 'complimentary.300',
+                      }}
+                      isDisabled={!isCustomValid}
+                      onClick={handleNextInCustomWeightMode}
+                    >
                       Next
                     </Button>
                   </Flex>
@@ -623,8 +649,13 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
                     </Text>
                     <Button
                       w="55%"
+                      _active={{
+                        transform: 'scale(0.95)',
+                        color: 'complimentary.800',
+                      }}
                       _hover={{
-                        bgColor: 'complimentary.500',
+                        bgColor: 'rgba(255,128,0, 0.25)',
+                        color: 'complimentary.300',
                       }}
                       mt={4}
                       onClick={(event) => handleLiquidStake(event)}
@@ -664,8 +695,13 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
                       </Text>
                       <Button
                         w="55%"
+                        _active={{
+                          transform: 'scale(0.95)',
+                          color: 'complimentary.800',
+                        }}
                         _hover={{
-                          bgColor: 'complimentary.500',
+                          bgColor: 'rgba(255,128,0, 0.25)',
+                          color: 'complimentary.300',
                         }}
                         mt={4}
                         onClick={() => setStep(1)}

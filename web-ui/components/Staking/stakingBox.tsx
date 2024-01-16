@@ -516,8 +516,13 @@ export const StakingBox = ({
                     <Tooltip hasArrow label={liquidStakeTooltip} isDisabled={!isLiquidStakeDisabled}>
                       <Button
                         width="100%"
+                        _active={{
+                          transform: 'scale(0.95)',
+                          color: 'complimentary.800',
+                        }}
                         _hover={{
-                          bgColor: 'complimentary.1000',
+                          bgColor: 'rgba(255,128,0, 0.25)',
+                          color: 'complimentary.300',
                         }}
                         onClick={openStakingModal}
                         isDisabled={Number(tokenAmount) === 0 || !address || Number(tokenAmount) < 0.1}
@@ -793,8 +798,13 @@ export const StakingBox = ({
                 </HStack>
                 <Button
                   width="100%"
+                  _active={{
+                    transform: 'scale(0.95)',
+                    color: 'complimentary.800',
+                  }}
                   _hover={{
-                    bgColor: 'complimentary.1000',
+                    bgColor: 'rgba(255,128,0, 0.25)',
+                    color: 'complimentary.300',
                   }}
                   onClick={handleLiquidUnstake}
                   isDisabled={Number(tokenAmount) === 0 || !address || isSigning || Number(qBalance?.balance.amount) === 0}
