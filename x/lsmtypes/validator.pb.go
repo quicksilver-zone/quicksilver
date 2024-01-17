@@ -8,7 +8,8 @@ import (
 	_ "github.com/cosmos/cosmos-proto"
 	types "github.com/cosmos/cosmos-sdk/codec/types"
 	_ "github.com/cosmos/cosmos-sdk/types"
-	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
+	cosmossdk_io_math "cosmossdk.io/math"
+github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
 	query "github.com/cosmos/cosmos-sdk/types/query"
 	types1 "github.com/cosmos/cosmos-sdk/x/staking/types"
 	_ "github.com/cosmos/gogoproto/gogoproto"
@@ -54,9 +55,9 @@ type Validator struct {
 	// status is the validator status (bonded/unbonding/unbonded).
 	Status types1.BondStatus `protobuf:"varint,4,opt,name=status,proto3,enum=cosmos.staking.v1beta1.BondStatus" json:"status,omitempty"`
 	// tokens define the delegated tokens (incl. self-delegation).
-	Tokens github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,5,opt,name=tokens,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"tokens"`
+	Tokens cosmossdk_io_math.Int `protobuf:"bytes,5,opt,name=tokens,proto3,customtype=cosmossdk.io/math.Int" json:"tokens"`
 	// delegator_shares defines total shares issued to a validator's delegators.
-	DelegatorShares github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,6,opt,name=delegator_shares,json=delegatorShares,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"delegator_shares" yaml:"delegator_shares"`
+	DelegatorShares cosmossdk_io_math.LegacyDec `protobuf:"bytes,6,opt,name=delegator_shares,json=delegatorShares,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"delegator_shares" yaml:"delegator_shares"`
 	// description defines the description terms for the validator.
 	Description types1.Description `protobuf:"bytes,7,opt,name=description,proto3" json:"description"`
 	// unbonding_height defines, if unbonding, the height at which this validator
@@ -69,7 +70,7 @@ type Validator struct {
 	Commission types1.Commission `protobuf:"bytes,10,opt,name=commission,proto3" json:"commission"`
 	// Deprecated: This field has been deprecated with LSM in favor of the
 	// validator bond
-	MinSelfDelegation github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,11,opt,name=min_self_delegation,json=minSelfDelegation,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"min_self_delegation" yaml:"min_self_delegation"` // Deprecated: Do not use.
+	MinSelfDelegation cosmossdk_io_math.Int `protobuf:"bytes,11,opt,name=min_self_delegation,json=minSelfDelegation,proto3,customtype=cosmossdk.io/math.Int" json:"min_self_delegation" yaml:"min_self_delegation"` // Deprecated: Do not use.
 	// strictly positive if this validator's unbonding has been stopped by
 	// external modules
 	UnbondingOnHoldRefCount int64 `protobuf:"varint,12,opt,name=unbonding_on_hold_ref_count,json=unbondingOnHoldRefCount,proto3" json:"unbonding_on_hold_ref_count,omitempty"`
@@ -77,9 +78,9 @@ type Validator struct {
 	// validator
 	UnbondingIds []uint64 `protobuf:"varint,13,rep,packed,name=unbonding_ids,json=unbondingIds,proto3" json:"unbonding_ids,omitempty"`
 	// Number of shares self bonded from the validator
-	ValidatorBondShares github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,14,opt,name=validator_bond_shares,json=validatorBondShares,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"validator_bond_shares" yaml:"validator_bond_shares"`
+	ValidatorBondShares cosmossdk_io_math.LegacyDec `protobuf:"bytes,14,opt,name=validator_bond_shares,json=validatorBondShares,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"validator_bond_shares" yaml:"validator_bond_shares"`
 	// Number of shares either tokenized or owned by a liquid staking provider
-	LiquidShares github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,15,opt,name=liquid_shares,json=liquidShares,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"liquid_shares" yaml:"liquid_shares"`
+	LiquidShares cosmossdk_io_math.LegacyDec `protobuf:"bytes,15,opt,name=liquid_shares,json=liquidShares,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"liquid_shares" yaml:"liquid_shares"`
 }
 
 func (m *Validator) Reset()      { *m = Validator{} }

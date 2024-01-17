@@ -88,8 +88,8 @@ type Zone struct {
 	AccountPrefix                string                                 `protobuf:"bytes,7,opt,name=account_prefix,json=accountPrefix,proto3" json:"account_prefix,omitempty"`
 	LocalDenom                   string                                 `protobuf:"bytes,8,opt,name=local_denom,json=localDenom,proto3" json:"local_denom,omitempty"`
 	BaseDenom                    string                                 `protobuf:"bytes,9,opt,name=base_denom,json=baseDenom,proto3" json:"base_denom,omitempty"`
-	RedemptionRate               github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,10,opt,name=redemption_rate,json=redemptionRate,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"redemption_rate"`
-	LastRedemptionRate           github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,11,opt,name=last_redemption_rate,json=lastRedemptionRate,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"last_redemption_rate"`
+	RedemptionRate               cosmossdk_io_math.LegacyDec `protobuf:"bytes,10,opt,name=redemption_rate,json=redemptionRate,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"redemption_rate"`
+	LastRedemptionRate           cosmossdk_io_math.LegacyDec `protobuf:"bytes,11,opt,name=last_redemption_rate,json=lastRedemptionRate,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"last_redemption_rate"`
 	Validators                   []*Validator                           `protobuf:"bytes,12,rep,name=validators,proto3" json:"validators,omitempty"`
 	AggregateIntent              ValidatorIntents                       `protobuf:"bytes,13,rep,name=aggregate_intent,json=aggregateIntent,proto3,castrepeated=ValidatorIntents" json:"aggregate_intent,omitempty"`
 	MultiSend                    bool                                   `protobuf:"varint,14,opt,name=multi_send,json=multiSend,proto3" json:"multi_send,omitempty"`
@@ -99,7 +99,7 @@ type Zone struct {
 	ValidatorSelectionAllocation uint64                                 `protobuf:"varint,18,opt,name=validator_selection_allocation,json=validatorSelectionAllocation,proto3" json:"validator_selection_allocation,omitempty"`
 	HoldingsAllocation           uint64                                 `protobuf:"varint,19,opt,name=holdings_allocation,json=holdingsAllocation,proto3" json:"holdings_allocation,omitempty"`
 	LastEpochHeight              int64                                  `protobuf:"varint,20,opt,name=last_epoch_height,json=lastEpochHeight,proto3" json:"last_epoch_height,omitempty"`
-	Tvl                          github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,21,opt,name=tvl,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"tvl"`
+	Tvl                          cosmossdk_io_math.LegacyDec `protobuf:"bytes,21,opt,name=tvl,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"tvl"`
 	UnbondingPeriod              int64                                  `protobuf:"varint,22,opt,name=unbonding_period,json=unbondingPeriod,proto3" json:"unbonding_period,omitempty"`
   MessagesPerTx                int64                                  `protobuf:"varint,23,opt,name=messages_per_tx,json=messagesPerTx,proto3" json:"messages_per_tx,omitempty"`
 	Decimals                     int64                                  `protobuf:"varint,24,opt,name=decimals,proto3" json:"decimals,omitempty"`
@@ -235,10 +235,10 @@ type TransferRecord struct {
 ```go
 type Validator struct {
 	ValoperAddress  string                                 `protobuf:"bytes,1,opt,name=valoper_address,json=valoperAddress,proto3" json:"valoper_address,omitempty"`
-	CommissionRate  github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,2,opt,name=commission_rate,json=commissionRate,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"commission_rate"`
-	DelegatorShares github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,3,opt,name=delegator_shares,json=delegatorShares,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"delegator_shares"`
-	VotingPower     github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,4,opt,name=voting_power,json=votingPower,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"voting_power"`
-	Score           github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,5,opt,name=score,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"score"`
+	CommissionRate  cosmossdk_io_math.LegacyDec `protobuf:"bytes,2,opt,name=commission_rate,json=commissionRate,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"commission_rate"`
+	DelegatorShares cosmossdk_io_math.LegacyDec `protobuf:"bytes,3,opt,name=delegator_shares,json=delegatorShares,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"delegator_shares"`
+	VotingPower     cosmossdk_io_math.Int `protobuf:"bytes,4,opt,name=voting_power,json=votingPower,proto3,customtype=cosmossdk.io/math.Int" json:"voting_power"`
+	Score           cosmossdk_io_math.LegacyDec `protobuf:"bytes,5,opt,name=score,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"score"`
 	Status          string                                 `protobuf:"bytes,6,opt,name=status,proto3" json:"status,omitempty"`
 	Jailed          bool                                   `protobuf:"varint,7,opt,name=jailed,proto3" json:"jailed,omitempty"`
 	Tombstoned      bool                                   `protobuf:"varint,8,opt,name=tombstoned,proto3" json:"tombstoned,omitempty"`
@@ -264,7 +264,7 @@ validator.
 ```go
 type ValidatorIntent struct {
 	ValoperAddress string                                 `protobuf:"bytes,1,opt,name=valoper_address,proto3" json:"valoper_address,omitempty"`
-	Weight         github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,2,opt,name=weight,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"weight" yaml:"weight"`
+	Weight         cosmossdk_io_math.LegacyDec `protobuf:"bytes,2,opt,name=weight,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"weight" yaml:"weight"`
 }
 ```
 
