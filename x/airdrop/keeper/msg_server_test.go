@@ -360,17 +360,13 @@ func (suite *KeeperTestSuite) Test_msgServer_Claim() {
 				}
 				appA.GovKeeper.SetProposal(suite.chainA.GetContext(), prop)
 
-				vote := govv1.Vote{
-					ProposalId: 0,
-					Voter:      userAddress,
-					Options: []*govv1.WeightedVoteOption{
-						{
-							Option: govv1.VoteOption_VOTE_OPTION_YES,
-							Weight: "1.0",
-						},
+				// add vote to the above proposal
+				appA.GovKeeper.AddVote(suite.chainA.GetContext(), prop.Id, sdk.AccAddress(userAddress), []*govv1.WeightedVoteOption{
+					{
+						Option: govv1.VoteOption_VOTE_OPTION_YES,
+						Weight: "1.0",
 					},
-				}
-				appA.GovKeeper.SetVote(suite.chainA.GetContext(), vote)
+				}, "test")
 
 				msg = types.MsgClaim{
 					ChainId: suite.chainB.ChainID,

@@ -142,9 +142,11 @@ func (suite *KeeperTestSuite) initTestZoneDrop() {
 func (suite *KeeperTestSuite) fundZoneDrop(chainID string, amount uint64) {
 	quicksilver := suite.GetQuicksilverApp(suite.chainA)
 	ctx := suite.chainA.GetContext()
+	bondDenom, _ := quicksilver.StakingKeeper.BondDenom(ctx)
+
 	coins := sdk.NewCoins(
 		sdk.NewCoin(
-			quicksilver.StakingKeeper.BondDenom(ctx),
+			bondDenom,
 			sdkmath.NewIntFromUint64(amount),
 		),
 	)
