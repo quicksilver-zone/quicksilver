@@ -158,7 +158,7 @@ const StakingIntent: React.FC<StakingIntentProps> = ({ address, isWalletConnecte
         </Flex>
 
         <VStack pb={4} overflowY="auto" gap={4} spacing={2} align="stretch" maxH="250px">
-          {validatorsWithDetails.map(
+          { validatorsWithDetails.length > 0 && validatorsWithDetails.map(
             (validator: { logoUrl: string; moniker: string; percentage: string }, index: Key | null | undefined) => (
               <Flex key={index} justifyContent="space-between" w="full" alignItems="center">
                 <Flex alignItems="center" gap={2}>
@@ -200,7 +200,7 @@ const StakingIntent: React.FC<StakingIntentProps> = ({ address, isWalletConnecte
                 </Text>
               </Flex>
             ),
-          )}
+          ) || <Text fontSize="md">No intent set</Text>}
         </VStack>
       </VStack>
     </Box>
