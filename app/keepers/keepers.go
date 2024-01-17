@@ -178,6 +178,7 @@ func NewAppKeepers(
 		blockedAddresses,
 		skipUpgradeHeights,
 		mock,
+		homePath,
 		appOpts,
 		wasmDir,
 		supplyEndpointEnabled,
@@ -374,7 +375,7 @@ func (appKeepers *AppKeepers) InitKeepers(
 	appKeepers.TransferModule = transfer.NewAppModule(appKeepers.TransferKeeper)
 
 	// TODO: Not sure
-	appKeepers.PacketForwardModule = packetforward.NewAppModule(appKeepers.PacketForwardKeeper, appKeepers.GetSubspace(packetforwardexported.ModuleName))
+	appKeepers.PacketForwardModule = packetforward.NewAppModule(appKeepers.PacketForwardKeeper, packetforwardexported.Subspace(appKeepers.GetSubspace(packetforwardtypes.ModuleName)))
 
 	// ICA Keepers
 	appKeepers.ICAControllerKeeper = icacontrollerkeeper.NewKeeper(
@@ -552,12 +553,6 @@ func (appKeepers *AppKeepers) InitKeepers(
 	// Set legacy router for backwards compatibility with gov v1beta1
 	govKeeper.SetLegacyRouter(govRouter)
 
-	app.GovKeeper = *govKeeper.SetHooks(
-		govtypes.NewMultiGovHooks(
-		// register the governance hooks
-		),
-	)
-
 	// IBC Fee Module keeper
 	appKeepers.IBCFeeKeeper = ibcfeekeeper.NewKeeper(
 		appCodec,
@@ -609,7 +604,7 @@ func (*AppKeepers) initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *cod
 	paramsKeeper.Subspace(ibctransfertypes.ModuleName)
 	paramsKeeper.Subspace(icacontrollertypes.SubModuleName)
 	paramsKeeper.Subspace(icahosttypes.SubModuleName)
-	paramsKeeper.Subspace(ibchost.ModuleName)
+	paramsKeeper.Subspace(ibchost.SubModuleName)
 	paramsKeeper.Subspace(packetforwardtypes.ModuleName).WithKeyTable(packetforwardtypes.ParamKeyTable())
 	// quicksilver subspaces
 	paramsKeeper.Subspace(claimsmanagertypes.ModuleName)
