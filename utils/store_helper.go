@@ -4,11 +4,9 @@ import (
 	"errors"
 	"fmt"
 
-	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/store"
 	storetypes "cosmossdk.io/store/types"
 	db "github.com/cosmos/cosmos-db"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -125,16 +123,18 @@ func MustGet(storeObj store.KVStore, key []byte, result proto.Message) {
 	}
 }
 
-// MustSetDec sets dec value to store at key. Panics on any error.
-func MustSetDec(storeObj store.KVStore, key []byte, value sdkmath.LegacyDec) {
-	MustSet(storeObj, key, &sdk.DecProto{
-		Dec: value,
-	})
-}
+// Temporarily commented out:
+// TODO: Uncomment and refactor
+// // MustSetDec sets dec value to store at key. Panics on any error.
+// func MustSetDec(storeObj store.KVStore, key []byte, value sdkmath.LegacyDec) {
+// 	MustSet(storeObj, key, &sdk.DecProto{
+// 		Dec: value,
+// 	})
+// }
 
-// MustGetDec gets dec value from store at key. Panics on any error.
-func MustGetDec(storeObj store.KVStore, key []byte) sdkmath.LegacyDec {
-	result := &sdkmath.LegacyDecProto{}
-	MustGet(storeObj, key, result)
-	return result.Dec
-}
+// // MustGetDec gets dec value from store at key. Panics on any error.
+// func MustGetDec(storeObj store.KVStore, key []byte) sdkmath.LegacyDec {
+// 	result := &sdkmath.LegacyDecProto{}
+// 	MustGet(storeObj, key, result)
+// 	return result.Dec
+// }
