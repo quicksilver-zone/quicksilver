@@ -493,6 +493,7 @@ func (appKeepers *AppKeepers) InitKeepers(
 		packetforwardkeeper.DefaultForwardTransferPacketTimeoutTimestamp,
 		packetforwardkeeper.DefaultRefundTransferPacketTimeoutTimestamp,
 	)
+	ibcStack = interchainstaking.NewTransferMiddleware(ibcStack, appKeepers.InterchainstakingKeeper)
 
 	// Create static IBC router, add transfer route, then set and seal it
 	ibcRouter := porttypes.NewRouter()

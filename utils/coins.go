@@ -2,11 +2,12 @@ package utils
 
 import (
 	"fmt"
+	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	ibctransfertypes "github.com/cosmos/ibc-go/v5/modules/apps/transfer/types"
+	transfertypes "github.com/cosmos/ibc-go/v5/modules/apps/transfer/types"
 )
 
 func DenomFromRequestKey(query []byte, accAddr sdk.AccAddress) (string, error) {
@@ -27,18 +28,16 @@ func DenomFromRequestKey(query []byte, accAddr sdk.AccAddress) (string, error) {
 	return denom, nil
 }
 
-func DeriveIbcDenom(port, channel, denom string) string {
-	return DeriveIbcDenomTrace(port, channel, denom).IBCDenom()
-}
-
-func DeriveIbcDenomTrace(port, channel, denom string) ibctransfertypes.DenomTrace {
-	// generate denomination prefix
-	sourcePrefix := ibctransfertypes.GetDenomPrefix(port, channel)
-	// NOTE: sourcePrefix contains the trailing "/"
-	prefixedDenom := sourcePrefix + denom
-
-	// construct the denomination trace from the full raw denomination
-	denomTrace := ibctransfertypes.ParseDenomTrace(prefixedDenom)
-
-	return denomTrace
+func DeriveIbcDenom(port, channel, counterpartyPort, counterpartyChannel, denom string) string {
+	counterpartyPrefix := transfertypes.GetDenomPrefix(counterpartyPort, counterpartyChannel)
+	if strings.HasPrefix(denom, counterpartyPrefix) {
+		unwoundDenom := denom[len(counterpartyPrefix):]
+		denomTrace := transfertypes.ParseDenomTrace(unwoundDenom)
+		if denomTrace.Path == "" {
+			return unwoundDenom
+		}
+		return denomTrace.IBCDenom()
+	}
+	prefixedDenom := transfertypes.GetDenomPrefix(port, channel) + denom
+	return transfertypes.ParseDenomTrace(prefixedDenom).IBCDenom()
 }

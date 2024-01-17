@@ -10,6 +10,7 @@ import (
 
 	"github.com/golang/protobuf/proto" // nolint:staticcheck
 
+	"cosmossdk.io/math"
 	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -273,22 +274,22 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 			if err := k.HandleUpdatedWithdrawAddress(ctx, msg.Msg); err != nil {
 				return err
 			}
-		case "/ibc.applications.transfer.v1.MsgTransfer":
-			// this should be okay to fail; we'll pick it up next time around.
-			if !success {
-				return nil
-			}
-			response := ibctransfertypes.MsgTransferResponse{}
-			err = proto.Unmarshal(msgResponse, &response)
-			if err != nil {
-				k.Logger(ctx).Error("unable to unpack MsgTransfer response", "error", err)
-				return err
-			}
+		// case "/ibc.applications.transfer.v1.MsgTransfer":
+		// 	// this should be okay to fail; we'll pick it up next time around.
+		// 	if !success {
+		// 		return nil
+		// 	}
+		// 	response := ibctransfertypes.MsgTransferResponse{}
+		// 	err = proto.Unmarshal(msgResponse, &response)
+		// 	if err != nil {
+		// 		k.Logger(ctx).Error("unable to unpack MsgTransfer response", "error", err)
+		// 		return err
+		// 	}
 
-			k.Logger(ctx).Info("MsgTranfer acknowledgement received")
-			if err := k.HandleMsgTransfer(ctx, msg.Msg); err != nil {
-				return err
-			}
+		// 	k.Logger(ctx).Info("MsgTranfer acknowledgement received")
+		// 	if err := k.HandleMsgTransfer(ctx, msg.Msg); err != nil {
+		// 		return err
+		// 	}
 		default:
 			k.Logger(ctx).Error("unhandled acknowledgement packet", "type", reflect.TypeOf(msg.Msg).Name())
 		}
@@ -303,46 +304,28 @@ func (*Keeper) HandleTimeout(_ sdk.Context, _ channeltypes.Packet) error {
 
 // ----------------------------------------------------------------
 
-func (k *Keeper) HandleMsgTransfer(ctx sdk.Context, msg sdk.Msg) error {
+func (k *Keeper) HandleMsgTransfer(ctx sdk.Context, msg ibctransfertypes.FungibleTokenPacketData, ibcDenom string) error {
 	k.Logger(ctx).Info("Received MsgTransfer acknowledgement")
 	// first, type assertion. we should have ibctransfertypes.MsgTransfer
-	sMsg, ok := msg.(*ibctransfertypes.MsgTransfer)
-	if !ok {
-		k.Logger(ctx).Error("unable to cast source message to MsgTransfer")
-		return errors.New("unable to cast source message to MsgTransfer")
-	}
 
 	// check if destination is interchainstaking module account (spoiler: it was)
-	if sMsg.Receiver != k.AccountKeeper.GetModuleAddress(types.ModuleName).String() {
+	if msg.Receiver != k.AccountKeeper.GetModuleAddress(types.ModuleName).String() {
 		k.Logger(ctx).Error("msgTransfer to unknown account!")
 		return errors.New("unexpected recipient")
 	}
 
-	receivedCoin := sMsg.Token
+	receivedAmount, ok := math.NewIntFromString(msg.Amount)
+	if !ok {
+		return fmt.Errorf("unable to marshal amount into math.Int: %s", msg.Amount)
+	}
+	receivedCoin := sdk.NewCoin(ibcDenom, receivedAmount)
 
-	zone, found := k.GetZoneForWithdrawalAccount(ctx, sMsg.Sender)
+	zone, found := k.GetZoneForWithdrawalAccount(ctx, msg.Sender)
 	if !found {
-		return fmt.Errorf("zone not found for withdrawal account %s", sMsg.Sender)
+		return fmt.Errorf("zone not found for withdrawal account %s", msg.Sender)
 	}
 
-	var channel *channeltypes.IdentifiedChannel
-	k.IBCKeeper.ChannelKeeper.IterateChannels(ctx, func(ic channeltypes.IdentifiedChannel) bool {
-		if ic.Counterparty.ChannelId == sMsg.SourceChannel && ic.Counterparty.PortId == sMsg.SourcePort && len(ic.ConnectionHops) == 1 && ic.ConnectionHops[0] == zone.ConnectionId && ic.State == channeltypes.OPEN {
-			channel = &ic
-			return true
-		}
-		return false
-	})
-
-	if channel == nil {
-		k.Logger(ctx).Error("channel not found for the packet", "port", sMsg.SourcePort, "channel", sMsg.SourceChannel)
-		return errors.New("channel not found for the packet")
-	}
-
-	denomTrace := utils.DeriveIbcDenomTrace(channel.PortId, channel.ChannelId, receivedCoin.Denom)
-	receivedCoin.Denom = denomTrace.IBCDenom()
-
-	if found && denomTrace.BaseDenom != zone.BaseDenom {
+	if found && msg.Denom != zone.BaseDenom {
 		// k.Logger(ctx).Error("got withdrawal account and NOT staking denom", "rx", receivedCoin.Denom, "trace_base_denom", denomTrace.BaseDenom, "zone_base_denom", zone.BaseDenom)
 		feeAmount := sdk.NewDecFromInt(receivedCoin.Amount).Mul(k.GetCommissionRate(ctx)).TruncateInt()
 		rewardCoin := receivedCoin.SubAmount(feeAmount)
