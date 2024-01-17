@@ -7,15 +7,12 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"cosmossdk.io/log"
 	"github.com/CosmWasm/wasmd/x/wasm"
-	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmos "github.com/cometbft/cometbft/libs/os"
 	dbm "github.com/cosmos/cosmos-db"
-	"github.com/prometheus/client_golang/prometheus"
 	"github.com/spf13/cast"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -41,6 +38,7 @@ import (
 	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
 	ibctestingtypes "github.com/cosmos/ibc-go/v8/testing/types"
 
+	nodeservice "github.com/cosmos/cosmos-sdk/client/grpc/node"
 	"github.com/quicksilver-zone/quicksilver/v7/app/keepers"
 	"github.com/quicksilver-zone/quicksilver/v7/docs"
 	airdroptypes "github.com/quicksilver-zone/quicksilver/v7/x/airdrop/types"
@@ -80,6 +78,7 @@ var (
 // Quicksilver implements an extended ABCI application.
 type Quicksilver struct {
 	*baseapp.BaseApp
+	keepers.AppKeepers
 	legacyAmino       *codec.LegacyAmino
 	appCodec          codec.Codec
 	txConfig          client.TxConfig
@@ -107,11 +106,8 @@ func NewQuicksilver(
 	loadLatest bool,
 	skipUpgradeHeights map[int64]bool,
 	homePath string,
-	invCheckPeriod uint,
 	encodingConfig EncodingConfig,
-	enabledProposals []wasm.ProposalType,
 	appOpts servertypes.AppOptions,
-	wasmOpts []wasm.Option,
 	mock bool,
 	enableSupplyEndpoint bool,
 	baseAppOptions ...func(*baseapp.BaseApp),
@@ -134,10 +130,9 @@ func NewQuicksilver(
 
 	app := &Quicksilver{
 		BaseApp:           bApp,
-		cdc:               cdc,
+		legacyAmino:       cdc,
 		appCodec:          appCodec,
 		interfaceRegistry: interfaceRegistry,
-		invCheckPeriod:    invCheckPeriod,
 	}
 
 	wasmDir := filepath.Join(homePath, "data")
@@ -155,12 +150,8 @@ func NewQuicksilver(
 		skipUpgradeHeights,
 		mock,
 		homePath,
-		invCheckPeriod,
 		appOpts,
 		wasmDir,
-		wasmConfig,
-		enabledProposals,
-		wasmOpts,
 		enableSupplyEndpoint,
 	)
 
@@ -176,7 +167,9 @@ func NewQuicksilver(
 	app.mm.SetOrderInitGenesis(orderInitBlockers()...)
 
 	app.mm.RegisterInvariants(&app.CrisisKeeper)
-	app.mm.RegisterRoutes(app.Router(), app.QueryRouter(), encodingConfig.Amino)
+	// TODO: in this commit they just removed the RegisterRoutes method https://github.com/cosmos/cosmos-sdk/commit/3a097012b59413641ac92f18f226c5d6b674ae42
+
+	// app.mm.RegisterRoutes(app.Router(), app.QueryRouter(), encodingConfig.Amino)
 	app.configurator = module.NewConfigurator(app.appCodec, app.MsgServiceRouter(), app.GRPCQueryRouter())
 	app.mm.RegisterServices(app.configurator)
 
@@ -239,7 +232,7 @@ func NewQuicksilver(
 func (app *Quicksilver) Name() string { return app.BaseApp.Name() }
 
 // BeginBlocker updates every begin block.
-func (app *Quicksilver) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
+func (app *Quicksilver) BeginBlocker(ctx sdk.Context) (sdk.BeginBlock, error) {
 	if ctx.ChainID() == "quicksilver-2" && ctx.BlockHeight() == 235001 {
 		zone, found := app.InterchainstakingKeeper.GetZone(ctx, "stargaze-1")
 		if !found {
@@ -248,12 +241,12 @@ func (app *Quicksilver) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock
 		app.InterchainstakingKeeper.OverrideRedemptionRateNoCap(ctx, &zone)
 	}
 
-	return app.mm.BeginBlock(ctx, req)
+	return app.mm.BeginBlock(ctx)
 }
 
 // EndBlocker updates every end block.
-func (app *Quicksilver) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
-	return app.mm.EndBlock(ctx, req)
+func (app *Quicksilver) EndBlocker(ctx sdk.Context) (sdk.EndBlock, error) {
+	return app.mm.EndBlock(ctx)
 }
 
 // DeliverTx calls BaseApp.DeliverTx and calculates transactions per second.
@@ -272,13 +265,16 @@ func (app *Quicksilver) DeliverTx(req abci.RequestDeliverTx) (res abci.ResponseD
 }
 
 // InitChainer updates at chain initialization.
-func (app *Quicksilver) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
+func (app *Quicksilver) InitChainer(ctx sdk.Context, req *abci.RequestInitChain) (*abci.ResponseInitChain, error) {
 	var genesisState GenesisState
 	if err := json.Unmarshal(req.AppStateBytes, &genesisState); err != nil {
 		panic(err)
 	}
 	app.UpgradeKeeper.SetModuleVersionMap(ctx, app.mm.GetVersionMap())
-	return app.mm.InitGenesis(ctx, app.appCodec, genesisState)
+
+	response, err := app.mm.InitGenesis(ctx, app.appCodec, genesisState)
+
+	return response, err
 }
 
 // LoadHeight loads state at a particular height.
@@ -312,7 +308,7 @@ func (*Quicksilver) BlockedAddrs() map[string]bool {
 // NOTE: This is solely to be used for testing purposes as it may be desirable
 // for modules to register their own custom testing types.
 func (app *Quicksilver) LegacyAmino() *codec.LegacyAmino {
-	return app.cdc
+	return app.legacyAmino
 }
 
 // AppCodec returns Quicksilver's app codec.
@@ -350,6 +346,9 @@ func (*Quicksilver) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APICo
 	authtx.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 	// Register new tendermint queries routes from grpc-gateway.
 	tmservice.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
+
+	// Register node gRPC service for grpc-gateway.
+	nodeservice.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 
 	ModuleBasics.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 
@@ -412,40 +411,6 @@ func GetMaccPerms() map[string][]string {
 	return dupMaccPerms
 }
 
-func GetWasmOpts(appOpts servertypes.AppOptions) []wasm.Option {
-	var wasmOpts []wasm.Option
-	if cast.ToBool(appOpts.Get("telemetry.enabled")) {
-		wasmOpts = append(wasmOpts, wasmkeeper.WithVMCacheMetrics(prometheus.DefaultRegisterer))
-	}
-
-	wasmOpts = append(wasmOpts, wasmkeeper.WithGasRegister(NewWasmGasRegister()))
-
-	return wasmOpts
-}
-
-// PROPOSALS
-
-const (
-	ProposalsEnabled = "true"
-	// If set to non-empty string it must be comma-separated list of values that are all a subset
-	// of "EnableAllProposals" (takes precedence over ProposalsEnabled)
-	// https://github.com/CosmWasm/wasmd/blob/02a54d33ff2c064f3539ae12d75d027d9c665f05/x/wasm/internal/types/proposal.go#L28-L34
-	EnableSpecificProposals = ""
-)
-
-// GetEnabledProposals parses the ProposalsEnabled / EnableSpecificProposals values to
-// produce a list of enabled proposals to pass into wasmd app.
-func GetEnabledProposals() []wasm.ProposalType {
-	if EnableSpecificProposals == "" {
-		if ProposalsEnabled == "true" {
-			return wasm.EnableAllProposals
-		}
-		return wasm.DisableAllProposals
-	}
-	chunks := strings.Split(EnableSpecificProposals, ",")
-	proposals, err := wasm.ConvertToProposals(chunks)
-	if err != nil {
-		panic(err)
-	}
-	return proposals
+func (app *Quicksilver) RegisterNodeService(clientCtx client.Context, cfg config.Config) {
+	nodeservice.RegisterNodeService(clientCtx, app.GRPCQueryRouter(), cfg)
 }
