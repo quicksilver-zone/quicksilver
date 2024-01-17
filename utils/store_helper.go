@@ -4,10 +4,12 @@ import (
 	"errors"
 	"fmt"
 
-	db "github.com/cosmos/cosmos-db"
-	"github.com/gogo/protobuf/proto"
-
+	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/store"
+	storetypes "cosmossdk.io/store/types"
+	db "github.com/cosmos/cosmos-db"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"google.golang.org/protobuf/proto"
 )
 
 func GatherAllKeysFromStore(storeObj store.KVStore) []string {
@@ -125,7 +127,7 @@ func MustGet(storeObj store.KVStore, key []byte, result proto.Message) {
 
 // MustSetDec sets dec value to store at key. Panics on any error.
 func MustSetDec(storeObj store.KVStore, key []byte, value sdkmath.LegacyDec) {
-	MustSet(storeObj, key, &sdkmath.LegacyDecProto{
+	MustSet(storeObj, key, &sdk.DecProto{
 		Dec: value,
 	})
 }

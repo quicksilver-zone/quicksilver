@@ -4,14 +4,31 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/kv"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-
 	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 )
 
+func addressAndDenomFromBalancesStore(key []byte) (sdk.AccAddress, string, error) {
+	if len(key) == 0 {
+		return nil, "", banktypes.ErrInvalidKey
+	}
+
+	kv.AssertKeyAtLeastLength(key, 1)
+
+	addrBound := int(key[0])
+
+	if len(key)-1 < addrBound {
+		return nil, "", banktypes.ErrInvalidKey
+	}
+
+	return key[1 : addrBound+1], string(key[addrBound+1:]), nil
+}
+
 func DenomFromRequestKey(query []byte, accAddr sdk.AccAddress) (string, error) {
 	balancesStore := query[1:]
-	gotAccAddress, denom, err := banktypes.AddressAndDenomFromBalancesStore(balancesStore)
+
+	gotAccAddress, denom, err := addressAndDenomFromBalancesStore(balancesStore)
 	if err != nil {
 		return "", err
 	}
