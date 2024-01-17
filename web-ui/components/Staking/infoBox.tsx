@@ -159,7 +159,7 @@ export const InfoBox: React.FC<AssetsAccordianProps> = ({ selectedOption, displa
 
       <Text mt={3} color="white" textAlign="center" bgColor="rgba(0,0,0,0.4)" p={5} width="100%" borderRadius={6} fontWeight="light">
         Want to learn more about rewards, fees, and unbonding on Quicksilver?&nbsp;Check out the{' '}
-        <Link href="https://your-docs-url.com" color="complimentary.900" isExternal>
+        <Link href="https://docs.quicksilver.zone" color="complimentary.900" isExternal>
           docs
         </Link>
         .
