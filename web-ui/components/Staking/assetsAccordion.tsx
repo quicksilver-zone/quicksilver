@@ -80,7 +80,7 @@ export const AssetsAccordian: React.FC<AssetsAccordianProps> = ({ selectedOption
           <h2>
             <AccordionButton _hover={{ cursor: 'default' }} borderRadius={'10px'} borderTopColor={'transparent'}>
               <Flex p={1} flexDirection="row" flex="1" alignItems="center">
-                <Image alt="qAtom" src={selectedOption.qlogo} boxSize="35px" mr={2} />
+                <Image alt="qAtom" borderRadius={'full'} src={selectedOption.qlogo} boxSize="35px" mr={2} />
                 <Text fontSize="16px" color={'white'}>
                   Liquid Staked
                 </Text>

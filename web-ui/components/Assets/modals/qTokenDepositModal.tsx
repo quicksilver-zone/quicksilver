@@ -42,7 +42,7 @@ const QDepositModal: React.FC<QDepositModalProps> = ({ token }) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const chainOptions = useMemo(() => {
-    const desiredChains = ['osmosis', 'secretnetwork', 'umee'];
+    const desiredChains = ['osmosis', 'umee'];
     return chainRecords
       .filter((chainRecord) => desiredChains.includes(chainRecord.name))
       .map((chainRecord) => ({

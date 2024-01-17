@@ -22,8 +22,8 @@ import { coins, StdFee } from '@cosmjs/amino';
 import { useChain } from '@cosmos-kit/react';
 import styled from '@emotion/styled';
 import { bech32 } from 'bech32';
-import { assets } from 'chain-registry';
-import chains from 'chain-registry';
+import { assets, chains } from 'chain-registry';
+
 import { cosmos } from 'interchain-query';
 
 import React, { useEffect, useState } from 'react';
@@ -98,6 +98,8 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
     newChainName = 'osmosistestnet';
   } else if (selectedOption?.chainId === 'regen-redwood-1') {
     newChainName = 'regen';
+  } else if (selectedOption?.chainId === 'sommelier-3') {
+    newChainName = 'sommelier';
   } else {
     // Default case
     newChainName = selectedOption?.chainName;
@@ -155,11 +157,11 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
   const calculateIntents = () => {
     return selectedValidators.map((validator) => {
       // For each validator, calculate the weight based on whether default weights are used
-      const weight = useDefaultWeights ? defaultWeight : weights[validator.operatorAddress];
+      const weight = useDefaultWeights ? defaultWeight : weights[validator.operatorAddress] || 0;
 
       return {
         address: validator.operatorAddress,
-        intent: weight.toFixed(4), // Ensure 4 decimal places
+        intent: weight.toFixed(4),
       };
     });
   };
@@ -245,16 +247,23 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
   });
 
   const mainTokens = assets.find(({ chain_name }) => chain_name === newChainName);
-  const fees = chains.chains.find(({ chain_name }) => chain_name === newChainName)?.fees?.fee_tokens;
+  const fees = chains.find(({ chain_name }) => chain_name === newChainName)?.fees?.fee_tokens;
   const mainDenom = mainTokens?.assets[0].base ?? '';
-  const fixedMinGasPrice = fees?.find(({ denom }) => denom === mainDenom)?.average_gas_price ?? '';
-  const feeAmount = shiftDigits(fixedMinGasPrice, 6);
+  let feeAmount;
+  if (selectedOption?.chainName === 'sommelier') {
+    // Hardcoded value for sommelier-3
+    feeAmount = '10000';
+  } else {
+    // Default case
+    const fixedMinGasPrice = fees?.find(({ denom }) => denom === mainDenom)?.average_gas_price ?? '';
+    feeAmount = shiftDigits(fixedMinGasPrice, 6).toString();
+  }
 
   const fee: StdFee = {
     amount: [
       {
         denom: mainDenom,
-        amount: feeAmount.toString(),
+        amount: feeAmount,
       },
     ],
     gas: '500000',

@@ -15,7 +15,7 @@ import {
   StatNumber,
   Spinner,
 } from '@chakra-ui/react';
-import chains from '@chalabi/chain-registry';
+import chains from 'chain-registry';
 
 import { coins, StdFee } from '@cosmjs/amino';
 

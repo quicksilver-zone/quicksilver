@@ -6,7 +6,7 @@ const createGrpcGateWayClient = quicksilver.ClientFactory.createGrpcGateWayClien
 
 export const useGrpcQueryClient = (chainName: string) => {
 
-  
+
   let grpcEndpoint: string | undefined;
   const env = process.env.NEXT_PUBLIC_CHAIN_ENV; 
 
@@ -19,6 +19,7 @@ export const useGrpcQueryClient = (chainName: string) => {
     stargaze: env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_LCD_ENDPOINT_STARGAZE : process.env.NEXT_PUBLIC_MAINNET_LCD_ENDPOINT_STARGAZE,
     regen: env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_LCD_ENDPOINT_REGEN : process.env.NEXT_PUBLIC_MAINNET_LCD_ENDPOINT_REGEN,
     osmosis: env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_LCD_ENDPOINT_OSMOSIS : process.env.NEXT_PUBLIC_MAINNET_LCD_ENDPOINT_OSMOSIS,
+    juno: env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_LCD_ENDPOINT_JUNO : process.env.NEXT_PUBLIC_MAINNET_LCD_ENDPOINT_JUNO,
   };
 
 

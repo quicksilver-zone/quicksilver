@@ -5,6 +5,7 @@ export const ibcDenomDepositMapping = {
       qSTARS: 'qstars',
       qREGEN: 'qregen',
       qSOMM: 'qsomm',
+      qJUNO: 'qjuno',
     },
     umee: {
         qATOM: 'qatom',
@@ -12,14 +13,9 @@ export const ibcDenomDepositMapping = {
         qSTARS: 'qstars',
         qREGEN: 'qregen',
         qSOMM: 'qsomm',
+        qJUNO: 'qjuno',
     },
-    secretnetwork: {
-        qATOM: 'qatom',
-        qOSMO: 'qosmo',
-        qSTARS: 'qstars',
-        qREGEN: 'qregen',
-        qSOMM: 'qsomm',
-    },
+
   };
 
   export const ibcDenomWithdrawMapping = {
@@ -32,17 +28,11 @@ export const ibcDenomDepositMapping = {
     },
     umee: {
       qATOM: 'ibc/454725EA4029BAA99C293904336DE9A4B84E2BF7D83B9C56EE6B03E8A65FB5A1',
-      qOSMO: 'ibc/123',
-      qSTARS: 'ibc/123',
-      qREGEN: 'ibc/123',
-      qSOMM: 'ibc/123',
-    },
-    secretnetwork: {
-      qATOM: 'ibc/97048A1FAFF5D84D4A5DDD9976AD332A3CAD99C81BC5C0C2B82A50E4C2131FB2',
-      qOSMO: 'ibc/123',
-      qSTARS: 'ibc/123',
-      qREGEN: 'ibc/123',
-      qSOMM: 'ibc/123',
+      qOSMO: 'ibc/F0D60708ACC09F2BDFF531D17477AE5F218220943A4792256DEF3F836E875D27',
+      qSTARS: 'ibc/31946162F3E898B9E3A21792DD2AC740F2E82E7B92769BDF239C3DDA1726BB9F',
+      qREGEN: 'ibc/16F0C7E49C2FE3A99E92A20DBCF4006B38ABC4E29F7F37829AD40F2C585BE835',
+      qSOMM: 'ibc/ACF9DA139FE5BC8F95AC4A12B0B6D7710274DEDAC57284B881BEE1896F40642D',
+      qJUNO: 'ibc/CA0BEF2524A37205009210EFCFB09585FBA9648C5F065FA078944A5C6704E8DC'
     },
   };
 
@@ -81,12 +71,20 @@ export const networks = [
     },
     {
       value: 'SOMM',
-      logo: '/quicksilver/img/networks/sommelier.png',
+      logo: '/quicksilver/img/networks/somm.svg',
       qlogo: '/quicksilver/img/networks/qsomm.png',
       name: 'Sommelier',
       chainName: 'sommelier',
       chainId: 'sommelier-3',
     },
+    {
+      value: 'JUNO',
+      logo: '/quicksilver/img/networks/juno.svg',
+      qlogo: '/quicksilver/img/networks/qjuno.png',
+      name: 'Juno',
+      chainName: 'juno',
+      chainId: 'juno-1',
+      },
   ];
 
   export const testNetworks = [
@@ -124,12 +122,20 @@ export const networks = [
     },
     {
       value: 'SOMM',
-      logo: '/quicksilver/img/networks/sommelier.png',
+      logo: '/quicksilver/img/networks/somm.svg',
       qlogo: '/quicksilver/img/networks/qsomm.png',
       name: 'Sommelier',
-      chainName: 'sommelier',
+      chainName: 'Sommelier',
       chainId: 'sommelier-3',
     },
+    {
+        value: 'JUNO',
+        logo: '/quicksilver/img/networks/juno.svg',
+        qlogo: '/quicksilver/img/networks/qjuno.png',
+        name: 'Juno',
+        chainName: 'juno',
+        chainId: 'juno-1',
+        },
   ];
 
 

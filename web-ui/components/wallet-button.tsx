@@ -4,14 +4,10 @@ import { MouseEventHandler } from 'react';
 import { FiAlertTriangle } from 'react-icons/fi';
 
 import {
-  Astronaut,
   Error,
   Connected,
-  ConnectedShowAddress,
-  ConnectedUserInfo,
   Connecting,
   ConnectStatusWarn,
-  CopyAddressBtn,
   Disconnected,
   NotExist,
   Rejected,

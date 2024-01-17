@@ -26,7 +26,7 @@ interface UnbondingAssetsTableProps {
 }
 
 const UnbondingAssetsTable: React.FC<UnbondingAssetsTableProps> = ({ address, isWalletConnected }) => {
-  const chains = ['Cosmos', 'Stargaze', 'Osmosis', 'Regen', 'Sommelier'];
+  const chains = ['Cosmos', 'Stargaze', 'Osmosis', 'Regen', 'Sommelier', 'Juno'];
   const [currentChainIndex, setCurrentChainIndex] = useState(0);
 
   const currentChainName = chains[currentChainIndex];
@@ -41,6 +41,8 @@ const UnbondingAssetsTable: React.FC<UnbondingAssetsTableProps> = ({ address, is
     newChainName = 'regen';
   } else if (currentChainName === 'Sommelier') {
     newChainName = 'sommelier';
+  } else if (currentChainName === 'Juno') {
+    newChainName = 'juno';
   } else {
     // Default case
     newChainName = currentChainName;

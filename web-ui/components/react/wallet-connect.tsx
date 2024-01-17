@@ -14,7 +14,7 @@ export const ConnectWalletButton = ({ buttonText, isLoading, isDisabled, icon }:
 
   useEffect(() => {
     if (status === 'Done') {
-      client?.enable?.(['cosmoshub-4', 'osmosis-1', 'regen-1', 'sommelier-3', 'stargaze-1']);
+      client?.enable?.(['cosmoshub-4', 'osmosis-1', 'regen-1', 'sommelier-3', 'stargaze-1', 'juno-1']);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status]);

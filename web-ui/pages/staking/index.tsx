@@ -41,6 +41,7 @@ export default function Staking() {
     // Default case
     newChainId = selectedNetwork.chainId;
   }
+
   const { APY, isLoading, isError } = useAPYQuery(newChainId);
   const [balance, setBalance] = useState('');
   const [qBalance, setQBalance] = useState('');

@@ -52,6 +52,7 @@ function Home() {
   const STARGAZE_CHAIN_ID = process.env.NEXT_PUBLIC_STARGAZE_CHAIN_ID;
   const REGEN_CHAIN_ID = process.env.NEXT_PUBLIC_REGEN_CHAIN_ID;
   const SOMMELIER_CHAIN_ID = process.env.NEXT_PUBLIC_SOMMELIER_CHAIN_ID;
+  const JUNO_CHAIN_ID = process.env.NEXT_PUBLIC_JUNO_CHAIN_ID;
 
   // Retrieve balance for each token
   const { balance: qAtom } = useQBalanceQuery('quicksilver', address ?? '', 'atom');
@@ -59,6 +60,7 @@ function Home() {
   const { balance: qStars } = useQBalanceQuery('quicksilver', address ?? '', 'stars');
   const { balance: qRegen } = useQBalanceQuery('quicksilver', address ?? '', 'regen');
   const { balance: qSomm } = useQBalanceQuery('quicksilver', address ?? '', 'somm');
+  const { balance: qJuno } = useQBalanceQuery('quicksilver', address ?? '', 'juno');
 
   // Retrieve zone data for each token
   const { data: CosmosZone } = useZoneQuery(COSMOSHUB_CHAIN_ID ?? '');
@@ -66,6 +68,7 @@ function Home() {
   const { data: StarZone } = useZoneQuery(STARGAZE_CHAIN_ID ?? '');
   const { data: RegenZone } = useZoneQuery(REGEN_CHAIN_ID ?? '');
   const { data: SommZone } = useZoneQuery(SOMMELIER_CHAIN_ID ?? '');
+  const { data: JunoZone } = useZoneQuery(JUNO_CHAIN_ID ?? '');
   // Retrieve APY data for each token
   const { APY: cosmosAPY } = useAPYQuery('cosmoshub-4');
   const { APY: osmoAPY } = useAPYQuery('osmosis-1');
@@ -73,6 +76,7 @@ function Home() {
   const { APY: regenAPY } = useAPYQuery('regen-1');
   const { APY: sommAPY } = useAPYQuery('sommelier-3');
   const { APY: quickAPY } = useAPYQuery('quicksilver-2');
+  const { APY: junoAPY } = useAPYQuery('juno-1');
 
   // useMemo hook to cache APY data
   const qAPYRates: APYRates = useMemo(
@@ -82,8 +86,9 @@ function Home() {
       qStars: starsAPY,
       qRegen: regenAPY,
       qSomm: sommAPY,
+      qJuno: junoAPY,
     }),
-    [cosmosAPY, osmoAPY, starsAPY, regenAPY, sommAPY],
+    [cosmosAPY, osmoAPY, starsAPY, regenAPY, sommAPY, junoAPY],
   );
   // useMemo hook to cache qBalance data
   const qBalances: BalanceRates = useMemo(
@@ -93,8 +98,9 @@ function Home() {
       qStars: shiftDigits(qStars?.balance?.amount ?? '', -6),
       qRegen: shiftDigits(qRegen?.balance?.amount ?? '', -6),
       qSomm: shiftDigits(qSomm?.balance?.amount ?? '', -6),
+      qJuno: shiftDigits(qJuno?.balance?.amount ?? '', -6),
     }),
-    [qAtom, qOsmo, qStars, qRegen, qSomm],
+    [qAtom, qOsmo, qStars, qRegen, qSomm, qJuno],
   );
 
   // useMemo hook to cache redemption rate data
@@ -105,8 +111,9 @@ function Home() {
       stars: StarZone?.redemptionRate ? parseFloat(StarZone.redemptionRate) : 1,
       regen: RegenZone?.redemptionRate ? parseFloat(RegenZone.redemptionRate) : 1,
       somm: SommZone?.redemptionRate ? parseFloat(SommZone.redemptionRate) : 1,
+      juno: JunoZone?.redemptionRate ? parseFloat(JunoZone.redemptionRate) : 1,
     }),
-    [CosmosZone, OsmoZone, StarZone, RegenZone, SommZone],
+    [CosmosZone, OsmoZone, StarZone, RegenZone, SommZone, JunoZone],
   );
 
   // State hooks for portfolio items, total portfolio value, and other metrics
