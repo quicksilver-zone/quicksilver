@@ -1924,7 +1924,6 @@ func (suite *KeeperTestSuite) Test_v046Callback() {
 				return []sdk.Msg{&sendMsg}, anyResponse
 			},
 			assertStatements: func(ctx sdk.Context, quicksilver *app.Quicksilver) bool {
-
 				return true
 			},
 		},
