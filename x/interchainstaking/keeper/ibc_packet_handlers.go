@@ -10,7 +10,6 @@ import (
 
 	"github.com/golang/protobuf/proto" // nolint:staticcheck
 
-	"cosmossdk.io/math"
 	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -274,22 +273,10 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 			if err := k.HandleUpdatedWithdrawAddress(ctx, msg.Msg); err != nil {
 				return err
 			}
-		// case "/ibc.applications.transfer.v1.MsgTransfer":
-		// 	// this should be okay to fail; we'll pick it up next time around.
-		// 	if !success {
-		// 		return nil
-		// 	}
-		// 	response := ibctransfertypes.MsgTransferResponse{}
-		// 	err = proto.Unmarshal(msgResponse, &response)
-		// 	if err != nil {
-		// 		k.Logger(ctx).Error("unable to unpack MsgTransfer response", "error", err)
-		// 		return err
-		// 	}
+		case "/ibc.applications.transfer.v1.MsgTransfer":
+			k.Logger(ctx).Debug("Received MsgTransfer acknowledgement; no action")
+			return nil
 
-		// 	k.Logger(ctx).Info("MsgTranfer acknowledgement received")
-		// 	if err := k.HandleMsgTransfer(ctx, msg.Msg); err != nil {
-		// 		return err
-		// 	}
 		default:
 			k.Logger(ctx).Error("unhandled acknowledgement packet", "type", reflect.TypeOf(msg.Msg).Name())
 		}
@@ -314,7 +301,7 @@ func (k *Keeper) HandleMsgTransfer(ctx sdk.Context, msg ibctransfertypes.Fungibl
 		return errors.New("unexpected recipient")
 	}
 
-	receivedAmount, ok := math.NewIntFromString(msg.Amount)
+	receivedAmount, ok := sdkmath.NewIntFromString(msg.Amount)
 	if !ok {
 		return fmt.Errorf("unable to marshal amount into math.Int: %s", msg.Amount)
 	}
