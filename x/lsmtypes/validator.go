@@ -6,7 +6,7 @@ import (
 	"gopkg.in/yaml.v2"
 
 	"cosmossdk.io/errors"
-
+	sdkmath "cosmossdk.io/math"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
