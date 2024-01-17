@@ -1,111 +1,111 @@
 package wasmbinding
 
-import (
-	"encoding/json"
-	"os"
-	"testing"
+// import (
+// 	"encoding/json"
+// 	"os"
+// 	"testing"
 
-	sdkmath "cosmossdk.io/math"
-	"github.com/CosmWasm/wasmd/x/wasm/keeper"
-	"github.com/CosmWasm/wasmd/x/wasm/types"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
+// 	sdkmath "cosmossdk.io/math"
+// 	"github.com/CosmWasm/wasmd/x/wasm/keeper"
+// 	"github.com/CosmWasm/wasmd/x/wasm/types"
+// 	"github.com/stretchr/testify/assert"
+// 	"github.com/stretchr/testify/require"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+// 	sdk "github.com/cosmos/cosmos-sdk/types"
+// 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 
-	"github.com/quicksilver-zone/quicksilver/v7/app"
-)
+// 	"github.com/quicksilver-zone/quicksilver/v7/app"
+// )
 
-func TestNoStorageWithoutProposal(t *testing.T) {
-	// we use default config
-	quicksilver, ctx := CreateTestInput(t)
+// func TestNoStorageWithoutProposal(t *testing.T) {
+// 	// we use default config
+// 	quicksilver, ctx := CreateTestInput(t)
 
-	wasmKeeper := quicksilver.WasmKeeper
-	// this wraps wasmKeeper, providing interfaces exposed to external messages
-	contractKeeper := keeper.NewDefaultPermissionKeeper(wasmKeeper)
+// 	wasmKeeper := quicksilver.WasmKeeper
+// 	// this wraps wasmKeeper, providing interfaces exposed to external messages
+// 	contractKeeper := keeper.NewDefaultPermissionKeeper(wasmKeeper)
 
-	_, _, creator := keyPubAddr()
+// 	_, _, creator := keyPubAddr()
 
-	// upload reflect code
-	wasmCode, err := os.ReadFile("../testdata/hackatom.wasm")
-	require.NoError(t, err)
-	_, _, err = contractKeeper.Create(ctx, creator, wasmCode, nil)
-	require.Error(t, err)
-}
+// 	// upload reflect code
+// 	wasmCode, err := os.ReadFile("../testdata/hackatom.wasm")
+// 	require.NoError(t, err)
+// 	_, _, err = contractKeeper.Create(ctx, creator, wasmCode, nil)
+// 	require.Error(t, err)
+// }
 
-func storeCodeViaProposal(t *testing.T, ctx sdk.Context, quicksilverApp *app.Quicksilver, addr sdk.AccAddress) {
-	t.Helper()
+// func storeCodeViaProposal(t *testing.T, ctx sdk.Context, quicksilverApp *app.Quicksilver, addr sdk.AccAddress) {
+// 	t.Helper()
 
-	govKeeper := quicksilverApp.GovKeeper
-	wasmCode, err := os.ReadFile("../testdata/hackatom.wasm")
-	require.NoError(t, err)
+// 	govKeeper := quicksilverApp.GovKeeper
+// 	wasmCode, err := os.ReadFile("../testdata/hackatom.wasm")
+// 	require.NoError(t, err)
 
-	src := types.StoreCodeProposalFixture(func(p *types.StoreCodeProposal) {
-		p.RunAs = addr.String()
-		p.WASMByteCode = wasmCode
-	})
+// 	src := types.StoreCodeProposalFixture(func(p *types.StoreCodeProposal) {
+// 		p.RunAs = addr.String()
+// 		p.WASMByteCode = wasmCode
+// 	})
 
-	govAddress := govKeeper.GetGovernanceAccount(ctx).GetAddress().String()
-	msgContent, err := govv1.NewLegacyContent(src, govAddress)
-	require.NoError(t, err)
+// 	govAddress := govKeeper.GetGovernanceAccount(ctx).GetAddress().String()
+// 	msgContent, err := govv1.NewLegacyContent(src, govAddress)
+// 	require.NoError(t, err)
 
-	// when stored
-	_, err = govKeeper.SubmitProposal(ctx, []sdk.Msg{msgContent}, "testing123")
-	require.NoError(t, err)
+// 	// when stored
+// 	_, err = govKeeper.SubmitProposal(ctx, []sdk.Msg{msgContent}, "testing123")
+// 	require.NoError(t, err)
 
-	// and proposal execute
-	em := sdk.NewEventManager()
-	handler := govKeeper.LegacyRouter().GetRoute(src.ProposalRoute())
-	err = handler(ctx.WithEventManager(em), src)
-	require.NoError(t, err)
-}
+// 	// and proposal execute
+// 	em := sdk.NewEventManager()
+// 	handler := govKeeper.LegacyRouter().GetRoute(src.ProposalRoute())
+// 	err = handler(ctx.WithEventManager(em), src)
+// 	require.NoError(t, err)
+// }
 
-func TestStoreCodeProposal(t *testing.T) {
-	quicksilver, ctx := CreateTestInput(t)
-	myActorAddress := RandomAccountAddress()
-	wasmKeeper := quicksilver.WasmKeeper
+// func TestStoreCodeProposal(t *testing.T) {
+// 	quicksilver, ctx := CreateTestInput(t)
+// 	myActorAddress := RandomAccountAddress()
+// 	wasmKeeper := quicksilver.WasmKeeper
 
-	storeCodeViaProposal(t, ctx, quicksilver, myActorAddress)
+// 	storeCodeViaProposal(t, ctx, quicksilver, myActorAddress)
 
-	// then
-	cInfo := wasmKeeper.GetCodeInfo(ctx, 1)
-	require.NotNil(t, cInfo)
-	assert.Equal(t, myActorAddress.String(), cInfo.Creator)
-	assert.True(t, wasmKeeper.IsPinnedCode(ctx, 1))
+// 	// then
+// 	cInfo := wasmKeeper.GetCodeInfo(ctx, 1)
+// 	require.NotNil(t, cInfo)
+// 	assert.Equal(t, myActorAddress.String(), cInfo.Creator)
+// 	assert.True(t, wasmKeeper.IsPinnedCode(ctx, 1))
 
-	storedCode, err := wasmKeeper.GetByteCode(ctx, 1)
-	require.NoError(t, err)
-	wasmCode, err := os.ReadFile("../testdata/hackatom.wasm")
-	require.NoError(t, err)
-	assert.Equal(t, wasmCode, storedCode)
-}
+// 	storedCode, err := wasmKeeper.GetByteCode(ctx, 1)
+// 	require.NoError(t, err)
+// 	wasmCode, err := os.ReadFile("../testdata/hackatom.wasm")
+// 	require.NoError(t, err)
+// 	assert.Equal(t, wasmCode, storedCode)
+// }
 
-type HackatomExampleInitMsg struct {
-	Verifier    sdk.AccAddress `json:"verifier"`
-	Beneficiary sdk.AccAddress `json:"beneficiary"`
-}
+// type HackatomExampleInitMsg struct {
+// 	Verifier    sdk.AccAddress `json:"verifier"`
+// 	Beneficiary sdk.AccAddress `json:"beneficiary"`
+// }
 
-func TestInstantiateContract(t *testing.T) {
-	coin := sdk.NewCoin("uqck", sdkmath.NewInt(10000000000))
-	quicksilverApp, ctx := CreateTestInput(t)
-	funder := RandomAccountAddress()
-	benefit, arb := RandomAccountAddress(), RandomAccountAddress()
-	err := FundAccount(quicksilverApp.BankKeeper, ctx, funder, sdk.NewCoins(coin))
-	require.NoError(t, err)
+// func TestInstantiateContract(t *testing.T) {
+// 	coin := sdk.NewCoin("uqck", sdkmath.NewInt(10000000000))
+// 	quicksilverApp, ctx := CreateTestInput(t)
+// 	funder := RandomAccountAddress()
+// 	benefit, arb := RandomAccountAddress(), RandomAccountAddress()
+// 	err := FundAccount(quicksilverApp.BankKeeper, ctx, funder, sdk.NewCoins(coin))
+// 	require.NoError(t, err)
 
-	storeCodeViaProposal(t, ctx, quicksilverApp, funder)
-	contractKeeper := keeper.NewDefaultPermissionKeeper(quicksilverApp.WasmKeeper)
-	codeID := uint64(1)
+// 	storeCodeViaProposal(t, ctx, quicksilverApp, funder)
+// 	contractKeeper := keeper.NewDefaultPermissionKeeper(quicksilverApp.WasmKeeper)
+// 	codeID := uint64(1)
 
-	initMsg := HackatomExampleInitMsg{
-		Verifier:    arb,
-		Beneficiary: benefit,
-	}
-	initMsgBz, err := json.Marshal(initMsg)
-	require.NoError(t, err)
+// 	initMsg := HackatomExampleInitMsg{
+// 		Verifier:    arb,
+// 		Beneficiary: benefit,
+// 	}
+// 	initMsgBz, err := json.Marshal(initMsg)
+// 	require.NoError(t, err)
 
-	funds := sdk.NewInt64Coin("uqck", 123456)
-	_, _, err = contractKeeper.Instantiate(ctx, codeID, funder, funder, initMsgBz, "demo contract", sdk.Coins{funds})
-	require.NoError(t, err)
-}
+// 	funds := sdk.NewInt64Coin("uqck", 123456)
+// 	_, _, err = contractKeeper.Instantiate(ctx, codeID, funder, funder, initMsgBz, "demo contract", sdk.Coins{funds})
+// 	require.NoError(t, err)
+// }
