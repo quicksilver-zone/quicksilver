@@ -4,11 +4,9 @@ import (
 	"errors"
 	"fmt"
 
-	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/store"
 	storetypes "cosmossdk.io/store/types"
 	db "github.com/cosmos/cosmos-db"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/gogo/protobuf/proto"
 )
 
@@ -125,16 +123,18 @@ func MustGet(store store.KVStore, key []byte, result proto.Message) {
 	}
 }
 
-// MustSetDec sets dec value to store at key. Panics on any error.
-func MustSetDec(store store.KVStore, key []byte, value sdkmath.LegacyDec) {
-	MustSet(store, key, &sdk.DecProto{
-		Dec: value,
-	})
-}
+// Unused functions:
 
-// MustGetDec gets dec value from store at key. Panics on any error.
-func MustGetDec(store store.KVStore, key []byte) sdkmath.LegacyDec {
-	result := &sdk.DecProto{}
-	MustGet(store, key, result)
-	return result.Dec
-}
+// // MustSetDec sets dec value to store at key. Panics on any error.
+// func MustSetDec(store store.KVStore, key []byte, value sdkmath.LegacyDec) {
+// 	MustSet(store, key, &sdk.DecProto{
+// 		Dec: value,
+// 	})
+// }
+
+// // MustGetDec gets dec value from store at key. Panics on any error.
+// func MustGetDec(store store.KVStore, key []byte) sdkmath.LegacyDec {
+// 	result := &sdk.DecProto{}
+// 	MustGet(store, key, result)
+// 	return result.Dec
+// }
