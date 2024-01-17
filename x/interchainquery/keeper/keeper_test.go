@@ -98,9 +98,10 @@ func (suite *KeeperTestSuite) TestSubmitQueryResponse() {
 	bondedQuery := stakingtypes.QueryValidatorsRequest{Status: stakingtypes.BondStatusBonded}
 	bz, err := bondedQuery.Marshal()
 	suite.NoError(err)
-
+	vals, err := suite.GetSimApp(suite.chainB).StakingKeeper.GetBondedValidatorsByPower(suite.chainB.GetContext())
+	suite.NoError(err)
 	qvr := stakingtypes.QueryValidatorsResponse{
-		Validators: suite.GetSimApp(suite.chainB).StakingKeeper.GetBondedValidatorsByPower(suite.chainB.GetContext()),
+		Validators: vals,
 	}
 
 	tests := []struct {
@@ -196,8 +197,9 @@ func (suite *KeeperTestSuite) TestDataPoints() {
 	bz, err := bondedQuery.Marshal()
 	suite.NoError(err)
 
+	vals, err := suite.GetSimApp(suite.chainB).StakingKeeper.GetBondedValidatorsByPower(suite.chainB.GetContext())
 	qvr := stakingtypes.QueryValidatorsResponse{
-		Validators: suite.GetSimApp(suite.chainB).StakingKeeper.GetBondedValidatorsByPower(suite.chainB.GetContext()),
+		Validators: vals,
 	}
 
 	id := keeper.GenerateQueryHash(suite.path.EndpointB.ConnectionID, suite.chainB.ChainID, "cosmos.staking.v1beta1.Query/Validators", bz, "")

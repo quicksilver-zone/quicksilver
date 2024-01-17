@@ -8,8 +8,11 @@ import (
 )
 
 func (suite *KeeperTestSuite) TestEndBlocker() {
+	vals, err := suite.GetSimApp(suite.chainB).StakingKeeper.GetBondedValidatorsByPower(suite.chainB.GetContext())
+
+	suite.NoError(err)
 	qvr := stakingtypes.QueryValidatorsResponse{
-		Validators: suite.GetSimApp(suite.chainB).StakingKeeper.GetBondedValidatorsByPower(suite.chainB.GetContext()),
+		Validators: vals,
 	}
 
 	bondedQuery := stakingtypes.QueryValidatorsRequest{Status: stakingtypes.BondStatusBonded}

@@ -57,8 +57,10 @@ func TestMsgSubmitQueryResponse(t *testing.T) {
 	bz, err := bondedQuery.Marshal()
 	require.NoError(t, err)
 
+	vals, err := GetSimApp(chainB).StakingKeeper.GetBondedValidatorsByPower(chainB.GetContext())
+	require.NoError(t, err)
 	qvr := stakingtypes.QueryValidatorsResponse{
-		Validators: GetSimApp(chainB).StakingKeeper.GetBondedValidatorsByPower(chainB.GetContext()),
+		Validators: vals,
 	}
 
 	msg := types.MsgSubmitQueryResponse{
