@@ -1,8 +1,6 @@
 package interchainstaking
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 
@@ -94,12 +92,6 @@ func (im TransferMiddleware) OnRecvPacket(
 	if err := transfertypes.ModuleCdc.UnmarshalJSON(packet.GetData(), &data); err != nil {
 		return channeltypes.NewErrorAcknowledgement(err)
 	}
-
-	fmt.Printf("DEBUG: Middleware OnRecvPacket sequence: %d, src-channel: %s, src-port: %s, dst-channel: %s, dst-port: %s, amount: %s, denom: %s, decoded-denom: %s, memo: %s, recipient: %s, sender: %s\n", packet.Sequence,
-		packet.SourceChannel, packet.SourcePort,
-		packet.DestinationChannel, packet.DestinationPort,
-		data.Amount, data.Denom, utils.DeriveIbcDenom(packet.DestinationPort, packet.DestinationChannel, packet.SourcePort, packet.SourceChannel, data.Denom), data.Memo, data.Receiver, data.Sender,
-	)
 
 	_, found := im.keeper.GetZoneForWithdrawalAccount(ctx, data.Sender)
 	if found {
