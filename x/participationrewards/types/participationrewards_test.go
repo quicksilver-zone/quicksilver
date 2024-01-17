@@ -7,8 +7,6 @@ import (
 	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	liquiditytypes "github.com/quicksilver-zone/quicksilver/v7/third-party-chains/crescent-types/liquidity/types"
 	"github.com/quicksilver-zone/quicksilver/v7/utils/addressutils"
 	"github.com/quicksilver-zone/quicksilver/v7/x/participationrewards/types"
@@ -34,9 +32,10 @@ func TestDistributionProportions_ValidateBasic(t *testing.T) {
 			"invalid_proportions_gt",
 			fields{
 				ValidatorSelectionAllocation: sdkmath.LegacyMustNewDecFromStr("0.5"),
-				ValidatorSelectionAllocation: sdkmath.LegacyMustNewDecFromStr("0.5"),
 				HoldingsAllocation:           sdkmath.LegacyMustNewDecFromStr("0.5"),
 				LockupAllocation:             sdkmath.LegacyMustNewDecFromStr("0.5"),
+			},
+			true,
 		},
 		{
 			"invalid_proportions_lt",
@@ -50,9 +49,9 @@ func TestDistributionProportions_ValidateBasic(t *testing.T) {
 		{
 			"invalid_proportions_negative",
 			fields{
-				ValidatorSelectionAllocation: sdkmath.MustNewDecFromStr("-0.4"),
-				HoldingsAllocation:           sdkmath.MustNewDecFromStr("-0.3"),
-				LockupAllocation:             sdkmath.MustNewDecFromStr("-0.3"),
+				ValidatorSelectionAllocation: sdkmath.LegacyMustNewDecFromStr("-0.4"),
+				HoldingsAllocation:           sdkmath.LegacyMustNewDecFromStr("-0.3"),
+				LockupAllocation:             sdkmath.LegacyMustNewDecFromStr("-0.3"),
 			},
 			true,
 		},
