@@ -2,10 +2,8 @@ package keeper_test
 
 import (
 	"testing"
-	"time"
 
 	"github.com/cometbft/cometbft/crypto/ed25519"
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/suite"
 
 	sdkmath "cosmossdk.io/math"
@@ -42,7 +40,7 @@ type KeeperTestSuite struct {
 func (suite *KeeperTestSuite) Setup() {
 	cmdcfg.SetBech32Prefixes(sdk.GetConfig())
 	suite.App = app.Setup(suite.T(), false)
-	suite.Ctx = suite.App.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "quick-1", Time: time.Now().UTC()})
+	suite.Ctx = suite.App.BaseApp.NewContext(false)
 	suite.QueryHelper = &baseapp.QueryServiceTestHelper{
 		GRPCQueryRouter: suite.App.GRPCQueryRouter(),
 		Ctx:             suite.Ctx,
@@ -73,7 +71,7 @@ func (suite *KeeperTestSuite) FundAcc(acc sdk.AccAddress, amounts sdk.Coins) {
 func (suite *KeeperTestSuite) SetupTestForInitGenesis() {
 	// Setting to True, leads to init genesis not running
 	suite.App = app.Setup(suite.T(), true)
-	suite.Ctx = suite.App.BaseApp.NewContext(true, tmproto.Header{})
+	suite.Ctx = suite.App.BaseApp.NewContext(true)
 }
 
 // AssertEventEmitted asserts that ctx's event manager has emitted the given number of events
@@ -122,7 +120,7 @@ func (suite *KeeperTestSuite) TestCreateModuleAccount() {
 	quicksilver.AccountKeeper.RemoveAccount(suite.Ctx, tokenfactoryModuleAccount)
 
 	// ensure module account was removed
-	suite.Ctx = quicksilver.BaseApp.NewContext(false, tmproto.Header{})
+	suite.Ctx = quicksilver.BaseApp.NewContext(false)
 	tokenfactoryModuleAccount = quicksilver.AccountKeeper.GetAccount(suite.Ctx, quicksilver.AccountKeeper.GetModuleAddress(types.ModuleName))
 	suite.Require().Nil(tokenfactoryModuleAccount)
 
