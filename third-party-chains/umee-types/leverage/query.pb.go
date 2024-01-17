@@ -7,7 +7,8 @@ import (
 	context "context"
 	encoding_binary "encoding/binary"
 	fmt "fmt"
-	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
+	cosmossdk_io_math "cosmossdk.io/math"
+github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
 	types "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/gogo/protobuf/gogoproto"
 	grpc1 "github.com/gogo/protobuf/grpc"
@@ -232,39 +233,39 @@ type QueryMarketSummaryResponse struct {
 	// Exponent is the power of ten required to get from base denom to symbol denom. For example, an exponent of 6 means 10^6 uumee = 1 UMEE.
 	Exponent uint32 `protobuf:"varint,2,opt,name=exponent,proto3" json:"exponent,omitempty"`
 	// Oracle Price is the current USD value of a token. Oracle price is nil when the oracle is down.
-	OraclePrice *github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,3,opt,name=oracle_price,json=oraclePrice,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"oracle_price,omitempty"`
+	OraclePrice *cosmossdk_io_math.LegacyDec `protobuf:"bytes,3,opt,name=oracle_price,json=oraclePrice,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"oracle_price,omitempty"`
 	// uToken Exchange Rate is the amount of base tokens received when withdrawing 1 uToken. For example, a uToken exchange rate of 1.5 means a supplier receives 3 uumee for every 2 u/uumee they wish to withdraw. The same applies in reverse: supplying 3 uumee would award 2 u/uumee at that time.
-	UTokenExchangeRate github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,4,opt,name=uToken_exchange_rate,json=uTokenExchangeRate,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"utoken_exchange_rate"`
+	UTokenExchangeRate cosmossdk_io_math.LegacyDec `protobuf:"bytes,4,opt,name=uToken_exchange_rate,json=uTokenExchangeRate,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"utoken_exchange_rate"`
 	// Supply APY is the current interest rate suppliers are receiving for their deposits. For example, 0.11 would mean 11% APY. Supply APY is always less than borrow APY.
-	Supply_APY github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,5,opt,name=supply_APY,json=supplyAPY,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"supply_apy"`
+	Supply_APY cosmossdk_io_math.LegacyDec `protobuf:"bytes,5,opt,name=supply_APY,json=supplyAPY,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"supply_apy"`
 	// Borrow APY is the current interest rate borrowers are being charged on their loans. For example, 0.2 would mean 20% APY.
-	Borrow_APY github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,6,opt,name=borrow_APY,json=borrowAPY,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"borrow_apy"`
+	Borrow_APY cosmossdk_io_math.LegacyDec `protobuf:"bytes,6,opt,name=borrow_APY,json=borrowAPY,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"borrow_apy"`
 	// Supplied is the total amount of tokens supplied to the the system by all suppliers, including any interest earned. This includes that tokens which have been borrowed out or enabled as collateral, but excludes reserves. Supplied is denominated in base tokens, so exponent must be applied to convert to symbol denom.
-	Supplied github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,7,opt,name=supplied,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"supplied"`
+	Supplied cosmossdk_io_math.Int `protobuf:"bytes,7,opt,name=supplied,proto3,customtype=cosmossdk.io/math.Int" json:"supplied"`
 	// Reserved is the total amount of tokens held in reserve by the module for emergencies. Reserves are always excluded from total supply, borrow, collateral, and liqduidity queries. Reserves are denominated in base tokens, so exponent must be applied to convert to symbol denom.
-	Reserved github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,8,opt,name=reserved,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"reserved"`
+	Reserved cosmossdk_io_math.Int `protobuf:"bytes,8,opt,name=reserved,proto3,customtype=cosmossdk.io/math.Int" json:"reserved"`
 	// Collateral is the total amount of uTokens collateralized by all borrowers. Collateral is denominated in uTokenso, so both uToken exchange rate and exponent must also be applied to convert to symbol denom. For example, if collateral is 4000000 u/uumee and uToken exchange rate is 1.2, then 5 UMEE have been collateralized.
-	Collateral github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,9,opt,name=collateral,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"collateral"`
+	Collateral cosmossdk_io_math.Int `protobuf:"bytes,9,opt,name=collateral,proto3,customtype=cosmossdk.io/math.Int" json:"collateral"`
 	// Borrowed is the total amount of debt in this token held across all borrowers. It is denominated in base tokens, so exponent must be applied to convert to symbol denom.
-	Borrowed github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,10,opt,name=borrowed,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"borrowed"`
+	Borrowed cosmossdk_io_math.Int `protobuf:"bytes,10,opt,name=borrowed,proto3,customtype=cosmossdk.io/math.Int" json:"borrowed"`
 	// Liquidity is the amount of a token that has been supplied but not yet borrowed or reserved. It is denominated in base tokens, so exponent must be applied to convert to symbol denom.
-	Liquidity github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,11,opt,name=liquidity,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"liquidity"`
+	Liquidity cosmossdk_io_math.Int `protobuf:"bytes,11,opt,name=liquidity,proto3,customtype=cosmossdk.io/math.Int" json:"liquidity"`
 	// Maximum Borrow is the amount of a token that is available for borrowing, including that which has already been borrowed out. This amount is less than total supply due to safety limits. It is denominated in base tokens, so exponent must be applied to convert to symbol denom. For example, if borrowed is 3000000 uumee and maximum borrow is 4000000 uumee, then 1 UMEE is currently available for borrowing.
-	MaximumBorrow github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,12,opt,name=maximum_borrow,json=maximumBorrow,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"maximum_borrow"`
+	MaximumBorrow cosmossdk_io_math.Int `protobuf:"bytes,12,opt,name=maximum_borrow,json=maximumBorrow,proto3,customtype=cosmossdk.io/math.Int" json:"maximum_borrow"`
 	// Maximum Collateral is the amount of a token that can be collateralized, including that which is already collateral. This amount is less than total supply due to safety limits. It is denominated in uTokens, so both uToken exchange rate and exponent must be applied to convert to symbol denom. For example, if collateral is 4000000 u/uumee, uToken exchange rate is 1.2, and maximum borrow is 7000000 uumee, then a maximum of 2 additional UMEE is permitted to be collateralized.
-	MaximumCollateral github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,13,opt,name=maximum_collateral,json=maximumCollateral,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"maximum_collateral"`
+	MaximumCollateral cosmossdk_io_math.Int `protobuf:"bytes,13,opt,name=maximum_collateral,json=maximumCollateral,proto3,customtype=cosmossdk.io/math.Int" json:"maximum_collateral"`
 	// Minimum Liquidity is the minimum amount of liquidity in the module required by safety limits, based on the current collateral. It is denominated in base tokens, so exponent must be applied to convert to symbol denom. For example, if liquidity is 9000000 uumee and minimum liquidity is 8000000 uumee, then a maximum of 1 additional UMEE is currently available for borrowing or withdrawal.
-	MinimumLiquidity github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,14,opt,name=minimum_liquidity,json=minimumLiquidity,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"minimum_liquidity"`
+	MinimumLiquidity cosmossdk_io_math.Int `protobuf:"bytes,14,opt,name=minimum_liquidity,json=minimumLiquidity,proto3,customtype=cosmossdk.io/math.Int" json:"minimum_liquidity"`
 	// uToken Supply is the total amount of a base token's associated uToken in circulation.
-	UTokenSupply github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,15,opt,name=uToken_supply,json=uTokenSupply,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"utoken_supply"`
+	UTokenSupply cosmossdk_io_math.Int `protobuf:"bytes,15,opt,name=uToken_supply,json=uTokenSupply,proto3,customtype=cosmossdk.io/math.Int" json:"utoken_supply"`
 	// Available Borrow is the maximum additional amount of base tokens than can be borrowed based on current liquidity and system safety limits. It can also be calculated by MIN(maximum_borrow - borrowed, liquidity - minimum_liquidity). It is denominated in base tokens, so exponent must be applied to convert to symbol denom. A negative availability means safety limits have been exceeded and borrowing is temporarily unavailable.
-	AvailableBorrow github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,16,opt,name=available_borrow,json=availableBorrow,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"available_borrow"`
+	AvailableBorrow cosmossdk_io_math.Int `protobuf:"bytes,16,opt,name=available_borrow,json=availableBorrow,proto3,customtype=cosmossdk.io/math.Int" json:"available_borrow"`
 	// Available Withdraw is the maximum amount of uTokens than can currently be withdrawn based on liquidity and system safety limits. It can also be calculated by (liquidity - minimum_liquidity). It is denominated in uTokens, so both uToken exchange rate and exponent must be applied to convert to symbol denom. A negative availability means safety limits have been exceeded and withdrawal is temporarily unavailable.
-	AvailableWithdraw github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,17,opt,name=available_withdraw,json=availableWithdraw,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"available_withdraw"`
+	AvailableWithdraw cosmossdk_io_math.Int `protobuf:"bytes,17,opt,name=available_withdraw,json=availableWithdraw,proto3,customtype=cosmossdk.io/math.Int" json:"available_withdraw"`
 	// Available Collateralize is the maximum additional amount of uTokens than can be collateralized based on current liquidity and system safety limits. It can also be calculated by (maximum_collateral, - collateral). It is denominated in uTokens, so both uToken exchange rate and exponent must be applied to convert to symbol denom. A negative availability means safety limits have been exceeded and additional collateral cannot be created until more liquidity is present.
-	AvailableCollateralize github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,18,opt,name=available_collateralize,json=availableCollateralize,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"available_collateralize"`
+	AvailableCollateralize cosmossdk_io_math.Int `protobuf:"bytes,18,opt,name=available_collateralize,json=availableCollateralize,proto3,customtype=cosmossdk.io/math.Int" json:"available_collateralize"`
 	// Oracle Historic Price is the historic USD value of a token. Historic price is defined as the median of the last N historic median prices from the oracle module, with N being this token's HistoricMedians in the leverage registry. Current price is used if required medians is zero. Price is nil when the oracle is down or insufficient historic medians are available.
-	OracleHistoricPrice *github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,19,opt,name=oracle_historic_price,json=oracleHistoricPrice,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"oracle_historic_price,omitempty"`
+	OracleHistoricPrice *cosmossdk_io_math.LegacyDec `protobuf:"bytes,19,opt,name=oracle_historic_price,json=oracleHistoricPrice,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"oracle_historic_price,omitempty"`
 	Errors              string                                  `protobuf:"bytes,20,opt,name=errors,proto3" json:"errors,omitempty"`
 }
 
@@ -425,24 +426,24 @@ type QueryAccountSummaryResponse struct {
 	// Supplied Value is the sum of the USD value of all tokens the account has supplied, including interest earned.
 	// Computation skips assets which are missing oracle prices, potentially resulting in a lower supplied
 	// value than if prices were all available.
-	SuppliedValue github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,1,opt,name=supplied_value,json=suppliedValue,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"supplied_value"`
+	SuppliedValue cosmossdk_io_math.LegacyDec `protobuf:"bytes,1,opt,name=supplied_value,json=suppliedValue,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"supplied_value"`
 	// Collateral Value is the sum of the USD value of all uTokens the account has collateralized.
 	// Computation skips collateral which is missing an oracle price, potentially resulting in a lower collateral
 	// value than if prices were all available.
-	CollateralValue github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,2,opt,name=collateral_value,json=collateralValue,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"collateral_value"`
+	CollateralValue cosmossdk_io_math.LegacyDec `protobuf:"bytes,2,opt,name=collateral_value,json=collateralValue,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"collateral_value"`
 	// Borrowed Value is the sum of the USD value of all tokens the account has borrowed, including interest owed.
 	// It always uses spot prices.
 	// Computation skips borrows which are missing oracle prices, potentially resulting in a lower borrowed
 	// value than if prices were all available.
-	BorrowedValue github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,3,opt,name=borrowed_value,json=borrowedValue,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"borrowed_value"`
+	BorrowedValue cosmossdk_io_math.LegacyDec `protobuf:"bytes,3,opt,name=borrowed_value,json=borrowedValue,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"borrowed_value"`
 	// Borrow Limit is the maximum Borrowed Value the account is allowed to reach through direct borrowing.
 	// The lower of spot or historic price for each collateral token is used when calculating borrow limits.
 	// Computation skips collateral which is missing an oracle price, potentially resulting in a lower borrow
 	// limit than if prices were all available.
-	BorrowLimit github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,4,opt,name=borrow_limit,json=borrowLimit,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"borrow_limit"`
+	BorrowLimit cosmossdk_io_math.LegacyDec `protobuf:"bytes,4,opt,name=borrow_limit,json=borrowLimit,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"borrow_limit"`
 	// Liquidation Threshold is the Borrowed Value at which the account becomes eligible for liquidation.
 	// Will be null if an oracle price required for computation is missing.
-	LiquidationThreshold *github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,5,opt,name=liquidation_threshold,json=liquidationThreshold,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"liquidation_threshold,omitempty"`
+	LiquidationThreshold *cosmossdk_io_math.LegacyDec `protobuf:"bytes,5,opt,name=liquidation_threshold,json=liquidationThreshold,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"liquidation_threshold,omitempty"`
 }
 
 func (m *QueryAccountSummaryResponse) Reset()         { *m = QueryAccountSummaryResponse{} }
@@ -3593,7 +3594,7 @@ func (m *QueryMarketSummaryResponse) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			var v github_com_cosmos_cosmos_sdk_types.Dec
+			var v cosmossdk_io_math.LegacyDec
 			m.OraclePrice = &v
 			if err := m.OraclePrice.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
@@ -4139,7 +4140,7 @@ func (m *QueryMarketSummaryResponse) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			var v github_com_cosmos_cosmos_sdk_types.Dec
+			var v cosmossdk_io_math.LegacyDec
 			m.OracleHistoricPrice = &v
 			if err := m.OracleHistoricPrice.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
@@ -4709,7 +4710,7 @@ func (m *QueryAccountSummaryResponse) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			var v github_com_cosmos_cosmos_sdk_types.Dec
+			var v cosmossdk_io_math.LegacyDec
 			m.LiquidationThreshold = &v
 			if err := m.LiquidationThreshold.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err

@@ -6,7 +6,8 @@ package lockup
 import (
 	context "context"
 	"fmt"
-	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
+	cosmossdk_io_math "cosmossdk.io/math"
+github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
 	types "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/gogo/protobuf/gogoproto"
 	grpc1 "github.com/gogo/protobuf/grpc"
@@ -912,7 +913,7 @@ func (m *LockedDenomRequest) GetDuration() time.Duration {
 }
 
 type LockedDenomResponse struct {
-	Amount github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,1,opt,name=amount,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"amount" yaml:"amount"`
+	Amount cosmossdk_io_math.Int `protobuf:"bytes,1,opt,name=amount,proto3,customtype=cosmossdk.io/math.Int" json:"amount" yaml:"amount"`
 }
 
 func (m *LockedDenomResponse) Reset()         { *m = LockedDenomResponse{} }

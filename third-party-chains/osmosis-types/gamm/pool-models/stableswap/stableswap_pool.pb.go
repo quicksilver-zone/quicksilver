@@ -6,7 +6,8 @@ package stableswap
 import (
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
-	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
+	cosmossdk_io_math "cosmossdk.io/math"
+github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
 	types "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/cosmos/cosmos-sdk/x/auth/types"
 	_ "github.com/gogo/protobuf/gogoproto"
@@ -33,8 +34,8 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 // governance. Instead they will be managed by the token holders of the pool.
 // The pool's token holders are specified in future_pool_governor.
 type PoolParams struct {
-	SwapFee github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,1,opt,name=swap_fee,json=swapFee,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"swap_fee" yaml:"swap_fee"`
-	ExitFee github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,2,opt,name=exit_fee,json=exitFee,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"exit_fee" yaml:"exit_fee"`
+	SwapFee cosmossdk_io_math.LegacyDec `protobuf:"bytes,1,opt,name=swap_fee,json=swapFee,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"swap_fee" yaml:"swap_fee"`
+	ExitFee cosmossdk_io_math.LegacyDec `protobuf:"bytes,2,opt,name=exit_fee,json=exitFee,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"exit_fee" yaml:"exit_fee"`
 }
 
 func (m *PoolParams) Reset()         { *m = PoolParams{} }

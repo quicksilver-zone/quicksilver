@@ -5,7 +5,7 @@ package types
 
 import (
 	fmt "fmt"
-	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
+	cosmossdk_io_math "cosmossdk.io/math"
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
 	io "io"
@@ -34,7 +34,7 @@ type Params struct {
 	// 0.3 indicates 30% of the way from LT to CV.
 	// See also `minimum_close_factor` for more information.
 	// Valid values: 0-1.
-	CompleteLiquidationThreshold github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,2,opt,name=complete_liquidation_threshold,json=completeLiquidationThreshold,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"complete_liquidation_threshold" yaml:"complete_liquidation_threshold"`
+	CompleteLiquidationThreshold cosmossdk_io_math.LegacyDec `protobuf:"bytes,2,opt,name=complete_liquidation_threshold,json=completeLiquidationThreshold,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"complete_liquidation_threshold" yaml:"complete_liquidation_threshold"`
 	// Close Factor determines the portion of a borrower's position that can be
 	// liquidated in a single event. Minimum Close Factor is Close Factor at
 	// liquidation_threshold. 0.1 means that that 10% of the borrower position can
@@ -53,20 +53,20 @@ type Params struct {
 	//    is the borrowed value above which close factor will be 1.
 	//
 	// Valid values: 0-1.
-	MinimumCloseFactor github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,3,opt,name=minimum_close_factor,json=minimumCloseFactor,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"minimum_close_factor" yaml:"minimum_close_factor"`
+	MinimumCloseFactor cosmossdk_io_math.LegacyDec `protobuf:"bytes,3,opt,name=minimum_close_factor,json=minimumCloseFactor,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"minimum_close_factor" yaml:"minimum_close_factor"`
 	// Oracle Reward Factor determines the portion of interest accrued on
 	// borrows that is sent to the oracle module to fund its reward pool.
 	// Valid values: 0-1.
-	OracleRewardFactor github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,4,opt,name=oracle_reward_factor,json=oracleRewardFactor,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"oracle_reward_factor" yaml:"oracle_reward_factor"`
+	OracleRewardFactor cosmossdk_io_math.LegacyDec `protobuf:"bytes,4,opt,name=oracle_reward_factor,json=oracleRewardFactor,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"oracle_reward_factor" yaml:"oracle_reward_factor"`
 	// Small Liquidation Size determines the USD value at which a borrow is
 	// considered small enough to be liquidated in a single transaction, bypassing
 	// dynamic close factor.
-	SmallLiquidationSize github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,5,opt,name=small_liquidation_size,json=smallLiquidationSize,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"small_liquidation_size" yaml:"small_liquidation_size"`
+	SmallLiquidationSize cosmossdk_io_math.LegacyDec `protobuf:"bytes,5,opt,name=small_liquidation_size,json=smallLiquidationSize,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"small_liquidation_size" yaml:"small_liquidation_size"`
 	// Direct Liquidation Fee is a reduction factor in liquidation incentive
 	// experienced by liquidators who choose to receive base assets instead of
 	// uTokens as liquidation rewards.
 	// Valid values: 0-1.
-	DirectLiquidationFee github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,6,opt,name=direct_liquidation_fee,json=directLiquidationFee,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"direct_liquidation_fee" yaml:"direct_liquidation_fee"`
+	DirectLiquidationFee cosmossdk_io_math.LegacyDec `protobuf:"bytes,6,opt,name=direct_liquidation_fee,json=directLiquidationFee,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"direct_liquidation_fee" yaml:"direct_liquidation_fee"`
 }
 
 func (m *Params) Reset()      { *m = Params{} }
@@ -112,40 +112,40 @@ type Token struct {
 	// Reserve Factor defines what portion of accrued interest goes to reserves
 	// when this token is borrowed.
 	// Valid values: 0-1.
-	ReserveFactor github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,2,opt,name=reserve_factor,json=reserveFactor,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"reserve_factor" yaml:"reserve_factor"`
+	ReserveFactor cosmossdk_io_math.LegacyDec `protobuf:"bytes,2,opt,name=reserve_factor,json=reserveFactor,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"reserve_factor" yaml:"reserve_factor"`
 	// Collateral Weight defines what portion of the total value of the asset
 	// can contribute to a users borrowing power. If the collateral weight is
 	// zero, using this asset as collateral against borrowing will be disabled.
 	// Must be smaller than `liquidation_threshold`.
 	// Valid values: 0-1.
-	CollateralWeight github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,3,opt,name=collateral_weight,json=collateralWeight,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"collateral_weight" yaml:"collateral_weight"`
+	CollateralWeight cosmossdk_io_math.LegacyDec `protobuf:"bytes,3,opt,name=collateral_weight,json=collateralWeight,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"collateral_weight" yaml:"collateral_weight"`
 	// Liquidation Threshold defines what amount of the total value of the
 	// asset as a collateral can contribute to a user's liquidation threshold
 	// (above which they become eligible for liquidation).
 	// Must be bigger than `collateral_weight`.
 	// Valid values: 0-1.
 	// See also: min_close_factor.
-	LiquidationThreshold github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,4,opt,name=liquidation_threshold,json=liquidationThreshold,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"liquidation_threshold" yaml:"liquidation_threshold"`
+	LiquidationThreshold cosmossdk_io_math.LegacyDec `protobuf:"bytes,4,opt,name=liquidation_threshold,json=liquidationThreshold,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"liquidation_threshold" yaml:"liquidation_threshold"`
 	// Base Borrow Rate defines the minimum interest rate for borrowing this
 	// asset.
 	// Valid values: 0-∞
-	BaseBorrowRate github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,5,opt,name=base_borrow_rate,json=baseBorrowRate,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"base_borrow_rate" yaml:"base_borrow_rate"`
+	BaseBorrowRate cosmossdk_io_math.LegacyDec `protobuf:"bytes,5,opt,name=base_borrow_rate,json=baseBorrowRate,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"base_borrow_rate" yaml:"base_borrow_rate"`
 	// Kink Borrow Rate defines the interest rate for borrowing this
 	// asset when supply utilization is equal to 'kink_utilization'.
 	// Valid values: 0-∞
-	KinkBorrowRate github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,6,opt,name=kink_borrow_rate,json=kinkBorrowRate,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"kink_borrow_rate" yaml:"kink_borrow_rate"`
+	KinkBorrowRate cosmossdk_io_math.LegacyDec `protobuf:"bytes,6,opt,name=kink_borrow_rate,json=kinkBorrowRate,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"kink_borrow_rate" yaml:"kink_borrow_rate"`
 	// Max Borrow Rate defines the interest rate for borrowing this
 	// asset when supply utilization is at its maximum.
 	// Valid values: 0-∞
-	MaxBorrowRate github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,7,opt,name=max_borrow_rate,json=maxBorrowRate,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"max_borrow_rate" yaml:"max_borrow_rate"`
+	MaxBorrowRate cosmossdk_io_math.LegacyDec `protobuf:"bytes,7,opt,name=max_borrow_rate,json=maxBorrowRate,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"max_borrow_rate" yaml:"max_borrow_rate"`
 	// Kink Utilization defines the supply utilization value where
 	// the kink in the borrow interest rate function occurs.
 	// Valid values: 0-1.
-	KinkUtilization github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,8,opt,name=kink_utilization,json=kinkUtilization,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"kink_utilization" yaml:"kink_utilization"`
+	KinkUtilization cosmossdk_io_math.LegacyDec `protobuf:"bytes,8,opt,name=kink_utilization,json=kinkUtilization,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"kink_utilization" yaml:"kink_utilization"`
 	// Liquidation Incentive determines the portion of bonus collateral of
 	// a token type liquidators receive as a liquidation reward.
 	// Valid values: 0-1.
-	LiquidationIncentive github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,9,opt,name=liquidation_incentive,json=liquidationIncentive,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"liquidation_incentive" yaml:"liquidation_incentive"`
+	LiquidationIncentive cosmossdk_io_math.LegacyDec `protobuf:"bytes,9,opt,name=liquidation_incentive,json=liquidationIncentive,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"liquidation_incentive" yaml:"liquidation_incentive"`
 	// Symbol Denom is the human readable denomination of this token.
 	SymbolDenom string `protobuf:"bytes,10,opt,name=symbol_denom,json=symbolDenom,proto3" json:"symbol_denom,omitempty" yaml:"symbol_denom"`
 	// Exponent is the power of ten by which to multiply, in order to convert
@@ -173,13 +173,13 @@ type Token struct {
 	// can be provided by a given token. 1.0 means that the token has no restriction.
 	// 0.1 means maximum 10% of system's total collateral value can be provided by this token.
 	// Valid values: 0-1.
-	MaxCollateralShare github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,15,opt,name=max_collateral_share,json=maxCollateralShare,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"max_collateral_share" yaml:"max_collateral_share"`
+	MaxCollateralShare cosmossdk_io_math.LegacyDec `protobuf:"bytes,15,opt,name=max_collateral_share,json=maxCollateralShare,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"max_collateral_share" yaml:"max_collateral_share"`
 	// Max Supply Utilization specifies the maximum supply utilization a token is
 	// allowed to reach as a direct result of user borrowing. New borrows are not allowed when
 	// the supply utilization is above `max_supply_utilization`.
 	//    supply_utilization(token) = total_borrowed(token) / total_supply(token)
 	// Valid values: 0-1.
-	MaxSupplyUtilization github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,16,opt,name=max_supply_utilization,json=maxSupplyUtilization,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"max_supply_utilization" yaml:"max_supply_utilization"`
+	MaxSupplyUtilization cosmossdk_io_math.LegacyDec `protobuf:"bytes,16,opt,name=max_supply_utilization,json=maxSupplyUtilization,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"max_supply_utilization" yaml:"max_supply_utilization"`
 	// Min Collateral Liquidity specifies min limit for the following function:
 	//    collateral_liquidity(token) = available(token) / total_collateral(token)
 	// Borrowing, collateralizing, or withdrawing assets is not allowed when the
@@ -189,12 +189,12 @@ type Token struct {
 	// for withdraw when there is a collateral liquidation and the liquidator needs to
 	// withdraw uToken.
 	// Valid values: 0 - inf
-	MinCollateralLiquidity github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,17,opt,name=min_collateral_liquidity,json=minCollateralLiquidity,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"min_collateral_liquidity" yaml:"min_collateral_liquidity"`
+	MinCollateralLiquidity cosmossdk_io_math.LegacyDec `protobuf:"bytes,17,opt,name=min_collateral_liquidity,json=minCollateralLiquidity,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"min_collateral_liquidity" yaml:"min_collateral_liquidity"`
 	// Max Supply is the maximum amount of tokens the protocol can hold.
 	// Adding more supply of the given token to the protocol will return an error.
 	// Must be a non negative value. 0 means that there is no limit.
 	// To mark a token as not valid for supply, `msg_supply` must be set to false.
-	MaxSupply github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,18,opt,name=max_supply,json=maxSupply,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"max_supply" yaml:"max_supply"`
+	MaxSupply cosmossdk_io_math.Int `protobuf:"bytes,18,opt,name=max_supply,json=maxSupply,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"max_supply" yaml:"max_supply"`
 	// Historic Medians is the number of median historic prices to request from
 	// the oracle module when evaluating new borrow positions containing this token.
 	// All MsgBorrow, MsgWithdraw, and MsgDecollateralize must result in healthy

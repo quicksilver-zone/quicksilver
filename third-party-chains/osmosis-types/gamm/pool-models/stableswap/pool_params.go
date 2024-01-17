@@ -1,6 +1,7 @@
 package stableswap
 
 import (
+	sdkmath "cosmossdk.io/math"
 	"github.com/quicksilver-zone/quicksilver/v7/third-party-chains/osmosis-types/gamm"
 )
 

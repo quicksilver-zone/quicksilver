@@ -4,8 +4,6 @@ import (
 	"errors"
 
 	sdkmath "cosmossdk.io/math"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // ErrTolerance is used to define a compare function, which checks if two
@@ -49,7 +47,7 @@ func (e ErrTolerance) Compare(expected sdkmath.Int, actual sdkmath.Int) int {
 	}
 	// Check multiplicative tolerance equations
 	if !e.MultiplicativeTolerance.IsNil() && !e.MultiplicativeTolerance.IsZero() {
-		errTerm := sdkmath.LegacyNewDecFromInt(diff).Quo(sdkmath.LegacyNewDecFromInt(sdk.MinInt(expected, actual)))
+		errTerm := sdkmath.LegacyNewDecFromInt(diff).Quo(sdkmath.LegacyNewDecFromInt(sdkmath.MinInt(expected, actual)))
 		if errTerm.GT(e.MultiplicativeTolerance) {
 			return comparisonSign
 		}

@@ -3,9 +3,9 @@ package types
 import (
 	"fmt"
 
-	"gopkg.in/yaml.v3"
-
+	sdkmath "cosmossdk.io/math"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	"gopkg.in/yaml.v3"
 )
 
 var _ paramtypes.ParamSet = &Params{}
