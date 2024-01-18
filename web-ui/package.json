@@ -40,7 +40,7 @@
     "bech32": "^2.0.0",
     "bun": "^1.0.3",
     "bun-framework-next": "latest",
-    "chain-registry": "1.19.0",
+    "chain-registry": "1.25.1",
     "chakra-react-select": "^4.7.6",
     "cosmjs-types": "0.9.0",
     "crypto-js": "^4.2.0",
