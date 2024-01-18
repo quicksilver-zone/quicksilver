@@ -11,7 +11,6 @@ import (
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/tx"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	icatypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/types"
@@ -31,9 +30,9 @@ const (
 	ICATimeout      = time.Hour * 6
 )
 
-func (k *Keeper) HandleReceiptTransaction(ctx sdk.Context, txn *tx.Tx, hash string, zone types.Zone) error {
+func (k *Keeper) HandleReceiptTransaction(ctx sdk.Context, txn sdk.TxWithMemo, hash string, zone types.Zone) error {
 	k.Logger(ctx).Info("Deposit receipt.", "ischeck", ctx.IsCheckTx(), "isrecheck", ctx.IsReCheckTx())
-	memo := txn.Body.Memo
+	memo := txn.GetMemo()
 
 	senderAddress := Unset
 	assets := sdk.Coins{}
@@ -143,8 +142,9 @@ func (k *Keeper) SendTokenIBC(ctx sdk.Context, senderAccAddress sdk.AccAddress, 
 	if srcPort == "" {
 		return errors.New("unable to find remote transfer connection")
 	}
-
-	return k.TransferKeeper.Send(
+	
+	msgTransfer := transfertypes.
+	return k.TransferKeeper.Transfer(
 		ctx,
 		srcPort,
 		srcChannel,
