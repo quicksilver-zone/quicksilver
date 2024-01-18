@@ -7,8 +7,11 @@ import (
 
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
-	"github.com/CosmWasm/wasmd/x/wasm"
 	abci "github.com/cometbft/cometbft/abci/types"
+	cometlog "github.com/cometbft/cometbft/libs/log"
+	"github.com/quicksilver-zone/quicksilver/v7/app"
+	"github.com/rs/zerolog"
+
 	"github.com/cometbft/cometbft/crypto/secp256k1"
 	tmtypes "github.com/cometbft/cometbft/types"
 	dbm "github.com/cosmos/cosmos-db"
@@ -19,8 +22,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-
-	"github.com/quicksilver-zone/quicksilver/v7/app"
 )
 
 func TestQuicksilverExport(t *testing.T) {
@@ -45,19 +46,17 @@ func TestQuicksilverExport(t *testing.T) {
 	}
 	db := dbm.NewMemDB()
 	quicksilver := app.NewQuicksilver(
-		log.NewTMLogger(log.NewSyncWriter(os.Stdout)),
+		log.NewCustomLogger(cometlog.NewSyncWriter(os.Stdout).(zerolog.Logger)),
 		db,
 		nil,
 		true,
 		map[int64]bool{},
 		app.DefaultNodeHome,
-		0,
 		app.MakeEncodingConfig(),
-		wasm.EnableAllProposals,
 		app.EmptyAppOptions{},
+		false,
+		false,
 		app.GetWasmOpts(app.EmptyAppOptions{}),
-		false,
-		false,
 	)
 
 	genesisState := app.NewDefaultGenesisState()
@@ -77,19 +76,18 @@ func TestQuicksilverExport(t *testing.T) {
 	quicksilver.Commit()
 
 	// Making a new app object with the db, so that initchain hasn't been called
-	app2 := app.NewQuicksilver(log.NewTMLogger(log.NewSyncWriter(os.Stdout)),
+	app2 := app.NewQuicksilver(log.NewCustomLogger(cometlog.NewSyncWriter(os.Stdout).(zerolog.Logger)),
 		db,
 		nil,
 		true,
 		map[int64]bool{},
 		app.DefaultNodeHome,
-		0,
 		app.MakeEncodingConfig(),
 		app.EmptyAppOptions{},
+		false,
+		false,
 		app.GetWasmOpts(app.EmptyAppOptions{}),
-		false,
-		false,
 	)
-	_, err = app2.ExportAppStateAndValidators(false, []string{})
+	_, err = app2.ExportAppStateAndValidators(false, []string{}, []string{})
 	require.NoError(t, err, "ExportAppStateAndValidators should not have an error")
 }

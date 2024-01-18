@@ -10,11 +10,10 @@ import (
 
 	"cosmossdk.io/log"
 	"github.com/CosmWasm/wasmd/x/wasm"
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmos "github.com/cometbft/cometbft/libs/os"
 	dbm "github.com/cosmos/cosmos-db"
-	"github.com/spf13/cast"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	tmservice "github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
@@ -34,6 +33,7 @@ import (
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	capabilitykeeper "github.com/cosmos/ibc-go/modules/capability/keeper"
+	"github.com/spf13/cast"
 
 	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
 	ibctestingtypes "github.com/cosmos/ibc-go/v8/testing/types"
@@ -110,6 +110,7 @@ func NewQuicksilver(
 	appOpts servertypes.AppOptions,
 	mock bool,
 	enableSupplyEndpoint bool,
+	wasmOpts []wasmkeeper.Option,
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) *Quicksilver {
 	appCodec := encodingConfig.Marshaler
@@ -166,7 +167,7 @@ func NewQuicksilver(
 	app.mm.SetOrderEndBlockers(orderEndBlockers()...)
 	app.mm.SetOrderInitGenesis(orderInitBlockers()...)
 
-	app.mm.RegisterInvariants(&app.CrisisKeeper)
+	app.mm.RegisterInvariants(app.CrisisKeeper)
 	// TODO: in this commit they just removed the RegisterRoutes method https://github.com/cosmos/cosmos-sdk/commit/3a097012b59413641ac92f18f226c5d6b674ae42
 
 	// app.mm.RegisterRoutes(app.Router(), app.QueryRouter(), encodingConfig.Amino)
@@ -198,7 +199,7 @@ func NewQuicksilver(
 			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
 		},
 		WasmConfig:        wasmConfig,
-		TxCounterStoreKey: app.GetKey(wasm.StoreKey),
+		TxCounterStoreKey: runtime.NewKVStoreService(app.AppKeepers.GetKey(wasm.StoreKey)),
 		IBCKeeper:         app.IBCKeeper,
 	}
 
@@ -249,20 +250,23 @@ func (app *Quicksilver) EndBlocker(ctx sdk.Context) (sdk.EndBlock, error) {
 	return app.mm.EndBlock(ctx)
 }
 
-// DeliverTx calls BaseApp.DeliverTx and calculates transactions per second.
-func (app *Quicksilver) DeliverTx(req abci.RequestDeliverTx) (res abci.ResponseDeliverTx) {
-	defer func() {
-		// TODO: Record the count along with the code and or reason so as to display
-		// in the transactions per second live dashboards.
-		if res.IsErr() {
-			app.tpsCounter.incrementFailure()
-		} else {
-			app.tpsCounter.incrementSuccess()
-		}
-	}()
+// // TODO: Figure out how to reimplement this, new version of cosmos-sdk doesn't have DeliverTx exposed
+// ref:https://github.com/cosmos/cosmos-sdk/blob/release/v0.50.x/UPGRADING.md#baseapp
 
-	return app.BaseApp.DeliverTx(req)
-}
+// DeliverTx calls BaseApp.DeliverTx and calculates transactions per second.
+// func (app *Quicksilver) DeliverTx(req abci.RequestDeliverTx) (res abci.ResponseDeliverTx) {
+// 	defer func() {
+// 		// TODO: Record the count along with the code and or reason so as to display
+// 		// in the transactions per second live dashboards.
+// 		if res.IsErr() {
+// 			app.tpsCounter.incrementFailure()
+// 		} else {
+// 			app.tpsCounter.incrementSuccess()
+// 		}
+// 	}()
+
+// 	return app.BaseApp.DeliverTx(req)
+// }
 
 // InitChainer updates at chain initialization.
 func (app *Quicksilver) InitChainer(ctx sdk.Context, req *abci.RequestInitChain) (*abci.ResponseInitChain, error) {

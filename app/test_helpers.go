@@ -9,7 +9,6 @@ import (
 
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
-	"github.com/CosmWasm/wasmd/x/wasm"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/crypto/secp256k1"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -39,8 +38,8 @@ func (EmptyAppOptions) Get(_ string) interface{} {
 
 // DefaultConsensusParams defines the default Tendermint consensus params used in
 // Quicksilver testing.
-var DefaultConsensusParams = &abci.ConsensusParams{
-	Block: &abci.BlockParams{
+var DefaultConsensusParams = &tmproto.ConsensusParams{
+	Block: &tmproto.BlockParams{
 		MaxBytes: 200000,
 		MaxGas:   -1, // no limit
 	},
@@ -88,13 +87,11 @@ func Setup(t *testing.T, isCheckTx bool) *Quicksilver {
 		true,
 		map[int64]bool{},
 		DefaultNodeHome,
-		5,
 		MakeEncodingConfig(),
-		wasm.EnableAllProposals,
 		EmptyAppOptions{},
+		false,
+		false,
 		GetWasmOpts(EmptyAppOptions{}),
-		false,
-		false,
 	)
 
 	genesisState := NewDefaultGenesisState()
@@ -138,13 +135,11 @@ func SetupTestingApp() (testApp ibctesting.TestingApp, genesisState map[string]j
 		true,
 		map[int64]bool{},
 		DefaultNodeHome,
-		5,
 		MakeEncodingConfig(),
-		wasm.EnableAllProposals,
 		EmptyAppOptions{},
-		GetWasmOpts(EmptyAppOptions{}),
 		true, // set mock state to true
 		false,
+		GetWasmOpts(EmptyAppOptions{}),
 	)
 	return app, NewDefaultGenesisState()
 }
@@ -177,14 +172,14 @@ func GenesisStateWithValSet(t *testing.T,
 			Jailed:          false,
 			Status:          stakingtypes.Bonded,
 			Tokens:          bondAmt,
-			DelegatorShares: sdkmath.OneDec(),
+			DelegatorShares: sdkmath.LegacyOneDec(),
 			Description:     stakingtypes.Description{},
 			UnbondingHeight: int64(0),
 			UnbondingTime:   time.Unix(0, 0).UTC(),
 			Commission:      stakingtypes.NewCommission(sdkmath.LegacyZeroDec(), sdkmath.LegacyZeroDec(), sdkmath.LegacyZeroDec()),
 		}
 		validators = append(validators, validator)
-		delegations = append(delegations, stakingtypes.NewDelegation(genAccs[0].GetAddress(), val.Address.Bytes(), sdkmath.LegacyOneDec()))
+		delegations = append(delegations, stakingtypes.NewDelegation(genAccs[0].GetAddress().String(), val.Address.String(), sdkmath.LegacyOneDec()))
 
 	}
 	// set validators and delegations
@@ -209,7 +204,7 @@ func GenesisStateWithValSet(t *testing.T,
 	})
 
 	// update total supply
-	bankGenesis := banktypes.NewGenesisState(banktypes.DefaultGenesisState().Params, balances, totalSupply, []banktypes.Metadata{})
+	bankGenesis := banktypes.NewGenesisState(banktypes.DefaultGenesisState().Params, balances, totalSupply, []banktypes.Metadata{}, []banktypes.SendEnabled{})
 	genesisState[banktypes.ModuleName] = app.AppCodec().MustMarshalJSON(bankGenesis)
 
 	return genesisState
