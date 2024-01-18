@@ -4,9 +4,9 @@ import (
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
+	corestoretypes "cosmossdk.io/core/store"
 	sdkioerrors "cosmossdk.io/errors"
 
-	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
@@ -20,7 +20,7 @@ import (
 type HandlerOptions struct {
 	ante.HandlerOptions
 
-	TxCounterStoreKey storetypes.StoreKey
+	TxCounterStoreKey corestoretypes.KVStoreService
 	WasmConfig        wasmtypes.WasmConfig
 
 	IBCKeeper *ibckeeper.Keeper
