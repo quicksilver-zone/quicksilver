@@ -18,6 +18,7 @@ import (
 	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
 	host "github.com/cosmos/ibc-go/v8/modules/core/24-host"
 
+	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 	"github.com/quicksilver-zone/quicksilver/v7/utils"
 	"github.com/quicksilver-zone/quicksilver/v7/utils/addressutils"
 	"github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking/types"
@@ -142,21 +143,29 @@ func (k *Keeper) SendTokenIBC(ctx sdk.Context, senderAccAddress sdk.AccAddress, 
 	if srcPort == "" {
 		return errors.New("unable to find remote transfer connection")
 	}
-	
-	msgTransfer := transfertypes.
-	return k.TransferKeeper.Transfer(
-		ctx,
-		srcPort,
-		srcChannel,
-		coin,
-		senderAccAddress,
-		receiver,
-		clienttypes.Height{
+
+	msgTransfer := &transfertypes.MsgTransfer{
+		SourcePort:    srcPort,
+		SourceChannel: srcChannel,
+		Token:         coin,
+		Sender:        senderAccAddress.String(),
+		Receiver:      receiver,
+		TimeoutHeight: clienttypes.Height{
 			RevisionNumber: 0,
 			RevisionHeight: 0,
 		},
-		uint64(ctx.BlockTime().UnixNano()+5*time.Minute.Nanoseconds()),
+		TimeoutTimestamp: uint64(ctx.BlockTime().UnixNano() + 5*time.Minute.Nanoseconds()),
+	}
+
+	_, err := k.TransferKeeper.Transfer(
+		ctx,
+		msgTransfer,
 	)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // MintAndSendQAsset mints qAssets based on the native asset redemption rate.  Tokens are then transferred to the given user.

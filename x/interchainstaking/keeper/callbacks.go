@@ -28,6 +28,7 @@ import (
 	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
 	tmclienttypes "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint"
 
+	errorsmod "cosmossdk.io/errors"
 	"github.com/quicksilver-zone/quicksilver/v7/utils"
 	"github.com/quicksilver-zone/quicksilver/v7/utils/addressutils"
 	"github.com/quicksilver-zone/quicksilver/v7/utils/bankutils"

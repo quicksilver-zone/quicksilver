@@ -8,13 +8,13 @@ import (
 	"time"
 
 	"github.com/cometbft/cometbft/proto/tendermint/types"
-	ics23 "github.com/confio/ics23/go"
+	ics23 "github.com/cosmos/ics23/go"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/math"
 	sdkmath "cosmossdk.io/math"
-
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -24,7 +24,6 @@ import (
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/cosmos/ibc-go/v8/testing/simapp"
 
 	ibctypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
 	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
@@ -32,6 +31,7 @@ import (
 
 	"github.com/quicksilver-zone/quicksilver/v7/app"
 	"github.com/quicksilver-zone/quicksilver/v7/utils/addressutils"
+	"github.com/quicksilver-zone/quicksilver/v7/utils/bankutils"
 	icqtypes "github.com/quicksilver-zone/quicksilver/v7/x/interchainquery/types"
 	"github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking/keeper"
 	icstypes "github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking/types"
@@ -72,7 +72,7 @@ func (suite *KeeperTestSuite) setupIbc() (*app.Quicksilver, sdk.Context) {
 	txRes.Header.Header.Time = ctx.BlockTime()
 	// setup ClientConsensusState for checking Header validation
 	// Cheat, and set the client state and consensus state for 07-tendermint-0 to match the incoming header.
-	quicksilver.IBCKeeper.ClientKeeper.SetClientState(ctx, "07-tendermint-0", lightclienttypes.NewClientState("gaiatest-1", lightclienttypes.DefaultTrustLevel, time.Hour, time.Hour, time.Second*50, txRes.Header.TrustedHeight, []*ics23.ProofSpec{}, []string{}, false, false))
+	quicksilver.IBCKeeper.ClientKeeper.SetClientState(ctx, "07-tendermint-0", lightclienttypes.NewClientState("gaiatest-1", lightclienttypes.DefaultTrustLevel, time.Hour, time.Hour, time.Second*50, txRes.Header.TrustedHeight, []*ics23.ProofSpec{}, []string{}))
 	quicksilver.IBCKeeper.ClientKeeper.SetClientConsensusState(ctx, "07-tendermint-0", txRes.Header.TrustedHeight, txRes.Header.ConsensusState())
 
 	return quicksilver, ctx
@@ -88,7 +88,8 @@ func (suite *KeeperTestSuite) TestHandleValsetCallback() {
 	}{
 		{
 			name: "valid - no-op",
-			valset: func(in stakingtypes.Validators) stakingtypes.QueryValidatorsResponse {
+			valset: func(inVals stakingtypes.Validators) stakingtypes.QueryValidatorsResponse {
+				in := inVals.Validators
 				return stakingtypes.QueryValidatorsResponse{Validators: in}
 			},
 			checks: func(_ *require.Assertions, _ sdk.Context, _ *app.Quicksilver, _ stakingtypes.Validators) {
@@ -97,11 +98,15 @@ func (suite *KeeperTestSuite) TestHandleValsetCallback() {
 		},
 		{
 			name: "valid - shares +1000 val[0]",
-			valset: func(in stakingtypes.Validators) stakingtypes.QueryValidatorsResponse {
+			valset: func(inVals stakingtypes.Validators) stakingtypes.QueryValidatorsResponse {
+				in := inVals.Validators
+
 				in[0].DelegatorShares = in[0].DelegatorShares.Add(sdkmath.LegacyNewDec(1000))
 				return stakingtypes.QueryValidatorsResponse{Validators: in}
 			},
-			checks: func(require *require.Assertions, ctx sdk.Context, quicksilver *app.Quicksilver, in stakingtypes.Validators) {
+			checks: func(require *require.Assertions, ctx sdk.Context, quicksilver *app.Quicksilver, inVals stakingtypes.Validators) {
+				in := inVals.Validators
+
 				foundQuery := false
 				_, addr, _ := bech32.DecodeAndConvert(in[0].OperatorAddress)
 				data := stakingtypes.GetValidatorKey(addr)
@@ -116,12 +121,16 @@ func (suite *KeeperTestSuite) TestHandleValsetCallback() {
 		},
 		{
 			name: "valid - shares +1000 val[1], +2000 val[2]",
-			valset: func(in stakingtypes.Validators) stakingtypes.QueryValidatorsResponse {
+			valset: func(inVals stakingtypes.Validators) stakingtypes.QueryValidatorsResponse {
+				in := inVals.Validators
+
 				in[1].DelegatorShares = in[1].DelegatorShares.Add(sdkmath.LegacyNewDec(1000))
 				in[2].DelegatorShares = in[2].DelegatorShares.Add(sdkmath.LegacyNewDec(2000))
 				return stakingtypes.QueryValidatorsResponse{Validators: in}
 			},
-			checks: func(require *require.Assertions, ctx sdk.Context, quicksilver *app.Quicksilver, in stakingtypes.Validators) {
+			checks: func(require *require.Assertions, ctx sdk.Context, quicksilver *app.Quicksilver, inVals stakingtypes.Validators) {
+				in := inVals.Validators
+
 				foundQuery := false
 				foundQuery2 := false
 				_, addr, _ := bech32.DecodeAndConvert(in[1].OperatorAddress)
@@ -142,11 +151,15 @@ func (suite *KeeperTestSuite) TestHandleValsetCallback() {
 		},
 		{
 			name: "valid - tokens +1000 val[0]",
-			valset: func(in stakingtypes.Validators) stakingtypes.QueryValidatorsResponse {
+			valset: func(inVals stakingtypes.Validators) stakingtypes.QueryValidatorsResponse {
+				in := inVals.Validators
+
 				in[0].Tokens = in[0].Tokens.Add(sdkmath.NewInt(1000))
 				return stakingtypes.QueryValidatorsResponse{Validators: in}
 			},
-			checks: func(require *require.Assertions, ctx sdk.Context, quicksilver *app.Quicksilver, in stakingtypes.Validators) {
+			checks: func(require *require.Assertions, ctx sdk.Context, quicksilver *app.Quicksilver, inVals stakingtypes.Validators) {
+				in := inVals.Validators
+
 				foundQuery := false
 				_, addr, _ := bech32.DecodeAndConvert(in[0].OperatorAddress)
 				data := stakingtypes.GetValidatorKey(addr)
@@ -161,12 +174,16 @@ func (suite *KeeperTestSuite) TestHandleValsetCallback() {
 		},
 		{
 			name: "valid - tokens +1000 val[1], +2000 val[2]",
-			valset: func(in stakingtypes.Validators) stakingtypes.QueryValidatorsResponse {
+			valset: func(inVals stakingtypes.Validators) stakingtypes.QueryValidatorsResponse {
+				in := inVals.Validators
+
 				in[1].Tokens = in[1].Tokens.Add(sdkmath.NewInt(1000))
 				in[2].Tokens = in[2].Tokens.Add(sdkmath.NewInt(2000))
 				return stakingtypes.QueryValidatorsResponse{Validators: in}
 			},
-			checks: func(require *require.Assertions, ctx sdk.Context, quicksilver *app.Quicksilver, in stakingtypes.Validators) {
+			checks: func(require *require.Assertions, ctx sdk.Context, quicksilver *app.Quicksilver, inVals stakingtypes.Validators) {
+				in := inVals.Validators
+
 				foundQuery := false
 				foundQuery2 := false
 				_, addr, _ := bech32.DecodeAndConvert(in[1].OperatorAddress)
@@ -187,12 +204,16 @@ func (suite *KeeperTestSuite) TestHandleValsetCallback() {
 		},
 		{
 			name: "valid - tokens -10 val[1], -20 val[2]",
-			valset: func(in stakingtypes.Validators) stakingtypes.QueryValidatorsResponse {
+			valset: func(inVals stakingtypes.Validators) stakingtypes.QueryValidatorsResponse {
+				in := inVals.Validators
+
 				in[1].Tokens = in[1].Tokens.Sub(sdkmath.NewInt(10))
 				in[2].Tokens = in[2].Tokens.Sub(sdkmath.NewInt(20))
 				return stakingtypes.QueryValidatorsResponse{Validators: in}
 			},
-			checks: func(require *require.Assertions, ctx sdk.Context, quicksilver *app.Quicksilver, in stakingtypes.Validators) {
+			checks: func(require *require.Assertions, ctx sdk.Context, quicksilver *app.Quicksilver, inVals stakingtypes.Validators) {
+				in := inVals.Validators
+
 				foundQuery := false
 				foundQuery2 := false
 				_, addr, _ := bech32.DecodeAndConvert(in[1].OperatorAddress)
@@ -213,12 +234,16 @@ func (suite *KeeperTestSuite) TestHandleValsetCallback() {
 		},
 		{
 			name: "valid - commission 0.5 val[0], 0.05 val[2]",
-			valset: func(in stakingtypes.Validators) stakingtypes.QueryValidatorsResponse {
+			valset: func(inVals stakingtypes.Validators) stakingtypes.QueryValidatorsResponse {
+				in := inVals.Validators
+
 				in[0].Commission.CommissionRates.Rate = sdkmath.LegacyNewDecWithPrec(5, 1)
 				in[2].Commission.CommissionRates.Rate = sdkmath.LegacyNewDecWithPrec(5, 2)
 				return stakingtypes.QueryValidatorsResponse{Validators: in}
 			},
-			checks: func(require *require.Assertions, ctx sdk.Context, quicksilver *app.Quicksilver, in stakingtypes.Validators) {
+			checks: func(require *require.Assertions, ctx sdk.Context, quicksilver *app.Quicksilver, inVals stakingtypes.Validators) {
+				in := inVals.Validators
+
 				foundQuery := false
 				foundQuery2 := false
 				_, addr, _ := bech32.DecodeAndConvert(in[0].OperatorAddress)
@@ -239,7 +264,9 @@ func (suite *KeeperTestSuite) TestHandleValsetCallback() {
 		},
 		{
 			name: "valid - new validator",
-			valset: func(in stakingtypes.Validators) stakingtypes.QueryValidatorsResponse {
+			valset: func(inVals stakingtypes.Validators) stakingtypes.QueryValidatorsResponse {
+				in := inVals.Validators
+
 				val := in[0]
 				val.OperatorAddress = newVal.String()
 				in = append(in, val)
@@ -258,11 +285,15 @@ func (suite *KeeperTestSuite) TestHandleValsetCallback() {
 		},
 		{
 			name: "valid - status unbonding val[0]",
-			valset: func(in stakingtypes.Validators) stakingtypes.QueryValidatorsResponse {
+			valset: func(inVals stakingtypes.Validators) stakingtypes.QueryValidatorsResponse {
+				in := inVals.Validators
+
 				in[0].Status = stakingtypes.Unbonding
 				return stakingtypes.QueryValidatorsResponse{Validators: in}
 			},
-			checks: func(require *require.Assertions, ctx sdk.Context, quicksilver *app.Quicksilver, in stakingtypes.Validators) {
+			checks: func(require *require.Assertions, ctx sdk.Context, quicksilver *app.Quicksilver, inVals stakingtypes.Validators) {
+				in := inVals.Validators
+
 				foundQuery := false
 				_, addr, _ := bech32.DecodeAndConvert(in[0].OperatorAddress)
 				data := stakingtypes.GetValidatorKey(addr)
@@ -285,16 +316,17 @@ func (suite *KeeperTestSuite) TestHandleValsetCallback() {
 			quicksilver.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
 			ctx := suite.chainA.GetContext()
 
-			chainBVals := suite.GetQuicksilverApp(suite.chainB).StakingKeeper.GetValidators(suite.chainB.GetContext(), 300)
+			chainBVals, err := suite.GetQuicksilverApp(suite.chainB).StakingKeeper.GetValidators(suite.chainB.GetContext(), 300)
+			suite.NoError(err)
 
-			queryResp := test.valset(chainBVals)
+			queryResp := test.valset(stakingtypes.Validators{Validators: chainBVals})
 			bz, err := quicksilver.AppCodec().Marshal(&queryResp)
 			suite.NoError(err)
 
 			err = keeper.ValsetCallback(quicksilver.InterchainstakingKeeper, ctx, bz, icqtypes.Query{ChainId: suite.chainB.ChainID})
 			suite.NoError(err)
 			// valset callback doesn't actually update validators, but does emit icq callbacks.
-			test.checks(suite.Require(), ctx, quicksilver, chainBVals)
+			test.checks(suite.Require(), ctx, quicksilver, stakingtypes.Validators{Validators: chainBVals})
 		})
 	}
 }
@@ -820,7 +852,8 @@ func (suite *KeeperTestSuite) TestHandleDistributeRewardsCallback() {
 
 	ctxA := suite.chainA.GetContext()
 	ctxB := suite.chainB.GetContext()
-	vals := gaia.StakingKeeper.GetAllValidators(ctxB)
+	vals, err := gaia.StakingKeeper.GetAllValidators(ctxB)
+	suite.NoError(err)
 
 	zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctxA, suite.chainB.ChainID)
 	suite.True(found)
@@ -1065,7 +1098,7 @@ func (suite *KeeperTestSuite) TestAllBalancesCallback() {
 
 		_, addr, err := bech32.DecodeAndConvert(zone.DepositAddress.Address)
 		suite.NoError(err)
-		data := banktypes.CreateAccountBalancesPrefix(addr)
+		data := bankutils.CreateAccountBalancesPrefix(addr)
 
 		// check a ICQ request was made
 		found := false
@@ -1115,7 +1148,7 @@ func (suite *KeeperTestSuite) TestAllBalancesCallbackWithExistingWg() {
 
 		_, addr, err := bech32.DecodeAndConvert(zone.DepositAddress.Address)
 		suite.NoError(err)
-		data := banktypes.CreateAccountBalancesPrefix(addr)
+		data := bankutils.CreateAccountBalancesPrefix(addr)
 
 		// check a ICQ request was made
 		found := false
@@ -1168,7 +1201,7 @@ func (suite *KeeperTestSuite) TestAllBalancesCallbackExistingBalanceNowNil() {
 
 		_, addr, err := bech32.DecodeAndConvert(zone.DepositAddress.Address)
 		suite.NoError(err)
-		data := banktypes.CreateAccountBalancesPrefix(addr)
+		data := bankutils.CreateAccountBalancesPrefix(addr)
 
 		// check a ICQ request was made
 		found := false
@@ -1216,7 +1249,7 @@ func (suite *KeeperTestSuite) TestAllBalancesCallbackExistingBalanceNowNil() {
 
 		_, addr, err := bech32.DecodeAndConvert(zone.WithdrawalAddress.Address)
 		suite.NoError(err)
-		data := banktypes.CreateAccountBalancesPrefix(addr)
+		data := bankutils.CreateAccountBalancesPrefix(addr)
 
 		// check a ICQ request was made
 		found := false
@@ -1264,7 +1297,7 @@ func (suite *KeeperTestSuite) TestAllBalancesCallbackMulti() {
 
 		_, addr, err := bech32.DecodeAndConvert(zone.DepositAddress.Address)
 		suite.NoError(err)
-		data := banktypes.CreateAccountBalancesPrefix(addr)
+		data := bankutils.CreateAccountBalancesPrefix(addr)
 
 		// check a ICQ request was made for each denom
 		for _, coin := range response.Balances {
@@ -1305,7 +1338,7 @@ func (suite *KeeperTestSuite) TestAccountBalanceCallback() {
 		for _, addr := range []string{zone.DepositAddress.Address, zone.WithdrawalAddress.Address} {
 			accAddr, err := sdk.AccAddressFromBech32(addr)
 			suite.NoError(err)
-			data := append(banktypes.CreateAccountBalancesPrefix(accAddr), []byte("qck")...)
+			data := append(bankutils.CreateAccountBalancesPrefix(accAddr), []byte("qck")...)
 
 			err = keeper.AccountBalanceCallback(quicksilver.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: data})
 			suite.NoError(err)
@@ -1335,7 +1368,7 @@ func (suite *KeeperTestSuite) TestAccountBalance046Callback() {
 		for _, addr := range []string{zone.DepositAddress.Address, zone.WithdrawalAddress.Address} {
 			accAddr, err := sdk.AccAddressFromBech32(addr)
 			suite.NoError(err)
-			data := append(banktypes.CreateAccountBalancesPrefix(accAddr), []byte("qck")...)
+			data := append(bankutils.CreateAccountBalancesPrefix(accAddr), []byte("qck")...)
 
 			err = keeper.AccountBalanceCallback(quicksilver.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: data})
 			suite.NoError(err)
@@ -1364,7 +1397,7 @@ func (suite *KeeperTestSuite) TestAccountBalanceCallbackMismatch() {
 		for _, addr := range []string{zone.DepositAddress.Address, zone.WithdrawalAddress.Address} {
 			accAddr, err := sdk.AccAddressFromBech32(addr)
 			suite.NoError(err)
-			data := append(banktypes.CreateAccountBalancesPrefix(accAddr), []byte("stake")...)
+			data := append(bankutils.CreateAccountBalancesPrefix(accAddr), []byte("stake")...)
 
 			err = keeper.AccountBalanceCallback(quicksilver.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: data})
 			suite.ErrorContains(err, "received coin denom qck does not match requested denom stake")
@@ -1393,7 +1426,7 @@ func (suite *KeeperTestSuite) TestAccountBalanceCallbackNil() {
 		for _, addr := range []string{zone.DepositAddress.Address, zone.WithdrawalAddress.Address} {
 			accAddr, err := sdk.AccAddressFromBech32(addr)
 			suite.NoError(err)
-			data := append(banktypes.CreateAccountBalancesPrefix(accAddr), []byte("stake")...)
+			data := append(bankutils.CreateAccountBalancesPrefix(accAddr), []byte("stake")...)
 
 			err = keeper.AccountBalanceCallback(quicksilver.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: data})
 			suite.NoError(err)
@@ -1432,7 +1465,8 @@ func TestDelegationsCallbackAllPresentNoChange(t *testing.T) {
 	zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 	suite.True(found)
 
-	vals := suite.GetQuicksilverApp(suite.chainB).StakingKeeper.GetAllValidators(suite.chainB.GetContext())
+	vals, err := suite.GetQuicksilverApp(suite.chainB).StakingKeeper.GetAllValidators(suite.chainB.GetContext())
+	suite.NoError(err)
 	delegationA := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[0].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdkmath.NewInt(1000))}
 	delegationB := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[1].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdkmath.NewInt(1000))}
 	delegationC := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[2].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdkmath.NewInt(1000))}
@@ -1452,7 +1486,7 @@ func TestDelegationsCallbackAllPresentNoChange(t *testing.T) {
 	delegationQuery := stakingtypes.QueryDelegatorDelegationsRequest{DelegatorAddr: zone.DelegationAddress.Address, Pagination: &query.PageRequest{Limit: uint64(len(vals))}}
 	bz := cdc.MustMarshal(&delegationQuery)
 
-	err := keeper.DelegationsCallback(quicksilver.InterchainstakingKeeper, ctx, data, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: bz})
+	err = keeper.DelegationsCallback(quicksilver.InterchainstakingKeeper, ctx, data, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: bz})
 
 	suite.NoError(err)
 
@@ -1481,7 +1515,8 @@ func TestDelegationsCallbackAllPresentOneChange(t *testing.T) {
 	zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 	suite.True(found)
 
-	vals := suite.GetQuicksilverApp(suite.chainB).StakingKeeper.GetAllValidators(suite.chainB.GetContext())
+	vals, err := suite.GetQuicksilverApp(suite.chainB).StakingKeeper.GetAllValidators(suite.chainB.GetContext())
+	suite.NoError(err)
 	delegationA := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[0].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdkmath.NewInt(1000))}
 	delegationB := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[1].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdkmath.NewInt(1000))}
 	delegationC := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[2].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdkmath.NewInt(1000))}
@@ -1501,7 +1536,7 @@ func TestDelegationsCallbackAllPresentOneChange(t *testing.T) {
 	delegationQuery := stakingtypes.QueryDelegatorDelegationsRequest{DelegatorAddr: zone.DelegationAddress.Address, Pagination: &query.PageRequest{Limit: uint64(len(vals))}}
 	bz := cdc.MustMarshal(&delegationQuery)
 
-	err := keeper.DelegationsCallback(quicksilver.InterchainstakingKeeper, ctx, data, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: bz})
+	err = keeper.DelegationsCallback(quicksilver.InterchainstakingKeeper, ctx, data, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: bz})
 
 	suite.NoError(err)
 
@@ -1530,7 +1565,8 @@ func TestDelegationsCallbackOneMissing(t *testing.T) {
 	zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 	suite.True(found)
 
-	vals := suite.GetQuicksilverApp(suite.chainB).StakingKeeper.GetAllValidators(suite.chainB.GetContext())
+	vals, err := suite.GetQuicksilverApp(suite.chainB).StakingKeeper.GetAllValidators(suite.chainB.GetContext())
+	suite.NoError(err)
 	delegationA := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[0].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdkmath.NewInt(1000))}
 	delegationB := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[1].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdkmath.NewInt(1000))}
 	delegationC := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[2].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdkmath.NewInt(1000))}
@@ -1549,7 +1585,7 @@ func TestDelegationsCallbackOneMissing(t *testing.T) {
 	delegationQuery := stakingtypes.QueryDelegatorDelegationsRequest{DelegatorAddr: zone.DelegationAddress.Address, Pagination: &query.PageRequest{Limit: uint64(len(vals))}}
 	bz := cdc.MustMarshal(&delegationQuery)
 
-	err := keeper.DelegationsCallback(quicksilver.InterchainstakingKeeper, ctx, data, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: bz})
+	err = keeper.DelegationsCallback(quicksilver.InterchainstakingKeeper, ctx, data, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: bz})
 
 	suite.NoError(err)
 
@@ -1578,7 +1614,8 @@ func TestDelegationsCallbackOneAdditional(t *testing.T) {
 	zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 	suite.True(found)
 
-	vals := suite.GetQuicksilverApp(suite.chainB).StakingKeeper.GetAllValidators(suite.chainB.GetContext())
+	vals, err := suite.GetQuicksilverApp(suite.chainB).StakingKeeper.GetAllValidators(suite.chainB.GetContext())
+	suite.NoError(err)
 	delegationA := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[0].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdkmath.NewInt(1000))}
 	delegationB := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[1].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdkmath.NewInt(1000))}
 	delegationC := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[2].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdkmath.NewInt(1000))}
@@ -1599,7 +1636,7 @@ func TestDelegationsCallbackOneAdditional(t *testing.T) {
 	delegationQuery := stakingtypes.QueryDelegatorDelegationsRequest{DelegatorAddr: zone.DelegationAddress.Address, Pagination: &query.PageRequest{Limit: uint64(len(vals))}}
 	bz := cdc.MustMarshal(&delegationQuery)
 
-	err := keeper.DelegationsCallback(quicksilver.InterchainstakingKeeper, ctx, data, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: bz})
+	err = keeper.DelegationsCallback(quicksilver.InterchainstakingKeeper, ctx, data, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: bz})
 
 	suite.NoError(err)
 
@@ -1628,7 +1665,8 @@ func TestDelegationCallbackNew(t *testing.T) {
 	zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 	suite.True(found)
 
-	vals := suite.GetQuicksilverApp(suite.chainB).StakingKeeper.GetAllValidators(suite.chainB.GetContext())
+	vals, err := suite.GetQuicksilverApp(suite.chainB).StakingKeeper.GetAllValidators(suite.chainB.GetContext())
+	suite.NoError(err)
 	delegationA := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[0].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdkmath.NewInt(1000))}
 	delegationB := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[1].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdkmath.NewInt(1000))}
 	delegationC := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[2].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdkmath.NewInt(1000))}
@@ -1667,7 +1705,8 @@ func TestDelegationCallbackUpdate(t *testing.T) {
 	zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 	suite.True(found)
 
-	vals := suite.GetQuicksilverApp(suite.chainB).StakingKeeper.GetAllValidators(suite.chainB.GetContext())
+	vals, err := suite.GetQuicksilverApp(suite.chainB).StakingKeeper.GetAllValidators(suite.chainB.GetContext())
+	suite.NoError(err)
 	delegationA := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[0].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdkmath.NewInt(1000))}
 	delegationB := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[1].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdkmath.NewInt(1000))}
 	delegationC := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[2].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdkmath.NewInt(1000))}
@@ -1706,7 +1745,8 @@ func TestDelegationCallbackNoOp(t *testing.T) {
 	zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 	suite.True(found)
 
-	vals := suite.GetQuicksilverApp(suite.chainB).StakingKeeper.GetAllValidators(suite.chainB.GetContext())
+	vals, err := suite.GetQuicksilverApp(suite.chainB).StakingKeeper.GetAllValidators(suite.chainB.GetContext())
+	suite.NoError(err)
 	delegationA := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[0].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdkmath.NewInt(1000))}
 	delegationB := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[1].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdkmath.NewInt(1000))}
 	delegationC := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[2].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdkmath.NewInt(1000))}
@@ -1745,7 +1785,8 @@ func TestDelegationCallbackRemove(t *testing.T) {
 	zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 	suite.True(found)
 
-	vals := suite.GetQuicksilverApp(suite.chainB).StakingKeeper.GetAllValidators(suite.chainB.GetContext())
+	vals, err := suite.GetQuicksilverApp(suite.chainB).StakingKeeper.GetAllValidators(suite.chainB.GetContext())
+	suite.NoError(err)
 	delegationA := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[0].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdkmath.NewInt(1000))}
 	delegationB := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[1].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdkmath.NewInt(1000))}
 	delegationC := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[2].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdkmath.NewInt(1000))}
@@ -1930,7 +1971,8 @@ func (suite *KeeperTestSuite) TestDepositTxCallback() {
 
 func (suite *KeeperTestSuite) TestSigningInfoCallback() {
 	validator := addressutils.GenerateValAddressForTest()
-	pubKey := simapp.CreateTestPubKeys(1)[0]
+	privVal := mock.NewPV().PrivKey
+	pubKey := privVal.PubKey()
 
 	pkAny, err := codectypes.NewAnyWithValue(pubKey)
 	suite.Require().NoError(err)
@@ -1942,7 +1984,7 @@ func (suite *KeeperTestSuite) TestSigningInfoCallback() {
 	consAddr, err := newValidator.GetConsAddr()
 	suite.NoError(err)
 
-	bech32ConsAddress := addressutils.MustEncodeAddressToBech32(sdk.Bech32PrefixConsAddr, consAddr)
+	bech32ConsAddress := addressutils.MustEncodeAddressToBech32(sdk.Bech32PrefixConsAddr, sdk.AccAddress(consAddr))
 	testCases := []struct {
 		name      string
 		malleate  func(quicksilver *app.Quicksilver, ctx sdk.Context) []byte
@@ -2256,7 +2298,7 @@ func (suite *KeeperTestSuite) TestDepositLsmTxCallback() {
 		payload.Header.Header.Time = ctx.BlockTime()
 		suite.NoError(err)
 		// cheat, and set the client state and consensus state for 07-tendermint-0 to match the incoming header.
-		quicksilver.IBCKeeper.ClientKeeper.SetClientState(ctx, "07-tendermint-0", lightclienttypes.NewClientState("gaiatest-1", lightclienttypes.DefaultTrustLevel, time.Hour, time.Hour, time.Second*50, payload.Header.TrustedHeight, []*ics23.ProofSpec{}, []string{}, false, false))
+		quicksilver.IBCKeeper.ClientKeeper.SetClientState(ctx, "07-tendermint-0", lightclienttypes.NewClientState("gaiatest-1", lightclienttypes.DefaultTrustLevel, time.Hour, time.Hour, time.Second*50, payload.Header.TrustedHeight, []*ics23.ProofSpec{}, []string{}))
 		quicksilver.IBCKeeper.ClientKeeper.SetClientConsensusState(ctx, "07-tendermint-0", payload.Header.TrustedHeight, payload.Header.ConsensusState())
 
 		requestData := tx.GetTxRequest{
@@ -2289,12 +2331,11 @@ func (suite *KeeperTestSuite) TestDepositLsmTxCallback() {
 		sdkTx, err := keeper.TxDecoder(quicksilver.InterchainstakingKeeper.GetCodec())(payload.Proof.Data)
 		suite.NoError(err)
 
-		authTx, _ := sdkTx.(*tx.Tx)
+		authTx, _ := sdkTx.(sdk.Tx)
 
 		// validate receipt matches source / hash / amount
-		var msg sdk.Msg
-		suite.NoError(quicksilver.InterchainstakingKeeper.GetCodec().UnpackAny(authTx.Body.Messages[0], &msg))
-		sendmsg, _ := msg.(*banktypes.MsgSend)
+		msgs := authTx.GetMsgs()
+		sendmsg, _ := msgs[0].(*banktypes.MsgSend)
 		suite.Equal(receipt.Sender, sendmsg.FromAddress)
 		suite.Equal(receipt.Txhash, requestData.Hash)
 		bt := ctx.BlockTime()
@@ -2354,7 +2395,7 @@ func (suite *KeeperTestSuite) TestDepositTxCallback2() {
 		payload.Header.Header.Time = ctx.BlockTime()
 		suite.NoError(err)
 		// cheat, and set the client state and consensus state for 07-tendermint-0 to match the incoming header.
-		quicksilver.IBCKeeper.ClientKeeper.SetClientState(ctx, "07-tendermint-0", lightclienttypes.NewClientState("gaiatest-1", lightclienttypes.DefaultTrustLevel, time.Hour, time.Hour, time.Second*50, payload.Header.TrustedHeight, []*ics23.ProofSpec{}, []string{}, false, false))
+		quicksilver.IBCKeeper.ClientKeeper.SetClientState(ctx, "07-tendermint-0", lightclienttypes.NewClientState("gaiatest-1", lightclienttypes.DefaultTrustLevel, time.Hour, time.Hour, time.Second*50, payload.Header.TrustedHeight, []*ics23.ProofSpec{}, []string{}))
 		quicksilver.IBCKeeper.ClientKeeper.SetClientConsensusState(ctx, "07-tendermint-0", payload.Header.TrustedHeight, payload.Header.ConsensusState())
 
 		requestData := tx.GetTxRequest{
@@ -2387,11 +2428,11 @@ func (suite *KeeperTestSuite) TestDepositTxCallback2() {
 		sdkTx, err := keeper.TxDecoder(quicksilver.InterchainstakingKeeper.GetCodec())(payload.Proof.Data)
 		suite.NoError(err)
 
-		authTx, _ := sdkTx.(*tx.Tx)
-
 		// validate receipt matches source / hash / amount
-		var msg sdk.Msg
-		suite.NoError(quicksilver.InterchainstakingKeeper.GetCodec().UnpackAny(authTx.Body.Messages[0], &msg))
+		msgs := sdkTx.GetMsgs()
+		suite.Require().Len(msgs, 1)
+
+		msg := msgs[0]
 		sendmsg, _ := msg.(*banktypes.MsgSend)
 		suite.Equal(receipt.Sender, sendmsg.FromAddress)
 		suite.Equal(receipt.Txhash, requestData.Hash)
@@ -2439,7 +2480,7 @@ func (suite *KeeperTestSuite) TestDepositLsmTxCallbackFailOnNonMatchingValidator
 		payload.Header.Header.Time = ctx.BlockTime()
 		suite.NoError(err)
 		// cheat, and set the client state and consensus state for 07-tendermint-0 to match the incoming header.
-		quicksilver.IBCKeeper.ClientKeeper.SetClientState(ctx, "07-tendermint-0", lightclienttypes.NewClientState("gaiatest-1", lightclienttypes.DefaultTrustLevel, time.Hour, time.Hour, time.Second*50, payload.Header.TrustedHeight, []*ics23.ProofSpec{}, []string{}, false, false))
+		quicksilver.IBCKeeper.ClientKeeper.SetClientState(ctx, "07-tendermint-0", lightclienttypes.NewClientState("gaiatest-1", lightclienttypes.DefaultTrustLevel, time.Hour, time.Hour, time.Second*50, payload.Header.TrustedHeight, []*ics23.ProofSpec{}, []string{}))
 		quicksilver.IBCKeeper.ClientKeeper.SetClientConsensusState(ctx, "07-tendermint-0", payload.Header.TrustedHeight, payload.Header.ConsensusState())
 
 		requestData := tx.GetTxRequest{
@@ -2562,7 +2603,7 @@ func (suite *KeeperTestSuite) TestDelegationAccountBalancesCallback() {
 
 			_, addr, err := bech32.DecodeAndConvert(zone.DelegationAddress.Address)
 			suite.Require().NoError(err)
-			data := banktypes.CreateAccountBalancesPrefix(addr)
+			data := bankutils.CreateAccountBalancesPrefix(addr)
 
 			// check a ICQ request was made
 			for _, b := range t.IncomingBalance {
@@ -2603,7 +2644,7 @@ func (suite *KeeperTestSuite) TestDelegationAccountBalanceCallback() {
 
 		accAddr, err := sdk.AccAddressFromBech32(zone.DelegationAddress.Address)
 		suite.Require().NoError(err)
-		data := append(banktypes.CreateAccountBalancesPrefix(accAddr), []byte("uatom")...)
+		data := append(bankutils.CreateAccountBalancesPrefix(accAddr), []byte("uatom")...)
 
 		err = keeper.DelegationAccountBalanceCallback(app.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: data})
 		suite.Require().NoError(err)
@@ -2638,7 +2679,7 @@ func (suite *KeeperTestSuite) TestDelegationAccountBalanceCallbackLSM() {
 
 		accAddr, err := sdk.AccAddressFromBech32(zone.DelegationAddress.Address)
 		suite.Require().NoError(err)
-		data := append(banktypes.CreateAccountBalancesPrefix(accAddr), []byte(denom)...)
+		data := append(bankutils.CreateAccountBalancesPrefix(accAddr), []byte(denom)...)
 
 		err = keeper.DelegationAccountBalanceCallback(app.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: data})
 		suite.Require().NoError(err)
@@ -2676,7 +2717,7 @@ func (suite *KeeperTestSuite) TestPerfBalanceCallbackUpdate() {
 		address := zone.PerformanceAddress.Address
 		accAddr, err := sdk.AccAddressFromBech32(address)
 		suite.NoError(err)
-		data := append(banktypes.CreateAccountBalancesPrefix(accAddr), []byte("uatom")...)
+		data := append(bankutils.CreateAccountBalancesPrefix(accAddr), []byte("uatom")...)
 
 		err = keeper.PerfBalanceCallback(quicksilver.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: data})
 		suite.NoError(err)

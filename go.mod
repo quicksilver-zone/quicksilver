@@ -16,7 +16,6 @@ require (
 	github.com/client9/misspell v0.3.4
 	github.com/cometbft/cometbft v0.38.2
 	github.com/cometbft/cometbft-db v0.9.1
-	github.com/confio/ics23/go v0.9.0
 	github.com/cosmos/cosmos-db v1.0.0
 	github.com/cosmos/cosmos-proto v1.0.0-beta.3
 	github.com/cosmos/cosmos-sdk v0.50.3-0.20240113183815-8ac049214243
@@ -24,6 +23,7 @@ require (
 	github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v8 v8.0.0
 	github.com/cosmos/ibc-go/modules/capability v1.0.0
 	github.com/cosmos/ibc-go/v8 v8.0.1-0.20240112153319-3833f1e8f227
+	github.com/cosmos/ics23/go v0.10.0
 	github.com/cosmos/rosetta v0.50.2
 	github.com/gogo/protobuf v1.3.3
 	github.com/golang/protobuf v1.5.3
@@ -119,7 +119,6 @@ require (
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/gogogateway v1.2.0 // indirect
 	github.com/cosmos/iavl v1.0.0 // indirect
-	github.com/cosmos/ics23/go v0.10.0 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.13.3 // indirect
 	github.com/cosmos/rosetta-sdk-go v0.10.0 // indirect
 	github.com/curioswitch/go-reassign v0.2.0 // indirect
@@ -349,7 +348,6 @@ require (
 )
 
 replace (
-
 	// Prevent cosmos-sdk breaking
 	cosmossdk.io/core v0.12.0 => cosmossdk.io/core v0.11.0
 	// use cosmos fork of keyring
