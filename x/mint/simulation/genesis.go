@@ -65,7 +65,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 	// minter
 	var epochProvisions sdkmath.LegacyDec
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, epochProvisionsKey, &epochProvisions, simState.Rand,
+		epochProvisionsKey, &epochProvisions, simState.Rand,
 		func(r *rand.Rand) {
 			epochProvisions = genEpochProvisions(r)
 		},
@@ -73,7 +73,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 
 	var distributionProportions types.DistributionProportions
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, distributionProportionsKey, &distributionProportions, simState.Rand,
+		distributionProportionsKey, &distributionProportions, simState.Rand,
 		func(r *rand.Rand) {
 			distributionProportions = genDistributionProportions(r)
 		},
@@ -81,7 +81,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 
 	var reductionFactor sdkmath.LegacyDec
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, reductionFactorKey, &reductionFactor, simState.Rand,
+		reductionFactorKey, &reductionFactor, simState.Rand,
 		func(r *rand.Rand) {
 			reductionFactor = genReductionFactor(r)
 		},
@@ -89,13 +89,13 @@ func RandomizedGenState(simState *module.SimulationState) {
 
 	var reductionPeriodInEpochs int64
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, reductionPeriodInEpochsKey, &reductionPeriodInEpochs, simState.Rand,
+		reductionPeriodInEpochsKey, &reductionPeriodInEpochs, simState.Rand,
 		func(r *rand.Rand) { reductionPeriodInEpochs = genReductionPeriodInEpochs(r) },
 	)
 
 	var mintintRewardsDistributionStartEpoch int64
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, mintingRewardsDistributionStartEpochKey, &mintintRewardsDistributionStartEpoch, simState.Rand,
+		mintingRewardsDistributionStartEpochKey, &mintintRewardsDistributionStartEpoch, simState.Rand,
 		func(r *rand.Rand) { mintintRewardsDistributionStartEpoch = genMintintRewardsDistributionStartEpoch(r) },
 	)
 
