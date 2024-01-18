@@ -17,6 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 
 	tmdb "github.com/cometbft/cometbft-db"
+	"github.com/cometbft/cometbft/state"
 )
 
 const (
@@ -103,6 +104,7 @@ func pruneBlockStoreAndGetHeights(dbPath string, fullHeight int64) (
 	}
 
 	dbbs, err := tmdb.NewGoLevelDBWithOpts("blockstore", dbPath, &opts)
+
 	if err != nil {
 		return 0, 0, err
 	}
@@ -114,7 +116,8 @@ func pruneBlockStoreAndGetHeights(dbPath string, fullHeight int64) (
 	currentHeight = bs.Height()
 
 	fmt.Println("Pruning Block Store ...")
-	pruned, evidencePoint, err := bs.PruneBlocks(currentHeight - fullHeight)
+	// TODO: figure out how to get the state to retain evidence, new PruineBlocks required that
+	pruned, evidencePoint, err := bs.PruneBlocks(currentHeight-fullHeight, state.State{})
 	if err != nil {
 		return 0, 0, err
 	}

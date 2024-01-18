@@ -8,11 +8,13 @@ import (
 	"path/filepath"
 
 	"cosmossdk.io/log"
+	storetypes "cosmossdk.io/store/types"
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	tmcfg "github.com/cometbft/cometbft/config"
 	tmcli "github.com/cometbft/cometbft/libs/cli"
 	dbm "github.com/cosmos/cosmos-db"
+	rosettaCmd "github.com/cosmos/rosetta/cmd"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
@@ -29,10 +31,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 
@@ -62,7 +63,7 @@ func NewRootCmd() (*cobra.Command, app.EncodingConfig) {
 		WithLegacyAmino(encodingConfig.Amino).
 		WithInput(os.Stdin).
 		WithAccountRetriever(types.AccountRetriever{}).
-		WithBroadcastMode(flags.BroadcastBlock).
+		// WithBroadcastMode(flags.BroadcastBlock). See more: https://github.com/cosmos/cosmos-sdk/issues/12167
 		WithHomeDir(app.DefaultNodeHome).
 		WithViper(EnvPrefix)
 
@@ -97,17 +98,14 @@ func NewRootCmd() (*cobra.Command, app.EncodingConfig) {
 
 	rootCmd.AddCommand(
 		forceprune(),
-		genutilcli.InitCmd(app.ModuleBasics, app.DefaultNodeHome),
-		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome),
-		genutilcli.GenTxCmd(app.ModuleBasics, encodingConfig.TxConfig, banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome),
-		genutilcli.ValidateGenesisCmd(app.ModuleBasics),
+		genutilcli.GenesisCoreCommand(encodingConfig.TxConfig, app.ModuleBasics, app.DefaultNodeHome),
 		AddGenesisAccountCmd(app.DefaultNodeHome),
 		AddGenesisAirdropCmd(app.DefaultNodeHome),
 		BulkGenesisAirdropCmd(app.DefaultNodeHome),
 		AddZonedropCmd(app.DefaultNodeHome),
 		tmcli.NewCompletionCmd(rootCmd, true),
 		debug.Cmd(),
-		config.Cmd(),
+		// config.Cmd(),
 	)
 
 	ac := appCreator{
@@ -117,14 +115,13 @@ func NewRootCmd() (*cobra.Command, app.EncodingConfig) {
 
 	// add keybase, auxiliary RPC, query, and tx child commands
 	rootCmd.AddCommand(
-		rpc.StatusCommand(),
 		queryCommand(),
 		txCommand(),
-		keys.Commands(app.DefaultNodeHome),
+		keys.Commands(),
 	)
 
 	// add rosetta
-	rootCmd.AddCommand(server.RosettaCommand(encodingConfig.InterfaceRegistry, encodingConfig.Marshaler))
+	rootCmd.AddCommand(rosettaCmd.RosettaCommand(encodingConfig.InterfaceRegistry, encodingConfig.Marshaler))
 
 	return rootCmd, encodingConfig
 }
@@ -160,9 +157,9 @@ func queryCommand() *cobra.Command {
 	}
 
 	cmd.AddCommand(
-		authcmd.GetAccountCmd(),
+		// authcmd.GetAccountCmd(),
 		rpc.ValidatorCommand(),
-		rpc.BlockCommand(),
+		// rpc.BlockCommand(),
 		authcmd.QueryTxsByEventsCmd(),
 		authcmd.QueryTxCmd(),
 	)
@@ -199,6 +196,16 @@ func txCommand() *cobra.Command {
 	return cmd
 }
 
+// genesisCommand builds genesis-related `simd genesis` command. Users may provide application specific commands as a parameter
+func genesisCommand(txConfig client.TxConfig, basicManager module.BasicManager, cmds ...*cobra.Command) *cobra.Command {
+	cmd := genutilcli.Commands(txConfig, basicManager, app.DefaultNodeHome)
+
+	for _, subCmd := range cmds {
+		cmd.AddCommand(subCmd)
+	}
+	return cmd
+}
+
 // initAppConfig helps to override default appConfig template and configs.
 // return "", nil if no custom configuration is required for the application.
 func initAppConfig() (string, interface{}) {
@@ -221,7 +228,7 @@ func (ac appCreator) newApp(
 	traceStore io.Writer,
 	appOpts servertypes.AppOptions,
 ) servertypes.Application {
-	var cache sdk.MultiStorePersistentCache
+	var cache storetypes.MultiStorePersistentCache
 
 	if cast.ToBool(appOpts.Get(server.FlagInterBlockCache)) {
 		cache = store.NewCommitKVStoreCacheManager()
@@ -252,7 +259,7 @@ func (ac appCreator) newApp(
 		cast.ToUint32(appOpts.Get(server.FlagStateSyncSnapshotKeepRecent)),
 	)
 
-	var wasmOpts []wasm.Option
+	var wasmOpts []wasmkeeper.Option
 	if cast.ToBool(appOpts.Get("telemetry.enabled")) {
 		wasmOpts = append(wasmOpts, wasmkeeper.WithVMCacheMetrics(prometheus.DefaultRegisterer))
 	}
@@ -260,13 +267,13 @@ func (ac appCreator) newApp(
 	return app.NewQuicksilver(
 		logger, db, traceStore, true, skipUpgradeHeights,
 		cast.ToString(appOpts.Get(flags.FlagHome)),
-		cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)),
+		// cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)),
 		ac.encCfg,
-		wasm.EnableAllProposals,
+		// wasm.EnableAllProposals,
 		appOpts,
-		wasmOpts,
 		false,
 		cast.ToBool(appOpts.Get(FlagSupplyEnabled)),
+		wasmOpts,
 		baseapp.SetPruning(pruningOpts),
 		baseapp.SetMinGasPrices(cast.ToString(appOpts.Get(server.FlagMinGasPrices))),
 		baseapp.SetHaltHeight(cast.ToUint64(appOpts.Get(server.FlagHaltHeight))),
@@ -284,6 +291,18 @@ func addModuleInitFlags(startCmd *cobra.Command) {
 	startCmd.Flags().Bool(FlagSupplyEnabled, false, "Enable supply module endpoint")
 }
 
+// AppExporter func(
+//
+//	logger log.Logger,
+//	db dbm.DB,
+//	traceWriter io.Writer,
+//	height int64,
+//	forZeroHeight bool,
+//	jailAllowedAddrs []string,
+//	opts AppOptions,
+//	modulesToExport []string,
+//
+// ) (ExportedApp, error)
 func (ac appCreator) appExport(
 	logger log.Logger,
 	db dbm.DB,
@@ -292,6 +311,7 @@ func (ac appCreator) appExport(
 	forZeroHeight bool,
 	jailAllowedAddrs []string,
 	appOpts servertypes.AppOptions,
+	modulesToExport []string,
 ) (servertypes.ExportedApp, error) {
 	homePath, ok := appOpts.Get(flags.FlagHome).(string)
 	if !ok || homePath == "" {
@@ -311,13 +331,11 @@ func (ac appCreator) appExport(
 		loadLatest,
 		map[int64]bool{},
 		homePath,
-		cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)),
 		ac.encCfg,
-		wasm.EnableAllProposals,
 		appOpts,
+		false,
+		false,
 		emptyWasmOpts,
-		false,
-		false,
 	)
 
 	if height != -1 {
@@ -326,5 +344,5 @@ func (ac appCreator) appExport(
 		}
 	}
 
-	return qsApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs)
+	return qsApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs, modulesToExport)
 }
