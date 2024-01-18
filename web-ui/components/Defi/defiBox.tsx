@@ -19,7 +19,7 @@ import {
   Spinner,
   useBreakpointValue,
 } from '@chakra-ui/react';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 import { useDefiData } from '@/hooks/useQueries';
 
@@ -58,6 +58,7 @@ const formatApy = (apy: number) => {
 };
 
 const DefiTable = () => {
+  
   const { defi, isLoading, isError } = useDefiData();
 
   const [activeFilter, setActiveFilter] = useState<string>('All');
@@ -70,7 +71,20 @@ const DefiTable = () => {
   const handleFilterClick = (filter: string) => {
     setActiveFilter(filter);
   };
-  const isMobile = useBreakpointValue({ base: true, sm: true, md: false });
+  const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' && window.innerWidth < 1274);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 1274);
+    };
+
+    window.addEventListener('resize', handleResize);
+
+    // Clean up
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
   const filteredData = defi ? defi.filter(filterCategories[activeFilter]) : [];
 
   type ProviderKey = 'osmosis' | 'ux' | 'shade';
