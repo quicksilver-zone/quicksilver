@@ -16,6 +16,10 @@ import (
 
 func (k Keeper) AllocateHoldingsRewards(ctx sdk.Context) error {
 	// obtain and iterate all claim records for each zone
+	bondDenom, err := k.stakingKeeper.BondDenom(ctx)
+	if err != nil {
+		panic(err)
+	}
 	k.icsKeeper.IterateZones(ctx, func(index int64, zone *icstypes.Zone) (stop bool) {
 		k.Logger(ctx).Info("zones", "zone", zone.ChainId)
 		userAllocations, remaining, icsRewardsAllocations := k.CalcUserHoldingsAllocations(ctx, zone)
@@ -29,7 +33,8 @@ func (k Keeper) AllocateHoldingsRewards(ctx sdk.Context) error {
 		if remaining.IsPositive() {
 			k.Logger(ctx).Error("remaining amount to return to incentives pool", "remainder", remaining, "pool balance", k.GetModuleBalance(ctx))
 			// send unclaimed remainder to incentives pool
-			if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, airdroptypes.ModuleName, sdk.NewCoins(sdk.NewCoin(k.stakingKeeper.BondDenom(ctx), remaining))); err != nil {
+
+			if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, airdroptypes.ModuleName, sdk.NewCoins(sdk.NewCoin(bondDenom, remaining))); err != nil {
 				k.Logger(ctx).Error("failed to send remaining amount to return to incentives pool", "remainder", remaining, "pool balance", k.GetModuleBalance(ctx), "err", err)
 				return false
 			}
@@ -116,12 +121,16 @@ func (k Keeper) CalcUserHoldingsAllocations(ctx sdk.Context, zone *icstypes.Zone
 	}
 	k.Logger(ctx).Info("tokens per asset", "zone", zone.ChainId, "tpa", tokensPerAsset)
 
+	bondDenom, err := k.stakingKeeper.BondDenom(ctx)
+	if err != nil {
+		panic(err)
+	}
 	for _, address := range utils.Keys(userAmountsMap) {
 		amount := userAmountsMap[address]
 		userAllocation := sdkmath.LegacyNewDecFromInt(amount).Mul(tokensPerAsset).TruncateInt()
 		allocation := types.UserAllocation{
 			Address: address,
-			Amount:  sdk.NewCoin(k.stakingKeeper.BondDenom(ctx), userAllocation),
+			Amount:  sdk.NewCoin(bondDenom, userAllocation),
 		}
 		userAllocations = append(userAllocations, allocation)
 		zoneAllocation = zoneAllocation.Sub(userAllocation)

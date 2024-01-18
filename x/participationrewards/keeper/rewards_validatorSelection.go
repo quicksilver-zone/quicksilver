@@ -275,7 +275,10 @@ func (k Keeper) CalcUserValidatorSelectionAllocations(
 
 	allocation := sdkmath.LegacyNewDecFromInt(sdkmath.NewIntFromUint64(zone.ValidatorSelectionAllocation))
 	tokensPerPoint := allocation.Quo(sum)
-	bondDenom := k.stakingKeeper.BondDenom(ctx)
+	bondDenom, error := k.stakingKeeper.BondDenom(ctx)
+	if error != nil {
+		panic(error)
+	}
 	k.Logger(ctx).Info("tokens per point", "zone", zs.ZoneID, "zone score", sum, "tpp", tokensPerPoint)
 	for _, us := range userScores {
 		ua := types.UserAllocation{

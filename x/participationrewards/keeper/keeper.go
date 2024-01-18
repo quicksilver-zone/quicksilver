@@ -162,7 +162,11 @@ func (k *Keeper) UpdateSelfConnectionData(ctx sdk.Context) error {
 }
 
 func (k *Keeper) GetModuleBalance(ctx sdk.Context) sdkmath.Int {
-	denom := k.stakingKeeper.BondDenom(ctx)
+	denom, err := k.stakingKeeper.BondDenom(ctx)
+	if err != nil {
+		panic(err)
+	}
+
 	moduleAddress := k.accountKeeper.GetModuleAddress(types.ModuleName)
 	moduleBalance := k.bankKeeper.GetBalance(ctx, moduleAddress, denom)
 
