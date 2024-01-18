@@ -129,7 +129,10 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 			baseAccount := authtypes.NewBaseAccount(addr, nil, 0, 0)
 
 			if !vestingAmt.IsZero() {
-				baseVestingAccount := authvesting.NewBaseVestingAccount(baseAccount, vestingAmt.Sort(), vestingEnd)
+				baseVestingAccount, err := authvesting.NewBaseVestingAccount(baseAccount, vestingAmt.Sort(), vestingEnd)
+				if err != nil {
+					return fmt.Errorf("failed to create base vesting account: %w", err)
+				}
 
 				if (balances.Coins.IsZero() && !baseVestingAccount.OriginalVesting.IsZero()) ||
 					baseVestingAccount.OriginalVesting.IsAnyGT(balances.Coins) {
@@ -138,8 +141,10 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 
 				switch {
 				case len(periods) > 0 && vestingStart != 0:
-					genAccount = authvesting.NewPeriodicVestingAccount(baseAccount, vestingAmt.Sort(), vestingStart, periods)
-
+					genAccount, err = authvesting.NewPeriodicVestingAccount(baseAccount, vestingAmt.Sort(), vestingStart, periods)
+					if err != nil {
+						return fmt.Errorf("failed to create periodic vesting account: %w", err)
+					}
 				case vestingStart != 0 && vestingEnd != 0:
 					genAccount = authvesting.NewContinuousVestingAccountRaw(baseVestingAccount, vestingStart)
 
