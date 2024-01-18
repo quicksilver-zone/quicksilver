@@ -7,7 +7,8 @@ import { SigningStargateClientOptions, AminoTypes } from '@cosmjs/stargate';
 import { SignerOptions } from '@cosmos-kit/core';
 import { wallets as cosmostationWallets } from '@cosmos-kit/cosmostation';
 import { wallets as keplrWallets } from '@cosmos-kit/keplr';
-import { wallets as leapWallets } from '@cosmos-kit/leap';
+import { wallets as LeapExtensionWallet } from '@cosmos-kit/leap-extension';
+import { wallets as LeapMobileWallet } from '@cosmos-kit/leap-mobile';
 import { ChainProvider, ThemeCustomizationProps } from '@cosmos-kit/react';
 import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
@@ -267,7 +268,7 @@ function QuickApp({ Component, pageProps }: AppProps) {
         modalTheme={modalThemeOverrides}
         chains={chains}
         assetLists={assets}
-        wallets={[...keplrWallets, ...cosmostationWallets, ...leapWallets]}
+        wallets={[...keplrWallets, ...cosmostationWallets, ...LeapExtensionWallet, ...LeapMobileWallet]}
         walletConnectOptions={{
           signClient: {
             projectId: 'a8510432ebb71e6948cfd6cde54b70f7',
