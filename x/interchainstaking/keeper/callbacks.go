@@ -16,10 +16,10 @@ import (
 	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/unknownproto"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
@@ -30,8 +30,10 @@ import (
 
 	"github.com/quicksilver-zone/quicksilver/v7/utils"
 	"github.com/quicksilver-zone/quicksilver/v7/utils/addressutils"
+	"github.com/quicksilver-zone/quicksilver/v7/utils/bankutils"
 	icqtypes "github.com/quicksilver-zone/quicksilver/v7/x/interchainquery/types"
 	"github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking/types"
+	protov2 "google.golang.org/protobuf/proto"
 )
 
 // ___________________________________________________________________________________________________
@@ -528,7 +530,10 @@ func DepositTxCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Q
 		return err
 	}
 
-	txtx, ok := txn.(*tx.Tx)
+	// Not work anymore: * (x/authx) [#15284](https://github.com/cosmos/cosmos-sdk/pull/15284) `types/tx.Tx` no longer implements `sdk.Tx`
+	// txtx, ok := txn.(*tx.Tx)
+
+	txtx, ok := txn.(sdk.TxWithMemo)
 	if !ok {
 		return errors.New("cannot assert type of tx")
 	}
@@ -549,12 +554,12 @@ func AccountBalanceCallback(k *Keeper, ctx sdk.Context, args []byte, query icqty
 		return errors.New("account balance icq request must always have a length of at least 2 bytes")
 	}
 	balancesStore := query.Request[1:]
-	accAddr, denom, err := banktypes.AddressAndDenomFromBalancesStore(balancesStore)
+	accAddr, denom, err := bankutils.AddressAndDenomFromBalancesStore(balancesStore)
 	if err != nil {
 		return err
 	}
 
-	coin, err := bankkeeper.UnmarshalBalanceCompat(k.cdc, args, denom)
+	coin, err := bankutils.UnmarshalBalanceCompat(k.cdc, args, denom)
 	if err != nil {
 		return err
 	}
@@ -592,12 +597,12 @@ func DelegationAccountBalanceCallback(k *Keeper, ctx sdk.Context, args []byte, q
 		return errors.New("account balance icq request must always have a length of at least 2 bytes")
 	}
 	balancesStore := query.Request[1:]
-	accAddr, denom, err := banktypes.AddressAndDenomFromBalancesStore(balancesStore)
+	accAddr, denom, err := bankutils.AddressAndDenomFromBalancesStore(balancesStore)
 	if err != nil {
 		return err
 	}
 
-	coin, err := bankkeeper.UnmarshalBalanceCompat(k.cdc, args, denom)
+	coin, err := bankutils.UnmarshalBalanceCompat(k.cdc, args, denom)
 	if err != nil {
 		return err
 	}
@@ -671,7 +676,7 @@ func DelegationAccountBalancesCallback(k *Keeper, ctx sdk.Context, args []byte, 
 			zone.ConnectionId,
 			zone.ChainId,
 			types.BankStoreKey,
-			append(banktypes.CreateAccountBalancesPrefix(addressBytes), []byte(coin.Denom)...),
+			append(bankutils.CreateAccountBalancesPrefix(addressBytes), []byte(coin.Denom)...),
 			sdkmath.NewInt(-1),
 			types.ModuleName,
 			"delegationaccountbalance",
@@ -750,6 +755,12 @@ func TxDecoder(cdc codec.Codec) sdk.TxDecoder {
 
 		var body tx.TxBody
 
+		// allow non-critical unknown fields in TxBody
+		txBodyHasUnknownNonCriticals, err := unknownproto.RejectUnknownFields(raw.BodyBytes, &body, true, cdc.InterfaceRegistry())
+		if err != nil {
+			return nil, errorsmod.Wrap(sdkerrors.ErrTxDecode, err.Error())
+		}
+
 		err = cdc.Unmarshal(raw.BodyBytes, &body)
 		if err != nil {
 			return nil, sdkioerrors.Wrap(sdkerrors.ErrTxDecode, err.Error())
@@ -761,11 +772,17 @@ func TxDecoder(cdc codec.Codec) sdk.TxDecoder {
 		if err != nil {
 			return nil, sdkioerrors.Wrap(sdkerrors.ErrTxDecode, err.Error())
 		}
-
-		return &tx.Tx{
+		theTx := &tx.Tx{
 			Body:       &body,
 			AuthInfo:   &authInfo,
 			Signatures: raw.Signatures,
+		}
+		return &wrapper{
+			tx:                           theTx,
+			bodyBz:                       raw.BodyBytes,
+			authInfoBz:                   raw.AuthInfoBytes,
+			txBodyHasUnknownNonCriticals: txBodyHasUnknownNonCriticals,
+			cdc:                          cdc,
 		}, nil
 	}
 }
@@ -840,4 +857,52 @@ func varintMinLength(n uint64) int {
 	default:
 		return 10
 	}
+}
+
+// Copied https://github.com/cosmos/cosmos-sdk/blob/main/x/auth/tx/builder.go#L26
+
+// wrapper is a wrapper around the tx.Tx proto.Message which retain the raw
+// body and auth_info bytes.
+type wrapper struct {
+	cdc codec.Codec
+
+	tx *tx.Tx
+
+	// bodyBz represents the protobuf encoding of TxBody. This should be encoding
+	// from the client using TxRaw if the tx was decoded from the wire
+	bodyBz []byte
+
+	// authInfoBz represents the protobuf encoding of TxBody. This should be encoding
+	// from the client using TxRaw if the tx was decoded from the wire
+	authInfoBz []byte
+
+	txBodyHasUnknownNonCriticals bool
+
+	signers [][]byte
+	msgsV2  []protov2.Message
+}
+
+func (w *wrapper) GetMsgs() []sdk.Msg {
+	return w.tx.GetMsgs()
+}
+
+func (w *wrapper) GetMemo() string {
+	return w.tx.Body.Memo
+}
+
+func (w *wrapper) GetMsgsV2() ([]protov2.Message, error) {
+	if w.msgsV2 == nil {
+		err := w.initSignersAndMsgsV2()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return w.msgsV2, nil
+}
+
+func (w *wrapper) initSignersAndMsgsV2() error {
+	var err error
+	w.signers, w.msgsV2, err = w.tx.GetSigners(w.cdc)
+	return err
 }
