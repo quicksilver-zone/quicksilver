@@ -142,7 +142,8 @@ func (suite *KeeperTestSuite) initTestZoneDrop() {
 func (suite *KeeperTestSuite) fundZoneDrop(chainID string, amount uint64) {
 	quicksilver := suite.GetQuicksilverApp(suite.chainA)
 	ctx := suite.chainA.GetContext()
-	bondDenom, _ := quicksilver.StakingKeeper.BondDenom(ctx)
+	bondDenom, err := quicksilver.StakingKeeper.BondDenom(ctx)
+	suite.Require().NoError(err)
 
 	coins := sdk.NewCoins(
 		sdk.NewCoin(
@@ -153,7 +154,7 @@ func (suite *KeeperTestSuite) fundZoneDrop(chainID string, amount uint64) {
 	// fund zonedrop account
 	zdacc := quicksilver.AirdropKeeper.GetZoneDropAccountAddress(chainID)
 
-	err := quicksilver.MintKeeper.MintCoins(ctx, coins)
+	err = quicksilver.MintKeeper.MintCoins(ctx, coins)
 	suite.Require().NoError(err)
 
 	err = quicksilver.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, zdacc, coins)
