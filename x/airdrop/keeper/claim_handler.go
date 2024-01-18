@@ -406,8 +406,12 @@ func (k *Keeper) getClaimAmountAndUpdateRecord(ctx sdk.Context, cr *types.ClaimR
 }
 
 func (k *Keeper) sendCoins(ctx sdk.Context, cr types.ClaimRecord, amount uint64) (sdk.Coins, error) {
+	bondDenom, err := k.BondDenom(ctx)
+	if err != nil {
+		return sdk.NewCoins(), err
+	}
 	coins := sdk.NewCoins(
-		sdk.NewCoin(k.BondDenom(ctx), sdkmath.NewIntFromUint64(amount)),
+		sdk.NewCoin(bondDenom, sdkmath.NewIntFromUint64(amount)),
 	)
 
 	addr, err := sdk.AccAddressFromBech32(cr.Address)

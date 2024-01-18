@@ -108,8 +108,12 @@ func (k *Keeper) GetModuleAccountAddress(_ sdk.Context) sdk.AccAddress {
 
 // GetModuleAccountBalance gets the airdrop module account coin balance.
 func (k *Keeper) GetModuleAccountBalance(ctx sdk.Context) sdk.Coin {
+	bondDenom, err := k.stakingKeeper.BondDenom(ctx)
+	if err != nil {
+		panic(err)
+	}
 	moduleAccAddr := k.GetModuleAccountAddress(ctx)
-	return k.bankKeeper.GetBalance(ctx, moduleAccAddr, k.stakingKeeper.BondDenom(ctx))
+	return k.bankKeeper.GetBalance(ctx, moduleAccAddr, bondDenom)
 }
 
 func (k *Keeper) SendCoinsFromModuleToModule(ctx sdk.Context, senderModule, recipientModule string, amount sdk.Coins) error {
@@ -124,6 +128,6 @@ func (k *Keeper) SendCoinsFromAccountToModule(ctx sdk.Context, senderAccount sdk
 	return k.bankKeeper.SendCoinsFromAccountToModule(ctx, senderAccount, recipientModule, amount)
 }
 
-func (k *Keeper) BondDenom(ctx sdk.Context) string {
+func (k *Keeper) BondDenom(ctx sdk.Context) (string, error) {
 	return k.stakingKeeper.BondDenom(ctx)
 }

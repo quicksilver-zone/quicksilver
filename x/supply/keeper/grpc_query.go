@@ -26,7 +26,7 @@ func (q Querier) Supply(c context.Context, _ *types.QuerySupplyRequest) (*types.
 	ctx := sdk.UnwrapSDKContext(c)
 
 	if q.endpointEnabled {
-		baseDenom := q.stakingKeeper.BondDenom(ctx)
+		baseDenom, _ := q.stakingKeeper.BondDenom(ctx)
 		supply := q.bankKeeper.GetSupply(ctx, baseDenom)
 		circulatingSupply := q.CalculateCirculatingSupply(ctx, baseDenom, []string{
 			"quick1yxe3vmd2ypjf0fs4cejnmv2559tqq5x5cc5nyh", // foundation account
