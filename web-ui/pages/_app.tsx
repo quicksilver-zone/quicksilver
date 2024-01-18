@@ -95,6 +95,10 @@ function QuickApp({ Component, pageProps }: AppProps) {
   };
 
   const modalThemeOverrides: ThemeCustomizationProps = {
+    modalContentStyles: {
+      backgroundColor: 'rgba(0,0,0,0.75)',
+      opacity: 0,
+    },
     overrides: {
       'connect-modal': {
         bg: {
@@ -109,7 +113,16 @@ function QuickApp({ Component, pageProps }: AppProps) {
           light: '#FFFFFF',
           dark: '#FFFFFF',
         },
+        focusedBg: {
+          light: 'rgba(0,0,0,0.75)',
+          dark: 'rgba(32,32,32,0.9)',
+        },
+        disabledBg: {
+          light: 'rgba(0,0,0,0.75)',
+          dark: 'rgba(32,32,32,0.9)',
+        },
       },
+
       'clipboard-copy-text': {
         bg: {
           light: '#FFFFFF',
@@ -161,6 +174,7 @@ function QuickApp({ Component, pageProps }: AppProps) {
           light: '#FF8000',
           dark: '#FF8000',
         },
+        borderColor: { light: 'black', dark: 'black' },
         hoverBorderColor: {
           light: 'black',
           dark: 'black',
@@ -173,6 +187,7 @@ function QuickApp({ Component, pageProps }: AppProps) {
           light: '#000000',
           dark: '#FFFFFF',
         },
+        focusedBorderColor: { light: '#FFFFFF', dark: '#FFFFFF' },
       },
       'connect-modal-qr-code': {
         bg: {
@@ -186,22 +201,20 @@ function QuickApp({ Component, pageProps }: AppProps) {
       },
       'connect-modal-install-button': {
         bg: {
-          light: '#F0F0F0', // Example background color for light theme
-          dark: '#FF8000', // Example background color for dark theme
+          light: '#F0F0F0',
+          dark: '#FF8000',
         },
-        // Other properties for 'connect-modal-install-button' if needed
       },
       'connect-modal-qr-code-error': {
         bg: {
-          light: '#FFEEEE', // Example background color for light theme
-          dark: '#FFFFFF', // Example background color for dark theme
+          light: '#FFEEEE',
+          dark: '#FFFFFF',
         },
-        // Other properties for 'connect-modal-qr-code-error' if needed
       },
       'connect-modal-qr-code-error-button': {
         bg: {
-          light: '#FFCCCC', // Example background color for light theme
-          dark: '#552222', // Example background color for dark theme
+          light: '#FFCCCC',
+          dark: '#552222',
         },
       },
     },
@@ -254,7 +267,6 @@ function QuickApp({ Component, pageProps }: AppProps) {
         modalTheme={modalThemeOverrides}
         chains={chains}
         assetLists={assets}
-        //@ts-ignore
         wallets={[...keplrWallets, ...cosmostationWallets, ...leapWallets]}
         walletConnectOptions={{
           signClient: {

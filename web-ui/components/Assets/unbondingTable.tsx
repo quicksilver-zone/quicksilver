@@ -190,19 +190,25 @@ const UnbondingAssetsTable: React.FC<UnbondingAssetsTableProps> = ({ address, is
                       Redemption Amount
                     </Th>
                     <Th borderBottomColor={'transparent'} color="complimentary.900">
+                      Epoch Number
+                    </Th>
+                    <Th borderBottomColor={'transparent'} color="complimentary.900">
                       Completion Time
                     </Th>
                   </Tr>
                 </Thead>
                 <Tbody>
                   {unbondingData?.withdrawals.map((withdrawal, index) => (
-                    <Tr key={index}>
-                      <Td>
+                    <Tr _even={{ bg: 'rgba(255, 128, 0, 0.1)' }} key={index}>
+                      <Td borderBottomColor={'transparent'}>
                         {Number(shiftDigits(withdrawal.burn_amount.amount, -6))} {formatDenom(withdrawal.burn_amount.denom)}
                       </Td>
-                      <Td>{statusCodes.get(withdrawal.status)}</Td>
-                      <Td>{withdrawal.amount.map((amt) => `${shiftDigits(amt.amount, -6)} ${formatDenom(amt.denom)}`).join(', ')}</Td>
-                      <Td>
+                      <Td borderBottomColor={'transparent'}>{statusCodes.get(withdrawal.status)}</Td>
+                      <Td borderBottomColor={'transparent'}>
+                        {withdrawal.amount.map((amt) => `${shiftDigits(amt.amount, -6)} ${formatDenom(amt.denom)}`).join(', ')}
+                      </Td>
+                      <Td borderBottomColor={'transparent'}>{withdrawal.epoch_number}</Td>
+                      <Td borderBottomColor={'transparent'}>
                         {withdrawal.status === 2
                           ? 'Pending'
                           : withdrawal.status === 4

@@ -7,6 +7,22 @@ const defaultThemeObject = {
   },
   styles: {
     global: (props: { colorMode: string }) => ({
+      '._1n3anio3': {
+        backgroundColor: 'transparent',
+        height: '150px'
+      },
+
+      '.x1bv961' : {
+        '--x1bv960': 'transparent',
+      },
+      '._1n3aniok': {
+        width: 0,
+        height: 0
+      },
+      
+      '._4lx8b48' : {
+        '--_4lx8b40': '0 0 0 1px rgb(32,32,32)'
+      },
       body: {
         background: props.colorMode === 'dark' ? '#000000' : '#000000',
         bgGradient:

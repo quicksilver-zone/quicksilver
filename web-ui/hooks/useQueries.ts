@@ -159,7 +159,7 @@ export const useAuthChecker = (address: string) => {
       }
 
       try {
-        const url = `https://lcd.quicksilver.zone/cosmos/authz/v1beta1/grants?granter=${address}&grantee=quick1c4vz0535677xpdksxh5um7zqqwfsw7245ppdaj&msgTypeUrl=/quicksilver.participationrewards.v1.MsgSubmitClaim`;
+        const url = `https://lcd.quicksilver.zone/cosmos/authz/v1beta1/grants?granter=${address}&grantee=quick1w5ennfhdqrpyvewf35sv3y3t8yuzwq29mrmyal&msgTypeUrl=/quicksilver.participationrewards.v1.MsgSubmitClaim`;
         const response = await axios.get(url);
         return { data: response.data, error: null };
       } catch (error) {

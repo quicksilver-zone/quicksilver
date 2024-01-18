@@ -1,5 +1,5 @@
 import { CloseIcon } from '@chakra-ui/icons';
-import { Box, Flex, Text, VStack, Button, HStack, Checkbox, Spinner } from '@chakra-ui/react';
+import { Box, Flex, Text, VStack, Button, HStack, Checkbox, Spinner, Tooltip, Heading } from '@chakra-ui/react';
 import { useState } from 'react';
 
 import { useLiquidEpochQuery } from '@/hooks/useQueries';
@@ -11,6 +11,7 @@ import { assets } from 'chain-registry';
 import { cosmos } from 'interchain-query';
 import { Grant, GenericAuthorization } from 'interchain-query/cosmos/authz/v1beta1/authz';
 import { MsgSubmitClaim } from 'quicksilverjs/types/codegen/quicksilver/participationrewards/v1/messages';
+import React from 'react';
 
 interface RewardsClaimInterface {
   address: string;
@@ -58,7 +59,7 @@ export const RewardsClaim: React.FC<RewardsClaimInterface> = ({ address, onClose
 
   const msgGrant = grant({
     granter: address,
-    grantee: 'quick1dv3v662kd3pp6pxfagck4zyysas82adsdhugaf',
+    grantee: 'quick1w5ennfhdqrpyvewf35sv3y3t8yuzwq29mrmyal',
     grant: {
       authorization: {
         typeUrl: '/cosmos.authz.v1beta1.GenericAuthorization',
@@ -173,22 +174,45 @@ export const RewardsClaim: React.FC<RewardsClaimInterface> = ({ address, onClose
                 Enable Automatic Claiming
               </Text>
             </Checkbox>
-            <Button
-              _active={{
-                transform: 'scale(0.95)',
-                color: 'complimentary.800',
-              }}
-              _hover={{
-                bgColor: 'rgba(255,128,0, 0.25)',
-                color: 'complimentary.300',
-              }}
-              minW={'120px'}
-              onClick={transactionHandler}
-              size="sm"
-              alignSelf="end"
+            <Tooltip
+              mr={12}
+              label={
+                <React.Fragment>
+                  <Flex direction="column" p="2" maxW="xs" textAlign={'center'} align="center">
+                    <Heading color="red" fontSize="md" fontWeight="bold" pb={2}>
+                      Claiming Disabled
+                    </Heading>
+                    <Text>Reward claiming is disabled until a governance proposal updating the claiming parameter is passed.</Text>
+                    <Box p="2">
+                      <Text>You may still enable automatic claiming in advance.</Text>
+                    </Box>
+                  </Flex>
+                </React.Fragment>
+              }
+              isDisabled={autoClaimEnabled}
+              placement="top"
+              hasArrow
             >
-              {isError ? 'Try Again' : isSigning ? <Spinner /> : 'Claim Rewards'}
-            </Button>
+              <Box>
+                <Button
+                  _active={{
+                    transform: 'scale(0.95)',
+                    color: 'complimentary.800',
+                  }}
+                  _hover={{
+                    bgColor: 'rgba(255,128,0, 0.25)',
+                    color: 'complimentary.300',
+                  }}
+                  minW={'120px'}
+                  onClick={transactionHandler}
+                  size="sm"
+                  alignSelf="end"
+                  isDisabled={!autoClaimEnabled}
+                >
+                  {isError ? 'Try Again' : isSigning ? <Spinner /> : autoClaimEnabled ? 'Auto Claim' : 'Claim Rewards'}
+                </Button>
+              </Box>
+            </Tooltip>
           </HStack>
         </VStack>
       </Flex>

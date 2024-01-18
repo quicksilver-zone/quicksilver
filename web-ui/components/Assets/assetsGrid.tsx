@@ -1,5 +1,6 @@
-import { Box, VStack, Text, Divider, HStack, Flex, Grid, GridItem, Spinner } from '@chakra-ui/react';
+import { Box, VStack, Text, Divider, HStack, Flex, Grid, GridItem, Spinner, Tooltip } from '@chakra-ui/react';
 import React from 'react';
+import { WarningIcon } from '@chakra-ui/icons';
 
 import QDepositModal from './modals/qTokenDepositModal';
 import QWithdrawModal from './modals/qTokenWithdrawlModal';
@@ -71,13 +72,13 @@ const AssetCard: React.FC<AssetCardProps> = ({ assetName, balance, apy, nativeAs
     return shiftDigits(totalAmount.toString(), -6); // Adjust the shift as per your data's scale
   };
 
-  const nativeAssets = nonNative?.assets['rhye-2']
-    ? nonNative.assets['rhye-2'][0].Amount.find((amount) => amount.denom === `uq${nativeAssetName.toLowerCase()}`)
-    : undefined;
+  // const nativeAssets = nonNative?.assets['quicksilver-2']
+  //   ? nonNative.assets['quicksilver-2'][0].Amount.find((amount) => amount.denom === `uq${nativeAssetName.toLowerCase()}`)
+  //   : undefined;
 
-  const formattedNonNativeBalance = calculateTotalBalance(nonNative, nativeAssetName);
+  // const formattedNonNativeBalance = calculateTotalBalance(nonNative, nativeAssetName);
 
-  const formattedNativebalance = nativeAssets ? shiftDigits(nativeAssets.amount, -6) : '0';
+  // const formattedNativebalance = nativeAssets ? shiftDigits(nativeAssets.amount, -6) : '0';
 
   if (!balance || !apy) {
     return (
@@ -121,7 +122,7 @@ const AssetCard: React.FC<AssetCardProps> = ({ assetName, balance, apy, nativeAs
           </GridItem>
           <GridItem>
             <Text fontSize="md" textAlign="right" fontWeight="semibold">
-              {formattedNativebalance}
+              {/*Awaiting Claims enabled */}
             </Text>
           </GridItem>
           <GridItem>
@@ -131,7 +132,7 @@ const AssetCard: React.FC<AssetCardProps> = ({ assetName, balance, apy, nativeAs
           </GridItem>
           <GridItem>
             <Text fontSize="md" textAlign="right" fontWeight="semibold">
-              {formattedNonNativeBalance}
+              {/*Awaiting Claims enabled */}
             </Text>
           </GridItem>
         </Grid>
@@ -148,9 +149,14 @@ const AssetCard: React.FC<AssetCardProps> = ({ assetName, balance, apy, nativeAs
 const AssetsGrid: React.FC<AssetGridProps> = ({ assets, isWalletConnected, nonNative }) => {
   return (
     <>
-      <Text fontSize="xl" fontWeight="bold" color="white" mb={4}>
-        qAssets
-      </Text>
+      <HStack alignItems="center" mb={4}>
+        <Text fontSize="xl" fontWeight="bold" color="white">
+          qAssets
+        </Text>
+        <Tooltip label={'qAsset amounts will not be visible until the claims parameter is enabled.'}>
+          <WarningIcon alignSelf={'center'} color="complimentary.900" />
+        </Tooltip>
+      </HStack>
       {!isWalletConnected && (
         <Flex
           backdropFilter="blur(50px)"

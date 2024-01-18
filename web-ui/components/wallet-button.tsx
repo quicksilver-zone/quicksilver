@@ -41,7 +41,7 @@ export const WalletButton: React.FC<{ chainName: string }> = ({ chainName }) => 
       connected={<Connected buttonText={'My Wallet'} onClick={onClickOpenView} />}
       rejected={<Rejected buttonText="Reconnect" onClick={onClickConnect} />}
       error={<Error buttonText="Change Wallet" onClick={onClickOpenView} />}
-      notExist={<NotExist buttonText="Install Wallet" onClick={onClickOpenView} />}
+      notExist={<NotExist buttonText="Connect Wallet" onClick={onClickOpenView} />}
     />
   );
 
