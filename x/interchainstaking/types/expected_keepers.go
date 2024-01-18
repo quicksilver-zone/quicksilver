@@ -44,7 +44,7 @@ type BankKeeper interface {
 }
 
 type IcsHooks interface {
-	AfterZoneCreated(ctx context.Context, connectionID, chainID, accountPrefix string) error
+	AfterZoneCreated(ctx sdk.Context, connectionID, chainID, accountPrefix string) error
 }
 
 type ClaimsManagerKeeper interface {
