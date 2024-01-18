@@ -6,8 +6,6 @@ import (
 	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	icstypes "github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking/types"
 	participationrewardstypes "github.com/quicksilver-zone/quicksilver/v7/x/participationrewards/types"
 )
@@ -36,8 +34,8 @@ type StakingKeeper interface {
 }
 
 type GovKeeper interface {
-	Proposals(ctx context.Context, req *v1.QueryProposalsRequest) (*v1.QueryProposalsResponse, error)
-	Vote(ctx context.Context, req *v1.QueryVoteRequest) (*v1.QueryVoteResponse, error)
+	// Proposals(ctx context.Context, req *v1.QueryProposalsRequest) (*v1.QueryProposalsResponse, error)
+	// Vote(ctx context.Context, req *v1.QueryVoteRequest) (*v1.QueryVoteResponse, error)
 }
 
 type InterchainStakingKeeper interface {

@@ -7,8 +7,8 @@ import (
 	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-
 	osmosistypes "github.com/quicksilver-zone/quicksilver/v7/third-party-chains/osmosis-types"
 	osmosislockuptypes "github.com/quicksilver-zone/quicksilver/v7/third-party-chains/osmosis-types/lockup"
 	"github.com/quicksilver-zone/quicksilver/v7/x/airdrop/types"
@@ -200,10 +200,11 @@ func (k *Keeper) verifyGovernanceParticipation(ctx sdk.Context, address string) 
 	}
 
 	voted := false
-	getProposalsResp, _ := k.govKeeper.Proposals(ctx, &v1.QueryProposalsRequest{})
+	govQueryServer := govkeeper.NewQueryServer(k.govKeeper.(*govkeeper.Keeper))
+	getProposalsResp, _ := govQueryServer.Proposals(ctx, &v1.QueryProposalsRequest{})
 	proposals := getProposalsResp.Proposals
 	for _, proposal := range proposals {
-		_, err := k.govKeeper.Vote(ctx, &v1.QueryVoteRequest{ProposalId: proposal.Id, Voter: addr.String()})
+		_, err := govQueryServer.Vote(ctx, &v1.QueryVoteRequest{ProposalId: proposal.Id, Voter: addr.String()})
 		if err == nil {
 			voted = true
 			break

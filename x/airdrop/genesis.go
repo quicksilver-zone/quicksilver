@@ -43,14 +43,18 @@ func InitGenesis(ctx sdk.Context, k *keeper.Keeper, genState types.GenesisState)
 		}
 
 		zonedropAddress := k.GetZoneDropAccountAddress(zd.ChainId)
+		bondDenom, err := k.BondDenom(ctx)
+		if err != nil {
+			panic(err)
+		}
 
-		err := k.SendCoinsFromModuleToAccount(
+		err = k.SendCoinsFromModuleToAccount(
 			ctx,
 			types.ModuleName,
 			zonedropAddress,
 			sdk.NewCoins(
 				sdk.NewCoin(
-					k.BondDenom(ctx),
+					bondDenom,
 					sdkmath.NewIntFromUint64(zd.Allocation),
 				),
 			),
