@@ -8,12 +8,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	umee "github.com/quicksilver-zone/quicksilver/v7/third-party-chains/umee-types"
 	leveragetypes "github.com/quicksilver-zone/quicksilver/v7/third-party-chains/umee-types/leverage/types"
 	"github.com/quicksilver-zone/quicksilver/v7/utils"
+	"github.com/quicksilver-zone/quicksilver/v7/utils/bankutils"
 	cmtypes "github.com/quicksilver-zone/quicksilver/v7/x/claimsmanager/types"
 	icstypes "github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking/types"
 	"github.com/quicksilver-zone/quicksilver/v7/x/participationrewards/types"
@@ -125,7 +124,7 @@ func (UmeeModule) Hooks(ctx sdk.Context, k *Keeper) {
 			return false
 		}
 		balance, _ := ibalance.(*types.UmeeLeverageModuleBalanceProtocolData)
-		accountPrefix := banktypes.CreateAccountBalancesPrefix(authtypes.NewModuleAddress(leveragetypes.LeverageModuleName))
+		accountPrefix := bankutils.CreateAccountBalancesPrefix(authtypes.NewModuleAddress(leveragetypes.LeverageModuleName))
 
 		// update leverage module balance
 		k.IcqKeeper.MakeRequest(
@@ -211,7 +210,7 @@ func (UmeeModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.MsgSubmit
 			return 0, err
 		}
 		if denomData.QAssetDenom == zone.LocalDenom && denomData.IbcDenom == denom {
-			uToken, err := bankkeeper.UnmarshalBalanceCompat(k.cdc, proof.Data, udenom)
+			uToken, err := bankutils.UnmarshalBalanceCompat(k.cdc, proof.Data, udenom)
 			if err != nil {
 				return 0, err
 			}

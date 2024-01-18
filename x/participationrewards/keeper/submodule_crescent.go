@@ -8,13 +8,13 @@ import (
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
-	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	crescenttypes "github.com/quicksilver-zone/quicksilver/v7/third-party-chains/crescent-types"
 	liquiditytypes "github.com/quicksilver-zone/quicksilver/v7/third-party-chains/crescent-types/liquidity/types"
 	lpfarmtypes "github.com/quicksilver-zone/quicksilver/v7/third-party-chains/crescent-types/lpfarm"
 	"github.com/quicksilver-zone/quicksilver/v7/utils/addressutils"
+	"github.com/quicksilver-zone/quicksilver/v7/utils/bankutils"
 	icstypes "github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking/types"
 	rewardstypes "github.com/quicksilver-zone/quicksilver/v7/x/participationrewards/types"
 )
@@ -57,7 +57,7 @@ func (CrescentModule) Hooks(ctx sdk.Context, k *Keeper) {
 		}
 		balance, _ := ibalance.(*rewardstypes.CrescentReserveAddressBalanceProtocolData)
 		_, addrBytes, _ := bech32.DecodeAndConvert(balance.ReserveAddress)
-		lookupKey := banktypes.CreateAccountBalancesPrefix(addrBytes)
+		lookupKey := bankutils.CreateAccountBalancesPrefix(addrBytes)
 
 		k.IcqKeeper.MakeRequest(
 			ctx,
@@ -125,11 +125,11 @@ func (CrescentModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *rewardstype
 	for _, proof := range msg.Proofs {
 		position := lpfarmtypes.Position{}
 		if proof.ProofType == rewardstypes.ProofTypeBank {
-			addr, poolDenom, err := banktypes.AddressAndDenomFromBalancesStore(proof.Key[1:])
+			addr, poolDenom, err := bankutils.AddressAndDenomFromBalancesStore(proof.Key[1:])
 			if err != nil {
 				return 0, err
 			}
-			coin, err := keeper.UnmarshalBalanceCompat(k.cdc, proof.Data, poolDenom)
+			coin, err := bankutils.UnmarshalBalanceCompat(k.cdc, proof.Data, poolDenom)
 			if err != nil {
 				return 0, err
 			}

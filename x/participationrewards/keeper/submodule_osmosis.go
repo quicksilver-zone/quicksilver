@@ -11,11 +11,10 @@ import (
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
-	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	osmosistypes "github.com/quicksilver-zone/quicksilver/v7/third-party-chains/osmosis-types"
 	osmolockup "github.com/quicksilver-zone/quicksilver/v7/third-party-chains/osmosis-types/lockup"
+	"github.com/quicksilver-zone/quicksilver/v7/utils/bankutils"
 	"github.com/quicksilver-zone/quicksilver/v7/x/participationrewards/types"
 )
 
@@ -77,11 +76,11 @@ func (*OsmosisModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.MsgSu
 	var lock osmolockup.PeriodLock
 	for _, proof := range msg.Proofs {
 		if proof.ProofType == types.ProofTypeBank {
-			addr, poolDenom, err := banktypes.AddressAndDenomFromBalancesStore(proof.Key[1:])
+			addr, poolDenom, err := bankutils.AddressAndDenomFromBalancesStore(proof.Key[1:])
 			if err != nil {
 				return 0, err
 			}
-			coin, err := keeper.UnmarshalBalanceCompat(k.cdc, proof.Data, poolDenom)
+			coin, err := bankutils.UnmarshalBalanceCompat(k.cdc, proof.Data, poolDenom)
 			if err != nil {
 				return 0, err
 			}

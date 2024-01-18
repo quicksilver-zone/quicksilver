@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 
 	"github.com/quicksilver-zone/quicksilver/v7/utils"
+	"github.com/quicksilver-zone/quicksilver/v7/utils/bankutils"
 	"github.com/quicksilver-zone/quicksilver/v7/x/participationrewards/types"
 )
 
@@ -57,12 +58,13 @@ func (*LiquidTokensModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.
 			return 0, err
 		}
 		if denomData.QAssetDenom == zone.LocalDenom && denomData.IbcDenom == denom {
-			coinStr := string(proof.Data)
-			coins, err := sdk.ParseCoinsNormalized(coinStr)
+			coin, err := bankutils.UnmarshalBalanceCompat(k.cdc, proof.Data, denomData.IbcDenom)
+
 			if err != nil {
 				return 0, err
+			}
+			amount += coin.Amount.Uint64()
 		}
-		amount += coins.Amount.Uint64()
 	}
 	return amount, nil
 }
