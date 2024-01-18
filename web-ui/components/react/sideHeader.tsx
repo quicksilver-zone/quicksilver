@@ -25,9 +25,9 @@ import { FaDiscord, FaTwitter, FaGithub, FaInfo } from 'react-icons/fa';
 import { IoIosDocument } from 'react-icons/io';
 import { MdPrivacyTip } from 'react-icons/md';
 
-import { DrawerControlProvider } from '@/state/chains/drawerControlProvider';
-
 import { WalletButton } from '../wallet-button';
+
+import { DrawerControlProvider } from '@/state/chains/drawerControlProvider';
 
 export const SideHeader = () => {
   const router = useRouter();
@@ -37,7 +37,7 @@ export const SideHeader = () => {
 
   useEffect(() => {
     const handleRouteChange = (url: string) => {
-      const path = url.split('/quicksilver/')[1];
+      const path = url.split('/')[1];
       setSelectedPage(path);
     };
 
@@ -110,7 +110,7 @@ export const SideHeader = () => {
           h="75px"
           w="75px"
           borderRadius="full"
-          src="/quicksilver/img/networks/quicksilver.svg"
+          src="/img/networks/quicksilver.svg"
           onClick={handleLogoClick}
           cursor="pointer"
           _hover={{
@@ -227,7 +227,7 @@ export const SideHeader = () => {
                         alt="Staking"
                         h="60px"
                         w="60px"
-                        src="/quicksilver/img/liquid.png"
+                        src="/img/liquid.png"
                       />
                     </Box>
                   </Tooltip>
@@ -257,7 +257,7 @@ export const SideHeader = () => {
                         alt="Governance"
                         h="60px"
                         w="65px"
-                        src="/quicksilver/img/governance.png"
+                        src="/img/governance.png"
                       />
                     </Box>
                   </Tooltip>
@@ -284,7 +284,7 @@ export const SideHeader = () => {
                         }}
                         alt="Assets"
                         h="55px"
-                        src="/quicksilver/img/assets.png"
+                        src="/img/assets.png"
                       />
                     </Box>
                   </Tooltip>
@@ -310,7 +310,7 @@ export const SideHeader = () => {
                         }}
                         alt="DeFi"
                         h="55px"
-                        src="/quicksilver/img/airdrop.png"
+                        src="/img/airdrop.png"
                       />
                     </Box>
                   </Tooltip>
@@ -337,7 +337,7 @@ export const SideHeader = () => {
                         }}
                         alt="DeFi"
                         h="55px"
-                        src="/quicksilver/img/defi.png"
+                        src="/img/defi.png"
                       />
                     </Box>
                   </Tooltip>
@@ -349,16 +349,16 @@ export const SideHeader = () => {
               {showSocialLinks && (
                 <VStack justifyContent="center" alignItems="center" spacing={16}>
                   <Link href="https://quicksilver.zone/" isExternal>
-                  <Tooltip borderLeft="4px solid rgba(255, 128, 0, 0.9)" label="About" placement="right">
-                    <Box
-                      _hover={{
-                        cursor: 'pointer',
-                        boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`,
-                      }}
-                    >
-                      <FaInfo size={'25px'} color="rgb(255, 128, 0)" />
-                    </Box>
-                  </Tooltip>
+                    <Tooltip borderLeft="4px solid rgba(255, 128, 0, 0.9)" label="About" placement="right">
+                      <Box
+                        _hover={{
+                          cursor: 'pointer',
+                          boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`,
+                        }}
+                      >
+                        <FaInfo size={'25px'} color="rgb(255, 128, 0)" />
+                      </Box>
+                    </Tooltip>
                   </Link>
                   <Link href="https://docs.quicksilver.zone/" isExternal>
                     <Tooltip borderLeft="4px solid rgba(255, 128, 0, 0.9)" label="Docs" placement="right">

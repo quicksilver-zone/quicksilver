@@ -3,8 +3,7 @@
 module.exports = {
   reactStrictMode: true,
   swcMinify: true,
-  basePath: '/quicksilver',
-  assetPrefix: '/quicksilver',
+
   async redirects() {
     return [
       {

@@ -76,9 +76,9 @@ const DefiTable = () => {
   type ProviderKey = 'osmosis' | 'ux' | 'shade';
 
   const providerIcons: Record<ProviderKey, string> = {
-    osmosis: '/quicksilver/img/osmoIcon.svg',
-    ux: '/quicksilver/img/ux.png',
-    shade: '/quicksilver/img/shd.svg',
+    osmosis: '/img/osmoIcon.svg',
+    ux: '/img/ux.png',
+    shade: '/img/shd.svg',
   };
 
   const isProviderKey = (key: string): key is ProviderKey => {
