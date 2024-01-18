@@ -8,7 +8,6 @@ import (
 	sdkmath "cosmossdk.io/math"
 	tmservice "github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
@@ -16,6 +15,7 @@ import (
 	"github.com/quicksilver-zone/quicksilver/v7/third-party-chains/osmosis-types/gamm"
 	umeetypes "github.com/quicksilver-zone/quicksilver/v7/third-party-chains/umee-types/leverage/types"
 	"github.com/quicksilver-zone/quicksilver/v7/utils/addressutils"
+	"github.com/quicksilver-zone/quicksilver/v7/utils/bankutils"
 	icqtypes "github.com/quicksilver-zone/quicksilver/v7/x/interchainquery/types"
 	"github.com/quicksilver-zone/quicksilver/v7/x/participationrewards/types"
 )
@@ -325,12 +325,12 @@ func UmeeLeverageModuleBalanceUpdateCallback(ctx sdk.Context, k *Keeper, respons
 	}
 
 	balancesStore := query.Request[1:]
-	_, denom, err := banktypes.AddressAndDenomFromBalancesStore(balancesStore)
+	_, denom, err := bankutils.AddressAndDenomFromBalancesStore(balancesStore)
 	if err != nil {
 		return err
 	}
 
-	balanceCoin, err := bankkeeper.UnmarshalBalanceCompat(k.cdc, response, denom)
+	balanceCoin, err := bankutils.UnmarshalBalanceCompat(k.cdc, response, denom)
 	if err != nil {
 		return err
 	}
@@ -509,7 +509,7 @@ func CrescentReserveBalanceUpdateCallback(ctx sdk.Context, k *Keeper, response [
 		return errors.New("account balance icq request must always have a length of at least 2 bytes")
 	}
 	balancesStore := query.Request[1:]
-	addr, denom, err := banktypes.AddressAndDenomFromBalancesStore(balancesStore)
+	addr, denom, err := bankutils.AddressAndDenomFromBalancesStore(balancesStore)
 	if err != nil {
 		return err
 	}
@@ -519,7 +519,7 @@ func CrescentReserveBalanceUpdateCallback(ctx sdk.Context, k *Keeper, response [
 		return err
 	}
 
-	balanceCoin, err := bankkeeper.UnmarshalBalanceCompat(k.cdc, response, denom)
+	balanceCoin, err := bankutils.UnmarshalBalanceCompat(k.cdc, response, denom)
 	if err != nil {
 		return err
 	}

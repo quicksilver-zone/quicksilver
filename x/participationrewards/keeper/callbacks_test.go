@@ -15,6 +15,7 @@ import (
 	liquiditytypes "github.com/quicksilver-zone/quicksilver/v7/third-party-chains/crescent-types/liquidity/types"
 	"github.com/quicksilver-zone/quicksilver/v7/third-party-chains/osmosis-types/gamm"
 	leveragetypes "github.com/quicksilver-zone/quicksilver/v7/third-party-chains/umee-types/leverage/types"
+	"github.com/quicksilver-zone/quicksilver/v7/utils/bankutils"
 	icqkeeper "github.com/quicksilver-zone/quicksilver/v7/x/interchainquery/keeper"
 	"github.com/quicksilver-zone/quicksilver/v7/x/participationrewards/keeper"
 	"github.com/quicksilver-zone/quicksilver/v7/x/participationrewards/types"
@@ -199,7 +200,7 @@ func (suite *KeeperTestSuite) executeUmeeLeverageModuleBalanceUpdateCallback() {
 	prk := suite.GetQuicksilverApp(suite.chainA).ParticipationRewardsKeeper
 	ctx := suite.chainA.GetContext()
 
-	accountPrefix := banktypes.CreateAccountBalancesPrefix(authtypes.NewModuleAddress(leveragetypes.LeverageModuleName))
+	accountPrefix := bankutils.CreateAccountBalancesPrefix(authtypes.NewModuleAddress(leveragetypes.LeverageModuleName))
 
 	qid := icqkeeper.GenerateQueryHash(umeeTestConnection, umeeTestChain, "store/bank/key", append(accountPrefix, []byte(umeeBaseDenom)...), types.ModuleName)
 
@@ -454,7 +455,7 @@ func (suite *KeeperTestSuite) executeCrescentReserveBalanceUpdateCallback() {
 	ctx := suite.chainA.GetContext()
 
 	_, addr, _ := bech32.DecodeAndConvert(testCrescentAddress)
-	accountPrefix := banktypes.CreateAccountBalancesPrefix(addr)
+	accountPrefix := bankutils.CreateAccountBalancesPrefix(addr)
 
 	qid := icqkeeper.GenerateQueryHash(crescentTestConnection, crescentTestChain, "store/bank/key", append(accountPrefix, []byte(cosmosIBCDenom)...), types.ModuleName)
 
