@@ -7,7 +7,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 
 	osmosistypes "github.com/quicksilver-zone/quicksilver/v7/third-party-chains/osmosis-types"
 	osmosislockuptypes "github.com/quicksilver-zone/quicksilver/v7/third-party-chains/osmosis-types/lockup"
@@ -163,7 +163,7 @@ func (k *Keeper) verifyBondedDelegation(ctx sdk.Context, address string) error {
 		return err
 	}
 
-	amount := k.stakingKeeper.GetDelegatorBonded(ctx, addr)
+	amount, _ := k.stakingKeeper.GetDelegatorBonded(ctx, addr)
 	if !amount.IsPositive() {
 		return fmt.Errorf("no bonded delegation for %s", addr)
 	}
@@ -200,14 +200,15 @@ func (k *Keeper) verifyGovernanceParticipation(ctx sdk.Context, address string) 
 	}
 
 	voted := false
-	k.govKeeper.IterateProposals(ctx, func(proposal govv1.Proposal) (stop bool) {
-		_, found := k.govKeeper.GetVote(ctx, proposal.Id, addr)
-		if found {
+	getProposalsResp, _ := k.govKeeper.Proposals(ctx, &v1.QueryProposalsRequest{})
+	proposals := getProposalsResp.Proposals
+	for _, proposal := range proposals {
+		_, err := k.govKeeper.Vote(ctx, &v1.QueryVoteRequest{ProposalId: proposal.Id, Voter: addr.String()})
+		if err == nil {
 			voted = true
-			return true
+			break
 		}
-		return false
-	})
+	}
 
 	if !voted {
 		return fmt.Errorf("no governance votes by %s", addr)
