@@ -9,7 +9,6 @@ import (
 	"cosmossdk.io/log"
 
 	sdkmath "cosmossdk.io/math"
-
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -19,7 +18,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/types/tx"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
@@ -34,6 +32,7 @@ import (
 
 	"github.com/quicksilver-zone/quicksilver/v7/utils"
 	"github.com/quicksilver-zone/quicksilver/v7/utils/addressutils"
+	"github.com/quicksilver-zone/quicksilver/v7/utils/bankutils"
 	epochskeeper "github.com/quicksilver-zone/quicksilver/v7/x/epochs/keeper"
 	interchainquerykeeper "github.com/quicksilver-zone/quicksilver/v7/x/interchainquery/keeper"
 	icqtypes "github.com/quicksilver-zone/quicksilver/v7/x/interchainquery/types"
@@ -496,7 +495,7 @@ func (k *Keeper) EmitPerformanceBalanceQuery(ctx sdk.Context, zone *types.Zone) 
 	if err != nil {
 		return err
 	}
-	data := banktypes.CreateAccountBalancesPrefix(addr)
+	data := bankutils.CreateAccountBalancesPrefix(addr)
 
 	// query performance account for baseDenom balance every 100 blocks.
 	k.ICQKeeper.MakeRequest(

@@ -14,6 +14,7 @@ import (
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
+	"github.com/quicksilver-zone/quicksilver/v7/utils/bankutils"
 	icqtypes "github.com/quicksilver-zone/quicksilver/v7/x/interchainquery/types"
 	"github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking/types"
 )
@@ -296,7 +297,7 @@ func (k *Keeper) SetAccountBalance(ctx sdk.Context, zone types.Zone, address str
 	if err != nil {
 		return err
 	}
-	data := banktypes.CreateAccountBalancesPrefix(addr)
+	data := bankutils.CreateAccountBalancesPrefix(addr)
 
 	var icaAccount *types.ICAAccount
 
