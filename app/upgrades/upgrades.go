@@ -1,6 +1,7 @@
 package upgrades
 
 import (
+	"context"
 	"errors"
 	"time"
 
@@ -53,7 +54,9 @@ func NoOpHandler(
 	configurator module.Configurator,
 	_ *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
-	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+	return func(goCtx context.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		ctx := sdk.UnwrapSDKContext(goCtx)
+
 		return mm.RunMigrations(ctx, configurator, fromVM)
 	}
 }
@@ -63,7 +66,8 @@ func V010402rc1UpgradeHandler(
 	configurator module.Configurator,
 	appKeepers *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
-	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+	return func(goCtx context.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		ctx := sdk.UnwrapSDKContext(goCtx)
 		if isTestnet(ctx) || isTest(ctx) {
 			appKeepers.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zone *icstypes.Zone) (stop bool) {
 				for _, val := range zone.Validators {
@@ -98,7 +102,8 @@ func V010402rc3UpgradeHandler(
 	configurator module.Configurator,
 	appKeepers *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
-	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+	return func(goCtx context.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		ctx := sdk.UnwrapSDKContext(goCtx)
 		if isTestnet(ctx) || isTest(ctx) {
 			appKeepers.InterchainstakingKeeper.RemoveZoneAndAssociatedRecords(ctx, OsmosisTestnetChainID)
 			pdType, exists := prtypes.ProtocolDataType_value["ProtocolDataTypeConnection"]
@@ -123,7 +128,8 @@ func V010402rc4UpgradeHandler(
 	configurator module.Configurator,
 	appKeepers *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
-	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+	return func(goCtx context.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		ctx := sdk.UnwrapSDKContext(goCtx)
 		if isTestnet(ctx) || isTest(ctx) {
 			pdType, exists := prtypes.ProtocolDataType_value["ProtocolDataTypeLiquidToken"]
 			if !exists {
@@ -164,7 +170,9 @@ func V010402rc5UpgradeHandler(
 	configurator module.Configurator,
 	appKeepers *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
-	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+	return func(goCtx context.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		ctx := sdk.UnwrapSDKContext(goCtx)
+
 		if isTestnet(ctx) || isTest(ctx) {
 
 			rcptTime := time.Unix(1682932342, 0)
@@ -243,7 +251,8 @@ func V010402rc6UpgradeHandler(
 	configurator module.Configurator,
 	appKeepers *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
-	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+	return func(goCtx context.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		ctx := sdk.UnwrapSDKContext(goCtx)
 		if isTestnet(ctx) || isTest(ctx) {
 			// for each zone, trigger an icq request to update all delegations.
 			appKeepers.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zone *icstypes.Zone) (stop bool) {
@@ -275,7 +284,9 @@ func V010403rc0UpgradeHandler(
 	configurator module.Configurator,
 	appKeepers *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
-	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+	return func(goCtx context.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		ctx := sdk.UnwrapSDKContext(goCtx)
+
 		if isTestnet(ctx) || isTest(ctx) {
 			appKeepers.ParticipationRewardsKeeper.IteratePrefixedProtocolDatas(ctx, prtypes.GetPrefixProtocolDataKey(prtypes.ProtocolDataTypeLiquidToken), func(index int64, key []byte, data prtypes.ProtocolData) (stop bool) {
 				prefixedKey := append(prtypes.GetPrefixProtocolDataKey(prtypes.ProtocolDataTypeLiquidToken), key...)
@@ -299,7 +310,9 @@ func V010404beta0UpgradeHandler(
 	configurator module.Configurator,
 	appKeepers *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
-	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+	return func(goCtx context.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		ctx := sdk.UnwrapSDKContext(goCtx)
+
 		if isTestnet(ctx) || isTest(ctx) {
 			appKeepers.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zone *icstypes.Zone) (stop bool) {
 				zone.Is_118 = true
@@ -317,7 +330,9 @@ func V010404beta5UpgradeHandler(
 	configurator module.Configurator,
 	appKeepers *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
-	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+	return func(goCtx context.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		ctx := sdk.UnwrapSDKContext(goCtx)
+
 		if isDevnet(ctx) || isTest(ctx) {
 			// 6d3cc69d3276dd59a93a252e1ea15fc1e507c56512266c87c615fac4dcddb5cb
 			wr, found := appKeepers.InterchainstakingKeeper.GetWithdrawalRecord(ctx, "theta-testnet-001", "6d3cc69d3276dd59a93a252e1ea15fc1e507c56512266c87c615fac4dcddb5cb", 3)
@@ -357,7 +372,9 @@ func V010404beta7UpgradeHandler(
 	configurator module.Configurator,
 	appKeepers *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
-	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+	return func(goCtx context.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		ctx := sdk.UnwrapSDKContext(goCtx)
+
 		const (
 			thetaUnbondingPeriod = int64(172800)
 			uniUnbondingPeriod   = int64(2419200)
@@ -398,7 +415,9 @@ func V010404rc0UpgradeHandler(
 	configurator module.Configurator,
 	appKeepers *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
-	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+	return func(goCtx context.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		ctx := sdk.UnwrapSDKContext(goCtx)
+
 		const (
 			thetaUnbondingPeriod = int64(172800)
 			uniUnbondingPeriod   = int64(2419200)
@@ -459,7 +478,9 @@ func V010404beta8UpgradeHandler(
 	configurator module.Configurator,
 	appKeepers *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
-	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+	return func(goCtx context.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		ctx := sdk.UnwrapSDKContext(goCtx)
+
 		if isTestnet(ctx) || isTest(ctx) || isDevnet(ctx) {
 			appKeepers.InterchainstakingKeeper.IterateWithdrawalRecords(ctx, func(index int64, record icstypes.WithdrawalRecord) (stop bool) {
 				if (record.Status == icstypes.WithdrawStatusSend) || record.Requeued || ((record.CompletionTime != time.Time{}) && (record.CompletionTime.Before(ctx.BlockTime()))) {
@@ -483,7 +504,9 @@ func V010404rc1UpgradeHandler(
 	configurator module.Configurator,
 	appKeepers *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
-	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+	return func(goCtx context.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		ctx := sdk.UnwrapSDKContext(goCtx)
+
 		if isTestnet(ctx) || isTest(ctx) || isDevnet(ctx) {
 
 			appKeepers.InterchainstakingKeeper.RemoveZoneAndAssociatedRecords(ctx, JunoTestnetChainID)
@@ -522,7 +545,9 @@ func V010404beta9UpgradeHandler(
 	configurator module.Configurator,
 	appKeepers *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
-	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+	return func(goCtx context.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		ctx := sdk.UnwrapSDKContext(goCtx)
+
 		if isTest(ctx) || isDevnet(ctx) {
 
 			appKeepers.InterchainstakingKeeper.RemoveZoneAndAssociatedRecords(ctx, JunoTestnetChainID)
@@ -549,7 +574,9 @@ func V010404beta10UpgradeHandler(
 	configurator module.Configurator,
 	appKeepers *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
-	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+	return func(goCtx context.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		ctx := sdk.UnwrapSDKContext(goCtx)
+
 		if isDevnet(ctx) {
 			// stargaze
 			appKeepers.InterchainstakingKeeper.RemoveZoneAndAssociatedRecords(ctx, StargazeTestnetChainID)
@@ -635,7 +662,7 @@ func V010404beta10UpgradeHandler(
 //	configurator module.Configurator,
 //	appKeepers *keepers.AppKeepers,
 // ) upgradetypes.UpgradeHandler {
-//	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+//	return func(ctx context.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 //		// upgrade zones
 //		appKeepers.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zone *icstypes.Zone) (stop bool) {
 //			zone.DepositsEnabled = true
@@ -696,7 +723,7 @@ func V010404beta10UpgradeHandler(
 //	configurator module.Configurator,
 //	appKeepers *keepers.AppKeepers,
 // ) upgradetypes.UpgradeHandler {
-//	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+//	return func(ctx context.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 //		if isTestnet(ctx) {
 //			appKeepers.InterchainstakingKeeper.RemoveZoneAndAssociatedRecords(ctx, "regen-redwood-1")
 //			// re-register regen-redwood-1 with new connection
@@ -756,7 +783,7 @@ func V010404beta10UpgradeHandler(
 //	configurator module.Configurator,
 //	appKeepers *keepers.AppKeepers,
 // ) upgradetypes.UpgradeHandler {
-//	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+//	return func(ctx context.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 //		// remove expired failed redelegation records
 //		appKeepers.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zone *icstypes.Zone) (stop bool) {
 //			appKeepers.InterchainstakingKeeper.IterateAllDelegations(ctx, zone, func(delegation icstypes.Delegation) (stop bool) {
