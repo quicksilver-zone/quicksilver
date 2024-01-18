@@ -16,10 +16,8 @@ func (k *Keeper) GetZoneDropAccountAddress(chainID string) sdk.AccAddress {
 
 // GetZoneDropAccountBalance gets the zone airdrop account coin balance.
 func (k *Keeper) GetZoneDropAccountBalance(ctx sdk.Context, chainID string) sdk.Coin {
-	bondDenom, err := k.stakingKeeper.BondDenom(ctx)
-	if err != nil {
-		panic(err)
-	}
+	bondDenom, _ := k.stakingKeeper.BondDenom(ctx)
+
 	zonedropAccAddr := k.GetZoneDropAccountAddress(chainID)
 	return k.bankKeeper.GetBalance(ctx, zonedropAccAddr, bondDenom)
 }
