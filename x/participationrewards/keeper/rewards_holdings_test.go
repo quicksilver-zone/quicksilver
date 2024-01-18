@@ -17,7 +17,8 @@ func (suite *KeeperTestSuite) TestCalcUserHoldingsAllocations() {
 	user2 := addressutils.GenerateAccAddressForTest()
 	appA := suite.GetQuicksilverApp(suite.chainA)
 	ctx := suite.chainA.GetContext()
-	bondDenom := appA.StakingKeeper.BondDenom(ctx)
+	bondDenom, err := appA.StakingKeeper.BondDenom(ctx)
+	suite.NoError(err)
 	tests := []struct {
 		name         string
 		malleate     func(ctx sdk.Context, appA *app.Quicksilver)
@@ -298,9 +299,10 @@ func (suite *KeeperTestSuite) TestCalcUserHoldingsAllocations() {
 
 			zone, found := appA.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 			suite.True(found)
-
-			suite.NoError(appA.BankKeeper.MintCoins(ctx, "mint", sdk.NewCoins(sdk.NewCoin(appA.StakingKeeper.BondDenom(ctx), sdkmath.NewIntFromUint64(zone.HoldingsAllocation)))))
-			suite.NoError(appA.BankKeeper.SendCoinsFromModuleToModule(ctx, "mint", types.ModuleName, sdk.NewCoins(sdk.NewCoin(appA.StakingKeeper.BondDenom(ctx), sdkmath.NewIntFromUint64(zone.HoldingsAllocation)))))
+			bondDenom, err := appA.StakingKeeper.BondDenom(ctx)
+			suite.NoError(err)
+			suite.NoError(appA.BankKeeper.MintCoins(ctx, "mint", sdk.NewCoins(sdk.NewCoin(bondDenom, sdkmath.NewIntFromUint64(zone.HoldingsAllocation)))))
+			suite.NoError(appA.BankKeeper.SendCoinsFromModuleToModule(ctx, "mint", types.ModuleName, sdk.NewCoins(sdk.NewCoin(bondDenom, sdkmath.NewIntFromUint64(zone.HoldingsAllocation)))))
 
 			allocations, remainder, icsRewardsAllocations := appA.ParticipationRewardsKeeper.CalcUserHoldingsAllocations(ctx, &zone)
 			suite.ElementsMatch(tt.want, allocations)
@@ -308,7 +310,7 @@ func (suite *KeeperTestSuite) TestCalcUserHoldingsAllocations() {
 			suite.True(tt.remainder.Equal(remainder))
 
 			// distribute assets to users; check remainder (to be distributed next time!)
-			err := appA.ParticipationRewardsKeeper.DistributeToUsersFromAddress(ctx, icsRewardsAllocations, zone.WithdrawalAddress.Address)
+			err = appA.ParticipationRewardsKeeper.DistributeToUsersFromAddress(ctx, icsRewardsAllocations, zone.WithdrawalAddress.Address)
 			suite.NoError(err)
 			icsAddress, _ := addressutils.AddressFromBech32(zone.WithdrawalAddress.Address, "")
 			icsBalance := appA.BankKeeper.GetAllBalances(ctx, icsAddress)
@@ -403,14 +405,15 @@ func (suite *KeeperTestSuite) TestAllocateHoldingsRewards() {
 
 			zone, found := appA.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 			suite.True(found)
+			bondDenom, err := appA.StakingKeeper.BondDenom(ctx)
+			suite.NoError(err)
+			suite.NoError(appA.BankKeeper.MintCoins(ctx, "mint", sdk.NewCoins(sdk.NewCoin(bondDenom, sdkmath.NewIntFromUint64(zone.HoldingsAllocation)))))
+			suite.NoError(appA.BankKeeper.SendCoinsFromModuleToModule(ctx, "mint", types.ModuleName, sdk.NewCoins(sdk.NewCoin(bondDenom, sdkmath.NewIntFromUint64(zone.HoldingsAllocation)))))
 
-			suite.NoError(appA.BankKeeper.MintCoins(ctx, "mint", sdk.NewCoins(sdk.NewCoin(appA.StakingKeeper.BondDenom(ctx), sdkmath.NewIntFromUint64(zone.HoldingsAllocation)))))
-			suite.NoError(appA.BankKeeper.SendCoinsFromModuleToModule(ctx, "mint", types.ModuleName, sdk.NewCoins(sdk.NewCoin(appA.StakingKeeper.BondDenom(ctx), sdkmath.NewIntFromUint64(zone.HoldingsAllocation)))))
-
-			err := appA.ParticipationRewardsKeeper.AllocateHoldingsRewards(ctx)
+			err = appA.ParticipationRewardsKeeper.AllocateHoldingsRewards(ctx)
 			suite.True(err == nil)
-			user1Balance := appA.BankKeeper.GetBalance(ctx, user1, appA.StakingKeeper.BondDenom(ctx)).Amount.String()
-			user2Balance := appA.BankKeeper.GetBalance(ctx, user2, appA.StakingKeeper.BondDenom(ctx)).Amount.String()
+			user1Balance := appA.BankKeeper.GetBalance(ctx, user1, bondDenom).Amount.String()
+			user2Balance := appA.BankKeeper.GetBalance(ctx, user2, bondDenom).Amount.String()
 			suite.Equal(tt.balances, []string{user1Balance, user2Balance})
 		})
 	}

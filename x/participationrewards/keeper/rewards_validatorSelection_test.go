@@ -232,9 +232,10 @@ func (suite *KeeperTestSuite) TestCalcUserValidatorSelectionAllocations() {
 
 			zone, found := appA.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 			suite.True(found)
-
-			suite.NoError(appA.BankKeeper.MintCoins(ctx, "mint", sdk.NewCoins(sdk.NewCoin(appA.StakingKeeper.BondDenom(ctx), sdkmath.NewIntFromUint64(zone.HoldingsAllocation)))))
-			suite.NoError(appA.BankKeeper.SendCoinsFromModuleToModule(ctx, "mint", types.ModuleName, sdk.NewCoins(sdk.NewCoin(appA.StakingKeeper.BondDenom(ctx), sdkmath.NewIntFromUint64(zone.HoldingsAllocation)))))
+			bondDenom, err := appA.StakingKeeper.BondDenom(ctx)
+			suite.NoError(err)
+			suite.NoError(appA.BankKeeper.MintCoins(ctx, "mint", sdk.NewCoins(sdk.NewCoin(bondDenom, sdkmath.NewIntFromUint64(zone.HoldingsAllocation)))))
+			suite.NoError(appA.BankKeeper.SendCoinsFromModuleToModule(ctx, "mint", types.ModuleName, sdk.NewCoins(sdk.NewCoin(bondDenom, sdkmath.NewIntFromUint64(zone.HoldingsAllocation)))))
 
 			validatorScores := tt.validatorScores(ctx, appA, zone.ChainId)
 
@@ -245,7 +246,7 @@ func (suite *KeeperTestSuite) TestCalcUserValidatorSelectionAllocations() {
 			}
 
 			userAllocations := appA.ParticipationRewardsKeeper.CalcUserValidatorSelectionAllocations(ctx, &zone, zs)
-			suite.Equal(tt.want(appA.StakingKeeper.BondDenom(ctx)), userAllocations)
+			suite.Equal(tt.want(bondDenom), userAllocations)
 		})
 	}
 }
@@ -399,9 +400,11 @@ func (suite *KeeperTestSuite) TestCalcDistributionScores() {
 
 			zone, found := appA.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 			suite.True(found)
+			bondDenom, err := appA.StakingKeeper.BondDenom(ctx)
+			suite.NoError(err)
 
-			suite.NoError(appA.BankKeeper.MintCoins(ctx, "mint", sdk.NewCoins(sdk.NewCoin(appA.StakingKeeper.BondDenom(ctx), sdkmath.NewIntFromUint64(zone.HoldingsAllocation)))))
-			suite.NoError(appA.BankKeeper.SendCoinsFromModuleToModule(ctx, "mint", types.ModuleName, sdk.NewCoins(sdk.NewCoin(appA.StakingKeeper.BondDenom(ctx), sdkmath.NewIntFromUint64(zone.HoldingsAllocation)))))
+			suite.NoError(appA.BankKeeper.MintCoins(ctx, "mint", sdk.NewCoins(sdk.NewCoin(bondDenom, sdkmath.NewIntFromUint64(zone.HoldingsAllocation)))))
+			suite.NoError(appA.BankKeeper.SendCoinsFromModuleToModule(ctx, "mint", types.ModuleName, sdk.NewCoins(sdk.NewCoin(bondDenom, sdkmath.NewIntFromUint64(zone.HoldingsAllocation)))))
 
 			validatorScores := tt.validatorScores(ctx, appA, zone.ChainId)
 
@@ -411,7 +414,7 @@ func (suite *KeeperTestSuite) TestCalcDistributionScores() {
 				ValidatorScores:  validatorScores,
 			}
 
-			err := appA.ParticipationRewardsKeeper.CalcDistributionScores(ctx, zone, &zs)
+			err = appA.ParticipationRewardsKeeper.CalcDistributionScores(ctx, zone, &zs)
 			suite.Equal(err != nil, tt.wantErr)
 			tt.verify(ctx, appA, zs)
 		})
@@ -451,7 +454,7 @@ func (suite *KeeperTestSuite) TestCalcOverallScores() {
 			delegatorRewards: func(ctx sdk.Context, appA *app.Quicksilver, chainID string) distributiontypes.QueryDelegationTotalRewardsResponse {
 				zone, _ := appA.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 				valAddress := appA.InterchainstakingKeeper.GetValidatorAddresses(ctx, chainID)[0]
-				return distributiontypes.QueryDelegationTotalRewardsResponse{Rewards: []distributiontypes.DelegationDelegatorReward{{ValidatorAddress: valAddress, Reward: sdk.NewDecCoins(sdk.NewDecCoin(zone.BaseDenom, sdkmath.NewInt(1)))}}, Total: sdk.NewDecCoins(sdk.LegacyNewDecCoin(zone.BaseDenom, sdkmath.NewInt(0)))}
+				return distributiontypes.QueryDelegationTotalRewardsResponse{Rewards: []distributiontypes.DelegationDelegatorReward{{ValidatorAddress: valAddress, Reward: sdk.NewDecCoins(sdk.NewDecCoin(zone.BaseDenom, sdkmath.NewInt(1)))}}, Total: sdk.NewDecCoins(sdk.NewDecCoin(zone.BaseDenom, sdkmath.NewInt(0)))}
 			},
 			verify: func(_ types.ZoneScore, _ []distributiontypes.DelegationDelegatorReward, _ []icstypes.Validator) {
 			},
@@ -486,8 +489,8 @@ func (suite *KeeperTestSuite) TestCalcOverallScores() {
 				inactiveAddress := appA.InterchainstakingKeeper.GetValidatorAddresses(ctx, chainID)[0]
 				activeAddress := appA.InterchainstakingKeeper.GetValidatorAddresses(ctx, chainID)[1]
 				return distributiontypes.QueryDelegationTotalRewardsResponse{Rewards: []distributiontypes.DelegationDelegatorReward{
-					{ValidatorAddress: inactiveAddress, Reward: sdkmath.LegacyDecNewCoins(sdk.LegacyNewDecCoin(zone.BaseDenom, sdkmath.NewInt(1)))},
-					{ValidatorAddress: activeAddress, Reward: sdkmath.LegacyDecNewCoins(sdk.LegacyNewDecCoin(zone.BaseDenom, sdkmath.NewInt(10)))},
+					{ValidatorAddress: inactiveAddress, Reward: sdk.NewDecCoins(sdk.NewDecCoin(zone.BaseDenom, sdkmath.NewInt(1)))},
+					{ValidatorAddress: activeAddress, Reward: sdk.NewDecCoins(sdk.NewDecCoin(zone.BaseDenom, sdkmath.NewInt(10)))},
 				}, Total: sdk.NewDecCoins(sdk.NewDecCoin(zone.BaseDenom, sdkmath.NewInt(11)))}
 			},
 			verify: func(zs types.ZoneScore, delegatorRewards []distributiontypes.DelegationDelegatorReward, validators []icstypes.Validator) {
@@ -574,9 +577,10 @@ func (suite *KeeperTestSuite) TestCalcOverallScores() {
 
 			zone, found := appA.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 			suite.True(found)
-
-			suite.NoError(appA.BankKeeper.MintCoins(ctx, "mint", sdk.NewCoins(sdk.NewCoin(appA.StakingKeeper.BondDenom(ctx), sdkmath.NewIntFromUint64(zone.HoldingsAllocation)))))
-			suite.NoError(appA.BankKeeper.SendCoinsFromModuleToModule(ctx, "mint", types.ModuleName, sdk.NewCoins(sdk.NewCoin(appA.StakingKeeper.BondDenom(ctx), sdkmath.NewIntFromUint64(zone.HoldingsAllocation)))))
+			bondDenom, err := appA.StakingKeeper.BondDenom(ctx)
+			suite.NoError(err)
+			suite.NoError(appA.BankKeeper.MintCoins(ctx, "mint", sdk.NewCoins(sdk.NewCoin(bondDenom, sdkmath.NewIntFromUint64(zone.HoldingsAllocation)))))
+			suite.NoError(appA.BankKeeper.SendCoinsFromModuleToModule(ctx, "mint", types.ModuleName, sdk.NewCoins(sdk.NewCoin(bondDenom, sdkmath.NewIntFromUint64(zone.HoldingsAllocation)))))
 
 			validatorScores := tt.validatorScores(ctx, appA, zone.ChainId)
 
@@ -588,7 +592,7 @@ func (suite *KeeperTestSuite) TestCalcOverallScores() {
 
 			delegatorRewards := tt.delegatorRewards(ctx, appA, zone.ChainId)
 
-			err := appA.ParticipationRewardsKeeper.CalcOverallScores(ctx, zone, delegatorRewards, &zs)
+			err = appA.ParticipationRewardsKeeper.CalcOverallScores(ctx, zone, delegatorRewards, &zs)
 
 			suite.Equal(err != nil, tt.wantErr)
 			tt.verify(zs, delegatorRewards.Rewards, appA.InterchainstakingKeeper.GetValidators(ctx, zone.ChainId))
