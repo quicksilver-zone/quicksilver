@@ -25,9 +25,10 @@ import { FaDiscord, FaTwitter, FaGithub, FaInfo } from 'react-icons/fa';
 import { IoIosDocument } from 'react-icons/io';
 import { MdPrivacyTip } from 'react-icons/md';
 
+import { DrawerControlProvider } from '@/state/chains/drawerControlProvider';
+
 import { WalletButton } from '../wallet-button';
 
-import { DrawerControlProvider } from '@/state/chains/drawerControlProvider';
 
 export const SideHeader = () => {
   const router = useRouter();
