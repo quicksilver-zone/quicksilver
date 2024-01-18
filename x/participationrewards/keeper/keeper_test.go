@@ -138,10 +138,11 @@ func (suite *KeeperTestSuite) coreTest() {
 	quicksilver.EpochsKeeper.AfterEpochEnd(suite.chainA.GetContext(), epochtypes.EpochIdentifierEpoch, 2)
 	// Epoch boundary
 	ctx := suite.chainA.GetContext()
-
+	bondDenom, err := quicksilver.StakingKeeper.BondDenom(ctx)
+	suite.NoError(err)
 	quicksilver.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zone *icstypes.Zone) (stop bool) {
-		suite.NoError(quicksilver.BankKeeper.MintCoins(ctx, "mint", sdk.NewCoins(sdk.NewCoin(quicksilver.StakingKeeper.BondDenom(ctx), sdkmath.NewIntFromUint64(zone.HoldingsAllocation)))))
-		suite.NoError(quicksilver.BankKeeper.SendCoinsFromModuleToModule(ctx, "mint", types.ModuleName, sdk.NewCoins(sdk.NewCoin(quicksilver.StakingKeeper.BondDenom(ctx), sdkmath.NewIntFromUint64(zone.HoldingsAllocation)))))
+		suite.NoError(quicksilver.BankKeeper.MintCoins(ctx, "mint", sdk.NewCoins(sdk.NewCoin(bondDenom, sdkmath.NewIntFromUint64(zone.HoldingsAllocation)))))
+		suite.NoError(quicksilver.BankKeeper.SendCoinsFromModuleToModule(ctx, "mint", types.ModuleName, sdk.NewCoins(sdk.NewCoin(bondDenom, sdkmath.NewIntFromUint64(zone.HoldingsAllocation)))))
 		return false
 	})
 
@@ -212,7 +213,10 @@ func (suite *KeeperTestSuite) setupTestZones() {
 	quicksilver.IBCKeeper.ClientKeeper.SetClientConsensusState(suite.chainA.GetContext(), "07-tendermint-0", clienttypes.Height{RevisionNumber: 1, RevisionHeight: 100}, &tmclienttypes.ConsensusState{Timestamp: suite.chainA.GetContext().BlockTime()})
 	suite.NoError(suite.setupChannelForICA(suite.chainB.ChainID, suite.path.EndpointA.ConnectionID, "performance", testzone.AccountPrefix))
 
-	vals := suite.GetQuicksilverApp(suite.chainB).StakingKeeper.GetBondedValidatorsByPower(suite.chainB.GetContext())
+	vals, err := suite.GetQuicksilverApp(suite.chainB).StakingKeeper.GetBondedValidatorsByPower(suite.chainB.GetContext())
+	if err != nil {
+		panic(err)
+	}
 	zone, found := quicksilver.InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
 	suite.True(found)
 
@@ -360,7 +364,7 @@ func (suite *KeeperTestSuite) setupChannelForICA(chainID, connectionID, accountS
 	quicksilver.InterchainstakingKeeper.SetConnectionForPort(suite.chainA.GetContext(), connectionID, portID)
 
 	channelID := quicksilver.IBCKeeper.ChannelKeeper.GenerateChannelIdentifier(suite.chainA.GetContext())
-	quicksilver.IBCKeeper.ChannelKeeper.SetChannel(suite.chainA.GetContext(), portID, channelID, channeltypes.Channel{State: channeltypes.OPEN, Ordering: channeltypes.ORDERED, Counterparty: channeltypes.Counterparty{PortId: icatypes.PortID, ChannelId: channelID}, ConnectionHops: []string{connectionID}})
+	quicksilver.IBCKeeper.ChannelKeeper.SetChannel(suite.chainA.GetContext(), portID, channelID, channeltypes.Channel{State: channeltypes.OPEN, Ordering: channeltypes.ORDERED, Counterparty: channeltypes.Counterparty{PortId: icatypes.HostPortID, ChannelId: channelID}, ConnectionHops: []string{connectionID}})
 
 	quicksilver.IBCKeeper.ChannelKeeper.SetNextSequenceSend(suite.chainA.GetContext(), portID, channelID, 1)
 	quicksilver.ICAControllerKeeper.SetActiveChannelID(suite.chainA.GetContext(), connectionID, portID, channelID)
