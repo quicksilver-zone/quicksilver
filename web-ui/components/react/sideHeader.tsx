@@ -110,6 +110,7 @@ export const SideHeader = () => {
           alt="logo"
           h="75px"
           w="75px"
+          padding="5px"
           borderRadius="full"
           src="/img/networks/quicksilver.svg"
           onClick={handleLogoClick}

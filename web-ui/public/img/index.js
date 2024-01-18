@@ -20,7 +20,6 @@ import qInj from "./networks/q-inj.svg";
 import qRegen from "./networks/q-regen.svg";
 import qinj from "./networks/qinj.svg";
 import qosmo from "./networks/qosmo.svg";
-import quicksilverPng from "./networks/quicksilver.png";
 import quicksilverSvg from "./networks/quicksilver.svg";
 import raydium from "./networks/raydium.png";
 import regen from "./networks/regen.svg";
@@ -57,7 +56,6 @@ export {
   qRegen,
   qinj,
   qosmo,
-  quicksilverPng,
   quicksilverSvg,
   raydium,
   regen,
