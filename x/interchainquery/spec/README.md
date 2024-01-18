@@ -35,11 +35,11 @@ type Query struct {
 	QueryType    string `protobuf:"bytes,4,opt,name=query_type,json=queryType,proto3" json:"query_type,omitempty"`
 	Request      []byte `protobuf:"bytes,5,opt,name=request,proto3" json:"request,omitempty"`
 	// change these to uint64 in v0.5.0
-	Period       cosmossdk_io_math.Int `protobuf:"bytes,6,opt,name=period,proto3,customtype=cosmossdk.io/math.Int" json:"period"`
-	LastHeight   cosmossdk_io_math.Int `protobuf:"bytes,7,opt,name=last_height,json=lastHeight,proto3,customtype=cosmossdk.io/math.Int" json:"last_height"`
+	Period       cosmossdk_io_math.Int `protobuf:"bytes,6,opt,name=period,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"period"`
+	LastHeight   cosmossdk_io_math.Int `protobuf:"bytes,7,opt,name=last_height,json=lastHeight,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"last_height"`
 	CallbackId   string                                 `protobuf:"bytes,8,opt,name=callback_id,json=callbackId,proto3" json:"callback_id,omitempty"`
 	Ttl          uint64                                 `protobuf:"varint,9,opt,name=ttl,proto3" json:"ttl,omitempty"`
-	LastEmission cosmossdk_io_math.Int `protobuf:"bytes,10,opt,name=last_emission,json=lastEmission,proto3,customtype=cosmossdk.io/math.Int" json:"last_emission"`
+	LastEmission cosmossdk_io_math.Int `protobuf:"bytes,10,opt,name=last_emission,json=lastEmission,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"last_emission"`
 }
 ```
 
@@ -49,8 +49,8 @@ type Query struct {
 type DataPoint struct {
 	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	// change these to uint64 in v0.5.0
-	RemoteHeight cosmossdk_io_math.Int `protobuf:"bytes,2,opt,name=remote_height,json=remoteHeight,proto3,customtype=cosmossdk.io/math.Int" json:"remote_height"`
-	LocalHeight  cosmossdk_io_math.Int `protobuf:"bytes,3,opt,name=local_height,json=localHeight,proto3,customtype=cosmossdk.io/math.Int" json:"local_height"`
+	RemoteHeight cosmossdk_io_math.Int `protobuf:"bytes,2,opt,name=remote_height,json=remoteHeight,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"remote_height"`
+	LocalHeight  cosmossdk_io_math.Int `protobuf:"bytes,3,opt,name=local_height,json=localHeight,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"local_height"`
 	Value        []byte                                 `protobuf:"bytes,4,opt,name=value,proto3" json:"result,omitempty"`
 }
 ```

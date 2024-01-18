@@ -237,7 +237,7 @@ type Validator struct {
 	ValoperAddress  string                                 `protobuf:"bytes,1,opt,name=valoper_address,json=valoperAddress,proto3" json:"valoper_address,omitempty"`
 	CommissionRate  cosmossdk_io_math.LegacyDec `protobuf:"bytes,2,opt,name=commission_rate,json=commissionRate,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"commission_rate"`
 	DelegatorShares cosmossdk_io_math.LegacyDec `protobuf:"bytes,3,opt,name=delegator_shares,json=delegatorShares,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"delegator_shares"`
-	VotingPower     cosmossdk_io_math.Int `protobuf:"bytes,4,opt,name=voting_power,json=votingPower,proto3,customtype=cosmossdk.io/math.Int" json:"voting_power"`
+	VotingPower     cosmossdk_io_math.Int `protobuf:"bytes,4,opt,name=voting_power,json=votingPower,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"voting_power"`
 	Score           cosmossdk_io_math.LegacyDec `protobuf:"bytes,5,opt,name=score,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"score"`
 	Status          string                                 `protobuf:"bytes,6,opt,name=status,proto3" json:"status,omitempty"`
 	Jailed          bool                                   `protobuf:"varint,7,opt,name=jailed,proto3" json:"jailed,omitempty"`
