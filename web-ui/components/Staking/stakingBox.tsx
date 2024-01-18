@@ -33,8 +33,6 @@ import { quicksilver } from 'quicksilverjs';
 import React, { useCallback, useEffect, useState } from 'react';
 import { FaStar } from 'react-icons/fa';
 
-import StakingProcessModal from './modals/stakingProcessModal';
-import TransferProcessModal from './modals/transferProcessModal';
 
 import { useTx } from '@/hooks';
 import {
@@ -48,6 +46,9 @@ import {
 } from '@/hooks/useQueries';
 import { getExponent } from '@/utils';
 import { shiftDigits } from '@/utils';
+
+import StakingProcessModal from './modals/stakingProcessModal';
+import TransferProcessModal from './modals/transferProcessModal';
 
 type StakingBoxProps = {
   selectedOption: {

@@ -2,12 +2,13 @@ import { Box, Flex, Text, Button, VStack, useColorModeValue, HStack, SkeletonCir
 import { useChain } from '@cosmos-kit/react';
 import { BsCoin } from 'react-icons/bs';
 
-import { DepositModal } from './modals/qckDepositModal';
-import { WithdrawModal } from './modals/qckWithdrawModal';
 
 import { defaultChainName } from '@/config';
 import { useBalanceQuery } from '@/hooks/useQueries';
 import { shiftDigits } from '@/utils';
+
+import { DepositModal } from './modals/qckDepositModal';
+import { WithdrawModal } from './modals/qckWithdrawModal';
 
 interface QuickBoxProps {
   stakingApy?: number;

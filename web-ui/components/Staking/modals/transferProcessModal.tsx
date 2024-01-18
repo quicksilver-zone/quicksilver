@@ -15,20 +15,15 @@ import {
   StatNumber,
   Spinner,
 } from '@chakra-ui/react';
-import chains from 'chain-registry';
-
 import { coins, StdFee } from '@cosmjs/amino';
-
 import styled from '@emotion/styled';
-
+import chains from 'chain-registry';
 import { assets } from 'chain-registry';
-
 import React, { useEffect, useState } from 'react';
 import { cosmos } from 'stridejs';
 
 import { useTx } from '@/hooks';
 import { useZoneQuery } from '@/hooks/useQueries';
-
 import { shiftDigits } from '@/utils';
 
 const ChakraModalContent = styled(ModalContent)`

@@ -1,17 +1,16 @@
 import { CloseIcon } from '@chakra-ui/icons';
 import { Box, Flex, Text, VStack, Button, HStack, Checkbox, Spinner, Tooltip, Heading } from '@chakra-ui/react';
-import { useState } from 'react';
-
-import { useLiquidEpochQuery } from '@/hooks/useQueries';
-
-import { quicksilver } from 'quicksilverjs';
-import { useTx } from '@/hooks';
 import { StdFee } from '@cosmjs/amino';
 import { assets } from 'chain-registry';
 import { cosmos } from 'interchain-query';
 import { Grant, GenericAuthorization } from 'interchain-query/cosmos/authz/v1beta1/authz';
+import { quicksilver } from 'quicksilverjs';
 import { MsgSubmitClaim } from 'quicksilverjs/types/codegen/quicksilver/participationrewards/v1/messages';
+import { useState } from 'react';
 import React from 'react';
+
+import { useTx } from '@/hooks';
+import { useLiquidEpochQuery } from '@/hooks/useQueries';
 
 interface RewardsClaimInterface {
   address: string;

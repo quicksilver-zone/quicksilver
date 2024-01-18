@@ -19,15 +19,14 @@ import {
 import { StdFee } from '@cosmjs/amino';
 import { useChain } from '@cosmos-kit/react';
 import styled from '@emotion/styled';
-
 import { assets } from 'chain-registry';
 import { quicksilver } from 'quicksilverjs';
-
 import React, { useEffect, useState } from 'react';
+
+import { useTx } from '@/hooks';
 
 import { IntentMultiModal } from './intentMultiModal';
 
-import { useTx } from '@/hooks';
 
 const ChakraModalContent = styled(ModalContent)`
   position: relative;

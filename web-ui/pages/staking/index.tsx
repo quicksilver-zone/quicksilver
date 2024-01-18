@@ -1,5 +1,4 @@
 import { Box, Container, Flex, VStack, HStack, Stat, StatLabel, StatNumber, SlideFade, SkeletonCircle } from '@chakra-ui/react';
-
 import dynamic from 'next/dynamic';
 import Head from 'next/head';
 import { useState } from 'react';

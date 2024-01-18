@@ -1,5 +1,5 @@
 {
-  "extends": "next/babel",
+  "extends": "next/core-web-vitals",
   "plugins": ["import"],
   "rules": {
     "import/order": [

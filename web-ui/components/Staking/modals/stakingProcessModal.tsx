@@ -23,18 +23,16 @@ import { useChain } from '@cosmos-kit/react';
 import styled from '@emotion/styled';
 import { bech32 } from 'bech32';
 import { assets, chains } from 'chain-registry';
-
 import { cosmos } from 'interchain-query';
-
 import React, { useEffect, useState } from 'react';
+
+import { useTx } from '@/hooks';
+import { useZoneQuery } from '@/hooks/useQueries';
+import { shiftDigits } from '@/utils';
 
 import { MultiModal } from './validatorSelectionModal';
 
-import { useZoneQuery } from '@/hooks/useQueries';
 
-import { shiftDigits } from '@/utils';
-
-import { useTx } from '@/hooks';
 
 const ChakraModalContent = styled(ModalContent)`
   position: relative;
