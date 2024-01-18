@@ -1,12 +1,13 @@
 package types
 
 import (
+	context "context"
 	"fmt"
 	"strings"
 
 	sdkioerrors "cosmossdk.io/errors"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 const (
@@ -71,9 +72,9 @@ func DeconstructDenom(denom string) (creator, subdenom string, err error) {
 
 // NewTokenFactoryDenomMintCoinsRestriction creates and returns a BankMintingRestrictionFn that only allows minting of
 // valid tokenfactory denoms.
-type MintingRestrictionFn func(ctx sdk.Context, coinsToMint sdk.Coins) error
+// type MintingRestrictionFn func(ctx context.Context, coinsToMint sdk.Coins) error
 
-var NewTokenFactoryDenomMintCoinsRestriction MintingRestrictionFn = func(ctx sdk.Context, coinsToMint sdk.Coins) error {
+var NewTokenFactoryDenomMintCoinsRestriction banktypes.MintingRestrictionFn = func(ctx context.Context, coinsToMint sdk.Coins) error {
 	for _, coin := range coinsToMint {
 		_, _, err := DeconstructDenom(coin.Denom)
 		if err != nil {
