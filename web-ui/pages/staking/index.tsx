@@ -1,4 +1,4 @@
-import { Box, Container, Flex, VStack, HStack, Stat, StatLabel, StatNumber, SlideFade, SkeletonCircle } from '@chakra-ui/react';
+import { Box, Container, Flex, VStack, HStack, Stat, StatLabel, StatNumber, SlideFade, SkeletonCircle, Image } from '@chakra-ui/react';
 import dynamic from 'next/dynamic';
 import Head from 'next/head';
 import { useState } from 'react';
@@ -124,6 +124,18 @@ export default function Staking() {
               </Flex>
             </Flex>
           </Flex>
+          <Box>
+            <Image
+              src="/img/quicksilverWord.png"
+              alt="Quicksilver"
+              position="relative"
+              bottom="100"
+              left="680"
+              h={'100px'}
+              transform="rotate(90deg)"
+              transformOrigin="bottom right"
+            />
+          </Box>
         </Container>
       </SlideFade>
     </>
