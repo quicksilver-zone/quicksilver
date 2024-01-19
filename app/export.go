@@ -5,6 +5,7 @@ import (
 	"log"
 
 	storetypes "cosmossdk.io/store/types"
+
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
@@ -19,7 +20,6 @@ func (app *Quicksilver) ExportAppStateAndValidators(
 ) (servertypes.ExportedApp, error) {
 	// Creates context with current height and checks txs for ctx to be usable by start of next block
 	ctx := app.NewContext(true)
-
 	// We export at last height + 1, because that's the height at which
 	// Tendermint will start InitChain.
 	height := app.LastBlockHeight() + 1
@@ -127,6 +127,9 @@ func (app *Quicksilver) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAdd
 		}
 		// donate any unwithdrawn outstanding reward fraction tokens to the community pool
 		scraps, err := app.DistrKeeper.GetValidatorOutstandingRewardsCoins(ctx, valBz)
+		if err != nil {
+			panic(err)
+		}
 		feePool, err := app.DistrKeeper.FeePool.Get(ctx)
 		if err != nil {
 			panic(err)

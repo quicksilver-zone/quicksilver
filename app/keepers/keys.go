@@ -24,7 +24,6 @@ import (
 	icacontrollertypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/controller/types"
 	icahosttypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/host/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
-
 	airdroptypes "github.com/quicksilver-zone/quicksilver/v7/x/airdrop/types"
 	claimsmanagertypes "github.com/quicksilver-zone/quicksilver/v7/x/claimsmanager/types"
 	epochstypes "github.com/quicksilver-zone/quicksilver/v7/x/epochs/types"
@@ -41,7 +40,6 @@ func KVStoreKeys() []string {
 	return []string{
 		// SDK keys
 		authtypes.StoreKey,
-		consensusparamtypes.StoreKey,
 		banktypes.StoreKey,
 		stakingtypes.StoreKey,
 		crisistypes.StoreKey,
@@ -54,6 +52,7 @@ func KVStoreKeys() []string {
 		capabilitytypes.StoreKey,
 		feegrant.StoreKey,
 		authzkeeper.StoreKey,
+		consensusparamtypes.StoreKey,
 		// ibc keys
 		ibcexported.StoreKey,
 		ibctransfertypes.StoreKey,

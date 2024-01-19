@@ -1,16 +1,15 @@
 package app_test
 
 import (
-	"encoding/json"
-	"os"
 	"testing"
+
+	cmtjson "github.com/cometbft/cometbft/libs/json"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
 	abci "github.com/cometbft/cometbft/abci/types"
-	cometlog "github.com/cometbft/cometbft/libs/log"
 	"github.com/quicksilver-zone/quicksilver/v7/app"
-	"github.com/rs/zerolog"
 
 	"github.com/cometbft/cometbft/crypto/secp256k1"
 	tmtypes "github.com/cometbft/cometbft/types"
@@ -62,21 +61,30 @@ func TestQuicksilverExport(t *testing.T) {
 	genesisState := app.NewDefaultGenesisState()
 	genesisState = app.GenesisStateWithValSet(t, quicksilver, genesisState, valSet, []authtypes.GenesisAccount{acc}, balance)
 
-	stateBytes, err := json.MarshalIndent(genesisState, "", "  ")
+	stateBytes, err := cmtjson.MarshalIndent(genesisState, "", "  ")
 	require.NoError(t, err)
 
 	// Initialize the chain
-	quicksilver.InitChain(
+	_, err = quicksilver.InitChain(
 		&abci.RequestInitChain{
-			ChainId:       "quicksilver-1",
-			Validators:    []abci.ValidatorUpdate{},
-			AppStateBytes: stateBytes,
+			Validators:      []abci.ValidatorUpdate{},
+			AppStateBytes:   stateBytes,
+			ConsensusParams: simtestutil.DefaultConsensusParams,
 		},
 	)
-	quicksilver.Commit()
+	require.NoError(t, err)
+	// Finalize the chain
+	_, err = quicksilver.FinalizeBlock(&abci.RequestFinalizeBlock{
+		Height: 1,
+	})
+	require.NoError(t, err)
 
+	_, err = quicksilver.Commit()
+	require.NoError(t, err)
+	// _, err = quicksilver.ExportAppStateAndValidators(false, []string{}, []string{})
+	// require.NoError(t, err, "ExportAppStateAndValidators should not have an error")
 	// Making a new app object with the db, so that initchain hasn't been called
-	app2 := app.NewQuicksilver(log.NewCustomLogger(cometlog.NewSyncWriter(os.Stdout).(zerolog.Logger)),
+	app2 := app.NewQuicksilver(log.NewNopLogger(),
 		db,
 		nil,
 		true,
@@ -84,7 +92,7 @@ func TestQuicksilverExport(t *testing.T) {
 		app.DefaultNodeHome,
 		app.MakeEncodingConfig(),
 		app.EmptyAppOptions{},
-		false,
+		true,
 		false,
 		app.GetWasmOpts(app.EmptyAppOptions{}),
 	)

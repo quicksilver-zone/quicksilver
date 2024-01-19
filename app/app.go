@@ -7,9 +7,24 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"sync"
+
+	upgradetypes "cosmossdk.io/x/upgrade/types"
+
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	"github.com/cosmos/cosmos-sdk/server"
+	"github.com/cosmos/cosmos-sdk/std"
+	consensusparamtypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
+	"github.com/cosmos/cosmos-sdk/x/genutil"
+	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
+	"github.com/cosmos/cosmos-sdk/x/gov"
+	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/cosmos/gogoproto/proto"
 
 	"cosmossdk.io/client/v2/autocli"
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/x/tx/signing"
 	runtimeservices "github.com/cosmos/cosmos-sdk/runtime/services"
 	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 
@@ -23,6 +38,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	tmservice "github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/server/api"
@@ -36,6 +52,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	capabilitykeeper "github.com/cosmos/ibc-go/modules/capability/keeper"
 	"github.com/spf13/cast"
@@ -92,7 +109,8 @@ type Quicksilver struct {
 	invCheckPeriod uint
 
 	// the module manager
-	mm *module.Manager
+	mm                 *module.Manager
+	BasicModuleManager module.BasicManager
 
 	// simulation manager
 	sm *module.SimulationManager
@@ -101,6 +119,7 @@ type Quicksilver struct {
 	configurator module.Configurator
 
 	tpsCounter *tpsCounter
+	once       sync.Once
 }
 
 // NewQuicksilver returns a reference to a new initialized Quicksilver application.
@@ -118,10 +137,25 @@ func NewQuicksilver(
 	wasmOpts []wasmkeeper.Option,
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) *Quicksilver {
-	appCodec := encodingConfig.Marshaler
-	cdc := encodingConfig.Amino
-	interfaceRegistry := encodingConfig.InterfaceRegistry
+	interfaceRegistry, err := types.NewInterfaceRegistryWithOptions(types.InterfaceRegistryOptions{
+		ProtoFiles: proto.HybridResolver,
+		SigningOptions: signing.Options{
+			AddressCodec: address.Bech32Codec{
+				Bech32Prefix: sdk.GetConfig().GetBech32AccountAddrPrefix(),
+			},
+			ValidatorAddressCodec: address.Bech32Codec{
+				Bech32Prefix: sdk.GetConfig().GetBech32ValidatorAddrPrefix(),
+			},
+		},
+	})
+	if err != nil {
+		panic(err)
+	}
+	appCodec := codec.NewProtoCodec(interfaceRegistry)
+	cdc := codec.NewLegacyAmino()
 
+	std.RegisterLegacyAminoCodec(cdc)
+	std.RegisterInterfaces(interfaceRegistry)
 	// NOTE we use custom transaction decoder that supports the sdk.Tx interface instead of sdk.StdTx
 	bApp := baseapp.NewBaseApp(
 		Name,
@@ -133,6 +167,7 @@ func NewQuicksilver(
 	bApp.SetCommitMultiStoreTracer(traceStore)
 	bApp.SetVersion(version.Version)
 	bApp.SetInterfaceRegistry(interfaceRegistry)
+	bApp.SetTxEncoder(encodingConfig.TxConfig.TxEncoder())
 
 	app := &Quicksilver{
 		BaseApp:           bApp,
@@ -167,17 +202,41 @@ func NewQuicksilver(
 	// we prefer to be more strict in what arguments the modules expect.
 	skipGenesisInvariants := cast.ToBool(appOpts.Get(crisis.FlagSkipGenesisInvariants))
 	app.mm = module.NewManager(appModules(app, encodingConfig, skipGenesisInvariants)...)
+	// BasicModuleManager defines the module BasicManager is in charge of setting up basic,
+	// non-dependant module elements, such as codec registration and genesis verification.
+	// By default it is composed of all the module from the module manager.
+	// Additionally, app module basics can be overwritten by passing them as argument.
+	app.BasicModuleManager = module.NewBasicManagerFromManager(
+		app.mm,
+		map[string]module.AppModuleBasic{
+			genutiltypes.ModuleName: genutil.NewAppModuleBasic(genutiltypes.DefaultMessageValidator),
+			govtypes.ModuleName: gov.NewAppModuleBasic(
+				[]govclient.ProposalHandler{
+					paramsclient.ProposalHandler,
+				},
+			),
+		})
+	app.BasicModuleManager.RegisterLegacyAminoCodec(cdc)
+	app.BasicModuleManager.RegisterInterfaces(interfaceRegistry)
 
+	// NOTE: upgrade module is required to be prioritized
+	app.mm.SetOrderPreBlockers(
+		upgradetypes.ModuleName,
+	)
 	app.mm.SetOrderBeginBlockers(orderBeginBlockers()...)
 	app.mm.SetOrderEndBlockers(orderEndBlockers()...)
 	app.mm.SetOrderInitGenesis(orderInitBlockers()...)
+	app.mm.SetOrderExportGenesis(orderInitBlockers()...)
 
 	app.mm.RegisterInvariants(app.CrisisKeeper)
 	// TODO: in this commit they just removed the RegisterRoutes method https://github.com/cosmos/cosmos-sdk/commit/3a097012b59413641ac92f18f226c5d6b674ae42
 
 	// app.mm.RegisterRoutes(app.Router(), app.QueryRouter(), encodingConfig.Amino)
 	app.configurator = module.NewConfigurator(app.appCodec, app.MsgServiceRouter(), app.GRPCQueryRouter())
-	app.mm.RegisterServices(app.configurator)
+	err = app.mm.RegisterServices(app.configurator)
+	if err != nil {
+		panic(err)
+	}
 
 	// // add test gRPC service for testing gRPC queries in isolation
 	// // testdata.RegisterTestServiceServer(app.GRPCQueryRouter(), testdata.TestServiceImpl{})
@@ -375,11 +434,13 @@ func (app *Quicksilver) RegisterTxService(clientCtx client.Context) {
 
 // RegisterTendermintService implements the Application.RegisterTendermintService method.
 func (app *Quicksilver) RegisterTendermintService(clientCtx client.Context) {
+	cmtApp := server.NewCometABCIWrapper(app)
+
 	tmservice.RegisterTendermintService(
 		clientCtx,
 		app.BaseApp.GRPCQueryRouter(),
 		app.interfaceRegistry,
-		app.Query,
+		cmtApp.Query,
 	)
 }
 
@@ -444,4 +505,25 @@ func (app *Quicksilver) AutoCliOpts() autocli.AppOptions {
 		ValidatorAddressCodec: authcodec.NewBech32Codec(sdk.GetConfig().GetBech32ValidatorAddrPrefix()),
 		ConsensusAddressCodec: authcodec.NewBech32Codec(sdk.GetConfig().GetBech32ConsensusAddrPrefix()),
 	}
+}
+
+func (app *Quicksilver) FinalizeBlock(req *abci.RequestFinalizeBlock) (*abci.ResponseFinalizeBlock, error) {
+	// when skipping sdk 47 for sdk 50, the upgrade handler is called too late in BaseApp
+	// this is a hack to ensure that the migration is executed when needed and not panics
+	app.once.Do(func() {
+		ctx := app.NewUncachedContext(false, tmproto.Header{})
+		if _, err := app.ConsensusParamsKeeper.Params(ctx, &consensusparamtypes.QueryParamsRequest{}); err != nil {
+			// prevents panic: consensus key is nil: collections: not found: key 'no_key' of type github.com/cosmos/gogoproto/tendermint.types.ConsensusParams
+			// sdk 47:
+			// Migrate Tendermint consensus parameters from x/params module to a dedicated x/consensus module.
+			// see https://github.com/cosmos/cosmos-sdk/blob/v0.47.0/simapp/upgrades.go#L66
+			baseAppLegacySS := app.ParamsKeeper.Subspace(baseapp.Paramspace)
+			err := baseapp.MigrateParams(sdk.UnwrapSDKContext(ctx), baseAppLegacySS, app.ConsensusParamsKeeper.ParamsStore)
+			if err != nil {
+				panic(err)
+			}
+		}
+	})
+
+	return app.BaseApp.FinalizeBlock(req)
 }
