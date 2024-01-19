@@ -7,7 +7,7 @@ import (
 	fmt "fmt"
 	cosmossdk_io_math "cosmossdk.io/math"
 	_ "github.com/gogo/protobuf/gogoproto"
-	proto "github.com/gogo/protobuf/proto"
+	proto "github.com/cosmos/gogoproto/proto"
 	io "io"
 	math "math"
 	math_bits "math/bits"

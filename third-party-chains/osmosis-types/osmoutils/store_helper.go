@@ -7,7 +7,7 @@ import (
 	"cosmossdk.io/store"
 	storetypes "cosmossdk.io/store/types"
 	db "github.com/cosmos/cosmos-db"
-	"github.com/gogo/protobuf/proto"
+	proto "github.com/cosmos/gogoproto/proto"
 )
 
 func GatherAllKeysFromStore(storeObj store.KVStore) []string {

@@ -5,7 +5,8 @@ import (
 	"testing"
 
 	tmcli "github.com/cometbft/cometbft/libs/cli"
-	"github.com/gogo/protobuf/proto"
+	proto "github.com/cosmos/gogoproto/proto"
+
 	"github.com/stretchr/testify/suite"
 
 	sdkmath "cosmossdk.io/math"
