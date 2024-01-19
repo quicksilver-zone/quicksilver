@@ -4,15 +4,20 @@ package app
 
 import (
 	"encoding/json"
+	"fmt"
 	"testing"
 	"time"
+
+	cmtjson "github.com/cometbft/cometbft/libs/json"
+
+	"github.com/cosmos/cosmos-sdk/baseapp"
 
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/crypto/secp256k1"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	tmtypes "github.com/cometbft/cometbft/types"
+	cmttypes "github.com/cometbft/cometbft/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 
@@ -50,7 +55,7 @@ var DefaultConsensusParams = &tmproto.ConsensusParams{
 	},
 	Validator: &tmproto.ValidatorParams{
 		PubKeyTypes: []string{
-			tmtypes.ABCIPubKeyTypeEd25519,
+			cmttypes.ABCIPubKeyTypeEd25519,
 		},
 	},
 }
@@ -64,8 +69,8 @@ func Setup(t *testing.T, isCheckTx bool) *Quicksilver {
 	require.NoError(t, err)
 
 	// create validator set with single validator
-	validator := tmtypes.NewValidator(pubKey, 1)
-	valSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
+	validator := cmttypes.NewValidator(pubKey, 1)
+	valSet := cmttypes.NewValidatorSet([]*cmttypes.Validator{validator})
 
 	// generate genesis account
 	senderPrivKey := secp256k1.GenPrivKey()
@@ -92,26 +97,24 @@ func Setup(t *testing.T, isCheckTx bool) *Quicksilver {
 		false,
 		false,
 		GetWasmOpts(EmptyAppOptions{}),
+		baseapp.SetChainID("mercury-1"),
 	)
 
 	genesisState := NewDefaultGenesisState()
 	genesisState = GenesisStateWithValSet(t, app, genesisState, valSet, []authtypes.GenesisAccount{acc}, balance)
 
 	if !isCheckTx {
-		stateBytes, err := json.MarshalIndent(genesisState, "", " ")
-		if err != nil {
-			panic(err)
-		}
+		stateBytes, err := cmtjson.MarshalIndent(genesisState, "", " ")
+		require.NoError(t, err)
 
 		// Initialize the chain
-		app.InitChain(
+		_, err = app.InitChain(
 			&abci.RequestInitChain{
-				ChainId:         "mercury-1",
-				Validators:      []abci.ValidatorUpdate{},
-				ConsensusParams: DefaultConsensusParams,
-				AppStateBytes:   stateBytes,
+				ChainId:       "mercury-1",
+				AppStateBytes: stateBytes,
 			},
 		)
+		require.NoError(t, err)
 	}
 
 	return app
@@ -147,7 +150,7 @@ func SetupTestingApp() (testApp ibctesting.TestingApp, genesisState map[string]j
 // GenesisStateWithValSet creates a quicksilver genesis state with the given validator set.
 func GenesisStateWithValSet(t *testing.T,
 	app *Quicksilver, genesisState GenesisState,
-	valSet *tmtypes.ValidatorSet, genAccs []authtypes.GenesisAccount,
+	valSet *cmttypes.ValidatorSet, genAccs []authtypes.GenesisAccount,
 	balances ...banktypes.Balance,
 ) GenesisState {
 	t.Helper()
@@ -162,10 +165,12 @@ func GenesisStateWithValSet(t *testing.T,
 	bondAmt := sdk.DefaultPowerReduction
 
 	for _, val := range valSet.Validators {
-		pk, err := cryptocodec.FromTmPubKeyInterface(val.PubKey)
+		pk, err := cryptocodec.FromCmtPubKeyInterface(val.PubKey)
 		require.NoError(t, err)
+
 		pkAny, err := codectypes.NewAnyWithValue(pk)
 		require.NoError(t, err)
+
 		validator := stakingtypes.Validator{
 			OperatorAddress: sdk.ValAddress(val.Address).String(),
 			ConsensusPubkey: pkAny,
@@ -178,8 +183,9 @@ func GenesisStateWithValSet(t *testing.T,
 			UnbondingTime:   time.Unix(0, 0).UTC(),
 			Commission:      stakingtypes.NewCommission(sdkmath.LegacyZeroDec(), sdkmath.LegacyZeroDec(), sdkmath.LegacyZeroDec()),
 		}
+		fmt.Println("validator", validator)
 		validators = append(validators, validator)
-		delegations = append(delegations, stakingtypes.NewDelegation(genAccs[0].GetAddress().String(), val.Address.String(), sdkmath.LegacyOneDec()))
+		delegations = append(delegations, stakingtypes.NewDelegation(genAccs[0].GetAddress().String(), sdk.ValAddress(val.Address).String(), sdkmath.LegacyOneDec()))
 
 	}
 	// set validators and delegations

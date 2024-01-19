@@ -46,7 +46,7 @@ func TestQuicksilverExport(t *testing.T) {
 	}
 	db := dbm.NewMemDB()
 	quicksilver := app.NewQuicksilver(
-		log.NewCustomLogger(cometlog.NewSyncWriter(os.Stdout).(zerolog.Logger)),
+		log.NewNopLogger(),
 		db,
 		nil,
 		true,

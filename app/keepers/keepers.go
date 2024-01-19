@@ -433,7 +433,7 @@ func (appKeepers *AppKeepers) InitKeepers(
 		appCodec,
 		appKeepers.keys[interchainstakingtypes.StoreKey],
 		appKeepers.AccountKeeper,
-		appKeepers.InterchainstakingKeeper.BankKeeper,
+		appKeepers.BankKeeper,
 		appKeepers.ICAControllerKeeper,
 		&scopedInterchainStakingKeeper,
 		appKeepers.InterchainQueryKeeper,
@@ -587,7 +587,7 @@ func (appKeepers *AppKeepers) InitKeepers(
 
 	// Set legacy router for backwards compatibility with gov v1beta1
 	govKeeper.SetLegacyRouter(govRouter)
-
+	appKeepers.GovKeeper = *govKeeper
 	// IBC Fee Module keeper
 	appKeepers.IBCFeeKeeper = ibcfeekeeper.NewKeeper(
 		appCodec,
