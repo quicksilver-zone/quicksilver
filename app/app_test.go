@@ -5,6 +5,7 @@ import (
 
 	cmtjson "github.com/cometbft/cometbft/libs/json"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	"github.com/cosmos/gogoproto/proto"
 
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
@@ -51,14 +52,13 @@ func TestQuicksilverExport(t *testing.T) {
 		true,
 		map[int64]bool{},
 		app.DefaultNodeHome,
-		app.MakeEncodingConfig(),
 		app.EmptyAppOptions{},
 		false,
 		false,
 		app.GetWasmOpts(app.EmptyAppOptions{}),
 	)
 
-	genesisState := app.NewDefaultGenesisState()
+	genesisState := quicksilver.NewDefaultGenesisState()
 	genesisState = app.GenesisStateWithValSet(t, quicksilver, genesisState, valSet, []authtypes.GenesisAccount{acc}, balance)
 
 	stateBytes, err := cmtjson.MarshalIndent(genesisState, "", "  ")
@@ -84,13 +84,13 @@ func TestQuicksilverExport(t *testing.T) {
 	// _, err = quicksilver.ExportAppStateAndValidators(false, []string{}, []string{})
 	// require.NoError(t, err, "ExportAppStateAndValidators should not have an error")
 	// Making a new app object with the db, so that initchain hasn't been called
-	app2 := app.NewQuicksilver(log.NewNopLogger(),
+	app2 := app.NewQuicksilver(
+		log.NewNopLogger(),
 		db,
 		nil,
 		true,
 		map[int64]bool{},
 		app.DefaultNodeHome,
-		app.MakeEncodingConfig(),
 		app.EmptyAppOptions{},
 		true,
 		false,
@@ -98,4 +98,12 @@ func TestQuicksilverExport(t *testing.T) {
 	)
 	_, err = app2.ExportAppStateAndValidators(false, []string{}, []string{})
 	require.NoError(t, err, "ExportAppStateAndValidators should not have an error")
+}
+
+// TestMergedRegistry tests that fetching the gogo/protov2 merged registry
+// doesn't fail after loading all file descriptors.
+func TestMergedRegistry(t *testing.T) {
+	r, err := proto.MergedRegistry()
+	require.NoError(t, err)
+	require.Greater(t, r.NumFiles(), 0)
 }
