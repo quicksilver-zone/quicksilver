@@ -21,13 +21,12 @@ import { Proposal } from 'interchain-query/cosmos/gov/v1/gov';
 import React, { useMemo, useState } from 'react';
 import { FaSearch } from 'react-icons/fa';
 
-import { useVotingData } from '@/hooks';
-import { decodeUint8Arr } from '@/utils';
-
 import { DisconnectedContent, Loader } from './common';
 import { ProposalCard } from './ProposalCard';
 import { ProposalModal } from './ProposalModal';
 
+import { useVotingData } from '@/hooks';
+import { decodeUint8Arr } from '@/utils';
 
 function RotateIcon({ isOpen }: { isOpen: boolean }) {
   return (
@@ -56,8 +55,10 @@ export const VotingSection = ({ chainName }: { chainName: ChainName }) => {
 
     return data.proposals.filter((proposal) => {
       const decodedContent = decodeUint8Arr(proposal.messages[0].value);
+
       const contentToSearch = decodedContent.toLowerCase();
-      const titleMatches = proposal.title.toLowerCase().includes(searchTerm.toLowerCase());
+      const titleMatches = decodedContent.toLowerCase().includes(searchTerm.toLowerCase());
+
       const contentMatches = contentToSearch.includes(searchTerm.toLowerCase());
 
       let periodMatches = true;
