@@ -1,13 +1,12 @@
 syntax = "proto3";
-package cosmos.lsmstaking.v1beta1;
+package cosmos.staking.v1beta1;
 
 import "cosmos/base/query/v1beta1/pagination.proto";
-import "cosmos/base/v1beta1/coin.proto";
-import "cosmos/staking/v1beta1/staking.proto";
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "google/protobuf/any.proto";
 import "google/protobuf/timestamp.proto";
+import "amino/amino.proto";
 
 option go_package = "github.com/quicksilver-zone/quicksilver/v7/x/lsmtypes";
 option (gogoproto.equal_all) = true;
@@ -97,10 +96,81 @@ message Validator {
 }
 
 message QueryValidatorsResponse {
+  // Query validators response.
   option (gogoproto.equal) = false;
   // validators contains all the queried validators.
   repeated Validator validators = 1 [ (gogoproto.nullable) = false ];
 
   // pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+
+// BondStatus is the status of a validator.
+enum BondStatus {
+  option (gogoproto.goproto_enum_prefix) = false;
+
+  // UNSPECIFIED defines an invalid validator status.
+  BOND_STATUS_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "Unspecified"];
+  // UNBONDED defines a validator that is not bonded.
+  BOND_STATUS_UNBONDED = 1 [(gogoproto.enumvalue_customname) = "Unbonded"];
+  // UNBONDING defines a validator that is unbonding.
+  BOND_STATUS_UNBONDING = 2 [(gogoproto.enumvalue_customname) = "Unbonding"];
+  // BONDED defines a validator that is bonded.
+  BOND_STATUS_BONDED = 3 [(gogoproto.enumvalue_customname) = "Bonded"];
+}
+
+// Description defines a validator description.
+message Description {
+  option (gogoproto.equal) = true;
+
+  // moniker defines a human-readable name for the validator.
+  string moniker = 1;
+  // identity defines an optional identity signature (ex. UPort or Keybase).
+  string identity = 2;
+  // website defines an optional website link.
+  string website = 3;
+  // security_contact defines an optional email for security contact.
+  string security_contact = 4;
+  // details define other optional details.
+  string details = 5;
+}
+
+// Commission defines commission parameters for a given validator.
+message Commission {
+  option (gogoproto.equal) = true;
+
+  // commission_rates defines the initial commission rates to be used for creating a validator.
+  CommissionRates commission_rates = 1
+      [(gogoproto.embed) = true, (gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  // update_time is the last time the commission rate was changed.
+  google.protobuf.Timestamp update_time = 2
+      [(gogoproto.nullable) = false, (amino.dont_omitempty) = true, (gogoproto.stdtime) = true];
+}
+// CommissionRates defines the initial commission rates to be used for creating
+// a validator.
+message CommissionRates {
+  option (gogoproto.equal) = true;
+
+  // rate is the commission rate charged to delegators, as a fraction.
+  string rate = 1 [
+    (cosmos_proto.scalar)  = "cosmos.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable)   = false,
+    (amino.dont_omitempty) = true
+  ];
+  // max_rate defines the maximum commission rate which validator can ever charge, as a fraction.
+  string max_rate = 2 [
+    (cosmos_proto.scalar)  = "cosmos.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable)   = false,
+    (amino.dont_omitempty) = true
+  ];
+  // max_change_rate defines the maximum daily increase of the validator commission, as a fraction.
+  string max_change_rate = 3 [
+    (cosmos_proto.scalar)  = "cosmos.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable)   = false,
+    (amino.dont_omitempty) = true
+  ];
 }
