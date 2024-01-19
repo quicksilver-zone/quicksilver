@@ -9,7 +9,7 @@ import { ConnectWalletType } from '../types';
 
 export const ConnectWalletButton = ({ buttonText, isLoading, isDisabled, icon }: ConnectWalletType) => {
   const invertButtonTextColor = useColorModeValue('primary.50', 'primary.700');
-  const chains = useChains(['quicksilver', 'cosmoshub', 'osmosis', 'stargaze', 'juno', 'sommelier', 'regen']);
+  const chains = useChains(['quicksilver', 'cosmoshub', 'osmosis', 'stargaze', 'juno', 'sommelier', 'regen', 'umee', 'secret']);
   const connected = Object.values(chains).every((chain) => chain.isWalletConnected);
   const { connect, openView } = chains.quicksilver;
 
