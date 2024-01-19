@@ -1,13 +1,9 @@
 import { CloseIcon } from '@chakra-ui/icons';
 import { Box, Flex, Text, VStack, Button, HStack, Checkbox, Spinner, Tooltip, Heading } from '@chakra-ui/react';
-import { StdFee } from '@cosmjs/amino';
 import { assets } from 'chain-registry';
-import { cosmos } from 'interchain-query';
-import { Grant, GenericAuthorization } from 'interchain-query/cosmos/authz/v1beta1/authz';
-import { quicksilver } from 'quicksilverjs';
-import { MsgSubmitClaim } from 'quicksilverjs/types/codegen/quicksilver/participationrewards/v1/messages';
-import { useState } from 'react';
-import React from 'react';
+import { GenericAuthorization } from 'interchain-query/cosmos/authz/v1beta1/authz';
+import { quicksilver, cosmos } from 'quicksilverjs';
+import React, { useState } from 'react';
 
 import { useTx } from '@/hooks';
 import { useLiquidEpochQuery } from '@/hooks/useQueries';
@@ -48,10 +44,8 @@ export const RewardsClaim: React.FC<RewardsClaimInterface> = ({ address, onClose
 
   const { grant } = cosmos.authz.v1beta1.MessageComposer.withTypeUrl;
 
-  const msgTypeUrl = '/quicksilver.participationrewards.v1.MsgSubmitClaim';
-
   const genericAuth = {
-    msg: msgTypeUrl,
+    msg: quicksilver.participationrewards.v1.MsgSubmitClaim.typeUrl,
   };
 
   const binaryMessage = GenericAuthorization.encode(genericAuth).finish();
@@ -61,7 +55,7 @@ export const RewardsClaim: React.FC<RewardsClaimInterface> = ({ address, onClose
     grantee: 'quick1w5ennfhdqrpyvewf35sv3y3t8yuzwq29mrmyal',
     grant: {
       authorization: {
-        typeUrl: '/cosmos.authz.v1beta1.GenericAuthorization',
+        typeUrl: cosmos.authz.v1beta1.GenericAuthorization.typeUrl,
         value: binaryMessage,
       },
     },
@@ -70,7 +64,7 @@ export const RewardsClaim: React.FC<RewardsClaimInterface> = ({ address, onClose
   const mainTokens = assets.find(({ chain_name }) => chain_name === 'quicksilver');
   const mainDenom = mainTokens?.assets[0].base ?? 'uqck';
 
-  const fee: StdFee = {
+  const fee = {
     amount: [
       {
         denom: mainDenom,

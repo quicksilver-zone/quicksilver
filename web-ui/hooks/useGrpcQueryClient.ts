@@ -1,4 +1,4 @@
-import { quicksilver } from '@hoangdv2429/quicksilverjs';
+import { quicksilver } from 'quicksilverjs';
 import { useQuery } from '@tanstack/react-query';
 
 

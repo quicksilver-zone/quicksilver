@@ -19,8 +19,8 @@ import { coins, StdFee } from '@cosmjs/amino';
 import styled from '@emotion/styled';
 import chains from 'chain-registry';
 import { assets } from 'chain-registry';
+import { cosmos } from 'quicksilverjs';
 import React, { useEffect, useState } from 'react';
-import { cosmos } from 'stridejs';
 
 import { useTx } from '@/hooks';
 import { useZoneQuery } from '@/hooks/useQueries';

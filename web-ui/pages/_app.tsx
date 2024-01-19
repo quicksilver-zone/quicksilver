@@ -1,7 +1,6 @@
 import '../styles/globals.css';
 import { Chain } from '@chain-registry/types';
 import { Box, ChakraProvider, Flex } from '@chakra-ui/react';
-import { ibcAminoConverters, ibcProtoRegistry } from '@chalabi/quicksilverjs';
 import { Registry } from '@cosmjs/proto-signing';
 import { SigningStargateClientOptions, AminoTypes } from '@cosmjs/stargate';
 import { SignerOptions } from '@cosmos-kit/core';
@@ -13,10 +12,8 @@ import { ChainProvider, ThemeCustomizationProps } from '@cosmos-kit/react';
 import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { chains, assets } from 'chain-registry';
-import { cosmosAminoConverters, cosmosProtoRegistry } from 'interchain-query';
 import type { AppProps } from 'next/app';
-import { quicksilverProtoRegistry, quicksilverAminoConverters } from 'quicksilverjs';
-import { cosmosAminoConverters as cosmosAminoConvertersStride, cosmosProtoRegistry as cosmosProtoRegistryStride } from 'stridejs';
+import { quicksilverProtoRegistry, quicksilverAminoConverters, cosmosAminoConverters, cosmosProtoRegistry, ibcAminoConverters, ibcProtoRegistry } from 'quicksilverjs';
 
 import { Header, SideHeader } from '@/components';
 import { defaultTheme } from '@/config';
@@ -29,14 +26,12 @@ function QuickApp({ Component, pageProps }: AppProps) {
     signingStargate: (chain: Chain): SigningStargateClientOptions | undefined => {
       //@ts-ignore
       const mergedRegistry = new Registry([
-        ...cosmosProtoRegistryStride,
         ...quicksilverProtoRegistry,
         ...ibcProtoRegistry,
         ...cosmosProtoRegistry,
       ]);
 
       const mergedAminoTypes = new AminoTypes({
-        ...cosmosAminoConvertersStride,
         ...cosmosAminoConverters,
         ...quicksilverAminoConverters,
         ...ibcAminoConverters,

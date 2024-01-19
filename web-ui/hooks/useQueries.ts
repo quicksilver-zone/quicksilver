@@ -1,5 +1,5 @@
 import { useChain } from '@cosmos-kit/react';
-import { Zone } from '@hoangdv2429/quicksilverjs/dist/codegen/quicksilver/interchainstaking/v1/interchainstaking';
+import { Zone } from 'quicksilverjs/dist/codegen/quicksilver/interchainstaking/v1/interchainstaking';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import { cosmos } from 'interchain-query';
@@ -8,6 +8,7 @@ import { useGrpcQueryClient } from './useGrpcQueryClient';
 
 import { getCoin, getLogoUrls } from '@/utils';
 import { ExtendedValidator, parseValidators } from '@/utils/staking';
+import { quicksilver } from 'quicksilverjs';
 
 type WithdrawalRecord = {
   chain_id: string;
@@ -496,7 +497,7 @@ export const useValidatorsQuery = (chainName: string) => {
       do {
         const response = await fetchValidators(nextKey);
         allValidators = allValidators.concat(response.validators);
-        nextKey = response.pagination?.next_key ?? new Uint8Array();
+        nextKey = response.pagination?.nextKey ?? new Uint8Array();
       } while (nextKey && nextKey.length > 0);
       const sorted = allValidators.sort((a, b) => new BigNumber(b.tokens).minus(a.tokens).toNumber());
       return parseValidators(sorted);
@@ -638,7 +639,7 @@ export const useMissedBlocks = (chainName: string) => {
       });
       
       allMissedBlocks = allMissedBlocks.concat(filteredMissedBlocks);
-      nextKey = response.pagination?.next_key ?? new Uint8Array();
+      nextKey = response.pagination?.nextKey ?? new Uint8Array();
     } while (nextKey && nextKey.length > 0);
   
     return allMissedBlocks;

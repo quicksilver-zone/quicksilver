@@ -23,7 +23,6 @@ import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
 import { FaDiscord, FaTwitter, FaGithub, FaInfo } from 'react-icons/fa';
 import { IoIosDocument } from 'react-icons/io';
-import { MdPrivacyTip } from 'react-icons/md';
 
 import { DrawerControlProvider } from '@/state/chains/drawerControlProvider';
 

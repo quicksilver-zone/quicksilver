@@ -13,19 +13,19 @@ import {
   useDisclosure,
   Spinner,
 } from '@chakra-ui/react';
-import { ibc } from '@chalabi/quicksilverjs';
 import { StdFee } from '@cosmjs/stargate';
 import { ChainName } from '@cosmos-kit/core';
 import { useChain, useManager } from '@cosmos-kit/react';
 import BigNumber from 'bignumber.js';
 import { assets, chains } from 'chain-registry';
+import { ibc } from 'quicksilverjs';
 import { useState, useMemo, useEffect } from 'react';
 
 import { ChooseChain } from '@/components/react/choose-chain';
 import { handleSelectChainDropdown, ChainOption } from '@/components/types';
 import { useTx } from '@/hooks';
 import { useIbcBalanceQuery } from '@/hooks/useQueries';
-import { getCoin, getIbcInfo, shiftDigits } from '@/utils';
+import { getIbcInfo, shiftDigits } from '@/utils';
 
 export function DepositModal() {
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -107,7 +107,8 @@ export function DepositModal() {
       sender: address ?? '',
       receiver: qAddress ?? '',
       token,
-      timeoutHeight: undefined,
+       //@ts-ignore
+      timeoutHeight: 0,
       //@ts-ignore
       timeoutTimestamp: timeoutInNanos,
       memo: '',
