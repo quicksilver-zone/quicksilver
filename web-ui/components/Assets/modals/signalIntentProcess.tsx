@@ -23,10 +23,9 @@ import { assets } from 'chain-registry';
 import { quicksilver } from 'quicksilverjs';
 import React, { useEffect, useState } from 'react';
 
-import { useTx } from '@/hooks';
-
 import { IntentMultiModal } from './intentMultiModal';
 
+import { useTx } from '@/hooks';
 
 const ChakraModalContent = styled(ModalContent)`
   position: relative;

@@ -15,11 +15,11 @@ import {
   useToast,
   Spinner,
 } from '@chakra-ui/react';
-import { ibc } from '@chalabi/quicksilverjs';
 import { StdFee, coins } from '@cosmjs/stargate';
 import { ChainName } from '@cosmos-kit/core';
 import { useChain, useManager } from '@cosmos-kit/react';
 import BigNumber from 'bignumber.js';
+import { ibc } from 'quicksilverjs';
 import { useState, useMemo, useEffect } from 'react';
 
 import { ChooseChain } from '@/components/react/choose-chain';
@@ -69,16 +69,14 @@ const QWithdrawModal: React.FC<QDepositModalProps> = ({ token }) => {
 
   const chooseChain = <ChooseChain chainName={chainName} chainInfos={chainOptions} onChange={onChainChange} />;
 
-  const fromChain = chainName;
-  const toChain = 'quicksilver';
+  const fromChain = 'quicksilver';
+  const toChain = chainName;
 
   const { transfer } = ibc.applications.transfer.v1.MessageComposer.withTypeUrl;
   const { address, connect, status, message, wallet } = useChain(fromChain ?? '');
   const { address: qAddress } = useChain('quicksilver');
   const { balance } = useIbcBalanceQuery(fromChain ?? '', address ?? '');
   const { tx } = useTx(fromChain ?? '');
-  const qckBalance =
-    balance?.balances.find((b) => b.denom === 'ibc/635CB83EF1DFE598B10A3E90485306FD0D47D34217A4BE5FD9977FA010A5367D')?.amount ?? '';
 
   const onSubmitClick = async () => {
     setIsLoading(true);
@@ -96,13 +94,13 @@ const QWithdrawModal: React.FC<QDepositModalProps> = ({ token }) => {
     // Function to get the correct IBC denom trace based on chain and token
     type ChainDenomMappingKeys = keyof typeof ibcDenomWithdrawMapping;
 
-    type TokenKeys = keyof (typeof ibcDenomWithdrawMapping)['osmosis'];
+    type TokenKeys = keyof (typeof ibcDenomWithdrawMapping)['quicksilver'];
 
     const getIbcDenom = (chainName: string, token: string) => {
       const chain = chainName as ChainDenomMappingKeys;
       const chainDenoms = ibcDenomWithdrawMapping[chain];
 
-      if (token in chainDenoms) {
+      if (chainDenoms && token in chainDenoms) {
         return chainDenoms[token as TokenKeys];
       }
 
@@ -123,7 +121,7 @@ const QWithdrawModal: React.FC<QDepositModalProps> = ({ token }) => {
     }
 
     const ibcToken = {
-      denom: ibcDenom ?? '',
+      denom: 'u' + ibcDenom ?? '',
       amount: transferAmount,
     };
 
@@ -133,8 +131,8 @@ const QWithdrawModal: React.FC<QDepositModalProps> = ({ token }) => {
     const msg = transfer({
       sourcePort,
       sourceChannel,
-      sender: address ?? '',
-      receiver: qAddress ?? '',
+      sender: qAddress ?? '',
+      receiver: address ?? '',
       token: ibcToken,
       timeoutHeight: undefined,
       //@ts-ignore

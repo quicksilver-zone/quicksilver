@@ -14,11 +14,11 @@ import {
   useToast,
   Spinner,
 } from '@chakra-ui/react';
-import { ibc } from '@chalabi/quicksilverjs';
 import { StdFee, coins } from '@cosmjs/stargate';
 import { ChainName } from '@cosmos-kit/core';
 import { useChain, useManager } from '@cosmos-kit/react';
 import BigNumber from 'bignumber.js';
+import { ibc } from 'quicksilverjs';
 import { useState, useMemo, useEffect } from 'react';
 
 import { ChooseChain } from '@/components/react/choose-chain';

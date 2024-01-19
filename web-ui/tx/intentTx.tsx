@@ -1,12 +1,10 @@
 import { Box, Text, Link, useToast } from '@chakra-ui/react';
-import { quicksilver } from '@chalabi/quicksilverjs';
-import { ValidatorIntent } from '@chalabi/quicksilverjs/dist/codegen/quicksilver/interchainstaking/v1/interchainstaking';
-
 import { StdFee } from '@cosmjs/amino';
 import { SigningStargateClient } from '@cosmjs/stargate';
 import { ChainName, Dispatch } from '@cosmos-kit/core';
-
 import { assets } from 'chain-registry';
+import { quicksilver } from 'quicksilverjs';
+import { ValidatorIntent } from 'quicksilverjs/dist/codegen/quicksilver/interchainstaking/v1/interchainstaking';
 import { SetStateAction } from 'react';
 
 const showSuccessToast = (toast: ReturnType<typeof useToast>, txHash: string, chainName: ChainName) => {

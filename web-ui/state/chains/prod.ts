@@ -1,30 +1,22 @@
-export const ibcDenomDepositMapping = {
-    osmosis: {
+export const ibcDenomWithdrawMapping = {
+    quicksilver: {
       qATOM: 'qatom',
       qOSMO: 'qosmo',
       qSTARS: 'qstars',
       qREGEN: 'qregen',
       qSOMM: 'qsomm',
       qJUNO: 'qjuno',
-    },
-    umee: {
-        qATOM: 'qatom',
-        qOSMO: 'qosmo',
-        qSTARS: 'qstars',
-        qREGEN: 'qregen',
-        qSOMM: 'qsomm',
-        qJUNO: 'qjuno',
-    },
-
+    }
   };
 
-  export const ibcDenomWithdrawMapping = {
+  export const ibcDenomDepositMapping = {
     osmosis: {
       qATOM: 'ibc/FA602364BEC305A696CBDF987058E99D8B479F0318E47314C49173E8838C5BAC',
       qOSMO: 'ibc/42D24879D4569CE6477B7E88206ADBFE47C222C6CAD51A54083E4A72594269FC',
       qSTARS: 'ibc/46C83BB054E12E189882B5284542DB605D94C99827E367C9192CF0579CD5BC83',
       qREGEN: 'ibc/79A676508A2ECA1021EDDC7BB9CF70CEEC9514C478DA526A5A8B3E78506C2206',
       qSOMM: 'ibc/EAF76AD1EEF7B16D167D87711FB26ABE881AC7D9F7E6D0CF313D5FA530417208',
+      qJUNO: 'ibc/B4E18E61E1505C2F371B621E49B09E983F6A138F251A7B5286A6BDF739FD0D54'
     },
     umee: {
       qATOM: 'ibc/454725EA4029BAA99C293904336DE9A4B84E2BF7D83B9C56EE6B03E8A65FB5A1',

@@ -152,7 +152,7 @@ export const TransferProcessModal: React.FC<StakingModalProps> = ({
         amount: feeAmount.toString(),
       },
     ],
-    gas: '200000',
+    gas: '300000',
   };
 
   const { tx } = useTx(newChainName ?? '');
