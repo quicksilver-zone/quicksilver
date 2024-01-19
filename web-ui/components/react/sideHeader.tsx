@@ -35,13 +35,19 @@ export const SideHeader = () => {
   const [showSocialLinks, setShowSocialLinks] = useState(false);
 
   useEffect(() => {
+    const path = router.asPath.split('/')[1];
+    setSelectedPage(path);
+
     const handleRouteChange = (url: string) => {
-      const path = url.split('/')[1];
-      setSelectedPage(path);
+      const newPath = url.split('/')[1];
+      setSelectedPage(newPath);
     };
 
     router.events.on('routeChangeComplete', handleRouteChange);
-    return () => router.events.off('routeChangeComplete', handleRouteChange);
+
+    return () => {
+      router.events.off('routeChangeComplete', handleRouteChange);
+    };
   }, [router]);
 
   const commonBoxShadowColor = 'rgba(255, 128, 0, 0.25)';
