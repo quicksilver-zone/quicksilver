@@ -3,11 +3,13 @@ module github.com/quicksilver-zone/quicksilver/v7
 go 1.21
 
 require (
+	cosmossdk.io/client/v2 v2.0.0-beta.1
 	cosmossdk.io/core v0.12.0
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/log v1.3.0
 	cosmossdk.io/math v1.2.0
 	cosmossdk.io/store v1.0.3-0.20240110195214-b3ec5322273f
+	cosmossdk.io/tools/confix v0.1.0
 	cosmossdk.io/x/evidence v0.1.0
 	cosmossdk.io/x/feegrant v0.1.0
 	cosmossdk.io/x/upgrade v0.1.1
@@ -61,7 +63,6 @@ require (
 	cloud.google.com/go/iam v1.1.5 // indirect
 	cloud.google.com/go/storage v1.35.1 // indirect
 	cosmossdk.io/api v0.7.2 // indirect
-	cosmossdk.io/client/v2 v2.0.0-beta.1 // indirect
 	cosmossdk.io/collections v0.4.0 // indirect
 	cosmossdk.io/depinject v1.0.0-alpha.4 // indirect
 	cosmossdk.io/x/circuit v0.1.0 // indirect
@@ -121,6 +122,8 @@ require (
 	github.com/cosmos/iavl v1.0.0 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.13.3 // indirect
 	github.com/cosmos/rosetta-sdk-go v0.10.0 // indirect
+	github.com/creachadair/atomicfile v0.3.1 // indirect
+	github.com/creachadair/tomledit v0.0.24 // indirect
 	github.com/curioswitch/go-reassign v0.2.0 // indirect
 	github.com/daixiang0/gci v0.11.2 // indirect
 	github.com/danieljoos/wincred v1.2.0 // indirect

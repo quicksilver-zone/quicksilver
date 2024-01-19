@@ -7,6 +7,11 @@ import (
 	"os"
 	"path/filepath"
 
+	confixcmd "cosmossdk.io/tools/confix/cmd"
+	"github.com/cosmos/cosmos-sdk/client/pruning"
+	"github.com/cosmos/cosmos-sdk/client/snapshot"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	"github.com/CosmWasm/wasmd/x/wasm"
@@ -14,6 +19,8 @@ import (
 	tmcfg "github.com/cometbft/cometbft/config"
 	tmcli "github.com/cometbft/cometbft/libs/cli"
 	dbm "github.com/cosmos/cosmos-db"
+	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	rosettaCmd "github.com/cosmos/rosetta/cmd"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/spf13/cast"
@@ -49,6 +56,37 @@ const (
 
 type appCreator struct {
 	encCfg app.EncodingConfig
+}
+
+func initRootCmd(
+	rootCmd *cobra.Command,
+	txConfig client.TxConfig,
+	interfaceRegistry codectypes.InterfaceRegistry,
+	appCodec codec.Codec,
+	basicManager module.BasicManager,
+	ac appCreator,
+) {
+	cfg := sdk.GetConfig()
+	cfg.Seal()
+
+	rootCmd.AddCommand(
+		genutilcli.InitCmd(basicManager, app.DefaultNodeHome),
+		debug.Cmd(),
+		confixcmd.ConfigCommand(),
+		pruning.Cmd(ac.newApp, app.DefaultNodeHome),
+		snapshot.Cmd(ac.newApp),
+	)
+
+	server.AddCommands(rootCmd, app.DefaultNodeHome, ac.newApp, ac.appExport, addModuleInitFlags)
+
+	// add keybase, auxiliary RPC, query, genesis, and tx child commands
+	rootCmd.AddCommand(
+		server.StatusCommand(),
+		genesisCommand(txConfig, basicManager),
+		queryCommand(),
+		txCommand(),
+		keys.Commands(),
+	)
 }
 
 // NewRootCmd creates a new root command for quicksilverd. It is called once in the
@@ -111,14 +149,8 @@ func NewRootCmd() (*cobra.Command, app.EncodingConfig) {
 	ac := appCreator{
 		encCfg: app.MakeEncodingConfig(),
 	}
+	initRootCmd(rootCmd, encodingConfig.TxConfig, encodingConfig.InterfaceRegistry, encodingConfig.Marshaler, app.ModuleBasics, ac)
 	server.AddCommands(rootCmd, app.DefaultNodeHome, ac.newApp, ac.appExport, addModuleInitFlags)
-
-	// add keybase, auxiliary RPC, query, and tx child commands
-	rootCmd.AddCommand(
-		queryCommand(),
-		txCommand(),
-		keys.Commands(),
-	)
 
 	// add rosetta
 	rootCmd.AddCommand(rosettaCmd.RosettaCommand(encodingConfig.InterfaceRegistry, encodingConfig.Marshaler))
@@ -189,8 +221,6 @@ func txCommand() *cobra.Command {
 		authcmd.GetEncodeCommand(),
 		authcmd.GetDecodeCommand(),
 	)
-
-	app.ModuleBasics.AddTxCommands(cmd)
 	cmd.PersistentFlags().String(flags.FlagChainID, "", "The network chain ID")
 
 	return cmd
