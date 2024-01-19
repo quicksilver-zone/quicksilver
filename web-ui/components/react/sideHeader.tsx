@@ -132,7 +132,7 @@ export const SideHeader = () => {
                 QUICKSILVER
               </DrawerHeader>
               <DrawerBody>
-                {['Airdrop', 'Assets', 'Defi', 'Governance', 'Staking'].map((item) => (
+                {[/*'Airdrop', */'Assets', 'Defi', 'Governance', 'Staking'].map((item) => (
                   <Box key={item} mb={4} position="relative">
                     <Link
                       href={`/${item.toLowerCase()}`}
@@ -290,7 +290,7 @@ export const SideHeader = () => {
                       />
                     </Box>
                   </Tooltip>
-                  <Tooltip borderLeft="4px solid rgba(255, 128, 0, 0.9)" label="Airdrop" placement="right">
+                  {/*<Tooltip borderLeft="4px solid rgba(255, 128, 0, 0.9)" label="Airdrop" placement="right">
                     <Box
                       w="55px"
                       h="55px"
@@ -315,7 +315,7 @@ export const SideHeader = () => {
                         src="/img/airdrop.png"
                       />
                     </Box>
-                  </Tooltip>
+                      </Tooltip>*/}
 
                   <Tooltip borderLeft="4px solid rgba(255, 128, 0, 0.9)" label="DeFi" placement="right">
                     <Box
