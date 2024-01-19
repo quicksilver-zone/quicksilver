@@ -228,7 +228,7 @@ export const SideHeader = () => {
                       <Image
                         filter={selectedPage === 'staking' ? 'contrast(100%)' : 'contrast(0%)'}
                         _hover={{
-                          filter: 'contrast(100%)',
+                          filter: 'contrast(50%)',
                         }}
                         alt="Staking"
                         h="60px"
@@ -258,7 +258,7 @@ export const SideHeader = () => {
                       <Image
                         filter={selectedPage === 'governance' ? 'contrast(100%)' : 'contrast(0%)'}
                         _hover={{
-                          filter: 'contrast(100%)',
+                          filter: 'contrast(50%)',
                         }}
                         alt="Governance"
                         h="60px"
@@ -286,7 +286,7 @@ export const SideHeader = () => {
                       <Image
                         filter={selectedPage === 'assets' ? 'contrast(100%)' : 'contrast(0%)'}
                         _hover={{
-                          filter: 'contrast(100%)',
+                          filter: 'contrast(50%)',
                         }}
                         alt="Assets"
                         h="55px"
@@ -312,7 +312,7 @@ export const SideHeader = () => {
                       <Image
                         filter={selectedPage === 'airdrop' ? 'contrast(100%)' : 'contrast(0%)'}
                         _hover={{
-                          filter: 'contrast(100%)',
+                          filter: 'contrast(50%)',
                         }}
                         alt="DeFi"
                         h="55px"
@@ -339,7 +339,7 @@ export const SideHeader = () => {
                       <Image
                         filter={selectedPage === 'defi' ? 'contrast(100%)' : 'contrast(0%)'}
                         _hover={{
-                          filter: 'contrast(100%)',
+                          filter: 'contrast(50%)',
                         }}
                         alt="DeFi"
                         h="55px"
