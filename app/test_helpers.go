@@ -4,7 +4,6 @@ package app
 
 import (
 	"encoding/json"
-	"fmt"
 	"testing"
 	"time"
 
@@ -92,7 +91,6 @@ func Setup(t *testing.T, isCheckTx bool) *Quicksilver {
 		true,
 		map[int64]bool{},
 		DefaultNodeHome,
-		MakeEncodingConfig(),
 		EmptyAppOptions{},
 		false,
 		false,
@@ -100,7 +98,7 @@ func Setup(t *testing.T, isCheckTx bool) *Quicksilver {
 		baseapp.SetChainID("mercury-1"),
 	)
 
-	genesisState := NewDefaultGenesisState()
+	genesisState := app.NewDefaultGenesisState()
 	genesisState = GenesisStateWithValSet(t, app, genesisState, valSet, []authtypes.GenesisAccount{acc}, balance)
 
 	if !isCheckTx {
@@ -138,13 +136,12 @@ func SetupTestingApp() (testApp ibctesting.TestingApp, genesisState map[string]j
 		true,
 		map[int64]bool{},
 		DefaultNodeHome,
-		MakeEncodingConfig(),
 		EmptyAppOptions{},
 		true, // set mock state to true
 		false,
 		GetWasmOpts(EmptyAppOptions{}),
 	)
-	return app, NewDefaultGenesisState()
+	return app, app.NewDefaultGenesisState()
 }
 
 // GenesisStateWithValSet creates a quicksilver genesis state with the given validator set.
@@ -183,7 +180,6 @@ func GenesisStateWithValSet(t *testing.T,
 			UnbondingTime:   time.Unix(0, 0).UTC(),
 			Commission:      stakingtypes.NewCommission(sdkmath.LegacyZeroDec(), sdkmath.LegacyZeroDec(), sdkmath.LegacyZeroDec()),
 		}
-		fmt.Println("validator", validator)
 		validators = append(validators, validator)
 		delegations = append(delegations, stakingtypes.NewDelegation(genAccs[0].GetAddress().String(), sdk.ValAddress(val.Address).String(), sdkmath.LegacyOneDec()))
 
@@ -212,6 +208,5 @@ func GenesisStateWithValSet(t *testing.T,
 	// update total supply
 	bankGenesis := banktypes.NewGenesisState(banktypes.DefaultGenesisState().Params, balances, totalSupply, []banktypes.Metadata{}, []banktypes.SendEnabled{})
 	genesisState[banktypes.ModuleName] = app.AppCodec().MustMarshalJSON(bankGenesis)
-
 	return genesisState
 }

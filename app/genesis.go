@@ -17,9 +17,8 @@ import (
 type GenesisState map[string]json.RawMessage
 
 // NewDefaultGenesisState generates the default state for the application.
-func NewDefaultGenesisState() GenesisState {
-	encCfg := MakeEncodingConfig()
-	gen := ModuleBasics.DefaultGenesis(encCfg.Marshaler)
+func (app *Quicksilver) NewDefaultGenesisState() GenesisState {
+	gen := app.BasicModuleManager.DefaultGenesis(app.AppCodec())
 
 	// here we override wasm config to make it permissioned by default
 	wasmGen := wasm.GenesisState{
@@ -28,6 +27,6 @@ func NewDefaultGenesisState() GenesisState {
 			InstantiateDefaultPermission: wasmtypes.AccessTypeEverybody,
 		},
 	}
-	gen[wasm.ModuleName] = encCfg.Marshaler.MustMarshalJSON(&wasmGen)
+	gen[wasm.ModuleName] = app.AppCodec().MustMarshalJSON(&wasmGen)
 	return gen
 }

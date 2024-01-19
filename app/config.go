@@ -3,22 +3,15 @@ package app
 // DONTCOVER
 
 import (
-	"fmt"
-	"time"
-
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/spf13/cast"
 
-	purningtypes "cosmossdk.io/store/pruning/types"
+	pruningtypes "cosmossdk.io/store/pruning/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/crypto/hd"
-	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 func GetWasmOpts(appOpts servertypes.AppOptions) []wasmkeeper.Option {
@@ -30,31 +23,6 @@ func GetWasmOpts(appOpts servertypes.AppOptions) []wasmkeeper.Option {
 	return wasmOpts
 }
 
-func DefaultConfig() network.Config {
-	encCfg := MakeEncodingConfig()
-
-	return network.Config{
-		Codec:             encCfg.Marshaler,
-		TxConfig:          encCfg.TxConfig,
-		LegacyAmino:       encCfg.Amino,
-		InterfaceRegistry: encCfg.InterfaceRegistry,
-		AccountRetriever:  authtypes.AccountRetriever{},
-		AppConstructor:    NewAppConstructor(encCfg),
-		GenesisState:      ModuleBasics.DefaultGenesis(encCfg.Marshaler),
-		TimeoutCommit:     1 * time.Second / 2,
-		ChainID:           "quicktest-1",
-		NumValidators:     1,
-		BondDenom:         sdk.DefaultBondDenom,
-		MinGasPrices:      fmt.Sprintf("0.000006%s", sdk.DefaultBondDenom),
-		AccountTokens:     sdk.TokensFromConsensusPower(1000, sdk.DefaultPowerReduction),
-		StakingTokens:     sdk.TokensFromConsensusPower(500, sdk.DefaultPowerReduction),
-		BondedTokens:      sdk.TokensFromConsensusPower(100, sdk.DefaultPowerReduction),
-		CleanupDir:        true,
-		SigningAlgo:       string(hd.Secp256k1Type),
-		KeyringOptions:    []keyring.Option{},
-	}
-}
-
 func NewAppConstructor(encCfg EncodingConfig) network.AppConstructor {
 	return func(val network.ValidatorI) servertypes.Application {
 		return NewQuicksilver(
@@ -64,12 +32,11 @@ func NewAppConstructor(encCfg EncodingConfig) network.AppConstructor {
 			true,
 			map[int64]bool{},
 			DefaultNodeHome,
-			encCfg,
 			EmptyAppOptions{},
 			false,
 			false,
 			GetWasmOpts(EmptyAppOptions{}),
-			baseapp.SetPruning(purningtypes.NewPruningOptionsFromString(val.GetAppConfig().Pruning)),
+			baseapp.SetPruning(pruningtypes.NewPruningOptionsFromString(val.GetAppConfig().Pruning)),
 			// baseapp.SetMinGasPrices(val.AppConfig().MinGasPrices),
 		)
 	}

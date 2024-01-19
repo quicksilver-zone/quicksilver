@@ -77,8 +77,13 @@ func Init() {
 
 const (
 	// Name defines the application binary name.
-	Name = "quicksilverd"
+	Name         = "quicksilverd"
+	Bech32Prefix = "quicksilver"
 )
+
+// These constants are derived from the above variables.
+// These are the ones we will want to use in the code, based on
+// any overrides above
 
 var (
 	// DefaultNodeHome default home directories for the application daemon.
@@ -90,6 +95,18 @@ var (
 		interchainstakingtypes.ModuleName: true,
 		airdroptypes.ModuleName:           true,
 	}
+	// Bech32PrefixAccAddr defines the Bech32 prefix of an account's address
+	Bech32PrefixAccAddr = Bech32Prefix
+	// Bech32PrefixAccPub defines the Bech32 prefix of an account's public key
+	Bech32PrefixAccPub = Bech32Prefix + sdk.PrefixPublic
+	// Bech32PrefixValAddr defines the Bech32 prefix of a validator's operator address
+	Bech32PrefixValAddr = Bech32Prefix + sdk.PrefixValidator + sdk.PrefixOperator
+	// Bech32PrefixValPub defines the Bech32 prefix of a validator's operator public key
+	Bech32PrefixValPub = Bech32Prefix + sdk.PrefixValidator + sdk.PrefixOperator + sdk.PrefixPublic
+	// Bech32PrefixConsAddr defines the Bech32 prefix of a consensus node address
+	Bech32PrefixConsAddr = Bech32Prefix + sdk.PrefixValidator + sdk.PrefixConsensus
+	// Bech32PrefixConsPub defines the Bech32 prefix of a consensus node public key
+	Bech32PrefixConsPub = Bech32Prefix + sdk.PrefixValidator + sdk.PrefixConsensus + sdk.PrefixPublic
 )
 
 var (
@@ -130,7 +147,6 @@ func NewQuicksilver(
 	loadLatest bool,
 	skipUpgradeHeights map[int64]bool,
 	homePath string,
-	encodingConfig EncodingConfig,
 	appOpts servertypes.AppOptions,
 	mock bool,
 	enableSupplyEndpoint bool,
@@ -153,6 +169,7 @@ func NewQuicksilver(
 	}
 	appCodec := codec.NewProtoCodec(interfaceRegistry)
 	cdc := codec.NewLegacyAmino()
+	txConfig := authtx.NewTxConfig(appCodec, authtx.DefaultSignModes)
 
 	std.RegisterLegacyAminoCodec(cdc)
 	std.RegisterInterfaces(interfaceRegistry)
@@ -161,19 +178,20 @@ func NewQuicksilver(
 		Name,
 		logger,
 		db,
-		encodingConfig.TxConfig.TxDecoder(),
+		txConfig.TxDecoder(),
 		baseAppOptions...,
 	)
 	bApp.SetCommitMultiStoreTracer(traceStore)
 	bApp.SetVersion(version.Version)
 	bApp.SetInterfaceRegistry(interfaceRegistry)
-	bApp.SetTxEncoder(encodingConfig.TxConfig.TxEncoder())
+	bApp.SetTxEncoder(txConfig.TxEncoder())
 
 	app := &Quicksilver{
 		BaseApp:           bApp,
 		legacyAmino:       cdc,
 		appCodec:          appCodec,
 		interfaceRegistry: interfaceRegistry,
+		txConfig:          txConfig,
 	}
 
 	wasmDir := filepath.Join(homePath, "data")
@@ -201,7 +219,12 @@ func NewQuicksilver(
 	// NOTE: we may consider parsing `appOpts` inside module constructors. For the moment
 	// we prefer to be more strict in what arguments the modules expect.
 	skipGenesisInvariants := cast.ToBool(appOpts.Get(crisis.FlagSkipGenesisInvariants))
-	app.mm = module.NewManager(appModules(app, encodingConfig, skipGenesisInvariants)...)
+	app.mm = module.NewManager(
+		append(
+			appModules(app, appCodec, skipGenesisInvariants),
+			genutil.NewAppModule(app.AccountKeeper, app.StakingKeeper, app, txConfig),
+		)...)
+
 	// BasicModuleManager defines the module BasicManager is in charge of setting up basic,
 	// non-dependant module elements, such as codec registration and genesis verification.
 	// By default it is composed of all the module from the module manager.
@@ -245,7 +268,7 @@ func NewQuicksilver(
 	//
 	// NOTE: this is not required apps that don't use the simulator for fuzz testing
 	// transactions
-	app.sm = module.NewSimulationManager(simulationModules(app, encodingConfig)...)
+	app.sm = module.NewSimulationManager(simulationModules(app, appCodec)...)
 	app.sm.RegisterStoreDecoders()
 
 	// initialize stores
@@ -259,7 +282,7 @@ func NewQuicksilver(
 			AccountKeeper:   app.AccountKeeper,
 			BankKeeper:      app.BankKeeper,
 			FeegrantKeeper:  app.FeeGrantKeeper,
-			SignModeHandler: encodingConfig.TxConfig.SignModeHandler(),
+			SignModeHandler: txConfig.SignModeHandler(),
 			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
 		},
 		WasmConfig:        wasmConfig,
@@ -467,9 +490,8 @@ func (app *Quicksilver) GetScopedIBCKeeper() capabilitykeeper.ScopedKeeper {
 }
 
 // GetTxConfig implements the TestingApp interface.
-func (*Quicksilver) GetTxConfig() client.TxConfig {
-	cfg := MakeEncodingConfig()
-	return cfg.TxConfig
+func (app *Quicksilver) GetTxConfig() client.TxConfig {
+	return app.txConfig
 }
 
 // GetMaccPerms returns a copy of the module account permissions.
