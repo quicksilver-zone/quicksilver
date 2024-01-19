@@ -2,6 +2,8 @@ package app
 
 import (
 	"cosmossdk.io/x/evidence"
+	ibcfeetypes "github.com/cosmos/ibc-go/v8/modules/apps/29-fee/types"
+
 	evidencetypes "cosmossdk.io/x/evidence/types"
 	"cosmossdk.io/x/feegrant"
 	feegrantmodule "cosmossdk.io/x/feegrant/module"
@@ -10,6 +12,7 @@ import (
 	"github.com/CosmWasm/wasmd/x/wasm"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -43,6 +46,7 @@ import (
 	packetforwardtypes "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v8/packetforward/types"
 	"github.com/cosmos/ibc-go/modules/capability"
 	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
+	ibcfee "github.com/cosmos/ibc-go/v8/modules/apps/29-fee"
 	ibcexported "github.com/cosmos/ibc-go/v8/modules/core/exported"
 
 	ica "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts"
@@ -51,6 +55,7 @@ import (
 	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 	ibc "github.com/cosmos/ibc-go/v8/modules/core"
 
+	ibctm "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint"
 	"github.com/quicksilver-zone/quicksilver/v7/x/airdrop"
 	airdroptypes "github.com/quicksilver-zone/quicksilver/v7/x/airdrop/types"
 	"github.com/quicksilver-zone/quicksilver/v7/x/claimsmanager"
@@ -140,19 +145,14 @@ var (
 
 func appModules(
 	app *Quicksilver,
-	encodingConfig EncodingConfig,
+	appCodec codec.Codec,
 	skipGenesisInvariants bool,
 ) []module.AppModule {
-	appCodec := encodingConfig.Marshaler
 
 	// NOTE: Any module instantiated in the module manager that is later modified
 	// must be passed by reference here.
 	return []module.AppModule{
-		// SDK app modules
-		genutil.NewAppModule(
-			app.AccountKeeper, app.StakingKeeper, app,
-			encodingConfig.TxConfig,
-		),
+
 		auth.NewAppModule(appCodec, app.AccountKeeper, authsims.RandomGenesisAccounts, app.GetSubspace(authtypes.ModuleName)),
 		vesting.NewAppModule(app.AccountKeeper, app.BankKeeper),
 		bank.NewAppModule(appCodec, app.BankKeeper, app.AccountKeeper, app.GetSubspace(banktypes.ModuleName)),
@@ -167,11 +167,14 @@ func appModules(
 		feegrantmodule.NewAppModule(appCodec, app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper, app.interfaceRegistry),
 		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		consensus.NewAppModule(appCodec, app.ConsensusParamsKeeper),
+
 		// ibc modules
 		ibc.NewAppModule(app.IBCKeeper),
-		app.TransferModule,
-		app.PacketForwardModule,
-		app.ICAModule,
+		transfer.NewAppModule(app.TransferKeeper),
+		ibcfee.NewAppModule(app.IBCFeeKeeper),
+		ica.NewAppModule(&app.ICAControllerKeeper, &app.ICAHostKeeper),
+		ibctm.NewAppModule(),
+
 		// Quicksilver app modules
 		mint.NewAppModule(appCodec, app.MintKeeper, app.AccountKeeper, app.BankKeeper),
 		claimsmanager.NewAppModule(appCodec, app.ClaimsManagerKeeper),
@@ -192,9 +195,8 @@ func appModules(
 // define the order of the modules for deterministic simulations.
 func simulationModules(
 	app *Quicksilver,
-	encodingConfig EncodingConfig,
+	appCodec codec.Codec,
 ) []module.AppModuleSimulation {
-	appCodec := encodingConfig.Marshaler
 	// NOTE: Any module instantiated in the module manager that is later modified
 	// must be passed by reference here.
 	return []module.AppModuleSimulation{
@@ -347,6 +349,7 @@ func orderInitBlockers() []string {
 		vestingtypes.ModuleName,
 		icatypes.ModuleName,
 		ibcexported.ModuleName,
+		ibcfeetypes.ModuleName,
 		consensusparamtypes.ModuleName,
 		// Quicksilver modules
 		epochstypes.ModuleName,
