@@ -1108,7 +1108,9 @@ func (suite *KeeperTestSuite) TestReceiveAckErrForBeginRedelegate() {
 	quicksilver.InterchainstakingKeeper.SetRedelegationRecord(ctx, record)
 
 	redelegate := &stakingtypes.MsgBeginRedelegate{DelegatorAddress: zone.DelegationAddress.Address, ValidatorSrcAddress: validators[0].ValoperAddress, ValidatorDstAddress: validators[1].ValoperAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdkmath.NewInt(1000))}
-	data, err := icatypes.SerializeCosmosTx(quicksilver.InterchainstakingKeeper.GetCodec(), []sdk.Msg{redelegate})
+	// parameters addition of Serialize CosmosTx
+	data, err := icatypes.SerializeCosmosTx(quicksilver.InterchainstakingKeeper.GetCodec(), []sdk.Msg{redelegate},
+		icatypes.EncodingProto3JSON)
 	suite.NoError(err)
 
 	// validate memo < 256 bytes
@@ -1476,7 +1478,7 @@ func (suite *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 				quicksilver.InterchainstakingKeeper.SetUnbondingRecord(ctx, ubr)
 			}
 
-			data, err := icatypes.SerializeCosmosTx(quicksilver.InterchainstakingKeeper.GetCodec(), test.msgs(ctx, quicksilver, zone))
+			data, err := icatypes.SerializeCosmosTx(quicksilver.InterchainstakingKeeper.GetCodec(), test.msgs(ctx, quicksilver, zone), icatypes.EncodingProto3JSON)
 			suite.NoError(err)
 
 			// validate memo < 256 bytes
@@ -1903,7 +1905,7 @@ func (suite *KeeperTestSuite) Test_v045Callback() {
 				},
 			}
 
-			pdBytes, err := icatypes.SerializeCosmosTx(icatypes.ModuleCdc, msg)
+			pdBytes, err := icatypes.SerializeCosmosTx(icatypes.ModuleCdc, msg, icatypes.EncodingProto3JSON)
 			suite.NoError(err)
 			packetData := icatypes.InterchainAccountPacketData{
 				Type: icatypes.EXECUTE_TX,
@@ -2034,7 +2036,7 @@ func (suite *KeeperTestSuite) Test_v046Callback() {
 				},
 			}
 
-			pdBytes, err := icatypes.SerializeCosmosTx(icatypes.ModuleCdc, msg)
+			pdBytes, err := icatypes.SerializeCosmosTx(icatypes.ModuleCdc, msg, icatypes.EncodingProto3JSON)
 			suite.NoError(err)
 			packetData := icatypes.InterchainAccountPacketData{
 				Type: icatypes.EXECUTE_TX,
@@ -2468,7 +2470,7 @@ func (suite *KeeperTestSuite) TestReceiveAckForBeginUndelegate() {
 			}
 
 			msgs := test.msgs(ctx, quicksilver, zone)
-			data, err := icatypes.SerializeCosmosTx(quicksilver.InterchainstakingKeeper.GetCodec(), msgs)
+			data, err := icatypes.SerializeCosmosTx(quicksilver.InterchainstakingKeeper.GetCodec(), msgs, icatypes.EncodingProto3JSON)
 			suite.NoError(err)
 
 			// validate memo < 256 bytes
@@ -2560,7 +2562,7 @@ func (suite *KeeperTestSuite) TestReceiveAckForBeginRedelegateNonNilCompletion()
 	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, zone.ChainId, beforeSource)
 
 	redelegate := &stakingtypes.MsgBeginRedelegate{DelegatorAddress: zone.DelegationAddress.Address, ValidatorSrcAddress: validators[0].ValoperAddress, ValidatorDstAddress: validators[1].ValoperAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdkmath.NewInt(1000))}
-	data, err := icatypes.SerializeCosmosTx(quicksilver.InterchainstakingKeeper.GetCodec(), []sdk.Msg{redelegate})
+	data, err := icatypes.SerializeCosmosTx(quicksilver.InterchainstakingKeeper.GetCodec(), []sdk.Msg{redelegate}, icatypes.EncodingProto3JSON)
 	suite.NoError(err)
 
 	// validate memo < 256 bytes
@@ -2654,7 +2656,7 @@ func (suite *KeeperTestSuite) TestReceiveAckForBeginRedelegateNilCompletion() {
 	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, zone.ChainId, beforeSource)
 
 	redelegate := &stakingtypes.MsgBeginRedelegate{DelegatorAddress: zone.DelegationAddress.Address, ValidatorSrcAddress: validators[0].ValoperAddress, ValidatorDstAddress: validators[1].ValoperAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdkmath.NewInt(1000))}
-	data, err := icatypes.SerializeCosmosTx(quicksilver.InterchainstakingKeeper.GetCodec(), []sdk.Msg{redelegate})
+	data, err := icatypes.SerializeCosmosTx(quicksilver.InterchainstakingKeeper.GetCodec(), []sdk.Msg{redelegate}, icatypes.EncodingProto3JSON)
 	suite.NoError(err)
 
 	// validate memo < 256 bytes
@@ -2725,7 +2727,7 @@ func (suite *KeeperTestSuite) TestReceiveAckForWithdrawReward() {
 		DelegatorAddress: user,
 		ValidatorAddress: val,
 	}
-	data, err := icatypes.SerializeCosmosTx(quicksilver.InterchainstakingKeeper.GetCodec(), []sdk.Msg{withdrawReward})
+	data, err := icatypes.SerializeCosmosTx(quicksilver.InterchainstakingKeeper.GetCodec(), []sdk.Msg{withdrawReward}, icatypes.EncodingProto3JSON)
 	suite.NoError(err)
 
 	// validate memo < 256 bytes
@@ -2806,7 +2808,7 @@ func (suite *KeeperTestSuite) TestReceiveAckForRedeemTokens() {
 		DelegatorAddress: zone.DelegationAddress.Address,
 		Amount:           sdk.NewCoin(vals[0]+"/1", sdkmath.NewInt(100)),
 	}
-	data, err := icatypes.SerializeCosmosTx(quicksilver.InterchainstakingKeeper.GetCodec(), []sdk.Msg{redeemTokens})
+	data, err := icatypes.SerializeCosmosTx(quicksilver.InterchainstakingKeeper.GetCodec(), []sdk.Msg{redeemTokens}, icatypes.EncodingProto3JSON)
 	suite.NoError(err)
 
 	// validate memo < 256 bytes
@@ -2887,7 +2889,7 @@ func (suite *KeeperTestSuite) TestReceiveAckForTokenizedShares() {
 		Amount:              sdk.NewCoin(zone.BaseDenom, sdkmath.NewInt(1000)),
 		TokenizedShareOwner: addressutils.GenerateAddressForTestWithPrefix(zone.GetAccountPrefix()),
 	}
-	data, err := icatypes.SerializeCosmosTx(quicksilver.InterchainstakingKeeper.GetCodec(), []sdk.Msg{tokenizeShares})
+	data, err := icatypes.SerializeCosmosTx(quicksilver.InterchainstakingKeeper.GetCodec(), []sdk.Msg{tokenizeShares}, icatypes.EncodingProto3JSON)
 	suite.NoError(err)
 
 	// validate memo < 256 bytes
@@ -2961,7 +2963,7 @@ func (suite *KeeperTestSuite) TestReceiveAckForDelegate() {
 		Amount:           sdk.NewCoin("uatom", sdkmath.NewInt(1000)),
 	}
 
-	data, err := icatypes.SerializeCosmosTx(quicksilver.InterchainstakingKeeper.GetCodec(), []sdk.Msg{withdrawReward})
+	data, err := icatypes.SerializeCosmosTx(quicksilver.InterchainstakingKeeper.GetCodec(), []sdk.Msg{withdrawReward}, icatypes.EncodingProto3JSON)
 	suite.NoError(err)
 
 	// validate memo < 256 bytes
@@ -3025,7 +3027,7 @@ func (suite *KeeperTestSuite) TestReceiveAckForBankSend() {
 		Amount:      sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdkmath.NewInt(1_000_000))),
 	}
 
-	data, err := icatypes.SerializeCosmosTx(quicksilver.InterchainstakingKeeper.GetCodec(), []sdk.Msg{withdrawReward})
+	data, err := icatypes.SerializeCosmosTx(quicksilver.InterchainstakingKeeper.GetCodec(), []sdk.Msg{withdrawReward}, icatypes.EncodingProto3JSON)
 	suite.NoError(err)
 
 	// validate memo < 256 bytes
@@ -3092,7 +3094,7 @@ func (suite *KeeperTestSuite) TestReceiveAckErrForBankSend() {
 		Amount:      sdk.NewCoins(sdk.NewCoin(v1+"1", sdkmath.NewInt(1000000))),
 	}
 
-	data, err := icatypes.SerializeCosmosTx(quicksilver.InterchainstakingKeeper.GetCodec(), []sdk.Msg{send})
+	data, err := icatypes.SerializeCosmosTx(quicksilver.InterchainstakingKeeper.GetCodec(), []sdk.Msg{send}, icatypes.EncodingProto3JSON)
 	suite.NoError(err)
 
 	// validate memo < 256 bytes
