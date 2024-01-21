@@ -131,6 +131,7 @@ var (
 		govtypes.ModuleName:                        {authtypes.Burner},
 		ibctransfertypes.ModuleName:                {authtypes.Minter, authtypes.Burner},
 		icatypes.ModuleName:                        nil,
+		ibcfeetypes.ModuleName:                     nil,
 		claimsmanagertypes.ModuleName:              nil,
 		interchainstakingtypes.ModuleName:          {authtypes.Minter},
 		interchainstakingtypes.EscrowModuleAccount: {authtypes.Burner},
@@ -270,6 +271,7 @@ func orderBeginBlockers() []string {
 		paramstypes.ModuleName,
 		vestingtypes.ModuleName,
 		tokenfactorytypes.ModuleName,
+		ibcfeetypes.ModuleName,
 		wasm.ModuleName,
 		supplytypes.ModuleName,
 	}
@@ -313,6 +315,7 @@ func orderEndBlockers() []string {
 		participationrewardstypes.ModuleName,
 		airdroptypes.ModuleName,
 		tokenfactorytypes.ModuleName,
+		ibcfeetypes.ModuleName,
 		wasm.ModuleName,
 		supplytypes.ModuleName,
 		// currently no-op.

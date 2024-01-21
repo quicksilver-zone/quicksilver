@@ -3,6 +3,7 @@ package keepers
 import (
 	"github.com/CosmWasm/wasmd/x/wasm"
 	packetforwardtypes "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v8/packetforward/types"
+	ibcfeetypes "github.com/cosmos/ibc-go/v8/modules/apps/29-fee/types"
 
 	storetypes "cosmossdk.io/store/types"
 	evidencetypes "cosmossdk.io/x/evidence/types"
@@ -59,6 +60,7 @@ func KVStoreKeys() []string {
 		icacontrollertypes.StoreKey,
 		icahosttypes.StoreKey,
 		packetforwardtypes.StoreKey,
+		ibcfeetypes.StoreKey,
 		// quicksilver keys
 		minttypes.StoreKey,
 		claimsmanagertypes.StoreKey,
