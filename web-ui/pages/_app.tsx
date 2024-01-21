@@ -1,10 +1,10 @@
 import '../styles/globals.css';
 import { Chain } from '@chain-registry/types';
-import { Box, ChakraProvider, Container, Fade, Flex } from '@chakra-ui/react';
+import { Box, ChakraProvider, Flex } from '@chakra-ui/react';
 import { ibcAminoConverters, ibcProtoRegistry } from '@chalabi/quicksilverjs';
 import { Registry } from '@cosmjs/proto-signing';
 import { SigningStargateClientOptions, AminoTypes } from '@cosmjs/stargate';
-import { SignerOptions, WalletViewProps } from '@cosmos-kit/core';
+import { SignerOptions } from '@cosmos-kit/core';
 import { wallets as cosmostationWallets } from '@cosmos-kit/cosmostation';
 import { wallets as keplrWallets } from '@cosmos-kit/keplr';
 import { wallets as leapWallets } from '@cosmos-kit/leap';
@@ -12,7 +12,7 @@ import { ChainProvider, ThemeCustomizationProps } from '@cosmos-kit/react';
 import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { chains, assets } from 'chain-registry';
-import { cosmos, cosmosAminoConverters, cosmosProtoRegistry } from 'interchain-query';
+import { cosmosAminoConverters, cosmosProtoRegistry } from 'interchain-query';
 import type { AppProps } from 'next/app';
 import { quicksilverProtoRegistry, quicksilverAminoConverters } from 'quicksilverjs';
 import { cosmosAminoConverters as cosmosAminoConvertersStride, cosmosProtoRegistry as cosmosProtoRegistryStride } from 'stridejs';
@@ -22,7 +22,7 @@ import { defaultTheme } from '@/config';
 
 import '@interchain-ui/react/styles';
 
-function CreateCosmosApp({ Component, pageProps }: AppProps) {
+function QuickApp({ Component, pageProps }: AppProps) {
   const signerOptions: SignerOptions = {
     //@ts-ignore
     signingStargate: (chain: Chain): SigningStargateClientOptions | undefined => {
@@ -284,4 +284,4 @@ function CreateCosmosApp({ Component, pageProps }: AppProps) {
   );
 }
 
-export default CreateCosmosApp;
+export default QuickApp;

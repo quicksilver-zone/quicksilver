@@ -1,26 +1,10 @@
-import {
-  Box,
-  Image,
-  Container,
-  Flex,
-  VStack,
-  HStack,
-  Stat,
-  StatLabel,
-  StatNumber,
-  useBreakpointValue,
-  Spacer,
-  Fade,
-  SlideFade,
-  Spinner,
-  SkeletonCircle,
-} from '@chakra-ui/react';
-import { useChain } from '@cosmos-kit/react';
+import { Box, Container, Flex, VStack, HStack, Stat, StatLabel, StatNumber, SlideFade, SkeletonCircle } from '@chakra-ui/react';
+
 import dynamic from 'next/dynamic';
 import Head from 'next/head';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
-import { Header, NetworkSelect, SideHeader } from '@/components';
+import { NetworkSelect } from '@/components';
 import { StakingBox } from '@/components';
 import { InfoBox } from '@/components';
 import { AssetsAccordian } from '@/components';
@@ -43,7 +27,7 @@ const networks = process.env.NEXT_PUBLIC_CHAIN_ENV === 'mainnet' ? prodNetworks 
 
 export default function Staking() {
   const [selectedNetwork, setSelectedNetwork] = useState(networks[0]);
-  const [isModalOpen, setModalOpen] = useState(false);
+
   let newChainId;
   if (selectedNetwork.chainId === 'provider') {
     newChainId = 'cosmoshub-4';
@@ -67,8 +51,6 @@ export default function Staking() {
   } else if (isError) {
     displayApr = 'Error';
   }
-
-  const flexDirection = useBreakpointValue({ base: 'column', md: 'row' });
 
   const [isStakingModalOpen, setStakingModalOpen] = useState(false);
   const [isTransferModalOpen, setTransferModalOpen] = useState(false);

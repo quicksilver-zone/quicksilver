@@ -2,7 +2,6 @@ import { Container, Text, SlideFade, Image, Box, Center, VStack } from '@chakra-
 import Head from 'next/head';
 
 export default function Home() {
-  const geoBlockTitle = ':(';
   return (
     <>
       <SlideFade offsetY={'200px'} in={true} style={{ width: '100%' }}>

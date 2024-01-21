@@ -12,18 +12,17 @@ import {
   Button,
   Stat,
   StatLabel,
-  Toast,
   Spinner,
   Input,
   Grid,
 } from '@chakra-ui/react';
-import { coins, StdFee } from '@cosmjs/amino';
+import { StdFee } from '@cosmjs/amino';
 import { useChain } from '@cosmos-kit/react';
 import styled from '@emotion/styled';
-import { bech32 } from 'bech32';
+
 import { assets } from 'chain-registry';
 import { quicksilver } from 'quicksilverjs';
-import { ValidatorIntent } from 'quicksilverjs/types/codegen/quicksilver/interchainstaking/v1/interchainstaking';
+
 import React, { useEffect, useState } from 'react';
 
 import { IntentMultiModal } from './intentMultiModal';
@@ -64,7 +63,7 @@ interface StakingModalProps {
   isOpen: boolean;
   onClose: () => void;
   children?: React.ReactNode;
-
+  refetch: () => void;
   selectedOption?: {
     name: string;
     value: string;
@@ -74,7 +73,12 @@ interface StakingModalProps {
   };
 }
 
-export const SignalIntentModal: React.FC<StakingModalProps> = ({ isOpen, onClose, selectedOption }) => {
+interface Intent {
+  valoperAddress: string;
+  weight: string;
+}
+
+export const SignalIntentModal: React.FC<StakingModalProps> = ({ isOpen, onClose, selectedOption, refetch }) => {
   const [step, setStep] = React.useState(1);
   const getProgressColor = (circleStep: number) => {
     if (step >= circleStep) return 'complimentary.900';
@@ -84,28 +88,12 @@ export const SignalIntentModal: React.FC<StakingModalProps> = ({ isOpen, onClose
   const [isSigning, setIsSigning] = useState<boolean>(false);
   const [isError, setIsError] = useState<boolean>(false);
 
-  let newChainName: string | undefined;
-  if (selectedOption?.chainId === 'provider') {
-    newChainName = 'rsprovidertestnet';
-  } else if (selectedOption?.chainId === 'elgafar-1') {
-    newChainName = 'stargazetestnet';
-  } else if (selectedOption?.chainId === 'osmo-test-5') {
-    newChainName = 'osmosistestnet';
-  } else if (selectedOption?.chainId === 'regen-redwood-1') {
-    newChainName = 'regen';
-  } else {
-    // Default case
-    newChainName = selectedOption?.chainName;
-  }
-
-  const { address, getSigningStargateClient } = useChain(newChainName || '');
+  const { address } = useChain('quicksilver' || '');
 
   const labels = ['Choose validators', `Set weights`, `Sign & Submit`, `Receive q${selectedOption?.value}`];
   const [isModalOpen, setModalOpen] = useState(false);
 
   const [selectedValidators, setSelectedValidators] = React.useState<{ name: string; operatorAddress: string }[]>([]);
-
-  const [resp, setResp] = useState('');
 
   const advanceStep = () => {
     if (selectedValidators.length > 0) {
@@ -114,7 +102,7 @@ export const SignalIntentModal: React.FC<StakingModalProps> = ({ isOpen, onClose
   };
 
   const retreatStep = () => {
-    if (step === 3 && check) {
+    if (step === 3) {
       setStep(1); // If on step 3 and checkbox is checked, go back to step 1
     } else {
       setStep((prevStep) => Math.max(prevStep - 1, 1)); // Otherwise, go to the previous step
@@ -124,14 +112,9 @@ export const SignalIntentModal: React.FC<StakingModalProps> = ({ isOpen, onClose
   const totalWeights = 1;
   const numberOfValidators = selectedValidators.length;
 
-  // Calculate the weight for each validator
-  const weightPerValidator = numberOfValidators ? (totalWeights / numberOfValidators).toFixed(4) : '0';
-
   const [weights, setWeights] = useState<{ [key: string]: number }>({});
-  const [totalWeight, setTotalWeight] = useState<string>('0');
 
   const [isCustomValid, setIsCustomValid] = useState(true);
-  const [defaultWeight, setDefaultWeight] = useState(0);
 
   useEffect(() => {
     // Update the state when selectedValidators changes
@@ -148,55 +131,54 @@ export const SignalIntentModal: React.FC<StakingModalProps> = ({ isOpen, onClose
 
     // Update the total weight as string
     const newTotalWeight = Object.values({ ...weights, [validatorName]: value }).reduce((acc, val) => acc + val, 0);
-    setTotalWeight(newTotalWeight.toString());
 
     setIsCustomValid(newTotalWeight === 100); // Validation for custom weights
   };
 
-  // Calculate defaultWeight as string
-  useEffect(() => {
-    setDefaultWeight(1 / numberOfValidators);
-  }, [numberOfValidators]);
+  // Calculate default weight per validator
+  const weightPerValidator = (totalWeights / numberOfValidators).toFixed(4);
 
-  const [useDefaultWeights, setUseDefaultWeights] = useState(true);
+  // Initialize intents array
+  let intents: Intent[] = [];
 
-  const intents: ValidatorIntent[] = selectedValidators.map((validator) => ({
-    valoperAddress: validator.operatorAddress,
-    weight: (useDefaultWeights ? defaultWeight : weights[validator.operatorAddress]).toString() || '0',
-  }));
-
-  const valToByte = (val: number) => {
-    if (val > 1) {
-      val = 1;
-    }
-    if (val < 0) {
-      val = 0;
-    }
-    return Math.abs(val * 200);
-  };
-
-  const addValidator = (valAddr: string, weight: number) => {
-    let { words } = bech32.decode(valAddr);
-    let wordsUint8Array = new Uint8Array(bech32.fromWords(words));
-    let weightByte = valToByte(weight);
-    return Buffer.concat([Buffer.from([weightByte]), wordsUint8Array]);
-  };
-
-  let memoBuffer = Buffer.alloc(0);
-
-  if (intents.length > 0) {
-    intents.forEach((val) => {
-      memoBuffer = Buffer.concat([memoBuffer, addValidator(val.valoperAddress, Number(val.weight))]);
+  // Assign default or custom weight to each validator
+  selectedValidators.forEach((validator, index) => {
+    const customWeight = weights[validator.operatorAddress];
+    const weight = customWeight !== undefined ? (customWeight / 100).toFixed(4) : weightPerValidator;
+    intents.push({
+      valoperAddress: validator.operatorAddress,
+      weight: weight,
     });
-    memoBuffer = Buffer.concat([Buffer.from([0x02, memoBuffer.length]), memoBuffer]);
+  });
+
+  // Calculate the total assigned weight
+  const totalAssignedWeight = intents.reduce((sum, intent) => sum + parseFloat(intent.weight), 0);
+
+  // If the total weight is not equal to 1, adjust the last validator's weight
+  if (totalAssignedWeight !== 1 && intents.length > 0) {
+    const lastValidatorWeight = parseFloat(intents[intents.length - 1].weight);
+    const remainingWeight = (1 - (totalAssignedWeight - lastValidatorWeight)).toFixed(4);
+    intents[intents.length - 1].weight = remainingWeight;
   }
 
-  let memo = memoBuffer.length > 0 && selectedValidators.length > 0 ? memoBuffer.toString('base64') : '';
+  // Create formatted intents string
+  const formattedIntentsString = intents.map((intent) => `${intent.weight}${intent.valoperAddress}`).join(',');
+
+  const remainingWeight = (1 - totalAssignedWeight).toFixed(4);
+
+  // Assign the remaining weight to the last validator
+  if (selectedValidators.length > 0) {
+    const lastValidator = selectedValidators[selectedValidators.length - 1];
+    intents.push({
+      valoperAddress: lastValidator.operatorAddress,
+      weight: remainingWeight,
+    });
+  }
 
   const { signalIntent } = quicksilver.interchainstaking.v1.MessageComposer.withTypeUrl;
   const msgSignalIntent = signalIntent({
     chainId: selectedOption?.chainId ?? '',
-    intents: memo,
+    intents: formattedIntentsString,
     fromAddress: address ?? '',
   });
 
@@ -213,25 +195,23 @@ export const SignalIntentModal: React.FC<StakingModalProps> = ({ isOpen, onClose
     gas: '500000',
   };
 
-  const { tx } = useTx(newChainName ?? '');
-
-  const [transactionStatus, setTransactionStatus] = useState('Pending');
+  const { tx } = useTx('quicksilver' ?? '');
 
   const handleSignalIntent = async (event: React.MouseEvent) => {
     event.preventDefault();
     setIsSigning(true);
-    setTransactionStatus('Pending');
+
     try {
       const result = await tx([msgSignalIntent], {
         fee,
         onSuccess: () => {
-          setStep(4);
-          setTransactionStatus('Success');
+          refetch();
+          onClose();
         },
       });
     } catch (error) {
       console.error('Transaction failed', error);
-      setTransactionStatus('Failed');
+
       setIsError(true);
     } finally {
       setIsSigning(false);
@@ -243,14 +223,12 @@ export const SignalIntentModal: React.FC<StakingModalProps> = ({ isOpen, onClose
     setStep(1);
     setIsError(false);
     setIsSigning(false);
-    setUseDefaultWeights(true);
   }, [selectedOption?.chainName]);
 
   const [isCustomWeight, setIsCustomWeight] = useState(false);
 
   const handleCustomWeightMode = () => {
     setIsCustomWeight(true);
-    setUseDefaultWeights(false);
   };
 
   const handleNextInCustomWeightMode = () => {
@@ -260,22 +238,11 @@ export const SignalIntentModal: React.FC<StakingModalProps> = ({ isOpen, onClose
     }
   };
 
-  const [check, setCheck] = useState(false);
-
-  const handleCheck = () => {
-    setCheck(!check);
-  };
-
   const handleStepOneButtonClick = () => {
     // Check if only one validator is selected
     if (selectedValidators.length === 1) {
-      setUseDefaultWeights(true);
       setStep(3); // Skip directly to step 3
-    } else if (check) {
-      // If checkbox is checked, skip directly to step 3
-      setStep(3);
     } else {
-      // If checkbox is not checked, consider the state of selectedValidators
       if (selectedValidators.length === 0) {
         setModalOpen(true);
       } else {
@@ -378,12 +345,17 @@ export const SignalIntentModal: React.FC<StakingModalProps> = ({ isOpen, onClose
                   <Button
                     mt={4}
                     width="55%"
+                    _active={{
+                      transform: 'scale(0.95)',
+                      color: 'complimentary.800',
+                    }}
                     _hover={{
-                      bgColor: 'complimentary.500',
+                      bgColor: 'rgba(255,128,0, 0.25)',
+                      color: 'complimentary.300',
                     }}
                     onClick={handleStepOneButtonClick}
                   >
-                    {check ? 'Sign & Submit' : selectedValidators.length > 0 ? 'Next' : 'Choose Validators'}
+                    {selectedValidators.length > 0 ? 'Next' : 'Choose Validators'}
                   </Button>
 
                   <IntentMultiModal
@@ -406,12 +378,18 @@ export const SignalIntentModal: React.FC<StakingModalProps> = ({ isOpen, onClose
                   </Text>
                   <HStack mt={4} justifyContent={'center'} alignItems={'center'}>
                     <Button
+                      _active={{
+                        transform: 'scale(0.95)',
+                        color: 'complimentary.800',
+                      }}
                       _hover={{
-                        bgColor: 'complimentary.500',
+                        bgColor: 'rgba(255,128,0, 0.25)',
+                        color: 'complimentary.300',
                       }}
                       minW={'100px'}
                       onClick={() => {
-                        setUseDefaultWeights(true);
+                        setWeights({});
+                        setIsCustomWeight(false);
                         advanceStep();
                       }}
                     >
@@ -420,8 +398,13 @@ export const SignalIntentModal: React.FC<StakingModalProps> = ({ isOpen, onClose
                     {selectedValidators.length > 1 && (
                       <Button
                         minW={'100px'}
+                        _active={{
+                          transform: 'scale(0.95)',
+                          color: 'complimentary.800',
+                        }}
                         _hover={{
-                          bgColor: 'complimentary.500',
+                          bgColor: 'rgba(255,128,0, 0.25)',
+                          color: 'complimentary.300',
                         }}
                         onClick={handleCustomWeightMode}
                       >
@@ -460,7 +443,11 @@ export const SignalIntentModal: React.FC<StakingModalProps> = ({ isOpen, onClose
                   <Box overflowY="auto" maxH="160px">
                     {' '}
                     {/* Set a maximum height to make the box scrollable */}
-                    <Grid templateColumns={`repeat(${Math.ceil(Math.sqrt(selectedValidators.length))}, 1fr)`} gap={8}>
+                    <Grid
+                      templateColumns="repeat(auto-fill, minmax(120px, 1fr))"
+                      gap={8}
+                      maxWidth="400px" // This ensures that no more than 4 items (120px each) are in a row
+                    >
                       {selectedValidators.map((validator, index) => (
                         <Flex key={validator.operatorAddress} flexDirection={'column'} alignItems={'center'}>
                           <Text fontSize="sm" color="white" mb={2}>
@@ -510,7 +497,18 @@ export const SignalIntentModal: React.FC<StakingModalProps> = ({ isOpen, onClose
                     >
                       ←
                     </Button>
-                    <Button isDisabled={!isCustomValid} onClick={handleNextInCustomWeightMode}>
+                    <Button
+                      _active={{
+                        transform: 'scale(0.95)',
+                        color: 'complimentary.800',
+                      }}
+                      _hover={{
+                        bgColor: 'rgba(255,128,0, 0.25)',
+                        color: 'complimentary.300',
+                      }}
+                      isDisabled={!isCustomValid}
+                      onClick={handleNextInCustomWeightMode}
+                    >
                       Next
                     </Button>
                   </Flex>
@@ -537,8 +535,13 @@ export const SignalIntentModal: React.FC<StakingModalProps> = ({ isOpen, onClose
                     </Text>
                     <Button
                       w="55%"
+                      _active={{
+                        transform: 'scale(0.95)',
+                        color: 'complimentary.800',
+                      }}
                       _hover={{
-                        bgColor: 'complimentary.500',
+                        bgColor: 'rgba(255,128,0, 0.25)',
+                        color: 'complimentary.300',
                       }}
                       mt={4}
                       onClick={handleSignalIntent}

@@ -2,7 +2,7 @@ import { HttpEndpoint } from '@cosmjs/stargate';
 import { useQuery } from '@tanstack/react-query';
 import { cosmos } from 'interchain-query';
 
-import { useQueryHooks } from './useQueryHooks';
+
 
 const createRPCQueryClient = cosmos.ClientFactory.createRPCQueryClient;
 

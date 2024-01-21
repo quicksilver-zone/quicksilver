@@ -1,13 +1,10 @@
-import { Box, color, Link, ToastId, useToast, Text } from '@chakra-ui/react';
+import { ToastId } from '@chakra-ui/react';
 import { isDeliverTxSuccess, StdFee } from '@cosmjs/stargate';
 import { useChain } from '@cosmos-kit/react';
 import { cosmos } from 'interchain-query';
 import { TxRaw } from 'interchain-query/cosmos/tx/v1beta1/tx';
 
 import { useToaster, ToastType, type CustomToast } from './useToaster';
-import { ChainName } from '@cosmos-kit/core';
-import { on } from 'events';
-import { isExternal } from 'util/types';
 
 interface Msg {
   typeUrl: string;

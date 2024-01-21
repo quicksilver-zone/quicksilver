@@ -9,11 +9,6 @@ export const truncateDenom = (denom: string) => {
   return denom.slice(0, 10) + '...' + denom.slice(-6);
 };
 
-
-
-
-
-
 const filterAssets = (chainName: string, assetList: AssetList[]): Asset[] => {
   return (
     assetList

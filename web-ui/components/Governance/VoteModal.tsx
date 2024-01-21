@@ -126,8 +126,13 @@ export const VoteModal: React.FC<VoteModalProps> = ({ modalControl, chainName, u
 
           <ModalFooter>
             <Button
+              _active={{
+                transform: 'scale(0.95)',
+                color: 'complimentary.800',
+              }}
               _hover={{
-                bgColor: '#181818',
+                bgColor: 'rgba(255,128,0, 0.25)',
+                color: 'complimentary.300',
               }}
               onClick={handleConfirmClick}
               isDisabled={!option || isLoading}

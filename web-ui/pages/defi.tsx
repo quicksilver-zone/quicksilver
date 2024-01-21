@@ -1,5 +1,4 @@
-import { ExternalLinkIcon } from '@chakra-ui/icons';
-import { Box, Button, Container, Flex, Stack, Table, Tbody, Td, Th, Thead, Tr, Text, SlideFade } from '@chakra-ui/react';
+import { Container, Text, SlideFade } from '@chakra-ui/react';
 import Head from 'next/head';
 
 import DefiTable from '@/components/Defi/defiBox';
