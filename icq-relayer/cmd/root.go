@@ -3,10 +3,12 @@ package cmd
 import (
 	"os"
 
-	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/quicksilver-zone/quicksilver/icq-relayer/v7/pkg/config"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+
+	"github.com/cosmos/cosmos-sdk/client/flags"
+
+	"github.com/quicksilver-zone/quicksilver/icq-relayer/v7/pkg/config"
 )
 
 var (

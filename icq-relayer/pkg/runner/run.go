@@ -18,32 +18,33 @@ import (
 	"sync"
 	"time"
 
+	"github.com/dgraph-io/ristretto"
+	"github.com/go-kit/log"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/quicksilver-zone/quicksilver/icq-relayer/v7/pkg/config"
-	"github.com/quicksilver-zone/quicksilver/icq-relayer/v7/prommetrics"
-
-	"github.com/go-kit/log"
-
-	abcitypes "github.com/cometbft/cometbft/abci/types"
-	tmquery "github.com/cometbft/cometbft/libs/pubsub/query"
-	"github.com/cometbft/cometbft/proto/tendermint/crypto"
-	coretypes "github.com/cometbft/cometbft/rpc/core/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	querytypes "github.com/cosmos/cosmos-sdk/types/query"
-	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
-	qstypes "github.com/quicksilver-zone/quicksilver/v7/x/interchainquery/types"
 	lensclient "github.com/strangelove-ventures/lens/client"
 	lensquery "github.com/strangelove-ventures/lens/client/query"
 	"google.golang.org/grpc/metadata"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	querytypes "github.com/cosmos/cosmos-sdk/types/query"
+	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
+
+	abcitypes "github.com/cometbft/cometbft/abci/types"
 	cmtjson "github.com/cometbft/cometbft/libs/json"
+	tmquery "github.com/cometbft/cometbft/libs/pubsub/query"
+	"github.com/cometbft/cometbft/proto/tendermint/crypto"
+	coretypes "github.com/cometbft/cometbft/rpc/core/types"
 	jsonrpcclient "github.com/cometbft/cometbft/rpc/jsonrpc/client"
 	jsonrpctypes "github.com/cometbft/cometbft/rpc/jsonrpc/types"
 	tmtypes "github.com/cometbft/cometbft/types"
+
 	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
 	tmclient "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint"
-	"github.com/dgraph-io/ristretto"
+
+	"github.com/quicksilver-zone/quicksilver/icq-relayer/v7/pkg/config"
+	"github.com/quicksilver-zone/quicksilver/icq-relayer/v7/prommetrics"
+	qstypes "github.com/quicksilver-zone/quicksilver/v7/x/interchainquery/types"
 )
 
 type Clients []*lensclient.ChainClient
