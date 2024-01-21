@@ -40,7 +40,7 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNum
 				zone.ChainId,
 				"cosmos.staking.v1beta1.Query/DelegatorDelegations",
 				bz,
-				sdk.NewInt(-1),
+				sdkmath.NewInt(-1),
 				types.ModuleName,
 				"delegations",
 				0,
