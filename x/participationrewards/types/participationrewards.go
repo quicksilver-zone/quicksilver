@@ -6,7 +6,6 @@ import (
 
 	"github.com/ingenuity-build/multierror"
 
-	"cosmossdk.io/math"
 	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -135,7 +134,7 @@ type UserAllocation struct {
 // calculations to determine validator voting power percentages.
 type ZoneScore struct {
 	ZoneID           string // chainID
-	TotalVotingPower math.Int
+	TotalVotingPower sdkmath.Int
 	ValidatorScores  map[string]*Validator
 }
 

@@ -1,7 +1,7 @@
 package types // noalias
 
 import (
-	context "context"
+	"context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 

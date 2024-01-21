@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"time"
 
-	"cosmossdk.io/math"
 	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -77,7 +76,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 						Coins: sdk.NewCoins(
 							sdk.NewCoin(
 								"gamm/1",
-								math.NewInt(10000000),
+								sdkmath.NewInt(10000000),
 							),
 						),
 					},
@@ -117,7 +116,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 						Coins: sdk.NewCoins(
 							sdk.NewCoin(
 								"gamm/2",
-								math.NewInt(10000000),
+								sdkmath.NewInt(10000000),
 							),
 						),
 					},
@@ -153,7 +152,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 
 				cd := sdk.Coin{
 					Denom:  "u/random",
-					Amount: math.NewInt(1000),
+					Amount: sdkmath.NewInt(1000),
 				}
 				bz, err := cd.Marshal()
 				suite.NoError(err)
@@ -188,7 +187,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 
 				key := lpfarm.GetPositionKey(addr, cosmosIBCDenom)
 
-				cd := lpfarm.Position{Farmer: crescentAddress, FarmingAmount: math.NewInt(10000), Denom: "pool7"}
+				cd := lpfarm.Position{Farmer: crescentAddress, FarmingAmount: sdkmath.NewInt(10000), Denom: "pool7"}
 				bz, err := prk.GetCodec().Marshal(&cd)
 				suite.Require().NoError(err)
 
@@ -222,7 +221,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 
 				key := lpfarm.GetPositionKey(addr, cosmosIBCDenom)
 
-				cd := lpfarm.Position{Farmer: crescentAddress, FarmingAmount: math.NewInt(10000), Denom: "pool1"}
+				cd := lpfarm.Position{Farmer: crescentAddress, FarmingAmount: sdkmath.NewInt(10000), Denom: "pool1"}
 				bz, err := prk.GetCodec().Marshal(&cd)
 				suite.Require().NoError(err)
 
@@ -256,7 +255,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 
 				key := lpfarm.GetPositionKey(addr, cosmosIBCDenom)
 
-				cd := lpfarm.Position{Farmer: crescentAddress, FarmingAmount: math.NewInt(-1), Denom: "pool1"}
+				cd := lpfarm.Position{Farmer: crescentAddress, FarmingAmount: sdkmath.NewInt(-1), Denom: "pool1"}
 				bz, err := prk.GetCodec().Marshal(&cd)
 				suite.Require().NoError(err)
 
@@ -291,7 +290,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 					Coins: sdk.NewCoins(
 						sdk.NewCoin(
 							"gamm/1",
-							math.NewInt(10000000),
+							sdkmath.NewInt(10000000),
 						),
 					),
 				}
@@ -324,7 +323,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 				bankkey := bankutils.CreateAccountBalancesPrefix(userAddress)
 				bankkey = append(bankkey, []byte("gamm/1")...)
 
-				cd := math.NewInt(10000000)
+				cd := sdkmath.NewInt(10000000)
 				bz, err := cd.Marshal()
 				suite.Require().NoError(err)
 
@@ -355,7 +354,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 
 				cd := sdk.Coin{
 					Denom:  "",
-					Amount: math.NewInt(0),
+					Amount: sdkmath.NewInt(0),
 				}
 				bz, err := cd.Marshal()
 				suite.NoError(err)
@@ -387,7 +386,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 
 				cd := sdk.Coin{
 					Denom:  "",
-					Amount: math.NewInt(0),
+					Amount: sdkmath.NewInt(0),
 				}
 				bz, err := cd.Marshal()
 				suite.NoError(err)
@@ -422,7 +421,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 
 				leveragekey := umeetypes.KeyCollateralAmount(address, "u/uumee")
 
-				cd := math.NewInt(1000)
+				cd := sdkmath.NewInt(1000)
 				bz, err := cd.Marshal()
 				suite.NoError(err)
 
@@ -464,7 +463,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 
 				key := lpfarm.GetPositionKey(addr, cosmosIBCDenom)
 
-				cd := lpfarm.Position{Farmer: crescentAddress, FarmingAmount: math.NewInt(10000), Denom: "pool1"}
+				cd := lpfarm.Position{Farmer: crescentAddress, FarmingAmount: sdkmath.NewInt(10000), Denom: "pool1"}
 				bz, err := prk.GetCodec().Marshal(&cd)
 				suite.Require().NoError(err)
 
@@ -493,7 +492,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 				bankkey := bankutils.CreateAccountBalancesPrefix(userAddress)
 				bankkey = append(bankkey, []byte("pool1")...)
 
-				cd := math.NewInt(1000)
+				cd := sdkmath.NewInt(1000)
 				bz, err := cd.Marshal()
 				suite.Require().NoError(err)
 

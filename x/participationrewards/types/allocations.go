@@ -3,19 +3,18 @@ package types
 import (
 	"fmt"
 
-	"cosmossdk.io/math"
 	sdkmath "cosmossdk.io/math"
 )
 
 type RewardsAllocation struct {
-	ValidatorSelection math.Int
-	Holdings           math.Int
-	Lockup             math.Int
+	ValidatorSelection sdkmath.Int
+	Holdings           sdkmath.Int
+	Lockup             sdkmath.Int
 }
 
 // GetRewardsAllocations returns an instance of rewardsAllocation with values
 // set according to the given moduleBalance and distribution proportions.
-func GetRewardsAllocations(moduleBalance math.Int, proportions DistributionProportions) (*RewardsAllocation, error) {
+func GetRewardsAllocations(moduleBalance sdkmath.Int, proportions DistributionProportions) (*RewardsAllocation, error) {
 	if moduleBalance.IsNil() || moduleBalance.IsZero() {
 		return nil, ErrNothingToAllocate
 	}

@@ -1,18 +1,17 @@
 package types
 
 import (
-	"cosmossdk.io/math"
 	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func DetermineAllocationsForUndelegation(currentAllocations map[string]math.Int, lockedAllocations map[string]bool, currentSum math.Int, targetAllocations ValidatorIntents, availablePerValidator map[string]math.Int, amount sdk.Coins) map[string]math.Int {
+func DetermineAllocationsForUndelegation(currentAllocations map[string]sdkmath.Int, lockedAllocations map[string]bool, currentSum sdkmath.Int, targetAllocations ValidatorIntents, availablePerValidator map[string]sdkmath.Int, amount sdk.Coins) map[string]sdkmath.Int {
 	// this is brooooken
 	input := amount[0].Amount
-	underAllocated, overAllocated := CalculateAllocationDeltas(currentAllocations, lockedAllocations, currentSum /* .Sub(input) */, targetAllocations, make(map[string]math.Int))
+	underAllocated, overAllocated := CalculateAllocationDeltas(currentAllocations, lockedAllocations, currentSum /* .Sub(input) */, targetAllocations, make(map[string]sdkmath.Int))
 	outSum := sdkmath.ZeroInt()
-	outWeights := make(map[string]math.Int)
+	outWeights := make(map[string]sdkmath.Int)
 
 	// deltas: +ve is below target; -ve is above target.
 
@@ -30,7 +29,7 @@ func DetermineAllocationsForUndelegation(currentAllocations map[string]math.Int,
 	if !overAllocationSplit.IsZero() {
 		for idx := range overAllocated {
 			// use Amount+1 in the line below to avoid 1 remaining where truncation leaves 1 remaining - e.g. 1000 => 333/333/333 + 1.
-			outWeights[overAllocated[idx].ValoperAddress] = sdkmath.LegacyNewDecFromInt(overAllocated[idx].Amount.Add(math.OneInt())).Quo(sdkmath.LegacyNewDecFromInt(sum)).Mul(sdkmath.LegacyNewDecFromInt(overAllocationSplit)).TruncateInt()
+			outWeights[overAllocated[idx].ValoperAddress] = sdkmath.LegacyNewDecFromInt(overAllocated[idx].Amount.Add(sdkmath.OneInt())).Quo(sdkmath.LegacyNewDecFromInt(sum)).Mul(sdkmath.LegacyNewDecFromInt(overAllocationSplit)).TruncateInt()
 			if outWeights[overAllocated[idx].ValoperAddress].GT(availablePerValidator[overAllocated[idx].ValoperAddress]) {
 				// use up all of overAllocated[idx] and set available to zero.
 				outWeights[overAllocated[idx].ValoperAddress] = availablePerValidator[overAllocated[idx].ValoperAddress]

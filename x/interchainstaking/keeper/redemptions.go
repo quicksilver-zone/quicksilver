@@ -6,7 +6,6 @@ import (
 	"sort"
 	"time"
 
-	"cosmossdk.io/math"
 	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -117,10 +116,10 @@ func (k *Keeper) queueRedemption(
 // GetUnlockedTokensForZone will iterate over all validators for a zone, summing delegated amounts,
 // and then remove the locked tokens (those actively being redelegated), returning a slice of int64
 // staking tokens that are unlocked and free to redelegate or unbond.
-func (k *Keeper) GetUnlockedTokensForZone(ctx sdk.Context, zone *types.Zone) (map[string]math.Int, sdkmath.Int, error) {
+func (k *Keeper) GetUnlockedTokensForZone(ctx sdk.Context, zone *types.Zone) (map[string]sdkmath.Int, sdkmath.Int, error) {
 	validators := k.GetValidators(ctx, zone.ChainId)
 
-	availablePerValidator := make(map[string]math.Int, len(validators))
+	availablePerValidator := make(map[string]sdkmath.Int, len(validators))
 	total := sdkmath.ZeroInt()
 	// for each validator, fetch delegated amount.
 	for _, validator := range validators {
@@ -140,7 +139,7 @@ func (k *Keeper) GetUnlockedTokensForZone(ctx sdk.Context, zone *types.Zone) (ma
 		if found {
 			availablePerValidator[redelegation.Destination] = thisAvailable.Sub(sdkmath.NewInt(redelegation.Amount))
 			if availablePerValidator[redelegation.Destination].LT(sdkmath.ZeroInt()) {
-				return map[string]math.Int{}, sdkmath.ZeroInt(), fmt.Errorf("negative available amount [chain: %s, validator: %s, amount: %s]; unable to continue", zone.ChainId, redelegation.Destination, availablePerValidator[redelegation.Destination].String())
+				return map[string]sdkmath.Int{}, sdkmath.ZeroInt(), fmt.Errorf("negative available amount [chain: %s, validator: %s, amount: %s]; unable to continue", zone.ChainId, redelegation.Destination, availablePerValidator[redelegation.Destination].String())
 			}
 			total = total.Sub(sdkmath.NewInt(redelegation.Amount))
 		}
@@ -330,7 +329,7 @@ func (k *Keeper) GCCompletedUnbondings(ctx sdk.Context, zone *types.Zone) error 
 	return err
 }
 
-func (k *Keeper) DeterminePlanForUndelegation(ctx sdk.Context, zone *types.Zone, amount sdk.Coins) (map[string]math.Int, error) {
+func (k *Keeper) DeterminePlanForUndelegation(ctx sdk.Context, zone *types.Zone, amount sdk.Coins) (map[string]sdkmath.Int, error) {
 	currentAllocations, currentSum, _, _ := k.GetDelegationMap(ctx, zone.ChainId)
 	availablePerValidator, _, err := k.GetUnlockedTokensForZone(ctx, zone)
 	if err != nil {

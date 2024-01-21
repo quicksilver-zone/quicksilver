@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"cosmossdk.io/math"
 	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -24,7 +23,7 @@ func (suite *KeeperTestSuite) TestCalcUserHoldingsAllocations() {
 		malleate     func(ctx sdk.Context, appA *app.Quicksilver)
 		want         []types.UserAllocation
 		icsWant      []types.UserAllocation
-		remainder    math.Int
+		remainder    sdkmath.Int
 		icsRemainder sdk.Coins
 		wantErr      string
 	}{

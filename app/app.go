@@ -123,8 +123,6 @@ type Quicksilver struct {
 	txConfig          client.TxConfig
 	interfaceRegistry types.InterfaceRegistry
 
-	invCheckPeriod uint
-
 	// the module manager
 	mm                 *module.Manager
 	BasicModuleManager module.BasicManager

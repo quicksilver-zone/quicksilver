@@ -8,7 +8,6 @@ import (
 
 	testsuite "github.com/stretchr/testify/suite"
 
-	"cosmossdk.io/math"
 	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -252,21 +251,21 @@ func (suite *KeeperTestSuite) setupTestZones() {
 				ValoperAddress:  "osmovaloper1clpqr4nrk4khgkxj78fcwwh6dl3uw4ep88n0y4",
 				CommissionRate:  sdkmath.LegacyMustNewDecFromStr("0.1"),
 				DelegatorShares: sdkmath.LegacyNewDec(200032604739),
-				VotingPower:     math.NewInt(200032604739),
+				VotingPower:     sdkmath.NewInt(200032604739),
 				Score:           sdkmath.LegacyZeroDec(),
 			},
 			{
 				ValoperAddress:  "osmovaloper1hjct6q7npsspsg3dgvzk3sdf89spmlpf6t4agt",
 				CommissionRate:  sdkmath.LegacyMustNewDecFromStr("0.1"),
 				DelegatorShares: sdkmath.LegacyNewDec(200032604734),
-				VotingPower:     math.NewInt(200032604734),
+				VotingPower:     sdkmath.NewInt(200032604734),
 				Score:           sdkmath.LegacyZeroDec(),
 			},
 			{
 				ValoperAddress:  "osmovaloper15urq2dtp9qce4fyc85m6upwm9xul3049wh9czc",
 				CommissionRate:  sdkmath.LegacyMustNewDecFromStr("0.1"),
 				DelegatorShares: sdkmath.LegacyNewDec(200032604738),
-				VotingPower:     math.NewInt(200032604738),
+				VotingPower:     sdkmath.NewInt(200032604738),
 				Score:           sdkmath.LegacyZeroDec(),
 			},
 		},
@@ -302,21 +301,21 @@ func (suite *KeeperTestSuite) setupTestZones() {
 			ValoperAddress:  "cosmosvaloper1759teakrsvnx7rnur8ezc4qaq8669nhtgukm0x",
 			CommissionRate:  sdkmath.LegacyMustNewDecFromStr("0.1"),
 			DelegatorShares: sdkmath.LegacyNewDec(200032604739),
-			VotingPower:     math.NewInt(200032604739),
+			VotingPower:     sdkmath.NewInt(200032604739),
 			Score:           sdkmath.LegacyZeroDec(),
 		},
 		{
 			ValoperAddress:  "cosmosvaloper1jtjjyxtqk0fj85ud9cxk368gr8cjdsftvdt5jl",
 			CommissionRate:  sdkmath.LegacyMustNewDecFromStr("0.1"),
 			DelegatorShares: sdkmath.LegacyNewDec(200032604734),
-			VotingPower:     math.NewInt(200032604734),
+			VotingPower:     sdkmath.NewInt(200032604734),
 			Score:           sdkmath.LegacyZeroDec(),
 		},
 		{
 			ValoperAddress:  "cosmosvaloper1q86m0zq0p52h4puw5pg5xgc3c5e2mq52y6mth0",
 			CommissionRate:  sdkmath.LegacyMustNewDecFromStr("0.1"),
 			DelegatorShares: sdkmath.LegacyNewDec(200032604738),
-			VotingPower:     math.NewInt(200032604738),
+			VotingPower:     sdkmath.NewInt(200032604738),
 			Score:           sdkmath.LegacyZeroDec(),
 		},
 	}
@@ -557,7 +556,7 @@ func (suite *KeeperTestSuite) setupTestDeposits() {
 		&zone,
 		testAddress,
 		"testTxHash03",
-		sdk.NewCoins(sdk.NewCoin("uatom", math.NewInt(150000000))),
+		sdk.NewCoins(sdk.NewCoin("uatom", sdkmath.NewInt(150000000))),
 	)
 
 	// add deposit to cosmos zone
@@ -568,7 +567,7 @@ func (suite *KeeperTestSuite) setupTestDeposits() {
 		&zone,
 		testAddress,
 		"testTxHash01",
-		sdk.NewCoins(sdk.NewCoin("uatom", math.NewInt(120000000))),
+		sdk.NewCoins(sdk.NewCoin("uatom", sdkmath.NewInt(120000000))),
 	)
 
 	// add deposit to osmosis zone
@@ -579,7 +578,7 @@ func (suite *KeeperTestSuite) setupTestDeposits() {
 		&zone,
 		testAddress,
 		"testTxHash02",
-		sdk.NewCoins(sdk.NewCoin("uosmo", math.NewInt(100000000))),
+		sdk.NewCoins(sdk.NewCoin("uosmo", sdkmath.NewInt(100000000))),
 	)
 }
 

@@ -117,7 +117,7 @@ func Run(cfg *config.Config, home string) error {
 		metrics.SendQueue.WithLabelValues("send-queue").Set(float64(len(sendQueue[c.ChainID])))
 	}
 
-	query, err := tmquery.Parse(fmt.Sprintf("message.module='%s'", "interchainquery"))
+	query, err := tmquery.New(fmt.Sprintf("message.module='%s'", "interchainquery"))
 	if err != nil {
 		// handle error
 	}
@@ -805,7 +805,7 @@ func unique(msgSlice []sdk.Msg, logger log.Logger) []sdk.Msg {
 }
 
 func Close() error {
-	query := cmtquery.MustParse(fmt.Sprintf("message.module='%s'", "interchainquery"))
+	query := tmquery.MustCompile(fmt.Sprintf("message.module='%s'", "interchainquery"))
 
 	for _, chainClient := range globalCfg.Cl {
 		err := chainClient.RPCClient.Unsubscribe(ctx, chainClient.Config.ChainID+"-icq", query.String())

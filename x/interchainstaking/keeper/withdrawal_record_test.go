@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"cosmossdk.io/math"
 	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -34,8 +33,8 @@ func (suite *KeeperTestSuite) TestUpdateWithdrawalRecordsForSlash() {
 						{Amount: 10000, Valoper: validators[2]},
 						{Amount: 10000, Valoper: validators[3]},
 					},
-					Amount:     sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, math.NewInt(40000))),
-					BurnAmount: sdk.NewCoin(zone.LocalDenom, math.NewInt(32356)),
+					Amount:     sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdkmath.NewInt(40000))),
+					BurnAmount: sdk.NewCoin(zone.LocalDenom, sdkmath.NewInt(32356)),
 					Txhash:     "3BE21C1057ABBFBC44BE8993D2A4701C751507FF9901AA110B5993BA070C176B",
 					Status:     types.WithdrawStatusUnbond,
 				}
@@ -55,8 +54,8 @@ func (suite *KeeperTestSuite) TestUpdateWithdrawalRecordsForSlash() {
 							{Amount: 10000, Valoper: validators[2]},
 							{Amount: 10000, Valoper: validators[3]},
 						},
-						Amount:     sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, math.NewInt(39500))),
-						BurnAmount: sdk.NewCoin(zone.LocalDenom, math.NewInt(32356)),
+						Amount:     sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdkmath.NewInt(39500))),
+						BurnAmount: sdk.NewCoin(zone.LocalDenom, sdkmath.NewInt(32356)),
 						Txhash:     "3BE21C1057ABBFBC44BE8993D2A4701C751507FF9901AA110B5993BA070C176B",
 						Status:     types.WithdrawStatusUnbond,
 					},
@@ -83,8 +82,8 @@ func (suite *KeeperTestSuite) TestUpdateWithdrawalRecordsForSlash() {
 						{Amount: 10000, Valoper: validators[2]},
 						{Amount: 10000, Valoper: validators[3]},
 					},
-					Amount:     sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, math.NewInt(40000))),
-					BurnAmount: sdk.NewCoin(zone.LocalDenom, math.NewInt(32356)),
+					Amount:     sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdkmath.NewInt(40000))),
+					BurnAmount: sdk.NewCoin(zone.LocalDenom, sdkmath.NewInt(32356)),
 					Txhash:     "3BE21C1057ABBFBC44BE8993D2A4701C751507FF9901AA110B5993BA070C176B",
 					Status:     types.WithdrawStatusUnbond,
 				}
@@ -99,8 +98,8 @@ func (suite *KeeperTestSuite) TestUpdateWithdrawalRecordsForSlash() {
 						{Amount: 10000, Valoper: validators[2]},
 						{Amount: 11000, Valoper: validators[3]},
 					},
-					Amount:     sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, math.NewInt(48000))),
-					BurnAmount: sdk.NewCoin(zone.LocalDenom, math.NewInt(36503)),
+					Amount:     sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdkmath.NewInt(48000))),
+					BurnAmount: sdk.NewCoin(zone.LocalDenom, sdkmath.NewInt(36503)),
 					Txhash:     "FB087A50A4836CBDFACA70D393AF110C28935276267B7BA2838BE3CEEA08F762",
 					Status:     types.WithdrawStatusUnbond,
 				}
@@ -120,8 +119,8 @@ func (suite *KeeperTestSuite) TestUpdateWithdrawalRecordsForSlash() {
 							{Amount: 10000, Valoper: validators[2]},
 							{Amount: 10000, Valoper: validators[3]},
 						},
-						Amount:     sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, math.NewInt(39500))),
-						BurnAmount: sdk.NewCoin(zone.LocalDenom, math.NewInt(32356)),
+						Amount:     sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdkmath.NewInt(39500))),
+						BurnAmount: sdk.NewCoin(zone.LocalDenom, sdkmath.NewInt(32356)),
 						Txhash:     "3BE21C1057ABBFBC44BE8993D2A4701C751507FF9901AA110B5993BA070C176B",
 						Status:     types.WithdrawStatusUnbond,
 					},
@@ -135,8 +134,8 @@ func (suite *KeeperTestSuite) TestUpdateWithdrawalRecordsForSlash() {
 							{Amount: 10000, Valoper: validators[2]},
 							{Amount: 11000, Valoper: validators[3]},
 						},
-						Amount:     sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, math.NewInt(47300))),
-						BurnAmount: sdk.NewCoin(zone.LocalDenom, math.NewInt(36503)),
+						Amount:     sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdkmath.NewInt(47300))),
+						BurnAmount: sdk.NewCoin(zone.LocalDenom, sdkmath.NewInt(36503)),
 						Txhash:     "FB087A50A4836CBDFACA70D393AF110C28935276267B7BA2838BE3CEEA08F762",
 						Status:     types.WithdrawStatusUnbond,
 					},
@@ -159,8 +158,8 @@ func (suite *KeeperTestSuite) TestUpdateWithdrawalRecordsForSlash() {
 					Distribution: []*types.Distribution{
 						{Amount: 9223372036854775807 + 1, Valoper: validators[1]}, // max int64 +1 - check for overflow
 					},
-					Amount:     sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, math.NewInt(40000))),
-					BurnAmount: sdk.NewCoin(zone.LocalDenom, math.NewInt(32356)),
+					Amount:     sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdkmath.NewInt(40000))),
+					BurnAmount: sdk.NewCoin(zone.LocalDenom, sdkmath.NewInt(32356)),
 					Txhash:     "3BE21C1057ABBFBC44BE8993D2A4701C751507FF9901AA110B5993BA070C176B",
 					Status:     types.WithdrawStatusUnbond,
 				}
@@ -177,8 +176,8 @@ func (suite *KeeperTestSuite) TestUpdateWithdrawalRecordsForSlash() {
 						Distribution: []*types.Distribution{
 							{Amount: 9223372036854775807 + 1, Valoper: validators[1]},
 						},
-						Amount:     sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, math.NewInt(40000))),
-						BurnAmount: sdk.NewCoin(zone.LocalDenom, math.NewInt(32356)),
+						Amount:     sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdkmath.NewInt(40000))),
+						BurnAmount: sdk.NewCoin(zone.LocalDenom, sdkmath.NewInt(32356)),
 						Txhash:     "3BE21C1057ABBFBC44BE8993D2A4701C751507FF9901AA110B5993BA070C176B",
 						Status:     types.WithdrawStatusUnbond,
 					},
@@ -202,8 +201,8 @@ func (suite *KeeperTestSuite) TestUpdateWithdrawalRecordsForSlash() {
 					Distribution: []*types.Distribution{
 						{Amount: 100000000, Valoper: validators[1]}, // slashed amount exceeds total amount
 					},
-					Amount:     sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, math.NewInt(10))),
-					BurnAmount: sdk.NewCoin(zone.LocalDenom, math.NewInt(10)),
+					Amount:     sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdkmath.NewInt(10))),
+					BurnAmount: sdk.NewCoin(zone.LocalDenom, sdkmath.NewInt(10)),
 					Txhash:     "8A698A142447087E5DC01F7BC3886EC1A6606D377D1FAC766FB279AD09F1407C",
 					Status:     types.WithdrawStatusUnbond,
 				}
@@ -220,8 +219,8 @@ func (suite *KeeperTestSuite) TestUpdateWithdrawalRecordsForSlash() {
 						Distribution: []*types.Distribution{
 							{Amount: 100000000, Valoper: validators[1]}, // slashed amount exceeds total amount
 						},
-						Amount:     sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, math.NewInt(10))),
-						BurnAmount: sdk.NewCoin(zone.LocalDenom, math.NewInt(10)),
+						Amount:     sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdkmath.NewInt(10))),
+						BurnAmount: sdk.NewCoin(zone.LocalDenom, sdkmath.NewInt(10)),
 						Txhash:     "8A698A142447087E5DC01F7BC3886EC1A6606D377D1FAC766FB279AD09F1407C",
 						Status:     types.WithdrawStatusUnbond,
 					},

@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"cosmossdk.io/math"
 	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -56,7 +55,7 @@ func (k Keeper) AllocateHoldingsRewards(ctx sdk.Context) error {
 }
 
 // CalcUserHoldingsAllocations calculates allocations per user for a given zone, based upon claims submitted and zone.
-func (k Keeper) CalcUserHoldingsAllocations(ctx sdk.Context, zone *icstypes.Zone) ([]types.UserAllocation, math.Int, []types.UserAllocation) {
+func (k Keeper) CalcUserHoldingsAllocations(ctx sdk.Context, zone *icstypes.Zone) ([]types.UserAllocation, sdkmath.Int, []types.UserAllocation) {
 	k.Logger(ctx).Info("CalcUserHoldingsAllocations", "zone", zone.ChainId, "allocations", zone.HoldingsAllocation)
 
 	userAllocations := make([]types.UserAllocation, 0)
@@ -68,15 +67,15 @@ func (k Keeper) CalcUserHoldingsAllocations(ctx sdk.Context, zone *icstypes.Zone
 
 	if zone.HoldingsAllocation == 0 || !supply.Amount.IsPositive() {
 		k.Logger(ctx).Info("holdings allocation is zero, nothing to allocate")
-		return userAllocations, math.NewIntFromUint64(zone.HoldingsAllocation), icsRewardsAllocations
+		return userAllocations, sdkmath.NewIntFromUint64(zone.HoldingsAllocation), icsRewardsAllocations
 	}
 
 	// calculate user totals and zone total (held assets)
-	zoneAmount := math.ZeroInt()
-	userAmountsMap := make(map[string]math.Int)
+	zoneAmount := sdkmath.ZeroInt()
+	userAmountsMap := make(map[string]sdkmath.Int)
 
 	k.ClaimsManagerKeeper.IterateClaims(ctx, zone.ChainId, func(_ int64, claim cmtypes.Claim) (stop bool) {
-		amount := math.NewIntFromUint64(claim.Amount)
+		amount := sdkmath.NewIntFromUint64(claim.Amount)
 		k.Logger(ctx).Info(
 			"claim",
 			"type", cmtypes.ClaimType_name[int32(claim.Module)],
@@ -86,7 +85,7 @@ func (k Keeper) CalcUserHoldingsAllocations(ctx sdk.Context, zone *icstypes.Zone
 		)
 
 		if _, exists := userAmountsMap[claim.UserAddress]; !exists {
-			userAmountsMap[claim.UserAddress] = math.ZeroInt()
+			userAmountsMap[claim.UserAddress] = sdkmath.ZeroInt()
 		}
 
 		userAmountsMap[claim.UserAddress] = userAmountsMap[claim.UserAddress].Add(amount)
@@ -99,10 +98,10 @@ func (k Keeper) CalcUserHoldingsAllocations(ctx sdk.Context, zone *icstypes.Zone
 
 	if !zoneAmount.IsPositive() {
 		k.Logger(ctx).Info("zero claims for zone", "zone", zone.ChainId)
-		return userAllocations, math.NewIntFromUint64(zone.HoldingsAllocation), icsRewardsAllocations
+		return userAllocations, sdkmath.NewIntFromUint64(zone.HoldingsAllocation), icsRewardsAllocations
 	}
 
-	zoneAllocation := math.NewIntFromUint64(zone.HoldingsAllocation)
+	zoneAllocation := sdkmath.NewIntFromUint64(zone.HoldingsAllocation)
 	tokensPerAsset := sdkmath.LegacyNewDecFromInt(zoneAllocation).Quo(sdkmath.LegacyNewDecFromInt(supply.Amount))
 
 	if zone.WithdrawalAddress != nil {

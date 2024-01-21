@@ -33,6 +33,7 @@ func GetWasmOpts(appOpts servertypes.AppOptions) []wasmkeeper.Option {
 }
 
 func DefaultConfig(t *testing.T) network.Config {
+	t.Helper()
 	encCfg := MakeEncodingConfig(t)
 
 	return network.Config{

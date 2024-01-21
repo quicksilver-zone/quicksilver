@@ -5,7 +5,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/math"
 	sdkmath "cosmossdk.io/math"
 
 	"github.com/quicksilver-zone/quicksilver/v7/x/participationrewards/types"
@@ -13,7 +12,7 @@ import (
 
 func TestGetRewardsAllocations(t *testing.T) {
 	type args struct {
-		moduleBalance math.Int
+		moduleBalance sdkmath.Int
 		proportions   types.DistributionProportions
 	}
 	tests := []struct {
