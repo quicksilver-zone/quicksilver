@@ -3,6 +3,8 @@ import { useChain, useManager } from '@cosmos-kit/react';
 import { MouseEventHandler } from 'react';
 import { FiAlertTriangle } from 'react-icons/fi';
 
+import { defaultChainName as chainName } from '@/config';
+
 import {
   Astronaut,
   Error,
@@ -20,7 +22,6 @@ import {
   ChainCard,
 } from '../components';
 
-import { defaultChainName as chainName } from '@/config';
 
 export const WalletSection = () => {
   const { connect, openView, status, username, address, message, wallet, chain: chainInfo } = useChain(chainName);
