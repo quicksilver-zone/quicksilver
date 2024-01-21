@@ -34,7 +34,6 @@ import (
 	"github.com/quicksilver-zone/quicksilver/v7/utils/bankutils"
 	icqtypes "github.com/quicksilver-zone/quicksilver/v7/x/interchainquery/types"
 	"github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking/types"
-	protov2 "google.golang.org/protobuf/proto"
 )
 
 // ___________________________________________________________________________________________________
@@ -858,52 +857,4 @@ func varintMinLength(n uint64) int {
 	default:
 		return 10
 	}
-}
-
-// Copied https://github.com/cosmos/cosmos-sdk/blob/main/x/auth/tx/builder.go#L26
-
-// wrapper is a wrapper around the tx.Tx proto.Message which retain the raw
-// body and auth_info bytes.
-type wrapper struct {
-	cdc codec.Codec
-
-	tx *tx.Tx
-
-	// bodyBz represents the protobuf encoding of TxBody. This should be encoding
-	// from the client using TxRaw if the tx was decoded from the wire
-	bodyBz []byte
-
-	// authInfoBz represents the protobuf encoding of TxBody. This should be encoding
-	// from the client using TxRaw if the tx was decoded from the wire
-	authInfoBz []byte
-
-	txBodyHasUnknownNonCriticals bool
-
-	signers [][]byte
-	msgsV2  []protov2.Message
-}
-
-func (w *wrapper) GetMsgs() []sdk.Msg {
-	return w.tx.GetMsgs()
-}
-
-func (w *wrapper) GetMemo() string {
-	return w.tx.Body.Memo
-}
-
-func (w *wrapper) GetMsgsV2() ([]protov2.Message, error) {
-	if w.msgsV2 == nil {
-		err := w.initSignersAndMsgsV2()
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return w.msgsV2, nil
-}
-
-func (w *wrapper) initSignersAndMsgsV2() error {
-	var err error
-	w.signers, w.msgsV2, err = w.tx.GetSigners(w.cdc)
-	return err
 }
