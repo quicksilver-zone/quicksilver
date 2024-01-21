@@ -21,7 +21,7 @@ import {
   ibcProtoRegistry,
 } from 'quicksilverjs';
 
-import { Header, SideHeader } from '@/components';
+import { DynamicHeaderSection, Header, SideHeader } from '@/components';
 import { defaultTheme } from '@/config';
 
 import '@interchain-ui/react/styles';
@@ -314,7 +314,7 @@ function QuickApp({ Component, pageProps }: AppProps) {
           <ReactQueryDevtools initialIsOpen={true} />
           <Box w="100vw" h="100vh" bgSize="fit" bgPosition="right center" bgAttachment="fixed" bgRepeat="no-repeat">
             <Flex justifyContent={'space-between'} alignItems={'center'}>
-              <Header chainName="quicksilver" />
+              <DynamicHeaderSection chainName="quicksilver" />
               <SideHeader />
             </Flex>
             <Component {...pageProps} />

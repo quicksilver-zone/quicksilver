@@ -1,5 +1,5 @@
 import { Center, Grid, GridItem, Icon } from '@chakra-ui/react';
-import { useChain, useManager } from '@cosmos-kit/react';
+import { useChain, useChains, useManager } from '@cosmos-kit/react';
 import { MouseEventHandler } from 'react';
 import { FiAlertTriangle } from 'react-icons/fi';
 
@@ -14,14 +14,15 @@ import {
   RejectedWarn,
   WalletConnectComponent,
 } from '@/components';
-import { useDrawerControl } from '@/state/useDrawerController';
 
-export const WalletButton: React.FC<{ chainName: string }> = ({ chainName }) => {
-  const { connect, openView, status, message, wallet } = useChain(chainName || 'cosmoshub');
+export const WalletButton: React.FC = () => {
+  const chains = useChains(['quicksilver', 'cosmoshub', 'osmosis', 'stargaze', 'juno', 'sommelier', 'regen', 'umee']);
+
+  const { connect, openView, status, message, wallet, isWalletError } = chains.quicksilver;
 
   // Events
-  const onClickConnect: MouseEventHandler = async (e) => {
-    await connect();
+  const onClickConnect: MouseEventHandler = (e) => {
+    connect();
   };
 
   const onClickOpenView: MouseEventHandler = (e) => {
@@ -35,7 +36,7 @@ export const WalletButton: React.FC<{ chainName: string }> = ({ chainName }) => 
       disconnect={<Disconnected buttonText="Connect Wallet" onClick={onClickConnect} />}
       connecting={<Connecting />}
       connected={<Connected buttonText={'My Wallet'} onClick={onClickOpenView} />}
-      rejected={<Rejected buttonText="Reconnect" onClick={onClickConnect} />}
+      rejected={<Disconnected buttonText="Reconnect" onClick={onClickConnect} />}
       error={<Error buttonText="Change Wallet" onClick={onClickOpenView} />}
       notExist={<NotExist buttonText="Connect Wallet" onClick={onClickOpenView} />}
     />
