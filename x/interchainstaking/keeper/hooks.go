@@ -28,6 +28,24 @@ func (*Keeper) BeforeEpochStart(_ sdk.Context, _ string, _ int64) error {
 func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
 	// every epoch
 	if epochIdentifier != epochstypes.EpochIdentifierEpoch {
+		k.IterateZones(ctx, func(index int64, zone *types.Zone) (stop bool) {
+			vals := k.GetValidatorAddresses(ctx, zone.ChainId)
+			delegationQuery := stakingtypes.QueryDelegatorDelegationsRequest{DelegatorAddr: zone.DelegationAddress.Address, Pagination: &query.PageRequest{Limit: uint64(len(vals))}}
+			bz := k.cdc.MustMarshal(&delegationQuery)
+
+			k.ICQKeeper.MakeRequest(
+				ctx,
+				zone.ConnectionId,
+				zone.ChainId,
+				"cosmos.staking.v1beta1.Query/DelegatorDelegations",
+				bz,
+				sdk.NewInt(-1),
+				types.ModuleName,
+				"delegations",
+				0,
+			)
+			return false
+		})
 		return nil
 	}
 	k.Logger(ctx).Info("handling epoch end", "epoch_identifier", epochIdentifier, "epoch_number", epochNumber)
