@@ -21,7 +21,8 @@ import {
 import { keyframes } from '@emotion/react';
 import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
-import { FaDiscord, FaTwitter, FaGithub, FaInfo } from 'react-icons/fa';
+import { FaDiscord, FaGithub, FaInfo } from 'react-icons/fa';
+import { FaXTwitter } from 'react-icons/fa6';
 import { IoIosDocument } from 'react-icons/io';
 
 import { DrawerControlProvider } from '@/state/chains/drawerControlProvider';
@@ -168,32 +169,38 @@ export const SideHeader = () => {
                 ))}
                 <Box mt={12} position="relative"></Box>
                 <HStack mt={'50px'} alignContent={'center'} justifyContent={'space-around'}>
-                  <Box
-                    _hover={{
-                      cursor: 'pointer',
-                      boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`,
-                    }}
-                  >
-                    <FaGithub size={'25px'} color="rgb(255, 128, 0)" />
-                  </Box>
-                  <Box
-                    _hover={{
-                      cursor: 'pointer',
-                      boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`,
-                      transition: transitionStyle,
-                    }}
-                  >
-                    <FaDiscord size={'25px'} color="rgb(255, 128, 0)" />
-                  </Box>
-                  <Box
-                    _hover={{
-                      cursor: 'pointer',
-                      boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`,
-                      transition: transitionStyle,
-                    }}
-                  >
-                    <FaTwitter size={'25px'} color="rgb(255, 128, 0)" />
-                  </Box>
+                  <Link href="https://github.com/quicksilver-zone/quicksilver" isExternal>
+                    <Box
+                      _hover={{
+                        cursor: 'pointer',
+                        boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`,
+                      }}
+                    >
+                      <FaGithub size={'25px'} color="rgb(255, 128, 0)" />
+                    </Box>
+                  </Link>
+                  <Link href="https://discord.com/invite/xrSmYMDVrQ" isExternal>
+                    <Box
+                      _hover={{
+                        cursor: 'pointer',
+                        boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`,
+                        transition: transitionStyle,
+                      }}
+                    >
+                      <FaDiscord size={'25px'} color="rgb(255, 128, 0)" />
+                    </Box>
+                  </Link>
+                  <Link href="https://twitter.com/quicksilverzone" isExternal>
+                    <Box
+                      _hover={{
+                        cursor: 'pointer',
+                        boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`,
+                        transition: transitionStyle,
+                      }}
+                    >
+                      <FaXTwitter size={'25px'} color="rgb(255, 128, 0)" />
+                    </Box>
+                  </Link>
                 </HStack>
               </DrawerBody>
             </DrawerContent>
@@ -410,7 +417,7 @@ export const SideHeader = () => {
                           transition: transitionStyle,
                         }}
                       >
-                        <FaTwitter size={'25px'} color="rgb(255, 128, 0)" />
+                        <FaXTwitter size={'25px'} color="rgb(255, 128, 0)" />
                       </Box>
                     </Link>
                   </Tooltip>
