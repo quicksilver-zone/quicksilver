@@ -30,3 +30,7 @@ func (app *Quicksilver) NewDefaultGenesisState() GenesisState {
 	gen[wasm.ModuleName] = app.AppCodec().MustMarshalJSON(&wasmGen)
 	return gen
 }
+
+func NewDefaultGenState() GenesisState {
+	return NewQuicksilver(nil, nil, nil, true, nil, "", EmptyAppOptions{}, true, false, GetWasmOpts(EmptyAppOptions{})).NewDefaultGenesisState()
+}
