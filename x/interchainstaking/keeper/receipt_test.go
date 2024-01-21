@@ -35,7 +35,8 @@ func (suite *KeeperTestSuite) TestHandleReceiptTransactionGood() {
 	msg := banktypes.MsgSend{FromAddress: fromAddress, ToAddress: zone.DepositAddress.Address, Amount: sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, math.NewInt(1000000)))}
 
 	txBuilder := keeper.NewBuilder(suite.chainA.Codec)
-	txBuilder.SetMsgs(&msg)
+	err := txBuilder.SetMsgs(&msg)
+	suite.NoError(err)
 	tx := txBuilder.GetTx()
 
 	transaction := tx.(sdk.TxWithMemo)
@@ -46,7 +47,7 @@ func (suite *KeeperTestSuite) TestHandleReceiptTransactionGood() {
 	before := suite.GetQuicksilverApp(suite.chainA).BankKeeper.GetSupply(ctx, zone.LocalDenom)
 	suite.Equal(sdk.NewCoin(zone.LocalDenom, sdkmath.ZeroInt()), before)
 	// rr is 1.0
-	err := icsKeeper.HandleReceiptTransaction(ctx, transaction, hash, zone)
+	err = icsKeeper.HandleReceiptTransaction(ctx, transaction, hash, zone)
 	suite.NoError(err)
 
 	after := suite.GetQuicksilverApp(suite.chainA).BankKeeper.GetSupply(ctx, zone.LocalDenom)
@@ -76,7 +77,8 @@ func (suite *KeeperTestSuite) TestHandleReceiptTransactionBadRecipient() {
 	msg := banktypes.MsgSend{FromAddress: fromAddress, ToAddress: zone.DelegationAddress.Address, Amount: sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, math.NewInt(1000000)))}
 	// Build tx from msg
 	txBuilder := keeper.NewBuilder(suite.chainA.Codec)
-	txBuilder.SetMsgs(&msg)
+	err := txBuilder.SetMsgs(&msg)
+	suite.NoError(err)
 	tx := txBuilder.GetTx()
 
 	transaction := tx.(sdk.TxWithMemo)
@@ -86,7 +88,8 @@ func (suite *KeeperTestSuite) TestHandleReceiptTransactionBadRecipient() {
 	before := suite.GetQuicksilverApp(suite.chainA).BankKeeper.GetSupply(ctx, zone.LocalDenom)
 	suite.Equal(sdk.NewCoin(zone.LocalDenom, sdkmath.ZeroInt()), before)
 
-	err := icsKeeper.HandleReceiptTransaction(ctx, transaction, hash, zone)
+	err = icsKeeper.HandleReceiptTransaction(ctx, transaction, hash, zone)
+	suite.NoError(err)
 	// suite.ErrorContains(err, "no sender found. Ignoring")
 	nilReceipt, found := icsKeeper.GetReceipt(ctx, zone.ChainId, hash)
 	suite.True(found)                  // check nilReceipt is found for hash
@@ -112,7 +115,8 @@ func (suite *KeeperTestSuite) TestHandleReceiptTransactionBadMessageType() {
 
 	// Build tx from msg
 	txBuilder := keeper.NewBuilder(suite.chainA.Codec)
-	txBuilder.SetMsgs(&msg)
+	err := txBuilder.SetMsgs(&msg)
+	suite.NoError(err)
 	tx := txBuilder.GetTx()
 
 	transaction := tx.(sdk.TxWithMemo)
@@ -122,7 +126,7 @@ func (suite *KeeperTestSuite) TestHandleReceiptTransactionBadMessageType() {
 	before := suite.GetQuicksilverApp(suite.chainA).BankKeeper.GetSupply(ctx, zone.LocalDenom)
 	suite.Equal(sdk.NewCoin(zone.LocalDenom, sdkmath.ZeroInt()), before)
 
-	err := icsKeeper.HandleReceiptTransaction(ctx, transaction, hash, zone)
+	err = icsKeeper.HandleReceiptTransaction(ctx, transaction, hash, zone)
 	// suite.ErrorContains(err, "no sender found. Ignoring")
 	nilReceipt, found := icsKeeper.GetReceipt(ctx, zone.ChainId, hash)
 	suite.True(found)                  // check nilReceipt is found for hash
@@ -150,7 +154,8 @@ func (suite *KeeperTestSuite) TestHandleReceiptMixedMessageTypeGood() {
 
 	// Build tx from msg1 and msg2
 	txBuilder := keeper.NewBuilder(suite.chainA.Codec)
-	txBuilder.SetMsgs(&msg, &msg2)
+	err := txBuilder.SetMsgs(&msg, &msg2)
+	suite.NoError(err)
 	tx := txBuilder.GetTx()
 
 	transaction := tx.(sdk.TxWithMemo)
@@ -160,7 +165,7 @@ func (suite *KeeperTestSuite) TestHandleReceiptMixedMessageTypeGood() {
 	before := suite.GetQuicksilverApp(suite.chainA).BankKeeper.GetSupply(ctx, zone.LocalDenom)
 	suite.Equal(sdk.NewCoin(zone.LocalDenom, sdkmath.ZeroInt()), before)
 
-	err := icsKeeper.HandleReceiptTransaction(ctx, transaction, hash, zone)
+	err = icsKeeper.HandleReceiptTransaction(ctx, transaction, hash, zone)
 	suite.NoError(err)
 
 	after := suite.GetQuicksilverApp(suite.chainA).BankKeeper.GetSupply(ctx, zone.LocalDenom)

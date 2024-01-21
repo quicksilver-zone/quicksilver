@@ -1,7 +1,7 @@
 package types
 
 import (
-	context "context"
+	"context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
