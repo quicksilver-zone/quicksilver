@@ -34,7 +34,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	// Use baseURL to make API HTTP requests or use val.RPCClient to make direct
 	// Tendermint RPC calls. (from testutil/network godocs)
 
-	s.cfg = app.DefaultConfig()
+	s.cfg = app.DefaultConfig(s.T())
 
 	updateGenesisConfigState := func(moduleName string, moduleState proto.Message) {
 		buf, err := s.cfg.Codec.MarshalJSON(moduleState)

@@ -615,7 +615,7 @@ func (suite *KeeperTestSuite) TestGovReopenChannel() {
 					Authority:    "",
 				}
 			},
-			expecErr: fmt.Errorf("chainID / connectionID mismatch. Connection: %s, Port: %s", "testchain2", ""),
+			expecErr: fmt.Errorf("chainID / connectionID mismatch. Connection: %s, Port: %s", "testchain2-1", ""),
 		},
 		{
 			name: "existing active channel",
@@ -623,13 +623,14 @@ func (suite *KeeperTestSuite) TestGovReopenChannel() {
 				k := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
 				ctx := suite.chainA.GetContext()
 				channels := suite.GetQuicksilverApp(suite.chainA).IBCKeeper.ChannelKeeper.GetAllChannels(ctx)
+				fmt.Println(channels[0])
 				return &icstypes.MsgGovReopenChannel{
 					ConnectionId: suite.path.EndpointA.ConnectionID,
 					PortId:       channels[0].PortId,
 					Authority:    sdk.MustBech32ifyAddressBytes(sdk.GetConfig().GetBech32AccountAddrPrefix(), k.AccountKeeper.GetModuleAddress(govtypes.ModuleName)),
 				}
 			},
-			expecErr: errors.New("existing active channel channel-7 for portID icacontroller-testchain2.delegate on connection connection-0 for owner testchain2.delegate: active channel already set for this owner"),
+			expecErr: errors.New("existing active channel channel-7 for portID icacontroller-testchain2-1.delegate on connection connection-0: active channel already set for this owner"),
 		},
 		{
 			name: "pass",
@@ -637,18 +638,17 @@ func (suite *KeeperTestSuite) TestGovReopenChannel() {
 				quicksilver := suite.GetQuicksilverApp(suite.chainA)
 				ctx := suite.chainA.GetContext()
 				connectionID := "connection-1"
-				portID := "icacontroller-testchain2.delegate"
+				portID := "icacontroller-testchain2-1.delegate"
 				channelID := "channel-9"
 
 				version := []*connectiontypes.Version{
 					{Identifier: "1", Features: []string{"ORDER_ORDERED", "ORDER_UNORDERED"}},
 				}
-				connectionEnd := connectiontypes.ConnectionEnd{ClientId: "09-tendermint-1", State: connectiontypes.OPEN, Versions: version}
+				connectionEnd := connectiontypes.ConnectionEnd{ClientId: "07-tendermint-0", State: connectiontypes.OPEN, Versions: version}
 				quicksilver.IBCKeeper.ConnectionKeeper.SetConnection(ctx, connectionID, connectionEnd)
 
 				_, f := quicksilver.IBCKeeper.ConnectionKeeper.GetConnection(ctx, connectionID)
 				suite.True(f)
-
 				channelSet := channeltypes.Channel{
 					State:          channeltypes.TRYOPEN,
 					Ordering:       channeltypes.NONE,
@@ -683,7 +683,6 @@ func (suite *KeeperTestSuite) TestGovReopenChannel() {
 				return
 			}
 			suite.NoError(err)
-
 			// Check connection for port has been set
 			conn, err := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetConnectionForPort(ctx, msg.PortId)
 			suite.NoError(err)

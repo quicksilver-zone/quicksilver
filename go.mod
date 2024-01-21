@@ -356,7 +356,7 @@ replace (
 	// use cosmos fork of keyring
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 
-	github.com/cosmos/ibc-go/v8 v8.0.1-0.20240112153319-3833f1e8f227 => ../ibc-go
+	// github.com/cosmos/ibc-go/v8 v8.0.1-0.20240112153319-3833f1e8f227 => ../ibc-go
 	// TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
 	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.8.1
 

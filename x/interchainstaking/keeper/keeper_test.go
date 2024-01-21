@@ -160,7 +160,6 @@ func (suite *KeeperTestSuite) setupChannelForICA(ctx sdk.Context, chainID, conne
 		key,
 		host.ChannelCapabilityPath(portID, channelID),
 	)
-	fmt.Println("DEBUG: claimed capability for channel", host.ChannelCapabilityPath(portID, channelID))
 	if err != nil {
 		return err
 	}
@@ -170,7 +169,6 @@ func (suite *KeeperTestSuite) setupChannelForICA(ctx sdk.Context, chainID, conne
 		key,
 		host.ChannelCapabilityPath(portID, channelID),
 	)
-	fmt.Println("DEBUG(ICA): claimed capability for channel", host.ChannelCapabilityPath(portID, channelID))
 
 	if err != nil {
 		return err
@@ -714,11 +712,12 @@ func (suite *KeeperTestSuite) TestGetChainIDFromContext() {
 				ctx := suite.chainA.GetContext()
 
 				ctx = ctx.WithContext(context.WithValue(ctx.Context(), utils.ContextKey("connectionID"), suite.path.EndpointA.ConnectionID))
+				fmt.Println(suite.path.EndpointA.ConnectionID)
 				return suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper, ctx
 			},
 			wantErr:         false,
 			expectedErr:     nil,
-			expectedChainID: "testchain2",
+			expectedChainID: "testchain2-1",
 		},
 	}
 	for _, tc := range testCase {

@@ -477,7 +477,6 @@ func (k *Keeper) GetChainID(ctx sdk.Context, connectionID string) (string, error
 	if !ok {
 		return "", fmt.Errorf("invalid client state for client %q on connection %q", conn.ClientId, connectionID)
 	}
-
 	return client.ChainId, nil
 }
 
