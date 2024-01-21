@@ -20,30 +20,30 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/quicksilver-zone/quicksilver/icq-relayer/pkg/config"
-	"github.com/quicksilver-zone/quicksilver/icq-relayer/prommetrics"
+	"github.com/quicksilver-zone/quicksilver/icq-relayer/v7/pkg/config"
+	"github.com/quicksilver-zone/quicksilver/icq-relayer/v7/prommetrics"
 
 	"github.com/go-kit/log"
 
+	abcitypes "github.com/cometbft/cometbft/abci/types"
+	tmquery "github.com/cometbft/cometbft/libs/pubsub/query"
+	"github.com/cometbft/cometbft/proto/tendermint/crypto"
+	coretypes "github.com/cometbft/cometbft/rpc/core/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	querytypes "github.com/cosmos/cosmos-sdk/types/query"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
-	qstypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
+	qstypes "github.com/quicksilver-zone/quicksilver/v7/x/interchainquery/types"
 	lensclient "github.com/strangelove-ventures/lens/client"
 	lensquery "github.com/strangelove-ventures/lens/client/query"
-	abcitypes "github.com/tendermint/tendermint/abci/types"
-	tmquery "github.com/tendermint/tendermint/libs/pubsub/query"
-	"github.com/tendermint/tendermint/proto/tendermint/crypto"
-	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 	"google.golang.org/grpc/metadata"
 
-	clienttypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
-	tmclient "github.com/cosmos/ibc-go/v5/modules/light-clients/07-tendermint/types"
+	cmtjson "github.com/cometbft/cometbft/libs/json"
+	jsonrpcclient "github.com/cometbft/cometbft/rpc/jsonrpc/client"
+	jsonrpctypes "github.com/cometbft/cometbft/rpc/jsonrpc/types"
+	tmtypes "github.com/cometbft/cometbft/types"
+	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
+	tmclient "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint"
 	"github.com/dgraph-io/ristretto"
-	cmtjson "github.com/tendermint/tendermint/libs/json"
-	jsonrpcclient "github.com/tendermint/tendermint/rpc/jsonrpc/client"
-	jsonrpctypes "github.com/tendermint/tendermint/rpc/jsonrpc/types"
-	tmtypes "github.com/tendermint/tendermint/types"
 )
 
 type Clients []*lensclient.ChainClient
@@ -117,8 +117,10 @@ func Run(cfg *config.Config, home string) error {
 		metrics.SendQueue.WithLabelValues("send-queue").Set(float64(len(sendQueue[c.ChainID])))
 	}
 
-	query := tmquery.MustParse(fmt.Sprintf("message.module='%s'", "interchainquery"))
-
+	query, err := tmquery.Parse(fmt.Sprintf("message.module='%s'", "interchainquery"))
+	if err != nil {
+		// handle error
+	}
 	wg := &sync.WaitGroup{}
 	defer wg.Wait()
 
@@ -644,7 +646,6 @@ func submitClientUpdate(client, submitClient *lensclient.ChainClient, query Quer
 
 	msg := &clienttypes.MsgUpdateClient{
 		ClientId: clientId.(string), // needs to be passed in as part of request.
-		Header:   anyHeader,
 		Signer:   submitClient.MustEncodeAccAddr(from),
 	}
 
@@ -804,7 +805,7 @@ func unique(msgSlice []sdk.Msg, logger log.Logger) []sdk.Msg {
 }
 
 func Close() error {
-	query := tmquery.MustParse(fmt.Sprintf("message.module='%s'", "interchainquery"))
+	query := cmtquery.MustParse(fmt.Sprintf("message.module='%s'", "interchainquery"))
 
 	for _, chainClient := range globalCfg.Cl {
 		err := chainClient.RPCClient.Unsubscribe(ctx, chainClient.Config.ChainID+"-icq", query.String())
