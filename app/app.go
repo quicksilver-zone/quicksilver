@@ -77,7 +77,8 @@ func Init() {
 
 const (
 	// Name defines the application binary name.
-	Name = "quicksilverd"
+	Name         = "quicksilverd"
+	Bech32Prefix = "quicksilver"
 )
 
 // These constants are derived from the above variables.
@@ -94,6 +95,18 @@ var (
 		interchainstakingtypes.ModuleName: true,
 		airdroptypes.ModuleName:           true,
 	}
+	// Bech32PrefixAccAddr defines the Bech32 prefix of an account's address
+	Bech32PrefixAccAddr = Bech32Prefix
+	// Bech32PrefixAccPub defines the Bech32 prefix of an account's public key
+	Bech32PrefixAccPub = Bech32Prefix + sdk.PrefixPublic
+	// Bech32PrefixValAddr defines the Bech32 prefix of a validator's operator address
+	Bech32PrefixValAddr = Bech32Prefix + sdk.PrefixValidator + sdk.PrefixOperator
+	// Bech32PrefixValPub defines the Bech32 prefix of a validator's operator public key
+	Bech32PrefixValPub = Bech32Prefix + sdk.PrefixValidator + sdk.PrefixOperator + sdk.PrefixPublic
+	// Bech32PrefixConsAddr defines the Bech32 prefix of a consensus node address
+	Bech32PrefixConsAddr = Bech32Prefix + sdk.PrefixValidator + sdk.PrefixConsensus
+	// Bech32PrefixConsPub defines the Bech32 prefix of a consensus node public key
+	Bech32PrefixConsPub = Bech32Prefix + sdk.PrefixValidator + sdk.PrefixConsensus + sdk.PrefixPublic
 )
 
 var (
@@ -241,7 +254,6 @@ func NewQuicksilver(
 	app.mm.RegisterInvariants(app.CrisisKeeper)
 	// TODO: in this commit they just removed the RegisterRoutes method https://github.com/cosmos/cosmos-sdk/commit/3a097012b59413641ac92f18f226c5d6b674ae42
 
-	// app.mm.RegisterRoutes(app.Router(), app.QueryRouter(), encodingConfig.Amino)
 	app.configurator = module.NewConfigurator(app.appCodec, app.MsgServiceRouter(), app.GRPCQueryRouter())
 	err = app.mm.RegisterServices(app.configurator)
 	if err != nil {
@@ -255,6 +267,7 @@ func NewQuicksilver(
 	//
 	// NOTE: this is not required apps that don't use the simulator for fuzz testing
 	// transactions
+
 	app.sm = module.NewSimulationManager(simulationModules(app, appCodec)...)
 	app.sm.RegisterStoreDecoders()
 
