@@ -20,8 +20,8 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/quicksilver-zone/quicksilver/v7/icq-relayer/pkg/config"
-	"github.com/quicksilver-zone/quicksilver/v7/icq-relayer/prommetrics"
+	"github.com/quicksilver-zone/quicksilver/icq-relayer/v7/pkg/config"
+	"github.com/quicksilver-zone/quicksilver/icq-relayer/v7/prommetrics"
 
 	"github.com/go-kit/log"
 
@@ -633,6 +633,7 @@ func submitClientUpdate(client, submitClient *lensclient.ChainClient, query Quer
 		cache.Set("clientId/"+query.ConnectionId, clientId, 1)
 	}
 
+	/* REMOVED BECAUSE OF CHANGES TO IBC
 	header, err := getHeader(ctx, client, submitClient, clientId.(string), height, logger, false, metrics)
 	if err != nil {
 		_ = logger.Log("msg", fmt.Sprintf("Error: Could not get header %s", err))
@@ -643,6 +644,7 @@ func submitClientUpdate(client, submitClient *lensclient.ChainClient, query Quer
 		_ = logger.Log("msg", fmt.Sprintf("Error: Could not pack header %s", err))
 		return
 	}
+	/* END REMOVED BECAUSE OF CHANGES TO IBC */
 
 	msg := &clienttypes.MsgUpdateClient{
 		ClientId: clientId.(string), // needs to be passed in as part of request.
@@ -776,21 +778,10 @@ func flush(chainId string, toSend []sdk.Msg, logger log.Logger, metrics prommetr
 
 func unique(msgSlice []sdk.Msg, logger log.Logger) []sdk.Msg {
 	keys := make(map[string]bool)
-	clientUpdateHeights := make(map[string]bool)
 
 	list := []sdk.Msg{}
 	for _, entry := range msgSlice {
-		msg, ok := entry.(*clienttypes.MsgUpdateClient)
-		if ok {
-			header, _ := clienttypes.UnpackHeader(msg.Header)
-			key := header.GetHeight().String()
-			if _, value := clientUpdateHeights[key]; !value {
-				clientUpdateHeights[key] = true
-				list = append(list, entry)
-				_ = logger.Log("msg", "Added ClientUpdate message", "height", key)
-			}
-			continue
-		}
+
 		msg2, ok2 := entry.(*qstypes.MsgSubmitQueryResponse)
 		if ok2 {
 			if _, value := keys[msg2.QueryId]; !value {

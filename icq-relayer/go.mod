@@ -1,4 +1,4 @@
-module github.com/quicksilver-zone/quicksilver/v7/icq-relayer
+module github.com/quicksilver-zone/quicksilver/icq-relayer/v7
 
 go 1.21
 
