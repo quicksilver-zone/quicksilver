@@ -82,6 +82,7 @@ import (
 	epochstypes "github.com/quicksilver-zone/quicksilver/v7/x/epochs/types"
 	interchainquerykeeper "github.com/quicksilver-zone/quicksilver/v7/x/interchainquery/keeper"
 	interchainquerytypes "github.com/quicksilver-zone/quicksilver/v7/x/interchainquery/types"
+	"github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking"
 	interchainstakingkeeper "github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking/keeper"
 	interchainstakingtypes "github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking/types"
 	mintkeeper "github.com/quicksilver-zone/quicksilver/v7/x/mint/keeper"
@@ -542,12 +543,17 @@ func (appKeepers *AppKeepers) InitKeepers(
 	wasmStack = wasm.NewIBCHandler(appKeepers.WasmKeeper, appKeepers.IBCKeeper.ChannelKeeper, appKeepers.IBCFeeKeeper)
 	wasmStack = ibcfee.NewIBCMiddleware(wasmStack, appKeepers.IBCFeeKeeper)
 
+	var icsStack porttypes.IBCModule
+	icsStack = interchainstaking.NewIBCModule(appKeepers.InterchainstakingKeeper)
+	icsStack = ibcfee.NewIBCMiddleware(icsStack, appKeepers.IBCFeeKeeper)
+
 	// Create static IBC router, add app routes, then set and seal it
 	ibcRouter := porttypes.NewRouter().
 		AddRoute(ibctransfertypes.ModuleName, transferStack).
 		AddRoute(wasmtypes.ModuleName, wasmStack).
 		AddRoute(icacontrollertypes.SubModuleName, icaControllerStack).
-		AddRoute(icahosttypes.SubModuleName, icaHostStack)
+		AddRoute(icahosttypes.SubModuleName, icaHostStack).
+		AddRoute(interchainstakingtypes.ModuleName, icsStack)
 	appKeepers.IBCKeeper.SetRouter(ibcRouter)
 
 	// create evidence keeper with router
@@ -564,6 +570,7 @@ func (appKeepers *AppKeepers) InitKeepers(
 	govRouter := govv1beta1.NewRouter()
 	govRouter.AddRoute(govtypes.RouterKey, govv1beta1.ProposalHandler).
 		AddRoute(paramproposal.RouterKey, params.NewParamChangeProposalHandler(appKeepers.ParamsKeeper)).
+		AddRoute(interchainstakingtypes.RouterKey, interchainstaking.NewProposalHandler(appKeepers.InterchainstakingKeeper)).
 		AddRoute(ibcclienttypes.RouterKey, ibcclient.NewClientProposalHandler(appKeepers.IBCKeeper.ClientKeeper))
 	govConfig := govtypes.DefaultConfig()
 	/*
