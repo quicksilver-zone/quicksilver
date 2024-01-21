@@ -1,6 +1,6 @@
 
 on: [push, pull_request]
-name: icq-relayer: build and test
+name: icq-relayer
 jobs:
   test:
     strategy:
