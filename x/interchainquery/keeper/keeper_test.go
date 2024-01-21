@@ -4,8 +4,9 @@ import (
 	"math/rand"
 	"testing"
 
-	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/suite"
+
+	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -198,6 +199,7 @@ func (suite *KeeperTestSuite) TestDataPoints() {
 	suite.NoError(err)
 
 	vals, err := suite.GetSimApp(suite.chainB).StakingKeeper.GetBondedValidatorsByPower(suite.chainB.GetContext())
+	suite.NoError(err)
 	qvr := stakingtypes.QueryValidatorsResponse{
 		Validators: vals,
 	}

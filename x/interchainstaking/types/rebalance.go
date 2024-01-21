@@ -6,7 +6,6 @@ import (
 	"sort"
 
 	"cosmossdk.io/log"
-
 	sdkmath "cosmossdk.io/math"
 
 	"github.com/quicksilver-zone/quicksilver/v7/utils"

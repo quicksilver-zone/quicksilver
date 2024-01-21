@@ -2,11 +2,12 @@ package keeper_test
 
 import (
 	sdkmath "cosmossdk.io/math"
-	"github.com/cometbft/cometbft/proto/tendermint/crypto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	staking "github.com/cosmos/cosmos-sdk/x/staking/types"
+
+	"github.com/cometbft/cometbft/proto/tendermint/crypto"
 
 	"github.com/quicksilver-zone/quicksilver/v7/utils/addressutils"
 	"github.com/quicksilver-zone/quicksilver/v7/x/airdrop/keeper"

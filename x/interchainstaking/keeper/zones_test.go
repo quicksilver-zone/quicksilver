@@ -7,11 +7,12 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/log"
-	sdkmath "cosmossdk.io/math"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/exp/maps"
+
+	"cosmossdk.io/log"
+	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"

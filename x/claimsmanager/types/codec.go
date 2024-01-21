@@ -3,7 +3,6 @@ package types
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
-	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 
@@ -12,10 +11,7 @@ import (
 	"github.com/quicksilver-zone/quicksilver/v7/third-party-chains/osmosis-types/gamm/pool-models/stableswap"
 )
 
-var (
-	amino     = codec.NewLegacyAmino()
-	ModuleCdc = codec.NewAminoCodec(amino)
-)
+var ModuleCdc = codec.NewLegacyAmino()
 
 func RegisterLegacyAminoCodec(_ *codec.LegacyAmino) {
 }
@@ -31,11 +27,4 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
-}
-
-func init() {
-	RegisterLegacyAminoCodec(amino)
-	cryptocodec.RegisterCrypto(amino)
-	sdk.RegisterLegacyAminoCodec(amino)
-	amino.Seal()
 }

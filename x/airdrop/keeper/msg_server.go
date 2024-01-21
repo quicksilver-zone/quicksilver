@@ -70,7 +70,7 @@ func (k msgServer) IncentivePoolSpend(goCtx context.Context, msg *types.MsgIncen
 				telemetry.SetGaugeWithLabels(
 					[]string{"tx", "msg", "send"},
 					float32(a.Amount.Int64()),
-					[]metrics.Label{metrics.Label{Name: "denom", Value: a.Denom}}, // change this line
+					[]metrics.Label{{Name: "denom", Value: a.Denom}}, // change this line
 				)
 			}
 		}

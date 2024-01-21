@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 
-	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
@@ -13,8 +12,10 @@ import (
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+
+	abci "github.com/cometbft/cometbft/abci/types"
+
 	"github.com/quicksilver-zone/quicksilver/v7/x/supply/keeper"
 	"github.com/quicksilver-zone/quicksilver/v7/x/supply/types"
 )

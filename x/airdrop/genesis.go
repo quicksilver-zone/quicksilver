@@ -3,9 +3,10 @@ package airdrop
 import (
 	"fmt"
 
+	sdkmath "cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	sdkmath "cosmossdk.io/math"
 	"github.com/quicksilver-zone/quicksilver/v7/x/airdrop/keeper"
 	"github.com/quicksilver-zone/quicksilver/v7/x/airdrop/types"
 )

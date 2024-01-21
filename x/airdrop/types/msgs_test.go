@@ -3,12 +3,13 @@ package types_test
 import (
 	"testing"
 
-	"github.com/cometbft/cometbft/proto/tendermint/crypto"
 	"github.com/stretchr/testify/require"
 
 	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/cometbft/cometbft/proto/tendermint/crypto"
 
 	"github.com/quicksilver-zone/quicksilver/v7/utils/addressutils"
 	"github.com/quicksilver-zone/quicksilver/v7/x/airdrop/types"

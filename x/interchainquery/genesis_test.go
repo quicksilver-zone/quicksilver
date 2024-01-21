@@ -5,9 +5,10 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
+	sdkmath "cosmossdk.io/math"
+
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	sdkmath "cosmossdk.io/math"
 	ibctesting "github.com/cosmos/ibc-go/v8/testing"
 
 	"github.com/quicksilver-zone/quicksilver/v7/app"

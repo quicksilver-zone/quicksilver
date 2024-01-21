@@ -6,8 +6,9 @@ import (
 	"errors"
 	"fmt"
 
-	sdkmath "cosmossdk.io/math"
 	"github.com/spf13/cobra"
+
+	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"

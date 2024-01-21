@@ -13,6 +13,7 @@ import (
 	"github.com/spf13/cast"
 
 	pruningtypes "cosmossdk.io/store/pruning/types"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -55,6 +56,7 @@ func DefaultConfig(t *testing.T) network.Config {
 		KeyringOptions:    []keyring.Option{},
 	}
 }
+
 func NewAppConstructor(encCfg EncodingConfig) network.AppConstructor {
 	return func(val network.ValidatorI) servertypes.Application {
 		return NewQuicksilver(

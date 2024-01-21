@@ -7,8 +7,9 @@ import (
 	"strconv"
 	"strings"
 
-	sdkmath "cosmossdk.io/math"
 	"github.com/ingenuity-build/multierror"
+
+	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"

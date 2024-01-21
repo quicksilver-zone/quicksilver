@@ -4,13 +4,13 @@ import (
 	"fmt"
 
 	sdkmath "cosmossdk.io/math"
-	"github.com/cometbft/cometbft/crypto"
-
-	"cosmossdk.io/math"
-
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/cometbft/cometbft/crypto"
+
 	"github.com/quicksilver-zone/quicksilver/v7/x/interchainquery/types"
 )
 
@@ -26,7 +26,7 @@ func (k Keeper) NewQuery(
 	chainID,
 	queryType string,
 	request []byte,
-	period math.Int,
+	period sdkmath.Int,
 	callbackID string,
 	ttl uint64,
 ) *types.Query {

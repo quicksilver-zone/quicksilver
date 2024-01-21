@@ -4,16 +4,17 @@ import (
 	"fmt"
 	"testing"
 
-	tmcli "github.com/cometbft/cometbft/libs/cli"
 	proto "github.com/cosmos/gogoproto/proto"
-
 	"github.com/stretchr/testify/suite"
 
 	sdkmath "cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	tmcli "github.com/cometbft/cometbft/libs/cli"
 
 	"github.com/quicksilver-zone/quicksilver/v7/app"
 	"github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking/client/cli"

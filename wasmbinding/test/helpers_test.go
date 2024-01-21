@@ -3,10 +3,10 @@ package wasmbinding
 import (
 	"testing"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/cometbft/cometbft/crypto"
 	"github.com/cometbft/cometbft/crypto/ed25519"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/quicksilver-zone/quicksilver/v7/app"
 )

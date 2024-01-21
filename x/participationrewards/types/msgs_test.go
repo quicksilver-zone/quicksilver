@@ -5,10 +5,11 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/cometbft/cometbft/proto/tendermint/crypto"
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/cometbft/cometbft/proto/tendermint/crypto"
 
 	"github.com/quicksilver-zone/quicksilver/v7/utils/addressutils"
 	cmtypes "github.com/quicksilver-zone/quicksilver/v7/x/claimsmanager/types"

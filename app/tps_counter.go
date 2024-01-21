@@ -6,10 +6,11 @@ import (
 	"sync/atomic"
 	"time"
 
-	"cosmossdk.io/log"
 	"go.opencensus.io/stats"
 	"go.opencensus.io/stats/view"
 	"go.opencensus.io/tag"
+
+	"cosmossdk.io/log"
 )
 
 var (
