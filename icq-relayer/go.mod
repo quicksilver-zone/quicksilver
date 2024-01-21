@@ -1,4 +1,4 @@
-module github.com/quicksilver-zone/quicksilver/v7/icq-relayer
+module github.com/quicksilver-zone/quicksilver/icq-relayer/v7
 
 go 1.21
 
@@ -6,13 +6,13 @@ require (
 	cosmossdk.io/x/feegrant v0.1.0
 	cosmossdk.io/x/upgrade v0.1.1
 	github.com/cometbft/cometbft v0.38.2
-	github.com/cosmos/cosmos-sdk v0.50.3-0.20240113183815-8ac049214243
+	github.com/cosmos/cosmos-sdk v0.50.3
 	github.com/cosmos/ibc-go/modules/capability v1.0.0
 	github.com/cosmos/ibc-go/v8 v8.0.1-0.20240112153319-3833f1e8f227
 	github.com/dgraph-io/ristretto v0.1.1
 	github.com/go-kit/log v0.2.1
 	github.com/prometheus/client_golang v1.18.0
-	github.com/quicksilver-zone/quicksilver/v7 v7.0.0-00010101000000-000000000000
+	github.com/quicksilver-zone/quicksilver/v7 v7.0.0-20240121144549-3f9226f75405
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/viper v1.18.2
 	github.com/strangelove-ventures/lens v0.6.0
@@ -29,7 +29,7 @@ require (
 	cloud.google.com/go/storage v1.35.1 // indirect
 	cosmossdk.io/api v0.7.2 // indirect
 	cosmossdk.io/collections v0.4.0 // indirect
-	cosmossdk.io/core v0.11.0 // indirect
+	cosmossdk.io/core v0.12.0 // indirect
 	cosmossdk.io/depinject v1.0.0-alpha.4 // indirect
 	cosmossdk.io/errors v1.0.1 // indirect
 	cosmossdk.io/log v1.3.0 // indirect
@@ -51,14 +51,13 @@ require (
 	github.com/btcsuite/btcd/btcec/v2 v2.3.2 // indirect
 	github.com/btcsuite/btcd/btcutil v1.1.5 // indirect
 	github.com/btcsuite/btcd/chaincfg/chainhash v1.1.0 // indirect
-	github.com/bytedance/sonic v1.10.2 // indirect
 	github.com/cenkalti/backoff/v4 v4.2.1 // indirect
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/chzyer/readline v1.5.1 // indirect
 	github.com/cockroachdb/errors v1.11.1 // indirect
 	github.com/cockroachdb/logtags v0.0.0-20230118201751-21c54148d20b // indirect
-	github.com/cockroachdb/pebble v0.0.0-20231102162011-844f0582c2eb // indirect
+	github.com/cockroachdb/pebble v0.0.0-20231119032537-b9be64b88e6a // indirect
 	github.com/cockroachdb/redact v1.1.5 // indirect
 	github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06 // indirect
 	github.com/cometbft/cometbft-db v0.9.1 // indirect
@@ -85,11 +84,11 @@ require (
 	github.com/emicklei/dot v1.6.0 // indirect
 	github.com/ethereum/c-kzg-4844 v0.4.0 // indirect
 	github.com/ethereum/go-ethereum v1.13.5 // indirect
-	github.com/fatih/color v1.15.0 // indirect
+	github.com/fatih/color v1.16.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/getsentry/sentry-go v0.25.0 // indirect
-	github.com/go-kit/kit v0.12.0 // indirect
+	github.com/go-kit/kit v0.13.0 // indirect
 	github.com/go-logfmt/logfmt v0.6.0 // indirect
 	github.com/go-stack/stack v1.8.1 // indirect
 	github.com/godbus/dbus v0.0.0-20190726142602-4481cbc300e2 // indirect
@@ -117,8 +116,8 @@ require (
 	github.com/hashicorp/go-getter v1.7.3 // indirect
 	github.com/hashicorp/go-hclog v1.5.0 // indirect
 	github.com/hashicorp/go-immutable-radix v1.3.1 // indirect
-	github.com/hashicorp/go-metrics v0.5.2 // indirect
-	github.com/hashicorp/go-plugin v1.5.2 // indirect
+	github.com/hashicorp/go-metrics v0.5.3 // indirect
+	github.com/hashicorp/go-plugin v1.6.0 // indirect
 	github.com/hashicorp/go-safetemp v1.0.0 // indirect
 	github.com/hashicorp/go-version v1.6.0 // indirect
 	github.com/hashicorp/golang-lru v1.0.2 // indirect
@@ -202,7 +201,7 @@ require (
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	gotest.tools/v3 v3.5.1 // indirect
-	nhooyr.io/websocket v1.8.7 // indirect
+	nhooyr.io/websocket v1.8.10 // indirect
 	pgregory.net/rapid v1.1.0 // indirect
 	rsc.io/tmplfunc v0.0.3 // indirect
 	sigs.k8s.io/yaml v1.4.0 // indirect
@@ -210,6 +209,5 @@ require (
 
 replace (
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
-	github.com/quicksilver-zone/quicksilver/v7 => ../
 	github.com/strangelove-ventures/lens => github.com/notional-labs/lens v0.0.0-20240114101800-ae65fc74a22d
 )
