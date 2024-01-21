@@ -26,7 +26,7 @@ func (upd *UmeeProtocolData) GenerateKey() []byte {
 	return []byte(upd.Denom)
 }
 
-func GetUnderlyingData[V math.Int | sdkmath.LegacyDec](upd *UmeeProtocolData) (V, error) {
+func GetUnderlyingData[V sdkmath.Int | sdkmath.LegacyDec](upd *UmeeProtocolData) (V, error) {
 	var data V
 	err := json.Unmarshal(upd.Data, &data)
 	if err != nil {
@@ -66,15 +66,15 @@ type UmeeUTokenSupplyProtocolData struct {
 }
 
 func (upd *UmeeUTokenSupplyProtocolData) GetUTokenSupply() (math.Int, error) {
-	return GetUnderlyingData[math.Int](&upd.UmeeProtocolData)
+	return GetUnderlyingData[sdkmath.Int](&upd.UmeeProtocolData)
 }
 
 type UmeeLeverageModuleBalanceProtocolData struct {
 	UmeeProtocolData
 }
 
-func (upd *UmeeLeverageModuleBalanceProtocolData) GetModuleBalance() (math.Int, error) {
-	return GetUnderlyingData[math.Int](&upd.UmeeProtocolData)
+func (upd *UmeeLeverageModuleBalanceProtocolData) GetModuleBalance() (sdkmath.Int, error) {
+	return GetUnderlyingData[sdkmath.Int](&upd.UmeeProtocolData)
 }
 
 // -----------------------------------------------------
