@@ -6,14 +6,20 @@ import { SigningStargateClientOptions, AminoTypes } from '@cosmjs/stargate';
 import { SignerOptions } from '@cosmos-kit/core';
 import { wallets as cosmostationWallets } from '@cosmos-kit/cosmostation';
 import { wallets as keplrWallets } from '@cosmos-kit/keplr';
-import { wallets as LeapExtensionWallet } from '@cosmos-kit/leap-extension';
-import { wallets as LeapMobileWallet } from '@cosmos-kit/leap-mobile';
+import { wallets as leapWallets } from '@cosmos-kit/leap';
 import { ChainProvider, ThemeCustomizationProps } from '@cosmos-kit/react';
 import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { chains, assets } from 'chain-registry';
 import type { AppProps } from 'next/app';
-import { quicksilverProtoRegistry, quicksilverAminoConverters, cosmosAminoConverters, cosmosProtoRegistry, ibcAminoConverters, ibcProtoRegistry } from 'quicksilverjs';
+import {
+  quicksilverProtoRegistry,
+  quicksilverAminoConverters,
+  cosmosAminoConverters,
+  cosmosProtoRegistry,
+  ibcAminoConverters,
+  ibcProtoRegistry,
+} from 'quicksilverjs';
 
 import { Header, SideHeader } from '@/components';
 import { defaultTheme } from '@/config';
@@ -25,11 +31,7 @@ function QuickApp({ Component, pageProps }: AppProps) {
     //@ts-ignore
     signingStargate: (chain: Chain): SigningStargateClientOptions | undefined => {
       //@ts-ignore
-      const mergedRegistry = new Registry([
-        ...quicksilverProtoRegistry,
-        ...ibcProtoRegistry,
-        ...cosmosProtoRegistry,
-      ]);
+      const mergedRegistry = new Registry([...quicksilverProtoRegistry, ...ibcProtoRegistry, ...cosmosProtoRegistry]);
 
       const mergedAminoTypes = new AminoTypes({
         ...cosmosAminoConverters,
@@ -216,6 +218,35 @@ function QuickApp({ Component, pageProps }: AppProps) {
     },
   };
 
+  function isWalletClientAvailable(walletName: string) {
+    if (typeof window === 'undefined') {
+      return false;
+    }
+
+    switch (walletName) {
+      case 'Keplr':
+        return typeof window.keplr !== 'undefined';
+      case 'Cosmostation':
+        return typeof window.cosmostation !== 'undefined';
+      case 'Leap':
+        return typeof window.leap !== 'undefined';
+      default:
+        return false;
+    }
+  }
+
+  const availableWallets = [];
+
+  if (isWalletClientAvailable('Keplr')) {
+    availableWallets.push(...keplrWallets);
+  }
+  if (isWalletClientAvailable('Cosmostation')) {
+    availableWallets.push(...cosmostationWallets);
+  }
+  if (isWalletClientAvailable('Leap')) {
+    availableWallets.push(...leapWallets);
+  }
+
   return (
     <ChakraProvider theme={defaultTheme}>
       <ChainProvider
@@ -263,15 +294,15 @@ function QuickApp({ Component, pageProps }: AppProps) {
         modalTheme={modalThemeOverrides}
         chains={chains}
         assetLists={assets}
-        wallets={[...keplrWallets, ...cosmostationWallets, ...LeapExtensionWallet, ...LeapMobileWallet]}
+        wallets={availableWallets}
         walletConnectOptions={{
           signClient: {
-            projectId: 'a8510432ebb71e6948cfd6cde54b70f7',
+            projectId: '41a0749c331d209190beeac1c2530c90',
             relayUrl: 'wss://relay.walletconnect.org',
             metadata: {
-              name: 'Quicksilver Dashboard',
-              description: 'Interact with the Quicksilver Network',
-              url: 'https://docs.quicksilver.zone/',
+              name: 'Quicksilver',
+              description: 'CosmosKit dapp template',
+              url: 'https://docs.cosmoskit.com/',
               icons: [],
             },
           },

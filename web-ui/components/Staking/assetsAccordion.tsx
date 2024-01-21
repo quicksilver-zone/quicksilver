@@ -17,7 +17,6 @@ type AssetsAccordianProps = {
 
 export const AssetsAccordian: React.FC<AssetsAccordianProps> = ({ selectedOption, balance, qBalance }) => {
   const qAssets = shiftDigits(qBalance, -6);
-  console.log(balance);
 
   const qAssetsDisplay = qAssets.includes('.') ? qAssets.substring(0, qAssets.indexOf('.') + 3) : qAssets;
   const balanceDisplay = balance.includes('.') ? balance.substring(0, balance.indexOf('.') + 4) : balance;

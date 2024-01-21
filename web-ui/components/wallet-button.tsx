@@ -19,16 +19,12 @@ import { useDrawerControl } from '@/state/useDrawerController';
 export const WalletButton: React.FC<{ chainName: string }> = ({ chainName }) => {
   const { connect, openView, status, message, wallet } = useChain(chainName || 'cosmoshub');
 
-  const { closeDrawer } = useDrawerControl();
-
   // Events
   const onClickConnect: MouseEventHandler = async (e) => {
-    closeDrawer();
     await connect();
   };
 
   const onClickOpenView: MouseEventHandler = (e) => {
-    closeDrawer();
     openView();
   };
 

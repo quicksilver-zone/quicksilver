@@ -36,19 +36,13 @@ export const SideHeader = () => {
   const [showSocialLinks, setShowSocialLinks] = useState(false);
 
   useEffect(() => {
-    const path = router.asPath.split('/')[1];
-    setSelectedPage(path);
-
     const handleRouteChange = (url: string) => {
-      const newPath = url.split('/')[1];
-      setSelectedPage(newPath);
+      const path = url.split('/')[1];
+      setSelectedPage(path);
     };
 
     router.events.on('routeChangeComplete', handleRouteChange);
-
-    return () => {
-      router.events.off('routeChangeComplete', handleRouteChange);
-    };
+    return () => router.events.off('routeChangeComplete', handleRouteChange);
   }, [router]);
 
   const commonBoxShadowColor = 'rgba(255, 128, 0, 0.25)';
@@ -169,9 +163,7 @@ export const SideHeader = () => {
                     </Link>
                   </Box>
                 ))}
-                <Box mt={12} position="relative">
-                  <WalletButton chainName={'quicksilver'} />
-                </Box>
+                <Box mt={12} position="relative"></Box>
                 <HStack mt={'50px'} alignContent={'center'} justifyContent={'space-around'}>
                   <Box
                     _hover={{
@@ -227,9 +219,9 @@ export const SideHeader = () => {
                       }}
                     >
                       <Image
-                        filter={selectedPage === 'staking' ? 'contrast(100%)' : 'contrast(0%)'}
+                        filter={selectedPage === 'staking' ? 'contrast(100%)' : 'contrast(50%)'}
                         _hover={{
-                          filter: 'contrast(50%)',
+                          filter: 'contrast(100%)',
                         }}
                         alt="Staking"
                         h="60px"
@@ -257,9 +249,9 @@ export const SideHeader = () => {
                       }}
                     >
                       <Image
-                        filter={selectedPage === 'governance' ? 'contrast(100%)' : 'contrast(0%)'}
+                        filter={selectedPage === 'governance' ? 'contrast(100%)' : 'contrast(50%)'}
                         _hover={{
-                          filter: 'contrast(50%)',
+                          filter: 'contrast(100%)',
                         }}
                         alt="Governance"
                         h="60px"
@@ -285,9 +277,9 @@ export const SideHeader = () => {
                       }}
                     >
                       <Image
-                        filter={selectedPage === 'assets' ? 'contrast(100%)' : 'contrast(0%)'}
+                        filter={selectedPage === 'assets' ? 'contrast(100%)' : 'contrast(50%)'}
                         _hover={{
-                          filter: 'contrast(50%)',
+                          filter: 'contrast(100%)',
                         }}
                         alt="Assets"
                         h="55px"
@@ -311,9 +303,9 @@ export const SideHeader = () => {
                       }}
                     >
                       <Image
-                        filter={selectedPage === 'airdrop' ? 'contrast(100%)' : 'contrast(0%)'}
+                        filter={selectedPage === 'airdrop' ? 'contrast(100%)' : 'contrast(50%)'}
                         _hover={{
-                          filter: 'contrast(50%)',
+                          filter: 'contrast(100%)',
                         }}
                         alt="DeFi"
                         h="55px"
@@ -338,9 +330,9 @@ export const SideHeader = () => {
                       }}
                     >
                       <Image
-                        filter={selectedPage === 'defi' ? 'contrast(100%)' : 'contrast(0%)'}
+                        filter={selectedPage === 'defi' ? 'contrast(100%)' : 'contrast(50%)'}
                         _hover={{
-                          filter: 'contrast(50%)',
+                          filter: 'contrast(100%)',
                         }}
                         alt="DeFi"
                         h="55px"
