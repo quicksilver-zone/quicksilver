@@ -221,7 +221,7 @@ func (suite *KeeperTestSuite) setupTestZones() {
 	suite.True(found)
 
 	for i := range vals {
-		suite.NoError(quicksilver.InterchainstakingKeeper.SetValidatorForZone(suite.chainA.GetContext(), &zone, app.DefaultConfig().Codec.MustMarshal(&vals[i])))
+		suite.NoError(quicksilver.InterchainstakingKeeper.SetValidatorForZone(suite.chainA.GetContext(), &zone, app.MakeEncodingConfig(suite.T()).Codec.MustMarshal(&vals[i])))
 	}
 
 	// self zone

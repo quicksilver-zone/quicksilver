@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
 	"time"
 
@@ -116,8 +117,11 @@ func (suite *KeeperTestSuite) setupTestZones() {
 
 	vals, err := suite.GetQuicksilverApp(suite.chainB).StakingKeeper.GetBondedValidatorsByPower(suite.chainB.GetContext())
 	suite.NoError(err)
+
 	for i := range vals {
-		suite.NoError(quicksilver.InterchainstakingKeeper.SetValidatorForZone(suite.chainA.GetContext(), &zone, app.DefaultConfig().Codec.MustMarshal(&vals[i])))
+		err := quicksilver.InterchainstakingKeeper.SetValidatorForZone(suite.chainA.GetContext(), &zone, app.MakeEncodingConfig(suite.T()).Codec.MustMarshal(&vals[i]))
+		suite.NoError(err)
+
 	}
 
 	suite.coordinator.CommitNBlocks(suite.chainA, 2)
@@ -156,10 +160,21 @@ func (suite *KeeperTestSuite) setupChannelForICA(ctx sdk.Context, chainID, conne
 		key,
 		host.ChannelCapabilityPath(portID, channelID),
 	)
+	fmt.Println("DEBUG: claimed capability for channel", host.ChannelCapabilityPath(portID, channelID))
 	if err != nil {
 		return err
 	}
 
+	err = quicksilver.ScopedICAControllerKeeper.ClaimCapability(
+		ctx,
+		key,
+		host.ChannelCapabilityPath(portID, channelID),
+	)
+	fmt.Println("DEBUG(ICA): claimed capability for channel", host.ChannelCapabilityPath(portID, channelID))
+
+	if err != nil {
+		return err
+	}
 	key, err = quicksilver.InterchainstakingKeeper.ScopedKeeper().NewCapability(
 		ctx,
 		host.PortPath(portID),

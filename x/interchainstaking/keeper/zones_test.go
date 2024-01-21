@@ -9,8 +9,6 @@ import (
 
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
-	"github.com/CosmWasm/wasmd/x/wasm"
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/exp/maps"
@@ -33,13 +31,10 @@ func newQuicksilver(t *testing.T) *app.Quicksilver {
 		true,
 		map[int64]bool{},
 		t.TempDir(),
-		5,
-		app.MakeEncodingConfig(),
-		wasm.EnableAllProposals,
 		app.EmptyAppOptions{},
-		app.GetWasmOpts(app.EmptyAppOptions{}),
 		true,
 		false,
+		app.GetWasmOpts(app.EmptyAppOptions{}),
 	)
 }
 
@@ -48,7 +43,7 @@ func TestKeeperWithZonesRoundTrip(t *testing.T) {
 
 	chainID := "quicksilver-1"
 	kpr := quicksilver.InterchainstakingKeeper
-	ctx := quicksilver.NewContext(true, tmproto.Header{Height: quicksilver.LastBlockHeight()})
+	ctx := quicksilver.NewContext(true)
 
 	// 1. Check for a zone without having stored anything.
 	zone, ok := kpr.GetZone(ctx, chainID)

@@ -15,7 +15,7 @@ import (
 )
 
 func TestDecodeStore(t *testing.T) {
-	cdc := app.MakeEncodingConfig().Marshaler
+	cdc := app.MakeEncodingConfig(t).Codec
 	dec := simulation.NewDecodeStore(cdc)
 
 	minter := types.NewMinter(sdkmath.LegacyNewDec(15))
