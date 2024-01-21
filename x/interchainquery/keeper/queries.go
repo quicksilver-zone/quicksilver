@@ -3,14 +3,15 @@ package keeper
 import (
 	"fmt"
 
-	sdkmath "cosmossdk.io/math"
-	"github.com/cometbft/cometbft/crypto"
-
 	"cosmossdk.io/math"
-
+	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/cometbft/cometbft/crypto"
+
 	"github.com/quicksilver-zone/quicksilver/v7/x/interchainquery/types"
 )
 

@@ -3,13 +3,15 @@ package keeper_test
 import (
 	"testing"
 
-	"github.com/cometbft/cometbft/crypto/ed25519"
 	"github.com/stretchr/testify/suite"
 
 	sdkmath "cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
+
+	"github.com/cometbft/cometbft/crypto/ed25519"
 
 	"github.com/quicksilver-zone/quicksilver/v7/app"
 	cmdcfg "github.com/quicksilver-zone/quicksilver/v7/cmd/quicksilverd/config"

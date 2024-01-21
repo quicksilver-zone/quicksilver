@@ -4,10 +4,11 @@ import (
 	"errors"
 	"fmt"
 
-	"cosmossdk.io/store"
-	storetypes "cosmossdk.io/store/types"
 	db "github.com/cosmos/cosmos-db"
 	"google.golang.org/protobuf/proto"
+
+	"cosmossdk.io/store"
+	storetypes "cosmossdk.io/store/types"
 )
 
 func GatherAllKeysFromStore(storeObj store.KVStore) []string {

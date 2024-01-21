@@ -2,8 +2,8 @@ package keeper_test
 
 import (
 	"cosmossdk.io/math"
-
 	sdkmath "cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	icskeeper "github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking/keeper"

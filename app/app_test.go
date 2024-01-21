@@ -3,25 +3,26 @@ package app_test
 import (
 	"testing"
 
-	cmtjson "github.com/cometbft/cometbft/libs/json"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/gogoproto/proto"
+	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
-	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/quicksilver-zone/quicksilver/v7/app"
-
-	"github.com/cometbft/cometbft/crypto/secp256k1"
-	tmtypes "github.com/cometbft/cometbft/types"
-	dbm "github.com/cosmos/cosmos-db"
-	"github.com/stretchr/testify/require"
 
 	cosmossecp256k1 "github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+
+	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cometbft/cometbft/crypto/secp256k1"
+	cmtjson "github.com/cometbft/cometbft/libs/json"
+	tmtypes "github.com/cometbft/cometbft/types"
+
+	"github.com/quicksilver-zone/quicksilver/v7/app"
 )
 
 func TestQuicksilverExport(t *testing.T) {
