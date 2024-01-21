@@ -301,8 +301,8 @@ function QuickApp({ Component, pageProps }: AppProps) {
             relayUrl: 'wss://relay.walletconnect.org',
             metadata: {
               name: 'Quicksilver',
-              description: 'CosmosKit dapp template',
-              url: 'https://docs.cosmoskit.com/',
+              description: 'Quicksilver App',
+              url: 'https://apps.qucksilver.zone/',
               icons: [],
             },
           },
