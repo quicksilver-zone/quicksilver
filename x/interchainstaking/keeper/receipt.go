@@ -294,7 +294,7 @@ func (k *Keeper) SubmitTx(ctx sdk.Context, msgs []sdk.Msg, account *types.ICAAcc
 		msgs = msgs[chunkSize:]
 
 		// build and submit message for this chunk
-		data, err := icatypes.SerializeCosmosTx(k.cdc, msgsChunk, icatypes.EncodingProto3JSON)
+		data, err := icatypes.SerializeCosmosTx(k.cdc, msgsChunk, icatypes.EncodingProtobuf)
 		if err != nil {
 			return err
 		}
