@@ -18,26 +18,21 @@ import {
   RejectedWarn,
   WalletConnectComponent,
 } from '@/components';
+import { useDrawerControl } from '@/state/useDrawerController';
 
 export const WalletButton: React.FC<{ chainName: string }> = ({ chainName }) => {
-  const { connect, openView, status, username, address, message, wallet, chain: chainInfo } = useChain(chainName || 'cosmoshub');
-  const { getChainLogo } = useManager();
+  const { connect, openView, status, message, wallet } = useChain(chainName || 'cosmoshub');
 
-  const chain = {
-    chainName,
-    label: chainInfo.pretty_name,
-    value: chainName,
-    icon: getChainLogo(chainName || 'cosmoshub'),
-  };
+  const { closeDrawer } = useDrawerControl();
 
   // Events
   const onClickConnect: MouseEventHandler = async (e) => {
-    e.preventDefault();
+    closeDrawer();
     await connect();
   };
 
   const onClickOpenView: MouseEventHandler = (e) => {
-    e.preventDefault();
+    closeDrawer();
     openView();
   };
 
@@ -61,9 +56,6 @@ export const WalletButton: React.FC<{ chainName: string }> = ({ chainName }) => 
       error={<RejectedWarn icon={<Icon as={FiAlertTriangle} mt={1} />} wordOfWarning={`${wallet?.prettyName}: ${message}`} />}
     />
   );
-
-  const userInfo = username && <ConnectedUserInfo username={username} icon={<Astronaut />} />;
-  const addressBtn = <CopyAddressBtn walletStatus={status} connected={<ConnectedShowAddress address={address} isLoading={false} />} />;
 
   return (
     <Center>

@@ -19,15 +19,11 @@ import {
   Spacer,
   Skeleton,
   SkeletonText,
-  useToast,
   SlideFade,
   Spinner,
-  FormControl,
-  FormLabel,
   Switch,
   Tooltip,
   Image,
-  Icon,
   SkeletonCircle,
   Link,
 } from '@chakra-ui/react';
@@ -92,19 +88,15 @@ export const StakingBox = ({
   const { address: qAddress } = useChain('quicksilver');
   const exp = getExponent(selectedOption.chainName);
   const { balance, isLoading } = useBalanceQuery(selectedOption.chainName, address ?? '');
-  const { balance: allBalances, isLoading: allBalancesIsLoading } = useAllBalancesQuery(selectedOption.chainName, address ?? '');
+  const { balance: allBalances } = useAllBalancesQuery(selectedOption.chainName, address ?? '');
 
-  const {
-    balance: qBalance,
-    isLoading: qIsLoading,
-    isError: qIsError,
-  } = useQBalanceQuery('quicksilver', qAddress ?? '', selectedOption.value.toLowerCase());
+  const { balance: qBalance } = useQBalanceQuery('quicksilver', qAddress ?? '', selectedOption.value.toLowerCase());
 
   const qAssets = qBalance?.balance.amount || '';
 
   const baseBalance = shiftDigits(balance?.balance?.amount || '0', -exp);
 
-  const { data: zone, isLoading: isZoneLoading, isError: isZoneError } = useZoneQuery(selectedOption.chainId);
+  const { data: zone } = useZoneQuery(selectedOption.chainId);
 
   useEffect(() => {
     setQBalance(qAssets);
@@ -139,13 +131,8 @@ export const StakingBox = ({
 
   const [isSigning, setIsSigning] = useState<boolean>(false);
 
-  const [isError, setIsError] = useState<boolean>(false);
-  const [transactionStatus, setTransactionStatus] = useState('Pending');
-
   const env = process.env.NEXT_PUBLIC_CHAIN_ENV;
   const quicksilverChainName = env === 'testnet' ? 'quicksilvertestnet' : 'quicksilver';
-
-  const isCalculationDataLoaded = tokenAmount && !isNaN(Number(tokenAmount)) && zone && !isNaN(Number(zone.redemptionRate));
 
   const { requestRedemption } = quicksilver.interchainstaking.v1.MessageComposer.withTypeUrl;
   const numericAmount = Number(tokenAmount);
@@ -175,14 +162,9 @@ export const StakingBox = ({
     try {
       const result = await tx([msgRequestRedemption], {
         fee,
-        onSuccess: () => {
-          setTransactionStatus('Success');
-        },
       });
     } catch (error) {
       console.error('Transaction failed', error);
-      setTransactionStatus('Failed');
-      setIsError(true);
     } finally {
       setIsSigning(false);
     }
@@ -192,8 +174,6 @@ export const StakingBox = ({
     setActiveTabIndex(index);
     setTokenAmount('');
   };
-
-  const isValidNumber = !isNaN(Number(qAssetsDisplay)) && qAssetsDisplay !== '';
 
   const { delegations, delegationsIsError, delegationsIsLoading } = useNativeStakeQuery(selectedOption.chainName, address ?? '');
   const delegationsResponse = delegations?.delegation_responses;
@@ -212,9 +192,9 @@ export const StakingBox = ({
     setUseNativeStake(false);
   }, [selectedOption]);
 
-  const { validatorsData, isLoading: validatorsDataLoading, isError: validatorsDataError } = useValidatorsQuery(selectedOption.chainName);
+  const { validatorsData } = useValidatorsQuery(selectedOption.chainName);
 
-  const { data: logos, isLoading: isFetchingLogos } = useValidatorLogos(selectedOption.chainName, validatorsData || []);
+  const { data: logos } = useValidatorLogos(selectedOption.chainName, validatorsData || []);
   const [selectedValidator, setSelectedValidator] = useState<string | null>(null);
 
   const [isBottomVisible, setIsBottomVisible] = useState(true);
@@ -536,8 +516,13 @@ export const StakingBox = ({
                     <Tooltip hasArrow label={liquidStakeTooltip} isDisabled={!isLiquidStakeDisabled}>
                       <Button
                         width="100%"
+                        _active={{
+                          transform: 'scale(0.95)',
+                          color: 'complimentary.800',
+                        }}
                         _hover={{
-                          bgColor: 'complimentary.1000',
+                          bgColor: 'rgba(255,128,0, 0.25)',
+                          color: 'complimentary.300',
                         }}
                         onClick={openStakingModal}
                         isDisabled={Number(tokenAmount) === 0 || !address || Number(tokenAmount) < 0.1}
@@ -813,8 +798,13 @@ export const StakingBox = ({
                 </HStack>
                 <Button
                   width="100%"
+                  _active={{
+                    transform: 'scale(0.95)',
+                    color: 'complimentary.800',
+                  }}
                   _hover={{
-                    bgColor: 'complimentary.1000',
+                    bgColor: 'rgba(255,128,0, 0.25)',
+                    color: 'complimentary.300',
                   }}
                   onClick={handleLiquidUnstake}
                   isDisabled={Number(tokenAmount) === 0 || !address || isSigning || Number(qBalance?.balance.amount) === 0}

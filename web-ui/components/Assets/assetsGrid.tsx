@@ -1,4 +1,4 @@
-import { Box, SimpleGrid, VStack, Text, Button, Divider, useColorModeValue, HStack, Flex, Grid, GridItem, Spinner } from '@chakra-ui/react';
+import { Box, VStack, Text, Divider, HStack, Flex, Grid, GridItem, Spinner } from '@chakra-ui/react';
 import React from 'react';
 
 import QDepositModal from './modals/qTokenDepositModal';
@@ -31,10 +31,6 @@ type Amount = {
   amount: string;
 };
 
-type Asset = {
-  [key: string]: Amount[];
-};
-
 type Errors = {
   Errors: any;
 };
@@ -52,20 +48,36 @@ type LiquidRewardsData = {
   errors: Errors;
 };
 
-type UseLiquidRewardsQueryReturnType = {
-  liquidRewards: LiquidRewardsData | undefined;
-  isLoading: boolean;
-  isError: boolean;
-};
-
 const AssetCard: React.FC<AssetCardProps> = ({ assetName, balance, apy, nativeAssetName, isWalletConnected, nonNative }) => {
-  const nonNativeBalance = nonNative?.assets['quicksilver-2']
-    ? nonNative.assets['quicksilver-2'][0].Amount.find((amount) => amount.denom === `uq${nativeAssetName.toLowerCase()}`)
+  const calculateTotalBalance = (nonNative: LiquidRewardsData | undefined, nativeAssetName: string) => {
+    if (!nonNative) {
+      return '0';
+    }
+    const chainIds = ['osmosis-1', 'secret-1', 'umee-1', 'cosmoshub-4', 'stargaze-1', 'sommelier-3', 'regen-1'];
+    let totalAmount = 0;
+
+    chainIds.forEach((chainId) => {
+      const assetsInChain = nonNative?.assets[chainId];
+      if (assetsInChain) {
+        assetsInChain.forEach((asset: any) => {
+          const assetAmount = asset.Amount.find((amount: { denom: string }) => amount.denom === `uq${nativeAssetName.toLowerCase()}`);
+          if (assetAmount) {
+            totalAmount += parseInt(assetAmount.amount, 10); // assuming amount is a string
+          }
+        });
+      }
+    });
+
+    return shiftDigits(totalAmount.toString(), -6); // Adjust the shift as per your data's scale
+  };
+
+  const nativeAssets = nonNative?.assets['rhye-2']
+    ? nonNative.assets['rhye-2'][0].Amount.find((amount) => amount.denom === `uq${nativeAssetName.toLowerCase()}`)
     : undefined;
 
-  const formattedNonNativeBalance = nonNativeBalance
-    ? shiftDigits(nonNativeBalance.amount, -6) // Assuming the amount is in micro units
-    : '0';
+  const formattedNonNativeBalance = calculateTotalBalance(nonNative, nativeAssetName);
+
+  const formattedNativebalance = nativeAssets ? shiftDigits(nativeAssets.amount, -6) : '0';
 
   if (!balance || !apy) {
     return (
@@ -109,7 +121,7 @@ const AssetCard: React.FC<AssetCardProps> = ({ assetName, balance, apy, nativeAs
           </GridItem>
           <GridItem>
             <Text fontSize="md" textAlign="right" fontWeight="semibold">
-              {balance}
+              {formattedNativebalance}
             </Text>
           </GridItem>
           <GridItem>

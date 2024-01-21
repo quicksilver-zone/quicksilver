@@ -1,4 +1,4 @@
-import { Box, Text, VStack, Heading, Link, Container, SlideFade } from '@chakra-ui/react';
+import { Text, VStack, Heading, Link, Container, SlideFade } from '@chakra-ui/react';
 import Head from 'next/head';
 
 const AboutPage = () => {

@@ -8,9 +8,15 @@ import * as bech32 from 'bech32';
 import * as CryptoJS from 'crypto-js';
 
 import { decodeUint8Arr, isGreaterThanZero, shiftDigits, toNumber } from '.';
-import { Any } from 'cosmjs-types/google/protobuf/any';
-import { AnySDKType } from 'interchain-query/google/protobuf/any';
 
+
+export function truncateString(str: string, num: number) {
+  if (str.length > num) {
+    return str.slice(0, num) + '...';
+  } else {
+    return str;
+  }
+}
 
 const DAY_TO_SECONDS = 24 * 60 * 60;
 const ZERO = '0';

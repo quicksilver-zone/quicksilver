@@ -13,27 +13,22 @@ import {
   Stat,
   StatLabel,
   StatNumber,
-  Toast,
   Spinner,
-  useToast,
-  Input,
-  Grid,
-  Checkbox,
 } from '@chakra-ui/react';
 import chains from '@chalabi/chain-registry';
-import { MsgTokenizeShares } from '@chalabi/quicksilverjs/dist/codegen/quicksilver/lsm-types/v1/types';
+
 import { coins, StdFee } from '@cosmjs/amino';
-import { useChain } from '@cosmos-kit/react';
+
 import styled from '@emotion/styled';
-import { bech32 } from 'bech32';
+
 import { assets } from 'chain-registry';
-import { TxResponse } from 'interchain-query/cosmos/base/abci/v1beta1/abci';
+
 import React, { useEffect, useState } from 'react';
 import { cosmos } from 'stridejs';
 
-import { useQueryHooks, useTx } from '@/hooks';
+import { useTx } from '@/hooks';
 import { useZoneQuery } from '@/hooks/useQueries';
-import { liquidStakeTx, unbondLiquidStakeTx } from '@/tx/liquidStakeTx';
+
 import { shiftDigits } from '@/utils';
 
 const ChakraModalContent = styled(ModalContent)`
@@ -126,7 +121,7 @@ export const TransferProcessModal: React.FC<StakingModalProps> = ({
     newChainName = selectedOption?.chainName;
   }
 
-  const { data: zone, isLoading: isZoneLoading, isError: isZoneError } = useZoneQuery(selectedOption?.chainId ?? '');
+  const { data: zone } = useZoneQuery(selectedOption?.chainId ?? '');
   const labels = ['Tokenize Shares', `Transfer`, `Receive q${selectedOption?.value}`];
   const [transactionStatus, setTransactionStatus] = useState('Pending');
   function truncateString(str: string, num: number) {
@@ -162,7 +157,7 @@ export const TransferProcessModal: React.FC<StakingModalProps> = ({
         amount: feeAmount.toString(),
       },
     ],
-    gas: '1926657',
+    gas: '200000',
   };
 
   const { tx } = useTx(newChainName ?? '');
@@ -299,8 +294,13 @@ export const TransferProcessModal: React.FC<StakingModalProps> = ({
                   <Button
                     mt={4}
                     width="55%"
+                    _active={{
+                      transform: 'scale(0.95)',
+                      color: 'complimentary.800',
+                    }}
                     _hover={{
-                      bgColor: 'complimentary.500',
+                      bgColor: 'rgba(255,128,0, 0.25)',
+                      color: 'complimentary.300',
                     }}
                     onClick={hanleTokenizeShares}
                   >
@@ -316,8 +316,13 @@ export const TransferProcessModal: React.FC<StakingModalProps> = ({
                   <Button
                     mt={4}
                     width="55%"
+                    _active={{
+                      transform: 'scale(0.95)',
+                      color: 'complimentary.800',
+                    }}
                     _hover={{
-                      bgColor: 'complimentary.500',
+                      bgColor: 'rgba(255,128,0, 0.25)',
+                      color: 'complimentary.300',
                     }}
                     onClick={handleSend}
                   >
@@ -338,8 +343,13 @@ export const TransferProcessModal: React.FC<StakingModalProps> = ({
                       </Text>
                       <Button
                         w="55%"
+                        _active={{
+                          transform: 'scale(0.95)',
+                          color: 'complimentary.800',
+                        }}
                         _hover={{
-                          bgColor: '#181818',
+                          bgColor: 'rgba(255,128,0, 0.25)',
+                          color: 'complimentary.300',
                         }}
                         mt={4}
                         onClick={() => setStep(1)}

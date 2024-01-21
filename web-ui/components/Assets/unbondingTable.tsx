@@ -157,7 +157,6 @@ const UnbondingAssetsTable: React.FC<UnbondingAssetsTableProps> = ({ address, is
         backdropFilter="blur(50px)"
         bgColor="rgba(255,255,255,0.1)"
         h="sm"
-        p={4}
         borderRadius="lg"
         flexDirection="column"
         justifyContent="center"
@@ -174,7 +173,7 @@ const UnbondingAssetsTable: React.FC<UnbondingAssetsTableProps> = ({ address, is
             You have no unbonding assets.
           </Text>
         ) : (
-          <Box bgColor="rgba(255,255,255,0.1)" p={4} borderRadius="lg">
+          <Box w="100%" h="100%" p={4} borderRadius="lg">
             <TableContainer h={'200px'} overflowY={'auto'}>
               <Table variant="simple" color="white">
                 <Thead boxShadow="0px 0.5px 0px 0px rgba(255,255,255,1)" position={'sticky'} bgColor="#1A1A1A" top="0" zIndex="sticky">
