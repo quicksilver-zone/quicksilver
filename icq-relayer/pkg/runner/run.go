@@ -26,7 +26,7 @@ import (
 	"github.com/go-kit/log"
 
 	abcitypes "github.com/cometbft/cometbft/abci/types"
-	tmquery "github.com/cometbft/cometbft/libs/pubsub/query"
+	cmtpubsubquery "github.com/cometbft/cometbft/libs/pubsub/query"
 	"github.com/cometbft/cometbft/proto/tendermint/crypto"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -117,7 +117,7 @@ func Run(cfg *config.Config, home string) error {
 		metrics.SendQueue.WithLabelValues("send-queue").Set(float64(len(sendQueue[c.ChainID])))
 	}
 
-	query, err := tmquery.Parse(fmt.Sprintf("message.module='%s'", "interchainquery"))
+	query, err := cmtpubsubquery.New(fmt.Sprintf("message.module='%s'", "interchainquery"))
 	if err != nil {
 		// handle error
 	}
@@ -805,7 +805,7 @@ func unique(msgSlice []sdk.Msg, logger log.Logger) []sdk.Msg {
 }
 
 func Close() error {
-	query := cmtquery.MustParse(fmt.Sprintf("message.module='%s'", "interchainquery"))
+	query := cmtpubsubquery.MustCompile(fmt.Sprintf("message.module='%s'", "interchainquery"))
 
 	for _, chainClient := range globalCfg.Cl {
 		err := chainClient.RPCClient.Unsubscribe(ctx, chainClient.Config.ChainID+"-icq", query.String())
