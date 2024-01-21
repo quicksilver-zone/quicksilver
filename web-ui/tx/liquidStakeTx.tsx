@@ -100,8 +100,6 @@ export const liquidStakeTx = (
       return;
     }
 
-    const {} = quicksilver.interchainstaking.v1.MessageComposer.withTypeUrl;
-
     const { send } = cosmos.bank.v1beta1.MessageComposer.withTypeUrl;
     const msgSend = send({
       fromAddress: address,

@@ -8,7 +8,6 @@ import {
   IconButton,
   Tooltip,
   ScaleFade,
-  useBreakpointValue,
   useDisclosure,
   Drawer,
   DrawerBody,
@@ -25,6 +24,8 @@ import { useState, useEffect } from 'react';
 import { FaDiscord, FaTwitter, FaGithub, FaInfo } from 'react-icons/fa';
 import { IoIosDocument } from 'react-icons/io';
 import { MdPrivacyTip } from 'react-icons/md';
+import { WalletButton } from '../wallet-button';
+import { DrawerControlProvider } from '@/state/chains/drawerControlProvider';
 
 export const SideHeader = () => {
   const router = useRouter();
@@ -60,11 +61,10 @@ export const SideHeader = () => {
     };
   }, []);
   const transitionStyle = 'all 0.3s ease';
-  const { isOpen, onOpen, onClose } = useDisclosure();
 
   const handleLogoClick = () => {
     if (isMobile) {
-      onOpen();
+      DrawerOnOpen();
     } else {
       router.push('/staking');
     }
@@ -87,6 +87,8 @@ export const SideHeader = () => {
     box-shadow: 0 0 10px 5px #FF8000;
   }
 `;
+
+  const { isOpen: DrawerIsOpen, onOpen: DrawerOnOpen, onClose: DrawerOnClose } = useDisclosure();
 
   return (
     <Box
@@ -117,78 +119,82 @@ export const SideHeader = () => {
             }),
           }}
         />
-
-        <Drawer isOpen={isOpen} placement="left" onClose={onClose}>
-          <DrawerOverlay />
-          <DrawerContent bgColor="rgba(32,32,32,1)">
-            <DrawerCloseButton color="white" />
-            <DrawerHeader fontSize="3xl" letterSpacing={4} lineHeight={2} color="white">
-              QUICKSILVER
-            </DrawerHeader>
-            <DrawerBody>
-              {['Staking', 'Governance', 'Defi', 'Assets', 'Airdrop'].map((item) => (
-                <Box key={item} mb={4} position="relative">
-                  <Link
-                    href={`/quicksilver/${item.toLowerCase()}`}
-                    fontSize="xl"
-                    fontWeight="medium"
-                    color="white"
-                    position="relative"
+        <DrawerControlProvider closeDrawer={DrawerOnClose}>
+          <Drawer isOpen={DrawerIsOpen} placement="left" onClose={DrawerOnClose}>
+            <DrawerOverlay />
+            <DrawerContent bgColor="rgba(32,32,32,1)">
+              <DrawerCloseButton color="white" />
+              <DrawerHeader fontSize="3xl" letterSpacing={4} lineHeight={2} color="white">
+                QUICKSILVER
+              </DrawerHeader>
+              <DrawerBody>
+                {['Airdrop', 'Assets', 'Defi', 'Governance', 'Staking'].map((item) => (
+                  <Box key={item} mb={4} position="relative">
+                    <Link
+                      href={`/${item.toLowerCase()}`}
+                      fontSize="xl"
+                      fontWeight="medium"
+                      color="white"
+                      position="relative"
+                      _hover={{
+                        textDecoration: 'none',
+                        color: 'transparent',
+                        backgroundClip: 'text',
+                        bgGradient: 'linear(to-r, #FF8000, #FF9933, #FFB266, #FFD9B3, #FFE6CC)',
+                        _before: {
+                          width: '100%',
+                        },
+                      }}
+                      _before={{
+                        content: `""`,
+                        position: 'absolute',
+                        bottom: '-2px',
+                        left: '0',
+                        width: '0',
+                        height: '2px',
+                        bgGradient: 'linear(to-r, #FF8000, #FF9933, #FFB266, #FFD9B3, #FFE6CC)',
+                        transition: 'width 0.4s ease',
+                      }}
+                    >
+                      {item}
+                    </Link>
+                  </Box>
+                ))}
+                <Box mt={12} position="relative">
+                  <WalletButton chainName={'quicksilver'} />
+                </Box>
+                <HStack mt={'50px'} alignContent={'center'} justifyContent={'space-around'}>
+                  <Box
                     _hover={{
-                      textDecoration: 'none',
-                      color: 'transparent',
-                      backgroundClip: 'text',
-                      bgGradient: 'linear(to-r, #FF8000, #FF9933, #FFB266, #FFD9B3, #FFE6CC)',
-                      _before: {
-                        width: '100%',
-                      },
-                    }}
-                    _before={{
-                      content: `""`,
-                      position: 'absolute',
-                      bottom: '-2px',
-                      left: '0',
-                      width: '0',
-                      height: '2px',
-                      bgGradient: 'linear(to-r, #FF8000, #FF9933, #FFB266, #FFD9B3, #FFE6CC)',
-                      transition: 'width 0.4s ease',
+                      cursor: 'pointer',
+                      boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`,
                     }}
                   >
-                    {item}
-                  </Link>
-                </Box>
-              ))}
-              <HStack mt={'50px'} alignContent={'center'} justifyContent={'space-around'}>
-                <Box
-                  _hover={{
-                    cursor: 'pointer',
-                    boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`,
-                  }}
-                >
-                  <FaGithub size={'25px'} color="rgb(255, 128, 0)" />
-                </Box>
-                <Box
-                  _hover={{
-                    cursor: 'pointer',
-                    boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`,
-                    transition: transitionStyle,
-                  }}
-                >
-                  <FaDiscord size={'25px'} color="rgb(255, 128, 0)" />
-                </Box>
-                <Box
-                  _hover={{
-                    cursor: 'pointer',
-                    boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`,
-                    transition: transitionStyle,
-                  }}
-                >
-                  <FaTwitter size={'25px'} color="rgb(255, 128, 0)" />
-                </Box>
-              </HStack>
-            </DrawerBody>
-          </DrawerContent>
-        </Drawer>
+                    <FaGithub size={'25px'} color="rgb(255, 128, 0)" />
+                  </Box>
+                  <Box
+                    _hover={{
+                      cursor: 'pointer',
+                      boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`,
+                      transition: transitionStyle,
+                    }}
+                  >
+                    <FaDiscord size={'25px'} color="rgb(255, 128, 0)" />
+                  </Box>
+                  <Box
+                    _hover={{
+                      cursor: 'pointer',
+                      boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`,
+                      transition: transitionStyle,
+                    }}
+                  >
+                    <FaTwitter size={'25px'} color="rgb(255, 128, 0)" />
+                  </Box>
+                </HStack>
+              </DrawerBody>
+            </DrawerContent>
+          </Drawer>
+        </DrawerControlProvider>
 
         {!isMobile && (
           <>

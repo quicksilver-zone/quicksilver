@@ -6,7 +6,7 @@ import { DepositModal } from './modals/qckDepositModal';
 import { WithdrawModal } from './modals/qckWithdrawModal';
 
 import { defaultChainName } from '@/config';
-import { useAPYQuery, useBalanceQuery, useParamsQuery, useZoneQuery } from '@/hooks/useQueries';
+import { useBalanceQuery } from '@/hooks/useQueries';
 import { shiftDigits } from '@/utils';
 
 interface QuickBoxProps {

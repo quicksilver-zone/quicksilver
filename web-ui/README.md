@@ -43,22 +43,13 @@ Please ensure your IDE is configured to use Typescript v4.9.3
 
 **Mobile Menu**
 
-- connect wallet button
-
 - graphic elements
-
-- font size / style / decorations
 
 **DevOps**
 
 - make onboarding networks seamless
 
-**Assets Page**
+**Blockers**
 
-- claim rewards claim.test.quicksilver.zone/address/current \*/epoch
-
-- intent query
-
-claim rewards - rewards get claimed at epoch after your submit tx its not immediate
-
-no solid way to track rewards rn
+- main net reward current & epoch queries
+- update grantee address in query & tx

@@ -1,11 +1,9 @@
-import { useAccordionStyles } from '@chakra-ui/accordion';
-import { CheckIcon, ChevronDownIcon, ChevronRightIcon, InfoOutlineIcon } from '@chakra-ui/icons';
+import { ChevronDownIcon, ChevronRightIcon, InfoOutlineIcon } from '@chakra-ui/icons';
 import {
   Accordion,
   AccordionItem,
   AccordionButton,
   AccordionPanel,
-  AccordionIcon,
   Box,
   Button,
   Flex,
@@ -14,12 +12,10 @@ import {
   Tooltip,
   VStack,
   HStack,
-  useColorModeValue,
   Icon,
   Badge,
   useDisclosure,
 } from '@chakra-ui/react';
-import { useState } from 'react';
 
 interface AirdropAccordionItemProps {
   index: number;
@@ -67,8 +63,6 @@ const AirdropAccordionItem: React.FC<AirdropAccordionItemProps> = ({ index, defa
 };
 
 const AirdropSection = () => {
-  const { isOpen, onToggle } = useDisclosure();
-
   return isBeta ? (
     // What to render if isBeta is true
     <Flex
@@ -89,7 +83,7 @@ const AirdropSection = () => {
         left: 0,
         right: 0,
         bottom: 0,
-        backgroundImage: "url('/quicksilver/img/underConstruction.png')",
+
         backgroundSize: 'contain',
         backgroundPosition: 'center',
         backdropFilter: 'blur(10px)',

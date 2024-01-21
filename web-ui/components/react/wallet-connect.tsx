@@ -7,8 +7,7 @@ import { IoWallet } from 'react-icons/io5';
 
 import { ConnectWalletType } from '../types';
 
-export const ConnectWalletButton = ({ buttonText, isLoading, isDisabled, icon, onClickConnectBtn }: ConnectWalletType) => {
-  const buttonTextColor = useColorModeValue('primary.700', 'primary.50');
+export const ConnectWalletButton = ({ buttonText, isLoading, isDisabled, icon }: ConnectWalletType) => {
   const invertButtonTextColor = useColorModeValue('primary.50', 'primary.700');
   const { openView } = useChain('quicksilver');
   const { status, client } = useWalletClient();
