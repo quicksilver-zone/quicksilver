@@ -7,8 +7,6 @@ import (
 	"os/exec"
 	"strconv"
 
-	"github.com/cometbft/cometbft/config"
-	tmstore "github.com/cometbft/cometbft/store"
 	"github.com/spf13/cobra"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/opt"
@@ -17,7 +15,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 
 	tmdb "github.com/cometbft/cometbft-db"
+	"github.com/cometbft/cometbft/config"
 	"github.com/cometbft/cometbft/state"
+	tmstore "github.com/cometbft/cometbft/store"
 )
 
 const (
@@ -104,7 +104,6 @@ func pruneBlockStoreAndGetHeights(dbPath string, fullHeight int64) (
 	}
 
 	dbbs, err := tmdb.NewGoLevelDBWithOpts("blockstore", dbPath, &opts)
-
 	if err != nil {
 		return 0, 0, err
 	}

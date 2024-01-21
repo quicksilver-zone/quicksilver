@@ -2,9 +2,10 @@ package keeper
 
 import (
 	"cosmossdk.io/store/prefix"
+	storetypes "cosmossdk.io/store/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	storetypes "cosmossdk.io/store/types"
 	"github.com/quicksilver-zone/quicksilver/v7/x/epochs/types"
 )
 

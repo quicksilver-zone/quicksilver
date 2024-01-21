@@ -6,6 +6,7 @@ import (
 	"gopkg.in/yaml.v2"
 
 	sdkmath "cosmossdk.io/math"
+
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 

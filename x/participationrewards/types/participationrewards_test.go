@@ -4,8 +4,9 @@ import (
 	"encoding/json"
 	"testing"
 
-	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
+
+	sdkmath "cosmossdk.io/math"
 
 	liquiditytypes "github.com/quicksilver-zone/quicksilver/v7/third-party-chains/crescent-types/liquidity/types"
 	"github.com/quicksilver-zone/quicksilver/v7/utils/addressutils"

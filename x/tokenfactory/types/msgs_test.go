@@ -4,12 +4,14 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/cometbft/cometbft/crypto/ed25519"
 	"github.com/stretchr/testify/require"
 
 	sdkmath "cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+
+	"github.com/cometbft/cometbft/crypto/ed25519"
 
 	"github.com/quicksilver-zone/quicksilver/v7/x/tokenfactory/types"
 )

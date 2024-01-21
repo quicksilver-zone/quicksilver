@@ -59,7 +59,6 @@ func (*LiquidTokensModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.
 		}
 		if denomData.QAssetDenom == zone.LocalDenom && denomData.IbcDenom == denom {
 			coin, err := bankutils.UnmarshalBalanceCompat(k.cdc, proof.Data, denomData.IbcDenom)
-
 			if err != nil {
 				return 0, err
 			}

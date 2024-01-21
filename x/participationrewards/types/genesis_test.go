@@ -3,8 +3,9 @@ package types_test
 import (
 	"testing"
 
-	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
+
+	sdkmath "cosmossdk.io/math"
 
 	"github.com/quicksilver-zone/quicksilver/v7/x/participationrewards/types"
 )
