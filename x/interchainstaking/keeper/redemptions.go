@@ -19,7 +19,7 @@ import (
 )
 
 // processRedemptionForLsm will determine based on user intent, the tokens to return to the user, generate Redeem message and send them.
-func (k *Keeper) processRedemptionForLsm(ctx sdk.Context, zone *types.Zone, sender sdk.AccAddress, destination string, nativeTokens math.Int, burnAmount sdk.Coin, hash string) error {
+func (k *Keeper) processRedemptionForLsm(ctx sdk.Context, zone *types.Zone, sender sdk.AccAddress, destination string, nativeTokens sdkmath.Int, burnAmount sdk.Coin, hash string) error {
 	intent, found := k.GetDelegatorIntent(ctx, zone, sender.String(), false)
 	// msgs is slice of MsgTokenizeShares, so we can handle dust allocation later.
 	msgs := make([]*lsmstakingtypes.MsgTokenizeShares, 0)
@@ -90,7 +90,7 @@ func (k *Keeper) queueRedemption(
 	zone *types.Zone,
 	sender sdk.AccAddress,
 	destination string,
-	nativeTokens math.Int,
+	nativeTokens sdkmath.Int,
 	burnAmount sdk.Coin,
 	hash string,
 ) error { //nolint:unparam // we know that the error is always nil
@@ -117,7 +117,7 @@ func (k *Keeper) queueRedemption(
 // GetUnlockedTokensForZone will iterate over all validators for a zone, summing delegated amounts,
 // and then remove the locked tokens (those actively being redelegated), returning a slice of int64
 // staking tokens that are unlocked and free to redelegate or unbond.
-func (k *Keeper) GetUnlockedTokensForZone(ctx sdk.Context, zone *types.Zone) (map[string]math.Int, math.Int, error) {
+func (k *Keeper) GetUnlockedTokensForZone(ctx sdk.Context, zone *types.Zone) (map[string]math.Int, sdkmath.Int, error) {
 	validators := k.GetValidators(ctx, zone.ChainId)
 
 	availablePerValidator := make(map[string]math.Int, len(validators))

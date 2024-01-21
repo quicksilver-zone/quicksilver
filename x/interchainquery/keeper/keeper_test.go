@@ -199,6 +199,7 @@ func (suite *KeeperTestSuite) TestDataPoints() {
 	suite.NoError(err)
 
 	vals, err := suite.GetSimApp(suite.chainB).StakingKeeper.GetBondedValidatorsByPower(suite.chainB.GetContext())
+	suite.NoError(err)
 	qvr := stakingtypes.QueryValidatorsResponse{
 		Validators: vals,
 	}

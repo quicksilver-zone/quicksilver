@@ -3,7 +3,6 @@ package keeper
 import (
 	"fmt"
 
-	"cosmossdk.io/math"
 	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
@@ -27,7 +26,7 @@ func (k Keeper) NewQuery(
 	chainID,
 	queryType string,
 	request []byte,
-	period math.Int,
+	period sdkmath.Int,
 	callbackID string,
 	ttl uint64,
 ) *types.Query {
