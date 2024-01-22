@@ -8,7 +8,6 @@ import (
 	storetypes "cosmossdk.io/store/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
 	"github.com/quicksilver-zone/quicksilver/v7/x/tokenfactory/types"
@@ -76,6 +75,5 @@ func (k Keeper) GetCreatorsPrefixStore(ctx sdk.Context) storetypes.KVStore {
 // it purely mints and burns them on behalf of the admin of respective denoms,
 // and sends to the relevant address.
 func (k Keeper) CreateModuleAccount(ctx sdk.Context) {
-	moduleAcc := authtypes.NewEmptyModuleAccount(types.ModuleName, authtypes.Minter, authtypes.Burner)
-	k.accountKeeper.SetModuleAccount(ctx, moduleAcc)
+	k.accountKeeper.GetModuleAccount(ctx, types.ModuleName)
 }

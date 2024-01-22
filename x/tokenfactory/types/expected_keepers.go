@@ -31,6 +31,7 @@ type BankKeeper interface {
 type AccountKeeper interface {
 	SetModuleAccount(ctx context.Context, macc sdk.ModuleAccountI)
 	GetAccount(ctx context.Context, addr sdk.AccAddress) sdk.AccountI
+	GetModuleAccount(ctx context.Context, moduleName string) sdk.ModuleAccountI
 }
 
 // CommunityPoolKeeper defines the contract needed to be fulfilled for community pool interactions.
