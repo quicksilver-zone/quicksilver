@@ -302,7 +302,7 @@ function QuickApp({ Component, pageProps }: AppProps) {
             metadata: {
               name: 'Quicksilver',
               description: 'Quicksilver App',
-              url: 'https://apps.qucksilver.zone/',
+              url: 'https://apps.quicksilver.zone/',
               icons: [],
             },
           },
