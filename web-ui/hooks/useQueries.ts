@@ -8,8 +8,6 @@ import { useGrpcQueryClient } from './useGrpcQueryClient';
 
 import { getCoin, getLogoUrls } from '@/utils';
 import { ExtendedValidator, parseValidators } from '@/utils/staking';
-import { quicksilver } from 'quicksilverjs';
-
 type WithdrawalRecord = {
   chain_id: string;
   delegator: string;

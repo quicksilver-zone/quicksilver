@@ -21,7 +21,7 @@ import {
   ibcProtoRegistry,
 } from 'quicksilverjs';
 
-import { DynamicHeaderSection, Header, SideHeader } from '@/components';
+import { DynamicHeaderSection, SideHeader } from '@/components';
 import { defaultTheme } from '@/config';
 
 import '@interchain-ui/react/styles';
