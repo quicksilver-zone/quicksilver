@@ -56,6 +56,10 @@ func TestKeeperWithZonesRoundTrip(t *testing.T) {
 		ChainId:      chainID,
 		LocalDenom:   "uqck",
 		BaseDenom:    "qck",
+		// TODO: Not sure if should initialized here or not.
+		RedemptionRate:     sdkmath.LegacyNewDec(0),
+		LastRedemptionRate: sdkmath.LegacyNewDec(0),
+		Tvl:                sdkmath.LegacyNewDec(0),
 	}
 	kpr.SetZone(ctx, &zone)
 	gotZone, ok := kpr.GetZone(ctx, chainID)
@@ -88,7 +92,10 @@ func TestKeeperWithZonesRoundTrip(t *testing.T) {
 					sdk.NewCoin("uqck", sdkmath.NewInt(700000)),
 				),
 			},
-			Is_118: true,
+			Is_118:             true,
+			RedemptionRate:     sdkmath.LegacyNewDec(0),
+			LastRedemptionRate: sdkmath.LegacyNewDec(0),
+			Tvl:                sdkmath.LegacyNewDec(0),
 		}
 		kpr.SetAddressZoneMapping(ctx, delegationAddr, zone.ChainId)
 		kpr.SetZone(ctx, &zone)
@@ -199,6 +206,9 @@ func (suite *KeeperTestSuite) TestRemoveZoneAndAssociatedRecords() {
 		PerformanceAddress: &types.ICAAccount{
 			Address: addressutils.GenerateAddressForTestWithPrefix("quicksilver"),
 		},
+		RedemptionRate:     sdkmath.LegacyNewDec(0),
+		LastRedemptionRate: sdkmath.LegacyNewDec(0),
+		Tvl:                sdkmath.LegacyNewDec(0),
 	})
 	// Check set zone
 	zone, ok := quicksilver.InterchainstakingKeeper.GetZone(ctx, chainID)
