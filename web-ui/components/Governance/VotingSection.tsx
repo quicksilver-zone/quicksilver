@@ -14,6 +14,7 @@ import {
   Menu,
   MenuButton,
   MenuItem,
+  Image,
 } from '@chakra-ui/react';
 import { ChainName } from '@cosmos-kit/core';
 import { useChain } from '@cosmos-kit/react';
@@ -280,6 +281,21 @@ export const VotingSection = ({ chainName }: { chainName: ChainName }) => {
         >
           {isLoading ? <Loader /> : content}
         </Box>
+        {address && (
+          <Box>
+            <Image
+              display={{ base: 'none', lg: 'block', md: 'none' }}
+              src="/img/quicksilverWord.png"
+              alt="Quicksilver"
+              position="relative"
+              bottom="90"
+              left="680"
+              h={'100px'}
+              transform="rotate(90deg)"
+              transformOrigin="bottom right"
+            />
+          </Box>
+        )}
       </Box>
 
       {selectedProposal && (

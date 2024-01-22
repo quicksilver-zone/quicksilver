@@ -1,4 +1,4 @@
-import { Container, Text, SlideFade } from '@chakra-ui/react';
+import { Container, Text, SlideFade, Box, Image } from '@chakra-ui/react';
 import Head from 'next/head';
 
 import DefiTable from '@/components/Defi/defiBox';
@@ -26,6 +26,19 @@ export default function Home() {
             DeFi Opportunities
           </Text>
           <DefiTable />
+          <Box>
+            <Image
+              display={{ base: 'none', lg: 'block', md: 'none' }}
+              src="/img/quicksilverWord.png"
+              alt="Quicksilver"
+              position="relative"
+              bottom="90"
+              left="680"
+              h={'100px'}
+              transform="rotate(90deg)"
+              transformOrigin="bottom right"
+            />
+          </Box>
         </Container>
       </SlideFade>
     </>

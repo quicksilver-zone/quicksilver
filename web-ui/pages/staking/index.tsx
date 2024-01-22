@@ -126,6 +126,7 @@ export default function Staking() {
           </Flex>
           <Box>
             <Image
+              display={{ base: 'none', lg: 'block', md: 'none' }}
               src="/img/quicksilverWord.png"
               alt="Quicksilver"
               position="relative"

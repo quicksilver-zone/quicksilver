@@ -1,4 +1,4 @@
-import { Box, Container, Flex, SlideFade, Spacer, Text } from '@chakra-ui/react';
+import { Box, Container, Flex, SlideFade, Spacer, Text, Image } from '@chakra-ui/react';
 import { useChain } from '@cosmos-kit/react';
 import axios from 'axios';
 import dynamic from 'next/dynamic';
@@ -300,6 +300,18 @@ function Home() {
           {/* Unbonding Table */}
           <Box h="full" w="full" mt="20px">
             <UnbondingAssetsTable isWalletConnected={isWalletConnected} address={address ?? ''} />
+          </Box>
+          <Box>
+            <Image
+              display={{ base: 'none', lg: 'block', md: 'none' }}
+              src="/img/quicksilverWord.png"
+              alt="Quicksilver"
+              position="fixed"
+              bottom="150"
+              left="1350"
+              h={'100px'}
+              transform="rotate(90deg)"
+            />
           </Box>
           <Box h="40px"></Box>
         </Container>
