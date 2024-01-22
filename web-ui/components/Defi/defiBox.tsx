@@ -19,7 +19,7 @@ import {
   Spinner,
   useBreakpointValue,
 } from '@chakra-ui/react';
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 
 import { useDefiData } from '@/hooks/useQueries';
 
