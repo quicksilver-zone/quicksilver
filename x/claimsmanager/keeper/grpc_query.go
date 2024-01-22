@@ -70,9 +70,12 @@ func (k Keeper) UserClaims(c context.Context, q *types.QueryClaimsRequest) (*typ
 	k.IterateAllClaims(ctx, func(_ int64, key []byte, claim types.Claim) (stop bool) {
 		// check for the presence of the addr bytes in the key.
 		// first prefix byte is 0x00; so cater for that! Then + 1 to skip the separator.
-		idx := bytes.Index(key[1:], []byte{0x00}) + 1 + 1
-		if bytes.Equal(key[idx:idx+len(addrBytes)], addrBytes) {
-			out = append(out, claim)
+		idx := bytes.Index(key[1:], []byte{0x00})
+		if idx >= 0 && len(key[idx:]) >= len(addrBytes)+2 {
+			idx += 2
+			if bytes.Equal(key[idx:idx+len(addrBytes)], addrBytes) {
+				out = append(out, claim)
+			}
 		}
 		return false
 	})
