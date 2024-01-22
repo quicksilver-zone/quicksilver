@@ -1,4 +1,4 @@
-import { Box, Center, Grid, GridItem, Icon, Stack, useColorModeValue } from '@chakra-ui/react';
+import { Box, Center, GridItem, Icon } from '@chakra-ui/react';
 import { useChain, useManager } from '@cosmos-kit/react';
 import { MouseEventHandler } from 'react';
 import { FiAlertTriangle } from 'react-icons/fi';
