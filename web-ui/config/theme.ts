@@ -125,6 +125,7 @@ const defaultThemeObject = {
   components: {
     Tooltip: {
       baseStyle: {
+        "--popper-arrow-bg": "#323232",
         fontSize: '1em',
         bgColor: 'primary.700',
         color: 'primary.50',
