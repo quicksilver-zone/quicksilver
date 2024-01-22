@@ -73,18 +73,7 @@ const DefiTable = () => {
   };
   const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' && window.innerWidth < 1274);
 
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 1274);
-    };
-
-    window.addEventListener('resize', handleResize);
-
-    // Clean up
-    return () => {
-      window.removeEventListener('resize', handleResize);
-    };
-  }, []);
+  // Consider using CSS media queries or a library like `react-responsive` for a more robust solution.
   const filteredData = defi ? defi.filter(filterCategories[activeFilter]) : [];
 
   type ProviderKey = 'osmosis' | 'ux' | 'shade';
