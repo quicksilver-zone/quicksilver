@@ -2,7 +2,6 @@ import { Box, Center, GridItem, Icon } from '@chakra-ui/react';
 import { useChain, useManager } from '@cosmos-kit/react';
 import { MouseEventHandler } from 'react';
 import { FiAlertTriangle } from 'react-icons/fi';
-
 import { defaultChainName as chainName } from '@/config';
 
 import {
@@ -19,7 +18,6 @@ import {
   Rejected,
   RejectedWarn,
   WalletConnectComponent,
-  ChainCard,
 } from '../components';
 
 
@@ -66,8 +64,6 @@ export const WalletSection = () => {
     />
   );
 
-  const userInfo = username && <ConnectedUserInfo username={username} icon={<Astronaut />} />;
-  const addressBtn = <CopyAddressBtn walletStatus={status} connected={<ConnectedShowAddress address={address} isLoading={false} />} />;
 
   return (
     <Center py={16}>
