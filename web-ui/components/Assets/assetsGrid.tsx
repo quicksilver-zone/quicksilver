@@ -73,15 +73,7 @@ const AssetCard: React.FC<AssetCardProps> = ({ assetName, balance, apy, nativeAs
     return shiftDigits(totalAmount.toString(), -6); // Adjust the shift as per your data's scale
   };
 
-  // const nativeAssets = nonNative?.assets['quicksilver-2']
-  //   ? nonNative.assets['quicksilver-2'][0].Amount.find((amount) => amount.denom === `uq${nativeAssetName.toLowerCase()}`)
-  //   : undefined;
-
-  // const formattedNonNativeBalance = calculateTotalBalance(nonNative, nativeAssetName);
-
-  // const formattedNativebalance = nativeAssets ? shiftDigits(nativeAssets.amount, -6) : '0';
-
-  if (!balance || !apy) {
+  if (balance === undefined || apy === undefined) {
     return (
       <Flex
         w="100%"
