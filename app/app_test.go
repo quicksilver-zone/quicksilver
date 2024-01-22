@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	cmtjson "github.com/cometbft/cometbft/libs/json"
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/gogoproto/proto"
 
@@ -56,6 +57,7 @@ func TestQuicksilverExport(t *testing.T) {
 		false,
 		false,
 		app.GetWasmOpts(app.EmptyAppOptions{}),
+		baseapp.SetChainID("mercury-1"),
 	)
 
 	genesisState := quicksilver.NewDefaultGenesisState()
@@ -67,6 +69,7 @@ func TestQuicksilverExport(t *testing.T) {
 	// Initialize the chain
 	_, err = quicksilver.InitChain(
 		&abci.RequestInitChain{
+			ChainId:         "mercury-1",
 			Validators:      []abci.ValidatorUpdate{},
 			AppStateBytes:   stateBytes,
 			ConsensusParams: simtestutil.DefaultConsensusParams,

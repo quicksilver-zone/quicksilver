@@ -22,6 +22,8 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
+const defaultChainID = "quicktest-1"
+
 func GetWasmOpts(appOpts servertypes.AppOptions) []wasmkeeper.Option {
 	var wasmOpts []wasmkeeper.Option
 	if cast.ToBool(appOpts.Get("telemetry.enabled")) {
@@ -32,6 +34,7 @@ func GetWasmOpts(appOpts servertypes.AppOptions) []wasmkeeper.Option {
 }
 
 func DefaultConfig(t *testing.T) network.Config {
+	t.Helper()
 	encCfg := MakeEncodingConfig(t)
 
 	return network.Config{
@@ -40,10 +43,10 @@ func DefaultConfig(t *testing.T) network.Config {
 		LegacyAmino:       encCfg.Amino,
 		InterfaceRegistry: encCfg.InterfaceRegistry,
 		AccountRetriever:  authtypes.AccountRetriever{},
-		AppConstructor:    NewAppConstructor(encCfg),
+		AppConstructor:    NewAppConstructor(encCfg, defaultChainID),
 		GenesisState:      ModuleBasics.DefaultGenesis(encCfg.Codec),
 		TimeoutCommit:     1 * time.Second / 2,
-		ChainID:           "quicktest-1",
+		ChainID:           defaultChainID,
 		NumValidators:     1,
 		BondDenom:         sdk.DefaultBondDenom,
 		MinGasPrices:      fmt.Sprintf("0.000006%s", sdk.DefaultBondDenom),
@@ -55,7 +58,7 @@ func DefaultConfig(t *testing.T) network.Config {
 		KeyringOptions:    []keyring.Option{},
 	}
 }
-func NewAppConstructor(encCfg EncodingConfig) network.AppConstructor {
+func NewAppConstructor(encCfg EncodingConfig, chainID string) network.AppConstructor {
 	return func(val network.ValidatorI) servertypes.Application {
 		return NewQuicksilver(
 			val.GetCtx().Logger,
@@ -70,6 +73,7 @@ func NewAppConstructor(encCfg EncodingConfig) network.AppConstructor {
 			GetWasmOpts(EmptyAppOptions{}),
 			baseapp.SetPruning(pruningtypes.NewPruningOptionsFromString(val.GetAppConfig().Pruning)),
 			// baseapp.SetMinGasPrices(val.AppConfig().MinGasPrices),
+			baseapp.SetChainID(chainID),
 		)
 	}
 }
