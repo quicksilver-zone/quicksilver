@@ -17,7 +17,7 @@ import {
 export const WalletButton: React.FC = () => {
   const chains = useChains(['quicksilver', 'cosmoshub', 'osmosis', 'stargaze', 'juno', 'sommelier', 'regen', 'umee']);
 
-  const { connect, openView, status, message, wallet, isWalletError } = chains.quicksilver;
+  const { connect, openView, status, message, wallet } = chains.quicksilver;
 
   // Events
   const onClickConnect: MouseEventHandler = (e) => {
