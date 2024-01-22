@@ -1,5 +1,6 @@
 package app
 
+// DONTCOVER
 import (
 	"testing"
 	"time"
@@ -304,6 +305,7 @@ func (s *AppTestSuite) TestV010402rc3UpgradeHandler() {
 
 	handler := upgrades.V010402rc3UpgradeHandler(app.mm, app.configurator, &app.AppKeepers)
 	ctx := s.chainA.GetContext()
+
 	pdType, exists := prtypes.ProtocolDataType_value["ProtocolDataTypeConnection"]
 	s.Require().True(exists)
 

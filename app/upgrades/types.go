@@ -14,7 +14,7 @@ const (
 	ProductionChainID      = "quicksilver-2"
 	RhyeChainID            = "rhye-2"
 	DevnetChainID          = "magic-2"
-	TestChainID            = "testchain1"
+	TestChainID            = "testchain1-1"
 	OsmosisTestnetChainID  = "osmo-test-5"
 	JunoTestnetChainID     = "uni-6"
 	StargazeTestnetChainID = "elgafar-1"
