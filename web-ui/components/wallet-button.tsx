@@ -10,7 +10,6 @@ import {
   ConnectStatusWarn,
   Disconnected,
   NotExist,
-  Rejected,
   RejectedWarn,
   WalletConnectComponent,
 } from '@/components';
