@@ -200,6 +200,13 @@ func (k *Keeper) verifyGovernanceParticipation(ctx sdk.Context, address string) 
 	}
 
 	voted := false
+	// TODO:  Not work
+	// since k.govKeeper is keeper.Keeper, not *govkeeper.Keeper
+
+	// Should find a way to iterate gov states(proposals, votes in sdk v50)
+	// Since they removed all the Iterate and Get version, and replaced with Collection API
+	// https://docs.cosmos.network/main/build/architecture/adr-062-collections-state-layer
+
 	govQueryServer := govkeeper.NewQueryServer(k.govKeeper.(*govkeeper.Keeper))
 	getProposalsResp, _ := govQueryServer.Proposals(ctx, &v1.QueryProposalsRequest{})
 	proposals := getProposalsResp.Proposals

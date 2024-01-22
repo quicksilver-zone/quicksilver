@@ -1,5 +1,6 @@
 package keeper_test
 
+// DONTCOVER
 import (
 	sdkmath "cosmossdk.io/math"
 	"github.com/cometbft/cometbft/proto/tendermint/crypto"
