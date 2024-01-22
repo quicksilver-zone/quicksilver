@@ -133,10 +133,10 @@ func TestAddOrdinal(t *testing.T) {
 
 func TestAddOrdinalWithNewVal(t *testing.T) {
 	di := types.DelegatorIntent{Delegator: addressutils.GenerateAccAddressForTest().String(), Intents: []*types.ValidatorIntent{
+		{ValoperAddress: vals[0], Weight: sdkmath.LegacyOneDec().Quo(sdkmath.LegacyNewDec(3))},
 		{ValoperAddress: vals[1], Weight: sdkmath.LegacyOneDec().Quo(sdkmath.LegacyNewDec(3))},
 		{ValoperAddress: vals[2], Weight: sdkmath.LegacyOneDec().Quo(sdkmath.LegacyNewDec(3))},
 	}}
-
 	newIntents := types.ValidatorIntents{
 		{ValoperAddress: vals[3], Weight: sdkmath.LegacyNewDec(1000)},
 		{ValoperAddress: vals[2], Weight: sdkmath.LegacyNewDec(2000)},
