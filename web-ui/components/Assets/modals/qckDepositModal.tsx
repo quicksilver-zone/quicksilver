@@ -109,8 +109,6 @@ export function DepositModal() {
       token,
        timeoutHeight: { revisionNumber: 0, revisionHeight: 0 }, // Assuming these are the correct types
        timeoutTimestamp: timeoutInNanos.toString(), // Convert to string if required by the type
-      //@ts-ignore
-      timeoutTimestamp: timeoutInNanos,
       memo: '',
     });
 
