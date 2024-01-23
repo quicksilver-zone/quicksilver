@@ -309,7 +309,7 @@ const DefiTable = () => {
                   {' '}
                   {/* Span across all columns */}
                   <Center my={4}>
-                    <Text color="complimentary.900">No entries found for this category, please check back later!</Text>
+                    <Text color="complimentary.900">Nothing here yet. Stay tuned!</Text>
                   </Center>
                 </Td>
               </Tr>

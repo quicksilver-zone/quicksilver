@@ -481,7 +481,7 @@ export const useValidatorsQuery = (chainName: string) => {
       pagination: {
         key: key,
         offset: Long.fromNumber(0),
-        limit: Long.fromNumber(200),
+        limit: Long.fromNumber(500),
         countTotal: true,
         reverse: false,
       },
@@ -489,6 +489,7 @@ export const useValidatorsQuery = (chainName: string) => {
     return validators;
   };
 
+  //TODO: migrate this to use evince cache endpoint.
   const validatorQuery = useQuery(
     ['validators', chainName],
     async () => {
@@ -661,7 +662,7 @@ export const useMissedBlocks = (chainName: string) => {
       });
       
       allMissedBlocks = allMissedBlocks.concat(filteredMissedBlocks);
-      nextKey = response.pagination?.nextKey ?? new Uint8Array();
+      nextKey = response.pagination?.next_key ?? new Uint8Array();
     } while (nextKey && nextKey.length > 0);
   
     return allMissedBlocks;
@@ -725,7 +726,7 @@ export const useNativeStakeQuery = (chainName: string, address: string) => {
       }
       const nextKey = new Uint8Array()
       const balance = await grpcQueryClient.cosmos.staking.v1beta1.delegatorDelegations({
-        delegatorAddr: address || '',
+        delegator_addr: address || '',
         pagination: {
           key: nextKey,
           offset: Long.fromNumber(0),

@@ -178,7 +178,7 @@ export const StakingBox = ({
   };
 
   const { delegations, delegationsIsError, delegationsIsLoading } = useNativeStakeQuery(selectedOption.chainName, address ?? '');
-  const delegationsResponse = delegations?.delegationResponses;
+  const delegationsResponse = delegations?.delegation_responses;
   const nativeStakedAmount = delegationsResponse?.reduce((acc: number, delegationResponse: { balance: { amount: any } }) => {
     const amount = Number(delegationResponse?.balance?.amount) || 0;
     return acc + amount;
