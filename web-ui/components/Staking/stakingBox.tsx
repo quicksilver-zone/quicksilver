@@ -48,7 +48,6 @@ import { getExponent, shiftDigits } from '@/utils';
 import StakingProcessModal from './modals/stakingProcessModal';
 import TransferProcessModal from './modals/transferProcessModal';
 
-
 type StakingBoxProps = {
   selectedOption: {
     name: string;
@@ -212,6 +211,7 @@ export const StakingBox = ({
     moniker: string;
     tokenAmount: string;
     isTokenized: boolean;
+    denom: string;
   }
 
   const [selectedValidatorData, setSelectedValidatorData] = useState<SelectedValidator>({
@@ -219,6 +219,7 @@ export const StakingBox = ({
     moniker: '',
     tokenAmount: '',
     isTokenized: false,
+    denom: '',
   });
 
   const isWalletConnected = !!address;
@@ -230,6 +231,29 @@ export const StakingBox = ({
   } else if (Number(tokenAmount) < 0.1) {
     liquidStakeTooltip = 'Minimum amount to stake is 0.1';
   }
+
+  const safeDelegationsResponse = delegationsResponse || [];
+  const safeAllBalances = allBalances?.balances || [];
+
+  // Combine delegationsResponse with valoper entries from allBalances
+  const combinedDelegations = safeDelegationsResponse.concat(
+    safeAllBalances
+      .filter((balance) => balance.denom.includes('valoper'))
+      .map((balance) => {
+        const [validatorAddress, uniqueId] = balance.denom.split('/');
+        return {
+          delegation: {
+            validator_address: validatorAddress,
+            unique_id: uniqueId,
+          },
+          balance: {
+            amount: balance.amount,
+          },
+          isTokenized: true,
+          denom: balance.denom,
+        };
+      }),
+  );
 
   return (
     <Box position="relative" backdropFilter="blur(50px)" bgColor="rgba(255,255,255,0.1)" flex="1" borderRadius="10px" p={5}>
@@ -546,94 +570,77 @@ export const StakingBox = ({
                       <Box position="relative" mb={8}>
                         <Box className="custom-scroll" maxH="290px" overflowY="scroll" w="fit-content" onScroll={handleScroll}>
                           {/* Combine delegationsResponse with valoper entries from allBalances */}
-                          {delegationsResponse
-                            ?.concat(
-                              allBalances?.balances
-                                .filter((balance) => balance.denom.includes('valoper'))
-                                .map((balance) => {
-                                  const [validatorAddress, uniqueId] = balance.denom.split('/');
-                                  return {
-                                    delegation: {
-                                      validator_address: validatorAddress,
-                                      unique_id: uniqueId, // Including the unique ID
-                                    },
-                                    balance: {
-                                      amount: balance.amount,
-                                    },
-                                    isTokenized: true,
-                                  };
-                                }),
-                            )
-                            .map(
-                              (
-                                delegation: {
-                                  delegation: { validator_address: string | number; unique_id: any };
-                                  balance: { amount: string | number };
-                                  isTokenized: any;
-                                },
-                                index: any,
-                              ) => {
-                                const validator = validatorsData?.find((v) => v.address === delegation.delegation.validator_address);
-                                const uniqueKey = `${delegation.delegation.validator_address}-${delegation.delegation.unique_id}`;
-                                const isSelected = uniqueKey === selectedValidator;
-                                const validatorLogo = logos[delegation.delegation.validator_address];
-
-                                return (
-                                  <Box
-                                    borderRadius={'md'}
-                                    as="button"
-                                    w="full"
-                                    onClick={() => {
-                                      setSelectedValidator(uniqueKey);
-                                      setSelectedValidatorData({
-                                        operatorAddress: delegation.delegation.validator_address.toString(),
-                                        moniker: validator?.name ?? '',
-                                        tokenAmount: delegation.balance.amount.toString(),
-                                        isTokenized: delegation.isTokenized,
-                                      });
-                                    }}
-                                    _hover={{ bg: 'rgba(255, 128, 0, 0.25)' }}
-                                    bg={isSelected ? 'rgba(255, 128, 0, 0.25)' : 'transparent'}
-                                    key={uniqueKey}
-                                    mb={2}
-                                  >
-                                    <Flex py={2} align="center">
-                                      <Box boxSize="50px" borderRadius="md" ml={4}>
-                                        {!validatorLogo ? (
-                                          <SkeletonCircle size="8" startColor="complimentary.900" endColor="complimentary.400" />
-                                        ) : (
-                                          <Image
-                                            src={validatorLogo}
-                                            alt={validator?.name}
-                                            boxSize="50px"
-                                            objectFit="cover"
-                                            borderRadius={'full'}
-                                          />
-                                        )}
-                                      </Box>
-                                      <VStack align="start" ml={2}>
-                                        <HStack>
-                                          <Text fontSize="md">{validator?.name ?? 'Validator'}</Text>
-                                          {delegation.isTokenized && (
-                                            <Tooltip
-                                              label="This share is tokenized and can be transferred to quicksilver."
-                                              aria-label="Tokenized Share"
-                                            >
-                                              <Box>
-                                                <FaStar color="#FF8000" />
-                                              </Box>
-                                            </Tooltip>
-                                          )}
-                                        </HStack>
-                                        <Text color={'complimentary.900'} fontSize="md">
-                                          {shiftDigits(delegation.balance.amount, -6)} {selectedOption.value}
-                                        </Text>
-                                      </VStack>
-                                    </Flex>
-                                  </Box>
-                                );
+                          {combinedDelegations.map(
+                            (
+                              delegation: {
+                                delegation: { validator_address: string | number; unique_id: any };
+                                balance: { amount: string | number };
+                                isTokenized: any;
                               },
-                            )}
+                              index: any,
+                            ) => {
+                              const validator = validatorsData?.find((v) => v.address === delegation.delegation.validator_address);
+                              const uniqueKey = `${delegation.delegation.validator_address}-${delegation.delegation.unique_id}`;
+                              const isSelected = uniqueKey === selectedValidator;
+                              const validatorLogo = logos[delegation.delegation.validator_address];
+
+                              return (
+                                <Box
+                                  borderRadius={'md'}
+                                  as="button"
+                                  w="full"
+                                  onClick={() => {
+                                    setSelectedValidator(uniqueKey);
+                                    setSelectedValidatorData({
+                                      operatorAddress: delegation.delegation.validator_address.toString(),
+                                      moniker: validator?.name ?? '',
+                                      tokenAmount: delegation.balance.amount.toString(),
+                                      isTokenized: delegation.isTokenized,
+                                      denom: delegation.denom,
+                                    });
+                                  }}
+                                  _hover={{ bg: 'rgba(255, 128, 0, 0.25)' }}
+                                  bg={isSelected ? 'rgba(255, 128, 0, 0.25)' : 'transparent'}
+                                  key={uniqueKey}
+                                  mb={2}
+                                >
+                                  <Flex py={2} align="center">
+                                    <Box boxSize="50px" borderRadius="md" ml={4}>
+                                      {!validatorLogo ? (
+                                        <SkeletonCircle size="8" startColor="complimentary.900" endColor="complimentary.400" />
+                                      ) : (
+                                        <Image
+                                          src={validatorLogo}
+                                          alt={validator?.name}
+                                          boxSize="50px"
+                                          objectFit="cover"
+                                          borderRadius={'full'}
+                                        />
+                                      )}
+                                    </Box>
+                                    <VStack align="start" ml={2}>
+                                      <HStack>
+                                        <Text fontSize="md">{validator?.name ?? 'Validator'}</Text>
+                                        {delegation.isTokenized && (
+                                          <Tooltip
+                                            label="This share is tokenized and can be transferred to quicksilver."
+                                            aria-label="Tokenized Share"
+                                          >
+                                            <Box>
+                                              <FaStar color="#FF8000" />
+                                            </Box>
+                                          </Tooltip>
+                                        )}
+                                      </HStack>
+                                      <Text color={'complimentary.900'} fontSize="md">
+                                        {shiftDigits(delegation.balance.amount, -6)} {selectedOption.value}
+                                      </Text>
+                                    </VStack>
+                                  </Flex>
+                                </Box>
+                              );
+                            },
+                          )}
                         </Box>
                         {isBottomVisible && (
                           <Box
@@ -665,6 +672,7 @@ export const StakingBox = ({
                       onClose={closeTransferModal}
                       selectedOption={selectedOption}
                       isTokenized={selectedValidatorData.isTokenized}
+                      denom={selectedValidatorData.denom}
                     />
                   </Flex>
                 )}

@@ -76,6 +76,7 @@ interface StakingModalProps {
   };
   address: string;
   isTokenized: boolean;
+  denom: string;
 }
 
 export const TransferProcessModal: React.FC<StakingModalProps> = ({
@@ -85,6 +86,7 @@ export const TransferProcessModal: React.FC<StakingModalProps> = ({
   selectedValidator,
   address,
   isTokenized,
+  denom,
 }) => {
   useEffect(() => {
     if (isTokenized === true) {
@@ -143,8 +145,8 @@ export const TransferProcessModal: React.FC<StakingModalProps> = ({
   const fees = chains.chains.find(({ chain_name }) => chain_name === newChainName)?.fees?.fee_tokens;
   const mainDenom = mainTokens?.assets[0].base ?? '';
   const fixedMinGasPrice = fees?.find(({ denom }) => denom === mainDenom)?.high_gas_price ?? '';
-  const feeAmount = Number(fixedMinGasPrice) * 750000
-  const sendFeeAmount = Number(fixedMinGasPrice) * 100000
+  const feeAmount = Number(fixedMinGasPrice) * 750000;
+  const sendFeeAmount = Number(fixedMinGasPrice) * 100000;
 
   const fee: StdFee = {
     amount: [
@@ -164,7 +166,7 @@ export const TransferProcessModal: React.FC<StakingModalProps> = ({
         amount: sendFeeAmount.toString(),
       },
     ],
-    gas: '100000', 
+    gas: '100000',
   };
 
   const { tx } = useTx(newChainName ?? '');
@@ -195,10 +197,11 @@ export const TransferProcessModal: React.FC<StakingModalProps> = ({
   if (isNaN(Number(numericAmount)) || Number(numericAmount) <= 0) {
     numericAmount = '0';
   }
+
   const msgSend = send({
     fromAddress: address ?? '',
     toAddress: zone?.depositAddress?.address ?? '',
-    amount: coins(numericAmount, zone?.baseDenom ?? ''),
+    amount: coins(numericAmount, denom ?? 'uatom'),
   });
 
   const handleSend = async (event: React.MouseEvent) => {
