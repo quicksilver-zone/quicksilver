@@ -159,7 +159,7 @@ const AssetsGrid: React.FC<AssetGridProps> = ({ assets, isWalletConnected, nonNa
         <Text fontSize="xl" fontWeight="bold" color="white">
           qAssets
         </Text>
-        <Tooltip label={'qAsset amounts will not be visible until the claims parameter is enabled.'}>
+        <Tooltip label={'Non-native qAsset amounts will not be displayed here until Cross chain claims (XCC) is configured by governance.'}>
           <WarningIcon alignSelf={'center'} color="complimentary.900" />
         </Tooltip>
       </HStack>
