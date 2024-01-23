@@ -182,7 +182,7 @@ const AssetsGrid: React.FC<AssetGridProps> = ({ assets, isWalletConnected, nonNa
         </Flex>
       )}
       {isWalletConnected && (
-        <Box overflowX="auto" overflowY={'hidden'} className="custom-scrollbar" w="full">
+        <Box w="full">
           <Flex gap="8">
             {assets.map((asset, index) => (
               <Box key={index} minW="350px">

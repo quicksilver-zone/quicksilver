@@ -90,15 +90,15 @@ const QuickBox: React.FC<QuickBoxProps> = ({ stakingApy }) => {
           {quickStakingApy()}
         </HStack>
         <VStack spacing={1} alignItems="flex-start" w="full">
-          <HStack gap={2}>
+          <VStack gap={2}>
             <Text fontSize="sm">ON QUICKSILVER:</Text>
             {isLoading === true && !balance && <SkeletonCircle size="2" startColor="complimentary.900" endColor="complimentary.400" />}
             {!isLoading && balance && (
               <Text fontSize="lg" fontWeight="semibold">
-                {tokenBalance}
+                {tokenBalance} QCK
               </Text>
             )}
-          </HStack>
+          </VStack>
         </VStack>
         <DepositModal />
         <WithdrawModal />
