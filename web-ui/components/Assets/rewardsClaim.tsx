@@ -1,5 +1,5 @@
 import { CloseIcon } from '@chakra-ui/icons';
-import { Box, Flex, Text, VStack, Button, HStack, Checkbox, Spinner, Tooltip, Heading } from '@chakra-ui/react';
+import { Box, Flex, Text, VStack, Button, HStack, Spinner } from '@chakra-ui/react';
 import { assets } from 'chain-registry';
 import { GenericAuthorization } from 'interchain-query/cosmos/authz/v1beta1/authz';
 import { quicksilver, cosmos } from 'quicksilverjs';
