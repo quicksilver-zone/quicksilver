@@ -199,7 +199,7 @@ function Home() {
   const assetsData = useMemo(() => {
     return Object.keys(qBalances).map((token) => {
       return {
-        name: token.toUpperCase().replace('Q', 'q'),
+        name: token.toUpperCase() ,
         balance: toNumber(qBalances[token], 2).toString(),
         apy: parseFloat(qAPYRates[token]?.toFixed(2)) || 0,
         native: token.replace('q', '').toUpperCase(),
@@ -300,8 +300,8 @@ function Home() {
 
           <Spacer />
           {/* Assets Grid */}
-          <AssetsGrid nonNative={liquidRewards} isWalletConnected={address !== undefined} assets={assetsData} />
-          <Spacer />
+          {/* <AssetsGrid nonNative={liquidRewards} isWalletConnected={address !== undefined} assets={assetsData} />
+          <Spacer /> */}
           {/* Unbonding Table */}
           <Box h="full" w="full" mt="20px">
             <UnbondingAssetsTable isWalletConnected={address !== undefined} address={address ?? ''} />
