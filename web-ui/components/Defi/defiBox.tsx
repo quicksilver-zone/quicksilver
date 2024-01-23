@@ -58,7 +58,6 @@ const formatApy = (apy: number) => {
 };
 
 const DefiTable = () => {
-  
   const { defi, isLoading, isError } = useDefiData();
 
   const [activeFilter, setActiveFilter] = useState<string>('All');
@@ -180,7 +179,7 @@ const DefiTable = () => {
           ))}
         </Stack>
       )}
-      <Box maxH={'480px'} minH={'480px'} overflow={'auto'}>
+      <Box maxH={'480px'} minH={'480px'} overflow={'auto'} className="custom-scrollbar">
         <Table color={'white'} variant="simple">
           <Thead position="sticky">
             <Tr>

@@ -12,15 +12,15 @@ import {
   Spinner,
   SkeletonCircle,
   SkeletonText,
+  Center,
 } from '@chakra-ui/react';
 import { Key, useState } from 'react';
 
+import SignalIntentModal from './modals/signalIntentProcess';
 
 import { useIntentQuery, useValidatorLogos, useValidatorsQuery } from '@/hooks/useQueries';
 import { networks as prodNetworks, testNetworks as devNetworks } from '@/state/chains/prod';
 import { truncateString } from '@/utils';
-
-import SignalIntentModal from './modals/signalIntentProcess';
 
 export interface StakingIntentProps {
   address: string;
@@ -157,50 +157,55 @@ const StakingIntent: React.FC<StakingIntentProps> = ({ address, isWalletConnecte
           />
         </Flex>
 
-        <VStack pb={4} overflowY="auto" gap={4} spacing={2} align="stretch" maxH="250px">
-          { validatorsWithDetails.length > 0 && validatorsWithDetails.map(
-            (validator: { logoUrl: string; moniker: string; percentage: string }, index: Key | null | undefined) => (
-              <Flex key={index} justifyContent="space-between" w="full" alignItems="center">
-                <Flex alignItems="center" gap={2}>
-                  {validator.logoUrl ? (
-                    <Image
-                      borderRadius={'full'}
-                      src={validator.logoUrl}
-                      alt={validator.moniker}
-                      boxSize="26px"
-                      objectFit="cover"
-                      marginRight="8px"
-                    />
-                  ) : (
-                    <SkeletonCircle
-                      boxSize="26px"
-                      objectFit="cover"
-                      marginRight="8px"
-                      display="inline-block"
-                      verticalAlign="middle"
-                      startColor="complimentary.900"
-                      endColor="complimentary.100"
-                    />
-                  )}
-                  {validator.moniker ? (
-                    <Text fontSize="md">{truncateString(validator.moniker, 20)}</Text>
-                  ) : (
-                    <SkeletonText
-                      display="inline-block"
-                      verticalAlign="middle"
-                      startColor="complimentary.900"
-                      endColor="complimentary.100"
-                      noOfLines={1}
-                      width="100px"
-                    />
-                  )}
+        <VStack pb={4} overflowY="auto" className="custom-scrollbar" gap={4} spacing={2} align="stretch" maxH="250px">
+          {(validatorsWithDetails.length > 0 &&
+            validatorsWithDetails.map(
+              (validator: { logoUrl: string; moniker: string; percentage: string }, index: Key | null | undefined) => (
+                <Flex key={index} justifyContent="space-between" w="full" alignItems="center">
+                  <Flex alignItems="center" gap={2}>
+                    {validator.logoUrl ? (
+                      <Image
+                        borderRadius={'full'}
+                        src={validator.logoUrl}
+                        alt={validator.moniker}
+                        boxSize="26px"
+                        objectFit="cover"
+                        marginRight="8px"
+                      />
+                    ) : (
+                      <SkeletonCircle
+                        boxSize="26px"
+                        objectFit="cover"
+                        marginRight="8px"
+                        display="inline-block"
+                        verticalAlign="middle"
+                        startColor="complimentary.900"
+                        endColor="complimentary.100"
+                      />
+                    )}
+                    {validator.moniker ? (
+                      <Text fontSize="md">{truncateString(validator.moniker, 20)}</Text>
+                    ) : (
+                      <SkeletonText
+                        display="inline-block"
+                        verticalAlign="middle"
+                        startColor="complimentary.900"
+                        endColor="complimentary.100"
+                        noOfLines={1}
+                        width="100px"
+                      />
+                    )}
+                  </Flex>
+                  <Text fontSize="lg" fontWeight="bold">
+                    {validator.percentage}
+                  </Text>
                 </Flex>
-                <Text fontSize="lg" fontWeight="bold">
-                  {validator.percentage}
-                </Text>
-              </Flex>
-            ),
-          ) || <Text fontSize="md">No intent set</Text>}
+              ),
+            )) || (
+            <Center mt={6}>
+              <Text fontSize="xl">No intent set</Text>
+            </Center>
+          )}
         </VStack>
       </VStack>
     </Box>

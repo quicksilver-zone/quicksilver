@@ -26,13 +26,11 @@ import { assets, chains } from 'chain-registry';
 import { cosmos } from 'interchain-query';
 import React, { useEffect, useState } from 'react';
 
+import { MultiModal } from './validatorSelectionModal';
+
 import { useTx } from '@/hooks';
 import { useZoneQuery } from '@/hooks/useQueries';
 import { shiftDigits } from '@/utils';
-
-import { MultiModal } from './validatorSelectionModal';
-
-
 
 const ChakraModalContent = styled(ModalContent)`
   position: relative;
@@ -167,6 +165,7 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
   // Calculate defaultWeight as string
   useEffect(() => {
     setDefaultWeight(1 / numberOfValidators);
+    //eslint-disable-next-line react-hooks/exhaustive-deps
   }, [numberOfValidators]);
 
   const [useDefaultWeights, setUseDefaultWeights] = useState(true);

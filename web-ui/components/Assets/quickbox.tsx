@@ -2,27 +2,26 @@ import { Box, Flex, Text, Button, VStack, useColorModeValue, HStack, SkeletonCir
 import { useChain } from '@cosmos-kit/react';
 import { BsCoin } from 'react-icons/bs';
 
+import { DepositModal } from './modals/qckDepositModal';
+import { WithdrawModal } from './modals/qckWithdrawModal';
 
 import { defaultChainName } from '@/config';
 import { useBalanceQuery } from '@/hooks/useQueries';
 import { shiftDigits } from '@/utils';
-
-import { DepositModal } from './modals/qckDepositModal';
-import { WithdrawModal } from './modals/qckWithdrawModal';
 
 interface QuickBoxProps {
   stakingApy?: number;
 }
 
 const QuickBox: React.FC<QuickBoxProps> = ({ stakingApy }) => {
-  const { address, isWalletConnected } = useChain(defaultChainName);
+  const { address } = useChain(defaultChainName);
 
   const { balance, isLoading } = useBalanceQuery(defaultChainName, address ?? '');
   const tokenBalance = Number(shiftDigits(balance?.balance?.amount ?? '', -6))
     .toFixed(2)
     .toString();
 
-  if (!isWalletConnected) {
+  if (!address) {
     return (
       <Flex direction="column" p={5} borderRadius="lg" align="center" justify="space-around" w="full" h="full">
         <Text fontSize="xl" textAlign="center">

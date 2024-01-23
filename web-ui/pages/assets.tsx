@@ -11,7 +11,7 @@ import MyPortfolio from '@/components/Assets/portfolio';
 import QuickBox from '@/components/Assets/quickbox';
 import RewardsClaim from '@/components/Assets/rewardsClaim';
 import UnbondingAssetsTable from '@/components/Assets/unbondingTable';
-import { useAPYQuery, useAuthChecker, useLiquidRewardsQuery, useQBalanceQuery, useZoneQuery } from '@/hooks/useQueries';
+import { useAPYQuery, useAuthChecker, useLiquidRewardsQuery, useQBalanceQuery, useTokenPrices, useZoneQuery } from '@/hooks/useQueries';
 import { shiftDigits, toNumber } from '@/utils';
 
 export interface PortfolioItemInterface {
@@ -35,17 +35,10 @@ type APYRates = {
 };
 
 function Home() {
-  const { address, isWalletConnected } = useChain('quicksilver');
-  // Function to fetch token price from an API
-  const fetchTokenPrice = async (token: any) => {
-    try {
-      const response = await axios.get(`https://api-osmosis.imperator.co/tokens/v2/price/${token}`);
-      return response.data.price;
-    } catch (error) {
-      console.error('Error fetching token price:', error);
-      return null;
-    }
-  };
+  const { address } = useChain('quicksilver');
+  const tokens = ['atom', 'osmo', 'stars', 'regen', 'somm', 'juno']; // Example tokens
+
+  const { data: tokenPrices, isLoading: isLoadingPrices } = useTokenPrices(tokens);
 
   const COSMOSHUB_CHAIN_ID = process.env.NEXT_PUBLIC_COSMOSHUB_CHAIN_ID;
   const OSMOSIS_CHAIN_ID = process.env.NEXT_PUBLIC_OSMOSIS_CHAIN_ID;
@@ -55,28 +48,49 @@ function Home() {
   const JUNO_CHAIN_ID = process.env.NEXT_PUBLIC_JUNO_CHAIN_ID;
 
   // Retrieve balance for each token
-  const { balance: qAtom } = useQBalanceQuery('quicksilver', address ?? '', 'atom');
-  const { balance: qOsmo } = useQBalanceQuery('quicksilver', address ?? '', 'osmo');
-  const { balance: qStars } = useQBalanceQuery('quicksilver', address ?? '', 'stars');
-  const { balance: qRegen } = useQBalanceQuery('quicksilver', address ?? '', 'regen');
-  const { balance: qSomm } = useQBalanceQuery('quicksilver', address ?? '', 'somm');
-  const { balance: qJuno } = useQBalanceQuery('quicksilver', address ?? '', 'juno');
+  const { balance: qAtom, isLoading: isLoadingQABalance } = useQBalanceQuery('quicksilver', address ?? '', 'atom');
+  const { balance: qOsmo, isLoading: isLoadingQOBalance } = useQBalanceQuery('quicksilver', address ?? '', 'osmo');
+  const { balance: qStars, isLoading: isLoadingQSBalance } = useQBalanceQuery('quicksilver', address ?? '', 'stars');
+  const { balance: qRegen, isLoading: isLoadingQRBalance } = useQBalanceQuery('quicksilver', address ?? '', 'regen');
+  const { balance: qSomm, isLoading: isLoadingQSOBalance } = useQBalanceQuery('quicksilver', address ?? '', 'somm');
+  const { balance: qJuno, isLoading: isLoadingQJBalance } = useQBalanceQuery('quicksilver', address ?? '', 'juno');
 
   // Retrieve zone data for each token
-  const { data: CosmosZone } = useZoneQuery(COSMOSHUB_CHAIN_ID ?? '');
-  const { data: OsmoZone } = useZoneQuery(OSMOSIS_CHAIN_ID ?? '');
-  const { data: StarZone } = useZoneQuery(STARGAZE_CHAIN_ID ?? '');
-  const { data: RegenZone } = useZoneQuery(REGEN_CHAIN_ID ?? '');
-  const { data: SommZone } = useZoneQuery(SOMMELIER_CHAIN_ID ?? '');
-  const { data: JunoZone } = useZoneQuery(JUNO_CHAIN_ID ?? '');
+  const { data: CosmosZone, isLoading: isLoadingCosmosZone } = useZoneQuery(COSMOSHUB_CHAIN_ID ?? '');
+  const { data: OsmoZone, isLoading: isLoadingOsmoZone } = useZoneQuery(OSMOSIS_CHAIN_ID ?? '');
+  const { data: StarZone, isLoading: isLoadingStarZone } = useZoneQuery(STARGAZE_CHAIN_ID ?? '');
+  const { data: RegenZone, isLoading: isLoadingRegenZone } = useZoneQuery(REGEN_CHAIN_ID ?? '');
+  const { data: SommZone, isLoading: isLoadingSommZone } = useZoneQuery(SOMMELIER_CHAIN_ID ?? '');
+  const { data: JunoZone, isLoading: isLoadingJunoZone } = useZoneQuery(JUNO_CHAIN_ID ?? '');
   // Retrieve APY data for each token
-  const { APY: cosmosAPY } = useAPYQuery('cosmoshub-4');
-  const { APY: osmoAPY } = useAPYQuery('osmosis-1');
-  const { APY: starsAPY } = useAPYQuery('stargaze-1');
-  const { APY: regenAPY } = useAPYQuery('regen-1');
-  const { APY: sommAPY } = useAPYQuery('sommelier-3');
+  const { APY: cosmosAPY, isLoading: isLoadingCosmosApy } = useAPYQuery('cosmoshub-4');
+  const { APY: osmoAPY, isLoading: isLoadingOsmoApy } = useAPYQuery('osmosis-1');
+  const { APY: starsAPY, isLoading: isLoadingStarsApy } = useAPYQuery('stargaze-1');
+  const { APY: regenAPY, isLoading: isLoadingRegenApy } = useAPYQuery('regen-1');
+  const { APY: sommAPY, isLoading: isLoadingSommApy } = useAPYQuery('sommelier-3');
   const { APY: quickAPY } = useAPYQuery('quicksilver-2');
-  const { APY: junoAPY } = useAPYQuery('juno-1');
+  const { APY: junoAPY, isLoading: isLoadingJunoApy } = useAPYQuery('juno-1');
+
+  const isLoadingAll =
+    isLoadingPrices ||
+    isLoadingQABalance ||
+    isLoadingQOBalance ||
+    isLoadingQSBalance ||
+    isLoadingQRBalance ||
+    isLoadingQSOBalance ||
+    isLoadingQJBalance ||
+    isLoadingCosmosZone ||
+    isLoadingOsmoZone ||
+    isLoadingStarZone ||
+    isLoadingRegenZone ||
+    isLoadingSommZone ||
+    isLoadingJunoZone ||
+    isLoadingCosmosApy ||
+    isLoadingOsmoApy ||
+    isLoadingStarsApy ||
+    isLoadingRegenApy ||
+    isLoadingSommApy ||
+    isLoadingJunoApy;
 
   // useMemo hook to cache APY data
   const qAPYRates: APYRates = useMemo(
@@ -121,18 +135,28 @@ function Home() {
   const [totalPortfolioValue, setTotalPortfolioValue] = useState(0);
   const [averageApy, setAverageAPY] = useState(0);
   const [totalYearlyYield, setTotalYearlyYield] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
   // useEffect hook to compute portfolio metrics when dependencies change
+
   useEffect(() => {
     const updatePortfolioItems = async () => {
+      // Check if all data is loaded
+      if (isLoadingAll) {
+        return;
+      }
+
+      setIsLoading(true);
       let totalValue = 0;
       let totalYearlyYield = 0;
       let weightedAPY = 0;
       let updatedItems = [];
+
       // Loop through each token to compute value, APY, and yield
       for (const token of Object.keys(qBalances)) {
         const baseToken = token.replace('q', '').toLowerCase();
-        const price = await fetchTokenPrice(baseToken);
-        const qTokenPrice = price * Number(redemptionRates[baseToken]);
+        // Find the price for the current token
+        const tokenPriceInfo = tokenPrices?.find((priceInfo: { token: string }) => priceInfo.token === baseToken);
+        const qTokenPrice = tokenPriceInfo ? tokenPriceInfo.price * Number(redemptionRates[baseToken]) : 0;
         const qTokenBalance = qBalances[token];
         const itemValue = Number(qTokenBalance) * qTokenPrice;
 
@@ -151,6 +175,7 @@ function Home() {
           qTokenPrice: qTokenPrice || 0,
         });
       }
+
       // Recalculate percentages for each item based on total value
       updatedItems = updatedItems.map((item) => {
         const itemValue = Number(item.amount) * item.qTokenPrice;
@@ -159,15 +184,17 @@ function Home() {
           percentage: (((itemValue / totalValue) * 100) / 100).toFixed(2),
         };
       });
+
       // Update state with calculated data
       setPortfolioItems(updatedItems);
       setTotalPortfolioValue(totalValue);
       setAverageAPY(weightedAPY);
       setTotalYearlyYield(totalYearlyYield);
+      setIsLoading(false);
     };
 
     updatePortfolioItems();
-  }, [qBalances, CosmosZone, OsmoZone, StarZone, RegenZone, SommZone, redemptionRates, qAPYRates]);
+  }, [qBalances, CosmosZone, OsmoZone, StarZone, RegenZone, SommZone, redemptionRates, qAPYRates, tokenPrices, isLoadingAll]);
 
   const assetsData = useMemo(() => {
     return Object.keys(qBalances).map((token) => {
@@ -223,83 +250,61 @@ function Home() {
           </Text>
 
           <Flex flexDir={{ base: 'column', md: 'row' }} py={6} alignItems="center" justifyContent={'space-between'} gap="4">
-            {!isWalletConnected && (
-              <Flex
-                w="100%"
-                backdropFilter="blur(50px)"
-                bgColor="rgba(255,255,255,0.1)"
-                h="sm"
-                p={4}
-                borderRadius="lg"
-                flexDirection="column"
-                justifyContent="center"
-                alignItems="center"
-                gap={6}
-                color="white"
-              >
-                <Text fontSize="xl" textAlign="center">
-                  Wallet is not connected! Please connect your wallet to view the Assets Section.
-                </Text>
-              </Flex>
-            )}
-            {isWalletConnected && (
-              <>
-                <Flex
-                  position="relative"
-                  backdropFilter="blur(50px)"
-                  bgColor="rgba(255,255,255,0.1)"
-                  borderRadius="10px"
-                  p={5}
-                  w={{ base: 'full', md: 'sm' }}
-                  h="sm"
-                  flexDir="column"
-                  justifyContent="space-around"
-                  alignItems="center"
-                >
-                  <QuickBox stakingApy={quickAPY} />
-                </Flex>
+            <Flex
+              position="relative"
+              backdropFilter="blur(50px)"
+              bgColor="rgba(255,255,255,0.1)"
+              borderRadius="10px"
+              p={5}
+              w={{ base: 'full', md: 'sm' }}
+              h="sm"
+              flexDir="column"
+              justifyContent="space-around"
+              alignItems="center"
+            >
+              <QuickBox stakingApy={quickAPY} />
+            </Flex>
 
-                <Flex
-                  alignContent={'center'}
-                  position="relative"
-                  backdropFilter="blur(50px)"
-                  bgColor="rgba(255,255,255,0.1)"
-                  borderRadius="10px"
-                  p={5}
-                  w={{ base: 'full', md: '2xl' }}
-                  h="sm"
-                >
-                  <MyPortfolio
-                    portfolioItems={portfolioItems}
-                    isWalletConnected={isWalletConnected}
-                    totalValue={totalPortfolioValue}
-                    averageApy={averageApy}
-                    totalYearlyYield={totalYearlyYield}
-                  />
-                </Flex>
-                <Flex
-                  alignContent={'center'}
-                  position="relative"
-                  backdropFilter="blur(50px)"
-                  bgColor="rgba(255,255,255,0.1)"
-                  borderRadius="10px"
-                  p={5}
-                  w={{ base: 'full', md: 'lg' }}
-                  h="sm"
-                >
-                  <StakingIntent isWalletConnected={isWalletConnected} address={address ?? ''} />
-                </Flex>
-              </>
-            )}
+            <Flex
+              alignContent={'center'}
+              position="relative"
+              backdropFilter="blur(50px)"
+              bgColor="rgba(255,255,255,0.1)"
+              borderRadius="10px"
+              p={5}
+              w={{ base: 'full', md: '2xl' }}
+              h="sm"
+            >
+              <MyPortfolio
+                isLoading={isLoadingAll}
+                portfolioItems={portfolioItems}
+                isWalletConnected={address !== undefined}
+                totalValue={totalPortfolioValue}
+                averageApy={averageApy}
+                totalYearlyYield={totalYearlyYield}
+              />
+            </Flex>
+            <Flex
+              alignContent={'center'}
+              position="relative"
+              backdropFilter="blur(50px)"
+              bgColor="rgba(255,255,255,0.1)"
+              borderRadius="10px"
+              p={5}
+              w={{ base: 'full', md: 'lg' }}
+              h="sm"
+            >
+              <StakingIntent isWalletConnected={address !== undefined} address={address ?? ''} />
+            </Flex>
           </Flex>
 
           <Spacer />
           {/* Assets Grid */}
-          <AssetsGrid nonNative={liquidRewards} isWalletConnected={isWalletConnected} assets={assetsData} />
+          <AssetsGrid nonNative={liquidRewards} isWalletConnected={address !== undefined} assets={assetsData} />
           <Spacer />
           {/* Unbonding Table */}
           <Box h="full" w="full" mt="20px">
-            <UnbondingAssetsTable isWalletConnected={isWalletConnected} address={address ?? ''} />
+            <UnbondingAssetsTable isWalletConnected={address !== undefined} address={address ?? ''} />
           </Box>
           <Box>
             <Image

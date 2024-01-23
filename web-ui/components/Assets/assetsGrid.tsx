@@ -2,11 +2,10 @@ import { WarningIcon } from '@chakra-ui/icons';
 import { Box, VStack, Text, Divider, HStack, Flex, Grid, GridItem, Spinner, Tooltip } from '@chakra-ui/react';
 import React from 'react';
 
-import { shiftDigits } from '@/utils';
-
 import QDepositModal from './modals/qTokenDepositModal';
 import QWithdrawModal from './modals/qTokenWithdrawlModal';
 
+import { shiftDigits } from '@/utils';
 
 interface AssetCardProps {
   assetName: string;
@@ -50,7 +49,12 @@ type LiquidRewardsData = {
   errors: Errors;
 };
 
-const AssetCard: React.FC<AssetCardProps> = ({ assetName, balance, apy, nativeAssetName, isWalletConnected, nonNative }) => {
+function truncateToTwoDecimals(num: number) {
+  const multiplier = Math.pow(10, 2);
+  return Math.floor(num * multiplier) / multiplier;
+}
+
+const AssetCard: React.FC<AssetCardProps> = ({ assetName, balance, apy }) => {
   const calculateTotalBalance = (nonNative: LiquidRewardsData | undefined, nativeAssetName: string) => {
     if (!nonNative) {
       return '0';
@@ -81,7 +85,7 @@ const AssetCard: React.FC<AssetCardProps> = ({ assetName, balance, apy, nativeAs
 
   // const formattedNativebalance = nativeAssets ? shiftDigits(nativeAssets.amount, -6) : '0';
 
-  if (!balance || !apy) {
+  if (balance === undefined || balance === null || apy === undefined || apy === null) {
     return (
       <Flex
         w="100%"
@@ -98,6 +102,7 @@ const AssetCard: React.FC<AssetCardProps> = ({ assetName, balance, apy, nativeAs
       </Flex>
     );
   }
+
   return (
     <VStack bg={'rgba(255,255,255,0.1)'} p={4} boxShadow="lg" align="center" spacing={4} borderRadius="lg">
       <VStack w="full" align="center" alignItems={'center'} spacing={3}>
@@ -110,7 +115,7 @@ const AssetCard: React.FC<AssetCardProps> = ({ assetName, balance, apy, nativeAs
               APY:
             </Text>
             <Text fontSize="md" fontWeight="bold" isTruncated>
-              {shiftDigits(apy.toFixed(2), 2)}%
+              {truncateToTwoDecimals(Number(shiftDigits(apy, 2)))}%
             </Text>
           </HStack>
         </HStack>
@@ -176,7 +181,7 @@ const AssetsGrid: React.FC<AssetGridProps> = ({ assets, isWalletConnected, nonNa
         </Flex>
       )}
       {isWalletConnected && (
-        <Box overflowX="auto" w="full">
+        <Box overflowX="auto" overflowY={'hidden'} className="custom-scrollbar" w="full">
           <Flex gap="8">
             {assets.map((asset, index) => (
               <Box key={index} minW="350px">
