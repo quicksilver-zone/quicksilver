@@ -150,7 +150,7 @@ export const StakingBox = ({
     amount: [
       {
         denom: 'uqck',
-        amount: '7500',
+        amount: '50',
       },
     ],
     gas: '500000',
@@ -178,7 +178,7 @@ export const StakingBox = ({
   };
 
   const { delegations, delegationsIsError, delegationsIsLoading } = useNativeStakeQuery(selectedOption.chainName, address ?? '');
-  const delegationsResponse = delegations?.delegation_responses;
+  const delegationsResponse = delegations?.delegationResponses;
   const nativeStakedAmount = delegationsResponse?.reduce((acc: number, delegationResponse: { balance: { amount: any } }) => {
     const amount = Number(delegationResponse?.balance?.amount) || 0;
     return acc + amount;
@@ -325,7 +325,7 @@ export const StakingBox = ({
                         </HStack>
                       </Tooltip>
                     )}
-                    {nativeStakedAmount > 0 && (
+                    {nativeStakedAmount != undefined && nativeStakedAmount > 0 && (
                       <HStack>
                         <Text fontWeight="medium" textAlign="center" color="white">
                           Use natively staked&nbsp;
@@ -586,9 +586,9 @@ export const StakingBox = ({
                                     onClick={() => {
                                       setSelectedValidator(uniqueKey);
                                       setSelectedValidatorData({
-                                        operatorAddress: delegation.delegation.validator_address,
+                                        operatorAddress: delegation.delegation.validator_address.toString(),
                                         moniker: validator?.name ?? '',
-                                        tokenAmount: delegation.balance.amount,
+                                        tokenAmount: delegation.balance.amount.toString(),
                                         isTokenized: delegation.isTokenized,
                                       });
                                     }}
