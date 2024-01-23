@@ -750,7 +750,7 @@ export const StakingBox = ({
                           <Text color="complimentary.900" fontWeight="light">
                             {address
                               ? qAssets && Number(qAssets) !== 0
-                                ? `${qAssetsDisplay} ${selectedOption.value.toUpperCase()}`
+                                ? `${qAssetsDisplay} q${selectedOption.value.toUpperCase()}`
                                 : `No q${selectedOption.value.toUpperCase()}`
                               : '0'}
                           </Text>
