@@ -121,7 +121,7 @@ const AssetCard: React.FC<AssetCardProps> = ({ assetName, balance, apy }) => {
           </HStack>
         </HStack>
         <Divider bgColor={'complimentary.900'} />
-        {/* <Grid mt={4} templateColumns="repeat(2, 1fr)" gap={4} w="full">
+        <Grid mt={4} templateColumns="repeat(2, 1fr)" gap={4} w="full">
           <GridItem>
             <Text fontSize="md" textAlign="left">
               ON QUICKSILVER:
@@ -129,9 +129,10 @@ const AssetCard: React.FC<AssetCardProps> = ({ assetName, balance, apy }) => {
           </GridItem>
           <GridItem>
             <Text fontSize="md" textAlign="right" fontWeight="semibold">
+              {balance.toString()} {assetName}
             </Text>
           </GridItem>
-          <GridItem>
+          {/*<GridItem>
             <Text fontSize="md" textAlign="left">
               NON-NATIVE:
             </Text>
@@ -139,8 +140,8 @@ const AssetCard: React.FC<AssetCardProps> = ({ assetName, balance, apy }) => {
           <GridItem>
             <Text fontSize="md" textAlign="right" fontWeight="semibold">
             </Text>
-          </GridItem>
-        </Grid> */}
+          </GridItem>*/}
+        </Grid>
       </VStack>
 
       <HStack w="full" pb={4} pt={4} spacing={2}>
@@ -180,8 +181,7 @@ const AssetsGrid: React.FC<AssetGridProps> = ({ assets, isWalletConnected, nonNa
         </Flex>
       )}
       {isWalletConnected && (
-        <Box w="full">
-          <Flex gap="8">
+        <Grid templateColumns='repeat(3, 1fr)' gap={8} w="100%">
             {assets.map((asset, index) => (
               <Box key={index} minW="350px">
                 <AssetCard
@@ -194,8 +194,7 @@ const AssetsGrid: React.FC<AssetGridProps> = ({ assets, isWalletConnected, nonNa
                 />
               </Box>
             ))}
-          </Flex>
-        </Box>
+        </Grid>
       )}
     </>
   );
