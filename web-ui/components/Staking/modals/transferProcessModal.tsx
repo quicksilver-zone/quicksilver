@@ -169,7 +169,25 @@ export const TransferProcessModal: React.FC<StakingModalProps> = ({
     gas: '100000',
   };
 
-  const { tx } = useTx(newChainName ?? '');
+  const { tx, responseEvents } = useTx(newChainName ?? '');
+  const [combinedDenom, setCombinedDenom] = useState<string>();
+
+  // prettier-ignore
+  useEffect(() => {
+
+    const tokenizeSharesEvent = responseEvents?.find(event => event.type === 'tokenize_shares');
+  
+    if (tokenizeSharesEvent) {
+ 
+      const validatorValue = tokenizeSharesEvent.attributes.find(attr => attr.key === 'validator')?.value;
+      const shareRecordIdValue = tokenizeSharesEvent.attributes.find(attr => attr.key === 'share_record_id')?.value;
+  
+
+      if (validatorValue && shareRecordIdValue) {
+        setCombinedDenom(`${validatorValue}/${shareRecordIdValue}`);
+      }
+    }
+  }, [responseEvents]);
 
   const handleTokenizeShares = async (event: React.MouseEvent) => {
     event.preventDefault();
@@ -191,6 +209,7 @@ export const TransferProcessModal: React.FC<StakingModalProps> = ({
       setIsSigning(false);
     }
   };
+
   const { send } = cosmos.bank.v1beta1.MessageComposer.withTypeUrl;
 
   let numericAmount = selectedValidator.tokenAmount;
@@ -201,7 +220,7 @@ export const TransferProcessModal: React.FC<StakingModalProps> = ({
   const msgSend = send({
     fromAddress: address ?? '',
     toAddress: zone?.depositAddress?.address ?? '',
-    amount: coins(numericAmount, denom ?? 'uatom'),
+    amount: coins(numericAmount, denom ?? combinedDenom),
   });
 
   const handleSend = async (event: React.MouseEvent) => {
@@ -351,21 +370,6 @@ export const TransferProcessModal: React.FC<StakingModalProps> = ({
                       <Text mt={2} textAlign={'center'} fontWeight={'light'} fontSize="lg" color="white">
                         Your q{selectedOption?.value} will arrive to your wallet in a few minutes.
                       </Text>
-                      <Button
-                        w="55%"
-                        _active={{
-                          transform: 'scale(0.95)',
-                          color: 'complimentary.800',
-                        }}
-                        _hover={{
-                          bgColor: 'rgba(255,128,0, 0.25)',
-                          color: 'complimentary.300',
-                        }}
-                        mt={4}
-                        onClick={() => setStep(1)}
-                      >
-                        Stake Again
-                      </Button>
                     </Flex>
                   </Box>
                 </>

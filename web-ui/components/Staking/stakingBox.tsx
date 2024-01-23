@@ -30,7 +30,7 @@ import {
 import { Coin, StdFee } from '@cosmjs/amino';
 import { useChain } from '@cosmos-kit/react';
 import { quicksilver } from 'quicksilverjs';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { FaStar } from 'react-icons/fa';
 
 import { useTx } from '@/hooks';
@@ -185,6 +185,12 @@ export const StakingBox = ({
 
   const [useNativeStake, setUseNativeStake] = useState(false);
 
+  const hasTokenizedShares = (balances: any[]) => {
+    return balances.some((balance: { denom: string | string[] }) => balance.denom.includes('valoper'));
+  };
+
+  const hasTokenized = useMemo(() => hasTokenizedShares(allBalances?.balances || []), [allBalances]);
+
   const handleSwitchChange = (event: { target: { checked: boolean | ((prevState: boolean) => boolean) } }) => {
     setUseNativeStake(event.target.checked);
   };
@@ -304,25 +310,33 @@ export const StakingBox = ({
                 </Text>
                 {selectedOption.name === 'Cosmos Hub' && (
                   <Flex textAlign={'left'} justifyContent={'flex-start'}>
-                    {!nativeStakedAmount && (
+                    {(nativeStakedAmount > 0 || hasTokenized) && (
                       <Tooltip
                         label={
                           !address
                             ? 'Please connect your wallet to enable this option.'
-                            : !nativeStakedAmount
-                            ? "You don't have any native staked tokens."
-                            : `You currently have ${shiftDigits(nativeStakedAmount, -6)} ${
+                            : !nativeStakedAmount && !hasTokenized
+                            ? "You don't have any native staked tokens or tokenized shares."
+                            : nativeStakedAmount > 0
+                            ? `You currently have ${shiftDigits(nativeStakedAmount, -6)} ${
                                 selectedOption.value
-                              } natively staked to ${delegationsResponse?.length} validators. You can tokenize your shares and transfer them to quicksilver by clicking the switch and selecting a validator.`
+                              } natively staked to ${delegationsResponse?.length} validators.`
+                            : hasTokenized
+                            ? 'You have tokenized shares available for transfer.'
+                            : ''
                         }
                       >
                         <HStack>
-                          <Text fontWeight="hairline" textAlign="center" color="whiteAlpha.800">
-                            Use natively staked&nbsp;
+                          <Text
+                            fontWeight={!nativeStakedAmount && !hasTokenized ? 'hairline' : 'normal'}
+                            textAlign="center"
+                            color={!nativeStakedAmount && !hasTokenized ? 'whiteAlpha.800' : 'white'}
+                          >
+                            Use staked&nbsp;
                             <span style={{ color: '#FF8000' }}>{selectedOption.value}</span>?
                           </Text>
                           {delegationsIsLoading && <SkeletonCircle size="4" startColor="complimentary.900" endColor="complimentary.400" />}
-                          {!delegationsIsLoading && !delegationsIsError && nativeStakedAmount && (
+                          {!delegationsIsLoading && !delegationsIsError && (
                             <Switch
                               _active={{
                                 borderColor: 'complimentary.900',
@@ -337,59 +351,16 @@ export const StakingBox = ({
                                 borderColor: 'complimentary.900',
                                 boxShadow: '0 0 0 3px #FF8000',
                               }}
-                              isDisabled={!nativeStakedAmount || !logos}
+                              isDisabled={(!nativeStakedAmount && !hasTokenized) || !logos}
                               isChecked={useNativeStake}
                               onChange={handleSwitchChange}
                               id="use-natively-staked"
                               colorScheme="orange"
                             />
                           )}
-
-                          <InfoOutlineIcon color="complimentary.1100" />
+                          <InfoOutlineIcon color={!nativeStakedAmount && !hasTokenized ? 'complimentary.1100' : 'complimentary.900'} />
                         </HStack>
                       </Tooltip>
-                    )}
-                    {nativeStakedAmount != undefined && nativeStakedAmount > 0 && (
-                      <HStack>
-                        <Text fontWeight="medium" textAlign="center" color="white">
-                          Use natively staked&nbsp;
-                          <span style={{ color: '#FF8000' }}>{selectedOption.value}</span>?
-                        </Text>
-                        <Switch
-                          _active={{
-                            borderColor: 'complimentary.900',
-                          }}
-                          _selected={{
-                            borderColor: 'complimentary.900',
-                          }}
-                          _hover={{
-                            borderColor: 'complimentary.900',
-                          }}
-                          _focus={{
-                            borderColor: 'complimentary.900',
-                            boxShadow: '0 0 0 3px #FF8000',
-                          }}
-                          isDisabled={!nativeStakedAmount || !logos}
-                          isChecked={useNativeStake}
-                          onChange={handleSwitchChange}
-                          id="use-natively-staked"
-                          colorScheme="orange"
-                        />
-
-                        <Tooltip
-                          label={
-                            !address
-                              ? 'Please connect your wallet to enable this option.'
-                              : !nativeStakedAmount
-                              ? "You don't have any native staked tokens."
-                              : `You currently have ${shiftDigits(nativeStakedAmount, -6)} ${
-                                  selectedOption.value
-                                } natively staked to ${delegationsResponse?.length} validators. You can tokenize your shares and transfer them to quicksilver by clicking the switch and selecting a validator.`
-                          }
-                        >
-                          <InfoOutlineIcon color="complimentary.900" />
-                        </Tooltip>
-                      </HStack>
                     )}
                   </Flex>
                 )}
@@ -423,7 +394,6 @@ export const StakingBox = ({
                         value={tokenAmount}
                         type="text"
                         onChange={(e) => {
-                          // Allow any numeric input
                           const validNumberPattern = /^\d*\.?\d*$/;
                           if (validNumberPattern.test(e.target.value) || e.target.value === '') {
                             setTokenAmount(e.target.value);
@@ -576,6 +546,7 @@ export const StakingBox = ({
                                 delegation: { validator_address: string | number; unique_id: any };
                                 balance: { amount: string | number };
                                 isTokenized: any;
+                                denom: any;
                               },
                               index: any,
                             ) => {
