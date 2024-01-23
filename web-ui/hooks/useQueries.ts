@@ -691,12 +691,13 @@ interface DefiData {
     apy: number;
     tvl: number;
     link: string;
+    id: string;
 }
 export const useDefiData = () => {
   const query = useQuery<DefiData[]>(
     ['defi'],
     async () => {
-      const res = await axios.get('https://data.test.quicksilver.zone/defi');
+      const res = await axios.get(`${process.env.NEXT_PUBLIC_QUICKSILVER_DATA_API}/defi`);
       if (!res.data || res.data.length === 0) {
         throw new Error('Failed to query defi');
       }
