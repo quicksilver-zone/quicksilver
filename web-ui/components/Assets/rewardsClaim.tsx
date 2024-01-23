@@ -68,7 +68,7 @@ export const RewardsClaim: React.FC<RewardsClaimInterface> = ({ address, onClose
     amount: [
       {
         denom: mainDenom,
-        amount: '5000',
+        amount: '50',
       },
     ],
     gas: '500000',
@@ -127,11 +127,11 @@ export const RewardsClaim: React.FC<RewardsClaimInterface> = ({ address, onClose
     }
   };
 
-  const [autoClaimEnabled, setAutoClaimEnabled] = useState(false);
+  const [autoClaimEnabled, setAutoClaimEnabled] = useState(true);
 
-  const handleAutoClaimToggle = () => {
-    setAutoClaimEnabled(!autoClaimEnabled);
-  };
+  // const handleAutoClaimToggle = () => {
+  //   setAutoClaimEnabled(!autoClaimEnabled);
+  // };
 
   const transactionHandler = autoClaimEnabled ? handleAutoClaimRewards : handleClaimRewards;
 
@@ -141,13 +141,13 @@ export const RewardsClaim: React.FC<RewardsClaimInterface> = ({ address, onClose
         <CloseIcon color="white" cursor="pointer" onClick={onClose} _hover={{ color: 'complimentary.900' }} />
         <VStack alignItems="flex-start" spacing="2">
           <Text fontSize="xl" fontWeight="bold" color="white">
-            Participation Rewards
+            Cross Chain Claims (XCC) is coming!
           </Text>
           <Text pb={2} color="white" fontSize="md">
-            Claim your participation rewards. Rewards will be sent to your wallet at the next epoch.
+            Click the button below to set your authz grant for automatic cross chain claims.
           </Text>
           <HStack gap={8} justifyContent={'space-between'}>
-            <Checkbox
+            {/* <Checkbox
               _selected={{ bgColor: 'transparent' }}
               _active={{
                 borderColor: 'complimentary.900',
@@ -160,14 +160,14 @@ export const RewardsClaim: React.FC<RewardsClaimInterface> = ({ address, onClose
                 boxShadow: '0 0 0 3px #FF8000',
               }}
               isChecked={autoClaimEnabled}
-              onChange={handleAutoClaimToggle}
+              //onChange={handleAutoClaimToggle}
               colorScheme="orange"
             >
               <Text color="white" fontSize="sm">
                 Enable Automatic Claiming
               </Text>
-            </Checkbox>
-            <Tooltip
+            </Checkbox> */}
+            {/* <Tooltip
               mr={12}
               label={
                 <React.Fragment>
@@ -185,7 +185,7 @@ export const RewardsClaim: React.FC<RewardsClaimInterface> = ({ address, onClose
               isDisabled={autoClaimEnabled}
               placement="top"
               hasArrow
-            >
+            > */}
               <Box>
                 <Button
                   _active={{
@@ -205,7 +205,7 @@ export const RewardsClaim: React.FC<RewardsClaimInterface> = ({ address, onClose
                   {isError ? 'Try Again' : isSigning ? <Spinner /> : autoClaimEnabled ? 'Auto Claim' : 'Claim Rewards'}
                 </Button>
               </Box>
-            </Tooltip>
+            {/* </Tooltip> */}
           </HStack>
         </VStack>
       </Flex>

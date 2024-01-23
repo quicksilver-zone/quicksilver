@@ -23,7 +23,7 @@ export default function Home() {
             <link rel="icon" href="/img/favicon.png" />
           </Head>
           <Text pb={2} color="white" fontSize="24px">
-            DeFi Opportunities
+            DeFi Portal
           </Text>
           <DefiTable />
           <Box>
