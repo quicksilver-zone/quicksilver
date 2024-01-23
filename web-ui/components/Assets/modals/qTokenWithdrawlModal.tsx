@@ -72,7 +72,7 @@ const QWithdrawModal: React.FC<QDepositModalProps> = ({ token }) => {
   const toChain = chainName;
 
   const { transfer } = ibc.applications.transfer.v1.MessageComposer.withTypeUrl;
-  const { address, connect, status, message, wallet } = useChain(fromChain ?? '');
+  const { address } = useChain(toChain ?? '');
   const { address: qAddress } = useChain('quicksilver');
   const { balance } = useIbcBalanceQuery(fromChain ?? '', address ?? '');
   const { tx } = useTx(fromChain ?? '');
