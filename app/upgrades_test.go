@@ -1,6 +1,5 @@
 package app
 
-// DONTCOVER
 import (
 	"testing"
 	"time"
