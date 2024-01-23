@@ -1,6 +1,6 @@
 import { Progress, Flex, Text, VStack, HStack, Heading, Spinner, Tooltip, Grid, Center, Box } from '@chakra-ui/react';
 
-import { abbreviateNumber, shiftDigits } from '@/utils';
+import { abbreviateNumber, shiftDigits, formatQasset } from '@/utils';
 
 interface PortfolioItemInterface {
   title: string;
@@ -169,7 +169,7 @@ const PortfolioItem: React.FC<PortfolioItemProps> = ({ title, percentage, progre
           </Text>
         </Tooltip>
         <Text textAlign={'left'} fontSize="md" fontWeight="medium">
-          {title}
+          {formatQasset(title)}
         </Text>
       </HStack>
 

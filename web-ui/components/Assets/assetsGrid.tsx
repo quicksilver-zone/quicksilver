@@ -2,7 +2,7 @@ import { WarningIcon } from '@chakra-ui/icons';
 import { Box, VStack, Text, Divider, HStack, Flex, Grid, GridItem, Spinner, Tooltip } from '@chakra-ui/react';
 import React from 'react';
 
-import { shiftDigits } from '@/utils';
+import { shiftDigits, formatQasset } from '@/utils';
 
 import QDepositModal from './modals/qTokenDepositModal';
 import QWithdrawModal from './modals/qTokenWithdrawlModal';
@@ -186,7 +186,7 @@ const AssetsGrid: React.FC<AssetGridProps> = ({ assets, isWalletConnected, nonNa
               <Box key={index} minW="350px">
                 <AssetCard
                   isWalletConnected={isWalletConnected}
-                  assetName={asset.name}
+                  assetName={formatQasset(asset.name)}
                   nativeAssetName={asset.native}
                   balance={asset.balance}
                   apy={asset.apy}

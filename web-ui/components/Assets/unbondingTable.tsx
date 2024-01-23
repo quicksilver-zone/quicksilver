@@ -3,7 +3,7 @@ import { Table, Thead, Tbody, Tr, Th, Td, TableContainer, Text, Box, Flex, IconB
 import { useState } from 'react';
 
 import { useUnbondingQuery } from '@/hooks/useQueries';
-import { shiftDigits } from '@/utils';
+import { shiftDigits, formatQasset } from '@/utils';
 
 const statusCodes = new Map<number, string>([
   [2, 'QUEUED'],
@@ -17,7 +17,7 @@ const formatDate = (dateString: string | number | Date) => {
 };
 
 const formatDenom = (denom: string) => {
-  return denom.startsWith('u') ? denom.substring(1).toUpperCase() : denom.toUpperCase();
+  return denom.startsWith('u') ? formatQasset(denom.substring(1).toUpperCase()) : denom.toUpperCase();
 };
 
 interface UnbondingAssetsTableProps {
