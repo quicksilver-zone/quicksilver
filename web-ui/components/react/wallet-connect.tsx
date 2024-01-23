@@ -1,6 +1,6 @@
 import { Button, Icon, Stack, Text, useColorModeValue } from '@chakra-ui/react';
 import { WalletStatus } from '@cosmos-kit/core';
-import React, { MouseEventHandler, ReactNode, useEffect } from 'react';
+import React, { MouseEventHandler, ReactNode } from 'react';
 import { FiAlertTriangle } from 'react-icons/fi';
 import { IoWallet } from 'react-icons/io5';
 

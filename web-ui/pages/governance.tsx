@@ -1,4 +1,4 @@
-import { Box, Container, SlideFade, Text, Image } from '@chakra-ui/react';
+import { Box, Container, SlideFade, Text } from '@chakra-ui/react';
 import dynamic from 'next/dynamic';
 import Head from 'next/head';
 

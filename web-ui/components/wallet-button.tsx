@@ -1,5 +1,5 @@
 import { Center, Grid, GridItem, Icon } from '@chakra-ui/react';
-import { useChain, useChains, useManager } from '@cosmos-kit/react';
+import { useChains } from '@cosmos-kit/react';
 import { MouseEventHandler } from 'react';
 import { FiAlertTriangle } from 'react-icons/fi';
 
@@ -10,7 +10,6 @@ import {
   ConnectStatusWarn,
   Disconnected,
   NotExist,
-  Rejected,
   RejectedWarn,
   WalletConnectComponent,
 } from '@/components';

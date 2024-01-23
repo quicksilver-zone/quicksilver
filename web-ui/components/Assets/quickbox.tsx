@@ -1,4 +1,4 @@
-import { Box, Flex, Text, Button, VStack, useColorModeValue, HStack, SkeletonCircle, Spinner } from '@chakra-ui/react';
+import { Box, Flex, Text, VStack, HStack, SkeletonCircle, Spinner } from '@chakra-ui/react';
 import { useChain } from '@cosmos-kit/react';
 import { BsCoin } from 'react-icons/bs';
 

@@ -1,4 +1,4 @@
-import { Progress, Flex, Text, VStack, HStack, Heading, Spinner, Tooltip, Grid, Center, Box } from '@chakra-ui/react';
+import { Progress, Flex, Text, VStack, HStack, Heading, Spinner, Tooltip, Grid, Box } from '@chakra-ui/react';
 
 import { abbreviateNumber, shiftDigits, formatQasset } from '@/utils';
 

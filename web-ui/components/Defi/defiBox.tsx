@@ -17,7 +17,6 @@ import {
   Tooltip,
   Center,
   Spinner,
-  useBreakpointValue,
 } from '@chakra-ui/react';
 import React, { useState, useEffect } from 'react';
 

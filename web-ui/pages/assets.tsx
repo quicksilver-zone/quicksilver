@@ -1,6 +1,5 @@
-import { Box, Container, Flex, SlideFade, Spacer, Text, Image } from '@chakra-ui/react';
+import { Box, Container, Flex, SlideFade, Spacer, Text } from '@chakra-ui/react';
 import { useChain } from '@cosmos-kit/react';
-import axios from 'axios';
 import dynamic from 'next/dynamic';
 import Head from 'next/head';
 import { useEffect, useMemo, useState } from 'react';

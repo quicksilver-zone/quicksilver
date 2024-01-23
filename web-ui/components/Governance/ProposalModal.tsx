@@ -14,7 +14,6 @@ import {
   Center,
   Divider,
   Heading,
-  useColorMode,
 } from '@chakra-ui/react';
 import { cosmos } from 'interchain-query';
 import { Proposal } from 'interchain-query/cosmos/gov/v1/gov';

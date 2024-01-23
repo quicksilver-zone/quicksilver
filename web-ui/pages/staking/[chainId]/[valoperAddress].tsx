@@ -1,4 +1,4 @@
-import { Container, Text, SlideFade, Image, Box, Center, VStack, SkeletonCircle } from '@chakra-ui/react';
+import { Container, Text, SlideFade, Image, Box, VStack, SkeletonCircle } from '@chakra-ui/react';
 import {
   Tabs,
   TabList,
