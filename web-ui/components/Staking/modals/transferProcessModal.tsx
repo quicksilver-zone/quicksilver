@@ -143,7 +143,8 @@ export const TransferProcessModal: React.FC<StakingModalProps> = ({
   const fees = chains.chains.find(({ chain_name }) => chain_name === newChainName)?.fees?.fee_tokens;
   const mainDenom = mainTokens?.assets[0].base ?? '';
   const fixedMinGasPrice = fees?.find(({ denom }) => denom === mainDenom)?.high_gas_price ?? '';
-  const feeAmount = shiftDigits(fixedMinGasPrice, 6);
+  const feeAmount = Number(fixedMinGasPrice) * 750000
+  const sendFeeAmount = Number(fixedMinGasPrice) * 100000
 
   const fee: StdFee = {
     amount: [
@@ -152,12 +153,23 @@ export const TransferProcessModal: React.FC<StakingModalProps> = ({
         amount: feeAmount.toString(),
       },
     ],
-    gas: '300000',
+    gas: '750000', // test txs were using well in excess of 600k
+  };
+
+  // don't use the same fee for both txs, as a send is piddly!
+  const sendFee: StdFee = {
+    amount: [
+      {
+        denom: mainDenom,
+        amount: sendFeeAmount.toString(),
+      },
+    ],
+    gas: '100000', 
   };
 
   const { tx } = useTx(newChainName ?? '');
 
-  const hanleTokenizeShares = async (event: React.MouseEvent) => {
+  const handleTokenizeShares = async (event: React.MouseEvent) => {
     event.preventDefault();
     setIsSigning(true);
     setTransactionStatus('Pending');
@@ -195,7 +207,7 @@ export const TransferProcessModal: React.FC<StakingModalProps> = ({
     setTransactionStatus('Pending');
     try {
       const result = await tx([msgSend], {
-        fee,
+        sendFee,
         onSuccess: () => {
           setStep(3);
           setTransactionStatus('Success');
@@ -297,7 +309,7 @@ export const TransferProcessModal: React.FC<StakingModalProps> = ({
                       bgColor: 'rgba(255,128,0, 0.25)',
                       color: 'complimentary.300',
                     }}
-                    onClick={hanleTokenizeShares}
+                    onClick={handleTokenizeShares}
                   >
                     {isError ? 'Try Again' : isSigning ? <Spinner /> : 'Tokenize Shares'}
                   </Button>
