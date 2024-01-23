@@ -300,8 +300,8 @@ function Home() {
 
           <Spacer />
           {/* Assets Grid */}
-          {/* <AssetsGrid nonNative={liquidRewards} isWalletConnected={address !== undefined} assets={assetsData} />
-          <Spacer /> */}
+          <AssetsGrid nonNative={liquidRewards} isWalletConnected={address !== undefined} assets={assetsData} />
+          <Spacer />
           {/* Unbonding Table */}
           <Box h="full" w="full" mt="20px">
             <UnbondingAssetsTable isWalletConnected={address !== undefined} address={address ?? ''} />

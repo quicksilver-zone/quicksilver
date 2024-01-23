@@ -91,10 +91,10 @@ const QuickBox: React.FC<QuickBoxProps> = ({ stakingApy }) => {
         </HStack>
         <VStack spacing={1} alignItems="flex-start" w="full">
           <VStack gap={2}>
-            <Text fontSize="sm">ON QUICKSILVER:</Text>
+            <Text fontSize="sm" textAlign="center">ON QUICKSILVER:</Text>
             {isLoading === true && !balance && <SkeletonCircle size="2" startColor="complimentary.900" endColor="complimentary.400" />}
             {!isLoading && balance && (
-              <Text fontSize="lg" fontWeight="semibold">
+              <Text fontSize="lg" fontWeight="semibold" textAlign="center">
                 {tokenBalance} QCK
               </Text>
             )}

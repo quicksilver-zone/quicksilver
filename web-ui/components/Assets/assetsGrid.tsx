@@ -121,7 +121,7 @@ const AssetCard: React.FC<AssetCardProps> = ({ assetName, balance, apy }) => {
           </HStack>
         </HStack>
         <Divider bgColor={'complimentary.900'} />
-        <Grid mt={4} templateColumns="repeat(2, 1fr)" gap={4} w="full">
+        {/* <Grid mt={4} templateColumns="repeat(2, 1fr)" gap={4} w="full">
           <GridItem>
             <Text fontSize="md" textAlign="left">
               ON QUICKSILVER:
@@ -129,7 +129,6 @@ const AssetCard: React.FC<AssetCardProps> = ({ assetName, balance, apy }) => {
           </GridItem>
           <GridItem>
             <Text fontSize="md" textAlign="right" fontWeight="semibold">
-              {/*Awaiting Claims enabled */}
             </Text>
           </GridItem>
           <GridItem>
@@ -139,10 +138,9 @@ const AssetCard: React.FC<AssetCardProps> = ({ assetName, balance, apy }) => {
           </GridItem>
           <GridItem>
             <Text fontSize="md" textAlign="right" fontWeight="semibold">
-              {/*Awaiting Claims enabled */}
             </Text>
           </GridItem>
-        </Grid>
+        </Grid> */}
       </VStack>
 
       <HStack w="full" pb={4} pt={4} spacing={2}>
