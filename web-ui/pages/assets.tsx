@@ -306,7 +306,7 @@ function Home() {
           <Box h="full" w="full" mt="20px">
             <UnbondingAssetsTable isWalletConnected={address !== undefined} address={address ?? ''} />
           </Box>
-          <Box>
+          {/* <Box>
             <Image
               display={{ base: 'none', lg: 'block', md: 'none' }}
               src="/img/quicksilverWord.png"
@@ -317,7 +317,7 @@ function Home() {
               h={'100px'}
               transform="rotate(90deg)"
             />
-          </Box>
+          </Box> */}
           <Box h="40px"></Box>
         </Container>
         {showRewardsClaim && (
