@@ -17,9 +17,8 @@ import {
   Tooltip,
   Center,
   Spinner,
-  useBreakpointValue,
 } from '@chakra-ui/react';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 import { useDefiData } from '@/hooks/useQueries';
 
@@ -70,15 +69,28 @@ const DefiTable = () => {
   const handleFilterClick = (filter: string) => {
     setActiveFilter(filter);
   };
-  const isMobile = useBreakpointValue({ base: true, sm: true, md: false });
+  const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' && window.innerWidth < 1274);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 1274);
+    };
+
+    window.addEventListener('resize', handleResize);
+
+    // Clean up
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
   const filteredData = defi ? defi.filter(filterCategories[activeFilter]) : [];
 
   type ProviderKey = 'osmosis' | 'ux' | 'shade';
 
   const providerIcons: Record<ProviderKey, string> = {
-    osmosis: '/quicksilver/img/osmoIcon.svg',
-    ux: '/quicksilver/img/ux.png',
-    shade: '/quicksilver/img/shd.svg',
+    osmosis: '/img/osmoIcon.svg',
+    ux: '/img/ux.png',
+    shade: '/img/shd.svg',
   };
 
   const isProviderKey = (key: string): key is ProviderKey => {
@@ -166,7 +178,7 @@ const DefiTable = () => {
           ))}
         </Stack>
       )}
-      <Box maxH={'480px'} minH={'480px'} overflow={'auto'}>
+      <Box maxH={'480px'} minH={'480px'} overflow={'auto'} className="custom-scrollbar">
         <Table color={'white'} variant="simple">
           <Thead position="sticky">
             <Tr>
@@ -297,7 +309,7 @@ const DefiTable = () => {
                   {' '}
                   {/* Span across all columns */}
                   <Center my={4}>
-                    <Text color="complimentary.900">No entries found for this category, please check back later!</Text>
+                    <Text color="complimentary.900">Nothing here yet. Stay tuned!</Text>
                   </Center>
                 </Td>
               </Tr>

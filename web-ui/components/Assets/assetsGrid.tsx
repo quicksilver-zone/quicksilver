@@ -1,10 +1,12 @@
-import { Box, VStack, Text, Divider, HStack, Flex, Grid, GridItem, Spinner } from '@chakra-ui/react';
+import { WarningIcon } from '@chakra-ui/icons';
+import { Box, VStack, Text, Divider, HStack, Flex, Grid, GridItem, Spinner, Tooltip } from '@chakra-ui/react';
 import React from 'react';
+
+import { shiftDigits, formatQasset } from '@/utils';
 
 import QDepositModal from './modals/qTokenDepositModal';
 import QWithdrawModal from './modals/qTokenWithdrawlModal';
 
-import { shiftDigits } from '@/utils';
 
 interface AssetCardProps {
   assetName: string;
@@ -48,12 +50,17 @@ type LiquidRewardsData = {
   errors: Errors;
 };
 
-const AssetCard: React.FC<AssetCardProps> = ({ assetName, balance, apy, nativeAssetName, isWalletConnected, nonNative }) => {
+function truncateToTwoDecimals(num: number) {
+  const multiplier = Math.pow(10, 2);
+  return Math.floor(num * multiplier) / multiplier;
+}
+
+const AssetCard: React.FC<AssetCardProps> = ({ assetName, balance, apy }) => {
   const calculateTotalBalance = (nonNative: LiquidRewardsData | undefined, nativeAssetName: string) => {
     if (!nonNative) {
       return '0';
     }
-    const chainIds = ['osmosis-1', 'secret-1', 'umee-1', 'cosmoshub-4', 'stargaze-1', 'sommelier-3', 'regen-1'];
+    const chainIds = ['osmosis-1', 'secret-1', 'umee-1', 'cosmoshub-4', 'stargaze-1', 'sommelier-3', 'regen-1', 'juno-1'];
     let totalAmount = 0;
 
     chainIds.forEach((chainId) => {
@@ -71,15 +78,15 @@ const AssetCard: React.FC<AssetCardProps> = ({ assetName, balance, apy, nativeAs
     return shiftDigits(totalAmount.toString(), -6); // Adjust the shift as per your data's scale
   };
 
-  const nativeAssets = nonNative?.assets['rhye-2']
-    ? nonNative.assets['rhye-2'][0].Amount.find((amount) => amount.denom === `uq${nativeAssetName.toLowerCase()}`)
-    : undefined;
+  // const nativeAssets = nonNative?.assets['quicksilver-2']
+  //   ? nonNative.assets['quicksilver-2'][0].Amount.find((amount) => amount.denom === `uq${nativeAssetName.toLowerCase()}`)
+  //   : undefined;
 
-  const formattedNonNativeBalance = calculateTotalBalance(nonNative, nativeAssetName);
+  // const formattedNonNativeBalance = calculateTotalBalance(nonNative, nativeAssetName);
 
-  const formattedNativebalance = nativeAssets ? shiftDigits(nativeAssets.amount, -6) : '0';
+  // const formattedNativebalance = nativeAssets ? shiftDigits(nativeAssets.amount, -6) : '0';
 
-  if (!balance || !apy) {
+  if (balance === undefined || balance === null || apy === undefined || apy === null) {
     return (
       <Flex
         w="100%"
@@ -96,6 +103,7 @@ const AssetCard: React.FC<AssetCardProps> = ({ assetName, balance, apy, nativeAs
       </Flex>
     );
   }
+
   return (
     <VStack bg={'rgba(255,255,255,0.1)'} p={4} boxShadow="lg" align="center" spacing={4} borderRadius="lg">
       <VStack w="full" align="center" alignItems={'center'} spacing={3}>
@@ -108,7 +116,7 @@ const AssetCard: React.FC<AssetCardProps> = ({ assetName, balance, apy, nativeAs
               APY:
             </Text>
             <Text fontSize="md" fontWeight="bold" isTruncated>
-              {shiftDigits(apy.toFixed(2), 2)}%
+              {truncateToTwoDecimals(Number(shiftDigits(apy, 2)))}%
             </Text>
           </HStack>
         </HStack>
@@ -121,19 +129,18 @@ const AssetCard: React.FC<AssetCardProps> = ({ assetName, balance, apy, nativeAs
           </GridItem>
           <GridItem>
             <Text fontSize="md" textAlign="right" fontWeight="semibold">
-              {formattedNativebalance}
+              {balance.toString()} {assetName}
             </Text>
           </GridItem>
-          <GridItem>
+          {/*<GridItem>
             <Text fontSize="md" textAlign="left">
               NON-NATIVE:
             </Text>
           </GridItem>
           <GridItem>
             <Text fontSize="md" textAlign="right" fontWeight="semibold">
-              {formattedNonNativeBalance}
             </Text>
-          </GridItem>
+          </GridItem>*/}
         </Grid>
       </VStack>
 
@@ -148,9 +155,14 @@ const AssetCard: React.FC<AssetCardProps> = ({ assetName, balance, apy, nativeAs
 const AssetsGrid: React.FC<AssetGridProps> = ({ assets, isWalletConnected, nonNative }) => {
   return (
     <>
-      <Text fontSize="xl" fontWeight="bold" color="white" mb={4}>
-        qAssets
-      </Text>
+      <HStack alignItems="center" mb={4}>
+        <Text fontSize="xl" fontWeight="bold" color="white">
+          qAssets
+        </Text>
+        <Tooltip label={'Non-native qAsset amounts will not be displayed here until Cross chain claims (XCC) is configured by governance.'}>
+          <WarningIcon alignSelf={'center'} color="complimentary.900" />
+        </Tooltip>
+      </HStack>
       {!isWalletConnected && (
         <Flex
           backdropFilter="blur(50px)"
@@ -169,22 +181,24 @@ const AssetsGrid: React.FC<AssetGridProps> = ({ assets, isWalletConnected, nonNa
         </Flex>
       )}
       {isWalletConnected && (
-        <Box overflowX="auto" w="full">
-          <Flex gap="8">
-            {assets.map((asset, index) => (
-              <Box key={index} minW="350px">
-                <AssetCard
-                  isWalletConnected={isWalletConnected}
-                  assetName={asset.name}
-                  nativeAssetName={asset.native}
-                  balance={asset.balance}
-                  apy={asset.apy}
-                  nonNative={nonNative}
-                />
-              </Box>
-            ))}
-          </Flex>
-        </Box>
+        <Grid
+          templateColumns={{ base: 'repeat(1, 1fr)', sm: 'repeat(1, 1fr)', md: 'repeat(1, 1fr)', lg: 'repeat(3, 1fr)' }}
+          gap={8}
+          w="100%"
+        >
+          {assets.map((asset, index) => (
+            <Box key={index} minW="350px">
+              <AssetCard
+                isWalletConnected={isWalletConnected}
+                assetName={formatQasset(asset.name)}
+                nativeAssetName={asset.native}
+                balance={asset.balance}
+                apy={asset.apy}
+                nonNative={nonNative}
+              />
+            </Box>
+          ))}
+        </Grid>
       )}
     </>
   );

@@ -21,10 +21,10 @@ import {
 import { keyframes } from '@emotion/react';
 import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
-import { FaDiscord, FaTwitter, FaGithub, FaInfo } from 'react-icons/fa';
+import { FaDiscord, FaGithub, FaInfo } from 'react-icons/fa';
+import { FaXTwitter } from 'react-icons/fa6';
 import { IoIosDocument } from 'react-icons/io';
-import { MdPrivacyTip } from 'react-icons/md';
-import { WalletButton } from '../wallet-button';
+
 import { DrawerControlProvider } from '@/state/chains/drawerControlProvider';
 
 export const SideHeader = () => {
@@ -34,13 +34,19 @@ export const SideHeader = () => {
   const [showSocialLinks, setShowSocialLinks] = useState(false);
 
   useEffect(() => {
+    const path = router.asPath.split('/')[1];
+    setSelectedPage(path);
+
     const handleRouteChange = (url: string) => {
-      const path = url.split('/quicksilver/')[1];
-      setSelectedPage(path);
+      const newPath = url.split('/')[1];
+      setSelectedPage(newPath);
     };
 
     router.events.on('routeChangeComplete', handleRouteChange);
-    return () => router.events.off('routeChangeComplete', handleRouteChange);
+
+    return () => {
+      router.events.off('routeChangeComplete', handleRouteChange);
+    };
   }, [router]);
 
   const commonBoxShadowColor = 'rgba(255, 128, 0, 0.25)';
@@ -107,8 +113,9 @@ export const SideHeader = () => {
           alt="logo"
           h="75px"
           w="75px"
+          padding="5px"
           borderRadius="full"
-          src="/quicksilver/img/networks/quicksilver.svg"
+          src="/img/networks/quicksilver.svg"
           onClick={handleLogoClick}
           cursor="pointer"
           _hover={{
@@ -128,7 +135,7 @@ export const SideHeader = () => {
                 QUICKSILVER
               </DrawerHeader>
               <DrawerBody>
-                {['Airdrop', 'Assets', 'Defi', 'Governance', 'Staking'].map((item) => (
+                {[/*'Airdrop', */ 'Assets', 'Defi', 'Governance', 'Staking'].map((item) => (
                   <Box key={item} mb={4} position="relative">
                     <Link
                       href={`/${item.toLowerCase()}`}
@@ -160,36 +167,40 @@ export const SideHeader = () => {
                     </Link>
                   </Box>
                 ))}
-                <Box mt={12} position="relative">
-                  <WalletButton chainName={'quicksilver'} />
-                </Box>
+                <Box mt={12} position="relative"></Box>
                 <HStack mt={'50px'} alignContent={'center'} justifyContent={'space-around'}>
-                  <Box
-                    _hover={{
-                      cursor: 'pointer',
-                      boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`,
-                    }}
-                  >
-                    <FaGithub size={'25px'} color="rgb(255, 128, 0)" />
-                  </Box>
-                  <Box
-                    _hover={{
-                      cursor: 'pointer',
-                      boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`,
-                      transition: transitionStyle,
-                    }}
-                  >
-                    <FaDiscord size={'25px'} color="rgb(255, 128, 0)" />
-                  </Box>
-                  <Box
-                    _hover={{
-                      cursor: 'pointer',
-                      boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`,
-                      transition: transitionStyle,
-                    }}
-                  >
-                    <FaTwitter size={'25px'} color="rgb(255, 128, 0)" />
-                  </Box>
+                  <Link href="https://github.com/quicksilver-zone/quicksilver" isExternal>
+                    <Box
+                      _hover={{
+                        cursor: 'pointer',
+                        boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`,
+                      }}
+                    >
+                      <FaGithub size={'25px'} color="rgb(255, 128, 0)" />
+                    </Box>
+                  </Link>
+                  <Link href="https://discord.com/invite/xrSmYMDVrQ" isExternal>
+                    <Box
+                      _hover={{
+                        cursor: 'pointer',
+                        boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`,
+                        transition: transitionStyle,
+                      }}
+                    >
+                      <FaDiscord size={'25px'} color="rgb(255, 128, 0)" />
+                    </Box>
+                  </Link>
+                  <Link href="https://twitter.com/quicksilverzone" isExternal>
+                    <Box
+                      _hover={{
+                        cursor: 'pointer',
+                        boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`,
+                        transition: transitionStyle,
+                      }}
+                    >
+                      <FaXTwitter size={'25px'} color="rgb(255, 128, 0)" />
+                    </Box>
+                  </Link>
                 </HStack>
               </DrawerBody>
             </DrawerContent>
@@ -218,14 +229,14 @@ export const SideHeader = () => {
                       }}
                     >
                       <Image
-                        filter={selectedPage === 'staking' ? 'contrast(100%)' : 'contrast(50%)'}
+                        filter={selectedPage === 'staking' ? 'contrast(100%)' : 'contrast(0%)'}
                         _hover={{
                           filter: 'contrast(100%)',
                         }}
                         alt="Staking"
                         h="60px"
                         w="60px"
-                        src="/quicksilver/img/liquid.png"
+                        src="/img/liquid.png"
                       />
                     </Box>
                   </Tooltip>
@@ -248,14 +259,14 @@ export const SideHeader = () => {
                       }}
                     >
                       <Image
-                        filter={selectedPage === 'governance' ? 'contrast(100%)' : 'contrast(50%)'}
+                        filter={selectedPage === 'governance' ? 'contrast(100%)' : 'contrast(0%)'}
                         _hover={{
                           filter: 'contrast(100%)',
                         }}
                         alt="Governance"
                         h="60px"
                         w="65px"
-                        src="/quicksilver/img/governance.png"
+                        src="/img/governance.png"
                       />
                     </Box>
                   </Tooltip>
@@ -276,17 +287,17 @@ export const SideHeader = () => {
                       }}
                     >
                       <Image
-                        filter={selectedPage === 'assets' ? 'contrast(100%)' : 'contrast(50%)'}
+                        filter={selectedPage === 'assets' ? 'contrast(100%)' : 'contrast(0%)'}
                         _hover={{
                           filter: 'contrast(100%)',
                         }}
                         alt="Assets"
                         h="55px"
-                        src="/quicksilver/img/assets.png"
+                        src="/img/assets.png"
                       />
                     </Box>
                   </Tooltip>
-                  <Tooltip borderLeft="4px solid rgba(255, 128, 0, 0.9)" label="Airdrop" placement="right">
+                  {/*<Tooltip borderLeft="4px solid rgba(255, 128, 0, 0.9)" label="Airdrop" placement="right">
                     <Box
                       w="55px"
                       h="55px"
@@ -308,10 +319,10 @@ export const SideHeader = () => {
                         }}
                         alt="DeFi"
                         h="55px"
-                        src="/quicksilver/img/airdrop.png"
+                        src="/img/airdrop.png"
                       />
                     </Box>
-                  </Tooltip>
+                      </Tooltip>*/}
 
                   <Tooltip borderLeft="4px solid rgba(255, 128, 0, 0.9)" label="DeFi" placement="right">
                     <Box
@@ -329,13 +340,13 @@ export const SideHeader = () => {
                       }}
                     >
                       <Image
-                        filter={selectedPage === 'defi' ? 'contrast(100%)' : 'contrast(50%)'}
+                        filter={selectedPage === 'defi' ? 'contrast(100%)' : 'contrast(0%)'}
                         _hover={{
                           filter: 'contrast(100%)',
                         }}
                         alt="DeFi"
                         h="55px"
-                        src="/quicksilver/img/defi.png"
+                        src="/img/defi.png"
                       />
                     </Box>
                   </Tooltip>
@@ -346,17 +357,18 @@ export const SideHeader = () => {
             <ScaleFade initialScale={0.5} in={showSocialLinks}>
               {showSocialLinks && (
                 <VStack justifyContent="center" alignItems="center" spacing={16}>
-                  <Tooltip borderLeft="4px solid rgba(255, 128, 0, 0.9)" label="About" placement="right">
-                    <Box
-                      onClick={() => router.push('/about')}
-                      _hover={{
-                        cursor: 'pointer',
-                        boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`,
-                      }}
-                    >
-                      <FaInfo size={'25px'} color="rgb(255, 128, 0)" />
-                    </Box>
-                  </Tooltip>
+                  <Link href="https://quicksilver.zone/" isExternal>
+                    <Tooltip borderLeft="4px solid rgba(255, 128, 0, 0.9)" label="About" placement="right">
+                      <Box
+                        _hover={{
+                          cursor: 'pointer',
+                          boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`,
+                        }}
+                      >
+                        <FaInfo size={'25px'} color="rgb(255, 128, 0)" />
+                      </Box>
+                    </Tooltip>
+                  </Link>
                   <Link href="https://docs.quicksilver.zone/" isExternal>
                     <Tooltip borderLeft="4px solid rgba(255, 128, 0, 0.9)" label="Docs" placement="right">
                       <Box
@@ -405,11 +417,11 @@ export const SideHeader = () => {
                           transition: transitionStyle,
                         }}
                       >
-                        <FaTwitter size={'25px'} color="rgb(255, 128, 0)" />
+                        <FaXTwitter size={'25px'} color="rgb(255, 128, 0)" />
                       </Box>
                     </Link>
                   </Tooltip>
-                  <Tooltip borderLeft="4px solid rgba(255, 128, 0, 0.9)" label="Privacy Policy" placement="right">
+                  {/*<Tooltip borderLeft="4px solid rgba(255, 128, 0, 0.9)" label="Privacy Policy" placement="right">
                     <Box
                       onClick={() => router.push('/privacy-policy')}
                       _hover={{
@@ -420,7 +432,7 @@ export const SideHeader = () => {
                     >
                       <MdPrivacyTip size={'25px'} color="rgb(255, 128, 0)" />
                     </Box>
-                  </Tooltip>
+                    </Tooltip>*/}
                 </VStack>
               )}
             </ScaleFade>

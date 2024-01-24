@@ -1,16 +1,12 @@
 import { CloseIcon } from '@chakra-ui/icons';
-import { Box, Flex, Text, VStack, Button, HStack, Checkbox, Spinner } from '@chakra-ui/react';
-import { useState } from 'react';
-
-import { useLiquidEpochQuery } from '@/hooks/useQueries';
-
-import { quicksilver } from 'quicksilverjs';
-import { useTx } from '@/hooks';
-import { StdFee } from '@cosmjs/amino';
+import { Box, Flex, Text, VStack, Button, HStack, Spinner } from '@chakra-ui/react';
 import { assets } from 'chain-registry';
-import { cosmos } from 'interchain-query';
-import { Grant, GenericAuthorization } from 'interchain-query/cosmos/authz/v1beta1/authz';
-import { MsgSubmitClaim } from 'quicksilverjs/types/codegen/quicksilver/participationrewards/v1/messages';
+import { GenericAuthorization } from 'interchain-query/cosmos/authz/v1beta1/authz';
+import { quicksilver, cosmos } from 'quicksilverjs';
+import React, { useState } from 'react';
+
+import { useTx } from '@/hooks';
+import { useLiquidEpochQuery } from '@/hooks/useQueries';
 
 interface RewardsClaimInterface {
   address: string;
@@ -48,20 +44,18 @@ export const RewardsClaim: React.FC<RewardsClaimInterface> = ({ address, onClose
 
   const { grant } = cosmos.authz.v1beta1.MessageComposer.withTypeUrl;
 
-  const msgTypeUrl = '/quicksilver.participationrewards.v1.MsgSubmitClaim';
-
   const genericAuth = {
-    msg: msgTypeUrl,
+    msg: quicksilver.participationrewards.v1.MsgSubmitClaim.typeUrl,
   };
 
   const binaryMessage = GenericAuthorization.encode(genericAuth).finish();
 
   const msgGrant = grant({
     granter: address,
-    grantee: 'quick1dv3v662kd3pp6pxfagck4zyysas82adsdhugaf',
+    grantee: 'quick1w5ennfhdqrpyvewf35sv3y3t8yuzwq29mrmyal',
     grant: {
       authorization: {
-        typeUrl: '/cosmos.authz.v1beta1.GenericAuthorization',
+        typeUrl: cosmos.authz.v1beta1.GenericAuthorization.typeUrl,
         value: binaryMessage,
       },
     },
@@ -70,11 +64,11 @@ export const RewardsClaim: React.FC<RewardsClaimInterface> = ({ address, onClose
   const mainTokens = assets.find(({ chain_name }) => chain_name === 'quicksilver');
   const mainDenom = mainTokens?.assets[0].base ?? 'uqck';
 
-  const fee: StdFee = {
+  const fee = {
     amount: [
       {
         denom: mainDenom,
-        amount: '5000',
+        amount: '50',
       },
     ],
     gas: '500000',
@@ -133,11 +127,11 @@ export const RewardsClaim: React.FC<RewardsClaimInterface> = ({ address, onClose
     }
   };
 
-  const [autoClaimEnabled, setAutoClaimEnabled] = useState(false);
+  const [autoClaimEnabled, setAutoClaimEnabled] = useState(true);
 
-  const handleAutoClaimToggle = () => {
-    setAutoClaimEnabled(!autoClaimEnabled);
-  };
+  // const handleAutoClaimToggle = () => {
+  //   setAutoClaimEnabled(!autoClaimEnabled);
+  // };
 
   const transactionHandler = autoClaimEnabled ? handleAutoClaimRewards : handleClaimRewards;
 
@@ -147,13 +141,13 @@ export const RewardsClaim: React.FC<RewardsClaimInterface> = ({ address, onClose
         <CloseIcon color="white" cursor="pointer" onClick={onClose} _hover={{ color: 'complimentary.900' }} />
         <VStack alignItems="flex-start" spacing="2">
           <Text fontSize="xl" fontWeight="bold" color="white">
-            Participation Rewards
+            Cross Chain Claims (XCC) is coming!
           </Text>
           <Text pb={2} color="white" fontSize="md">
-            Claim your participation rewards. Rewards will be sent to your wallet at the next epoch.
+            Click the button below to set your authz grant for automatic cross chain claims.
           </Text>
           <HStack gap={8} justifyContent={'space-between'}>
-            <Checkbox
+            {/* <Checkbox
               _selected={{ bgColor: 'transparent' }}
               _active={{
                 borderColor: 'complimentary.900',
@@ -166,29 +160,52 @@ export const RewardsClaim: React.FC<RewardsClaimInterface> = ({ address, onClose
                 boxShadow: '0 0 0 3px #FF8000',
               }}
               isChecked={autoClaimEnabled}
-              onChange={handleAutoClaimToggle}
+              //onChange={handleAutoClaimToggle}
               colorScheme="orange"
             >
               <Text color="white" fontSize="sm">
                 Enable Automatic Claiming
               </Text>
-            </Checkbox>
-            <Button
-              _active={{
-                transform: 'scale(0.95)',
-                color: 'complimentary.800',
-              }}
-              _hover={{
-                bgColor: 'rgba(255,128,0, 0.25)',
-                color: 'complimentary.300',
-              }}
-              minW={'120px'}
-              onClick={transactionHandler}
-              size="sm"
-              alignSelf="end"
-            >
-              {isError ? 'Try Again' : isSigning ? <Spinner /> : 'Claim Rewards'}
-            </Button>
+            </Checkbox> */}
+            {/* <Tooltip
+              mr={12}
+              label={
+                <React.Fragment>
+                  <Flex direction="column" p="2" maxW="xs" textAlign={'center'} align="center">
+                    <Heading color="red" fontSize="md" fontWeight="bold" pb={2}>
+                      Claiming Disabled
+                    </Heading>
+                    <Text>Reward claiming is disabled until a governance proposal updating the claiming parameter is passed.</Text>
+                    <Box p="2">
+                      <Text>You may still enable automatic claiming in advance.</Text>
+                    </Box>
+                  </Flex>
+                </React.Fragment>
+              }
+              isDisabled={autoClaimEnabled}
+              placement="top"
+              hasArrow
+            > */}
+              <Box>
+                <Button
+                  _active={{
+                    transform: 'scale(0.95)',
+                    color: 'complimentary.800',
+                  }}
+                  _hover={{
+                    bgColor: 'rgba(255,128,0, 0.25)',
+                    color: 'complimentary.300',
+                  }}
+                  minW={'120px'}
+                  onClick={transactionHandler}
+                  size="sm"
+                  alignSelf="end"
+                  isDisabled={!autoClaimEnabled}
+                >
+                  {isError ? 'Try Again' : isSigning ? <Spinner /> : autoClaimEnabled ? 'Auto Claim' : 'Claim Rewards'}
+                </Button>
+              </Box>
+            {/* </Tooltip> */}
           </HStack>
         </VStack>
       </Flex>
