@@ -10,8 +10,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
-
 	"github.com/quicksilver-zone/quicksilver/v7/utils"
 	"github.com/quicksilver-zone/quicksilver/v7/x/airdrop/types"
 )
@@ -23,7 +23,7 @@ type Keeper struct {
 	accountKeeper types.AccountKeeper
 	bankKeeper    types.BankKeeper
 	stakingKeeper types.StakingKeeper
-	govKeeper     types.GovKeeper
+	govKeeper     govtypes.Keeper
 	ibcKeeper     *ibckeeper.Keeper
 	icsKeeper     types.InterchainStakingKeeper
 	prKeeper      types.ParticipationRewardsKeeper
@@ -44,7 +44,7 @@ func NewKeeper(
 	ak types.AccountKeeper,
 	bk types.BankKeeper,
 	sk types.StakingKeeper,
-	gk types.GovKeeper,
+	gk govtypes.Keeper,
 	ibcKeeper *ibckeeper.Keeper,
 	icsk types.InterchainStakingKeeper,
 	prk types.ParticipationRewardsKeeper,

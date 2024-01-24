@@ -4,11 +4,10 @@ import (
 	"errors"
 	"fmt"
 
+	"cosmossdk.io/collections"
 	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
-	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	osmosistypes "github.com/quicksilver-zone/quicksilver/v7/third-party-chains/osmosis-types"
 	osmosislockuptypes "github.com/quicksilver-zone/quicksilver/v7/third-party-chains/osmosis-types/lockup"
 	"github.com/quicksilver-zone/quicksilver/v7/x/airdrop/types"
@@ -200,19 +199,19 @@ func (k *Keeper) verifyGovernanceParticipation(ctx sdk.Context, address string) 
 	}
 
 	voted := false
-	// TODO:  Not work
-	// since k.govKeeper is keeper.Keeper, not *govkeeper.Keeper
 
-	// Should find a way to iterate gov states(proposals, votes in sdk v50)
-	// Since they removed all the Iterate and Get version, and replaced with Collection API
-	// https://docs.cosmos.network/main/build/architecture/adr-062-collections-state-layer
-
-	govQueryServer := govkeeper.NewQueryServer(k.govKeeper.(*govkeeper.Keeper))
-	getProposalsResp, _ := govQueryServer.Proposals(ctx, &v1.QueryProposalsRequest{})
-	proposals := getProposalsResp.Proposals
-	for _, proposal := range proposals {
-		_, err := govQueryServer.Vote(ctx, &v1.QueryVoteRequest{ProposalId: proposal.Id, Voter: addr.String()})
-		if err == nil {
+	iter, err := k.govKeeper.Proposals.Iterate(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		proposalID, err := iter.Key()
+		if err != nil {
+			return err
+		}
+		_, err = k.govKeeper.Votes.Get(ctx, collections.Join[uint64, sdk.AccAddress](proposalID, addr))
+		if err != nil {
 			voted = true
 			break
 		}
