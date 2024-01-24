@@ -108,22 +108,25 @@ func storeReflectCode(t *testing.T, ctx sdk.Context, quicksilverApp *app.Quicksi
 
 	require.NoError(t, err)
 
-	src := wasmtypes.MsgStoreCode{
+	src := &wasmtypes.MsgStoreCode{
 		Sender:       addr.String(),
 		WASMByteCode: wasmCode,
 	}
 
-	msgContent, err := govv1.NewMsgSubmitProposal([]sdk.Msg{src}, sdk.NewCoins(sdk.NewInt64Coin("qck", 100000000)), govAddress, "test", "test", "test", true)
+	msgProposal, err := govv1.NewMsgSubmitProposal([]sdk.Msg{src}, sdk.NewCoins(sdk.NewInt64Coin("qck", 100000000)), govAddress, "test", "test", "test", true)
 	require.NoError(t, err)
 
 	// when stored
-	_, err = govKeeper.SubmitProposal(ctx, []sdk.Msg{msgContent}, "testing123")
-	require.NoError(t, err)
+	// _, err = govKeeper.SubmitProposal(ctx, []sdk.Msg{msgContent}, "testing123")
+	// require.NoError(t, err)
 
 	// and proposal execute
-	em := sdk.NewEventManager()
-	handler := govKeeper.LegacyRouter().GetRoute(src.ProposalRoute())
-	err = handler(ctx.WithEventManager(em), src)
+	// em := sdk.NewEventManager()
+	handler := govKeeper.Router().Handler(msgProposal)
+	if handler == nil {
+		t.Fatal("proposal handler not found")
+	}
+	_, err = handler(ctx, msgProposal)
 	require.NoError(t, err)
 }
 

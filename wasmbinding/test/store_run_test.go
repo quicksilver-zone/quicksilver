@@ -41,23 +41,28 @@ func storeCodeViaProposal(t *testing.T, ctx sdk.Context, quicksilverApp *app.Qui
 	wasmCode, err := os.ReadFile("../testdata/hackatom.wasm")
 	require.NoError(t, err)
 
-	src := types.StoreCodeProposalFixture(func(p *types.StoreCodeProposal) {
-		p.RunAs = addr.String()
-		p.WASMByteCode = wasmCode
-	})
-
-	govAddress := govKeeper.GetGovernanceAccount(ctx).GetAddress().String()
-	msgContent, err := govv1.NewLegacyContent(src, govAddress)
+	src := &types.MsgStoreCode{
+		Sender:       addr.String(),
+		WASMByteCode: wasmCode,
+	}
+	// types.StoreCodeProposal
+	msgProposal, err := govv1.NewMsgSubmitProposal([]sdk.Msg{src}, sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(100))), addr.String(), "test", "test", "test", false)
 	require.NoError(t, err)
+	// govAddress := govKeeper.GetGovernanceAccount(ctx).GetAddress().String()
+	// msgContent, err := govv1.NewLegacyContent(src, govAddress)
+	// require.NoError(t, err)
 
-	// when stored
-	_, err = govKeeper.SubmitProposal(ctx, []sdk.Msg{msgContent}, "testing123")
-	require.NoError(t, err)
+	// // when stored
+	// _, err = govKeeper.SubmitProposal(ctx, []sdk.Msg{msgProposal}, "testing123", "test", "test", addr, false)
+	// require.NoError(t, err)
 
 	// and proposal execute
-	em := sdk.NewEventManager()
-	handler := govKeeper.LegacyRouter().GetRoute(src.ProposalRoute())
-	err = handler(ctx.WithEventManager(em), src)
+	// em := sdk.NewEventManager()
+	handler := govKeeper.Router().Handler(msgProposal)
+	if handler == nil {
+		t.Fatal("proposal handler not found")
+	}
+	_, err = handler(ctx, msgProposal)
 	require.NoError(t, err)
 }
 
