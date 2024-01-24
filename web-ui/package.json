@@ -48,7 +48,7 @@
     "geoip-lite": "^1.4.9",
     "interchain-query": "^1.8.7",
     "mixpanel-browser": "^2.48.1",
-    "next": "12.2.3",
+    "next": "14.1.0",
     "quicksilverjs": "1.1.0",
     "react": "18.2.0",
     "react-dom": "18.2.0",
