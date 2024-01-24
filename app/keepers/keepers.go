@@ -520,6 +520,7 @@ func (appKeepers *AppKeepers) InitKeepers(
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 		[]wasmkeeper.Option{}...,
 	)
+	ibcStack = interchainstaking.NewTransferMiddleware(ibcStack, appKeepers.InterchainstakingKeeper)
 
 	// Create Transfer Stack
 	var transferStack porttypes.IBCModule
