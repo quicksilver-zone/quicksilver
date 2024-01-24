@@ -26,12 +26,11 @@ import { assets, chains } from 'chain-registry';
 import { cosmos } from 'interchain-query';
 import React, { useEffect, useState } from 'react';
 
+import { MultiModal } from './validatorSelectionModal';
+
 import { useTx } from '@/hooks';
 import { useZoneQuery } from '@/hooks/useQueries';
 import { shiftDigits } from '@/utils';
-
-import { MultiModal } from './validatorSelectionModal';
-
 
 const ChakraModalContent = styled(ModalContent)`
   position: relative;
@@ -182,6 +181,7 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
         }));
       }
     }
+    //eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedValidators, weights, useDefaultWeights]);
 
   interface ValidatorsSelect {
@@ -357,7 +357,7 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
   return (
     <Modal isOpen={isOpen} onClose={onClose} size={{ base: '3xl', md: '2xl' }}>
       <ModalOverlay />
-      <ChakraModalContent h="48%" maxH={'100%'}>
+      <ChakraModalContent h={{ base: '55%', md: '48%' }} maxH={'100%'}>
         <ModalBody borderRadius={4} h="48%" maxH={'100%'}>
           <ModalCloseButton zIndex={1000} color="white" />
           <HStack position={'relative'} h="100%" spacing="48px" align="stretch">

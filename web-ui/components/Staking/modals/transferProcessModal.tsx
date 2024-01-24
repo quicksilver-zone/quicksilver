@@ -29,7 +29,7 @@ import { shiftDigits } from '@/utils';
 const ChakraModalContent = styled(ModalContent)`
   position: relative;
   background: none;
-  max-height: 400px;
+  max-height: 450px;
   &::before,
   &::after {
     z-index: -1;
@@ -247,7 +247,7 @@ export const TransferProcessModal: React.FC<StakingModalProps> = ({
   return (
     <Modal isOpen={isOpen} onClose={onClose} size={{ base: '3xl', md: '2xl' }}>
       <ModalOverlay />
-      <ChakraModalContent h="48%" maxH={'100%'}>
+      <ChakraModalContent h={{ md: '48%', base: '80%' }} maxH={'100%'}>
         <ModalBody borderRadius={4} h="48%" maxH={'100%'}>
           <ModalCloseButton zIndex={1000} color="white" />
           <HStack position={'relative'} h="100%" spacing="48px" align="stretch">

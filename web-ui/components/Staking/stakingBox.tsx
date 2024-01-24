@@ -33,6 +33,9 @@ import { quicksilver } from 'quicksilverjs';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { FaStar } from 'react-icons/fa';
 
+import StakingProcessModal from './modals/stakingProcessModal';
+import TransferProcessModal from './modals/transferProcessModal';
+
 import { useTx } from '@/hooks';
 import {
   useAllBalancesQuery,
@@ -44,9 +47,6 @@ import {
   useZoneQuery,
 } from '@/hooks/useQueries';
 import { getExponent, shiftDigits } from '@/utils';
-
-import StakingProcessModal from './modals/stakingProcessModal';
-import TransferProcessModal from './modals/transferProcessModal';
 
 type StakingBoxProps = {
   selectedOption: {
@@ -538,7 +538,7 @@ export const StakingBox = ({
                   <Flex flexDirection="column" w="100%">
                     <VStack spacing={8} align="center">
                       <Box position="relative" mb={8}>
-                        <Box className="custom-scroll" maxH="290px" overflowY="scroll" w="fit-content" onScroll={handleScroll}>
+                        <Box className="custom-scrollbar" maxH="290px" overflowY="scroll" w="fit-content" onScroll={handleScroll}>
                           {/* Combine delegationsResponse with valoper entries from allBalances */}
                           {combinedDelegations.map(
                             (

@@ -23,15 +23,14 @@ import { assets } from 'chain-registry';
 import { quicksilver } from 'quicksilverjs';
 import React, { useEffect, useState } from 'react';
 
-import { useTx } from '@/hooks';
-
 import { IntentMultiModal } from './intentMultiModal';
 
+import { useTx } from '@/hooks';
 
 const ChakraModalContent = styled(ModalContent)`
   position: relative;
   background: none;
-  max-height: 320px;
+  max-height: 350px;
   &::before,
   &::after {
     z-index: -1;
@@ -253,7 +252,7 @@ export const SignalIntentModal: React.FC<StakingModalProps> = ({ isOpen, onClose
   return (
     <Modal isOpen={isOpen} onClose={onClose} size={{ base: '3xl', md: '2xl' }}>
       <ModalOverlay />
-      <ChakraModalContent h="48%" maxH={'100%'}>
+      <ChakraModalContent h={{ md: '48%', base: '55%' }} maxH={'100%'}>
         <ModalBody borderRadius={4} h="48%" maxH={'100%'}>
           <ModalCloseButton zIndex={1000} color="white" />
           <HStack position={'relative'} h="100%" spacing="48px" align="stretch">
