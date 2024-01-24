@@ -15,21 +15,23 @@ export default function Home() {
     <>
       <SlideFade offsetY={'200px'} in={true} style={{ width: '100%' }}>
         <Container
-          flexDir={'column'}
-          mt={{ base: 10, 1279: 10, md: 0 }}
-          top={20}
           zIndex={2}
           position="relative"
-          justifyContent="center"
-          alignItems="center"
-          maxW="5xl"
+          maxW="container.lg"
+          height="100vh" // Full viewport height
+          display="flex"
+          flexDirection="column"
+          justifyContent="center" // Center vertically
+          alignItems="center" // Center horizontally
+          mt={{ base: '-40px', md: '60px' }} // Ensuring the margin-top is zero
+          mb="0" // Ensuring the margin-bottom is zero
         >
           <Head>
             <title>Governance</title>
             <meta name="viewport" content="width=device-width, initial-scale=1.0" />
             <link rel="icon" href="/img/favicon.png" />
           </Head>
-          <Box maxHeight="3xl" width="100%" padding={2} mt={{ base: 10, md: 5 }}>
+          <Box width="100%" padding={2} mt={{ base: 10, md: 5 }}>
             <Text pb={2} color="white" fontSize="24px">
               Proposals
             </Text>

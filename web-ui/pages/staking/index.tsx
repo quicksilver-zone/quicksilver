@@ -64,8 +64,8 @@ export default function Staking() {
       </Head>
       <SlideFade offsetY={'200px'} in={true} style={{ width: '100%' }}>
         <Container
-          top={20}
           zIndex={2}
+          mt={{ base: '-30px', md: '50px' }}
           position="relative"
           maxW="container.lg"
           height="100vh"
@@ -73,9 +73,8 @@ export default function Staking() {
           flexDirection="column"
           justifyContent="center"
           alignItems="center"
-          mt={{ base: '50px', md: '30px' }}
         >
-          <Flex zIndex={3} direction="column" h="100%">
+          <Flex justifyContent={'center'} zIndex={3} direction="column" h="100%">
             {/* Dropdown and Statistic */}
             <Box w="50%">
               <HStack justifyContent="space-between" w="100%">
@@ -125,7 +124,7 @@ export default function Staking() {
                 <DynamicAssetBox selectedOption={selectedNetwork} balance={balance} qBalance={qBalance} />
               </Flex>
             </Flex>
-            <Box display={{ base: 'none', lg: 'block', md: 'none' }} position="relative" left="900px" bottom="205px" zIndex={10}>
+            <Box display={{ base: 'none', lg: 'block', md: 'none' }} position="relative" left="885px" bottom="205px" zIndex={10}>
               <Image src="/img/quicksilverWord.png" alt="Quicksilver" h="100px" transform="rotate(90deg)" />
             </Box>
           </Flex>

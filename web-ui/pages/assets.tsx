@@ -232,7 +232,7 @@ function Home() {
         <Container
           flexDir={'column'}
           top={20}
-          mt={{ base: 10, md: 10 }}
+          mt={{ base: '-30px', md: 10 }}
           zIndex={2}
           position="relative"
           justifyContent="center"
@@ -318,19 +318,6 @@ function Home() {
             />
           </Box> */}
           <Box h="40px"></Box>
-          <Box>
-            <Image
-              display={{ base: 'none', lg: 'block', md: 'none' }}
-              src="/img/quicksilverWord.png"
-              alt="Quicksilver"
-              position="fixed"
-              bottom="30px"
-              left="1110"
-              h={'100px'}
-              transform="rotate(90deg)"
-              transformOrigin="bottom right"
-            />
-          </Box>
         </Container>
         {showRewardsClaim && (
           <SlideFade in={showRewardsClaim} offsetY="20px" style={{ position: 'fixed', right: '20px', bottom: '20px', zIndex: 10 }}>

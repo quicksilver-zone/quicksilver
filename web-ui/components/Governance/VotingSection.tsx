@@ -288,8 +288,8 @@ export const VotingSection = ({ chainName }: { chainName: ChainName }) => {
               src="/img/quicksilverWord.png"
               alt="Quicksilver"
               position="relative"
-              bottom="90"
-              left="680"
+              bottom="100"
+              left="660"
               h={'100px'}
               transform="rotate(90deg)"
               transformOrigin="bottom right"
