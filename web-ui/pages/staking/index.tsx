@@ -65,7 +65,7 @@ export default function Staking() {
       <SlideFade offsetY={'200px'} in={true} style={{ width: '100%' }}>
         <Container
           zIndex={2}
-          mt={{ base: '-30px', md: '50px' }}
+          mt={{ base: '10px', md: '50px' }}
           position="relative"
           maxW="container.lg"
           height="100vh"
@@ -124,8 +124,18 @@ export default function Staking() {
                 <DynamicAssetBox selectedOption={selectedNetwork} balance={balance} qBalance={qBalance} />
               </Flex>
             </Flex>
-            <Box display={{ base: 'none', lg: 'block', md: 'none' }} position="relative" left="885px" bottom="205px" zIndex={10}>
-              <Image src="/img/quicksilverWord.png" alt="Quicksilver" h="100px" transform="rotate(90deg)" />
+            <Box>
+              <Image
+                display={{ base: 'none', lg: 'block', md: 'none' }}
+                position="relative"
+                left="885px"
+                bottom="205px"
+                zIndex={10}
+                src="/img/quicksilverWord.png"
+                alt="Quicksilver"
+                h="100px"
+                transform="rotate(90deg)"
+              />
             </Box>
           </Flex>
         </Container>
