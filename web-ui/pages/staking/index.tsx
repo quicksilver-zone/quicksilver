@@ -124,8 +124,18 @@ export default function Staking() {
                 <DynamicAssetBox selectedOption={selectedNetwork} balance={balance} qBalance={qBalance} />
               </Flex>
             </Flex>
-            <Box display={{ base: 'none', lg: 'block', md: 'none' }} position="relative" left="885px" bottom="205px" zIndex={10}>
-              <Image src="/img/quicksilverWord.png" alt="Quicksilver" h="100px" transform="rotate(90deg)" />
+            <Box>
+              <Image
+                display={{ base: 'none', lg: 'block', md: 'none' }}
+                position="relative"
+                left="885px"
+                bottom="205px"
+                zIndex={10}
+                src="/img/quicksilverWord.png"
+                alt="Quicksilver"
+                h="100px"
+                transform="rotate(90deg)"
+              />
             </Box>
           </Flex>
         </Container>
