@@ -22,19 +22,16 @@ import { coins, StdFee } from '@cosmjs/amino';
 import { useChain } from '@cosmos-kit/react';
 import styled from '@emotion/styled';
 import { bech32 } from 'bech32';
-import { assets } from 'chain-registry';
-import chains from 'chain-registry';
+import { assets, chains } from 'chain-registry';
 import { cosmos } from 'interchain-query';
-
 import React, { useEffect, useState } from 'react';
 
-import { MultiModal } from './validatorSelectionModal';
-
-import { useZoneQuery } from '@/hooks/useQueries';
-
-import { shiftDigits } from '@/utils';
 
 import { useTx } from '@/hooks';
+import { useZoneQuery } from '@/hooks/useQueries';
+import { shiftDigits } from '@/utils';
+
+import { MultiModal } from './validatorSelectionModal';
 
 const ChakraModalContent = styled(ModalContent)`
   position: relative;
@@ -98,6 +95,8 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
     newChainName = 'osmosistestnet';
   } else if (selectedOption?.chainId === 'regen-redwood-1') {
     newChainName = 'regen';
+  } else if (selectedOption?.chainId === 'sommelier-3') {
+    newChainName = 'sommelier';
   } else {
     // Default case
     newChainName = selectedOption?.chainName;
@@ -155,11 +154,11 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
   const calculateIntents = () => {
     return selectedValidators.map((validator) => {
       // For each validator, calculate the weight based on whether default weights are used
-      const weight = useDefaultWeights ? defaultWeight : weights[validator.operatorAddress];
+      const weight = useDefaultWeights ? defaultWeight : weights[validator.operatorAddress] || 0;
 
       return {
         address: validator.operatorAddress,
-        intent: weight.toFixed(4), // Ensure 4 decimal places
+        intent: weight.toFixed(4),
       };
     });
   };
@@ -167,6 +166,7 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
   // Calculate defaultWeight as string
   useEffect(() => {
     setDefaultWeight(1 / numberOfValidators);
+    //eslint-disable-next-line react-hooks/exhaustive-deps
   }, [numberOfValidators]);
 
   const [useDefaultWeights, setUseDefaultWeights] = useState(true);
@@ -182,6 +182,7 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
         }));
       }
     }
+    //eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedValidators, weights, useDefaultWeights]);
 
   interface ValidatorsSelect {
@@ -245,16 +246,23 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
   });
 
   const mainTokens = assets.find(({ chain_name }) => chain_name === newChainName);
-  const fees = chains.chains.find(({ chain_name }) => chain_name === newChainName)?.fees?.fee_tokens;
+  const fees = chains.find(({ chain_name }) => chain_name === newChainName)?.fees?.fee_tokens;
   const mainDenom = mainTokens?.assets[0].base ?? '';
-  const fixedMinGasPrice = fees?.find(({ denom }) => denom === mainDenom)?.average_gas_price ?? '';
-  const feeAmount = shiftDigits(fixedMinGasPrice, 6);
+  let feeAmount;
+  if (selectedOption?.chainName === 'sommelier') {
+    // Hardcoded value for sommelier-3
+    feeAmount = '10000';
+  } else {
+    // Default case
+    const fixedMinGasPrice = fees?.find(({ denom }) => denom === mainDenom)?.average_gas_price ?? '';
+    feeAmount = shiftDigits(fixedMinGasPrice, 6).toString();
+  }
 
   const fee: StdFee = {
     amount: [
       {
         denom: mainDenom,
-        amount: feeAmount.toString(),
+        amount: feeAmount,
       },
     ],
     gas: '500000',
@@ -350,7 +358,7 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
   return (
     <Modal isOpen={isOpen} onClose={onClose} size={{ base: '3xl', md: '2xl' }}>
       <ModalOverlay />
-      <ChakraModalContent h="48%" maxH={'100%'}>
+      <ChakraModalContent h={{ base: '55%', md: '48%' }} maxH={'100%'}>
         <ModalBody borderRadius={4} h="48%" maxH={'100%'}>
           <ModalCloseButton zIndex={1000} color="white" />
           <HStack position={'relative'} h="100%" spacing="48px" align="stretch">

@@ -14,19 +14,19 @@ import {
   Center,
   Divider,
   Heading,
-  useColorMode,
 } from '@chakra-ui/react';
 import { cosmos } from 'interchain-query';
 import { Proposal } from 'interchain-query/cosmos/gov/v1/gov';
 import React, { useMemo, useState } from 'react';
 import { PieChart } from 'react-minimal-pie-chart';
 
+import { Votes } from '@/hooks';
+import { decodeUint8Arr, exponentiate, formatDate, getCoin, getExponent, getPercentage } from '@/utils';
+
 import { VoteResult, TimeDisplay, VoteRatio, NewLineText, StatusBadge, VoteOption } from './common';
 import { VoteColor } from './ProposalCard';
 import { VoteModal } from './VoteModal';
 
-import { Votes } from '@/hooks';
-import { decodeUint8Arr, exponentiate, formatDate, getCoin, getExponent, getPercentage } from '@/utils';
 
 const ProposalStatus = cosmos.gov.v1beta1.ProposalStatus;
 

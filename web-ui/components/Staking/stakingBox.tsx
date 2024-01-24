@@ -30,11 +30,9 @@ import {
 import { Coin, StdFee } from '@cosmjs/amino';
 import { useChain } from '@cosmos-kit/react';
 import { quicksilver } from 'quicksilverjs';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { FaStar } from 'react-icons/fa';
 
-import StakingProcessModal from './modals/stakingProcessModal';
-import TransferProcessModal from './modals/transferProcessModal';
 
 import { useTx } from '@/hooks';
 import {
@@ -46,8 +44,10 @@ import {
   useValidatorsQuery,
   useZoneQuery,
 } from '@/hooks/useQueries';
-import { getExponent } from '@/utils';
-import { shiftDigits } from '@/utils';
+import { getExponent, shiftDigits } from '@/utils';
+
+import StakingProcessModal from './modals/stakingProcessModal';
+import TransferProcessModal from './modals/transferProcessModal';
 
 type StakingBoxProps = {
   selectedOption: {
@@ -87,7 +87,9 @@ export const StakingBox = ({
 
   const { address: qAddress } = useChain('quicksilver');
   const exp = getExponent(selectedOption.chainName);
+
   const { balance, isLoading } = useBalanceQuery(selectedOption.chainName, address ?? '');
+
   const { balance: allBalances } = useAllBalancesQuery(selectedOption.chainName, address ?? '');
 
   const { balance: qBalance } = useQBalanceQuery('quicksilver', qAddress ?? '', selectedOption.value.toLowerCase());
@@ -148,7 +150,7 @@ export const StakingBox = ({
     amount: [
       {
         denom: 'uqck',
-        amount: '7500',
+        amount: '50',
       },
     ],
     gas: '500000',
@@ -177,12 +179,18 @@ export const StakingBox = ({
 
   const { delegations, delegationsIsError, delegationsIsLoading } = useNativeStakeQuery(selectedOption.chainName, address ?? '');
   const delegationsResponse = delegations?.delegation_responses;
-  const nativeStakedAmount = delegationsResponse?.reduce((acc, delegationResponse) => {
+  const nativeStakedAmount = delegationsResponse?.reduce((acc: number, delegationResponse: { balance: { amount: any } }) => {
     const amount = Number(delegationResponse?.balance?.amount) || 0;
     return acc + amount;
   }, 0);
 
   const [useNativeStake, setUseNativeStake] = useState(false);
+
+  const hasTokenizedShares = (balances: any[]) => {
+    return balances.some((balance: { denom: string | string[] }) => balance.denom.includes('valoper'));
+  };
+
+  const hasTokenized = useMemo(() => hasTokenizedShares(allBalances?.balances || []), [allBalances]);
 
   const handleSwitchChange = (event: { target: { checked: boolean | ((prevState: boolean) => boolean) } }) => {
     setUseNativeStake(event.target.checked);
@@ -210,6 +218,7 @@ export const StakingBox = ({
     moniker: string;
     tokenAmount: string;
     isTokenized: boolean;
+    denom: string;
   }
 
   const [selectedValidatorData, setSelectedValidatorData] = useState<SelectedValidator>({
@@ -217,6 +226,7 @@ export const StakingBox = ({
     moniker: '',
     tokenAmount: '',
     isTokenized: false,
+    denom: '',
   });
 
   const isWalletConnected = !!address;
@@ -228,6 +238,29 @@ export const StakingBox = ({
   } else if (Number(tokenAmount) < 0.1) {
     liquidStakeTooltip = 'Minimum amount to stake is 0.1';
   }
+
+  const safeDelegationsResponse = delegationsResponse || [];
+  const safeAllBalances = allBalances?.balances || [];
+
+  // Combine delegationsResponse with valoper entries from allBalances
+  const combinedDelegations = safeDelegationsResponse.concat(
+    safeAllBalances
+      .filter((balance) => balance.denom.includes('valoper'))
+      .map((balance) => {
+        const [validatorAddress, uniqueId] = balance.denom.split('/');
+        return {
+          delegation: {
+            validator_address: validatorAddress,
+            unique_id: uniqueId,
+          },
+          balance: {
+            amount: balance.amount,
+          },
+          isTokenized: true,
+          denom: balance.denom,
+        };
+      }),
+  );
 
   return (
     <Box position="relative" backdropFilter="blur(50px)" bgColor="rgba(255,255,255,0.1)" flex="1" borderRadius="10px" p={5}>
@@ -278,25 +311,33 @@ export const StakingBox = ({
                 </Text>
                 {selectedOption.name === 'Cosmos Hub' && (
                   <Flex textAlign={'left'} justifyContent={'flex-start'}>
-                    {!nativeStakedAmount && (
+                    {(nativeStakedAmount > 0 || hasTokenized) && (
                       <Tooltip
                         label={
                           !address
                             ? 'Please connect your wallet to enable this option.'
-                            : !nativeStakedAmount
-                            ? "You don't have any native staked tokens."
-                            : `You currently have ${shiftDigits(nativeStakedAmount, -6)} ${
+                            : !nativeStakedAmount && !hasTokenized
+                            ? "You don't have any native staked tokens or tokenized shares."
+                            : nativeStakedAmount > 0
+                            ? `You currently have ${shiftDigits(nativeStakedAmount, -6)} ${
                                 selectedOption.value
-                              } natively staked to ${delegationsResponse?.length} validators. You can tokenize your shares and transfer them to quicksilver by clicking the switch and selecting a validator.`
+                              } natively staked to ${delegationsResponse?.length} validators.`
+                            : hasTokenized
+                            ? 'You have tokenized shares available for transfer.'
+                            : ''
                         }
                       >
                         <HStack>
-                          <Text fontWeight="hairline" textAlign="center" color="whiteAlpha.800">
-                            Use natively staked&nbsp;
+                          <Text
+                            fontWeight={!nativeStakedAmount && !hasTokenized ? 'hairline' : 'normal'}
+                            textAlign="center"
+                            color={!nativeStakedAmount && !hasTokenized ? 'whiteAlpha.800' : 'white'}
+                          >
+                            Use staked&nbsp;
                             <span style={{ color: '#FF8000' }}>{selectedOption.value}</span>?
                           </Text>
                           {delegationsIsLoading && <SkeletonCircle size="4" startColor="complimentary.900" endColor="complimentary.400" />}
-                          {!delegationsIsLoading && !delegationsIsError && nativeStakedAmount && (
+                          {!delegationsIsLoading && !delegationsIsError && (
                             <Switch
                               _active={{
                                 borderColor: 'complimentary.900',
@@ -311,59 +352,16 @@ export const StakingBox = ({
                                 borderColor: 'complimentary.900',
                                 boxShadow: '0 0 0 3px #FF8000',
                               }}
-                              isDisabled={!nativeStakedAmount || !logos}
+                              isDisabled={(!nativeStakedAmount && !hasTokenized) || !logos}
                               isChecked={useNativeStake}
                               onChange={handleSwitchChange}
                               id="use-natively-staked"
                               colorScheme="orange"
                             />
                           )}
-
-                          <InfoOutlineIcon color="complimentary.1100" />
+                          <InfoOutlineIcon color={!nativeStakedAmount && !hasTokenized ? 'complimentary.1100' : 'complimentary.900'} />
                         </HStack>
                       </Tooltip>
-                    )}
-                    {nativeStakedAmount > 0 && (
-                      <HStack>
-                        <Text fontWeight="medium" textAlign="center" color="white">
-                          Use natively staked&nbsp;
-                          <span style={{ color: '#FF8000' }}>{selectedOption.value}</span>?
-                        </Text>
-                        <Switch
-                          _active={{
-                            borderColor: 'complimentary.900',
-                          }}
-                          _selected={{
-                            borderColor: 'complimentary.900',
-                          }}
-                          _hover={{
-                            borderColor: 'complimentary.900',
-                          }}
-                          _focus={{
-                            borderColor: 'complimentary.900',
-                            boxShadow: '0 0 0 3px #FF8000',
-                          }}
-                          isDisabled={!nativeStakedAmount || !logos}
-                          isChecked={useNativeStake}
-                          onChange={handleSwitchChange}
-                          id="use-natively-staked"
-                          colorScheme="orange"
-                        />
-
-                        <Tooltip
-                          label={
-                            !address
-                              ? 'Please connect your wallet to enable this option.'
-                              : !nativeStakedAmount
-                              ? "You don't have any native staked tokens."
-                              : `You currently have ${shiftDigits(nativeStakedAmount, -6)} ${
-                                  selectedOption.value
-                                } natively staked to ${delegationsResponse?.length} validators. You can tokenize your shares and transfer them to quicksilver by clicking the switch and selecting a validator.`
-                          }
-                        >
-                          <InfoOutlineIcon color="complimentary.900" />
-                        </Tooltip>
-                      </HStack>
                     )}
                   </Flex>
                 )}
@@ -397,7 +395,6 @@ export const StakingBox = ({
                         value={tokenAmount}
                         type="text"
                         onChange={(e) => {
-                          // Allow any numeric input
                           const validNumberPattern = /^\d*\.?\d*$/;
                           if (validNumberPattern.test(e.target.value) || e.target.value === '') {
                             setTokenAmount(e.target.value);
@@ -542,27 +539,18 @@ export const StakingBox = ({
                   <Flex flexDirection="column" w="100%">
                     <VStack spacing={8} align="center">
                       <Box position="relative" mb={8}>
-                        <Box className="custom-scroll" maxH="290px" overflowY="scroll" w="fit-content" onScroll={handleScroll}>
+                        <Box className="custom-scrollbar" maxH="290px" overflowY="scroll" w="fit-content" onScroll={handleScroll}>
                           {/* Combine delegationsResponse with valoper entries from allBalances */}
-                          {delegationsResponse
-                            ?.concat(
-                              allBalances?.balances
-                                .filter((balance) => balance.denom.includes('valoper'))
-                                .map((balance) => {
-                                  const [validatorAddress, uniqueId] = balance.denom.split('/');
-                                  return {
-                                    delegation: {
-                                      validator_address: validatorAddress,
-                                      unique_id: uniqueId, // Including the unique ID
-                                    },
-                                    balance: {
-                                      amount: balance.amount,
-                                    },
-                                    isTokenized: true,
-                                  };
-                                }),
-                            )
-                            .map((delegation, index) => {
+                          {combinedDelegations.map(
+                            (
+                              delegation: {
+                                delegation: { validator_address: string | number; unique_id: any };
+                                balance: { amount: string | number };
+                                isTokenized: any;
+                                denom: any;
+                              },
+                              index: any,
+                            ) => {
                               const validator = validatorsData?.find((v) => v.address === delegation.delegation.validator_address);
                               const uniqueKey = `${delegation.delegation.validator_address}-${delegation.delegation.unique_id}`;
                               const isSelected = uniqueKey === selectedValidator;
@@ -576,10 +564,11 @@ export const StakingBox = ({
                                   onClick={() => {
                                     setSelectedValidator(uniqueKey);
                                     setSelectedValidatorData({
-                                      operatorAddress: delegation.delegation.validator_address,
+                                      operatorAddress: delegation.delegation.validator_address.toString(),
                                       moniker: validator?.name ?? '',
-                                      tokenAmount: delegation.balance.amount,
+                                      tokenAmount: delegation.balance.amount.toString(),
                                       isTokenized: delegation.isTokenized,
+                                      denom: delegation.denom,
                                     });
                                   }}
                                   _hover={{ bg: 'rgba(255, 128, 0, 0.25)' }}
@@ -622,7 +611,8 @@ export const StakingBox = ({
                                   </Flex>
                                 </Box>
                               );
-                            })}
+                            },
+                          )}
                         </Box>
                         {isBottomVisible && (
                           <Box
@@ -654,6 +644,7 @@ export const StakingBox = ({
                       onClose={closeTransferModal}
                       selectedOption={selectedOption}
                       isTokenized={selectedValidatorData.isTokenized}
+                      denom={selectedValidatorData.denom}
                     />
                   </Flex>
                 )}
@@ -731,7 +722,7 @@ export const StakingBox = ({
                           <Text color="complimentary.900" fontWeight="light">
                             {address
                               ? qAssets && Number(qAssets) !== 0
-                                ? `${qAssetsDisplay} ${selectedOption.value.toUpperCase()}`
+                                ? `${qAssetsDisplay} q${selectedOption.value.toUpperCase()}`
                                 : `No q${selectedOption.value.toUpperCase()}`
                               : '0'}
                           </Text>

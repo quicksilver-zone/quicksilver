@@ -1,13 +1,15 @@
 import { useChain } from '@cosmos-kit/react';
-import { Zone } from '@hoangdv2429/quicksilverjs/dist/codegen/quicksilver/interchainstaking/v1/interchainstaking';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import { cosmos } from 'interchain-query';
+import { quicksilver } from 'quicksilverjs';
+import { Zone } from 'quicksilverjs/dist/codegen/quicksilver/interchainstaking/v1/interchainstaking';
 
 import { useGrpcQueryClient } from './useGrpcQueryClient';
 
 import { getCoin, getLogoUrls } from '@/utils';
 import { ExtendedValidator, parseValidators } from '@/utils/staking';
+
 
 type WithdrawalRecord = {
   chain_id: string;
@@ -159,7 +161,7 @@ export const useAuthChecker = (address: string) => {
       }
 
       try {
-        const url = `https://lcd.quicksilver.zone/cosmos/authz/v1beta1/grants?granter=${address}&grantee=quick1c4vz0535677xpdksxh5um7zqqwfsw7245ppdaj&msgTypeUrl=/quicksilver.participationrewards.v1.MsgSubmitClaim`;
+        const url = `https://lcd.quicksilver.zone/cosmos/authz/v1beta1/grants?granter=${address}&grantee=quick1w5ennfhdqrpyvewf35sv3y3t8yuzwq29mrmyal&msgTypeUrl=/quicksilver.participationrewards.v1.MsgSubmitClaim`;
         const response = await axios.get(url);
         return { data: response.data, error: null };
       } catch (error) {
@@ -469,7 +471,7 @@ export const useUnbondingQuery = (chainName: string, address: string) => {
 export const useValidatorsQuery = (chainName: string) => {
   const { grpcQueryClient } = useGrpcQueryClient(chainName);
 
-  const fetchValidators = async (nextKey = new Uint8Array()) => {
+  const fetchValidators = async (key = new Uint8Array()) => {
     if (!grpcQueryClient) {
       throw new Error('RPC Client not ready');
     }
@@ -477,9 +479,9 @@ export const useValidatorsQuery = (chainName: string) => {
     const validators = await grpcQueryClient.cosmos.staking.v1beta1.validators({
       status: cosmos.staking.v1beta1.bondStatusToJSON(cosmos.staking.v1beta1.BondStatus.BOND_STATUS_BONDED),
       pagination: {
-        key: nextKey,
+        key: key,
         offset: Long.fromNumber(0),
-        limit: Long.fromNumber(100),
+        limit: Long.fromNumber(500),
         countTotal: true,
         reverse: false,
       },
@@ -487,6 +489,7 @@ export const useValidatorsQuery = (chainName: string) => {
     return validators;
   };
 
+  //TODO: migrate this to use evince cache endpoint.
   const validatorQuery = useQuery(
     ['validators', chainName],
     async () => {
@@ -496,7 +499,7 @@ export const useValidatorsQuery = (chainName: string) => {
       do {
         const response = await fetchValidators(nextKey);
         allValidators = allValidators.concat(response.validators);
-        nextKey = response.pagination?.next_key ?? new Uint8Array();
+        nextKey = response.pagination.next_key ?? new Uint8Array();
       } while (nextKey && nextKey.length > 0);
       const sorted = allValidators.sort((a, b) => new BigNumber(b.tokens).minus(a.tokens).toNumber());
       return parseValidators(sorted);
@@ -512,6 +515,27 @@ export const useValidatorsQuery = (chainName: string) => {
     isLoading: validatorQuery.isLoading,
     isError: validatorQuery.isError,
   };
+};
+
+export const useTokenPrices = (tokens: string[]) => {
+  const fetchTokenPrices = async () => {
+    return Promise.all(
+      tokens.map(async (token) => {
+        try {
+          const response = await axios.get(`https://api-osmosis.imperator.co/tokens/v2/price/${token}`);
+          return { token, price: response.data.price };
+        } catch (error) {
+          console.error(`Error fetching price for ${token}:`, error);
+          return { token, price: null };
+        }
+      })
+    );
+  };
+
+  return useQuery(['tokenPrices', ...tokens], fetchTokenPrices, {
+    enabled: !!tokens,
+    staleTime: Infinity, 
+  });
 };
 
 const fetchAPY = async (chainId: any) => {
@@ -668,12 +692,13 @@ interface DefiData {
     apy: number;
     tvl: number;
     link: string;
+    id: string;
 }
 export const useDefiData = () => {
   const query = useQuery<DefiData[]>(
     ['defi'],
     async () => {
-      const res = await axios.get('https://data.test.quicksilver.zone/defi');
+      const res = await axios.get(`${process.env.NEXT_PUBLIC_QUICKSILVER_DATA_API}/defi`);
       if (!res.data || res.data.length === 0) {
         throw new Error('Failed to query defi');
       }
@@ -701,7 +726,7 @@ export const useNativeStakeQuery = (chainName: string, address: string) => {
       }
       const nextKey = new Uint8Array()
       const balance = await grpcQueryClient.cosmos.staking.v1beta1.delegatorDelegations({
-        delegatorAddr: address || '',
+        delegator_addr: address || '',
         pagination: {
           key: nextKey,
           offset: Long.fromNumber(0),

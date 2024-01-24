@@ -17,7 +17,7 @@ const AboutPage = () => {
         <Head>
           <title>About </title>
           <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-          <link rel="icon" href="/quicksilver/img/favicon.png" />
+          <link rel="icon" href="/img/favicon.png" />
         </Head>
         <VStack spacing={4} align="stretch" m={8}>
           <Heading as="h1" color="white" size="xl" textAlign="left">

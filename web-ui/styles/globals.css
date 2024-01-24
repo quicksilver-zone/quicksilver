@@ -192,3 +192,33 @@ a {
   font-style: normal;
   font-display: swap;
 }
+
+/* Custom Scrollbar Styles */
+.custom-scrollbar {
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent; /* Makes the track transparent */
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent; /* Makes the track transparent */
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: transparent; /* Initially, the thumb is transparent */
+  border-radius: 4px;
+}
+
+/* Styles when hovering over the scrollable element */
+.custom-scrollbar:hover::-webkit-scrollbar-thumb {
+  background: rgba(255, 165, 0, 0.5); /* Thumb color when hovered */
+}
+
+.custom-scrollbar:hover {
+  scrollbar-color: rgba(255, 165, 0, 0.5) transparent; /* For Firefox */
+}
