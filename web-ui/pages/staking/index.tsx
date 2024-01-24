@@ -63,16 +63,18 @@ export default function Staking() {
         <link rel="icon" href="/img/favicon.png" />
       </Head>
       <SlideFade offsetY={'200px'} in={true} style={{ width: '100%' }}>
-        <Container top={20} zIndex={2} position="relative" maxW="container.lg" maxH="80vh" h="80vh" mt={{ base: '50px', md: '30px' }}>
-          {/* <Image
-            alt={''}
-            src="/img/metalmisc2.png"
-            zIndex={-10}
-            position="absolute"
-            bottom="-10"
-            left="-10"
-            boxSize="120px"
-          /> */}
+        <Container
+          top={20}
+          zIndex={2}
+          position="relative"
+          maxW="container.lg"
+          height="100vh"
+          display="flex"
+          flexDirection="column"
+          justifyContent="center"
+          alignItems="center"
+          mt={{ base: '50px', md: '30px' }}
+        >
           <Flex zIndex={3} direction="column" h="100%">
             {/* Dropdown and Statistic */}
             <Box w="50%">
@@ -123,20 +125,10 @@ export default function Staking() {
                 <DynamicAssetBox selectedOption={selectedNetwork} balance={balance} qBalance={qBalance} />
               </Flex>
             </Flex>
+            <Box display={{ base: 'none', lg: 'block', md: 'none' }} position="relative" left="900px" bottom="205px" zIndex={10}>
+              <Image src="/img/quicksilverWord.png" alt="Quicksilver" h="100px" transform="rotate(90deg)" />
+            </Box>
           </Flex>
-          <Box>
-            <Image
-              display={{ base: 'none', lg: 'block', md: 'none' }}
-              src="/img/quicksilverWord.png"
-              alt="Quicksilver"
-              position="relative"
-              bottom="100"
-              left="680"
-              h={'100px'}
-              transform="rotate(90deg)"
-              transformOrigin="bottom right"
-            />
-          </Box>
         </Container>
       </SlideFade>
     </>

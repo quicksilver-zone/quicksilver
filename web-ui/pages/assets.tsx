@@ -1,4 +1,4 @@
-import { Box, Container, Flex, SlideFade, Spacer, Text } from '@chakra-ui/react';
+import { Box, Container, Flex, SlideFade, Spacer, Text, Image } from '@chakra-ui/react';
 import { useChain } from '@cosmos-kit/react';
 import dynamic from 'next/dynamic';
 import Head from 'next/head';
@@ -198,7 +198,7 @@ function Home() {
   const assetsData = useMemo(() => {
     return Object.keys(qBalances).map((token) => {
       return {
-        name: token.toUpperCase() ,
+        name: token.toUpperCase(),
         balance: toNumber(qBalances[token], 2).toString(),
         apy: parseFloat(qAPYRates[token]?.toFixed(2)) || 0,
         native: token.replace('q', '').toUpperCase(),
@@ -318,6 +318,19 @@ function Home() {
             />
           </Box> */}
           <Box h="40px"></Box>
+          <Box>
+            <Image
+              display={{ base: 'none', lg: 'block', md: 'none' }}
+              src="/img/quicksilverWord.png"
+              alt="Quicksilver"
+              position="fixed"
+              bottom="30px"
+              left="1110"
+              h={'100px'}
+              transform="rotate(90deg)"
+              transformOrigin="bottom right"
+            />
+          </Box>
         </Container>
         {showRewardsClaim && (
           <SlideFade in={showRewardsClaim} offsetY="20px" style={{ position: 'fixed', right: '20px', bottom: '20px', zIndex: 10 }}>

@@ -2,11 +2,10 @@ import { WarningIcon } from '@chakra-ui/icons';
 import { Box, VStack, Text, Divider, HStack, Flex, Grid, GridItem, Spinner, Tooltip } from '@chakra-ui/react';
 import React from 'react';
 
-import { shiftDigits, formatQasset } from '@/utils';
-
 import QDepositModal from './modals/qTokenDepositModal';
 import QWithdrawModal from './modals/qTokenWithdrawlModal';
 
+import { shiftDigits, formatQasset } from '@/utils';
 
 interface AssetCardProps {
   assetName: string;
@@ -181,19 +180,23 @@ const AssetsGrid: React.FC<AssetGridProps> = ({ assets, isWalletConnected, nonNa
         </Flex>
       )}
       {isWalletConnected && (
-        <Grid templateColumns='repeat(3, 1fr)' gap={8} w="100%">
-            {assets.map((asset, index) => (
-              <Box key={index} minW="350px">
-                <AssetCard
-                  isWalletConnected={isWalletConnected}
-                  assetName={formatQasset(asset.name)}
-                  nativeAssetName={asset.native}
-                  balance={asset.balance}
-                  apy={asset.apy}
-                  nonNative={nonNative}
-                />
-              </Box>
-            ))}
+        <Grid
+          templateColumns={{ base: 'repeat(1, 1fr)', sm: 'repeat(1, 1fr)', md: 'repeat(1, 1fr)', lg: 'repeat(3, 1fr)' }}
+          gap={8}
+          w="100%"
+        >
+          {assets.map((asset, index) => (
+            <Box key={index} minW="350px">
+              <AssetCard
+                isWalletConnected={isWalletConnected}
+                assetName={formatQasset(asset.name)}
+                nativeAssetName={asset.native}
+                balance={asset.balance}
+                apy={asset.apy}
+                nonNative={nonNative}
+              />
+            </Box>
+          ))}
         </Grid>
       )}
     </>
