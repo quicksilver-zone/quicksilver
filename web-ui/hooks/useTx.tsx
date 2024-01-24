@@ -3,8 +3,9 @@ import { isDeliverTxSuccess, StdFee } from '@cosmjs/stargate';
 import { useChain } from '@cosmos-kit/react';
 import { cosmos } from 'interchain-query';
 import { TxRaw } from 'interchain-query/cosmos/tx/v1beta1/tx';
-
+import { Event } from 'interchain-query/tendermint/abci/types';
 import { useToaster, ToastType, type CustomToast } from './useToaster';
+import { useState } from 'react';
 
 interface Msg {
   typeUrl: string;
@@ -28,7 +29,7 @@ const txRaw = cosmos.tx.v1beta1.TxRaw;
 
 export const useTx = (chainName: string) => {
   const { address, getSigningStargateClient, estimateFee } = useChain(chainName);
-
+  const [responseEvents, setResponseEvents] = useState<readonly Event[] | null>(null);
   const toaster = useToaster();
 
   const tx = async (msgs: Msg[], options: TxOptions) => {
@@ -81,7 +82,8 @@ export const useTx = (chainName: string) => {
           //@ts-ignore
           if (isDeliverTxSuccess(res)) {
             if (options.onSuccess) options.onSuccess();
-
+            //@ts-ignore
+            setResponseEvents(res?.events);
             toaster.toast({
               title: options.toast?.title || TxStatus.Successful,
               type: options.toast?.type || ToastType.Success,
@@ -112,5 +114,5 @@ export const useTx = (chainName: string) => {
     }
   };
 
-  return { tx };
+  return { tx, responseEvents };
 };

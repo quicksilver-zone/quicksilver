@@ -18,7 +18,7 @@ export default function Home() {
           <Head>
             <title>Geo Block</title>
             <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-            <link rel="icon" href="/quicksilver/img/favicon.png" />
+            <link rel="icon" href="/img/favicon.png" />
           </Head>
 
           <Center>

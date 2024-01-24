@@ -14,11 +14,11 @@ import {
   useToast,
   Spinner,
 } from '@chakra-ui/react';
-import { ibc } from '@chalabi/quicksilverjs';
 import { StdFee, coins } from '@cosmjs/stargate';
 import { ChainName } from '@cosmos-kit/core';
 import { useChain, useManager } from '@cosmos-kit/react';
 import BigNumber from 'bignumber.js';
+import { ibc } from 'quicksilverjs';
 import { useState, useMemo, useEffect } from 'react';
 
 import { ChooseChain } from '@/components/react/choose-chain';
@@ -42,7 +42,7 @@ const QDepositModal: React.FC<QDepositModalProps> = ({ token }) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const chainOptions = useMemo(() => {
-    const desiredChains = ['osmosis', 'secretnetwork', 'umee'];
+    const desiredChains = ['osmosis', 'umee'];
     return chainRecords
       .filter((chainRecord) => desiredChains.includes(chainRecord.name))
       .map((chainRecord) => ({
@@ -101,7 +101,7 @@ const QDepositModal: React.FC<QDepositModalProps> = ({ token }) => {
       const chain = chainName as ChainDenomMappingKeys;
       const chainDenoms = ibcDenomDepositMapping[chain];
 
-      if (token in chainDenoms) {
+      if (chainDenoms && token in chainDenoms) {
         return chainDenoms[token as TokenKeys];
       }
 

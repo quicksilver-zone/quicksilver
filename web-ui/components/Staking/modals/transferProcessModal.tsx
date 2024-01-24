@@ -15,26 +15,21 @@ import {
   StatNumber,
   Spinner,
 } from '@chakra-ui/react';
-import chains from '@chalabi/chain-registry';
-
 import { coins, StdFee } from '@cosmjs/amino';
-
 import styled from '@emotion/styled';
-
+import chains from 'chain-registry';
 import { assets } from 'chain-registry';
-
+import { cosmos } from 'quicksilverjs';
 import React, { useEffect, useState } from 'react';
-import { cosmos } from 'stridejs';
 
 import { useTx } from '@/hooks';
 import { useZoneQuery } from '@/hooks/useQueries';
-
 import { shiftDigits } from '@/utils';
 
 const ChakraModalContent = styled(ModalContent)`
   position: relative;
   background: none;
-  max-height: 400px;
+  max-height: 450px;
   &::before,
   &::after {
     z-index: -1;
@@ -81,6 +76,7 @@ interface StakingModalProps {
   };
   address: string;
   isTokenized: boolean;
+  denom: string;
 }
 
 export const TransferProcessModal: React.FC<StakingModalProps> = ({
@@ -90,6 +86,7 @@ export const TransferProcessModal: React.FC<StakingModalProps> = ({
   selectedValidator,
   address,
   isTokenized,
+  denom,
 }) => {
   useEffect(() => {
     if (isTokenized === true) {
@@ -148,7 +145,8 @@ export const TransferProcessModal: React.FC<StakingModalProps> = ({
   const fees = chains.chains.find(({ chain_name }) => chain_name === newChainName)?.fees?.fee_tokens;
   const mainDenom = mainTokens?.assets[0].base ?? '';
   const fixedMinGasPrice = fees?.find(({ denom }) => denom === mainDenom)?.high_gas_price ?? '';
-  const feeAmount = shiftDigits(fixedMinGasPrice, 6);
+  const feeAmount = Number(fixedMinGasPrice) * 750000;
+  const sendFeeAmount = Number(fixedMinGasPrice) * 100000;
 
   const fee: StdFee = {
     amount: [
@@ -157,12 +155,41 @@ export const TransferProcessModal: React.FC<StakingModalProps> = ({
         amount: feeAmount.toString(),
       },
     ],
-    gas: '200000',
+    gas: '750000', // test txs were using well in excess of 600k
   };
 
-  const { tx } = useTx(newChainName ?? '');
+  // don't use the same fee for both txs, as a send is piddly!
+  const sendFee: StdFee = {
+    amount: [
+      {
+        denom: mainDenom,
+        amount: sendFeeAmount.toString(),
+      },
+    ],
+    gas: '100000',
+  };
 
-  const hanleTokenizeShares = async (event: React.MouseEvent) => {
+  const { tx, responseEvents } = useTx(newChainName ?? '');
+  const [combinedDenom, setCombinedDenom] = useState<string>();
+
+  // prettier-ignore
+  useEffect(() => {
+
+    const tokenizeSharesEvent = responseEvents?.find(event => event.type === 'tokenize_shares');
+  
+    if (tokenizeSharesEvent) {
+ 
+      const validatorValue = tokenizeSharesEvent.attributes.find(attr => attr.key === 'validator')?.value;
+      const shareRecordIdValue = tokenizeSharesEvent.attributes.find(attr => attr.key === 'share_record_id')?.value;
+  
+
+      if (validatorValue && shareRecordIdValue) {
+        setCombinedDenom(`${validatorValue}/${shareRecordIdValue}`);
+      }
+    }
+  }, [responseEvents]);
+
+  const handleTokenizeShares = async (event: React.MouseEvent) => {
     event.preventDefault();
     setIsSigning(true);
     setTransactionStatus('Pending');
@@ -182,16 +209,18 @@ export const TransferProcessModal: React.FC<StakingModalProps> = ({
       setIsSigning(false);
     }
   };
+
   const { send } = cosmos.bank.v1beta1.MessageComposer.withTypeUrl;
 
   let numericAmount = selectedValidator.tokenAmount;
   if (isNaN(Number(numericAmount)) || Number(numericAmount) <= 0) {
     numericAmount = '0';
   }
+
   const msgSend = send({
     fromAddress: address ?? '',
     toAddress: zone?.depositAddress?.address ?? '',
-    amount: coins(numericAmount, zone?.baseDenom ?? ''),
+    amount: coins(numericAmount, denom ?? combinedDenom),
   });
 
   const handleSend = async (event: React.MouseEvent) => {
@@ -200,7 +229,7 @@ export const TransferProcessModal: React.FC<StakingModalProps> = ({
     setTransactionStatus('Pending');
     try {
       const result = await tx([msgSend], {
-        fee,
+        fee: sendFee,
         onSuccess: () => {
           setStep(3);
           setTransactionStatus('Success');
@@ -218,7 +247,7 @@ export const TransferProcessModal: React.FC<StakingModalProps> = ({
   return (
     <Modal isOpen={isOpen} onClose={onClose} size={{ base: '3xl', md: '2xl' }}>
       <ModalOverlay />
-      <ChakraModalContent h="48%" maxH={'100%'}>
+      <ChakraModalContent h={{ md: '48%', base: '80%' }} maxH={'100%'}>
         <ModalBody borderRadius={4} h="48%" maxH={'100%'}>
           <ModalCloseButton zIndex={1000} color="white" />
           <HStack position={'relative'} h="100%" spacing="48px" align="stretch">
@@ -302,7 +331,7 @@ export const TransferProcessModal: React.FC<StakingModalProps> = ({
                       bgColor: 'rgba(255,128,0, 0.25)',
                       color: 'complimentary.300',
                     }}
-                    onClick={hanleTokenizeShares}
+                    onClick={handleTokenizeShares}
                   >
                     {isError ? 'Try Again' : isSigning ? <Spinner /> : 'Tokenize Shares'}
                   </Button>
@@ -341,21 +370,6 @@ export const TransferProcessModal: React.FC<StakingModalProps> = ({
                       <Text mt={2} textAlign={'center'} fontWeight={'light'} fontSize="lg" color="white">
                         Your q{selectedOption?.value} will arrive to your wallet in a few minutes.
                       </Text>
-                      <Button
-                        w="55%"
-                        _active={{
-                          transform: 'scale(0.95)',
-                          color: 'complimentary.800',
-                        }}
-                        _hover={{
-                          bgColor: 'rgba(255,128,0, 0.25)',
-                          color: 'complimentary.300',
-                        }}
-                        mt={4}
-                        onClick={() => setStep(1)}
-                      >
-                        Stake Again
-                      </Button>
                     </Flex>
                   </Box>
                 </>

@@ -1,27 +1,28 @@
-import { Box, Flex, Text, Button, VStack, useColorModeValue, HStack, SkeletonCircle, Spinner } from '@chakra-ui/react';
+import { Box, Flex, Text, VStack, HStack, SkeletonCircle, Spinner } from '@chakra-ui/react';
 import { useChain } from '@cosmos-kit/react';
 import { BsCoin } from 'react-icons/bs';
-
-import { DepositModal } from './modals/qckDepositModal';
-import { WithdrawModal } from './modals/qckWithdrawModal';
 
 import { defaultChainName } from '@/config';
 import { useBalanceQuery } from '@/hooks/useQueries';
 import { shiftDigits } from '@/utils';
+
+import { DepositModal } from './modals/qckDepositModal';
+import { WithdrawModal } from './modals/qckWithdrawModal';
+
 
 interface QuickBoxProps {
   stakingApy?: number;
 }
 
 const QuickBox: React.FC<QuickBoxProps> = ({ stakingApy }) => {
-  const { address, isWalletConnected } = useChain(defaultChainName);
+  const { address } = useChain(defaultChainName);
 
   const { balance, isLoading } = useBalanceQuery(defaultChainName, address ?? '');
   const tokenBalance = Number(shiftDigits(balance?.balance?.amount ?? '', -6))
     .toFixed(2)
     .toString();
 
-  if (!isWalletConnected) {
+  if (!address) {
     return (
       <Flex direction="column" p={5} borderRadius="lg" align="center" justify="space-around" w="full" h="full">
         <Text fontSize="xl" textAlign="center">
@@ -89,15 +90,15 @@ const QuickBox: React.FC<QuickBoxProps> = ({ stakingApy }) => {
           {quickStakingApy()}
         </HStack>
         <VStack spacing={1} alignItems="flex-start" w="full">
-          <HStack gap={2}>
-            <Text fontSize="sm">ON QUICKSILVER:</Text>
+          <VStack gap={2}>
+            <Text fontSize="sm" textAlign="center">ON QUICKSILVER:</Text>
             {isLoading === true && !balance && <SkeletonCircle size="2" startColor="complimentary.900" endColor="complimentary.400" />}
             {!isLoading && balance && (
-              <Text fontSize="lg" fontWeight="semibold">
-                {tokenBalance}
+              <Text fontSize="lg" fontWeight="semibold" textAlign="center">
+                {tokenBalance} QCK
               </Text>
             )}
-          </HStack>
+          </VStack>
         </VStack>
         <DepositModal />
         <WithdrawModal />

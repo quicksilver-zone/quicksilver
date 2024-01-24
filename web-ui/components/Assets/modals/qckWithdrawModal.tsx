@@ -11,20 +11,18 @@ import {
   FormLabel,
   Input,
   useDisclosure,
-  useToast,
   Spinner,
 } from '@chakra-ui/react';
-import { ibc } from '@chalabi/quicksilverjs';
 import { StdFee, coins } from '@cosmjs/stargate';
 import { ChainName } from '@cosmos-kit/core';
 import { useChain, useManager } from '@cosmos-kit/react';
 import BigNumber from 'bignumber.js';
+import { ibc } from 'quicksilverjs';
 import { useState, useMemo, useEffect } from 'react';
 
 import { ChooseChain } from '@/components/react/choose-chain';
 import { handleSelectChainDropdown, ChainOption } from '@/components/types';
 import { useTx } from '@/hooks';
-import { useIbcBalanceQuery } from '@/hooks/useQueries';
 import { getCoin, getIbcInfo } from '@/utils';
 
 export function WithdrawModal() {

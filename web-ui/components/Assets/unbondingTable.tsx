@@ -3,7 +3,7 @@ import { Table, Thead, Tbody, Tr, Th, Td, TableContainer, Text, Box, Flex, IconB
 import { useState } from 'react';
 
 import { useUnbondingQuery } from '@/hooks/useQueries';
-import { shiftDigits } from '@/utils';
+import { shiftDigits, formatQasset } from '@/utils';
 
 const statusCodes = new Map<number, string>([
   [2, 'QUEUED'],
@@ -17,7 +17,7 @@ const formatDate = (dateString: string | number | Date) => {
 };
 
 const formatDenom = (denom: string) => {
-  return denom.startsWith('u') ? denom.substring(1).toUpperCase() : denom.toUpperCase();
+  return denom.startsWith('u') ? formatQasset(denom.substring(1).toUpperCase()) : denom.toUpperCase();
 };
 
 interface UnbondingAssetsTableProps {
@@ -26,7 +26,7 @@ interface UnbondingAssetsTableProps {
 }
 
 const UnbondingAssetsTable: React.FC<UnbondingAssetsTableProps> = ({ address, isWalletConnected }) => {
-  const chains = ['Cosmos', 'Stargaze', 'Osmosis', 'Regen', 'Sommelier'];
+  const chains = ['Cosmos', 'Stargaze', 'Osmosis', 'Regen', 'Sommelier', 'Juno'];
   const [currentChainIndex, setCurrentChainIndex] = useState(0);
 
   const currentChainName = chains[currentChainIndex];
@@ -41,6 +41,8 @@ const UnbondingAssetsTable: React.FC<UnbondingAssetsTableProps> = ({ address, is
     newChainName = 'regen';
   } else if (currentChainName === 'Sommelier') {
     newChainName = 'sommelier';
+  } else if (currentChainName === 'Juno') {
+    newChainName = 'juno';
   } else {
     // Default case
     newChainName = currentChainName;
@@ -57,7 +59,65 @@ const UnbondingAssetsTable: React.FC<UnbondingAssetsTableProps> = ({ address, is
     setCurrentChainIndex((prevIndex: number) => (prevIndex === chains.length - 1 ? 0 : prevIndex + 1));
   };
   const noUnbondingAssets = isWalletConnected && unbondingData?.withdrawals.length === 0;
-
+  if (!isWalletConnected) {
+    return (
+      <Flex direction="column" gap={4}>
+        <Flex justifyContent="space-between" alignItems="center">
+          <Text fontSize="xl" fontWeight="bold" color="white">
+            Unbonding Assets
+          </Text>
+          <Flex alignItems="center" gap="2">
+            <IconButton
+              icon={<ChevronLeftIcon />}
+              onClick={handleLeftArrowClick}
+              aria-label="Previous chain"
+              variant="ghost"
+              _hover={{ bgColor: 'transparent', color: 'complimentary.900' }}
+              _active={{
+                transform: 'scale(0.75)',
+                color: 'complimentary.800',
+              }}
+              color="white"
+            />
+            <Box minWidth="100px" textAlign="center">
+              <Text>{chains[currentChainIndex]}</Text>
+            </Box>
+            <IconButton
+              icon={<ChevronRightIcon />}
+              onClick={handleRightArrowClick}
+              aria-label="Next chain"
+              variant="ghost"
+              _hover={{ bgColor: 'transparent', color: 'complimentary.900' }}
+              _active={{
+                transform: 'scale(0.75)',
+                color: 'complimentary.800',
+              }}
+              color="white"
+            />
+          </Flex>
+        </Flex>
+        <Flex
+          w="100%"
+          backdropFilter="blur(50px)"
+          bgColor="rgba(255,255,255,0.1)"
+          h="sm"
+          p={4}
+          borderRadius="lg"
+          flexDirection="column"
+          justifyContent="center"
+          alignItems="center"
+          gap={6}
+          color="white"
+        >
+          <Flex justifyContent="center" alignItems="center" h="200px">
+            <Text fontSize="xl" textAlign="center">
+              Wallet is not connected! Please connect your wallet to view your unbonding assets.
+            </Text>
+          </Flex>
+        </Flex>
+      </Flex>
+    );
+  }
   if (isLoading) {
     return (
       <Flex direction="column" gap={4}>
@@ -188,19 +248,25 @@ const UnbondingAssetsTable: React.FC<UnbondingAssetsTableProps> = ({ address, is
                       Redemption Amount
                     </Th>
                     <Th borderBottomColor={'transparent'} color="complimentary.900">
+                      Epoch Number
+                    </Th>
+                    <Th borderBottomColor={'transparent'} color="complimentary.900">
                       Completion Time
                     </Th>
                   </Tr>
                 </Thead>
                 <Tbody>
                   {unbondingData?.withdrawals.map((withdrawal, index) => (
-                    <Tr key={index}>
-                      <Td>
+                    <Tr _even={{ bg: 'rgba(255, 128, 0, 0.1)' }} key={index}>
+                      <Td borderBottomColor={'transparent'}>
                         {Number(shiftDigits(withdrawal.burn_amount.amount, -6))} {formatDenom(withdrawal.burn_amount.denom)}
                       </Td>
-                      <Td>{statusCodes.get(withdrawal.status)}</Td>
-                      <Td>{withdrawal.amount.map((amt) => `${shiftDigits(amt.amount, -6)} ${formatDenom(amt.denom)}`).join(', ')}</Td>
-                      <Td>
+                      <Td borderBottomColor={'transparent'}>{statusCodes.get(withdrawal.status)}</Td>
+                      <Td borderBottomColor={'transparent'}>
+                        {withdrawal.amount.map((amt) => `${shiftDigits(amt.amount, -6)} ${formatDenom(amt.denom)}`).join(', ')}
+                      </Td>
+                      <Td borderBottomColor={'transparent'}>{withdrawal.epoch_number}</Td>
+                      <Td borderBottomColor={'transparent'}>
                         {withdrawal.status === 2
                           ? 'Pending'
                           : withdrawal.status === 4
