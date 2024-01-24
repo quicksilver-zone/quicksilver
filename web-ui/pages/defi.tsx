@@ -12,7 +12,7 @@ export default function Home() {
         <link rel="icon" href="/img/favicon.png" />
       </Head>
       <SlideFade offsetY={'200px'} in={true} style={{ width: '100%' }}>
-        <Flex height="100vh" mt={{ base: '-60px' }} alignItems="center" justifyContent="center">
+        <Flex height="100vh" mt={{ base: '-20px' }} alignItems="center" justifyContent="center">
           <Container
             p={4}
             m={0}

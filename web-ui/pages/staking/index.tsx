@@ -65,7 +65,7 @@ export default function Staking() {
       <SlideFade offsetY={'200px'} in={true} style={{ width: '100%' }}>
         <Container
           zIndex={2}
-          mt={{ base: '-30px', md: '50px' }}
+          mt={{ base: '10px', md: '50px' }}
           position="relative"
           maxW="container.lg"
           height="100vh"
