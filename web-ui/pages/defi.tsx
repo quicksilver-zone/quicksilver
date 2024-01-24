@@ -34,7 +34,7 @@ export default function Home() {
               src="/img/quicksilverWord.png"
               alt="Quicksilver"
               position="absolute"
-              bottom="155"
+              bottom="170"
               left="750"
               h="100px"
               transform="translate(50%, 50%) rotate(90deg)"
