@@ -54,31 +54,31 @@ func WeightedOperations(
 		weightMsgSetDenomMetadata int
 	)
 
-	appParams.GetOrGenerate(OpWeightMsgBurn, &weightMsgBurn, r,
+	appParams.GetOrGenerate(OpWeightMsgBurn, &weightMsgBurn, nil,
 		func(r *rand.Rand) {
 			weightMsgBurn = DefaultWeightMsgBurn
 		},
 	)
 
-	appParams.GetOrGenerate(OpWeightMsgMint, &weightMsgMint, r,
+	appParams.GetOrGenerate(OpWeightMsgMint, &weightMsgMint, nil,
 		func(_ *rand.Rand) {
 			weightMsgMint = DefaultWeightMsgMint
 		},
 	)
 
-	appParams.GetOrGenerate(OpWeightMsgBurn, &weightMsgBurn, r,
+	appParams.GetOrGenerate(OpWeightMsgBurn, &weightMsgBurn, nil,
 		func(_ *rand.Rand) {
 			weightMsgBurn = DefaultWeightMsgBurn
 		},
 	)
 
-	appParams.GetOrGenerate(OpWeightMsgChangeAdmin, &weightMsgChangeAdmin, r,
+	appParams.GetOrGenerate(OpWeightMsgChangeAdmin, &weightMsgChangeAdmin, nil,
 		func(_ *rand.Rand) {
 			weightMsgChangeAdmin = DefaultWeightMsgChangeAdmin
 		},
 	)
 
-	appParams.GetOrGenerate(OpWeightMsgSetDenomMetadata, &weightMsgSetDenomMetadata, r,
+	appParams.GetOrGenerate(OpWeightMsgSetDenomMetadata, &weightMsgSetDenomMetadata, nil,
 		func(_ *rand.Rand) {
 			weightMsgSetDenomMetadata = DefaultWeightMsgSetDenomMetadata
 		},
