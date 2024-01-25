@@ -1,4 +1,4 @@
-import { Box, Container, Flex, SlideFade, Spacer, Text, Image } from '@chakra-ui/react';
+import { Box, Container, Flex, SlideFade, Spacer, Text, Image, Center } from '@chakra-ui/react';
 import { useChain } from '@cosmos-kit/react';
 import dynamic from 'next/dynamic';
 import Head from 'next/head';
@@ -134,7 +134,7 @@ function Home() {
   const [totalPortfolioValue, setTotalPortfolioValue] = useState(0);
   const [averageApy, setAverageAPY] = useState(0);
   const [totalYearlyYield, setTotalYearlyYield] = useState(0);
-  const [isLoading, setIsLoading] = useState(false);
+
   // useEffect hook to compute portfolio metrics when dependencies change
 
   useEffect(() => {
@@ -144,7 +144,6 @@ function Home() {
         return;
       }
 
-      setIsLoading(true);
       let totalValue = 0;
       let totalYearlyYield = 0;
       let weightedAPY = 0;
@@ -189,7 +188,6 @@ function Home() {
       setTotalPortfolioValue(totalValue);
       setAverageAPY(weightedAPY);
       setTotalYearlyYield(totalYearlyYield);
-      setIsLoading(false);
     };
 
     updatePortfolioItems();
@@ -225,6 +223,50 @@ function Home() {
     setShowRewardsClaim(false);
     setUserClosedRewardsClaim(true);
   };
+
+  if (!address) {
+    return (
+      <SlideFade offsetY={'200px'} in={true} style={{ width: '100%' }}>
+        <Center>
+          <Flex height="100vh" mt={{ base: '-20px' }} alignItems="center" justifyContent="center">
+            <Container
+              p={4}
+              m={0}
+              textAlign={'left'} // This sets the text alignment for the container
+              flexDir="column"
+              position="relative"
+              justifyContent="flex-start" // Aligns items to the start of the container, along the cross axis
+              alignItems="flex-start" // Aligns items to the start of the container, along the main axis
+              maxW="5xl"
+            >
+              <Head>
+                <title>Assets</title>
+                <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+                <link rel="icon" href="/img/favicon.png" />
+              </Head>
+              <Text pb={2} color="white" fontSize="24px">
+                Assets
+              </Text>
+              <Flex py={6} alignItems="center" alignContent={'center'} justifyContent={'space-between'} gap="4">
+                <Flex
+                  backdropFilter="blur(50px)"
+                  bgColor="rgba(255,255,255,0.1)"
+                  borderRadius="10px"
+                  p={12}
+                  maxW="5xl"
+                  h="md"
+                  justifyContent="center"
+                  alignItems="center"
+                >
+                  <Text fontSize="xl">Please connect your wallet to interact with your qAssets.</Text>
+                </Flex>
+              </Flex>
+            </Container>
+          </Flex>
+        </Center>
+      </SlideFade>
+    );
+  }
 
   return (
     <>
