@@ -26,12 +26,11 @@ import { assets, chains } from 'chain-registry';
 import { cosmos } from 'interchain-query';
 import React, { useEffect, useState } from 'react';
 
+import { MultiModal } from './validatorSelectionModal';
 
 import { useTx } from '@/hooks';
 import { useZoneQuery } from '@/hooks/useQueries';
 import { shiftDigits } from '@/utils';
-
-import { MultiModal } from './validatorSelectionModal';
 
 const ChakraModalContent = styled(ModalContent)`
   position: relative;
@@ -358,8 +357,8 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
   return (
     <Modal isOpen={isOpen} onClose={onClose} size={{ base: '3xl', md: '2xl' }}>
       <ModalOverlay />
-      <ChakraModalContent h={{ base: '55%', md: '48%' }} maxH={'100%'}>
-        <ModalBody borderRadius={4} h="48%" maxH={'100%'}>
+      <ChakraModalContent position={'absolute'} h={{ base: '65%', md: '50%' }} maxH={'550px'}>
+        <ModalBody borderRadius={4} h="50%" maxH={'100%'}>
           <ModalCloseButton zIndex={1000} color="white" />
           <HStack position={'relative'} h="100%" spacing="48px" align="stretch">
             {/* Left Section */}
@@ -451,7 +450,7 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
                   )}
                   <Button
                     mt={4}
-                    width="55%"
+                    width={{ base: '80%', md: '55%' }}
                     _active={{
                       transform: 'scale(0.95)',
                       color: 'complimentary.800',
@@ -633,8 +632,25 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
               {step === 3 && (
                 <>
                   <Box justifyContent={'center'}>
-                    <Text fontWeight={'bold'} fontSize="lg" w="250px" textAlign={'left'} color="white">
+                    <Text
+                      display={{ base: 'none', md: 'block' }}
+                      fontWeight={'bold'}
+                      fontSize="lg"
+                      w="250px"
+                      textAlign={'left'}
+                      color="white"
+                    >
                       You’re going to liquid stake {tokenAmount} {selectedOption?.value} on Quicksilver
+                    </Text>
+                    <Text
+                      display={{ base: 'block', md: 'none' }}
+                      fontWeight={'bold'}
+                      fontSize="md"
+                      w="250px"
+                      textAlign={'left'}
+                      color="white"
+                    >
+                      Liquid staking {tokenAmount} {selectedOption?.value}
                     </Text>
                     {selectedValidators.length > 0 && (
                       <Flex mt={2} textAlign={'left'} alignItems="baseline" gap="2">

@@ -257,7 +257,7 @@ export const TransferProcessModal: React.FC<StakingModalProps> = ({
                 <Stat>
                   <StatLabel color="rgba(255,255,255,0.5)">TRANSFER DELEGATION</StatLabel>
                   <StatNumber color="white">{truncateString(selectedValidator.moniker, 13)}</StatNumber>
-                  <StatNumber color="white">
+                  <StatNumber display={{ base: 'none', md: 'block' }} color="white">
                     {shiftDigits(selectedValidator.tokenAmount, -6)}&nbsp;
                     {selectedOption?.value}
                   </StatNumber>
@@ -322,7 +322,7 @@ export const TransferProcessModal: React.FC<StakingModalProps> = ({
 
                   <Button
                     mt={4}
-                    width="55%"
+                    width={{ base: '80%', md: '55%' }}
                     _active={{
                       transform: 'scale(0.95)',
                       color: 'complimentary.800',

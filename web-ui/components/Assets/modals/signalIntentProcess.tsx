@@ -23,10 +23,9 @@ import { assets } from 'chain-registry';
 import { quicksilver } from 'quicksilverjs';
 import React, { useEffect, useState } from 'react';
 
-import { useTx } from '@/hooks';
-
 import { IntentMultiModal } from './intentMultiModal';
 
+import { useTx } from '@/hooks';
 
 const ChakraModalContent = styled(ModalContent)`
   position: relative;
@@ -343,7 +342,7 @@ export const SignalIntentModal: React.FC<StakingModalProps> = ({ isOpen, onClose
                   )}
                   <Button
                     mt={4}
-                    width="55%"
+                    width={{ base: '80%', md: '55%' }}
                     _active={{
                       transform: 'scale(0.95)',
                       color: 'complimentary.800',

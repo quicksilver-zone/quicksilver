@@ -4,11 +4,10 @@ import { cosmos } from 'interchain-query';
 import { Proposal } from 'interchain-query/cosmos/gov/v1/gov';
 import React, { useMemo } from 'react';
 
+import { StatusBadge, VotedBadge } from './common';
 
 import { Votes } from '@/hooks';
 import { decodeUint8Arr, getPercentage } from '@/utils';
-
-import { StatusBadge, VotedBadge } from './common';
 
 enum VoteOption {
   YES = 'YES',
@@ -73,7 +72,7 @@ export const ProposalCard = ({
       onClick={handleClick}
     >
       <GridItem colSpan={2}>
-        <Center color="white" w="100%" h="100%">
+        <Center display={{ base: 'none', md: 'flex' }} color="white" w="100%" h="100%">
           # {proposal.id ? proposal.id.toString().padStart(6, '0') : ''}
         </Center>
       </GridItem>
@@ -114,7 +113,7 @@ export const ProposalCard = ({
         </Flex>
       </GridItem>
       <GridItem colSpan={2}>
-        <Flex w="100%" h="100%" alignItems="center" px={4} justifyContent="center">
+        <Flex display={{ base: 'none', md: 'flex' }} w="100%" h="100%" alignItems="center" px={4} justifyContent="center">
           <StatusBadge status={proposal.status} />
         </Flex>
       </GridItem>

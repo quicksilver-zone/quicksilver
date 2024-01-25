@@ -16,12 +16,11 @@ import {
 } from '@chakra-ui/react';
 import { Key, useState } from 'react';
 
+import SignalIntentModal from './modals/signalIntentProcess';
+
 import { useIntentQuery, useValidatorLogos, useValidatorsQuery } from '@/hooks/useQueries';
 import { networks as prodNetworks, testNetworks as devNetworks } from '@/state/chains/prod';
 import { truncateString } from '@/utils';
-
-import SignalIntentModal from './modals/signalIntentProcess';
-
 
 export interface StakingIntentProps {
   address: string;
@@ -64,14 +63,16 @@ const StakingIntent: React.FC<StakingIntentProps> = ({ address, isWalletConnecte
     }, {}) || {};
 
   const validatorsWithDetails =
-    intent?.data?.intent.intents.map((validatorIntent: { valoper_address: string; weight: string }) => {
-      const validatorDetails = validatorsMap[validatorIntent.valoper_address];
-      return {
-        moniker: validatorDetails?.moniker,
-        logoUrl: validatorDetails?.logoUrl,
-        percentage: `${(parseFloat(validatorIntent.weight) * 100).toFixed(2)}%`,
-      };
-    }) || [];
+    intent?.data?.intent.intents
+      .filter((validatorIntent: { valoper_address: string; weight: string }) => parseFloat(validatorIntent.weight) > 0)
+      .map((validatorIntent: { valoper_address: string; weight: string }) => {
+        const validatorDetails = validatorsMap[validatorIntent.valoper_address];
+        return {
+          moniker: validatorDetails?.moniker,
+          logoUrl: validatorDetails?.logoUrl,
+          percentage: `${(parseFloat(validatorIntent.weight) * 100).toFixed(2)}%`,
+        };
+      }) || [];
 
   const handleLeftArrowClick = () => {
     setCurrentChainIndex((prevIndex) => (prevIndex === 0 ? networks.length - 1 : prevIndex - 1));

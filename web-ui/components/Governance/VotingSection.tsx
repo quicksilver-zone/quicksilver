@@ -22,13 +22,12 @@ import { Proposal } from 'interchain-query/cosmos/gov/v1/gov';
 import React, { useMemo, useState } from 'react';
 import { FaSearch } from 'react-icons/fa';
 
-import { useVotingData } from '@/hooks';
-import { decodeUint8Arr } from '@/utils';
-
 import { DisconnectedContent, Loader } from './common';
 import { ProposalCard } from './ProposalCard';
 import { ProposalModal } from './ProposalModal';
 
+import { useVotingData } from '@/hooks';
+import { decodeUint8Arr } from '@/utils';
 
 function RotateIcon({ isOpen }: { isOpen: boolean }) {
   return (
@@ -117,7 +116,7 @@ export const VotingSection = ({ chainName }: { chainName: ChainName }) => {
     <>
       <Box mb={16}>
         <Flex mb={4} alignContent="center" alignItems="center" justifyContent={'space-between'} w="100%" flexDirection={'row'}>
-          <InputGroup>
+          <InputGroup display={{ base: 'none', md: 'block' }}>
             <Input
               textAlign="right"
               type="text"
