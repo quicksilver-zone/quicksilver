@@ -26,11 +26,12 @@ import { assets, chains } from 'chain-registry';
 import { cosmos } from 'interchain-query';
 import React, { useEffect, useState } from 'react';
 
-import { MultiModal } from './validatorSelectionModal';
 
 import { useTx } from '@/hooks';
 import { useZoneQuery } from '@/hooks/useQueries';
 import { shiftDigits } from '@/utils';
+
+import { MultiModal } from './validatorSelectionModal';
 
 const ChakraModalContent = styled(ModalContent)`
   position: relative;
