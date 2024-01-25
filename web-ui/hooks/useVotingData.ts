@@ -108,7 +108,7 @@ export const useVotingData = (
             if (!grpcQueryClient || !proposalId || !address) {
               throw new Error("Required information for query is missing");
             }
-            return grpcQueryClient.cosmos.gov.v1.vote({
+            return grpcQueryClient.cosmos.gov.v1beta1.vote({
               proposal_id: proposalId,
               voter: address || '',
             });
