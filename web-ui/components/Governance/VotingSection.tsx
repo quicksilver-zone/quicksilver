@@ -15,6 +15,7 @@ import {
   MenuButton,
   MenuItem,
   Image,
+  Text,
 } from '@chakra-ui/react';
 import { ChainName } from '@cosmos-kit/core';
 import { useChain } from '@cosmos-kit/react';
@@ -119,6 +120,9 @@ export const VotingSection = ({ chainName }: { chainName: ChainName }) => {
     <>
       <Box mb={16}>
         <Flex mb={4} alignContent="center" alignItems="center" justifyContent={'space-between'} w="100%" flexDirection={'row'}>
+          <Text display={{ base: 'flex', md: 'none' }} pb={2} color="white" fontSize="24px">
+            Proposals
+          </Text>
           <InputGroup display={{ base: 'none', md: 'block' }}>
             <Input
               textAlign="right"

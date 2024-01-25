@@ -78,8 +78,8 @@ export default function Home() {
             <meta name="viewport" content="width=device-width, initial-scale=1.0" />
             <link rel="icon" href="/img/favicon.png" />
           </Head>
-          <Box width="100%" padding={2} mt={{ base: 10, md: 5 }}>
-            <Text pb={2} color="white" fontSize="24px">
+          <Box overflow={'none'} width="100%" padding={2} mt={{ base: 10, md: 5 }}>
+            <Text display={{ base: 'none', md: 'flex' }} pb={2} color="white" fontSize="24px">
               Proposals
             </Text>
             {chainName && <DynamicVotingSection chainName={chainName} />}
