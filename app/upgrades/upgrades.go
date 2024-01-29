@@ -22,11 +22,13 @@ func Upgrades() []Upgrade {
 		// testnet upgrades
 		{UpgradeName: V010405rc6UpgradeName, CreateUpgradeHandler: NoOpHandler},
 		{UpgradeName: V010405rc7UpgradeName, CreateUpgradeHandler: NoOpHandler},
+		{UpgradeName: V010407rc0UpgradeName, CreateUpgradeHandler: NoOpHandler},
 
 		// v1.2: this needs to be present to support upgrade on mainnet
 		{UpgradeName: V010217UpgradeName, CreateUpgradeHandler: NoOpHandler},
 		{UpgradeName: V010405UpgradeName, CreateUpgradeHandler: NoOpHandler},
 		{UpgradeName: V010406UpgradeName, CreateUpgradeHandler: V010406UpgradeHandler},
+		{UpgradeName: V010407UpgradeName, CreateUpgradeHandler: NoOpHandler},
 	}
 }
 
