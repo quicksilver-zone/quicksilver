@@ -269,14 +269,11 @@ func TestOverAndUnderAllocatedValidators(t *testing.T) {
 	amount := sdk.Coins{sdk.NewCoin("stake", sdk.NewInt(300))}
 
 	expectedAllocations := map[string]sdkmath.Int{
-		"validator1": sdkmath.NewInt(0), /// << why?
 		"validator4": sdkmath.NewInt(300),
 	}
 
 	allocations, err := types.DetermineAllocationsForUndelegation(currentAllocations, lockedAllocations, currentSum, targetAllocations, availablePerValidator, amount)
 	require.NoError(t, err)
-
-	fmt.Println(allocations)
 	require.Equal(t, expectedAllocations, allocations)
 }
 

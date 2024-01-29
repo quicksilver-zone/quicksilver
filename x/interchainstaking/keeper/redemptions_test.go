@@ -8,14 +8,16 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/math"
+	"github.com/stretchr/testify/require"
+
 	sdkmath "cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
 	clienttypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
 	connectiontypes "github.com/cosmos/ibc-go/v5/modules/core/03-connection/types"
 	tmclienttypes "github.com/cosmos/ibc-go/v5/modules/light-clients/07-tendermint/types"
-	"github.com/stretchr/testify/require"
 
 	"github.com/quicksilver-zone/quicksilver/utils/ica"
 	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/keeper"
@@ -139,12 +141,12 @@ func (suite *KeeperTestSuite) TestStargazeHandleQueuedUnbondingsUnderflow() {
 		DepositAddress:     &types.ICAAccount{Address: "stars16k9qkq57kpwcnzawd8u0utl6u2zh5mr2dz7qp3wy7ywx9m7xkdaqnq5msn", PortName: "icacontroller-stargaze-1.deposit"},
 		DelegationAddress:  &types.ICAAccount{Address: "stars1rqeychen93f9j72r7jue56g2gvaaqtjl7ule7u09f3ytxtlxhe8s3zhd98", PortName: "icacontroller-stargaze-1.delegate"},
 		PerformanceAddress: &types.ICAAccount{Address: "stars1rqd5082y3lxlx04g77s5m8v7f4hq33zcjsgvk6lcadk289xn9grqvn9zjm", PortName: "icacontroller-stargaze-1.performance"},
-		WithdrawalAddress:  &types.ICAAccount{Address: "stars1t0d7kv3mnc42s2y7fvw47fpcvh39qdgyguccts6n9xejtcar8kzqe5qkce", PortName: "icacontroller-stargaze-1.withdrawal", Balance: sdk.NewCoins(sdk.NewCoin("ustars", math.NewInt(32188974)))},
+		WithdrawalAddress:  &types.ICAAccount{Address: "stars1t0d7kv3mnc42s2y7fvw47fpcvh39qdgyguccts6n9xejtcar8kzqe5qkce", PortName: "icacontroller-stargaze-1.withdrawal", Balance: sdk.NewCoins(sdk.NewCoin("ustars", sdkmath.NewInt(32188974)))},
 		RedemptionRate:     func() sdk.Dec { d, _ := sdk.NewDecFromStr("1.283388457217398276"); return d }(),
 		LastRedemptionRate: func() sdk.Dec { d, _ := sdk.NewDecFromStr("1.281768532605782265"); return d }(),
 	}
 
-	txk := ica.IcaTxKeeper{}
+	txk := ica.TxKeeper{}
 	quicksilver.InterchainstakingKeeper.SetZone(ctx, &zone)
 	quicksilver.InterchainstakingKeeper.OverrideTxSubmit(ica.GetTestSubmitTxFn(&txk))
 
@@ -172,8 +174,8 @@ func (suite *KeeperTestSuite) TestStargazeHandleQueuedUnbondingsUnderflow() {
 		ChainId:     "stargaze-1",
 		Delegator:   "quick1lnlwk8g83d5n3x4k5303asl2re8gswteruac5a",
 		Recipient:   "stars1lnlwk8g83d5n3x4k5303asl2re8gswteuy6hx7",
-		Amount:      sdk.NewCoins(sdk.NewCoin("ustars", math.NewInt(21575817444))),
-		BurnAmount:  sdk.NewCoin("uqstars", math.NewInt(16832850000)),
+		Amount:      sdk.NewCoins(sdk.NewCoin("ustars", sdkmath.NewInt(21575817444))),
+		BurnAmount:  sdk.NewCoin("uqstars", sdkmath.NewInt(16832850000)),
 		Txhash:      "11ceeb2be3764db1f8a3bdd07ece33c0382618846770fdb35a7e98b540b9fc01",
 		Status:      2,
 		EpochNumber: 127,
@@ -183,8 +185,8 @@ func (suite *KeeperTestSuite) TestStargazeHandleQueuedUnbondingsUnderflow() {
 		ChainId:     "stargaze-1",
 		Delegator:   "quick1lnlwk8g83d5n3x4k5303asl2re8gswteruac5a",
 		Recipient:   "stars1lnlwk8g83d5n3x4k5303asl2re8gswteuy6hx7",
-		Amount:      sdk.NewCoins(sdk.NewCoin("ustars", math.NewInt(6432004220))),
-		BurnAmount:  sdk.NewCoin("uqstars", math.NewInt(5018070000)),
+		Amount:      sdk.NewCoins(sdk.NewCoin("ustars", sdkmath.NewInt(6432004220))),
+		BurnAmount:  sdk.NewCoin("uqstars", sdkmath.NewInt(5018070000)),
 		Txhash:      "37cbaca43391e6d149ac8e3fbc4e568ca4674cd79aa914e31841969e94aac98c",
 		Status:      2,
 		EpochNumber: 127,
@@ -194,8 +196,8 @@ func (suite *KeeperTestSuite) TestStargazeHandleQueuedUnbondingsUnderflow() {
 		ChainId:     "stargaze-1",
 		Delegator:   "quick14xrfwpjmh69y67v2tvz7ncqh7m390tpw3cvymd",
 		Recipient:   "stars14xrfwpjmh69y67v2tvz7ncqh7m390tpwwqttfw",
-		Amount:      sdk.NewCoins(sdk.NewCoin("ustars", math.NewInt(1281768))),
-		BurnAmount:  sdk.NewCoin("uqstars", math.NewInt(1000000)),
+		Amount:      sdk.NewCoins(sdk.NewCoin("ustars", sdkmath.NewInt(1281768))),
+		BurnAmount:  sdk.NewCoin("uqstars", sdkmath.NewInt(1000000)),
 		Txhash:      "42ad2f1d8f3b44be0ddad5551021c86e81dd98f054d7f8e453a191153f57217d",
 		Status:      2,
 		EpochNumber: 127,
@@ -205,8 +207,8 @@ func (suite *KeeperTestSuite) TestStargazeHandleQueuedUnbondingsUnderflow() {
 		ChainId:     "stargaze-1",
 		Delegator:   "quick16x03wcp37kx5e8ehckjxvwcgk9j0cqnhcccnty",
 		Recipient:   "stars16x03wcp37kx5e8ehckjxvwcgk9j0cqnh8qlue8",
-		Amount:      sdk.NewCoins(sdk.NewCoin("ustars", math.NewInt(640884))),
-		BurnAmount:  sdk.NewCoin("uqstars", math.NewInt(500000)),
+		Amount:      sdk.NewCoins(sdk.NewCoin("ustars", sdkmath.NewInt(640884))),
+		BurnAmount:  sdk.NewCoin("uqstars", sdkmath.NewInt(500000)),
 		Txhash:      "489f26cb7de7c7109d48bc86265a9d1c7d8a2f05365343af4f465be0e36076c5",
 		Status:      2,
 		EpochNumber: 127,
@@ -216,8 +218,8 @@ func (suite *KeeperTestSuite) TestStargazeHandleQueuedUnbondingsUnderflow() {
 		ChainId:     "stargaze-1",
 		Delegator:   "quick1lnlwk8g83d5n3x4k5303asl2re8gswteruac5a",
 		Recipient:   "stars1lnlwk8g83d5n3x4k5303asl2re8gswteuy6hx7",
-		Amount:      sdk.NewCoins(sdk.NewCoin("ustars", math.NewInt(14053041020))),
-		BurnAmount:  sdk.NewCoin("uqstars", math.NewInt(10963790000)),
+		Amount:      sdk.NewCoins(sdk.NewCoin("ustars", sdkmath.NewInt(14053041020))),
+		BurnAmount:  sdk.NewCoin("uqstars", sdkmath.NewInt(10963790000)),
 		Txhash:      "80309be5a05e0efd378745c15ed847c018c26109b8ad95cf37edd00a722e2e0a",
 		Status:      2,
 		EpochNumber: 127,
@@ -227,8 +229,8 @@ func (suite *KeeperTestSuite) TestStargazeHandleQueuedUnbondingsUnderflow() {
 		ChainId:     "stargaze-1",
 		Delegator:   "quick14xrfwpjmh69y67v2tvz7ncqh7m390tpw3cvymd",
 		Recipient:   "stars14xrfwpjmh69y67v2tvz7ncqh7m390tpwwqttfw",
-		Amount:      sdk.NewCoins(sdk.NewCoin("ustars", math.NewInt(1281768))),
-		BurnAmount:  sdk.NewCoin("uqstars", math.NewInt(1000000)),
+		Amount:      sdk.NewCoins(sdk.NewCoin("ustars", sdkmath.NewInt(1281768))),
+		BurnAmount:  sdk.NewCoin("uqstars", sdkmath.NewInt(1000000)),
 		Txhash:      "bfba48a6bd5a07dde6d9ea86d7da7edea7217165da999adb362c5c7936f288bf",
 		Status:      2,
 		EpochNumber: 127,
@@ -238,8 +240,8 @@ func (suite *KeeperTestSuite) TestStargazeHandleQueuedUnbondingsUnderflow() {
 		ChainId:     "stargaze-1",
 		Delegator:   "quick14xrfwpjmh69y67v2tvz7ncqh7m390tpw3cvymd",
 		Recipient:   "stars14xrfwpjmh69y67v2tvz7ncqh7m390tpwwqttfw",
-		Amount:      sdk.NewCoins(sdk.NewCoin("ustars", math.NewInt(17644428997))),
-		BurnAmount:  sdk.NewCoin("uqstars", math.NewInt(13765690566)),
+		Amount:      sdk.NewCoins(sdk.NewCoin("ustars", sdkmath.NewInt(17644428997))),
+		BurnAmount:  sdk.NewCoin("uqstars", sdkmath.NewInt(13765690566)),
 		Txhash:      "d32fa49212777d865da767516bee885b9e91484ed5557cae604577156b1dd286",
 		Status:      2,
 		EpochNumber: 127,
@@ -249,8 +251,8 @@ func (suite *KeeperTestSuite) TestStargazeHandleQueuedUnbondingsUnderflow() {
 		ChainId:     "stargaze-1",
 		Delegator:   "quick1lnlwk8g83d5n3x4k5303asl2re8gswteruac5a",
 		Recipient:   "stars1lnlwk8g83d5n3x4k5303asl2re8gswteuy6hx7",
-		Amount:      sdk.NewCoins(sdk.NewCoin("ustars", math.NewInt(128176853))),
-		BurnAmount:  sdk.NewCoin("uqstars", math.NewInt(100000000)),
+		Amount:      sdk.NewCoins(sdk.NewCoin("ustars", sdkmath.NewInt(128176853))),
+		BurnAmount:  sdk.NewCoin("uqstars", sdkmath.NewInt(100000000)),
 		Txhash:      "d862b4ecf1e69d731b1ceb254995c0d0737479107e45b8d54016d86fe8106d80",
 		Status:      2,
 		EpochNumber: 127,
@@ -260,8 +262,8 @@ func (suite *KeeperTestSuite) TestStargazeHandleQueuedUnbondingsUnderflow() {
 		ChainId:     "stargaze-1",
 		Delegator:   "quick14xrfwpjmh69y67v2tvz7ncqh7m390tpw3cvymd",
 		Recipient:   "stars14xrfwpjmh69y67v2tvz7ncqh7m390tpwwqttfw",
-		Amount:      sdk.NewCoins(sdk.NewCoin("ustars", math.NewInt(1281768))),
-		BurnAmount:  sdk.NewCoin("uqstars", math.NewInt(1000000)),
+		Amount:      sdk.NewCoins(sdk.NewCoin("ustars", sdkmath.NewInt(1281768))),
+		BurnAmount:  sdk.NewCoin("uqstars", sdkmath.NewInt(1000000)),
 		Txhash:      "e485c9a5b6024b3ef939b2395c46b6b61a0d6486d1d5c00d4720b7143b242777",
 		Status:      2,
 		EpochNumber: 127,
@@ -319,11 +321,10 @@ const (
 )
 
 func TestDetermineAllocationsForUndelegationReturnsNoNegatives(t *testing.T) {
-
 	testCases := []struct {
-		currentJson  []byte
-		apvJson      []byte
-		tgtAllocJson []byte
+		currentJSON  []byte
+		apvJSON      []byte
+		tgtAllocJSON []byte
 		denom        string
 	}{
 		{
@@ -347,11 +348,11 @@ func TestDetermineAllocationsForUndelegationReturnsNoNegatives(t *testing.T) {
 	var targetAllocations types.ValidatorIntents
 
 	for _, tc := range testCases {
-		err := json.Unmarshal(tc.currentJson, &currentAllocations)
+		err := json.Unmarshal(tc.currentJSON, &currentAllocations)
 		require.NoError(t, err)
-		err = json.Unmarshal(tc.apvJson, &availablePerValidator)
+		err = json.Unmarshal(tc.apvJSON, &availablePerValidator)
 		require.NoError(t, err)
-		err = json.Unmarshal(tc.tgtAllocJson, &targetAllocations)
+		err = json.Unmarshal(tc.tgtAllocJSON, &targetAllocations)
 		require.NoError(t, err)
 
 		currentSum := sdkmath.ZeroInt()
@@ -361,7 +362,6 @@ func TestDetermineAllocationsForUndelegationReturnsNoNegatives(t *testing.T) {
 		rand.New(rand.NewSource(time.Now().Unix()))
 		amount := sdk.NewCoins(sdk.NewCoin("uatom", sdkmath.NewInt(rand.Int63n(currentSum.Int64()))))
 
-		/// currentAllocations, map[string]bool{}, currentSum, targetAllocations, availablePerValidator, amount
 		allocs, err := types.DetermineAllocationsForUndelegation(currentAllocations, map[string]bool{}, currentSum, targetAllocations, availablePerValidator, amount)
 		require.NoError(t, err)
 
@@ -369,5 +369,4 @@ func TestDetermineAllocationsForUndelegationReturnsNoNegatives(t *testing.T) {
 			require.False(t, alloc.IsNegative(), fmt.Sprintf("%s is %d", valoper, alloc.Int64()))
 		}
 	}
-
 }

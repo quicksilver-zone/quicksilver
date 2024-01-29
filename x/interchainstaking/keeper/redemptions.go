@@ -6,7 +6,6 @@ import (
 	"sort"
 	"time"
 
-	"cosmossdk.io/math"
 	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -18,7 +17,7 @@ import (
 )
 
 // processRedemptionForLsm will determine based on user intent, the tokens to return to the user, generate Redeem message and send them.
-// func (k *Keeper) processRedemptionForLsm(ctx sdk.Context, zone *types.Zone, sender sdk.AccAddress, destination string, nativeTokens math.Int, burnAmount sdk.Coin, hash string) error {
+// func (k *Keeper) processRedemptionForLsm(ctx sdk.Context, zone *types.Zone, sender sdk.AccAddress, destination string, nativeTokens sdkmath.Int, burnAmount sdk.Coin, hash string) error {
 // 	intent, found := k.GetDelegatorIntent(ctx, zone, sender.String(), false)
 // 	// msgs is slice of MsgTokenizeShares, so we can handle dust allocation later.
 // 	msgs := make([]*lsmstakingtypes.MsgTokenizeShares, 0)
@@ -89,7 +88,7 @@ func (k *Keeper) queueRedemption(
 	zone *types.Zone,
 	sender sdk.AccAddress,
 	destination string,
-	nativeTokens math.Int,
+	nativeTokens sdkmath.Int,
 	burnAmount sdk.Coin,
 	hash string,
 ) error { //nolint:unparam // we know that the error is always nil
@@ -116,10 +115,10 @@ func (k *Keeper) queueRedemption(
 // GetUnlockedTokensForZone will iterate over all validators for a zone, summing delegated amounts,
 // and then remove the locked tokens (those actively being redelegated), returning a slice of int64
 // staking tokens that are unlocked and free to redelegate or unbond.
-func (k *Keeper) GetUnlockedTokensForZone(ctx sdk.Context, zone *types.Zone) (map[string]math.Int, math.Int, error) {
+func (k *Keeper) GetUnlockedTokensForZone(ctx sdk.Context, zone *types.Zone) (map[string]sdkmath.Int, sdkmath.Int, error) {
 	validators := k.GetValidators(ctx, zone.ChainId)
 
-	availablePerValidator := make(map[string]math.Int, len(validators))
+	availablePerValidator := make(map[string]sdkmath.Int, len(validators))
 	total := sdk.ZeroInt()
 	// for each validator, fetch delegated amount.
 	for _, validator := range validators {
@@ -139,7 +138,7 @@ func (k *Keeper) GetUnlockedTokensForZone(ctx sdk.Context, zone *types.Zone) (ma
 		if found {
 			availablePerValidator[redelegation.Destination] = thisAvailable.Sub(sdk.NewInt(redelegation.Amount))
 			if availablePerValidator[redelegation.Destination].LT(sdk.ZeroInt()) {
-				return map[string]math.Int{}, sdk.ZeroInt(), fmt.Errorf("negative available amount [chain: %s, validator: %s, amount: %s]; unable to continue", zone.ChainId, redelegation.Destination, availablePerValidator[redelegation.Destination].String())
+				return map[string]sdkmath.Int{}, sdk.ZeroInt(), fmt.Errorf("negative available amount [chain: %s, validator: %s, amount: %s]; unable to continue", zone.ChainId, redelegation.Destination, availablePerValidator[redelegation.Destination].String())
 			}
 			total = total.Sub(sdk.NewInt(redelegation.Amount))
 		}
@@ -271,7 +270,7 @@ func (k *Keeper) GCCompletedUnbondings(ctx sdk.Context, zone *types.Zone) error 
 	return err
 }
 
-func (k *Keeper) DeterminePlanForUndelegation(ctx sdk.Context, zone *types.Zone, amount sdk.Coins) (map[string]math.Int, error) {
+func (k *Keeper) DeterminePlanForUndelegation(ctx sdk.Context, zone *types.Zone, amount sdk.Coins) (map[string]sdkmath.Int, error) {
 	currentAllocations, currentSum, _, _ := k.GetDelegationMap(ctx, zone.ChainId)
 	availablePerValidator, _, err := k.GetUnlockedTokensForZone(ctx, zone)
 	if err != nil {
@@ -299,7 +298,6 @@ func AllocateWithdrawalsFromValidators(
 	map[string][]*types.Distribution, // filled map of distributions
 	error,
 ) {
-
 	_amountToWithdrawPerWithdrawal := make(map[string]sdk.Coin, len(amountToWithdrawPerWithdrawal))
 	_tokensAllocatedForWithdrawalPerValidator := make(map[string]sdkmath.Int, len(tokensAllocatedForWithdrawalPerValidator))
 	for k, v := range amountToWithdrawPerWithdrawal {
@@ -326,9 +324,9 @@ WITHDRAWAL:
 				continue WITHDRAWAL
 			}
 
-			if amountToWithdrawPerWithdrawal[hash].IsNegative() {
+			if !amountToWithdrawPerWithdrawal[hash].Amount.IsUint64() {
 				// should not happen - be defensive.
-				return nil, nil, nil, fmt.Errorf("aborting allocation. reason: amountToWithdrawPerWithdrawal[%s] is negative: %v", hash, amountToWithdrawPerWithdrawal[hash])
+				return nil, nil, nil, fmt.Errorf("aborting allocation. reason: amountToWithdrawPerWithdrawal[%s] is non uint64: %v", hash, amountToWithdrawPerWithdrawal[hash])
 			}
 
 			// if current selected validator allocation for withdrawal can satisfy this withdrawal in totality...
@@ -354,9 +352,9 @@ WITHDRAWAL:
 				continue WITHDRAWAL
 			}
 
-			if amountToWithdrawPerWithdrawal[hash].IsNegative() {
+			if !amountToWithdrawPerWithdrawal[hash].Amount.IsUint64() {
 				// should not happen - be defensive.
-				return nil, nil, nil, fmt.Errorf("aborting allocation. reason: tokensAllocatedForWithdrawalPerValidator[%s] is negative: %v", v, tokensAllocatedForWithdrawalPerValidator[v])
+				return nil, nil, nil, fmt.Errorf("aborting allocation. reason: tokensAllocatedForWithdrawalPerValidator[%s] is non-uint64: %v", v, tokensAllocatedForWithdrawalPerValidator[v])
 			}
 
 			// otherwise (current validator allocation cannot wholly satisfy current record), allocate entire allocation to this withdrawal.
@@ -410,18 +408,7 @@ WITHDRAWAL:
 
 	if !sumIn.Equal(sumOut) {
 		return nil, nil, nil, fmt.Errorf("sumIn <-> sumOut mismatch; sumIn = %d, sumOut = %d", sumIn.Amount.Int64(), sumOut.Amount.Int64())
-
 	}
 
 	return coinsOutPerValidator, txHashesPerValidator, distributionsPerWithdrawal, nil
-}
-
-type DistributionSet []*types.Distribution
-
-func (d DistributionSet) Sum() sdkmath.Int {
-	sum := uint64(0)
-	for _, dist := range d {
-		sum += dist.Amount
-	}
-	return sdk.NewIntFromUint64(sum)
 }

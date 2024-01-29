@@ -6,8 +6,20 @@ import (
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/quicksilver-zone/quicksilver/utils"
 )
+
+// remove zero and potential negative values
+func filter(in map[string]math.Int) map[string]math.Int {
+	out := make(map[string]math.Int)
+	for _, v := range utils.Keys[math.Int](in) {
+		if !in[v].IsNil() && in[v].IsPositive() {
+			out[v] = in[v]
+		}
+	}
+	return out
+}
 
 func DetermineAllocationsForUndelegation(currentAllocations map[string]math.Int, lockedAllocations map[string]bool, currentSum math.Int, targetAllocations ValidatorIntents, availablePerValidator map[string]math.Int, amount sdk.Coins) (map[string]math.Int, error) {
 	outWeights := make(map[string]math.Int)
@@ -56,7 +68,7 @@ func DetermineAllocationsForUndelegation(currentAllocations map[string]math.Int,
 	// if remaining amount to distribute is zero, shortcut exit here.
 	input = input.Sub(outSum)
 	if input.IsZero() {
-		return outWeights, nil
+		return filter(outWeights), nil
 	}
 
 	if input.IsNegative() {
@@ -96,7 +108,6 @@ func DetermineAllocationsForUndelegation(currentAllocations map[string]math.Int,
 				availablePerValidator[deltas[idx].ValoperAddress] = sdk.ZeroInt()
 			} else {
 				availablePerValidator[deltas[idx].ValoperAddress] = availablePerValidator[deltas[idx].ValoperAddress].Sub(allocation)
-
 			}
 
 			deltas[idx].Amount = deltas[idx].Amount.Sub(allocation)
@@ -149,7 +160,6 @@ func DetermineAllocationsForUndelegation(currentAllocations map[string]math.Int,
 
 	if !outSum.LTE(amount[0].Amount) {
 		return map[string]math.Int{}, fmt.Errorf("outSum (%d) is unexpectedly greater than the input amount (%d), aborting", outSum.Int64(), amount[0].Amount.Int64())
-
 	}
 	if input.IsNegative() {
 		return map[string]math.Int{}, fmt.Errorf("input is unexpectedly negative (2), aborting")
@@ -166,18 +176,7 @@ func DetermineAllocationsForUndelegation(currentAllocations map[string]math.Int,
 		}
 	}
 
-	// remove zero and potential negative values
-	filtered := func(in map[string]math.Int) map[string]math.Int {
-		out := make(map[string]math.Int)
-		for _, v := range utils.Keys[math.Int](in) {
-			if !in[v].IsNil() && in[v].IsPositive() {
-				out[v] = in[v]
-			}
-		}
-		return out
-	}(outWeights)
-
-	return filtered, nil
+	return filter(outWeights), nil
 }
 
 func DetermineAllocationsForUndelegationPredef(currentAllocations map[string]math.Int, lockedAllocations map[string]bool, currentSum math.Int, targetAllocations ValidatorIntents, availablePerValidator map[string]math.Int, amount sdk.Coins) (map[string]math.Int, error) {
@@ -267,7 +266,6 @@ func DetermineAllocationsForUndelegationPredef(currentAllocations map[string]mat
 				availablePerValidator[deltas[idx].ValoperAddress] = sdk.ZeroInt()
 			} else {
 				availablePerValidator[deltas[idx].ValoperAddress] = availablePerValidator[deltas[idx].ValoperAddress].Sub(allocation)
-
 			}
 
 			deltas[idx].Amount = deltas[idx].Amount.Sub(allocation)
@@ -320,7 +318,6 @@ func DetermineAllocationsForUndelegationPredef(currentAllocations map[string]mat
 
 	if !outSum.LTE(amount[0].Amount) {
 		return map[string]math.Int{}, fmt.Errorf("outSum (%d) is unexpectedly greater than the input amount (%d), aborting", outSum.Int64(), amount[0].Amount.Int64())
-
 	}
 	if input.IsNegative() {
 		return map[string]math.Int{}, fmt.Errorf("input is unexpectedly negative (2), aborting")
