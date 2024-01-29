@@ -41,6 +41,8 @@ import (
 	lsmstakingtypes "github.com/quicksilver-zone/quicksilver/x/lsmtypes"
 )
 
+type TxSubmitFn func(ctx sdk.Context, k *Keeper, msgs []sdk.Msg, account *types.ICAAccount, memo string, messagesPerTx int64) error
+
 // Keeper of this module maintains collections of registered zones.
 type Keeper struct {
 	cdc                 codec.Codec
@@ -57,6 +59,7 @@ type Keeper struct {
 	Ir                  codectypes.InterfaceRegistry
 	hooks               types.IcsHooks
 	paramStore          paramtypes.Subspace
+	txSubmit            TxSubmitFn
 }
 
 // NewKeeper returns a new instance of zones Keeper.
@@ -102,9 +105,13 @@ func NewKeeper(
 		TransferKeeper:      transferKeeper,
 		ClaimsManagerKeeper: claimsManagerKeeper,
 		hooks:               nil,
-
-		paramStore: ps,
+		txSubmit:            ProdSubmitTx,
+		paramStore:          ps,
 	}
+}
+
+func (k *Keeper) OverrideTxSubmit(fn TxSubmitFn) {
+	k.txSubmit = fn
 }
 
 // SetHooks set the ics hooks.
