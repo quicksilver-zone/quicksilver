@@ -41,16 +41,6 @@ func (app *Quicksilver) setUpgradeStoreLoaders() {
 	var storeUpgrades *storetypes.StoreUpgrades
 
 	switch upgradeInfo.Name { // nolint:gocritic
-	case upgrades.V010402rc3UpgradeName:
-
-		storeUpgrades = &storetypes.StoreUpgrades{
-			Added: []string{packetforwardtypes.ModuleName},
-		}
-
-	case upgrades.V010405rc0UpgradeName:
-		storeUpgrades = &storetypes.StoreUpgrades{
-			Added: []string{supplytypes.ModuleName},
-		}
 
 	case upgrades.V010405UpgradeName:
 		storeUpgrades = &storetypes.StoreUpgrades{
