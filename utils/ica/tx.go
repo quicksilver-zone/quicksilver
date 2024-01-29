@@ -1,25 +1,20 @@
 package ica
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/keeper"
 	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 )
 
+// TxKeeper exists to provide a test harness for capturing emitted ICA txs.
+// Replace the ProdSubmitTx fn with GetTestSubmitTxFn() to be able to inspect emitted txs.
 type TxKeeper struct {
 	Txs []icaTx
 }
 
 func (i *TxKeeper) Append(tx icaTx) {
 	i.Txs = append(i.Txs, tx)
-	fmt.Println("append tx")
-}
-
-func (i *TxKeeper) Dump() {
-	fmt.Println(i.Txs)
 }
 
 type icaTx struct {
