@@ -246,7 +246,7 @@ func (k *Keeper) HandleQueuedUnbondings(ctx sdk.Context, zone *types.Zone, epoch
 	for _, valoper := range utils.Keys(coinsOutPerValidator) {
 		if !coinsOutPerValidator[valoper].Amount.IsZero() {
 			sort.Strings(txHashesPerValidator[valoper])
-			k.SetUnbondingRecord(ctx, types.UnbondingRecord{ChainId: zone.ChainId, EpochNumber: epoch, Validator: valoper, RelatedTxhash: txHashesPerValidator[valoper]})
+			k.SetUnbondingRecord(ctx, types.UnbondingRecord{ChainId: zone.ChainId, EpochNumber: epoch, Validator: valoper, RelatedTxhash: txHashesPerValidator[valoper], Amount: coinsOutPerValidator[valoper]})
 		}
 	}
 
