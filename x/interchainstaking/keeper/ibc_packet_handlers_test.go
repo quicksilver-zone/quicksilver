@@ -1214,10 +1214,10 @@ func (suite *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 						Delegator:    delegator1,
 						Distribution: nil,
 						Recipient:    addressutils.GenerateAddressForTestWithPrefix(zone.GetAccountPrefix()),
-						Amount:       sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))),
 						BurnAmount:   sdk.NewCoin(zone.LocalDenom, sdk.NewInt(900)),
 						Txhash:       fmt.Sprintf("%064d", 1),
 						Status:       types.WithdrawStatusQueued,
+						Requeued:     true,
 					},
 				}
 			},
@@ -1277,6 +1277,7 @@ func (suite *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 						BurnAmount:   sdk.NewCoin(zone.LocalDenom, sdk.NewInt(900)),
 						Txhash:       hash1,
 						Status:       types.WithdrawStatusQueued,
+						Requeued:     true,
 					},
 				}
 			},
@@ -1420,30 +1421,30 @@ func (suite *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 						Delegator:    delegator1,
 						Distribution: nil,
 						Recipient:    addressutils.GenerateAddressForTestWithPrefix(zone.GetAccountPrefix()),
-						Amount:       sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(500))),
 						BurnAmount:   sdk.NewCoin(zone.LocalDenom, sdk.NewInt(450)),
 						Txhash:       fmt.Sprintf("%064d", 1),
 						Status:       types.WithdrawStatusQueued,
+						Requeued:     true,
 					},
 					{
 						ChainId:      suite.chainB.ChainID,
 						Delegator:    delegator2,
 						Distribution: nil,
 						Recipient:    addressutils.GenerateAddressForTestWithPrefix(zone.GetAccountPrefix()),
-						Amount:       sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(2000))),
 						BurnAmount:   sdk.NewCoin(zone.LocalDenom, sdk.NewInt(1800)),
 						Txhash:       fmt.Sprintf("%064d", 2),
 						Status:       types.WithdrawStatusQueued,
+						Requeued:     true,
 					},
 					{
 						ChainId:      suite.chainB.ChainID,
 						Delegator:    delegator1,
 						Distribution: nil,
 						Recipient:    addressutils.GenerateAddressForTestWithPrefix(zone.GetAccountPrefix()),
-						Amount:       sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(400))),
 						BurnAmount:   sdk.NewCoin(zone.LocalDenom, sdk.NewInt(360)),
 						Txhash:       fmt.Sprintf("%064d", 3),
 						Status:       types.WithdrawStatusQueued,
+						Requeued:     true,
 					},
 				}
 			},
@@ -1507,6 +1508,7 @@ func (suite *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 				suite.Equal(ewdr.Delegator, wdr.Delegator)
 				suite.Equal(ewdr.Distribution, wdr.Distribution, idx)
 				suite.Equal(ewdr.Status, wdr.Status)
+				suite.Equal(ewdr.Requeued, wdr.Requeued)
 				suite.False(wdr.Acknowledged)
 			}
 		})
