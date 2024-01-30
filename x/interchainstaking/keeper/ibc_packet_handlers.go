@@ -818,7 +818,13 @@ func (k *Keeper) HandleFailedUndelegate(ctx sdk.Context, msg sdk.Msg, memo strin
 			wdr.Requeued = true
 			k.UpdateWithdrawalRecordStatus(ctx, &wdr, types.WithdrawStatusQueued)
 		} else {
-			// remove this validator from distribution; amend amounts; requeue.
+			// if multi val then:
+			// - remove this validator from distribution
+			// - related amount = amount from this val
+			// - determine RR paid
+			// - mult RR by related amount, sub this from burn amount
+			// - save old record
+			// - create new record for unhandled burn amount
 			newDistribution := make([]*types.Distribution, 0)
 			relatedAmount := uint64(0)
 			for _, dist := range wdr.Distribution {
@@ -841,7 +847,6 @@ func (k *Keeper) HandleFailedUndelegate(ctx sdk.Context, msg sdk.Msg, memo strin
 				Delegator:    wdr.Delegator,
 				Recipient:    wdr.Recipient,
 				Distribution: nil,
-				Amount:       sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewIntFromUint64(relatedAmount))),
 				BurnAmount:   sdk.NewCoin(zone.LocalDenom, relatedQAsset),
 				Txhash:       fmt.Sprintf("%064d", k.GetNextWithdrawalRecordSequence(ctx)),
 				Status:       types.WithdrawStatusQueued,
