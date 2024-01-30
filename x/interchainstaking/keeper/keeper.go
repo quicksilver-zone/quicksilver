@@ -170,6 +170,11 @@ func (k *Keeper) GetConnectionForPort(ctx sdk.Context, port string) (string, err
 	return mapping.ConnectionId, nil
 }
 
+func (k *Keeper) DeleteConnectionForPort(ctx sdk.Context, port string) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixPortMapping)
+	store.Delete([]byte(port))
+}
+
 // IteratePortConnections iterates through all of the delegations.
 func (k *Keeper) IteratePortConnections(ctx sdk.Context, cb func(pc types.PortConnectionTuple) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)

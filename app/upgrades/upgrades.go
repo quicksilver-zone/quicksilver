@@ -23,7 +23,7 @@ func Upgrades() []Upgrade {
 		{UpgradeName: V010405rc6UpgradeName, CreateUpgradeHandler: NoOpHandler},
 		{UpgradeName: V010405rc7UpgradeName, CreateUpgradeHandler: NoOpHandler},
 		{UpgradeName: V010407rc0UpgradeName, CreateUpgradeHandler: NoOpHandler},
-		{UpgradeName: V010407rc1UpgradeName, CreateUpgradeHandler: NoOpHandler},
+		{UpgradeName: V010407rc1UpgradeName, CreateUpgradeHandler: V010407rc1UpgradeHandler},
 
 		// v1.2: this needs to be present to support upgrade on mainnet
 		{UpgradeName: V010217UpgradeName, CreateUpgradeHandler: NoOpHandler},
@@ -198,4 +198,19 @@ func migratePeriodicVestingAccount(ctx sdk.Context, appKeepers *keepers.AppKeepe
 	// delete the old account from the account keeper.
 	appKeepers.AccountKeeper.RemoveAccount(ctx, oldPva)
 	return nil
+}
+
+func V010407rc1UpgradeHandler(
+	mm *module.Manager,
+	configurator module.Configurator,
+	appKeepers *keepers.AppKeepers,
+) upgradetypes.UpgradeHandler {
+	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		if isTestnet(ctx) {
+			// remove osmo-test-5 so we can reinstate
+			appKeepers.InterchainstakingKeeper.RemoveZoneAndAssociatedRecords(ctx, "osmo-test-5")
+		}
+
+		return mm.RunMigrations(ctx, configurator, fromVM)
+	}
 }
