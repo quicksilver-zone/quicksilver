@@ -88,12 +88,10 @@ func (k *Keeper) queueRedemption(
 	zone *types.Zone,
 	sender sdk.AccAddress,
 	destination string,
-	nativeTokens sdkmath.Int,
 	burnAmount sdk.Coin,
 	hash string,
 ) error { //nolint:unparam // we know that the error is always nil
 	distributions := make([]*types.Distribution, 0)
-	amount := sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, nativeTokens))
 
 	k.AddWithdrawalRecord(
 		ctx,
@@ -101,7 +99,6 @@ func (k *Keeper) queueRedemption(
 		sender.String(),
 		distributions,
 		destination,
-		amount,
 		burnAmount,
 		hash,
 		types.WithdrawStatusQueued,
@@ -165,24 +162,24 @@ func (k *Keeper) HandleQueuedUnbondings(ctx sdk.Context, zone *types.Zone, epoch
 		return err
 	}
 
+	// get min of LastRedemptionRate (N-1) and RedemptionRate (N)
+	rate := sdk.MinDec(zone.LastRedemptionRate, zone.RedemptionRate)
+
 	// iterate all withdrawal records for the zone in the QUEUED state.
 	k.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, types.WithdrawStatusQueued, func(idx int64, withdrawal types.WithdrawalRecord) bool {
 		k.Logger(ctx).Info("handling queued withdrawal request", "from", withdrawal.Delegator, "to", withdrawal.Recipient, "amount", withdrawal.Amount)
-		if len(withdrawal.Amount) != 1 { // native unbonding can only unbond the baseDenom
-			k.Logger(ctx).Error("withdrawal %s has no amount set; cannot process...", withdrawal.Txhash)
-			return false
-		}
 
-		if !withdrawal.Amount[0].IsPositive() {
+		nativeTokens := sdk.NewDecFromInt(withdrawal.BurnAmount.Amount).Mul(rate).TruncateInt()
+		amount := sdk.NewCoin(zone.BaseDenom, nativeTokens)
+		k.Logger(ctx).Info("tokens to distribute", "amount", amount)
+
+		if !amount.IsPositive() {
 			k.Logger(ctx).Error("withdrawal %s attempting to withdraw non-positive amount; cannot process...", withdrawal.Txhash)
 			return false
 		}
 
-		// native unbonding can only unbond the baseDenom
-		if withdrawal.Amount[0].Denom != zone.BaseDenom {
-			k.Logger(ctx).Error("withdrawal %s attempting to withdraw invalid amount; cannot process...", withdrawal.Txhash)
-			return false
-		}
+		withdrawal.Amount = sdk.NewCoins(amount)
+		k.SetWithdrawalRecord(ctx, withdrawal)
 
 		// check whether the running total of withdrawals can be satisfied by the available unlocked tokens.
 		// if not return true to stop iterating and return all records up until now.

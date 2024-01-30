@@ -66,12 +66,6 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 		return nil, errors.New("account has insufficient balance of qasset to burn")
 	}
 
-	// get min of LastRedemptionRate (N-1) and RedemptionRate (N)
-	rate := sdk.MinDec(zone.LastRedemptionRate, zone.RedemptionRate)
-	nativeTokens := sdk.NewDecFromInt(msg.Value.Amount).Mul(rate).TruncateInt()
-	outTokens := sdk.NewCoin(zone.BaseDenom, nativeTokens)
-	k.Logger(ctx).Info("tokens to distribute", "amount", outTokens)
-
 	heightBytes := make([]byte, 8)
 	binary.BigEndian.PutUint64(heightBytes, uint64(ctx.BlockHeight()))
 	hash := sha256.Sum256(append(msg.GetSignBytes(), heightBytes...))
@@ -81,7 +75,7 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 		return nil, fmt.Errorf("unable to send coins to escrow account: %w", err)
 	}
 
-	if err := k.queueRedemption(ctx, zone, sender, msg.DestinationAddress, nativeTokens, msg.Value, hashString); err != nil {
+	if err := k.queueRedemption(ctx, zone, sender, msg.DestinationAddress, msg.Value, hashString); err != nil {
 		return nil, fmt.Errorf("unable to queue redemption: %w", err)
 	}
 
@@ -93,7 +87,6 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 		sdk.NewEvent(
 			types.EventTypeRedemptionRequest,
 			sdk.NewAttribute(types.AttributeKeyBurnAmount, msg.Value.String()),
-			sdk.NewAttribute(types.AttributeKeyRedeemAmount, nativeTokens.String()),
 			sdk.NewAttribute(types.AttributeKeyRecipientAddress, msg.DestinationAddress),
 			sdk.NewAttribute(types.AttributeKeyChainID, zone.ChainId),
 			sdk.NewAttribute(types.AttributeKeyConnectionID, zone.ConnectionId),
