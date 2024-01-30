@@ -68,10 +68,10 @@ export default function Home() {
           height="100vh"
           display="flex"
           flexDirection="column"
-          justifyContent="center"
-          alignItems="center"
-          mt={{ base: '40px', md: '60px' }}
-          mb="0"
+          justifyContent="center" // Center vertically
+          alignItems="center" // Center horizontally
+          mt={{ base: '40px', md: '60px' }} // Ensuring the margin-top is zero
+          mb="0" // Ensuring the margin-bottom is zero
         >
           <Head>
             <title>Governance</title>
