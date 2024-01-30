@@ -382,7 +382,7 @@ func (k *Keeper) handleSendToDelegate(ctx sdk.Context, zone *types.Zone, msg *ba
 			if err != nil {
 				return 0, err
 			}
-			msgs = append(msgs, k.PrepareDelegationMessagesForCoins(zone, allocations)...)
+			msgs = append(msgs, k.PrepareDelegationMessagesForCoins(zone, allocations, isBatchOrRewards(memo))...)
 		} else {
 			msgs = append(msgs, k.PrepareDelegationMessagesForShares(zone, msg.Amount)...)
 		}
@@ -391,6 +391,13 @@ func (k *Keeper) handleSendToDelegate(ctx sdk.Context, zone *types.Zone, msg *ba
 	k.Logger(ctx).Info("messages to send", "messages", msgs)
 
 	return len(msgs), k.SubmitTx(ctx, msgs, zone.DelegationAddress, memo, zone.MessagesPerTx)
+}
+
+func isBatchOrRewards(memo string) bool {
+	if memo == "rewards" {
+		return true
+	}
+	return strings.HasPrefix(memo, "batch")
 }
 
 // HandleWithdrawForUser handles withdraw for user will check that the msgSend we have successfully executed matches an existing withdrawal record.

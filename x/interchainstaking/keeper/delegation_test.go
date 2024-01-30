@@ -626,7 +626,7 @@ func (suite *KeeperTestSuite) TestFlushOutstandingDelegations() {
 				var msgs []sdk.Msg
 				allocations, err := quicksilver.InterchainstakingKeeper.DeterminePlanForDelegation(ctx, &zone, test.expectedDelegation)
 				suite.NoError(err)
-				msgs = append(msgs, quicksilver.InterchainstakingKeeper.PrepareDelegationMessagesForCoins(&zone, allocations)...)
+				msgs = append(msgs, quicksilver.InterchainstakingKeeper.PrepareDelegationMessagesForCoins(&zone, allocations, true)...)
 				for _, msg := range msgs {
 					err := quicksilver.InterchainstakingKeeper.HandleDelegate(ctx, msg, types.EpochMsgMemo(types.MsgTypeBatch, ctx.BlockTime().AddDate(0, 0, -1).Unix()))
 					suite.NoError(err)

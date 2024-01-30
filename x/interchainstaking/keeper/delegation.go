@@ -191,11 +191,11 @@ func (k *Keeper) IterateDelegatorDelegations(ctx sdk.Context, chainID string, de
 	}
 }
 
-func (*Keeper) PrepareDelegationMessagesForCoins(zone *types.Zone, allocations map[string]sdkmath.Int) []sdk.Msg {
+func (*Keeper) PrepareDelegationMessagesForCoins(zone *types.Zone, allocations map[string]sdkmath.Int, isFlush bool) []sdk.Msg {
 	var msgs []sdk.Msg
 	for _, valoper := range utils.Keys(allocations) {
 		if allocations[valoper].IsPositive() {
-			if allocations[valoper].GTE(sdk.NewInt(1_000_000)) {
+			if allocations[valoper].GTE(sdk.NewInt(1_000_000)) || isFlush {
 				// don't delegate tiny amounts. TODO: make configurable per zone.
 				msgs = append(msgs, &stakingtypes.MsgDelegate{DelegatorAddress: zone.DelegationAddress.Address, ValidatorAddress: valoper, Amount: sdk.NewCoin(zone.BaseDenom, allocations[valoper])})
 			}
