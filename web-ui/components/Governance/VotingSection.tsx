@@ -24,7 +24,6 @@ import React, { useMemo, useState } from 'react';
 import { FaSearch } from 'react-icons/fa';
 
 import { useVotingData } from '@/hooks';
-import { useGovernanceQuery } from '@/hooks/useQueries';
 import { decodeUint8Arr } from '@/utils';
 
 import { DisconnectedContent, Loader } from './common';

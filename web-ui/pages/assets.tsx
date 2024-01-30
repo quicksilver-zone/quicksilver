@@ -1,4 +1,4 @@
-import { Box, Container, Flex, SlideFade, Spacer, Text, Image, Center } from '@chakra-ui/react';
+import { Box, Container, Flex, SlideFade, Spacer, Text, Center } from '@chakra-ui/react';
 import { useChain } from '@cosmos-kit/react';
 import dynamic from 'next/dynamic';
 import Head from 'next/head';

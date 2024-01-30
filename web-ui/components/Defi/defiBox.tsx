@@ -126,8 +126,6 @@ const DefiTable = () => {
 
   const sortedData = sortData(filteredData, sortColumn, sortOrder);
 
-  const isTableDataMobile = useBreakpointValue({ base: true, md: false });
-
   return (
     <Box backdropFilter="blur(50px)" bgColor="rgba(255,255,255,0.1)" flex="1" borderRadius="10px" p={6} rounded="md">
       {isMobile ? (
