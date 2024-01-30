@@ -75,15 +75,26 @@ func (suite *KeeperTestSuite) TestGetUnlockedTokensForZoneNotAllHaveDelegation()
 }
 
 func TestAllocateWithdrawalsFromValidatorsNonEmptyMaps(t *testing.T) {
+	// clones required because original values get amended
 	tokensAllocatedForWithdrawalPerValidator := make(map[string]sdkmath.Int)
 	tokensAllocatedForWithdrawalPerValidator["validator1"] = sdkmath.NewInt(100)
 	tokensAllocatedForWithdrawalPerValidator["validator2"] = sdkmath.NewInt(200)
+
+	_tokensAllocatedForWithdrawalPerValidator := make(map[string]sdkmath.Int)
+	_tokensAllocatedForWithdrawalPerValidator["validator1"] = sdkmath.NewInt(100)
+	_tokensAllocatedForWithdrawalPerValidator["validator2"] = sdkmath.NewInt(200)
 
 	amountToWithdrawPerWithdrawal := make(map[string]sdk.Coin)
 	amountToWithdrawPerWithdrawal["withdrawal1"] = sdk.NewCoin("denom", sdkmath.NewInt(150))
 	amountToWithdrawPerWithdrawal["withdrawal2"] = sdk.NewCoin("denom", sdkmath.NewInt(50))
 	amountToWithdrawPerWithdrawal["withdrawal3"] = sdk.NewCoin("denom", sdkmath.NewInt(75))
 	amountToWithdrawPerWithdrawal["withdrawal4"] = sdk.NewCoin("denom", sdkmath.NewInt(25))
+
+	_amountToWithdrawPerWithdrawal := make(map[string]sdk.Coin)
+	_amountToWithdrawPerWithdrawal["withdrawal1"] = sdk.NewCoin("denom", sdkmath.NewInt(150))
+	_amountToWithdrawPerWithdrawal["withdrawal2"] = sdk.NewCoin("denom", sdkmath.NewInt(50))
+	_amountToWithdrawPerWithdrawal["withdrawal3"] = sdk.NewCoin("denom", sdkmath.NewInt(75))
+	_amountToWithdrawPerWithdrawal["withdrawal4"] = sdk.NewCoin("denom", sdkmath.NewInt(25))
 
 	distributionsPerWithdrawal := map[string][]*types.Distribution{
 		"withdrawal1": make([]*types.Distribution, 0),
@@ -94,8 +105,17 @@ func TestAllocateWithdrawalsFromValidatorsNonEmptyMaps(t *testing.T) {
 
 	coinsOutPerValidator, _, distributions, err := keeper.AllocateWithdrawalsFromValidators("denom", tokensAllocatedForWithdrawalPerValidator, amountToWithdrawPerWithdrawal, distributionsPerWithdrawal)
 	require.NoError(t, err)
-	fmt.Println(coinsOutPerValidator)
-	fmt.Println(distributions)
+	for valoper, amount := range _tokensAllocatedForWithdrawalPerValidator {
+		require.Equal(t, amount, coinsOutPerValidator[valoper].Amount)
+	}
+
+	for hash, dist := range distributions {
+		sum := uint64(0)
+		for _, amount := range dist {
+			sum += amount.Amount
+		}
+		require.Equal(t, _amountToWithdrawPerWithdrawal[hash].Amount, sdkmath.NewIntFromUint64(sum))
+	}
 }
 
 func (suite *KeeperTestSuite) TestGetUnlockedTokensForZoneWithRedelegation() {
