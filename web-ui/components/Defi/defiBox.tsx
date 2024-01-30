@@ -98,8 +98,8 @@ const DefiTable = () => {
     return key in providerIcons;
   };
 
-  const [sortColumn, setSortColumn] = useState<SortableColumn | null>(null);
-  const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
+  const [sortColumn, setSortColumn] = useState<SortableColumn>('apy');
+  const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
 
   const sortData = (data: DefiData[], column: SortableColumn | null, order: SortOrder) => {
     if (!column) return data;
