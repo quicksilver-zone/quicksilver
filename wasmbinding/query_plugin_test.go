@@ -4,12 +4,11 @@ import (
 	"encoding/hex"
 	"fmt"
 	"testing"
-	"time"
 
+	sdkmath "cosmossdk.io/math"
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
 	"github.com/golang/protobuf/proto" // nolint:staticcheck
 	"github.com/stretchr/testify/suite"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -18,9 +17,9 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	"github.com/quicksilver-zone/quicksilver/app"
-	"github.com/quicksilver-zone/quicksilver/wasmbinding"
-	epochtypes "github.com/quicksilver-zone/quicksilver/x/epochs/types"
+	"github.com/quicksilver-zone/quicksilver/v7/app"
+	"github.com/quicksilver-zone/quicksilver/v7/wasmbinding"
+	epochtypes "github.com/quicksilver-zone/quicksilver/v7/x/epochs/types"
 )
 
 type StargateTestSuite struct {
@@ -32,7 +31,7 @@ type StargateTestSuite struct {
 
 func (s *StargateTestSuite) SetupTest() {
 	s.app = app.Setup(s.T(), false)
-	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "quicksilver-1", Time: time.Now().UTC()})
+	s.ctx = s.app.BaseApp.NewContext(false)
 }
 
 func TestStargateTestSuite(t *testing.T) {
@@ -178,7 +177,7 @@ func (s *StargateTestSuite) TestConvertProtoToJsonMarshal() {
 			originalResponse:    "0a090a036261721202333012050a03666f6f",
 			protoResponseStruct: &banktypes.QueryAllBalancesResponse{},
 			expectedProtoResponse: &banktypes.QueryAllBalancesResponse{
-				Balances: sdk.NewCoins(sdk.NewCoin("bar", sdk.NewInt(30))),
+				Balances: sdk.NewCoins(sdk.NewCoin("bar", sdkmath.NewInt(30))),
 				Pagination: &query.PageResponse{
 					NextKey: []byte("foo"),
 				},
@@ -267,7 +266,7 @@ func (s *StargateTestSuite) TestDeterministicJsonMarshal() {
 			&banktypes.QueryAllBalancesResponse{},
 			func() proto.Message {
 				return &banktypes.QueryAllBalancesResponse{
-					Balances: sdk.NewCoins(sdk.NewCoin("bar", sdk.NewInt(30))),
+					Balances: sdk.NewCoins(sdk.NewCoin("bar", sdkmath.NewInt(30))),
 					Pagination: &query.PageResponse{
 						NextKey: []byte("foo"),
 					},

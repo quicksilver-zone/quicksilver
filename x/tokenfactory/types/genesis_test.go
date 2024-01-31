@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/quicksilver-zone/quicksilver/x/tokenfactory/types"
+	"github.com/quicksilver-zone/quicksilver/v7/x/tokenfactory/types"
 )
 
 func TestGenesisState_Validate(t *testing.T) {

@@ -5,8 +5,9 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/quicksilver-zone/quicksilver/x/airdrop/keeper"
-	"github.com/quicksilver-zone/quicksilver/x/airdrop/types"
+	sdkmath "cosmossdk.io/math"
+	"github.com/quicksilver-zone/quicksilver/v7/x/airdrop/keeper"
+	"github.com/quicksilver-zone/quicksilver/v7/x/airdrop/types"
 )
 
 // InitGenesis initializes the airdrop module's state from a provided genesis
@@ -42,15 +43,19 @@ func InitGenesis(ctx sdk.Context, k *keeper.Keeper, genState types.GenesisState)
 		}
 
 		zonedropAddress := k.GetZoneDropAccountAddress(zd.ChainId)
+		bondDenom, err := k.BondDenom(ctx)
+		if err != nil {
+			panic(err)
+		}
 
-		err := k.SendCoinsFromModuleToAccount(
+		err = k.SendCoinsFromModuleToAccount(
 			ctx,
 			types.ModuleName,
 			zonedropAddress,
 			sdk.NewCoins(
 				sdk.NewCoin(
-					k.BondDenom(ctx),
-					sdk.NewIntFromUint64(zd.Allocation),
+					bondDenom,
+					sdkmath.NewIntFromUint64(zd.Allocation),
 				),
 			),
 		)

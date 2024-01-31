@@ -21,16 +21,16 @@ import (
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	icatypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/types"
-	ibctransfertypes "github.com/cosmos/ibc-go/v5/modules/apps/transfer/types"
-	clienttypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
-	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
+	icatypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/types"
+	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
+	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
+	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
 
-	"github.com/quicksilver-zone/quicksilver/utils"
-	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
-	querytypes "github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
-	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
-	lsmstakingtypes "github.com/quicksilver-zone/quicksilver/x/lsmtypes"
+	"github.com/quicksilver-zone/quicksilver/v7/utils"
+	"github.com/quicksilver-zone/quicksilver/v7/utils/addressutils"
+	querytypes "github.com/quicksilver-zone/quicksilver/v7/x/interchainquery/types"
+	"github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking/types"
+	lsmstakingtypes "github.com/quicksilver-zone/quicksilver/v7/x/lsmtypes"
 )
 
 type TypedMsg struct {
@@ -274,9 +274,21 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 				return err
 			}
 		case "/ibc.applications.transfer.v1.MsgTransfer":
-			k.Logger(ctx).Debug("Received MsgTransfer acknowledgement; no action")
-			return nil
+			// this should be okay to fail; we'll pick it up next time around.
+			if !success {
+				return nil
+			}
+			response := ibctransfertypes.MsgTransferResponse{}
+			err = proto.Unmarshal(msgResponse, &response)
+			if err != nil {
+				k.Logger(ctx).Error("unable to unpack MsgTransfer response", "error", err)
+				return err
+			}
 
+			k.Logger(ctx).Info("MsgTranfer acknowledgement received")
+			if err := k.HandleMsgTransfer(ctx, msg.Msg); err != nil {
+				return err
+			}
 		default:
 			k.Logger(ctx).Error("unhandled acknowledgement packet", "type", reflect.TypeOf(msg.Msg).Name())
 		}
@@ -291,30 +303,48 @@ func (*Keeper) HandleTimeout(_ sdk.Context, _ channeltypes.Packet) error {
 
 // ----------------------------------------------------------------
 
-func (k *Keeper) HandleMsgTransfer(ctx sdk.Context, msg ibctransfertypes.FungibleTokenPacketData, ibcDenom string) error {
+func (k *Keeper) HandleMsgTransfer(ctx sdk.Context, msg sdk.Msg) error {
 	k.Logger(ctx).Info("Received MsgTransfer acknowledgement")
 	// first, type assertion. we should have ibctransfertypes.MsgTransfer
+	sMsg, ok := msg.(*ibctransfertypes.MsgTransfer)
+	if !ok {
+		k.Logger(ctx).Error("unable to cast source message to MsgTransfer")
+		return errors.New("unable to cast source message to MsgTransfer")
+	}
 
 	// check if destination is interchainstaking module account (spoiler: it was)
-	if msg.Receiver != k.AccountKeeper.GetModuleAddress(types.ModuleName).String() {
+	if sMsg.Receiver != k.AccountKeeper.GetModuleAddress(types.ModuleName).String() {
 		k.Logger(ctx).Error("msgTransfer to unknown account!")
 		return errors.New("unexpected recipient")
 	}
 
-	receivedAmount, ok := sdkmath.NewIntFromString(msg.Amount)
-	if !ok {
-		return fmt.Errorf("unable to marshal amount into math.Int: %s", msg.Amount)
-	}
-	receivedCoin := sdk.NewCoin(ibcDenom, receivedAmount)
+	receivedCoin := sMsg.Token
 
-	zone, found := k.GetZoneForWithdrawalAccount(ctx, msg.Sender)
+	zone, found := k.GetZoneForWithdrawalAccount(ctx, sMsg.Sender)
 	if !found {
-		return fmt.Errorf("zone not found for withdrawal account %s", msg.Sender)
+		return fmt.Errorf("zone not found for withdrawal account %s", sMsg.Sender)
 	}
 
-	if found && msg.Denom != zone.BaseDenom {
+	var channel *channeltypes.IdentifiedChannel
+	k.IBCKeeper.ChannelKeeper.IterateChannels(ctx, func(ic channeltypes.IdentifiedChannel) bool {
+		if ic.Counterparty.ChannelId == sMsg.SourceChannel && ic.Counterparty.PortId == sMsg.SourcePort && len(ic.ConnectionHops) == 1 && ic.ConnectionHops[0] == zone.ConnectionId && ic.State == channeltypes.OPEN {
+			channel = &ic
+			return true
+		}
+		return false
+	})
+
+	if channel == nil {
+		k.Logger(ctx).Error("channel not found for the packet", "port", sMsg.SourcePort, "channel", sMsg.SourceChannel)
+		return errors.New("channel not found for the packet")
+	}
+
+	denomTrace := utils.DeriveIbcDenomTrace(channel.PortId, channel.ChannelId, receivedCoin.Denom)
+	receivedCoin.Denom = denomTrace.IBCDenom()
+
+	if found && denomTrace.BaseDenom != zone.BaseDenom {
 		// k.Logger(ctx).Error("got withdrawal account and NOT staking denom", "rx", receivedCoin.Denom, "trace_base_denom", denomTrace.BaseDenom, "zone_base_denom", zone.BaseDenom)
-		feeAmount := sdk.NewDecFromInt(receivedCoin.Amount).Mul(k.GetCommissionRate(ctx)).TruncateInt()
+		feeAmount := sdkmath.LegacyNewDecFromInt(receivedCoin.Amount).Mul(k.GetCommissionRate(ctx)).TruncateInt()
 		rewardCoin := receivedCoin.SubAmount(feeAmount)
 		zoneAddress, err := addressutils.AccAddressFromBech32(zone.WithdrawalAddress.Address, "")
 		if err != nil {
@@ -410,7 +440,7 @@ func (k *Keeper) HandleWithdrawForUser(ctx sdk.Context, zone *types.Zone, msg *b
 
 	// case 1: total amount - native unbonding
 	// this statement is ridiculous, but currently calling coins.Equals against coins with different denoms panics; which is pretty useless.
-	if len(withdrawalRecord.Amount) == 1 && len(msg.Amount) == 1 && msg.Amount[0].Denom == withdrawalRecord.Amount[0].Denom && withdrawalRecord.Amount.IsEqual(msg.Amount) {
+	if len(withdrawalRecord.Amount) == 1 && len(msg.Amount) == 1 && msg.Amount[0].Denom == withdrawalRecord.Amount[0].Denom && withdrawalRecord.Amount.Equal(msg.Amount) {
 		k.Logger(ctx).Info("found matching withdrawal; marking as completed")
 		k.UpdateWithdrawalRecordStatus(ctx, &withdrawalRecord, types.WithdrawStatusCompleted)
 		if err := k.BankKeeper.BurnCoins(ctx, types.EscrowModuleAccount, sdk.NewCoins(withdrawalRecord.BurnAmount)); err != nil {
@@ -424,7 +454,7 @@ func (k *Keeper) HandleWithdrawForUser(ctx sdk.Context, zone *types.Zone, msg *b
 
 		dlist := make(map[int]struct{})
 		for i, dist := range withdrawalRecord.Distribution {
-			if msg.Amount[0].Amount.Equal(sdk.NewIntFromUint64(dist.Amount)) { // check valoper here too?
+			if msg.Amount[0].Amount.Equal(sdkmath.NewIntFromUint64(dist.Amount)) { // check valoper here too?
 				dlist[i] = struct{}{}
 				// matched amount
 				if len(withdrawalRecord.Distribution) == len(dlist) {
@@ -600,7 +630,7 @@ func (k *Keeper) HandleBeginRedelegate(ctx sdk.Context, msg sdk.Msg, completion 
 		zone.ChainId,
 		"store/staking/key",
 		data,
-		sdk.NewInt(-1),
+		sdkmath.NewInt(-1),
 		types.ModuleName,
 		"delegation",
 		0,
@@ -628,7 +658,7 @@ func (k *Keeper) HandleBeginRedelegate(ctx sdk.Context, msg sdk.Msg, completion 
 		zone.ChainId,
 		"store/staking/key",
 		data,
-		sdk.NewInt(-1),
+		sdkmath.NewInt(-1),
 		types.ModuleName,
 		"delegation",
 		0,
@@ -715,7 +745,7 @@ func (k *Keeper) HandleUndelegate(ctx sdk.Context, msg sdk.Msg, completion time.
 		zone.ChainId,
 		"store/staking/key",
 		data,
-		sdk.NewInt(-1),
+		sdkmath.NewInt(-1),
 		types.ModuleName,
 		"delegation",
 		0,
@@ -830,9 +860,9 @@ func (k *Keeper) HandleFailedUndelegate(ctx sdk.Context, msg sdk.Msg, memo strin
 			}
 			wdr.Distribution = newDistribution
 			amount := wdr.Amount.AmountOf(zone.BaseDenom)
-			wdr.Amount = wdr.Amount.Sub(sdk.NewCoin(zone.BaseDenom, sdk.NewIntFromUint64(relatedAmount)))
-			rr := sdk.NewDecFromInt(wdr.BurnAmount.Amount).Quo(sdk.NewDecFromInt(amount))
-			relatedQAsset := sdk.NewDec(int64(relatedAmount)).Mul(rr).TruncateInt()
+			wdr.Amount = wdr.Amount.Sub(sdk.NewCoin(zone.BaseDenom, sdkmath.NewIntFromUint64(relatedAmount)))
+			rr := sdkmath.LegacyNewDecFromInt(wdr.BurnAmount.Amount).Quo(sdkmath.LegacyNewDecFromInt(amount))
+			relatedQAsset := sdkmath.LegacyNewDec(int64(relatedAmount)).Mul(rr).TruncateInt()
 			wdr.BurnAmount = wdr.BurnAmount.SubAmount(relatedQAsset)
 			k.SetWithdrawalRecord(ctx, wdr)
 			// create a new record with the failed amount
@@ -841,7 +871,7 @@ func (k *Keeper) HandleFailedUndelegate(ctx sdk.Context, msg sdk.Msg, memo strin
 				Delegator:    wdr.Delegator,
 				Recipient:    wdr.Recipient,
 				Distribution: nil,
-				Amount:       sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewIntFromUint64(relatedAmount))),
+				Amount:       sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdkmath.NewIntFromUint64(relatedAmount))),
 				BurnAmount:   sdk.NewCoin(zone.LocalDenom, relatedQAsset),
 				Txhash:       fmt.Sprintf("%064d", k.GetNextWithdrawalRecordSequence(ctx)),
 				Status:       types.WithdrawStatusQueued,
@@ -1108,7 +1138,7 @@ func (k *Keeper) UpdateDelegationRecordsForAddress(ctx sdk.Context, zone types.Z
 				zone.ChainId,
 				"store/staking/key",
 				data,
-				sdk.NewInt(-1),
+				sdkmath.NewInt(-1),
 				types.ModuleName,
 				"delegation",
 				0,
@@ -1136,7 +1166,7 @@ func (k *Keeper) UpdateDelegationRecordsForAddress(ctx sdk.Context, zone types.Z
 			zone.ChainId,
 			"store/staking/key",
 			data,
-			sdk.NewInt(-1),
+			sdkmath.NewInt(-1),
 			types.ModuleName,
 			"delegation",
 			0,
@@ -1231,7 +1261,7 @@ func (k *Keeper) TriggerRedemptionRate(ctx sdk.Context, zone *types.Zone) error 
 		zone.ChainId,
 		"cosmos.bank.v1beta1.Query/AllBalances",
 		bz,
-		sdk.NewInt(int64(-1)),
+		sdkmath.NewInt(int64(-1)),
 		types.ModuleName,
 		"distributerewards",
 		0,
@@ -1255,7 +1285,7 @@ func DistributeRewardsFromWithdrawAccount(k *Keeper, ctx sdk.Context, args []byt
 	baseDenomAmount := withdrawBalance.Balances.AmountOf(zone.BaseDenom)
 	// calculate fee (fee = amount * rate)
 
-	baseDenomFee := sdk.NewDecFromInt(baseDenomAmount).
+	baseDenomFee := sdkmath.LegacyNewDecFromInt(baseDenomAmount).
 		Mul(k.GetCommissionRate(ctx)).
 		TruncateInt()
 
@@ -1318,7 +1348,7 @@ func (*Keeper) prepareRewardsDistributionMsgs(zone types.Zone, rewards sdkmath.I
 
 func equalLsmCoin(valoper string, amount uint64, lsmAmount sdk.Coin) bool {
 	if strings.HasPrefix(lsmAmount.Denom, valoper) {
-		return lsmAmount.Amount.Equal(sdk.NewIntFromUint64(amount))
+		return lsmAmount.Amount.Equal(sdkmath.NewIntFromUint64(amount))
 	}
 	return false
 }

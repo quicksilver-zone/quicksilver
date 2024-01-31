@@ -6,7 +6,7 @@ import "gogoproto/gogo.proto";
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 
-option go_package = "github.com/quicksilver-zone/quicksilver/x/airdrop/types";
+option go_package = "github.com/quicksilver-zone/quicksilver/v7/x/airdrop/types";
 
 // Action is used as an enum to denote specific actions or tasks.
 enum Action {
@@ -73,7 +73,7 @@ message ZoneDrop {
   uint64 allocation = 5;
   repeated string actions = 6 [
     (cosmos_proto.scalar) = "cosmos.Dec",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable) = false
   ];
   bool is_concluded = 7;

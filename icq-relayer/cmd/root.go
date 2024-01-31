@@ -4,7 +4,7 @@ import (
 	"os"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/quicksilver-zone/quicksilver/icq-relayer/pkg/config"
+	"github.com/quicksilver-zone/quicksilver/v7/icq-relayer/pkg/config"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )

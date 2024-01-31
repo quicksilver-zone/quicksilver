@@ -3,9 +3,10 @@ package keeper_test
 import (
 	"fmt"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/quicksilver-zone/quicksilver/x/tokenfactory/types"
+	"github.com/quicksilver-zone/quicksilver/v7/x/tokenfactory/types"
 )
 
 func (suite *KeeperTestSuite) TestMsgCreateDenom() {
@@ -64,10 +65,10 @@ func (suite *KeeperTestSuite) TestCreateDenom() {
 	var (
 		primaryDenom            = types.DefaultParams().DenomCreationFee[0].Denom
 		secondaryDenom          = SecondaryDenom
-		defaultDenomCreationFee = types.Params{DenomCreationFee: sdk.NewCoins(sdk.NewCoin(primaryDenom, sdk.NewInt(50000000)))}
-		twoDenomCreationFee     = types.Params{DenomCreationFee: sdk.NewCoins(sdk.NewCoin(primaryDenom, sdk.NewInt(50000000)), sdk.NewCoin(secondaryDenom, sdk.NewInt(50000000)))}
+		defaultDenomCreationFee = types.Params{DenomCreationFee: sdk.NewCoins(sdk.NewCoin(primaryDenom, sdkmath.NewInt(50000000)))}
+		twoDenomCreationFee     = types.Params{DenomCreationFee: sdk.NewCoins(sdk.NewCoin(primaryDenom, sdkmath.NewInt(50000000)), sdk.NewCoin(secondaryDenom, sdkmath.NewInt(50000000)))}
 		nilCreationFee          = types.Params{DenomCreationFee: nil}
-		largeCreationFee        = types.Params{DenomCreationFee: sdk.NewCoins(sdk.NewCoin(primaryDenom, sdk.NewInt(5000000000)))}
+		largeCreationFee        = types.Params{DenomCreationFee: sdk.NewCoins(sdk.NewCoin(primaryDenom, sdkmath.NewInt(5000000000)))}
 	)
 
 	for _, tc := range []struct {
@@ -142,7 +143,7 @@ func (suite *KeeperTestSuite) TestCreateDenom() {
 			postCreateBalance := bankKeeper.GetAllBalances(suite.Ctx, suite.TestAccs[0])
 			if tc.valid {
 				suite.Require().NoError(err)
-				suite.Require().True(preCreateBalance.Sub(postCreateBalance...).IsEqual(denomCreationFee))
+				suite.Require().True(preCreateBalance.Sub(postCreateBalance...).Equal(denomCreationFee))
 
 				// Make sure that the admin is set correctly
 				queryRes, err := suite.queryClient.DenomAuthorityMetadata(suite.Ctx.Context(), &types.QueryDenomAuthorityMetadataRequest{
@@ -155,7 +156,7 @@ func (suite *KeeperTestSuite) TestCreateDenom() {
 			} else {
 				suite.Require().Error(err)
 				// Ensure we don't charge if we expect an error
-				suite.Require().True(preCreateBalance.IsEqual(postCreateBalance))
+				suite.Require().True(preCreateBalance.Equal(postCreateBalance))
 			}
 		})
 	}

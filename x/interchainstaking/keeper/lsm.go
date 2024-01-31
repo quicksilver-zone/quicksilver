@@ -4,13 +4,15 @@ import (
 	"errors"
 
 	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
 
-	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"cosmossdk.io/store/prefix"
+	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
-	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
+	"github.com/quicksilver-zone/quicksilver/v7/utils/addressutils"
+	"github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking/types"
 )
 
 // GetCap returns Cap info by zone and delegator
@@ -42,7 +44,7 @@ func (k Keeper) DeleteLsmCaps(ctx sdk.Context, chainID string) {
 func (k Keeper) IterateLsmCaps(ctx sdk.Context, fn func(index int64, chainID string, cap types.LsmCaps) (stop bool)) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixLsmCaps)
 
-	iterator := sdk.KVStorePrefixIterator(store, nil)
+	iterator := storetypes.KVStorePrefixIterator(store, nil)
 	defer iterator.Close()
 
 	i := int64(0)
@@ -70,8 +72,8 @@ func (k Keeper) AllLsmCaps(ctx sdk.Context) map[string]types.LsmCaps {
 	return allCaps
 }
 
-func (k Keeper) GetLiquidStakedSupply(ctx sdk.Context, zone *types.Zone) sdk.Dec {
-	out := sdk.ZeroDec()
+func (k Keeper) GetLiquidStakedSupply(ctx sdk.Context, zone *types.Zone) sdkmath.LegacyDec {
+	out := sdkmath.LegacyZeroDec()
 	for _, val := range k.GetActiveValidators(ctx, zone.ChainId) {
 		if val.Status == stakingtypes.BondStatusBonded {
 			out = out.Add(val.LiquidShares)
@@ -81,7 +83,7 @@ func (k Keeper) GetLiquidStakedSupply(ctx sdk.Context, zone *types.Zone) sdk.Dec
 }
 
 func (k Keeper) GetTotalStakedSupply(ctx sdk.Context, zone *types.Zone) math.Int {
-	out := sdk.ZeroInt()
+	out := sdkmath.ZeroInt()
 	for _, val := range k.GetActiveValidators(ctx, zone.ChainId) {
 		if val.Status == stakingtypes.BondStatusBonded {
 			out = out.Add(val.VotingPower)
@@ -98,8 +100,8 @@ func (k Keeper) CheckExceedsGlobalCap(ctx sdk.Context, zone *types.Zone, amount 
 	}
 
 	liquidSupply := k.GetLiquidStakedSupply(ctx, zone)
-	totalSupply := sdk.NewDecFromInt(k.GetTotalStakedSupply(ctx, zone))
-	amountDec := sdk.NewDecFromInt(amount)
+	totalSupply := sdkmath.LegacyNewDecFromInt(k.GetTotalStakedSupply(ctx, zone))
+	amountDec := sdkmath.LegacyNewDecFromInt(amount)
 	return liquidSupply.Add(amountDec).Quo(totalSupply).GT(caps.GlobalCap)
 }
 
@@ -124,9 +126,9 @@ func (k Keeper) CheckExceedsValidatorCap(ctx sdk.Context, zone *types.Zone, vali
 	}
 
 	// Calculate the liquid shares and tokens
-	amountDec := sdk.NewDecFromInt(amount)
+	amountDec := sdkmath.LegacyNewDecFromInt(amount)
 	liquidShares := val.LiquidShares.Add(amountDec)
-	tokens := sdk.NewDecFromInt(val.VotingPower).Add(amountDec)
+	tokens := sdkmath.LegacyNewDecFromInt(val.VotingPower).Add(amountDec)
 
 	if liquidShares.Quo(tokens).GT(caps.ValidatorCap) {
 		return errors.New("exceeds validator cap")
@@ -156,7 +158,7 @@ func (k Keeper) CheckExceedsValidatorBondCap(ctx sdk.Context, zone *types.Zone, 
 
 	maxShares := val.ValidatorBondShares.Mul(caps.ValidatorBondCap)
 
-	amountDec := sdk.NewDecFromInt(amount)
+	amountDec := sdkmath.LegacyNewDecFromInt(amount)
 	liquidShares := val.LiquidShares.Add(amountDec)
 
 	if liquidShares.GT(maxShares) {

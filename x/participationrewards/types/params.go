@@ -5,7 +5,7 @@ import (
 
 	"gopkg.in/yaml.v2"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkmath "cosmossdk.io/math"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
@@ -13,9 +13,9 @@ var (
 	KeyDistributionProportions = []byte("DistributionProportions")
 	KeyClaimsEnabled           = []byte("ClaimsEnabled")
 
-	DefaultValidatorSelectionAllocation = sdk.NewDecWithPrec(34, 2)
-	DefaultHoldingsAllocation           = sdk.NewDecWithPrec(33, 2)
-	DefaultLockupAllocation             = sdk.NewDecWithPrec(33, 2)
+	DefaultValidatorSelectionAllocation = sdkmath.LegacyNewDecWithPrec(34, 2)
+	DefaultHoldingsAllocation           = sdkmath.LegacyNewDecWithPrec(33, 2)
+	DefaultLockupAllocation             = sdkmath.LegacyNewDecWithPrec(33, 2)
 	DefaultClaimsEnabled                = false
 )
 
@@ -26,9 +26,9 @@ func ParamKeyTable() paramtypes.KeyTable {
 
 // NewParams creates a new ics Params instance.
 func NewParams(
-	validatorSelectionAllocation sdk.Dec,
-	holdingsAllocation sdk.Dec,
-	lockupAllocation sdk.Dec,
+	validatorSelectionAllocation sdkmath.LegacyDec,
+	holdingsAllocation sdkmath.LegacyDec,
+	lockupAllocation sdkmath.LegacyDec,
 	claimsEnabled bool,
 ) Params {
 	return Params{

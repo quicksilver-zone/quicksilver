@@ -6,39 +6,38 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/tendermint/tendermint/libs/log"
+	"cosmossdk.io/log"
 
 	sdkmath "cosmossdk.io/math"
-
+	"cosmossdk.io/store/prefix"
+	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/types/tx"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
-	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	capabilitykeeper "github.com/cosmos/ibc-go/modules/capability/keeper"
+	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
 
-	icacontrollerkeeper "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/controller/keeper"
-	ibctransferkeeper "github.com/cosmos/ibc-go/v5/modules/apps/transfer/keeper"
-	ibckeeper "github.com/cosmos/ibc-go/v5/modules/core/keeper"
-	ibctmtypes "github.com/cosmos/ibc-go/v5/modules/light-clients/07-tendermint/types"
+	icacontrollerkeeper "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/controller/keeper"
+	ibctransferkeeper "github.com/cosmos/ibc-go/v8/modules/apps/transfer/keeper"
+	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
+	ibctmtypes "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint"
 
-	"github.com/quicksilver-zone/quicksilver/utils"
-	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
-	epochskeeper "github.com/quicksilver-zone/quicksilver/x/epochs/keeper"
-	interchainquerykeeper "github.com/quicksilver-zone/quicksilver/x/interchainquery/keeper"
-	icqtypes "github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
-	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
-	lsmstakingtypes "github.com/quicksilver-zone/quicksilver/x/lsmtypes"
+	"github.com/quicksilver-zone/quicksilver/v7/utils"
+	"github.com/quicksilver-zone/quicksilver/v7/utils/addressutils"
+	"github.com/quicksilver-zone/quicksilver/v7/utils/bankutils"
+	epochskeeper "github.com/quicksilver-zone/quicksilver/v7/x/epochs/keeper"
+	interchainquerykeeper "github.com/quicksilver-zone/quicksilver/v7/x/interchainquery/keeper"
+	icqtypes "github.com/quicksilver-zone/quicksilver/v7/x/interchainquery/types"
+	"github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking/types"
+	lsmstakingtypes "github.com/quicksilver-zone/quicksilver/v7/x/lsmtypes"
 )
 
 // Keeper of this module maintains collections of registered zones.
@@ -167,7 +166,7 @@ func (k *Keeper) GetConnectionForPort(ctx sdk.Context, port string) (string, err
 func (k *Keeper) IteratePortConnections(ctx sdk.Context, cb func(pc types.PortConnectionTuple) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 
-	iterator := sdk.KVStorePrefixIterator(store, types.KeyPrefixPortMapping)
+	iterator := storetypes.KVStorePrefixIterator(store, types.KeyPrefixPortMapping)
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
@@ -308,7 +307,7 @@ func (k *Keeper) SetValidatorForZone(ctx sdk.Context, zone *types.Zone, data []b
 			CommissionRate:  validator.GetCommission(),
 			VotingPower:     validator.Tokens,
 			DelegatorShares: validator.DelegatorShares,
-			Score:           sdk.ZeroDec(),
+			Score:           sdkmath.LegacyZeroDec(),
 			Status:          validator.Status.String(),
 			Jailed:          validator.IsJailed(),
 			JailedSince:     jailTime,
@@ -352,8 +351,8 @@ func (k *Keeper) SetValidatorForZone(ctx sdk.Context, zone *types.Zone, data []b
 				return fmt.Errorf("incoming voting power must be greater than zero, received %s", validator.Tokens)
 			}
 			// determine difference between previous vp/shares ratio and new ratio.
-			prevRatio := val.DelegatorShares.Quo(sdk.NewDecFromInt(val.VotingPower))
-			newRatio := validator.DelegatorShares.Quo(sdk.NewDecFromInt(validator.Tokens))
+			prevRatio := val.DelegatorShares.Quo(sdkmath.LegacyNewDecFromInt(val.VotingPower))
+			newRatio := validator.DelegatorShares.Quo(sdkmath.LegacyNewDecFromInt(validator.Tokens))
 			delta := newRatio.Quo(prevRatio)
 			err = k.UpdateWithdrawalRecordsForSlash(ctx, zone, val.ValoperAddress, delta)
 			if err != nil {
@@ -438,8 +437,8 @@ func (k *Keeper) GetUnbondingEnabled(ctx sdk.Context) bool {
 	return out
 }
 
-func (k *Keeper) GetCommissionRate(ctx sdk.Context) sdk.Dec {
-	var out sdk.Dec
+func (k *Keeper) GetCommissionRate(ctx sdk.Context) sdkmath.LegacyDec {
+	var out sdkmath.LegacyDec
 	k.paramStore.Get(ctx, types.KeyCommissionRate, &out)
 	return out
 }
@@ -478,7 +477,6 @@ func (k *Keeper) GetChainID(ctx sdk.Context, connectionID string) (string, error
 	if !ok {
 		return "", fmt.Errorf("invalid client state for client %q on connection %q", conn.ClientId, connectionID)
 	}
-
 	return client.ChainId, nil
 }
 
@@ -496,7 +494,7 @@ func (k *Keeper) EmitPerformanceBalanceQuery(ctx sdk.Context, zone *types.Zone) 
 	if err != nil {
 		return err
 	}
-	data := banktypes.CreateAccountBalancesPrefix(addr)
+	data := bankutils.CreateAccountBalancesPrefix(addr)
 
 	// query performance account for baseDenom balance every 100 blocks.
 	k.ICQKeeper.MakeRequest(
@@ -505,7 +503,7 @@ func (k *Keeper) EmitPerformanceBalanceQuery(ctx sdk.Context, zone *types.Zone) 
 		zone.ChainId,
 		types.BankStoreKey,
 		append(data, []byte(zone.BaseDenom)...),
-		sdk.NewInt(-1),
+		sdkmath.NewInt(-1),
 		types.ModuleName,
 		"perfbalance",
 		100,
@@ -551,7 +549,7 @@ func (k *Keeper) EmitValidatorQuery(ctx sdk.Context, connectionID, chainID strin
 		chainID,
 		"store/staking/key",
 		data,
-		sdk.NewInt(-1),
+		sdkmath.NewInt(-1),
 		types.ModuleName,
 		"validator",
 		0,
@@ -576,7 +574,7 @@ func (k *Keeper) EmitDepositIntervalQuery(ctx sdk.Context, zone *types.Zone) {
 		zone.ChainId,
 		"cosmos.tx.v1beta1.Service/GetTxsEvent",
 		k.cdc.MustMarshal(&req),
-		sdk.NewInt(-1),
+		sdkmath.NewInt(-1),
 		types.ModuleName,
 		"depositinterval",
 		0,
@@ -596,7 +594,7 @@ func (k *Keeper) EmitSigningInfoQuery(ctx sdk.Context, connectionID, chainID str
 		chainID,
 		"store/slashing/key",
 		data,
-		sdk.NewInt(-1),
+		sdkmath.NewInt(-1),
 		types.ModuleName,
 		"signinginfo",
 		0,
@@ -628,12 +626,12 @@ func (k *Keeper) UpdateRedemptionRate(ctx sdk.Context, zone *types.Zone, epochRe
 	// TODO: make max deltas params.
 	// soft cap redemption rate, instead of panicking.
 	delta := ratio.Quo(zone.RedemptionRate)
-	if delta.GT(sdk.NewDecWithPrec(102, 2)) {
+	if delta.GT(sdkmath.LegacyNewDecWithPrec(102, 2)) {
 		k.Logger(ctx).Error("ratio diverged by more than 2% upwards in the last epoch; capping at 1.02...")
-		ratio = zone.RedemptionRate.Mul(sdk.NewDecWithPrec(102, 2))
-	} else if delta.LT(sdk.NewDecWithPrec(95, 2)) && !isZero { // we allow a bigger downshift if all assets were withdrawn and we revert to zero.
+		ratio = zone.RedemptionRate.Mul(sdkmath.LegacyNewDecWithPrec(102, 2))
+	} else if delta.LT(sdkmath.LegacyNewDecWithPrec(95, 2)) && !isZero { // we allow a bigger downshift if all assets were withdrawn and we revert to zero.
 		k.Logger(ctx).Error("ratio diverged by more than 5% downwards in the last epoch; 5% is the theoretical max if _all_ controlled tokens were tombstoned. capping at 0.95...")
-		ratio = zone.RedemptionRate.Mul(sdk.NewDecWithPrec(95, 2))
+		ratio = zone.RedemptionRate.Mul(sdkmath.LegacyNewDecWithPrec(95, 2))
 	}
 
 	zone.LastRedemptionRate = zone.RedemptionRate
@@ -651,7 +649,7 @@ func (k *Keeper) OverrideRedemptionRateNoCap(ctx sdk.Context, zone *types.Zone) 
 	k.SetZone(ctx, zone)
 }
 
-func (k *Keeper) GetRatio(ctx sdk.Context, zone *types.Zone, epochRewards sdkmath.Int) (sdk.Dec, bool) {
+func (k *Keeper) GetRatio(ctx sdk.Context, zone *types.Zone, epochRewards sdkmath.Int) (sdkmath.LegacyDec, bool) {
 	// native asset amount
 	nativeAssetAmount := k.GetDelegatedAmount(ctx, zone).Amount
 	nativeAssetUnbondingAmount := k.GetUnbondingAmount(ctx, zone).Amount
@@ -664,10 +662,10 @@ func (k *Keeper) GetRatio(ctx sdk.Context, zone *types.Zone, epochRewards sdkmat
 	if qAssetAmount.IsZero() {
 		// ratio 1.0 (default 1:1 ratio between nativeAssets and qAssets)
 		// native assets should not reach zero before qAssets (discount rate asymptote)
-		return sdk.OneDec(), true
+		return sdkmath.LegacyOneDec(), true
 	}
 
-	return sdk.NewDecFromInt(nativeAssetAmount.Add(epochRewards).Add(nativeAssetUnbondingAmount).Add(nativeAssetUnbonded)).Quo(sdk.NewDecFromInt(qAssetAmount)), false
+	return sdkmath.LegacyNewDecFromInt(nativeAssetAmount.Add(epochRewards).Add(nativeAssetUnbondingAmount).Add(nativeAssetUnbonded)).Quo(sdkmath.LegacyNewDecFromInt(qAssetAmount)), false
 }
 
 func (k *Keeper) GetAggregateIntentOrDefault(ctx sdk.Context, zone *types.Zone) (types.ValidatorIntents, error) {

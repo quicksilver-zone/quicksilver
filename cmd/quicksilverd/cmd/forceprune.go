@@ -1,4 +1,4 @@
-package main
+package cmd
 
 // DONTCOVER
 
@@ -7,16 +7,17 @@ import (
 	"os/exec"
 	"strconv"
 
+	"github.com/cometbft/cometbft/config"
+	tmstore "github.com/cometbft/cometbft/store"
 	"github.com/spf13/cobra"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/opt"
 	"github.com/syndtr/goleveldb/leveldb/util"
-	"github.com/tendermint/tendermint/config"
-	tmstore "github.com/tendermint/tendermint/store"
 
 	"github.com/cosmos/cosmos-sdk/client"
 
 	tmdb "github.com/cometbft/cometbft-db"
+	"github.com/cometbft/cometbft/state"
 )
 
 const (
@@ -103,6 +104,7 @@ func pruneBlockStoreAndGetHeights(dbPath string, fullHeight int64) (
 	}
 
 	dbbs, err := tmdb.NewGoLevelDBWithOpts("blockstore", dbPath, &opts)
+
 	if err != nil {
 		return 0, 0, err
 	}
@@ -114,11 +116,12 @@ func pruneBlockStoreAndGetHeights(dbPath string, fullHeight int64) (
 	currentHeight = bs.Height()
 
 	fmt.Println("Pruning Block Store ...")
-	prunedBlocks, err := bs.PruneBlocks(currentHeight - fullHeight)
+	// TODO: figure out how to get the state to retain evidence, new PruineBlocks required that
+	pruned, evidencePoint, err := bs.PruneBlocks(currentHeight-fullHeight, state.State{})
 	if err != nil {
 		return 0, 0, err
 	}
-	fmt.Println("Pruned Block Store ...", prunedBlocks)
+	fmt.Println("Pruned Block Store ...", pruned, evidencePoint)
 
 	// N.B: We duplicate the call to db_bs.Close() on top of
 	// the call in defer statement above to make sure that the resources

@@ -3,10 +3,11 @@ package keeper_test
 import (
 	"cosmossdk.io/math"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	icskeeper "github.com/quicksilver-zone/quicksilver/x/interchainstaking/keeper"
-	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
+	icskeeper "github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking/keeper"
+	"github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking/types"
 )
 
 func (suite *KeeperTestSuite) TestUpdateWithdrawalRecordsForSlash() {
@@ -15,7 +16,7 @@ func (suite *KeeperTestSuite) TestUpdateWithdrawalRecordsForSlash() {
 		InitialRecords  func(ctx sdk.Context, keeper *icskeeper.Keeper)
 		ExpectedRecords func(ctx sdk.Context, keeper *icskeeper.Keeper) (out []types.WithdrawalRecord)
 		Validator       func(validators []string) string
-		Delta           sdk.Dec
+		Delta           sdkmath.LegacyDec
 		ExpectError     bool
 	}{
 		{
@@ -62,7 +63,7 @@ func (suite *KeeperTestSuite) TestUpdateWithdrawalRecordsForSlash() {
 				}
 				return out
 			},
-			Delta:     sdk.NewDecWithPrec(100, 2).Quo(sdk.NewDecWithPrec(95, 2)),
+			Delta:     sdkmath.LegacyNewDecWithPrec(100, 2).Quo(sdkmath.LegacyNewDecWithPrec(95, 2)),
 			Validator: func(validators []string) string { return validators[1] },
 
 			ExpectError: false,
@@ -142,7 +143,7 @@ func (suite *KeeperTestSuite) TestUpdateWithdrawalRecordsForSlash() {
 				}
 				return out
 			},
-			Delta:       sdk.NewDecWithPrec(100, 2).Quo(sdk.NewDecWithPrec(95, 2)),
+			Delta:       sdkmath.LegacyNewDecWithPrec(100, 2).Quo(sdkmath.LegacyNewDecWithPrec(95, 2)),
 			Validator:   func(validators []string) string { return validators[1] },
 			ExpectError: false,
 		},
@@ -184,7 +185,7 @@ func (suite *KeeperTestSuite) TestUpdateWithdrawalRecordsForSlash() {
 				}
 				return out
 			},
-			Delta:       sdk.NewDecWithPrec(100, 2).Quo(sdk.NewDecWithPrec(95, 2)),
+			Delta:       sdkmath.LegacyNewDecWithPrec(100, 2).Quo(sdkmath.LegacyNewDecWithPrec(95, 2)),
 			Validator:   func(validators []string) string { return validators[1] },
 			ExpectError: true,
 		},
@@ -227,7 +228,7 @@ func (suite *KeeperTestSuite) TestUpdateWithdrawalRecordsForSlash() {
 				}
 				return out
 			},
-			Delta:       sdk.NewDecWithPrec(100, 2).Quo(sdk.NewDecWithPrec(95, 2)),
+			Delta:       sdkmath.LegacyNewDecWithPrec(100, 2).Quo(sdkmath.LegacyNewDecWithPrec(95, 2)),
 			Validator:   func(validators []string) string { return validators[1] },
 			ExpectError: true,
 		},

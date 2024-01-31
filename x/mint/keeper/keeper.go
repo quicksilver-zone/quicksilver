@@ -1,16 +1,17 @@
 package keeper
 
 import (
-	"github.com/tendermint/tendermint/libs/log"
+	"cosmossdk.io/log"
 
+	sdkmath "cosmossdk.io/math"
+	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
-	airdroptypes "github.com/quicksilver-zone/quicksilver/x/airdrop/types"
-	"github.com/quicksilver-zone/quicksilver/x/mint/types"
-	participationrewards "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
+	airdroptypes "github.com/quicksilver-zone/quicksilver/v7/x/airdrop/types"
+	"github.com/quicksilver-zone/quicksilver/v7/x/mint/types"
+	participationrewards "github.com/quicksilver-zone/quicksilver/v7/x/participationrewards/types"
 )
 
 // Keeper of the mint store.
@@ -140,8 +141,8 @@ func (k Keeper) MintCoins(ctx sdk.Context, newCoins sdk.Coins) error {
 }
 
 // GetProportions gets the balance of the `MintedDenom` from minted coins and returns coins according to the `AllocationRatio`.
-func (Keeper) GetProportions(mintedCoin sdk.Coin, ratio sdk.Dec) sdk.Coin {
-	return sdk.NewCoin(mintedCoin.Denom, sdk.NewDecFromInt(mintedCoin.Amount).Mul(ratio).TruncateInt())
+func (Keeper) GetProportions(mintedCoin sdk.Coin, ratio sdkmath.LegacyDec) sdk.Coin {
+	return sdk.NewCoin(mintedCoin.Denom, sdkmath.LegacyNewDecFromInt(mintedCoin.Amount).Mul(ratio).TruncateInt())
 }
 
 // DistributeMintedCoins implements distribution of minted coins from mint to external modules.

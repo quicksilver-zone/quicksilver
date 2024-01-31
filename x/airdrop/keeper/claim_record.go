@@ -3,11 +3,13 @@ package keeper
 import (
 	"fmt"
 
+	sdkmath "cosmossdk.io/math"
+	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 
-	"github.com/quicksilver-zone/quicksilver/x/airdrop/types"
-	cmtypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
+	"github.com/quicksilver-zone/quicksilver/v7/x/airdrop/types"
+	cmtypes "github.com/quicksilver-zone/quicksilver/v7/x/claimsmanager/types"
 )
 
 // GetClaimRecord returns the ClaimRecord of the given address for the given zone.
@@ -60,7 +62,7 @@ func (k *Keeper) DeleteClaimRecord(ctx sdk.Context, chainID, address string) err
 func (k *Keeper) IterateClaimRecords(ctx sdk.Context, chainID string, fn func(index int64, cr types.ClaimRecord) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 
-	iterator := sdk.KVStorePrefixIterator(store, types.GetPrefixClaimRecord(chainID))
+	iterator := storetypes.KVStorePrefixIterator(store, types.GetPrefixClaimRecord(chainID))
 	defer iterator.Close()
 
 	i := int64(0)
@@ -83,7 +85,7 @@ func (k *Keeper) AllClaimRecords(ctx sdk.Context) []*types.ClaimRecord {
 
 	store := ctx.KVStore(k.storeKey)
 
-	iterator := sdk.KVStorePrefixIterator(store, types.KeyPrefixClaimRecord)
+	iterator := storetypes.KVStorePrefixIterator(store, types.KeyPrefixClaimRecord)
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
@@ -110,7 +112,7 @@ func (k *Keeper) AllZoneClaimRecords(ctx sdk.Context, chainID string) []*types.C
 func (k *Keeper) ClearClaimRecords(ctx sdk.Context, chainID string) {
 	store := ctx.KVStore(k.storeKey)
 
-	iterator := sdk.KVStorePrefixIterator(store, types.GetPrefixClaimRecord(chainID))
+	iterator := storetypes.KVStorePrefixIterator(store, types.GetPrefixClaimRecord(chainID))
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
@@ -159,8 +161,8 @@ func (k *Keeper) GetClaimableAmountForAction(ctx sdk.Context, chainID, address s
 
 	// airdrop has started to decay, calculate claimable portion
 	elapsedDecayTime := ctx.BlockTime().Sub(zd.StartTime.Add(zd.Duration))
-	decayPercent := sdk.NewDec(elapsedDecayTime.Nanoseconds()).QuoInt64(zd.Decay.Nanoseconds())
-	claimablePercent := sdk.OneDec().Sub(decayPercent)
+	decayPercent := sdkmath.LegacyNewDec(elapsedDecayTime.Nanoseconds()).QuoInt64(zd.Decay.Nanoseconds())
+	claimablePercent := sdkmath.LegacyOneDec().Sub(decayPercent)
 	amount = claimablePercent.MulInt64(amount).TruncateInt64()
 
 	return uint64(amount), nil

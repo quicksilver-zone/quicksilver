@@ -11,10 +11,10 @@ import (
 )
 
 type AccountKeeper interface {
-	NewAccount(sdk.Context, authtypes.AccountI) authtypes.AccountI
+	NewAccount(sdk.Context, sdk.AccountI) sdk.AccountI
 
-	GetAccount(ctx sdk.Context, addr sdk.AccAddress) authtypes.AccountI
-	SetAccount(ctx sdk.Context, acc authtypes.AccountI)
+	GetAccount(ctx sdk.Context, addr sdk.AccAddress) sdk.AccountI
+	SetAccount(ctx sdk.Context, acc sdk.AccountI)
 }
 
 // CanCreateModuleAccountAtAddr tells us if we can safely make a module account at

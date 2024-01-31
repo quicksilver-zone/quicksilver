@@ -1,11 +1,12 @@
 package keeper
 
 import (
-	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"cosmossdk.io/store/prefix"
+	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
+	"github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking/types"
 )
 
 // GetValidators returns validators by chainID.
@@ -75,7 +76,7 @@ func (k Keeper) DeleteValidator(ctx sdk.Context, chainID string, address []byte)
 func (k Keeper) IterateValidators(ctx sdk.Context, chainID string, fn func(index int64, validator types.Validator) (stop bool)) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), nil)
 
-	iterator := sdk.KVStorePrefixIterator(store, types.GetZoneValidatorsKey(chainID))
+	iterator := storetypes.KVStorePrefixIterator(store, types.GetZoneValidatorsKey(chainID))
 	defer iterator.Close()
 
 	i := int64(0)

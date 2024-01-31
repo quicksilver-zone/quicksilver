@@ -1,10 +1,11 @@
-package main
+package cmd
 
 import (
 	"encoding/json"
 	"fmt"
 	"strconv"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -16,7 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 
-	"github.com/quicksilver-zone/quicksilver/x/airdrop/types"
+	"github.com/quicksilver-zone/quicksilver/v7/x/airdrop/types"
 )
 
 // AddGenesisAirdropCmd returns add-genesis-airdrop cobra Command.
@@ -99,7 +100,7 @@ func AddGenesisAirdropCmd(defaultNodeHome string) *cobra.Command {
 			appState[types.ModuleName] = airdropGenStateBz
 
 			// add base account for airdrop recipient, containing 1uqck
-			balances := banktypes.Balance{Address: addr.String(), Coins: sdk.NewCoins(sdk.NewCoin("uqck", sdk.OneInt()))}
+			balances := banktypes.Balance{Address: addr.String(), Coins: sdk.NewCoins(sdk.NewCoin("uqck", sdkmath.OneInt()))}
 			genAccount := authtypes.NewBaseAccount(addr, nil, 0, 0)
 
 			if err := genAccount.Validate(); err != nil {

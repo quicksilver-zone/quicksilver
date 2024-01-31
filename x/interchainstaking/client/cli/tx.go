@@ -16,7 +16,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 
-	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
+	"github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking/types"
 )
 
 // GetTxCmd returns a root CLI command handler for all x/interchainstaking transaction commands.

@@ -3,17 +3,17 @@ package keeper
 import (
 	"fmt"
 
-	"github.com/tendermint/tendermint/libs/log"
+	"cosmossdk.io/log"
 
+	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
-	ibckeeper "github.com/cosmos/ibc-go/v5/modules/core/keeper"
-
-	"github.com/quicksilver-zone/quicksilver/utils"
-	"github.com/quicksilver-zone/quicksilver/x/airdrop/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/keeper"
+	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
+	"github.com/quicksilver-zone/quicksilver/v7/utils"
+	"github.com/quicksilver-zone/quicksilver/v7/x/airdrop/types"
 )
 
 type Keeper struct {
@@ -23,7 +23,7 @@ type Keeper struct {
 	accountKeeper types.AccountKeeper
 	bankKeeper    types.BankKeeper
 	stakingKeeper types.StakingKeeper
-	govKeeper     types.GovKeeper
+	govKeeper     govtypes.Keeper
 	ibcKeeper     *ibckeeper.Keeper
 	icsKeeper     types.InterchainStakingKeeper
 	prKeeper      types.ParticipationRewardsKeeper
@@ -44,7 +44,7 @@ func NewKeeper(
 	ak types.AccountKeeper,
 	bk types.BankKeeper,
 	sk types.StakingKeeper,
-	gk types.GovKeeper,
+	gk govtypes.Keeper,
 	ibcKeeper *ibckeeper.Keeper,
 	icsk types.InterchainStakingKeeper,
 	prk types.ParticipationRewardsKeeper,
@@ -108,8 +108,12 @@ func (k *Keeper) GetModuleAccountAddress(_ sdk.Context) sdk.AccAddress {
 
 // GetModuleAccountBalance gets the airdrop module account coin balance.
 func (k *Keeper) GetModuleAccountBalance(ctx sdk.Context) sdk.Coin {
+	bondDenom, err := k.stakingKeeper.BondDenom(ctx)
+	if err != nil {
+		panic(err)
+	}
 	moduleAccAddr := k.GetModuleAccountAddress(ctx)
-	return k.bankKeeper.GetBalance(ctx, moduleAccAddr, k.stakingKeeper.BondDenom(ctx))
+	return k.bankKeeper.GetBalance(ctx, moduleAccAddr, bondDenom)
 }
 
 func (k *Keeper) SendCoinsFromModuleToModule(ctx sdk.Context, senderModule, recipientModule string, amount sdk.Coins) error {
@@ -124,6 +128,6 @@ func (k *Keeper) SendCoinsFromAccountToModule(ctx sdk.Context, senderAccount sdk
 	return k.bankKeeper.SendCoinsFromAccountToModule(ctx, senderAccount, recipientModule, amount)
 }
 
-func (k *Keeper) BondDenom(ctx sdk.Context) string {
+func (k *Keeper) BondDenom(ctx sdk.Context) (string, error) {
 	return k.stakingKeeper.BondDenom(ctx)
 }

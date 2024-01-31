@@ -3,8 +3,8 @@ package mint
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/quicksilver-zone/quicksilver/x/mint/keeper"
-	"github.com/quicksilver-zone/quicksilver/x/mint/types"
+	"github.com/quicksilver-zone/quicksilver/v7/x/mint/keeper"
+	"github.com/quicksilver-zone/quicksilver/v7/x/mint/types"
 )
 
 // InitGenesis new mint genesis.

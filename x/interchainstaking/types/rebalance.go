@@ -5,13 +5,11 @@ import (
 	"math"
 	"sort"
 
-	"github.com/tendermint/tendermint/libs/log"
+	"cosmossdk.io/log"
 
 	sdkmath "cosmossdk.io/math"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/quicksilver-zone/quicksilver/utils"
+	"github.com/quicksilver-zone/quicksilver/v7/utils"
 )
 
 // CalculateAllocationDeltas determines, for the current delegations, in delta between actual allocations and the target intent.
@@ -43,12 +41,12 @@ func CalculateAllocationDeltas(
 	for _, valoper := range keySet {
 		current, ok := currentAllocations[valoper]
 		if !ok {
-			current = sdk.ZeroInt()
+			current = sdkmath.ZeroInt()
 		}
 
 		target, ok := targetAllocations.GetForValoper(valoper)
 		if !ok {
-			target = &ValidatorIntent{ValoperAddress: valoper, Weight: sdk.ZeroDec()}
+			target = &ValidatorIntent{ValoperAddress: valoper, Weight: sdkmath.LegacyZeroDec()}
 		}
 		targetAmount := target.Weight.MulInt(currentSum).TruncateInt()
 
@@ -137,7 +135,7 @@ func (deltas AllocationDeltas) String() (out string) {
 
 // MinDelta returns the lowest value in a slice of AllocationDeltas.
 func (deltas AllocationDeltas) MinDelta() sdkmath.Int {
-	minValue := sdk.NewInt(math.MaxInt64)
+	minValue := sdkmath.NewInt(math.MaxInt64)
 	for _, delta := range deltas {
 		if minValue.GT(delta.Amount) {
 			minValue = delta.Amount
@@ -149,7 +147,7 @@ func (deltas AllocationDeltas) MinDelta() sdkmath.Int {
 
 // MaxDelta returns the greatest value in a slice of AllocationDeltas.
 func (deltas AllocationDeltas) MaxDelta() sdkmath.Int {
-	maxValue := sdk.NewInt(math.MinInt64)
+	maxValue := sdkmath.NewInt(math.MinInt64)
 	for _, delta := range deltas {
 		if maxValue.LT(delta.Amount) {
 			maxValue = delta.Amount
@@ -227,7 +225,7 @@ func DetermineAllocationsForRebalancing(
 
 	// rebalanceBudget = (total_delegations - locked)/2 == 50% of (total_delegations - locked)
 	// TODO: make this 2 (max_redelegation_factor) a param.
-	rebalanceBudget := currentSum.Sub(lockedSum).Quo(sdk.NewInt(2))
+	rebalanceBudget := currentSum.Sub(lockedSum).Quo(sdkmath.NewInt(2))
 
 	if logger != nil {
 		logger.Debug("Rebalancing", "total", currentSum, "totalLocked", lockedSum, "rebalanceBudget", rebalanceBudget)

@@ -5,15 +5,18 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/cosmos/cosmos-sdk/store/prefix"
+	sdkmath "cosmossdk.io/math"
+	"cosmossdk.io/store/prefix"
+	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	icqtypes "github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
-	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
+	"github.com/quicksilver-zone/quicksilver/v7/utils/bankutils"
+	icqtypes "github.com/quicksilver-zone/quicksilver/v7/x/interchainquery/types"
+	"github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking/types"
 )
 
 // GetZone returns zone info by chainID.
@@ -46,7 +49,7 @@ func (k *Keeper) DeleteZone(ctx sdk.Context, chainID string) {
 func (k *Keeper) IterateZones(ctx sdk.Context, fn func(index int64, zone *types.Zone) (stop bool)) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixZone)
 
-	iterator := sdk.KVStorePrefixIterator(store, nil)
+	iterator := storetypes.KVStorePrefixIterator(store, nil)
 	defer iterator.Close()
 
 	i := int64(0)
@@ -87,7 +90,7 @@ func (k *Keeper) DeleteAddressZoneMapping(ctx sdk.Context, address string) {
 }
 
 func (k *Keeper) GetDelegatedAmount(ctx sdk.Context, zone *types.Zone) sdk.Coin {
-	out := sdk.NewCoin(zone.BaseDenom, sdk.ZeroInt())
+	out := sdk.NewCoin(zone.BaseDenom, sdkmath.ZeroInt())
 	k.IterateAllDelegations(ctx, zone.ChainId, func(delegation types.Delegation) (stop bool) {
 		out = out.Add(delegation.Amount)
 		return false
@@ -96,7 +99,7 @@ func (k *Keeper) GetDelegatedAmount(ctx sdk.Context, zone *types.Zone) sdk.Coin 
 }
 
 func (k *Keeper) GetUnbondingAmount(ctx sdk.Context, zone *types.Zone) sdk.Coin {
-	out := sdk.NewCoin(zone.BaseDenom, sdk.ZeroInt())
+	out := sdk.NewCoin(zone.BaseDenom, sdkmath.ZeroInt())
 	k.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, types.WithdrawStatusUnbond, func(index int64, wr types.WithdrawalRecord) (stop bool) {
 		amount := wr.Amount[0]
 		if !amount.IsNegative() {
@@ -294,7 +297,7 @@ func (k *Keeper) SetAccountBalance(ctx sdk.Context, zone types.Zone, address str
 	if err != nil {
 		return err
 	}
-	data := banktypes.CreateAccountBalancesPrefix(addr)
+	data := bankutils.CreateAccountBalancesPrefix(addr)
 
 	var icaAccount *types.ICAAccount
 
@@ -316,7 +319,7 @@ func (k *Keeper) SetAccountBalance(ctx sdk.Context, zone types.Zone, address str
 	}
 
 	for _, coin := range icaAccount.Balance {
-		if queryRes.Balances.AmountOf(coin.Denom).Equal(sdk.ZeroInt()) {
+		if queryRes.Balances.AmountOf(coin.Denom).Equal(sdkmath.ZeroInt()) {
 			// coin we used to have is now zero - also validate this.
 			k.Logger(ctx).Info("Querying for value", "key", types.BankStoreKey, "denom", coin.Denom) // debug?
 			k.ICQKeeper.MakeRequest(
@@ -325,7 +328,7 @@ func (k *Keeper) SetAccountBalance(ctx sdk.Context, zone types.Zone, address str
 				zone.ChainId,
 				types.BankStoreKey,
 				append(data, []byte(coin.Denom)...),
-				sdk.NewInt(-1),
+				sdkmath.NewInt(-1),
 				types.ModuleName,
 				"accountbalance",
 				0,
@@ -343,7 +346,7 @@ func (k *Keeper) SetAccountBalance(ctx sdk.Context, zone types.Zone, address str
 			zone.ChainId,
 			types.BankStoreKey,
 			append(data, []byte(coin.Denom)...),
-			sdk.NewInt(-1),
+			sdkmath.NewInt(-1),
 			types.ModuleName,
 			"accountbalance",
 			0,
@@ -370,8 +373,8 @@ OUTER:
 		validatorsToDelegate = append(validatorsToDelegate, v.ValoperAddress)
 	}
 
-	amount := sdk.NewCoin(zone.BaseDenom, sdk.NewInt(10000))
-	minBalance := sdk.NewInt(int64(len(validatorsToDelegate)) * amount.Amount.Int64())
+	amount := sdk.NewCoin(zone.BaseDenom, sdkmath.NewInt(10000))
+	minBalance := sdkmath.NewInt(int64(len(validatorsToDelegate)) * amount.Amount.Int64())
 	balance := zone.PerformanceAddress.Balance.AmountOfNoDenomValidation(zone.BaseDenom)
 	if balance.LT(minBalance) {
 		k.Logger(ctx).Error(
@@ -508,7 +511,7 @@ func (k *Keeper) CurrentDelegationsAsIntent(ctx sdk.Context, zone *types.Zone) t
 	currentDelegations := k.GetAllDelegations(ctx, zone.ChainId)
 	intents := make(types.ValidatorIntents, 0)
 	for _, d := range currentDelegations {
-		intents = append(intents, &types.ValidatorIntent{ValoperAddress: d.ValidatorAddress, Weight: sdk.NewDecFromInt(d.Amount.Amount)})
+		intents = append(intents, &types.ValidatorIntent{ValoperAddress: d.ValidatorAddress, Weight: sdkmath.LegacyNewDecFromInt(d.Amount.Amount)})
 	}
 
 	return intents.Normalize()
@@ -520,7 +523,7 @@ func (k *Keeper) DistanceToTarget(ctx sdk.Context, zone *types.Zone) (float64, e
 	if err != nil {
 		return 0, err
 	}
-	preSqRt := sdk.ZeroDec()
+	preSqRt := sdkmath.LegacyZeroDec()
 
 	for _, valoper := range zone.Validators {
 		c := current.MustGetForValoper(valoper.ValoperAddress)
@@ -540,19 +543,19 @@ func (k *Keeper) DistanceToTarget(ctx sdk.Context, zone *types.Zone) (float64, e
 func (k *Keeper) DefaultAggregateIntents(ctx sdk.Context, chainID string) types.ValidatorIntents {
 	out := make(types.ValidatorIntents, 0)
 	k.IterateValidators(ctx, chainID, func(index int64, validator types.Validator) (stop bool) {
-		if validator.CommissionRate.LTE(sdk.NewDecWithPrec(5, 1)) { // 50%; make this a param.
+		if validator.CommissionRate.LTE(sdkmath.LegacyNewDecWithPrec(5, 1)) { // 50%; make this a param.
 			if !validator.Jailed && !validator.Tombstoned && validator.Status == stakingtypes.BondStatusBonded {
-				out = append(out, &types.ValidatorIntent{ValoperAddress: validator.GetValoperAddress(), Weight: sdk.OneDec()})
+				out = append(out, &types.ValidatorIntent{ValoperAddress: validator.GetValoperAddress(), Weight: sdkmath.LegacyOneDec()})
 			}
 		}
 		return false
 	})
 
-	valCount := sdk.NewInt(int64(len(out)))
+	valCount := sdkmath.NewInt(int64(len(out)))
 
 	// normalise the array (divide everything by length of intent list)
 	for idx, intent := range out.Sort() {
-		out[idx].Weight = intent.Weight.Quo(sdk.NewDecFromInt(valCount))
+		out[idx].Weight = intent.Weight.Quo(sdkmath.LegacyNewDecFromInt(valCount))
 	}
 
 	return out

@@ -1,4 +1,4 @@
-package main
+package cmd
 
 import (
 	"errors"
@@ -7,16 +7,28 @@ import (
 	"os"
 	"path/filepath"
 
+	confixcmd "cosmossdk.io/tools/confix/cmd"
+	"github.com/cosmos/cosmos-sdk/client/pruning"
+	"github.com/cosmos/cosmos-sdk/client/snapshot"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"cosmossdk.io/log"
+	storetypes "cosmossdk.io/store/types"
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	tmcfg "github.com/cometbft/cometbft/config"
+	tmcli "github.com/cometbft/cometbft/libs/cli"
+	dbm "github.com/cosmos/cosmos-db"
+	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	rosettaCmd "github.com/cosmos/rosetta/cmd"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
-	tmcfg "github.com/tendermint/tendermint/config"
-	tmcli "github.com/tendermint/tendermint/libs/cli"
-	"github.com/tendermint/tendermint/libs/log"
-	dbm "github.com/tendermint/tm-db"
 
+	"cosmossdk.io/store"
+	"cosmossdk.io/store/snapshots"
+	snapshottypes "cosmossdk.io/store/snapshots/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/config"
@@ -26,19 +38,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	"github.com/cosmos/cosmos-sdk/snapshots"
-	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
-	"github.com/cosmos/cosmos-sdk/store"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 
-	"github.com/quicksilver-zone/quicksilver/app"
-	quicksilverconfig "github.com/quicksilver-zone/quicksilver/cmd/config"
-	servercfg "github.com/quicksilver-zone/quicksilver/server/config"
+	"github.com/quicksilver-zone/quicksilver/v7/app"
+	quicksilverconfig "github.com/quicksilver-zone/quicksilver/v7/cmd/quicksilverd/config"
+	servercfg "github.com/quicksilver-zone/quicksilver/v7/server/config"
 )
 
 const (
@@ -50,19 +58,75 @@ type appCreator struct {
 	encCfg app.EncodingConfig
 }
 
+func initRootCmd(
+	rootCmd *cobra.Command,
+	txConfig client.TxConfig,
+	interfaceRegistry codectypes.InterfaceRegistry,
+	appCodec codec.Codec,
+	basicManager module.BasicManager,
+	ac appCreator,
+) {
+	cfg := sdk.GetConfig()
+	cfg.Seal()
+
+	rootCmd.AddCommand(
+		genutilcli.InitCmd(basicManager, app.DefaultNodeHome),
+		debug.Cmd(),
+		confixcmd.ConfigCommand(),
+		pruning.Cmd(ac.newApp, app.DefaultNodeHome),
+		snapshot.Cmd(ac.newApp),
+	)
+
+	server.AddCommands(rootCmd, app.DefaultNodeHome, ac.newApp, ac.appExport, addModuleInitFlags)
+
+	// add keybase, auxiliary RPC, query, genesis, and tx child commands
+	rootCmd.AddCommand(
+		server.StatusCommand(),
+		genesisCommand(txConfig, basicManager),
+		queryCommand(),
+		txCommand(),
+		keys.Commands(),
+	)
+}
+
 // NewRootCmd creates a new root command for quicksilverd. It is called once in the
 // main function.
 func NewRootCmd() (*cobra.Command, app.EncodingConfig) {
 	app.Init()
-	encodingConfig := app.MakeEncodingConfig()
+	cfg := sdk.GetConfig()
+	cfg.SetBech32PrefixForAccount(app.Bech32PrefixAccAddr, app.Bech32PrefixAccPub)
+	cfg.SetBech32PrefixForValidator(app.Bech32PrefixValAddr, app.Bech32PrefixValPub)
+	cfg.SetBech32PrefixForConsensusNode(app.Bech32PrefixConsAddr, app.Bech32PrefixConsPub)
+	cfg.Seal()
+	// we "pre"-instantiate the application for getting the injected/configured encoding configuration
+	// note, this is not necessary when using app wiring, as depinject can be directly used (see root_v2.go)
+	tempApp := app.NewQuicksilver(
+		log.NewNopLogger(),
+		dbm.NewMemDB(),
+		nil,
+		true,
+		map[int64]bool{},
+		app.DefaultNodeHome,
+		app.EmptyAppOptions{},
+		true,
+		false,
+		app.GetWasmOpts(app.EmptyAppOptions{}),
+	)
+	encodingConfig := app.EncodingConfig{
+		InterfaceRegistry: tempApp.InterfaceRegistry(),
+		Codec:             tempApp.AppCodec(),
+		TxConfig:          tempApp.GetTxConfig(),
+		Amino:             tempApp.LegacyAmino(),
+	}
+
 	initClientCtx := client.Context{}.
-		WithCodec(encodingConfig.Marshaler).
+		WithCodec(encodingConfig.Codec).
 		WithInterfaceRegistry(encodingConfig.InterfaceRegistry).
 		WithTxConfig(encodingConfig.TxConfig).
 		WithLegacyAmino(encodingConfig.Amino).
 		WithInput(os.Stdin).
 		WithAccountRetriever(types.AccountRetriever{}).
-		WithBroadcastMode(flags.BroadcastBlock).
+		// WithBroadcastMode(flags.BroadcastBlock). See more: https://github.com/cosmos/cosmos-sdk/issues/12167
 		WithHomeDir(app.DefaultNodeHome).
 		WithViper(EnvPrefix)
 
@@ -97,34 +161,21 @@ func NewRootCmd() (*cobra.Command, app.EncodingConfig) {
 
 	rootCmd.AddCommand(
 		forceprune(),
-		genutilcli.InitCmd(app.ModuleBasics, app.DefaultNodeHome),
-		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome),
-		genutilcli.GenTxCmd(app.ModuleBasics, encodingConfig.TxConfig, banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome),
-		genutilcli.ValidateGenesisCmd(app.ModuleBasics),
+		genutilcli.GenesisCoreCommand(encodingConfig.TxConfig, app.ModuleBasics, app.DefaultNodeHome),
 		AddGenesisAccountCmd(app.DefaultNodeHome),
 		AddGenesisAirdropCmd(app.DefaultNodeHome),
 		BulkGenesisAirdropCmd(app.DefaultNodeHome),
 		AddZonedropCmd(app.DefaultNodeHome),
 		tmcli.NewCompletionCmd(rootCmd, true),
 		debug.Cmd(),
-		config.Cmd(),
+		// config.Cmd(),
 	)
-
-	ac := appCreator{
-		encCfg: app.MakeEncodingConfig(),
-	}
+	ac := appCreator{encCfg: encodingConfig}
+	initRootCmd(rootCmd, encodingConfig.TxConfig, encodingConfig.InterfaceRegistry, encodingConfig.Codec, app.ModuleBasics, ac)
 	server.AddCommands(rootCmd, app.DefaultNodeHome, ac.newApp, ac.appExport, addModuleInitFlags)
 
-	// add keybase, auxiliary RPC, query, and tx child commands
-	rootCmd.AddCommand(
-		rpc.StatusCommand(),
-		queryCommand(),
-		txCommand(),
-		keys.Commands(app.DefaultNodeHome),
-	)
-
 	// add rosetta
-	rootCmd.AddCommand(server.RosettaCommand(encodingConfig.InterfaceRegistry, encodingConfig.Marshaler))
+	rootCmd.AddCommand(rosettaCmd.RosettaCommand(encodingConfig.InterfaceRegistry, encodingConfig.Codec))
 
 	return rootCmd, encodingConfig
 }
@@ -160,9 +211,9 @@ func queryCommand() *cobra.Command {
 	}
 
 	cmd.AddCommand(
-		authcmd.GetAccountCmd(),
+		// authcmd.GetAccountCmd(),
 		rpc.ValidatorCommand(),
-		rpc.BlockCommand(),
+		// rpc.BlockCommand(),
 		authcmd.QueryTxsByEventsCmd(),
 		authcmd.QueryTxCmd(),
 	)
@@ -192,10 +243,18 @@ func txCommand() *cobra.Command {
 		authcmd.GetEncodeCommand(),
 		authcmd.GetDecodeCommand(),
 	)
-
-	app.ModuleBasics.AddTxCommands(cmd)
 	cmd.PersistentFlags().String(flags.FlagChainID, "", "The network chain ID")
 
+	return cmd
+}
+
+// genesisCommand builds genesis-related `simd genesis` command. Users may provide application specific commands as a parameter
+func genesisCommand(txConfig client.TxConfig, basicManager module.BasicManager, cmds ...*cobra.Command) *cobra.Command {
+	cmd := genutilcli.Commands(txConfig, basicManager, app.DefaultNodeHome)
+
+	for _, subCmd := range cmds {
+		cmd.AddCommand(subCmd)
+	}
 	return cmd
 }
 
@@ -221,7 +280,7 @@ func (ac appCreator) newApp(
 	traceStore io.Writer,
 	appOpts servertypes.AppOptions,
 ) servertypes.Application {
-	var cache sdk.MultiStorePersistentCache
+	var cache storetypes.MultiStorePersistentCache
 
 	if cast.ToBool(appOpts.Get(server.FlagInterBlockCache)) {
 		cache = store.NewCommitKVStoreCacheManager()
@@ -252,7 +311,7 @@ func (ac appCreator) newApp(
 		cast.ToUint32(appOpts.Get(server.FlagStateSyncSnapshotKeepRecent)),
 	)
 
-	var wasmOpts []wasm.Option
+	var wasmOpts []wasmkeeper.Option
 	if cast.ToBool(appOpts.Get("telemetry.enabled")) {
 		wasmOpts = append(wasmOpts, wasmkeeper.WithVMCacheMetrics(prometheus.DefaultRegisterer))
 	}
@@ -260,13 +319,12 @@ func (ac appCreator) newApp(
 	return app.NewQuicksilver(
 		logger, db, traceStore, true, skipUpgradeHeights,
 		cast.ToString(appOpts.Get(flags.FlagHome)),
-		cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)),
-		ac.encCfg,
-		wasm.EnableAllProposals,
+		// cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)),
+		// wasm.EnableAllProposals,
 		appOpts,
-		wasmOpts,
 		false,
 		cast.ToBool(appOpts.Get(FlagSupplyEnabled)),
+		wasmOpts,
 		baseapp.SetPruning(pruningOpts),
 		baseapp.SetMinGasPrices(cast.ToString(appOpts.Get(server.FlagMinGasPrices))),
 		baseapp.SetHaltHeight(cast.ToUint64(appOpts.Get(server.FlagHaltHeight))),
@@ -284,6 +342,18 @@ func addModuleInitFlags(startCmd *cobra.Command) {
 	startCmd.Flags().Bool(FlagSupplyEnabled, false, "Enable supply module endpoint")
 }
 
+// AppExporter func(
+//
+//	logger log.Logger,
+//	db dbm.DB,
+//	traceWriter io.Writer,
+//	height int64,
+//	forZeroHeight bool,
+//	jailAllowedAddrs []string,
+//	opts AppOptions,
+//	modulesToExport []string,
+//
+// ) (ExportedApp, error)
 func (ac appCreator) appExport(
 	logger log.Logger,
 	db dbm.DB,
@@ -292,6 +362,7 @@ func (ac appCreator) appExport(
 	forZeroHeight bool,
 	jailAllowedAddrs []string,
 	appOpts servertypes.AppOptions,
+	modulesToExport []string,
 ) (servertypes.ExportedApp, error) {
 	homePath, ok := appOpts.Get(flags.FlagHome).(string)
 	if !ok || homePath == "" {
@@ -311,13 +382,10 @@ func (ac appCreator) appExport(
 		loadLatest,
 		map[int64]bool{},
 		homePath,
-		cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)),
-		ac.encCfg,
-		wasm.EnableAllProposals,
 		appOpts,
+		false,
+		false,
 		emptyWasmOpts,
-		false,
-		false,
 	)
 
 	if height != -1 {
@@ -326,5 +394,15 @@ func (ac appCreator) appExport(
 		}
 	}
 
-	return qsApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs)
+	return qsApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs, modulesToExport)
+}
+
+var tempDir = func() string {
+	dir, err := os.MkdirTemp("", "wasmd")
+	if err != nil {
+		panic("failed to create temp dir: " + err.Error())
+	}
+	defer os.RemoveAll(dir)
+
+	return dir
 }

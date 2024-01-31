@@ -5,8 +5,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/quicksilver-zone/quicksilver/x/epochs/keeper"
-	"github.com/quicksilver-zone/quicksilver/x/epochs/types"
+	"github.com/quicksilver-zone/quicksilver/v7/x/epochs/keeper"
+	"github.com/quicksilver-zone/quicksilver/v7/x/epochs/types"
 )
 
 // InitGenesis initializes the capability module's state from a provided genesis

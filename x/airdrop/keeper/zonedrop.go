@@ -1,10 +1,11 @@
 package keeper
 
 import (
+	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
-	"github.com/quicksilver-zone/quicksilver/x/airdrop/types"
+	"github.com/quicksilver-zone/quicksilver/v7/x/airdrop/types"
 )
 
 // GetZoneDropAccountAddress returns the zone airdrop account address.
@@ -15,8 +16,10 @@ func (k *Keeper) GetZoneDropAccountAddress(chainID string) sdk.AccAddress {
 
 // GetZoneDropAccountBalance gets the zone airdrop account coin balance.
 func (k *Keeper) GetZoneDropAccountBalance(ctx sdk.Context, chainID string) sdk.Coin {
+	bondDenom, _ := k.stakingKeeper.BondDenom(ctx)
+
 	zonedropAccAddr := k.GetZoneDropAccountAddress(chainID)
-	return k.bankKeeper.GetBalance(ctx, zonedropAccAddr, k.stakingKeeper.BondDenom(ctx))
+	return k.bankKeeper.GetBalance(ctx, zonedropAccAddr, bondDenom)
 }
 
 // GetZoneDrop returns airdrop details for the zone identified by chainID.
@@ -49,7 +52,7 @@ func (k *Keeper) DeleteZoneDrop(ctx sdk.Context, chainID string) {
 func (k Keeper) IterateZoneDrops(ctx sdk.Context, fn func(index int64, zoneDrop types.ZoneDrop) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 
-	iterator := sdk.KVStorePrefixIterator(store, types.KeyPrefixZoneDrop)
+	iterator := storetypes.KVStorePrefixIterator(store, types.KeyPrefixZoneDrop)
 	defer iterator.Close()
 
 	i := int64(0)

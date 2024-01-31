@@ -5,13 +5,14 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
-	"github.com/quicksilver-zone/quicksilver/utils/randomutils"
-	epochstypes "github.com/quicksilver-zone/quicksilver/x/epochs/types"
-	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
+	"github.com/quicksilver-zone/quicksilver/v7/utils/addressutils"
+	"github.com/quicksilver-zone/quicksilver/v7/utils/randomutils"
+	epochstypes "github.com/quicksilver-zone/quicksilver/v7/x/epochs/types"
+	"github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking/types"
 )
 
 var delegatorAddress = "quick16pxh2v4hr28h2gkntgfk8qgh47pfmjfhzgeure"
@@ -273,7 +274,7 @@ func (suite *KeeperTestSuite) TestKeeper_DelegatorIntent() {
 						Intents: types.ValidatorIntents{
 							&types.ValidatorIntent{
 								ValoperAddress: icsKeeper.GetValidators(ctx, suite.chainB.ChainID)[0].ValoperAddress,
-								Weight:         sdk.OneDec(),
+								Weight:         sdkmath.LegacyOneDec(),
 							},
 						},
 					},
@@ -364,7 +365,7 @@ func (suite *KeeperTestSuite) TestKeeper_DelegatorIntents() {
 						Intents: types.ValidatorIntents{
 							&types.ValidatorIntent{
 								ValoperAddress: icsKeeper.GetValidators(ctx, suite.chainB.ChainID)[0].ValoperAddress,
-								Weight:         sdk.OneDec(),
+								Weight:         sdkmath.LegacyOneDec(),
 							},
 						},
 					},
@@ -394,7 +395,7 @@ func (suite *KeeperTestSuite) TestKeeper_DelegatorIntents() {
 						Intents: types.ValidatorIntents{
 							&types.ValidatorIntent{
 								ValoperAddress: icsKeeper.GetValidators(ctx, suite.chainB.ChainID)[0].ValoperAddress,
-								Weight:         sdk.OneDec(),
+								Weight:         sdkmath.LegacyOneDec(),
 							},
 						},
 					},
@@ -496,7 +497,7 @@ func (suite *KeeperTestSuite) TestKeeper_Delegations() {
 				delegation := types.Delegation{
 					DelegationAddress: testAddress,
 					ValidatorAddress:  icsKeeper.GetValidators(ctx, suite.chainB.ChainID)[0].ValoperAddress,
-					Amount:            sdk.NewCoin("denom", sdk.NewInt(15000)),
+					Amount:            sdk.NewCoin("denom", sdkmath.NewInt(15000)),
 				}
 				icsKeeper.SetDelegation(ctx, zone.ChainId, delegation)
 			},

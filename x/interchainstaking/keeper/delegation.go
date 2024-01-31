@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	sdkmath "cosmossdk.io/math"
+	storetypes "cosmossdk.io/store/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
@@ -12,9 +13,9 @@ import (
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	"github.com/quicksilver-zone/quicksilver/utils"
-	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
-	lsmstakingtypes "github.com/quicksilver-zone/quicksilver/x/lsmtypes"
+	"github.com/quicksilver-zone/quicksilver/v7/utils"
+	"github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking/types"
+	lsmstakingtypes "github.com/quicksilver-zone/quicksilver/v7/x/lsmtypes"
 )
 
 // GetDelegation returns a specific delegation.
@@ -63,7 +64,7 @@ func (k *Keeper) GetPerformanceDelegation(ctx sdk.Context, chainID string, perfo
 func (k *Keeper) IterateAllDelegations(ctx sdk.Context, chainID string, cb func(delegation types.Delegation) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 
-	iterator := sdk.KVStorePrefixIterator(store, append(types.KeyPrefixDelegation, []byte(chainID)...))
+	iterator := storetypes.KVStorePrefixIterator(store, append(types.KeyPrefixDelegation, []byte(chainID)...))
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
@@ -88,7 +89,7 @@ func (k *Keeper) GetAllDelegations(ctx sdk.Context, chainID string) (delegations
 func (k *Keeper) IterateAllPerformanceDelegations(ctx sdk.Context, chainID string, cb func(delegation types.Delegation) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 
-	iterator := sdk.KVStorePrefixIterator(store, append(types.KeyPrefixPerformanceDelegation, []byte(chainID)...))
+	iterator := storetypes.KVStorePrefixIterator(store, append(types.KeyPrefixPerformanceDelegation, []byte(chainID)...))
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
@@ -180,7 +181,7 @@ func (k *Keeper) RemovePerformanceDelegation(ctx sdk.Context, chainID string, de
 func (k *Keeper) IterateDelegatorDelegations(ctx sdk.Context, chainID string, delegator sdk.AccAddress, cb func(delegation types.Delegation) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 	delegatorPrefixKey := types.GetDelegationsKey(chainID, delegator)
-	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey)
+	iterator := storetypes.KVStorePrefixIterator(store, delegatorPrefixKey)
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
@@ -224,8 +225,8 @@ func (k Keeper) DetermineMaximumValidatorAllocations(ctx sdk.Context, zone *type
 		maxBondShares := val.ValidatorBondShares.Mul(caps.ValidatorBondCap).Sub(val.LiquidShares)
 
 		// validator pc max
-		maxLiquidStakedShares := sdk.NewDecFromInt(val.VotingPower).Mul(caps.ValidatorCap).Sub(val.LiquidShares)
-		out[val.ValoperAddress] = sdkmath.MaxInt(sdk.ZeroInt(), sdkmath.MinInt(maxBondShares.TruncateInt(), maxLiquidStakedShares.TruncateInt()))
+		maxLiquidStakedShares := sdkmath.LegacyNewDecFromInt(val.VotingPower).Mul(caps.ValidatorCap).Sub(val.LiquidShares)
+		out[val.ValoperAddress] = sdkmath.MaxInt(sdkmath.ZeroInt(), sdkmath.MinInt(maxBondShares.TruncateInt(), maxLiquidStakedShares.TruncateInt()))
 	}
 
 	return out
@@ -281,8 +282,8 @@ func (k *Keeper) WithdrawDelegationRewardsForResponse(ctx sdk.Context, zone *typ
 func (k *Keeper) GetDelegationMap(ctx sdk.Context, chainID string) (out map[string]sdkmath.Int, sum sdkmath.Int, locked map[string]bool, lockedSum sdkmath.Int) {
 	out = make(map[string]sdkmath.Int)
 	locked = make(map[string]bool)
-	sum = sdk.ZeroInt()
-	lockedSum = sdk.ZeroInt()
+	sum = sdkmath.ZeroInt()
+	lockedSum = sdkmath.ZeroInt()
 
 	k.IterateAllDelegations(ctx, chainID, func(delegation types.Delegation) bool {
 		out[delegation.ValidatorAddress] = delegation.Amount.Amount

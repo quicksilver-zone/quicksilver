@@ -3,14 +3,15 @@ package keeper
 import (
 	"fmt"
 
-	"github.com/tendermint/tendermint/crypto"
+	sdkmath "cosmossdk.io/math"
+	"github.com/cometbft/cometbft/crypto"
 
 	"cosmossdk.io/math"
 
-	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"cosmossdk.io/store/prefix"
+	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
+	"github.com/quicksilver-zone/quicksilver/v7/x/interchainquery/types"
 )
 
 func GenerateQueryHash(connectionID, chainID, queryType string, request []byte, module string) string {
@@ -36,7 +37,7 @@ func (k Keeper) NewQuery(
 		QueryType:    queryType,
 		Request:      request,
 		Period:       period,
-		LastHeight:   sdk.ZeroInt(),
+		LastHeight:   sdkmath.ZeroInt(),
 		CallbackId:   callbackID,
 		Ttl:          ttl,
 	}
@@ -70,7 +71,7 @@ func (k Keeper) DeleteQuery(ctx sdk.Context, id string) {
 // IterateQueries iterate through queries.
 func (k Keeper) IterateQueries(ctx sdk.Context, fn func(index int64, queryInfo types.Query) (stop bool)) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixQuery)
-	iterator := sdk.KVStorePrefixIterator(store, nil)
+	iterator := storetypes.KVStorePrefixIterator(store, nil)
 	defer iterator.Close()
 
 	i := int64(0)

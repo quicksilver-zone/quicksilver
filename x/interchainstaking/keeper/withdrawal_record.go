@@ -8,10 +8,11 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 
-	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"cosmossdk.io/store/prefix"
+	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
+	"github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking/types"
 )
 
 func (k *Keeper) GetNextWithdrawalRecordSequence(ctx sdk.Context) (sequence uint64) {
@@ -85,7 +86,7 @@ func (k *Keeper) DeleteWithdrawalRecord(ctx sdk.Context, chainID, txhash string,
 func (k *Keeper) IteratePrefixedWithdrawalRecords(ctx sdk.Context, prefixBytes []byte, fn func(index int64, record types.WithdrawalRecord) (stop bool)) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixWithdrawalRecord)
 
-	iterator := sdk.KVStorePrefixIterator(store, prefixBytes)
+	iterator := storetypes.KVStorePrefixIterator(store, prefixBytes)
 	defer iterator.Close()
 
 	i := int64(0)
@@ -183,7 +184,7 @@ func (k *Keeper) DeleteUnbondingRecord(ctx sdk.Context, chainID, validator strin
 func (k *Keeper) IteratePrefixedUnbondingRecords(ctx sdk.Context, prefixBytes []byte, fn func(index int64, record types.UnbondingRecord) (stop bool)) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixUnbondingRecord)
 
-	iterator := sdk.KVStorePrefixIterator(store, prefixBytes)
+	iterator := storetypes.KVStorePrefixIterator(store, prefixBytes)
 	defer iterator.Close()
 
 	i := int64(0)
@@ -226,7 +227,7 @@ func (k *Keeper) AllZoneUnbondingRecords(ctx sdk.Context, chainID string) []type
 	return records
 }
 
-func (k *Keeper) UpdateWithdrawalRecordsForSlash(ctx sdk.Context, zone *types.Zone, valoper string, delta sdk.Dec) error {
+func (k *Keeper) UpdateWithdrawalRecordsForSlash(ctx sdk.Context, zone *types.Zone, valoper string, delta sdkmath.LegacyDec) error {
 	var err error
 	k.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, types.WithdrawStatusUnbond, func(_ int64, record types.WithdrawalRecord) bool {
 		recordSubAmount := sdkmath.ZeroInt()
@@ -235,7 +236,7 @@ func (k *Keeper) UpdateWithdrawalRecordsForSlash(ctx sdk.Context, zone *types.Zo
 			if d.Valoper != valoper {
 				continue
 			}
-			distAmount := sdk.NewDec(int64(d.Amount))
+			distAmount := sdkmath.LegacyNewDec(int64(d.Amount))
 			if distAmount.IsNegative() {
 				err = fmt.Errorf("distAmount cannot be negative; suspected overflow")
 				return true

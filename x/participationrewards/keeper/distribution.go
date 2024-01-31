@@ -4,17 +4,18 @@ import (
 	"errors"
 	"fmt"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/ingenuity-build/multierror"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/quicksilver-zone/quicksilver/utils"
-	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
-	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
-	"github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
+	"github.com/quicksilver-zone/quicksilver/v7/utils"
+	"github.com/quicksilver-zone/quicksilver/v7/utils/addressutils"
+	icstypes "github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking/types"
+	"github.com/quicksilver-zone/quicksilver/v7/x/participationrewards/types"
 )
 
-type TokenValues map[string]sdk.Dec
+type TokenValues map[string]sdkmath.LegacyDec
 
 func (k *Keeper) CalcTokenValues(ctx sdk.Context) (TokenValues, error) {
 	k.Logger(ctx).Info("calcTokenValues")
@@ -31,10 +32,10 @@ func (k *Keeper) CalcTokenValues(ctx sdk.Context) (TokenValues, error) {
 	baseDenom := osmoParams.(*types.OsmosisParamsProtocolData).BaseDenom
 	baseChain := osmoParams.(*types.OsmosisParamsProtocolData).BaseChain
 
-	tvs := make(map[string]sdk.Dec)
+	tvs := make(map[string]sdkmath.LegacyDec)
 
 	// add base value
-	tvs[baseDenom] = sdk.OneDec()
+	tvs[baseDenom] = sdkmath.LegacyOneDec()
 
 	// capture errors from iteratora
 	errs := make(map[string]error)
@@ -130,7 +131,7 @@ func (k *Keeper) AllocateZoneRewards(ctx sdk.Context, tvs TokenValues, allocatio
 func (k *Keeper) SetZoneAllocations(ctx sdk.Context, tvs TokenValues, allocation types.RewardsAllocation) error {
 	k.Logger(ctx).Info("setZoneAllocations", "allocation", allocation)
 
-	otvl := sdk.ZeroDec()
+	otvl := sdkmath.LegacyZeroDec()
 	// pass 1: iterate zones - set tvl & calc overall tvl
 	k.icsKeeper.IterateZones(ctx, func(index int64, zone *icstypes.Zone) (stop bool) {
 		tv, exists := tvs[zone.BaseDenom]
@@ -138,7 +139,7 @@ func (k *Keeper) SetZoneAllocations(ctx sdk.Context, tvs TokenValues, allocation
 			k.Logger(ctx).Error(fmt.Sprintf("unable to obtain token value for zone %s", zone.ChainId))
 			return false
 		}
-		ztvl := sdk.NewDecFromInt(k.icsKeeper.GetDelegatedAmount(ctx, zone).Amount.Add(k.icsKeeper.GetDelegationsInProcess(ctx, zone.ChainId))).Mul(tv)
+		ztvl := sdkmath.LegacyNewDecFromInt(k.icsKeeper.GetDelegatedAmount(ctx, zone).Amount.Add(k.icsKeeper.GetDelegationsInProcess(ctx, zone.ChainId))).Mul(tv)
 		zone.Tvl = ztvl
 		k.icsKeeper.SetZone(ctx, zone)
 
@@ -157,14 +158,14 @@ func (k *Keeper) SetZoneAllocations(ctx sdk.Context, tvs TokenValues, allocation
 	// pass 2: iterate zones - calc zone tvl proportion & set allocations
 	k.icsKeeper.IterateZones(ctx, func(index int64, zone *icstypes.Zone) (stop bool) {
 		if zone.Tvl.IsNil() {
-			zone.Tvl = sdk.ZeroDec()
+			zone.Tvl = sdkmath.LegacyZeroDec()
 		}
 
 		zp := zone.Tvl.Quo(otvl)
 		k.Logger(ctx).Info("zone proportion", "zone", zone.ChainId, "proportion", zp)
 
-		zone.ValidatorSelectionAllocation = sdk.NewDecFromInt(allocation.ValidatorSelection).Mul(zp).TruncateInt().Uint64()
-		zone.HoldingsAllocation = sdk.NewDecFromInt(allocation.Holdings).Mul(zp).TruncateInt().Uint64()
+		zone.ValidatorSelectionAllocation = sdkmath.LegacyNewDecFromInt(allocation.ValidatorSelection).Mul(zp).TruncateInt().Uint64()
+		zone.HoldingsAllocation = sdkmath.LegacyNewDecFromInt(allocation.Holdings).Mul(zp).TruncateInt().Uint64()
 		k.icsKeeper.SetZone(ctx, zone)
 		return false
 	})

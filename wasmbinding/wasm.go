@@ -8,7 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 
-	tokenfactorykeeper "github.com/quicksilver-zone/quicksilver/x/tokenfactory/keeper"
+	tokenfactorykeeper "github.com/quicksilver-zone/quicksilver/v7/x/tokenfactory/keeper"
 )
 
 func RegisterCustomPlugins(

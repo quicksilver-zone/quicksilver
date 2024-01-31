@@ -10,8 +10,6 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	sdkmath "cosmossdk.io/math"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 type intTestSuite struct {
@@ -317,27 +315,27 @@ func (s *intTestSuite) TestEncodingTableUint() {
 		rawBz  []byte
 	}{
 		{
-			sdk.NewUint(0),
+			sdkmath.NewUint(0),
 			[]byte("\"0\""),
 			[]byte{0x30},
 		},
 		{
-			sdk.NewUint(100),
+			sdkmath.NewUint(100),
 			[]byte("\"100\""),
 			[]byte{0x31, 0x30, 0x30},
 		},
 		{
-			sdk.NewUint(51842),
+			sdkmath.NewUint(51842),
 			[]byte("\"51842\""),
 			[]byte{0x35, 0x31, 0x38, 0x34, 0x32},
 		},
 		{
-			sdk.NewUint(19513368),
+			sdkmath.NewUint(19513368),
 			[]byte("\"19513368\""),
 			[]byte{0x31, 0x39, 0x35, 0x31, 0x33, 0x33, 0x36, 0x38},
 		},
 		{
-			sdk.NewUint(999999999999),
+			sdkmath.NewUint(999999999999),
 			[]byte("\"999999999999\""),
 			[]byte{0x39, 0x39, 0x39, 0x39, 0x39, 0x39, 0x39, 0x39, 0x39, 0x39, 0x39, 0x39},
 		},
@@ -452,7 +450,7 @@ func (s *intTestSuite) TestEncodingRandom() {
 
 	for i := 0; i < 1000; i++ {
 		n := rand.Uint64()
-		ni := sdk.NewUint(n)
+		ni := sdkmath.NewUint(n)
 
 		var ri sdkmath.Uint
 

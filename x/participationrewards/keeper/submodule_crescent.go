@@ -5,17 +5,18 @@ import (
 	"errors"
 	"fmt"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
-	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	crescenttypes "github.com/quicksilver-zone/quicksilver/third-party-chains/crescent-types"
-	liquiditytypes "github.com/quicksilver-zone/quicksilver/third-party-chains/crescent-types/liquidity/types"
-	lpfarmtypes "github.com/quicksilver-zone/quicksilver/third-party-chains/crescent-types/lpfarm"
-	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
-	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
-	rewardstypes "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
+	crescenttypes "github.com/quicksilver-zone/quicksilver/v7/third-party-chains/crescent-types"
+	liquiditytypes "github.com/quicksilver-zone/quicksilver/v7/third-party-chains/crescent-types/liquidity/types"
+	lpfarmtypes "github.com/quicksilver-zone/quicksilver/v7/third-party-chains/crescent-types/lpfarm"
+	"github.com/quicksilver-zone/quicksilver/v7/utils/addressutils"
+	"github.com/quicksilver-zone/quicksilver/v7/utils/bankutils"
+	icstypes "github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking/types"
+	rewardstypes "github.com/quicksilver-zone/quicksilver/v7/x/participationrewards/types"
 )
 
 type CrescentModule struct{}
@@ -56,7 +57,7 @@ func (CrescentModule) Hooks(ctx sdk.Context, k *Keeper) {
 		}
 		balance, _ := ibalance.(*rewardstypes.CrescentReserveAddressBalanceProtocolData)
 		_, addrBytes, _ := bech32.DecodeAndConvert(balance.ReserveAddress)
-		lookupKey := banktypes.CreateAccountBalancesPrefix(addrBytes)
+		lookupKey := bankutils.CreateAccountBalancesPrefix(addrBytes)
 
 		k.IcqKeeper.MakeRequest(
 			ctx,
@@ -64,7 +65,7 @@ func (CrescentModule) Hooks(ctx sdk.Context, k *Keeper) {
 			connectionData.ChainID,
 			icstypes.BankStoreKey,
 			append(lookupKey, []byte(balance.Denom)...),
-			sdk.NewInt(-1),
+			sdkmath.NewInt(-1),
 			rewardstypes.ModuleName,
 			CrescentReserveBalanceUpdateCallbackID,
 			0,
@@ -88,7 +89,7 @@ func (CrescentModule) Hooks(ctx sdk.Context, k *Keeper) {
 			connectionData.ChainID,
 			"store/liquidity/key",
 			poolKey,
-			sdk.NewInt(-1),
+			sdkmath.NewInt(-1),
 			rewardstypes.ModuleName,
 			CrescentPoolUpdateCallbackID,
 			0,
@@ -110,7 +111,7 @@ func (CrescentModule) Hooks(ctx sdk.Context, k *Keeper) {
 			connectionData.ChainID,
 			icstypes.BankStoreKey,
 			append(banktypes.SupplyKey, []byte(supply.PoolCoinDenom)...),
-			sdk.NewInt(-1),
+			sdkmath.NewInt(-1),
 			rewardstypes.ModuleName,
 			CrescentPoolCoinSupplyUpdateCallbackID,
 			0,
@@ -124,11 +125,11 @@ func (CrescentModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *rewardstype
 	for _, proof := range msg.Proofs {
 		position := lpfarmtypes.Position{}
 		if proof.ProofType == rewardstypes.ProofTypeBank {
-			addr, poolDenom, err := banktypes.AddressAndDenomFromBalancesStore(proof.Key[1:])
+			addr, poolDenom, err := bankutils.AddressAndDenomFromBalancesStore(proof.Key[1:])
 			if err != nil {
 				return 0, err
 			}
-			coin, err := keeper.UnmarshalBalanceCompat(k.cdc, proof.Data, poolDenom)
+			coin, err := bankutils.UnmarshalBalanceCompat(k.cdc, proof.Data, poolDenom)
 			if err != nil {
 				return 0, err
 			}

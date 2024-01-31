@@ -1,12 +1,12 @@
 package upgrades
 
 import (
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	storetypes "cosmossdk.io/store/types"
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-	"github.com/quicksilver-zone/quicksilver/app/keepers"
+	"github.com/quicksilver-zone/quicksilver/v7/app/keepers"
 )
 
 // upgrade name consts: vMMmmppUpgradeName (M=Major, m=minor, p=patch).
@@ -14,7 +14,7 @@ const (
 	ProductionChainID      = "quicksilver-2"
 	RhyeChainID            = "rhye-2"
 	DevnetChainID          = "magic-2"
-	TestChainID            = "testchain1"
+	TestChainID            = "testchain1-1"
 	OsmosisTestnetChainID  = "osmo-test-5"
 	JunoTestnetChainID     = "uni-6"
 	StargazeTestnetChainID = "elgafar-1"

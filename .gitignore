@@ -15,6 +15,7 @@
 *.dll
 *.so
 *.dylib
+go.work.sum
 
 # Build
 vendor

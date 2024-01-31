@@ -8,14 +8,14 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/gamm"
-	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/osmoutils"
+	"github.com/quicksilver-zone/quicksilver/v7/third-party-chains/osmosis-types/gamm"
+	"github.com/quicksilver-zone/quicksilver/v7/third-party-chains/osmosis-types/osmoutils"
 )
 
 const errMsgFormatSharesLargerThanMax = "%s resulted shares is larger than the max amount of %s"
 
 // CalcExitPool returns how many tokens should come out, when exiting k LP shares against a "standard" CFMM
-func CalcExitPool(ctx sdk.Context, pool gamm.PoolI, exitingShares sdkmath.Int, exitFee sdk.Dec) (sdk.Coins, error) {
+func CalcExitPool(ctx sdk.Context, pool gamm.PoolI, exitingShares sdkmath.Int, exitFee sdkmath.LegacyDec) (sdk.Coins, error) {
 	totalShares := pool.GetTotalShares()
 	if exitingShares.GTE(totalShares) {
 		return sdk.Coins{}, sdkioerrors.Wrapf(gamm.ErrLimitMaxAmount, errMsgFormatSharesLargerThanMax, exitingShares, totalShares)
@@ -23,13 +23,13 @@ func CalcExitPool(ctx sdk.Context, pool gamm.PoolI, exitingShares sdkmath.Int, e
 
 	// refundedShares = exitingShares * (1 - exit fee)
 	// with 0 exit fee optimization
-	var refundedShares sdk.Dec
+	var refundedShares sdkmath.LegacyDec
 	if !exitFee.IsZero() {
 		// exitingShares * (1 - exit fee)
-		oneSubExitFee := sdk.OneDec().SubMut(exitFee)
+		oneSubExitFee := sdkmath.LegacyOneDec().SubMut(exitFee)
 		refundedShares = oneSubExitFee.MulIntMut(exitingShares)
 	} else {
-		refundedShares = sdk.NewDecFromInt(exitingShares)
+		refundedShares = sdkmath.LegacyNewDecFromInt(exitingShares)
 	}
 
 	shareOutRatio := refundedShares.QuoInt(totalShares)
@@ -40,7 +40,7 @@ func CalcExitPool(ctx sdk.Context, pool gamm.PoolI, exitingShares sdkmath.Int, e
 	for _, asset := range poolLiquidity {
 		// round down here, due to not wanting to over-exit
 		exitAmt := shareOutRatio.MulInt(asset.Amount).TruncateInt()
-		if exitAmt.LTE(sdk.ZeroInt()) {
+		if exitAmt.LTE(sdkmath.ZeroInt()) {
 			continue
 		}
 		if exitAmt.GTE(asset.Amount) {
@@ -65,9 +65,9 @@ func CalcExitPool(ctx sdk.Context, pool gamm.PoolI, exitingShares sdkmath.Int, e
 //  2. get the minimal share ratio that would work as the benchmark for all tokens.
 //  3. calculate the number of shares that could be joined (total share * min share ratio), return the remaining coins
 func MaximalExactRatioJoin(p gamm.PoolI, ctx sdk.Context, tokensIn sdk.Coins) (numShares sdkmath.Int, remCoins sdk.Coins, err error) {
-	coinShareRatios := make([]sdk.Dec, len(tokensIn))
-	minShareRatio := sdk.MaxSortableDec
-	maxShareRatio := sdk.ZeroDec()
+	coinShareRatios := make([]sdkmath.LegacyDec, len(tokensIn))
+	minShareRatio := sdkmath.LegacyMaxSortableDec
+	maxShareRatio := sdkmath.LegacyZeroDec()
 
 	poolLiquidity := p.GetTotalPoolLiquidity(ctx)
 	totalShares := p.GetTotalShares()
@@ -76,7 +76,7 @@ func MaximalExactRatioJoin(p gamm.PoolI, ctx sdk.Context, tokensIn sdk.Coins) (n
 		// Note: QuoInt implements floor division, unlike Quo
 		// This is because it calls the native golang routine big.Int.Quo
 		// https://pkg.go.dev/math/big#Int.Quo
-		shareRatio := sdk.NewDecFromInt(coin.Amount).QuoInt(poolLiquidity.AmountOfNoDenomValidation(coin.Denom))
+		shareRatio := sdkmath.LegacyNewDecFromInt(coin.Amount).QuoInt(poolLiquidity.AmountOfNoDenomValidation(coin.Denom))
 		if shareRatio.LT(minShareRatio) {
 			minShareRatio = shareRatio
 		}
@@ -86,7 +86,7 @@ func MaximalExactRatioJoin(p gamm.PoolI, ctx sdk.Context, tokensIn sdk.Coins) (n
 		coinShareRatios[i] = shareRatio
 	}
 
-	if minShareRatio.Equal(sdk.MaxSortableDec) {
+	if minShareRatio.Equal(sdkmath.LegacyMaxSortableDec) {
 		return numShares, remCoins, errors.New("unexpected error in MaximalExactRatioJoin")
 	}
 
@@ -133,13 +133,13 @@ func BinarySearchSingleAssetJoin(
 	ctx := sdk.Context{}
 	// Need to get something that makes the result correct within 1 LP share
 	// If we fail to reach it within maxIterations, we return an error
-	correctnessThreshold := sdk.NewInt(2)
+	correctnessThreshold := sdkmath.NewInt(2)
 	maxIterations := 300
 	// upperbound of number of LP shares = existingShares * tokenIn.Amount / pool.totalLiquidity.AmountOf(tokenIn.Denom)
 	existingTokenLiquidity := pool.GetTotalPoolLiquidity(ctx).AmountOf(tokenIn.Denom)
 	existingLPShares := pool.GetTotalShares()
-	LPShareUpperBound := sdk.NewDecFromInt(existingLPShares.Mul(tokenIn.Amount)).QuoInt(existingTokenLiquidity).Ceil().TruncateInt()
-	LPShareLowerBound := sdk.ZeroInt()
+	LPShareUpperBound := sdkmath.LegacyNewDecFromInt(existingLPShares.Mul(tokenIn.Amount)).QuoInt(existingTokenLiquidity).Ceil().TruncateInt()
+	LPShareLowerBound := sdkmath.ZeroInt()
 
 	// Creates a pool with tokenIn liquidity added, where it created `sharesIn` number of shares.
 	// Returns how many tokens you'd get, if you then exited all of `sharesIn` for tokenIn.Denom
@@ -148,7 +148,7 @@ func BinarySearchSingleAssetJoin(
 		poolWithUpdatedLiquidity := poolWithAddedLiquidityAndShares(tokenIn, sharesIn)
 		swapToDenom := tokenIn.Denom
 		// so now due to correctness of exitPool, we exitPool and swap all remaining assets to base asset
-		exitFee := sdk.ZeroDec()
+		exitFee := sdkmath.LegacyZeroDec()
 		exitedCoins, err := poolWithUpdatedLiquidity.ExitPool(ctx, sharesIn, exitFee)
 		if err != nil {
 			return sdkmath.Int{}, err
@@ -157,7 +157,7 @@ func BinarySearchSingleAssetJoin(
 		return swapAllCoinsToSingleAsset(poolWithUpdatedLiquidity, ctx, exitedCoins, swapToDenom)
 	}
 	// TODO: Come back and revisit err tolerance
-	errTolerance := osmoutils.ErrTolerance{AdditiveTolerance: correctnessThreshold, MultiplicativeTolerance: sdk.Dec{}}
+	errTolerance := osmoutils.ErrTolerance{AdditiveTolerance: correctnessThreshold, MultiplicativeTolerance: sdkmath.LegacyDec{}}
 	numLPShares, err = osmoutils.BinarySearch(
 		estimateCoinOutGivenShares,
 		LPShareLowerBound, LPShareUpperBound, tokenIn.Amount, errTolerance, maxIterations)
@@ -166,7 +166,7 @@ func BinarySearchSingleAssetJoin(
 }
 
 func swapAllCoinsToSingleAsset(pool gamm.PoolI, ctx sdk.Context, inTokens sdk.Coins, swapToDenom string) (sdkmath.Int, error) {
-	swapFee := sdk.ZeroDec()
+	swapFee := sdkmath.LegacyZeroDec()
 	tokenOutAmt := inTokens.AmountOfNoDenomValidation(swapToDenom)
 	for _, coin := range inTokens {
 		if coin.Denom == swapToDenom {

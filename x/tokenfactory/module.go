@@ -12,11 +12,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"math/rand"
 
+	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
-	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -25,10 +24,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
-	"github.com/quicksilver-zone/quicksilver/x/tokenfactory/client/cli"
-	"github.com/quicksilver-zone/quicksilver/x/tokenfactory/keeper"
-	"github.com/quicksilver-zone/quicksilver/x/tokenfactory/simulation"
-	"github.com/quicksilver-zone/quicksilver/x/tokenfactory/types"
+	"github.com/quicksilver-zone/quicksilver/v7/x/tokenfactory/client/cli"
+	"github.com/quicksilver-zone/quicksilver/v7/x/tokenfactory/keeper"
+	"github.com/quicksilver-zone/quicksilver/v7/x/tokenfactory/types"
 )
 
 var (
@@ -123,18 +121,8 @@ func (am AppModule) Name() string {
 	return am.AppModuleBasic.Name()
 }
 
-// Route returns the x/tokenfactory module's message routing key.
-func (AppModule) Route() sdk.Route {
-	return sdk.Route{}
-}
-
 // QuerierRoute returns the x/tokenfactory module's query routing key.
 func (AppModule) QuerierRoute() string { return types.QuerierRoute }
-
-// LegacyQuerierHandler returns the x/tokenfactory module's Querier.
-func (AppModule) LegacyQuerierHandler(_ *codec.LegacyAmino) sdk.Querier {
-	return nil
-}
 
 // RegisterServices registers a GRPC query service to respond to the
 // module-specific GRPC queries.
@@ -165,11 +153,11 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 }
 
 // BeginBlock executes all ABCI BeginBlock logic respective to the tokenfactory module.
-func (AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
+func (AppModule) BeginBlock(_ sdk.Context) {}
 
 // EndBlock executes all ABCI EndBlock logic respective to the tokenfactory module. It
 // returns no validator updates.
-func (AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
+func (AppModule) EndBlock(_ sdk.Context) []abci.ValidatorUpdate {
 	return []abci.ValidatorUpdate{}
 }
 
@@ -178,30 +166,36 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 
 // ___________________________________________________________________________
 
+// AppModuleBasic functions
+
+// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
+func (am AppModule) IsOnePerModuleType() { // marker
+}
+
+// IsAppModule implements the appmodule.AppModule interface.
+func (am AppModule) IsAppModule() { // marker
+}
+
+// ___________________________________________________________________________
+
 // AppModuleSimulation functions
 
 // GenerateGenesisState creates a randomized GenState of the mint module.
-func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
-	simulation.RandomizedGenState(simState)
+func (AppModule) GenerateGenesisState(_ *module.SimulationState) {
 }
 
 // ProposalContents doesn't return any content functions for governance proposals.
-func (AppModule) ProposalContents(_ module.SimulationState) []simtypes.WeightedProposalContent {
+
+// ProposalMsgs returns msgs used for governance proposals for simulations.
+func (am AppModule) ProposalMsgs(simState module.SimulationState) []simtypes.WeightedProposalMsg {
 	return nil
 }
 
-// RandomizedParams creates randomized mint param changes for the simulator.
-func (AppModule) RandomizedParams(_ *rand.Rand) []simtypes.ParamChange {
-	return []simtypes.ParamChange{}
+// RegisterStoreDecoder registers a decoder for supply module's types
+func (am AppModule) RegisterStoreDecoder(_ simtypes.StoreDecoderRegistry) {
 }
 
-// RegisterStoreDecoder registers a decoder for mint module's types.
-func (AppModule) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {
-}
-
-// WeightedOperations doesn't return any mint module operation.
+// WeightedOperations returns the all the gov module operations with their respective weights.
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
-	return simulation.WeightedOperations(
-		simState.AppParams, simState.Cdc, am.accountKeeper, am.bankKeeper, am.keeper,
-	)
+	return nil
 }

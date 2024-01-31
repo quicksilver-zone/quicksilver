@@ -5,18 +5,19 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
+	sdkmath "cosmossdk.io/math"
+	tmservice "github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
-	liquiditytypes "github.com/quicksilver-zone/quicksilver/third-party-chains/crescent-types/liquidity/types"
-	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/gamm"
-	umeetypes "github.com/quicksilver-zone/quicksilver/third-party-chains/umee-types/leverage/types"
-	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
-	icqtypes "github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
-	"github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
+	liquiditytypes "github.com/quicksilver-zone/quicksilver/v7/third-party-chains/crescent-types/liquidity/types"
+	"github.com/quicksilver-zone/quicksilver/v7/third-party-chains/osmosis-types/gamm"
+	umeetypes "github.com/quicksilver-zone/quicksilver/v7/third-party-chains/umee-types/leverage/types"
+	"github.com/quicksilver-zone/quicksilver/v7/utils/addressutils"
+	"github.com/quicksilver-zone/quicksilver/v7/utils/bankutils"
+	icqtypes "github.com/quicksilver-zone/quicksilver/v7/x/interchainquery/types"
+	"github.com/quicksilver-zone/quicksilver/v7/x/participationrewards/types"
 )
 
 const (
@@ -170,7 +171,7 @@ func OsmosisPoolUpdateCallback(ctx sdk.Context, k *Keeper, response []byte, quer
 }
 
 func UmeeReservesUpdateCallback(ctx sdk.Context, k *Keeper, response []byte, query icqtypes.Query) error {
-	reserveAmount := sdk.ZeroInt()
+	reserveAmount := sdkmath.ZeroInt()
 	if err := reserveAmount.Unmarshal(response); err != nil {
 		return err
 	}
@@ -211,7 +212,7 @@ func UmeeTotalBorrowsUpdateCallback(ctx sdk.Context, k *Keeper, response []byte,
 		return fmt.Errorf("unexpected query request prefix %q, want %q", g, w)
 	}
 
-	totalBorrows := sdk.ZeroDec()
+	totalBorrows := sdkmath.LegacyZeroDec()
 	if err := totalBorrows.Unmarshal(response); err != nil {
 		return err
 	}
@@ -248,7 +249,7 @@ func UmeeInterestScalarUpdateCallback(ctx sdk.Context, k *Keeper, response []byt
 		return fmt.Errorf("unexpected query request prefix %q, want %q", g, w)
 	}
 
-	interestScalar := sdk.ZeroDec()
+	interestScalar := sdkmath.LegacyZeroDec()
 	if err := interestScalar.Unmarshal(response); err != nil {
 		return err
 	}
@@ -281,7 +282,7 @@ func UmeeInterestScalarUpdateCallback(ctx sdk.Context, k *Keeper, response []byt
 }
 
 func UmeeUTokenSupplyUpdateCallback(ctx sdk.Context, k *Keeper, response []byte, query icqtypes.Query) error {
-	supplyAmount := sdk.ZeroInt()
+	supplyAmount := sdkmath.ZeroInt()
 	if err := supplyAmount.Unmarshal(response); err != nil {
 		return err
 	}
@@ -324,12 +325,12 @@ func UmeeLeverageModuleBalanceUpdateCallback(ctx sdk.Context, k *Keeper, respons
 	}
 
 	balancesStore := query.Request[1:]
-	_, denom, err := banktypes.AddressAndDenomFromBalancesStore(balancesStore)
+	_, denom, err := bankutils.AddressAndDenomFromBalancesStore(balancesStore)
 	if err != nil {
 		return err
 	}
 
-	balanceCoin, err := bankkeeper.UnmarshalBalanceCompat(k.cdc, response, denom)
+	balanceCoin, err := bankutils.UnmarshalBalanceCompat(k.cdc, response, denom)
 	if err != nil {
 		return err
 	}
@@ -404,7 +405,7 @@ func SetEpochBlockCallback(ctx sdk.Context, k *Keeper, args []byte, query icqtyp
 		query.ChainId,
 		"ibc.ClientUpdate",
 		heightInBytes,
-		sdk.NewInt(-1),
+		sdkmath.NewInt(-1),
 		types.ModuleName,
 		"",
 		0,
@@ -459,7 +460,7 @@ func CrescentPoolUpdateCallback(ctx sdk.Context, k *Keeper, response []byte, que
 }
 
 func CrescentPoolCoinSupplyUpdateCallback(ctx sdk.Context, k *Keeper, response []byte, query icqtypes.Query) error {
-	supplyAmount := sdk.ZeroInt()
+	supplyAmount := sdkmath.ZeroInt()
 	if err := supplyAmount.Unmarshal(response); err != nil {
 		return err
 	} else if !supplyAmount.IsPositive() {
@@ -508,7 +509,7 @@ func CrescentReserveBalanceUpdateCallback(ctx sdk.Context, k *Keeper, response [
 		return errors.New("account balance icq request must always have a length of at least 2 bytes")
 	}
 	balancesStore := query.Request[1:]
-	addr, denom, err := banktypes.AddressAndDenomFromBalancesStore(balancesStore)
+	addr, denom, err := bankutils.AddressAndDenomFromBalancesStore(balancesStore)
 	if err != nil {
 		return err
 	}
@@ -518,7 +519,7 @@ func CrescentReserveBalanceUpdateCallback(ctx sdk.Context, k *Keeper, response [
 		return err
 	}
 
-	balanceCoin, err := bankkeeper.UnmarshalBalanceCompat(k.cdc, response, denom)
+	balanceCoin, err := bankutils.UnmarshalBalanceCompat(k.cdc, response, denom)
 	if err != nil {
 		return err
 	}

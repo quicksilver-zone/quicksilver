@@ -503,38 +503,34 @@ mdlint-fix:
 ###                                Protobuf                                 ###
 ###############################################################################
 
-BUF_VERSION=1.21.0
+protoVer=0.14.0
+protoImageName=ghcr.io/cosmos/proto-builder:$(protoVer)
+protoImage=$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(protoImageName)
 
-proto-all: proto-gen
+proto-all: proto-format proto-lint proto-gen
 
-proto-gen: proto-format
-	@echo "🤖 Generating code from protobuf..."
-	@$(DOCKER) run --rm --volume "$(PWD)":/workspace --workdir /workspace \
-		quicksilver-proto sh ./proto/generate.sh
-	@echo "✅ Completed code generation!"
+proto-gen:
+	@echo "Generating Protobuf files"
+	@$(protoImage) sh ./scripts/protocgen.sh
 
-proto-lint:
-	@echo "🤖 Running protobuf linter..."
-	@$(DOCKER) run --volume "$(PWD)":/workspace --workdir /workspace \
-		bufbuild/buf:$(BUF_VERSION) lint
-	@echo "✅ Completed protobuf linting!"
+proto-swagger-gen:
+	@echo "Generating Protobuf Swagger"
+	@$(protoImage) sh ./scripts/protoc-swagger-gen.sh
 
 proto-format:
-	@echo "🤖 Running protobuf format..."
-	@$(DOCKER) run --volume "$(PWD)":/workspace --workdir /workspace \
-		bufbuild/buf:$(BUF_VERSION) format -w
-	@echo "✅ Completed protobuf format!"
+	@$(protoImage) find ./ -name "*.proto" -exec clang-format -i {} \;
 
-proto-breaking-check:
-	@echo "🤖 Running protobuf breaking check against develop branch..."
-	@$(DOCKER) run --volume "$(PWD)":/workspace --workdir /workspace \
-		bufbuild/buf:$(BUF_VERSION) breaking --against '.git#branch=develop'
-	@echo "✅ Completed protobuf breaking check!"
+proto-lint:
+	@$(protoImage) buf lint --error-format=json
 
-proto-setup:
-	@echo "🤖 Setting up protobuf environment..."
-	@$(DOCKER) build --rm --tag quicksilver-proto:latest --file proto/Dockerfile .
-	@echo "✅ Setup protobuf environment!"
+proto-check-breaking:
+	@$(protoImage) buf breaking --against $(HTTPS_GIT)#branch=main
+
+proto-update-deps:
+	@echo "Updating Protobuf dependencies"
+	$(DOCKER) run --rm -v $(CURDIR)/proto:/workspace --workdir /workspace $(protoImageName) buf mod update
+
+.PHONY: proto-all proto-gen proto-gen-any proto-swagger-gen proto-format proto-lint proto-check-breaking proto-update-deps
 
 ### Other tools
 .PHONY: hermes-build

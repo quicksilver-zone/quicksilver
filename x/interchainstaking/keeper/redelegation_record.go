@@ -1,10 +1,11 @@
 package keeper
 
 import (
-	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"cosmossdk.io/store/prefix"
+	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
+	"github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking/types"
 )
 
 // GetRedelegationRecord returns Redelegation record info by zone, validator and epoch.
@@ -43,7 +44,7 @@ func (k *Keeper) DeleteRedelegationRecordByKey(ctx sdk.Context, key []byte) {
 func (k *Keeper) IteratePrefixedRedelegationRecords(ctx sdk.Context, prefixBytes []byte, fn func(index int64, key []byte, record types.RedelegationRecord) (stop bool)) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixRedelegationRecord)
 
-	iterator := sdk.KVStorePrefixIterator(store, prefixBytes)
+	iterator := storetypes.KVStorePrefixIterator(store, prefixBytes)
 	defer iterator.Close()
 
 	i := int64(0)

@@ -3,31 +3,33 @@ package keeper_test
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
 	"time"
 
 	testsuite "github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 
-	icatypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/types"
-	clienttypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
-	connectiontypes "github.com/cosmos/ibc-go/v5/modules/core/03-connection/types"
-	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
-	host "github.com/cosmos/ibc-go/v5/modules/core/24-host"
-	tmclienttypes "github.com/cosmos/ibc-go/v5/modules/light-clients/07-tendermint/types"
-	ibctesting "github.com/cosmos/ibc-go/v5/testing"
+	icatypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/types"
+	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
+	connectiontypes "github.com/cosmos/ibc-go/v8/modules/core/03-connection/types"
+	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
+	host "github.com/cosmos/ibc-go/v8/modules/core/24-host"
+	tmclienttypes "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint"
+	ibctesting "github.com/cosmos/ibc-go/v8/testing"
 
-	"github.com/quicksilver-zone/quicksilver/app"
-	"github.com/quicksilver-zone/quicksilver/utils"
-	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
-	"github.com/quicksilver-zone/quicksilver/utils/randomutils"
-	ics "github.com/quicksilver-zone/quicksilver/x/interchainstaking"
-	interchainstakingkeeper "github.com/quicksilver-zone/quicksilver/x/interchainstaking/keeper"
-	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
+	"github.com/quicksilver-zone/quicksilver/v7/app"
+	"github.com/quicksilver-zone/quicksilver/v7/utils"
+	"github.com/quicksilver-zone/quicksilver/v7/utils/addressutils"
+	"github.com/quicksilver-zone/quicksilver/v7/utils/randomutils"
+	ics "github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking"
+	interchainstakingkeeper "github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking/keeper"
+	icstypes "github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking/types"
 )
 
 var testAddress = addressutils.GenerateAccAddressForTest().String()
@@ -113,9 +115,13 @@ func (suite *KeeperTestSuite) setupTestZones() {
 	zone, found = quicksilver.InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
 	suite.True(found)
 
-	vals := suite.GetQuicksilverApp(suite.chainB).StakingKeeper.GetBondedValidatorsByPower(suite.chainB.GetContext())
+	vals, err := suite.GetQuicksilverApp(suite.chainB).StakingKeeper.GetBondedValidatorsByPower(suite.chainB.GetContext())
+	suite.NoError(err)
+
 	for i := range vals {
-		suite.NoError(quicksilver.InterchainstakingKeeper.SetValidatorForZone(suite.chainA.GetContext(), &zone, app.DefaultConfig().Codec.MustMarshal(&vals[i])))
+		err := quicksilver.InterchainstakingKeeper.SetValidatorForZone(suite.chainA.GetContext(), &zone, app.MakeEncodingConfig(suite.T()).Codec.MustMarshal(&vals[i]))
+		suite.NoError(err)
+
 	}
 
 	suite.coordinator.CommitNBlocks(suite.chainA, 2)
@@ -134,7 +140,7 @@ func (suite *KeeperTestSuite) setupChannelForICA(ctx sdk.Context, chainID, conne
 	quicksilver.InterchainstakingKeeper.SetConnectionForPort(ctx, connectionID, portID)
 
 	channelID := quicksilver.IBCKeeper.ChannelKeeper.GenerateChannelIdentifier(ctx)
-	quicksilver.IBCKeeper.ChannelKeeper.SetChannel(ctx, portID, channelID, channeltypes.Channel{State: channeltypes.OPEN, Ordering: channeltypes.ORDERED, Counterparty: channeltypes.Counterparty{PortId: icatypes.PortID, ChannelId: channelID}, ConnectionHops: []string{connectionID}})
+	quicksilver.IBCKeeper.ChannelKeeper.SetChannel(ctx, portID, channelID, channeltypes.Channel{State: channeltypes.OPEN, Ordering: channeltypes.ORDERED, Counterparty: channeltypes.Counterparty{PortId: icatypes.HostPortID, ChannelId: channelID}, ConnectionHops: []string{connectionID}})
 
 	// channel, found := quicksilver.IBCKeeper.ChannelKeeper.GetChannel(ctx, portID, channelID)
 	// suite.True(found)
@@ -158,6 +164,15 @@ func (suite *KeeperTestSuite) setupChannelForICA(ctx sdk.Context, chainID, conne
 		return err
 	}
 
+	err = quicksilver.ScopedICAControllerKeeper.ClaimCapability(
+		ctx,
+		key,
+		host.ChannelCapabilityPath(portID, channelID),
+	)
+
+	if err != nil {
+		return err
+	}
 	key, err = quicksilver.InterchainstakingKeeper.ScopedKeeper().NewCapability(
 		ctx,
 		host.PortPath(portID),
@@ -218,7 +233,7 @@ func (suite *KeeperTestSuite) TestGetDelegatedAmount() {
 			delegations: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []icstypes.Delegation {
 				validators := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
 				out := make([]icstypes.Delegation, 0)
-				out = append(out, icstypes.NewDelegation(zone.DelegationAddress.Address, validators[0], sdk.NewCoin(zone.BaseDenom, sdk.NewInt(3000000))))
+				out = append(out, icstypes.NewDelegation(zone.DelegationAddress.Address, validators[0], sdk.NewCoin(zone.BaseDenom, sdkmath.NewInt(3000000))))
 				return out
 			},
 			expected: math.NewInt(3000000),
@@ -229,9 +244,9 @@ func (suite *KeeperTestSuite) TestGetDelegatedAmount() {
 				validators := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
 				out := make([]icstypes.Delegation, 0)
 				out = append(out,
-					icstypes.NewDelegation(zone.DelegationAddress.Address, validators[0], sdk.NewCoin(zone.BaseDenom, sdk.NewInt(3000000))),
-					icstypes.NewDelegation(zone.DelegationAddress.Address, validators[1], sdk.NewCoin(zone.BaseDenom, sdk.NewInt(17000000))),
-					icstypes.NewDelegation(zone.DelegationAddress.Address, validators[2], sdk.NewCoin(zone.BaseDenom, sdk.NewInt(20000000))),
+					icstypes.NewDelegation(zone.DelegationAddress.Address, validators[0], sdk.NewCoin(zone.BaseDenom, sdkmath.NewInt(3000000))),
+					icstypes.NewDelegation(zone.DelegationAddress.Address, validators[1], sdk.NewCoin(zone.BaseDenom, sdkmath.NewInt(17000000))),
+					icstypes.NewDelegation(zone.DelegationAddress.Address, validators[2], sdk.NewCoin(zone.BaseDenom, sdkmath.NewInt(20000000))),
 				)
 				return out
 			},
@@ -349,7 +364,7 @@ func (suite *KeeperTestSuite) TestGetRatio() {
 		records     func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []icstypes.WithdrawalRecord
 		delegations func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []icstypes.Delegation
 		supply      math.Int
-		expected    sdk.Dec
+		expected    sdkmath.LegacyDec
 	}{
 		{
 			name: "no withdrawals, no unbonding, no supply",
@@ -362,7 +377,7 @@ func (suite *KeeperTestSuite) TestGetRatio() {
 				return out
 			},
 			supply:   math.ZeroInt(),
-			expected: sdk.OneDec(),
+			expected: sdkmath.LegacyOneDec(),
 		},
 		{
 			name: "no withdrawals, one delegation, expect 1.0",
@@ -373,11 +388,11 @@ func (suite *KeeperTestSuite) TestGetRatio() {
 			delegations: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []icstypes.Delegation {
 				validators := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
 				out := make([]icstypes.Delegation, 0)
-				out = append(out, icstypes.NewDelegation(zone.DepositAddress.Address, validators[0], sdk.NewCoin(zone.BaseDenom, sdk.NewInt(3000000))))
+				out = append(out, icstypes.NewDelegation(zone.DepositAddress.Address, validators[0], sdk.NewCoin(zone.BaseDenom, sdkmath.NewInt(3000000))))
 				return out
 			},
 			supply:   math.NewInt(3000000),
-			expected: sdk.OneDec(),
+			expected: sdkmath.LegacyOneDec(),
 		},
 		{
 			name: "one withdrawal, no delegation, expect 1.0",
@@ -391,7 +406,7 @@ func (suite *KeeperTestSuite) TestGetRatio() {
 				return out
 			},
 			supply:   math.NewInt(3000000),
-			expected: sdk.OneDec(),
+			expected: sdkmath.LegacyOneDec(),
 		},
 		{
 			name: "one withdrawals, one delegation, one unbonding, expect 1.0",
@@ -403,11 +418,11 @@ func (suite *KeeperTestSuite) TestGetRatio() {
 			delegations: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []icstypes.Delegation {
 				validators := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
 				out := make([]icstypes.Delegation, 0)
-				out = append(out, icstypes.NewDelegation(zone.DepositAddress.Address, validators[0], sdk.NewCoin(zone.BaseDenom, sdk.NewInt(3000000))))
+				out = append(out, icstypes.NewDelegation(zone.DepositAddress.Address, validators[0], sdk.NewCoin(zone.BaseDenom, sdkmath.NewInt(3000000))))
 				return out
 			},
 			supply:   math.NewInt(6000000),
-			expected: sdk.OneDec(),
+			expected: sdkmath.LegacyOneDec(),
 		},
 		{
 			name: "one non-unbond withdrawals, one delegation, one unbonding, expect 1.0",
@@ -419,11 +434,11 @@ func (suite *KeeperTestSuite) TestGetRatio() {
 			delegations: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []icstypes.Delegation {
 				validators := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
 				out := make([]icstypes.Delegation, 0)
-				out = append(out, icstypes.NewDelegation(zone.DepositAddress.Address, validators[0], sdk.NewCoin(zone.BaseDenom, sdk.NewInt(3000000))))
+				out = append(out, icstypes.NewDelegation(zone.DepositAddress.Address, validators[0], sdk.NewCoin(zone.BaseDenom, sdkmath.NewInt(3000000))))
 				return out
 			},
 			supply:   math.NewInt(3000000),
-			expected: sdk.OneDec(),
+			expected: sdkmath.LegacyOneDec(),
 		},
 		{
 			name: "multi unbonding withdrawal, delegation, expect 1.0",
@@ -439,11 +454,11 @@ func (suite *KeeperTestSuite) TestGetRatio() {
 			delegations: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []icstypes.Delegation {
 				validators := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
 				out := make([]icstypes.Delegation, 0)
-				out = append(out, icstypes.NewDelegation(zone.DepositAddress.Address, validators[0], sdk.NewCoin(zone.BaseDenom, sdk.NewInt(3000000))))
+				out = append(out, icstypes.NewDelegation(zone.DepositAddress.Address, validators[0], sdk.NewCoin(zone.BaseDenom, sdkmath.NewInt(3000000))))
 				return out
 			},
 			supply:   math.NewInt(17500000),
-			expected: sdk.OneDec(),
+			expected: sdkmath.LegacyOneDec(),
 		},
 		{
 			name: "multi unbonding withdrawal, delegation, sub 1.0",
@@ -458,11 +473,11 @@ func (suite *KeeperTestSuite) TestGetRatio() {
 			delegations: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []icstypes.Delegation {
 				validators := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
 				out := make([]icstypes.Delegation, 0)
-				out = append(out, icstypes.NewDelegation(zone.DepositAddress.Address, validators[0], sdk.NewCoin(zone.BaseDenom, sdk.NewInt(3000000))))
+				out = append(out, icstypes.NewDelegation(zone.DepositAddress.Address, validators[0], sdk.NewCoin(zone.BaseDenom, sdkmath.NewInt(3000000))))
 				return out
 			},
 			supply:   math.NewInt(10000000),
-			expected: sdk.NewDecWithPrec(75, 2),
+			expected: sdkmath.LegacyNewDecWithPrec(75, 2),
 		},
 		{
 			name: "multi unbonding withdrawal, delegation, gt 1.0",
@@ -475,14 +490,14 @@ func (suite *KeeperTestSuite) TestGetRatio() {
 				validators := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
 				out := make([]icstypes.Delegation, 0)
 				out = append(out,
-					icstypes.NewDelegation(zone.DepositAddress.Address, validators[0], sdk.NewCoin(zone.BaseDenom, sdk.NewInt(3000000))),
-					icstypes.NewDelegation(zone.DepositAddress.Address, validators[1], sdk.NewCoin(zone.BaseDenom, sdk.NewInt(16000000))),
-					icstypes.NewDelegation(zone.DepositAddress.Address, validators[2], sdk.NewCoin(zone.BaseDenom, sdk.NewInt(8000000))),
+					icstypes.NewDelegation(zone.DepositAddress.Address, validators[0], sdk.NewCoin(zone.BaseDenom, sdkmath.NewInt(3000000))),
+					icstypes.NewDelegation(zone.DepositAddress.Address, validators[1], sdk.NewCoin(zone.BaseDenom, sdkmath.NewInt(16000000))),
+					icstypes.NewDelegation(zone.DepositAddress.Address, validators[2], sdk.NewCoin(zone.BaseDenom, sdkmath.NewInt(8000000))),
 				)
 				return out
 			},
 			supply:   math.NewInt(22500000),
-			expected: sdk.NewDec(4).Quo(sdk.NewDec(3)),
+			expected: sdkmath.LegacyNewDec(4).Quo(sdkmath.LegacyNewDec(3)),
 		},
 	}
 
@@ -508,7 +523,7 @@ func (suite *KeeperTestSuite) TestGetRatio() {
 			err := quicksilver.MintKeeper.MintCoins(ctx, sdk.NewCoins(sdk.NewCoin(zone.LocalDenom, tt.supply)))
 			suite.NoError(err)
 
-			actual, isZero := icsKeeper.GetRatio(ctx, &zone, sdk.ZeroInt())
+			actual, isZero := icsKeeper.GetRatio(ctx, &zone, sdkmath.ZeroInt())
 			suite.Equal(tt.supply.IsZero(), isZero)
 			suite.Equal(tt.expected, actual)
 		})
@@ -525,29 +540,30 @@ func (suite *KeeperTestSuite) TestUpdateRedemptionRate() {
 	zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
 	suite.True(found)
 
-	vals := suite.GetQuicksilverApp(suite.chainB).StakingKeeper.GetAllValidators(suite.chainB.GetContext())
-	delegationA := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[0].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
-	delegationB := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[1].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
-	delegationC := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[2].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
+	vals, err := suite.GetQuicksilverApp(suite.chainB).StakingKeeper.GetAllValidators(suite.chainB.GetContext())
+	suite.NoError(err)
+	delegationA := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[0].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdkmath.NewInt(1000))}
+	delegationB := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[1].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdkmath.NewInt(1000))}
+	delegationC := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[2].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdkmath.NewInt(1000))}
 
 	icsKeeper.SetDelegation(ctx, zone.ChainId, delegationA)
 	icsKeeper.SetDelegation(ctx, zone.ChainId, delegationB)
 	icsKeeper.SetDelegation(ctx, zone.ChainId, delegationC)
 
-	err := quicksilver.MintKeeper.MintCoins(ctx, sdk.NewCoins(sdk.NewCoin(zone.LocalDenom, sdk.NewInt(3000))))
+	err = quicksilver.MintKeeper.MintCoins(ctx, sdk.NewCoins(sdk.NewCoin(zone.LocalDenom, sdkmath.NewInt(3000))))
 	suite.NoError(err)
 
 	// no change!
-	suite.Equal(sdk.OneDec(), zone.RedemptionRate)
-	icsKeeper.UpdateRedemptionRate(ctx, &zone, sdk.ZeroInt())
+	suite.Equal(sdkmath.LegacyOneDec(), zone.RedemptionRate)
+	icsKeeper.UpdateRedemptionRate(ctx, &zone, sdkmath.ZeroInt())
 
 	zone, found = icsKeeper.GetZone(ctx, suite.chainB.ChainID)
 	suite.True(found)
-	suite.Equal(sdk.OneDec(), zone.RedemptionRate)
+	suite.Equal(sdkmath.LegacyOneDec(), zone.RedemptionRate)
 
 	// add 1%
-	suite.Equal(sdk.OneDec(), zone.RedemptionRate)
-	icsKeeper.UpdateRedemptionRate(ctx, &zone, sdk.NewInt(30))
+	suite.Equal(sdkmath.LegacyOneDec(), zone.RedemptionRate)
+	icsKeeper.UpdateRedemptionRate(ctx, &zone, sdkmath.NewInt(30))
 	delegationA.Amount.Amount = delegationA.Amount.Amount.AddRaw(10)
 	delegationB.Amount.Amount = delegationB.Amount.Amount.AddRaw(10)
 	delegationC.Amount.Amount = delegationC.Amount.Amount.AddRaw(10)
@@ -557,10 +573,10 @@ func (suite *KeeperTestSuite) TestUpdateRedemptionRate() {
 
 	zone, found = icsKeeper.GetZone(ctx, suite.chainB.ChainID)
 	suite.True(found)
-	suite.Equal(sdk.NewDecWithPrec(101, 2), zone.RedemptionRate)
+	suite.Equal(sdkmath.LegacyNewDecWithPrec(101, 2), zone.RedemptionRate)
 
 	// add >2%; cap at 2%
-	icsKeeper.UpdateRedemptionRate(ctx, &zone, sdk.NewInt(500))
+	icsKeeper.UpdateRedemptionRate(ctx, &zone, sdkmath.NewInt(500))
 	delegationA.Amount.Amount = delegationA.Amount.Amount.AddRaw(166)
 	delegationB.Amount.Amount = delegationB.Amount.Amount.AddRaw(167)
 	delegationC.Amount.Amount = delegationC.Amount.Amount.AddRaw(167)
@@ -570,14 +586,14 @@ func (suite *KeeperTestSuite) TestUpdateRedemptionRate() {
 	zone, found = icsKeeper.GetZone(ctx, suite.chainB.ChainID)
 	suite.True(found)
 	// should be capped at 2% increase. (1.01*1.02 == 1.0302)
-	suite.Equal(sdk.NewDecWithPrec(10302, 4), zone.RedemptionRate)
+	suite.Equal(sdkmath.LegacyNewDecWithPrec(10302, 4), zone.RedemptionRate)
 
 	// add nothing, still cap at 2%
-	icsKeeper.UpdateRedemptionRate(ctx, &zone, sdk.ZeroInt())
+	icsKeeper.UpdateRedemptionRate(ctx, &zone, sdkmath.ZeroInt())
 	zone, found = icsKeeper.GetZone(ctx, suite.chainB.ChainID)
 	suite.True(found)
 	// should be capped at 2% increase. (1.01*1.02*1.02 == 1.050804)
-	suite.Equal(sdk.NewDecWithPrec(1050804, 6), zone.RedemptionRate)
+	suite.Equal(sdkmath.LegacyNewDecWithPrec(1050804, 6), zone.RedemptionRate)
 
 	delegationA.Amount.Amount = delegationA.Amount.Amount.SubRaw(500)
 	delegationB.Amount.Amount = delegationB.Amount.Amount.SubRaw(500)
@@ -587,11 +603,11 @@ func (suite *KeeperTestSuite) TestUpdateRedemptionRate() {
 	icsKeeper.SetDelegation(ctx, zone.ChainId, delegationC)
 
 	// remove > 5%, cap at -5%
-	icsKeeper.UpdateRedemptionRate(ctx, &zone, sdk.ZeroInt())
+	icsKeeper.UpdateRedemptionRate(ctx, &zone, sdkmath.ZeroInt())
 	zone, found = icsKeeper.GetZone(ctx, suite.chainB.ChainID)
 	suite.True(found)
 
-	suite.Equal(sdk.NewDecWithPrec(9982638, 7), zone.RedemptionRate)
+	suite.Equal(sdkmath.LegacyNewDecWithPrec(9982638, 7), zone.RedemptionRate)
 }
 
 func (suite *KeeperTestSuite) TestOverrideRedemptionRateNoCap() {
@@ -604,25 +620,26 @@ func (suite *KeeperTestSuite) TestOverrideRedemptionRateNoCap() {
 	zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
 	suite.True(found)
 
-	vals := suite.GetQuicksilverApp(suite.chainB).StakingKeeper.GetAllValidators(suite.chainB.GetContext())
-	delegationA := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[0].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
-	delegationB := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[1].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
-	delegationC := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[2].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
+	vals, err := suite.GetQuicksilverApp(suite.chainB).StakingKeeper.GetAllValidators(suite.chainB.GetContext())
+	suite.NoError(err)
+	delegationA := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[0].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdkmath.NewInt(1000))}
+	delegationB := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[1].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdkmath.NewInt(1000))}
+	delegationC := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[2].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdkmath.NewInt(1000))}
 
 	icsKeeper.SetDelegation(ctx, zone.ChainId, delegationA)
 	icsKeeper.SetDelegation(ctx, zone.ChainId, delegationB)
 	icsKeeper.SetDelegation(ctx, zone.ChainId, delegationC)
 
-	err := quicksilver.MintKeeper.MintCoins(ctx, sdk.NewCoins(sdk.NewCoin(zone.LocalDenom, sdk.NewInt(3000))))
+	err = quicksilver.MintKeeper.MintCoins(ctx, sdk.NewCoins(sdk.NewCoin(zone.LocalDenom, sdkmath.NewInt(3000))))
 	suite.NoError(err)
 
 	// no change!
-	suite.Equal(sdk.OneDec(), zone.RedemptionRate)
+	suite.Equal(sdkmath.LegacyOneDec(), zone.RedemptionRate)
 	icsKeeper.OverrideRedemptionRateNoCap(ctx, &zone)
 
 	zone, found = icsKeeper.GetZone(ctx, suite.chainB.ChainID)
 	suite.True(found)
-	suite.Equal(sdk.OneDec(), zone.RedemptionRate)
+	suite.Equal(sdkmath.LegacyOneDec(), zone.RedemptionRate)
 
 	// add 1%
 	delegationA.Amount.Amount = delegationA.Amount.Amount.AddRaw(10)
@@ -635,7 +652,7 @@ func (suite *KeeperTestSuite) TestOverrideRedemptionRateNoCap() {
 
 	zone, found = icsKeeper.GetZone(ctx, suite.chainB.ChainID)
 	suite.True(found)
-	suite.Equal(sdk.NewDecWithPrec(101, 2), zone.RedemptionRate)
+	suite.Equal(sdkmath.LegacyNewDecWithPrec(101, 2), zone.RedemptionRate)
 
 	// add >2%; no cap
 	delegationA.Amount.Amount = delegationA.Amount.Amount.AddRaw(166)
@@ -648,13 +665,13 @@ func (suite *KeeperTestSuite) TestOverrideRedemptionRateNoCap() {
 
 	zone, found = icsKeeper.GetZone(ctx, suite.chainB.ChainID)
 	suite.True(found)
-	suite.Equal(sdk.NewDecWithPrec(1176666666666666667, 18), zone.RedemptionRate)
+	suite.Equal(sdkmath.LegacyNewDecWithPrec(1176666666666666667, 18), zone.RedemptionRate)
 
 	// add nothing, no change
 	icsKeeper.OverrideRedemptionRateNoCap(ctx, &zone)
 	zone, found = icsKeeper.GetZone(ctx, suite.chainB.ChainID)
 	suite.True(found)
-	suite.Equal(sdk.NewDecWithPrec(1176666666666666667, 18), zone.RedemptionRate)
+	suite.Equal(sdkmath.LegacyNewDecWithPrec(1176666666666666667, 18), zone.RedemptionRate)
 
 	delegationA.Amount.Amount = delegationA.Amount.Amount.SubRaw(500)
 	delegationB.Amount.Amount = delegationB.Amount.Amount.SubRaw(500)
@@ -666,7 +683,7 @@ func (suite *KeeperTestSuite) TestOverrideRedemptionRateNoCap() {
 	zone, found = icsKeeper.GetZone(ctx, suite.chainB.ChainID)
 	suite.True(found)
 
-	suite.Equal(sdk.NewDecWithPrec(676666666666666667, 18), zone.RedemptionRate)
+	suite.Equal(sdkmath.LegacyNewDecWithPrec(676666666666666667, 18), zone.RedemptionRate)
 }
 
 func (suite *KeeperTestSuite) TestGetChainIDFromContext() {
@@ -695,11 +712,12 @@ func (suite *KeeperTestSuite) TestGetChainIDFromContext() {
 				ctx := suite.chainA.GetContext()
 
 				ctx = ctx.WithContext(context.WithValue(ctx.Context(), utils.ContextKey("connectionID"), suite.path.EndpointA.ConnectionID))
+				fmt.Println(suite.path.EndpointA.ConnectionID)
 				return suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper, ctx
 			},
 			wantErr:         false,
 			expectedErr:     nil,
-			expectedChainID: "testchain2",
+			expectedChainID: "testchain2-1",
 		},
 	}
 	for _, tc := range testCase {

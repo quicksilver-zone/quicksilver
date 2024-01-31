@@ -4,7 +4,7 @@ package quicksilver.airdrop.v1;
 import "gogoproto/gogo.proto";
 import "quicksilver/airdrop/v1/airdrop.proto";
 
-option go_package = "github.com/quicksilver-zone/quicksilver/x/airdrop/types";
+option go_package = "github.com/quicksilver-zone/quicksilver/v7/x/airdrop/types";
 
 message RegisterZoneDropProposal {
   option (gogoproto.equal) = false;
@@ -14,6 +14,6 @@ message RegisterZoneDropProposal {
   string title = 1;
   string description = 2;
 
-  ZoneDrop zone_drop = 3 [(gogoproto.moretags) = "yaml:\"zone_drop\""];
-  bytes claim_records = 4 [(gogoproto.moretags) = "yaml:\"claim_records\""];
+  ZoneDrop zone_drop = 3 [ (gogoproto.moretags) = "yaml:\"zone_drop\"" ];
+  bytes claim_records = 4 [ (gogoproto.moretags) = "yaml:\"claim_records\"" ];
 }

@@ -3,18 +3,19 @@ package simulation
 import (
 	"math/rand"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
-	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdksimtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
+	simappparams "github.com/cosmos/ibc-go/v8/testing/simapp/params"
 
-	"github.com/quicksilver-zone/quicksilver/test/simulation/simtypes"
-	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/osmoutils"
-	"github.com/quicksilver-zone/quicksilver/x/tokenfactory/keeper"
-	"github.com/quicksilver-zone/quicksilver/x/tokenfactory/types"
+	"github.com/quicksilver-zone/quicksilver/v7/test/simulation/simtypes"
+	"github.com/quicksilver-zone/quicksilver/v7/third-party-chains/osmosis-types/osmoutils"
+	"github.com/quicksilver-zone/quicksilver/v7/x/tokenfactory/keeper"
+	"github.com/quicksilver-zone/quicksilver/v7/x/tokenfactory/types"
 )
 
 const (
@@ -53,31 +54,31 @@ func WeightedOperations(
 		weightMsgSetDenomMetadata int
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgCreateDenom, &weightMsgCreateDenom, nil,
-		func(_ *rand.Rand) {
-			weightMsgCreateDenom = DefaultWeightMsgCreateDenom
+	appParams.GetOrGenerate(OpWeightMsgBurn, &weightMsgBurn, nil,
+		func(r *rand.Rand) {
+			weightMsgBurn = DefaultWeightMsgBurn
 		},
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgMint, &weightMsgMint, nil,
+	appParams.GetOrGenerate(OpWeightMsgMint, &weightMsgMint, nil,
 		func(_ *rand.Rand) {
 			weightMsgMint = DefaultWeightMsgMint
 		},
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgBurn, &weightMsgBurn, nil,
+	appParams.GetOrGenerate(OpWeightMsgBurn, &weightMsgBurn, nil,
 		func(_ *rand.Rand) {
 			weightMsgBurn = DefaultWeightMsgBurn
 		},
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgChangeAdmin, &weightMsgChangeAdmin, nil,
+	appParams.GetOrGenerate(OpWeightMsgChangeAdmin, &weightMsgChangeAdmin, nil,
 		func(_ *rand.Rand) {
 			weightMsgChangeAdmin = DefaultWeightMsgChangeAdmin
 		},
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgSetDenomMetadata, &weightMsgSetDenomMetadata, nil,
+	appParams.GetOrGenerate(OpWeightMsgSetDenomMetadata, &weightMsgSetDenomMetadata, nil,
 		func(_ *rand.Rand) {
 			weightMsgSetDenomMetadata = DefaultWeightMsgSetDenomMetadata
 		},
@@ -129,7 +130,6 @@ func SimulateMsgCreateDenom(ak types.AccountKeeper, bk types.BankKeeper, k keepe
 			TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
 			Cdc:             nil,
 			Msg:             msg,
-			MsgType:         TypeMsgCreateDenom,
 			CoinsSpentInMsg: minCoins,
 			Context:         ctx,
 			SimAccount:      acc,
@@ -160,7 +160,7 @@ func SimulateMsgMint(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keepe
 			return sdksimtypes.NoOpMsg(types.ModuleName, TypeMsgMint, "account is not admin"), nil, nil
 		}
 
-		mintAmount, err := simtypes.RandPositiveInt(r, sdk.NewIntFromUint64(1000_000000))
+		mintAmount, err := simtypes.RandPositiveInt(r, sdkmath.NewIntFromUint64(1000_000000))
 		if err != nil {
 			return sdksimtypes.NoOpMsg(types.ModuleName, TypeMsgMint, "error creating random sdkmath.Int"), nil, err
 		}
@@ -176,7 +176,6 @@ func SimulateMsgMint(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keepe
 			TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
 			Cdc:             nil,
 			Msg:             msg,
-			MsgType:         TypeMsgMint,
 			CoinsSpentInMsg: nil,
 			Context:         ctx,
 			SimAccount:      acc,
@@ -231,7 +230,6 @@ func SimulateMsgBurn(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keepe
 			TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
 			Cdc:             nil,
 			Msg:             msg,
-			MsgType:         TypeMsgBurn,
 			CoinsSpentInMsg: sdk.NewCoins(burnCoin),
 			Context:         ctx,
 			SimAccount:      acc,
@@ -279,7 +277,6 @@ func SimulateMsgChangeAdmin(ak types.AccountKeeper, bk types.BankKeeper, k keepe
 			TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
 			Cdc:             nil,
 			Msg:             msg,
-			MsgType:         TypeMsgChangeAdmin,
 			CoinsSpentInMsg: nil,
 			Context:         ctx,
 			SimAccount:      acc,
@@ -339,7 +336,6 @@ func SimulateMsgSetDenomMetadata(ak types.AccountKeeper, bk types.BankKeeper, k 
 			TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
 			Cdc:             nil,
 			Msg:             msg,
-			MsgType:         TypeMsgSetDenomMetadata,
 			CoinsSpentInMsg: nil,
 			Context:         ctx,
 			SimAccount:      acc,

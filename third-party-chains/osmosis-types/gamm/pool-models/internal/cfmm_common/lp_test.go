@@ -10,14 +10,14 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/gamm"
-	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/gamm/pool-models/balancer"
-	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/gamm/pool-models/internal/cfmm_common"
-	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/gamm/pool-models/stableswap"
+	"github.com/quicksilver-zone/quicksilver/v7/third-party-chains/osmosis-types/gamm"
+	"github.com/quicksilver-zone/quicksilver/v7/third-party-chains/osmosis-types/gamm/pool-models/balancer"
+	"github.com/quicksilver-zone/quicksilver/v7/third-party-chains/osmosis-types/gamm/pool-models/internal/cfmm_common"
+	"github.com/quicksilver-zone/quicksilver/v7/third-party-chains/osmosis-types/gamm/pool-models/stableswap"
 )
 
 // a helper function used to multiply coins
-func mulCoins(coins sdk.Coins, multiplier sdk.Dec) sdk.Coins {
+func mulCoins(coins sdk.Coins, multiplier sdkmath.LegacyDec) sdk.Coins {
 	outCoins := sdk.Coins{}
 	for _, coin := range coins {
 		outCoin := sdk.NewCoin(coin.Denom, multiplier.MulInt(coin.Amount).TruncateInt())
@@ -37,15 +37,15 @@ func TestCalcExitPool(t *testing.T) {
 	)
 
 	threeBalancerPoolAssets := []balancer.PoolAsset{
-		{Token: sdk.NewInt64Coin("foo", 2000000000), Weight: sdk.NewIntFromUint64(5)},
-		{Token: sdk.NewInt64Coin("bar", 3000000000), Weight: sdk.NewIntFromUint64(5)},
-		{Token: sdk.NewInt64Coin("baz", 4000000000), Weight: sdk.NewIntFromUint64(5)},
+		{Token: sdk.NewInt64Coin("foo", 2000000000), Weight: sdkmath.NewIntFromUint64(5)},
+		{Token: sdk.NewInt64Coin("bar", 3000000000), Weight: sdkmath.NewIntFromUint64(5)},
+		{Token: sdk.NewInt64Coin("baz", 4000000000), Weight: sdkmath.NewIntFromUint64(5)},
 	}
 
 	// create these pools used for testing
 	twoAssetPool, err := stableswap.NewStableswapPool(
 		1,
-		stableswap.PoolParams{ExitFee: sdk.ZeroDec()},
+		stableswap.PoolParams{ExitFee: sdkmath.LegacyZeroDec()},
 		twoStablePoolAssets,
 		[]uint64{1, 1},
 		"",
@@ -54,7 +54,7 @@ func TestCalcExitPool(t *testing.T) {
 
 	threeAssetPool, err := balancer.NewBalancerPool(
 		1,
-		balancer.PoolParams{SwapFee: sdk.ZeroDec(), ExitFee: sdk.ZeroDec()},
+		balancer.PoolParams{SwapFee: sdkmath.LegacyZeroDec(), ExitFee: sdkmath.LegacyZeroDec()},
 		threeBalancerPoolAssets,
 		"",
 		time.Now(),
@@ -63,7 +63,7 @@ func TestCalcExitPool(t *testing.T) {
 
 	twoAssetPoolWithExitFee, err := stableswap.NewStableswapPool(
 		1,
-		stableswap.PoolParams{ExitFee: sdk.MustNewDecFromStr("0.0001")},
+		stableswap.PoolParams{ExitFee: sdkmath.LegacyMustNewDecFromStr("0.0001")},
 		twoStablePoolAssets,
 		[]uint64{1, 1},
 		"",
@@ -72,7 +72,7 @@ func TestCalcExitPool(t *testing.T) {
 
 	threeAssetPoolWithExitFee, err := balancer.NewBalancerPool(
 		1,
-		balancer.PoolParams{SwapFee: sdk.ZeroDec(), ExitFee: sdk.MustNewDecFromStr("0.0002")},
+		balancer.PoolParams{SwapFee: sdkmath.LegacyZeroDec(), ExitFee: sdkmath.LegacyMustNewDecFromStr("0.0002")},
 		threeBalancerPoolAssets,
 		"",
 		time.Now(),
@@ -106,7 +106,7 @@ func TestCalcExitPool(t *testing.T) {
 		{
 			name:          "three-asset pool, valid exiting shares",
 			pool:          &threeAssetPool,
-			exitingShares: sdk.NewIntFromUint64(3000000000000),
+			exitingShares: sdkmath.NewIntFromUint64(3000000000000),
 			expError:      false,
 		},
 		{
@@ -118,7 +118,7 @@ func TestCalcExitPool(t *testing.T) {
 		{
 			name:          "three-asset pool with exit fee, valid exiting shares",
 			pool:          &threeAssetPoolWithExitFee,
-			exitingShares: sdk.NewIntFromUint64(7000000000000),
+			exitingShares: sdkmath.NewIntFromUint64(7000000000000),
 			expError:      false,
 		},
 	}
@@ -133,7 +133,7 @@ func TestCalcExitPool(t *testing.T) {
 			require.NoError(t, err, "test: %v", test.name)
 
 			// exitCoins = ( (1 - exitFee) * exitingShares / poolTotalShares ) * poolTotalLiquidity
-			expExitCoins := mulCoins(test.pool.GetTotalPoolLiquidity(emptyContext), (sdk.OneDec().Sub(exitFee)).MulInt(test.exitingShares).QuoInt(test.pool.GetTotalShares()))
+			expExitCoins := mulCoins(test.pool.GetTotalPoolLiquidity(emptyContext), (sdkmath.LegacyOneDec().Sub(exitFee)).MulInt(test.exitingShares).QuoInt(test.pool.GetTotalShares()))
 			require.Equal(t, expExitCoins.Sort().String(), exitCoins.Sort().String(), "test: %v", test.name)
 		}
 	}
@@ -143,8 +143,8 @@ func TestMaximalExactRatioJoin(t *testing.T) {
 	emptyContext := sdk.Context{}
 
 	balancerPoolAsset := []balancer.PoolAsset{
-		{Token: sdk.NewInt64Coin("foo", 100), Weight: sdk.NewIntFromUint64(5)},
-		{Token: sdk.NewInt64Coin("bar", 100), Weight: sdk.NewIntFromUint64(5)},
+		{Token: sdk.NewInt64Coin("foo", 100), Weight: sdkmath.NewIntFromUint64(5)},
+		{Token: sdk.NewInt64Coin("bar", 100), Weight: sdkmath.NewIntFromUint64(5)},
 	}
 
 	tests := []struct {
@@ -159,7 +159,7 @@ func TestMaximalExactRatioJoin(t *testing.T) {
 			pool: func() gamm.PoolI {
 				balancerPool, err := balancer.NewBalancerPool(
 					1,
-					balancer.PoolParams{SwapFee: sdk.ZeroDec(), ExitFee: sdk.ZeroDec()},
+					balancer.PoolParams{SwapFee: sdkmath.LegacyZeroDec(), ExitFee: sdkmath.LegacyZeroDec()},
 					balancerPoolAsset,
 					"",
 					time.Now(),
@@ -167,8 +167,8 @@ func TestMaximalExactRatioJoin(t *testing.T) {
 				require.NoError(t, err)
 				return &balancerPool
 			},
-			tokensIn:    sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(10)), sdk.NewCoin("bar", sdk.NewInt(10))),
-			expNumShare: sdk.NewIntFromUint64(10000000000000000000),
+			tokensIn:    sdk.NewCoins(sdk.NewCoin("foo", sdkmath.NewInt(10)), sdk.NewCoin("bar", sdkmath.NewInt(10))),
+			expNumShare: sdkmath.NewIntFromUint64(10000000000000000000),
 			expRemCoin:  sdk.Coins{},
 		},
 		{
@@ -176,7 +176,7 @@ func TestMaximalExactRatioJoin(t *testing.T) {
 			pool: func() gamm.PoolI {
 				balancerPool, err := balancer.NewBalancerPool(
 					1,
-					balancer.PoolParams{SwapFee: sdk.ZeroDec(), ExitFee: sdk.ZeroDec()},
+					balancer.PoolParams{SwapFee: sdkmath.LegacyZeroDec(), ExitFee: sdkmath.LegacyZeroDec()},
 					balancerPoolAsset,
 					"",
 					time.Now(),
@@ -184,16 +184,16 @@ func TestMaximalExactRatioJoin(t *testing.T) {
 				require.NoError(t, err)
 				return &balancerPool
 			},
-			tokensIn:    sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(10)), sdk.NewCoin("bar", sdk.NewInt(11))),
-			expNumShare: sdk.NewIntFromUint64(10000000000000000000),
-			expRemCoin:  sdk.NewCoins(sdk.NewCoin("bar", sdk.NewIntFromUint64(1))),
+			tokensIn:    sdk.NewCoins(sdk.NewCoin("foo", sdkmath.NewInt(10)), sdk.NewCoin("bar", sdkmath.NewInt(11))),
+			expNumShare: sdkmath.NewIntFromUint64(10000000000000000000),
+			expRemCoin:  sdk.NewCoins(sdk.NewCoin("bar", sdkmath.NewIntFromUint64(1))),
 		},
 	}
 
 	for _, test := range tests {
 		balancerPool, err := balancer.NewBalancerPool(
 			1,
-			balancer.PoolParams{SwapFee: sdk.ZeroDec(), ExitFee: sdk.ZeroDec()},
+			balancer.PoolParams{SwapFee: sdkmath.LegacyZeroDec(), ExitFee: sdkmath.LegacyZeroDec()},
 			balancerPoolAsset,
 			"",
 			time.Now(),

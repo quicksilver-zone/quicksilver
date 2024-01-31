@@ -8,13 +8,14 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 
-	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"cosmossdk.io/store/prefix"
+	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/quicksilver-zone/quicksilver/utils"
-	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
-	prtypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
-	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
+	"github.com/quicksilver-zone/quicksilver/v7/utils"
+	"github.com/quicksilver-zone/quicksilver/v7/utils/addressutils"
+	prtypes "github.com/quicksilver-zone/quicksilver/v7/x/claimsmanager/types"
+	"github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking/types"
 )
 
 func (*Keeper) getStoreKey(zone *types.Zone, snapshot bool) []byte {
@@ -54,7 +55,7 @@ func (k *Keeper) DeleteDelegatorIntent(ctx sdk.Context, zone *types.Zone, delega
 func (k *Keeper) IterateDelegatorIntents(ctx sdk.Context, zone *types.Zone, snapshot bool, fn func(index int64, intent types.DelegatorIntent) (stop bool)) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), k.getStoreKey(zone, snapshot))
 
-	iterator := sdk.KVStorePrefixIterator(store, nil)
+	iterator := storetypes.KVStorePrefixIterator(store, nil)
 	defer iterator.Close()
 
 	i := int64(0)
@@ -96,7 +97,7 @@ func (k *Keeper) AllDelegatorIntentsAsPointer(ctx sdk.Context, zone *types.Zone,
 func (k *Keeper) AggregateDelegatorIntents(ctx sdk.Context, zone *types.Zone) error {
 	snapshot := false
 	aggregate := make(types.ValidatorIntents, 0)
-	ordinalizedIntentSum := sdk.ZeroDec()
+	ordinalizedIntentSum := sdkmath.LegacyZeroDec()
 
 	k.IterateDelegatorIntents(ctx, zone, snapshot, func(_ int64, delIntent types.DelegatorIntent) (stop bool) {
 		balance := sdk.NewCoin(zone.LocalDenom, sdkmath.ZeroInt())
@@ -114,7 +115,7 @@ func (k *Keeper) AggregateDelegatorIntents(ctx sdk.Context, zone *types.Zone) er
 			return false
 		})
 
-		valIntents := delIntent.Ordinalize(sdk.NewDecFromInt(balance.Amount)).Intents
+		valIntents := delIntent.Ordinalize(sdkmath.LegacyNewDecFromInt(balance.Amount)).Intents
 		k.Logger(ctx).Debug(
 			"intents - ordinalized",
 			"user", delIntent.Delegator,
@@ -142,7 +143,7 @@ func (k *Keeper) AggregateDelegatorIntents(ctx sdk.Context, zone *types.Zone) er
 	// power, in the event claims cannot be made properly.
 	supply := k.BankKeeper.GetSupply(ctx, zone.LocalDenom)
 	defaults := k.DefaultAggregateIntents(ctx, zone.ChainId)
-	nonVotingSupply := sdk.NewDecFromInt(supply.Amount).Sub(ordinalizedIntentSum)
+	nonVotingSupply := sdkmath.LegacyNewDecFromInt(supply.Amount).Sub(ordinalizedIntentSum)
 	di := types.DelegatorIntent{Delegator: "", Intents: defaults}
 	di = di.Ordinalize(nonVotingSupply)
 	defaults = di.Intents
@@ -208,7 +209,7 @@ func (k *Keeper) UpdateDelegatorIntent(ctx sdk.Context, delegator sdk.AccAddress
 	})
 
 	// inAmount is ordinal with respect to the redemption rate, so we must scale
-	baseBalance := zone.RedemptionRate.Mul(sdk.NewDecFromInt(claimAmt))
+	baseBalance := zone.RedemptionRate.Mul(sdkmath.LegacyNewDecFromInt(claimAmt))
 	if baseBalance.IsZero() {
 		return nil
 	}

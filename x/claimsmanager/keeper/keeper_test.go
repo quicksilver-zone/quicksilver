@@ -6,11 +6,11 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	ibctesting "github.com/cosmos/ibc-go/v5/testing"
+	ibctesting "github.com/cosmos/ibc-go/v8/testing"
 
-	"github.com/quicksilver-zone/quicksilver/app"
-	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
-	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
+	"github.com/quicksilver-zone/quicksilver/v7/app"
+	"github.com/quicksilver-zone/quicksilver/v7/utils/addressutils"
+	icstypes "github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking/types"
 )
 
 var testAddress = addressutils.GenerateAccAddressForTest().String()

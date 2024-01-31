@@ -4,18 +4,19 @@ import (
 	"math/rand"
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/quicksilver-zone/quicksilver/x/mint/types"
+	"github.com/quicksilver-zone/quicksilver/v7/x/mint/types"
 )
 
 // Benchmarking :)
 // previously using sdkmath.Int operations:
 // BenchmarkEpochProvision-4 5000000 220 ns/op
 //
-// using sdk.Dec operations: (current implementation)
+// using sdkmath.LegacyDec operations: (current implementation)
 // BenchmarkEpochProvision-4 3000000 429 ns/op.
 func BenchmarkEpochProvision(b *testing.B) {
 	b.ReportAllocs()
@@ -24,7 +25,7 @@ func BenchmarkEpochProvision(b *testing.B) {
 
 	s1 := rand.NewSource(100)
 	r1 := rand.New(s1)
-	minter.EpochProvisions = sdk.NewDec(r1.Int63n(1000000))
+	minter.EpochProvisions = sdkmath.LegacyNewDec(r1.Int63n(1000000))
 
 	// run the EpochProvision function b.N times
 	for n := 0; n < b.N; n++ {
@@ -48,10 +49,10 @@ func BenchmarkNextEpochProvisions(b *testing.B) {
 func TestEpochProvision(t *testing.T) {
 	params := types.DefaultParams()
 	minter := types.DefaultInitialMinter()
-	minter.EpochProvisions = sdk.NewDecWithPrec(75, 2)
+	minter.EpochProvisions = sdkmath.LegacyNewDecWithPrec(75, 2)
 
 	actual := minter.NextEpochProvisions(params)
-	require.Equal(t, sdk.NewDecWithPrec(5625, 4), actual)
+	require.Equal(t, sdkmath.LegacyNewDecWithPrec(5625, 4), actual)
 	require.Equal(t, sdk.NewCoin(params.MintDenom, actual.TruncateInt()), minter.EpochProvision(params))
 }
 
@@ -69,7 +70,7 @@ func TestMinterValidate(t *testing.T) {
 		{
 			"negative",
 			types.Minter{
-				EpochProvisions: sdk.NewDec(-1),
+				EpochProvisions: sdkmath.LegacyNewDec(-1),
 			},
 			false,
 		},

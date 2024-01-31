@@ -7,7 +7,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/quicksilver-zone/quicksilver/x/airdrop/types"
+	"github.com/quicksilver-zone/quicksilver/v7/x/airdrop/types"
 )
 
 // TODO test

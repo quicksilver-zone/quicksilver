@@ -1,10 +1,11 @@
 package keeper_test
 
 import (
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	icqtypes "github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
+	icqtypes "github.com/quicksilver-zone/quicksilver/v7/x/interchainquery/types"
 )
 
 func (suite *KeeperTestSuite) TestQueries() {
@@ -18,7 +19,7 @@ func (suite *KeeperTestSuite) TestQueries() {
 		suite.chainB.ChainID,
 		"cosmos.staking.v1beta1.Query/Validators",
 		bz,
-		sdk.NewInt(200),
+		sdkmath.NewInt(200),
 		"",
 		0,
 	)
@@ -34,6 +35,6 @@ func (suite *KeeperTestSuite) TestQueries() {
 	suite.Equal(suite.path.EndpointB.ConnectionID, res.Queries[0].ConnectionId)
 	suite.Equal(suite.chainB.ChainID, res.Queries[0].ChainId)
 	suite.Equal("cosmos.staking.v1beta1.Query/Validators", res.Queries[0].QueryType)
-	suite.Equal(sdk.NewInt(200), res.Queries[0].Period)
+	suite.Equal(sdkmath.NewInt(200), res.Queries[0].Period)
 	suite.Equal("", res.Queries[0].CallbackId)
 }

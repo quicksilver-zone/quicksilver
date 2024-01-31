@@ -13,7 +13,7 @@ import (
 )
 
 func DefaultFeeString(cfg network.Config) string {
-	feeCoins := sdk.NewCoins(sdk.NewCoin(cfg.BondDenom, sdk.NewInt(10)))
+	feeCoins := sdk.NewCoins(sdk.NewCoin(cfg.BondDenom, sdkmath.NewInt(10)))
 	return fmt.Sprintf("--%s=%s", flags.FlagFees, feeCoins.String())
 }
 
@@ -45,7 +45,7 @@ func ParseSdkIntFromString(s string, separator string) ([]sdkmath.Int, error) {
 		if err != nil {
 			return parsedInts, err
 		}
-		parsedInts = append(parsedInts, sdk.NewIntFromUint64(parsed))
+		parsedInts = append(parsedInts, sdkmath.NewIntFromUint64(parsed))
 	}
 	return parsedInts, nil
 }

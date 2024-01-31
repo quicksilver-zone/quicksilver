@@ -7,13 +7,14 @@ import (
 	"strconv"
 	"strings"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/ingenuity-build/multierror"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 
-	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
+	"github.com/quicksilver-zone/quicksilver/v7/utils/addressutils"
 )
 
 // interchainstaking message types.
@@ -111,11 +112,11 @@ func IntentsFromString(input string) ([]*ValidatorIntent, error) {
 
 	out := []*ValidatorIntent{}
 
-	wsum := sdk.ZeroDec()
+	wsum := sdkmath.LegacyZeroDec()
 	istrs := strings.Split(input, ",")
 	for i, istr := range istrs {
 		wstr := iexpr.ReplaceAllString(istr, "$1")
-		weight, err := sdk.NewDecFromStr(wstr)
+		weight, err := sdkmath.LegacyNewDecFromStr(wstr)
 		if err != nil {
 			return nil, fmt.Errorf("intent token [%v]: %w", i, err)
 		}
@@ -133,7 +134,7 @@ func IntentsFromString(input string) ([]*ValidatorIntent, error) {
 		out = append(out, v)
 	}
 
-	if !wsum.Equal(sdk.OneDec()) {
+	if !wsum.Equal(sdkmath.LegacyOneDec()) {
 		return nil, errors.New("combined weight must be 1.0")
 	}
 
@@ -162,8 +163,8 @@ func (msg MsgSignalIntent) ValidateBasic() error {
 		errm["ChainID"] = errors.New("undefined")
 	}
 
-	wantSum := sdk.OneDec()
-	weightSum := sdk.NewDec(0)
+	wantSum := sdkmath.LegacyOneDec()
+	weightSum := sdkmath.LegacyNewDec(0)
 	intents, err := IntentsFromString(msg.Intents)
 	if err != nil {
 		errm["Intents"] = err
@@ -326,15 +327,15 @@ func ValidatePort(portID string) error {
 }
 
 func (caps LsmCaps) Validate() error {
-	if caps.GlobalCap.GT(sdk.OneDec()) || caps.GlobalCap.LT(sdk.ZeroDec()) {
+	if caps.GlobalCap.GT(sdkmath.LegacyOneDec()) || caps.GlobalCap.LT(sdkmath.LegacyZeroDec()) {
 		return errors.New("global cap must be between 0 and 1")
 	}
 
-	if caps.ValidatorCap.GT(sdk.OneDec()) || caps.ValidatorCap.LT(sdk.ZeroDec()) {
+	if caps.ValidatorCap.GT(sdkmath.LegacyOneDec()) || caps.ValidatorCap.LT(sdkmath.LegacyZeroDec()) {
 		return errors.New("validator cap must be between 0 and 1")
 	}
 
-	if caps.ValidatorBondCap.LTE(sdk.ZeroDec()) {
+	if caps.ValidatorBondCap.LTE(sdkmath.LegacyZeroDec()) {
 		return errors.New("validator bond cap must be greater than 0")
 	}
 

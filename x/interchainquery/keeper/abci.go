@@ -4,10 +4,11 @@ import (
 	"encoding/hex"
 	"time"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
+	"github.com/quicksilver-zone/quicksilver/v7/x/interchainquery/types"
 )
 
 const (
@@ -21,12 +22,12 @@ func (k Keeper) EndBlocker(ctx sdk.Context) {
 	events := sdk.Events{}
 	// emit events for periodic queries
 	k.IterateQueries(ctx, func(_ int64, queryInfo types.Query) (stop bool) {
-		// if queryInfo.QueryType == "ibc.ClientUpdate" && queryInfo.LastEmission.AddRaw(1000).LTE(sdk.NewInt(ctx.BlockHeight())) {
+		// if queryInfo.QueryType == "ibc.ClientUpdate" && queryInfo.LastEmission.AddRaw(1000).LTE(sdkmath.NewInt(ctx.BlockHeight())) {
 		// 	k.DeleteQuery(ctx, queryInfo.ID)
 		// 	k.Logger(ctx).Error("Deleting stale query")
 		// 	return false
 		// }
-		if queryInfo.LastEmission.IsNil() || queryInfo.LastEmission.IsZero() || queryInfo.LastEmission.Add(queryInfo.Period).Equal(sdk.NewInt(ctx.BlockHeight())) {
+		if queryInfo.LastEmission.IsNil() || queryInfo.LastEmission.IsZero() || queryInfo.LastEmission.Add(queryInfo.Period).Equal(sdkmath.NewInt(ctx.BlockHeight())) {
 			k.Logger(ctx).Debug("Interchainquery event emitted", "id", queryInfo.Id)
 			event := sdk.NewEvent(
 				sdk.EventTypeMessage,
@@ -42,7 +43,7 @@ func (k Keeper) EndBlocker(ctx sdk.Context) {
 			)
 
 			events = append(events, event)
-			queryInfo.LastEmission = sdk.NewInt(ctx.BlockHeight())
+			queryInfo.LastEmission = sdkmath.NewInt(ctx.BlockHeight())
 			k.SetQuery(ctx, queryInfo)
 
 		}

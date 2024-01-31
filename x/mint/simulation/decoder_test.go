@@ -6,19 +6,19 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 
-	"github.com/quicksilver-zone/quicksilver/app"
-	"github.com/quicksilver-zone/quicksilver/x/mint/simulation"
-	"github.com/quicksilver-zone/quicksilver/x/mint/types"
+	"github.com/quicksilver-zone/quicksilver/v7/app"
+	"github.com/quicksilver-zone/quicksilver/v7/x/mint/simulation"
+	"github.com/quicksilver-zone/quicksilver/v7/x/mint/types"
 )
 
 func TestDecodeStore(t *testing.T) {
-	cdc := app.MakeEncodingConfig().Marshaler
+	cdc := app.MakeEncodingConfig(t).Codec
 	dec := simulation.NewDecodeStore(cdc)
 
-	minter := types.NewMinter(sdk.NewDec(15))
+	minter := types.NewMinter(sdkmath.LegacyNewDec(15))
 
 	kvPairs := kv.Pairs{
 		Pairs: []kv.Pair{

@@ -169,7 +169,7 @@ type ZoneDrop struct {
 	Duration    time.Duration                            `protobuf:"bytes,3,opt,name=duration,proto3,stdduration" json:"duration,omitempty" yaml:"duration"`
 	Decay       time.Duration                            `protobuf:"bytes,4,opt,name=decay,proto3,stdduration" json:"decay,omitempty" yaml:"decay"`
 	Allocation  uint64                                   `protobuf:"varint,5,opt,name=allocation,proto3" json:"allocation,omitempty"`
-	Actions     []github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,6,rep,name=actions,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"actions"`
+	Actions     []cosmossdk_io_math.LegacyDec `protobuf:"bytes,6,rep,name=actions,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"actions"`
 	IsConcluded bool                                     `protobuf:"varint,7,opt,name=is_concluded,json=isConcluded,proto3" json:"is_concluded,omitempty"`
 }
 ```

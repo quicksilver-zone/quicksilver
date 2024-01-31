@@ -6,19 +6,20 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
 
-	clienttypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
-	connectiontypes "github.com/cosmos/ibc-go/v5/modules/core/03-connection/types"
-	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
-	tmclienttypes "github.com/cosmos/ibc-go/v5/modules/light-clients/07-tendermint/types"
+	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
+	connectiontypes "github.com/cosmos/ibc-go/v8/modules/core/03-connection/types"
+	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
+	tmclienttypes "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint"
 
-	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
-	icskeeper "github.com/quicksilver-zone/quicksilver/x/interchainstaking/keeper"
-	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
+	"github.com/quicksilver-zone/quicksilver/v7/utils/addressutils"
+	icskeeper "github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking/keeper"
+	icstypes "github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking/types"
 )
 
 func (suite *KeeperTestSuite) TestRequestRedemption() {
@@ -39,7 +40,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 				addr, err := addressutils.EncodeAddressToBech32("cosmos", addressutils.GenerateAccAddressForTest())
 				suite.NoError(err)
 				msg = icstypes.MsgRequestRedemption{
-					Value:              sdk.NewCoin("uqatom", sdk.NewInt(10000000)),
+					Value:              sdk.NewCoin("uqatom", sdkmath.NewInt(10000000)),
 					DestinationAddress: addr,
 					FromAddress:        testAddress,
 				}
@@ -53,14 +54,14 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 				addr, err := addressutils.EncodeAddressToBech32("cosmos", addressutils.GenerateAccAddressForTest())
 				suite.NoError(err)
 				msg = icstypes.MsgRequestRedemption{
-					Value:              sdk.NewCoin("uqatom", sdk.NewInt(10000000)),
+					Value:              sdk.NewCoin("uqatom", sdkmath.NewInt(10000000)),
 					DestinationAddress: addr,
 					FromAddress:        testAddress,
 				}
 
 				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
 				suite.True(found)
-				zone.RedemptionRate = sdk.MustNewDecFromStr("0.95")
+				zone.RedemptionRate = sdkmath.LegacyMustNewDecFromStr("0.95")
 				suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetZone(suite.chainA.GetContext(), &zone)
 			},
 			"",
@@ -72,15 +73,15 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 				addr, err := addressutils.EncodeAddressToBech32("cosmos", addressutils.GenerateAccAddressForTest())
 				suite.NoError(err)
 				msg = icstypes.MsgRequestRedemption{
-					Value:              sdk.NewCoin("uqatom", sdk.NewInt(10000000)),
+					Value:              sdk.NewCoin("uqatom", sdkmath.NewInt(10000000)),
 					DestinationAddress: addr,
 					FromAddress:        testAddress,
 				}
 
 				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
 				suite.True(found)
-				zone.LastRedemptionRate = sdk.MustNewDecFromStr("1.05")
-				zone.RedemptionRate = sdk.MustNewDecFromStr("1.1")
+				zone.LastRedemptionRate = sdkmath.LegacyMustNewDecFromStr("1.05")
+				zone.RedemptionRate = sdkmath.LegacyMustNewDecFromStr("1.1")
 				suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetZone(suite.chainA.GetContext(), &zone)
 			},
 			"",
@@ -92,15 +93,15 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 				addr, err := addressutils.EncodeAddressToBech32("cosmos", addressutils.GenerateAccAddressForTest())
 				suite.NoError(err)
 				msg = icstypes.MsgRequestRedemption{
-					Value:              sdk.NewCoin("uqatom", sdk.NewInt(10000000)),
+					Value:              sdk.NewCoin("uqatom", sdkmath.NewInt(10000000)),
 					DestinationAddress: addr,
 					FromAddress:        testAddress,
 				}
 
 				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
 				suite.True(found)
-				zone.LastRedemptionRate = sdk.MustNewDecFromStr("1.1")
-				zone.RedemptionRate = sdk.MustNewDecFromStr("1.05")
+				zone.LastRedemptionRate = sdkmath.LegacyMustNewDecFromStr("1.1")
+				zone.RedemptionRate = sdkmath.LegacyMustNewDecFromStr("1.05")
 				suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetZone(suite.chainA.GetContext(), &zone)
 			},
 			"",
@@ -112,7 +113,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 				addr, err := addressutils.EncodeAddressToBech32("cosmos", addressutils.GenerateAccAddressForTest())
 				suite.NoError(err)
 				msg = icstypes.MsgRequestRedemption{
-					Value:              sdk.NewCoin("uqatom", sdk.NewInt(5000000)),
+					Value:              sdk.NewCoin("uqatom", sdkmath.NewInt(5000000)),
 					DestinationAddress: addr,
 					FromAddress:        testAddress,
 				}
@@ -126,14 +127,14 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 				addr, err := addressutils.EncodeAddressToBech32("cosmos", addressutils.GenerateAccAddressForTest())
 				suite.NoError(err)
 				msg = icstypes.MsgRequestRedemption{
-					Value:              sdk.NewCoin("uqatom", sdk.NewInt(5000000)),
+					Value:              sdk.NewCoin("uqatom", sdkmath.NewInt(5000000)),
 					DestinationAddress: addr,
 					FromAddress:        testAddress,
 				}
 
 				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
 				suite.True(found)
-				zone.RedemptionRate = sdk.MustNewDecFromStr("0.99999")
+				zone.RedemptionRate = sdkmath.LegacyMustNewDecFromStr("0.99999")
 				suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetZone(suite.chainA.GetContext(), &zone)
 			},
 			"",
@@ -145,15 +146,15 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 				addr, err := addressutils.EncodeAddressToBech32("cosmos", addressutils.GenerateAccAddressForTest())
 				suite.NoError(err)
 				msg = icstypes.MsgRequestRedemption{
-					Value:              sdk.NewCoin("uqatom", sdk.NewInt(5000000)),
+					Value:              sdk.NewCoin("uqatom", sdkmath.NewInt(5000000)),
 					DestinationAddress: addr,
 					FromAddress:        testAddress,
 				}
 
 				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
 				suite.True(found)
-				zone.LastRedemptionRate = sdk.MustNewDecFromStr("1.049999")
-				zone.RedemptionRate = sdk.MustNewDecFromStr("1.099999")
+				zone.LastRedemptionRate = sdkmath.LegacyMustNewDecFromStr("1.049999")
+				zone.RedemptionRate = sdkmath.LegacyMustNewDecFromStr("1.099999")
 				suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetZone(suite.chainA.GetContext(), &zone)
 			},
 			"",
@@ -165,7 +166,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 				addr, err := addressutils.EncodeAddressToBech32("cosmos", addressutils.GenerateAccAddressForTest())
 				suite.NoError(err)
 				msg = icstypes.MsgRequestRedemption{
-					Value:              sdk.NewCoin("uqatom", sdk.NewInt(5000000)),
+					Value:              sdk.NewCoin("uqatom", sdkmath.NewInt(5000000)),
 					DestinationAddress: addr,
 					FromAddress:        testAddress,
 				}
@@ -184,7 +185,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 				addr, err := addressutils.EncodeAddressToBech32("cosmos", addressutils.GenerateAccAddressForTest())
 				suite.NoError(err)
 				msg = icstypes.MsgRequestRedemption{
-					Value:              sdk.NewCoin("uatom", sdk.NewInt(10000000)),
+					Value:              sdk.NewCoin("uatom", sdkmath.NewInt(10000000)),
 					DestinationAddress: addr,
 					FromAddress:        testAddress,
 				}
@@ -198,7 +199,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 				addr, err := addressutils.EncodeAddressToBech32("cosmos", addressutils.GenerateAccAddressForTest())
 				suite.NoError(err)
 				msg = icstypes.MsgRequestRedemption{
-					Value:              sdk.NewCoin("uqatom", sdk.NewInt(1000000000)),
+					Value:              sdk.NewCoin("uqatom", sdkmath.NewInt(1000000000)),
 					DestinationAddress: addr,
 					FromAddress:        testAddress,
 				}
@@ -212,7 +213,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 				addr, err := addressutils.EncodeAddressToBech32("bob", addressutils.GenerateAccAddressForTest())
 				suite.NoError(err)
 				msg = icstypes.MsgRequestRedemption{
-					Value:              sdk.NewCoin("uqatom", sdk.OneInt()),
+					Value:              sdk.NewCoin("uqatom", sdkmath.OneInt()),
 					DestinationAddress: addr,
 					FromAddress:        testAddress,
 				}
@@ -226,7 +227,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 				addr, err := addressutils.EncodeAddressToBech32("cosmos", addressutils.GenerateAccAddressForTest())
 				suite.NoError(err)
 				msg = icstypes.MsgRequestRedemption{
-					Value:              sdk.NewCoin("uqatom", sdk.OneInt()),
+					Value:              sdk.NewCoin("uqatom", sdkmath.OneInt()),
 					DestinationAddress: addr,
 					FromAddress:        addr,
 				}
@@ -240,7 +241,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 				addr, err := addressutils.EncodeAddressToBech32("cosmos", addressutils.GenerateAccAddressForTest())
 				suite.NoError(err)
 				msg = icstypes.MsgRequestRedemption{
-					Value:              sdk.NewCoin("uqatom", sdk.NewInt(10000000)),
+					Value:              sdk.NewCoin("uqatom", sdkmath.NewInt(10000000)),
 					DestinationAddress: addr,
 					FromAddress:        testAddress,
 				}
@@ -330,7 +331,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 			for _, delegation := range func(zone icstypes.Zone) []icstypes.Delegation {
 				out := make([]icstypes.Delegation, 0)
 				for _, valoper := range validators {
-					out = append(out, icstypes.NewDelegation(zone.DelegationAddress.Address, valoper, sdk.NewCoin(zone.BaseDenom, sdk.NewInt(3000000))))
+					out = append(out, icstypes.NewDelegation(zone.DelegationAddress.Address, valoper, sdk.NewCoin(zone.BaseDenom, sdkmath.NewInt(3000000))))
 				}
 				return out
 			}(zone) {
@@ -359,7 +360,7 @@ func (suite *KeeperTestSuite) TestSignalIntent() {
 	tests := []struct {
 		name             string
 		malleate         func(suite *KeeperTestSuite) *icstypes.MsgSignalIntent
-		expected         []sdk.Dec
+		expected         []sdkmath.LegacyDec
 		failsValidations bool
 		expectErr        bool
 	}{
@@ -375,7 +376,7 @@ func (suite *KeeperTestSuite) TestSignalIntent() {
 					FromAddress: testAddress,
 				}
 			},
-			[]sdk.Dec{},
+			[]sdkmath.LegacyDec{},
 			true,
 			false,
 		},
@@ -391,7 +392,7 @@ func (suite *KeeperTestSuite) TestSignalIntent() {
 					FromAddress: testAddress,
 				}
 			},
-			[]sdk.Dec{},
+			[]sdkmath.LegacyDec{},
 			true,
 			false,
 		},
@@ -407,7 +408,7 @@ func (suite *KeeperTestSuite) TestSignalIntent() {
 					FromAddress: testAddress,
 				}
 			},
-			[]sdk.Dec{},
+			[]sdkmath.LegacyDec{},
 			false,
 			true,
 		},
@@ -423,7 +424,7 @@ func (suite *KeeperTestSuite) TestSignalIntent() {
 					FromAddress: testAddress,
 				}
 			},
-			[]sdk.Dec{sdk.NewDecWithPrec(1, 0)},
+			[]sdkmath.LegacyDec{sdkmath.LegacyNewDecWithPrec(1, 0)},
 			false,
 			false,
 		},
@@ -443,10 +444,10 @@ func (suite *KeeperTestSuite) TestSignalIntent() {
 					FromAddress: testAddress,
 				}
 			},
-			[]sdk.Dec{
-				sdk.NewDecWithPrec(5, 1),
-				sdk.NewDecWithPrec(2, 1),
-				sdk.NewDecWithPrec(3, 1),
+			[]sdkmath.LegacyDec{
+				sdkmath.LegacyNewDecWithPrec(5, 1),
+				sdkmath.LegacyNewDecWithPrec(2, 1),
+				sdkmath.LegacyNewDecWithPrec(3, 1),
 			},
 			false,
 			false,
@@ -614,7 +615,7 @@ func (suite *KeeperTestSuite) TestGovReopenChannel() {
 					Authority:    "",
 				}
 			},
-			expecErr: fmt.Errorf("chainID / connectionID mismatch. Connection: %s, Port: %s", "testchain2", ""),
+			expecErr: fmt.Errorf("chainID / connectionID mismatch. Connection: %s, Port: %s", "testchain2-1", ""),
 		},
 		{
 			name: "existing active channel",
@@ -622,13 +623,14 @@ func (suite *KeeperTestSuite) TestGovReopenChannel() {
 				k := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
 				ctx := suite.chainA.GetContext()
 				channels := suite.GetQuicksilverApp(suite.chainA).IBCKeeper.ChannelKeeper.GetAllChannels(ctx)
+				fmt.Println(channels[0])
 				return &icstypes.MsgGovReopenChannel{
 					ConnectionId: suite.path.EndpointA.ConnectionID,
 					PortId:       channels[0].PortId,
 					Authority:    sdk.MustBech32ifyAddressBytes(sdk.GetConfig().GetBech32AccountAddrPrefix(), k.AccountKeeper.GetModuleAddress(govtypes.ModuleName)),
 				}
 			},
-			expecErr: errors.New("existing active channel channel-7 for portID icacontroller-testchain2.delegate on connection connection-0 for owner testchain2.delegate: active channel already set for this owner"),
+			expecErr: errors.New("existing active channel channel-7 for portID icacontroller-testchain2-1.delegate on connection connection-0: active channel already set for this owner"),
 		},
 		{
 			name: "pass",
@@ -636,18 +638,17 @@ func (suite *KeeperTestSuite) TestGovReopenChannel() {
 				quicksilver := suite.GetQuicksilverApp(suite.chainA)
 				ctx := suite.chainA.GetContext()
 				connectionID := "connection-1"
-				portID := "icacontroller-testchain2.delegate"
+				portID := "icacontroller-testchain2-1.delegate"
 				channelID := "channel-9"
 
 				version := []*connectiontypes.Version{
 					{Identifier: "1", Features: []string{"ORDER_ORDERED", "ORDER_UNORDERED"}},
 				}
-				connectionEnd := connectiontypes.ConnectionEnd{ClientId: "09-tendermint-1", State: connectiontypes.OPEN, Versions: version}
+				connectionEnd := connectiontypes.ConnectionEnd{ClientId: "07-tendermint-0", State: connectiontypes.OPEN, Versions: version}
 				quicksilver.IBCKeeper.ConnectionKeeper.SetConnection(ctx, connectionID, connectionEnd)
 
 				_, f := quicksilver.IBCKeeper.ConnectionKeeper.GetConnection(ctx, connectionID)
 				suite.True(f)
-
 				channelSet := channeltypes.Channel{
 					State:          channeltypes.TRYOPEN,
 					Ordering:       channeltypes.NONE,
@@ -682,7 +683,6 @@ func (suite *KeeperTestSuite) TestGovReopenChannel() {
 				return
 			}
 			suite.NoError(err)
-
 			// Check connection for port has been set
 			conn, err := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetConnectionForPort(ctx, msg.PortId)
 			suite.NoError(err)
@@ -703,9 +703,9 @@ func (suite *KeeperTestSuite) TestSetLsmCaps() {
 				return &icstypes.MsgGovSetLsmCaps{
 					ChainId: s.chainB.ChainID,
 					Caps: &icstypes.LsmCaps{
-						ValidatorCap:     sdk.NewDecWithPrec(50, 2),
-						ValidatorBondCap: sdk.NewDec(250),
-						GlobalCap:        sdk.NewDecWithPrec(25, 2),
+						ValidatorCap:     sdkmath.LegacyNewDecWithPrec(50, 2),
+						ValidatorBondCap: sdkmath.LegacyNewDec(250),
+						GlobalCap:        sdkmath.LegacyNewDecWithPrec(25, 2),
 					},
 					Authority: testAddress,
 				}
@@ -718,9 +718,9 @@ func (suite *KeeperTestSuite) TestSetLsmCaps() {
 				return &icstypes.MsgGovSetLsmCaps{
 					ChainId: "unknownzone-1",
 					Caps: &icstypes.LsmCaps{
-						ValidatorCap:     sdk.NewDecWithPrec(50, 2),
-						ValidatorBondCap: sdk.NewDec(250),
-						GlobalCap:        sdk.NewDecWithPrec(25, 2),
+						ValidatorCap:     sdkmath.LegacyNewDecWithPrec(50, 2),
+						ValidatorBondCap: sdkmath.LegacyNewDec(250),
+						GlobalCap:        sdkmath.LegacyNewDecWithPrec(25, 2),
 					},
 					Authority: testAddress,
 				}
@@ -737,9 +737,9 @@ func (suite *KeeperTestSuite) TestSetLsmCaps() {
 				return &icstypes.MsgGovSetLsmCaps{
 					ChainId: s.chainB.ChainID,
 					Caps: &icstypes.LsmCaps{
-						ValidatorCap:     sdk.NewDecWithPrec(50, 2),
-						ValidatorBondCap: sdk.NewDec(250),
-						GlobalCap:        sdk.NewDecWithPrec(25, 2),
+						ValidatorCap:     sdkmath.LegacyNewDecWithPrec(50, 2),
+						ValidatorBondCap: sdkmath.LegacyNewDec(250),
+						GlobalCap:        sdkmath.LegacyNewDecWithPrec(25, 2),
 					},
 					Authority: testAddress,
 				}
@@ -752,9 +752,9 @@ func (suite *KeeperTestSuite) TestSetLsmCaps() {
 				return &icstypes.MsgGovSetLsmCaps{
 					ChainId: s.chainB.ChainID,
 					Caps: &icstypes.LsmCaps{
-						ValidatorCap:     sdk.NewDecWithPrec(50, 2),
-						ValidatorBondCap: sdk.NewDec(250),
-						GlobalCap:        sdk.NewDecWithPrec(25, 2),
+						ValidatorCap:     sdkmath.LegacyNewDecWithPrec(50, 2),
+						ValidatorBondCap: sdkmath.LegacyNewDec(250),
+						GlobalCap:        sdkmath.LegacyNewDecWithPrec(25, 2),
 					},
 					Authority: "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn",
 				}

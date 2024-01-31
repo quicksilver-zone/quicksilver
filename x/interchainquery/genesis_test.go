@@ -5,15 +5,15 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	ibctesting "github.com/cosmos/ibc-go/v5/testing"
+	sdkmath "cosmossdk.io/math"
+	ibctesting "github.com/cosmos/ibc-go/v8/testing"
 
-	"github.com/quicksilver-zone/quicksilver/app"
-	"github.com/quicksilver-zone/quicksilver/x/interchainquery"
-	"github.com/quicksilver-zone/quicksilver/x/interchainquery/keeper"
-	"github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
+	"github.com/quicksilver-zone/quicksilver/v7/app"
+	"github.com/quicksilver-zone/quicksilver/v7/x/interchainquery"
+	"github.com/quicksilver-zone/quicksilver/v7/x/interchainquery/keeper"
+	"github.com/quicksilver-zone/quicksilver/v7/x/interchainquery/types"
 )
 
 func init() {
@@ -63,7 +63,7 @@ func (s *InterChainQueryTestSuite) TestInitGenesis() {
 		s.chainB.ChainID,
 		"cosmos.staking.v1beta1.Query/Validators",
 		bz,
-		sdk.NewInt(200),
+		sdkmath.NewInt(200),
 		"",
 		0,
 	)
@@ -76,7 +76,7 @@ func (s *InterChainQueryTestSuite) TestInitGenesis() {
 	s.Equal(s.path.EndpointB.ConnectionID, queryResponse.ConnectionId)
 	s.Equal(s.chainB.ChainID, queryResponse.ChainId)
 	s.Equal("cosmos.staking.v1beta1.Query/Validators", queryResponse.QueryType)
-	s.Equal(sdk.NewInt(200), queryResponse.Period)
+	s.Equal(sdkmath.NewInt(200), queryResponse.Period)
 	s.Equal(uint64(0), queryResponse.Ttl)
 	s.Equal("", queryResponse.CallbackId)
 }

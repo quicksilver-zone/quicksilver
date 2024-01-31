@@ -3,16 +3,16 @@ package types_test
 import (
 	"testing"
 
+	"github.com/cometbft/cometbft/proto/tendermint/crypto"
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/proto/tendermint/crypto"
 
 	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
-	"github.com/quicksilver-zone/quicksilver/x/airdrop/types"
-	cmtypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
+	"github.com/quicksilver-zone/quicksilver/v7/utils/addressutils"
+	"github.com/quicksilver-zone/quicksilver/v7/x/airdrop/types"
+	cmtypes "github.com/quicksilver-zone/quicksilver/v7/x/claimsmanager/types"
 )
 
 func TestMsgClaim_ValidateBasic(t *testing.T) {
@@ -220,7 +220,7 @@ func TestMsgIncentivePoolSpendValidateBasic(t *testing.T) {
 		Amount    sdk.Coins
 	}
 
-	validTestCoins := sdk.NewCoins(sdk.NewCoin("test", sdk.NewIntFromUint64(10000)))
+	validTestCoins := sdk.NewCoins(sdk.NewCoin("test", sdkmath.NewIntFromUint64(10000)))
 	addr1 := addressutils.GenerateAccAddressForTest().String()
 	addr2 := addressutils.GenerateAccAddressForTest().String()
 

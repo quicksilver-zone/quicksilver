@@ -11,11 +11,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	icatypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/types"
-	ibcexported "github.com/cosmos/ibc-go/v5/modules/core/exported"
-	tmclienttypes "github.com/cosmos/ibc-go/v5/modules/light-clients/07-tendermint/types"
+	icatypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/types"
+	ibcexported "github.com/cosmos/ibc-go/v8/modules/core/exported"
+	tmclienttypes "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint"
 
-	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
+	"github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking/types"
 )
 
 // HandleRegisterZoneProposal is a handler for executing a passed community spend proposal.
@@ -57,8 +57,8 @@ func (k *Keeper) HandleRegisterZoneProposal(ctx sdk.Context, p *types.RegisterZo
 		LocalDenom:         p.LocalDenom,
 		BaseDenom:          p.BaseDenom,
 		AccountPrefix:      p.AccountPrefix,
-		RedemptionRate:     sdk.NewDec(1),
-		LastRedemptionRate: sdk.NewDec(1),
+		RedemptionRate:     sdkmath.LegacyNewDec(1),
+		LastRedemptionRate: sdkmath.LegacyNewDec(1),
 		UnbondingEnabled:   p.UnbondingEnabled,
 		ReturnToSender:     p.ReturnToSender,
 		LiquidityModule:    p.LiquidityModule,

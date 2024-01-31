@@ -3,11 +3,10 @@ package cosmos.staking.v1beta1;
 
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "cosmos/base/v1beta1/coin.proto";
-import "cosmos/staking/v1beta1/staking.proto";
 import "gogoproto/gogo.proto";
 import "google/protobuf/timestamp.proto";
 
-option go_package = "github.com/quicksilver-zone/quicksilver/x/lsmtypes";
+option go_package = "github.com/quicksilver-zone/quicksilver/v7/x/lsmtypes";
 option (gogoproto.equal_all) = true;
 
 // TokenizeShareRecordReward represents the properties of tokenize share
@@ -30,14 +29,15 @@ message QueryTokenizeShareRecordRewardRequest {
   option (gogoproto.equal) = false;
   option (gogoproto.goproto_getters) = false;
 
-  string owner_address = 1 [(gogoproto.moretags) = "yaml:\"owner_address\""];
+  string owner_address = 1 [ (gogoproto.moretags) = "yaml:\"owner_address\"" ];
 }
 
 // QueryTokenizeShareRecordRewardResponse is the response type for the
 // Query/TokenizeShareRecordReward RPC method.
 message QueryTokenizeShareRecordRewardResponse {
   // rewards defines all the rewards accrued by a delegator.
-  repeated TokenizeShareRecordReward rewards = 1 [(gogoproto.nullable) = false];
+  repeated TokenizeShareRecordReward rewards = 1
+      [ (gogoproto.nullable) = false ];
   // total defines the sum of all the rewards.
   repeated cosmos.base.v1beta1.DecCoin total = 2 [
     (gogoproto.nullable) = false,
@@ -51,7 +51,7 @@ message MsgWithdrawTokenizeShareRecordReward {
   option (gogoproto.equal) = false;
   option (gogoproto.goproto_getters) = false;
 
-  string owner_address = 1 [(gogoproto.moretags) = "yaml:\"owner_address\""];
+  string owner_address = 1 [ (gogoproto.moretags) = "yaml:\"owner_address\"" ];
   uint64 record_id = 2;
 }
 
@@ -65,7 +65,7 @@ message MsgWithdrawAllTokenizeShareRecordReward {
   option (gogoproto.equal) = false;
   option (gogoproto.goproto_getters) = false;
 
-  string owner_address = 1 [(gogoproto.moretags) = "yaml:\"owner_address\""];
+  string owner_address = 1 [ (gogoproto.moretags) = "yaml:\"owner_address\"" ];
 }
 
 // MsgWithdrawAllTokenizeShareRecordRewardResponse defines the
@@ -74,38 +74,32 @@ message MsgWithdrawAllTokenizeShareRecordRewardResponse {}
 
 // QueryTokenizeShareRecordByIdRequest is request type for the
 // Query/QueryTokenizeShareRecordById RPC method.
-message QueryTokenizeShareRecordByIdRequest {
-  uint64 id = 1;
-}
+message QueryTokenizeShareRecordByIdRequest { uint64 id = 1; }
 
 // QueryTokenizeShareRecordByIdRequest is response type for the
 // Query/QueryTokenizeShareRecordById RPC method.
 message QueryTokenizeShareRecordByIdResponse {
-  TokenizeShareRecord record = 1 [(gogoproto.nullable) = false];
+  TokenizeShareRecord record = 1 [ (gogoproto.nullable) = false ];
 }
 
 // QueryTokenizeShareRecordByDenomRequest is request type for the
 // Query/QueryTokenizeShareRecordByDenom RPC method.
-message QueryTokenizeShareRecordByDenomRequest {
-  string denom = 1;
-}
+message QueryTokenizeShareRecordByDenomRequest { string denom = 1; }
 
 // QueryTokenizeShareRecordByDenomResponse is response type for the
 // Query/QueryTokenizeShareRecordByDenom RPC method.
 message QueryTokenizeShareRecordByDenomResponse {
-  TokenizeShareRecord record = 1 [(gogoproto.nullable) = false];
+  TokenizeShareRecord record = 1 [ (gogoproto.nullable) = false ];
 }
 
 // QueryTokenizeShareRecordsOwnedRequest is request type for the
 // Query/QueryTokenizeShareRecordsOwned RPC method.
-message QueryTokenizeShareRecordsOwnedRequest {
-  string owner = 1;
-}
+message QueryTokenizeShareRecordsOwnedRequest { string owner = 1; }
 
 // QueryTokenizeShareRecordsOwnedResponse is response type for the
 // Query/QueryTokenizeShareRecordsOwned RPC method.
 message QueryTokenizeShareRecordsOwnedResponse {
-  repeated TokenizeShareRecord records = 1 [(gogoproto.nullable) = false];
+  repeated TokenizeShareRecord records = 1 [ (gogoproto.nullable) = false ];
 }
 
 // QueryAllTokenizeShareRecordsRequest is request type for the
@@ -120,7 +114,7 @@ message QueryAllTokenizeShareRecordsRequest {
 // Query/QueryAllTokenizeShareRecords RPC method.
 message QueryAllTokenizeShareRecordsResponse {
   option (gogoproto.equal) = false;
-  repeated TokenizeShareRecord records = 1 [(gogoproto.nullable) = false];
+  repeated TokenizeShareRecord records = 1 [ (gogoproto.nullable) = false ];
   // pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
@@ -131,9 +125,7 @@ message QueryLastTokenizeShareRecordIdRequest {}
 
 // QueryLastTokenizeShareRecordIdResponse is response type for the
 // Query/QueryLastTokenizeShareRecordId RPC method.
-message QueryLastTokenizeShareRecordIdResponse {
-  uint64 id = 1;
-}
+message QueryLastTokenizeShareRecordIdResponse { uint64 id = 1; }
 
 // QueryTotalTokenizeSharedAssetsRequest is request type for the
 // Query/QueryTotalTokenizeSharedAssets RPC method.
@@ -142,7 +134,7 @@ message QueryTotalTokenizeSharedAssetsRequest {}
 // QueryTotalTokenizeSharedAssetsResponse is response type for the
 // Query/QueryTotalTokenizeSharedAssets RPC method.
 message QueryTotalTokenizeSharedAssetsResponse {
-  cosmos.base.v1beta1.Coin value = 1 [(gogoproto.nullable) = false];
+  cosmos.base.v1beta1.Coin value = 1 [ (gogoproto.nullable) = false ];
 }
 
 // QueryTotalLiquidStakedRequest is request type for the
@@ -151,15 +143,11 @@ message QueryTotalLiquidStaked {}
 
 // QueryTotalLiquidStakedResponse is response type for the
 // Query/QueryQueryTotalLiquidStaked RPC method.
-message QueryTotalLiquidStakedResponse {
-  string tokens = 1;
-}
+message QueryTotalLiquidStakedResponse { string tokens = 1; }
 
 // QueryTokenizeShareLockInfo queries the tokenize share lock information
 // associated with given account
-message QueryTokenizeShareLockInfo {
-  string address = 1;
-}
+message QueryTokenizeShareLockInfo { string address = 1; }
 
 // QueryTokenizeShareLockInfoResponse is the response from the
 // QueryTokenizeShareLockInfo query
@@ -175,14 +163,13 @@ message TokenizeShareRecord {
   uint64 id = 1;
   string owner = 2;
   string module_account = 3; // module account take the role of delegator
-  string validator = 4; // validator delegated to for tokenize share record creation
+  string validator =
+      4; // validator delegated to for tokenize share record creation
 }
 
 // PendingTokenizeShareAuthorizations stores a list of addresses that have their
 // tokenize share enablement in progress
-message PendingTokenizeShareAuthorizations {
-  repeated string addresses = 1;
-}
+message PendingTokenizeShareAuthorizations { repeated string addresses = 1; }
 
 // TokenizeShareLockStatus indicates whether the address is able to tokenize
 // shares
@@ -203,7 +190,7 @@ enum TokenizeShareLockStatus {
 // MsgUnbondValidator defines a method for performing the status transition for
 // a validator from bonded to unbonded
 message MsgUnbondValidator {
-  string validator_address = 1 [(gogoproto.moretags) = "yaml:\"address\""];
+  string validator_address = 1 [ (gogoproto.moretags) = "yaml:\"address\"" ];
 }
 
 // MsgUnbondValidatorResponse defines the Msg/UnbondValidator response type.
@@ -214,15 +201,17 @@ message MsgTokenizeShares {
   option (gogoproto.equal) = false;
   option (gogoproto.goproto_getters) = false;
 
-  string delegator_address = 1 [(gogoproto.moretags) = "yaml:\"delegator_address\""];
-  string validator_address = 2 [(gogoproto.moretags) = "yaml:\"validator_address\""];
-  cosmos.base.v1beta1.Coin amount = 3 [(gogoproto.nullable) = false];
+  string delegator_address = 1
+      [ (gogoproto.moretags) = "yaml:\"delegator_address\"" ];
+  string validator_address = 2
+      [ (gogoproto.moretags) = "yaml:\"validator_address\"" ];
+  cosmos.base.v1beta1.Coin amount = 3 [ (gogoproto.nullable) = false ];
   string tokenized_share_owner = 4;
 }
 
 // MsgTokenizeSharesResponse defines the Msg/MsgTokenizeShares response type.
 message MsgTokenizeSharesResponse {
-  cosmos.base.v1beta1.Coin amount = 1 [(gogoproto.nullable) = false];
+  cosmos.base.v1beta1.Coin amount = 1 [ (gogoproto.nullable) = false ];
 }
 
 // MsgRedeemTokensForShares redeems a tokenized share back into a native
@@ -231,14 +220,15 @@ message MsgRedeemTokensForShares {
   option (gogoproto.equal) = false;
   option (gogoproto.goproto_getters) = false;
 
-  string delegator_address = 1 [(gogoproto.moretags) = "yaml:\"delegator_address\""];
-  cosmos.base.v1beta1.Coin amount = 2 [(gogoproto.nullable) = false];
+  string delegator_address = 1
+      [ (gogoproto.moretags) = "yaml:\"delegator_address\"" ];
+  cosmos.base.v1beta1.Coin amount = 2 [ (gogoproto.nullable) = false ];
 }
 
 // MsgRedeemTokensForSharesResponse defines the Msg/MsgRedeemTokensForShares
 // response type.
 message MsgRedeemTokensForSharesResponse {
-  cosmos.base.v1beta1.Coin amount = 1 [(gogoproto.nullable) = false];
+  cosmos.base.v1beta1.Coin amount = 1 [ (gogoproto.nullable) = false ];
 }
 
 // MsgTransferTokenizeShareRecord transfer a tokenize share record
@@ -261,7 +251,8 @@ message MsgDisableTokenizeShares {
   option (gogoproto.equal) = false;
   option (gogoproto.goproto_getters) = false;
 
-  string delegator_address = 1 [(gogoproto.moretags) = "yaml:\"delegator_address\""];
+  string delegator_address = 1
+      [ (gogoproto.moretags) = "yaml:\"delegator_address\"" ];
 }
 
 // MsgDisableTokenizeSharesResponse defines the Msg/DisableTokenizeShares
@@ -273,16 +264,15 @@ message MsgEnableTokenizeShares {
   option (gogoproto.equal) = false;
   option (gogoproto.goproto_getters) = false;
 
-  string delegator_address = 1 [(gogoproto.moretags) = "yaml:\"delegator_address\""];
+  string delegator_address = 1
+      [ (gogoproto.moretags) = "yaml:\"delegator_address\"" ];
 }
 
 // MsgEnableTokenizeSharesResponse defines the Msg/EnableTokenizeShares response
 // type.
 message MsgEnableTokenizeSharesResponse {
-  google.protobuf.Timestamp completion_time = 1 [
-    (gogoproto.nullable) = false,
-    (gogoproto.stdtime) = true
-  ];
+  google.protobuf.Timestamp completion_time = 1
+      [ (gogoproto.nullable) = false, (gogoproto.stdtime) = true ];
 }
 
 // MsgValidatorBond defines a SDK message for performing validator self-bond of
@@ -291,8 +281,10 @@ message MsgValidatorBond {
   option (gogoproto.equal) = false;
   option (gogoproto.goproto_getters) = false;
 
-  string delegator_address = 1 [(gogoproto.moretags) = "yaml:\"delegator_address\""];
-  string validator_address = 2 [(gogoproto.moretags) = "yaml:\"validator_address\""];
+  string delegator_address = 1
+      [ (gogoproto.moretags) = "yaml:\"delegator_address\"" ];
+  string validator_address = 2
+      [ (gogoproto.moretags) = "yaml:\"validator_address\"" ];
 }
 
 // MsgValidatorBondResponse defines the Msg/ValidatorBond response type.

@@ -1,25 +1,28 @@
 package app_test
 
 import (
-	"encoding/json"
-	"os"
 	"testing"
 
-	"github.com/CosmWasm/wasmd/x/wasm"
+	cmtjson "github.com/cometbft/cometbft/libs/json"
+	"github.com/cosmos/cosmos-sdk/baseapp"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	"github.com/cosmos/gogoproto/proto"
+
+	"cosmossdk.io/log"
+	sdkmath "cosmossdk.io/math"
+	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/quicksilver-zone/quicksilver/v7/app"
+
+	"github.com/cometbft/cometbft/crypto/secp256k1"
+	tmtypes "github.com/cometbft/cometbft/types"
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto/secp256k1"
-	"github.com/tendermint/tendermint/libs/log"
-	tmtypes "github.com/tendermint/tendermint/types"
-	dbm "github.com/tendermint/tm-db"
 
 	cosmossecp256k1 "github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-
-	"github.com/quicksilver-zone/quicksilver/app"
 )
 
 func TestQuicksilverExport(t *testing.T) {
@@ -40,56 +43,70 @@ func TestQuicksilverExport(t *testing.T) {
 	acc := authtypes.NewBaseAccount(senderPrivKey.PubKey().Address().Bytes(), &senderPubKey, 0, 0)
 	balance := banktypes.Balance{
 		Address: acc.GetAddress().String(),
-		Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000000000000))),
+		Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(100000000000000))),
 	}
 	db := dbm.NewMemDB()
 	quicksilver := app.NewQuicksilver(
-		log.NewTMLogger(log.NewSyncWriter(os.Stdout)),
+		log.NewNopLogger(),
 		db,
 		nil,
 		true,
 		map[int64]bool{},
 		app.DefaultNodeHome,
-		0,
-		app.MakeEncodingConfig(),
-		wasm.EnableAllProposals,
 		app.EmptyAppOptions{},
+		false,
+		false,
 		app.GetWasmOpts(app.EmptyAppOptions{}),
-		false,
-		false,
+		baseapp.SetChainID("mercury-1"),
 	)
 
-	genesisState := app.NewDefaultGenesisState()
+	genesisState := quicksilver.NewDefaultGenesisState()
 	genesisState = app.GenesisStateWithValSet(t, quicksilver, genesisState, valSet, []authtypes.GenesisAccount{acc}, balance)
 
-	stateBytes, err := json.MarshalIndent(genesisState, "", "  ")
+	stateBytes, err := cmtjson.MarshalIndent(genesisState, "", "  ")
 	require.NoError(t, err)
 
 	// Initialize the chain
-	quicksilver.InitChain(
-		abci.RequestInitChain{
-			ChainId:       "quicksilver-1",
-			Validators:    []abci.ValidatorUpdate{},
-			AppStateBytes: stateBytes,
+	_, err = quicksilver.InitChain(
+		&abci.RequestInitChain{
+			ChainId:         "mercury-1",
+			Validators:      []abci.ValidatorUpdate{},
+			AppStateBytes:   stateBytes,
+			ConsensusParams: simtestutil.DefaultConsensusParams,
 		},
 	)
-	quicksilver.Commit()
+	require.NoError(t, err)
+	// Finalize the chain
+	_, err = quicksilver.FinalizeBlock(&abci.RequestFinalizeBlock{
+		Height: 1,
+	})
+	require.NoError(t, err)
 
+	_, err = quicksilver.Commit()
+	require.NoError(t, err)
+	// _, err = quicksilver.ExportAppStateAndValidators(false, []string{}, []string{})
+	// require.NoError(t, err, "ExportAppStateAndValidators should not have an error")
 	// Making a new app object with the db, so that initchain hasn't been called
-	app2 := app.NewQuicksilver(log.NewTMLogger(log.NewSyncWriter(os.Stdout)),
+	app2 := app.NewQuicksilver(
+		log.NewNopLogger(),
 		db,
 		nil,
 		true,
 		map[int64]bool{},
 		app.DefaultNodeHome,
-		0,
-		app.MakeEncodingConfig(),
-		wasm.EnableAllProposals,
 		app.EmptyAppOptions{},
+		true,
+		false,
 		app.GetWasmOpts(app.EmptyAppOptions{}),
-		false,
-		false,
 	)
-	_, err = app2.ExportAppStateAndValidators(false, []string{})
+	_, err = app2.ExportAppStateAndValidators(false, []string{}, []string{})
 	require.NoError(t, err, "ExportAppStateAndValidators should not have an error")
+}
+
+// TestMergedRegistry tests that fetching the gogo/protov2 merged registry
+// doesn't fail after loading all file descriptors.
+func TestMergedRegistry(t *testing.T) {
+	r, err := proto.MergedRegistry()
+	require.NoError(t, err)
+	require.Greater(t, r.NumFiles(), 0)
 }

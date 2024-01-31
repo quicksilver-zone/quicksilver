@@ -4,16 +4,17 @@ import (
 	"math/rand"
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/suite"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	ibctesting "github.com/cosmos/ibc-go/v5/testing"
+	ibctesting "github.com/cosmos/ibc-go/v8/testing"
 
-	"github.com/quicksilver-zone/quicksilver/app"
-	"github.com/quicksilver-zone/quicksilver/x/interchainquery/keeper"
-	icqtypes "github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
+	"github.com/quicksilver-zone/quicksilver/v7/app"
+	"github.com/quicksilver-zone/quicksilver/v7/x/interchainquery/keeper"
+	icqtypes "github.com/quicksilver-zone/quicksilver/v7/x/interchainquery/types"
 )
 
 const TestOwnerAddress = "cosmos17dtl0mjt3t77kpuhg2edqzjpszulwhgzuj9ljs"
@@ -65,7 +66,7 @@ func (suite *KeeperTestSuite) TestMakeRequest() {
 		suite.chainB.ChainID,
 		"cosmos.staking.v1beta1.Query/Validators",
 		bz,
-		sdk.NewInt(200),
+		sdkmath.NewInt(200),
 		"",
 		"",
 		0,
@@ -77,7 +78,7 @@ func (suite *KeeperTestSuite) TestMakeRequest() {
 	suite.Equal(suite.path.EndpointB.ConnectionID, query.ConnectionId)
 	suite.Equal(suite.chainB.ChainID, query.ChainId)
 	suite.Equal("cosmos.staking.v1beta1.Query/Validators", query.QueryType)
-	suite.Equal(sdk.NewInt(200), query.Period)
+	suite.Equal(sdkmath.NewInt(200), query.Period)
 	suite.Equal("", query.CallbackId)
 
 	suite.GetSimApp(suite.chainA).InterchainQueryKeeper.MakeRequest(
@@ -86,7 +87,7 @@ func (suite *KeeperTestSuite) TestMakeRequest() {
 		suite.chainB.ChainID,
 		"cosmos.staking.v1beta1.Query/Validators",
 		bz,
-		sdk.NewInt(200),
+		sdkmath.NewInt(200),
 		"",
 		"",
 		0,
@@ -97,9 +98,10 @@ func (suite *KeeperTestSuite) TestSubmitQueryResponse() {
 	bondedQuery := stakingtypes.QueryValidatorsRequest{Status: stakingtypes.BondStatusBonded}
 	bz, err := bondedQuery.Marshal()
 	suite.NoError(err)
-
+	vals, err := suite.GetSimApp(suite.chainB).StakingKeeper.GetBondedValidatorsByPower(suite.chainB.GetContext())
+	suite.NoError(err)
 	qvr := stakingtypes.QueryValidatorsResponse{
-		Validators: suite.GetSimApp(suite.chainB).StakingKeeper.GetBondedValidatorsByPower(suite.chainB.GetContext()),
+		Validators: vals,
 	}
 
 	tests := []struct {
@@ -115,7 +117,7 @@ func (suite *KeeperTestSuite) TestSubmitQueryResponse() {
 					suite.chainB.ChainID,
 					"cosmos.staking.v1beta1.Query/Validators",
 					bz,
-					sdk.NewInt(200),
+					sdkmath.NewInt(200),
 					"",
 					0,
 				),
@@ -130,7 +132,7 @@ func (suite *KeeperTestSuite) TestSubmitQueryResponse() {
 					suite.chainB.ChainID,
 					"cosmos.staking.v1beta1.Query/Validators",
 					bz,
-					sdk.NewInt(200),
+					sdkmath.NewInt(200),
 					"",
 					10,
 				),
@@ -145,7 +147,7 @@ func (suite *KeeperTestSuite) TestSubmitQueryResponse() {
 					suite.chainB.ChainID,
 					"cosmos.staking.v1beta1.Query/Validators",
 					bz,
-					sdk.NewInt(-200),
+					sdkmath.NewInt(-200),
 					"",
 					0,
 				),
@@ -160,7 +162,7 @@ func (suite *KeeperTestSuite) TestSubmitQueryResponse() {
 					suite.chainB.ChainID,
 					"cosmos.staking.v1beta1.Query/Validators",
 					bz,
-					sdk.NewInt(100),
+					sdkmath.NewInt(100),
 					"",
 					0,
 				),
@@ -195,8 +197,9 @@ func (suite *KeeperTestSuite) TestDataPoints() {
 	bz, err := bondedQuery.Marshal()
 	suite.NoError(err)
 
+	vals, err := suite.GetSimApp(suite.chainB).StakingKeeper.GetBondedValidatorsByPower(suite.chainB.GetContext())
 	qvr := stakingtypes.QueryValidatorsResponse{
-		Validators: suite.GetSimApp(suite.chainB).StakingKeeper.GetBondedValidatorsByPower(suite.chainB.GetContext()),
+		Validators: vals,
 	}
 
 	id := keeper.GenerateQueryHash(suite.path.EndpointB.ConnectionID, suite.chainB.ChainID, "cosmos.staking.v1beta1.Query/Validators", bz, "")
@@ -205,7 +208,7 @@ func (suite *KeeperTestSuite) TestDataPoints() {
 		suite.chainA.GetContext(),
 		id,
 		suite.GetSimApp(suite.chainB).AppCodec().MustMarshalJSON(&qvr),
-		sdk.NewInt(suite.chainB.CurrentHeader.Height),
+		sdkmath.NewInt(suite.chainB.CurrentHeader.Height),
 	)
 	suite.NoError(err)
 

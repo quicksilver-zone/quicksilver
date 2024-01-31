@@ -5,12 +5,13 @@ import (
 	"fmt"
 	"strings"
 
+	sdkmath "cosmossdk.io/math"
 	yaml "gopkg.in/yaml.v2"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
-	epochtypes "github.com/quicksilver-zone/quicksilver/x/epochs/types"
+	epochtypes "github.com/quicksilver-zone/quicksilver/v7/x/epochs/types"
 )
 
 // Parameter store keys.
@@ -30,8 +31,8 @@ func ParamKeyTable() paramtypes.KeyTable {
 }
 
 func NewParams(
-	mintDenom string, genesisEpochProvisions sdk.Dec, epochIdentifier string,
-	reductionPeriodInEpochs int64, reductionFactor sdk.Dec,
+	mintDenom string, genesisEpochProvisions sdkmath.LegacyDec, epochIdentifier string,
+	reductionPeriodInEpochs int64, reductionFactor sdkmath.LegacyDec,
 	distrProportions DistributionProportions, mintingRewardsDistributionStartEpoch int64,
 ) Params {
 	return Params{
@@ -49,15 +50,15 @@ func NewParams(
 func DefaultParams() Params {
 	return NewParams(
 		sdk.DefaultBondDenom,
-		sdk.NewDec(200000000/122),
+		sdkmath.LegacyNewDec(200000000/122),
 		"day",
 		365,
-		sdk.NewDecWithPrec(75, 2),
+		sdkmath.LegacyNewDecWithPrec(75, 2),
 		DistributionProportions{
-			Staking:              sdk.NewDecWithPrec(3, 1), // 0.3
-			PoolIncentives:       sdk.NewDecWithPrec(3, 1), // 0.3
-			ParticipationRewards: sdk.NewDecWithPrec(3, 1), // 0.3
-			CommunityPool:        sdk.NewDecWithPrec(1, 1), // 0.1
+			Staking:              sdkmath.LegacyNewDecWithPrec(3, 1), // 0.3
+			PoolIncentives:       sdkmath.LegacyNewDecWithPrec(3, 1), // 0.3
+			ParticipationRewards: sdkmath.LegacyNewDecWithPrec(3, 1), // 0.3
+			CommunityPool:        sdkmath.LegacyNewDecWithPrec(1, 1), // 0.1
 		},
 		0,
 	)
@@ -118,12 +119,12 @@ func validateMintDenom(i interface{}) error {
 }
 
 func validateGenesisEpochProvisions(i interface{}) error {
-	v, ok := i.(sdk.Dec)
+	v, ok := i.(sdkmath.LegacyDec)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
-	if v.LT(sdk.ZeroDec()) {
+	if v.LT(sdkmath.LegacyZeroDec()) {
 		return errors.New("genesis epoch provision must be non-negative")
 	}
 
@@ -144,12 +145,12 @@ func validateReductionPeriodInEpochs(i interface{}) error {
 }
 
 func validateReductionFactor(i interface{}) error {
-	v, ok := i.(sdk.Dec)
+	v, ok := i.(sdkmath.LegacyDec)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
-	if v.GT(sdk.OneDec()) {
+	if v.GT(sdkmath.LegacyOneDec()) {
 		return errors.New("reduction factor cannot be greater than 1")
 	}
 
@@ -183,7 +184,7 @@ func validateDistributionProportions(i interface{}) error {
 	}
 
 	totalProportions := v.Staking.Add(v.PoolIncentives).Add(v.CommunityPool).Add(v.ParticipationRewards)
-	if !totalProportions.Equal(sdk.OneDec()) {
+	if !totalProportions.Equal(sdkmath.LegacyOneDec()) {
 		return errors.New("total distributions ratio should be 1")
 	}
 

@@ -7,18 +7,18 @@ import (
 	"os"
 	"testing"
 
+	"cosmossdk.io/log"
 	"github.com/CosmWasm/wasmd/x/wasm"
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/libs/log"
-	dbm "github.com/tendermint/tm-db"
 
+	"cosmossdk.io/store"
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/store"
 	simulationtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	sdksimulation "github.com/cosmos/cosmos-sdk/x/simulation"
 
-	"github.com/quicksilver-zone/quicksilver/app"
-	"github.com/quicksilver-zone/quicksilver/test/simulation"
+	"github.com/quicksilver-zone/quicksilver/v7/app"
+	"github.com/quicksilver-zone/quicksilver/v7/test/simulation"
 )
 
 func init() {
@@ -117,7 +117,6 @@ func TestAppStateDeterminism(t *testing.T) {
 				app.DefaultNodeHome,
 				simulation.FlagPeriodValue,
 				app.MakeEncodingConfig(),
-				wasm.EnableAllProposals,
 				app.EmptyAppOptions{},
 				app.GetWasmOpts(app.EmptyAppOptions{}),
 				false,

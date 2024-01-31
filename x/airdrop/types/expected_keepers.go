@@ -1,13 +1,13 @@
 package types // noalias
 
 import (
+	"context"
+
 	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-
-	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
-	participationrewardstypes "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
+	icstypes "github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking/types"
+	participationrewardstypes "github.com/quicksilver-zone/quicksilver/v7/x/participationrewards/types"
 )
 
 // AccountKeeper defines the contract required for account APIs.
@@ -18,24 +18,24 @@ type AccountKeeper interface {
 // BankKeeper defines the contract needed to be fulfilled for banking and supply
 // dependencies.
 type BankKeeper interface {
-	SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error
-	GetBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin
-	SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
-	SendCoinsFromModuleToModule(ctx sdk.Context, senderModule, recipientModule string, amt sdk.Coins) error
-	SendCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
-	IsSendEnabledCoins(ctx sdk.Context, coins ...sdk.Coin) error
+	SendCoins(ctx context.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error
+	GetBalance(ctx context.Context, addr sdk.AccAddress, denom string) sdk.Coin
+	SendCoinsFromModuleToAccount(ctx context.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
+	SendCoinsFromModuleToModule(ctx context.Context, senderModule, recipientModule string, amt sdk.Coins) error
+	SendCoinsFromAccountToModule(ctx context.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
+	IsSendEnabledCoins(ctx context.Context, coins ...sdk.Coin) error
 	BlockedAddr(addr sdk.AccAddress) bool
 }
 
 // StakingKeeper defines the contract for staking APIs.
 type StakingKeeper interface {
-	BondDenom(ctx sdk.Context) string
-	GetDelegatorBonded(ctx sdk.Context, delegator sdk.AccAddress) sdkmath.Int
+	BondDenom(ctx context.Context) (string, error)
+	GetDelegatorBonded(ctx context.Context, delegator sdk.AccAddress) (sdkmath.Int, error)
 }
 
 type GovKeeper interface {
-	IterateProposals(ctx sdk.Context, cb func(proposal govv1.Proposal) (stop bool))
-	GetVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.AccAddress) (vote govv1.Vote, found bool)
+	// Proposals(ctx context.Context, req *v1.QueryProposalsRequest) (*v1.QueryProposalsResponse, error)
+	// Vote(ctx context.Context, req *v1.QueryVoteRequest) (*v1.QueryVoteResponse, error)
 }
 
 type InterchainStakingKeeper interface {

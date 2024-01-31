@@ -4,13 +4,12 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/suite"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/quicksilver-zone/quicksilver/app"
-	"github.com/quicksilver-zone/quicksilver/x/epochs/types"
+	"github.com/quicksilver-zone/quicksilver/v7/app"
+	"github.com/quicksilver-zone/quicksilver/v7/x/epochs/types"
 )
 
 type KeeperTestSuite struct {
@@ -29,7 +28,7 @@ func (suite *KeeperTestSuite) DoSetupTest(t *testing.T) {
 	checkTx := false
 	suite.app = app.Setup(t, checkTx)
 
-	suite.ctx = suite.app.BaseApp.NewContext(false, tmproto.Header{})
+	suite.ctx = suite.app.BaseApp.NewContext(false)
 
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, &suite.app.EpochsKeeper)

@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
-	abci "github.com/tendermint/tendermint/abci/types"
+	abci "github.com/cometbft/cometbft/abci/types"
 
 	sdkioerrors "cosmossdk.io/errors"
 
@@ -13,7 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/quicksilver-zone/quicksilver/wasmbinding/bindings"
+	"github.com/quicksilver-zone/quicksilver/v7/wasmbinding/bindings"
 )
 
 // StargateQuerier dispatches whitelisted stargate queries.
@@ -29,7 +29,7 @@ func StargateQuerier(queryRouter baseapp.GRPCQueryRouter, cdc codec.Codec) func(
 			return nil, wasmvmtypes.UnsupportedRequest{Kind: fmt.Sprintf("No route to query '%s'", request.Path)}
 		}
 
-		res, err := route(ctx, abci.RequestQuery{
+		res, err := route(ctx, &abci.RequestQuery{
 			Data: request.Data,
 			Path: request.Path,
 		})

@@ -7,13 +7,13 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	clienttypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
-	connectiontypes "github.com/cosmos/ibc-go/v5/modules/core/03-connection/types"
-	tmclienttypes "github.com/cosmos/ibc-go/v5/modules/light-clients/07-tendermint/types"
+	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
+	connectiontypes "github.com/cosmos/ibc-go/v8/modules/core/03-connection/types"
+	tmclienttypes "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint"
 
-	"github.com/quicksilver-zone/quicksilver/app"
-	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
-	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
+	"github.com/quicksilver-zone/quicksilver/v7/app"
+	"github.com/quicksilver-zone/quicksilver/v7/utils/addressutils"
+	icstypes "github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking/types"
 )
 
 func (suite *KeeperTestSuite) TestHandleUpdateZoneProposal() {

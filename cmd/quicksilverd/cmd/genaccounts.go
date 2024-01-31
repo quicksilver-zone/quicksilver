@@ -1,4 +1,4 @@
-package main
+package cmd
 
 import (
 	"bufio"
@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -107,11 +108,11 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 				periodAmount := sdk.Coins{}
 				dust := sdk.Coins{}
 				for _, coin := range vestingAmt {
-					periodCoin := sdk.NewCoin(coin.Denom, coin.Amount.Quo(sdk.NewInt(periodCount)))
+					periodCoin := sdk.NewCoin(coin.Denom, coin.Amount.Quo(sdkmath.NewInt(periodCount)))
 					periodAmount = append(periodAmount, periodCoin)
 					// if there was truncation, determine the extent and add to the last period
-					if !periodCoin.Amount.Mul(sdk.NewInt(periodCount)).Equal(coin.Amount) { // truncation happened!
-						dust = append(dust, sdk.NewCoin(coin.Denom, coin.Amount.Sub(periodCoin.Amount.Mul(sdk.NewInt(periodCount)))))
+					if !periodCoin.Amount.Mul(sdkmath.NewInt(periodCount)).Equal(coin.Amount) { // truncation happened!
+						dust = append(dust, sdk.NewCoin(coin.Denom, coin.Amount.Sub(periodCoin.Amount.Mul(sdkmath.NewInt(periodCount)))))
 					}
 				}
 				for _, period := range vestingPeriods {
@@ -128,7 +129,10 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 			baseAccount := authtypes.NewBaseAccount(addr, nil, 0, 0)
 
 			if !vestingAmt.IsZero() {
-				baseVestingAccount := authvesting.NewBaseVestingAccount(baseAccount, vestingAmt.Sort(), vestingEnd)
+				baseVestingAccount, err := authvesting.NewBaseVestingAccount(baseAccount, vestingAmt.Sort(), vestingEnd)
+				if err != nil {
+					return fmt.Errorf("failed to create base vesting account: %w", err)
+				}
 
 				if (balances.Coins.IsZero() && !baseVestingAccount.OriginalVesting.IsZero()) ||
 					baseVestingAccount.OriginalVesting.IsAnyGT(balances.Coins) {
@@ -137,8 +141,10 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 
 				switch {
 				case len(periods) > 0 && vestingStart != 0:
-					genAccount = authvesting.NewPeriodicVestingAccount(baseAccount, vestingAmt.Sort(), vestingStart, periods)
-
+					genAccount, err = authvesting.NewPeriodicVestingAccount(baseAccount, vestingAmt.Sort(), vestingStart, periods)
+					if err != nil {
+						return fmt.Errorf("failed to create periodic vesting account: %w", err)
+					}
 				case vestingStart != 0 && vestingEnd != 0:
 					genAccount = authvesting.NewContinuousVestingAccountRaw(baseVestingAccount, vestingStart)
 

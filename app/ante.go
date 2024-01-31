@@ -4,15 +4,15 @@ import (
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
+	corestoretypes "cosmossdk.io/core/store"
 	sdkioerrors "cosmossdk.io/errors"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 
-	ibcante "github.com/cosmos/ibc-go/v5/modules/core/ante"
-	ibckeeper "github.com/cosmos/ibc-go/v5/modules/core/keeper"
+	ibcante "github.com/cosmos/ibc-go/v8/modules/core/ante"
+	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
 )
 
 // HandlerOptions extend the SDK's AnteHandler options by requiring the IBC
@@ -20,7 +20,7 @@ import (
 type HandlerOptions struct {
 	ante.HandlerOptions
 
-	TxCounterStoreKey storetypes.StoreKey
+	TxCounterStoreKey corestoretypes.KVStoreService
 	WasmConfig        wasmtypes.WasmConfig
 
 	IBCKeeper *ibckeeper.Keeper
@@ -46,7 +46,6 @@ func NewAnteHandler(options HandlerOptions) sdk.AnteHandler {
 		ante.NewSetUpContextDecorator(),
 		wasmkeeper.NewLimitSimulationGasDecorator(options.WasmConfig.SimulationGasLimit),
 		wasmkeeper.NewCountTXDecorator(options.TxCounterStoreKey),
-
 		ante.NewExtensionOptionsDecorator(options.ExtensionOptionChecker),
 		//		ante.NewMempoolFeeDecorator(),
 		ante.NewValidateBasicDecorator(),

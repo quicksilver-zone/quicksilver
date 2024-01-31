@@ -3,14 +3,15 @@ package keeper
 import (
 	"time"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	epochstypes "github.com/quicksilver-zone/quicksilver/x/epochs/types"
-	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
+	epochstypes "github.com/quicksilver-zone/quicksilver/v7/x/epochs/types"
+	"github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking/types"
 )
 
 func (*Keeper) BeforeEpochStart(_ sdk.Context, _ string, _ int64) error {
@@ -39,7 +40,7 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNum
 				zone.ChainId,
 				"cosmos.staking.v1beta1.Query/DelegatorDelegations",
 				bz,
-				sdk.NewInt(-1),
+				sdkmath.NewInt(-1),
 				types.ModuleName,
 				"delegations",
 				0,
@@ -158,7 +159,7 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNum
 			zone.ChainId,
 			"cosmos.staking.v1beta1.Query/DelegatorDelegations",
 			bz,
-			sdk.NewInt(-1),
+			sdkmath.NewInt(-1),
 			types.ModuleName,
 			"delegations",
 			0,
@@ -172,7 +173,7 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNum
 			zone.ChainId,
 			"cosmos.bank.v1beta1.Query/AllBalances",
 			bz,
-			sdk.NewInt(-1),
+			sdkmath.NewInt(-1),
 			types.ModuleName,
 			"delegationaccountbalances",
 			0,
@@ -189,7 +190,7 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNum
 			zone.ChainId,
 			"cosmos.distribution.v1beta1.Query/DelegationTotalRewards",
 			bz,
-			sdk.NewInt(-1),
+			sdkmath.NewInt(-1),
 			types.ModuleName,
 			"rewards",
 			0,

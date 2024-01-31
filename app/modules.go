@@ -1,10 +1,19 @@
 package app
 
 import (
-	"github.com/CosmWasm/wasmd/x/wasm"
-	packetforward "github.com/strangelove-ventures/packet-forward-middleware/v5/router"
-	packetforwardtypes "github.com/strangelove-ventures/packet-forward-middleware/v5/router/types"
+	"cosmossdk.io/x/evidence"
+	ibcfeetypes "github.com/cosmos/ibc-go/v8/modules/apps/29-fee/types"
 
+	evidencetypes "cosmossdk.io/x/evidence/types"
+	"cosmossdk.io/x/feegrant"
+	feegrantmodule "cosmossdk.io/x/feegrant/module"
+	"cosmossdk.io/x/upgrade"
+	upgradetypes "cosmossdk.io/x/upgrade/types"
+	"github.com/CosmWasm/wasmd/x/wasm"
+	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
@@ -15,17 +24,12 @@ import (
 	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/cosmos/cosmos-sdk/x/capability"
-	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
+	"github.com/cosmos/cosmos-sdk/x/consensus"
+	consensusparamtypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
-	distrclient "github.com/cosmos/cosmos-sdk/x/distribution/client"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	"github.com/cosmos/cosmos-sdk/x/evidence"
-	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
-	"github.com/cosmos/cosmos-sdk/x/feegrant"
-	feegrantmodule "github.com/cosmos/cosmos-sdk/x/feegrant/module"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	"github.com/cosmos/cosmos-sdk/x/gov"
@@ -38,38 +42,40 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/cosmos/cosmos-sdk/x/upgrade"
-	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	packetforward "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v8/packetforward"
+	packetforwardtypes "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v8/packetforward/types"
+	"github.com/cosmos/ibc-go/modules/capability"
+	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
+	ibcfee "github.com/cosmos/ibc-go/v8/modules/apps/29-fee"
+	ibcexported "github.com/cosmos/ibc-go/v8/modules/core/exported"
 
-	ica "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts"
-	icatypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/types"
-	"github.com/cosmos/ibc-go/v5/modules/apps/transfer"
-	ibctransfertypes "github.com/cosmos/ibc-go/v5/modules/apps/transfer/types"
-	ibc "github.com/cosmos/ibc-go/v5/modules/core"
-	ibcclientclient "github.com/cosmos/ibc-go/v5/modules/core/02-client/client"
-	ibchost "github.com/cosmos/ibc-go/v5/modules/core/24-host"
+	ica "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts"
+	icatypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/types"
+	"github.com/cosmos/ibc-go/v8/modules/apps/transfer"
+	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
+	ibc "github.com/cosmos/ibc-go/v8/modules/core"
 
-	"github.com/quicksilver-zone/quicksilver/x/airdrop"
-	airdroptypes "github.com/quicksilver-zone/quicksilver/x/airdrop/types"
-	"github.com/quicksilver-zone/quicksilver/x/claimsmanager"
-	claimsmanagertypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
-	"github.com/quicksilver-zone/quicksilver/x/epochs"
-	epochstypes "github.com/quicksilver-zone/quicksilver/x/epochs/types"
-	"github.com/quicksilver-zone/quicksilver/x/interchainquery"
-	interchainquerytypes "github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
-	"github.com/quicksilver-zone/quicksilver/x/interchainstaking"
-	interchainstakingclient "github.com/quicksilver-zone/quicksilver/x/interchainstaking/client"
-	interchainstakingtypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
-	"github.com/quicksilver-zone/quicksilver/x/mint"
-	minttypes "github.com/quicksilver-zone/quicksilver/x/mint/types"
-	"github.com/quicksilver-zone/quicksilver/x/participationrewards"
-	participationrewardsclient "github.com/quicksilver-zone/quicksilver/x/participationrewards/client"
-	participationrewardstypes "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
-	"github.com/quicksilver-zone/quicksilver/x/supply"
-	supplytypes "github.com/quicksilver-zone/quicksilver/x/supply/types"
-	"github.com/quicksilver-zone/quicksilver/x/tokenfactory"
-	tokenfactorytypes "github.com/quicksilver-zone/quicksilver/x/tokenfactory/types"
+	ibctm "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint"
+	"github.com/quicksilver-zone/quicksilver/v7/x/airdrop"
+	airdroptypes "github.com/quicksilver-zone/quicksilver/v7/x/airdrop/types"
+	"github.com/quicksilver-zone/quicksilver/v7/x/claimsmanager"
+	claimsmanagertypes "github.com/quicksilver-zone/quicksilver/v7/x/claimsmanager/types"
+	"github.com/quicksilver-zone/quicksilver/v7/x/epochs"
+	epochstypes "github.com/quicksilver-zone/quicksilver/v7/x/epochs/types"
+	"github.com/quicksilver-zone/quicksilver/v7/x/interchainquery"
+	interchainquerytypes "github.com/quicksilver-zone/quicksilver/v7/x/interchainquery/types"
+	"github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking"
+	interchainstakingclient "github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking/client"
+	interchainstakingtypes "github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking/types"
+	"github.com/quicksilver-zone/quicksilver/v7/x/mint"
+	minttypes "github.com/quicksilver-zone/quicksilver/v7/x/mint/types"
+	"github.com/quicksilver-zone/quicksilver/v7/x/participationrewards"
+	participationrewardsclient "github.com/quicksilver-zone/quicksilver/v7/x/participationrewards/client"
+	participationrewardstypes "github.com/quicksilver-zone/quicksilver/v7/x/participationrewards/types"
+	"github.com/quicksilver-zone/quicksilver/v7/x/supply"
+	supplytypes "github.com/quicksilver-zone/quicksilver/v7/x/supply/types"
+	"github.com/quicksilver-zone/quicksilver/v7/x/tokenfactory"
+	tokenfactorytypes "github.com/quicksilver-zone/quicksilver/v7/x/tokenfactory/types"
 )
 
 var (
@@ -86,8 +92,9 @@ var (
 		mint.AppModuleBasic{},
 		gov.NewAppModuleBasic(
 			[]govclient.ProposalHandler{
-				paramsclient.ProposalHandler, distrclient.ProposalHandler, upgradeclient.LegacyProposalHandler, upgradeclient.LegacyCancelProposalHandler,
-				ibcclientclient.UpdateClientProposalHandler, ibcclientclient.UpgradeProposalHandler, interchainstakingclient.RegisterProposalHandler, interchainstakingclient.UpdateProposalHandler,
+				paramsclient.ProposalHandler,
+				interchainstakingclient.RegisterProposalHandler,
+				interchainstakingclient.UpdateProposalHandler,
 				participationrewardsclient.AddProtocolDataProposalHandler,
 			},
 		),
@@ -124,6 +131,7 @@ var (
 		govtypes.ModuleName:                        {authtypes.Burner},
 		ibctransfertypes.ModuleName:                {authtypes.Minter, authtypes.Burner},
 		icatypes.ModuleName:                        nil,
+		ibcfeetypes.ModuleName:                     nil,
 		claimsmanagertypes.ModuleName:              nil,
 		interchainstakingtypes.ModuleName:          {authtypes.Minter},
 		interchainstakingtypes.EscrowModuleAccount: {authtypes.Burner},
@@ -138,38 +146,37 @@ var (
 
 func appModules(
 	app *Quicksilver,
-	encodingConfig EncodingConfig,
+	appCodec codec.Codec,
 	skipGenesisInvariants bool,
 ) []module.AppModule {
-	appCodec := encodingConfig.Marshaler
 
 	// NOTE: Any module instantiated in the module manager that is later modified
 	// must be passed by reference here.
 	return []module.AppModule{
-		// SDK app modules
-		genutil.NewAppModule(
-			app.AccountKeeper, app.StakingKeeper, app.BaseApp.DeliverTx,
-			encodingConfig.TxConfig,
-		),
-		auth.NewAppModule(appCodec, app.AccountKeeper, authsims.RandomGenesisAccounts),
+
+		auth.NewAppModule(appCodec, app.AccountKeeper, authsims.RandomGenesisAccounts, app.GetSubspace(authtypes.ModuleName)),
 		vesting.NewAppModule(app.AccountKeeper, app.BankKeeper),
-		bank.NewAppModule(appCodec, app.BankKeeper, app.AccountKeeper),
-		capability.NewAppModule(appCodec, *app.CapabilityKeeper),
-		crisis.NewAppModule(&app.CrisisKeeper, skipGenesisInvariants),
-		gov.NewAppModule(appCodec, app.GovKeeper, app.AccountKeeper, app.BankKeeper),
-		slashing.NewAppModule(appCodec, app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, *app.StakingKeeper),
-		distr.NewAppModule(appCodec, app.DistrKeeper, app.AccountKeeper, app.BankKeeper, *app.StakingKeeper),
-		staking.NewAppModule(appCodec, *app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
-		upgrade.NewAppModule(app.UpgradeKeeper),
+		bank.NewAppModule(appCodec, app.BankKeeper, app.AccountKeeper, app.GetSubspace(banktypes.ModuleName)),
+		capability.NewAppModule(appCodec, *app.CapabilityKeeper, false),
+		gov.NewAppModule(appCodec, &app.GovKeeper, app.AccountKeeper, app.BankKeeper, app.GetSubspace(govtypes.ModuleName)),
+		slashing.NewAppModule(appCodec, app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, *app.StakingKeeper, app.GetSubspace(slashingtypes.ModuleName), app.interfaceRegistry),
+		distr.NewAppModule(appCodec, app.DistrKeeper, app.AccountKeeper, app.BankKeeper, *app.StakingKeeper, app.GetSubspace(distrtypes.ModuleName)),
+		staking.NewAppModule(appCodec, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.GetSubspace(stakingtypes.ModuleName)),
+		upgrade.NewAppModule(app.UpgradeKeeper, app.AccountKeeper.AddressCodec()),
 		evidence.NewAppModule(app.EvidenceKeeper),
 		params.NewAppModule(app.ParamsKeeper),
 		feegrantmodule.NewAppModule(appCodec, app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper, app.interfaceRegistry),
 		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
+		consensus.NewAppModule(appCodec, app.ConsensusParamsKeeper),
+
 		// ibc modules
 		ibc.NewAppModule(app.IBCKeeper),
-		app.TransferModule,
-		app.PacketForwardModule,
-		app.ICAModule,
+		transfer.NewAppModule(app.TransferKeeper),
+		ibcfee.NewAppModule(app.IBCFeeKeeper),
+		ica.NewAppModule(&app.ICAControllerKeeper, &app.ICAHostKeeper),
+		ibctm.NewAppModule(),
+		packetforward.NewAppModule(app.PacketForwardKeeper, app.GetSubspace(packetforwardtypes.ModuleName)),
+
 		// Quicksilver app modules
 		mint.NewAppModule(appCodec, app.MintKeeper, app.AccountKeeper, app.BankKeeper),
 		claimsmanager.NewAppModule(appCodec, app.ClaimsManagerKeeper),
@@ -179,8 +186,10 @@ func appModules(
 		participationrewards.NewAppModule(appCodec, app.ParticipationRewardsKeeper),
 		airdrop.NewAppModule(appCodec, app.AirdropKeeper),
 		tokenfactory.NewAppModule(app.TokenFactoryKeeper, app.AccountKeeper, app.BankKeeper),
-		wasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
+		wasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, baseapp.NewMsgServiceRouter(), app.GetSubspace(wasm.ModuleName)),
 		supply.NewAppModule(appCodec, app.SupplyKeeper),
+
+		crisis.NewAppModule(app.CrisisKeeper, skipGenesisInvariants, app.GetSubspace(crisistypes.ModuleName)),
 	}
 }
 
@@ -188,20 +197,19 @@ func appModules(
 // define the order of the modules for deterministic simulations.
 func simulationModules(
 	app *Quicksilver,
-	encodingConfig EncodingConfig,
+	appCodec codec.Codec,
 ) []module.AppModuleSimulation {
-	appCodec := encodingConfig.Marshaler
 	// NOTE: Any module instantiated in the module manager that is later modified
 	// must be passed by reference here.
 	return []module.AppModuleSimulation{
 		// SDK app modules
-		auth.NewAppModule(appCodec, app.AccountKeeper, authsims.RandomGenesisAccounts),
-		bank.NewAppModule(appCodec, app.BankKeeper, app.AccountKeeper),
-		capability.NewAppModule(appCodec, *app.CapabilityKeeper),
-		gov.NewAppModule(appCodec, app.GovKeeper, app.AccountKeeper, app.BankKeeper),
-		slashing.NewAppModule(appCodec, app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, *app.StakingKeeper),
-		distr.NewAppModule(appCodec, app.DistrKeeper, app.AccountKeeper, app.BankKeeper, *app.StakingKeeper),
-		staking.NewAppModule(appCodec, *app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
+		auth.NewAppModule(appCodec, app.AccountKeeper, authsims.RandomGenesisAccounts, app.GetSubspace(authtypes.ModuleName)),
+		bank.NewAppModule(appCodec, app.BankKeeper, app.AccountKeeper, app.GetSubspace(banktypes.ModuleName)),
+		capability.NewAppModule(appCodec, *app.CapabilityKeeper, false),
+		gov.NewAppModule(appCodec, &app.GovKeeper, app.AccountKeeper, app.BankKeeper, app.GetSubspace(govtypes.ModuleName)),
+		slashing.NewAppModule(appCodec, app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, *app.StakingKeeper, app.GetSubspace(slashingtypes.ModuleName), app.interfaceRegistry),
+		distr.NewAppModule(appCodec, app.DistrKeeper, app.AccountKeeper, app.BankKeeper, *app.StakingKeeper, app.GetSubspace(distrtypes.ModuleName)),
+		staking.NewAppModule(appCodec, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.GetSubspace(stakingtypes.ModuleName)),
 		evidence.NewAppModule(app.EvidenceKeeper),
 		params.NewAppModule(app.ParamsKeeper),
 		feegrantmodule.NewAppModule(appCodec, app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper, app.interfaceRegistry),
@@ -237,7 +245,6 @@ NOTE: capability module's beginblocker must come before any modules using capabi
 
 func orderBeginBlockers() []string {
 	return []string{
-		upgradetypes.ModuleName,
 		capabilitytypes.ModuleName,
 		// Note: epochs' begin should be "real" start of epochs, we keep epochs beginblock at the beginning
 		epochstypes.ModuleName,
@@ -246,7 +253,7 @@ func orderBeginBlockers() []string {
 		slashingtypes.ModuleName,
 		evidencetypes.ModuleName,
 		stakingtypes.ModuleName,
-		ibchost.ModuleName,
+		ibcexported.ModuleName,
 		interchainstakingtypes.ModuleName,
 		interchainquerytypes.ModuleName, // check ordering here.
 		// no-op modules
@@ -259,13 +266,13 @@ func orderBeginBlockers() []string {
 		authtypes.ModuleName,
 		banktypes.ModuleName,
 		govtypes.ModuleName,
-		crisistypes.ModuleName,
 		genutiltypes.ModuleName,
 		authz.ModuleName,
 		feegrant.ModuleName,
 		paramstypes.ModuleName,
 		vestingtypes.ModuleName,
 		tokenfactorytypes.ModuleName,
+		ibcfeetypes.ModuleName,
 		wasm.ModuleName,
 		supplytypes.ModuleName,
 	}
@@ -288,11 +295,10 @@ func orderEndBlockers() []string {
 		interchainquerytypes.ModuleName,
 		epochstypes.ModuleName,
 		// no-op modules
-		ibchost.ModuleName,
+		ibcexported.ModuleName,
 		ibctransfertypes.ModuleName,
 		icatypes.ModuleName,
 		packetforwardtypes.ModuleName,
-		capabilitytypes.ModuleName,
 		authtypes.ModuleName,
 		banktypes.ModuleName,
 		distrtypes.ModuleName,
@@ -310,6 +316,7 @@ func orderEndBlockers() []string {
 		participationrewardstypes.ModuleName,
 		airdroptypes.ModuleName,
 		tokenfactorytypes.ModuleName,
+		ibcfeetypes.ModuleName,
 		wasm.ModuleName,
 		supplytypes.ModuleName,
 		// currently no-op.
@@ -335,7 +342,6 @@ func orderInitBlockers() []string {
 		slashingtypes.ModuleName,
 		govtypes.ModuleName,
 		minttypes.ModuleName,
-		ibchost.ModuleName,
 		genutiltypes.ModuleName,
 		evidencetypes.ModuleName,
 		ibctransfertypes.ModuleName,
@@ -346,6 +352,9 @@ func orderInitBlockers() []string {
 		upgradetypes.ModuleName,
 		vestingtypes.ModuleName,
 		icatypes.ModuleName,
+		ibcexported.ModuleName,
+		ibcfeetypes.ModuleName,
+		consensusparamtypes.ModuleName,
 		// Quicksilver modules
 		epochstypes.ModuleName,
 		claimsmanagertypes.ModuleName,
@@ -360,4 +369,8 @@ func orderInitBlockers() []string {
 		// NOTE: crisis module must go at the end to check for invariants on each module
 		crisistypes.ModuleName,
 	}
+}
+
+func (app *Quicksilver) PreBlocker(ctx sdk.Context, _ *abci.RequestFinalizeBlock) (*sdk.ResponsePreBlock, error) {
+	return app.mm.PreBlock(ctx)
 }

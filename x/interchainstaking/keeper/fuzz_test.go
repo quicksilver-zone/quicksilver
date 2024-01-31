@@ -3,16 +3,16 @@ package keeper_test
 import (
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
-	icqtypes "github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
-	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/keeper"
-	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
+	"github.com/quicksilver-zone/quicksilver/v7/utils/addressutils"
+	icqtypes "github.com/quicksilver-zone/quicksilver/v7/x/interchainquery/types"
+	"github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking/keeper"
+	icstypes "github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking/types"
 )
 
 type FuzzingTestSuite struct {
@@ -65,7 +65,7 @@ func FuzzZones(f *testing.F) {
 		switch str := string(reqBz); str {
 		// Manually skipping over known and reported vectors
 		// as we know they cause crashes.
-		case "\n\t\n\x01000 0(0", "\n\t\n\x03000 0(0": // https://github.com/quicksilver-zone/quicksilver-incognito/issues/88
+		case "\n\t\n\x01000 0(0", "\n\t\n\x03000 0(0": // https://github.com/quicksilver-zone/quicksilver/v7-incognito/issues/88
 			return
 		case "\n\t\n\x01K\x10\x0000(0", "\n\t\n\x030D0 0(0", "\n\t\n\x0301000(0":
 			return
@@ -97,37 +97,50 @@ func FuzzValsetCallback(f *testing.F) {
 	// 1. Generate the seeds.
 	newVal := addressutils.GenerateValAddressForTest()
 	valSetFuncs := []func(in stakingtypes.Validators) stakingtypes.QueryValidatorsResponse{
-		func(in stakingtypes.Validators) stakingtypes.QueryValidatorsResponse {
+		func(inVals stakingtypes.Validators) stakingtypes.QueryValidatorsResponse {
+			in := inVals.Validators
 			val := in[0]
 			val.OperatorAddress = newVal.String()
 			in = append(in, val)
 			return stakingtypes.QueryValidatorsResponse{Validators: in}
 		},
-		func(in stakingtypes.Validators) stakingtypes.QueryValidatorsResponse {
-			in[1].DelegatorShares = in[1].DelegatorShares.Add(sdk.NewDec(1000))
-			in[2].DelegatorShares = in[2].DelegatorShares.Add(sdk.NewDec(2000))
+		func(inVals stakingtypes.Validators) stakingtypes.QueryValidatorsResponse {
+			in := inVals.Validators
+
+			in[1].DelegatorShares = in[1].DelegatorShares.Add(sdkmath.LegacyNewDec(1000))
+			in[2].DelegatorShares = in[2].DelegatorShares.Add(sdkmath.LegacyNewDec(2000))
 			return stakingtypes.QueryValidatorsResponse{Validators: in}
 		},
-		func(in stakingtypes.Validators) stakingtypes.QueryValidatorsResponse {
-			in[0].Tokens = in[0].Tokens.Add(sdk.NewInt(1000))
+		func(inVals stakingtypes.Validators) stakingtypes.QueryValidatorsResponse {
+			in := inVals.Validators
+
+			in[0].Tokens = in[0].Tokens.Add(sdkmath.NewInt(1000))
 			return stakingtypes.QueryValidatorsResponse{Validators: in}
 		},
-		func(in stakingtypes.Validators) stakingtypes.QueryValidatorsResponse {
-			in[1].Tokens = in[1].Tokens.Add(sdk.NewInt(1000))
-			in[2].Tokens = in[2].Tokens.Add(sdk.NewInt(2000))
+		func(inVals stakingtypes.Validators) stakingtypes.QueryValidatorsResponse {
+			in := inVals.Validators
+
+			in[1].Tokens = in[1].Tokens.Add(sdkmath.NewInt(1000))
+			in[2].Tokens = in[2].Tokens.Add(sdkmath.NewInt(2000))
 			return stakingtypes.QueryValidatorsResponse{Validators: in}
 		},
-		func(in stakingtypes.Validators) stakingtypes.QueryValidatorsResponse {
-			in[1].Tokens = in[1].Tokens.Sub(sdk.NewInt(10))
-			in[2].Tokens = in[2].Tokens.Sub(sdk.NewInt(20))
+		func(inVals stakingtypes.Validators) stakingtypes.QueryValidatorsResponse {
+			in := inVals.Validators
+
+			in[1].Tokens = in[1].Tokens.Sub(sdkmath.NewInt(10))
+			in[2].Tokens = in[2].Tokens.Sub(sdkmath.NewInt(20))
 			return stakingtypes.QueryValidatorsResponse{Validators: in}
 		},
-		func(in stakingtypes.Validators) stakingtypes.QueryValidatorsResponse {
-			in[0].Commission.CommissionRates.Rate = sdk.NewDecWithPrec(5, 1)
-			in[2].Commission.CommissionRates.Rate = sdk.NewDecWithPrec(5, 2)
+		func(inVals stakingtypes.Validators) stakingtypes.QueryValidatorsResponse {
+			in := inVals.Validators
+
+			in[0].Commission.CommissionRates.Rate = sdkmath.LegacyNewDecWithPrec(5, 1)
+			in[2].Commission.CommissionRates.Rate = sdkmath.LegacyNewDecWithPrec(5, 2)
 			return stakingtypes.QueryValidatorsResponse{Validators: in}
 		},
-		func(in stakingtypes.Validators) stakingtypes.QueryValidatorsResponse {
+		func(inVals stakingtypes.Validators) stakingtypes.QueryValidatorsResponse {
+			in := inVals.Validators
+
 			val := in[0]
 			val.OperatorAddress = newVal.String()
 			in = append(in, val)
@@ -142,8 +155,13 @@ func FuzzValsetCallback(f *testing.F) {
 
 	for _, valFunc := range valSetFuncs {
 		// 1.5. Set up a fresh test suite given that valFunc can mutate inputs.
-		chainBVals := suite.GetQuicksilverApp(suite.chainB).StakingKeeper.GetValidators(suite.chainB.GetContext(), 300)
-		queryRes := valFunc(chainBVals)
+		chainBVals, err := suite.GetQuicksilverApp(suite.chainB).StakingKeeper.GetValidators(suite.chainB.GetContext(), 300)
+		suite.NoError(err)
+		vals := stakingtypes.Validators{
+			Validators:     chainBVals,
+			ValidatorCodec: suite.chainB.App.AppCodec().InterfaceRegistry().SigningContext().AddressCodec(),
+		}
+		queryRes := valFunc(vals)
 		app := suite.GetQuicksilverApp(suite.chainA)
 		bz, err := app.AppCodec().Marshal(&queryRes)
 		suite.NoError(err)

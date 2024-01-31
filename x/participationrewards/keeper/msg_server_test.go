@@ -4,24 +4,25 @@ import (
 	"encoding/json"
 	"time"
 
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/proto/tendermint/crypto"
+	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cometbft/cometbft/proto/tendermint/crypto"
 
 	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	"github.com/quicksilver-zone/quicksilver/app"
-	lpfarm "github.com/quicksilver-zone/quicksilver/third-party-chains/crescent-types/lpfarm" //nolint:revive
-	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/lockup"
-	umeetypes "github.com/quicksilver-zone/quicksilver/third-party-chains/umee-types/leverage/types"
-	"github.com/quicksilver-zone/quicksilver/utils"
-	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
-	cmtypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
-	"github.com/quicksilver-zone/quicksilver/x/participationrewards/keeper"
-	"github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
+	"github.com/quicksilver-zone/quicksilver/v7/app"
+	lpfarm "github.com/quicksilver-zone/quicksilver/v7/third-party-chains/crescent-types/lpfarm" //nolint:revive
+	"github.com/quicksilver-zone/quicksilver/v7/third-party-chains/osmosis-types/lockup"
+	umeetypes "github.com/quicksilver-zone/quicksilver/v7/third-party-chains/umee-types/leverage/types"
+	"github.com/quicksilver-zone/quicksilver/v7/utils"
+	"github.com/quicksilver-zone/quicksilver/v7/utils/addressutils"
+	"github.com/quicksilver-zone/quicksilver/v7/utils/bankutils"
+	cmtypes "github.com/quicksilver-zone/quicksilver/v7/x/claimsmanager/types"
+	"github.com/quicksilver-zone/quicksilver/v7/x/participationrewards/keeper"
+	"github.com/quicksilver-zone/quicksilver/v7/x/participationrewards/types"
 )
 
 func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
@@ -147,8 +148,8 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 			"invalid_umee_denom",
 			func() {
 				address := addressutils.GenerateAccAddressForTest()
-				prefix := banktypes.CreateAccountBalancesPrefix(authtypes.NewModuleAddress(umeetypes.LeverageModuleName))
-				key := banktypes.CreatePrefixedAccountStoreKey(prefix, []byte("u/ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3"))
+				prefix := bankutils.CreateAccountBalancesPrefix(authtypes.NewModuleAddress(umeetypes.LeverageModuleName))
+				key := bankutils.CreatePrefixedAccountStoreKey(prefix, []byte("u/ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3"))
 
 				cd := sdk.Coin{
 					Denom:  "u/random",
@@ -320,7 +321,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 			"valid_osmosis_unbonded_gamm",
 			func() {
 				userAddress := addressutils.GenerateAccAddressForTest()
-				bankkey := banktypes.CreateAccountBalancesPrefix(userAddress)
+				bankkey := bankutils.CreateAccountBalancesPrefix(userAddress)
 				bankkey = append(bankkey, []byte("gamm/1")...)
 
 				cd := math.NewInt(10000000)
@@ -350,7 +351,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 			"valid_liquid",
 			func() {
 				address := addressutils.GenerateAccAddressForTest()
-				key := banktypes.CreatePrefixedAccountStoreKey(address, []byte("ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3"))
+				key := bankutils.CreatePrefixedAccountStoreKey(address, []byte("ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3"))
 
 				cd := sdk.Coin{
 					Denom:  "",
@@ -382,7 +383,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 			"valid_liquid",
 			func() {
 				address := addressutils.GenerateAccAddressForTest()
-				key := banktypes.CreatePrefixedAccountStoreKey(address, []byte("ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3"))
+				key := bankutils.CreatePrefixedAccountStoreKey(address, []byte("ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3"))
 
 				cd := sdk.Coin{
 					Denom:  "",
@@ -416,7 +417,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 				address := addressutils.GenerateAccAddressForTest()
 
 				userAddress, _ := addressutils.EncodeAddressToBech32("umee", address)
-				bankkey := banktypes.CreateAccountBalancesPrefix(address)
+				bankkey := bankutils.CreateAccountBalancesPrefix(address)
 				bankkey = append(bankkey, []byte("u/uumee")...)
 
 				leveragekey := umeetypes.KeyCollateralAmount(address, "u/uumee")
@@ -489,7 +490,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 			name: "valid_crescent_unbonded_pool_coin",
 			malleate: func() {
 				userAddress := addressutils.GenerateAccAddressForTest()
-				bankkey := banktypes.CreateAccountBalancesPrefix(userAddress)
+				bankkey := bankutils.CreateAccountBalancesPrefix(userAddress)
 				bankkey = append(bankkey, []byte("pool1")...)
 
 				cd := math.NewInt(1000)
@@ -558,7 +559,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitLocalClaim() {
 			func(ctx sdk.Context, appA *app.Quicksilver) {},
 			func(ctx sdk.Context, appA *app.Quicksilver) *types.MsgSubmitClaim {
 				address := addressutils.GenerateAccAddressForTest()
-				key := banktypes.CreatePrefixedAccountStoreKey(address, []byte("ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3"))
+				key := bankutils.CreatePrefixedAccountStoreKey(address, []byte("ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3"))
 
 				query := abci.RequestQuery{
 					Data:   key,
@@ -567,7 +568,8 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitLocalClaim() {
 					Prove:  true,
 				}
 
-				resp := appA.BaseApp.Query(query)
+				resp, err := appA.BaseApp.Query(ctx, &query)
+				suite.Require().NoError(err)
 
 				return &types.MsgSubmitClaim{
 					UserAddress: address.String(),
@@ -592,11 +594,11 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitLocalClaim() {
 		{
 			"local_callback_value_invalid_denom",
 			func(ctx sdk.Context, appA *app.Quicksilver) {
-				suite.NoError(appA.BankKeeper.MintCoins(ctx, "mint", sdk.NewCoins(sdk.NewCoin("uqatom", sdk.NewInt(100)))))
-				suite.NoError(appA.BankKeeper.SendCoinsFromModuleToAccount(ctx, "mint", address, sdk.NewCoins(sdk.NewCoin("uqatom", sdk.NewInt(100)))))
+				suite.NoError(appA.BankKeeper.MintCoins(ctx, "mint", sdk.NewCoins(sdk.NewCoin("uqatom", sdkmath.NewInt(100)))))
+				suite.NoError(appA.BankKeeper.SendCoinsFromModuleToAccount(ctx, "mint", address, sdk.NewCoins(sdk.NewCoin("uqatom", sdkmath.NewInt(100)))))
 			},
 			func(ctx sdk.Context, appA *app.Quicksilver) *types.MsgSubmitClaim {
-				key := banktypes.CreatePrefixedAccountStoreKey(address, []byte("uqatom"))
+				key := bankutils.CreatePrefixedAccountStoreKey(address, []byte("uqatom"))
 
 				query := abci.RequestQuery{
 					Data:   key,
@@ -605,7 +607,8 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitLocalClaim() {
 					Prove:  true,
 				}
 
-				resp := appA.BaseApp.Query(query)
+				resp, err := appA.BaseApp.Query(ctx, &query)
+				suite.Require().NoError(err)
 
 				return &types.MsgSubmitClaim{
 					UserAddress: address.String(),
@@ -630,8 +633,8 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitLocalClaim() {
 		{
 			"local_callback_value_valid_denom",
 			func(ctx sdk.Context, appA *app.Quicksilver) {
-				suite.NoError(appA.BankKeeper.MintCoins(ctx, "mint", sdk.NewCoins(sdk.NewCoin("uqatom", sdk.NewInt(100)))))
-				suite.NoError(appA.BankKeeper.SendCoinsFromModuleToAccount(ctx, "mint", address, sdk.NewCoins(sdk.NewCoin("uqatom", sdk.NewInt(100)))))
+				suite.NoError(appA.BankKeeper.MintCoins(ctx, "mint", sdk.NewCoins(sdk.NewCoin("uqatom", sdkmath.NewInt(100)))))
+				suite.NoError(appA.BankKeeper.SendCoinsFromModuleToAccount(ctx, "mint", address, sdk.NewCoins(sdk.NewCoin("uqatom", sdkmath.NewInt(100)))))
 
 				// add uqatom to the list of allowed denoms for this zone
 				rawPd := types.LiquidAllowedDenomProtocolData{
@@ -648,7 +651,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitLocalClaim() {
 				appA.ParticipationRewardsKeeper.SetProtocolData(ctx, rawPd.GenerateKey(), pd)
 			},
 			func(ctx sdk.Context, appA *app.Quicksilver) *types.MsgSubmitClaim {
-				key := banktypes.CreatePrefixedAccountStoreKey(address, []byte("uqatom"))
+				key := bankutils.CreatePrefixedAccountStoreKey(address, []byte("uqatom"))
 
 				query := abci.RequestQuery{
 					Data:   key,
@@ -657,7 +660,8 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitLocalClaim() {
 					Prove:  true,
 				}
 
-				resp := appA.BaseApp.Query(query)
+				resp, err := appA.BaseApp.Query(ctx, &query)
+				suite.Require().NoError(err)
 
 				return &types.MsgSubmitClaim{
 					UserAddress: address.String(),

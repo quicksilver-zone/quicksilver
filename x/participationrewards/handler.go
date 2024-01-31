@@ -7,8 +7,8 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 
-	"github.com/quicksilver-zone/quicksilver/x/participationrewards/keeper"
-	"github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
+	"github.com/quicksilver-zone/quicksilver/v7/x/participationrewards/keeper"
+	"github.com/quicksilver-zone/quicksilver/v7/x/participationrewards/types"
 )
 
 func NewProposalHandler(k *keeper.Keeper) govv1beta1.Handler {

@@ -6,19 +6,17 @@ import (
 	"testing"
 	"time"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	simapp "github.com/quicksilver-zone/quicksilver/app"
-	"github.com/quicksilver-zone/quicksilver/x/participationrewards"
-	"github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
+	simapp "github.com/quicksilver-zone/quicksilver/v7/app"
+	"github.com/quicksilver-zone/quicksilver/v7/x/participationrewards"
+	"github.com/quicksilver-zone/quicksilver/v7/x/participationrewards/types"
 )
 
 func TestParticipationRewardsExportGenesis(t *testing.T) {
 	app := simapp.Setup(t, false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(false)
 
 	chainStartTime := ctx.BlockTime()
 
@@ -47,7 +45,7 @@ func TestParticipationRewardsExportGenesis(t *testing.T) {
 func TestParticipationRewardsInitGenesis(t *testing.T) {
 	// setup params
 	app := simapp.Setup(t, false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(false)
 
 	now := time.Now()
 	ctx = ctx.WithBlockHeight(1)
@@ -74,9 +72,9 @@ func TestParticipationRewardsInitGenesis(t *testing.T) {
 	genesisState := types.GenesisState{
 		Params: types.Params{
 			DistributionProportions: types.DistributionProportions{
-				ValidatorSelectionAllocation: sdk.NewDecWithPrec(5, 1),
-				HoldingsAllocation:           sdk.NewDecWithPrec(5, 1),
-				LockupAllocation:             sdk.ZeroDec(),
+				ValidatorSelectionAllocation: sdkmath.LegacyNewDecWithPrec(5, 1),
+				HoldingsAllocation:           sdkmath.LegacyNewDecWithPrec(5, 1),
+				LockupAllocation:             sdkmath.LegacyZeroDec(),
 			},
 		},
 		ProtocolData: []*types.KeyedProtocolData{kpd},
@@ -85,9 +83,9 @@ func TestParticipationRewardsInitGenesis(t *testing.T) {
 
 	participationrewards.InitGenesis(ctx, app.ParticipationRewardsKeeper, genesisState)
 
-	require.Equal(t, app.ParticipationRewardsKeeper.GetParams(ctx).DistributionProportions.ValidatorSelectionAllocation, sdk.NewDecWithPrec(5, 1))
-	require.Equal(t, app.ParticipationRewardsKeeper.GetParams(ctx).DistributionProportions.HoldingsAllocation, sdk.NewDecWithPrec(5, 1))
-	require.Equal(t, app.ParticipationRewardsKeeper.GetParams(ctx).DistributionProportions.LockupAllocation, sdk.ZeroDec())
+	require.Equal(t, app.ParticipationRewardsKeeper.GetParams(ctx).DistributionProportions.ValidatorSelectionAllocation, sdkmath.LegacyNewDecWithPrec(5, 1))
+	require.Equal(t, app.ParticipationRewardsKeeper.GetParams(ctx).DistributionProportions.HoldingsAllocation, sdkmath.LegacyNewDecWithPrec(5, 1))
+	require.Equal(t, app.ParticipationRewardsKeeper.GetParams(ctx).DistributionProportions.LockupAllocation, sdkmath.LegacyZeroDec())
 
 	pd, found := app.ParticipationRewardsKeeper.GetProtocolData(ctx, types.ProtocolDataTypeOsmosisPool, "6")
 	require.True(t, found)

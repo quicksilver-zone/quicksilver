@@ -6,21 +6,23 @@ import (
 	"time"
 
 	sdkioerrors "cosmossdk.io/errors"
+	sdkmath "cosmossdk.io/math"
 
-	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"cosmossdk.io/store/prefix"
+	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/tx"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	icatypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/types"
-	clienttypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
-	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
-	host "github.com/cosmos/ibc-go/v5/modules/core/24-host"
+	icatypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/types"
+	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
+	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
+	host "github.com/cosmos/ibc-go/v8/modules/core/24-host"
 
-	"github.com/quicksilver-zone/quicksilver/utils"
-	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
-	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
-	minttypes "github.com/quicksilver-zone/quicksilver/x/mint/types"
+	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
+	"github.com/quicksilver-zone/quicksilver/v7/utils"
+	"github.com/quicksilver-zone/quicksilver/v7/utils/addressutils"
+	"github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking/types"
+	minttypes "github.com/quicksilver-zone/quicksilver/v7/x/mint/types"
 )
 
 const (
@@ -29,9 +31,9 @@ const (
 	ICATimeout      = time.Hour * 6
 )
 
-func (k *Keeper) HandleReceiptTransaction(ctx sdk.Context, txn *tx.Tx, hash string, zone types.Zone) error {
+func (k *Keeper) HandleReceiptTransaction(ctx sdk.Context, txn sdk.TxWithMemo, hash string, zone types.Zone) error {
 	k.Logger(ctx).Info("Deposit receipt.", "ischeck", ctx.IsCheckTx(), "isrecheck", ctx.IsReCheckTx())
-	memo := txn.Body.Memo
+	memo := txn.GetMemo()
 
 	senderAddress := Unset
 	assets := sdk.Coins{}
@@ -142,19 +144,28 @@ func (k *Keeper) SendTokenIBC(ctx sdk.Context, senderAccAddress sdk.AccAddress, 
 		return errors.New("unable to find remote transfer connection")
 	}
 
-	return k.TransferKeeper.SendTransfer(
-		ctx,
-		srcPort,
-		srcChannel,
-		coin,
-		senderAccAddress,
-		receiver,
-		clienttypes.Height{
+	msgTransfer := &transfertypes.MsgTransfer{
+		SourcePort:    srcPort,
+		SourceChannel: srcChannel,
+		Token:         coin,
+		Sender:        senderAccAddress.String(),
+		Receiver:      receiver,
+		TimeoutHeight: clienttypes.Height{
 			RevisionNumber: 0,
 			RevisionHeight: 0,
 		},
-		uint64(ctx.BlockTime().UnixNano()+5*time.Minute.Nanoseconds()),
+		TimeoutTimestamp: uint64(ctx.BlockTime().UnixNano() + 5*time.Minute.Nanoseconds()),
+	}
+
+	_, err := k.TransferKeeper.Transfer(
+		ctx,
+		msgTransfer,
 	)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // MintAndSendQAsset mints qAssets based on the native asset redemption rate.  Tokens are then transferred to the given user.
@@ -176,7 +187,7 @@ func (k *Keeper) MintAndSendQAsset(ctx sdk.Context, sender sdk.AccAddress, sende
 
 	qAssets := sdk.Coins{}
 	for _, asset := range assets.Sort() {
-		amount := sdk.NewDecFromInt(asset.Amount).Quo(zone.RedemptionRate).TruncateInt()
+		amount := sdkmath.LegacyNewDecFromInt(asset.Amount).Quo(zone.RedemptionRate).TruncateInt()
 		qAssets = qAssets.Add(sdk.NewCoin(zone.LocalDenom, amount))
 	}
 
@@ -283,7 +294,7 @@ func (k *Keeper) SubmitTx(ctx sdk.Context, msgs []sdk.Msg, account *types.ICAAcc
 		msgs = msgs[chunkSize:]
 
 		// build and submit message for this chunk
-		data, err := icatypes.SerializeCosmosTx(k.cdc, msgsChunk)
+		data, err := icatypes.SerializeCosmosTx(k.cdc, msgsChunk, icatypes.EncodingProtobuf)
 		if err != nil {
 			return err
 		}
@@ -348,7 +359,7 @@ func (k *Keeper) DeleteReceipt(ctx sdk.Context, chainID, txHash string) {
 // IterateReceipts iterate through receipts.
 func (k *Keeper) IterateReceipts(ctx sdk.Context, fn func(index int64, receiptInfo types.Receipt) (stop bool)) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixReceipt)
-	iterator := sdk.KVStorePrefixIterator(store, nil)
+	iterator := storetypes.KVStorePrefixIterator(store, nil)
 	defer iterator.Close()
 
 	i := int64(0)
@@ -375,7 +386,7 @@ func (k *Keeper) AllReceipts(ctx sdk.Context) []types.Receipt {
 // IterateZoneReceipts iterates through receipts of the given zone.
 func (k *Keeper) IterateZoneReceipts(ctx sdk.Context, chainID string, fn func(index int64, receiptInfo types.Receipt) (stop bool)) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixReceipt)
-	iterator := sdk.KVStorePrefixIterator(store, []byte(chainID))
+	iterator := storetypes.KVStorePrefixIterator(store, []byte(chainID))
 	defer iterator.Close()
 
 	i := int64(0)

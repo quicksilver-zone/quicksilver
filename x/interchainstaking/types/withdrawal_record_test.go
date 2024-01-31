@@ -4,11 +4,12 @@ import (
 	"testing"
 	"time"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
+	"github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking/types"
 )
 
 func TestWithdrawalRecord_DelayCompletion(t *testing.T) {
@@ -19,7 +20,7 @@ func TestWithdrawalRecord_DelayCompletion(t *testing.T) {
 		ChainId:        "test",
 		Delegator:      "test",
 		Recipient:      "test",
-		BurnAmount:     sdk.NewCoin("test", sdk.NewInt(10000)),
+		BurnAmount:     sdk.NewCoin("test", sdkmath.NewInt(10000)),
 		Txhash:         "test",
 		Status:         types.WithdrawStatusSend,
 		CompletionTime: ctx.BlockTime(),

@@ -1,15 +1,18 @@
 package keeper_test
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkmath "cosmossdk.io/math"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	"github.com/quicksilver-zone/quicksilver/x/interchainquery/keeper"
+	"github.com/quicksilver-zone/quicksilver/v7/x/interchainquery/keeper"
 )
 
 func (suite *KeeperTestSuite) TestEndBlocker() {
+	vals, err := suite.GetSimApp(suite.chainB).StakingKeeper.GetBondedValidatorsByPower(suite.chainB.GetContext())
+
+	suite.NoError(err)
 	qvr := stakingtypes.QueryValidatorsResponse{
-		Validators: suite.GetSimApp(suite.chainB).StakingKeeper.GetBondedValidatorsByPower(suite.chainB.GetContext()),
+		Validators: vals,
 	}
 
 	bondedQuery := stakingtypes.QueryValidatorsRequest{Status: stakingtypes.BondStatusBonded}
@@ -24,7 +27,7 @@ func (suite *KeeperTestSuite) TestEndBlocker() {
 		suite.chainB.ChainID,
 		"cosmos.staking.v1beta1.Query/Validators",
 		bz,
-		sdk.NewInt(200),
+		sdkmath.NewInt(200),
 		"",
 		0,
 	)
@@ -39,7 +42,7 @@ func (suite *KeeperTestSuite) TestEndBlocker() {
 		suite.chainA.GetContext(),
 		id,
 		suite.GetSimApp(suite.chainB).AppCodec().MustMarshalJSON(&qvr),
-		sdk.NewInt(suite.chainB.CurrentHeader.Height),
+		sdkmath.NewInt(suite.chainB.CurrentHeader.Height),
 	)
 	suite.NoError(err)
 

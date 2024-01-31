@@ -9,11 +9,12 @@ import (
 	"fmt"
 	"strings"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
-	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
-	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
+	"github.com/quicksilver-zone/quicksilver/v7/utils/addressutils"
+	"github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking/types"
 )
 
 type msgServer struct {
@@ -67,8 +68,8 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 	}
 
 	// get min of LastRedemptionRate (N-1) and RedemptionRate (N)
-	rate := sdk.MinDec(zone.LastRedemptionRate, zone.RedemptionRate)
-	nativeTokens := sdk.NewDecFromInt(msg.Value.Amount).Mul(rate).TruncateInt()
+	rate := sdkmath.LegacyMinDec(zone.LastRedemptionRate, zone.RedemptionRate)
+	nativeTokens := sdkmath.LegacyNewDecFromInt(msg.Value.Amount).Mul(rate).TruncateInt()
 	outTokens := sdk.NewCoin(zone.BaseDenom, nativeTokens)
 	k.Logger(ctx).Info("tokens to distribute", "amount", outTokens)
 

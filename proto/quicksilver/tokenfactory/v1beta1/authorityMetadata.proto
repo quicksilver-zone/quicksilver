@@ -3,7 +3,7 @@ package quicksilver.tokenfactory.v1beta1;
 
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/quicksilver-zone/quicksilver/x/tokenfactory/types";
+option go_package = "github.com/quicksilver-zone/quicksilver/v7/x/tokenfactory/types";
 
 // DenomAuthorityMetadata specifies metadata for addresses that have specific
 // capabilities over a token factory denom. Right now there is only one Admin
@@ -12,5 +12,5 @@ message DenomAuthorityMetadata {
   option (gogoproto.equal) = true;
 
   // Can be empty for no admin, or a valid quicksilver address
-  string admin = 1 [(gogoproto.moretags) = "yaml:\"admin\""];
+  string admin = 1 [ (gogoproto.moretags) = "yaml:\"admin\"" ];
 }

@@ -6,9 +6,10 @@ import (
 	"fmt"
 	"strings"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
+	"github.com/quicksilver-zone/quicksilver/v7/utils/addressutils"
 )
 
 func (z Zone) SupportReturnToSender() bool { return z.ReturnToSender }
@@ -66,12 +67,12 @@ func (z *Zone) ValidateCoinsForZone(coins sdk.Coins, zoneVals map[string]bool) e
 // memo functionality
 
 // this method exist to make testing easier!
-func (z *Zone) UpdateIntentWithCoins(intent DelegatorIntent, multiplier sdk.Dec, inAmount sdk.Coins, vals map[string]bool) DelegatorIntent {
+func (z *Zone) UpdateIntentWithCoins(intent DelegatorIntent, multiplier sdkmath.LegacyDec, inAmount sdk.Coins, vals map[string]bool) DelegatorIntent {
 	// coinIntent is ordinal
 	return intent.AddOrdinal(multiplier, z.ConvertCoinsToOrdinalIntents(inAmount, vals))
 }
 
-func (*Zone) UpdateZoneIntentWithMemo(memoIntent ValidatorIntents, intent DelegatorIntent, multiplier sdk.Dec) DelegatorIntent {
+func (*Zone) UpdateZoneIntentWithMemo(memoIntent ValidatorIntents, intent DelegatorIntent, multiplier sdkmath.LegacyDec) DelegatorIntent {
 	return intent.AddOrdinal(multiplier, memoIntent)
 }
 
@@ -89,9 +90,9 @@ func (*Zone) ConvertCoinsToOrdinalIntents(coins sdk.Coins, zoneVals map[string]b
 
 		val, ok := out.GetForValoper(coinParts[0])
 		if !ok {
-			val = &ValidatorIntent{ValoperAddress: coinParts[0], Weight: sdk.ZeroDec()}
+			val = &ValidatorIntent{ValoperAddress: coinParts[0], Weight: sdkmath.LegacyZeroDec()}
 		}
-		val.Weight = val.Weight.Add(sdk.NewDecFromInt(coin.Amount))
+		val.Weight = val.Weight.Add(sdkmath.LegacyNewDecFromInt(coin.Amount))
 		out = out.SetForValoper(coinParts[0], val)
 	}
 
@@ -183,7 +184,7 @@ func (z *Zone) validatorIntentsFromBytes(coins sdk.Coins, weightBytes []byte) (v
 		if rawWeight > 200 {
 			return validatorIntents, fmt.Errorf("out of bounds value received in memo intent message; expected 0-200, got %d", rawWeight)
 		}
-		sdkWeight := sdk.NewDecFromInt(sdk.NewInt(rawWeight)).QuoInt(sdk.NewInt(200))
+		sdkWeight := sdkmath.LegacyNewDecFromInt(sdkmath.NewInt(rawWeight)).QuoInt(sdkmath.NewInt(200))
 		coinWeight := sdkWeight.MulInt(coins.AmountOf(z.BaseDenom))
 		index++
 		address := weightBytes[index : index+20]
@@ -194,7 +195,7 @@ func (z *Zone) validatorIntentsFromBytes(coins sdk.Coins, weightBytes []byte) (v
 		}
 		val, ok := validatorIntents.GetForValoper(valAddr)
 		if !ok {
-			val = &ValidatorIntent{ValoperAddress: valAddr, Weight: sdk.ZeroDec()}
+			val = &ValidatorIntent{ValoperAddress: valAddr, Weight: sdkmath.LegacyZeroDec()}
 		}
 		val.Weight = val.Weight.Add(coinWeight)
 		validatorIntents = validatorIntents.SetForValoper(valAddr, val)

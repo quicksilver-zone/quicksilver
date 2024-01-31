@@ -1,14 +1,14 @@
 package balancer
 
 import (
-	proto "github.com/gogo/protobuf/proto"
+	proto "github.com/cosmos/gogoproto/proto"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 
-	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/gamm"
+	"github.com/quicksilver-zone/quicksilver/v7/third-party-chains/osmosis-types/gamm"
 )
 
 // RegisterLegacyAminoCodec registers the necessary x/gamm interfaces and concrete types

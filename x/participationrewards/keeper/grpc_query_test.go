@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
+	"github.com/quicksilver-zone/quicksilver/v7/x/participationrewards/types"
 )
 
 func (suite *KeeperTestSuite) TestKeeper_Params() {

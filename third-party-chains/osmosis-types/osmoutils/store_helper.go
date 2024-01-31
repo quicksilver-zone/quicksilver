@@ -4,11 +4,10 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/gogo/protobuf/proto"
-	db "github.com/tendermint/tm-db"
-
-	"github.com/cosmos/cosmos-sdk/store"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"cosmossdk.io/store"
+	storetypes "cosmossdk.io/store/types"
+	db "github.com/cosmos/cosmos-db"
+	proto "github.com/cosmos/gogoproto/proto"
 )
 
 func GatherAllKeysFromStore(storeObj store.KVStore) []string {
@@ -29,7 +28,7 @@ func GatherValuesFromStore[T any](storeObj store.KVStore, keyStart []byte, keyEn
 }
 
 func GatherValuesFromStorePrefix[T any](storeObj store.KVStore, prefix []byte, parseValue func([]byte) (T, error)) ([]T, error) {
-	iterator := sdk.KVStorePrefixIterator(storeObj, prefix)
+	iterator := storetypes.KVStorePrefixIterator(storeObj, prefix)
 	defer iterator.Close()
 	return gatherValuesFromIteratorWithStop(iterator, parseValue, noStopFn)
 }
@@ -124,16 +123,18 @@ func MustGet(store store.KVStore, key []byte, result proto.Message) {
 	}
 }
 
-// MustSetDec sets dec value to store at key. Panics on any error.
-func MustSetDec(store store.KVStore, key []byte, value sdk.Dec) {
-	MustSet(store, key, &sdk.DecProto{
-		Dec: value,
-	})
-}
+// Unused functions:
 
-// MustGetDec gets dec value from store at key. Panics on any error.
-func MustGetDec(store store.KVStore, key []byte) sdk.Dec {
-	result := &sdk.DecProto{}
-	MustGet(store, key, result)
-	return result.Dec
-}
+// // MustSetDec sets dec value to store at key. Panics on any error.
+// func MustSetDec(store store.KVStore, key []byte, value sdkmath.LegacyDec) {
+// 	MustSet(store, key, &sdk.DecProto{
+// 		Dec: value,
+// 	})
+// }
+
+// // MustGetDec gets dec value from store at key. Panics on any error.
+// func MustGetDec(store store.KVStore, key []byte) sdkmath.LegacyDec {
+// 	result := &sdk.DecProto{}
+// 	MustGet(store, key, result)
+// 	return result.Dec
+// }

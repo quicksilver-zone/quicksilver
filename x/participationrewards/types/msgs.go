@@ -10,8 +10,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 
-	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
-	cmtypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
+	"github.com/quicksilver-zone/quicksilver/v7/utils/addressutils"
+	cmtypes "github.com/quicksilver-zone/quicksilver/v7/x/claimsmanager/types"
 )
 
 // participationrewars message types.

@@ -3,14 +3,13 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/quicksilver-zone/quicksilver/x/tokenfactory/types"
+	"github.com/quicksilver-zone/quicksilver/v7/x/tokenfactory/types"
 )
 
 // InitGenesis initializes the tokenfactory module's state from a provided genesis
 // state.
 func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 	k.CreateModuleAccount(ctx)
-
 	if genState.Params.DenomCreationFee == nil {
 		genState.Params.DenomCreationFee = sdk.NewCoins()
 	}

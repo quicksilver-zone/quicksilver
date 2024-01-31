@@ -6,10 +6,10 @@ import (
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	"github.com/quicksilver-zone/quicksilver/utils"
-	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
+	"github.com/quicksilver-zone/quicksilver/v7/utils"
+	"github.com/quicksilver-zone/quicksilver/v7/utils/addressutils"
+	"github.com/quicksilver-zone/quicksilver/v7/utils/bankutils"
 )
 
 const expectedDenom = "denom"
@@ -24,7 +24,7 @@ func TestDenomFromRequestKey(t *testing.T) {
 			"valid",
 			func() (sdk.AccAddress, []byte) {
 				accAddr := addressutils.GenerateAccAddressForTest()
-				key := banktypes.CreateAccountBalancesPrefix(accAddr.Bytes())
+				key := bankutils.CreateAccountBalancesPrefix(accAddr.Bytes())
 				key = append(key, []byte(expectedDenom)...)
 				return accAddr, key
 			},
@@ -37,7 +37,7 @@ func TestDenomFromRequestKey(t *testing.T) {
 				require.NoError(t, err)
 				checkAddr, err := addressutils.AccAddressFromBech32("cosmos1ent5eg0xn3pskf3fhdw8mky88ry7t4kx628ru3pzp4nqjp6eufusphlldy", "cosmos")
 				require.NoError(t, err)
-				key := banktypes.CreateAccountBalancesPrefix(keyAddr.Bytes())
+				key := bankutils.CreateAccountBalancesPrefix(keyAddr.Bytes())
 				key = append(key, []byte(expectedDenom)...)
 				return checkAddr, key
 			},
@@ -47,7 +47,7 @@ func TestDenomFromRequestKey(t *testing.T) {
 			"invalid - empty address",
 			func() (sdk.AccAddress, []byte) {
 				accAddr := sdk.AccAddress{}
-				key := banktypes.CreateAccountBalancesPrefix(accAddr.Bytes())
+				key := bankutils.CreateAccountBalancesPrefix(accAddr.Bytes())
 				key = append(key, []byte(expectedDenom)...)
 				return accAddr, key
 			},
@@ -57,7 +57,7 @@ func TestDenomFromRequestKey(t *testing.T) {
 			"invalid - empty denom",
 			func() (sdk.AccAddress, []byte) {
 				accAddr := addressutils.GenerateAccAddressForTest()
-				key := banktypes.CreateAccountBalancesPrefix(accAddr.Bytes())
+				key := bankutils.CreateAccountBalancesPrefix(accAddr.Bytes())
 				key = append(key, []byte("")...)
 				return accAddr, key
 			},

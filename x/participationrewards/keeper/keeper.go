@@ -4,26 +4,26 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/tendermint/tendermint/libs/log"
+	"cosmossdk.io/log"
 
 	sdkmath "cosmossdk.io/math"
 
+	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
-	ibckeeper "github.com/cosmos/ibc-go/v5/modules/core/keeper"
+	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
 
-	config "github.com/quicksilver-zone/quicksilver/cmd/config" //nolint:revive
-	crescenttypes "github.com/quicksilver-zone/quicksilver/third-party-chains/crescent-types"
-	osmosistypes "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types"
-	umeetypes "github.com/quicksilver-zone/quicksilver/third-party-chains/umee-types"
-	"github.com/quicksilver-zone/quicksilver/utils"
-	cmtypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
-	epochskeeper "github.com/quicksilver-zone/quicksilver/x/epochs/keeper"
-	"github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
+	config "github.com/quicksilver-zone/quicksilver/v7/cmd/quicksilverd/config" //nolint:revive
+	crescenttypes "github.com/quicksilver-zone/quicksilver/v7/third-party-chains/crescent-types"
+	osmosistypes "github.com/quicksilver-zone/quicksilver/v7/third-party-chains/osmosis-types"
+	umeetypes "github.com/quicksilver-zone/quicksilver/v7/third-party-chains/umee-types"
+	"github.com/quicksilver-zone/quicksilver/v7/utils"
+	cmtypes "github.com/quicksilver-zone/quicksilver/v7/x/claimsmanager/types"
+	epochskeeper "github.com/quicksilver-zone/quicksilver/v7/x/epochs/keeper"
+	"github.com/quicksilver-zone/quicksilver/v7/x/participationrewards/types"
 )
 
 // UserAllocation is an internal keeper struct to track transient state for
@@ -162,7 +162,11 @@ func (k *Keeper) UpdateSelfConnectionData(ctx sdk.Context) error {
 }
 
 func (k *Keeper) GetModuleBalance(ctx sdk.Context) sdkmath.Int {
-	denom := k.stakingKeeper.BondDenom(ctx)
+	denom, err := k.stakingKeeper.BondDenom(ctx)
+	if err != nil {
+		panic(err)
+	}
+
 	moduleAddress := k.accountKeeper.GetModuleAddress(types.ModuleName)
 	moduleBalance := k.bankKeeper.GetBalance(ctx, moduleAddress, denom)
 

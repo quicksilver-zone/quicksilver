@@ -10,7 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/quicksilver-zone/quicksilver/x/tokenfactory/types"
+	"github.com/quicksilver-zone/quicksilver/v7/x/tokenfactory/types"
 )
 
 // GetTxCmd returns the transaction commands for this module.
@@ -46,13 +46,19 @@ func NewCreateDenomCmd() *cobra.Command {
 				return err
 			}
 
-			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
+			txf, err := tx.NewFactoryCLI(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
+			txf = txf.WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
 
 			msg := types.NewMsgCreateDenom(
 				clientCtx.GetFromAddress().String(),
 				args[0],
 			)
-
+			if err != nil {
+				return err
+			}
 			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
 		},
 	}
@@ -73,7 +79,11 @@ func NewMintCmd() *cobra.Command {
 				return err
 			}
 
-			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
+			txf, err := tx.NewFactoryCLI(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
+			txf = txf.WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
 
 			amount, err := sdk.ParseCoinNormalized(args[0])
 			if err != nil {
@@ -105,7 +115,11 @@ func NewBurnCmd() *cobra.Command {
 				return err
 			}
 
-			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
+			txf, err := tx.NewFactoryCLI(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
+			txf = txf.WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
 
 			amount, err := sdk.ParseCoinNormalized(args[0])
 			if err != nil {
@@ -171,7 +185,12 @@ func NewChangeAdminCmd() *cobra.Command {
 				return err
 			}
 
-			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
+			txf, err := tx.NewFactoryCLI(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			txf = txf.WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
 
 			msg := types.NewMsgChangeAdmin(
 				clientCtx.GetFromAddress().String(),

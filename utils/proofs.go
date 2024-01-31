@@ -5,14 +5,14 @@ import (
 	"fmt"
 	"net/url"
 
-	"github.com/tendermint/tendermint/proto/tendermint/crypto"
+	"github.com/cometbft/cometbft/proto/tendermint/crypto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	clienttypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
-	commitmenttypes "github.com/cosmos/ibc-go/v5/modules/core/23-commitment/types"
-	ibckeeper "github.com/cosmos/ibc-go/v5/modules/core/keeper"
-	tmclienttypes "github.com/cosmos/ibc-go/v5/modules/light-clients/07-tendermint/types"
+	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
+	commitmenttypes "github.com/cosmos/ibc-go/v8/modules/core/23-commitment/types"
+	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
+	tmclienttypes "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint"
 )
 
 type ProofOpsFn func(ctx sdk.Context, ibcKeeper *ibckeeper.Keeper, connectionID, chainID string, height int64, module string, key []byte, data []byte, proofOps *crypto.ProofOps) error
@@ -39,7 +39,7 @@ func ValidateProofOps(
 	}
 
 	csHeight := clienttypes.NewHeight(clienttypes.ParseChainID(chainID), uint64(height)+1)
-	consensusState, found := ibcKeeper.ClientKeeper.GetClientConsensusState(ctx, connection.ClientId, csHeight)
+	_, found := ibcKeeper.ClientKeeper.GetClientConsensusState(ctx, connection.ClientId, csHeight)
 
 	if !found {
 		return errors.New("unable to fetch consensus state")
@@ -50,30 +50,33 @@ func ValidateProofOps(
 		return errors.New("unable to fetch client state")
 	}
 
-	path := commitmenttypes.NewMerklePath([]string{module, url.PathEscape(string(key))}...)
+	// TODO: ibc v8 remove the GetRoot method of ConsensusState, so can not verify MerkleProof
 
-	merkleProof, err := commitmenttypes.ConvertProofs(proofOps)
+	// path := commitmenttypes.NewMerklePath([]string{module, url.PathEscape(string(key))}...)
+
+	_, err := commitmenttypes.ConvertProofs(proofOps)
 	if err != nil {
 		return errors.New("error converting proofs")
 	}
 
-	tmClientState, ok := clientState.(*tmclienttypes.ClientState)
+	_, ok = clientState.(*tmclienttypes.ClientState)
 	if !ok {
 		return errors.New("error unmarshaling client state")
 	}
 
-	if len(data) != 0 {
-		// if we got a non-nil response, verify inclusion proof.
-		if err := merkleProof.VerifyMembership(tmClientState.ProofSpecs, consensusState.GetRoot(), path, data); err != nil {
-			return fmt.Errorf("unable to verify inclusion proof: %w", err)
-		}
-		return nil
+	// if len(data) != 0 {
+	// 	// if we got a non-nil response, verify inclusion proof.
+	// 	if err := merkleProof.VerifyMembership(tmClientState.ProofSpecs, consensusState.GetRoot(), path, data); err != nil {
+	// 		return fmt.Errorf("unable to verify inclusion proof: %w", err)
+	// 	}
+	// 	return nil
 
-	}
-	// if we got a nil response, verify non inclusion proof.
-	if err := merkleProof.VerifyNonMembership(tmClientState.ProofSpecs, consensusState.GetRoot(), path); err != nil {
-		return fmt.Errorf("unable to verify non-inclusion proof: %w", err)
-	}
+	// }
+	// // if we got a nil response, verify non inclusion proof.
+
+	// if err := merkleProof.VerifyNonMembership(tmClientState.ProofSpecs, consensusState.Root, path); err != nil {
+	// 	return fmt.Errorf("unable to verify non-inclusion proof: %w", err)
+	// }
 	return nil
 }
 

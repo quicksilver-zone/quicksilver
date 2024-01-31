@@ -5,10 +5,11 @@ package types
 
 import (
 	fmt "fmt"
-	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
+	cosmossdk_io_math "cosmossdk.io/math"
+github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
 	types "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/gogo/protobuf/gogoproto"
-	proto "github.com/gogo/protobuf/proto"
+	proto "github.com/cosmos/gogoproto/proto"
 	io "io"
 	math "math"
 	math_bits "math/bits"
@@ -194,7 +195,7 @@ var xxx_messageInfo_BadDebt proto.InternalMessageInfo
 // state.
 type InterestScalar struct {
 	Denom  string                                 `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty"`
-	Scalar github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,2,opt,name=scalar,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"scalar"`
+	Scalar cosmossdk_io_math.LegacyDec `protobuf:"bytes,2,opt,name=scalar,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"scalar"`
 }
 
 func (m *InterestScalar) Reset()         { *m = InterestScalar{} }

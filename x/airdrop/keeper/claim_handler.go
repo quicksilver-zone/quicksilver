@@ -4,16 +4,15 @@ import (
 	"errors"
 	"fmt"
 
+	"cosmossdk.io/collections"
 	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-
-	osmosistypes "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types"
-	osmosislockuptypes "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/lockup"
-	"github.com/quicksilver-zone/quicksilver/x/airdrop/types"
-	cmtypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
-	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
+	osmosistypes "github.com/quicksilver-zone/quicksilver/v7/third-party-chains/osmosis-types"
+	osmosislockuptypes "github.com/quicksilver-zone/quicksilver/v7/third-party-chains/osmosis-types/lockup"
+	"github.com/quicksilver-zone/quicksilver/v7/x/airdrop/types"
+	cmtypes "github.com/quicksilver-zone/quicksilver/v7/x/claimsmanager/types"
+	icstypes "github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking/types"
 )
 
 var (
@@ -34,15 +33,15 @@ func (k *Keeper) HandleClaim(ctx sdk.Context, cr types.ClaimRecord, action types
 	case types.ActionInitialClaim:
 		return k.handleInitial(ctx, &cr, action)
 	case types.ActionDepositT1:
-		return k.handleDeposit(ctx, &cr, action, sdk.MustNewDecFromStr(tier1))
+		return k.handleDeposit(ctx, &cr, action, sdkmath.LegacyMustNewDecFromStr(tier1))
 	case types.ActionDepositT2:
-		return k.handleDeposit(ctx, &cr, action, sdk.MustNewDecFromStr(tier2))
+		return k.handleDeposit(ctx, &cr, action, sdkmath.LegacyMustNewDecFromStr(tier2))
 	case types.ActionDepositT3:
-		return k.handleDeposit(ctx, &cr, action, sdk.MustNewDecFromStr(tier3))
+		return k.handleDeposit(ctx, &cr, action, sdkmath.LegacyMustNewDecFromStr(tier3))
 	case types.ActionDepositT4:
-		return k.handleDeposit(ctx, &cr, action, sdk.MustNewDecFromStr(tier4))
+		return k.handleDeposit(ctx, &cr, action, sdkmath.LegacyMustNewDecFromStr(tier4))
 	case types.ActionDepositT5:
-		return k.handleDeposit(ctx, &cr, action, sdk.MustNewDecFromStr(tier5))
+		return k.handleDeposit(ctx, &cr, action, sdkmath.LegacyMustNewDecFromStr(tier5))
 	case types.ActionStakeQCK:
 		return k.handleBondedDelegation(ctx, &cr, action)
 	case types.ActionSignalIntent:
@@ -70,7 +69,7 @@ func (k *Keeper) handleInitial(ctx sdk.Context, cr *types.ClaimRecord, action ty
 }
 
 // handleDeposit.
-func (k *Keeper) handleDeposit(ctx sdk.Context, cr *types.ClaimRecord, action types.Action, threshold sdk.Dec) (uint64, error) {
+func (k *Keeper) handleDeposit(ctx sdk.Context, cr *types.ClaimRecord, action types.Action, threshold sdkmath.LegacyDec) (uint64, error) {
 	if err := k.verifyDeposit(ctx, *cr, threshold); err != nil {
 		return 0, err
 	}
@@ -122,7 +121,7 @@ func (k *Keeper) handleOsmosisLP(ctx sdk.Context, cr *types.ClaimRecord, action 
 // -------------
 
 // verifyDeposit.
-func (k *Keeper) verifyDeposit(ctx sdk.Context, cr types.ClaimRecord, threshold sdk.Dec) error {
+func (k *Keeper) verifyDeposit(ctx sdk.Context, cr types.ClaimRecord, threshold sdkmath.LegacyDec) error {
 	addr, err := sdk.AccAddressFromBech32(cr.Address)
 	if err != nil {
 		return err
@@ -140,7 +139,7 @@ func (k *Keeper) verifyDeposit(ctx sdk.Context, cr types.ClaimRecord, threshold 
 	}
 
 	// sum gross deposits amount
-	gdAmount := sdk.NewInt(0)
+	gdAmount := sdkmath.NewInt(0)
 	for _, rcpt := range receipts {
 		gdAmount = gdAmount.Add(rcpt.Amount.AmountOf(zone.BaseDenom))
 	}
@@ -163,7 +162,7 @@ func (k *Keeper) verifyBondedDelegation(ctx sdk.Context, address string) error {
 		return err
 	}
 
-	amount := k.stakingKeeper.GetDelegatorBonded(ctx, addr)
+	amount, _ := k.stakingKeeper.GetDelegatorBonded(ctx, addr)
 	if !amount.IsPositive() {
 		return fmt.Errorf("no bonded delegation for %s", addr)
 	}
@@ -200,14 +199,23 @@ func (k *Keeper) verifyGovernanceParticipation(ctx sdk.Context, address string) 
 	}
 
 	voted := false
-	k.govKeeper.IterateProposals(ctx, func(proposal govv1.Proposal) (stop bool) {
-		_, found := k.govKeeper.GetVote(ctx, proposal.Id, addr)
-		if found {
-			voted = true
-			return true
+
+	iter, err := k.govKeeper.Proposals.Iterate(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		proposalID, err := iter.Key()
+		if err != nil {
+			return err
 		}
-		return false
-	})
+		_, err = k.govKeeper.Votes.Get(ctx, collections.Join[uint64, sdk.AccAddress](proposalID, addr))
+		if err != nil {
+			voted = true
+			break
+		}
+	}
 
 	if !voted {
 		return fmt.Errorf("no governance votes by %s", addr)
@@ -237,7 +245,7 @@ func (k *Keeper) verifyOsmosisLP(ctx sdk.Context, proofs []*cmtypes.Proof, cr ty
 		return errors.New("unable to find Osmosis zone")
 	}
 
-	uAmount := sdk.ZeroInt()
+	uAmount := sdkmath.ZeroInt()
 	dupCheck := make(map[string]struct{})
 	for i, p := range proofs {
 		proof := p
@@ -284,7 +292,7 @@ func (k *Keeper) verifyOsmosisLP(ctx sdk.Context, proofs []*cmtypes.Proof, cr ty
 	}
 
 	// calculate target amount
-	dThreshold := sdk.MustNewDecFromStr(tier4)
+	dThreshold := sdkmath.LegacyMustNewDecFromStr(tier4)
 	if err := k.verifyDeposit(ctx, cr, dThreshold); err != nil {
 		return fmt.Errorf("%w, must reach at least %s of %d", err, tier4, cr.BaseValue)
 	}
@@ -405,8 +413,12 @@ func (k *Keeper) getClaimAmountAndUpdateRecord(ctx sdk.Context, cr *types.ClaimR
 }
 
 func (k *Keeper) sendCoins(ctx sdk.Context, cr types.ClaimRecord, amount uint64) (sdk.Coins, error) {
+	bondDenom, err := k.BondDenom(ctx)
+	if err != nil {
+		return sdk.NewCoins(), err
+	}
 	coins := sdk.NewCoins(
-		sdk.NewCoin(k.BondDenom(ctx), sdk.NewIntFromUint64(amount)),
+		sdk.NewCoin(bondDenom, sdkmath.NewIntFromUint64(amount)),
 	)
 
 	addr, err := sdk.AccAddressFromBech32(cr.Address)

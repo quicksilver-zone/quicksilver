@@ -6,8 +6,7 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkmath "cosmossdk.io/math"
 )
 
 type UmeeProtocolData struct {
@@ -27,7 +26,7 @@ func (upd *UmeeProtocolData) GenerateKey() []byte {
 	return []byte(upd.Denom)
 }
 
-func GetUnderlyingData[V math.Int | sdk.Dec](upd *UmeeProtocolData) (V, error) {
+func GetUnderlyingData[V math.Int | sdkmath.LegacyDec](upd *UmeeProtocolData) (V, error) {
 	var data V
 	err := json.Unmarshal(upd.Data, &data)
 	if err != nil {
@@ -50,16 +49,16 @@ type UmeeTotalBorrowsProtocolData struct {
 	UmeeProtocolData
 }
 
-func (upd *UmeeTotalBorrowsProtocolData) GetTotalBorrows() (sdk.Dec, error) {
-	return GetUnderlyingData[sdk.Dec](&upd.UmeeProtocolData)
+func (upd *UmeeTotalBorrowsProtocolData) GetTotalBorrows() (sdkmath.LegacyDec, error) {
+	return GetUnderlyingData[sdkmath.LegacyDec](&upd.UmeeProtocolData)
 }
 
 type UmeeInterestScalarProtocolData struct {
 	UmeeProtocolData
 }
 
-func (upd *UmeeInterestScalarProtocolData) GetInterestScalar() (sdk.Dec, error) {
-	return GetUnderlyingData[sdk.Dec](&upd.UmeeProtocolData)
+func (upd *UmeeInterestScalarProtocolData) GetInterestScalar() (sdkmath.LegacyDec, error) {
+	return GetUnderlyingData[sdkmath.LegacyDec](&upd.UmeeProtocolData)
 }
 
 type UmeeUTokenSupplyProtocolData struct {

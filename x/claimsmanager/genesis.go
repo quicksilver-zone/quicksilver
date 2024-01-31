@@ -3,8 +3,8 @@ package claimsmanager
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/quicksilver-zone/quicksilver/x/claimsmanager/keeper"
-	"github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
+	"github.com/quicksilver-zone/quicksilver/v7/x/claimsmanager/keeper"
+	"github.com/quicksilver-zone/quicksilver/v7/x/claimsmanager/types"
 )
 
 // InitGenesis initializes the claimsmanager module's state from a provided genesis

@@ -4,18 +4,19 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/tendermint/tendermint/libs/log"
+	"cosmossdk.io/log"
 
 	"cosmossdk.io/math"
 
+	sdkmath "cosmossdk.io/math"
+	"cosmossdk.io/store/prefix"
+	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	ibckeeper "github.com/cosmos/ibc-go/v5/modules/core/keeper"
+	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
 
-	"github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
+	"github.com/quicksilver-zone/quicksilver/v7/x/interchainquery/types"
 )
 
 // Keeper of this module maintains collections of registered zones.
@@ -55,7 +56,7 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 }
 
 func (k *Keeper) SetDatapointForID(ctx sdk.Context, id string, result []byte, height math.Int) error {
-	mapping := types.DataPoint{Id: id, RemoteHeight: height, LocalHeight: sdk.NewInt(ctx.BlockHeight()), Value: result}
+	mapping := types.DataPoint{Id: id, RemoteHeight: height, LocalHeight: sdkmath.NewInt(ctx.BlockHeight()), Value: result}
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixData)
 	bz := k.cdc.MustMarshal(&mapping)
 	store.Set([]byte(id), bz)
@@ -77,7 +78,7 @@ func (k *Keeper) GetDatapointForID(ctx sdk.Context, id string) (types.DataPoint,
 // IterateDatapoints iterate through datapoints.
 func (k Keeper) IterateDatapoints(ctx sdk.Context, fn func(index int64, dp types.DataPoint) (stop bool)) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixData)
-	iterator := sdk.KVStorePrefixIterator(store, nil)
+	iterator := storetypes.KVStorePrefixIterator(store, nil)
 	defer iterator.Close()
 
 	i := int64(0)
@@ -108,12 +109,12 @@ func (k *Keeper) GetDatapointOrRequest(ctx sdk.Context, module, connectionID, ch
 	val, err := k.GetDatapoint(ctx, module, connectionID, chainID, queryType, request)
 	if err != nil {
 		// no datapoint
-		k.MakeRequest(ctx, connectionID, chainID, queryType, request, sdk.NewInt(-1), "", "", maxAge)
+		k.MakeRequest(ctx, connectionID, chainID, queryType, request, sdkmath.NewInt(-1), "", "", maxAge)
 		return types.DataPoint{}, errors.New("no data; query submitted")
 	}
 
-	if val.LocalHeight.LT(sdk.NewInt(ctx.BlockHeight() - int64(maxAge))) { // this is somewhat arbitrary; TODO: make this better
-		k.MakeRequest(ctx, connectionID, chainID, queryType, request, sdk.NewInt(-1), "", "", maxAge)
+	if val.LocalHeight.LT(sdkmath.NewInt(ctx.BlockHeight() - int64(maxAge))) { // this is somewhat arbitrary; TODO: make this better
+		k.MakeRequest(ctx, connectionID, chainID, queryType, request, sdkmath.NewInt(-1), "", "", maxAge)
 		return types.DataPoint{}, errors.New("stale data; query submitted")
 	}
 	// check ttl
@@ -162,7 +163,7 @@ func (k *Keeper) MakeRequest(
 	} else {
 		// a re-request of an existing query triggers resetting of height to trigger immediately.
 		k.Logger(ctx).Debug("re-request", "LastHeight", existingQuery.LastHeight)
-		existingQuery.LastHeight = sdk.ZeroInt()
+		existingQuery.LastHeight = sdkmath.ZeroInt()
 		k.SetQuery(ctx, existingQuery)
 	}
 }

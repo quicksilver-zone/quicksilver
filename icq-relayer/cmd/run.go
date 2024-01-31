@@ -4,7 +4,7 @@ Copyright © 2022 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	"github.com/quicksilver-zone/quicksilver/icq-relayer/pkg/runner"
+	"github.com/quicksilver-zone/quicksilver/v7/icq-relayer/pkg/runner"
 	"github.com/spf13/cobra"
 )
 

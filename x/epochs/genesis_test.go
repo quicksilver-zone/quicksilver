@@ -5,16 +5,15 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	simapp "github.com/quicksilver-zone/quicksilver/app"
-	"github.com/quicksilver-zone/quicksilver/x/epochs"
-	"github.com/quicksilver-zone/quicksilver/x/epochs/types"
+	simapp "github.com/quicksilver-zone/quicksilver/v7/app"
+	"github.com/quicksilver-zone/quicksilver/v7/x/epochs"
+	"github.com/quicksilver-zone/quicksilver/v7/x/epochs/types"
 )
 
 func TestEpochsExportGenesis(t *testing.T) {
 	app := simapp.Setup(t, false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(false)
 
 	chainStartTime := ctx.BlockTime()
 	chainStartHeight := ctx.BlockHeight()
@@ -48,7 +47,7 @@ func TestEpochsExportGenesis(t *testing.T) {
 func TestEpochsInitGenesis(t *testing.T) {
 	// setup feemarketGenesis params
 	app := simapp.Setup(t, false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(false)
 
 	// On init genesis, default epochs information is set
 	// To check init genesis again, should make it fresh status

@@ -6,11 +6,10 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
-	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
+	"github.com/quicksilver-zone/quicksilver/v7/utils/addressutils"
+	"github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking/types"
 )
 
 func TestDetermineAllocationsForRebalancing(t *testing.T) {
@@ -37,7 +36,7 @@ func TestDetermineAllocationsForRebalancing(t *testing.T) {
 			target: types.ValidatorIntents{
 				&types.ValidatorIntent{
 					ValoperAddress: vals[0],
-					Weight:         sdk.NewDec(1),
+					Weight:         sdkmath.LegacyNewDec(1),
 				},
 			},
 			locked: map[string]bool{},
@@ -71,11 +70,11 @@ func TestDetermineAllocationsForRebalancing(t *testing.T) {
 			target: types.ValidatorIntents{
 				&types.ValidatorIntent{
 					ValoperAddress: vals[0],
-					Weight:         sdk.NewDecWithPrec(5, 1),
+					Weight:         sdkmath.LegacyNewDecWithPrec(5, 1),
 				},
 				&types.ValidatorIntent{
 					ValoperAddress: vals[1],
-					Weight:         sdk.NewDecWithPrec(5, 1),
+					Weight:         sdkmath.LegacyNewDecWithPrec(5, 1),
 				},
 			},
 			locked: map[string]bool{},
@@ -113,11 +112,11 @@ func TestDetermineAllocationsForRebalancing(t *testing.T) {
 			target: types.ValidatorIntents{
 				&types.ValidatorIntent{
 					ValoperAddress: vals[0],
-					Weight:         sdk.NewDecWithPrec(5, 1),
+					Weight:         sdkmath.LegacyNewDecWithPrec(5, 1),
 				},
 				&types.ValidatorIntent{
 					ValoperAddress: vals[1],
-					Weight:         sdk.NewDecWithPrec(5, 1),
+					Weight:         sdkmath.LegacyNewDecWithPrec(5, 1),
 				},
 			},
 			locked: map[string]bool{},
@@ -146,19 +145,19 @@ func TestDetermineAllocationsForRebalancing(t *testing.T) {
 			target: types.ValidatorIntents{
 				&types.ValidatorIntent{
 					ValoperAddress: vals[0],
-					Weight:         sdk.NewDecWithPrec(25, 2),
+					Weight:         sdkmath.LegacyNewDecWithPrec(25, 2),
 				},
 				&types.ValidatorIntent{
 					ValoperAddress: vals[1],
-					Weight:         sdk.NewDecWithPrec(25, 2),
+					Weight:         sdkmath.LegacyNewDecWithPrec(25, 2),
 				},
 				&types.ValidatorIntent{
 					ValoperAddress: vals[2],
-					Weight:         sdk.NewDecWithPrec(25, 2),
+					Weight:         sdkmath.LegacyNewDecWithPrec(25, 2),
 				},
 				&types.ValidatorIntent{
 					ValoperAddress: vals[3],
-					Weight:         sdk.NewDecWithPrec(25, 2),
+					Weight:         sdkmath.LegacyNewDecWithPrec(25, 2),
 				},
 			},
 			locked: map[string]bool{},
@@ -196,23 +195,23 @@ func TestDetermineAllocationsForRebalancing(t *testing.T) {
 			target: types.ValidatorIntents{
 				&types.ValidatorIntent{
 					ValoperAddress: vals[0],
-					Weight:         sdk.NewDecWithPrec(20, 2),
+					Weight:         sdkmath.LegacyNewDecWithPrec(20, 2),
 				},
 				&types.ValidatorIntent{
 					ValoperAddress: vals[1],
-					Weight:         sdk.NewDecWithPrec(20, 2),
+					Weight:         sdkmath.LegacyNewDecWithPrec(20, 2),
 				},
 				&types.ValidatorIntent{
 					ValoperAddress: vals[2],
-					Weight:         sdk.NewDecWithPrec(20, 2),
+					Weight:         sdkmath.LegacyNewDecWithPrec(20, 2),
 				},
 				&types.ValidatorIntent{
 					ValoperAddress: vals[3],
-					Weight:         sdk.NewDecWithPrec(20, 2),
+					Weight:         sdkmath.LegacyNewDecWithPrec(20, 2),
 				},
 				&types.ValidatorIntent{
 					ValoperAddress: vals[4],
-					Weight:         sdk.NewDecWithPrec(20, 2),
+					Weight:         sdkmath.LegacyNewDecWithPrec(20, 2),
 				},
 			},
 			locked: map[string]bool{},
@@ -251,23 +250,23 @@ func TestDetermineAllocationsForRebalancing(t *testing.T) {
 			target: types.ValidatorIntents{
 				&types.ValidatorIntent{
 					ValoperAddress: vals[0],
-					Weight:         sdk.NewDecWithPrec(10, 2),
+					Weight:         sdkmath.LegacyNewDecWithPrec(10, 2),
 				},
 				&types.ValidatorIntent{
 					ValoperAddress: vals[1],
-					Weight:         sdk.NewDecWithPrec(225, 3),
+					Weight:         sdkmath.LegacyNewDecWithPrec(225, 3),
 				},
 				&types.ValidatorIntent{
 					ValoperAddress: vals[2],
-					Weight:         sdk.NewDecWithPrec(225, 3),
+					Weight:         sdkmath.LegacyNewDecWithPrec(225, 3),
 				},
 				&types.ValidatorIntent{
 					ValoperAddress: vals[3],
-					Weight:         sdk.NewDecWithPrec(225, 3),
+					Weight:         sdkmath.LegacyNewDecWithPrec(225, 3),
 				},
 				&types.ValidatorIntent{
 					ValoperAddress: vals[4],
-					Weight:         sdk.NewDecWithPrec(225, 3),
+					Weight:         sdkmath.LegacyNewDecWithPrec(225, 3),
 				},
 			},
 			locked: map[string]bool{
@@ -287,23 +286,23 @@ func TestDetermineAllocationsForRebalancing(t *testing.T) {
 			target: types.ValidatorIntents{
 				&types.ValidatorIntent{
 					ValoperAddress: vals[0],
-					Weight:         sdk.NewDecWithPrec(5, 2),
+					Weight:         sdkmath.LegacyNewDecWithPrec(5, 2),
 				},
 				&types.ValidatorIntent{
 					ValoperAddress: vals[1],
-					Weight:         sdk.NewDecWithPrec(5, 2),
+					Weight:         sdkmath.LegacyNewDecWithPrec(5, 2),
 				},
 				&types.ValidatorIntent{
 					ValoperAddress: vals[2],
-					Weight:         sdk.NewDecWithPrec(30, 2),
+					Weight:         sdkmath.LegacyNewDecWithPrec(30, 2),
 				},
 				&types.ValidatorIntent{
 					ValoperAddress: vals[3],
-					Weight:         sdk.NewDecWithPrec(30, 2),
+					Weight:         sdkmath.LegacyNewDecWithPrec(30, 2),
 				},
 				&types.ValidatorIntent{
 					ValoperAddress: vals[4],
-					Weight:         sdk.NewDecWithPrec(30, 2),
+					Weight:         sdkmath.LegacyNewDecWithPrec(30, 2),
 				},
 			},
 			locked: map[string]bool{
@@ -332,15 +331,15 @@ func TestDetermineAllocationsForRebalancing(t *testing.T) {
 			target: types.ValidatorIntents{
 				&types.ValidatorIntent{
 					ValoperAddress: vals[1],
-					Weight:         sdk.ZeroDec(),
+					Weight:         sdkmath.LegacyZeroDec(),
 				},
 				&types.ValidatorIntent{
 					ValoperAddress: vals[2],
-					Weight:         sdk.NewDecWithPrec(5, 1),
+					Weight:         sdkmath.LegacyNewDecWithPrec(5, 1),
 				},
 				&types.ValidatorIntent{
 					ValoperAddress: vals[3],
-					Weight:         sdk.NewDecWithPrec(5, 1),
+					Weight:         sdkmath.LegacyNewDecWithPrec(5, 1),
 				},
 			},
 			locked: map[string]bool{},

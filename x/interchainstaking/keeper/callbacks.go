@@ -8,29 +8,32 @@ import (
 	"strings"
 	"time"
 
-	"github.com/tendermint/tendermint/crypto/tmhash"
-	tmtypes "github.com/tendermint/tendermint/types"
+	"github.com/cometbft/cometbft/crypto/tmhash"
+	tmtypes "github.com/cometbft/cometbft/types"
 	"google.golang.org/protobuf/encoding/protowire"
 
 	sdkioerrors "cosmossdk.io/errors"
+	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/unknownproto"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	clienttypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
-	tmclienttypes "github.com/cosmos/ibc-go/v5/modules/light-clients/07-tendermint/types"
+	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
+	tmclienttypes "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint"
 
-	"github.com/quicksilver-zone/quicksilver/utils"
-	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
-	icqtypes "github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
-	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
+	errorsmod "cosmossdk.io/errors"
+	"github.com/quicksilver-zone/quicksilver/v7/utils"
+	"github.com/quicksilver-zone/quicksilver/v7/utils/addressutils"
+	"github.com/quicksilver-zone/quicksilver/v7/utils/bankutils"
+	icqtypes "github.com/quicksilver-zone/quicksilver/v7/x/interchainquery/types"
+	"github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking/types"
 )
 
 // ___________________________________________________________________________________________________
@@ -259,7 +262,7 @@ func DepositIntervalCallback(k *Keeper, ctx sdk.Context, args []byte, query icqt
 			continue
 		}
 		k.Logger(ctx).Info("Found previously unhandled tx. Processing.", "txhash", txn.TxHash)
-		k.ICQKeeper.MakeRequest(ctx, query.ConnectionId, query.ChainId, "tendermint.Tx", hashBytes, sdk.NewInt(-1), types.ModuleName, "deposittx", 0)
+		k.ICQKeeper.MakeRequest(ctx, query.ConnectionId, query.ChainId, "tendermint.Tx", hashBytes, sdkmath.NewInt(-1), types.ModuleName, "deposittx", 0)
 	}
 	return nil
 }
@@ -527,7 +530,10 @@ func DepositTxCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Q
 		return err
 	}
 
-	txtx, ok := txn.(*tx.Tx)
+	// Not work anymore: * (x/authx) [#15284](https://github.com/cosmos/cosmos-sdk/pull/15284) `types/tx.Tx` no longer implements `sdk.Tx`
+	// txtx, ok := txn.(*tx.Tx)
+
+	txtx, ok := txn.(sdk.TxWithMemo)
 	if !ok {
 		return errors.New("cannot assert type of tx")
 	}
@@ -548,12 +554,12 @@ func AccountBalanceCallback(k *Keeper, ctx sdk.Context, args []byte, query icqty
 		return errors.New("account balance icq request must always have a length of at least 2 bytes")
 	}
 	balancesStore := query.Request[1:]
-	accAddr, denom, err := banktypes.AddressAndDenomFromBalancesStore(balancesStore)
+	accAddr, denom, err := bankutils.AddressAndDenomFromBalancesStore(balancesStore)
 	if err != nil {
 		return err
 	}
 
-	coin, err := bankkeeper.UnmarshalBalanceCompat(k.cdc, args, denom)
+	coin, err := bankutils.UnmarshalBalanceCompat(k.cdc, args, denom)
 	if err != nil {
 		return err
 	}
@@ -563,7 +569,7 @@ func AccountBalanceCallback(k *Keeper, ctx sdk.Context, args []byte, query icqty
 	}
 
 	// Ensure that the coin is valid.
-	// Please see https://github.com/quicksilver-zone/quicksilver-incognito/issues/80
+	// Please see https://github.com/quicksilver-zone/quicksilver/v7-incognito/issues/80
 	if err := coin.Validate(); err != nil {
 		k.Logger(ctx).Error("invalid coin for zone", "zone", zone.ChainId, "err", err)
 		return err
@@ -591,12 +597,12 @@ func DelegationAccountBalanceCallback(k *Keeper, ctx sdk.Context, args []byte, q
 		return errors.New("account balance icq request must always have a length of at least 2 bytes")
 	}
 	balancesStore := query.Request[1:]
-	accAddr, denom, err := banktypes.AddressAndDenomFromBalancesStore(balancesStore)
+	accAddr, denom, err := bankutils.AddressAndDenomFromBalancesStore(balancesStore)
 	if err != nil {
 		return err
 	}
 
-	coin, err := bankkeeper.UnmarshalBalanceCompat(k.cdc, args, denom)
+	coin, err := bankutils.UnmarshalBalanceCompat(k.cdc, args, denom)
 	if err != nil {
 		return err
 	}
@@ -606,7 +612,7 @@ func DelegationAccountBalanceCallback(k *Keeper, ctx sdk.Context, args []byte, q
 	}
 
 	// Ensure that the coin is valid.
-	// Please see https://github.com/quicksilver-zone/quicksilver-incognito/issues/80
+	// Please see https://github.com/quicksilver-zone/quicksilver/v7-incognito/issues/80
 	if err := coin.Validate(); err != nil {
 		k.Logger(ctx).Debug("invalid coin for zone", "zone", zone.ChainId, "err", err)
 		return err
@@ -670,8 +676,8 @@ func DelegationAccountBalancesCallback(k *Keeper, ctx sdk.Context, args []byte, 
 			zone.ConnectionId,
 			zone.ChainId,
 			types.BankStoreKey,
-			append(banktypes.CreateAccountBalancesPrefix(addressBytes), []byte(coin.Denom)...),
-			sdk.NewInt(-1),
+			append(bankutils.CreateAccountBalancesPrefix(addressBytes), []byte(coin.Denom)...),
+			sdkmath.NewInt(-1),
 			types.ModuleName,
 			"delegationaccountbalance",
 			0,
@@ -749,6 +755,12 @@ func TxDecoder(cdc codec.Codec) sdk.TxDecoder {
 
 		var body tx.TxBody
 
+		// allow non-critical unknown fields in TxBody
+		txBodyHasUnknownNonCriticals, err := unknownproto.RejectUnknownFields(raw.BodyBytes, &body, true, cdc.InterfaceRegistry())
+		if err != nil {
+			return nil, errorsmod.Wrap(sdkerrors.ErrTxDecode, err.Error())
+		}
+
 		err = cdc.Unmarshal(raw.BodyBytes, &body)
 		if err != nil {
 			return nil, sdkioerrors.Wrap(sdkerrors.ErrTxDecode, err.Error())
@@ -760,11 +772,17 @@ func TxDecoder(cdc codec.Codec) sdk.TxDecoder {
 		if err != nil {
 			return nil, sdkioerrors.Wrap(sdkerrors.ErrTxDecode, err.Error())
 		}
-
-		return &tx.Tx{
+		theTx := &tx.Tx{
 			Body:       &body,
 			AuthInfo:   &authInfo,
 			Signatures: raw.Signatures,
+		}
+		return &wrapper{
+			tx:                           theTx,
+			bodyBz:                       raw.BodyBytes,
+			authInfoBz:                   raw.AuthInfoBytes,
+			txBodyHasUnknownNonCriticals: txBodyHasUnknownNonCriticals,
+			cdc:                          cdc,
 		}, nil
 	}
 }

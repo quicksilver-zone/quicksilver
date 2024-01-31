@@ -4,12 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"math/rand"
 
+	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
-	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -18,9 +17,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
-	"github.com/quicksilver-zone/quicksilver/x/airdrop/client/cli"
-	"github.com/quicksilver-zone/quicksilver/x/airdrop/keeper"
-	"github.com/quicksilver-zone/quicksilver/x/airdrop/types"
+	"github.com/quicksilver-zone/quicksilver/v7/x/airdrop/client/cli"
+	"github.com/quicksilver-zone/quicksilver/v7/x/airdrop/keeper"
+	"github.com/quicksilver-zone/quicksilver/v7/x/airdrop/types"
 )
 
 var (
@@ -116,21 +115,9 @@ func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 	keeper.RegisterInvariants(ir, am.keeper)
 }
 
-// Route returns the message routing key for the airdrop module.
-func (am AppModule) Route() sdk.Route {
-	return sdk.Route{}
-}
-
 // QuerierRoute returns the airdrop module's querier route name.
 func (AppModule) QuerierRoute() string {
 	return types.QuerierRoute
-}
-
-// LegacyQuerierHandler returns the x/airdrop module's sdk.Querier.
-func (am AppModule) LegacyQuerierHandler(_ *codec.LegacyAmino) sdk.Querier {
-	return func(sdk.Context, []string, abci.RequestQuery) ([]byte, error) {
-		return nil, fmt.Errorf("legacy querier not supported for the x/%s module", types.ModuleName)
-	}
 }
 
 // RegisterServices registers a gRPC query service to respond to the
@@ -158,18 +145,30 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 }
 
 // BeginBlock executes all ABCI BeginBlock logic respective to the airdrop module.
-func (am AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {
+func (am AppModule) BeginBlock(_ sdk.Context) {
 }
 
 // EndBlock executes all ABCI EndBlock logic respective to the airdrop module. It
 // returns no validator updates.
-func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
+func (am AppModule) EndBlock(ctx sdk.Context) []abci.ValidatorUpdate {
 	am.keeper.EndBlocker(ctx)
 	return []abci.ValidatorUpdate{}
 }
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
 func (AppModule) ConsensusVersion() uint64 { return 1 }
+
+// ___________________________________________________________________________
+
+// AppModuleBasic functions
+
+// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
+func (am AppModule) IsOnePerModuleType() { // marker
+}
+
+// IsAppModule implements the appmodule.AppModule interface.
+func (am AppModule) IsAppModule() { // marker
+}
 
 // ___________________________________________________________________________
 
@@ -180,20 +179,17 @@ func (AppModule) GenerateGenesisState(_ *module.SimulationState) {
 }
 
 // ProposalContents doesn't return any content functions for governance proposals.
-func (AppModule) ProposalContents(_ module.SimulationState) []simtypes.WeightedProposalContent {
+
+// ProposalMsgs returns msgs used for governance proposals for simulations.
+func (am AppModule) ProposalMsgs(simState module.SimulationState) []simtypes.WeightedProposalMsg {
 	return nil
 }
 
-// RandomizedParams creates randomized mint param changes for the simulator.
-func (AppModule) RandomizedParams(_ *rand.Rand) []simtypes.ParamChange {
-	return []simtypes.ParamChange{}
+// RegisterStoreDecoder registers a decoder for supply module's types
+func (am AppModule) RegisterStoreDecoder(_ simtypes.StoreDecoderRegistry) {
 }
 
-// RegisterStoreDecoder registers a decoder for mint module's types.
-func (am AppModule) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {
-}
-
-// WeightedOperations doesn't return any mint module operation.
-func (AppModule) WeightedOperations(_ module.SimulationState) []simtypes.WeightedOperation {
+// WeightedOperations returns the all the gov module operations with their respective weights.
+func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
 	return nil
 }

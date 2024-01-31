@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 
-	"github.com/quicksilver-zone/quicksilver/x/mint/types"
+	"github.com/quicksilver-zone/quicksilver/v7/x/mint/types"
 )
 
 // NewDecodeStore returns a decoder function closure that umarshals the KVPair's

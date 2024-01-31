@@ -3,11 +3,10 @@ package supply
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 
+	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
-	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -15,8 +14,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 
-	"github.com/quicksilver-zone/quicksilver/x/supply/keeper"
-	"github.com/quicksilver-zone/quicksilver/x/supply/types"
+	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/quicksilver-zone/quicksilver/v7/x/supply/keeper"
+	"github.com/quicksilver-zone/quicksilver/v7/x/supply/types"
 )
 
 var (
@@ -97,21 +97,9 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper) AppModule {
 // RegisterInvariants registers the participationrewards module invariants.
 func (AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
-// Route returns the message routing key for the participationrewards module.
-func (AppModule) Route() sdk.Route {
-	return sdk.Route{}
-}
-
 // QuerierRoute returns the participationrewards module's querier route name.
 func (AppModule) QuerierRoute() string {
 	return types.QuerierRoute
-}
-
-// LegacyQuerierHandler returns the x/participationrewards module's sdk.Querier.
-func (AppModule) LegacyQuerierHandler(_ *codec.LegacyAmino) sdk.Querier {
-	return func(sdk.Context, []string, abci.RequestQuery) ([]byte, error) {
-		return nil, fmt.Errorf("legacy querier not supported for the x/%s module", types.ModuleName)
-	}
 }
 
 // RegisterServices registers a gRPC query service to respond to the
@@ -132,14 +120,50 @@ func (AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMes
 }
 
 // BeginBlock executes all ABCI BeginBlock logic respective to the participationrewards module.
-func (AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {
+func (AppModule) BeginBlock(ctx sdk.Context) {
 }
 
 // EndBlock executes all ABCI EndBlock logic respective to the participationrewards module. It
 // returns no validator updates.
-func (AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
+func (AppModule) EndBlock(_ sdk.Context) []abci.ValidatorUpdate {
 	return []abci.ValidatorUpdate{}
 }
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
 func (AppModule) ConsensusVersion() uint64 { return 1 }
+
+// ___________________________________________________________________________
+
+// AppModuleBasic functions
+
+// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
+func (am AppModule) IsOnePerModuleType() { // marker
+}
+
+// IsAppModule implements the appmodule.AppModule interface.
+func (am AppModule) IsAppModule() { // marker
+}
+
+// ___________________________________________________________________________
+
+// AppModuleSimulation functions
+
+// GenerateGenesisState creates a randomized GenState of the mint module.
+func (AppModule) GenerateGenesisState(_ *module.SimulationState) {
+}
+
+// ProposalContents doesn't return any content functions for governance proposals.
+
+// ProposalMsgs returns msgs used for governance proposals for simulations.
+func (am AppModule) ProposalMsgs(simState module.SimulationState) []simtypes.WeightedProposalMsg {
+	return nil
+}
+
+// RegisterStoreDecoder registers a decoder for supply module's types
+func (am AppModule) RegisterStoreDecoder(_ simtypes.StoreDecoderRegistry) {
+}
+
+// WeightedOperations returns the all the gov module operations with their respective weights.
+func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
+	return nil
+}

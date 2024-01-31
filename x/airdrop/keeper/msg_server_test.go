@@ -1,18 +1,19 @@
 package keeper_test
 
 import (
-	"github.com/tendermint/tendermint/proto/tendermint/crypto"
+	sdkmath "cosmossdk.io/math"
+	"github.com/cometbft/cometbft/proto/tendermint/crypto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	staking "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
-	"github.com/quicksilver-zone/quicksilver/x/airdrop/keeper"
-	"github.com/quicksilver-zone/quicksilver/x/airdrop/types"
-	cmtypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
-	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
-	minttypes "github.com/quicksilver-zone/quicksilver/x/mint/types"
+	"github.com/quicksilver-zone/quicksilver/v7/utils/addressutils"
+	"github.com/quicksilver-zone/quicksilver/v7/x/airdrop/keeper"
+	"github.com/quicksilver-zone/quicksilver/v7/x/airdrop/types"
+	cmtypes "github.com/quicksilver-zone/quicksilver/v7/x/claimsmanager/types"
+	icstypes "github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking/types"
+	minttypes "github.com/quicksilver-zone/quicksilver/v7/x/mint/types"
 )
 
 func (suite *KeeperTestSuite) Test_msgServer_Claim() {
@@ -108,7 +109,7 @@ func (suite *KeeperTestSuite) Test_msgServer_Claim() {
 					Amount: sdk.NewCoins(
 						sdk.NewCoin(
 							denom,
-							sdk.NewIntFromUint64(2000000), // 20% deposit
+							sdkmath.NewIntFromUint64(2000000), // 20% deposit
 						),
 					),
 				}
@@ -206,7 +207,7 @@ func (suite *KeeperTestSuite) Test_msgServer_Claim() {
 					Amount: sdk.NewCoins(
 						sdk.NewCoin(
 							denom,
-							sdk.NewIntFromUint64(1000000), // 10% deposit (sum 30%)
+							sdkmath.NewIntFromUint64(1000000), // 10% deposit (sum 30%)
 						),
 					),
 				}
@@ -258,7 +259,7 @@ func (suite *KeeperTestSuite) Test_msgServer_Claim() {
 				del := staking.Delegation{
 					DelegatorAddress: userAddress,
 					ValidatorAddress: valAddress.String(),
-					Shares:           sdk.MustNewDecFromStr("10.0"),
+					Shares:           sdkmath.LegacyMustNewDecFromStr("10.0"),
 				}
 				appA.StakingKeeper.SetDelegation(
 					suite.chainA.GetContext(),
@@ -309,7 +310,7 @@ func (suite *KeeperTestSuite) Test_msgServer_Claim() {
 					Intents: []*icstypes.ValidatorIntent{
 						{
 							ValoperAddress: valAddress.String(),
-							Weight:         sdk.OneDec(),
+							Weight:         sdkmath.LegacyOneDec(),
 						},
 					},
 				}
@@ -359,17 +360,13 @@ func (suite *KeeperTestSuite) Test_msgServer_Claim() {
 				}
 				appA.GovKeeper.SetProposal(suite.chainA.GetContext(), prop)
 
-				vote := govv1.Vote{
-					ProposalId: 0,
-					Voter:      userAddress,
-					Options: []*govv1.WeightedVoteOption{
-						{
-							Option: govv1.VoteOption_VOTE_OPTION_YES,
-							Weight: "1.0",
-						},
+				// add vote to the above proposal
+				appA.GovKeeper.AddVote(suite.chainA.GetContext(), prop.Id, sdk.AccAddress(userAddress), []*govv1.WeightedVoteOption{
+					{
+						Option: govv1.VoteOption_VOTE_OPTION_YES,
+						Weight: "1.0",
 					},
-				}
-				appA.GovKeeper.SetVote(suite.chainA.GetContext(), vote)
+				}, "test")
 
 				msg = types.MsgClaim{
 					ChainId: suite.chainB.ChainID,
@@ -494,8 +491,8 @@ func (suite *KeeperTestSuite) Test_msgServer_IncentivePoolSpend() {
 	modAccAddr := "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn"
 	userAddress := addressutils.GenerateAccAddressForTest().String()
 	denom := "uatom" // same as test zone setup in keeper_test
-	coins := sdk.NewCoins(sdk.NewCoin(denom, sdk.NewIntFromUint64(1000)))
-	mintCoins := sdk.NewCoins(sdk.NewCoin(denom, sdk.NewIntFromUint64(100000000)))
+	coins := sdk.NewCoins(sdk.NewCoin(denom, sdkmath.NewIntFromUint64(1000)))
+	mintCoins := sdk.NewCoins(sdk.NewCoin(denom, sdkmath.NewIntFromUint64(100000000)))
 
 	// set up mod acct with funds
 	err := appA.BankKeeper.MintCoins(suite.chainA.GetContext(), minttypes.ModuleName, mintCoins)

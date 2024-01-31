@@ -3,8 +3,8 @@ package participationrewards
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/quicksilver-zone/quicksilver/x/participationrewards/keeper"
-	"github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
+	"github.com/quicksilver-zone/quicksilver/v7/x/participationrewards/keeper"
+	"github.com/quicksilver-zone/quicksilver/v7/x/participationrewards/types"
 )
 
 // InitGenesis initializes the capability module's state from a provided genesis

@@ -8,12 +8,13 @@ import (
 	"fmt"
 	_ "github.com/cosmos/cosmos-proto"
 	types "github.com/cosmos/cosmos-sdk/codec/types"
-	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
+	cosmossdk_io_math "cosmossdk.io/math"
+github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
 	types1 "github.com/cosmos/cosmos-sdk/types"
 	query "github.com/cosmos/cosmos-sdk/types/query"
 	_ "github.com/gogo/protobuf/gogoproto"
 	grpc1 "github.com/gogo/protobuf/grpc"
-	proto "github.com/gogo/protobuf/proto"
+	proto "github.com/cosmos/gogoproto/proto"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
@@ -749,7 +750,7 @@ func (m *QuerySwapExactAmountInRequest) GetRoutes() []SwapAmountInRoute {
 }
 
 type QuerySwapExactAmountInResponse struct {
-	TokenOutAmount github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,1,opt,name=token_out_amount,json=tokenOutAmount,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"token_out_amount" yaml:"token_out_amount"`
+	TokenOutAmount cosmossdk_io_math.Int `protobuf:"bytes,1,opt,name=token_out_amount,json=tokenOutAmount,proto3,customtype=cosmossdk.io/math.Int" json:"token_out_amount" yaml:"token_out_amount"`
 }
 
 func (m *QuerySwapExactAmountInResponse) Reset()         { *m = QuerySwapExactAmountInResponse{} }
@@ -855,7 +856,7 @@ func (m *QuerySwapExactAmountOutRequest) GetTokenOut() string {
 }
 
 type QuerySwapExactAmountOutResponse struct {
-	TokenInAmount github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,1,opt,name=token_in_amount,json=tokenInAmount,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"token_in_amount" yaml:"token_in_amount"`
+	TokenInAmount cosmossdk_io_math.Int `protobuf:"bytes,1,opt,name=token_in_amount,json=tokenInAmount,proto3,customtype=cosmossdk.io/math.Int" json:"token_in_amount" yaml:"token_in_amount"`
 }
 
 func (m *QuerySwapExactAmountOutResponse) Reset()         { *m = QuerySwapExactAmountOutResponse{} }

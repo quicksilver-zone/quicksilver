@@ -11,8 +11,8 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/log"
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/libs/log"
 )
 
 func TestTPSCounter(t *testing.T) {

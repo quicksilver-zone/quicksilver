@@ -11,8 +11,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	liquiditytypes "github.com/quicksilver-zone/quicksilver/third-party-chains/crescent-types/liquidity/types"
-	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
+	liquiditytypes "github.com/quicksilver-zone/quicksilver/v7/third-party-chains/crescent-types/liquidity/types"
+	"github.com/quicksilver-zone/quicksilver/v7/utils/addressutils"
 )
 
 type CrescentPoolProtocolData struct {

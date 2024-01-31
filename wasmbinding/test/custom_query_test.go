@@ -16,8 +16,8 @@ import (
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 
-	"github.com/quicksilver-zone/quicksilver/app"
-	"github.com/quicksilver-zone/quicksilver/wasmbinding/bindings"
+	"github.com/quicksilver-zone/quicksilver/v7/app"
+	"github.com/quicksilver-zone/quicksilver/v7/wasmbinding/bindings"
 )
 
 // we must pay this many uosmo for every pool we create.
@@ -108,22 +108,25 @@ func storeReflectCode(t *testing.T, ctx sdk.Context, quicksilverApp *app.Quicksi
 
 	require.NoError(t, err)
 
-	src := wasmtypes.StoreCodeProposalFixture(func(p *wasmtypes.StoreCodeProposal) {
-		p.RunAs = addr.String()
-		p.WASMByteCode = wasmCode
-	})
+	src := &wasmtypes.MsgStoreCode{
+		Sender:       addr.String(),
+		WASMByteCode: wasmCode,
+	}
 
-	msgContent, err := govv1.NewLegacyContent(src, govAddress)
+	msgProposal, err := govv1.NewMsgSubmitProposal([]sdk.Msg{src}, sdk.NewCoins(sdk.NewInt64Coin("qck", 100000000)), govAddress, "test", "test", "test", true)
 	require.NoError(t, err)
 
 	// when stored
-	_, err = govKeeper.SubmitProposal(ctx, []sdk.Msg{msgContent}, "testing123")
-	require.NoError(t, err)
+	// _, err = govKeeper.SubmitProposal(ctx, []sdk.Msg{msgContent}, "testing123")
+	// require.NoError(t, err)
 
 	// and proposal execute
-	em := sdk.NewEventManager()
-	handler := govKeeper.LegacyRouter().GetRoute(src.ProposalRoute())
-	err = handler(ctx.WithEventManager(em), src)
+	// em := sdk.NewEventManager()
+	handler := govKeeper.Router().Handler(msgProposal)
+	if handler == nil {
+		t.Fatal("proposal handler not found")
+	}
+	_, err = handler(ctx, msgProposal)
 	require.NoError(t, err)
 }
 

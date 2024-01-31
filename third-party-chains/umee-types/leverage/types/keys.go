@@ -4,7 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 
-	"github.com/quicksilver-zone/quicksilver/utils"
+	"github.com/quicksilver-zone/quicksilver/v7/utils"
 )
 
 const (

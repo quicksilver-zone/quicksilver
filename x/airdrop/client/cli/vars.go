@@ -1,6 +1,6 @@
 package cli
 
-import "github.com/quicksilver-zone/quicksilver/x/airdrop/types"
+import "github.com/quicksilver-zone/quicksilver/v7/x/airdrop/types"
 
 var (
 	exampleChainID = "cosmoshub-4"

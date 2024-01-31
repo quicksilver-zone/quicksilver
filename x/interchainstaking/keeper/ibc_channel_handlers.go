@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"strings"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
+	"github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking/types"
 )
 
 func (k *Keeper) HandleChannelOpenAck(ctx sdk.Context, portID, connectionID string) error {
@@ -65,7 +66,7 @@ func (k *Keeper) HandleChannelOpenAck(ctx sdk.Context, portID, connectionID stri
 				chainID,
 				"cosmos.bank.v1beta1.Query/AllBalances",
 				bz,
-				sdk.NewInt(int64(k.GetParam(ctx, types.KeyDepositInterval))),
+				sdkmath.NewInt(int64(k.GetParam(ctx, types.KeyDepositInterval))),
 				types.ModuleName,
 				"allbalances",
 				0,

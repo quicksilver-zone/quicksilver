@@ -3,7 +3,7 @@ package keeper
 import (
 	"context"
 
-	"github.com/armon/go-metrics"
+	"github.com/hashicorp/go-metrics"
 
 	sdkioerrors "cosmossdk.io/errors"
 
@@ -12,7 +12,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
-	"github.com/quicksilver-zone/quicksilver/x/airdrop/types"
+	"github.com/quicksilver-zone/quicksilver/v7/x/airdrop/types"
 )
 
 type msgServer struct {
@@ -70,7 +70,7 @@ func (k msgServer) IncentivePoolSpend(goCtx context.Context, msg *types.MsgIncen
 				telemetry.SetGaugeWithLabels(
 					[]string{"tx", "msg", "send"},
 					float32(a.Amount.Int64()),
-					[]metrics.Label{telemetry.NewLabel("denom", a.Denom)},
+					[]metrics.Label{metrics.Label{Name: "denom", Value: a.Denom}}, // change this line
 				)
 			}
 		}

@@ -2,25 +2,24 @@ package keeper_test
 
 import (
 	"testing"
-	"time"
 
+	"github.com/cometbft/cometbft/crypto/ed25519"
 	"github.com/stretchr/testify/suite"
-	"github.com/tendermint/tendermint/crypto/ed25519"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 
-	"github.com/quicksilver-zone/quicksilver/app"
-	cmdcfg "github.com/quicksilver-zone/quicksilver/cmd/config"
-	"github.com/quicksilver-zone/quicksilver/x/tokenfactory/keeper"
-	"github.com/quicksilver-zone/quicksilver/x/tokenfactory/types"
+	"github.com/quicksilver-zone/quicksilver/v7/app"
+	cmdcfg "github.com/quicksilver-zone/quicksilver/v7/cmd/quicksilverd/config"
+	"github.com/quicksilver-zone/quicksilver/v7/x/tokenfactory/keeper"
+	"github.com/quicksilver-zone/quicksilver/v7/x/tokenfactory/types"
 )
 
 var (
 	SecondaryDenom  = "ura"
-	SecondaryAmount = sdk.NewInt(100000000)
+	SecondaryAmount = sdkmath.NewInt(100000000)
 )
 
 type KeeperTestSuite struct {
@@ -41,7 +40,7 @@ type KeeperTestSuite struct {
 func (suite *KeeperTestSuite) Setup() {
 	cmdcfg.SetBech32Prefixes(sdk.GetConfig())
 	suite.App = app.Setup(suite.T(), false)
-	suite.Ctx = suite.App.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "quick-1", Time: time.Now().UTC()})
+	suite.Ctx = suite.App.BaseApp.NewContext(false)
 	suite.QueryHelper = &baseapp.QueryServiceTestHelper{
 		GRPCQueryRouter: suite.App.GRPCQueryRouter(),
 		Ctx:             suite.Ctx,
@@ -72,7 +71,7 @@ func (suite *KeeperTestSuite) FundAcc(acc sdk.AccAddress, amounts sdk.Coins) {
 func (suite *KeeperTestSuite) SetupTestForInitGenesis() {
 	// Setting to True, leads to init genesis not running
 	suite.App = app.Setup(suite.T(), true)
-	suite.Ctx = suite.App.BaseApp.NewContext(true, tmproto.Header{})
+	suite.Ctx = suite.App.BaseApp.NewContext(true)
 }
 
 // AssertEventEmitted asserts that ctx's event manager has emitted the given number of events
@@ -121,7 +120,7 @@ func (suite *KeeperTestSuite) TestCreateModuleAccount() {
 	quicksilver.AccountKeeper.RemoveAccount(suite.Ctx, tokenfactoryModuleAccount)
 
 	// ensure module account was removed
-	suite.Ctx = quicksilver.BaseApp.NewContext(false, tmproto.Header{})
+	suite.Ctx = quicksilver.BaseApp.NewContext(false)
 	tokenfactoryModuleAccount = quicksilver.AccountKeeper.GetAccount(suite.Ctx, quicksilver.AccountKeeper.GetModuleAddress(types.ModuleName))
 	suite.Require().Nil(tokenfactoryModuleAccount)
 

@@ -3,9 +3,9 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	ibctmtypes "github.com/cosmos/ibc-go/v5/modules/light-clients/07-tendermint/types"
+	ibctmtypes "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint"
 
-	"github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
+	"github.com/quicksilver-zone/quicksilver/v7/x/claimsmanager/types"
 )
 
 // GetSelfConsensusState returns consensus state stored every epoch.

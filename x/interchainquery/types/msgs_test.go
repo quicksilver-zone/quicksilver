@@ -8,12 +8,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	ibctesting "github.com/cosmos/ibc-go/v5/testing"
+	ibctesting "github.com/cosmos/ibc-go/v8/testing"
 
-	"github.com/quicksilver-zone/quicksilver/app"
-	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
-	"github.com/quicksilver-zone/quicksilver/x/interchainquery/keeper"
-	"github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
+	"github.com/quicksilver-zone/quicksilver/v7/app"
+	"github.com/quicksilver-zone/quicksilver/v7/utils/addressutils"
+	"github.com/quicksilver-zone/quicksilver/v7/x/interchainquery/keeper"
+	"github.com/quicksilver-zone/quicksilver/v7/x/interchainquery/types"
 )
 
 var (
@@ -57,8 +57,10 @@ func TestMsgSubmitQueryResponse(t *testing.T) {
 	bz, err := bondedQuery.Marshal()
 	require.NoError(t, err)
 
+	vals, err := GetSimApp(chainB).StakingKeeper.GetBondedValidatorsByPower(chainB.GetContext())
+	require.NoError(t, err)
 	qvr := stakingtypes.QueryValidatorsResponse{
-		Validators: GetSimApp(chainB).StakingKeeper.GetBondedValidatorsByPower(chainB.GetContext()),
+		Validators: vals,
 	}
 
 	msg := types.MsgSubmitQueryResponse{

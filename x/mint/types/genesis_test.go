@@ -3,11 +3,10 @@ package types_test
 import (
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/quicksilver-zone/quicksilver/x/mint/types"
+	"github.com/quicksilver-zone/quicksilver/v7/x/mint/types"
 )
 
 func TestGenesisValidate(t *testing.T) {
@@ -15,7 +14,7 @@ func TestGenesisValidate(t *testing.T) {
 	invalidParams.Params.MintDenom = "" // cannot be empty
 
 	invalidMinter := types.DefaultGenesis()
-	invalidMinter.Minter.EpochProvisions = sdk.NewDec(-1) // cannot be empty
+	invalidMinter.Minter.EpochProvisions = sdkmath.LegacyNewDec(-1) // cannot be empty
 
 	tests := []struct {
 		name    string

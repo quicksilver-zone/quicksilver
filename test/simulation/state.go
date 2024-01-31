@@ -10,22 +10,22 @@ import (
 	"os"
 	"time"
 
-	tmjson "github.com/tendermint/tendermint/libs/json"
-	tmtypes "github.com/tendermint/tendermint/types"
+	tmjson "github.com/cometbft/cometbft/libs/json"
+	tmtypes "github.com/cometbft/cometbft/types"
 
 	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	simappparams "github.com/cosmos/ibc-go/v8/testing/simapp/params"
 
-	"github.com/quicksilver-zone/quicksilver/app"
+	"github.com/quicksilver-zone/quicksilver/v7/app"
 )
 
 // AppStateFn returns the initial application state using a genesis or the simulation parameters.
@@ -93,7 +93,7 @@ func AppStateFn(cdc codec.JSONCodec, simManager *module.SimulationManager) simty
 			panic(err)
 		}
 		// compute not bonded balance
-		notBondedTokens := sdk.ZeroInt()
+		notBondedTokens := sdkmath.ZeroInt()
 		for _, val := range stakingState.Validators {
 			if val.Status != stakingtypes.Unbonded {
 				continue
@@ -148,17 +148,17 @@ func AppStateRandomizedFn(
 	accs []simtypes.Account, genesisTimestamp time.Time, appParams simtypes.AppParams,
 ) (json.RawMessage, []simtypes.Account) {
 	numAccs := int64(len(accs))
-	genesisState := app.NewDefaultGenesisState()
+	genesisState := app.NewDefaultGenState()
 
 	// generate a random amount of initial stake coins and a random initial
 	// number of bonded accounts
 	var initialStake, numInitiallyBonded int64
 	appParams.GetOrGenerate(
-		cdc, simappparams.StakePerAccount, &initialStake, r,
+		simappparams.StakePerAccount, &initialStake, r,
 		func(r *rand.Rand) { initialStake = r.Int63n(1e12) },
 	)
 	appParams.GetOrGenerate(
-		cdc, simappparams.InitiallyBondedValidators, &numInitiallyBonded, r,
+		simappparams.InitiallyBondedValidators, &numInitiallyBonded, r,
 		func(r *rand.Rand) { numInitiallyBonded = int64(r.Intn(300)) },
 	)
 

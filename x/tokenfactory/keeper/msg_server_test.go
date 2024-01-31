@@ -3,10 +3,11 @@ package keeper_test
 import (
 	"fmt"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	"github.com/quicksilver-zone/quicksilver/x/tokenfactory/types"
+	"github.com/quicksilver-zone/quicksilver/v7/x/tokenfactory/types"
 )
 
 // TestMintDenomMsg tests TypeMsgMint message is emitted on a successful mint.
@@ -98,7 +99,7 @@ func (suite *KeeperTestSuite) TestBurnDenomMsg() {
 
 // TestCreateDenomMsg test TypeMsgCreateDenom message is emitted on a successful denom creation.
 func (suite *KeeperTestSuite) TestCreateDenomMsg() {
-	defaultDenomCreationFee := types.Params{DenomCreationFee: sdk.NewCoins(sdk.NewCoin("uqck", sdk.NewInt(50000000)))}
+	defaultDenomCreationFee := types.Params{DenomCreationFee: sdk.NewCoins(sdk.NewCoin("uqck", sdkmath.NewInt(50000000)))}
 	for _, tc := range []struct {
 		desc                  string
 		denomCreationFee      types.Params

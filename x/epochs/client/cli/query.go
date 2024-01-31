@@ -10,7 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/version"
 
-	"github.com/quicksilver-zone/quicksilver/x/epochs/types"
+	"github.com/quicksilver-zone/quicksilver/v7/x/epochs/types"
 )
 
 // GetQueryCmd returns the cli query commands for this module.

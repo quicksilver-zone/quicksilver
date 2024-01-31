@@ -2,37 +2,38 @@ package keepers
 
 import (
 	"github.com/CosmWasm/wasmd/x/wasm"
-	packetforwardtypes "github.com/strangelove-ventures/packet-forward-middleware/v5/router/types"
+	packetforwardtypes "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v8/packetforward/types"
+	ibcfeetypes "github.com/cosmos/ibc-go/v8/modules/apps/29-fee/types"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	storetypes "cosmossdk.io/store/types"
+	evidencetypes "cosmossdk.io/x/evidence/types"
+	"cosmossdk.io/x/feegrant"
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
+	consensusparamtypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
+	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
-	"github.com/cosmos/cosmos-sdk/x/feegrant"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
+	ibcexported "github.com/cosmos/ibc-go/v8/modules/core/exported"
 
-	icacontrollertypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/controller/types"
-	icahosttypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/host/types"
-	ibctransfertypes "github.com/cosmos/ibc-go/v5/modules/apps/transfer/types"
-	ibchost "github.com/cosmos/ibc-go/v5/modules/core/24-host"
-
-	airdroptypes "github.com/quicksilver-zone/quicksilver/x/airdrop/types"
-	claimsmanagertypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
-	epochstypes "github.com/quicksilver-zone/quicksilver/x/epochs/types"
-	interchainquerytypes "github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
-	interchainstakingtypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
-	minttypes "github.com/quicksilver-zone/quicksilver/x/mint/types"
-	participationrewardstypes "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
-	supplytypes "github.com/quicksilver-zone/quicksilver/x/supply/types"
-	tokenfactorytypes "github.com/quicksilver-zone/quicksilver/x/tokenfactory/types"
+	icacontrollertypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/controller/types"
+	icahosttypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/host/types"
+	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
+	airdroptypes "github.com/quicksilver-zone/quicksilver/v7/x/airdrop/types"
+	claimsmanagertypes "github.com/quicksilver-zone/quicksilver/v7/x/claimsmanager/types"
+	epochstypes "github.com/quicksilver-zone/quicksilver/v7/x/epochs/types"
+	interchainquerytypes "github.com/quicksilver-zone/quicksilver/v7/x/interchainquery/types"
+	interchainstakingtypes "github.com/quicksilver-zone/quicksilver/v7/x/interchainstaking/types"
+	minttypes "github.com/quicksilver-zone/quicksilver/v7/x/mint/types"
+	participationrewardstypes "github.com/quicksilver-zone/quicksilver/v7/x/participationrewards/types"
+	supplytypes "github.com/quicksilver-zone/quicksilver/v7/x/supply/types"
+	tokenfactorytypes "github.com/quicksilver-zone/quicksilver/v7/x/tokenfactory/types"
 )
 
 // TODO: We need to automate this, by bundling with a module struct...
@@ -42,6 +43,7 @@ func KVStoreKeys() []string {
 		authtypes.StoreKey,
 		banktypes.StoreKey,
 		stakingtypes.StoreKey,
+		crisistypes.StoreKey,
 		distrtypes.StoreKey,
 		slashingtypes.StoreKey,
 		govtypes.StoreKey,
@@ -51,12 +53,14 @@ func KVStoreKeys() []string {
 		capabilitytypes.StoreKey,
 		feegrant.StoreKey,
 		authzkeeper.StoreKey,
+		consensusparamtypes.StoreKey,
 		// ibc keys
-		ibchost.StoreKey,
+		ibcexported.StoreKey,
 		ibctransfertypes.StoreKey,
 		icacontrollertypes.StoreKey,
 		icahosttypes.StoreKey,
 		packetforwardtypes.StoreKey,
+		ibcfeetypes.StoreKey,
 		// quicksilver keys
 		minttypes.StoreKey,
 		claimsmanagertypes.StoreKey,
@@ -75,13 +79,13 @@ func KVStoreKeys() []string {
 func (appKeepers *AppKeepers) GenerateKeys() {
 	// Define what keys will be used in the cosmos-sdk key/value store.
 	// Cosmos-SDK modules each have a "key" that allows the application to reference what they've stored on the chain.
-	appKeepers.keys = sdk.NewKVStoreKeys(KVStoreKeys()...)
+	appKeepers.keys = storetypes.NewKVStoreKeys(KVStoreKeys()...)
 
 	// Define transient store keys
-	appKeepers.tkeys = sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
+	appKeepers.tkeys = storetypes.NewTransientStoreKeys(paramstypes.TStoreKey)
 
 	// MemKeys are for information that is stored only in RAM.
-	appKeepers.memKeys = sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
+	appKeepers.memKeys = storetypes.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
 }
 
 // GetSubspace gets existing substore from keeper.
