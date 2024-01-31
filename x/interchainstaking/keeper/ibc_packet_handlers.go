@@ -1274,7 +1274,11 @@ func DistributeRewardsFromWithdrawAccount(k *Keeper, ctx sdk.Context, args []byt
 	// prepare rewards distribution
 	rewards := sdk.NewCoin(zone.BaseDenom, baseDenomAmount.Sub(baseDenomFee))
 
-	msgs := []sdk.Msg{k.prepareRewardsDistributionMsgs(zone, rewards.Amount)}
+	msgs := make([]sdk.Msg, 0)
+
+	if rewards.Amount.IsPositive() {
+		msgs = append(msgs, k.prepareRewardsDistributionMsgs(zone, rewards.Amount))
+	}
 
 	// multiDenomFee is the balance of withdrawal account minus the redelegated rewards.
 	multiDenomFee := withdrawBalance.Balances.Sub(sdk.Coins{rewards}...)
@@ -1317,10 +1321,6 @@ func DistributeRewardsFromWithdrawAccount(k *Keeper, ctx sdk.Context, args []byt
 }
 
 func (*Keeper) prepareRewardsDistributionMsgs(zone types.Zone, rewards sdkmath.Int) sdk.Msg {
-	if !rewards.IsPositive() {
-		return &banktypes.MsgSend{}
-	}
-
 	return &banktypes.MsgSend{
 		FromAddress: zone.WithdrawalAddress.GetAddress(),
 		ToAddress:   zone.DelegationAddress.GetAddress(),
