@@ -54,6 +54,7 @@ export default function Staking() {
 
   const [isStakingModalOpen, setStakingModalOpen] = useState(false);
   const [isTransferModalOpen, setTransferModalOpen] = useState(false);
+  const [isRevertSharesModalOpen, setRevertSharesModalOpen] = useState(false);
 
   return (
     <>
@@ -109,6 +110,8 @@ export default function Staking() {
                 setStakingModalOpen={setStakingModalOpen}
                 isTransferModalOpen={isTransferModalOpen}
                 setTransferModalOpen={setTransferModalOpen}
+                isRevertSharesModalOpen={isRevertSharesModalOpen}
+                setRevertSharesModalOpen={setRevertSharesModalOpen}
                 setBalance={setBalance}
                 setQBalance={setQBalance}
               />

@@ -26,6 +26,7 @@ import {
   Image,
   SkeletonCircle,
   Link,
+  useToast,
 } from '@chakra-ui/react';
 import { Coin, StdFee } from '@cosmjs/amino';
 import { useChain } from '@cosmos-kit/react';
@@ -33,6 +34,9 @@ import { quicksilver } from 'quicksilverjs';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { FaStar } from 'react-icons/fa';
 
+import RevertSharesProcessModal from './modals/revertSharesProcessModal';
+import StakingProcessModal from './modals/stakingProcessModal';
+import TransferProcessModal from './modals/transferProcessModal';
 
 import { useTx } from '@/hooks';
 import {
@@ -44,10 +48,8 @@ import {
   useValidatorsQuery,
   useZoneQuery,
 } from '@/hooks/useQueries';
+import { useToaster, ToastType, type CustomToast } from '@/hooks/useToaster';
 import { getExponent, shiftDigits } from '@/utils';
-
-import StakingProcessModal from './modals/stakingProcessModal';
-import TransferProcessModal from './modals/transferProcessModal';
 
 type StakingBoxProps = {
   selectedOption: {
@@ -61,6 +63,8 @@ type StakingBoxProps = {
   setStakingModalOpen: (isOpen: boolean) => void;
   isTransferModalOpen: boolean;
   setTransferModalOpen: (isOpen: boolean) => void;
+  isRevertSharesModalOpen: boolean;
+  setRevertSharesModalOpen: (isOpen: boolean) => void;
   setBalance: (balance: string) => void;
   setQBalance: (qBalance: string) => void;
 };
@@ -71,6 +75,8 @@ export const StakingBox = ({
   setStakingModalOpen,
   isTransferModalOpen,
   setTransferModalOpen,
+  isRevertSharesModalOpen,
+  setRevertSharesModalOpen,
   setBalance,
   setQBalance,
 }: StakingBoxProps) => {
@@ -82,6 +88,9 @@ export const StakingBox = ({
 
   const openTransferModal = () => setTransferModalOpen(true);
   const closeTransferModal = () => setTransferModalOpen(false);
+
+  const openRevertSharesModal = () => setRevertSharesModalOpen(true);
+  const closeRevertSharesModal = () => setRevertSharesModalOpen(false);
 
   const { address } = useChain(selectedOption.chainName);
 
@@ -172,9 +181,17 @@ export const StakingBox = ({
     }
   };
 
+  const toaster = useToaster();
   const handleTabsChange = (index: number) => {
     setActiveTabIndex(index);
     setTokenAmount('');
+    if (index === 1) {
+      toaster.toast({
+        type: ToastType.Error,
+        title: 'Issues with unbonding',
+        message: 'Unbondings can be submitted but are currently not being processed and will be queued until the issue is resolved.',
+      });
+    }
   };
 
   const { delegations, delegationsIsError, delegationsIsLoading } = useNativeStakeQuery(selectedOption.chainName, address ?? '');
@@ -576,8 +593,8 @@ export const StakingBox = ({
                                   key={uniqueKey}
                                   mb={2}
                                 >
-                                  <Flex py={2} align="center">
-                                    <Box boxSize="50px" borderRadius="md" ml={4}>
+                                  <Flex py={2} align="center" justify="space-between">
+                                    <HStack align="center" ml={4}>
                                       {!validatorLogo ? (
                                         <SkeletonCircle size="8" startColor="complimentary.900" endColor="complimentary.400" />
                                       ) : (
@@ -589,25 +606,45 @@ export const StakingBox = ({
                                           borderRadius={'full'}
                                         />
                                       )}
-                                    </Box>
-                                    <VStack align="start" ml={2}>
-                                      <HStack>
-                                        <Text fontSize="md">{validator?.name ?? 'Validator'}</Text>
-                                        {delegation.isTokenized && (
-                                          <Tooltip
-                                            label="This share is tokenized and can be transferred to quicksilver."
-                                            aria-label="Tokenized Share"
-                                          >
-                                            <Box>
-                                              <FaStar color="#FF8000" />
-                                            </Box>
-                                          </Tooltip>
-                                        )}
-                                      </HStack>
-                                      <Text color={'complimentary.900'} fontSize="md">
-                                        {shiftDigits(delegation.balance.amount, -6)} {selectedOption.value}
-                                      </Text>
-                                    </VStack>
+                                      <VStack align="start">
+                                        <HStack>
+                                          <Text fontSize="md">{validator?.name ?? 'Validator'}</Text>
+                                          {delegation.isTokenized && (
+                                            <Tooltip
+                                              label="This share is tokenized and can be transferred to quicksilver."
+                                              aria-label="Tokenized Share"
+                                            >
+                                              <Box>
+                                                <FaStar color="#FF8000" />
+                                              </Box>
+                                            </Tooltip>
+                                          )}
+                                        </HStack>
+                                        <Text color={'complimentary.900'} fontSize="md">
+                                          {shiftDigits(delegation.balance.amount, -6)} {selectedOption.value}
+                                        </Text>
+                                      </VStack>
+                                    </HStack>
+                                    {isSelected && delegation.isTokenized && (
+                                      <Button
+                                        onClick={openRevertSharesModal}
+                                        _active={{
+                                          transform: 'scale(0.95)',
+                                          color: 'complimentary.800',
+                                        }}
+                                        _hover={{
+                                          bgColor: 'rgba(255,128,0, 0.25)',
+                                          color: 'complimentary.300',
+                                        }}
+                                        color="white"
+                                        size="sm"
+                                        variant="outline"
+                                        mb={6}
+                                        mr={2}
+                                      >
+                                        Revert
+                                      </Button>
+                                    )}
                                   </Flex>
                                 </Box>
                               );
@@ -642,6 +679,15 @@ export const StakingBox = ({
                       selectedValidator={selectedValidatorData}
                       isOpen={isTransferModalOpen}
                       onClose={closeTransferModal}
+                      selectedOption={selectedOption}
+                      isTokenized={selectedValidatorData.isTokenized}
+                      denom={selectedValidatorData.denom}
+                    />
+                    <RevertSharesProcessModal
+                      address={address ?? ''}
+                      selectedValidator={selectedValidatorData}
+                      isOpen={isRevertSharesModalOpen}
+                      onClose={closeRevertSharesModal}
                       selectedOption={selectedOption}
                       isTokenized={selectedValidatorData.isTokenized}
                       denom={selectedValidatorData.denom}

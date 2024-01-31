@@ -24,12 +24,16 @@ import { useState, useEffect } from 'react';
 import { FaDiscord, FaGithub, FaInfo } from 'react-icons/fa';
 import { FaXTwitter } from 'react-icons/fa6';
 import { IoIosDocument } from 'react-icons/io';
+import { MdPrivacyTip } from 'react-icons/md';
+
+import { DisableLsmModal } from './disableLsmModal';
 
 import { DrawerControlProvider } from '@/state/chains/drawerControlProvider';
 
 export const SideHeader = () => {
   const router = useRouter();
   const [selectedPage, setSelectedPage] = useState('');
+  const { isOpen, onOpen, onClose } = useDisclosure();
 
   const [showSocialLinks, setShowSocialLinks] = useState(false);
 
@@ -369,6 +373,7 @@ export const SideHeader = () => {
                       </Box>
                     </Tooltip>
                   </Link>
+
                   <Link href="https://docs.quicksilver.zone/" isExternal>
                     <Tooltip borderLeft="4px solid rgba(255, 128, 0, 0.9)" label="Docs" placement="right">
                       <Box
@@ -382,6 +387,19 @@ export const SideHeader = () => {
                       </Box>
                     </Tooltip>
                   </Link>
+                  {/* <Tooltip borderLeft="4px solid rgba(255, 128, 0, 0.9)" label="Disable LSM" placement="right">
+                    <Box
+                      onClick={onOpen}
+                      _hover={{
+                        cursor: 'pointer',
+                        boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 15px 5px ${commonBoxShadowColor}`,
+                        transition: transitionStyle,
+                      }}
+                    >
+                      <MdPrivacyTip size={'25px'} color="rgb(255, 128, 0)" />
+                    </Box>
+                  </Tooltip>
+                  <DisableLsmModal isOpen={isOpen} onClose={onClose} /> */}
                   <Tooltip borderLeft="4px solid rgba(255, 128, 0, 0.9)" label="Discord" placement="right">
                     <Link href="https://discord.com/invite/xrSmYMDVrQ" isExternal>
                       <Box
@@ -421,18 +439,6 @@ export const SideHeader = () => {
                       </Box>
                     </Link>
                   </Tooltip>
-                  {/*<Tooltip borderLeft="4px solid rgba(255, 128, 0, 0.9)" label="Privacy Policy" placement="right">
-                    <Box
-                      onClick={() => router.push('/privacy-policy')}
-                      _hover={{
-                        cursor: 'pointer',
-                        boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 15px 5px ${commonBoxShadowColor}`,
-                        transition: transitionStyle,
-                      }}
-                    >
-                      <MdPrivacyTip size={'25px'} color="rgb(255, 128, 0)" />
-                    </Box>
-                    </Tooltip>*/}
                 </VStack>
               )}
             </ScaleFade>
