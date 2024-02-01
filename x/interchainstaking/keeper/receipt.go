@@ -238,8 +238,12 @@ func (k *Keeper) TransferToDelegate(ctx sdk.Context, zone *types.Zone, coins sdk
 	return k.SubmitTx(ctx, []sdk.Msg{msg}, zone.DepositAddress, memo, zone.MessagesPerTx)
 }
 
-// SubmitTx submits a Tx on behalf of an ICAAccount to a remote chain.
 func (k *Keeper) SubmitTx(ctx sdk.Context, msgs []sdk.Msg, account *types.ICAAccount, memo string, messagesPerTx int64) error {
+	return k.txSubmit(ctx, k, msgs, account, memo, messagesPerTx)
+}
+
+// SubmitTx submits a Tx on behalf of an ICAAccount to a remote chain.
+func ProdSubmitTx(ctx sdk.Context, k *Keeper, msgs []sdk.Msg, account *types.ICAAccount, memo string, messagesPerTx int64) error {
 	// if no messages, do nothing
 	if len(msgs) == 0 {
 		return nil

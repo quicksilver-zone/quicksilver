@@ -41,6 +41,8 @@ import (
 	lsmstakingtypes "github.com/quicksilver-zone/quicksilver/x/lsmtypes"
 )
 
+type TxSubmitFn func(ctx sdk.Context, k *Keeper, msgs []sdk.Msg, account *types.ICAAccount, memo string, messagesPerTx int64) error
+
 // Keeper of this module maintains collections of registered zones.
 type Keeper struct {
 	cdc                 codec.Codec
@@ -57,6 +59,7 @@ type Keeper struct {
 	Ir                  codectypes.InterfaceRegistry
 	hooks               types.IcsHooks
 	paramStore          paramtypes.Subspace
+	txSubmit            TxSubmitFn
 }
 
 // NewKeeper returns a new instance of zones Keeper.
@@ -102,9 +105,13 @@ func NewKeeper(
 		TransferKeeper:      transferKeeper,
 		ClaimsManagerKeeper: claimsManagerKeeper,
 		hooks:               nil,
-
-		paramStore: ps,
+		txSubmit:            ProdSubmitTx,
+		paramStore:          ps,
 	}
+}
+
+func (k *Keeper) OverrideTxSubmit(fn TxSubmitFn) {
+	k.txSubmit = fn
 }
 
 // SetHooks set the ics hooks.
@@ -161,6 +168,11 @@ func (k *Keeper) GetConnectionForPort(ctx sdk.Context, port string) (string, err
 
 	k.cdc.MustUnmarshal(bz, &mapping)
 	return mapping.ConnectionId, nil
+}
+
+func (k *Keeper) DeleteConnectionForPort(ctx sdk.Context, port string) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixPortMapping)
+	store.Delete([]byte(port))
 }
 
 // IteratePortConnections iterates through all of the delegations.
@@ -725,14 +737,17 @@ func (k *Keeper) Rebalance(ctx sdk.Context, zone *types.Zone, epochNumber int64)
 	rebalances := types.DetermineAllocationsForRebalancing(currentAllocations, currentLocked, currentSum, lockedSum, targetAllocations, maxCanAllocate, k.Logger(ctx)).RemoveDuplicates()
 	msgs := make([]sdk.Msg, 0)
 	for _, rebalance := range rebalances {
-		msgs = append(msgs, &stakingtypes.MsgBeginRedelegate{DelegatorAddress: zone.DelegationAddress.Address, ValidatorSrcAddress: rebalance.Source, ValidatorDstAddress: rebalance.Target, Amount: sdk.NewCoin(zone.BaseDenom, rebalance.Amount)})
-		k.SetRedelegationRecord(ctx, types.RedelegationRecord{
-			ChainId:     zone.ChainId,
-			EpochNumber: epochNumber,
-			Source:      rebalance.Source,
-			Destination: rebalance.Target,
-			Amount:      rebalance.Amount.Int64(),
-		})
+		if rebalance.Amount.GTE(sdk.NewInt(1_000_000)) {
+			// don't redelegate dust; TODO: config per zone
+			msgs = append(msgs, &stakingtypes.MsgBeginRedelegate{DelegatorAddress: zone.DelegationAddress.Address, ValidatorSrcAddress: rebalance.Source, ValidatorDstAddress: rebalance.Target, Amount: sdk.NewCoin(zone.BaseDenom, rebalance.Amount)})
+			k.SetRedelegationRecord(ctx, types.RedelegationRecord{
+				ChainId:     zone.ChainId,
+				EpochNumber: epochNumber,
+				Source:      rebalance.Source,
+				Destination: rebalance.Target,
+				Amount:      rebalance.Amount.Int64(),
+			})
+		}
 	}
 	if len(msgs) == 0 {
 		k.Logger(ctx).Debug("No rebalancing required")

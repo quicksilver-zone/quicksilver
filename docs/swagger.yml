@@ -1647,10 +1647,7 @@ paths:
                         protobuf release, and it is not used for type URLs
                         beginning with
 
-                        type.googleapis.com. As of May 2023, there are no widely
-                        used type server
-
-                        implementations and no plans to implement one.
+                        type.googleapis.com.
 
 
                         Schemes other than `http`, `https` (or the empty scheme)
@@ -1695,10 +1692,6 @@ paths:
                         if (any.is(Foo.class)) {
                           foo = any.unpack(Foo.class);
                         }
-                        // or ...
-                        if (any.isSameTypeAs(Foo.getDefaultInstance())) {
-                          foo = any.unpack(Foo.getDefaultInstance());
-                        }
 
                      Example 3: Pack and unpack a message in Python.
 
@@ -1736,6 +1729,7 @@ paths:
                     type
 
                     name "y.z".
+
 
 
                     JSON
@@ -1964,10 +1958,7 @@ paths:
                         protobuf release, and it is not used for type URLs
                         beginning with
 
-                        type.googleapis.com. As of May 2023, there are no widely
-                        used type server
-
-                        implementations and no plans to implement one.
+                        type.googleapis.com.
 
 
                         Schemes other than `http`, `https` (or the empty scheme)
@@ -2012,10 +2003,6 @@ paths:
                         if (any.is(Foo.class)) {
                           foo = any.unpack(Foo.class);
                         }
-                        // or ...
-                        if (any.isSameTypeAs(Foo.getDefaultInstance())) {
-                          foo = any.unpack(Foo.getDefaultInstance());
-                        }
 
                      Example 3: Pack and unpack a message in Python.
 
@@ -2053,6 +2040,7 @@ paths:
                     type
 
                     name "y.z".
+
 
 
                     JSON
@@ -4119,6 +4107,21 @@ paths:
                       type: array
                       items:
                         type: string
+                    amount:
+                      type: object
+                      properties:
+                        denom:
+                          type: string
+                        amount:
+                          type: string
+                      description: >-
+                        Coin defines a token with a denomination and an amount.
+
+
+                        NOTE: The amount field is an Int which implements the
+                        custom method
+
+                        signatures required by gogoproto.
               pagination:
                 type: object
                 properties:
