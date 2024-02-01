@@ -226,7 +226,6 @@ func V010407rc2UpgradeHandler(
 	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 		if isTestnet(ctx) || isDevnet(ctx) {
 			appKeepers.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zone *icstypes.Zone) (stop bool) {
-
 				vals := appKeepers.InterchainstakingKeeper.GetValidators(ctx, zone.ChainId)
 				delegationQuery := stakingtypes.QueryDelegatorDelegationsRequest{DelegatorAddr: zone.DelegationAddress.Address, Pagination: &query.PageRequest{Limit: uint64(len(vals))}}
 				bz := appKeepers.InterchainstakingKeeper.GetCodec().MustMarshal(&delegationQuery)
