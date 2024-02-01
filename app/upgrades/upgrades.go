@@ -32,7 +32,7 @@ func Upgrades() []Upgrade {
 		{UpgradeName: V010217UpgradeName, CreateUpgradeHandler: NoOpHandler},
 		{UpgradeName: V010405UpgradeName, CreateUpgradeHandler: NoOpHandler},
 		{UpgradeName: V010406UpgradeName, CreateUpgradeHandler: V010406UpgradeHandler},
-		{UpgradeName: V010407UpgradeName, CreateUpgradeHandler: NoOpHandler},
+		{UpgradeName: V010407UpgradeName, CreateUpgradeHandler: V010407UpgradeHandler},
 	}
 }
 
@@ -262,6 +262,75 @@ func V010407rc2UpgradeHandler(
 
 				return false
 			})
+		}
+
+		return mm.RunMigrations(ctx, configurator, fromVM)
+	}
+}
+
+func V010407UpgradeHandler(
+	mm *module.Manager,
+	configurator module.Configurator,
+	appKeepers *keepers.AppKeepers,
+) upgradetypes.UpgradeHandler {
+	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		// set redemption rate to value correct as of 2024-02-01T20:00UTC.
+		rates := map[string]sdk.Dec{
+			"cosmoshub-4": sdk.NewDecFromInt(math.NewInt(219_280_116_789)).QuoInt64(186_283_929_157),
+			"stargaze-1":  sdk.NewDecFromInt(math.NewInt(7_883_310_380_922)).QuoInt64(6_142_958_768_078),
+			"osmosis-1":   sdk.NewDecFromInt(math.NewInt(363_909_524_952)).QuoInt64(322_912_055_083),
+			"sommelier-3": sdk.NewDecFromInt(math.NewInt(657_103_764_225)).QuoInt64(637_871_903_193),
+			"regen-1":     sdk.NewDecFromInt(math.NewInt(5_606_819_529_428)).QuoInt64(4_543_207_966_192),
+			"juno-1":      sdk.NewDecFromInt(math.NewInt(7_439_000_263)).QuoInt64(7_018_171_980),
+		}
+
+		// trigger redemption rate update immediately after upgrade.
+		appKeepers.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zone *icstypes.Zone) (stop bool) {
+			vals := appKeepers.InterchainstakingKeeper.GetValidators(ctx, zone.ChainId)
+			delegationQuery := stakingtypes.QueryDelegatorDelegationsRequest{DelegatorAddr: zone.DelegationAddress.Address, Pagination: &query.PageRequest{Limit: uint64(len(vals))}}
+			bz := appKeepers.InterchainstakingKeeper.GetCodec().MustMarshal(&delegationQuery)
+
+			appKeepers.InterchainQueryKeeper.MakeRequest(
+				ctx,
+				zone.ConnectionId,
+				zone.ChainId,
+				"cosmos.staking.v1beta1.Query/DelegatorDelegations",
+				bz,
+				sdk.NewInt(-1),
+				icstypes.ModuleName,
+				"delegations",
+				0,
+			)
+
+			balancesQuery := banktypes.QueryAllBalancesRequest{Address: zone.DelegationAddress.Address}
+			bz = appKeepers.InterchainstakingKeeper.GetCodec().MustMarshal(&balancesQuery)
+			appKeepers.InterchainQueryKeeper.MakeRequest(
+				ctx,
+				zone.ConnectionId,
+				zone.ChainId,
+				"cosmos.bank.v1beta1.Query/AllBalances",
+				bz,
+				sdk.NewInt(-1),
+				icstypes.ModuleName,
+				"delegationaccountbalances",
+				0,
+			)
+			// increment waitgroup; decremented in delegationaccountbalance callback
+			zone.WithdrawalWaitgroup++
+			zone.RedemptionRate = rates[zone.ChainId]
+			zone.LastRedemptionRate = rates[zone.ChainId]
+			appKeepers.InterchainstakingKeeper.SetZone(ctx, zone)
+
+			return false
+		})
+
+		// migrate testnet user account.
+		migrations := map[string]string{
+			"quick1k67rz3vn73tzp2tatlka2kn2ngtjdw8gpw8zq2": "quick1plq2mrsn0uw2dkksptr9dsyyk62dkk6t7w79j2",
+		}
+
+		if err := migrateVestingAccounts(ctx, appKeepers, migrations); err != nil {
+			panic(err)
 		}
 
 		return mm.RunMigrations(ctx, configurator, fromVM)
