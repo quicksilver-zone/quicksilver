@@ -7,8 +7,10 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
@@ -24,6 +26,7 @@ func Upgrades() []Upgrade {
 		{UpgradeName: V010405rc7UpgradeName, CreateUpgradeHandler: NoOpHandler},
 		{UpgradeName: V010407rc0UpgradeName, CreateUpgradeHandler: NoOpHandler},
 		{UpgradeName: V010407rc1UpgradeName, CreateUpgradeHandler: V010407rc1UpgradeHandler},
+		{UpgradeName: V010407rc2UpgradeName, CreateUpgradeHandler: V010407rc2UpgradeHandler},
 
 		// v1.2: this needs to be present to support upgrade on mainnet
 		{UpgradeName: V010217UpgradeName, CreateUpgradeHandler: NoOpHandler},
@@ -209,6 +212,57 @@ func V010407rc1UpgradeHandler(
 		if isTestnet(ctx) {
 			// remove osmo-test-5 so we can reinstate
 			appKeepers.InterchainstakingKeeper.RemoveZoneAndAssociatedRecords(ctx, "osmo-test-5")
+		}
+
+		return mm.RunMigrations(ctx, configurator, fromVM)
+	}
+}
+
+func V010407rc2UpgradeHandler(
+	mm *module.Manager,
+	configurator module.Configurator,
+	appKeepers *keepers.AppKeepers,
+) upgradetypes.UpgradeHandler {
+	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		if isTestnet(ctx) || isDevnet(ctx) {
+			appKeepers.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zone *icstypes.Zone) (stop bool) {
+
+				vals := appKeepers.InterchainstakingKeeper.GetValidators(ctx, zone.ChainId)
+				delegationQuery := stakingtypes.QueryDelegatorDelegationsRequest{DelegatorAddr: zone.DelegationAddress.Address, Pagination: &query.PageRequest{Limit: uint64(len(vals))}}
+				bz := appKeepers.InterchainstakingKeeper.GetCodec().MustMarshal(&delegationQuery)
+
+				appKeepers.InterchainQueryKeeper.MakeRequest(
+					ctx,
+					zone.ConnectionId,
+					zone.ChainId,
+					"cosmos.staking.v1beta1.Query/DelegatorDelegations",
+					bz,
+					sdk.NewInt(-1),
+					icstypes.ModuleName,
+					"delegations",
+					0,
+				)
+
+				balancesQuery := banktypes.QueryAllBalancesRequest{Address: zone.DelegationAddress.Address}
+				bz = appKeepers.InterchainstakingKeeper.GetCodec().MustMarshal(&balancesQuery)
+				appKeepers.InterchainQueryKeeper.MakeRequest(
+					ctx,
+					zone.ConnectionId,
+					zone.ChainId,
+					"cosmos.bank.v1beta1.Query/AllBalances",
+					bz,
+					sdk.NewInt(-1),
+					icstypes.ModuleName,
+					"delegationaccountbalances",
+					0,
+				)
+				// increment waitgroup; decremented in delegationaccountbalance callback
+				zone.WithdrawalWaitgroup++
+
+				appKeepers.InterchainstakingKeeper.SetZone(ctx, zone)
+
+				return false
+			})
 		}
 
 		return mm.RunMigrations(ctx, configurator, fromVM)
