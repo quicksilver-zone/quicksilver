@@ -3,6 +3,7 @@ import {
   useRpcEndpoint,
   useRpcClient,
   createRpcQueryHooks,
+
 } from 'interchain-query';
 
 export const useQueryHooks = (

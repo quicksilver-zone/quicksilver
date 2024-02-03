@@ -34,9 +34,6 @@ import { quicksilver } from 'quicksilverjs';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { FaStar } from 'react-icons/fa';
 
-import RevertSharesProcessModal from './modals/revertSharesProcessModal';
-import StakingProcessModal from './modals/stakingProcessModal';
-import TransferProcessModal from './modals/transferProcessModal';
 
 import { useTx } from '@/hooks';
 import {
@@ -50,6 +47,10 @@ import {
 } from '@/hooks/useQueries';
 import { useToaster, ToastType, type CustomToast } from '@/hooks/useToaster';
 import { getExponent, shiftDigits } from '@/utils';
+
+import RevertSharesProcessModal from './modals/revertSharesProcessModal';
+import StakingProcessModal from './modals/stakingProcessModal';
+import TransferProcessModal from './modals/transferProcessModal';
 
 type StakingBoxProps = {
   selectedOption: {
@@ -451,19 +452,12 @@ export const StakingBox = ({
                                 </Skeleton>
                               ) : (
                                 <Text color="complimentary.900" fontWeight="light">
-                                  {address ? (
-                                    balance?.balance?.amount && Number(balance?.balance?.amount) !== 0 ? (
-                                      `${truncatedBalance} ${selectedOption.value.toUpperCase()}`
-                                    ) : (
-                                      <Link
-                                        href={`https://app.osmosis.zone/?from=USDC&to=${selectedOption.value.toUpperCase()}`}
-                                        isExternal
-                                      >
-                                        Get {selectedOption.value.toUpperCase()} tokens here
-                                      </Link>
-                                    )
+                                  {balance?.balance?.amount && Number(balance.balance.amount) > 0 ? (
+                                    `${truncatedBalance} ${selectedOption.value.toUpperCase()}`
                                   ) : (
-                                    '0'
+                                    <Link href={`https://app.osmosis.zone/?from=USDC&to=${selectedOption.value.toUpperCase()}`} isExternal>
+                                      Get {selectedOption.value.toUpperCase()} tokens here
+                                    </Link>
                                   )}
                                 </Text>
                               )}
@@ -515,7 +509,7 @@ export const StakingBox = ({
                       </Flex>
                     </Flex>
                     <Divider bgColor="complimentary.900" />
-                    <HStack justifyContent="space-between" alignItems="left" w="100%" mt={-8}>
+                    <HStack pt={2} justifyContent="space-between" alignItems="left" w="100%" mt={-8}>
                       <Stat textAlign="left" color="white">
                         <StatLabel>What you&apos;ll get</StatLabel>
                         <StatNumber>q{selectedOption.value.toUpperCase()}:</StatNumber>
@@ -821,7 +815,7 @@ export const StakingBox = ({
                   </Flex>
                 </Flex>
                 <Divider bgColor="complimentary.900" />
-                <HStack justifyContent="space-between" alignItems="left" w="100%" mt={-8}>
+                <HStack pt={2} justifyContent="space-between" alignItems="left" w="100%" mt={-8}>
                   <Stat textAlign="left" color="white">
                     <StatLabel>What you&apos;ll get</StatLabel>
                     <StatNumber>{selectedOption.value.toUpperCase()}:</StatNumber>

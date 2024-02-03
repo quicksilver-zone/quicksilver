@@ -31,7 +31,7 @@ export interface StakingIntentProps {
 const StakingIntent: React.FC<StakingIntentProps> = ({ address, isWalletConnected }) => {
   const networks = process.env.NEXT_PUBLIC_CHAIN_ENV === 'mainnet' ? prodNetworks : devNetworks;
 
-  const chains = ['Cosmos', 'Osmosis', 'Stargaze', 'Regen', 'Sommelier', 'Juno'];
+  const chains = ['Cosmos', 'Osmosis', 'Dydx', 'Stargaze', 'Regen', 'Sommelier', 'Juno'];
   const [currentChainIndex, setCurrentChainIndex] = useState(0);
 
   const [isSignalIntentModalOpen, setIsSignalIntentModalOpen] = useState(false);
@@ -138,6 +138,7 @@ const StakingIntent: React.FC<StakingIntentProps> = ({ address, isWalletConnecte
               transform: 'scale(0.75)',
               color: 'complimentary.800',
             }}
+            color="GrayText"
             aria-label="Previous chain"
             icon={<ChevronLeftIcon w={'25px'} h={'25px'} />}
             onClick={handleLeftArrowClick}
@@ -152,6 +153,7 @@ const StakingIntent: React.FC<StakingIntentProps> = ({ address, isWalletConnecte
               transform: 'scale(0.75)',
               color: 'complimentary.800',
             }}
+            color="GrayText"
             _hover={{ bgColor: 'transparent', color: 'complimentary.900' }}
             variant="ghost"
             aria-label="Next chain"

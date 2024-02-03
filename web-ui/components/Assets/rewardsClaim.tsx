@@ -54,8 +54,9 @@ export const RewardsClaim: React.FC<RewardsClaimInterface> = ({ address, onClose
     granter: address,
     grantee: 'quick1w5ennfhdqrpyvewf35sv3y3t8yuzwq29mrmyal',
     grant: {
+      //@ts-ignore
       authorization: {
-        typeUrl: cosmos.authz.v1beta1.GenericAuthorization.typeUrl,
+        $typeUrl: cosmos.authz.v1beta1.GenericAuthorization.typeUrl,
         value: binaryMessage,
       },
     },
@@ -110,6 +111,7 @@ export const RewardsClaim: React.FC<RewardsClaimInterface> = ({ address, onClose
           zone: message.zone,
           srcZone: message.src_zone,
           claimType: message.claim_type,
+          //@ts-ignore
           proofs: transformedProofs,
         });
       });
@@ -186,25 +188,25 @@ export const RewardsClaim: React.FC<RewardsClaimInterface> = ({ address, onClose
               placement="top"
               hasArrow
             > */}
-              <Box>
-                <Button
-                  _active={{
-                    transform: 'scale(0.95)',
-                    color: 'complimentary.800',
-                  }}
-                  _hover={{
-                    bgColor: 'rgba(255,128,0, 0.25)',
-                    color: 'complimentary.300',
-                  }}
-                  minW={'120px'}
-                  onClick={transactionHandler}
-                  size="sm"
-                  alignSelf="end"
-                  isDisabled={!autoClaimEnabled}
-                >
-                  {isError ? 'Try Again' : isSigning ? <Spinner /> : autoClaimEnabled ? 'Auto Claim' : 'Claim Rewards'}
-                </Button>
-              </Box>
+            <Box>
+              <Button
+                _active={{
+                  transform: 'scale(0.95)',
+                  color: 'complimentary.800',
+                }}
+                _hover={{
+                  bgColor: 'rgba(255,128,0, 0.25)',
+                  color: 'complimentary.300',
+                }}
+                minW={'120px'}
+                onClick={transactionHandler}
+                size="sm"
+                alignSelf="end"
+                isDisabled={!autoClaimEnabled}
+              >
+                {isError ? 'Try Again' : isSigning ? <Spinner /> : autoClaimEnabled ? 'Auto Claim' : 'Claim Rewards'}
+              </Button>
+            </Box>
             {/* </Tooltip> */}
           </HStack>
         </VStack>

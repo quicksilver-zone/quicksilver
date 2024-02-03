@@ -387,7 +387,7 @@ export const SideHeader = () => {
                       </Box>
                     </Tooltip>
                   </Link>
-                  {/* <Tooltip borderLeft="4px solid rgba(255, 128, 0, 0.9)" label="Disable LSM" placement="right">
+                  <Tooltip borderLeft="4px solid rgba(255, 128, 0, 0.9)" label="LSM Controls" placement="right">
                     <Box
                       onClick={onOpen}
                       _hover={{
@@ -399,7 +399,7 @@ export const SideHeader = () => {
                       <MdPrivacyTip size={'25px'} color="rgb(255, 128, 0)" />
                     </Box>
                   </Tooltip>
-                  <DisableLsmModal isOpen={isOpen} onClose={onClose} /> */}
+                  <DisableLsmModal isOpen={isOpen} onClose={onClose} />
                   <Tooltip borderLeft="4px solid rgba(255, 128, 0, 0.9)" label="Discord" placement="right">
                     <Link href="https://discord.com/invite/xrSmYMDVrQ" isExternal>
                       <Box

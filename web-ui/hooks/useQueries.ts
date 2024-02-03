@@ -230,7 +230,7 @@ export const useAllBalancesQuery = (chainName: string, address: string) => {
           key: nextKey,
           offset: Long.fromNumber(0),
           limit: Long.fromNumber(100),
-          countTotal: true,
+          count_total: true,
           reverse: false,
         },
       });
@@ -265,7 +265,7 @@ export const useIbcBalanceQuery = (chainName: string, address: string) => {
           key: nextKey,
           offset: Long.fromNumber(0),
           limit: Long.fromNumber(100),
-          countTotal: true,
+          count_total: true,
           reverse: false,
         },
       });
@@ -482,7 +482,7 @@ export const useValidatorsQuery = (chainName: string) => {
         key: key,
         offset: Long.fromNumber(0),
         limit: Long.fromNumber(500),
-        countTotal: true,
+        count_total: true,
         reverse: false,
       },
     });
@@ -548,6 +548,8 @@ const fetchAPY = async (chainId: any) => {
   return chainInfo ? chainInfo.apr : 0;
 };
 
+
+
 export const useAPYQuery = (chainId: any) => {
   const query = useQuery(
       ['APY', chainId],
@@ -583,14 +585,14 @@ export const useZoneQuery = (chainId: string) => {
 
       // Parse or map the API zone data to your Zone interface
       const parsedZone: Zone = {
-        connectionId: apiZone.connection_id,
-        chainId: apiZone.chain_id,
-        depositAddress: apiZone.deposit_address,
-        withdrawalAddress: apiZone.withdrawal_address,
-        performanceAddress: apiZone.performance_address,
-        delegationAddress: apiZone.delegation_address,
-        accountPrefix: apiZone.account_prefix,
-        localDenom: apiZone.local_denom,
+        connection_id: apiZone.connection_id,
+        chain_id: apiZone.chain_id,
+        deposit_address: apiZone.deposit_address,
+        withdrawal_address: apiZone.withdrawal_address,
+        performance_address: apiZone.performance_address,
+        delegation_address: apiZone.delegation_address,
+        account_prefix: apiZone.account_prefix,
+        local_denom: apiZone.local_denom,
         baseDenom: apiZone.base_denom,
         redemptionRate: apiZone.redemption_rate,
         lastRedemptionRate: apiZone.last_redemption_rate,
@@ -648,7 +650,7 @@ export const useMissedBlocks = (chainName: string) => {
           key: nextKey,
           offset: Long.fromNumber(0),
           limit: Long.fromNumber(100),
-          countTotal: true,
+          count_total: true,
           reverse: false,
         },
       });
@@ -726,12 +728,12 @@ export const useGovernanceQuery = (chainName: string) => {
       }
       const nextKey = new Uint8Array()
       const governance = await grpcQueryClient.cosmos.gov.v1beta1.proposals({
-        proposalStatus: cosmos.gov.v1.ProposalStatus.PROPOSAL_STATUS_UNSPECIFIED,
+        proposal_status: cosmos.gov.v1.ProposalStatus.PROPOSAL_STATUS_UNSPECIFIED,
         pagination: {
           key: nextKey,
           offset: Long.fromNumber(0),
           limit: Long.fromNumber(100),
-          countTotal: true,
+          count_total: true,
           reverse: true,
         },
         voter: '',
@@ -769,7 +771,7 @@ export const useNativeStakeQuery = (chainName: string, address: string) => {
           key: nextKey,
           offset: Long.fromNumber(0),
           limit: Long.fromNumber(100),
-          countTotal: true,
+          count_total: true,
           reverse: false,
         },
       });

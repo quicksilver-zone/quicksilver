@@ -1,5 +1,5 @@
-import { quicksilver } from 'quicksilverjs';
 import { useQuery } from '@tanstack/react-query';
+import { quicksilver } from 'quicksilverjs';
 
 
 const createGrpcGateWayClient = quicksilver.ClientFactory.createGrpcGateWayClient;
@@ -20,6 +20,7 @@ export const useGrpcQueryClient = (chainName: string) => {
     regen: env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_LCD_ENDPOINT_REGEN : process.env.NEXT_PUBLIC_MAINNET_LCD_ENDPOINT_REGEN,
     osmosis: env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_LCD_ENDPOINT_OSMOSIS : process.env.NEXT_PUBLIC_MAINNET_LCD_ENDPOINT_OSMOSIS,
     juno: env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_LCD_ENDPOINT_JUNO : process.env.NEXT_PUBLIC_MAINNET_LCD_ENDPOINT_JUNO,
+    dydx: env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_LCD_ENDPOINT_DYDX : process.env.NEXT_PUBLIC_MAINNET_LCD_ENDPOINT_DYDX,
   };
 
 
