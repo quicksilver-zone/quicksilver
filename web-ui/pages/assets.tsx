@@ -119,12 +119,12 @@ function Home() {
   // useMemo hook to cache redemption rate data
   const redemptionRates: NumericRedemptionRates = useMemo(
     () => ({
-      atom: CosmosZone?.redemptionRate ? parseFloat(CosmosZone.redemptionRate) : 1,
-      osmo: OsmoZone?.redemptionRate ? parseFloat(OsmoZone.redemptionRate) : 1,
-      stars: StarZone?.redemptionRate ? parseFloat(StarZone.redemptionRate) : 1,
-      regen: RegenZone?.redemptionRate ? parseFloat(RegenZone.redemptionRate) : 1,
-      somm: SommZone?.redemptionRate ? parseFloat(SommZone.redemptionRate) : 1,
-      juno: JunoZone?.redemptionRate ? parseFloat(JunoZone.redemptionRate) : 1,
+      atom: CosmosZone?.redemption_rate ? parseFloat(CosmosZone.redemption_rate) : 1,
+      osmo: OsmoZone?.redemption_rate ? parseFloat(OsmoZone.redemption_rate) : 1,
+      stars: StarZone?.redemption_rate ? parseFloat(StarZone.redemption_rate) : 1,
+      regen: RegenZone?.redemption_rate ? parseFloat(RegenZone.redemption_rate) : 1,
+      somm: SommZone?.redemption_rate ? parseFloat(SommZone.redemption_rate) : 1,
+      juno: JunoZone?.redemption_rate ? parseFloat(JunoZone.redemption_rate) : 1,
     }),
     [CosmosZone, OsmoZone, StarZone, RegenZone, SommZone, JunoZone],
   );

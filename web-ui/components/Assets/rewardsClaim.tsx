@@ -19,8 +19,7 @@ function transformProofs(proofs: any[]) {
     data: proof.data,
     proofOps: proof.proof_ops
       ? {
-          //@ts-ignore
-          ops: proof.proof_ops.ops.map((op) => ({
+          ops: proof.proof_ops.ops.map((op: { type: any; key: any; data: any }) => ({
             type: op.type,
             key: op.key,
             data: op.data,

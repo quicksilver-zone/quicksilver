@@ -149,11 +149,11 @@ export const StakingBox = ({
   const { requestRedemption } = quicksilver.interchainstaking.v1.MessageComposer.withTypeUrl;
   const numericAmount = Number(tokenAmount);
   const smallestUnitAmount = numericAmount * Math.pow(10, 6);
-  const value: Coin = { amount: smallestUnitAmount.toFixed(0), denom: zone?.localDenom ?? '' };
+  const value: Coin = { amount: smallestUnitAmount.toFixed(0), denom: zone?.local_denom ?? '' };
   const msgRequestRedemption = requestRedemption({
     value: value,
-    fromAddress: qAddress ?? '',
-    destinationAddress: address ?? '',
+    from_address: qAddress ?? '',
+    destination_address: address ?? '',
   });
 
   const fee: StdFee = {
@@ -268,11 +268,14 @@ export const StakingBox = ({
         const [validatorAddress, uniqueId] = balance.denom.split('/');
         return {
           delegation: {
+            delegator_address: '',
             validator_address: validatorAddress,
             unique_id: uniqueId,
+            shares: '',
           },
           balance: {
             amount: balance.amount,
+            denom: balance.denom,
           },
           isTokenized: true,
           denom: balance.denom,
@@ -329,15 +332,15 @@ export const StakingBox = ({
                 </Text>
                 {selectedOption.name === 'Cosmos Hub' && (
                   <Flex textAlign={'left'} justifyContent={'flex-start'}>
-                    {(nativeStakedAmount > 0 || hasTokenized) && (
+                    {((nativeStakedAmount ?? 0) > 0 || hasTokenized) && (
                       <Tooltip
                         label={
                           !address
                             ? 'Please connect your wallet to enable this option.'
                             : !nativeStakedAmount && !hasTokenized
                             ? "You don't have any native staked tokens or tokenized shares."
-                            : nativeStakedAmount > 0
-                            ? `You currently have ${shiftDigits(nativeStakedAmount, -6)} ${
+                            : nativeStakedAmount ?? 0 > 0
+                            ? `You currently have ${shiftDigits(nativeStakedAmount ?? '', -6)} ${
                                 selectedOption.value
                               } natively staked to ${delegationsResponse?.length} validators.`
                             : hasTokenized
@@ -517,7 +520,7 @@ export const StakingBox = ({
                       <Spacer /> {/* This pushes the next Stat component to the right */}
                       <Stat py={4} textAlign="right" color="white">
                         <StatNumber textColor="complimentary.900">
-                          {(Number(tokenAmount) / (Number(zone?.redemptionRate) || 1)).toFixed(2)}
+                          {(Number(tokenAmount) / (Number(zone?.redemption_rate) || 1)).toFixed(2)}
                         </StatNumber>
                       </Stat>
                     </HStack>
@@ -553,6 +556,7 @@ export const StakingBox = ({
                         <Box className="custom-scrollbar" maxH="290px" overflowY="scroll" w="fit-content" onScroll={handleScroll}>
                           {/* Combine delegationsResponse with valoper entries from allBalances */}
                           {combinedDelegations.map(
+                            // @ts-ignore
                             (
                               delegation: {
                                 delegation: { validator_address: string | number; unique_id: any };
@@ -823,7 +827,7 @@ export const StakingBox = ({
                   <Spacer /> {/* This pushes the next Stat component to the right */}
                   <Stat py={4} textAlign="right" color="white">
                     <StatNumber textColor="complimentary.900">
-                      {(Number(tokenAmount) * Number(zone?.redemptionRate || 1)).toFixed(2)}
+                      {(Number(tokenAmount) * Number(zone?.redemption_rate || 1)).toFixed(2)}
                     </StatNumber>
                   </Stat>
                 </HStack>

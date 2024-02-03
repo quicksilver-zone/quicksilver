@@ -241,8 +241,8 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
 
   const msgSend = send({
     fromAddress: address ?? '',
-    toAddress: zone?.depositAddress?.address ?? '',
-    amount: coins(smallestUnitAmount.toFixed(0), zone?.baseDenom ?? ''),
+    toAddress: zone?.deposit_address?.address ?? '',
+    amount: coins(smallestUnitAmount.toFixed(0), zone?.base_denom ?? ''),
   });
 
   const mainTokens = assets.find(({ chain_name }) => chain_name === newChainName);
@@ -666,7 +666,7 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
                     <HStack mt={2} textAlign={'left'} fontWeight={'light'} fontSize="lg" color="white">
                       <Text fontWeight={'bold'}>Receiving:</Text>
                       <Text color="complimentary.900">
-                        {(Number(tokenAmount) / Number(zone?.redemptionRate)).toFixed(2)} q{selectedOption?.value}
+                        {(Number(tokenAmount) / Number(zone?.redemption_rate)).toFixed(2)} q{selectedOption?.value}
                       </Text>
                     </HStack>
                     <Text mt={2} textAlign={'left'} fontWeight={'hairline'}>

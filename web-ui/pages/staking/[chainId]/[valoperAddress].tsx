@@ -184,16 +184,16 @@ export const StakingBox = ({ selectedOption, valoperAddress }: StakingBoxProps) 
   const env = process.env.NEXT_PUBLIC_CHAIN_ENV;
   const quicksilverChainName = env === 'testnet' ? 'quicksilvertestnet' : 'quicksilver';
 
-  const isCalculationDataLoaded = tokenAmount && !isNaN(Number(tokenAmount)) && zone && !isNaN(Number(zone.redemptionRate));
+  const isCalculationDataLoaded = tokenAmount && !isNaN(Number(tokenAmount)) && zone && !isNaN(Number(zone.redemption_rate));
 
   const { requestRedemption } = quicksilver.interchainstaking.v1.MessageComposer.withTypeUrl;
   const numericAmount = Number(tokenAmount);
   const smallestUnitAmount = numericAmount * Math.pow(10, 6);
-  const value: Coin = { amount: smallestUnitAmount.toFixed(0), denom: zone?.localDenom ?? '' };
+  const value: Coin = { amount: smallestUnitAmount.toFixed(0), denom: zone?.local_denom ?? '' };
   const msgRequestRedemption = requestRedemption({
     value: value,
-    fromAddress: qAddress ?? '',
-    destinationAddress: address ?? '',
+    from_address: qAddress ?? '',
+    destination_address: address ?? '',
   });
 
   const fee: StdFee = {
@@ -271,9 +271,9 @@ export const StakingBox = ({ selectedOption, valoperAddress }: StakingBoxProps) 
   const { send } = cosmos.bank.v1beta1.MessageComposer.withTypeUrl;
 
   const msgSend = send({
-    fromAddress: address ?? '',
-    toAddress: zone?.depositAddress?.address ?? '',
-    amount: coins(smallestUnitAmount.toFixed(0), zone?.baseDenom ?? ''),
+    from_address: address ?? '',
+    to_address: zone?.deposit_address?.address ?? '',
+    amount: coins(smallestUnitAmount.toFixed(0), zone?.base_denom ?? ''),
   });
 
   const mainTokens = assets.find(({ chain_name }) => chain_name === selectedOption.chainName);
@@ -556,7 +556,7 @@ export const StakingBox = ({ selectedOption, valoperAddress }: StakingBoxProps) 
                     <Spacer /> {/* This pushes the next Stat component to the right */}
                     <Stat py={4} textAlign="right" color="white">
                       <StatNumber textColor="complimentary.900">
-                        {(Number(tokenAmount) / (Number(zone?.redemptionRate) || 1)).toFixed(2)}
+                        {(Number(tokenAmount) / (Number(zone?.redemption_rate) || 1)).toFixed(2)}
                       </StatNumber>
                     </Stat>
                   </HStack>
@@ -712,7 +712,7 @@ export const StakingBox = ({ selectedOption, valoperAddress }: StakingBoxProps) 
                   <Spacer /> {/* This pushes the next Stat component to the right */}
                   <Stat py={4} textAlign="right" color="white">
                     <StatNumber textColor="complimentary.900">
-                      {(Number(tokenAmount) * Number(zone?.redemptionRate || 1)).toFixed(2)}
+                      {(Number(tokenAmount) * Number(zone?.redemption_rate || 1)).toFixed(2)}
                     </StatNumber>
                   </Stat>
                 </HStack>

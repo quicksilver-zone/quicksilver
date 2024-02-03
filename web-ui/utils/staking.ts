@@ -1,11 +1,12 @@
 import { Coin, decodeCosmosSdkDecFromProto } from '@cosmjs/stargate';
+import * as bech32 from 'bech32';
 import BigNumber from 'bignumber.js';
+import * as CryptoJS from 'crypto-js';
 import { QueryDelegationTotalRewardsResponse } from 'interchain-query/cosmos/distribution/v1beta1/query';
 import { QueryAnnualProvisionsResponse } from 'interchain-query/cosmos/mint/v1beta1/query';
 import { QueryDelegatorDelegationsResponse, QueryParamsResponse } from 'interchain-query/cosmos/staking/v1beta1/query';
-import { Pool, Validator } from 'interchain-query/cosmos/staking/v1beta1/staking';
-import * as bech32 from 'bech32';
-import * as CryptoJS from 'crypto-js';
+import { Pool } from 'interchain-query/cosmos/staking/v1beta1/staking';
+import { Validator } from 'quicksilverjs/dist/codegen/cosmos/staking/v1beta1/staking';
 
 import { decodeUint8Arr, isGreaterThanZero, shiftDigits, toNumber } from '.';
 

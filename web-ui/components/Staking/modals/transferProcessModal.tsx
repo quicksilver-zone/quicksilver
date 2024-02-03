@@ -132,13 +132,13 @@ export const TransferProcessModal: React.FC<StakingModalProps> = ({
   const { tokenizeShares } = cosmos.staking.v1beta1.MessageComposer.withTypeUrl;
 
   const msg = tokenizeShares({
-    delegatorAddress: address,
-    validatorAddress: selectedValidator.operatorAddress,
+    delegator_address: address,
+    validator_address: selectedValidator.operatorAddress,
     amount: {
       denom: 'u' + selectedOption?.value.toLowerCase(),
       amount: selectedValidator.tokenAmount.toString(),
     },
-    tokenizedShareOwner: address,
+    tokenized_share_owner: address,
   });
 
   const mainTokens = assets.find(({ chain_name }) => chain_name === newChainName);
@@ -218,8 +218,8 @@ export const TransferProcessModal: React.FC<StakingModalProps> = ({
   }
 
   const msgSend = send({
-    fromAddress: address ?? '',
-    toAddress: zone?.depositAddress?.address ?? '',
+    from_address: address ?? '',
+    to_address: zone?.deposit_address?.address ?? '',
     amount: coins(numericAmount, denom ?? combinedDenom),
   });
 

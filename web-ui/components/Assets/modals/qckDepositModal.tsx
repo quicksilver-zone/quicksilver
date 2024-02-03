@@ -18,11 +18,12 @@ import { ChainName } from '@cosmos-kit/core';
 import { useChain, useManager } from '@cosmos-kit/react';
 import BigNumber from 'bignumber.js';
 import { assets, chains } from 'chain-registry';
+import Long from 'long';
 import { ibc } from 'quicksilverjs';
 import { useState, useMemo, useEffect } from 'react';
 
 import { ChooseChain } from '@/components/react/choose-chain';
-import { handleSelectChainDropdown, ChainOption } from '@/components/types';
+import { handleSelectChainDropdown, ChainOption, ChooseChainInfo } from '@/components/types';
 import { useTx } from '@/hooks';
 import { useIbcBalanceQuery } from '@/hooks/useQueries';
 import { getIbcInfo, shiftDigits } from '@/utils';
@@ -40,7 +41,7 @@ export function DepositModal() {
       .filter((chainRecord) => chainRecord.name === 'osmosis')
       .map((chainRecord) => ({
         chainName: chainRecord?.name,
-        label: chainRecord?.chain.pretty_name,
+        label: chainRecord?.chain?.pretty_name,
         value: chainRecord?.name,
         icon: getChainLogo(chainRecord.name),
       }));
@@ -59,7 +60,7 @@ export function DepositModal() {
     }
   };
 
-  const chooseChain = <ChooseChain chainName={chainName} chainInfos={chainOptions} onChange={onChainChange} />;
+  const chooseChain = <ChooseChain chainName={chainName} chainInfos={chainOptions as ChooseChainInfo[]} onChange={onChainChange} />;
 
   const fromChain = chainName;
   const toChain = 'quicksilver';
@@ -91,7 +92,7 @@ export function DepositModal() {
       gas: '500000',
     };
 
-    const { sourcePort, sourceChannel } = getIbcInfo(fromChain ?? '', toChain ?? '');
+    const { source_port, source_channel } = getIbcInfo(fromChain ?? '', toChain ?? '');
 
     const token = {
       denom: 'ibc/635CB83EF1DFE598B10A3E90485306FD0D47D34217A4BE5FD9977FA010A5367D',
@@ -99,19 +100,20 @@ export function DepositModal() {
     };
 
     const stamp = Date.now();
-    const timeoutInNanos = (stamp + 1.2e6) * 1e6;
+    const timeoutInNanos = new Long((stamp + 1.2e6) * 1e6);
 
     const msg = transfer({
-      sourcePort,
-      sourceChannel,
+      source_port,
+      source_channel,
       sender: address ?? '',
       receiver: qAddress ?? '',
       token,
-       //@ts-ignore
-      timeoutHeight: 0,
-      //@ts-ignore
-      timeoutTimestamp: timeoutInNanos,
-      memo: '',
+      timeout_height: {
+        revision_number: new Long(1000),
+        revision_height: new Long(1000),
+      },
+
+      timeout_timestamp: timeoutInNanos,
     });
 
     await tx([msg], {

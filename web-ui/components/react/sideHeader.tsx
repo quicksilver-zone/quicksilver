@@ -26,9 +26,10 @@ import { FaXTwitter } from 'react-icons/fa6';
 import { IoIosDocument } from 'react-icons/io';
 import { MdPrivacyTip } from 'react-icons/md';
 
+import { DrawerControlProvider } from '@/state/chains/drawerControlProvider';
+
 import { DisableLsmModal } from './disableLsmModal';
 
-import { DrawerControlProvider } from '@/state/chains/drawerControlProvider';
 
 export const SideHeader = () => {
   const router = useRouter();
