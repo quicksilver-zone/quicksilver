@@ -66,7 +66,7 @@ export const NetworkSelect: React.FC<CustomMenuProps> = ({ buttonTextColor = 'wh
             onClick={() => handleOptionClick(network)}
           >
             <Flex justifyContent="center" alignItems="center" flexDirection="row">
-              <Image alt={network.name.toLowerCase()} px={4} borderRadius={'full'} h="40px" src={network.logo} />
+              <Image alt={network.name.toLowerCase()} px={4} borderRadius={'1000px'} h="40px" src={network.logo} />
               <Text color="white" fontSize="20px" textAlign="center">
                 {network.name}
               </Text>

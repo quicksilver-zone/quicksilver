@@ -11,10 +11,9 @@ import {
   Spacer,
   Spinner,
 } from '@chakra-ui/react';
+import { StdFee } from '@cosmjs/amino';
 import { useChain } from '@cosmos-kit/react';
 import { assets, chains } from 'chain-registry';
-import { StdFee } from 'interchain-query';
-import { cosmos } from 'quicksilverjs';
 import { MsgDisableTokenizeShares, MsgEnableTokenizeShares } from 'quicksilverjs/dist/codegen/cosmos/staking/v1beta1/lsm';
 import { useState } from 'react';
 
@@ -33,9 +32,10 @@ export const DisableLsmModal: React.FC<DisableLsmModalProps> = ({ isOpen, onClos
     delegator_address: address ?? '',
   });
 
-  const msgEnable = MsgEnableTokenizeShares.fromPartial({
-    delegator_address: address ?? '',
-  });
+  const msgEnable = {
+    typeUrl: MsgEnableTokenizeShares.typeUrl,
+    value: MsgDisableTokenizeShares.encode({ delegator_address: address ?? '' }),
+  };
 
   const [isSigningEnable, setIsSigningEnable] = useState<boolean>(false);
   const [isSigningDisable, setIsSingingDisable] = useState<boolean>(false);
@@ -46,7 +46,6 @@ export const DisableLsmModal: React.FC<DisableLsmModalProps> = ({ isOpen, onClos
   const mainDenom = mainTokens?.assets[0].base ?? '';
   const fixedMinGasPrice = fees?.find(({ denom }) => denom === mainDenom)?.high_gas_price ?? '';
   const feeAmount = Number(fixedMinGasPrice) * 750000;
-  const sendFeeAmount = Number(fixedMinGasPrice) * 100000;
 
   const fee: StdFee = {
     amount: [
@@ -83,7 +82,7 @@ export const DisableLsmModal: React.FC<DisableLsmModalProps> = ({ isOpen, onClos
     setIsSigningEnable(true);
 
     try {
-      const result = await tx([], {
+      const result = await tx([msgEnable], {
         fee,
         onSuccess: () => {
           onClose();
@@ -146,8 +145,9 @@ export const DisableLsmModal: React.FC<DisableLsmModalProps> = ({ isOpen, onClos
               bgColor: 'rgba(255,255,255,0.05)',
               backdropFilter: 'blur(10px)',
             }}
+            borderColor={'green'}
             color="green"
-            variant="ghost"
+            variant="outline"
           >
             {isError ? 'Try Again' : isSigningEnable ? <Spinner /> : 'Enable'}
           </Button>

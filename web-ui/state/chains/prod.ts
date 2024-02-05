@@ -47,7 +47,7 @@ export const networks = [
     },
     {
         value: 'DYDX',
-        logo: '/img/networks/dydx.svg',
+        logo: '/img/networks/dydx.png',
         qlogo: '/img/networks/qdydx.png',
         name: 'Dydx',
         chainName: 'dydx',

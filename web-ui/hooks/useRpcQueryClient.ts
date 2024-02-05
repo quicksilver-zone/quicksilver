@@ -18,6 +18,8 @@ export const useRpcQueryClient = (chainName: string) => {
     stargaze: env === 'testnet' ? process.env.TESTNET_RPC_ENDPOINT_STARGAZE : process.env.MAINNET_RP_ENDPOINTC_STARGAZE,
     regen: env === 'testnet' ? process.env.TESTNET_RPC_ENDPOINT_REGEN : process.env.MAINNET_RPC_ENDPOINT_REGEN,
     osmosis: env === 'testnet' ? process.env.TESTNET_RPC_ENDPOINT_OSMOSIS : process.env.MAINNET_RPC_ENDPOINT_OSMOSIS,
+    juno: env === 'testnet' ? process.env.TESTNET_RPC_ENDPOINT_JUNO : process.env.MAINNET_RPC_ENDPOINT_JUNO,
+    dydx: env === 'testnet' ? process.env.TESTNET_RPC_ENDPOINT_DYDX : process.env.MAINNET_RPC_ENDPOINT_DYDX,
   };
 
   rpcEndpoint = endpoints[chainName];
@@ -30,9 +32,6 @@ export const useRpcQueryClient = (chainName: string) => {
     },
     enabled: !!rpcEndpoint,
     staleTime: Infinity,
-    onError: (error) => {
-      console.error('Error in fetching RPC Query Client:', error);
-    }
   });
 
  

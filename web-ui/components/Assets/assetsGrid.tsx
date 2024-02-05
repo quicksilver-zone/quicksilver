@@ -69,13 +69,13 @@ const AssetCard: React.FC<AssetCardProps> = ({ assetName, balance, apy }) => {
         assetsInChain.forEach((asset: any) => {
           const assetAmount = asset.Amount.find((amount: { denom: string }) => amount.denom === `uq${nativeAssetName.toLowerCase()}`);
           if (assetAmount) {
-            totalAmount += parseInt(assetAmount.amount, 10); // assuming amount is a string
+            totalAmount += parseInt(assetAmount.amount, 10);
           }
         });
       }
     });
 
-    return shiftDigits(totalAmount.toString(), -6); // Adjust the shift as per your data's scale
+    return shiftDigits(totalAmount.toString(), -6);
   };
 
   // const nativeAssets = nonNative?.assets['quicksilver-2']

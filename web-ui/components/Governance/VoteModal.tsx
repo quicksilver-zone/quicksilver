@@ -30,7 +30,7 @@ interface VoteModalProps {
   updateVotes: () => void;
   vote: number | undefined;
   title: string;
-  proposalId: BigInt;
+  proposalId: bigint;
 }
 
 export const VoteModal: React.FC<VoteModalProps> = ({ modalControl, chainName, updateVotes, title, vote, proposalId }) => {

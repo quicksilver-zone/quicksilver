@@ -191,7 +191,7 @@ export const RevertSharesProcessModal: React.FC<StakingModalProps> = ({
             <Flex flexDirection="column" justifyContent="space-between" width="40%" p={4} bg="#1E1C19" height="100%">
               <Box position="relative">
                 <Stat>
-                  <StatLabel color="rgba(255,255,255,0.5)">REVERT BACK</StatLabel>
+                  <StatLabel color="rgba(255,255,255,0.5)">REVERT</StatLabel>
 
                   <StatNumber display={{ base: 'none', md: 'block' }} color="white">
                     {shiftDigits(selectedValidator.tokenAmount, -6)}&nbsp;

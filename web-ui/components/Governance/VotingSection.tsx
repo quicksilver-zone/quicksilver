@@ -269,6 +269,7 @@ export const VotingSection = ({ chainName }: { chainName: ChainName }) => {
         <Box
           pr={2}
           maxHeight="2xl"
+          minH={"2xl"}
           overflowY="scroll"
           sx={{
             '&::-webkit-scrollbar': {

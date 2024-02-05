@@ -27,6 +27,15 @@ import {
 import { DynamicHeaderSection, SideHeader } from '@/components';
 import { defaultTheme } from '@/config';
 
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 2,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
+
 function QuickApp({ Component, pageProps }: AppProps) {
   const { themeClass } = useTheme();
   const signerOptions: SignerOptions = {
@@ -48,15 +57,6 @@ function QuickApp({ Component, pageProps }: AppProps) {
       };
     },
   };
-
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: {
-        retry: 2,
-        refetchOnWindowFocus: false,
-      },
-    },
-  });
 
   const env = process.env.NEXT_PUBLIC_CHAIN_ENV;
 

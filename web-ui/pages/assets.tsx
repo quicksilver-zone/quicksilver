@@ -35,7 +35,7 @@ type APYRates = {
 
 function Home() {
   const { address } = useChain('quicksilver');
-  const tokens = ['atom', 'osmo', 'stars', 'regen', 'somm', 'juno']; // Example tokens
+  const tokens = ['atom', 'osmo', 'stars', 'regen', 'somm', 'juno', 'dydx'];
 
   const { data: tokenPrices, isLoading: isLoadingPrices } = useTokenPrices(tokens);
 
@@ -45,6 +45,7 @@ function Home() {
   const REGEN_CHAIN_ID = process.env.NEXT_PUBLIC_REGEN_CHAIN_ID;
   const SOMMELIER_CHAIN_ID = process.env.NEXT_PUBLIC_SOMMELIER_CHAIN_ID;
   const JUNO_CHAIN_ID = process.env.NEXT_PUBLIC_JUNO_CHAIN_ID;
+  const DYDX_CHAIN_ID = process.env.NEXT_PUBLIC_DYDX_CHAIN_ID;
 
   // Retrieve balance for each token
   const { balance: qAtom, isLoading: isLoadingQABalance } = useQBalanceQuery('quicksilver', address ?? '', 'atom');
@@ -53,6 +54,7 @@ function Home() {
   const { balance: qRegen, isLoading: isLoadingQRBalance } = useQBalanceQuery('quicksilver', address ?? '', 'regen');
   const { balance: qSomm, isLoading: isLoadingQSOBalance } = useQBalanceQuery('quicksilver', address ?? '', 'somm');
   const { balance: qJuno, isLoading: isLoadingQJBalance } = useQBalanceQuery('quicksilver', address ?? '', 'juno');
+  const { balance: qDydx, isLoading: isLoadingQDBalance } = useQBalanceQuery('quicksilver', address ?? '', 'dydx');
 
   // Retrieve zone data for each token
   const { data: CosmosZone, isLoading: isLoadingCosmosZone } = useZoneQuery(COSMOSHUB_CHAIN_ID ?? '');
@@ -61,6 +63,7 @@ function Home() {
   const { data: RegenZone, isLoading: isLoadingRegenZone } = useZoneQuery(REGEN_CHAIN_ID ?? '');
   const { data: SommZone, isLoading: isLoadingSommZone } = useZoneQuery(SOMMELIER_CHAIN_ID ?? '');
   const { data: JunoZone, isLoading: isLoadingJunoZone } = useZoneQuery(JUNO_CHAIN_ID ?? '');
+  const { data: DydxZone, isLoading: isLoadingDydxZone } = useZoneQuery(DYDX_CHAIN_ID ?? '');
   // Retrieve APY data for each token
   const { APY: cosmosAPY, isLoading: isLoadingCosmosApy } = useAPYQuery('cosmoshub-4');
   const { APY: osmoAPY, isLoading: isLoadingOsmoApy } = useAPYQuery('osmosis-1');
@@ -69,6 +72,7 @@ function Home() {
   const { APY: sommAPY, isLoading: isLoadingSommApy } = useAPYQuery('sommelier-3');
   const { APY: quickAPY } = useAPYQuery('quicksilver-2');
   const { APY: junoAPY, isLoading: isLoadingJunoApy } = useAPYQuery('juno-1');
+  const { APY: dydxAPY, isLoading: isLoadingDydxApy } = useAPYQuery('dydx-mainnet-1');
 
   const isLoadingAll =
     isLoadingPrices ||
@@ -78,18 +82,21 @@ function Home() {
     isLoadingQRBalance ||
     isLoadingQSOBalance ||
     isLoadingQJBalance ||
+    isLoadingQDBalance ||
     isLoadingCosmosZone ||
     isLoadingOsmoZone ||
     isLoadingStarZone ||
     isLoadingRegenZone ||
     isLoadingSommZone ||
     isLoadingJunoZone ||
+    isLoadingDydxZone ||
     isLoadingCosmosApy ||
     isLoadingOsmoApy ||
     isLoadingStarsApy ||
     isLoadingRegenApy ||
     isLoadingSommApy ||
-    isLoadingJunoApy;
+    isLoadingJunoApy ||
+    isLoadingDydxApy;
 
   // useMemo hook to cache APY data
   const qAPYRates: APYRates = useMemo(
@@ -100,8 +107,9 @@ function Home() {
       qRegen: regenAPY,
       qSomm: sommAPY,
       qJuno: junoAPY,
+      qDydx: dydxAPY,
     }),
-    [cosmosAPY, osmoAPY, starsAPY, regenAPY, sommAPY, junoAPY],
+    [cosmosAPY, osmoAPY, starsAPY, regenAPY, sommAPY, junoAPY, dydxAPY],
   );
   // useMemo hook to cache qBalance data
   const qBalances: BalanceRates = useMemo(
@@ -112,8 +120,9 @@ function Home() {
       qRegen: shiftDigits(qRegen?.balance?.amount ?? '', -6),
       qSomm: shiftDigits(qSomm?.balance?.amount ?? '', -6),
       qJuno: shiftDigits(qJuno?.balance?.amount ?? '', -6),
+      qDydx: shiftDigits(qDydx?.balance?.amount ?? '', -6),
     }),
-    [qAtom, qOsmo, qStars, qRegen, qSomm, qJuno],
+    [qAtom, qOsmo, qStars, qRegen, qSomm, qJuno, qDydx],
   );
 
   // useMemo hook to cache redemption rate data
@@ -125,8 +134,9 @@ function Home() {
       regen: RegenZone?.redemption_rate ? parseFloat(RegenZone.redemption_rate) : 1,
       somm: SommZone?.redemption_rate ? parseFloat(SommZone.redemption_rate) : 1,
       juno: JunoZone?.redemption_rate ? parseFloat(JunoZone.redemption_rate) : 1,
+      dydx: DydxZone?.redemption_rate ? parseFloat(DydxZone.redemption_rate) : 1,
     }),
-    [CosmosZone, OsmoZone, StarZone, RegenZone, SommZone, JunoZone],
+    [CosmosZone, OsmoZone, StarZone, RegenZone, SommZone, JunoZone, DydxZone],
   );
 
   // State hooks for portfolio items, total portfolio value, and other metrics
@@ -191,7 +201,20 @@ function Home() {
     };
 
     updatePortfolioItems();
-  }, [qBalances, CosmosZone, OsmoZone, StarZone, RegenZone, SommZone, redemptionRates, qAPYRates, tokenPrices, isLoadingAll]);
+  }, [
+    qBalances,
+    CosmosZone,
+    OsmoZone,
+    StarZone,
+    RegenZone,
+    SommZone,
+    JunoZone,
+    DydxZone,
+    redemptionRates,
+    qAPYRates,
+    tokenPrices,
+    isLoadingAll,
+  ]);
 
   const assetsData = useMemo(() => {
     return Object.keys(qBalances).map((token) => {

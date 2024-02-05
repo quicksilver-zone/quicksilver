@@ -308,6 +308,7 @@ const DefiTable = () => {
                           bgColor: 'complimentary.1000',
                         }}
                         minW="150px"
+                        color={'white'}
                         backgroundColor="rgba(255, 128, 0, 0.8)"
                         rightIcon={<ExternalLinkIcon />}
                         variant="ghost"
