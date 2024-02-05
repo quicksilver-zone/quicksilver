@@ -24,11 +24,11 @@ import {
 import React from 'react';
 import { FaSearch } from 'react-icons/fa';
 
+import { ValidatorsTable } from './validatorTable';
 
 import { useValidatorsQuery } from '@/hooks/useQueries';
 import { useValidatorLogos } from '@/hooks/useQueries';
 
-import { ValidatorsTable } from './validatorTable';
 interface MultiModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -104,9 +104,7 @@ export const MultiModal: React.FC<MultiModalProps> = ({
               </h2>
               <AccordionPanel textAlign="left" alignContent="center" justifyContent="center" mt={-2}>
                 <Text fontWeight="light" pl={6} maxW="95%" color="white" fontSize="16px" letterSpacing={'wider'}>
-                  Choose which validator(s) you would like to liquid stake to. You can select from the list below or utilize the quick
-                  select to pick the highest ranked validators. To learn more about rankings read the{' '}
-                  <Link textDecor={'underline'}>Validator Selection Doc</Link>.
+                  Choose which validator(s) you would like to liquid stake to.
                 </Text>
               </AccordionPanel>
             </AccordionItem>
@@ -150,7 +148,7 @@ export const MultiModal: React.FC<MultiModalProps> = ({
                     }}
                   />
                 </InputGroup>
-                <Box borderRadius="10px" w="300px" h="50px" mr={2} display="flex" flexDirection="column" justifyContent="space-between">
+                {/* <Box borderRadius="10px" w="300px" h="50px" mr={2} display="flex" flexDirection="column" justifyContent="space-between">
                   <Flex w="100%" h="50%" pt={6} justifyContent="space-between" alignItems="center" flexDir={'row'}>
                     <Button
                       w="60px"
@@ -183,7 +181,7 @@ export const MultiModal: React.FC<MultiModalProps> = ({
                       Top 8
                     </Button>
                   </Flex>
-                </Box>
+                </Box> */}
               </Flex>
               <ValidatorsTable
                 logos={logos || []}
