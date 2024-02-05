@@ -178,13 +178,8 @@ export const StakingBox = ({ selectedOption, valoperAddress }: StakingBoxProps) 
 
   const [isSigning, setIsSigning] = useState<boolean>(false);
 
-  const [isError, setIsError] = useState<boolean>(false);
-  const [transactionStatus, setTransactionStatus] = useState('Pending');
-
   const env = process.env.NEXT_PUBLIC_CHAIN_ENV;
   const quicksilverChainName = env === 'testnet' ? 'quicksilvertestnet' : 'quicksilver';
-
-  const isCalculationDataLoaded = tokenAmount && !isNaN(Number(tokenAmount)) && zone && !isNaN(Number(zone.redemption_rate));
 
   const { requestRedemption } = quicksilver.interchainstaking.v1.MessageComposer.withTypeUrl;
   const numericAmount = Number(tokenAmount);
@@ -214,14 +209,10 @@ export const StakingBox = ({ selectedOption, valoperAddress }: StakingBoxProps) 
     try {
       const result = await tx([msgRequestRedemption], {
         fee,
-        onSuccess: () => {
-          setTransactionStatus('Success');
-        },
+        onSuccess: () => {},
       });
     } catch (error) {
       console.error('Transaction failed', error);
-      setTransactionStatus('Failed');
-      setIsError(true);
     } finally {
       setIsSigning(false);
     }
@@ -297,19 +288,15 @@ export const StakingBox = ({ selectedOption, valoperAddress }: StakingBoxProps) 
   const handleLiquidStake = async (event: React.MouseEvent) => {
     event.preventDefault();
     setIsSigning(true);
-    setTransactionStatus('Pending');
+
     try {
       const result = await sendTx([msgSend], {
         memo,
         fee: stakeFee,
-        onSuccess: () => {
-          setTransactionStatus('Success');
-        },
+        onSuccess: () => {},
       });
     } catch (error) {
       console.error('Transaction failed', error);
-      setTransactionStatus('Failed');
-      setIsError(true);
     } finally {
       setIsSigning(false);
     }

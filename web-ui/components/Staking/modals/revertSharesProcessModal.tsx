@@ -110,14 +110,12 @@ export const RevertSharesProcessModal: React.FC<StakingModalProps> = ({
   }
 
   const labels = ['Revert Shares', `Receive Tokens`];
-  const [transactionStatus, setTransactionStatus] = useState('Pending');
 
   const mainTokens = assets.find(({ chain_name }) => chain_name === newChainName);
   const fees = chains.chains.find(({ chain_name }) => chain_name === newChainName)?.fees?.fee_tokens;
   const mainDenom = mainTokens?.assets[0].base ?? '';
   const fixedMinGasPrice = fees?.find(({ denom }) => denom === mainDenom)?.high_gas_price ?? '';
   const feeAmount = Number(fixedMinGasPrice) * 750000;
-  const sendFeeAmount = Number(fixedMinGasPrice) * 100000;
 
   const fee: StdFee = {
     amount: [
@@ -162,18 +160,17 @@ export const RevertSharesProcessModal: React.FC<StakingModalProps> = ({
   const handleRevertShares = async (event: React.MouseEvent) => {
     event.preventDefault();
     setIsSigning(true);
-    setTransactionStatus('Pending');
+
     try {
       const result = await tx([msg], {
         fee,
         onSuccess: () => {
           setStep(2);
-          setTransactionStatus('Success');
         },
       });
     } catch (error) {
       console.error('Transaction failed', error);
-      setTransactionStatus('Failed');
+
       setIsError(true);
     } finally {
       setIsSigning(false);
