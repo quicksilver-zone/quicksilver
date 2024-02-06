@@ -12,8 +12,18 @@ const statusCodes = new Map<number, string>([
   [5, 'COMPLETED'],
 ]);
 
-const formatDate = (dateString: string | number | Date) => {
-  return new Date(dateString).toLocaleDateString(undefined);
+const formatDateAndTime = (dateString: string | number | Date) => {
+  const date = new Date(dateString);
+  const options: Intl.DateTimeFormatOptions = {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+
+    hour12: false,
+  };
+  return date.toLocaleString(undefined, options);
 };
 
 const formatDenom = (denom: string) => {
@@ -280,8 +290,8 @@ const UnbondingAssetsTable: React.FC<UnbondingAssetsTableProps> = ({ address, is
                         {withdrawal.status === 2
                           ? 'Pending'
                           : withdrawal.status === 4
-                          ? 'A few moments'
-                          : formatDate(withdrawal.completion_time)}
+                            ? 'A few moments'
+                            : formatDateAndTime(withdrawal.completion_time)}
                       </Td>
                     </Tr>
                   ))}

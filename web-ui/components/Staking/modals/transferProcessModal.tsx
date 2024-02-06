@@ -155,7 +155,7 @@ export const TransferProcessModal: React.FC<StakingModalProps> = ({
         amount: feeAmount.toString(),
       },
     ],
-    gas: '750000', // test txs were using well in excess of 600k
+    gas: '1000000', // increased to 1,000,000 from 750,000
   };
 
   // don't use the same fee for both txs, as a send is piddly!
