@@ -18,8 +18,7 @@ import { ChainName } from '@cosmos-kit/core';
 import { useChain, useManager } from '@cosmos-kit/react';
 import BigNumber from 'bignumber.js';
 import { assets, chains } from 'chain-registry';
-import Long from 'long';
-import { ibc } from 'quicksilverjs';
+import { ibc } from 'interchain-query';
 import { useState, useMemo, useEffect } from 'react';
 
 import { ChooseChain } from '@/components/react/choose-chain';
@@ -100,20 +99,17 @@ export function DepositModal() {
     };
 
     const stamp = Date.now();
-    const timeoutInNanos = new Long((stamp + 1.2e6) * 1e6);
+    const timeoutInNanos = (stamp + 1.2e6) * 1e6;
 
     const msg = transfer({
-      source_port,
-      source_channel,
+      sourcePort: source_port,
+      sourceChannel: source_channel,
       sender: address ?? '',
       receiver: qAddress ?? '',
       token,
-      timeout_height: {
-        revision_number: new Long(1000),
-        revision_height: new Long(1000),
-      },
-
-      timeout_timestamp: timeoutInNanos,
+      timeoutHeight: undefined,
+      //@ts-ignore
+      timeoutTimestamp: timeoutInNanos,
     });
 
     await tx([msg], {

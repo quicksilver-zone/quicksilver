@@ -14,15 +14,9 @@ import { ThemeProvider, useTheme } from '@interchain-ui/react';
 import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { chains, assets } from 'chain-registry';
+import { ibcAminoConverters, ibcProtoRegistry } from 'interchain-query';
 import type { AppProps } from 'next/app';
-import {
-  quicksilverProtoRegistry,
-  quicksilverAminoConverters,
-  cosmosAminoConverters,
-  cosmosProtoRegistry,
-  ibcAminoConverters,
-  ibcProtoRegistry,
-} from 'quicksilverjs';
+import { quicksilverProtoRegistry, quicksilverAminoConverters, cosmosAminoConverters, cosmosProtoRegistry } from 'quicksilverjs';
 
 import { DynamicHeaderSection, SideHeader } from '@/components';
 import { defaultTheme } from '@/config';
