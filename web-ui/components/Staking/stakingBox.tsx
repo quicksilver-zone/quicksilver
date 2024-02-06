@@ -548,6 +548,7 @@ export const StakingBox = ({
                       isOpen={isStakingModalOpen}
                       onClose={closeStakingModal}
                       selectedOption={selectedOption}
+                      address={address ?? ''}
                     />
                   </>
                 )}

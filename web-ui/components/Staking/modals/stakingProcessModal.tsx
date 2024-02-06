@@ -19,11 +19,11 @@ import {
   Checkbox,
 } from '@chakra-ui/react';
 import { coins, StdFee } from '@cosmjs/amino';
-import { useChain } from '@cosmos-kit/react';
 import styled from '@emotion/styled';
 import { bech32 } from 'bech32';
-import { assets, chains } from 'chain-registry';
-import { cosmos } from 'interchain-query';
+import { assets } from 'chain-registry';
+import chains from 'chain-registry';
+import { cosmos } from 'quicksilverjs';
 import React, { useEffect, useState } from 'react';
 
 
@@ -74,9 +74,10 @@ interface StakingModalProps {
     chainName: string;
     chainId: string;
   };
+  address: string;
 }
 
-export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClose, selectedOption, tokenAmount }) => {
+export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClose, selectedOption, tokenAmount, address }) => {
   const [step, setStep] = React.useState(1);
   const getProgressColor = (circleStep: number) => {
     if (step >= circleStep) return 'complimentary.900';
@@ -101,8 +102,6 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
     // Default case
     newChainName = selectedOption?.chainName;
   }
-
-  const { address } = useChain(newChainName || '');
 
   const labels = ['Choose validators', `Set weights`, `Sign & Submit`, `Receive q${selectedOption?.value}`];
   const [isModalOpen, setModalOpen] = useState(false);
@@ -240,13 +239,13 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
   const { send } = cosmos.bank.v1beta1.MessageComposer.withTypeUrl;
 
   const msgSend = send({
-    fromAddress: address ?? '',
-    toAddress: zone?.deposit_address?.address ?? '',
+    from_address: address ?? '',
+    to_address: zone?.deposit_address?.address ?? '',
     amount: coins(smallestUnitAmount.toFixed(0), zone?.base_denom ?? ''),
   });
 
   const mainTokens = assets.find(({ chain_name }) => chain_name === newChainName);
-  const fees = chains.find(({ chain_name }) => chain_name === newChainName)?.fees?.fee_tokens;
+  const fees = chains.chains.find(({ chain_name }) => chain_name === newChainName)?.fees?.fee_tokens;
   const mainDenom = mainTokens?.assets[0].base ?? '';
   let feeAmount;
   if (selectedOption?.chainName === 'sommelier') {
