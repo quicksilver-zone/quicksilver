@@ -26,6 +26,7 @@ import {
 
 import { DynamicHeaderSection, SideHeader } from '@/components';
 import { defaultTheme } from '@/config';
+import { LiveZonesProvider } from '@/state/LiveZonesContext';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -222,120 +223,93 @@ function QuickApp({ Component, pageProps }: AppProps) {
     },
   };
 
-  function isWalletClientAvailable(walletName: string) {
-    if (typeof window === 'undefined') {
-      return false;
-    }
-
-    switch (walletName) {
-      case 'Keplr':
-        return typeof window.keplr !== 'undefined';
-      case 'Cosmostation':
-        return typeof window.cosmostation !== 'undefined';
-      case 'Leap':
-        return typeof window.leap !== 'undefined';
-      default:
-        return false;
-    }
-  }
-
-  const availableWallets = [];
-
-  if (isWalletClientAvailable('Keplr')) {
-    availableWallets.push(...keplrWallets);
-  }
-  if (isWalletClientAvailable('Cosmostation')) {
-    availableWallets.push(...cosmostationWallets);
-  }
-  if (isWalletClientAvailable('Leap')) {
-    availableWallets.push(...leapWallets);
-  }
-
   return (
-    <ChakraProvider theme={defaultTheme}>
-      <ThemeProvider>
-        <ChainProvider
-          endpointOptions={{
-            isLazy: true,
-            endpoints: {
-              quicksilver: {
-                rpc: [rpcEndpoints.quicksilver ?? ''],
-                rest: [lcdEndpoints.quicksilver ?? ''],
+    <LiveZonesProvider>
+      <ChakraProvider theme={defaultTheme}>
+        <ThemeProvider>
+          <ChainProvider
+            endpointOptions={{
+              isLazy: true,
+              endpoints: {
+                quicksilver: {
+                  rpc: [rpcEndpoints.quicksilver ?? ''],
+                  rest: [lcdEndpoints.quicksilver ?? ''],
+                },
+                quicksilvertestnet: {
+                  rest: ['https://lcd.test.quicksilver.zone/'],
+                  rpc: ['https://rpc.test.quicksilver.zone'],
+                },
+                cosmoshub: {
+                  rpc: [rpcEndpoints.cosmoshub ?? ''],
+                  rest: [lcdEndpoints.cosmoshub ?? ''],
+                },
+                sommelier: {
+                  rpc: [rpcEndpoints.sommelier ?? ''],
+                  rest: [lcdEndpoints.sommelier ?? ''],
+                },
+                stargaze: {
+                  rpc: [rpcEndpoints.stargaze ?? ''],
+                  rest: [lcdEndpoints.stargaze ?? ''],
+                },
+                regen: {
+                  rpc: [rpcEndpoints.regen ?? ''],
+                  rest: [lcdEndpoints.regen ?? ''],
+                },
+                osmosis: {
+                  rpc: [rpcEndpoints.osmosis ?? ''],
+                  rest: [lcdEndpoints.osmosis ?? ''],
+                },
+                osmosistestnet: {
+                  rpc: [rpcEndpoints.osmosis ?? ''],
+                  rest: [lcdEndpoints.osmosis ?? ''],
+                },
+                umee: {
+                  rpc: ['https://rpc-umee-ia.cosmosia.notional.ventures/'],
+                  rest: ['https://api-umee-ia.cosmosia.notional.ventures/'],
+                },
+                dydx: {
+                  rpc: [rpcEndpoints.dydx ?? ''],
+                  rest: [lcdEndpoints.dydx ?? ''],
+                },
               },
-              quicksilvertestnet: {
-                rest: ['https://lcd.test.quicksilver.zone/'],
-                rpc: ['https://rpc.test.quicksilver.zone'],
+            }}
+            logLevel="NONE"
+            modalTheme={modalThemeOverrides}
+            chains={chains}
+            assetLists={assets}
+            wallets={[...keplrWallets, ...cosmostationWallets, ...leapWallets]}
+            walletConnectOptions={{
+              signClient: {
+                projectId: '41a0749c331d209190beeac1c2530c90',
+                relayUrl: 'wss://relay.walletconnect.org',
+                metadata: {
+                  name: 'Quicksilver',
+                  description: 'Quicksilver App',
+                  url: 'https://apps.qucksilver.zone/',
+                  icons: [],
+                },
               },
-              cosmoshub: {
-                rpc: [rpcEndpoints.cosmoshub ?? ''],
-                rest: [lcdEndpoints.cosmoshub ?? ''],
-              },
-              sommelier: {
-                rpc: [rpcEndpoints.sommelier ?? ''],
-                rest: [lcdEndpoints.sommelier ?? ''],
-              },
-              stargaze: {
-                rpc: [rpcEndpoints.stargaze ?? ''],
-                rest: [lcdEndpoints.stargaze ?? ''],
-              },
-              regen: {
-                rpc: [rpcEndpoints.regen ?? ''],
-                rest: [lcdEndpoints.regen ?? ''],
-              },
-              osmosis: {
-                rpc: [rpcEndpoints.osmosis ?? ''],
-                rest: [lcdEndpoints.osmosis ?? ''],
-              },
-              osmosistestnet: {
-                rpc: [rpcEndpoints.osmosis ?? ''],
-                rest: [lcdEndpoints.osmosis ?? ''],
-              },
-              umee: {
-                rpc: ['https://rpc-umee-ia.cosmosia.notional.ventures/'],
-                rest: ['https://api-umee-ia.cosmosia.notional.ventures/'],
-              },
-              dydx: {
-                rpc: [rpcEndpoints.dydx ?? ''],
-                rest: [lcdEndpoints.dydx ?? ''],
-              },
-            },
-          }}
-          logLevel="NONE"
-          modalTheme={modalThemeOverrides}
-          chains={chains}
-          assetLists={assets}
-          wallets={[...keplrWallets, ...cosmostationWallets, ...leapWallets]}
-          walletConnectOptions={{
-            signClient: {
-              projectId: '41a0749c331d209190beeac1c2530c90',
-              relayUrl: 'wss://relay.walletconnect.org',
-              metadata: {
-                name: 'Quicksilver',
-                description: 'Quicksilver App',
-                url: 'https://apps.qucksilver.zone/',
-                icons: [],
-              },
-            },
-          }}
-          //@ts-ignore
-          signerOptions={signerOptions}
-        >
-          <QueryClientProvider client={queryClient}>
-            <ReactQueryDevtools initialIsOpen={true} />
+            }}
+            //@ts-ignore
+            signerOptions={signerOptions}
+          >
+            <QueryClientProvider client={queryClient}>
+              <ReactQueryDevtools initialIsOpen={true} />
 
-            <main id="main" className={themeClass}>
-              <Box w="100vw" h="100vh" bgSize="fit" bgPosition="right center" bgAttachment="fixed" bgRepeat="no-repeat">
-                <Flex justifyContent={'space-between'} alignItems={'center'}>
-                  <DynamicHeaderSection chainName="quicksilver" />
-                  <SideHeader />
-                </Flex>
-                <Component {...pageProps} />
-              </Box>
-            </main>
-          </QueryClientProvider>
-        </ChainProvider>
-      </ThemeProvider>
-    </ChakraProvider>
+              <main id="main" className={themeClass}>
+                <Box w="100vw" h="100vh" bgSize="fit" bgPosition="right center" bgAttachment="fixed" bgRepeat="no-repeat">
+                  <Flex justifyContent={'space-between'} alignItems={'center'}>
+                    <DynamicHeaderSection chainName="quicksilver" />
+                    <SideHeader />
+                  </Flex>
+                  <Component {...pageProps} />
+                </Box>
+              </main>
+            </QueryClientProvider>
+          </ChainProvider>
+        </ThemeProvider>
+      </ChakraProvider>
+    </LiveZonesProvider>
   );
 }
 

@@ -11,6 +11,7 @@ import QuickBox from '@/components/Assets/quickbox';
 import RewardsClaim from '@/components/Assets/rewardsClaim';
 import UnbondingAssetsTable from '@/components/Assets/unbondingTable';
 import { useAPYQuery, useAuthChecker, useLiquidRewardsQuery, useQBalanceQuery, useTokenPrices, useZoneQuery } from '@/hooks/useQueries';
+import { useLiveZones } from '@/state/LiveZonesContext';
 import { shiftDigits, toNumber } from '@/utils';
 
 export interface PortfolioItemInterface {
@@ -47,7 +48,11 @@ function Home() {
   const JUNO_CHAIN_ID = process.env.NEXT_PUBLIC_JUNO_CHAIN_ID;
   const DYDX_CHAIN_ID = process.env.NEXT_PUBLIC_DYDX_CHAIN_ID;
 
+  // Retrieve list of zones that are enabled for liquid staking
+  const { liveNetworks } = useLiveZones();
+
   // Retrieve balance for each token
+  // Depending on whether the chain exists in liveNetworks or not, the query will be enabled/disabled
   const { balance: qAtom, isLoading: isLoadingQABalance } = useQBalanceQuery('quicksilver', address ?? '', 'atom');
   const { balance: qOsmo, isLoading: isLoadingQOBalance } = useQBalanceQuery('quicksilver', address ?? '', 'osmo');
   const { balance: qStars, isLoading: isLoadingQSBalance } = useQBalanceQuery('quicksilver', address ?? '', 'stars');
@@ -101,28 +106,26 @@ function Home() {
   // useMemo hook to cache APY data
   const qAPYRates: APYRates = useMemo(
     () => ({
-      qAtom: cosmosAPY,
-      qOsmo: osmoAPY,
-      qStars: starsAPY,
-      qRegen: regenAPY,
-      qSomm: sommAPY,
-      qJuno: junoAPY,
-      qDydx: dydxAPY,
+      qAtom: cosmosAPY ?? 0,
+      qOsmo: osmoAPY ?? 0,
+      qStars: starsAPY ?? 0,
+      qRegen: regenAPY ?? 0,
+      qSomm: sommAPY ?? 0,
+      qJuno: junoAPY ?? 0,
     }),
-    [cosmosAPY, osmoAPY, starsAPY, regenAPY, sommAPY, junoAPY, dydxAPY],
+    [cosmosAPY, osmoAPY, starsAPY, regenAPY, sommAPY, junoAPY],
   );
   // useMemo hook to cache qBalance data
   const qBalances: BalanceRates = useMemo(
     () => ({
-      qAtom: shiftDigits(qAtom?.balance?.amount ?? '', -6),
-      qOsmo: shiftDigits(qOsmo?.balance?.amount ?? '', -6),
-      qStars: shiftDigits(qStars?.balance?.amount ?? '', -6),
-      qRegen: shiftDigits(qRegen?.balance?.amount ?? '', -6),
-      qSomm: shiftDigits(qSomm?.balance?.amount ?? '', -6),
-      qJuno: shiftDigits(qJuno?.balance?.amount ?? '', -6),
-      qDydx: shiftDigits(qDydx?.balance?.amount ?? '', -6),
+      qAtom: shiftDigits(qAtom?.balance?.amount ?? '000000', -6),
+      qOsmo: shiftDigits(qOsmo?.balance?.amount ?? '000000', -6),
+      qStars: shiftDigits(qStars?.balance?.amount ?? '000000', -6),
+      qRegen: shiftDigits(qRegen?.balance?.amount ?? '000000', -6),
+      qSomm: shiftDigits(qSomm?.balance?.amount ?? '000000', -6),
+      qJuno: shiftDigits(qJuno?.balance?.amount ?? '000000', -6),
     }),
-    [qAtom, qOsmo, qStars, qRegen, qSomm, qJuno, qDydx],
+    [qAtom, qOsmo, qStars, qRegen, qSomm, qJuno],
   );
 
   // useMemo hook to cache redemption rate data
@@ -134,9 +137,8 @@ function Home() {
       regen: RegenZone?.redemption_rate ? parseFloat(RegenZone.redemption_rate) : 1,
       somm: SommZone?.redemption_rate ? parseFloat(SommZone.redemption_rate) : 1,
       juno: JunoZone?.redemption_rate ? parseFloat(JunoZone.redemption_rate) : 1,
-      dydx: DydxZone?.redemption_rate ? parseFloat(DydxZone.redemption_rate) : 1,
     }),
-    [CosmosZone, OsmoZone, StarZone, RegenZone, SommZone, JunoZone, DydxZone],
+    [CosmosZone, OsmoZone, StarZone, RegenZone, SommZone, JunoZone],
   );
 
   // State hooks for portfolio items, total portfolio value, and other metrics
@@ -201,20 +203,7 @@ function Home() {
     };
 
     updatePortfolioItems();
-  }, [
-    qBalances,
-    CosmosZone,
-    OsmoZone,
-    StarZone,
-    RegenZone,
-    SommZone,
-    JunoZone,
-    DydxZone,
-    redemptionRates,
-    qAPYRates,
-    tokenPrices,
-    isLoadingAll,
-  ]);
+  }, [qBalances, CosmosZone, OsmoZone, StarZone, RegenZone, SommZone, JunoZone, redemptionRates, qAPYRates, tokenPrices, isLoadingAll]);
 
   const assetsData = useMemo(() => {
     return Object.keys(qBalances).map((token) => {

@@ -34,6 +34,9 @@ import { quicksilver } from 'quicksilverjs';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { FaStar } from 'react-icons/fa';
 
+import RevertSharesProcessModal from './modals/revertSharesProcessModal';
+import StakingProcessModal from './modals/stakingProcessModal';
+import TransferProcessModal from './modals/transferProcessModal';
 
 import { useTx } from '@/hooks';
 import {
@@ -47,10 +50,6 @@ import {
 } from '@/hooks/useQueries';
 import { useToaster, ToastType, type CustomToast } from '@/hooks/useToaster';
 import { getExponent, shiftDigits } from '@/utils';
-
-import RevertSharesProcessModal from './modals/revertSharesProcessModal';
-import StakingProcessModal from './modals/stakingProcessModal';
-import TransferProcessModal from './modals/transferProcessModal';
 
 type StakingBoxProps = {
   selectedOption: {
@@ -181,18 +180,20 @@ export const StakingBox = ({
       setIsSigning(false);
     }
   };
+  // You can use this Toast hadnler and the below message to show there is an issue with unbonding
+  // const toaster = useToaster();
 
-  const toaster = useToaster();
   const handleTabsChange = (index: number) => {
     setActiveTabIndex(index);
     setTokenAmount('');
-    if (index === 1) {
-      toaster.toast({
-        type: ToastType.Error,
-        title: 'Issues with unbonding',
-        message: 'Unbondings can be submitted but are currently not being processed and will be queued until the issue is resolved.',
-      });
-    }
+    // You can use this Toast Msg to show there is an issue with unbonding
+    // if (index === 1) {
+    //   toaster.toast({
+    //     type: ToastType.Error,
+    //     title: 'Issues with unbonding',
+    //     message: 'Unbondings can be submitted but are currently not being processed and will be queued until the issue is resolved.',
+    //   });
+    // }
   };
 
   const { delegations, delegationsIsError, delegationsIsLoading } = useNativeStakeQuery(selectedOption.chainName, address ?? '');
@@ -338,14 +339,14 @@ export const StakingBox = ({
                           !address
                             ? 'Please connect your wallet to enable this option.'
                             : !nativeStakedAmount && !hasTokenized
-                            ? "You don't have any native staked tokens or tokenized shares."
-                            : nativeStakedAmount ?? 0 > 0
-                            ? `You currently have ${shiftDigits(nativeStakedAmount ?? '', -6)} ${
-                                selectedOption.value
-                              } natively staked to ${delegationsResponse?.length} validators.`
-                            : hasTokenized
-                            ? 'You have tokenized shares available for transfer.'
-                            : ''
+                              ? "You don't have any native staked tokens or tokenized shares."
+                              : nativeStakedAmount ?? 0 > 0
+                                ? `You currently have ${shiftDigits(nativeStakedAmount ?? '', -6)} ${
+                                    selectedOption.value
+                                  } natively staked to ${delegationsResponse?.length} validators.`
+                                : hasTokenized
+                                  ? 'You have tokenized shares available for transfer.'
+                                  : ''
                         }
                       >
                         <HStack>

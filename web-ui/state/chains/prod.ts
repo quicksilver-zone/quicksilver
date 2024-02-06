@@ -46,12 +46,12 @@ export const networks = [
       chainId: 'osmosis-1',
     },
     {
-        value: 'DYDX',
-        logo: '/img/networks/dydx.png',
-        qlogo: '/img/networks/qdydx.png',
-        name: 'Dydx',
-        chainName: 'dydx',
-        chainId: 'dydx-mainnet-1',
+      value: 'DYDX',
+      logo: '/img/networks/dydx.png',
+      qlogo: '/img/networks/qdydx.png',
+      name: 'Dydx',
+      chainName: 'dydx',
+    chainId: 'dydx-mainnet-1',
         },
     {
       value: 'STARS',

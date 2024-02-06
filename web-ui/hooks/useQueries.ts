@@ -1,5 +1,5 @@
 import { useChain } from '@cosmos-kit/react';
-import { useQuery } from '@tanstack/react-query';
+import { useQueries, useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import { cosmos } from 'interchain-query';
 import { quicksilver } from 'quicksilverjs';
@@ -302,8 +302,11 @@ export const useTokenPriceQuery = (tokenSymbol: string) => {
   });
 };
 
-export const useQBalanceQuery = (chainName: string, address: string, qAsset: string) => {
+export const useQBalanceQuery = (chainName: string, address: string, qAsset: string, liveNetworks?: string[], chainId?: string) => {
   const { grpcQueryClient } = useGrpcQueryClient(chainName);
+
+  const isLive = liveNetworks?.includes(chainId ?? '');
+
   const balanceQuery = useQuery(
     ['balance', qAsset],
     async () => {
@@ -319,7 +322,7 @@ export const useQBalanceQuery = (chainName: string, address: string, qAsset: str
       return balance;
     },
     {
-      enabled: !!grpcQueryClient && !!address,
+      enabled: !!grpcQueryClient && !!address && isLive,
       staleTime: Infinity,
     },
   );
@@ -550,13 +553,14 @@ const fetchAPY = async (chainId: any) => {
 
 
 
-export const useAPYQuery = (chainId: any) => {
+export const useAPYQuery = (chainId: any, liveNetworks?: string[] ) => {
+  const isLive = liveNetworks?.some(network => network === chainId);
   const query = useQuery(
       ['APY', chainId],
       () => fetchAPY(chainId),
       {
           staleTime: Infinity,
-          enabled: !!chainId,
+          enabled: !!chainId && isLive,
       }
   );
 
@@ -567,17 +571,72 @@ export const useAPYQuery = (chainId: any) => {
   };
 };
 
-export const useZoneQuery = (chainId: string) => {
+function parseZone(apiZone: any): Zone {
+
+  return {
+    connection_id: apiZone.connection_id,
+    chain_id: apiZone.chain_id,
+    deposit_address: apiZone.deposit_address,
+    withdrawal_address: apiZone.withdrawal_address,
+    performance_address: apiZone.performance_address,
+    delegation_address: apiZone.delegation_address,
+    account_prefix: apiZone.account_prefix,
+    local_denom: apiZone.local_denom,
+    base_denom: apiZone.base_denom,
+    redemption_rate: apiZone.redemption_rate,
+    last_redemption_rate: apiZone.last_redemption_rate,
+    validators: apiZone.validators,
+    aggregate_intent: apiZone.aggregate_intent,
+    multi_send: apiZone.multi_send,
+    liquidity_module: apiZone.liquidity_module,
+    withdrawal_waitgroup: apiZone.withdrawal_waitgroup,
+    ibc_next_validators_hash: apiZone.ibc_next_validators_hash,
+    validator_selection_allocation: apiZone.validator_selection_allocation,
+    holdings_allocation: apiZone.holdings_allocation,
+    last_epoch_height: apiZone.last_epoch_height,
+    tvl: apiZone.tvl,
+    unbonding_period: apiZone.unbonding_period,
+    messages_per_tx: apiZone.messages_per_tx,
+    decimals: apiZone.decimals,
+    return_to_sender: apiZone.return_to_sender,
+    unbonding_enabled: apiZone.unbonding_enabled,
+    deposits_enabled: apiZone.deposits_enabled,
+    is118: apiZone.is118,
+    subzoneInfo: apiZone.subzoneInfo,
+  };
+}
+
+export function useZonesData(networks: { chainId: string }[]) {
+  return useQueries({
+    queries: networks.map(({ chainId }) => ({
+      queryKey: ['zone', chainId],
+      queryFn: async () => {
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_QUICKSILVER_API}/quicksilver/interchainstaking/v1/zones`);
+        const zones: any[] = response.data.zones; 
+        const apiZone = zones.find(z => z.chain_id === chainId);
+        if (!apiZone) {
+          throw new Error(`No zone with chain id ${chainId} found`);
+        }
+        return parseZone(apiZone); 
+      },
+      enabled: !!chainId,
+    }))
+  });
+}
+
+export const useZoneQuery = (chainId: string, liveNetworks?: string[]) => {
+  const isLive = liveNetworks?.some(network => network === chainId);
   return useQuery<Zone, Error>(
     ['zone', chainId],
     async () => {
+      
       const res = await axios.get(`${process.env.NEXT_PUBLIC_QUICKSILVER_API}/quicksilver/interchainstaking/v1/zones`);
       const { zones } = res.data;
 
       if (!zones || zones.length === 0) {
         throw new Error('Failed to query zones');
       }
-
+    
       const apiZone = zones.find((z: { chain_id: string }) => z.chain_id === chainId);
       if (!apiZone) {
         throw new Error(`No zone with chain id ${chainId} found`);
@@ -619,7 +678,7 @@ export const useZoneQuery = (chainId: string) => {
       return parsedZone;
     },
     {
-      enabled: !!chainId,
+      enabled: !!chainId && isLive
     }
   );
 };

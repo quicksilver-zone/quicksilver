@@ -16,12 +16,11 @@ import {
 } from '@chakra-ui/react';
 import { Key, useState } from 'react';
 
+import SignalIntentModal from './modals/signalIntentProcess';
 
 import { useIntentQuery, useValidatorLogos, useValidatorsQuery } from '@/hooks/useQueries';
 import { networks as prodNetworks, testNetworks as devNetworks } from '@/state/chains/prod';
 import { truncateString } from '@/utils';
-
-import SignalIntentModal from './modals/signalIntentProcess';
 
 export interface StakingIntentProps {
   address: string;
@@ -90,6 +89,65 @@ const StakingIntent: React.FC<StakingIntentProps> = ({ address, isWalletConnecte
           Wallet is not connected. Please connect your wallet to interact with your QCK tokens.
         </Text>
       </Flex>
+    );
+  }
+
+  if (currentNetwork.chainName === 'dydx') {
+    return (
+      <Box w="full" color="white" borderRadius="lg" p={4} gap={6}>
+        <VStack spacing={4} align="stretch">
+          <Flex gap={6} justifyContent="space-between" alignItems="center">
+            <Heading fontSize="lg" fontWeight="bold" textTransform="uppercase">
+              Stake Intent
+            </Heading>
+
+            <SignalIntentModal
+              refetch={refetch}
+              selectedOption={currentNetwork}
+              isOpen={isSignalIntentModalOpen}
+              onClose={closeSignalIntentModal}
+            />
+          </Flex>
+
+          <Flex borderBottom="1px" borderBottomColor="complimentary.900" alignItems="center" justifyContent="space-between">
+            <IconButton
+              variant="ghost"
+              _hover={{ bgColor: 'transparent', color: 'complimentary.900' }}
+              _active={{
+                transform: 'scale(0.75)',
+                color: 'complimentary.800',
+              }}
+              color="GrayText"
+              aria-label="Previous chain"
+              icon={<ChevronLeftIcon w={'25px'} h={'25px'} />}
+              onClick={handleLeftArrowClick}
+            />
+            <SlideFade in={true} key={currentChainIndex}>
+              <Text fontSize="lg" fontWeight="semibold">
+                {chains[currentChainIndex]}
+              </Text>
+            </SlideFade>
+            <IconButton
+              _active={{
+                transform: 'scale(0.75)',
+                color: 'complimentary.800',
+              }}
+              color="GrayText"
+              _hover={{ bgColor: 'transparent', color: 'complimentary.900' }}
+              variant="ghost"
+              aria-label="Next chain"
+              icon={<ChevronRightIcon w={'25px'} h={'25px'} />}
+              onClick={handleRightArrowClick}
+            />
+          </Flex>
+
+          <VStack pb={4} overflowY="auto" className="custom-scrollbar" gap={4} spacing={2} align="stretch" maxH="250px">
+            <Center mt={6}>
+              <Text fontSize="xl">Coming Soon!</Text>
+            </Center>
+          </VStack>
+        </VStack>
+      </Box>
     );
   }
 
