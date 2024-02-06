@@ -265,7 +265,7 @@ function Home() {
               <Head>
                 <title>Assets</title>
                 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-                <link rel="icon" href="/img/favicon.png" />
+                <link rel="icon" href="/img/favicon-main.png" />
               </Head>
               <Text pb={2} color="white" fontSize="24px">
                 Assets
@@ -307,7 +307,7 @@ function Home() {
           <Head>
             <title>Assets</title>
             <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-            <link rel="icon" href="/img/favicon.png" />
+            <link rel="icon" href="/img/favicon-main.png" />
           </Head>
           <Text pb={2} color="white" fontSize="24px">
             Assets

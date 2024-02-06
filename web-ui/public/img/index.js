@@ -31,7 +31,7 @@ import stargaze1 from "./networks/stargaze.svg";
 import stir from "./networks/stir.png";
 import terravegas from "./networks/terravegas.png";
 import logo from "./logo.png";
-import favicon from "./favicon.png";
+import favicon-main from "./favicon-main.png";
 
 export {
   atom,
@@ -67,5 +67,5 @@ export {
   stir,
   terravegas,
   logo,
-  favicon,
+  favicon-main,
 };
