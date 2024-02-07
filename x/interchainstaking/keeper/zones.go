@@ -489,6 +489,13 @@ func (k *Keeper) RemoveZoneAndAssociatedRecords(ctx sdk.Context, chainID string)
 				return false
 			})
 
+			k.IteratePortConnections(ctx, func(pc types.PortConnectionTuple) (stop bool) {
+				if pc.ConnectionId == zone.ConnectionId {
+					k.DeleteConnectionForPort(ctx, pc.PortId)
+				}
+				return false
+			})
+
 			k.DeleteZone(ctx, zone.ChainId)
 
 		}

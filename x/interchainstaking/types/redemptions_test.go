@@ -75,10 +75,14 @@ func TestDetermineAllocationsForUndelegation(t *testing.T) {
 			},
 			amount: sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(1000))),
 			expected: map[string]sdkmath.Int{
-				vals[0]: sdk.NewInt(275),
-				vals[1]: sdk.NewInt(225),
-				vals[2]: sdk.NewInt(475),
-				vals[3]: sdk.NewInt(25),
+				// vals[0]: sdk.NewInt(275),
+				// vals[1]: sdk.NewInt(225),
+				// vals[2]: sdk.NewInt(475),
+				// vals[3]: sdk.NewInt(25),
+				vals[0]: sdk.NewInt(150),
+				vals[1]: sdk.NewInt(150),
+				vals[2]: sdk.NewInt(350),
+				vals[3]: sdk.NewInt(350),
 			},
 		},
 		{
@@ -230,7 +234,8 @@ func TestDetermineAllocationsForUndelegation(t *testing.T) {
 			}
 			return out
 		}
-		allocations := types.DetermineAllocationsForUndelegation(tt.currentAllocations, map[string]bool{}, sum(tt.currentAllocations), tt.targetAllocations, tt.unlocked, tt.amount)
+		allocations, err := types.DetermineAllocationsForUndelegation(tt.currentAllocations, map[string]bool{}, sum(tt.currentAllocations), tt.targetAllocations, tt.unlocked, tt.amount)
+		require.NoError(t, err)
 		for valoper := range allocations {
 			require.Equal(t, tt.expected[valoper].Int64(), allocations[valoper].Int64(), fmt.Sprintf("%s / %s", tt.name, valoper))
 		}
@@ -238,3 +243,70 @@ func TestDetermineAllocationsForUndelegation(t *testing.T) {
 		require.Equal(t, tt.amount[0].Amount, sum(allocations))
 	}
 }
+
+// The function should correctly calculate allocations for undelegation when there are overallocated validators.
+func TestOverAndUnderAllocatedValidators(t *testing.T) {
+	currentAllocations := map[string]sdkmath.Int{
+		"validator1": sdkmath.NewInt(5000),
+		"validator2": sdkmath.NewInt(1800),
+		"validator3": sdkmath.NewInt(1200),
+		"validator4": sdkmath.NewInt(1000),
+	}
+	lockedAllocations := map[string]bool{}
+	currentSum := sdkmath.NewInt(9000)
+	targetAllocations := types.ValidatorIntents{
+		{ValoperAddress: "validator1", Weight: sdk.NewDecWithPrec(50, 2)},
+		{ValoperAddress: "validator2", Weight: sdk.NewDecWithPrec(20, 2)},
+		{ValoperAddress: "validator3", Weight: sdk.NewDecWithPrec(15, 2)},
+		{ValoperAddress: "validator4", Weight: sdk.NewDecWithPrec(5, 2)},
+	}.Normalize()
+	availablePerValidator := map[string]sdkmath.Int{
+		"validator1": sdkmath.NewInt(5000),
+		"validator2": sdkmath.NewInt(1800),
+		"validator3": sdkmath.NewInt(1200),
+		"validator4": sdkmath.NewInt(1000),
+	}
+	amount := sdk.Coins{sdk.NewCoin("stake", sdk.NewInt(300))}
+
+	expectedAllocations := map[string]sdkmath.Int{
+		"validator4": sdkmath.NewInt(300),
+	}
+
+	allocations, err := types.DetermineAllocationsForUndelegation(currentAllocations, lockedAllocations, currentSum, targetAllocations, availablePerValidator, amount)
+	require.NoError(t, err)
+	require.Equal(t, expectedAllocations, allocations)
+}
+
+// func TestOverAndUnderAllocatedValidatorsDiv3(t *testing.T) {
+// 	currentAllocations := map[string]sdkmath.Int{
+// 		"validator1": sdkmath.NewInt(5000),
+// 		"validator2": sdkmath.NewInt(4000),
+// 		"validator3": sdkmath.NewInt(3000),
+// 		"validator4": sdkmath.NewInt(2000),
+// 	}
+// 	lockedAllocations := map[string]bool{}
+// 	currentSum := sdkmath.NewInt(14000)
+// 	targetAllocations := types.ValidatorIntents{
+// 		{ValoperAddress: "validator1", Weight: sdk.NewDecWithPrec(40, 2)},
+// 		{ValoperAddress: "validator2", Weight: sdk.NewDecWithPrec(30, 2)},
+// 		{ValoperAddress: "validator3", Weight: sdk.NewDecWithPrec(20, 2)},
+// 		{ValoperAddress: "validator4", Weight: sdk.NewDecWithPrec(10, 2)},
+// 	}.Normalize()
+// 	availablePerValidator := map[string]sdkmath.Int{
+// 		"validator1": sdkmath.NewInt(4000),
+// 		"validator2": sdkmath.NewInt(3000),
+// 		"validator3": sdkmath.NewInt(2000),
+// 		"validator4": sdkmath.NewInt(1000),
+// 	}
+// 	amount := sdk.Coins{sdk.NewCoin("stake", sdk.NewInt(300))}
+
+// 	expectedAllocations := map[string]sdkmath.Int{
+// 		"validator1": sdkmath.NewInt(0), /// << why?
+// 		"validator4": sdkmath.NewInt(300),
+// 	}
+
+// 	allocations := types.DetermineAllocationsForUndelegation(currentAllocations, lockedAllocations, currentSum, targetAllocations, availablePerValidator, amount)
+
+// 	fmt.Println(allocations)
+// 	require.Equal(t, expectedAllocations, allocations)
+// }

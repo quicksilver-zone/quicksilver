@@ -1,8 +1,6 @@
 package lsmtypes
 
 import (
-	"fmt"
-
 	"gopkg.in/yaml.v2"
 
 	"cosmossdk.io/errors"
@@ -21,7 +19,6 @@ func (v Validator) String() string {
 func (v Validator) GetConsAddr() ([]byte, error) {
 	pk, ok := v.ConsensusPubkey.GetCachedValue().(cryptotypes.PubKey)
 	if !ok {
-		fmt.Println("got", pk)
 		return nil, errors.Wrapf(sdkerrors.ErrInvalidType, "expecting cryptotypes.PubKey, got %T", pk)
 	}
 
