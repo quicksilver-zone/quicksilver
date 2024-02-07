@@ -15,7 +15,7 @@ import {
 } from '@chakra-ui/react';
 import { coins, StdFee } from '@cosmjs/stargate';
 import { useChain } from '@cosmos-kit/react';
-import { cosmos } from 'quicksilverjs';
+import { cosmos } from 'interchain-query';
 import { useState } from 'react';
 
 import { useTx } from '@/hooks';
