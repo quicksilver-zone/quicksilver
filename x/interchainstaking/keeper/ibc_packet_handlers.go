@@ -382,7 +382,7 @@ func (k *Keeper) handleSendToDelegate(ctx sdk.Context, zone *types.Zone, msg *ba
 			if err != nil {
 				return 0, err
 			}
-			msgs = append(msgs, k.PrepareDelegationMessagesForCoins(zone, allocations)...)
+			msgs = append(msgs, k.PrepareDelegationMessagesForCoins(zone, allocations, isBatchOrRewards(memo))...)
 		} else {
 			msgs = append(msgs, k.PrepareDelegationMessagesForShares(zone, msg.Amount)...)
 		}
@@ -391,6 +391,13 @@ func (k *Keeper) handleSendToDelegate(ctx sdk.Context, zone *types.Zone, msg *ba
 	k.Logger(ctx).Info("messages to send", "messages", msgs)
 
 	return len(msgs), k.SubmitTx(ctx, msgs, zone.DelegationAddress, memo, zone.MessagesPerTx)
+}
+
+func isBatchOrRewards(memo string) bool {
+	if memo == "rewards" {
+		return true
+	}
+	return strings.HasPrefix(memo, "batch")
 }
 
 // HandleWithdrawForUser handles withdraw for user will check that the msgSend we have successfully executed matches an existing withdrawal record.
@@ -818,7 +825,13 @@ func (k *Keeper) HandleFailedUndelegate(ctx sdk.Context, msg sdk.Msg, memo strin
 			wdr.Requeued = true
 			k.UpdateWithdrawalRecordStatus(ctx, &wdr, types.WithdrawStatusQueued)
 		} else {
-			// remove this validator from distribution; amend amounts; requeue.
+			// if multi val then:
+			// - remove this validator from distribution
+			// - related amount = amount from this val
+			// - determine RR paid
+			// - mult RR by related amount, sub this from burn amount
+			// - save old record
+			// - create new record for unhandled burn amount
 			newDistribution := make([]*types.Distribution, 0)
 			relatedAmount := uint64(0)
 			for _, dist := range wdr.Distribution {
@@ -841,7 +854,6 @@ func (k *Keeper) HandleFailedUndelegate(ctx sdk.Context, msg sdk.Msg, memo strin
 				Delegator:    wdr.Delegator,
 				Recipient:    wdr.Recipient,
 				Distribution: nil,
-				Amount:       sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewIntFromUint64(relatedAmount))),
 				BurnAmount:   sdk.NewCoin(zone.LocalDenom, relatedQAsset),
 				Txhash:       fmt.Sprintf("%064d", k.GetNextWithdrawalRecordSequence(ctx)),
 				Status:       types.WithdrawStatusQueued,
@@ -1262,7 +1274,11 @@ func DistributeRewardsFromWithdrawAccount(k *Keeper, ctx sdk.Context, args []byt
 	// prepare rewards distribution
 	rewards := sdk.NewCoin(zone.BaseDenom, baseDenomAmount.Sub(baseDenomFee))
 
-	msgs := []sdk.Msg{k.prepareRewardsDistributionMsgs(zone, rewards.Amount)}
+	msgs := make([]sdk.Msg, 0)
+
+	if rewards.Amount.IsPositive() {
+		msgs = append(msgs, k.prepareRewardsDistributionMsgs(zone, rewards.Amount))
+	}
 
 	// multiDenomFee is the balance of withdrawal account minus the redelegated rewards.
 	multiDenomFee := withdrawBalance.Balances.Sub(sdk.Coins{rewards}...)
@@ -1305,10 +1321,6 @@ func DistributeRewardsFromWithdrawAccount(k *Keeper, ctx sdk.Context, args []byt
 }
 
 func (*Keeper) prepareRewardsDistributionMsgs(zone types.Zone, rewards sdkmath.Int) sdk.Msg {
-	if !rewards.IsPositive() {
-		return &banktypes.MsgSend{}
-	}
-
 	return &banktypes.MsgSend{
 		FromAddress: zone.WithdrawalAddress.GetAddress(),
 		ToAddress:   zone.DelegationAddress.GetAddress(),
