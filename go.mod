@@ -9,7 +9,7 @@ require (
 	github.com/CosmWasm/wasmvm v1.1.1
 	github.com/armon/go-metrics v0.4.1
 	github.com/client9/misspell v0.3.4
-	github.com/cometbft/cometbft-db v0.10.0
+	github.com/cometbft/cometbft-db v0.11.0
 	github.com/confio/ics23/go v0.9.0
 	github.com/cosmos/cosmos-proto v1.0.0-beta.3
 	github.com/cosmos/cosmos-sdk v0.46.16
@@ -30,7 +30,7 @@ require (
 	github.com/strangelove-ventures/packet-forward-middleware/v5 v5.1.3
 	github.com/stretchr/testify v1.8.4
 	github.com/syndtr/goleveldb v1.0.1-0.20220721030215-126854af5e6d
-	github.com/tendermint/tendermint v0.34.29
+	github.com/tendermint/tendermint v0.34.31
 	github.com/tendermint/tm-db v0.6.8-0.20220506192307-f628bb5dc95b
 	go.opencensus.io v0.24.0
 	golang.org/x/exp v0.0.0-20231127185646-65229373498e
@@ -94,14 +94,16 @@ require (
 	github.com/chavacava/garif v0.1.0 // indirect
 	github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e // indirect
 	github.com/cockroachdb/apd/v2 v2.0.2 // indirect
-	github.com/cockroachdb/errors v1.10.0 // indirect
+	github.com/cockroachdb/errors v1.11.1 // indirect
 	github.com/cockroachdb/logtags v0.0.0-20230118201751-21c54148d20b // indirect
-	github.com/cockroachdb/pebble v1.0.0 // indirect
+	github.com/cockroachdb/pebble v1.1.0 // indirect
 	github.com/cockroachdb/redact v1.1.5 // indirect
+	github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06 // indirect
 	github.com/coinbase/rosetta-sdk-go v0.8.3 // indirect
 	github.com/coinbase/rosetta-sdk-go/types v1.0.0 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
+	github.com/cosmos/gorocksdb v1.2.0 // indirect
 	github.com/cosmos/iavl v0.19.6 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.12.4 // indirect
 	github.com/creachadair/taskgroup v0.6.0 // indirect
@@ -210,7 +212,7 @@ require (
 	github.com/leonklingele/grouper v1.1.1 // indirect
 	github.com/lib/pq v1.10.9 // indirect
 	github.com/libp2p/go-buffer-pool v0.1.0 // indirect
-	github.com/linxGnu/grocksdb v1.8.11 // indirect
+	github.com/linxGnu/grocksdb v1.8.12 // indirect
 	github.com/lufeee/execinquery v1.2.1 // indirect
 	github.com/macabu/inamedparam v0.1.2 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
@@ -340,7 +342,5 @@ replace (
 	// replace broken goleveldb
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
 	// use cometbft
-	github.com/tendermint/tendermint => github.com/cometbft/cometbft v0.34.29
-	// pebbledb - https://gist.github.com/faddat/673107b72eccdd869b242338dd17e9d9
-	github.com/tendermint/tm-db => github.com/notional-labs/tm-db v0.6.8-0.20230214123107-77c191d0f7ee
+	github.com/tendermint/tendermint => github.com/cometbft/cometbft v0.34.31
 )
