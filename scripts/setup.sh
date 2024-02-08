@@ -266,7 +266,7 @@ $QS1_RUN add-genesis-account ${DEMO_ADDRESS_7} 100000000000uqck
 $QS2_RUN add-genesis-account ${VAL_ADDRESS_6} 100000000000uqck
 $QS3_RUN add-genesis-account ${VAL_ADDRESS_7} 100000000000uqck
 
-$TZ1_1_RUN add-genesis-account ${VAL_ADDRESS_2} 100000000000uatom
+$TZ1_1_RUN add-genesis-account ${VAL_ADDRESS_2} 100000000000uatom,100000000uother
 $TZ1_1_RUN add-genesis-account ${VAL_ADDRESS_3} 100000000000uatom
 $TZ1_1_RUN add-genesis-account ${VAL_ADDRESS_4} 100000000000uatom
 $TZ1_1_RUN add-genesis-account ${VAL_ADDRESS_5} 100000000000uatom
