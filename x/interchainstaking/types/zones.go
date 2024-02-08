@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 )
@@ -37,11 +38,28 @@ func (z *Zone) GetDelegationAccount() (*ICAAccount, error) {
 	return z.DelegationAddress, nil
 }
 
-func (z *Zone) DecrementWithdrawalWaitgroup() error {
-	if z.WithdrawalWaitgroup == 0 {
+func (z *Zone) SetWithdrawalWaitgroup(logger log.Logger, num uint32, reason string) {
+	logger.Info("setting withdrawal waitgroup", "zone", z.ChainId, "existing", z.WithdrawalWaitgroup, "new", num, "reason", reason)
+	z.WithdrawalWaitgroup = num
+}
+
+func (z *Zone) DecrementWithdrawalWaitgroup(logger log.Logger, num uint32, reason string) error {
+	if uint32(z.WithdrawalWaitgroup-num) > z.WithdrawalWaitgroup { // underflow
+		logger.Error("error decrementing withdrawal waitgroup: uint32 underflow ", "zone", z.ChainId, "existing", z.WithdrawalWaitgroup, "decrement", num, "reason", reason)
 		return errors.New("unable to decrement the withdrawal waitgroup below 0")
 	}
-	z.WithdrawalWaitgroup--
+	logger.Info("decrementing withdrawal waitgroup", "zone", z.ChainId, "existing", z.WithdrawalWaitgroup, "decrement", num, "new", uint32(z.WithdrawalWaitgroup-num), "reason", reason)
+	z.WithdrawalWaitgroup -= num
+	return nil
+}
+
+func (z *Zone) IncrementWithdrawalWaitgroup(logger log.Logger, num uint32, reason string) error {
+	if uint32(z.WithdrawalWaitgroup+num) < z.WithdrawalWaitgroup { // overflow
+		logger.Error("error incrementing withdrawal waitgroup: uint32 overflow ", "zone", z.ChainId, "existing", z.WithdrawalWaitgroup, "increment", num, "reason", reason)
+		return errors.New("unable to increment the withdrawal waitgroup above 4294967295")
+	}
+	logger.Info("incrementing withdrawal waitgroup", "zone", z.ChainId, "existing", z.WithdrawalWaitgroup, "increment", num, "new", uint32(z.WithdrawalWaitgroup+num), "reason", reason)
+	z.WithdrawalWaitgroup += num
 	return nil
 }
 

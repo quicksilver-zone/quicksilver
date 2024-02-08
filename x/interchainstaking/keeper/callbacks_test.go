@@ -721,7 +721,7 @@ func (suite *KeeperTestSuite) TestHandleRewardsCallbackNonDelegator() {
 		ctx := suite.chainA.GetContext()
 
 		zone, _ := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
-		zone.WithdrawalWaitgroup++
+		zone.IncrementWithdrawalWaitgroup(quicksilver.Logger(), 1, "test rewards callback handler")
 		quicksilver.InterchainstakingKeeper.SetZone(ctx, &zone)
 
 		user := addressutils.GenerateAccAddressForTest()
@@ -757,7 +757,8 @@ func (suite *KeeperTestSuite) TestHandleRewardsCallbackEmptyResponse() {
 		ctx := suite.chainA.GetContext()
 
 		zone, _ := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
-		zone.WithdrawalWaitgroup++
+		zone.IncrementWithdrawalWaitgroup(quicksilver.Logger(), 1, "test rewards callback handler")
+
 		quicksilver.InterchainstakingKeeper.SetZone(ctx, &zone)
 
 		queryReq := distrtypes.QueryDelegationTotalRewardsRequest{
@@ -786,7 +787,8 @@ func (suite *KeeperTestSuite) TestHandleValideRewardsCallback() {
 		ctx := suite.chainA.GetContext()
 
 		zone, _ := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
-		zone.WithdrawalWaitgroup++
+		zone.IncrementWithdrawalWaitgroup(quicksilver.Logger(), 1, "test rewards callback handler")
+
 		quicksilver.InterchainstakingKeeper.SetZone(ctx, &zone)
 
 		queryReq := distrtypes.QueryDelegationTotalRewardsRequest{
@@ -2527,7 +2529,7 @@ func (suite *KeeperTestSuite) TestDelegationAccountBalancesCallback() {
 			ctx := suite.chainA.GetContext()
 
 			zone, _ := app.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
-			zone.WithdrawalWaitgroup = 1
+			zone.SetWithdrawalWaitgroup(app.Logger(), 1, "init")
 			zone.DelegationAddress.Balance = t.PreviousBalance
 			app.InterchainstakingKeeper.SetZone(ctx, &zone)
 
@@ -2546,7 +2548,7 @@ func (suite *KeeperTestSuite) TestDelegationAccountBalancesCallback() {
 
 			// refetch zone
 			zone, _ = app.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
-			suite.Require().Equal(t.ExpectedWaitgroup, zone.WithdrawalWaitgroup)
+			suite.Require().Equal(t.ExpectedWaitgroup, zone.GetWithdrawalWaitgroup())
 
 			_, addr, err := bech32.DecodeAndConvert(zone.DelegationAddress.Address)
 			suite.Require().NoError(err)
@@ -2581,7 +2583,7 @@ func (suite *KeeperTestSuite) TestDelegationAccountBalanceCallback() {
 		ctx := suite.chainA.GetContext()
 
 		zone, _ := app.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
-		zone.WithdrawalWaitgroup = 2
+		zone.SetWithdrawalWaitgroup(app.Logger(), 2, "init")
 		zone.DelegationAddress.Balance = sdk.NewCoins(sdk.NewCoin("uatom", math.NewInt(500_000_000)))
 		app.InterchainstakingKeeper.SetZone(ctx, &zone)
 
@@ -2598,7 +2600,7 @@ func (suite *KeeperTestSuite) TestDelegationAccountBalanceCallback() {
 
 		ctx = suite.chainA.GetContext()
 		zone, _ = app.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
-		suite.Equal(uint32(5), zone.WithdrawalWaitgroup) // initial 2 is reduced to 1, but incremented by 4 (4x delegation messages) == 5
+		suite.Equal(uint32(5), zone.GetWithdrawalWaitgroup()) // initial 2 is reduced to 1, but incremented by 4 (4x delegation messages) == 5
 		suite.Equal(sdk.NewInt(500_000_000), zone.DelegationAddress.Balance.AmountOf("uatom"))
 	})
 }
@@ -2616,7 +2618,7 @@ func (suite *KeeperTestSuite) TestDelegationAccountBalanceCallbackLSM() {
 
 		valOper := app.InterchainstakingKeeper.GetValidatorAddresses(ctx, suite.chainB.ChainID)[0]
 		denom := valOper + "/1"
-		zone.WithdrawalWaitgroup = 2
+		zone.SetWithdrawalWaitgroup(app.Logger(), 2, "init")
 		zone.DelegationAddress.Balance = sdk.NewCoins(sdk.NewCoin("uatom", math.NewInt(500)))
 		app.InterchainstakingKeeper.SetZone(ctx, &zone)
 
@@ -2633,7 +2635,7 @@ func (suite *KeeperTestSuite) TestDelegationAccountBalanceCallbackLSM() {
 
 		ctx = suite.chainA.GetContext()
 		zone, _ = app.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
-		suite.Equal(uint32(2), zone.WithdrawalWaitgroup) // initial 2 is reduced to 1, but incremented by 1 (1x redeem token messages) == 2
+		suite.Equal(uint32(2), zone.GetWithdrawalWaitgroup()) // initial 2 is reduced to 1, but incremented by 1 (1x redeem token messages) == 2
 		suite.Equal(sdk.NewInt(500), zone.DelegationAddress.Balance.AmountOf("uatom"))
 		suite.Equal(sdk.NewInt(10), zone.DelegationAddress.Balance.AmountOf(denom))
 	})

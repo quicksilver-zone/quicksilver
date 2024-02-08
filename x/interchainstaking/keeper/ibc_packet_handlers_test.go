@@ -813,7 +813,7 @@ func (suite *KeeperTestSuite) TestHandleWithdrawRewards() {
 		{
 			name: "try to decrement when waitgroup = 0",
 			setup: func(ctx sdk.Context, quicksilver *app.Quicksilver, zone *types.Zone) {
-				zone.WithdrawalWaitgroup = 0
+				zone.SetWithdrawalWaitgroup(quicksilver.Logger(), 0, "init")
 				quicksilver.InterchainstakingKeeper.SetZone(ctx, zone)
 			},
 			checks: func(ctx sdk.Context, quicksilver *app.Quicksilver, zone *types.Zone) {},
@@ -829,7 +829,8 @@ func (suite *KeeperTestSuite) TestHandleWithdrawRewards() {
 		{
 			name: "valid case with balances != 0",
 			setup: func(ctx sdk.Context, quicksilver *app.Quicksilver, zone *types.Zone) {
-				zone.WithdrawalWaitgroup = 1
+				zone.SetWithdrawalWaitgroup(quicksilver.Logger(), 1, "init")
+
 				balances := sdk.NewCoins(
 					sdk.NewCoin(
 						zone.BaseDenom,
@@ -852,13 +853,13 @@ func (suite *KeeperTestSuite) TestHandleWithdrawRewards() {
 		{
 			name: "valid case trigger redemption rate and check if delegatorAddress == performanceAddress",
 			setup: func(ctx sdk.Context, quicksilver *app.Quicksilver, zone *types.Zone) {
-				zone.WithdrawalWaitgroup = 1
+				zone.SetWithdrawalWaitgroup(quicksilver.Logger(), 1, "init")
 				quicksilver.InterchainstakingKeeper.SetZone(ctx, zone)
 			},
 			checks: func(ctx sdk.Context, quicksilver *app.Quicksilver, zone *types.Zone) {
 				newZone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, zone.ChainId)
 				suite.True(found)
-				suite.Zero(newZone.WithdrawalWaitgroup)
+				suite.Zero(newZone.GetWithdrawalWaitgroup())
 			},
 			msg: func(zone *types.Zone) sdk.Msg {
 				return &distrtypes.MsgWithdrawDelegatorReward{
@@ -872,7 +873,7 @@ func (suite *KeeperTestSuite) TestHandleWithdrawRewards() {
 		{
 			name: "valid case trigger redemption rate and without checking if delegatorAddress == performanceAddress",
 			setup: func(ctx sdk.Context, quicksilver *app.Quicksilver, zone *types.Zone) {
-				zone.WithdrawalWaitgroup = 0
+				zone.SetWithdrawalWaitgroup(quicksilver.Logger(), 0, "init")
 				quicksilver.InterchainstakingKeeper.SetZone(ctx, zone)
 			},
 			checks: func(ctx sdk.Context, quicksilver *app.Quicksilver, zone *types.Zone) {},
@@ -2670,7 +2671,7 @@ func (suite *KeeperTestSuite) TestReceiveAckForWithdrawReward() {
 	if !found {
 		suite.Fail("unable to retrieve zone for test")
 	}
-	zone.WithdrawalWaitgroup = 1
+	zone.SetWithdrawalWaitgroup(quicksilver.Logger(), 1, "init")
 	quicksilver.InterchainstakingKeeper.SetZone(ctx, &zone)
 
 	withdrawReward := &distrtypes.MsgWithdrawDelegatorReward{
@@ -4479,7 +4480,7 @@ func (suite *KeeperTestSuite) TestHandleFailedDelegate_Batch_OK() {
 	zone, found := app.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 	suite.True(found)
 
-	zone.WithdrawalWaitgroup = 100
+	zone.SetWithdrawalWaitgroup(app.Logger(), 100, "init")
 	app.InterchainstakingKeeper.SetZone(ctx, &zone)
 
 	vals := app.InterchainstakingKeeper.GetValidatorAddresses(ctx, suite.chainB.ChainID)
@@ -4490,7 +4491,7 @@ func (suite *KeeperTestSuite) TestHandleFailedDelegate_Batch_OK() {
 
 	zone, found = app.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 	suite.True(found)
-	suite.Equal(uint32(99), zone.WithdrawalWaitgroup)
+	suite.Equal(uint32(99), zone.GetWithdrawalWaitgroup())
 }
 
 func (suite *KeeperTestSuite) TestHandleFailedDelegate_PerfAddress_OK() {
@@ -4503,7 +4504,7 @@ func (suite *KeeperTestSuite) TestHandleFailedDelegate_PerfAddress_OK() {
 	zone, found := app.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 	suite.True(found)
 
-	zone.WithdrawalWaitgroup = 100
+	zone.SetWithdrawalWaitgroup(app.Logger(), 100, "init")
 	app.InterchainstakingKeeper.SetZone(ctx, &zone)
 
 	vals := app.InterchainstakingKeeper.GetValidatorAddresses(ctx, suite.chainB.ChainID)
@@ -4515,7 +4516,7 @@ func (suite *KeeperTestSuite) TestHandleFailedDelegate_PerfAddress_OK() {
 	zone, found = app.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 	suite.True(found)
 	// delegator was perf address, no change in waitgroup
-	suite.Equal(uint32(100), zone.WithdrawalWaitgroup)
+	suite.Equal(uint32(100), zone.GetWithdrawalWaitgroup())
 }
 
 func (suite *KeeperTestSuite) TestHandleFailedDelegate_NotBatch_OK() {
@@ -4528,7 +4529,7 @@ func (suite *KeeperTestSuite) TestHandleFailedDelegate_NotBatch_OK() {
 	zone, found := app.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 	suite.True(found)
 
-	zone.WithdrawalWaitgroup = 100
+	zone.SetWithdrawalWaitgroup(app.Logger(), 100, "init")
 	app.InterchainstakingKeeper.SetZone(ctx, &zone)
 
 	vals := app.InterchainstakingKeeper.GetValidatorAddresses(ctx, suite.chainB.ChainID)
@@ -4540,7 +4541,7 @@ func (suite *KeeperTestSuite) TestHandleFailedDelegate_NotBatch_OK() {
 	zone, found = app.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 	suite.True(found)
 	// memo was not a batch id, so don't decrement withdrawal wg
-	suite.Equal(uint32(100), zone.WithdrawalWaitgroup)
+	suite.Equal(uint32(100), zone.GetWithdrawalWaitgroup())
 }
 
 func (suite *KeeperTestSuite) TestHandleFailedDelegate_BatchTriggerRR_OK() {
@@ -4553,7 +4554,7 @@ func (suite *KeeperTestSuite) TestHandleFailedDelegate_BatchTriggerRR_OK() {
 	zone, found := app.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 	suite.True(found)
 
-	zone.WithdrawalWaitgroup = 1
+	zone.SetWithdrawalWaitgroup(app.Logger(), 1, "init")
 	app.InterchainstakingKeeper.SetZone(ctx, &zone)
 	preQueries := app.InterchainQueryKeeper.AllQueries(ctx)
 
@@ -4566,7 +4567,7 @@ func (suite *KeeperTestSuite) TestHandleFailedDelegate_BatchTriggerRR_OK() {
 	zone, found = app.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 	suite.True(found)
 	// memo was not a batch id, so don't decrement withdrawal wg
-	suite.Equal(uint32(0), zone.WithdrawalWaitgroup)
+	suite.Equal(uint32(0), zone.GetWithdrawalWaitgroup())
 
 	postQueries := app.InterchainQueryKeeper.AllQueries(ctx)
 
@@ -4600,7 +4601,7 @@ func (suite *KeeperTestSuite) TestHandleFailedDelegate_BadAddr_Fail() {
 	zone, found := app.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 	suite.True(found)
 
-	zone.WithdrawalWaitgroup = 100
+	zone.SetWithdrawalWaitgroup(app.Logger(), 100, "init")
 	app.InterchainstakingKeeper.SetZone(ctx, &zone)
 
 	vals := app.InterchainstakingKeeper.GetValidatorAddresses(ctx, suite.chainB.ChainID)
@@ -4620,7 +4621,7 @@ func (suite *KeeperTestSuite) TestHandleFailedDelegate_BadMsg_Fail() {
 	zone, found := app.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 	suite.True(found)
 
-	zone.WithdrawalWaitgroup = 100
+	zone.SetWithdrawalWaitgroup(app.Logger(), 100, "init")
 	app.InterchainstakingKeeper.SetZone(ctx, &zone)
 
 	vals := app.InterchainstakingKeeper.GetValidatorAddresses(ctx, suite.chainB.ChainID)

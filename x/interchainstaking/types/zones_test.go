@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"github.com/tendermint/tendermint/libs/log"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -39,15 +40,16 @@ func TestGetDelegationAccount(t *testing.T) {
 }
 
 func TestDecrementWithdrawalWg(t *testing.T) {
+	testlog := log.NewNopLogger()
 	zone := types.Zone{WithdrawalWaitgroup: 0}
-	oldWg := zone.WithdrawalWaitgroup
-	zone.WithdrawalWaitgroup++
-	firstWg := zone.WithdrawalWaitgroup
+	oldWg := zone.GetWithdrawalWaitgroup()
+	zone.IncrementWithdrawalWaitgroup(testlog, 1, "test increment")
+	firstWg := zone.GetWithdrawalWaitgroup()
 	require.Equal(t, oldWg+1, firstWg)
-	require.NoError(t, zone.DecrementWithdrawalWaitgroup())
-	secondWg := zone.WithdrawalWaitgroup
+	require.NoError(t, zone.DecrementWithdrawalWaitgroup(testlog, 1, "test decrement"))
+	secondWg := zone.GetWithdrawalWaitgroup()
 	require.Equal(t, firstWg-1, secondWg)
-	require.Error(t, zone.DecrementWithdrawalWaitgroup())
+	require.Error(t, zone.DecrementWithdrawalWaitgroup(testlog, 1, "test decrement error"))
 }
 
 func TestValidateCoinsForZone(t *testing.T) {

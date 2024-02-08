@@ -124,12 +124,12 @@ func RewardsCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Que
 
 	// decrement waitgroup as we have received back the query
 	// (initially incremented in AfterEpochEnd)
-	err = zone.DecrementWithdrawalWaitgroup()
+	err = zone.DecrementWithdrawalWaitgroup(k.Logger(ctx), 1, "rewards callback")
 	if err != nil {
 		return err
 	}
 
-	k.Logger(ctx).Debug("QueryDelegationRewards callback", "wg", zone.WithdrawalWaitgroup, "delegatorAddress", rewardsQuery.DelegatorAddress, "zone", query.ChainId)
+	k.Logger(ctx).Debug("QueryDelegationRewards callback", "wg", zone.GetWithdrawalWaitgroup(), "delegatorAddress", rewardsQuery.DelegatorAddress, "zone", query.ChainId)
 
 	return k.WithdrawDelegationRewardsForResponse(ctx, &zone, rewardsQuery.DelegatorAddress, args)
 }
@@ -622,7 +622,7 @@ func DelegationAccountBalanceCallback(k *Keeper, ctx sdk.Context, args []byte, q
 	}
 
 	k.Logger(ctx).Info("Received balance response for denom", "denom", coin.Denom)
-	err = zone.DecrementWithdrawalWaitgroup()
+	err = zone.DecrementWithdrawalWaitgroup(k.Logger(ctx), 1, "delegationaccountbalance callback")
 	if err != nil {
 		return err
 	}
@@ -653,7 +653,9 @@ func DelegationAccountBalancesCallback(k *Keeper, ctx sdk.Context, args []byte, 
 	result := banktypes.QueryAllBalancesResponse{}
 	k.cdc.MustUnmarshal(args, &result)
 
-	zone.WithdrawalWaitgroup--
+	if err := zone.DecrementWithdrawalWaitgroup(k.Logger(ctx), 1, "delegationaccountbalances callback"); err != nil {
+		return err
+	}
 
 	addressBytes, err := addressutils.AccAddressFromBech32(zone.DelegationAddress.Address, zone.AccountPrefix)
 	if err != nil {
@@ -677,8 +679,8 @@ func DelegationAccountBalancesCallback(k *Keeper, ctx sdk.Context, args []byte, 
 			0,
 		)
 
-		k.Logger(ctx).Info("Emitting balance request for denom", "denom", coin.Denom)
-		zone.WithdrawalWaitgroup++
+		zone.IncrementWithdrawalWaitgroup(k.Logger(ctx), 1, fmt.Sprintf("delegation account balance for %s", coin.Denom))
+		k.Logger(ctx).Info("Emitting balance request for denom", "denom", coin.Denom, "waitgroup", zone.GetWithdrawalWaitgroup())
 	}
 	k.SetZone(ctx, &zone)
 

@@ -313,7 +313,6 @@ func (k *Keeper) HandleMsgTransfer(ctx sdk.Context, msg ibctransfertypes.Fungibl
 	}
 
 	if found && msg.Denom != zone.BaseDenom {
-		// k.Logger(ctx).Error("got withdrawal account and NOT staking denom", "rx", receivedCoin.Denom, "trace_base_denom", denomTrace.BaseDenom, "zone_base_denom", zone.BaseDenom)
 		feeAmount := sdk.NewDecFromInt(receivedCoin.Amount).Mul(k.GetCommissionRate(ctx)).TruncateInt()
 		rewardCoin := receivedCoin.SubAmount(feeAmount)
 		zoneAddress, err := addressutils.AccAddressFromBech32(zone.WithdrawalAddress.Address, "")
@@ -896,7 +895,7 @@ func (k *Keeper) HandleRedeemTokens(ctx sdk.Context, msg sdk.Msg, amount sdk.Coi
 		k.SetReceiptsCompleted(ctx, zone.ChainId, time.Unix(exclusionTimestampUnix, 0), ctx.BlockTime(), redeemMsg.Amount.Denom)
 		zone.DelegationAddress.Balance = zone.DelegationAddress.Balance.Sub(redeemMsg.Amount)
 		k.SetZone(ctx, zone)
-		if zone.WithdrawalWaitgroup == 0 {
+		if zone.GetWithdrawalWaitgroup() == 0 {
 			k.Logger(ctx).Info("Triggering redemption rate calc after delegation flush")
 			if err = k.TriggerRedemptionRate(ctx, zone); err != nil {
 				return err
@@ -935,9 +934,12 @@ func (k *Keeper) HandleFailedRedeemTokens(ctx sdk.Context, msg sdk.Msg, memo str
 	switch {
 	case strings.HasPrefix(memo, "batch"):
 		k.Logger(ctx).Error("batch token redemption failed", "memo", memo, "tx", redeemMsg)
-		zone.WithdrawalWaitgroup--
+		if err := zone.DecrementWithdrawalWaitgroup(k.Logger(ctx), uint32(1), "batch token redemption failure ack"); err != nil {
+			return err
+		}
+		k.Logger(ctx).Info("Decremented waitgroup after failed batch token redemption", "wg", zone.GetWithdrawalWaitgroup())
 		k.SetZone(ctx, zone)
-		if zone.WithdrawalWaitgroup == 0 {
+		if zone.GetWithdrawalWaitgroup() == 0 {
 			k.Logger(ctx).Info("Triggering redemption rate calc after delegation flush")
 			if err := k.TriggerRedemptionRate(ctx, zone); err != nil {
 				return err
@@ -977,9 +979,12 @@ func (k *Keeper) HandleDelegate(ctx sdk.Context, msg sdk.Msg, memo string) error
 		k.Logger(ctx).Debug("outstanding delegations ack-received")
 		k.SetReceiptsCompleted(ctx, zone.ChainId, time.Unix(exclusionTimestampUnix, 0), ctx.BlockTime(), delegateMsg.Amount.Denom)
 		zone.DelegationAddress.Balance = zone.DelegationAddress.Balance.Sub(delegateMsg.Amount)
-		zone.WithdrawalWaitgroup--
+		fmt.Println("decrementing in handleDelegate", zone.GetWithdrawalWaitgroup())
+		if err := zone.DecrementWithdrawalWaitgroup(k.Logger(ctx), uint32(1), "batch/reward delegation success ack"); err != nil {
+			return err
+		}
 		k.SetZone(ctx, zone)
-		if zone.WithdrawalWaitgroup == 0 {
+		if zone.GetWithdrawalWaitgroup() == 0 {
 			k.Logger(ctx).Info("Triggering redemption rate calc after delegation flush")
 			if err := k.TriggerRedemptionRate(ctx, zone); err != nil {
 				return err
@@ -1019,9 +1024,11 @@ func (k *Keeper) HandleFailedDelegate(ctx sdk.Context, msg sdk.Msg, memo string)
 	switch {
 	case strings.HasPrefix(memo, "batch"):
 		k.Logger(ctx).Error("batch delegation failed", "memo", memo, "tx", delegateMsg)
-		zone.WithdrawalWaitgroup--
+		if err := zone.DecrementWithdrawalWaitgroup(k.Logger(ctx), 1, "batch delegation failed ack"); err != nil {
+			return err
+		}
 		k.SetZone(ctx, zone)
-		if zone.WithdrawalWaitgroup == 0 {
+		if zone.GetWithdrawalWaitgroup() == 0 {
 			k.Logger(ctx).Info("Triggering redemption rate calc after delegation flush")
 			if err := k.TriggerRedemptionRate(ctx, zone); err != nil {
 				return err
@@ -1211,15 +1218,16 @@ func (k *Keeper) HandleWithdrawRewards(ctx sdk.Context, msg sdk.Msg) error {
 	// operates outside the delegator set, its purpose is to track validator
 	// performance only.
 	if withdrawalMsg.DelegatorAddress != zone.PerformanceAddress.Address {
-		err = zone.DecrementWithdrawalWaitgroup()
+		if err := zone.DecrementWithdrawalWaitgroup(k.Logger(ctx), 1, "handle withdraw rewards"); err != nil {
+			return err
+		}
 		if err != nil {
 			return err
 		}
-		k.Logger(ctx).Info("Decremented waitgroup", "wg", zone.WithdrawalWaitgroup)
 		k.SetZone(ctx, zone)
 	}
-	k.Logger(ctx).Info("Received MsgWithdrawDelegatorReward acknowledgement", "wg", zone.WithdrawalWaitgroup, "delegator", withdrawalMsg.DelegatorAddress)
-	switch zone.WithdrawalWaitgroup == 0 {
+	k.Logger(ctx).Info("Received MsgWithdrawDelegatorReward acknowledgement", "wg", zone.GetWithdrawalWaitgroup(), "delegator", withdrawalMsg.DelegatorAddress)
+	switch zone.GetWithdrawalWaitgroup() == 0 {
 	case true:
 		k.Logger(ctx).Info("triggering redemption rate calc after rewards withdrawal")
 		return k.TriggerRedemptionRate(ctx, zone)
