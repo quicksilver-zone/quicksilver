@@ -2447,7 +2447,8 @@ func (suite *KeeperTestSuite) TestDepositLsmTxCallbackFailOnNonMatchingValidator
 		// trigger the callback
 		err = keeper.DepositTxCallback(quicksilver.InterchainstakingKeeper, ctx, payloadBytes, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: resDataBz})
 
-		suite.ErrorContains(err, "unable to validate coins. Ignoring.")
+		// we used to error here, but now we don't to avoid blocking queues.
+		suite.NoError(err)
 
 		// expect quick1a2zht8x2j0dqvuejr8pxpu7due3qmk405vakg9 to have 0 uqatoms, as the deposit failed.
 		addrBytes, _ := addressutils.AccAddressFromBech32("cosmos1a2zht8x2j0dqvuejr8pxpu7due3qmk40lgdy3h", "")

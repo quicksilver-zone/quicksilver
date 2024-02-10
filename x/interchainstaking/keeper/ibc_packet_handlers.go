@@ -352,15 +352,23 @@ func (k *Keeper) HandleCompleteSend(ctx sdk.Context, msg sdk.Msg, memo string) e
 
 	// checks here are specific to ensure future extensibility;
 	switch {
-	case zone.IsWithdrawalAddress(sMsg.FromAddress):
-		// WithdrawalAddress (for rewards) only send to DelegationAddresses.
-		// Target here is the DelegationAddresses.
+	case zone.IsDelegateAddress(sMsg.ToAddress) && zone.IsWithdrawalAddress(sMsg.FromAddress):
+		k.Logger(ctx).Info("delegate account received tokens from withdrawal account; delegating rewards", "amount", sMsg.Amount)
 		return k.handleRewardsDelegation(ctx, *zone, sMsg)
-	case zone.IsDelegateAddress(sMsg.FromAddress):
-		return k.HandleWithdrawForUser(ctx, zone, sMsg, memo)
-	case zone.IsDelegateAddress(sMsg.ToAddress) && zone.DepositAddress.Address == sMsg.FromAddress:
+
+	case zone.IsWithdrawalAddress(sMsg.ToAddress):
+		k.Logger(ctx).Info("withdrawal account received tokens to disburse", "amount", sMsg.Amount)
+		return nil
+
+	case zone.IsDelegateAddress(sMsg.ToAddress) && zone.IsDepositAddress(sMsg.FromAddress):
+		k.Logger(ctx).Info("delegate account received tokens from deposit account; delegating deposit", "amount", sMsg.Amount, "memo", memo)
 		_, err := k.handleSendToDelegate(ctx, zone, sMsg, memo)
 		return err
+
+	case zone.IsDelegateAddress(sMsg.FromAddress):
+		k.Logger(ctx).Info("delegate account received tokens from deposit account; delegating deposit", "amount", sMsg.Amount, "memo", memo)
+		return k.HandleWithdrawForUser(ctx, zone, sMsg, memo)
+
 	default:
 		err = fmt.Errorf("unexpected completed send (2) from %s to %s (amount: %s)", sMsg.FromAddress, sMsg.ToAddress, sMsg.Amount)
 		k.Logger(ctx).Error(err.Error())
@@ -619,7 +627,7 @@ func (k *Keeper) HandleBeginRedelegate(ctx sdk.Context, msg sdk.Msg, completion 
 	}
 	srcDelegation.Amount = srcDelegation.Amount.Sub(redelegateMsg.Amount)
 
-	k.SetDelegation(ctx, zone.ChainId, srcDelegation)
+		k.SetDelegation(ctx, zone.ChainId, srcDelegation)
 
 	valAddr, err = addressutils.ValAddressFromBech32(redelegateMsg.ValidatorDstAddress, zone.AccountPrefix+"valoper")
 	if err != nil {
@@ -979,7 +987,6 @@ func (k *Keeper) HandleDelegate(ctx sdk.Context, msg sdk.Msg, memo string) error
 		k.Logger(ctx).Debug("outstanding delegations ack-received")
 		k.SetReceiptsCompleted(ctx, zone.ChainId, time.Unix(exclusionTimestampUnix, 0), ctx.BlockTime(), delegateMsg.Amount.Denom)
 		zone.DelegationAddress.Balance = zone.DelegationAddress.Balance.Sub(delegateMsg.Amount)
-		fmt.Println("decrementing in handleDelegate", zone.GetWithdrawalWaitgroup())
 		if err := zone.DecrementWithdrawalWaitgroup(k.Logger(ctx), uint32(1), "batch/reward delegation success ack"); err != nil {
 			return err
 		}

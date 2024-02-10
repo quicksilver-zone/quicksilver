@@ -61,8 +61,33 @@ func TestValidateCoinsForZone(t *testing.T) {
 		"cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll": true,
 		"cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7": true,
 	}
-	require.NoError(t, zone.ValidateCoinsForZone(sdk.NewCoins(sdk.NewCoin("cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy/1", sdk.OneInt())), valAddresses))
-	require.Errorf(t, zone.ValidateCoinsForZone(sdk.NewCoins(sdk.NewCoin("cosmosvaloper18ldc09yx4aua9g8mkl3sj526hgydzzyehcyjjr/1", sdk.OneInt())), valAddresses), "invalid denom for zone: cosmosvaloper18ldc09yx4aua9g8mkl3sj526hgydzzyehcyjjr/1")
+
+	// valid AND matches a validator BUT lsm is off: false, false
+	valid, matches := zone.ValidateCoinsForZone(sdk.NewCoins(sdk.NewCoin("cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy/1", sdk.OneInt())), valAddresses)
+	require.False(t, valid)
+	require.False(t, matches)
+
+	zone.LiquidityModule = true
+	// valid AND matches a validator: true, true
+	valid, matches = zone.ValidateCoinsForZone(sdk.NewCoins(sdk.NewCoin("cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy/1", sdk.OneInt())), valAddresses)
+	require.True(t, valid)
+	require.True(t, matches)
+
+	// valid format but does not match: true, false
+	valid, matches = zone.ValidateCoinsForZone(sdk.NewCoins(sdk.NewCoin("cosmosvaloper18ldc09yx4aua9g8mkl3sj526hgydzzyehcyjjr/1", sdk.OneInt())), valAddresses)
+	require.True(t, valid)
+	require.False(t, matches)
+
+	// invalid format (although valid ibc!) - false, false
+	valid, matches = zone.ValidateCoinsForZone(sdk.NewCoins(sdk.NewCoin("ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2", sdk.OneInt())), valAddresses)
+	require.False(t, valid)
+	require.False(t, matches)
+
+	// staking token - true, true
+	valid, matches = zone.ValidateCoinsForZone(sdk.NewCoins(sdk.NewCoin("uatom", sdk.OneInt())), valAddresses)
+	require.True(t, valid)
+	require.True(t, matches)
+
 }
 
 func TestCoinsToIntent(t *testing.T) {

@@ -642,6 +642,12 @@ func DelegationAccountBalanceCallback(k *Keeper, ctx sdk.Context, args []byte, q
 
 	k.SetZone(ctx, &zone)
 
+	// if token is not valid for staking, then send to withdrawal account.
+	if valid, _ := zone.ValidateCoinsForZone(sdk.NewCoins(coin), k.GetValidatorAddressesAsMap(ctx, zone.ChainId)); !valid {
+		k.Logger(ctx).Info("token is not a valid staking token, so sending to withdrawal account for disbursal", "chain", zone.ChainId, "assets", coin)
+		return k.SendToWithdrawal(ctx, &zone, zone.DelegationAddress, sdk.NewCoins(coin))
+	}
+
 	return k.FlushOutstandingDelegations(ctx, &zone, coin)
 }
 

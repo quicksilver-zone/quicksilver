@@ -4021,7 +4021,7 @@ func (suite *KeeperTestSuite) TestHandleCompleteSend() {
 			message: func(zone *types.Zone) sdk.Msg {
 				return &banktypes.MsgSend{
 					FromAddress: zone.WithdrawalAddress.Address,
-					ToAddress:   "",
+					ToAddress:   zone.DelegationAddress.Address,
 					Amount:      sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1_000_000))),
 				}
 			},

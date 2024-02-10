@@ -23,6 +23,10 @@ func (z *Zone) GetValoperPrefix() string {
 	return ""
 }
 
+func (z Zone) IsDepositAddress(addr string) bool {
+	return z.DepositAddress != nil && z.DepositAddress.Address == addr
+}
+
 func (z Zone) IsDelegateAddress(addr string) bool {
 	return z.DelegationAddress != nil && z.DelegationAddress.Address == addr
 }
@@ -63,22 +67,35 @@ func (z *Zone) IncrementWithdrawalWaitgroup(logger log.Logger, num uint32, reaso
 	return nil
 }
 
-func (z *Zone) ValidateCoinsForZone(coins sdk.Coins, zoneVals map[string]bool) error {
+// ValidateCoinsForZone checks whether an inbound denomination is valid for this zone.
+// valid coins comprise:
+//   - non-lsm: staking denom only (z.BaseDenom)
+//   - lsm: staking denom, and tokens prefixed with zone.AccountPrefix
+//
+// lsm: if valoper is not in zoneVals map, then we return true, false, and this tx will be revisited.
+func (z *Zone) ValidateCoinsForZone(coins sdk.Coins, zoneVals map[string]bool) (valid bool, matchesVal bool) {
 	for _, coin := range coins.Sort() {
 		if coin.Denom == z.BaseDenom {
 			continue
 		}
 
-		coinParts := strings.Split(coin.Denom, "/")
-		if len(coinParts) != 2 {
-			return fmt.Errorf("invalid denom for zone: %s", coin.Denom)
+		// if liquidity module enabled, check to see if this is a tokenized share.
+		if z.LiquidityModule {
+			coinParts := strings.Split(coin.Denom, "/")
+			if len(coinParts) != 2 || !strings.HasPrefix(coinParts[0], z.AccountPrefix) {
+				return false, false
+			}
+
+			if _, ok := zoneVals[coinParts[0]]; !ok {
+				return true, false
+			}
+
+			continue
 		}
 
-		if _, ok := zoneVals[coinParts[0]]; !ok {
-			return fmt.Errorf("invalid denom for zone: %s", coin.Denom)
-		}
+		return false, false
 	}
-	return nil
+	return true, true
 }
 
 // memo functionality
