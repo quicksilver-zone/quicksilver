@@ -95,12 +95,10 @@ func (im TransferMiddleware) OnRecvPacket(
 
 	ack := im.app.OnRecvPacket(ctx, packet, relayer)
 	if ack.Success() {
-		im.keeper.Logger(ctx).Error("inbound msgTransfer")
 		_, found := im.keeper.GetZoneForWithdrawalAccount(ctx, data.Sender)
 		if found {
-			im.keeper.Logger(ctx).Error("recipient found")
 			if data.Receiver == im.keeper.AccountKeeper.GetModuleAddress(types.ModuleName).String() {
-				im.keeper.Logger(ctx).Error("msgTransfer to ics module account from withdrawal address")
+				im.keeper.Logger(ctx).Info("MsgTransfer to ics module account from withdrawal address")
 				err := im.keeper.HandleMsgTransfer(ctx, data, utils.DeriveIbcDenom(packet.DestinationPort, packet.DestinationChannel, packet.SourcePort, packet.SourceChannel, data.Denom))
 				if err != nil {
 					im.keeper.Logger(ctx).Error("unable to disperse rewards", "error", err.Error())
