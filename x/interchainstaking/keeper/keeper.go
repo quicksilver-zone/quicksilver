@@ -797,7 +797,6 @@ func (k *Keeper) UnmarshalValidator(data []byte) (lsmstakingtypes.Validator, err
 }
 
 func (k *Keeper) SendToWithdrawal(ctx sdk.Context, zone *types.Zone, sender *types.ICAAccount, amount sdk.Coins) error {
-
 	var msgs []sdk.Msg
 
 	sendMsg := banktypes.MsgSend{

@@ -685,7 +685,9 @@ func DelegationAccountBalancesCallback(k *Keeper, ctx sdk.Context, args []byte, 
 			0,
 		)
 
-		zone.IncrementWithdrawalWaitgroup(k.Logger(ctx), 1, fmt.Sprintf("delegation account balance for %s", coin.Denom))
+		if err = zone.IncrementWithdrawalWaitgroup(k.Logger(ctx), 1, fmt.Sprintf("delegation account balance for %s", coin.Denom)); err != nil {
+			return err
+		}
 		k.Logger(ctx).Info("Emitting balance request for denom", "denom", coin.Denom, "waitgroup", zone.GetWithdrawalWaitgroup())
 	}
 	k.SetZone(ctx, &zone)

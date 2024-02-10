@@ -132,7 +132,6 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNum
 
 		if zone.GetWithdrawalWaitgroup() > 0 {
 			zone.SetWithdrawalWaitgroup(k.Logger(ctx), 0, "epoch waitgroup was unexpected > 0")
-
 		}
 
 		// OnChanOpenAck calls SetWithdrawalAddress (see ibc_module.go)
@@ -173,7 +172,7 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNum
 			0,
 		)
 		// increment waitgroup; decremented in delegationaccountbalance callback
-		zone.IncrementWithdrawalWaitgroup(k.Logger(ctx), 1, "delegationaccountbalances trigger")
+		_ = zone.IncrementWithdrawalWaitgroup(k.Logger(ctx), 1, "delegationaccountbalances trigger")
 
 		rewardsQuery := distrtypes.QueryDelegationTotalRewardsRequest{DelegatorAddress: zone.DelegationAddress.Address}
 		bz = k.cdc.MustMarshal(&rewardsQuery)
@@ -193,7 +192,8 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNum
 		// increment the WithdrawalWaitgroup
 		// this allows us to track the response for every protocol delegator
 		// WithdrawalWaitgroup is decremented in RewardsCallback
-		zone.IncrementWithdrawalWaitgroup(k.Logger(ctx), 1, "rewards trigger")
+		_ = zone.IncrementWithdrawalWaitgroup(k.Logger(ctx), 1, "rewards trigger")
+
 		k.SetZone(ctx, zone)
 
 		return false

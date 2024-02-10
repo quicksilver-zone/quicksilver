@@ -275,7 +275,9 @@ func (k *Keeper) WithdrawDelegationRewardsForResponse(ctx sdk.Context, zone *typ
 	// this allows us to track individual msg responses and ensure all
 	// responses have been received and handled...
 	// HandleWithdrawRewards contains the opposing decrement.
-	zone.IncrementWithdrawalWaitgroup(k.Logger(ctx), uint32(len(msgs)), "WithdrawDelegationRewardsForResponse")
+	if err = zone.IncrementWithdrawalWaitgroup(k.Logger(ctx), uint32(len(msgs)), "WithdrawDelegationRewardsForResponse"); err != nil {
+		return err
+	}
 	k.SetZone(ctx, zone)
 	k.Logger(ctx).Info("Received WithdrawDelegationRewardsForResponse acknowledgement", "wg", zone.GetWithdrawalWaitgroup(), "address", delegator)
 
@@ -347,7 +349,9 @@ func (k *Keeper) FlushOutstandingDelegations(ctx sdk.Context, zone *types.Zone, 
 	if err != nil {
 		return err
 	}
-	zone.IncrementWithdrawalWaitgroup(k.Logger(ctx), uint32(numMsgs), "sending flush messages")
+	if err = zone.IncrementWithdrawalWaitgroup(k.Logger(ctx), uint32(numMsgs), "sending flush messages"); err != nil {
+		return err
+	}
 	k.SetZone(ctx, zone)
 	return nil
 }

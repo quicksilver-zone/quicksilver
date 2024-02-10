@@ -721,7 +721,7 @@ func (suite *KeeperTestSuite) TestHandleRewardsCallbackNonDelegator() {
 		ctx := suite.chainA.GetContext()
 
 		zone, _ := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
-		zone.IncrementWithdrawalWaitgroup(quicksilver.Logger(), 1, "test rewards callback handler")
+		suite.NoError(zone.IncrementWithdrawalWaitgroup(quicksilver.Logger(), 1, "test rewards callback handler"))
 		quicksilver.InterchainstakingKeeper.SetZone(ctx, &zone)
 
 		user := addressutils.GenerateAccAddressForTest()
@@ -757,7 +757,7 @@ func (suite *KeeperTestSuite) TestHandleRewardsCallbackEmptyResponse() {
 		ctx := suite.chainA.GetContext()
 
 		zone, _ := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
-		zone.IncrementWithdrawalWaitgroup(quicksilver.Logger(), 1, "test rewards callback handler")
+		suite.NoError(zone.IncrementWithdrawalWaitgroup(quicksilver.Logger(), 1, "test rewards callback handler"))
 
 		quicksilver.InterchainstakingKeeper.SetZone(ctx, &zone)
 
@@ -787,7 +787,7 @@ func (suite *KeeperTestSuite) TestHandleValideRewardsCallback() {
 		ctx := suite.chainA.GetContext()
 
 		zone, _ := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
-		zone.IncrementWithdrawalWaitgroup(quicksilver.Logger(), 1, "test rewards callback handler")
+		suite.NoError(zone.IncrementWithdrawalWaitgroup(quicksilver.Logger(), 1, "test rewards callback handler"))
 
 		quicksilver.InterchainstakingKeeper.SetZone(ctx, &zone)
 

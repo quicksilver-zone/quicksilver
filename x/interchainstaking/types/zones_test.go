@@ -43,7 +43,7 @@ func TestDecrementWithdrawalWg(t *testing.T) {
 	testlog := log.NewNopLogger()
 	zone := types.Zone{WithdrawalWaitgroup: 0}
 	oldWg := zone.GetWithdrawalWaitgroup()
-	zone.IncrementWithdrawalWaitgroup(testlog, 1, "test increment")
+	require.NoError(t, zone.IncrementWithdrawalWaitgroup(testlog, 1, "test increment"))
 	firstWg := zone.GetWithdrawalWaitgroup()
 	require.Equal(t, oldWg+1, firstWg)
 	require.NoError(t, zone.DecrementWithdrawalWaitgroup(testlog, 1, "test decrement"))
@@ -87,7 +87,6 @@ func TestValidateCoinsForZone(t *testing.T) {
 	valid, matches = zone.ValidateCoinsForZone(sdk.NewCoins(sdk.NewCoin("uatom", sdk.OneInt())), valAddresses)
 	require.True(t, valid)
 	require.True(t, matches)
-
 }
 
 func TestCoinsToIntent(t *testing.T) {
