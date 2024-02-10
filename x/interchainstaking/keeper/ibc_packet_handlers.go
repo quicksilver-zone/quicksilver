@@ -366,7 +366,7 @@ func (k *Keeper) HandleCompleteSend(ctx sdk.Context, msg sdk.Msg, memo string) e
 		return err
 
 	case zone.IsDelegateAddress(sMsg.FromAddress):
-		k.Logger(ctx).Info("delegate account received tokens from deposit account; delegating deposit", "amount", sMsg.Amount, "memo", memo)
+		k.Logger(ctx).Info("delegate account send tokens; handling withdrawal", "amount", sMsg.Amount, "memo", memo)
 		return k.HandleWithdrawForUser(ctx, zone, sMsg, memo)
 
 	default:

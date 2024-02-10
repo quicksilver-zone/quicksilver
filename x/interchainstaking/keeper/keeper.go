@@ -808,5 +808,5 @@ func (k *Keeper) SendToWithdrawal(ctx sdk.Context, zone *types.Zone, sender *typ
 
 	msgs = append(msgs, &sendMsg)
 
-	return k.SubmitTx(ctx, msgs, zone.DepositAddress, "", zone.MessagesPerTx)
+	return k.SubmitTx(ctx, msgs, sender, "", zone.MessagesPerTx)
 }

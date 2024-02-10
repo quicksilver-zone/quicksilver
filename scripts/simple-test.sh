@@ -128,9 +128,9 @@ sleep 3
 #sleep 5
 $TZ1_1_EXEC tx bank send demowallet2 $DEPOSIT_ACCOUNT 333333uatom --chain-id $CHAINID_1 -y --keyring-backend=test
 sleep 5
-$TZ1_1_EXEC tx bank send val2 $DEPOSIT_ACCOUNT 10000000uother --chain-id $CHAINID_1 -y --keyring-backend=test
+$TZ1_1_EXEC tx bank send val2 $DEPOSIT_ACCOUNT 5000000uother --chain-id $CHAINID_1 -y --keyring-backend=test
 sleep 5
-$TZ1_1_EXEC tx bank send val2 $WITHDRAWAL_ACCOUNT 10000000uother --chain-id $CHAINID_1 -y --keyring-backend=test
+$TZ1_1_EXEC tx bank send val2 $WITHDRAWAL_ACCOUNT 8000000uother --chain-id $CHAINID_1 -y --keyring-backend=test
 sleep 5
 $TZ1_1_EXEC tx bank send val2 $DELEGATE_ACCOUNT 10000000uother --chain-id $CHAINID_1 -y --keyring-backend=test
 sleep 5
