@@ -114,8 +114,13 @@ while [[ "$WITHDRAWAL_ACCOUNT" == "null" ]]; do
   WITHDRAWAL_ACCOUNT=$($QS1_EXEC q interchainstaking zones --output=json | jq .zones[0].withdrawal_address.address -r)
 done
 
-$TZ1_1_EXEC tx bank send val2 $PERFORMANCE_ACCOUNT 40000uatom --chain-id $CHAINID_1 -y --keyring-backend=test
+DELEGATE_ACCOUNT=$($QS1_EXEC q interchainstaking zones --output=json | jq .zones[0].delegation_address.address -r)
+while [[ "DELEGATE_ACCOUNT" == "null" ]]; do
+  sleep 2
+  DELEGATE_ACCOUNT=$($QS1_EXEC q interchainstaking zones --output=json | jq .zones[0].delegation_address.address -r)
+done
 
+$TZ1_1_EXEC tx bank send val2 $PERFORMANCE_ACCOUNT 40000uatom --chain-id $CHAINID_1 -y --keyring-backend=test
 sleep 3
 #$TZ1_1_EXEC tx bank send val2 $DEPOSIT_ACCOUNT 10000000${VAL_VALOPER_2}1 --chain-id $CHAINID_1 -y --keyring-backend=test
 #sleep 5
@@ -126,6 +131,8 @@ sleep 5
 $TZ1_1_EXEC tx bank send val2 $DEPOSIT_ACCOUNT 10000000uother --chain-id $CHAINID_1 -y --keyring-backend=test
 sleep 5
 $TZ1_1_EXEC tx bank send val2 $WITHDRAWAL_ACCOUNT 10000000uother --chain-id $CHAINID_1 -y --keyring-backend=test
+sleep 5
+$TZ1_1_EXEC tx bank send val2 $DELEGATE_ACCOUNT 10000000uother --chain-id $CHAINID_1 -y --keyring-backend=test
 sleep 5
 $TZ1_1_EXEC tx bank send demowallet2 $DEPOSIT_ACCOUNT 20000000uatom --chain-id $CHAINID_1 -y --keyring-backend=test --note MgTUzEjWVVYoDZBarqFL1akb38mxlgTsqdZ/sFxTJBNf+tv6rtckvn3T
 sleep 5
