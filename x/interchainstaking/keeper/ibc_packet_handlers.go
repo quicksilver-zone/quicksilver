@@ -755,18 +755,20 @@ func (k *Keeper) HandleFailedBankSend(ctx sdk.Context, msg sdk.Msg, memo string)
 
 	// checks here are specific to ensure future extensibility;
 	switch {
-	case zone.IsWithdrawalAddress(sMsg.FromAddress):
+	case zone.IsDelegateAddress(sMsg.ToAddress) && zone.IsWithdrawalAddress(sMsg.FromAddress):
 		// MsgSend from Withdrawal account to delegate account was not completed. We can ignore this.
-		k.Logger(ctx).Error("MsgSend from withdrawal account to delegate account failed")
-	case zone.IsDelegateAddress(sMsg.FromAddress):
-		return k.HandleFailedUnbondSend(ctx, sMsg, memo)
-	case zone.IsDelegateAddress(sMsg.ToAddress) && zone.DepositAddress.Address == sMsg.FromAddress:
+		k.Logger(ctx).Info("MsgSend to delegate account from withdrawal account failed", "amount", sMsg.Amount)
+	case zone.IsWithdrawalAddress(sMsg.ToAddress):
+		k.Logger(ctx).Info("MsgSend to withdrawal account for disbursal failed", "amount", sMsg.Amount)
+	case zone.IsDelegateAddress(sMsg.ToAddress) && zone.IsDepositAddress(sMsg.FromAddress):
 		// MsgSend from deposit account to delegate account for deposit.
-		k.Logger(ctx).Error("MsgSend from deposit account to delegate account failed")
+		k.Logger(ctx).Error("MsgSend from deposit account to delegate account failed", "amount", sMsg.Amount)
+	case zone.IsDelegateAddress(sMsg.FromAddress):
+		k.Logger(ctx).Info("MsgSend from delegate account failed; updating withdrawal", "amount", sMsg.Amount, "memo", memo)
+		return k.HandleFailedUnbondSend(ctx, sMsg, memo)
 	default:
-		err = fmt.Errorf("unexpected completed send (1) from %s to %s (amount: %s)", sMsg.FromAddress, sMsg.ToAddress, sMsg.Amount)
+		err = fmt.Errorf("unexpected failed send (1) from %s to %s (amount: %s)", sMsg.FromAddress, sMsg.ToAddress, sMsg.Amount)
 		k.Logger(ctx).Error(err.Error())
-		return nil
 	}
 
 	return nil
