@@ -625,9 +625,18 @@ func (k *Keeper) HandleBeginRedelegate(ctx sdk.Context, msg sdk.Msg, completion 
 		k.Logger(ctx).Error("unable to find delegation record", "chain", zone.ChainId, "source", redelegateMsg.ValidatorSrcAddress, "dst", redelegateMsg.ValidatorDstAddress, "epoch_number", epochNumber)
 		return fmt.Errorf("unable to find delegation record for chain %s, src: %s, dst: %s, at epoch %d", zone.ChainId, redelegateMsg.ValidatorSrcAddress, redelegateMsg.ValidatorDstAddress, epochNumber)
 	}
-	srcDelegation.Amount = srcDelegation.Amount.Sub(redelegateMsg.Amount)
-
+	srcDelegation.Amount, err = srcDelegation.Amount.SafeSub(redelegateMsg.Amount)
+	if err != nil {
+		if strings.Contains(err.Error(), "negative coin amount") {
+			// we received a negative srcDelegation. Obviously this cannot happen, but we can get a crossed re/un/delegation, all which fetch absolute values.
+			k.Logger(ctx).Error("possible race condition; unable to sub redelegation amount. requerying delegation anyway")
+		} else {
+			// we got some uother, unrecoverable err
+			return err
+		}
+	} else {
 		k.SetDelegation(ctx, zone.ChainId, srcDelegation)
+	}
 
 	valAddr, err = addressutils.ValAddressFromBech32(redelegateMsg.ValidatorDstAddress, zone.AccountPrefix+"valoper")
 	if err != nil {
