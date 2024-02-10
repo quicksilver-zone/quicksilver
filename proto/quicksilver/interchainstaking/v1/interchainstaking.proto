@@ -122,6 +122,11 @@ message UnbondingRecord {
   int64 epoch_number = 2;
   string validator = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   repeated string related_txhash = 4;
+  cosmos.base.v1beta1.Coin amount = 5 [
+    (cosmos_proto.scalar) = "cosmos.Coin",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin",
+    (gogoproto.nullable) = false
+  ];
 }
 
 message RedelegationRecord {

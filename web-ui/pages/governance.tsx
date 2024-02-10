@@ -23,7 +23,7 @@ export default function Home() {
           flexDirection="column"
           justifyContent="center" // Center vertically
           alignItems="center" // Center horizontally
-          mt={{ base: '-40px', md: '60px' }} // Ensuring the margin-top is zero
+          mt={{ base: '40px', md: '60px' }} // Ensuring the margin-top is zero
           mb="0" // Ensuring the margin-bottom is zero
         >
           <Head>
