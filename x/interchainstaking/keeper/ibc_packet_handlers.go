@@ -631,7 +631,7 @@ func (k *Keeper) HandleBeginRedelegate(ctx sdk.Context, msg sdk.Msg, completion 
 			// we received a negative srcDelegation. Obviously this cannot happen, but we can get a crossed re/un/delegation, all which fetch absolute values.
 			k.Logger(ctx).Error("possible race condition; unable to sub redelegation amount. requerying delegation anyway")
 		} else {
-			// we got some uother, unrecoverable err
+			// we got some other, unrecoverable err
 			return err
 		}
 	} else {
