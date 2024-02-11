@@ -28,7 +28,7 @@ func DetermineAllocationsForUndelegation(currentAllocations map[string]math.Int,
 	}
 
 	if !amount[0].Amount.IsPositive() {
-		return outWeights, fmt.Errorf("amount was invalid, expected positive value, got %d", amount[0].Amount.Int64())
+		return outWeights, fmt.Errorf("amount was invalid, expected positive value, got %s", amount[0].Amount.String())
 	}
 	input := amount[0].Amount
 	underAllocated, overAllocated := CalculateAllocationDeltas(currentAllocations, lockedAllocations, currentSum /* .Sub(input) */, targetAllocations, make(map[string]math.Int))
@@ -159,7 +159,7 @@ func DetermineAllocationsForUndelegation(currentAllocations map[string]math.Int,
 	}
 
 	if !outSum.LTE(amount[0].Amount) {
-		return map[string]math.Int{}, fmt.Errorf("outSum (%d) is unexpectedly greater than the input amount (%d), aborting", outSum.Int64(), amount[0].Amount.Int64())
+		return map[string]math.Int{}, fmt.Errorf("outSum (%s) is unexpectedly greater than the input amount (%s), aborting", outSum.String(), amount[0].Amount.String())
 	}
 	if input.IsNegative() {
 		return map[string]math.Int{}, fmt.Errorf("input is unexpectedly negative (2), aborting")
@@ -317,7 +317,7 @@ func DetermineAllocationsForUndelegationPredef(currentAllocations map[string]mat
 	}
 
 	if !outSum.LTE(amount[0].Amount) {
-		return map[string]math.Int{}, fmt.Errorf("outSum (%d) is unexpectedly greater than the input amount (%d), aborting", outSum.Int64(), amount[0].Amount.Int64())
+		return map[string]math.Int{}, fmt.Errorf("outSum (%s) is unexpectedly greater than the input amount (%s), aborting", outSum.String(), amount[0].Amount.String())
 	}
 	if input.IsNegative() {
 		return map[string]math.Int{}, fmt.Errorf("input is unexpectedly negative (2), aborting")

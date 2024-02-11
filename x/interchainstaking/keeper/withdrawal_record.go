@@ -245,7 +245,7 @@ func (k *Keeper) UpdateWithdrawalRecordsForSlash(ctx sdk.Context, zone *types.Zo
 			thisSubAmount := distAmount.TruncateInt().Sub(newAmount)
 			recordSubAmount = recordSubAmount.Add(thisSubAmount)
 			d.Amount = newAmount.Uint64()
-			k.Logger(ctx).Info("Updated withdrawal record due to slashing", "valoper", valoper, "old_amount", d.Amount, "new_amount", newAmount.Int64(), "sub_amount", thisSubAmount.Int64())
+			k.Logger(ctx).Info("Updated withdrawal record due to slashing", "valoper", valoper, "old_amount", d.Amount, "new_amount", newAmount.String(), "sub_amount", thisSubAmount.String())
 		}
 		record.Distribution = distr
 		subAmount := sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, recordSubAmount))

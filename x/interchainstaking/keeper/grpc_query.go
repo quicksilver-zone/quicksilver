@@ -181,15 +181,19 @@ func (k *Keeper) Delegations(c context.Context, req *types.QueryDelegationsReque
 	}
 
 	delegations := make([]types.Delegation, 0)
-	var sum int64
+	sum := sdk.ZeroInt()
 
 	k.IterateAllDelegations(ctx, zone.ChainId, func(delegation types.Delegation) (stop bool) {
 		delegations = append(delegations, delegation)
-		sum += delegation.Amount.Amount.Int64()
+		sum = sum.Add(delegation.Amount.Amount)
 		return false
 	})
 
-	return &types.QueryDelegationsResponse{Delegations: delegations, Tvl: sum}, nil
+	if sum.IsInt64() {
+		return &types.QueryDelegationsResponse{Delegations: delegations, Tvl: sum.Int64()}, nil
+	} else {
+		return &types.QueryDelegationsResponse{Delegations: delegations}, status.Error(codes.OutOfRange, "tvl out of bound Int64")
+	}
 }
 
 func (k *Keeper) Receipts(c context.Context, req *types.QueryReceiptsRequest) (*types.QueryReceiptsResponse, error) {
