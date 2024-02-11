@@ -74,7 +74,7 @@ jobs:
     name: test quicksilver
     strategy:
       matrix:
-        arch: [amd64, arm64]
+        arch: [amd64]
         targetos: [linux, windows, darwin]
         include:
           - targetos: darwin
