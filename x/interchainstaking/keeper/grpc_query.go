@@ -191,9 +191,8 @@ func (k *Keeper) Delegations(c context.Context, req *types.QueryDelegationsReque
 
 	if sum.IsInt64() {
 		return &types.QueryDelegationsResponse{Delegations: delegations, Tvl: sum.Int64()}, nil
-	} else {
-		return &types.QueryDelegationsResponse{Delegations: delegations}, status.Error(codes.OutOfRange, "tvl out of bound Int64")
 	}
+	return &types.QueryDelegationsResponse{Delegations: delegations}, status.Error(codes.OutOfRange, "tvl out of bound Int64")
 }
 
 func (k *Keeper) Receipts(c context.Context, req *types.QueryReceiptsRequest) (*types.QueryReceiptsResponse, error) {
