@@ -75,7 +75,7 @@ jobs:
     strategy:
       matrix:
         arch: [amd64]
-        targetos: [linux, windows, darwin]
+        targetos: [linux, windows]
         include:
           - targetos: darwin
             arch: arm64
