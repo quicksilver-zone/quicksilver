@@ -123,9 +123,6 @@ func (suite *KeeperTestSuite) coreTest() {
 	suite.executeUmeeInterestScalarUpdateCallback()
 	suite.executeUmeeLeverageModuleBalanceUpdateCallback()
 	suite.executeUmeeUTokenSupplyUpdateCallback()
-	suite.executeCrescentPoolUpdateCallback()
-	suite.executeCrescentPoolCoinSupplyUpdateCallback()
-	suite.executeCrescentReserveBalanceUpdateCallback()
 
 	suite.setupTestDeposits()
 	suite.setupTestIntents()
@@ -471,37 +468,7 @@ func (suite *KeeperTestSuite) setupTestProtocolData() {
 			"uosmo",
 		)),
 	)
-	// crescent params
-	suite.addProtocolData(
-		types.ProtocolDataTypeCrescentParams,
-		[]byte(fmt.Sprintf("{\"ChainID\": %q}", crescentTestChain)),
-	)
-	// crescent test chain
-	suite.addProtocolData(
-		types.ProtocolDataTypeConnection,
-		[]byte(fmt.Sprintf("{\"connectionid\": %q,\"chainid\": %q,\"lastepoch\": %d}", crescentTestConnection, crescentTestChain, 0)),
-	)
-	// crescent test pool
-	suite.addProtocolData(
-		types.ProtocolDataTypeCrescentPool,
-		[]byte(fmt.Sprintf(
-			"{\"poolid\":%d, \"denom\":%q}",
-			1,
-			cosmosIBCDenom,
-		)),
-	)
-	// crescent-types test supply
-	cpd, _ := json.Marshal(types.CrescentPoolCoinSupplyProtocolData{PoolCoinDenom: PoolCoinDenom})
-	suite.addProtocolData(
-		types.ProtocolDataTypeCrescentPoolCoinSupply,
-		cpd,
-	)
-	// crescent-types reserve address balance
-	cpd, _ = json.Marshal(types.CrescentReserveAddressBalanceProtocolData{ReserveAddress: testCrescentAddress, Denom: cosmosIBCDenom})
-	suite.addProtocolData(
-		types.ProtocolDataTypeCrescentReserveAddressBalance,
-		cpd,
-	)
+
 	// atom (cosmoshub) on osmosis
 	suite.addProtocolData(
 		types.ProtocolDataTypeLiquidToken,
