@@ -266,7 +266,7 @@ $QS1_RUN add-genesis-account ${DEMO_ADDRESS_7} 100000000000uqck
 $QS2_RUN add-genesis-account ${VAL_ADDRESS_6} 100000000000uqck
 $QS3_RUN add-genesis-account ${VAL_ADDRESS_7} 100000000000uqck
 
-$TZ1_1_RUN add-genesis-account ${VAL_ADDRESS_2} 100000000000uatom
+$TZ1_1_RUN add-genesis-account ${VAL_ADDRESS_2} 100000000000uatom,100000000uother
 $TZ1_1_RUN add-genesis-account ${VAL_ADDRESS_3} 100000000000uatom
 $TZ1_1_RUN add-genesis-account ${VAL_ADDRESS_4} 100000000000uatom
 $TZ1_1_RUN add-genesis-account ${VAL_ADDRESS_5} 100000000000uatom
@@ -475,7 +475,7 @@ if [ "$IS_MULTI_ZONE_TEST" = true ]; then
 fi
 
 ## set the 'epoch' epoch to 5m interval
-jq '.app_state.epochs.epochs = [{"identifier": "epoch","start_time": "0001-01-01T00:00:00Z","duration": "240s","current_epoch": "0","current_epoch_start_time": "0001-01-01T00:00:00Z","epoch_counting_started": false,"current_epoch_start_height": "0"}]' ./${CHAIN_DIR}/${CHAINID_0}/config/genesis.json > ./${CHAIN_DIR}/${CHAINID_0}/config/genesis.json.new && mv ./${CHAIN_DIR}/${CHAINID_0}/config/genesis.json{.new,}
+jq '.app_state.epochs.epochs = [{"identifier": "epoch","start_time": "0001-01-01T00:00:00Z","duration": "360s","current_epoch": "0","current_epoch_start_time": "0001-01-01T00:00:00Z","epoch_counting_started": false,"current_epoch_start_height": "0"},{"identifier": "day","start_time": "0001-01-01T00:00:00Z","duration": "120s","current_epoch": "0","current_epoch_start_time": "0001-01-01T00:00:00Z","epoch_counting_started": false,"current_epoch_start_height": "0"}]' ./${CHAIN_DIR}/${CHAINID_0}/config/genesis.json > ./${CHAIN_DIR}/${CHAINID_0}/config/genesis.json.new && mv ./${CHAIN_DIR}/${CHAINID_0}/config/genesis.json{.new,}
 jq '.app_state.interchainstaking.params.deposit_interval = 25' ./${CHAIN_DIR}/${CHAINID_0}/config/genesis.json > ./${CHAIN_DIR}/${CHAINID_0}/config/genesis.json.new && mv ./${CHAIN_DIR}/${CHAINID_0}/config/genesis.json{.new,}
 jq '.app_state.mint.params.epoch_identifier = "epoch"' ./${CHAIN_DIR}/${CHAINID_0}/config/genesis.json > ./${CHAIN_DIR}/${CHAINID_0}/config/genesis.json.new && mv ./${CHAIN_DIR}/${CHAINID_0}/config/genesis.json{.new,}
 jq '.app_state.gov.deposit_params.min_deposit = [{"denom": "uqck", "amount": "100"}]' ./${CHAIN_DIR}/${CHAINID_0}/config/genesis.json > ./${CHAIN_DIR}/${CHAINID_0}/config/genesis.json.new && mv ./${CHAIN_DIR}/${CHAINID_0}/config/genesis.json{.new,}

@@ -800,3 +800,17 @@ func (k *Keeper) UnmarshalValidator(data []byte) (lsmstakingtypes.Validator, err
 
 	return validator, nil
 }
+
+func (k *Keeper) SendToWithdrawal(ctx sdk.Context, zone *types.Zone, sender *types.ICAAccount, amount sdk.Coins) error {
+	var msgs []sdk.Msg
+
+	sendMsg := banktypes.MsgSend{
+		FromAddress: sender.Address,
+		ToAddress:   zone.WithdrawalAddress.Address,
+		Amount:      amount,
+	}
+
+	msgs = append(msgs, &sendMsg)
+
+	return k.SubmitTx(ctx, msgs, sender, "", zone.MessagesPerTx)
+}

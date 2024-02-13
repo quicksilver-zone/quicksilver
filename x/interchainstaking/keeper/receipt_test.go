@@ -215,7 +215,7 @@ func (suite *KeeperTestSuite) TestHandleReceiptTransactionBadDenom() {
 	suite.Equal(sdk.NewCoin(zone.LocalDenom, sdk.ZeroInt()), before)
 
 	err = icsKeeper.HandleReceiptTransaction(ctx, transaction, hash, zone)
-	suite.ErrorContains(err, "unable to validate coins. Ignoring")
+	suite.NoError(err)
 
 	after := suite.GetQuicksilverApp(suite.chainA).BankKeeper.GetSupply(ctx, zone.LocalDenom)
 	suite.Equal(sdk.NewCoin(zone.LocalDenom, sdk.ZeroInt()), after)
