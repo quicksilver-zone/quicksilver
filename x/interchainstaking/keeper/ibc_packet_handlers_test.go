@@ -4051,6 +4051,30 @@ func (suite *KeeperTestSuite) TestHandleCompleteSend() {
 			memo:          "unbondSend/7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
 			expectedError: errors.New("no matching withdrawal record found"),
 		},
+		{
+			name: "From DepositAddress to Withdrawal Address",
+			message: func(zone *types.Zone) sdk.Msg {
+				return &banktypes.MsgSend{
+					FromAddress: zone.DepositAddress.Address,
+					ToAddress:   zone.WithdrawalAddress.Address,
+					Amount:      sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1_000_000))),
+				}
+			},
+			memo:          "",
+			expectedError: nil,
+		},
+		{
+			name: "From DelegateAddress to Withdrawal Address",
+			message: func(zone *types.Zone) sdk.Msg {
+				return &banktypes.MsgSend{
+					FromAddress: zone.DelegationAddress.Address,
+					ToAddress:   zone.WithdrawalAddress.Address,
+					Amount:      sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1_000_000))),
+				}
+			},
+			memo:          "",
+			expectedError: nil,
+		},
 	}
 
 	for _, tc := range testCases {
