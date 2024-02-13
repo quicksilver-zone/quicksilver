@@ -28,6 +28,16 @@ func (k Keeper) GetValidatorAddresses(ctx sdk.Context, chainID string) []string 
 	return validators
 }
 
+// GetValidatorAddressesAsMap returns a slice of validator addresses by chainID.
+func (k Keeper) GetValidatorAddressesAsMap(ctx sdk.Context, chainID string) map[string]bool {
+	validators := map[string]bool{}
+	k.IterateValidators(ctx, chainID, func(_ int64, validator types.Validator) (stop bool) {
+		validators[validator.ValoperAddress] = true
+		return false
+	})
+	return validators
+}
+
 // GetActiveValidators returns validators by chainID where status = BONDED.
 func (k Keeper) GetActiveValidators(ctx sdk.Context, chainID string) []types.Validator {
 	validators := []types.Validator{}
