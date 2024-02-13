@@ -568,11 +568,18 @@ func (k *Keeper) HandleBeginRedelegate(ctx sdk.Context, msg sdk.Msg, completion 
 		// a zero completion time can only happen when the validator is unbonded; this means the redelegation has _already_ completed and can be removed.
 		k.DeleteRedelegationRecord(ctx, zone.ChainId, redelegateMsg.ValidatorSrcAddress, redelegateMsg.ValidatorDstAddress, epochNumber)
 	} else {
-
 		record, found := k.GetRedelegationRecord(ctx, zone.ChainId, redelegateMsg.ValidatorSrcAddress, redelegateMsg.ValidatorDstAddress, epochNumber)
 		if !found {
-			k.Logger(ctx).Error("unable to find redelegation record", "chain", zone.ChainId, "source", redelegateMsg.ValidatorSrcAddress, "dst", redelegateMsg.ValidatorDstAddress, "epoch_number", epochNumber)
-			return fmt.Errorf("unable to find redelegation record for chain %s, src: %s, dst: %s, at epoch %d", zone.ChainId, redelegateMsg.ValidatorSrcAddress, redelegateMsg.ValidatorDstAddress, epochNumber)
+			// it is possible that the record was cleaned up if there was a long delay in processing acknowledgements.
+			// just create a new one
+			record = types.RedelegationRecord{
+				ChainId:        zone.ChainId,
+				EpochNumber:    epochNumber,
+				Source:         redelegateMsg.ValidatorSrcAddress,
+				Destination:    redelegateMsg.ValidatorDstAddress,
+				Amount:         redelegateMsg.Amount.Amount.Int64(),
+				CompletionTime: completion,
+			}
 		}
 
 		k.Logger(ctx).Info("updating redelegation record with completion time", "completion", completion)
