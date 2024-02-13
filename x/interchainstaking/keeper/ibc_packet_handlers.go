@@ -130,7 +130,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 				if !ok {
 					return errors.New("unable to unmarshal MsgWithdrawDelegatorReward")
 				}
-				k.Logger(ctx).Error("Failed to withdraw rewards; will try again next epoch", "validator", withdrawalMsg.ValidatorAddress)
+				k.Logger(ctx).Error("failed to withdraw rewards; will try again next epoch", "validator", withdrawalMsg.ValidatorAddress)
 				return nil
 			}
 			k.Logger(ctx).Info("Rewards withdrawn")
@@ -672,7 +672,7 @@ func (k *Keeper) HandleFailedBeginRedelegate(ctx sdk.Context, msg sdk.Msg, memo 
 		return err
 	}
 
-	k.Logger(ctx).Error("Received MsgBeginRedelegate acknowledgement error")
+	k.Logger(ctx).Error("received MsgBeginRedelegate acknowledgement error")
 	// first, type assertion. we should have stakingtypes.MsgBeginRedelegate
 	redelegateMsg, ok := msg.(*stakingtypes.MsgBeginRedelegate)
 	if !ok {
@@ -683,7 +683,7 @@ func (k *Keeper) HandleFailedBeginRedelegate(ctx sdk.Context, msg sdk.Msg, memo 
 		return fmt.Errorf("zone for delegate account %s not found", redelegateMsg.DelegatorAddress)
 	}
 	k.DeleteRedelegationRecord(ctx, zone.ChainId, redelegateMsg.ValidatorSrcAddress, redelegateMsg.ValidatorDstAddress, epochNumber)
-	k.Logger(ctx).Error("Cleaning up redelegation record")
+	k.Logger(ctx).Info("cleaning up redelegation record")
 	return nil
 }
 
@@ -820,7 +820,7 @@ func (k *Keeper) HandleFailedUndelegate(ctx sdk.Context, msg sdk.Msg, memo strin
 		return err
 	}
 
-	k.Logger(ctx).Error("Received MsgUndelegate acknowledgement error")
+	k.Logger(ctx).Error("received MsgUndelegate acknowledgement error")
 	// first, type assertion. we should have stakingtypes.MsgBeginRedelegate
 	undelegateMsg, ok := msg.(*stakingtypes.MsgUndelegate)
 	if !ok {
@@ -889,7 +889,7 @@ func (k *Keeper) HandleFailedUndelegate(ctx sdk.Context, msg sdk.Msg, memo strin
 	}
 
 	k.DeleteUnbondingRecord(ctx, zone.ChainId, undelegateMsg.ValidatorAddress, epochNumber)
-	k.Logger(ctx).Error("Cleaning up redelegation record")
+	k.Logger(ctx).Info("cleaning up unbonding record")
 	return nil
 }
 
@@ -997,7 +997,7 @@ func (k *Keeper) HandleDelegate(ctx sdk.Context, msg sdk.Msg, memo string) error
 	switch {
 	case memo == "rewards":
 	case strings.HasPrefix(memo, "batch"):
-		k.Logger(ctx).Error("batch delegation", "memo", memo, "tx", delegateMsg)
+		k.Logger(ctx).Info("batch delegation", "memo", memo, "tx", delegateMsg)
 		exclusionTimestampUnix, err := strconv.ParseInt(strings.Split(memo, "/")[1], 10, 64)
 		if err != nil {
 			return err

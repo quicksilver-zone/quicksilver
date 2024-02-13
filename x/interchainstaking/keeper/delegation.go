@@ -318,7 +318,7 @@ func (k *Keeper) FlushOutstandingDelegations(ctx sdk.Context, zone *types.Zone, 
 	exclusionTime := ctx.BlockTime().AddDate(0, 0, -1)
 	k.IterateZoneReceipts(ctx, zone.ChainId, func(_ int64, receiptInfo types.Receipt) (stop bool) {
 		if (receiptInfo.FirstSeen.After(exclusionTime) || receiptInfo.FirstSeen.Equal(exclusionTime)) && receiptInfo.Completed == nil && receiptInfo.Amount[0].Denom == delAddrBalance.Denom {
-			k.Logger(ctx).Error("adding to pending amount", "pending receipt", receiptInfo)
+			k.Logger(ctx).Info("adding to pending amount", "pending receipt", receiptInfo)
 			pendingAmount = pendingAmount.Add(receiptInfo.Amount...)
 		}
 		return false
@@ -326,10 +326,10 @@ func (k *Keeper) FlushOutstandingDelegations(ctx sdk.Context, zone *types.Zone, 
 
 	coinsToFlush, hasNeg := sdk.NewCoins(delAddrBalance).SafeSub(pendingAmount...)
 	if hasNeg || coinsToFlush.IsZero() {
-		k.Logger(ctx).Error("delegate account balance negative, or nothing to flush, setting outdated receipts")
+		k.Logger(ctx).Info("delegate account balance negative, or nothing to flush, setting outdated receipts")
 		k.SetReceiptsCompleted(ctx, zone.ChainId, exclusionTime, ctx.BlockTime(), delAddrBalance.Denom)
 		if zone.GetWithdrawalWaitgroup() == 0 {
-			k.Logger(ctx).Info("Triggering redemption rate calc in lieu of delegation flush")
+			k.Logger(ctx).Info("triggering redemption rate calc in lieu of delegation flush")
 			if err := k.TriggerRedemptionRate(ctx, zone); err != nil {
 				return err
 			}
@@ -338,7 +338,7 @@ func (k *Keeper) FlushOutstandingDelegations(ctx sdk.Context, zone *types.Zone, 
 	}
 
 	// set the zone amount to the coins to be flushed.
-	k.Logger(ctx).Error("flush delegations ", "total", coinsToFlush)
+	k.Logger(ctx).Info("flush delegations ", "total", coinsToFlush)
 
 	sendMsg := banktypes.MsgSend{
 		FromAddress: "",

@@ -291,7 +291,7 @@ func SigningInfoCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes
 			return fmt.Errorf("can not get validator address from consensus address: %s", valSigningInfo.Address)
 		}
 
-		k.Logger(ctx).Error("Tombstoned validator found", "valoper", valAddr)
+		k.Logger(ctx).Info("tombstoned validator found", "valoper", valAddr)
 
 		valAddrBytes, err := addressutils.ValAddressFromBech32(valAddr, zone.GetValoperPrefix())
 		if err != nil {
@@ -718,22 +718,22 @@ func AllBalancesCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes
 	case zone.DepositAddress != nil && balanceQuery.Address == zone.DepositAddress.Address:
 		if zone.DepositAddress.BalanceWaitgroup != 0 {
 			zone.DepositAddress.BalanceWaitgroup = 0
-			k.Logger(ctx).Error("Zeroing deposit balance waitgroup")
+			k.Logger(ctx).Info("zeroing deposit balance waitgroup")
 		}
 	case zone.WithdrawalAddress != nil && balanceQuery.Address == zone.WithdrawalAddress.Address:
 		if zone.WithdrawalAddress.BalanceWaitgroup != 0 {
 			zone.WithdrawalAddress.BalanceWaitgroup = 0
-			k.Logger(ctx).Error("Zeroing withdrawal balance waitgroup")
+			k.Logger(ctx).Info("zeroing withdrawal balance waitgroup")
 		}
 	case zone.DelegationAddress != nil && balanceQuery.Address == zone.DelegationAddress.Address:
 		if zone.DelegationAddress.BalanceWaitgroup != 0 {
 			zone.DelegationAddress.BalanceWaitgroup = 0
-			k.Logger(ctx).Error("Zeroing delegation balance waitgroup")
+			k.Logger(ctx).Info("zeroing delegation balance waitgroup")
 		}
 	case zone.PerformanceAddress != nil && balanceQuery.Address == zone.PerformanceAddress.Address:
 		if zone.PerformanceAddress.BalanceWaitgroup != 0 {
 			zone.PerformanceAddress.BalanceWaitgroup = 0
-			k.Logger(ctx).Error("Zeroing performance balance waitgroup")
+			k.Logger(ctx).Info("zeroing performance balance waitgroup")
 		}
 	}
 	k.SetZone(ctx, &zone)

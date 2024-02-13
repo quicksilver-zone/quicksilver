@@ -203,7 +203,7 @@ func (k *Keeper) UpdateDelegatorIntent(ctx sdk.Context, delegator sdk.AccAddress
 	// grab offchain asset value, and raise the users' base value by this amount.
 	k.ClaimsManagerKeeper.IterateLastEpochUserClaims(ctx, zone.ChainId, delegator.String(), func(index int64, claim prtypes.Claim) (stop bool) {
 		claimAmt = claimAmt.Add(sdkmath.NewIntFromUint64(claim.Amount))
-		k.Logger(ctx).Error("Update intents - found claim for user", "user", delIntent.Delegator, "claim amount", claim.Amount, "new balance", claimAmt)
+		k.Logger(ctx).Info("Update intents - found claim for user", "user", delIntent.Delegator, "claim amount", claim.Amount, "new balance", claimAmt)
 		return false
 	})
 
