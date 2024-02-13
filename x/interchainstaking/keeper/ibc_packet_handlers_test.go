@@ -2656,6 +2656,91 @@ func (suite *KeeperTestSuite) TestReceiveAckForBeginRedelegateNilCompletion() {
 	suite.Equal(beforeTarget.Amount.Add(redelegate.Amount), afterTarget.Amount)
 }
 
+func (suite *KeeperTestSuite) TestReceiveAckForBeginRedelegateNoExistingRecord() {
+	suite.SetupTest()
+	suite.setupTestZones()
+
+	epoch := int64(2)
+
+	quicksilver := suite.GetQuicksilverApp(suite.chainA)
+	ctx := suite.chainA.GetContext()
+	complete := ctx.BlockTime().Add(time.Hour * 72)
+
+	zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+	if !found {
+		suite.Fail("unable to retrieve zone for test")
+	}
+	validators := quicksilver.InterchainstakingKeeper.GetValidators(ctx, zone.ChainId)
+
+	beforeTarget := types.Delegation{
+		DelegationAddress: zone.DelegationAddress.Address,
+		ValidatorAddress:  validators[1].ValoperAddress,
+		Amount:            sdk.NewCoin(zone.BaseDenom, math.NewInt(2000)),
+	}
+
+	beforeSource := types.Delegation{
+		DelegationAddress: zone.DelegationAddress.Address,
+		ValidatorAddress:  validators[0].ValoperAddress,
+		Amount:            sdk.NewCoin(zone.BaseDenom, math.NewInt(1001)),
+	}
+
+	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, zone.ChainId, beforeTarget)
+	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, zone.ChainId, beforeSource)
+
+	redelegate := &stakingtypes.MsgBeginRedelegate{DelegatorAddress: zone.DelegationAddress.Address, ValidatorSrcAddress: validators[0].ValoperAddress, ValidatorDstAddress: validators[1].ValoperAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
+	data, err := icatypes.SerializeCosmosTx(quicksilver.InterchainstakingKeeper.GetCodec(), []sdk.Msg{redelegate})
+	suite.NoError(err)
+
+	// validate memo < 256 bytes
+	packetData := icatypes.InterchainAccountPacketData{
+		Type: icatypes.EXECUTE_TX,
+		Data: data,
+		Memo: types.EpochRebalanceMemo(epoch),
+	}
+
+	packet := channeltypes.Packet{Data: quicksilver.InterchainstakingKeeper.GetCodec().MustMarshalJSON(&packetData)}
+
+	response := stakingtypes.MsgUndelegateResponse{
+		CompletionTime: complete,
+	}
+
+	anyResponse, err := codectypes.NewAnyWithValue(&response)
+	suite.NoError(err)
+
+	txMsgData := &sdk.TxMsgData{
+		MsgResponses: []*codectypes.Any{anyResponse},
+	}
+
+	ackData := icatypes.ModuleCdc.MustMarshal(txMsgData)
+
+	acknowledgement := channeltypes.NewResultAcknowledgement(ackData)
+	ackBytes, err := icatypes.ModuleCdc.MarshalJSON(&acknowledgement)
+	suite.NoError(err)
+
+	// call handler
+
+	err = quicksilver.InterchainstakingKeeper.HandleAcknowledgement(ctx, packet, ackBytes)
+	suite.NoError(err)
+
+	createdRecord, found := quicksilver.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, validators[0].ValoperAddress, validators[1].ValoperAddress, epoch)
+	suite.True(found) // redelegation record should have been removed.
+
+	suite.Equal(redelegate.Amount.Amount.Int64(), createdRecord.Amount)
+	suite.Equal(redelegate.ValidatorDstAddress, createdRecord.Destination)
+	suite.Equal(redelegate.ValidatorSrcAddress, createdRecord.Source)
+	suite.Equal(epoch, createdRecord.EpochNumber)
+	suite.Equal(complete, createdRecord.CompletionTime)
+
+	afterSource, found := quicksilver.InterchainstakingKeeper.GetDelegation(ctx, zone.ChainId, zone.DelegationAddress.Address, validators[0].ValoperAddress)
+	suite.True(found)
+	suite.Equal(beforeSource.Amount.Sub(redelegate.Amount), afterSource.Amount)
+
+	afterTarget, found := quicksilver.InterchainstakingKeeper.GetDelegation(ctx, zone.ChainId, zone.DelegationAddress.Address, validators[1].ValoperAddress)
+	suite.True(found)
+	suite.Equal(complete.Unix(), afterTarget.RedelegationEnd)
+	suite.Equal(beforeTarget.Amount.Add(redelegate.Amount), afterTarget.Amount)
+}
+
 func (suite *KeeperTestSuite) TestReceiveAckForWithdrawReward() {
 	suite.SetupTest()
 	suite.setupTestZones()
