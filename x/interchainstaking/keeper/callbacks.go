@@ -745,7 +745,7 @@ func AllBalancesCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes
 func TxDecoder(cdc codec.Codec) sdk.TxDecoder {
 	return func(txBytes []byte) (sdk.Tx, error) {
 		// Make sure txBytes follow ADR-027.
-		err := rejectNonADR027TxRaw(txBytes)
+		err := RejectNonADR027TxRaw(txBytes)
 		if err != nil {
 			return nil, sdkioerrors.Wrap(sdkerrors.ErrTxDecode, err.Error())
 		}
@@ -779,7 +779,7 @@ func TxDecoder(cdc codec.Codec) sdk.TxDecoder {
 	}
 }
 
-func rejectNonADR027TxRaw(txBytes []byte) error {
+func RejectNonADR027TxRaw(txBytes []byte) error {
 	// Make sure all fields are ordered in ascending order with this variable.
 	prevTagNum := protowire.Number(0)
 
@@ -807,7 +807,7 @@ func rejectNonADR027TxRaw(txBytes []byte) error {
 			return fmt.Errorf("invalid length; %w", protowire.ParseError(m))
 		}
 		// We make sure that this varint is as short as possible.
-		n := varintMinLength(lengthPrefix)
+		n := VarintMinLength(lengthPrefix)
 		if n != m {
 			return fmt.Errorf("length prefix varint for tagNum %d is not as short as possible, read %d, only need %d", tagNum, m, n)
 		}
@@ -823,9 +823,9 @@ func rejectNonADR027TxRaw(txBytes []byte) error {
 	return nil
 }
 
-// varintMinLength returns the minimum number of bytes necessary to encode an
+// VarintMinLength returns the minimum number of bytes necessary to encode an
 // uint using varint encoding.
-func varintMinLength(n uint64) int {
+func VarintMinLength(n uint64) int {
 	switch {
 	// Note: 1<<N == 2**N.
 	case n < 1<<(7):
