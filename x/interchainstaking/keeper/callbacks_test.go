@@ -16,11 +16,10 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 
-	"github.com/cosmos/cosmos-sdk/testutil/testdata"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -2654,6 +2653,7 @@ func (suite *KeeperTestSuite) TestDelegationAccountBalancesCallbackNoWg() {
 		})
 	}
 }
+
 func (suite *KeeperTestSuite) TestDelegationAccountBalanceCallback() {
 	suite.Run("delegation account balance", func() {
 		suite.SetupTest()
