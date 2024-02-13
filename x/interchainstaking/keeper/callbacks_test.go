@@ -31,6 +31,7 @@ import (
 
 	"github.com/quicksilver-zone/quicksilver/app"
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
+	"github.com/quicksilver-zone/quicksilver/utils/ica"
 	icqtypes "github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
 	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/keeper"
 	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
@@ -2574,6 +2575,33 @@ func (suite *KeeperTestSuite) TestDelegationAccountBalancesCallback() {
 	}
 }
 
+func (suite *KeeperTestSuite) TestDelegationAccountBalanceCallbackDenomMismatch() {
+	suite.Run("delegation account balance", func() {
+		suite.SetupTest()
+		suite.setupTestZones()
+
+		app := suite.GetQuicksilverApp(suite.chainA)
+		app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
+		ctx := suite.chainA.GetContext()
+
+		zone, _ := app.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+		zone.SetWithdrawalWaitgroup(app.Logger(), 2, "init")
+		zone.DelegationAddress.Balance = sdk.NewCoins(sdk.NewCoin("uatom", math.NewInt(500_000_000)))
+		app.InterchainstakingKeeper.SetZone(ctx, &zone)
+
+		response := sdk.NewCoin("uatom", sdk.NewInt(500_000_000))
+		respbz, err := app.AppCodec().Marshal(&response)
+		suite.Require().NoError(err)
+
+		accAddr, err := sdk.AccAddressFromBech32(zone.DelegationAddress.Address)
+		suite.Require().NoError(err)
+		data := append(banktypes.CreateAccountBalancesPrefix(accAddr), []byte("uqck")...)
+
+		err = keeper.DelegationAccountBalanceCallback(app.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: data})
+		suite.Require().Error(err)
+	})
+}
+
 func (suite *KeeperTestSuite) TestDelegationAccountBalanceCallback() {
 	suite.Run("delegation account balance", func() {
 		suite.SetupTest()
@@ -2639,6 +2667,52 @@ func (suite *KeeperTestSuite) TestDelegationAccountBalanceCallbackLSM() {
 		suite.Equal(uint32(2), zone.GetWithdrawalWaitgroup()) // initial 2 is reduced to 1, but incremented by 1 (1x redeem token messages) == 2
 		suite.Equal(sdk.NewInt(500), zone.DelegationAddress.Balance.AmountOf("uatom"))
 		suite.Equal(sdk.NewInt(10), zone.DelegationAddress.Balance.AmountOf(denom))
+	})
+}
+
+func (suite *KeeperTestSuite) TestDelegationAccountBalanceCallbackLSMBadZone() {
+	suite.Run("delegation account balance", func() {
+		suite.SetupTest()
+		suite.setupTestZones()
+
+		txk := ica.TxKeeper{}
+		app := suite.GetQuicksilverApp(suite.chainA)
+		app.InterchainstakingKeeper.OverrideTxSubmit(ica.GetTestSubmitTxFn(&txk))
+
+		app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
+		ctx := suite.chainA.GetContext()
+
+		zone, _ := app.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+
+		valOper := addressutils.GenerateAddressForTestWithPrefix("quickvaloper")
+		denom := valOper + "/1"
+		zone.SetWithdrawalWaitgroup(app.Logger(), 2, "init")
+		zone.DelegationAddress.Balance = sdk.NewCoins(sdk.NewCoin("uatom", math.NewInt(500)))
+		app.InterchainstakingKeeper.SetZone(ctx, &zone)
+
+		response := sdk.NewCoin(denom, sdk.NewInt(10))
+		respbz, err := app.AppCodec().Marshal(&response)
+		suite.Require().NoError(err)
+
+		accAddr, err := sdk.AccAddressFromBech32(zone.DelegationAddress.Address)
+		suite.Require().NoError(err)
+		data := append(banktypes.CreateAccountBalancesPrefix(accAddr), []byte(denom)...)
+
+		err = keeper.DelegationAccountBalanceCallback(app.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: data})
+		suite.Require().NoError(err)
+
+		ctx = suite.chainA.GetContext()
+		zone, _ = app.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+		suite.Equal(uint32(1), zone.GetWithdrawalWaitgroup()) // initial 2 is reduced to 1, and not incremented (no wg increment for sendToWithdrawal)
+		suite.Equal(sdk.NewInt(500), zone.DelegationAddress.Balance.AmountOf("uatom"))
+		suite.Equal(sdk.NewInt(10), zone.DelegationAddress.Balance.AmountOf(denom))
+		suite.Equal(1, len(txk.Txs))
+
+		sendMsg, ok := txk.Txs[0].Msgs[0].(*banktypes.MsgSend)
+		suite.True(ok)
+		suite.Equal(zone.WithdrawalAddress.Address, sendMsg.ToAddress)
+		suite.Equal(zone.DelegationAddress.Address, sendMsg.FromAddress)
+		suite.Equal(sdk.NewCoins(response), sendMsg.Amount)
 	})
 }
 
