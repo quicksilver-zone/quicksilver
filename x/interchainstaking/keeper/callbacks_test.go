@@ -1038,7 +1038,7 @@ func (suite *KeeperTestSuite) TestHandleDistributeRewardsCallback() {
 }
 
 func (suite *KeeperTestSuite) TestAllBalancesCallback() {
-	suite.Run("all balances non-zero)", func() {
+	suite.Run("all balances non-zero", func() {
 		suite.SetupTest()
 		suite.setupTestZones()
 
@@ -1086,7 +1086,7 @@ func (suite *KeeperTestSuite) TestAllBalancesCallback() {
 }
 
 func (suite *KeeperTestSuite) TestAllBalancesCallbackWithExistingWg() {
-	suite.Run("all balances non-zero)", func() {
+	suite.Run("all balances non-zero, existing wg", func() {
 		suite.SetupTest()
 		suite.setupTestZones()
 
@@ -2602,6 +2602,52 @@ func (suite *KeeperTestSuite) TestDelegationAccountBalanceCallbackDenomMismatch(
 	})
 }
 
+func (suite *KeeperTestSuite) TestDelegationAccountBalancesCallbackNoWg() {
+	tcs := []struct {
+		Name               string
+		PreviousBalance    sdk.Coins
+		IncomingBalance    sdk.Coins
+		ExpectedQueryCount int
+		ExpectedWaitgroup  uint32
+	}{
+		{
+			Name:               "initial nil, incoming uqck",
+			PreviousBalance:    sdk.NewCoins(),
+			IncomingBalance:    sdk.NewCoins(sdk.NewCoin("uqck", sdk.NewInt(1))),
+			ExpectedQueryCount: 1, // uqck
+			ExpectedWaitgroup:  1,
+		},
+	}
+
+	for _, t := range tcs {
+		suite.Run(t.Name, func() {
+			suite.SetupTest()
+			suite.setupTestZones()
+
+			app := suite.GetQuicksilverApp(suite.chainA)
+			app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
+			ctx := suite.chainA.GetContext()
+
+			zone, _ := app.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+			zone.WithdrawalWaitgroup = 0
+			zone.DelegationAddress.Balance = t.PreviousBalance
+			app.InterchainstakingKeeper.SetZone(ctx, &zone)
+
+			query := banktypes.QueryAllBalancesRequest{
+				Address: zone.DelegationAddress.Address,
+			}
+			reqbz, err := app.AppCodec().Marshal(&query)
+			suite.Require().NoError(err)
+
+			response := banktypes.QueryAllBalancesResponse{Balances: t.IncomingBalance}
+			respbz, err := app.AppCodec().Marshal(&response)
+			suite.Require().NoError(err)
+
+			err = keeper.DelegationAccountBalancesCallback(app.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: reqbz})
+			suite.Require().Error(err)
+		})
+	}
+}
 func (suite *KeeperTestSuite) TestDelegationAccountBalanceCallback() {
 	suite.Run("delegation account balance", func() {
 		suite.SetupTest()
