@@ -404,7 +404,7 @@ WITHDRAWAL:
 	}
 
 	if !sumIn.Equal(sumOut) {
-		return nil, nil, nil, fmt.Errorf("sumIn <-> sumOut mismatch; sumIn = %d, sumOut = %d", sumIn.Amount.Int64(), sumOut.Amount.Int64())
+		return nil, nil, nil, fmt.Errorf("sumIn <-> sumOut mismatch; sumIn = %s, sumOut = %s", sumIn.Amount.String(), sumOut.Amount.String())
 	}
 
 	return coinsOutPerValidator, txHashesPerValidator, distributionsPerWithdrawal, nil
