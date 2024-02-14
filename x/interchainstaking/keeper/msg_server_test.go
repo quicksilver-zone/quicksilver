@@ -858,10 +858,12 @@ func (suite *KeeperTestSuite) TestMsgCancelQueuedRedemeption() {
 			func(s *KeeperTestSuite) *icstypes.MsgCancelQueuedRedemption {
 				ctx := s.chainA.GetContext()
 				k := s.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
+				// generate two addresses, one for the withdrawal record we are looking up; one for the tx.
+				withdrawalAddress := addressutils.GenerateAddressForTestWithPrefix("quick")
 				address := addressutils.GenerateAddressForTestWithPrefix("quick")
 				k.SetWithdrawalRecord(ctx, icstypes.WithdrawalRecord{
 					ChainId:        s.chainB.ChainID,
-					Delegator:      addressutils.GenerateAddressForTestWithPrefix("quick"),
+					Delegator:      withdrawalAddress,
 					BurnAmount:     sdk.NewCoin("uqatom", math.NewInt(500)),
 					Status:         icstypes.WithdrawStatusQueued,
 					CompletionTime: ctx.BlockHeader().Time.Add(time.Hour * 72),
