@@ -209,7 +209,7 @@ func TestMsgSignalIntent_ValidateBasic(t *testing.T) {
 	}
 }
 
-func TestMsgCancelQueuedRedemeption_ValidateBasic(t *testing.T) {
+func TestMsgCancelQueuedRedemption_ValidateBasic(t *testing.T) {
 	type fields struct {
 		ChainID     string
 		Hash        string
@@ -298,7 +298,7 @@ func TestMsgCancelQueuedRedemeption_ValidateBasic(t *testing.T) {
 	}
 }
 
-func TestMsgCancelQueuedRedemeption(t *testing.T) {
+func TestMsgCancelQueuedRedemption(t *testing.T) {
 	fromAddr := addressutils.GenerateAccAddressForTest()
 	msg := types.NewMsgCancelQueuedRedemption("cosmoshub-4", randomutils.GenerateRandomHashAsHex(64), fromAddr)
 
@@ -841,4 +841,44 @@ func TestGovSetLsmCaps_ValidateBasic(t *testing.T) {
 			require.ErrorContains(t, err, c.Err, c.Name)
 		}
 	}
+}
+
+func TestMsgGovCloseChannel(t *testing.T) {
+	fromAddr := addressutils.GenerateAccAddressForTest()
+	msg := types.MsgGovCloseChannel{
+		"",
+		"",
+		"channel-74",
+		"icacontroller-cosmoshub-4.delegate",
+		fromAddr.String(),
+	}
+
+	// Check the signBytes.
+	signBytes := msg.GetSignBytes()
+	require.True(t, len(signBytes) != 0, "expecting signBytes to be produced")
+
+	// Signers should return the from address.
+	gotSigners := msg.GetSigners()
+	wantSigners := []sdk.AccAddress{fromAddr}
+	require.Equal(t, wantSigners, gotSigners, "mismatch in signers")
+}
+
+func TestMsgGovSetLsmCaps(t *testing.T) {
+	fromAddr := addressutils.GenerateAccAddressForTest()
+	msg := types.MsgGovSetLsmCaps{
+		"",
+		"",
+		"cosmoshub-4",
+		&types.LsmCaps{ValidatorCap: sdk.OneDec(), ValidatorBondCap: sdk.NewDec(250), GlobalCap: sdk.NewDecWithPrec(50, 2)},
+		fromAddr.String(),
+	}
+
+	// Check the signBytes.
+	signBytes := msg.GetSignBytes()
+	require.True(t, len(signBytes) != 0, "expecting signBytes to be produced")
+
+	// Signers should return the from address.
+	gotSigners := msg.GetSigners()
+	wantSigners := []sdk.AccAddress{fromAddr}
+	require.Equal(t, wantSigners, gotSigners, "mismatch in signers")
 }
