@@ -13,9 +13,9 @@ func NewMultiIcsHooks(hooks ...IcsHooks) MultiIcsHooks {
 	return hooks
 }
 
-func (h MultiIcsHooks) AfterZoneCreated(ctx sdk.Context, connectionID, chainID, accountPrefix string) error {
+func (h MultiIcsHooks) AfterZoneCreated(ctx sdk.Context, zone *Zone) error {
 	for i := range h {
-		if err := h[i].AfterZoneCreated(ctx, connectionID, chainID, accountPrefix); err != nil {
+		if err := h[i].AfterZoneCreated(ctx, zone); err != nil {
 			return err
 		}
 	}
