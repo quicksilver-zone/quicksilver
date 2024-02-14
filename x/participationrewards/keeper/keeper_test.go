@@ -30,16 +30,13 @@ import (
 )
 
 var (
-	testAddress         = addressutils.GenerateAddressForTestWithPrefix("cosmos")
-	testCrescentAddress = addressutils.GenerateAddressForTestWithPrefix("cre")
-	umeeTestConnection  = "connection-77003"
-	umeeTestChain       = "umee-types-1"
-	umeeBaseDenom       = "uumee"
+	testAddress        = addressutils.GenerateAddressForTestWithPrefix("cosmos")
+	umeeTestConnection = "connection-77003"
+	umeeTestChain      = "umee-types-1"
+	umeeBaseDenom      = "uumee"
 
-	crescentTestConnection = "connection-7704"
-	crescentTestChain      = "crescent-types-1"
-	cosmosIBCDenom         = "ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3"
-	osmosisIBCDenom        = "ibc/15E9C5CF5969080539DB395FA7D9C0868265217EFC528433671AAF9B1912D159"
+	cosmosIBCDenom  = "ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3"
+	osmosisIBCDenom = "ibc/15E9C5CF5969080539DB395FA7D9C0868265217EFC528433671AAF9B1912D159"
 )
 
 func init() {
