@@ -6,8 +6,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	liquiditytypes "github.com/quicksilver-zone/quicksilver/third-party-chains/crescent-types/liquidity/types"
-	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	"github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 )
 
@@ -102,7 +100,6 @@ func marshalledUmeeData[V types.UmeeInterestScalarProtocolData | types.UmeeUToke
 
 func TestUnmarshalProtocolData(t *testing.T) {
 	testUmeeData := types.UmeeProtocolData{Denom: "test", Data: []byte{0x6e, 0x75, 0x6c, 0x6c}}
-	testAddress := addressutils.GenerateAddressForTestWithPrefix("cosmos")
 
 	type args struct {
 		datatype types.ProtocolDataType
@@ -327,104 +324,6 @@ func TestUnmarshalProtocolData(t *testing.T) {
 				data:     marshalledUmeeData[types.UmeeTotalBorrowsProtocolData](testUmeeData),
 			},
 			&types.UmeeTotalBorrowsProtocolData{testUmeeData},
-			false,
-		},
-		{
-			"crescent_pool_empty",
-			args{
-				datatype: types.ProtocolDataTypeCrescentPool,
-				data:     []byte(`{}`),
-			},
-			nil,
-			true,
-		},
-		{
-			"crescent_pool",
-			args{
-				datatype: types.ProtocolDataTypeCrescentPool,
-				data: func() []byte {
-					pool := &liquiditytypes.Pool{
-						PoolCoinDenom: "pool1",
-						Id:            1,
-					}
-					pooldata, _ := json.Marshal(pool)
-					pd := types.CrescentPoolProtocolData{
-						PoolID:   1,
-						Denom:    "ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3",
-						PoolData: pooldata,
-					}
-					data, _ := json.Marshal(&pd)
-					return data
-				}(),
-			},
-			&types.CrescentPoolProtocolData{
-				PoolID: 1,
-				Denom:  "ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3",
-				PoolData: func() []byte {
-					pool := &liquiditytypes.Pool{
-						PoolCoinDenom: "pool1",
-						Id:            1,
-					}
-					pooldata, _ := json.Marshal(pool)
-					return pooldata
-				}(),
-			},
-			false,
-		},
-		{
-			"crescent_pool_coin_supply_empty",
-			args{
-				datatype: types.ProtocolDataTypeCrescentPoolCoinSupply,
-				data:     []byte(`{}`),
-			},
-			nil,
-			true,
-		},
-		{
-			"crescent_pool_coin_supply",
-			args{
-				datatype: types.ProtocolDataTypeCrescentPoolCoinSupply,
-				data: func() []byte {
-					pd := &types.CrescentPoolCoinSupplyProtocolData{
-						PoolCoinDenom: "pool1",
-						Supply:        []byte{0x6e, 0x75, 0x6c, 0x6c},
-					}
-					data, _ := json.Marshal(pd)
-					return data
-				}(),
-			},
-			&types.CrescentPoolCoinSupplyProtocolData{
-				PoolCoinDenom: "pool1",
-				Supply:        []byte{0x6e, 0x75, 0x6c, 0x6c},
-			},
-			false,
-		},
-		{
-			"crescent_reserve_address_balance_empty",
-			args{
-				datatype: types.ProtocolDataTypeCrescentReserveAddressBalance,
-				data:     []byte(`{}`),
-			},
-			nil,
-			true,
-		},
-		{
-			"crescent_reserve_address_balance",
-			args{
-				datatype: types.ProtocolDataTypeCrescentReserveAddressBalance,
-				data: func() []byte {
-					pd := &types.CrescentReserveAddressBalanceProtocolData{
-						ReserveAddress: testAddress,
-						Balance:        []byte{0x6e, 0x75, 0x6c, 0x6c},
-					}
-					data, _ := json.Marshal(pd)
-					return data
-				}(),
-			},
-			&types.CrescentReserveAddressBalanceProtocolData{
-				ReserveAddress: testAddress,
-				Balance:        []byte{0x6e, 0x75, 0x6c, 0x6c},
-			},
 			false,
 		},
 	}
