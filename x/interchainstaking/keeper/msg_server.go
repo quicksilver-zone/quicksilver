@@ -89,11 +89,52 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 			sdk.NewAttribute(types.AttributeKeyBurnAmount, msg.Value.String()),
 			sdk.NewAttribute(types.AttributeKeyRecipientAddress, msg.DestinationAddress),
 			sdk.NewAttribute(types.AttributeKeyChainID, zone.ChainId),
-			sdk.NewAttribute(types.AttributeKeyConnectionID, zone.ConnectionId),
 		),
 	})
 
 	return &types.MsgRequestRedemptionResponse{}, nil
+}
+
+func (k msgServer) CancelRedemption(goCtx context.Context, msg *types.MsgCancelQueuedRedemption) (*types.MsgCancelQueuedRedemptionResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	record, found := k.GetWithdrawalRecord(ctx, msg.ChainId, msg.Hash, types.WithdrawStatusQueued)
+
+	if !found {
+		return nil, fmt.Errorf("no queued record with hash \"%s\" found", msg.Hash)
+	}
+
+	if record.Delegator != msg.FromAddress {
+		return nil, fmt.Errorf("incorrect user for record with hash \"%s\"", msg.Hash)
+	}
+
+	// all good. delete!
+	k.DeleteWithdrawalRecord(ctx, msg.ChainId, msg.Hash, types.WithdrawStatusQueued)
+
+	userAccAddress, err := addressutils.AddressFromBech32(record.Delegator, "")
+	if err != nil {
+		return nil, err
+	}
+
+	// return coins
+	if err := k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.EscrowModuleAccount, userAccAddress, sdk.NewCoins(record.BurnAmount)); err != nil {
+		return nil, fmt.Errorf("unable to return coins from escrow account: %w", err)
+	}
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+		),
+		sdk.NewEvent(
+			types.EventTypeRedemptionCancellation,
+			sdk.NewAttribute(types.AttributeKeyReturnedAmount, record.BurnAmount.String()),
+			sdk.NewAttribute(types.AttributeKeyUser, msg.FromAddress),
+			sdk.NewAttribute(types.AttributeKeyChainID, msg.ChainId),
+		),
+	})
+
+	return &types.MsgCancelQueuedRedemptionResponse{Returned: record.BurnAmount}, nil
 }
 
 func (k msgServer) SignalIntent(goCtx context.Context, msg *types.MsgSignalIntent) (*types.MsgSignalIntentResponse, error) {

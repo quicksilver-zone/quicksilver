@@ -130,7 +130,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 				if !ok {
 					return errors.New("unable to unmarshal MsgWithdrawDelegatorReward")
 				}
-				k.Logger(ctx).Error("Failed to withdraw rewards; will try again next epoch", "validator", withdrawalMsg.ValidatorAddress)
+				k.Logger(ctx).Error("failed to withdraw rewards; will try again next epoch", "validator", withdrawalMsg.ValidatorAddress)
 				return nil
 			}
 			k.Logger(ctx).Info("Rewards withdrawn")
@@ -313,7 +313,6 @@ func (k *Keeper) HandleMsgTransfer(ctx sdk.Context, msg ibctransfertypes.Fungibl
 	}
 
 	if found && msg.Denom != zone.BaseDenom {
-		// k.Logger(ctx).Error("got withdrawal account and NOT staking denom", "rx", receivedCoin.Denom, "trace_base_denom", denomTrace.BaseDenom, "zone_base_denom", zone.BaseDenom)
 		feeAmount := sdk.NewDecFromInt(receivedCoin.Amount).Mul(k.GetCommissionRate(ctx)).TruncateInt()
 		rewardCoin := receivedCoin.SubAmount(feeAmount)
 		zoneAddress, err := addressutils.AccAddressFromBech32(zone.WithdrawalAddress.Address, "")
@@ -353,15 +352,23 @@ func (k *Keeper) HandleCompleteSend(ctx sdk.Context, msg sdk.Msg, memo string) e
 
 	// checks here are specific to ensure future extensibility;
 	switch {
-	case zone.IsWithdrawalAddress(sMsg.FromAddress):
-		// WithdrawalAddress (for rewards) only send to DelegationAddresses.
-		// Target here is the DelegationAddresses.
+	case zone.IsDelegateAddress(sMsg.ToAddress) && zone.IsWithdrawalAddress(sMsg.FromAddress):
+		k.Logger(ctx).Info("delegate account received tokens from withdrawal account; delegating rewards", "amount", sMsg.Amount)
 		return k.handleRewardsDelegation(ctx, *zone, sMsg)
-	case zone.IsDelegateAddress(sMsg.FromAddress):
-		return k.HandleWithdrawForUser(ctx, zone, sMsg, memo)
-	case zone.IsDelegateAddress(sMsg.ToAddress) && zone.DepositAddress.Address == sMsg.FromAddress:
+
+	case zone.IsWithdrawalAddress(sMsg.ToAddress):
+		k.Logger(ctx).Info("withdrawal account received tokens to disburse", "amount", sMsg.Amount)
+		return nil
+
+	case zone.IsDelegateAddress(sMsg.ToAddress) && zone.IsDepositAddress(sMsg.FromAddress):
+		k.Logger(ctx).Info("delegate account received tokens from deposit account; delegating deposit", "amount", sMsg.Amount, "memo", memo)
 		_, err := k.handleSendToDelegate(ctx, zone, sMsg, memo)
 		return err
+
+	case zone.IsDelegateAddress(sMsg.FromAddress):
+		k.Logger(ctx).Info("delegate account send tokens; handling withdrawal", "amount", sMsg.Amount, "memo", memo)
+		return k.HandleWithdrawForUser(ctx, zone, sMsg, memo)
+
 	default:
 		err = fmt.Errorf("unexpected completed send (2) from %s to %s (amount: %s)", sMsg.FromAddress, sMsg.ToAddress, sMsg.Amount)
 		k.Logger(ctx).Error(err.Error())
@@ -568,11 +575,18 @@ func (k *Keeper) HandleBeginRedelegate(ctx sdk.Context, msg sdk.Msg, completion 
 		// a zero completion time can only happen when the validator is unbonded; this means the redelegation has _already_ completed and can be removed.
 		k.DeleteRedelegationRecord(ctx, zone.ChainId, redelegateMsg.ValidatorSrcAddress, redelegateMsg.ValidatorDstAddress, epochNumber)
 	} else {
-
 		record, found := k.GetRedelegationRecord(ctx, zone.ChainId, redelegateMsg.ValidatorSrcAddress, redelegateMsg.ValidatorDstAddress, epochNumber)
 		if !found {
-			k.Logger(ctx).Error("unable to find redelegation record", "chain", zone.ChainId, "source", redelegateMsg.ValidatorSrcAddress, "dst", redelegateMsg.ValidatorDstAddress, "epoch_number", epochNumber)
-			return fmt.Errorf("unable to find redelegation record for chain %s, src: %s, dst: %s, at epoch %d", zone.ChainId, redelegateMsg.ValidatorSrcAddress, redelegateMsg.ValidatorDstAddress, epochNumber)
+			// it is possible that the record was cleaned up if there was a long delay in processing acknowledgements.
+			// just create a new one
+			record = types.RedelegationRecord{
+				ChainId:        zone.ChainId,
+				EpochNumber:    epochNumber,
+				Source:         redelegateMsg.ValidatorSrcAddress,
+				Destination:    redelegateMsg.ValidatorDstAddress,
+				Amount:         redelegateMsg.Amount.Amount.Int64(),
+				CompletionTime: completion,
+			}
 		}
 
 		k.Logger(ctx).Info("updating redelegation record with completion time", "completion", completion)
@@ -618,9 +632,18 @@ func (k *Keeper) HandleBeginRedelegate(ctx sdk.Context, msg sdk.Msg, completion 
 		k.Logger(ctx).Error("unable to find delegation record", "chain", zone.ChainId, "source", redelegateMsg.ValidatorSrcAddress, "dst", redelegateMsg.ValidatorDstAddress, "epoch_number", epochNumber)
 		return fmt.Errorf("unable to find delegation record for chain %s, src: %s, dst: %s, at epoch %d", zone.ChainId, redelegateMsg.ValidatorSrcAddress, redelegateMsg.ValidatorDstAddress, epochNumber)
 	}
-	srcDelegation.Amount = srcDelegation.Amount.Sub(redelegateMsg.Amount)
-
-	k.SetDelegation(ctx, zone.ChainId, srcDelegation)
+	srcDelegation.Amount, err = srcDelegation.Amount.SafeSub(redelegateMsg.Amount)
+	if err != nil {
+		if strings.Contains(err.Error(), "negative coin amount") {
+			// we received a negative srcDelegation. Obviously this cannot happen, but we can get a crossed re/un/delegation, all which fetch absolute values.
+			k.Logger(ctx).Error("possible race condition; unable to sub redelegation amount. requerying delegation anyway")
+		} else {
+			// we got some other, unrecoverable err
+			return err
+		}
+	} else {
+		k.SetDelegation(ctx, zone.ChainId, srcDelegation)
+	}
 
 	valAddr, err = addressutils.ValAddressFromBech32(redelegateMsg.ValidatorDstAddress, zone.AccountPrefix+"valoper")
 	if err != nil {
@@ -649,7 +672,7 @@ func (k *Keeper) HandleFailedBeginRedelegate(ctx sdk.Context, msg sdk.Msg, memo 
 		return err
 	}
 
-	k.Logger(ctx).Error("Received MsgBeginRedelegate acknowledgement error")
+	k.Logger(ctx).Error("received MsgBeginRedelegate acknowledgement error")
 	// first, type assertion. we should have stakingtypes.MsgBeginRedelegate
 	redelegateMsg, ok := msg.(*stakingtypes.MsgBeginRedelegate)
 	if !ok {
@@ -660,7 +683,7 @@ func (k *Keeper) HandleFailedBeginRedelegate(ctx sdk.Context, msg sdk.Msg, memo 
 		return fmt.Errorf("zone for delegate account %s not found", redelegateMsg.DelegatorAddress)
 	}
 	k.DeleteRedelegationRecord(ctx, zone.ChainId, redelegateMsg.ValidatorSrcAddress, redelegateMsg.ValidatorDstAddress, epochNumber)
-	k.Logger(ctx).Error("Cleaning up redelegation record")
+	k.Logger(ctx).Info("cleaning up redelegation record")
 	return nil
 }
 
@@ -748,18 +771,20 @@ func (k *Keeper) HandleFailedBankSend(ctx sdk.Context, msg sdk.Msg, memo string)
 
 	// checks here are specific to ensure future extensibility;
 	switch {
-	case zone.IsWithdrawalAddress(sMsg.FromAddress):
+	case zone.IsDelegateAddress(sMsg.ToAddress) && zone.IsWithdrawalAddress(sMsg.FromAddress):
 		// MsgSend from Withdrawal account to delegate account was not completed. We can ignore this.
-		k.Logger(ctx).Error("MsgSend from withdrawal account to delegate account failed")
-	case zone.IsDelegateAddress(sMsg.FromAddress):
-		return k.HandleFailedUnbondSend(ctx, sMsg, memo)
-	case zone.IsDelegateAddress(sMsg.ToAddress) && zone.DepositAddress.Address == sMsg.FromAddress:
+		k.Logger(ctx).Info("MsgSend to delegate account from withdrawal account failed", "amount", sMsg.Amount)
+	case zone.IsWithdrawalAddress(sMsg.ToAddress):
+		k.Logger(ctx).Info("MsgSend to withdrawal account for disbursal failed", "amount", sMsg.Amount)
+	case zone.IsDelegateAddress(sMsg.ToAddress) && zone.IsDepositAddress(sMsg.FromAddress):
 		// MsgSend from deposit account to delegate account for deposit.
-		k.Logger(ctx).Error("MsgSend from deposit account to delegate account failed")
+		k.Logger(ctx).Error("MsgSend from deposit account to delegate account failed", "amount", sMsg.Amount)
+	case zone.IsDelegateAddress(sMsg.FromAddress):
+		k.Logger(ctx).Info("MsgSend from delegate account failed; updating withdrawal", "amount", sMsg.Amount, "memo", memo)
+		return k.HandleFailedUnbondSend(ctx, sMsg, memo)
 	default:
-		err = fmt.Errorf("unexpected completed send (1) from %s to %s (amount: %s)", sMsg.FromAddress, sMsg.ToAddress, sMsg.Amount)
+		err = fmt.Errorf("unexpected failed send (1) from %s to %s (amount: %s)", sMsg.FromAddress, sMsg.ToAddress, sMsg.Amount)
 		k.Logger(ctx).Error(err.Error())
-		return nil
 	}
 
 	return nil
@@ -795,7 +820,7 @@ func (k *Keeper) HandleFailedUndelegate(ctx sdk.Context, msg sdk.Msg, memo strin
 		return err
 	}
 
-	k.Logger(ctx).Error("Received MsgUndelegate acknowledgement error")
+	k.Logger(ctx).Error("received MsgUndelegate acknowledgement error")
 	// first, type assertion. we should have stakingtypes.MsgBeginRedelegate
 	undelegateMsg, ok := msg.(*stakingtypes.MsgUndelegate)
 	if !ok {
@@ -864,7 +889,7 @@ func (k *Keeper) HandleFailedUndelegate(ctx sdk.Context, msg sdk.Msg, memo strin
 	}
 
 	k.DeleteUnbondingRecord(ctx, zone.ChainId, undelegateMsg.ValidatorAddress, epochNumber)
-	k.Logger(ctx).Error("Cleaning up redelegation record")
+	k.Logger(ctx).Info("cleaning up unbonding record")
 	return nil
 }
 
@@ -896,7 +921,7 @@ func (k *Keeper) HandleRedeemTokens(ctx sdk.Context, msg sdk.Msg, amount sdk.Coi
 		k.SetReceiptsCompleted(ctx, zone.ChainId, time.Unix(exclusionTimestampUnix, 0), ctx.BlockTime(), redeemMsg.Amount.Denom)
 		zone.DelegationAddress.Balance = zone.DelegationAddress.Balance.Sub(redeemMsg.Amount)
 		k.SetZone(ctx, zone)
-		if zone.WithdrawalWaitgroup == 0 {
+		if zone.GetWithdrawalWaitgroup() == 0 {
 			k.Logger(ctx).Info("Triggering redemption rate calc after delegation flush")
 			if err = k.TriggerRedemptionRate(ctx, zone); err != nil {
 				return err
@@ -935,9 +960,12 @@ func (k *Keeper) HandleFailedRedeemTokens(ctx sdk.Context, msg sdk.Msg, memo str
 	switch {
 	case strings.HasPrefix(memo, "batch"):
 		k.Logger(ctx).Error("batch token redemption failed", "memo", memo, "tx", redeemMsg)
-		zone.WithdrawalWaitgroup--
+		if err := zone.DecrementWithdrawalWaitgroup(k.Logger(ctx), uint32(1), "batch token redemption failure ack"); err != nil {
+			return err
+		}
+		k.Logger(ctx).Info("Decremented waitgroup after failed batch token redemption", "wg", zone.GetWithdrawalWaitgroup())
 		k.SetZone(ctx, zone)
-		if zone.WithdrawalWaitgroup == 0 {
+		if zone.GetWithdrawalWaitgroup() == 0 {
 			k.Logger(ctx).Info("Triggering redemption rate calc after delegation flush")
 			if err := k.TriggerRedemptionRate(ctx, zone); err != nil {
 				return err
@@ -969,7 +997,7 @@ func (k *Keeper) HandleDelegate(ctx sdk.Context, msg sdk.Msg, memo string) error
 	switch {
 	case memo == "rewards":
 	case strings.HasPrefix(memo, "batch"):
-		k.Logger(ctx).Error("batch delegation", "memo", memo, "tx", delegateMsg)
+		k.Logger(ctx).Info("batch delegation", "memo", memo, "tx", delegateMsg)
 		exclusionTimestampUnix, err := strconv.ParseInt(strings.Split(memo, "/")[1], 10, 64)
 		if err != nil {
 			return err
@@ -977,9 +1005,11 @@ func (k *Keeper) HandleDelegate(ctx sdk.Context, msg sdk.Msg, memo string) error
 		k.Logger(ctx).Debug("outstanding delegations ack-received")
 		k.SetReceiptsCompleted(ctx, zone.ChainId, time.Unix(exclusionTimestampUnix, 0), ctx.BlockTime(), delegateMsg.Amount.Denom)
 		zone.DelegationAddress.Balance = zone.DelegationAddress.Balance.Sub(delegateMsg.Amount)
-		zone.WithdrawalWaitgroup--
+		if err := zone.DecrementWithdrawalWaitgroup(k.Logger(ctx), uint32(1), "batch/reward delegation success ack"); err != nil {
+			return err
+		}
 		k.SetZone(ctx, zone)
-		if zone.WithdrawalWaitgroup == 0 {
+		if zone.GetWithdrawalWaitgroup() == 0 {
 			k.Logger(ctx).Info("Triggering redemption rate calc after delegation flush")
 			if err := k.TriggerRedemptionRate(ctx, zone); err != nil {
 				return err
@@ -1019,9 +1049,11 @@ func (k *Keeper) HandleFailedDelegate(ctx sdk.Context, msg sdk.Msg, memo string)
 	switch {
 	case strings.HasPrefix(memo, "batch"):
 		k.Logger(ctx).Error("batch delegation failed", "memo", memo, "tx", delegateMsg)
-		zone.WithdrawalWaitgroup--
+		if err := zone.DecrementWithdrawalWaitgroup(k.Logger(ctx), 1, "batch delegation failed ack"); err != nil {
+			return err
+		}
 		k.SetZone(ctx, zone)
-		if zone.WithdrawalWaitgroup == 0 {
+		if zone.GetWithdrawalWaitgroup() == 0 {
 			k.Logger(ctx).Info("Triggering redemption rate calc after delegation flush")
 			if err := k.TriggerRedemptionRate(ctx, zone); err != nil {
 				return err
@@ -1211,15 +1243,16 @@ func (k *Keeper) HandleWithdrawRewards(ctx sdk.Context, msg sdk.Msg) error {
 	// operates outside the delegator set, its purpose is to track validator
 	// performance only.
 	if withdrawalMsg.DelegatorAddress != zone.PerformanceAddress.Address {
-		err = zone.DecrementWithdrawalWaitgroup()
+		if err := zone.DecrementWithdrawalWaitgroup(k.Logger(ctx), 1, "handle withdraw rewards"); err != nil {
+			return err
+		}
 		if err != nil {
 			return err
 		}
-		k.Logger(ctx).Info("Decremented waitgroup", "wg", zone.WithdrawalWaitgroup)
 		k.SetZone(ctx, zone)
 	}
-	k.Logger(ctx).Info("Received MsgWithdrawDelegatorReward acknowledgement", "wg", zone.WithdrawalWaitgroup, "delegator", withdrawalMsg.DelegatorAddress)
-	switch zone.WithdrawalWaitgroup == 0 {
+	k.Logger(ctx).Info("Received MsgWithdrawDelegatorReward acknowledgement", "wg", zone.GetWithdrawalWaitgroup(), "delegator", withdrawalMsg.DelegatorAddress)
+	switch zone.GetWithdrawalWaitgroup() == 0 {
 	case true:
 		k.Logger(ctx).Info("triggering redemption rate calc after rewards withdrawal")
 		return k.TriggerRedemptionRate(ctx, zone)

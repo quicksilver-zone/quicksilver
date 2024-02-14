@@ -17,7 +17,6 @@ import (
 	ibckeeper "github.com/cosmos/ibc-go/v5/modules/core/keeper"
 
 	config "github.com/quicksilver-zone/quicksilver/cmd/config" //nolint:revive
-	crescenttypes "github.com/quicksilver-zone/quicksilver/third-party-chains/crescent-types"
 	osmosistypes "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types"
 	umeetypes "github.com/quicksilver-zone/quicksilver/third-party-chains/umee-types"
 	"github.com/quicksilver-zone/quicksilver/utils"
@@ -35,9 +34,8 @@ type UserAllocation struct {
 }
 
 var (
-	_ osmosistypes.ParticipationRewardsKeeper  = &Keeper{}
-	_ umeetypes.ParticipationRewardsKeeper     = &Keeper{}
-	_ crescenttypes.ParticipationRewardsKeeper = &Keeper{}
+	_ osmosistypes.ParticipationRewardsKeeper = &Keeper{}
+	_ umeetypes.ParticipationRewardsKeeper    = &Keeper{}
 )
 
 type Keeper struct {
@@ -176,6 +174,5 @@ func LoadSubmodules() map[cmtypes.ClaimType]Submodule {
 	out[cmtypes.ClaimTypeLiquidToken] = &LiquidTokensModule{}
 	out[cmtypes.ClaimTypeOsmosisPool] = &OsmosisModule{}
 	out[cmtypes.ClaimTypeUmeeToken] = &UmeeModule{}
-	out[cmtypes.ClaimTypeCrescentPool] = &CrescentModule{}
 	return out
 }

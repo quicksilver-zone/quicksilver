@@ -2145,6 +2145,74 @@ paths:
           type: boolean
       tags:
         - QueryInterchainQuery
+  /quicksilver/tx/v1/interchainstaking/cancel_redemption:
+    post:
+      summary: |-
+        CancelRedemption defines a method for cancelling a redemption request in
+        the queued state.
+      operationId: CancelRedemption
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              returned:
+                type: object
+                properties:
+                  denom:
+                    type: string
+                  amount:
+                    type: string
+                description: >-
+                  Coin defines a token with a denomination and an amount.
+
+
+                  NOTE: The amount field is an Int which implements the custom
+                  method
+
+                  signatures required by gogoproto.
+            description: >-
+              MsgRequestRedemptionResponse defines the MsgRequestRedemption
+              response type.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            properties:
+              chain_id:
+                type: string
+              hash:
+                type: string
+              from_address:
+                type: string
+            description: MsgCancelQueuedRedemption represents a message type to cancel .
+      tags:
+        - Msg
   /quicksilver/tx/v1/interchainstaking/close_channel:
     post:
       summary: >-

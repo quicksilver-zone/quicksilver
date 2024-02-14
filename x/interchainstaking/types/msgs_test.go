@@ -11,6 +11,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
+	"github.com/quicksilver-zone/quicksilver/utils/randomutils"
 	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 )
 
@@ -55,7 +56,7 @@ func TestIntentsFromString(t *testing.T) {
 	require.NotNil(t, err, "expecting a non-nil error")
 	require.Contains(t, err.Error(), "invalid intents string")
 
-	fromAddr := sdk.AccAddress([]byte{0x84, 0xbf, 0xf8, 0x4c, 0x7d, 0xda, 0xd1, 0x1c, 0xb8, 0xc0, 0x73, 0x86, 0xe9, 0x19, 0x28, 0xc5, 0x67, 0x5c, 0xa4, 0xbc})
+	fromAddr := addressutils.GenerateAccAddressForTest()
 	sigIntent := types.NewMsgSignalIntent("quicksilver", intents, fromAddr)
 	err = sigIntent.ValidateBasic()
 	if err != nil {
@@ -98,7 +99,7 @@ func TestIntentsFromStringInvalidValoperAddressesFailsOnValidate(t *testing.T) {
 	err = sigIntent.ValidateBasic()
 	require.NotNil(t, err, "expecting a non-nil error")
 	require.Contains(t, err.Error(), "invalid separator index")
-	require.Contains(t, err.Error(), "undefined")
+	require.Contains(t, err.Error(), "chainId not provided")
 }
 
 func TestMsgSignalIntent_ValidateBasic(t *testing.T) {
@@ -117,6 +118,78 @@ func TestMsgSignalIntent_ValidateBasic(t *testing.T) {
 			fields{},
 			true,
 		},
+		{
+			"invalid address",
+			fields{
+				ChainID:     "cosmoshub-4",
+				Intents:     "0.5cosmosvaloper1sjllsnramtg7ewxqwwrwjxfgc4n4ef9u2lcnp0,0.5cosmosvaloper156g8f9837p7d4c46p8yt3rlals9c5vuurfrrzf",
+				FromAddress: "raa",
+			},
+			true,
+		},
+		{
+			"invalid intent - bech32",
+			fields{
+				ChainID:     "cosmoshub-4",
+				Intents:     "10.3cosmosvaloper1sjllsnramtg7ewxqwwrwjxfgc4n4ef9u2lcnp0,0.5cosmosvaloper156g8f9837p7d4c46p8yt3rlals9c5vuurfrrzf",
+				FromAddress: addressutils.GenerateAddressForTestWithPrefix("quick"),
+			},
+			true,
+		},
+		{
+			"invalid intent",
+			fields{
+				ChainID:     "cosmoshub-4",
+				Intents:     "10.3cosmosvaloper1sjllsnramtg7ewxqwwrwjxfgc4n4ef9uukud56,0.5cosmosvaloper156g8f9837p7d4c46p8yt3rlals9c5vuuv37xeg",
+				FromAddress: addressutils.GenerateAddressForTestWithPrefix("quick"),
+			},
+			true,
+		},
+		{
+			"invalid intent - sum too great",
+			fields{
+				ChainID:     "cosmoshub-4",
+				Intents:     "0.8cosmosvaloper1sjllsnramtg7ewxqwwrwjxfgc4n4ef9uukud56,0.5cosmosvaloper156g8f9837p7d4c46p8yt3rlals9c5vuuv37xeg",
+				FromAddress: addressutils.GenerateAddressForTestWithPrefix("quick"),
+			},
+			true,
+		},
+		{
+			"invalid intent - sum too small",
+			fields{
+				ChainID:     "cosmoshub-4",
+				Intents:     "0.8cosmosvaloper1sjllsnramtg7ewxqwwrwjxfgc4n4ef9uukud56,0.5cosmosvaloper156g8f9837p7d4c46p8yt3rlals9c5vuuv37xeg",
+				FromAddress: addressutils.GenerateAddressForTestWithPrefix("quick"),
+			},
+			true,
+		},
+		{
+			"invalid intent - too much precision",
+			fields{
+				ChainID:     "cosmoshub-4",
+				Intents:     "0.800000000000000000001cosmosvaloper1sjllsnramtg7ewxqwwrwjxfgc4n4ef9uukud56,0.5cosmosvaloper156g8f9837p7d4c46p8yt3rlals9c5vuuv37xeg",
+				FromAddress: addressutils.GenerateAddressForTestWithPrefix("quick"),
+			},
+			true,
+		},
+		{
+			"invalid chainId",
+			fields{
+				ChainID:     "",
+				Intents:     "0.5cosmosvaloper1sjllsnramtg7ewxqwwrwjxfgc4n4ef9uukud56,0.5cosmosvaloper156g8f9837p7d4c46p8yt3rlals9c5vuuv37xeg",
+				FromAddress: addressutils.GenerateAddressForTestWithPrefix("quick"),
+			},
+			true,
+		},
+		{
+			"valid",
+			fields{
+				ChainID:     "cosmoshub-4",
+				Intents:     "0.5cosmosvaloper1sjllsnramtg7ewxqwwrwjxfgc4n4ef9uukud56,0.5cosmosvaloper156g8f9837p7d4c46p8yt3rlals9c5vuuv37xeg",
+				FromAddress: addressutils.GenerateAddressForTestWithPrefix("quick"),
+			},
+			false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -134,6 +207,119 @@ func TestMsgSignalIntent_ValidateBasic(t *testing.T) {
 			require.NoError(t, err)
 		})
 	}
+}
+
+func TestMsgCancelQueuedRedemption_ValidateBasic(t *testing.T) {
+	type fields struct {
+		ChainID     string
+		Hash        string
+		FromAddress string
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		wantErr bool
+	}{
+		{
+			"blank",
+			fields{},
+			true,
+		},
+		{
+			"invalid address",
+			fields{
+				ChainID:     "cosmoshub-4",
+				Hash:        randomutils.GenerateRandomHashAsHex(64),
+				FromAddress: "raa",
+			},
+			true,
+		},
+		{
+			"invalid intent - too short",
+			fields{
+				ChainID:     "cosmoshub-4",
+				Hash:        randomutils.GenerateRandomHashAsHex(63),
+				FromAddress: addressutils.GenerateAddressForTestWithPrefix("quick"),
+			},
+			true,
+		},
+		{
+			"invalid intent - too long",
+			fields{
+				ChainID:     "cosmoshub-4",
+				Hash:        randomutils.GenerateRandomHashAsHex(65),
+				FromAddress: addressutils.GenerateAddressForTestWithPrefix("quick"),
+			},
+			true,
+		},
+		{
+			"invalid intent - bad chars",
+			fields{
+				ChainID:     "cosmoshub-4",
+				Hash:        "zzzzzzz",
+				FromAddress: addressutils.GenerateAddressForTestWithPrefix("quick"),
+			},
+			true,
+		},
+		{
+			"invalid chainId",
+			fields{
+				ChainID:     "",
+				Hash:        randomutils.GenerateRandomHashAsHex(64),
+				FromAddress: addressutils.GenerateAddressForTestWithPrefix("quick"),
+			},
+			true,
+		},
+		{
+			"valid",
+			fields{
+				ChainID:     "cosmoshub-4",
+				Hash:        randomutils.GenerateRandomHashAsHex(64),
+				FromAddress: addressutils.GenerateAddressForTestWithPrefix("quick"),
+			},
+			true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			msg := types.MsgCancelQueuedRedemption{
+				ChainId:     tt.fields.ChainID,
+				Hash:        tt.fields.Hash,
+				FromAddress: tt.fields.FromAddress,
+			}
+			err := msg.ValidateBasic()
+			if tt.wantErr {
+				t.Logf("Error:\n%v\n", err)
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestMsgCancelQueuedRedemption(t *testing.T) {
+	fromAddr := addressutils.GenerateAccAddressForTest()
+	msg := types.NewMsgCancelQueuedRedemption("cosmoshub-4", randomutils.GenerateRandomHashAsHex(64), fromAddr)
+
+	// Check the router key.
+	gotRoute := msg.Route()
+	wantRoute := types.ModuleName
+	require.Equal(t, wantRoute, gotRoute, "mismatch in route")
+
+	// Check the type.
+	gotType := msg.Type()
+	wantType := types.TypeMsgCancelQueuedRedemption
+	require.Equal(t, wantType, gotType, "mismatch in type")
+
+	// Check the signBytes.
+	signBytes := msg.GetSignBytes()
+	require.True(t, len(signBytes) != 0, "expecting signBytes to be produced")
+
+	// Signers should return the from address.
+	gotSigners := msg.GetSigners()
+	wantSigners := []sdk.AccAddress{fromAddr}
+	require.Equal(t, wantSigners, gotSigners, "mismatch in signers")
 }
 
 func TestMsgRequestRedemption_ValidateBasic(t *testing.T) {
@@ -235,11 +421,35 @@ func TestMsgRequestRedemption_ValidateBasic(t *testing.T) {
 			if tt.wantErr {
 				t.Logf("Error:\n%v\n", err)
 				require.Error(t, err)
-				return
+			} else {
+				require.NoError(t, err)
 			}
-			require.NoError(t, err)
 		})
 	}
+}
+
+func TestMsgRequestRedemption(t *testing.T) {
+	fromAddr := addressutils.GenerateAccAddressForTest()
+	msg := types.NewMsgRequestRedemption(sdk.NewCoin("uqatom", sdkmath.NewInt(500)), addressutils.GenerateAddressForTestWithPrefix("cosmos"), fromAddr)
+
+	// Check the router key.
+	gotRoute := msg.Route()
+	wantRoute := types.ModuleName
+	require.Equal(t, wantRoute, gotRoute, "mismatch in route")
+
+	// Check the type.
+	gotType := msg.Type()
+	wantType := types.TypeMsgRequestRedemption
+	require.Equal(t, wantType, gotType, "mismatch in type")
+
+	// Check the signBytes.
+	signBytes := msg.GetSignBytes()
+	require.True(t, len(signBytes) != 0, "expecting signBytes to be produced")
+
+	// Signers should return the from address.
+	gotSigners := msg.GetSigners()
+	wantSigners := []sdk.AccAddress{fromAddr}
+	require.Equal(t, wantSigners, gotSigners, "mismatch in signers")
 }
 
 func TestMsgReopen_ValidateBasic(t *testing.T) {
@@ -321,9 +531,9 @@ func TestMsgReopen_ValidateBasic(t *testing.T) {
 				t.Logf("Error:\n%v\n", err)
 				require.Error(t, err)
 				require.ErrorContains(t, err, tt.errorMsg)
-				return
+			} else {
+				require.NoError(t, err)
 			}
-			require.NoError(t, err)
 		})
 	}
 }
@@ -518,6 +728,20 @@ func TestCloseChannelValidateBasic(t *testing.T) {
 	}
 }
 
+func TestMsgGovReopenChannel(t *testing.T) {
+	fromAddr := addressutils.GenerateAccAddressForTest()
+	msg := types.NewMsgGovReopenChannel("connection-0", "icacontroller-cosmoshub-4.delegate", fromAddr)
+
+	// Check the signBytes.
+	signBytes := msg.GetSignBytes()
+	require.True(t, len(signBytes) != 0, "expecting signBytes to be produced")
+
+	// Signers should return the from address.
+	gotSigners := msg.GetSigners()
+	wantSigners := []sdk.AccAddress{fromAddr}
+	require.Equal(t, wantSigners, gotSigners, "mismatch in signers")
+}
+
 func TestReopenChannelValidateBasic(t *testing.T) {
 	cases := []struct {
 		Name string
@@ -556,7 +780,7 @@ func TestReopenChannelValidateBasic(t *testing.T) {
 	}
 }
 
-func TestGovSetLsmCaps(t *testing.T) {
+func TestGovSetLsmCaps_ValidateBasic(t *testing.T) {
 	cases := []struct {
 		Name string
 		Msg  types.MsgGovSetLsmCaps
@@ -617,4 +841,44 @@ func TestGovSetLsmCaps(t *testing.T) {
 			require.ErrorContains(t, err, c.Err, c.Name)
 		}
 	}
+}
+
+func TestMsgGovCloseChannel(t *testing.T) {
+	fromAddr := addressutils.GenerateAccAddressForTest()
+	msg := types.MsgGovCloseChannel{
+		"",
+		"",
+		"channel-74",
+		"icacontroller-cosmoshub-4.delegate",
+		fromAddr.String(),
+	}
+
+	// Check the signBytes.
+	signBytes := msg.GetSignBytes()
+	require.True(t, len(signBytes) != 0, "expecting signBytes to be produced")
+
+	// Signers should return the from address.
+	gotSigners := msg.GetSigners()
+	wantSigners := []sdk.AccAddress{fromAddr}
+	require.Equal(t, wantSigners, gotSigners, "mismatch in signers")
+}
+
+func TestMsgGovSetLsmCaps(t *testing.T) {
+	fromAddr := addressutils.GenerateAccAddressForTest()
+	msg := types.MsgGovSetLsmCaps{
+		"",
+		"",
+		"cosmoshub-4",
+		&types.LsmCaps{ValidatorCap: sdk.OneDec(), ValidatorBondCap: sdk.NewDec(250), GlobalCap: sdk.NewDecWithPrec(50, 2)},
+		fromAddr.String(),
+	}
+
+	// Check the signBytes.
+	signBytes := msg.GetSignBytes()
+	require.True(t, len(signBytes) != 0, "expecting signBytes to be produced")
+
+	// Signers should return the from address.
+	gotSigners := msg.GetSigners()
+	wantSigners := []sdk.AccAddress{fromAddr}
+	require.Equal(t, wantSigners, gotSigners, "mismatch in signers")
 }

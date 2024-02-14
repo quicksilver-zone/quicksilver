@@ -30,16 +30,13 @@ import (
 )
 
 var (
-	testAddress         = addressutils.GenerateAddressForTestWithPrefix("cosmos")
-	testCrescentAddress = addressutils.GenerateAddressForTestWithPrefix("cre")
-	umeeTestConnection  = "connection-77003"
-	umeeTestChain       = "umee-types-1"
-	umeeBaseDenom       = "uumee"
+	testAddress        = addressutils.GenerateAddressForTestWithPrefix("cosmos")
+	umeeTestConnection = "connection-77003"
+	umeeTestChain      = "umee-types-1"
+	umeeBaseDenom      = "uumee"
 
-	crescentTestConnection = "connection-7704"
-	crescentTestChain      = "crescent-types-1"
-	cosmosIBCDenom         = "ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3"
-	osmosisIBCDenom        = "ibc/15E9C5CF5969080539DB395FA7D9C0868265217EFC528433671AAF9B1912D159"
+	cosmosIBCDenom  = "ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3"
+	osmosisIBCDenom = "ibc/15E9C5CF5969080539DB395FA7D9C0868265217EFC528433671AAF9B1912D159"
 )
 
 func init() {
@@ -109,7 +106,7 @@ func (suite *KeeperTestSuite) coreTest() {
 
 	akpd = quicksilver.ParticipationRewardsKeeper.AllKeyedProtocolDatas(suite.chainA.GetContext())
 	// added 19 in setupTestProtocolData
-	suite.Equal(19, len(akpd))
+	suite.Equal(14, len(akpd))
 
 	// advance the chains
 	suite.coordinator.CommitNBlocks(suite.chainA, 1)
@@ -123,9 +120,6 @@ func (suite *KeeperTestSuite) coreTest() {
 	suite.executeUmeeInterestScalarUpdateCallback()
 	suite.executeUmeeLeverageModuleBalanceUpdateCallback()
 	suite.executeUmeeUTokenSupplyUpdateCallback()
-	suite.executeCrescentPoolUpdateCallback()
-	suite.executeCrescentPoolCoinSupplyUpdateCallback()
-	suite.executeCrescentReserveBalanceUpdateCallback()
 
 	suite.setupTestDeposits()
 	suite.setupTestIntents()
@@ -471,37 +465,7 @@ func (suite *KeeperTestSuite) setupTestProtocolData() {
 			"uosmo",
 		)),
 	)
-	// crescent params
-	suite.addProtocolData(
-		types.ProtocolDataTypeCrescentParams,
-		[]byte(fmt.Sprintf("{\"ChainID\": %q}", crescentTestChain)),
-	)
-	// crescent test chain
-	suite.addProtocolData(
-		types.ProtocolDataTypeConnection,
-		[]byte(fmt.Sprintf("{\"connectionid\": %q,\"chainid\": %q,\"lastepoch\": %d}", crescentTestConnection, crescentTestChain, 0)),
-	)
-	// crescent test pool
-	suite.addProtocolData(
-		types.ProtocolDataTypeCrescentPool,
-		[]byte(fmt.Sprintf(
-			"{\"poolid\":%d, \"denom\":%q}",
-			1,
-			cosmosIBCDenom,
-		)),
-	)
-	// crescent-types test supply
-	cpd, _ := json.Marshal(types.CrescentPoolCoinSupplyProtocolData{PoolCoinDenom: PoolCoinDenom})
-	suite.addProtocolData(
-		types.ProtocolDataTypeCrescentPoolCoinSupply,
-		cpd,
-	)
-	// crescent-types reserve address balance
-	cpd, _ = json.Marshal(types.CrescentReserveAddressBalanceProtocolData{ReserveAddress: testCrescentAddress, Denom: cosmosIBCDenom})
-	suite.addProtocolData(
-		types.ProtocolDataTypeCrescentReserveAddressBalance,
-		cpd,
-	)
+
 	// atom (cosmoshub) on osmosis
 	suite.addProtocolData(
 		types.ProtocolDataTypeLiquidToken,

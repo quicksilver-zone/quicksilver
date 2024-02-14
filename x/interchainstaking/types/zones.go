@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/tendermint/tendermint/libs/log"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
@@ -20,6 +22,10 @@ func (z *Zone) GetValoperPrefix() string {
 		return z.AccountPrefix + "valoper"
 	}
 	return ""
+}
+
+func (z Zone) IsDepositAddress(addr string) bool {
+	return z.DepositAddress != nil && z.DepositAddress.Address == addr
 }
 
 func (z Zone) IsDelegateAddress(addr string) bool {
@@ -37,30 +43,60 @@ func (z *Zone) GetDelegationAccount() (*ICAAccount, error) {
 	return z.DelegationAddress, nil
 }
 
-func (z *Zone) DecrementWithdrawalWaitgroup() error {
-	if z.WithdrawalWaitgroup == 0 {
+func (z *Zone) SetWithdrawalWaitgroup(logger log.Logger, num uint32, reason string) {
+	logger.Info("setting withdrawal waitgroup", "zone", z.ChainId, "existing", z.WithdrawalWaitgroup, "new", num, "reason", reason)
+	z.WithdrawalWaitgroup = num
+}
+
+func (z *Zone) DecrementWithdrawalWaitgroup(logger log.Logger, num uint32, reason string) error {
+	if z.WithdrawalWaitgroup-num > z.WithdrawalWaitgroup { // underflow
+		logger.Error("error decrementing withdrawal waitgroup: uint32 underflow ", "zone", z.ChainId, "existing", z.WithdrawalWaitgroup, "decrement", num, "reason", reason)
 		return errors.New("unable to decrement the withdrawal waitgroup below 0")
 	}
-	z.WithdrawalWaitgroup--
+	logger.Info("decrementing withdrawal waitgroup", "zone", z.ChainId, "existing", z.WithdrawalWaitgroup, "decrement", num, "new", z.WithdrawalWaitgroup-num, "reason", reason)
+	z.WithdrawalWaitgroup -= num
 	return nil
 }
 
-func (z *Zone) ValidateCoinsForZone(coins sdk.Coins, zoneVals map[string]bool) error {
+func (z *Zone) IncrementWithdrawalWaitgroup(logger log.Logger, num uint32, reason string) error {
+	if z.WithdrawalWaitgroup+num < z.WithdrawalWaitgroup { // overflow
+		logger.Error("error incrementing withdrawal waitgroup: uint32 overflow ", "zone", z.ChainId, "existing", z.WithdrawalWaitgroup, "increment", num, "reason", reason)
+		return errors.New("unable to increment the withdrawal waitgroup above 4294967295")
+	}
+	logger.Info("incrementing withdrawal waitgroup", "zone", z.ChainId, "existing", z.WithdrawalWaitgroup, "increment", num, "new", z.WithdrawalWaitgroup+num, "reason", reason)
+	z.WithdrawalWaitgroup += num
+	return nil
+}
+
+// ValidateCoinsForZone checks whether an inbound denomination is valid for this zone.
+// valid coins comprise:
+//   - non-lsm: staking denom only (z.BaseDenom)
+//   - lsm: staking denom, and tokens prefixed with zone.AccountPrefix
+//
+// lsm: if valoper is not in zoneVals map, then we return true, false, and this tx will be revisited.
+func (z *Zone) ValidateCoinsForZone(coins sdk.Coins, zoneVals map[string]bool) (valid bool, matchesVal bool) {
 	for _, coin := range coins.Sort() {
 		if coin.Denom == z.BaseDenom {
 			continue
 		}
 
-		coinParts := strings.Split(coin.Denom, "/")
-		if len(coinParts) != 2 {
-			return fmt.Errorf("invalid denom for zone: %s", coin.Denom)
+		// if liquidity module enabled, check to see if this is a tokenized share.
+		if z.LiquidityModule {
+			coinParts := strings.Split(coin.Denom, "/")
+			if len(coinParts) != 2 || !strings.HasPrefix(coinParts[0], z.AccountPrefix) {
+				return false, false
+			}
+
+			if _, ok := zoneVals[coinParts[0]]; !ok {
+				return true, false
+			}
+
+			continue
 		}
 
-		if _, ok := zoneVals[coinParts[0]]; !ok {
-			return fmt.Errorf("invalid denom for zone: %s", coin.Denom)
-		}
+		return false, false
 	}
-	return nil
+	return true, true
 }
 
 // memo functionality
