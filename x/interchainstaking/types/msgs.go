@@ -31,6 +31,7 @@ var (
 	_ sdk.Msg            = &MsgGovReopenChannel{}
 	_ sdk.Msg            = &MsgGovSetLsmCaps{}
 	_ legacytx.LegacyMsg = &MsgRequestRedemption{}
+	_ legacytx.LegacyMsg = &MsgCancelQueuedRedemption{}
 	_ legacytx.LegacyMsg = &MsgSignalIntent{}
 )
 
@@ -216,11 +217,9 @@ func (msg MsgSignalIntent) ValidateBasic() error {
 	}
 
 	if msg.ChainId == "" {
-		errm["ChainID"] = errors.New("undefined")
+		errm["ChainID"] = errors.New("chainId not provided")
 	}
 
-	wantSum := sdk.OneDec()
-	weightSum := sdk.NewDec(0)
 	intents, err := IntentsFromString(msg.Intents)
 	if err != nil {
 		errm["Intents"] = err
@@ -230,16 +229,6 @@ func (msg MsgSignalIntent) ValidateBasic() error {
 				istr := fmt.Sprintf("Intent_%02d_ValoperAddress", i)
 				errm[istr] = err
 			}
-
-			if intent.Weight.GT(wantSum) {
-				istr := fmt.Sprintf("Intent_%02d_Weight", i)
-				errm[istr] = fmt.Errorf("weight %d overruns maximum of %v", intent.Weight, wantSum)
-			}
-			weightSum = weightSum.Add(intent.Weight)
-		}
-
-		if !weightSum.Equal(wantSum) {
-			errm["IntentWeights"] = fmt.Errorf("sum of weights is %v, not %v", weightSum, wantSum)
 		}
 	}
 	if len(errm) > 0 {
