@@ -17,6 +17,7 @@ import (
 	tmclienttypes "github.com/cosmos/ibc-go/v5/modules/light-clients/07-tendermint/types"
 
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
+	"github.com/quicksilver-zone/quicksilver/utils/randomutils"
 	icskeeper "github.com/quicksilver-zone/quicksilver/x/interchainstaking/keeper"
 	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 )
@@ -796,6 +797,136 @@ func (suite *KeeperTestSuite) TestSetLsmCaps() {
 				suite.Equal(caps, msg.Caps)
 
 			}
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestMsgCancelQueuedRedemeption() {
+	hash := randomutils.GenerateRandomHashAsHex(64)
+	tests := []struct {
+		name      string
+		malleate  func(s *KeeperTestSuite) *icstypes.MsgCancelQueuedRedemption
+		expectErr string
+	}{
+		{
+			"no zone exists",
+			func(s *KeeperTestSuite) *icstypes.MsgCancelQueuedRedemption {
+				return &icstypes.MsgCancelQueuedRedemption{
+					ChainId:     "bob",
+					Hash:        hash,
+					FromAddress: addressutils.GenerateAddressForTestWithPrefix("quick"),
+				}
+			},
+			fmt.Sprintf("no queued record with hash \"%s\" found", hash),
+		},
+		{
+			"no hash exists",
+			func(s *KeeperTestSuite) *icstypes.MsgCancelQueuedRedemption {
+				return &icstypes.MsgCancelQueuedRedemption{
+					ChainId:     s.chainB.ChainID,
+					Hash:        hash,
+					FromAddress: addressutils.GenerateAddressForTestWithPrefix("quick"),
+				}
+			},
+			fmt.Sprintf("no queued record with hash \"%s\" found", hash),
+		},
+		{
+			"hash exists but not in correct status",
+			func(s *KeeperTestSuite) *icstypes.MsgCancelQueuedRedemption {
+				ctx := s.chainA.GetContext()
+				k := s.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
+				address := addressutils.GenerateAddressForTestWithPrefix("quick")
+				k.SetWithdrawalRecord(ctx, icstypes.WithdrawalRecord{
+					ChainId:        s.chainB.ChainID,
+					Delegator:      address,
+					BurnAmount:     sdk.NewCoin("uqatom", math.NewInt(500)),
+					Status:         icstypes.WithdrawStatusUnbond,
+					CompletionTime: ctx.BlockHeader().Time.Add(time.Hour * 72),
+					Txhash:         hash,
+				})
+
+				return &icstypes.MsgCancelQueuedRedemption{
+					ChainId:     s.chainB.ChainID,
+					Hash:        hash,
+					FromAddress: address,
+				}
+			},
+			fmt.Sprintf("no queued record with hash \"%s\" found", hash),
+		},
+		{
+			"hash exists in correct status but different user",
+			func(s *KeeperTestSuite) *icstypes.MsgCancelQueuedRedemption {
+				ctx := s.chainA.GetContext()
+				k := s.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
+				address := addressutils.GenerateAddressForTestWithPrefix("quick")
+				k.SetWithdrawalRecord(ctx, icstypes.WithdrawalRecord{
+					ChainId:        s.chainB.ChainID,
+					Delegator:      addressutils.GenerateAddressForTestWithPrefix("quick"),
+					BurnAmount:     sdk.NewCoin("uqatom", math.NewInt(500)),
+					Status:         icstypes.WithdrawStatusQueued,
+					CompletionTime: ctx.BlockHeader().Time.Add(time.Hour * 72),
+					Txhash:         hash,
+				})
+
+				return &icstypes.MsgCancelQueuedRedemption{
+					ChainId:     s.chainB.ChainID,
+					Hash:        hash,
+					FromAddress: address,
+				}
+			},
+			fmt.Sprintf("incorrect user for record with hash \"%s\"", hash),
+		},
+		{
+			"valid",
+			func(s *KeeperTestSuite) *icstypes.MsgCancelQueuedRedemption {
+				ctx := s.chainA.GetContext()
+				k := s.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
+				address := addressutils.GenerateAddressForTestWithPrefix("quick")
+				k.SetWithdrawalRecord(ctx, icstypes.WithdrawalRecord{
+					ChainId:        s.chainB.ChainID,
+					Delegator:      address,
+					BurnAmount:     sdk.NewCoin("uqatom", math.NewInt(500)),
+					Status:         icstypes.WithdrawStatusQueued,
+					CompletionTime: ctx.BlockHeader().Time.Add(time.Hour * 72),
+					Txhash:         hash,
+				})
+
+				suite.NoError(k.BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(sdk.NewCoin("uqatom", math.NewInt(500)))))
+				suite.NoError(k.BankKeeper.SendCoinsFromModuleToModule(ctx, icstypes.ModuleName, icstypes.EscrowModuleAccount, sdk.NewCoins(sdk.NewCoin("uqatom", math.NewInt(500)))))
+
+				return &icstypes.MsgCancelQueuedRedemption{
+					ChainId:     s.chainB.ChainID,
+					Hash:        hash,
+					FromAddress: address,
+				}
+			},
+			"",
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+
+		suite.Run(tt.name, func() {
+			suite.SetupTest()
+			suite.setupTestZones()
+
+			msg := tt.malleate(suite)
+
+			msgSrv := icskeeper.NewMsgServerImpl(suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper)
+			res, err := msgSrv.CancelRedemption(sdk.WrapSDKContext(suite.chainA.GetContext()), msg)
+			if len(tt.expectErr) != 0 {
+				suite.ErrorContains(err, tt.expectErr)
+				suite.Nil(res)
+			} else {
+				suite.NoError(err)
+				suite.NotNil(res)
+			}
+
+			qapp := suite.GetQuicksilverApp(suite.chainA)
+			icsKeeper := qapp.InterchainstakingKeeper
+			_, found := icsKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
+			suite.True(found)
 		})
 	}
 }

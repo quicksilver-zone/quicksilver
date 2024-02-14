@@ -90,13 +90,11 @@ func (msg MsgRequestRedemption) GetSigners() []sdk.AccAddress {
 
 // ----------------------------------------------------------------
 
-var (
-	hexpr = regexp.MustCompile("^[A-Fa-f0-9]{64}$")
-)
+var hexpr = regexp.MustCompile("^[A-Fa-f0-9]{64}$")
 
 // NewMsgCancelQueuedRedemption - construct a msg to cancel a requested redemption.
-func NewMsgCancelQueuedRedemption(chainId string, hash string, fromAddress sdk.Address) *MsgCancelQueuedRedemption {
-	return &MsgCancelQueuedRedemption{ChainId: chainId, Hash: hash, FromAddress: fromAddress.String()}
+func NewMsgCancelQueuedRedemption(chainID string, hash string, fromAddress sdk.Address) *MsgCancelQueuedRedemption {
+	return &MsgCancelQueuedRedemption{ChainId: chainID, Hash: hash, FromAddress: fromAddress.String()}
 }
 
 // Route Implements Msg.
@@ -116,7 +114,7 @@ func (msg MsgCancelQueuedRedemption) ValidateBasic() error {
 	}
 
 	// check hash
-	if !pexpr.MatchString(msg.Hash) {
+	if !hexpr.MatchString(msg.Hash) {
 		errs["Hash"] = fmt.Errorf("invalid sha256 hash - expecting 64 character hex string")
 	}
 

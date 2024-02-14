@@ -291,9 +291,9 @@ func TestMsgCancelQueuedRedemeption_ValidateBasic(t *testing.T) {
 			if tt.wantErr {
 				t.Logf("Error:\n%v\n", err)
 				require.Error(t, err)
-				return
+			} else {
+				require.NoError(t, err)
 			}
-			require.NoError(t, err)
 		})
 	}
 }
@@ -421,9 +421,9 @@ func TestMsgRequestRedemption_ValidateBasic(t *testing.T) {
 			if tt.wantErr {
 				t.Logf("Error:\n%v\n", err)
 				require.Error(t, err)
-				return
+			} else {
+				require.NoError(t, err)
 			}
-			require.NoError(t, err)
 		})
 	}
 }
@@ -531,9 +531,9 @@ func TestMsgReopen_ValidateBasic(t *testing.T) {
 				t.Logf("Error:\n%v\n", err)
 				require.Error(t, err)
 				require.ErrorContains(t, err, tt.errorMsg)
-				return
+			} else {
+				require.NoError(t, err)
 			}
-			require.NoError(t, err)
 		})
 	}
 }

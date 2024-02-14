@@ -136,6 +136,7 @@ func (k msgServer) CancelRedemption(goCtx context.Context, msg *types.MsgCancelQ
 
 	return &types.MsgCancelQueuedRedemptionResponse{Returned: record.BurnAmount}, nil
 }
+
 func (k msgServer) SignalIntent(goCtx context.Context, msg *types.MsgSignalIntent) (*types.MsgSignalIntentResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
