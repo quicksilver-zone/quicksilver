@@ -191,11 +191,14 @@ func (k *Keeper) IterateDelegatorDelegations(ctx sdk.Context, chainID string, de
 	}
 }
 
-func (*Keeper) PrepareDelegationMessagesForCoins(zone *types.Zone, allocations map[string]sdkmath.Int) []sdk.Msg {
+func (*Keeper) PrepareDelegationMessagesForCoins(zone *types.Zone, allocations map[string]sdkmath.Int, isFlush bool) []sdk.Msg {
 	var msgs []sdk.Msg
 	for _, valoper := range utils.Keys(allocations) {
 		if allocations[valoper].IsPositive() {
-			msgs = append(msgs, &stakingtypes.MsgDelegate{DelegatorAddress: zone.DelegationAddress.Address, ValidatorAddress: valoper, Amount: sdk.NewCoin(zone.BaseDenom, allocations[valoper])})
+			if allocations[valoper].GTE(sdk.NewInt(1_000_000)) || isFlush {
+				// don't delegate tiny amounts. TODO: make configurable per zone.
+				msgs = append(msgs, &stakingtypes.MsgDelegate{DelegatorAddress: zone.DelegationAddress.Address, ValidatorAddress: valoper, Amount: sdk.NewCoin(zone.BaseDenom, allocations[valoper])})
+			}
 		}
 	}
 	return msgs
@@ -205,6 +208,7 @@ func (*Keeper) PrepareDelegationMessagesForShares(zone *types.Zone, coins sdk.Co
 	var msgs []sdk.Msg
 	for _, coin := range coins.Sort() {
 		if coin.IsPositive() {
+			// no min amount here.
 			msgs = append(msgs, &lsmstakingtypes.MsgRedeemTokensForShares{DelegatorAddress: zone.DelegationAddress.Address, Amount: coin})
 		}
 	}
@@ -271,9 +275,11 @@ func (k *Keeper) WithdrawDelegationRewardsForResponse(ctx sdk.Context, zone *typ
 	// this allows us to track individual msg responses and ensure all
 	// responses have been received and handled...
 	// HandleWithdrawRewards contains the opposing decrement.
-	zone.WithdrawalWaitgroup += uint32(len(msgs))
+	if err = zone.IncrementWithdrawalWaitgroup(k.Logger(ctx), uint32(len(msgs)), "WithdrawDelegationRewardsForResponse"); err != nil {
+		return err
+	}
 	k.SetZone(ctx, zone)
-	k.Logger(ctx).Info("Received WithdrawDelegationRewardsForResponse acknowledgement", "wg", zone.WithdrawalWaitgroup, "address", delegator)
+	k.Logger(ctx).Info("Received WithdrawDelegationRewardsForResponse acknowledgement", "wg", zone.GetWithdrawalWaitgroup(), "address", delegator)
 
 	return k.SubmitTx(ctx, msgs, zone.DelegationAddress, "", zone.MessagesPerTx)
 }
@@ -312,6 +318,7 @@ func (k *Keeper) FlushOutstandingDelegations(ctx sdk.Context, zone *types.Zone, 
 	exclusionTime := ctx.BlockTime().AddDate(0, 0, -1)
 	k.IterateZoneReceipts(ctx, zone.ChainId, func(_ int64, receiptInfo types.Receipt) (stop bool) {
 		if (receiptInfo.FirstSeen.After(exclusionTime) || receiptInfo.FirstSeen.Equal(exclusionTime)) && receiptInfo.Completed == nil && receiptInfo.Amount[0].Denom == delAddrBalance.Denom {
+			k.Logger(ctx).Info("adding to pending amount", "pending receipt", receiptInfo)
 			pendingAmount = pendingAmount.Add(receiptInfo.Amount...)
 		}
 		return false
@@ -319,8 +326,14 @@ func (k *Keeper) FlushOutstandingDelegations(ctx sdk.Context, zone *types.Zone, 
 
 	coinsToFlush, hasNeg := sdk.NewCoins(delAddrBalance).SafeSub(pendingAmount...)
 	if hasNeg || coinsToFlush.IsZero() {
-		k.Logger(ctx).Debug("delegate account balance negative, setting outdated reciepts")
+		k.Logger(ctx).Info("delegate account balance negative, or nothing to flush, setting outdated receipts")
 		k.SetReceiptsCompleted(ctx, zone.ChainId, exclusionTime, ctx.BlockTime(), delAddrBalance.Denom)
+		if zone.GetWithdrawalWaitgroup() == 0 {
+			k.Logger(ctx).Info("triggering redemption rate calc in lieu of delegation flush")
+			if err := k.TriggerRedemptionRate(ctx, zone); err != nil {
+				return err
+			}
+		}
 		return nil
 	}
 
@@ -336,7 +349,9 @@ func (k *Keeper) FlushOutstandingDelegations(ctx sdk.Context, zone *types.Zone, 
 	if err != nil {
 		return err
 	}
-	zone.WithdrawalWaitgroup += uint32(numMsgs)
+	if err = zone.IncrementWithdrawalWaitgroup(k.Logger(ctx), uint32(numMsgs), "sending flush messages"); err != nil {
+		return err
+	}
 	k.SetZone(ctx, zone)
 	return nil
 }

@@ -1,23 +1,13 @@
 import { Button, Icon, Stack, Text, useColorModeValue } from '@chakra-ui/react';
 import { WalletStatus } from '@cosmos-kit/core';
-import { useChain, useWalletClient } from '@cosmos-kit/react';
-import React, { MouseEventHandler, ReactNode, useEffect } from 'react';
+import React, { MouseEventHandler, ReactNode } from 'react';
 import { FiAlertTriangle } from 'react-icons/fi';
 import { IoWallet } from 'react-icons/io5';
 
 import { ConnectWalletType } from '../types';
 
-export const ConnectWalletButton = ({ buttonText, isLoading, isDisabled, icon }: ConnectWalletType) => {
+export const ConnectWalletButton = ({ buttonText, isLoading, isDisabled, icon, onClickConnectBtn }: ConnectWalletType) => {
   const invertButtonTextColor = useColorModeValue('primary.50', 'primary.700');
-  const { openView } = useChain('quicksilver');
-  const { status, client } = useWalletClient();
-
-  useEffect(() => {
-    if (status === 'Done') {
-      client?.enable?.(['cosmoshub-4', 'osmosis-1', 'regen-1', 'sommelier-3', 'stargaze-1']);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [status]);
 
   return (
     <Button
@@ -57,7 +47,7 @@ export const ConnectWalletButton = ({ buttonText, isLoading, isDisabled, icon }:
           '100%': { backgroundPosition: '0% 50%' },
         },
       }}
-      onClick={openView}
+      onClick={onClickConnectBtn}
     >
       <Icon as={icon ? icon : IoWallet} mr={2} />
       {buttonText ? buttonText : 'Connect'}
@@ -164,7 +154,7 @@ export const WalletConnectComponent = ({
     case WalletStatus.Connected:
       return <>{connected}</>;
     case WalletStatus.Rejected:
-      return <>{rejected}</>;
+      return <>{disconnect}</>;
     case WalletStatus.Error:
       return <>{error}</>;
     case WalletStatus.NotExist:

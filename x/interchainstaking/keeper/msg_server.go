@@ -66,12 +66,6 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 		return nil, errors.New("account has insufficient balance of qasset to burn")
 	}
 
-	// get min of LastRedemptionRate (N-1) and RedemptionRate (N)
-	rate := sdk.MinDec(zone.LastRedemptionRate, zone.RedemptionRate)
-	nativeTokens := sdk.NewDecFromInt(msg.Value.Amount).Mul(rate).TruncateInt()
-	outTokens := sdk.NewCoin(zone.BaseDenom, nativeTokens)
-	k.Logger(ctx).Info("tokens to distribute", "amount", outTokens)
-
 	heightBytes := make([]byte, 8)
 	binary.BigEndian.PutUint64(heightBytes, uint64(ctx.BlockHeight()))
 	hash := sha256.Sum256(append(msg.GetSignBytes(), heightBytes...))
@@ -81,14 +75,8 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 		return nil, fmt.Errorf("unable to send coins to escrow account: %w", err)
 	}
 
-	if zone.LiquidityModule {
-		if err := k.processRedemptionForLsm(ctx, zone, sender, msg.DestinationAddress, nativeTokens, msg.Value, hashString); err != nil {
-			return nil, fmt.Errorf("unable to process redemption for LSM: %w", err)
-		}
-	} else {
-		if err := k.queueRedemption(ctx, zone, sender, msg.DestinationAddress, nativeTokens, msg.Value, hashString); err != nil {
-			return nil, fmt.Errorf("unable to queue redemption: %w", err)
-		}
+	if err := k.queueRedemption(ctx, zone, sender, msg.DestinationAddress, msg.Value, hashString); err != nil {
+		return nil, fmt.Errorf("unable to queue redemption: %w", err)
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
@@ -99,14 +87,54 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 		sdk.NewEvent(
 			types.EventTypeRedemptionRequest,
 			sdk.NewAttribute(types.AttributeKeyBurnAmount, msg.Value.String()),
-			sdk.NewAttribute(types.AttributeKeyRedeemAmount, nativeTokens.String()),
 			sdk.NewAttribute(types.AttributeKeyRecipientAddress, msg.DestinationAddress),
 			sdk.NewAttribute(types.AttributeKeyChainID, zone.ChainId),
-			sdk.NewAttribute(types.AttributeKeyConnectionID, zone.ConnectionId),
 		),
 	})
 
 	return &types.MsgRequestRedemptionResponse{}, nil
+}
+
+func (k msgServer) CancelRedemption(goCtx context.Context, msg *types.MsgCancelQueuedRedemption) (*types.MsgCancelQueuedRedemptionResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	record, found := k.GetWithdrawalRecord(ctx, msg.ChainId, msg.Hash, types.WithdrawStatusQueued)
+
+	if !found {
+		return nil, fmt.Errorf("no queued record with hash \"%s\" found", msg.Hash)
+	}
+
+	if record.Delegator != msg.FromAddress {
+		return nil, fmt.Errorf("incorrect user for record with hash \"%s\"", msg.Hash)
+	}
+
+	// all good. delete!
+	k.DeleteWithdrawalRecord(ctx, msg.ChainId, msg.Hash, types.WithdrawStatusQueued)
+
+	userAccAddress, err := addressutils.AddressFromBech32(record.Delegator, "")
+	if err != nil {
+		return nil, err
+	}
+
+	// return coins
+	if err := k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.EscrowModuleAccount, userAccAddress, sdk.NewCoins(record.BurnAmount)); err != nil {
+		return nil, fmt.Errorf("unable to return coins from escrow account: %w", err)
+	}
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+		),
+		sdk.NewEvent(
+			types.EventTypeRedemptionCancellation,
+			sdk.NewAttribute(types.AttributeKeyReturnedAmount, record.BurnAmount.String()),
+			sdk.NewAttribute(types.AttributeKeyUser, msg.FromAddress),
+			sdk.NewAttribute(types.AttributeKeyChainID, msg.ChainId),
+		),
+	})
+
+	return &types.MsgCancelQueuedRedemptionResponse{Returned: record.BurnAmount}, nil
 }
 
 func (k msgServer) SignalIntent(goCtx context.Context, msg *types.MsgSignalIntent) (*types.MsgSignalIntentResponse, error) {

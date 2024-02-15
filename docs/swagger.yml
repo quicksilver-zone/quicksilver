@@ -1647,10 +1647,7 @@ paths:
                         protobuf release, and it is not used for type URLs
                         beginning with
 
-                        type.googleapis.com. As of May 2023, there are no widely
-                        used type server
-
-                        implementations and no plans to implement one.
+                        type.googleapis.com.
 
 
                         Schemes other than `http`, `https` (or the empty scheme)
@@ -1695,10 +1692,6 @@ paths:
                         if (any.is(Foo.class)) {
                           foo = any.unpack(Foo.class);
                         }
-                        // or ...
-                        if (any.isSameTypeAs(Foo.getDefaultInstance())) {
-                          foo = any.unpack(Foo.getDefaultInstance());
-                        }
 
                      Example 3: Pack and unpack a message in Python.
 
@@ -1736,6 +1729,7 @@ paths:
                     type
 
                     name "y.z".
+
 
 
                     JSON
@@ -1964,10 +1958,7 @@ paths:
                         protobuf release, and it is not used for type URLs
                         beginning with
 
-                        type.googleapis.com. As of May 2023, there are no widely
-                        used type server
-
-                        implementations and no plans to implement one.
+                        type.googleapis.com.
 
 
                         Schemes other than `http`, `https` (or the empty scheme)
@@ -2012,10 +2003,6 @@ paths:
                         if (any.is(Foo.class)) {
                           foo = any.unpack(Foo.class);
                         }
-                        // or ...
-                        if (any.isSameTypeAs(Foo.getDefaultInstance())) {
-                          foo = any.unpack(Foo.getDefaultInstance());
-                        }
 
                      Example 3: Pack and unpack a message in Python.
 
@@ -2053,6 +2040,7 @@ paths:
                     type
 
                     name "y.z".
+
 
 
                     JSON
@@ -2157,6 +2145,74 @@ paths:
           type: boolean
       tags:
         - QueryInterchainQuery
+  /quicksilver/tx/v1/interchainstaking/cancel_redemption:
+    post:
+      summary: |-
+        CancelRedemption defines a method for cancelling a redemption request in
+        the queued state.
+      operationId: CancelRedemption
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              returned:
+                type: object
+                properties:
+                  denom:
+                    type: string
+                  amount:
+                    type: string
+                description: >-
+                  Coin defines a token with a denomination and an amount.
+
+
+                  NOTE: The amount field is an Int which implements the custom
+                  method
+
+                  signatures required by gogoproto.
+            description: >-
+              MsgRequestRedemptionResponse defines the MsgRequestRedemption
+              response type.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            properties:
+              chain_id:
+                type: string
+              hash:
+                type: string
+              from_address:
+                type: string
+            description: MsgCancelQueuedRedemption represents a message type to cancel .
+      tags:
+        - Msg
   /quicksilver/tx/v1/interchainstaking/close_channel:
     post:
       summary: >-
@@ -4119,6 +4175,21 @@ paths:
                       type: array
                       items:
                         type: string
+                    amount:
+                      type: object
+                      properties:
+                        denom:
+                          type: string
+                        amount:
+                          type: string
+                      description: >-
+                        Coin defines a token with a denomination and an amount.
+
+
+                        NOTE: The amount field is an Int which implements the
+                        custom method
+
+                        signatures required by gogoproto.
               pagination:
                 type: object
                 properties:

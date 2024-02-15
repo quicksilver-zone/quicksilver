@@ -1,6 +1,6 @@
-import { Progress, Flex, Text, VStack, HStack, Heading, Spinner, Tooltip, Grid, Center, Box } from '@chakra-ui/react';
+import { Progress, Flex, Text, VStack, HStack, Heading, Spinner, Tooltip, Grid, Box } from '@chakra-ui/react';
 
-import { abbreviateNumber, shiftDigits } from '@/utils';
+import { abbreviateNumber, shiftDigits, formatQasset } from '@/utils';
 
 interface PortfolioItemInterface {
   title: string;
@@ -16,8 +16,16 @@ interface MyPortfolioProps {
   totalValue: number;
   averageApy: number;
   totalYearlyYield: number;
+  isLoading: boolean;
 }
-const MyPortfolio: React.FC<MyPortfolioProps> = ({ portfolioItems, isWalletConnected, totalValue, averageApy, totalYearlyYield }) => {
+const MyPortfolio: React.FC<MyPortfolioProps> = ({
+  portfolioItems,
+  isWalletConnected,
+  totalValue,
+  averageApy,
+  totalYearlyYield,
+  isLoading,
+}) => {
   if (!isWalletConnected) {
     return (
       <Flex
@@ -38,7 +46,7 @@ const MyPortfolio: React.FC<MyPortfolioProps> = ({ portfolioItems, isWalletConne
     );
   }
 
-  if (!totalValue) {
+  if (isLoading) {
     return (
       <Flex
         w="100%"
@@ -87,9 +95,16 @@ const MyPortfolio: React.FC<MyPortfolioProps> = ({ portfolioItems, isWalletConne
                   <Text fontSize="md" fontWeight="light">
                     AVG APY:
                   </Text>
-                  <Text fontSize="md" fontWeight="medium">
-                    {shiftDigits(averageApy.toFixed(2), 2)}%
-                  </Text>
+                  {Number.isNaN(averageApy) && (
+                    <Text fontSize="md" fontWeight="medium">
+                      0%
+                    </Text>
+                  )}
+                  {Number.isFinite(averageApy) && (
+                    <Text fontSize="md" fontWeight="medium">
+                      {shiftDigits(averageApy.toFixed(2), 2)}%
+                    </Text>
+                  )}
                 </HStack>
                 <Text textAlign="center">
                   <Text as="span" fontSize="md" fontWeight="light">
@@ -103,9 +118,15 @@ const MyPortfolio: React.FC<MyPortfolioProps> = ({ portfolioItems, isWalletConne
             </Flex>
           </VStack>
         </Flex>
-
+        {totalValue === 0 && (
+          <Flex w="100%" mt={-10} justifyContent="center" alignItems="center">
+            <Text fontSize="xl" textAlign="center">
+              You have no liquid staked assets.
+            </Text>
+          </Flex>
+        )}
         <Flex justifyContent="flex-start" borderRadius={6} alignItems="flex-start" gap={4}>
-          <VStack alignSelf="stretch" h="158px" overflowY="auto" borderRadius={6} alignItems="center" gap={3}>
+          <VStack alignSelf="stretch" h="158px" overflowY="auto" className="custom-scrollbar" borderRadius={6} alignItems="center" gap={3}>
             {portfolioItems
               .filter((item) => Number(item.amount) > 0)
               .map((item) => (
@@ -116,6 +137,7 @@ const MyPortfolio: React.FC<MyPortfolioProps> = ({ portfolioItems, isWalletConne
                   progressBarColor={item.progressBarColor}
                   amount={item.amount}
                   qTokenPrice={item.qTokenPrice}
+                  totalValue={totalValue}
                 />
               ))}
           </VStack>
@@ -131,9 +153,10 @@ interface PortfolioItemProps {
   progressBarColor: string;
   amount: string;
   qTokenPrice: number;
+  totalValue: number;
 }
 
-const PortfolioItem: React.FC<PortfolioItemProps> = ({ title, percentage, progressBarColor, amount, qTokenPrice }) => {
+const PortfolioItem: React.FC<PortfolioItemProps> = ({ title, percentage, progressBarColor, amount, qTokenPrice, totalValue }) => {
   const amountLength = amount.toString().length;
   const amountWidth = Math.min(Math.max(amountLength * 8, 90), 100);
 
@@ -146,7 +169,7 @@ const PortfolioItem: React.FC<PortfolioItemProps> = ({ title, percentage, progre
           </Text>
         </Tooltip>
         <Text textAlign={'left'} fontSize="md" fontWeight="medium">
-          {title}
+          {formatQasset(title)}
         </Text>
       </HStack>
 

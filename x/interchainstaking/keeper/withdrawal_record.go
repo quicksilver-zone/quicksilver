@@ -29,9 +29,9 @@ func (k *Keeper) GetNextWithdrawalRecordSequence(ctx sdk.Context) (sequence uint
 	return sequence
 }
 
-func (k *Keeper) AddWithdrawalRecord(ctx sdk.Context, chainID, delegator string, distributions []*types.Distribution, recipient string, amount sdk.Coins, burnAmount sdk.Coin, hash string, status int32, completionTime time.Time, epochNumber int64) {
-	record := types.WithdrawalRecord{ChainId: chainID, Delegator: delegator, Distribution: distributions, Recipient: recipient, Amount: amount, Status: status, BurnAmount: burnAmount, Txhash: hash, CompletionTime: completionTime, EpochNumber: epochNumber}
-	k.Logger(ctx).Error("addWithdrawalRecord", "record", record)
+func (k *Keeper) AddWithdrawalRecord(ctx sdk.Context, chainID, delegator string, distributions []*types.Distribution, recipient string, burnAmount sdk.Coin, hash string, status int32, completionTime time.Time, epochNumber int64) {
+	record := types.WithdrawalRecord{ChainId: chainID, Delegator: delegator, Distribution: distributions, Recipient: recipient, Status: status, BurnAmount: burnAmount, Txhash: hash, CompletionTime: completionTime, EpochNumber: epochNumber}
+	k.Logger(ctx).Info("addWithdrawalRecord", "record", record)
 	k.SetWithdrawalRecord(ctx, record)
 }
 
@@ -245,7 +245,7 @@ func (k *Keeper) UpdateWithdrawalRecordsForSlash(ctx sdk.Context, zone *types.Zo
 			thisSubAmount := distAmount.TruncateInt().Sub(newAmount)
 			recordSubAmount = recordSubAmount.Add(thisSubAmount)
 			d.Amount = newAmount.Uint64()
-			k.Logger(ctx).Info("Updated withdrawal record due to slashing", "valoper", valoper, "old_amount", d.Amount, "new_amount", newAmount.Int64(), "sub_amount", thisSubAmount.Int64())
+			k.Logger(ctx).Info("Updated withdrawal record due to slashing", "valoper", valoper, "old_amount", d.Amount, "new_amount", newAmount.String(), "sub_amount", thisSubAmount.String())
 		}
 		record.Distribution = distr
 		subAmount := sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, recordSubAmount))

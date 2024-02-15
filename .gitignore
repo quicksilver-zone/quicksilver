@@ -72,3 +72,4 @@ web-ui/.vercel
 # typescript
 web-ui/*.tsbuildinfo
 web-ui/next-env.d.ts
+.vercel

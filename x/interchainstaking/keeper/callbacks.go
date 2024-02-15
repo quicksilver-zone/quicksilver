@@ -124,12 +124,12 @@ func RewardsCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Que
 
 	// decrement waitgroup as we have received back the query
 	// (initially incremented in AfterEpochEnd)
-	err = zone.DecrementWithdrawalWaitgroup()
+	err = zone.DecrementWithdrawalWaitgroup(k.Logger(ctx), 1, "rewards callback")
 	if err != nil {
 		return err
 	}
 
-	k.Logger(ctx).Debug("QueryDelegationRewards callback", "wg", zone.WithdrawalWaitgroup, "delegatorAddress", rewardsQuery.DelegatorAddress, "zone", query.ChainId)
+	k.Logger(ctx).Debug("QueryDelegationRewards callback", "wg", zone.GetWithdrawalWaitgroup(), "delegatorAddress", rewardsQuery.DelegatorAddress, "zone", query.ChainId)
 
 	return k.WithdrawDelegationRewardsForResponse(ctx, &zone, rewardsQuery.DelegatorAddress, args)
 }
@@ -275,7 +275,7 @@ func SigningInfoCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes
 	valSigningInfo := slashingtypes.ValidatorSigningInfo{}
 	if len(args) == 0 {
 		k.Logger(ctx).Error("unable to find signing info for validator", "query", query.Request)
-		return errors.New("attempted to unmarshal zero length byte slice (10)")
+		return nil
 	}
 	err := k.cdc.Unmarshal(args, &valSigningInfo)
 	if err != nil {
@@ -291,7 +291,7 @@ func SigningInfoCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes
 			return fmt.Errorf("can not get validator address from consensus address: %s", valSigningInfo.Address)
 		}
 
-		k.Logger(ctx).Error("Tombstoned validator found", "valoper", valAddr)
+		k.Logger(ctx).Info("tombstoned validator found", "valoper", valAddr)
 
 		valAddrBytes, err := addressutils.ValAddressFromBech32(valAddr, zone.GetValoperPrefix())
 		if err != nil {
@@ -622,7 +622,7 @@ func DelegationAccountBalanceCallback(k *Keeper, ctx sdk.Context, args []byte, q
 	}
 
 	k.Logger(ctx).Info("Received balance response for denom", "denom", coin.Denom)
-	err = zone.DecrementWithdrawalWaitgroup()
+	err = zone.DecrementWithdrawalWaitgroup(k.Logger(ctx), 1, "delegationaccountbalance callback")
 	if err != nil {
 		return err
 	}
@@ -642,6 +642,12 @@ func DelegationAccountBalanceCallback(k *Keeper, ctx sdk.Context, args []byte, q
 
 	k.SetZone(ctx, &zone)
 
+	// if token is not valid for staking, then send to withdrawal account.
+	if valid, _ := zone.ValidateCoinsForZone(sdk.NewCoins(coin), k.GetValidatorAddressesAsMap(ctx, zone.ChainId)); !valid {
+		k.Logger(ctx).Info("token is not a valid staking token, so sending to withdrawal account for disbursal", "chain", zone.ChainId, "assets", coin)
+		return k.SendToWithdrawal(ctx, &zone, zone.DelegationAddress, sdk.NewCoins(coin))
+	}
+
 	return k.FlushOutstandingDelegations(ctx, &zone, coin)
 }
 
@@ -653,7 +659,9 @@ func DelegationAccountBalancesCallback(k *Keeper, ctx sdk.Context, args []byte, 
 	result := banktypes.QueryAllBalancesResponse{}
 	k.cdc.MustUnmarshal(args, &result)
 
-	zone.WithdrawalWaitgroup--
+	if err := zone.DecrementWithdrawalWaitgroup(k.Logger(ctx), 1, "delegationaccountbalances callback"); err != nil {
+		return err
+	}
 
 	addressBytes, err := addressutils.AccAddressFromBech32(zone.DelegationAddress.Address, zone.AccountPrefix)
 	if err != nil {
@@ -677,8 +685,10 @@ func DelegationAccountBalancesCallback(k *Keeper, ctx sdk.Context, args []byte, 
 			0,
 		)
 
-		k.Logger(ctx).Info("Emitting balance request for denom", "denom", coin.Denom)
-		zone.WithdrawalWaitgroup++
+		if err = zone.IncrementWithdrawalWaitgroup(k.Logger(ctx), 1, fmt.Sprintf("delegation account balance for %s", coin.Denom)); err != nil {
+			return err
+		}
+		k.Logger(ctx).Info("Emitting balance request for denom", "denom", coin.Denom, "waitgroup", zone.GetWithdrawalWaitgroup())
 	}
 	k.SetZone(ctx, &zone)
 
@@ -708,22 +718,22 @@ func AllBalancesCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes
 	case zone.DepositAddress != nil && balanceQuery.Address == zone.DepositAddress.Address:
 		if zone.DepositAddress.BalanceWaitgroup != 0 {
 			zone.DepositAddress.BalanceWaitgroup = 0
-			k.Logger(ctx).Error("Zeroing deposit balance waitgroup")
+			k.Logger(ctx).Info("zeroing deposit balance waitgroup")
 		}
 	case zone.WithdrawalAddress != nil && balanceQuery.Address == zone.WithdrawalAddress.Address:
 		if zone.WithdrawalAddress.BalanceWaitgroup != 0 {
 			zone.WithdrawalAddress.BalanceWaitgroup = 0
-			k.Logger(ctx).Error("Zeroing withdrawal balance waitgroup")
+			k.Logger(ctx).Info("zeroing withdrawal balance waitgroup")
 		}
 	case zone.DelegationAddress != nil && balanceQuery.Address == zone.DelegationAddress.Address:
 		if zone.DelegationAddress.BalanceWaitgroup != 0 {
 			zone.DelegationAddress.BalanceWaitgroup = 0
-			k.Logger(ctx).Error("Zeroing delegation balance waitgroup")
+			k.Logger(ctx).Info("zeroing delegation balance waitgroup")
 		}
 	case zone.PerformanceAddress != nil && balanceQuery.Address == zone.PerformanceAddress.Address:
 		if zone.PerformanceAddress.BalanceWaitgroup != 0 {
 			zone.PerformanceAddress.BalanceWaitgroup = 0
-			k.Logger(ctx).Error("Zeroing performance balance waitgroup")
+			k.Logger(ctx).Info("zeroing performance balance waitgroup")
 		}
 	}
 	k.SetZone(ctx, &zone)
@@ -735,7 +745,7 @@ func AllBalancesCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes
 func TxDecoder(cdc codec.Codec) sdk.TxDecoder {
 	return func(txBytes []byte) (sdk.Tx, error) {
 		// Make sure txBytes follow ADR-027.
-		err := rejectNonADR027TxRaw(txBytes)
+		err := RejectNonADR027TxRaw(txBytes)
 		if err != nil {
 			return nil, sdkioerrors.Wrap(sdkerrors.ErrTxDecode, err.Error())
 		}
@@ -769,7 +779,7 @@ func TxDecoder(cdc codec.Codec) sdk.TxDecoder {
 	}
 }
 
-func rejectNonADR027TxRaw(txBytes []byte) error {
+func RejectNonADR027TxRaw(txBytes []byte) error {
 	// Make sure all fields are ordered in ascending order with this variable.
 	prevTagNum := protowire.Number(0)
 
@@ -797,7 +807,7 @@ func rejectNonADR027TxRaw(txBytes []byte) error {
 			return fmt.Errorf("invalid length; %w", protowire.ParseError(m))
 		}
 		// We make sure that this varint is as short as possible.
-		n := varintMinLength(lengthPrefix)
+		n := VarintMinLength(lengthPrefix)
 		if n != m {
 			return fmt.Errorf("length prefix varint for tagNum %d is not as short as possible, read %d, only need %d", tagNum, m, n)
 		}
@@ -813,9 +823,9 @@ func rejectNonADR027TxRaw(txBytes []byte) error {
 	return nil
 }
 
-// varintMinLength returns the minimum number of bytes necessary to encode an
+// VarintMinLength returns the minimum number of bytes necessary to encode an
 // uint using varint encoding.
-func varintMinLength(n uint64) int {
+func VarintMinLength(n uint64) int {
 	switch {
 	// Note: 1<<N == 2**N.
 	case n < 1<<(7):

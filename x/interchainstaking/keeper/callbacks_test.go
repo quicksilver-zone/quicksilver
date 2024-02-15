@@ -3,18 +3,23 @@ package keeper_test
 import (
 	"bytes"
 	"encoding/base64"
+	"encoding/binary"
 	"fmt"
+	"math"
 	"testing"
 	"time"
 
 	ics23 "github.com/confio/ics23/go"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/proto/tendermint/types"
+	"google.golang.org/protobuf/encoding/protowire"
 
-	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -31,6 +36,7 @@ import (
 
 	"github.com/quicksilver-zone/quicksilver/app"
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
+	"github.com/quicksilver-zone/quicksilver/utils/ica"
 	icqtypes "github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
 	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/keeper"
 	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
@@ -721,7 +727,7 @@ func (suite *KeeperTestSuite) TestHandleRewardsCallbackNonDelegator() {
 		ctx := suite.chainA.GetContext()
 
 		zone, _ := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
-		zone.WithdrawalWaitgroup++
+		suite.NoError(zone.IncrementWithdrawalWaitgroup(quicksilver.Logger(), 1, "test rewards callback handler"))
 		quicksilver.InterchainstakingKeeper.SetZone(ctx, &zone)
 
 		user := addressutils.GenerateAccAddressForTest()
@@ -757,7 +763,8 @@ func (suite *KeeperTestSuite) TestHandleRewardsCallbackEmptyResponse() {
 		ctx := suite.chainA.GetContext()
 
 		zone, _ := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
-		zone.WithdrawalWaitgroup++
+		suite.NoError(zone.IncrementWithdrawalWaitgroup(quicksilver.Logger(), 1, "test rewards callback handler"))
+
 		quicksilver.InterchainstakingKeeper.SetZone(ctx, &zone)
 
 		queryReq := distrtypes.QueryDelegationTotalRewardsRequest{
@@ -786,7 +793,8 @@ func (suite *KeeperTestSuite) TestHandleValideRewardsCallback() {
 		ctx := suite.chainA.GetContext()
 
 		zone, _ := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
-		zone.WithdrawalWaitgroup++
+		suite.NoError(zone.IncrementWithdrawalWaitgroup(quicksilver.Logger(), 1, "test rewards callback handler"))
+
 		quicksilver.InterchainstakingKeeper.SetZone(ctx, &zone)
 
 		queryReq := distrtypes.QueryDelegationTotalRewardsRequest{
@@ -847,7 +855,7 @@ func (suite *KeeperTestSuite) TestHandleDistributeRewardsCallback() {
 				balances := sdk.NewCoins(
 					sdk.NewCoin(
 						zone.LocalDenom,
-						math.NewInt(100_000_000),
+						sdkmath.NewInt(100_000_000),
 					),
 				)
 				err := quicksilver.MintKeeper.MintCoins(ctxA, balances)
@@ -868,7 +876,7 @@ func (suite *KeeperTestSuite) TestHandleDistributeRewardsCallback() {
 				balances := sdk.NewCoins(
 					sdk.NewCoin(
 						zone.BaseDenom,
-						math.NewInt(1_000_000),
+						sdkmath.NewInt(1_000_000),
 					),
 				)
 
@@ -934,7 +942,7 @@ func (suite *KeeperTestSuite) TestHandleDistributeRewardsCallback() {
 				balances := sdk.NewCoins(
 					sdk.NewCoin(
 						zone.BaseDenom,
-						math.NewInt(10_000_000),
+						sdkmath.NewInt(10_000_000),
 					),
 				)
 
@@ -961,7 +969,7 @@ func (suite *KeeperTestSuite) TestHandleDistributeRewardsCallback() {
 			responseMsg: func() []byte {
 				balance := sdk.NewCoin(
 					zone.BaseDenom,
-					math.NewInt(10_000_000),
+					sdkmath.NewInt(10_000_000),
 				)
 				respbz, err := quicksilver.AppCodec().Marshal(&balance)
 				suite.NoError(err)
@@ -981,7 +989,7 @@ func (suite *KeeperTestSuite) TestHandleDistributeRewardsCallback() {
 				balances := sdk.NewCoins(
 					sdk.NewCoin(
 						zone.BaseDenom,
-						math.NewInt(10_000_000),
+						sdkmath.NewInt(10_000_000),
 					),
 				)
 
@@ -1003,7 +1011,7 @@ func (suite *KeeperTestSuite) TestHandleDistributeRewardsCallback() {
 			balances := sdk.NewCoins(
 				sdk.NewCoin(
 					zone.BaseDenom,
-					math.NewInt(10_000_000),
+					sdkmath.NewInt(10_000_000),
 				),
 			)
 			err := gaia.MintKeeper.MintCoins(ctxB, balances)
@@ -1035,7 +1043,7 @@ func (suite *KeeperTestSuite) TestHandleDistributeRewardsCallback() {
 }
 
 func (suite *KeeperTestSuite) TestAllBalancesCallback() {
-	suite.Run("all balances non-zero)", func() {
+	suite.Run("all balances non-zero", func() {
 		suite.SetupTest()
 		suite.setupTestZones()
 
@@ -1083,7 +1091,7 @@ func (suite *KeeperTestSuite) TestAllBalancesCallback() {
 }
 
 func (suite *KeeperTestSuite) TestAllBalancesCallbackWithExistingWg() {
-	suite.Run("all balances non-zero)", func() {
+	suite.Run("all balances non-zero, existing wg", func() {
 		suite.SetupTest()
 		suite.setupTestZones()
 
@@ -1988,17 +1996,6 @@ func (suite *KeeperTestSuite) TestSigningInfoCallback() {
 			},
 			expectErr: true,
 		},
-		// args has no len
-		{
-			name: "args has no len",
-			malleate: func(quicksilver *app.Quicksilver, ctx sdk.Context) []byte {
-				return []byte{}
-			},
-			query: icqtypes.Query{
-				ChainId: suite.chainB.ChainID,
-			},
-			expectErr: true,
-		},
 		// wrong type args
 		{
 			name: "wrong type args",
@@ -2278,7 +2275,7 @@ func (suite *KeeperTestSuite) TestDepositLsmTxCallback() {
 		// expect quick1a2zht8x2j0dqvuejr8pxpu7due3qmk405vakg9 to have 5000 uqatoms now!
 		addrBytes, _ := addressutils.AccAddressFromBech32("cosmos1a2zht8x2j0dqvuejr8pxpu7due3qmk40lgdy3h", "")
 		newBalance := quicksilver.BankKeeper.GetAllBalances(ctx, addrBytes)
-		suite.Equal(newBalance.AmountOf("uqatom"), math.NewInt(5000))
+		suite.Equal(newBalance.AmountOf("uqatom"), sdkmath.NewInt(5000))
 
 		// check receipt was created.
 		receipt, found := quicksilver.InterchainstakingKeeper.GetReceipt(ctx, zone.ChainId, requestData.Hash)
@@ -2306,7 +2303,7 @@ func (suite *KeeperTestSuite) TestDepositLsmTxCallback() {
 		suite.NoError(err)
 
 		nowBalance := quicksilver.BankKeeper.GetAllBalances(ctx, addrBytes)
-		suite.Equal(nowBalance.AmountOf("uqatom"), math.NewInt(5000))
+		suite.Equal(nowBalance.AmountOf("uqatom"), sdkmath.NewInt(5000))
 	})
 }
 
@@ -2376,7 +2373,7 @@ func (suite *KeeperTestSuite) TestDepositTxCallback2() {
 		// expect cosmos1a2zht8x2j0dqvuejr8pxpu7due3qmk40lgdy3h to have 500000 uqatoms now!
 		addrBytes, _ := addressutils.AccAddressFromBech32("cosmos1a2zht8x2j0dqvuejr8pxpu7due3qmk40lgdy3h", "")
 		newBalance := quicksilver.BankKeeper.GetAllBalances(ctx, addrBytes)
-		suite.Equal(newBalance.AmountOf("uqatom"), math.NewInt(500000))
+		suite.Equal(newBalance.AmountOf("uqatom"), sdkmath.NewInt(500000))
 
 		// check receipt was created.
 		receipt, found := quicksilver.InterchainstakingKeeper.GetReceipt(ctx, zone.ChainId, requestData.Hash)
@@ -2404,7 +2401,7 @@ func (suite *KeeperTestSuite) TestDepositTxCallback2() {
 		suite.NoError(err)
 
 		nowBalance := quicksilver.BankKeeper.GetAllBalances(ctx, addrBytes)
-		suite.Equal(nowBalance.AmountOf("uqatom"), math.NewInt(500000))
+		suite.Equal(nowBalance.AmountOf("uqatom"), sdkmath.NewInt(500000))
 	})
 }
 
@@ -2456,12 +2453,13 @@ func (suite *KeeperTestSuite) TestDepositLsmTxCallbackFailOnNonMatchingValidator
 		// trigger the callback
 		err = keeper.DepositTxCallback(quicksilver.InterchainstakingKeeper, ctx, payloadBytes, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: resDataBz})
 
-		suite.ErrorContains(err, "unable to validate coins. Ignoring.")
+		// we used to error here, but now we don't to avoid blocking queues.
+		suite.NoError(err)
 
 		// expect quick1a2zht8x2j0dqvuejr8pxpu7due3qmk405vakg9 to have 0 uqatoms, as the deposit failed.
 		addrBytes, _ := addressutils.AccAddressFromBech32("cosmos1a2zht8x2j0dqvuejr8pxpu7due3qmk40lgdy3h", "")
 		newBalance := quicksilver.BankKeeper.GetAllBalances(ctx, addrBytes)
-		suite.Equal(newBalance.AmountOf("uqatom"), math.NewInt(0))
+		suite.Equal(newBalance.AmountOf("uqatom"), sdkmath.NewInt(0))
 
 		_, found = quicksilver.InterchainstakingKeeper.GetReceipt(ctx, zone.ChainId, requestData.Hash)
 
@@ -2538,7 +2536,7 @@ func (suite *KeeperTestSuite) TestDelegationAccountBalancesCallback() {
 			ctx := suite.chainA.GetContext()
 
 			zone, _ := app.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
-			zone.WithdrawalWaitgroup = 1
+			zone.SetWithdrawalWaitgroup(app.Logger(), 1, "init")
 			zone.DelegationAddress.Balance = t.PreviousBalance
 			app.InterchainstakingKeeper.SetZone(ctx, &zone)
 
@@ -2557,7 +2555,7 @@ func (suite *KeeperTestSuite) TestDelegationAccountBalancesCallback() {
 
 			// refetch zone
 			zone, _ = app.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
-			suite.Require().Equal(t.ExpectedWaitgroup, zone.WithdrawalWaitgroup)
+			suite.Require().Equal(t.ExpectedWaitgroup, zone.GetWithdrawalWaitgroup())
 
 			_, addr, err := bech32.DecodeAndConvert(zone.DelegationAddress.Address)
 			suite.Require().NoError(err)
@@ -2582,6 +2580,80 @@ func (suite *KeeperTestSuite) TestDelegationAccountBalancesCallback() {
 	}
 }
 
+func (suite *KeeperTestSuite) TestDelegationAccountBalanceCallbackDenomMismatch() {
+	suite.Run("delegation account balance", func() {
+		suite.SetupTest()
+		suite.setupTestZones()
+
+		app := suite.GetQuicksilverApp(suite.chainA)
+		app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
+		ctx := suite.chainA.GetContext()
+
+		zone, _ := app.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+		zone.SetWithdrawalWaitgroup(app.Logger(), 2, "init")
+		zone.DelegationAddress.Balance = sdk.NewCoins(sdk.NewCoin("uatom", sdkmath.NewInt(500_000_000)))
+		app.InterchainstakingKeeper.SetZone(ctx, &zone)
+
+		response := sdk.NewCoin("uatom", sdk.NewInt(500_000_000))
+		respbz, err := app.AppCodec().Marshal(&response)
+		suite.Require().NoError(err)
+
+		accAddr, err := sdk.AccAddressFromBech32(zone.DelegationAddress.Address)
+		suite.Require().NoError(err)
+		data := append(banktypes.CreateAccountBalancesPrefix(accAddr), []byte("uqck")...)
+
+		err = keeper.DelegationAccountBalanceCallback(app.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: data})
+		suite.Require().Error(err)
+	})
+}
+
+func (suite *KeeperTestSuite) TestDelegationAccountBalancesCallbackNoWg() {
+	tcs := []struct {
+		Name               string
+		PreviousBalance    sdk.Coins
+		IncomingBalance    sdk.Coins
+		ExpectedQueryCount int
+		ExpectedWaitgroup  uint32
+	}{
+		{
+			Name:               "initial nil, incoming uqck",
+			PreviousBalance:    sdk.NewCoins(),
+			IncomingBalance:    sdk.NewCoins(sdk.NewCoin("uqck", sdk.NewInt(1))),
+			ExpectedQueryCount: 1, // uqck
+			ExpectedWaitgroup:  1,
+		},
+	}
+
+	for _, t := range tcs {
+		suite.Run(t.Name, func() {
+			suite.SetupTest()
+			suite.setupTestZones()
+
+			app := suite.GetQuicksilverApp(suite.chainA)
+			app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
+			ctx := suite.chainA.GetContext()
+
+			zone, _ := app.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+			zone.WithdrawalWaitgroup = 0
+			zone.DelegationAddress.Balance = t.PreviousBalance
+			app.InterchainstakingKeeper.SetZone(ctx, &zone)
+
+			query := banktypes.QueryAllBalancesRequest{
+				Address: zone.DelegationAddress.Address,
+			}
+			reqbz, err := app.AppCodec().Marshal(&query)
+			suite.Require().NoError(err)
+
+			response := banktypes.QueryAllBalancesResponse{Balances: t.IncomingBalance}
+			respbz, err := app.AppCodec().Marshal(&response)
+			suite.Require().NoError(err)
+
+			err = keeper.DelegationAccountBalancesCallback(app.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: reqbz})
+			suite.Require().Error(err)
+		})
+	}
+}
+
 func (suite *KeeperTestSuite) TestDelegationAccountBalanceCallback() {
 	suite.Run("delegation account balance", func() {
 		suite.SetupTest()
@@ -2592,11 +2664,11 @@ func (suite *KeeperTestSuite) TestDelegationAccountBalanceCallback() {
 		ctx := suite.chainA.GetContext()
 
 		zone, _ := app.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
-		zone.WithdrawalWaitgroup = 2
-		zone.DelegationAddress.Balance = sdk.NewCoins(sdk.NewCoin("uatom", math.NewInt(500)))
+		zone.SetWithdrawalWaitgroup(app.Logger(), 2, "init")
+		zone.DelegationAddress.Balance = sdk.NewCoins(sdk.NewCoin("uatom", sdkmath.NewInt(500_000_000)))
 		app.InterchainstakingKeeper.SetZone(ctx, &zone)
 
-		response := sdk.NewCoin("uatom", sdk.NewInt(10))
+		response := sdk.NewCoin("uatom", sdk.NewInt(500_000_000))
 		respbz, err := app.AppCodec().Marshal(&response)
 		suite.Require().NoError(err)
 
@@ -2609,8 +2681,8 @@ func (suite *KeeperTestSuite) TestDelegationAccountBalanceCallback() {
 
 		ctx = suite.chainA.GetContext()
 		zone, _ = app.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
-		suite.Equal(uint32(5), zone.WithdrawalWaitgroup) // initial 2 is reduced to 1, but incremented by 4 (4x delegation messages) == 5
-		suite.Equal(sdk.NewInt(10), zone.DelegationAddress.Balance.AmountOf("uatom"))
+		suite.Equal(uint32(5), zone.GetWithdrawalWaitgroup()) // initial 2 is reduced to 1, but incremented by 4 (4x delegation messages) == 5
+		suite.Equal(sdk.NewInt(500_000_000), zone.DelegationAddress.Balance.AmountOf("uatom"))
 	})
 }
 
@@ -2627,8 +2699,8 @@ func (suite *KeeperTestSuite) TestDelegationAccountBalanceCallbackLSM() {
 
 		valOper := app.InterchainstakingKeeper.GetValidatorAddresses(ctx, suite.chainB.ChainID)[0]
 		denom := valOper + "/1"
-		zone.WithdrawalWaitgroup = 2
-		zone.DelegationAddress.Balance = sdk.NewCoins(sdk.NewCoin("uatom", math.NewInt(500)))
+		zone.SetWithdrawalWaitgroup(app.Logger(), 2, "init")
+		zone.DelegationAddress.Balance = sdk.NewCoins(sdk.NewCoin("uatom", sdkmath.NewInt(500)))
 		app.InterchainstakingKeeper.SetZone(ctx, &zone)
 
 		response := sdk.NewCoin(denom, sdk.NewInt(10))
@@ -2644,9 +2716,55 @@ func (suite *KeeperTestSuite) TestDelegationAccountBalanceCallbackLSM() {
 
 		ctx = suite.chainA.GetContext()
 		zone, _ = app.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
-		suite.Equal(uint32(2), zone.WithdrawalWaitgroup) // initial 2 is reduced to 1, but incremented by 1 (1x redeem token messages) == 2
+		suite.Equal(uint32(2), zone.GetWithdrawalWaitgroup()) // initial 2 is reduced to 1, but incremented by 1 (1x redeem token messages) == 2
 		suite.Equal(sdk.NewInt(500), zone.DelegationAddress.Balance.AmountOf("uatom"))
 		suite.Equal(sdk.NewInt(10), zone.DelegationAddress.Balance.AmountOf(denom))
+	})
+}
+
+func (suite *KeeperTestSuite) TestDelegationAccountBalanceCallbackLSMBadZone() {
+	suite.Run("delegation account balance", func() {
+		suite.SetupTest()
+		suite.setupTestZones()
+
+		txk := ica.TxKeeper{}
+		app := suite.GetQuicksilverApp(suite.chainA)
+		app.InterchainstakingKeeper.OverrideTxSubmit(ica.GetTestSubmitTxFn(&txk))
+
+		app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
+		ctx := suite.chainA.GetContext()
+
+		zone, _ := app.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+
+		valOper := addressutils.GenerateAddressForTestWithPrefix("quickvaloper")
+		denom := valOper + "/1"
+		zone.SetWithdrawalWaitgroup(app.Logger(), 2, "init")
+		zone.DelegationAddress.Balance = sdk.NewCoins(sdk.NewCoin("uatom", sdkmath.NewInt(500)))
+		app.InterchainstakingKeeper.SetZone(ctx, &zone)
+
+		response := sdk.NewCoin(denom, sdk.NewInt(10))
+		respbz, err := app.AppCodec().Marshal(&response)
+		suite.Require().NoError(err)
+
+		accAddr, err := sdk.AccAddressFromBech32(zone.DelegationAddress.Address)
+		suite.Require().NoError(err)
+		data := append(banktypes.CreateAccountBalancesPrefix(accAddr), []byte(denom)...)
+
+		err = keeper.DelegationAccountBalanceCallback(app.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: data})
+		suite.Require().NoError(err)
+
+		ctx = suite.chainA.GetContext()
+		zone, _ = app.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+		suite.Equal(uint32(1), zone.GetWithdrawalWaitgroup()) // initial 2 is reduced to 1, and not incremented (no wg increment for sendToWithdrawal)
+		suite.Equal(sdk.NewInt(500), zone.DelegationAddress.Balance.AmountOf("uatom"))
+		suite.Equal(sdk.NewInt(10), zone.DelegationAddress.Balance.AmountOf(denom))
+		suite.Equal(1, len(txk.Txs))
+
+		sendMsg, ok := txk.Txs[0].Msgs[0].(*banktypes.MsgSend)
+		suite.True(ok)
+		suite.Equal(zone.WithdrawalAddress.Address, sendMsg.ToAddress)
+		suite.Equal(zone.DelegationAddress.Address, sendMsg.FromAddress)
+		suite.Equal(sdk.NewCoins(response), sendMsg.Amount)
 	})
 }
 
@@ -2683,6 +2801,137 @@ func (suite *KeeperTestSuite) TestPerfBalanceCallbackUpdate() {
 		zone, _ = quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 		suite.Equal(response.Amount, zone.PerformanceAddress.Balance.AmountOf(response.Denom))
 	})
+}
+
+func TestRejectNonADR027(t *testing.T) {
+	registry := codectypes.NewInterfaceRegistry()
+	cdc := codec.NewProtoCodec(registry)
+	decoder := keeper.TxDecoder(cdc)
+
+	body := &testdata.TestUpdatedTxBody{Memo: "AAA"} // Look for "65 65 65" when debugging the bytes stream.
+	bodyBz, err := body.Marshal()
+	require.NoError(t, err)
+	authInfo := &testdata.TestUpdatedAuthInfo{Fee: &tx.Fee{GasLimit: 127}} // Look for "127" when debugging the bytes stream.
+	authInfoBz, err := authInfo.Marshal()
+	require.NoError(t, err)
+	txRaw := &tx.TxRaw{
+		BodyBytes:     bodyBz,
+		AuthInfoBytes: authInfoBz,
+		Signatures:    [][]byte{{41}, {42}, {43}}, // Look for "42" when debugging the bytes stream.
+	}
+
+	// We know these bytes are ADR-027-compliant.
+	txBz, err := txRaw.Marshal()
+
+	// From the `txBz`, we extract the 3 components:
+	// bodyBz, authInfoBz, sigsBz.
+	// In our tests, we will try to decode txs with those 3 components in all
+	// possible orders.
+	//
+	// Consume "BodyBytes" field.
+	_, _, m := protowire.ConsumeField(txBz)
+	bodyBz = append([]byte{}, txBz[:m]...)
+	txBz = txBz[m:] // Skip over "BodyBytes" bytes.
+	// Consume "AuthInfoBytes" field.
+	_, _, m = protowire.ConsumeField(txBz)
+	authInfoBz = append([]byte{}, txBz[:m]...)
+	txBz = txBz[m:] // Skip over "AuthInfoBytes" bytes.
+	// Consume "Signature" field, it's the remaining bytes.
+	sigsBz := append([]byte{}, txBz...)
+
+	// bodyBz's length prefix is 5, with `5` as varint encoding. We also try a
+	// longer varint encoding for 5: `133 00`.
+	longVarintBodyBz := append(append([]byte{bodyBz[0]}, byte(133), byte(0o0)), bodyBz[2:]...)
+
+	tests := []struct {
+		name      string
+		txBz      []byte
+		shouldErr bool
+	}{
+		{
+			"authInfo, body, sigs",
+			append(append(authInfoBz, bodyBz...), sigsBz...),
+			true,
+		},
+		{
+			"authInfo, sigs, body",
+			append(append(authInfoBz, sigsBz...), bodyBz...),
+			true,
+		},
+		{
+			"sigs, body, authInfo",
+			append(append(sigsBz, bodyBz...), authInfoBz...),
+			true,
+		},
+		{
+			"sigs, authInfo, body",
+			append(append(sigsBz, authInfoBz...), bodyBz...),
+			true,
+		},
+		{
+			"body, sigs, authInfo",
+			append(append(bodyBz, sigsBz...), authInfoBz...),
+			true,
+		},
+		{
+			"body, authInfo, sigs (valid txRaw)",
+			append(append(bodyBz, authInfoBz...), sigsBz...),
+			false,
+		},
+		{
+			"longer varint than needed",
+			append(append(longVarintBodyBz, authInfoBz...), sigsBz...),
+			true,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			_, err = decoder(tt.txBz)
+			if tt.shouldErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestVarintMinLength(t *testing.T) {
+	tests := []struct {
+		n uint64
+	}{
+		{1<<7 - 1},
+		{1 << 7},
+		{1<<14 - 1},
+		{1 << 14},
+		{1<<21 - 1},
+		{1 << 21},
+		{1<<28 - 1},
+		{1 << 28},
+		{1<<35 - 1},
+		{1 << 35},
+		{1<<42 - 1},
+		{1 << 42},
+		{1<<49 - 1},
+		{1 << 49},
+		{1<<56 - 1},
+		{1 << 56},
+		{1<<63 - 1},
+		{1 << 63},
+		{math.MaxUint64},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(fmt.Sprintf("test %d", tt.n), func(t *testing.T) {
+			l1 := keeper.VarintMinLength(tt.n)
+			buf := make([]byte, binary.MaxVarintLen64)
+			l2 := binary.PutUvarint(buf, tt.n)
+			require.Equal(t, l2, l1)
+		})
+	}
 }
 
 // keep depositTxFixture at the foot of the file, so it's not in the way!
