@@ -3,8 +3,8 @@ package accum
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/osmoutils"
+	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/osmomath"
+	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/osmoutils"
 )
 
 // initOrUpdatePosition creates a new position or override an existing position
@@ -38,7 +38,7 @@ func GetTotalRewards(accum *AccumulatorObject, position Record) sdk.DecCoins {
 	totalRewards := position.UnclaimedRewardsTotal
 
 	// TODO: add a check that accum.value is greater than position.InitAccumValue
-	accumulatorRewards := accum.valuePerShare.Sub(position.AccumValuePerShare).MulDec(position.NumShares)
+	accumulatorRewards := accum.valuePerShare.Sub(position.AccumValuePerShare).MulDec(sdk.NewDecFromBigInt(position.NumShares.BigInt()))
 	totalRewards = totalRewards.Add(accumulatorRewards...)
 
 	return totalRewards

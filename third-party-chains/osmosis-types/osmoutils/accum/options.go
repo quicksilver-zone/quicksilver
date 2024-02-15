@@ -1,6 +1,6 @@
 package accum
 
-import "github.com/osmosis-labs/osmosis/osmomath"
+import "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/osmomath"
 
 var one = osmomath.OneDec()
 

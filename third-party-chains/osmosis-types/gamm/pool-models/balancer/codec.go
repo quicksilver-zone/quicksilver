@@ -8,7 +8,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
-	proto "github.com/cosmos/gogoproto/proto"
+	proto "github.com/gogo/protobuf/proto"
 )
 
 // RegisterLegacyAminoCodec registers the necessary x/gamm interfaces and concrete types
@@ -53,8 +53,3 @@ var (
 	// defined at the application level.
 	ModuleCdc = codec.NewAminoCodec(amino)
 )
-
-func init() {
-	RegisterLegacyAminoCodec(amino)
-	amino.Seal()
-}

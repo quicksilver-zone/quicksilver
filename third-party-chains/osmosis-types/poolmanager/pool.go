@@ -2,7 +2,7 @@ package poolmanager
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	proto "github.com/cosmos/gogoproto/proto"
+	proto "github.com/gogo/protobuf/proto"
 
 	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/osmomath"
 	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/osmoutils"
