@@ -1,9 +1,11 @@
 package gamm
 
 import (
-	"fmt"
+	fmt "fmt"
 
-	sdkioerrors "cosmossdk.io/errors"
+	errorsmod "cosmossdk.io/errors"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 type PoolDoesNotExistError struct {
@@ -14,42 +16,96 @@ func (e PoolDoesNotExistError) Error() string {
 	return fmt.Sprintf("pool with ID %d does not exist", e.PoolId)
 }
 
+type UnsortedPoolLiqError struct {
+	ActualLiquidity sdk.Coins
+}
+
+func (e UnsortedPoolLiqError) Error() string {
+	return fmt.Sprintf(`unsorted initial pool liquidity: %s.
+	Please sort and make sure scaling factor order matches initial liquidity coin order`, e.ActualLiquidity)
+}
+
+type LiquidityAndScalingFactorCountMismatchError struct {
+	LiquidityCount     int
+	ScalingFactorCount int
+}
+
+func (e LiquidityAndScalingFactorCountMismatchError) Error() string {
+	return fmt.Sprintf("liquidity count (%d) must match scaling factor count (%d)", e.LiquidityCount, e.ScalingFactorCount)
+}
+
+type ConcentratedPoolMigrationLinkNotFoundError struct {
+	PoolIdLeaving uint64
+}
+
+func (e ConcentratedPoolMigrationLinkNotFoundError) Error() string {
+	return fmt.Sprintf("given poolIdLeaving (%d) does not have a canonical link for any concentrated pool", e.PoolIdLeaving)
+}
+
+type BalancerPoolMigrationLinkNotFoundError struct {
+	PoolIdEntering uint64
+}
+
+func (e BalancerPoolMigrationLinkNotFoundError) Error() string {
+	return fmt.Sprintf("given PoolIdEntering (%d) does not have a canonical link for any balancer pool", e.PoolIdEntering)
+}
+
+type NoDesiredDenomInPoolError struct {
+	DesiredDenom string
+}
+
+func (e NoDesiredDenomInPoolError) Error() string {
+	return fmt.Sprintf("desired denom (%s) was not found in the pool", e.DesiredDenom)
+}
+
+type MustHaveTwoDenomsError struct {
+	NumDenoms int
+}
+
+func (e MustHaveTwoDenomsError) Error() string {
+	return fmt.Sprintf("can only have 2 denoms in CL pool, got (%d)", e.NumDenoms)
+}
+
 // x/gamm module sentinel errors.
 var (
-	ErrPoolNotFound        = sdkioerrors.Register(ModuleName, 1, "pool not found")
-	ErrPoolAlreadyExist    = sdkioerrors.Register(ModuleName, 2, "pool already exist")
-	ErrPoolLocked          = sdkioerrors.Register(ModuleName, 3, "pool is locked")
-	ErrTooFewPoolAssets    = sdkioerrors.Register(ModuleName, 4, "pool should have at least 2 assets, as they must be swapping between at least two assets")
-	ErrTooManyPoolAssets   = sdkioerrors.Register(ModuleName, 5, "pool has too many assets (currently capped at 8 assets per balancer pool and 2 per stableswap)")
-	ErrLimitMaxAmount      = sdkioerrors.Register(ModuleName, 6, "calculated amount is larger than max amount")
-	ErrLimitMinAmount      = sdkioerrors.Register(ModuleName, 7, "calculated amount is lesser than min amount")
-	ErrInvalidMathApprox   = sdkioerrors.Register(ModuleName, 8, "invalid calculated result")
-	ErrAlreadyInvalidPool  = sdkioerrors.Register(ModuleName, 9, "destruction on already invalid pool")
-	ErrInvalidPool         = sdkioerrors.Register(ModuleName, 10, "attempting to create an invalid pool")
-	ErrDenomNotFoundInPool = sdkioerrors.Register(ModuleName, 11, "denom does not exist in pool")
-	ErrDenomAlreadyInPool  = sdkioerrors.Register(ModuleName, 12, "denom already exists in the pool")
+	ErrPoolNotFound        = errorsmod.Register(ModuleName, 1, "pool not found")
+	ErrPoolAlreadyExist    = errorsmod.Register(ModuleName, 2, "pool already exist")
+	ErrPoolLocked          = errorsmod.Register(ModuleName, 3, "pool is locked")
+	ErrTooFewPoolAssets    = errorsmod.Register(ModuleName, 4, "pool should have at least 2 assets, as they must be swapping between at least two assets")
+	ErrTooManyPoolAssets   = errorsmod.Register(ModuleName, 5, "pool has too many assets (currently capped at 8 assets for both balancer and stableswap)")
+	ErrLimitMaxAmount      = errorsmod.Register(ModuleName, 6, "calculated amount is larger than max amount")
+	ErrLimitMinAmount      = errorsmod.Register(ModuleName, 7, "calculated amount is lesser than min amount")
+	ErrInvalidMathApprox   = errorsmod.Register(ModuleName, 8, "invalid calculated result")
+	ErrAlreadyInvalidPool  = errorsmod.Register(ModuleName, 9, "destruction on already invalid pool")
+	ErrInvalidPool         = errorsmod.Register(ModuleName, 10, "attempting to create an invalid pool")
+	ErrDenomNotFoundInPool = errorsmod.Register(ModuleName, 11, "denom does not exist in pool")
+	ErrDenomAlreadyInPool  = errorsmod.Register(ModuleName, 12, "denom already exists in the pool")
 
-	ErrEmptyRoutes              = sdkioerrors.Register(ModuleName, 21, "routes not defined")
-	ErrEmptyPoolAssets          = sdkioerrors.Register(ModuleName, 22, "PoolAssets not defined")
-	ErrNegativeSwapFee          = sdkioerrors.Register(ModuleName, 23, "swap fee is negative")
-	ErrNegativeExitFee          = sdkioerrors.Register(ModuleName, 24, "exit fee is negative")
-	ErrTooMuchSwapFee           = sdkioerrors.Register(ModuleName, 25, "swap fee should be lesser than 1 (100%)")
-	ErrTooMuchExitFee           = sdkioerrors.Register(ModuleName, 26, "exit fee should be lesser than 1 (100%)")
-	ErrNotPositiveWeight        = sdkioerrors.Register(ModuleName, 27, "token weight should be greater than 0")
-	ErrWeightTooLarge           = sdkioerrors.Register(ModuleName, 28, "user specified token weight should be less than 2^20")
-	ErrNotPositiveCriteria      = sdkioerrors.Register(ModuleName, 29, "min out amount or max in amount should be positive")
-	ErrNotPositiveRequireAmount = sdkioerrors.Register(ModuleName, 30, "required amount should be positive")
-	ErrTooManyTokensOut         = sdkioerrors.Register(ModuleName, 31, "tx is trying to get more tokens out of the pool than exist")
-	ErrSpotPriceOverflow        = sdkioerrors.Register(ModuleName, 32, "invalid spot price (overflowed)")
-	ErrSpotPriceInternal        = sdkioerrors.Register(ModuleName, 33, "internal spot price error")
+	ErrEmptyRoutes              = errorsmod.Register(ModuleName, 21, "routes not defined")
+	ErrEmptyPoolAssets          = errorsmod.Register(ModuleName, 22, "PoolAssets not defined")
+	ErrNegativeSpreadFactor     = errorsmod.Register(ModuleName, 23, "spread factor is negative")
+	ErrNegativeExitFee          = errorsmod.Register(ModuleName, 24, "exit fee is negative")
+	ErrTooMuchSpreadFactor      = errorsmod.Register(ModuleName, 25, "spread factor should be lesser than 1 (100%)")
+	ErrTooMuchExitFee           = errorsmod.Register(ModuleName, 26, "exit fee should be lesser than 1 (100%)")
+	ErrNotPositiveWeight        = errorsmod.Register(ModuleName, 27, "token weight should be greater than 0")
+	ErrWeightTooLarge           = errorsmod.Register(ModuleName, 28, "user specified token weight should be less than 2^20")
+	ErrNotPositiveCriteria      = errorsmod.Register(ModuleName, 29, "min out amount or max in amount should be positive")
+	ErrNotPositiveRequireAmount = errorsmod.Register(ModuleName, 30, "required amount should be positive")
+	ErrTooManyTokensOut         = errorsmod.Register(ModuleName, 31, "tx is trying to get more tokens out of the pool than exist")
+	ErrSpotPriceOverflow        = errorsmod.Register(ModuleName, 32, "invalid spot price (overflowed)")
+	ErrSpotPriceInternal        = errorsmod.Register(ModuleName, 33, "internal spot price error")
 
-	ErrPoolParamsInvalidDenom     = sdkioerrors.Register(ModuleName, 50, "pool params' LBP params has an invalid denomination")
-	ErrPoolParamsInvalidNumDenoms = sdkioerrors.Register(ModuleName, 51, "pool params' LBP doesn't have same number of params as underlying pool")
+	ErrPoolParamsInvalidDenom     = errorsmod.Register(ModuleName, 50, "pool params' LBP params has an invalid denomination")
+	ErrPoolParamsInvalidNumDenoms = errorsmod.Register(ModuleName, 51, "pool params' LBP doesn't have same number of params as underlying pool")
 
-	ErrNotImplemented = sdkioerrors.Register(ModuleName, 60, "function not implemented")
+	ErrNotImplemented = errorsmod.Register(ModuleName, 60, "function not implemented")
 
-	ErrNotStableSwapPool               = sdkioerrors.Register(ModuleName, 61, "not stableswap pool")
-	ErrInvalidStableswapScalingFactors = sdkioerrors.Register(ModuleName, 62, "length between liquidity and scaling factors mismatch")
-	ErrNotScalingFactorGovernor        = sdkioerrors.Register(ModuleName, 63, "not scaling factor governor")
-	ErrInvalidScalingFactors           = sdkioerrors.Register(ModuleName, 64, "invalid scaling factor")
+	ErrNotStableSwapPool          = errorsmod.Register(ModuleName, 61, "not stableswap pool")
+	ErrInvalidScalingFactorLength = errorsmod.Register(ModuleName, 62, "pool liquidity and scaling factors must have same length")
+	ErrNotScalingFactorGovernor   = errorsmod.Register(ModuleName, 63, "not scaling factor governor")
+	ErrInvalidScalingFactors      = errorsmod.Register(ModuleName, 64, "scaling factors cannot be 0 or use more than 63 bits")
+	ErrHitMaxScaledAssets         = errorsmod.Register(ModuleName, 65, "post-scaled pool assets can not exceed 10^34")
+	ErrHitMinScaledAssets         = errorsmod.Register(ModuleName, 66, "post-scaled pool assets can not be less than 1")
+	ErrNoGaugeToRedirect          = errorsmod.Register(ModuleName, 67, "could not find gauge to redirect")
+	ErrMustHaveTwoDenoms          = errorsmod.Register(ModuleName, 68, "can only have 2 denoms in CL pool")
 )

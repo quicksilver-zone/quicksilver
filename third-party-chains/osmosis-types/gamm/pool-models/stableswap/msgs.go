@@ -1,12 +1,11 @@
 package stableswap
 
 import (
-	sdkioerrors "cosmossdk.io/errors"
-
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-
-	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/gamm"
+	types "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/gamm"
+	poolmanagertypes "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/poolmanager"
 )
 
 const (
@@ -15,8 +14,8 @@ const (
 )
 
 var (
-	_ sdk.Msg            = &MsgCreateStableswapPool{}
-	_ gamm.CreatePoolMsg = &MsgCreateStableswapPool{}
+	_ sdk.Msg                        = &MsgCreateStableswapPool{}
+	_ poolmanagertypes.CreatePoolMsg = &MsgCreateStableswapPool{}
 )
 
 func NewMsgCreateStableswapPool(
@@ -35,12 +34,12 @@ func NewMsgCreateStableswapPool(
 	}
 }
 
-func (MsgCreateStableswapPool) Route() string { return gamm.RouterKey }
-func (MsgCreateStableswapPool) Type() string  { return TypeMsgCreateStableswapPool }
+func (msg MsgCreateStableswapPool) Route() string { return types.RouterKey }
+func (msg MsgCreateStableswapPool) Type() string  { return TypeMsgCreateStableswapPool }
 func (msg MsgCreateStableswapPool) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
-		return sdkioerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
 	}
 
 	err = msg.PoolParams.Validate()
@@ -48,20 +47,32 @@ func (msg MsgCreateStableswapPool) ValidateBasic() error {
 		return err
 	}
 
-	// validation for pool initial liquidity
-	// TO DO: expand this check to accommodate multi-asset pools for stableswap
-	if len(msg.InitialPoolLiquidity) < 2 {
-		return gamm.ErrTooFewPoolAssets
-	} else if len(msg.InitialPoolLiquidity) > 2 {
-		return gamm.ErrTooManyPoolAssets
-	}
-	// valid scaling factor lengths are 0, or one factor for each asset
-	if len(msg.ScalingFactors) != 0 && len(msg.ScalingFactors) != len(msg.InitialPoolLiquidity) {
-		return gamm.ErrInvalidScalingFactors
+	// validation for scaling factors
+	scalingFactors := msg.ScalingFactors
+	// The message's scaling factors must be empty or a valid set of scaling factors
+	if len(scalingFactors) != 0 {
+		if err = validateScalingFactors(scalingFactors, len(msg.InitialPoolLiquidity)); err != nil {
+			return err
+		}
+	} else {
+		for i := 0; i < len(msg.InitialPoolLiquidity); i += 1 {
+			scalingFactors = append(scalingFactors, 1)
+		}
 	}
 
-	// validation for future owner
-	if err = gamm.ValidateFutureGovernor(msg.FuturePoolGovernor); err != nil {
+	// validation for pool initial liquidity
+	// The message's pool liquidity must have between 2 and 8 assets with at most 10B post-scaled units in each
+	if err = validatePoolLiquidity(msg.InitialPoolLiquidity, scalingFactors); err != nil {
+		return err
+	}
+
+	// validation for scaling factor owner
+	if err = validateScalingFactorController(msg.ScalingFactorController); err != nil {
+		return err
+	}
+
+	// validation for future governor
+	if err = types.ValidateFutureGovernor(msg.FuturePoolGovernor); err != nil {
 		return err
 	}
 
@@ -98,13 +109,18 @@ func (msg MsgCreateStableswapPool) InitialLiquidity() sdk.Coins {
 	return msg.InitialPoolLiquidity
 }
 
-func (msg MsgCreateStableswapPool) CreatePool(ctx sdk.Context, poolId uint64) (gamm.PoolI, error) {
-	stableswapPool, err := NewStableswapPool(poolId, *msg.PoolParams, msg.InitialPoolLiquidity, msg.ScalingFactors, msg.FuturePoolGovernor)
+func (msg MsgCreateStableswapPool) CreatePool(ctx sdk.Context, poolId uint64) (poolmanagertypes.PoolI, error) {
+	stableswapPool, err := NewStableswapPool(poolId, *msg.PoolParams, msg.InitialPoolLiquidity,
+		msg.ScalingFactors, msg.ScalingFactorController, msg.FuturePoolGovernor)
 	if err != nil {
 		return nil, err
 	}
 
 	return &stableswapPool, nil
+}
+
+func (msg MsgCreateStableswapPool) GetPoolType() poolmanagertypes.PoolType {
+	return poolmanagertypes.Stableswap
 }
 
 var _ sdk.Msg = &MsgStableSwapAdjustScalingFactors{}
@@ -113,18 +129,20 @@ var _ sdk.Msg = &MsgStableSwapAdjustScalingFactors{}
 func NewMsgStableSwapAdjustScalingFactors(
 	sender string,
 	poolID uint64,
+	scalingFactors []uint64,
 ) MsgStableSwapAdjustScalingFactors {
 	return MsgStableSwapAdjustScalingFactors{
-		Sender: sender,
-		PoolID: poolID,
+		Sender:         sender,
+		PoolID:         poolID,
+		ScalingFactors: scalingFactors,
 	}
 }
 
-func (MsgStableSwapAdjustScalingFactors) Route() string {
-	return gamm.RouterKey
+func (msg MsgStableSwapAdjustScalingFactors) Route() string {
+	return types.RouterKey
 }
 
-func (MsgStableSwapAdjustScalingFactors) Type() string { return TypeMsgCreateStableswapPool }
+func (msg MsgStableSwapAdjustScalingFactors) Type() string { return TypeMsgCreateStableswapPool }
 func (msg MsgStableSwapAdjustScalingFactors) ValidateBasic() error {
 	if msg.Sender == "" {
 		return nil
@@ -132,7 +150,7 @@ func (msg MsgStableSwapAdjustScalingFactors) ValidateBasic() error {
 
 	_, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
-		return sdkioerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
 	}
 
 	return nil
