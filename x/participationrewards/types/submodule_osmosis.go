@@ -18,6 +18,7 @@ import (
 const (
 	PoolTypeBalancer   = "balancer"
 	PoolTypeStableSwap = "stableswap"
+	PoolTypeCL         = "concentrated-liquidity"
 )
 
 // OsmosisPoolProtocolData defines protocol state to track qAssets locked in
@@ -37,7 +38,7 @@ type DenomWithZone struct {
 	ChainID string
 }
 
-func (opd *OsmosisPoolProtocolData) GetPool() (gamm.PoolI, error) {
+func (opd *OsmosisPoolProtocolData) GetPool() (gamm.CFMMPoolI, error) {
 	switch opd.PoolType {
 	case PoolTypeBalancer:
 		var poolData balancer.Pool

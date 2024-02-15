@@ -123,7 +123,7 @@ func ValidatorSelectionRewardsCallback(ctx sdk.Context, k *Keeper, response []by
 }
 
 func OsmosisPoolUpdateCallback(ctx sdk.Context, k *Keeper, response []byte, query icqtypes.Query) error {
-	var pd gamm.PoolI
+	var pd gamm.CFMMPoolI
 	if err := k.cdc.UnmarshalInterface(response, &pd); err != nil {
 		return err
 	}
