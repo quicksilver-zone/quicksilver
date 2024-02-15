@@ -5,8 +5,8 @@ go 1.21
 require (
 	cosmossdk.io/x/feegrant v0.1.0
 	cosmossdk.io/x/upgrade v0.1.1
-	github.com/cometbft/cometbft v0.38.2
-	github.com/cosmos/cosmos-sdk v0.50.3
+	github.com/cometbft/cometbft v0.38.5
+	github.com/cosmos/cosmos-sdk v0.50.4-0.20240215075256-c122a3d8ab04
 	github.com/cosmos/ibc-go/modules/capability v1.0.0
 	github.com/cosmos/ibc-go/v8 v8.0.1-0.20240112153319-3833f1e8f227
 	github.com/dgraph-io/ristretto v0.1.1
@@ -32,7 +32,7 @@ require (
 	cosmossdk.io/core v0.12.0 // indirect
 	cosmossdk.io/depinject v1.0.0-alpha.4 // indirect
 	cosmossdk.io/errors v1.0.1 // indirect
-	cosmossdk.io/log v1.3.0 // indirect
+	cosmossdk.io/log v1.3.1 // indirect
 	cosmossdk.io/math v1.2.0 // indirect
 	cosmossdk.io/store v1.0.3-0.20240110195214-b3ec5322273f // indirect
 	cosmossdk.io/x/tx v0.13.0 // indirect
@@ -161,7 +161,7 @@ require (
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
 	github.com/rogpeppe/go-internal v1.11.0 // indirect
 	github.com/rs/cors v1.10.1 // indirect
-	github.com/rs/zerolog v1.31.0 // indirect
+	github.com/rs/zerolog v1.32.0 // indirect
 	github.com/sagikazarmark/locafero v0.4.0 // indirect
 	github.com/sagikazarmark/slog-shim v0.1.0 // indirect
 	github.com/sasha-s/go-deadlock v0.3.1 // indirect
