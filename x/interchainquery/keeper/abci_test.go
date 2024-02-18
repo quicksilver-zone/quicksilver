@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	"math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
@@ -52,4 +54,46 @@ func (suite *KeeperTestSuite) TestEndBlocker() {
 
 	// call end blocker
 	suite.GetSimApp(suite.chainA).InterchainQueryKeeper.EndBlocker(suite.chainA.GetContext())
+}
+
+func (suite *KeeperTestSuite) TestEndBlockerOutOfBoundTTL() {
+	qvr := stakingtypes.QueryValidatorsResponse{
+		Validators: suite.GetSimApp(suite.chainB).StakingKeeper.GetBondedValidatorsByPower(suite.chainB.GetContext()),
+	}
+
+	bondedQuery := stakingtypes.QueryValidatorsRequest{Status: stakingtypes.BondStatusBonded}
+	bz, err := bondedQuery.Marshal()
+	suite.NoError(err)
+
+	query := suite.GetSimApp(suite.chainA).InterchainQueryKeeper.NewQuery(
+		"",
+		suite.path.EndpointB.ConnectionID,
+		suite.chainB.ChainID,
+		"cosmos.staking.v1beta1.Query/Validators",
+		bz,
+		sdk.NewInt(200),
+		"",
+		math.MaxInt64+10, // value out of bound int64
+	)
+	// set the query
+	suite.GetSimApp(suite.chainA).InterchainQueryKeeper.SetQuery(suite.chainA.GetContext(), *query)
+	// Ensure the query has been saved in store
+	q, ok := suite.GetSimApp(suite.chainA).InterchainQueryKeeper.GetQuery(suite.chainA.GetContext(), query.Id)
+	suite.Equal(true, ok)
+	suite.Equal(query.Id, q.Id)
+	suite.Equal(query.Ttl, q.Ttl)
+
+	err = suite.GetSimApp(suite.chainA).InterchainQueryKeeper.SetDatapointForID(
+		suite.chainA.GetContext(),
+		query.Id,
+		suite.GetSimApp(suite.chainB).AppCodec().MustMarshalJSON(&qvr),
+		sdk.NewInt(suite.chainB.CurrentHeader.Height),
+	)
+	suite.NoError(err)
+
+	suite.GetSimApp(suite.chainA).InterchainQueryKeeper.EndBlocker(suite.chainA.GetContext())
+
+	// Ensure after EndBlocker the datapoint has removed
+	_, err = suite.GetSimApp(suite.chainA).InterchainQueryKeeper.GetDatapointForID(suite.chainA.GetContext(), query.Id)
+	suite.Error(err)
 }

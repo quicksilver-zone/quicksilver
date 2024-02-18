@@ -17,7 +17,7 @@ const (
 // EndBlocker of interchainquery module.
 func (k Keeper) EndBlocker(ctx sdk.Context) {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
-	_ = k.Logger(ctx)
+
 	events := sdk.Events{}
 	// emit events for periodic queries
 	k.IterateQueries(ctx, func(_ int64, queryInfo types.Query) (stop bool) {
@@ -58,7 +58,7 @@ func (k Keeper) EndBlocker(ctx sdk.Context) {
 		if !found {
 			// query was removed; delete datapoint
 			k.DeleteDatapoint(ctx, dp.Id)
-		} else if dp.LocalHeight.Int64()+int64(q.Ttl) > ctx.BlockHeader().Height {
+		} else if dp.LocalHeight.Add(sdk.NewIntFromUint64(q.Ttl)).Sub(sdk.NewInt(ctx.BlockHeader().Height)).IsPositive() {
 			// gc old data
 			k.DeleteDatapoint(ctx, dp.Id)
 		}
