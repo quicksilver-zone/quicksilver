@@ -97,7 +97,7 @@ func (k *Keeper) CalcTokenValues(ctx sdk.Context) (TokenValues, error) {
 				return true
 			}
 
-			tvs[valueDenom] = value
+			tvs[valueDenom] = sdk.NewDecFromBigInt(value.BigInt())
 		}
 
 		return false

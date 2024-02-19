@@ -1,12 +1,12 @@
 package balancer
 
 import (
-	sdkioerrors "cosmossdk.io/errors"
-
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/gamm"
+	types "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/gamm"
+	poolmanagertypes "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/poolmanager"
 )
 
 const (
@@ -14,8 +14,8 @@ const (
 )
 
 var (
-	_ sdk.Msg            = &MsgCreateBalancerPool{}
-	_ gamm.CreatePoolMsg = &MsgCreateBalancerPool{}
+	_ sdk.Msg                        = &MsgCreateBalancerPool{}
+	_ poolmanagertypes.CreatePoolMsg = &MsgCreateBalancerPool{}
 )
 
 func NewMsgCreateBalancerPool(
@@ -32,12 +32,12 @@ func NewMsgCreateBalancerPool(
 	}
 }
 
-func (MsgCreateBalancerPool) Route() string { return gamm.RouterKey }
-func (MsgCreateBalancerPool) Type() string  { return TypeMsgCreateBalancerPool }
+func (msg MsgCreateBalancerPool) Route() string { return types.RouterKey }
+func (msg MsgCreateBalancerPool) Type() string  { return TypeMsgCreateBalancerPool }
 func (msg MsgCreateBalancerPool) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
-		return sdkioerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
 	}
 
 	err = validateUserSpecifiedPoolAssets(msg.PoolAssets)
@@ -51,7 +51,7 @@ func (msg MsgCreateBalancerPool) ValidateBasic() error {
 	}
 
 	// validation for future owner
-	if err = gamm.ValidateFutureGovernor(msg.FuturePoolGovernor); err != nil {
+	if err = types.ValidateFutureGovernor(msg.FuturePoolGovernor); err != nil {
 		return err
 	}
 
@@ -90,13 +90,17 @@ func (msg MsgCreateBalancerPool) InitialLiquidity() sdk.Coins {
 		coins = append(coins, asset.Token)
 	}
 	if coins == nil {
-		panic("Shouldn't happen")
+		panic("InitialLiquidity coins is equal to nil - this shouldn't happen")
 	}
 	coins = coins.Sort()
 	return coins
 }
 
-func (msg MsgCreateBalancerPool) CreatePool(ctx sdk.Context, poolID uint64) (gamm.PoolI, error) {
+func (msg MsgCreateBalancerPool) CreatePool(ctx sdk.Context, poolID uint64) (poolmanagertypes.PoolI, error) {
 	poolI, err := NewBalancerPool(poolID, *msg.PoolParams, msg.PoolAssets, msg.FuturePoolGovernor, ctx.BlockTime())
 	return &poolI, err
+}
+
+func (msg MsgCreateBalancerPool) GetPoolType() poolmanagertypes.PoolType {
+	return poolmanagertypes.Balancer
 }

@@ -88,7 +88,7 @@ func (*OsmosisModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.MsgSu
 			if err != nil {
 				return 0, err
 			}
-			lock = osmolockup.NewPeriodLock(uint64(poolID), addr, time.Hour, time.Time{}, sdk.NewCoins(coin))
+			lock = osmolockup.NewPeriodLock(uint64(poolID), addr, addr.String(), time.Hour, time.Time{}, sdk.NewCoins(coin))
 		} else {
 			lock = osmolockup.PeriodLock{}
 			err := k.cdc.Unmarshal(proof.Data, &lock)
