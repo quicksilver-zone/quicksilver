@@ -11,6 +11,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
+	concentrated_liquidity "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/concentrated-liquidity"
 	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/gamm"
 	umeetypes "github.com/quicksilver-zone/quicksilver/third-party-chains/umee-types/leverage/types"
 	icqtypes "github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
@@ -20,15 +21,13 @@ import (
 const (
 	ValidatorSelectionRewardsCallbackID       = "validatorselectionrewards"
 	OsmosisPoolUpdateCallbackID               = "osmosispoolupdate"
+	OsmosisClPoolUpdateCallbackID             = "osmosisclpoolupdate"
 	SetEpochBlockCallbackID                   = "epochblock"
 	UmeeReservesUpdateCallbackID              = "umeereservesupdatecallback"
 	UmeeTotalBorrowsUpdateCallbackID          = "umeetotalborrowsupdatecallback"
 	UmeeInterestScalarUpdateCallbackID        = "umeeinterestscalarupdatecallback"
 	UmeeUTokenSupplyUpdateCallbackID          = "umeeutokensupplyupdatecallback"
 	UmeeLeverageModuleBalanceUpdateCallbackID = "umeeleveragemodulebalanceupdatecallback"
-	CrescentPoolUpdateCallbackID              = "crescentpoolupdate"
-	CrescentReserveBalanceUpdateCallbackID    = "reservebalanceupdate"
-	CrescentPoolCoinSupplyUpdateCallbackID    = "poolcoinsupplyupdate"
 )
 
 // Callback wrapper struct for interchainstaking keeper.
@@ -67,6 +66,7 @@ func (c Callbacks) RegisterCallbacks() icqtypes.QueryCallbacks {
 	a := c.
 		AddCallback(ValidatorSelectionRewardsCallbackID, Callback(ValidatorSelectionRewardsCallback)).
 		AddCallback(OsmosisPoolUpdateCallbackID, Callback(OsmosisPoolUpdateCallback)).
+		AddCallback(OsmosisClPoolUpdateCallbackID, Callback(OsmosisClPoolUpdateCallback)).
 		AddCallback(SetEpochBlockCallbackID, Callback(SetEpochBlockCallback)).
 		AddCallback(UmeeReservesUpdateCallbackID, Callback(UmeeReservesUpdateCallback)).
 		AddCallback(UmeeTotalBorrowsUpdateCallbackID, Callback(UmeeTotalBorrowsUpdateCallback)).
@@ -123,7 +123,7 @@ func ValidatorSelectionRewardsCallback(ctx sdk.Context, k *Keeper, response []by
 }
 
 func OsmosisPoolUpdateCallback(ctx sdk.Context, k *Keeper, response []byte, query icqtypes.Query) error {
-	var pd gamm.PoolI
+	var pd gamm.CFMMPoolI
 	if err := k.cdc.UnmarshalInterface(response, &pd); err != nil {
 		return err
 	}
@@ -149,6 +149,48 @@ func OsmosisPoolUpdateCallback(ctx sdk.Context, k *Keeper, response []byte, quer
 	pool, ok := ipool.(*types.OsmosisPoolProtocolData)
 	if !ok {
 		return fmt.Errorf("unable to unmarshal protocol data for osmosispools/%d", poolID)
+	}
+	pool.PoolData, err = json.Marshal(pd)
+	if err != nil {
+		return err
+	}
+	pool.LastUpdated = ctx.BlockTime()
+	data.Data, err = json.Marshal(pool)
+	if err != nil {
+		return err
+	}
+	k.SetProtocolData(ctx, pool.GenerateKey(), &data)
+
+	return nil
+}
+
+func OsmosisClPoolUpdateCallback(ctx sdk.Context, k *Keeper, response []byte, query icqtypes.Query) error {
+	var pd concentrated_liquidity.ConcentratedPoolExtension
+	if err := k.cdc.UnmarshalInterface(response, &pd); err != nil {
+		return err
+	}
+
+	// check query.Request is at least 9 bytes in length. (0x02 + 8 bytes for uint64)
+	if len(query.Request) < 9 {
+		return errors.New("query request not sufficient length")
+	}
+	// assert first character is 0x03 as expected (cl pool prefix)
+	if query.Request[0] != 0x03 {
+		return errors.New("query request has unexpected prefix")
+	}
+
+	poolID := sdk.BigEndianToUint64(query.Request[1:])
+	data, ok := k.GetProtocolData(ctx, types.ProtocolDataTypeOsmosisCLPool, fmt.Sprintf("%d", poolID))
+	if !ok {
+		return fmt.Errorf("unable to find protocol data for osmosisclpools/%d", poolID)
+	}
+	ipool, err := types.UnmarshalProtocolData(types.ProtocolDataTypeOsmosisCLPool, data.Data)
+	if err != nil {
+		return err
+	}
+	pool, ok := ipool.(*types.OsmosisClPoolProtocolData)
+	if !ok {
+		return fmt.Errorf("unable to unmarshal protocol data for osmosisclpools/%d", poolID)
 	}
 	pool.PoolData, err = json.Marshal(pd)
 	if err != nil {

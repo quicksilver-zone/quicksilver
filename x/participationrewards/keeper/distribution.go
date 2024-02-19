@@ -96,7 +96,8 @@ func (k *Keeper) CalcTokenValues(ctx sdk.Context) (TokenValues, error) {
 				return true
 			}
 
-			tvs[valueDenom] = value
+			tvs[valueDenom] = sdk.NewDecFromBigIntWithPrec(value.Dec().BigInt(), 18) // is there a better way to convert these?
+
 		}
 
 		return false
