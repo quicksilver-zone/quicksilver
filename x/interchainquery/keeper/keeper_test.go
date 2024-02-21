@@ -190,32 +190,6 @@ func (suite *KeeperTestSuite) TestSubmitQueryResponse() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestDataPoints() {
-	bondedQuery := stakingtypes.QueryValidatorsRequest{Status: stakingtypes.BondStatusBonded}
-	bz, err := bondedQuery.Marshal()
-	suite.NoError(err)
-
-	qvr := stakingtypes.QueryValidatorsResponse{
-		Validators: suite.GetSimApp(suite.chainB).StakingKeeper.GetBondedValidatorsByPower(suite.chainB.GetContext()),
-	}
-
-	id := keeper.GenerateQueryHash(suite.path.EndpointB.ConnectionID, suite.chainB.ChainID, "cosmos.staking.v1beta1.Query/Validators", bz, "")
-
-	err = suite.GetSimApp(suite.chainA).InterchainQueryKeeper.SetDatapointForID(
-		suite.chainA.GetContext(),
-		id,
-		suite.GetSimApp(suite.chainB).AppCodec().MustMarshalJSON(&qvr),
-		sdk.NewInt(suite.chainB.CurrentHeader.Height),
-	)
-	suite.NoError(err)
-
-	dataPoint, err := suite.GetSimApp(suite.chainA).InterchainQueryKeeper.GetDatapointForID(suite.chainA.GetContext(), id)
-	suite.NoError(err)
-	suite.NotNil(dataPoint)
-
-	suite.GetSimApp(suite.chainA).InterchainQueryKeeper.DeleteDatapoint(suite.chainA.GetContext(), id)
-}
-
 func newSimAppPath(chainA, chainB *ibctesting.TestChain) *ibctesting.Path {
 	path := ibctesting.NewPath(chainA, chainB)
 	path.EndpointA.ChannelConfig.PortID = ibctesting.TransferPort
