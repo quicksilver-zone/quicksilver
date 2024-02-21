@@ -70,7 +70,7 @@ func (s *InterChainQueryTestSuite) TestInitGenesis() {
 
 	interchainquery.InitGenesis(s.chainA.GetContext(), s.GetSimApp(s.chainA).InterchainQueryKeeper, types.GenesisState{Queries: []types.Query{*query}})
 
-	id := keeper.GenerateQueryHash(s.path.EndpointB.ConnectionID, s.chainB.ChainID, "cosmos.staking.v1beta1.Query/Validators", bz, "")
+	id := keeper.GenerateQueryHash(s.path.EndpointB.ConnectionID, s.chainB.ChainID, "cosmos.staking.v1beta1.Query/Validators", bz, "", "")
 	queryResponse, found := s.GetSimApp(s.chainA).InterchainQueryKeeper.GetQuery(s.chainA.GetContext(), id)
 	s.True(found)
 	s.Equal(s.path.EndpointB.ConnectionID, queryResponse.ConnectionId)
