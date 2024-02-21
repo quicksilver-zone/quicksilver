@@ -21,11 +21,6 @@ func (k Keeper) EndBlocker(ctx sdk.Context) {
 	events := sdk.Events{}
 	// emit events for periodic queries
 	k.IterateQueries(ctx, func(_ int64, queryInfo types.Query) (stop bool) {
-		// if queryInfo.QueryType == "ibc.ClientUpdate" && queryInfo.LastEmission.AddRaw(1000).LTE(sdk.NewInt(ctx.BlockHeight())) {
-		// 	k.DeleteQuery(ctx, queryInfo.ID)
-		// 	k.Logger(ctx).Error("Deleting stale query")
-		// 	return false
-		// }
 		if queryInfo.LastEmission.IsNil() || queryInfo.LastEmission.IsZero() || queryInfo.LastEmission.Add(queryInfo.Period).Equal(sdk.NewInt(ctx.BlockHeight())) {
 			k.Logger(ctx).Debug("Interchainquery event emitted", "id", queryInfo.Id)
 			event := sdk.NewEvent(
@@ -52,17 +47,4 @@ func (k Keeper) EndBlocker(ctx sdk.Context) {
 	if len(events) > 0 {
 		ctx.EventManager().EmitEvents(events)
 	}
-
-	k.IterateDatapoints(ctx, func(_ int64, dp types.DataPoint) bool {
-		q, found := k.GetQuery(ctx, dp.Id)
-		if !found {
-			// query was removed; delete datapoint
-			k.DeleteDatapoint(ctx, dp.Id)
-		} else if dp.LocalHeight.Int64()+int64(q.Ttl) > ctx.BlockHeader().Height {
-			// gc old data
-			k.DeleteDatapoint(ctx, dp.Id)
-		}
-
-		return false
-	})
 }
