@@ -1087,21 +1087,17 @@ func (k *Keeper) HandleUpdatedWithdrawAddress(ctx sdk.Context, msg sdk.Msg) erro
 
 	var err error
 	zone, found := k.GetZoneForDelegateAccount(ctx, original.DelegatorAddress)
-	if found {
-		err = zone.DelegationAddress.SetWithdrawalAddress(original.WithdrawAddress)
-	} else {
+	if !found {
 		zone, found = k.GetZoneForPerformanceAccount(ctx, original.DelegatorAddress)
-		if found {
-			err = zone.PerformanceAddress.SetWithdrawalAddress(original.WithdrawAddress)
-		} else {
+		if !found {
 			zone, found = k.GetZoneForDepositAccount(ctx, original.DelegatorAddress)
 			if !found {
 				return errors.New("unable to find zone")
 			}
-			err = zone.DepositAddress.SetWithdrawalAddress(original.WithdrawAddress)
 		}
 	}
 
+	err = zone.DelegationAddress.SetWithdrawalAddress(original.WithdrawAddress)
 	if err != nil {
 		return err
 	}
