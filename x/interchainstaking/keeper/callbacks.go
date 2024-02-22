@@ -291,41 +291,45 @@ func SigningInfoCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes
 		return err
 	}
 	if valSigningInfo.Tombstoned {
-		consAddr, err := addressutils.AddressFromBech32(valSigningInfo.Address, "")
-		if err != nil {
-			return err
-		}
-		valAddr, found := k.GetValidatorAddrByConsAddr(ctx, zone.ChainId, consAddr)
-		if !found {
-			return fmt.Errorf("can not get validator address from consensus address: %s", valSigningInfo.Address)
-		}
-
-		k.Logger(ctx).Info("tombstoned validator found", "valoper", valAddr)
-
-		valAddrBytes, err := addressutils.ValAddressFromBech32(valAddr, zone.GetValoperPrefix())
-		if err != nil {
-			return err
-		}
-		val, found := k.GetValidator(ctx, zone.ChainId, valAddrBytes)
-		// NOTE: this shouldn't be reachable, but keeping here as it doesn't do any harm.
-		if !found {
-			err := k.SetValidator(ctx, zone.ChainId, types.Validator{
-				ValoperAddress: valAddr,
-				Jailed:         true,
-				Tombstoned:     true,
-			})
-			if err != nil {
-				return err
-			}
-		} else {
-			val.Tombstoned = true
-			if err = k.SetValidator(ctx, zone.ChainId, val); err != nil {
-				return err
-			}
-		}
-		k.Logger(ctx).Info(fmt.Sprintf("%q on chainID: %q was found to already have been tombstoned, added information", val.ValoperAddress, zone.ChainId))
-
+		return handleTombstonedValidator(k, ctx, &zone, valSigningInfo)
 	}
+	return nil
+}
+
+func handleTombstonedValidator(k *Keeper, ctx sdk.Context, zone *types.Zone, valSigningInfo slashingtypes.ValidatorSigningInfo) error {
+	consAddr, err := addressutils.AddressFromBech32(valSigningInfo.Address, "")
+	if err != nil {
+		return err
+	}
+	valAddr, found := k.GetValidatorAddrByConsAddr(ctx, zone.ChainId, consAddr)
+	if !found {
+		return fmt.Errorf("can not get validator address from consensus address: %s", valSigningInfo.Address)
+	}
+
+	k.Logger(ctx).Info("tombstoned validator found", "valoper", valAddr)
+
+	valAddrBytes, err := addressutils.ValAddressFromBech32(valAddr, zone.GetValoperPrefix())
+	if err != nil {
+		return err
+	}
+	val, found := k.GetValidator(ctx, zone.ChainId, valAddrBytes)
+	if !found {
+		err := k.SetValidator(ctx, zone.ChainId, types.Validator{
+			ValoperAddress: valAddr,
+			Jailed:         true,
+			Tombstoned:     true,
+		})
+		if err != nil {
+			return err
+		}
+	} else {
+		val.Tombstoned = true
+		if err = k.SetValidator(ctx, zone.ChainId, val); err != nil {
+			return err
+		}
+	}
+	k.Logger(ctx).Info(fmt.Sprintf("%q on chainID: %q was found to already have been tombstoned, added information", val.ValoperAddress, zone.ChainId))
+
 	return nil
 }
 
