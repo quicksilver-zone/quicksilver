@@ -38,22 +38,19 @@ var _ wasmkeeper.Messenger = (*CustomMessenger)(nil)
 // DispatchMsg executes on the contractMsg.
 func (m *CustomMessenger) DispatchMsg(ctx sdk.Context, contractAddr sdk.AccAddress, contractIBCPortID string, msg wasmvmtypes.CosmosMsg) ([]sdk.Event, [][]byte, error) {
 	if msg.Custom != nil {
-		// only handle the happy path where this is really creating / minting / swapping ...
-		// leave everything else for the wrapped version
 		var contractMsg bindings.TokenFactoryMsg
 		if err := json.Unmarshal(msg.Custom, &contractMsg); err != nil {
 			return nil, nil, sdkioerrors.Wrap(err, "TokenFactoryMsg msg")
 		}
-		if contractMsg.CreateDenom != nil {
+
+		switch {
+		case contractMsg.CreateDenom != nil:
 			return m.createDenom(ctx, contractAddr, contractMsg.CreateDenom)
-		}
-		if contractMsg.MintTokens != nil {
+		case contractMsg.MintTokens != nil:
 			return m.mintTokens(ctx, contractAddr, contractMsg.MintTokens)
-		}
-		if contractMsg.ChangeAdmin != nil {
+		case contractMsg.ChangeAdmin != nil:
 			return m.changeAdmin(ctx, contractAddr, contractMsg.ChangeAdmin)
-		}
-		if contractMsg.BurnTokens != nil {
+		case contractMsg.BurnTokens != nil:
 			return m.burnTokens(ctx, contractAddr, contractMsg.BurnTokens)
 		}
 	}

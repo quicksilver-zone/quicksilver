@@ -142,29 +142,38 @@ func (k *Keeper) MakeRequest(
 		"callback", callbackID,
 		"ttl", ttl,
 	)
+
 	key := GenerateQueryHash(connectionID, chainID, queryType, request, module)
 	existingQuery, found := k.GetQuery(ctx, key)
-	if !found {
-		if module != "" && callbackID != "" {
-			if _, exists := k.callbacks[module]; !exists {
-				err := fmt.Errorf("no callback handler registered for module %s", module)
-				k.Logger(ctx).Error(err.Error())
-				panic(err)
-			}
-			if exists := k.callbacks[module].Has(callbackID); !exists {
-				err := fmt.Errorf("no callback %s registered for module %s", callbackID, module)
-				k.Logger(ctx).Error(err.Error())
-				panic(err)
-			}
-		}
-		newQuery := k.NewQuery(module, connectionID, chainID, queryType, request, period, callbackID, ttl)
-		k.SetQuery(ctx, *newQuery)
-	} else {
-		// a re-request of an existing query triggers resetting of height to trigger immediately.
+
+	if found {
+		// Handle re-request of existing query
 		k.Logger(ctx).Debug("re-request", "LastHeight", existingQuery.LastHeight)
 		existingQuery.LastHeight = sdk.ZeroInt()
 		k.SetQuery(ctx, existingQuery)
+		return
 	}
+
+	// Handle creation of new query
+	if err := k.validateCallbacks(module, callbackID); err != nil {
+		k.Logger(ctx).Error(err.Error())
+		panic(err)
+	}
+
+	newQuery := k.NewQuery(module, connectionID, chainID, queryType, request, period, callbackID, ttl)
+	k.SetQuery(ctx, *newQuery)
+}
+
+func (k *Keeper) validateCallbacks(module, callbackID string) error {
+	if module != "" && callbackID != "" {
+		if _, exists := k.callbacks[module]; !exists {
+			return fmt.Errorf("no callback handler registered for module %s", module)
+		}
+		if !k.callbacks[module].Has(callbackID) {
+			return fmt.Errorf("no callback %s registered for module %s", callbackID, module)
+		}
+	}
+	return nil
 }
 
 // Heights

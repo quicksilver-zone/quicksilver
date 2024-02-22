@@ -424,7 +424,7 @@ func (k *Keeper) HandleWithdrawForUser(ctx sdk.Context, zone *types.Zone, msg *b
 
 	// case 1: total amount - native unbonding
 	// this statement is ridiculous, but currently calling coins.Equals against coins with different denoms panics; which is pretty useless.
-	if len(withdrawalRecord.Amount) == 1 && len(msg.Amount) == 1 && msg.Amount[0].Denom == withdrawalRecord.Amount[0].Denom && withdrawalRecord.Amount.IsEqual(msg.Amount) {
+	if k.isMatchingWithdrawal(withdrawalRecord, msg) {
 		k.Logger(ctx).Info("found matching withdrawal; marking as completed")
 		k.UpdateWithdrawalRecordStatus(ctx, &withdrawalRecord, types.WithdrawStatusCompleted)
 		if err := k.BankKeeper.BurnCoins(ctx, types.EscrowModuleAccount, sdk.NewCoins(withdrawalRecord.BurnAmount)); err != nil {
@@ -471,6 +471,16 @@ func (k *Keeper) HandleWithdrawForUser(ctx sdk.Context, zone *types.Zone, msg *b
 	period := int64(k.GetParam(ctx, types.KeyValidatorSetInterval))
 	query := stakingtypes.QueryValidatorsRequest{}
 	return k.EmitValSetQuery(ctx, zone.ConnectionId, zone.ChainId, query, sdkmath.NewInt(period))
+}
+
+func (*Keeper) isMatchingWithdrawal(withdrawalRecord types.WithdrawalRecord, msg *banktypes.MsgSend) bool {
+	if len(withdrawalRecord.Amount) != 1 || len(msg.Amount) != 1 {
+		return false
+	}
+	if msg.Amount[0].Denom != withdrawalRecord.Amount[0].Denom {
+		return false
+	}
+	return withdrawalRecord.Amount.IsEqual(msg.Amount)
 }
 
 func (k *Keeper) GCCompletedRedelegations(ctx sdk.Context) error {
@@ -634,13 +644,12 @@ func (k *Keeper) HandleBeginRedelegate(ctx sdk.Context, msg sdk.Msg, completion 
 	}
 	srcDelegation.Amount, err = srcDelegation.Amount.SafeSub(redelegateMsg.Amount)
 	if err != nil {
-		if strings.Contains(err.Error(), "negative coin amount") {
-			// we received a negative srcDelegation. Obviously this cannot happen, but we can get a crossed re/un/delegation, all which fetch absolute values.
-			k.Logger(ctx).Error("possible race condition; unable to sub redelegation amount. requerying delegation anyway")
-		} else {
-			// we got some other, unrecoverable err
+		if !strings.Contains(err.Error(), "negative coin amount") {
+			// If the error is not due to a negative coin amount, return the error immediately.
 			return err
 		}
+		// Log the error for a negative coin amount but continue execution.
+		k.Logger(ctx).Error("possible race condition; unable to sub redelegation amount. requerying delegation anyway")
 	} else {
 		k.SetDelegation(ctx, zone.ChainId, srcDelegation)
 	}
@@ -1068,34 +1077,36 @@ func (k *Keeper) HandleFailedDelegate(ctx sdk.Context, msg sdk.Msg, memo string)
 
 func (k *Keeper) HandleUpdatedWithdrawAddress(ctx sdk.Context, msg sdk.Msg) error {
 	k.Logger(ctx).Info("Received MsgSetWithdrawAddress acknowledgement")
-	// first, type assertion. we should have distrtypes.MsgSetWithdrawAddress
+
+	// First, type assertion. We should have distrtypes.MsgSetWithdrawAddress
 	original, ok := msg.(*distrtypes.MsgSetWithdrawAddress)
 	if !ok {
 		k.Logger(ctx).Error("unable to cast source message to MsgSetWithdrawAddress")
 		return errors.New("unable to cast source message to MsgSetWithdrawAddress")
 	}
+
+	var err error
 	zone, found := k.GetZoneForDelegateAccount(ctx, original.DelegatorAddress)
-	if !found {
+	if found {
+		err = zone.DelegationAddress.SetWithdrawalAddress(original.WithdrawAddress)
+	} else {
 		zone, found = k.GetZoneForPerformanceAccount(ctx, original.DelegatorAddress)
-		if !found {
+		if found {
+			err = zone.PerformanceAddress.SetWithdrawalAddress(original.WithdrawAddress)
+		} else {
 			zone, found = k.GetZoneForDepositAccount(ctx, original.DelegatorAddress)
 			if !found {
 				return errors.New("unable to find zone")
 			}
-			if err := zone.DepositAddress.SetWithdrawalAddress(original.WithdrawAddress); err != nil {
-				return err
-			}
-		}
-		if err := zone.PerformanceAddress.SetWithdrawalAddress(original.WithdrawAddress); err != nil {
-			return err
-		}
-	} else {
-		if err := zone.DelegationAddress.SetWithdrawalAddress(original.WithdrawAddress); err != nil {
-			return err
+			err = zone.DepositAddress.SetWithdrawalAddress(original.WithdrawAddress)
 		}
 	}
-	k.SetZone(ctx, zone)
 
+	if err != nil {
+		return err
+	}
+
+	k.SetZone(ctx, zone)
 	return nil
 }
 

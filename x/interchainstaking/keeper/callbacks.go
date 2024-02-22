@@ -162,37 +162,46 @@ func DelegationCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.
 	}
 
 	delegation := stakingtypes.Delegation{}
-	// delegations _can_ legitimately be nil here, so explicitly DON'T guard against this.
 	err := k.cdc.Unmarshal(args, &delegation)
 	if err != nil {
 		return err
 	}
 
-	k.Logger(ctx).Debug("Delegation callback", "delegation", delegation, "chain", zone.ChainId)
-
-	if delegation.Shares.IsNil() || delegation.Shares.IsZero() {
-		// delegation never gets removed, even with zero shares.
-		delegator, validator, err := types.ParseStakingDelegationKey(query.Request)
-		if err != nil {
-			return err
-		}
-		validatorAddress, err := addressutils.EncodeAddressToBech32(zone.GetValoperPrefix(), validator)
-		if err != nil {
-			return err
-		}
-		delegatorAddress, err := addressutils.EncodeAddressToBech32(zone.GetAccountPrefix(), delegator)
-		if err != nil {
-			return err
-		}
-
-		if delegation, ok := k.GetDelegation(ctx, zone.ChainId, delegatorAddress, validatorAddress); ok {
-			err := k.RemoveDelegation(ctx, zone.ChainId, delegation)
-			if err != nil {
-				return err
-			}
-		}
-		return nil
+	if shouldRemoveDelegation(delegation) {
+		return handleDelegationRemoval(k, ctx, &zone, query)
 	}
+
+	return processDelegation(k, ctx, delegation, &zone)
+}
+
+func shouldRemoveDelegation(delegation stakingtypes.Delegation) bool {
+	return delegation.Shares.IsNil() || delegation.Shares.IsZero()
+}
+
+func handleDelegationRemoval(k *Keeper, ctx sdk.Context, zone *types.Zone, query icqtypes.Query) error {
+	delegator, validator, err := types.ParseStakingDelegationKey(query.Request)
+	if err != nil {
+		return err
+	}
+	validatorAddress, err := addressutils.EncodeAddressToBech32(zone.GetValoperPrefix(), validator)
+	if err != nil {
+		return err
+	}
+	delegatorAddress, err := addressutils.EncodeAddressToBech32(zone.GetAccountPrefix(), delegator)
+	if err != nil {
+		return err
+	}
+
+	if delegation, ok := k.GetDelegation(ctx, zone.ChainId, delegatorAddress, validatorAddress); ok {
+		err := k.RemoveDelegation(ctx, zone.ChainId, delegation)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func processDelegation(k *Keeper, ctx sdk.Context, delegation stakingtypes.Delegation, zone *types.Zone) error {
 	valAddrBytes, err := addressutils.ValAddressFromBech32(delegation.ValidatorAddress, zone.GetValoperPrefix())
 	if err != nil {
 		return err
@@ -204,7 +213,7 @@ func DelegationCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.
 		return err
 	}
 
-	return k.UpdateDelegationRecordForAddress(ctx, delegation.DelegatorAddress, delegation.ValidatorAddress, sdk.NewCoin(zone.BaseDenom, val.SharesToTokens(delegation.Shares)), &zone, true)
+	return k.UpdateDelegationRecordForAddress(ctx, delegation.DelegatorAddress, delegation.ValidatorAddress, sdk.NewCoin(zone.BaseDenom, val.SharesToTokens(delegation.Shares)), zone, true)
 }
 
 func PerfBalanceCallback(k *Keeper, ctx sdk.Context, response []byte, query icqtypes.Query) error {
