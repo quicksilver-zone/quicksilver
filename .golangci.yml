@@ -18,18 +18,19 @@ linters:
     - gosimple
     - govet
     - ineffassign
-    - maintidx
     - misspell
     - nakedret
+    - nestif
     - staticcheck
     - thelper
     - typecheck
     - stylecheck
     - revive
+    - testifylint
     - typecheck
     - tenv
     - unconvert
-    - unparam # Prefer unparam over revive's unused param. It is more thorough in its checking.
+    - unparam 
     - unused
     - misspell
 
@@ -91,8 +92,6 @@ linters-settings:
         disabled: true
       - name: empty-lines
         disabled: true
-      - name: unused-receiver # remove later
-        disabled: true
       - name: banned-characters
         disabled: true
       - name: deep-exit
@@ -105,9 +104,7 @@ linters-settings:
         disabled: true
       - name: defer
         disabled: true
-      - name: unused-parameter # Disabled in favour of unparam.
-        disabled: true
-      - name: unhandled-error # enable later, currently covered by errcheck
+      - name: unhandled-error 
         disabled: true
         arguments:
           - 'b.WriteString'
