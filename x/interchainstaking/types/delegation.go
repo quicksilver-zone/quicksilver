@@ -96,22 +96,14 @@ func (vi ValidatorIntents) GetForValoper(valoper string) (*ValidatorIntent, bool
 }
 
 func (vi ValidatorIntents) SetForValoper(valoper string, intent *ValidatorIntent) ValidatorIntents {
-	idx := -1 // the index of the valoper if found
 	for i, v := range vi {
-		// Search for the valoper.
 		if v.ValoperAddress == valoper {
-			idx = i
-			break
+			vi[i] = intent
+			return vi
 		}
 	}
-
-	if idx >= 0 { // We found the valoper so just replace it
-		vi[idx] = intent
-	} else {
-		vi = append(vi, intent)
-		return vi.Sort()
-	}
-	return vi
+	vi = append(vi, intent)
+	return vi.Sort()
 }
 
 func (vi ValidatorIntents) MustGetForValoper(valoper string) *ValidatorIntent {

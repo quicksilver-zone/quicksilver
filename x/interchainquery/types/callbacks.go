@@ -5,7 +5,7 @@ import (
 )
 
 type QueryCallbacks interface {
-	AddCallback(id string, fn interface{}) QueryCallbacks
+	AddCallback(id string, fn any) QueryCallbacks
 	RegisterCallbacks() QueryCallbacks
 	Call(ctx sdk.Context, id string, args []byte, query Query) error
 	Has(id string) bool

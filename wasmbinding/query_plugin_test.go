@@ -45,7 +45,7 @@ func (s *StargateTestSuite) TestStargateQuerier() {
 		testSetup              func()
 		path                   string
 		requestData            func() []byte
-		responseProtoStruct    interface{}
+		responseProtoStruct    any
 		expectedQuerierError   bool
 		expectedUnMarshalError bool
 		resendRequest          bool
@@ -224,7 +224,7 @@ func (s *StargateTestSuite) TestDeterministicJsonMarshal() {
 		originalResponsebz  []byte
 		updatedResponsebz   []byte
 		queryPath           string
-		responseProtoStruct interface{}
+		responseProtoStruct any
 		expectedProto       func() proto.Message
 	}{
 		/*

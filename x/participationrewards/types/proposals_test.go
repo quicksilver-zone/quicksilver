@@ -157,7 +157,7 @@ Data:			{
 	})
 }
 
-var sink interface{}
+var sink any
 
 func BenchmarkUpdateZoneProposalString(b *testing.B) {
 	adp := &types.AddProtocolDataProposal{
@@ -185,5 +185,5 @@ func BenchmarkUpdateZoneProposalString(b *testing.B) {
 	if sink == nil {
 		b.Fatal("Benchmark did not run")
 	}
-	sink = interface{}(nil)
+	sink = any(nil)
 }

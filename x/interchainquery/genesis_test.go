@@ -34,7 +34,7 @@ type InterChainQueryTestSuite struct {
 	path   *ibctesting.Path
 }
 
-func (s *InterChainQueryTestSuite) GetSimApp(chain *ibctesting.TestChain) *app.Quicksilver {
+func (*InterChainQueryTestSuite) GetSimApp(chain *ibctesting.TestChain) *app.Quicksilver {
 	quicksilver, ok := chain.App.(*app.Quicksilver)
 	if !ok {
 		panic("not quicksilver app")

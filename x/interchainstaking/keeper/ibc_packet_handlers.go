@@ -560,7 +560,7 @@ func (k *Keeper) HandleBeginRedelegate(ctx sdk.Context, msg sdk.Msg, completion 
 	}
 
 	k.Logger(ctx).Info("Received MsgBeginRedelegate acknowledgement")
-	// first, type assertion. we should have stakingtypes.MsgBeginRedelegate
+
 	redelegateMsg, ok := msg.(*stakingtypes.MsgBeginRedelegate)
 	if !ok {
 		return errors.New("unable to unmarshal MsgBeginRedelegate")
@@ -572,27 +572,25 @@ func (k *Keeper) HandleBeginRedelegate(ctx sdk.Context, msg sdk.Msg, completion 
 	}
 
 	if completion.IsZero() {
-		// a zero completion time can only happen when the validator is unbonded; this means the redelegation has _already_ completed and can be removed.
 		k.DeleteRedelegationRecord(ctx, zone.ChainId, redelegateMsg.ValidatorSrcAddress, redelegateMsg.ValidatorDstAddress, epochNumber)
-	} else {
-		record, found := k.GetRedelegationRecord(ctx, zone.ChainId, redelegateMsg.ValidatorSrcAddress, redelegateMsg.ValidatorDstAddress, epochNumber)
-		if !found {
-			// it is possible that the record was cleaned up if there was a long delay in processing acknowledgements.
-			// just create a new one
-			record = types.RedelegationRecord{
-				ChainId:        zone.ChainId,
-				EpochNumber:    epochNumber,
-				Source:         redelegateMsg.ValidatorSrcAddress,
-				Destination:    redelegateMsg.ValidatorDstAddress,
-				Amount:         redelegateMsg.Amount.Amount.Int64(),
-				CompletionTime: completion,
-			}
-		}
-
-		k.Logger(ctx).Info("updating redelegation record with completion time", "completion", completion)
-		record.CompletionTime = completion
-		k.SetRedelegationRecord(ctx, record)
+		return nil
 	}
+
+	record, found := k.GetRedelegationRecord(ctx, zone.ChainId, redelegateMsg.ValidatorSrcAddress, redelegateMsg.ValidatorDstAddress, epochNumber)
+	if !found {
+		record = types.RedelegationRecord{
+			ChainId:        zone.ChainId,
+			EpochNumber:    epochNumber,
+			Source:         redelegateMsg.ValidatorSrcAddress,
+			Destination:    redelegateMsg.ValidatorDstAddress,
+			Amount:         redelegateMsg.Amount.Amount.Int64(),
+			CompletionTime: completion,
+		}
+	}
+
+	k.Logger(ctx).Info("updating redelegation record with completion time", "completion", completion)
+	record.CompletionTime = completion
+	k.SetRedelegationRecord(ctx, record)
 
 	tgtDelegation, found := k.GetDelegation(ctx, zone.ChainId, redelegateMsg.DelegatorAddress, redelegateMsg.ValidatorDstAddress)
 	if !found {
@@ -600,8 +598,7 @@ func (k *Keeper) HandleBeginRedelegate(ctx sdk.Context, msg sdk.Msg, completion 
 	} else {
 		tgtDelegation.Amount = tgtDelegation.Amount.Add(redelegateMsg.Amount)
 	}
-	// RedelegationEnd is used to determine whether the delegation is 'locked' for transient redelegations.
-	tgtDelegation.RedelegationEnd = completion.Unix() // this field should be a timestamp, but let's avoid unnecessary state changes.
+	tgtDelegation.RedelegationEnd = completion.Unix()
 	k.SetDelegation(ctx, zone.ChainId, tgtDelegation)
 
 	delAddr, err := addressutils.AccAddressFromBech32(redelegateMsg.DelegatorAddress, zone.AccountPrefix)
@@ -614,7 +611,6 @@ func (k *Keeper) HandleBeginRedelegate(ctx sdk.Context, msg sdk.Msg, completion 
 	}
 	data := stakingtypes.GetDelegationKey(delAddr, valAddr)
 
-	// send request to update delegation record for target del/val tuple.
 	k.ICQKeeper.MakeRequest(
 		ctx,
 		zone.ConnectionId,
@@ -632,18 +628,16 @@ func (k *Keeper) HandleBeginRedelegate(ctx sdk.Context, msg sdk.Msg, completion 
 		k.Logger(ctx).Error("unable to find delegation record", "chain", zone.ChainId, "source", redelegateMsg.ValidatorSrcAddress, "dst", redelegateMsg.ValidatorDstAddress, "epoch_number", epochNumber)
 		return fmt.Errorf("unable to find delegation record for chain %s, src: %s, dst: %s, at epoch %d", zone.ChainId, redelegateMsg.ValidatorSrcAddress, redelegateMsg.ValidatorDstAddress, epochNumber)
 	}
+
 	srcDelegation.Amount, err = srcDelegation.Amount.SafeSub(redelegateMsg.Amount)
 	if err != nil {
-		if strings.Contains(err.Error(), "negative coin amount") {
-			// we received a negative srcDelegation. Obviously this cannot happen, but we can get a crossed re/un/delegation, all which fetch absolute values.
-			k.Logger(ctx).Error("possible race condition; unable to sub redelegation amount. requerying delegation anyway")
-		} else {
-			// we got some other, unrecoverable err
+		if !strings.Contains(err.Error(), "negative coin amount") {
 			return err
 		}
-	} else {
-		k.SetDelegation(ctx, zone.ChainId, srcDelegation)
+		k.Logger(ctx).Error("possible race condition; unable to sub redelegation amount. requerying delegation anyway")
 	}
+
+	k.SetDelegation(ctx, zone.ChainId, srcDelegation)
 
 	valAddr, err = addressutils.ValAddressFromBech32(redelegateMsg.ValidatorDstAddress, zone.AccountPrefix+"valoper")
 	if err != nil {
@@ -651,7 +645,6 @@ func (k *Keeper) HandleBeginRedelegate(ctx sdk.Context, msg sdk.Msg, completion 
 	}
 	data = stakingtypes.GetDelegationKey(delAddr, valAddr)
 
-	// send request to update delegation record for src del/val tuple.
 	k.ICQKeeper.MakeRequest(
 		ctx,
 		zone.ConnectionId,
@@ -663,6 +656,7 @@ func (k *Keeper) HandleBeginRedelegate(ctx sdk.Context, msg sdk.Msg, completion 
 		"delegation",
 		0,
 	)
+
 	return nil
 }
 

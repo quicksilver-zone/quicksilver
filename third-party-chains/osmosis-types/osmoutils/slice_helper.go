@@ -14,7 +14,7 @@ func SortSlice[T constraints.Ordered](s []T) {
 	})
 }
 
-func Filter[T interface{}](filter func(T) bool, s []T) []T {
+func Filter[T any](filter func(T) bool, s []T) []T {
 	filteredSlice := []T{}
 	for _, s := range s {
 		if filter(s) {

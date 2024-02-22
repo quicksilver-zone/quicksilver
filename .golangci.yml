@@ -26,7 +26,7 @@ linters:
     - typecheck
     - stylecheck
     - revive
-    - testifylint
+#   - testifylint
     - typecheck
     - tenv
     - unconvert
@@ -103,6 +103,8 @@ linters-settings:
       - name: confusing-naming
         disabled: true
       - name: defer
+        disabled: true
+      - name: unused-parameter
         disabled: true
       - name: unhandled-error 
         disabled: true

@@ -37,7 +37,7 @@ func ApplyFuncIfNoError(ctx sdk.Context, f func(ctx sdk.Context) error) (err err
 
 // PrintPanicRecoveryError error logs the recoveryError, along with the stacktrace, if it can be parsed.
 // If not emits them to stdout.
-func PrintPanicRecoveryError(ctx sdk.Context, recoveryError interface{}) {
+func PrintPanicRecoveryError(ctx sdk.Context, recoveryError any) {
 	errStackTrace := string(debug.Stack())
 	switch e := recoveryError.(type) {
 	case string:

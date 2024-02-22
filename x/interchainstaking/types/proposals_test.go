@@ -231,7 +231,7 @@ func TestRegisterZoneProposal_ValidateBasic(t *testing.T) {
 	}
 }
 
-var sink interface{}
+var sink any
 
 func BenchmarkUpdateZoneProposalString(b *testing.B) {
 	uzp := &types.UpdateZoneProposal{
@@ -256,5 +256,5 @@ func BenchmarkUpdateZoneProposalString(b *testing.B) {
 	if sink == nil {
 		b.Fatal("Benchmark did not run")
 	}
-	sink = interface{}(nil)
+	sink = any(nil)
 }

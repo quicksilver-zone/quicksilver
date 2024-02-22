@@ -91,7 +91,7 @@ func (p Params) Validate() error {
 	return validateDirectLiquidationFee(p.DirectLiquidationFee)
 }
 
-func validateLiquidationThreshold(i interface{}) error {
+func validateLiquidationThreshold(i any) error {
 	v, ok := i.(sdk.Dec)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
@@ -108,7 +108,7 @@ func validateLiquidationThreshold(i interface{}) error {
 	return nil
 }
 
-func validateMinimumCloseFactor(i interface{}) error {
+func validateMinimumCloseFactor(i any) error {
 	v, ok := i.(sdk.Dec)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
@@ -124,7 +124,7 @@ func validateMinimumCloseFactor(i interface{}) error {
 	return nil
 }
 
-func validateOracleRewardFactor(i interface{}) error {
+func validateOracleRewardFactor(i any) error {
 	v, ok := i.(sdk.Dec)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
@@ -140,7 +140,7 @@ func validateOracleRewardFactor(i interface{}) error {
 	return nil
 }
 
-func validateSmallLiquidationSize(i interface{}) error {
+func validateSmallLiquidationSize(i any) error {
 	v, ok := i.(sdk.Dec)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
@@ -153,7 +153,7 @@ func validateSmallLiquidationSize(i interface{}) error {
 	return nil
 }
 
-func validateDirectLiquidationFee(i interface{}) error {
+func validateDirectLiquidationFee(i any) error {
 	v, ok := i.(sdk.Dec)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)

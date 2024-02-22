@@ -545,7 +545,7 @@ func doRequest(query Query, logger log.Logger, metrics prommetrics.Metrics) {
 // does not contain the Tx object (that we don't use, because the TxProof already contains a byte representation of tx anyway!)
 // Note: this function is compatible with 0.34 and 0.37 representations of transactions.
 func Tx(client *lensclient.ChainClient, hash []byte) (tmtypes.TxProof, int64, error) {
-	params := map[string]interface{}{
+	params := map[string]any{
 		"hash":  hash,
 		"prove": true,
 	}
