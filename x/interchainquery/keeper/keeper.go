@@ -75,7 +75,7 @@ func (k *Keeper) MakeRequest(
 		"callback", callbackID,
 		"ttl", ttl,
 	)
-	key := GenerateQueryHash(connectionID, chainID, queryType, request, module)
+	key := GenerateQueryHash(connectionID, chainID, queryType, request, module, callbackID)
 	existingQuery, found := k.GetQuery(ctx, key)
 	if !found {
 		if module != "" && callbackID != "" {

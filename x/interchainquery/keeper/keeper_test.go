@@ -71,7 +71,7 @@ func (suite *KeeperTestSuite) TestMakeRequest() {
 		0,
 	)
 
-	id := keeper.GenerateQueryHash(suite.path.EndpointB.ConnectionID, suite.chainB.ChainID, "cosmos.staking.v1beta1.Query/Validators", bz, "")
+	id := keeper.GenerateQueryHash(suite.path.EndpointB.ConnectionID, suite.chainB.ChainID, "cosmos.staking.v1beta1.Query/Validators", bz, "", "")
 	query, found := suite.GetSimApp(suite.chainA).InterchainQueryKeeper.GetQuery(suite.chainA.GetContext(), id)
 	suite.True(found)
 	suite.Equal(suite.path.EndpointB.ConnectionID, query.ConnectionId)
@@ -179,7 +179,7 @@ func (suite *KeeperTestSuite) TestSubmitQueryResponse() {
 
 		qmsg := icqtypes.MsgSubmitQueryResponse{
 			ChainId:     suite.chainB.ChainID,
-			QueryId:     keeper.GenerateQueryHash(tc.query.ConnectionId, tc.query.ChainId, tc.query.QueryType, bz, ""),
+			QueryId:     keeper.GenerateQueryHash(tc.query.ConnectionId, tc.query.ChainId, tc.query.QueryType, bz, "", ""),
 			Result:      suite.GetSimApp(suite.chainB).AppCodec().MustMarshalJSON(&qvr),
 			Height:      suite.chainB.CurrentHeader.Height,
 			FromAddress: TestOwnerAddress,
