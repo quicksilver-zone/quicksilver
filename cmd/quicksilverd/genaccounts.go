@@ -45,28 +45,9 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 
 			config.SetRoot(clientCtx.HomeDir)
 
-			var kr keyring.Keyring
 			addr, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {
-				inBuf := bufio.NewReader(cmd.InOrStdin())
-				keyringBackend, _ := cmd.Flags().GetString(flags.FlagKeyringBackend)
-
-				if keyringBackend != "" && clientCtx.Keyring == nil {
-					var err error
-					kr, err = keyring.New(sdk.KeyringServiceName(), keyringBackend, clientCtx.HomeDir, inBuf, clientCtx.Codec)
-					if err != nil {
-						return err
-					}
-				} else {
-					kr = clientCtx.Keyring
-				}
-
-				k, err := kr.Key(args[0])
-				if err != nil {
-					return fmt.Errorf("failed to get address from Keyring: %w", err)
-				}
-
-				addr, err = k.GetAddress()
+				addr, err = getAddressFromKeyring(args[0], cmd, clientCtx)
 				if err != nil {
 					return err
 				}
@@ -222,4 +203,28 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
+}
+
+// New function to encapsulate the keyring logic
+func getAddressFromKeyring(arg string, cmd *cobra.Command, clientCtx client.Context) (sdk.AccAddress, error) {
+	inBuf := bufio.NewReader(cmd.InOrStdin())
+	keyringBackend, _ := cmd.Flags().GetString(flags.FlagKeyringBackend)
+
+	var kr keyring.Keyring
+	var err error
+	if keyringBackend != "" && clientCtx.Keyring == nil {
+		kr, err = keyring.New(sdk.KeyringServiceName(), keyringBackend, clientCtx.HomeDir, inBuf, clientCtx.Codec)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		kr = clientCtx.Keyring
+	}
+
+	k, err := kr.Key(arg)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get address from Keyring: %w", err)
+	}
+
+	return k.GetAddress()
 }
