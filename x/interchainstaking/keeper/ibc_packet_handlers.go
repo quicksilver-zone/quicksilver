@@ -713,7 +713,6 @@ func (k *Keeper) HandleUndelegate(ctx sdk.Context, msg sdk.Msg, completion time.
 	if err := zone.DecrementWithdrawalWaitgroup(k.Logger(ctx), 1, "unbonding message ack"); err != nil {
 		// given that there _could_ be a backlog of message, we don't want to bail here, else they will remain undeliverable.
 		k.Logger(ctx).Error(err.Error())
-
 	}
 	ubr, found := k.GetUnbondingRecord(ctx, zone.ChainId, undelegateMsg.ValidatorAddress, epochNumber)
 	if !found {
@@ -761,7 +760,9 @@ func (k *Keeper) HandleUndelegate(ctx sdk.Context, msg sdk.Msg, completion time.
 		0,
 	)
 
-	zone.IncrementWithdrawalWaitgroup(k.Logger(ctx), 1, "unbonding message ack emit delegation_epoch query")
+	if err = zone.IncrementWithdrawalWaitgroup(k.Logger(ctx), 1, "unbonding message ack emit delegation_epoch query"); err != nil {
+		return err
+	}
 	k.SetZone(ctx, zone)
 
 	return nil
@@ -1159,7 +1160,7 @@ func (k *Keeper) UpdateDelegationRecordsForAddress(ctx sdk.Context, zone types.Z
 
 	cb := "delegation"
 	if isEpoch {
-		if err := zone.DecrementWithdrawalWaitgroup(k.Logger(ctx), 1, "delegations_epoch callback suceeded"); err != nil {
+		if err := zone.DecrementWithdrawalWaitgroup(k.Logger(ctx), 1, "delegations_epoch callback succeeded"); err != nil {
 			k.Logger(ctx).Error(err.Error())
 			// don't return here, catch and squash err.
 		}

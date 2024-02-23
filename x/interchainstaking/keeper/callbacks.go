@@ -172,6 +172,7 @@ func DelegationEpochCallback(k *Keeper, ctx sdk.Context, args []byte, query icqt
 func DelegationCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
 	return delegationCallback(k, ctx, args, query, false)
 }
+
 func delegationCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Query, isEpoch bool) error {
 	zone, found := k.GetZone(ctx, query.GetChainId())
 	if !found {
