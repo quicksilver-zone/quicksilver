@@ -784,8 +784,14 @@ func unique(msgSlice []sdk.Msg, logger log.Logger) []sdk.Msg {
 	for _, entry := range msgSlice {
 		msg, ok := entry.(*clienttypes.MsgUpdateClient)
 		if ok {
-			clientMsg, _ := clienttypes.UnpackClientMessage(msg.ClientMessage)
-			header := clientMsg.(*tmclient.Header)
+			clientMsg, err := clienttypes.UnpackClientMessage(msg.ClientMessage)
+			if err != nil {
+				panic(fmt.Errorf("failed to unpack client message: %w", err))
+			}
+			header, ok := clientMsg.(*tmclient.Header)
+			if !ok {
+				panic(fmt.Errorf("client message is not of type *tmclient.Header"))
+			}
 			key := header.GetHeight().String()
 			if _, value := clientUpdateHeights[key]; !value {
 				clientUpdateHeights[key] = true
