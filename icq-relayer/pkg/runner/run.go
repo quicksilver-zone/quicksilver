@@ -814,7 +814,10 @@ func unique(msgSlice []sdk.Msg, logger log.Logger) []sdk.Msg {
 }
 
 func Close() error {
-	query := cmtpubsubquery.MustCompile(fmt.Sprintf("message.module='%s'", "interchainquery"))
+	query, err := cmtpubsubquery.New(fmt.Sprintf("message.module='%s'", "interchainquery"))
+	if err != nil {
+		return fmt.Errorf("failed to compile query: %w", err)
+	}
 
 	for _, chainClient := range globalCfg.Cl {
 		err := chainClient.RPCClient.Unsubscribe(ctx, chainClient.Config.ChainID+"-icq", query.String())
