@@ -5,8 +5,8 @@ go 1.21
 require (
 	cosmossdk.io/x/feegrant v0.1.0
 	cosmossdk.io/x/upgrade v0.1.1
-	github.com/cometbft/cometbft v0.38.5
-	github.com/cosmos/cosmos-sdk v0.50.4-0.20240215075256-c122a3d8ab04
+	github.com/cometbft/cometbft v0.38.2
+	github.com/cosmos/cosmos-sdk v0.50.3
 	github.com/cosmos/ibc-go/modules/capability v1.0.0
 	github.com/cosmos/ibc-go/v8 v8.1.0
 	github.com/dgraph-io/ristretto v0.1.1
@@ -208,6 +208,8 @@ require (
 )
 
 replace (
+	cosmossdk.io/core v0.12.0 => cosmossdk.io/core v0.11.0
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	github.com/strangelove-ventures/lens => github.com/notional-labs/lens v0.0.0-20240114101800-ae65fc74a22d
+
 )
