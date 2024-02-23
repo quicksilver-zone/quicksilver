@@ -101,6 +101,10 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNum
 			return false
 		})
 
+		if zone.GetWithdrawalWaitgroup() > 0 {
+			zone.SetWithdrawalWaitgroup(k.Logger(ctx), 0, "epoch waitgroup was unexpected > 0")
+		}
+
 		if err := k.HandleQueuedUnbondings(ctx, zone, epochNumber); err != nil {
 			// we can and need not panic here; logging the error is sufficient.
 			// an error here is not expected, but also not terminal.
@@ -130,10 +134,6 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNum
 			)
 		}
 
-		if zone.GetWithdrawalWaitgroup() > 0 {
-			zone.SetWithdrawalWaitgroup(k.Logger(ctx), 0, "epoch waitgroup was unexpected > 0")
-		}
-
 		// OnChanOpenAck calls SetWithdrawalAddress (see ibc_module.go)
 		k.Logger(ctx).Info(
 			"withdrawing rewards",
@@ -154,9 +154,11 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNum
 			bz,
 			sdk.NewInt(-1),
 			types.ModuleName,
-			"delegations",
+			"delegations_epoch",
 			0,
 		)
+
+		_ = zone.IncrementWithdrawalWaitgroup(k.Logger(ctx), 1, "delegations trigger")
 
 		balancesQuery := banktypes.QueryAllBalancesRequest{Address: zone.DelegationAddress.Address}
 		bz = k.cdc.MustMarshal(&balancesQuery)

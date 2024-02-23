@@ -73,7 +73,9 @@ func (c Callbacks) RegisterCallbacks() icqtypes.QueryCallbacks {
 		AddCallback("validator", Callback(ValidatorCallback)).
 		AddCallback("rewards", Callback(RewardsCallback)).
 		AddCallback("delegations", Callback(DelegationsCallback)).
+		AddCallback("delegations_epoch", Callback(DelegationsEpochCallback)).
 		AddCallback("delegation", Callback(DelegationCallback)).
+		AddCallback("delegation_epoch", Callback(DelegationEpochCallback)).
 		AddCallback("distributerewards", Callback(DistributeRewardsFromWithdrawAccount)).
 		AddCallback("depositinterval", Callback(DepositIntervalCallback)).
 		AddCallback("deposittx", Callback(DepositTxCallback)).
@@ -124,9 +126,9 @@ func RewardsCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Que
 
 	// decrement waitgroup as we have received back the query
 	// (initially incremented in AfterEpochEnd)
-	err = zone.DecrementWithdrawalWaitgroup(k.Logger(ctx), 1, "rewards callback")
-	if err != nil {
-		return err
+	if err = zone.DecrementWithdrawalWaitgroup(k.Logger(ctx), 1, "rewards callback"); err != nil {
+		// given that there _could_ be a backlog of message, we don't want to bail here, else they will remain undeliverable.
+		k.Logger(ctx).Error(err.Error())
 	}
 
 	k.Logger(ctx).Debug("QueryDelegationRewards callback", "wg", zone.GetWithdrawalWaitgroup(), "delegatorAddress", rewardsQuery.DelegatorAddress, "zone", query.ChainId)
@@ -134,7 +136,15 @@ func RewardsCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Que
 	return k.WithdrawDelegationRewardsForResponse(ctx, &zone, rewardsQuery.DelegatorAddress, args)
 }
 
+func DelegationsEpochCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
+	return delegationsCallback(k, ctx, args, query, true)
+}
+
 func DelegationsCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
+	return delegationsCallback(k, ctx, args, query, false)
+}
+
+func delegationsCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Query, isEpoch bool) error {
 	zone, found := k.GetZone(ctx, query.GetChainId())
 	if !found {
 		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
@@ -152,10 +162,17 @@ func DelegationsCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes
 
 	k.Logger(ctx).Debug("Delegations callback triggered", "chain", zone.ChainId)
 
-	return k.UpdateDelegationRecordsForAddress(ctx, zone, delegationQuery.DelegatorAddr, args)
+	return k.UpdateDelegationRecordsForAddress(ctx, zone, delegationQuery.DelegatorAddr, args, isEpoch)
+}
+
+func DelegationEpochCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
+	return delegationCallback(k, ctx, args, query, true)
 }
 
 func DelegationCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
+	return delegationCallback(k, ctx, args, query, false)
+}
+func delegationCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Query, isEpoch bool) error {
 	zone, found := k.GetZone(ctx, query.GetChainId())
 	if !found {
 		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
@@ -204,7 +221,7 @@ func DelegationCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.
 		return err
 	}
 
-	return k.UpdateDelegationRecordForAddress(ctx, delegation.DelegatorAddress, delegation.ValidatorAddress, sdk.NewCoin(zone.BaseDenom, val.SharesToTokens(delegation.Shares)), &zone, true)
+	return k.UpdateDelegationRecordForAddress(ctx, delegation.DelegatorAddress, delegation.ValidatorAddress, sdk.NewCoin(zone.BaseDenom, val.SharesToTokens(delegation.Shares)), &zone, true, isEpoch)
 }
 
 func PerfBalanceCallback(k *Keeper, ctx sdk.Context, response []byte, query icqtypes.Query) error {
@@ -622,9 +639,9 @@ func DelegationAccountBalanceCallback(k *Keeper, ctx sdk.Context, args []byte, q
 	}
 
 	k.Logger(ctx).Info("Received balance response for denom", "denom", coin.Denom)
-	err = zone.DecrementWithdrawalWaitgroup(k.Logger(ctx), 1, "delegationaccountbalance callback")
-	if err != nil {
-		return err
+	if err = zone.DecrementWithdrawalWaitgroup(k.Logger(ctx), 1, "delegationaccountbalance callback"); err != nil {
+		// given that there _could_ be a backlog of message, we don't want to bail here, else they will remain undeliverable.
+		k.Logger(ctx).Error(err.Error())
 	}
 
 	// set the zone amount.
@@ -645,6 +662,12 @@ func DelegationAccountBalanceCallback(k *Keeper, ctx sdk.Context, args []byte, q
 	// if token is not valid for staking, then send to withdrawal account.
 	if valid, _ := zone.ValidateCoinsForZone(sdk.NewCoins(coin), k.GetValidatorAddressesAsMap(ctx, zone.ChainId)); !valid {
 		k.Logger(ctx).Info("token is not a valid staking token, so sending to withdrawal account for disbursal", "chain", zone.ChainId, "assets", coin)
+		if zone.GetWithdrawalWaitgroup() == 0 {
+			k.Logger(ctx).Info("triggering redemption rate calc in lieu of delegation flush")
+			if err := k.TriggerRedemptionRate(ctx, &zone); err != nil {
+				return err
+			}
+		}
 		return k.SendToWithdrawal(ctx, &zone, zone.DelegationAddress, sdk.NewCoins(coin))
 	}
 
@@ -660,7 +683,8 @@ func DelegationAccountBalancesCallback(k *Keeper, ctx sdk.Context, args []byte, 
 	k.cdc.MustUnmarshal(args, &result)
 
 	if err := zone.DecrementWithdrawalWaitgroup(k.Logger(ctx), 1, "delegationaccountbalances callback"); err != nil {
-		return err
+		// given that there _could_ be a backlog of message, we don't want to bail here, else they will remain undeliverable.
+		k.Logger(ctx).Error(err.Error())
 	}
 
 	addressBytes, err := addressutils.AccAddressFromBech32(zone.DelegationAddress.Address, zone.AccountPrefix)
