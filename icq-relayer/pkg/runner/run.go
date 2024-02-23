@@ -638,15 +638,17 @@ func submitClientUpdate(client, submitClient *lensclient.ChainClient, query Quer
 		_ = logger.Log("msg", fmt.Sprintf("Error: Could not get header %s", err))
 		return
 	}
-	anyHeader, err := clienttypes.PackHeader(header)
+
+	anyHeader, err := clienttypes.PackClientMessage(header)
 	if err != nil {
 		_ = logger.Log("msg", fmt.Sprintf("Error: Could not pack header %s", err))
 		return
 	}
 
 	msg := &clienttypes.MsgUpdateClient{
-		ClientId: clientId.(string), // needs to be passed in as part of request.
-		Signer:   submitClient.MustEncodeAccAddr(from),
+		ClientId:      clientId.(string), // needs to be passed in as part of request.
+		Signer:        submitClient.MustEncodeAccAddr(from),
+		ClientMessage: anyHeader,
 	}
 
 	sendQueue[query.SourceChainId] <- msg
@@ -782,7 +784,8 @@ func unique(msgSlice []sdk.Msg, logger log.Logger) []sdk.Msg {
 	for _, entry := range msgSlice {
 		msg, ok := entry.(*clienttypes.MsgUpdateClient)
 		if ok {
-			header, _ := clienttypes.UnpackHeader(msg.Header)
+			clientMsg, _ := clienttypes.UnpackClientMessage(msg.ClientMessage)
+			header := clientMsg.(*tmclient.Header)
 			key := header.GetHeight().String()
 			if _, value := clientUpdateHeights[key]; !value {
 				clientUpdateHeights[key] = true
