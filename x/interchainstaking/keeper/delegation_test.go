@@ -217,7 +217,7 @@ func (suite *KeeperTestSuite) TestUpdateDelegation() {
 			}
 
 			for _, update := range tt.updates {
-				err := qApp.InterchainstakingKeeper.UpdateDelegationRecordForAddress(ctx, update.delegation.DelegationAddress, update.delegation.ValidatorAddress, update.delegation.Amount, &zone, update.absolute)
+				err := qApp.InterchainstakingKeeper.UpdateDelegationRecordForAddress(ctx, update.delegation.DelegationAddress, update.delegation.ValidatorAddress, update.delegation.Amount, &zone, update.absolute, false)
 				suite.NoError(err)
 			}
 

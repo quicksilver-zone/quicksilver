@@ -6,7 +6,7 @@
   "content": {
   "@type": "/quicksilver.interchainstaking.v1.RegisterZoneProposal",
   "title": "register lstest-1 zone",
-  "description": "register lstest-1 zone with multisend and lsm enabled",
+  "description": "register lstest-1 zone with lsm disabled",
   "connection_id": "connection-0",
   "base_denom": "uatom",
   "local_denom": "uqatom",
@@ -14,8 +14,9 @@
   "deposits_enabled": true,
   "unbonding_enabled": true,
   "liquidity_module": false,
-  "return_to_sender": true,
-  "decimals": 6
+  "return_to_sender": false,
+  "decimals": 6,
+  "is_118": true
   },
   "authority": "quick10d07y265gmmuvt4z0w9aw880jnsr700j3xrh0p"
 }],

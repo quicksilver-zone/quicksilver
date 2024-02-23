@@ -329,7 +329,8 @@ func (k *Keeper) FlushOutstandingDelegations(ctx sdk.Context, zone *types.Zone, 
 		k.Logger(ctx).Info("delegate account balance negative, or nothing to flush, setting outdated receipts")
 		k.SetReceiptsCompleted(ctx, zone.ChainId, exclusionTime, ctx.BlockTime(), delAddrBalance.Denom)
 		if zone.GetWithdrawalWaitgroup() == 0 {
-			k.Logger(ctx).Info("triggering redemption rate calc in lieu of delegation flush")
+			// we won't be sending any messages when we exit here; so if WG==0, then trigger RR update
+			k.Logger(ctx).Info("triggering redemption rate calc in lieu of delegation flush (non-positive coins)")
 			if err := k.TriggerRedemptionRate(ctx, zone); err != nil {
 				return err
 			}
@@ -352,6 +353,15 @@ func (k *Keeper) FlushOutstandingDelegations(ctx sdk.Context, zone *types.Zone, 
 	if err = zone.IncrementWithdrawalWaitgroup(k.Logger(ctx), uint32(numMsgs), "sending flush messages"); err != nil {
 		return err
 	}
+
+	// if we didn't send any messages (thus no acks will happen), and WG==0, then trigger RR update
+	if numMsgs == 0 && zone.GetWithdrawalWaitgroup() == 0 {
+		k.Logger(ctx).Info("triggering redemption rate calc in lieu of delegation flush (no messages to send)")
+		if err := k.TriggerRedemptionRate(ctx, zone); err != nil {
+			return err
+		}
+	}
+
 	k.SetZone(ctx, zone)
 	return nil
 }
