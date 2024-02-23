@@ -433,44 +433,53 @@ func (k *Keeper) HandleWithdrawForUser(ctx sdk.Context, zone *types.Zone, msg *b
 		}
 		k.Logger(ctx).Info("burned coins post-withdrawal", "coins", withdrawalRecord.BurnAmount)
 	} else {
-
 		// case 2: per validator amounts - LSM unbonding
-
-		dlist := make(map[int]struct{})
-		for i, dist := range withdrawalRecord.Distribution {
-			if msg.Amount[0].Amount.Equal(sdk.NewIntFromUint64(dist.Amount)) { // check valoper here too?
-				dlist[i] = struct{}{}
-				// matched amount
-				if len(withdrawalRecord.Distribution) == len(dlist) {
-					// we just removed the last element
-					k.Logger(ctx).Info("found matching withdrawal; marking as completed")
-					k.UpdateWithdrawalRecordStatus(ctx, &withdrawalRecord, types.WithdrawStatusCompleted)
-					if err := k.BankKeeper.BurnCoins(ctx, types.EscrowModuleAccount, sdk.NewCoins(withdrawalRecord.BurnAmount)); err != nil {
-						// if we can't burn the coins, fail.
-						return err
-					}
-					k.Logger(ctx).Info("burned coins post-withdrawal", "coins", withdrawalRecord.BurnAmount)
-				}
-				break
-			}
-		}
-
-		if len(dlist) > 0 {
-			newDist := make([]*types.Distribution, 0)
-			for idx := range withdrawalRecord.Distribution {
-				if _, remove := dlist[idx]; !remove {
-					newDist = append(newDist, withdrawalRecord.Distribution[idx])
-				}
-			}
-			k.Logger(ctx).Info("found matching withdrawal; awaiting additional messages")
-			withdrawalRecord.Distribution = newDist
-			k.SetWithdrawalRecord(ctx, withdrawalRecord)
+		if err := k.processPerValidatorWithdrawal(ctx, &withdrawalRecord, msg); err != nil {
+			return err
 		}
 	}
 
 	period := int64(k.GetParam(ctx, types.KeyValidatorSetInterval))
 	query := stakingtypes.QueryValidatorsRequest{}
 	return k.EmitValSetQuery(ctx, zone.ConnectionId, zone.ChainId, query, sdkmath.NewInt(period))
+}
+
+// New method to process per-validator withdrawals
+func (k Keeper) processPerValidatorWithdrawal(ctx sdk.Context, withdrawalRecord *types.WithdrawalRecord, msg *banktypes.MsgSend) error {
+	dlist := make(map[int]struct{})
+	for i, dist := range withdrawalRecord.Distribution {
+		if msg.Amount[0].Amount.Equal(sdk.NewIntFromUint64(dist.Amount)) {
+			dlist[i] = struct{}{}
+			if len(withdrawalRecord.Distribution) == len(dlist) {
+				k.Logger(ctx).Info("found matching withdrawal; marking as completed")
+				k.UpdateWithdrawalRecordStatus(ctx, withdrawalRecord, types.WithdrawStatusCompleted)
+				if err := k.BankKeeper.BurnCoins(ctx, types.EscrowModuleAccount, sdk.NewCoins(withdrawalRecord.BurnAmount)); err != nil {
+					return err
+				}
+				k.Logger(ctx).Info("burned coins post-withdrawal", "coins", withdrawalRecord.BurnAmount)
+				return nil
+			}
+			break
+		}
+	}
+
+	if len(dlist) > 0 {
+		withdrawalRecord.Distribution = k.removeMatchedDistributions(withdrawalRecord.Distribution, dlist)
+		k.Logger(ctx).Info("found matching withdrawal; awaiting additional messages")
+		k.SetWithdrawalRecord(ctx, *withdrawalRecord)
+	}
+	return nil
+}
+
+// Helper method to remove matched distributions
+func (Keeper) removeMatchedDistributions(distributions []*types.Distribution, dlist map[int]struct{}) []*types.Distribution {
+	newDist := make([]*types.Distribution, 0)
+	for idx, dist := range distributions {
+		if _, remove := dlist[idx]; !remove {
+			newDist = append(newDist, dist)
+		}
+	}
+	return newDist
 }
 
 func (*Keeper) isMatchingWithdrawal(withdrawalRecord types.WithdrawalRecord, msg *banktypes.MsgSend) bool {
