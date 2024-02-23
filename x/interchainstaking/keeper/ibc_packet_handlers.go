@@ -483,13 +483,22 @@ func (Keeper) removeMatchedDistributions(distributions []*types.Distribution, dl
 }
 
 func (*Keeper) isMatchingWithdrawal(withdrawalRecord types.WithdrawalRecord, msg *banktypes.MsgSend) bool {
-	if len(withdrawalRecord.Amount) != 1 || len(msg.Amount) != 1 {
+	if len(withdrawalRecord.Amount) != len(msg.Amount) {
 		return false
 	}
-	if msg.Amount[0].Denom != withdrawalRecord.Amount[0].Denom {
-		return false
+	for _, wrCoin := range withdrawalRecord.Amount {
+		matchFound := false
+		for _, msgCoin := range msg.Amount {
+			if wrCoin.Denom == msgCoin.Denom && wrCoin.Amount.Equal(msgCoin.Amount) {
+				matchFound = true
+				break
+			}
+		}
+		if !matchFound {
+			return false
+		}
 	}
-	return withdrawalRecord.Amount.IsEqual(msg.Amount)
+	return true
 }
 
 func (k *Keeper) GCCompletedRedelegations(ctx sdk.Context) error {
