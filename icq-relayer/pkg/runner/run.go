@@ -119,8 +119,9 @@ func Run(cfg *config.Config, home string) error {
 
 	query, err := cmtpubsubquery.New(fmt.Sprintf("message.module='%s'", "interchainquery"))
 	if err != nil {
-		// handle error
+		return fmt.Errorf("failed to compile query: %w", err)
 	}
+
 	wg := &sync.WaitGroup{}
 	defer wg.Wait()
 
