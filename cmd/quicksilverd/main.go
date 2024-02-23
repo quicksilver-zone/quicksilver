@@ -10,11 +10,13 @@ import (
 
 	"github.com/quicksilver-zone/quicksilver/app"
 	cmdcfg "github.com/quicksilver-zone/quicksilver/cmd/config"
+	webui "github.com/quicksilver-zone/quicksilver/web-ui"
 )
 
 func main() {
 	cmdcfg.SetupConfig()
 	cmdcfg.RegisterDenoms()
+	webui.UI() // Start the web server.  TODO: ensure that this is easy for operators to turn off, and that it handles cors or whatever.
 
 	userHomeDir, err := os.UserHomeDir()
 	if err != nil {
