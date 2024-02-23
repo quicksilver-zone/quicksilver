@@ -250,6 +250,11 @@ func (k *Keeper) HandleQueuedUnbondings(ctx sdk.Context, zone *types.Zone, epoch
 		}
 	}
 
+	if err = zone.IncrementWithdrawalWaitgroup(k.Logger(ctx), uint32(len(msgs)), "trigger unbonding messages"); err != nil {
+		return err
+	}
+	k.SetZone(ctx, zone)
+
 	return nil
 }
 

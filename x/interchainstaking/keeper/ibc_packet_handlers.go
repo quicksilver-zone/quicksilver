@@ -369,6 +369,10 @@ func (k *Keeper) HandleCompleteSend(ctx sdk.Context, msg sdk.Msg, memo string) e
 		k.Logger(ctx).Info("delegate account send tokens; handling withdrawal", "amount", sMsg.Amount, "memo", memo)
 		return k.HandleWithdrawForUser(ctx, zone, sMsg, memo)
 
+	case zone.IsDepositAddress(sMsg.FromAddress) && memo == "refund":
+		k.Logger(ctx).Info("unable to process deposit, returning funds to sender", "recipient", sMsg.ToAddress, "amount", sMsg.Amount, "memo", memo)
+		return nil
+
 	default:
 		err = fmt.Errorf("unexpected completed send (2) from %s to %s (amount: %s)", sMsg.FromAddress, sMsg.ToAddress, sMsg.Amount)
 		k.Logger(ctx).Error(err.Error())
@@ -705,6 +709,11 @@ func (k *Keeper) HandleUndelegate(ctx sdk.Context, msg sdk.Msg, completion time.
 	if !found {
 		return fmt.Errorf("zone for delegate account %s not found", undelegateMsg.DelegatorAddress)
 	}
+
+	if err := zone.DecrementWithdrawalWaitgroup(k.Logger(ctx), 1, "unbonding message ack"); err != nil {
+		// given that there _could_ be a backlog of message, we don't want to bail here, else they will remain undeliverable.
+		k.Logger(ctx).Error(err.Error())
+	}
 	ubr, found := k.GetUnbondingRecord(ctx, zone.ChainId, undelegateMsg.ValidatorAddress, epochNumber)
 	if !found {
 		return fmt.Errorf("unbonding record for %s not found for epoch %d", undelegateMsg.ValidatorAddress, epochNumber)
@@ -747,9 +756,14 @@ func (k *Keeper) HandleUndelegate(ctx sdk.Context, msg sdk.Msg, completion time.
 		data,
 		sdk.NewInt(-1),
 		types.ModuleName,
-		"delegation",
+		"delegation_epoch",
 		0,
 	)
+
+	if err = zone.IncrementWithdrawalWaitgroup(k.Logger(ctx), 1, "unbonding message ack emit delegation_epoch query"); err != nil {
+		return err
+	}
+	k.SetZone(ctx, zone)
 
 	return nil
 }
@@ -937,7 +951,7 @@ func (k *Keeper) HandleRedeemTokens(ctx sdk.Context, msg sdk.Msg, amount sdk.Coi
 		receipt.Completed = &t
 		k.SetReceipt(ctx, receipt)
 	}
-	return k.UpdateDelegationRecordForAddress(ctx, redeemMsg.DelegatorAddress, validatorAddress, amount, zone, false)
+	return k.UpdateDelegationRecordForAddress(ctx, redeemMsg.DelegatorAddress, validatorAddress, amount, zone, false, false)
 }
 
 func (k *Keeper) HandleFailedRedeemTokens(ctx sdk.Context, msg sdk.Msg, memo string) error {
@@ -961,7 +975,9 @@ func (k *Keeper) HandleFailedRedeemTokens(ctx sdk.Context, msg sdk.Msg, memo str
 	case strings.HasPrefix(memo, "batch"):
 		k.Logger(ctx).Error("batch token redemption failed", "memo", memo, "tx", redeemMsg)
 		if err := zone.DecrementWithdrawalWaitgroup(k.Logger(ctx), uint32(1), "batch token redemption failure ack"); err != nil {
-			return err
+			k.Logger(ctx).Error(err.Error())
+			return nil
+			// return nil here so we don't reject the incoming tx, but log the error and don't trigger RR update for repeated zero.
 		}
 		k.Logger(ctx).Info("Decremented waitgroup after failed batch token redemption", "wg", zone.GetWithdrawalWaitgroup())
 		k.SetZone(ctx, zone)
@@ -1006,7 +1022,9 @@ func (k *Keeper) HandleDelegate(ctx sdk.Context, msg sdk.Msg, memo string) error
 		k.SetReceiptsCompleted(ctx, zone.ChainId, time.Unix(exclusionTimestampUnix, 0), ctx.BlockTime(), delegateMsg.Amount.Denom)
 		zone.DelegationAddress.Balance = zone.DelegationAddress.Balance.Sub(delegateMsg.Amount)
 		if err := zone.DecrementWithdrawalWaitgroup(k.Logger(ctx), uint32(1), "batch/reward delegation success ack"); err != nil {
-			return err
+			k.Logger(ctx).Error(err.Error())
+			return nil
+			// return nil here so we don't reject the incoming tx, but log the error and don't trigger RR update for repeated zero.
 		}
 		k.SetZone(ctx, zone)
 		if zone.GetWithdrawalWaitgroup() == 0 {
@@ -1026,7 +1044,7 @@ func (k *Keeper) HandleDelegate(ctx sdk.Context, msg sdk.Msg, memo string) error
 
 	}
 
-	return k.UpdateDelegationRecordForAddress(ctx, delegateMsg.DelegatorAddress, delegateMsg.ValidatorAddress, delegateMsg.Amount, zone, false)
+	return k.UpdateDelegationRecordForAddress(ctx, delegateMsg.DelegatorAddress, delegateMsg.ValidatorAddress, delegateMsg.Amount, zone, false, false)
 }
 
 func (k *Keeper) HandleFailedDelegate(ctx sdk.Context, msg sdk.Msg, memo string) error {
@@ -1050,7 +1068,9 @@ func (k *Keeper) HandleFailedDelegate(ctx sdk.Context, msg sdk.Msg, memo string)
 	case strings.HasPrefix(memo, "batch"):
 		k.Logger(ctx).Error("batch delegation failed", "memo", memo, "tx", delegateMsg)
 		if err := zone.DecrementWithdrawalWaitgroup(k.Logger(ctx), 1, "batch delegation failed ack"); err != nil {
-			return err
+			k.Logger(ctx).Error(err.Error())
+			return nil
+			// return nil here so we don't reject the incoming tx, but log the error and don't trigger RR update for repeated zero.
 		}
 		k.SetZone(ctx, zone)
 		if zone.GetWithdrawalWaitgroup() == 0 {
@@ -1117,13 +1137,16 @@ func (k *Keeper) GetValidatorForToken(ctx sdk.Context, amount sdk.Coin) (string,
 	return "", fmt.Errorf("unable to find validator for token %s", amount.Denom)
 }
 
-func (k *Keeper) UpdateDelegationRecordsForAddress(ctx sdk.Context, zone types.Zone, delegatorAddress string, args []byte) error {
+// UpdateDelegationRecordsForAddress accepts a QueryDelegatorDelegationsResponse and for new, or changed delegation records will
+// trigger an ICQ request for that record. If this was triggered by an epoch, the withdrawal waitgroup should be decremented once,
+// (for the incoming message) and incremented for each outgoing message.
+func (k *Keeper) UpdateDelegationRecordsForAddress(ctx sdk.Context, zone types.Zone, delegatorAddress string, args []byte, isEpoch bool) error {
 	var response stakingtypes.QueryDelegatorDelegationsResponse
 	err := k.cdc.Unmarshal(args, &response)
 	if err != nil {
 		return err
 	}
-	k.Logger(ctx).Info("Delegation query response", "response", response)
+	k.Logger(ctx).Info("Delegation query response", "isEpoch", isEpoch, "response", response)
 	_, delAddr, err := bech32.DecodeAndConvert(delegatorAddress)
 	if err != nil {
 		return err
@@ -1134,6 +1157,16 @@ func (k *Keeper) UpdateDelegationRecordsForAddress(ctx sdk.Context, zone types.Z
 	for _, del := range delegatorDelegations {
 		delMap[del.ValidatorAddress] = del
 	}
+
+	cb := "delegation"
+	if isEpoch {
+		if err := zone.DecrementWithdrawalWaitgroup(k.Logger(ctx), 1, "delegations_epoch callback succeeded"); err != nil {
+			k.Logger(ctx).Error(err.Error())
+			// don't return here, catch and squash err.
+		}
+		cb = "delegation_epoch"
+	}
+
 	for _, delegationRecord := range response.DelegationResponses {
 
 		_, valAddr, err := bech32.DecodeAndConvert(delegationRecord.Delegation.ValidatorAddress)
@@ -1154,10 +1187,15 @@ func (k *Keeper) UpdateDelegationRecordsForAddress(ctx sdk.Context, zone types.Z
 				data,
 				sdk.NewInt(-1),
 				types.ModuleName,
-				"delegation",
+				cb,
 				0,
 			)
-			// zone.DelegationAddress.IncrementBalanceWaitgroup() // does this get decremented?
+			if isEpoch {
+				err = zone.IncrementWithdrawalWaitgroup(k.Logger(ctx), 1, fmt.Sprintf("delegation callback emit %s query", cb))
+				if err != nil {
+					return err
+				}
+			}
 		}
 
 		if ok {
@@ -1182,9 +1220,19 @@ func (k *Keeper) UpdateDelegationRecordsForAddress(ctx sdk.Context, zone types.Z
 			data,
 			sdk.NewInt(-1),
 			types.ModuleName,
-			"delegation",
+			cb,
 			0,
 		)
+		if isEpoch {
+			err = zone.IncrementWithdrawalWaitgroup(k.Logger(ctx), 1, fmt.Sprintf("delegations callback emit %s query", cb))
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	if isEpoch {
+		k.SetZone(ctx, &zone)
 	}
 
 	return nil
@@ -1197,6 +1245,7 @@ func (k *Keeper) UpdateDelegationRecordForAddress(
 	amount sdk.Coin,
 	zone *types.Zone,
 	absolute bool,
+	isEpoch bool,
 ) error {
 	delegation, found := k.GetDelegation(ctx, zone.ChainId, delegatorAddress, validatorAddress)
 
@@ -1219,6 +1268,25 @@ func (k *Keeper) UpdateDelegationRecordForAddress(
 	err := k.EmitValSetQuery(ctx, zone.ConnectionId, zone.ChainId, query, sdkmath.NewInt(period))
 	if err != nil {
 		return err
+	}
+
+	if isEpoch {
+		err = zone.DecrementWithdrawalWaitgroup(k.Logger(ctx), 1, "delegation_epoch success")
+		if err != nil {
+			k.Logger(ctx).Error(err.Error())
+			// return nil here as to not fail the ack, but don't trigger RR multiple times.
+			return nil
+		}
+
+		k.SetZone(ctx, zone)
+
+		if zone.GetWithdrawalWaitgroup() == 0 {
+			k.Logger(ctx).Info("Triggering redemption rate upgrade after delegation updates")
+			err = k.TriggerRedemptionRate(ctx, zone)
+			if err != nil {
+				return err
+			}
+		}
 	}
 	return nil
 }
@@ -1244,7 +1312,9 @@ func (k *Keeper) HandleWithdrawRewards(ctx sdk.Context, msg sdk.Msg) error {
 	// performance only.
 	if withdrawalMsg.DelegatorAddress != zone.PerformanceAddress.Address {
 		if err := zone.DecrementWithdrawalWaitgroup(k.Logger(ctx), 1, "handle withdraw rewards"); err != nil {
-			return err
+			k.Logger(ctx).Error(err.Error())
+			return nil
+			// return nil here so we don't reject the incoming tx, but log the error and don't trigger RR update for repeated zero.
 		}
 		if err != nil {
 			return err

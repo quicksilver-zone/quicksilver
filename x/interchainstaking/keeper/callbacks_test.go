@@ -2649,7 +2649,7 @@ func (suite *KeeperTestSuite) TestDelegationAccountBalancesCallbackNoWg() {
 			suite.Require().NoError(err)
 
 			err = keeper.DelegationAccountBalancesCallback(app.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: reqbz})
-			suite.Require().Error(err)
+			suite.Require().NoError(err) // was previously error but we no longer fail here, just exit with nil.
 		})
 	}
 }
