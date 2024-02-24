@@ -197,7 +197,7 @@ func (k *Keeper) MintAndSendQAsset(ctx sdk.Context, sender sdk.AccAddress, sende
 		if !found {
 			// if not found, skip minting and refund assets
 			msg := &banktypes.MsgSend{FromAddress: zone.DepositAddress.GetAddress(), ToAddress: senderAddress, Amount: assets}
-			return k.SubmitTx(ctx, []sdk.Msg{msg}, zone.DepositAddress, "", zone.MessagesPerTx)
+			return k.SubmitTx(ctx, []sdk.Msg{msg}, zone.DepositAddress, "refund", zone.MessagesPerTx)
 		}
 		// do not set, since mapped address already exists
 		setMappedAddress = false
@@ -212,6 +212,7 @@ func (k *Keeper) MintAndSendQAsset(ctx sdk.Context, sender sdk.AccAddress, sende
 	switch {
 	case zone.ReturnToSender || memoRTS:
 		err = k.SendTokenIBC(ctx, k.AccountKeeper.GetModuleAddress(types.ModuleName), senderAddress, zone, qAssets[0])
+		k.Logger(ctx).Info("Transferred qAssets via rts", "address", senderAddress, "assets", qAssets)
 
 	case mappedAddress != nil && !zone.Is_118:
 		// set mapped account
@@ -221,16 +222,16 @@ func (k *Keeper) MintAndSendQAsset(ctx sdk.Context, sender sdk.AccAddress, sende
 
 		// set send to mapped account
 		err = k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, mappedAddress, qAssets)
+		k.Logger(ctx).Info("Transferred qAssets to mapped account", "address", mappedAddress, "assets", qAssets)
 	default:
 		err = k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, sender, qAssets)
+		k.Logger(ctx).Info("Transferred qAssets to sender", "address", sender, "assets", qAssets)
 
 	}
 
 	if err != nil {
 		return fmt.Errorf("unable to transfer coins: %w", err)
 	}
-
-	k.Logger(ctx).Info("Transferred qAssets to sender", "assets", qAssets, "sender", sender)
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
