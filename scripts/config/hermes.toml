@@ -14,6 +14,7 @@ enabled = true
 enabled = true
 clear_interval = 100
 clear_on_start = true
+tx_confirmation = true
 
 [rest]
 enabled = true
@@ -29,7 +30,7 @@ port = 3001
 id = 'qstest-1'
 rpc_addr = 'http://quicksilver:26657'
 grpc_addr = 'http://quicksilver:9090'
-websocket_addr = 'ws://quicksilver:26657/websocket'
+event_source = { mode = "pull" }
 rpc_timeout = '10s'
 account_prefix = 'quick'
 key_name = 'testkey'
@@ -45,12 +46,14 @@ max_block_time = '10s'
 trusting_period = '3minutes'
 trust_threshold = { numerator = '1', denominator = '3' }
 address_type = { derivation = 'cosmos' }
+trusted_node = true
+sequential_batch_tx = true
 
 [[chains]]
 id = 'lstest-1'
 rpc_addr = 'http://testzone1-1:26657'
 grpc_addr = 'http://testzone1-1:9090'
-websocket_addr = 'ws://testzone1-1:26657/websocket'
+event_source = { mode = "pull" }
 rpc_timeout = '10s'
 account_prefix = 'cosmos'
 key_name = 'testkey'
@@ -66,3 +69,5 @@ max_block_time = '10s'
 trusting_period = '3minutes'
 trust_threshold = { numerator = '1', denominator = '3' }
 address_type = { derivation = 'cosmos' }
+trusted_node = true
+sequential_batch_tx = true

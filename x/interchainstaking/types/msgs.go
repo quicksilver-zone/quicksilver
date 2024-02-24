@@ -18,17 +18,20 @@ import (
 
 // interchainstaking message types.
 const (
-	TypeMsgRequestRedemption = "requestredemption"
-	TypeMsgSignalIntent      = "signalintent"
+	TypeMsgRequestRedemption      = "requestredemption"
+	TypeMsgCancelQueuedRedemption = "cancelqueuedredemption"
+	TypeMsgSignalIntent           = "signalintent"
 )
 
 var (
 	_ sdk.Msg            = &MsgRequestRedemption{}
+	_ sdk.Msg            = &MsgCancelQueuedRedemption{}
 	_ sdk.Msg            = &MsgSignalIntent{}
 	_ sdk.Msg            = &MsgGovCloseChannel{}
 	_ sdk.Msg            = &MsgGovReopenChannel{}
 	_ sdk.Msg            = &MsgGovSetLsmCaps{}
 	_ legacytx.LegacyMsg = &MsgRequestRedemption{}
+	_ legacytx.LegacyMsg = &MsgCancelQueuedRedemption{}
 	_ legacytx.LegacyMsg = &MsgSignalIntent{}
 )
 
@@ -81,6 +84,59 @@ func (msg MsgRequestRedemption) GetSignBytes() []byte {
 
 // GetSigners Implements Msg.
 func (msg MsgRequestRedemption) GetSigners() []sdk.AccAddress {
+	fromAddress, _ := sdk.AccAddressFromBech32(msg.FromAddress)
+	return []sdk.AccAddress{fromAddress}
+}
+
+// ----------------------------------------------------------------
+
+var hexpr = regexp.MustCompile("^[A-Fa-f0-9]{64}$")
+
+// NewMsgCancelQueuedRedemption - construct a msg to cancel a requested redemption.
+func NewMsgCancelQueuedRedemption(chainID string, hash string, fromAddress sdk.Address) *MsgCancelQueuedRedemption {
+	return &MsgCancelQueuedRedemption{ChainId: chainID, Hash: hash, FromAddress: fromAddress.String()}
+}
+
+// Route Implements Msg.
+func (MsgCancelQueuedRedemption) Route() string { return RouterKey }
+
+// Type Implements Msg.
+func (MsgCancelQueuedRedemption) Type() string { return TypeMsgCancelQueuedRedemption }
+
+// ValidateBasic Implements Msg.
+func (msg MsgCancelQueuedRedemption) ValidateBasic() error {
+	errs := make(map[string]error)
+
+	// check from address
+	_, err := addressutils.AccAddressFromBech32(msg.FromAddress, "")
+	if err != nil {
+		errs["FromAddress"] = err
+	}
+
+	// check hash
+	if !hexpr.MatchString(msg.Hash) {
+		errs["Hash"] = fmt.Errorf("invalid sha256 hash - expecting 64 character hex string")
+	}
+
+	// validate recipient address
+	if msg.ChainId == "" {
+		errs["ChainId"] = errors.New("chainId not provided")
+	}
+
+	if len(errs) > 0 {
+		return multierror.New(errs)
+	}
+
+	return nil
+}
+
+// GetSignBytes Implements Msg.
+func (msg MsgCancelQueuedRedemption) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+// GetSigners Implements Msg.
+func (msg MsgCancelQueuedRedemption) GetSigners() []sdk.AccAddress {
 	fromAddress, _ := sdk.AccAddressFromBech32(msg.FromAddress)
 	return []sdk.AccAddress{fromAddress}
 }
@@ -159,11 +215,9 @@ func (msg MsgSignalIntent) ValidateBasic() error {
 	}
 
 	if msg.ChainId == "" {
-		errm["ChainID"] = errors.New("undefined")
+		errm["ChainID"] = errors.New("chainId not provided")
 	}
 
-	wantSum := sdk.OneDec()
-	weightSum := sdk.NewDec(0)
 	intents, err := IntentsFromString(msg.Intents)
 	if err != nil {
 		errm["Intents"] = err
@@ -173,16 +227,6 @@ func (msg MsgSignalIntent) ValidateBasic() error {
 				istr := fmt.Sprintf("Intent_%02d_ValoperAddress", i)
 				errm[istr] = err
 			}
-
-			if intent.Weight.GT(wantSum) {
-				istr := fmt.Sprintf("Intent_%02d_Weight", i)
-				errm[istr] = fmt.Errorf("weight %d overruns maximum of %v", intent.Weight, wantSum)
-			}
-			weightSum = weightSum.Add(intent.Weight)
-		}
-
-		if !weightSum.Equal(wantSum) {
-			errm["IntentWeights"] = fmt.Errorf("sum of weights is %v, not %v", weightSum, wantSum)
 		}
 	}
 	if len(errm) > 0 {

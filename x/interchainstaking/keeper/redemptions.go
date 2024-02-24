@@ -250,6 +250,11 @@ func (k *Keeper) HandleQueuedUnbondings(ctx sdk.Context, zone *types.Zone, epoch
 		}
 	}
 
+	if err = zone.IncrementWithdrawalWaitgroup(k.Logger(ctx), uint32(len(msgs)), "trigger unbonding messages"); err != nil {
+		return err
+	}
+	k.SetZone(ctx, zone)
+
 	return nil
 }
 
@@ -404,7 +409,7 @@ WITHDRAWAL:
 	}
 
 	if !sumIn.Equal(sumOut) {
-		return nil, nil, nil, fmt.Errorf("sumIn <-> sumOut mismatch; sumIn = %d, sumOut = %d", sumIn.Amount.Int64(), sumOut.Amount.Int64())
+		return nil, nil, nil, fmt.Errorf("sumIn <-> sumOut mismatch; sumIn = %s, sumOut = %s", sumIn.Amount.String(), sumOut.Amount.String())
 	}
 
 	return coinsOutPerValidator, txHashesPerValidator, distributionsPerWithdrawal, nil

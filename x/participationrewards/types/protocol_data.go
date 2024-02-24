@@ -49,14 +49,6 @@ func UnmarshalProtocolData(datatype ProtocolDataType, data json.RawMessage) (Pro
 		return unmarshalProtocolData[*UmeeInterestScalarProtocolData](data)
 	case ProtocolDataTypeUmeeLeverageModuleBalance:
 		return unmarshalProtocolData[*UmeeLeverageModuleBalanceProtocolData](data)
-	case ProtocolDataTypeCrescentParams:
-		return unmarshalProtocolData[*CrescentParamsProtocolData](data)
-	case ProtocolDataTypeCrescentPool:
-		return unmarshalProtocolData[*CrescentPoolProtocolData](data)
-	case ProtocolDataTypeCrescentPoolCoinSupply:
-		return unmarshalProtocolData[*CrescentPoolCoinSupplyProtocolData](data)
-	case ProtocolDataTypeCrescentReserveAddressBalance:
-		return unmarshalProtocolData[*CrescentReserveAddressBalanceProtocolData](data)
 	default:
 		return nil, ErrUnknownProtocolDataType
 	}
@@ -109,8 +101,4 @@ var (
 	_ ProtocolDataI = &LiquidAllowedDenomProtocolData{}
 	_ ProtocolDataI = &UmeeProtocolData{}
 	_ ProtocolDataI = &UmeeParamsProtocolData{}
-	_ ProtocolDataI = &CrescentParamsProtocolData{}
-	_ ProtocolDataI = &CrescentPoolProtocolData{}
-	_ ProtocolDataI = &CrescentReserveAddressBalanceProtocolData{}
-	_ ProtocolDataI = &CrescentPoolCoinSupplyProtocolData{}
 )

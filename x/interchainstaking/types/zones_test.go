@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"github.com/tendermint/tendermint/libs/log"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -39,15 +40,16 @@ func TestGetDelegationAccount(t *testing.T) {
 }
 
 func TestDecrementWithdrawalWg(t *testing.T) {
+	testlog := log.NewNopLogger()
 	zone := types.Zone{WithdrawalWaitgroup: 0}
-	oldWg := zone.WithdrawalWaitgroup
-	zone.WithdrawalWaitgroup++
-	firstWg := zone.WithdrawalWaitgroup
+	oldWg := zone.GetWithdrawalWaitgroup()
+	require.NoError(t, zone.IncrementWithdrawalWaitgroup(testlog, 1, "test increment"))
+	firstWg := zone.GetWithdrawalWaitgroup()
 	require.Equal(t, oldWg+1, firstWg)
-	require.NoError(t, zone.DecrementWithdrawalWaitgroup())
-	secondWg := zone.WithdrawalWaitgroup
+	require.NoError(t, zone.DecrementWithdrawalWaitgroup(testlog, 1, "test decrement"))
+	secondWg := zone.GetWithdrawalWaitgroup()
 	require.Equal(t, firstWg-1, secondWg)
-	require.Error(t, zone.DecrementWithdrawalWaitgroup())
+	require.Error(t, zone.DecrementWithdrawalWaitgroup(testlog, 1, "test decrement error"))
 }
 
 func TestValidateCoinsForZone(t *testing.T) {
@@ -59,8 +61,32 @@ func TestValidateCoinsForZone(t *testing.T) {
 		"cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll": true,
 		"cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7": true,
 	}
-	require.NoError(t, zone.ValidateCoinsForZone(sdk.NewCoins(sdk.NewCoin("cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy/1", sdk.OneInt())), valAddresses))
-	require.Errorf(t, zone.ValidateCoinsForZone(sdk.NewCoins(sdk.NewCoin("cosmosvaloper18ldc09yx4aua9g8mkl3sj526hgydzzyehcyjjr/1", sdk.OneInt())), valAddresses), "invalid denom for zone: cosmosvaloper18ldc09yx4aua9g8mkl3sj526hgydzzyehcyjjr/1")
+
+	// valid AND matches a validator BUT lsm is off: false, false
+	valid, matches := zone.ValidateCoinsForZone(sdk.NewCoins(sdk.NewCoin("cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy/1", sdk.OneInt())), valAddresses)
+	require.False(t, valid)
+	require.False(t, matches)
+
+	zone.LiquidityModule = true
+	// valid AND matches a validator: true, true
+	valid, matches = zone.ValidateCoinsForZone(sdk.NewCoins(sdk.NewCoin("cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy/1", sdk.OneInt())), valAddresses)
+	require.True(t, valid)
+	require.True(t, matches)
+
+	// valid format but does not match: true, false
+	valid, matches = zone.ValidateCoinsForZone(sdk.NewCoins(sdk.NewCoin("cosmosvaloper18ldc09yx4aua9g8mkl3sj526hgydzzyehcyjjr/1", sdk.OneInt())), valAddresses)
+	require.True(t, valid)
+	require.False(t, matches)
+
+	// invalid format (although valid ibc!) - false, false
+	valid, matches = zone.ValidateCoinsForZone(sdk.NewCoins(sdk.NewCoin("ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2", sdk.OneInt())), valAddresses)
+	require.False(t, valid)
+	require.False(t, matches)
+
+	// staking token - true, true
+	valid, matches = zone.ValidateCoinsForZone(sdk.NewCoins(sdk.NewCoin("uatom", sdk.OneInt())), valAddresses)
+	require.True(t, valid)
+	require.True(t, matches)
 }
 
 func TestCoinsToIntent(t *testing.T) {

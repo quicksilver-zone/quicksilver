@@ -17,7 +17,6 @@ import (
 	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
 	host "github.com/cosmos/ibc-go/v5/modules/core/24-host"
 
-	"github.com/quicksilver-zone/quicksilver/utils"
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 	minttypes "github.com/quicksilver-zone/quicksilver/x/mint/types"
@@ -51,9 +50,10 @@ func (k *Keeper) HandleReceiptTransaction(ctx sdk.Context, txn *tx.Tx, hash stri
 			}
 
 			if sender != senderAddress {
+				// TODO: technically nothing wrong with this; just need to make sure we _only_ consider assets sent to QS
 				k.Logger(ctx).Error("sender mismatch", "expected", senderAddress, "received", sender)
 				k.NilReceipt(ctx, &zone, hash) // nil receipt will stop this hash being submitted again
-				return nil
+				return k.SendToWithdrawal(ctx, &zone, zone.DepositAddress, assets)
 			}
 
 			k.Logger(ctx).Info("Deposit receipt", "deposit_address", zone.DepositAddress.GetAddress(), "sender", sender, "amount", amount)
@@ -63,23 +63,32 @@ func (k *Keeper) HandleReceiptTransaction(ctx sdk.Context, txn *tx.Tx, hash stri
 
 	}
 
-	if senderAddress == Unset {
+	if senderAddress == Unset { // not sure this is ever reachable. A valid MsgSend must always have a valid sender.
 		k.Logger(ctx).Error("no sender found. Ignoring.")
 		k.NilReceipt(ctx, &zone, hash) // nil receipt will stop this hash being submitted again
-		return nil
+		return k.SendToWithdrawal(ctx, &zone, zone.DepositAddress, assets)
+
 	}
 	senderAccAddress, err := addressutils.AccAddressFromBech32(senderAddress, zone.GetAccountPrefix())
-	if err != nil {
+	if err != nil { // not sure this is ever reachable. A valid MsgSend must always have a valid sender.
 		k.Logger(ctx).Error("unable to decode sender address. Ignoring.", "senderAddress", senderAddress, "error", err)
 		k.NilReceipt(ctx, &zone, hash) // nil receipt will stop this hash being submitted again
-		return nil
+		return k.SendToWithdrawal(ctx, &zone, zone.DepositAddress, assets)
+
 	}
 
-	if err := zone.ValidateCoinsForZone(assets, utils.StringSliceToMap(k.GetValidatorAddresses(ctx, zone.ChainId))); err != nil {
-		// we expect this to trigger if the validatorset has changed recently (i.e. we haven't seen the validator before.
-		// That is okay, we'll catch it next round!)
+	valid, matchesVals := zone.ValidateCoinsForZone(assets, k.GetValidatorAddressesAsMap(ctx, zone.ChainId))
+
+	if !valid {
 		k.Logger(ctx).Error("unable to validate coins. Ignoring.", "senderAddress", senderAddress)
-		return fmt.Errorf("unable to validate coins. Ignoring. senderAddress=%q", senderAddress)
+		k.NewCompletedReceipt(ctx, &zone, senderAddress, hash, assets) // nil receipt will stop this hash being submitted again
+		// send tokens to withdrawal for disbursal.
+		return k.SendToWithdrawal(ctx, &zone, zone.DepositAddress, assets)
+	} else if !matchesVals {
+		k.Logger(ctx).Error("unable to validate coins for this valset.", "senderAddress", senderAddress)
+		// Do not set a nil receipt so we can revisit this tx.
+		// Don't return an error as to not clog queue.
+		return nil
 	}
 
 	k.Logger(ctx).Info("found new deposit tx", "deposit_address", zone.DepositAddress.GetAddress(), "senderAddress", senderAddress, "local", senderAccAddress.String(), "chain id", zone.ChainId, "assets", assets, "hash", hash)
@@ -188,7 +197,7 @@ func (k *Keeper) MintAndSendQAsset(ctx sdk.Context, sender sdk.AccAddress, sende
 		if !found {
 			// if not found, skip minting and refund assets
 			msg := &banktypes.MsgSend{FromAddress: zone.DepositAddress.GetAddress(), ToAddress: senderAddress, Amount: assets}
-			return k.SubmitTx(ctx, []sdk.Msg{msg}, zone.DepositAddress, "", zone.MessagesPerTx)
+			return k.SubmitTx(ctx, []sdk.Msg{msg}, zone.DepositAddress, "refund", zone.MessagesPerTx)
 		}
 		// do not set, since mapped address already exists
 		setMappedAddress = false
@@ -203,6 +212,7 @@ func (k *Keeper) MintAndSendQAsset(ctx sdk.Context, sender sdk.AccAddress, sende
 	switch {
 	case zone.ReturnToSender || memoRTS:
 		err = k.SendTokenIBC(ctx, k.AccountKeeper.GetModuleAddress(types.ModuleName), senderAddress, zone, qAssets[0])
+		k.Logger(ctx).Info("Transferred qAssets via rts", "address", senderAddress, "assets", qAssets)
 
 	case mappedAddress != nil && !zone.Is_118:
 		// set mapped account
@@ -212,16 +222,16 @@ func (k *Keeper) MintAndSendQAsset(ctx sdk.Context, sender sdk.AccAddress, sende
 
 		// set send to mapped account
 		err = k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, mappedAddress, qAssets)
+		k.Logger(ctx).Info("Transferred qAssets to mapped account", "address", mappedAddress, "assets", qAssets)
 	default:
 		err = k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, sender, qAssets)
+		k.Logger(ctx).Info("Transferred qAssets to sender", "address", sender, "assets", qAssets)
 
 	}
 
 	if err != nil {
 		return fmt.Errorf("unable to transfer coins: %w", err)
 	}
-
-	k.Logger(ctx).Info("Transferred qAssets to sender", "assets", qAssets, "sender", sender)
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
@@ -314,6 +324,11 @@ func (k Keeper) NilReceipt(ctx sdk.Context, zone *types.Zone, txhash string) {
 	t := ctx.BlockTime()
 	r := types.Receipt{ChainId: zone.ChainId, Sender: "", Txhash: txhash, Amount: sdk.Coins{}, FirstSeen: &t, Completed: &t}
 	k.SetReceipt(ctx, r)
+}
+
+func (Keeper) NewCompletedReceipt(ctx sdk.Context, zone *types.Zone, sender, txhash string, amount sdk.Coins) *types.Receipt {
+	t := ctx.BlockTime()
+	return &types.Receipt{ChainId: zone.ChainId, Sender: sender, Txhash: txhash, Amount: amount, FirstSeen: &t, Completed: &t}
 }
 
 func (Keeper) NewReceipt(ctx sdk.Context, zone *types.Zone, sender, txhash string, amount sdk.Coins) *types.Receipt {

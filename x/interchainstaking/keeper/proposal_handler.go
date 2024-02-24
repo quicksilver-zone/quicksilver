@@ -101,7 +101,7 @@ func (k *Keeper) HandleRegisterZoneProposal(ctx sdk.Context, p *types.RegisterZo
 		return err
 	}
 
-	err = k.hooks.AfterZoneCreated(ctx, zone.ConnectionId, zone.ChainId, zone.AccountPrefix)
+	err = k.hooks.AfterZoneCreated(ctx, zone)
 	if err != nil {
 		return err
 	}

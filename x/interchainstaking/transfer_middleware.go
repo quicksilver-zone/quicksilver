@@ -93,18 +93,21 @@ func (im TransferMiddleware) OnRecvPacket(
 		return channeltypes.NewErrorAcknowledgement(err)
 	}
 
-	_, found := im.keeper.GetZoneForWithdrawalAccount(ctx, data.Sender)
-	if found {
-		if data.Receiver == im.keeper.AccountKeeper.GetModuleAddress(types.ModuleName).String() {
-			im.keeper.Logger(ctx).Info("msgTransfer to ics module account from withdrawal address")
-			err := im.keeper.HandleMsgTransfer(ctx, data, utils.DeriveIbcDenom(packet.DestinationPort, packet.DestinationChannel, packet.SourcePort, packet.SourceChannel, data.Denom))
-			if err != nil {
-				im.keeper.Logger(ctx).Error("unable to disperse rewards", "error", err.Error())
+	ack := im.app.OnRecvPacket(ctx, packet, relayer)
+	if ack.Success() {
+		_, found := im.keeper.GetZoneForWithdrawalAccount(ctx, data.Sender)
+		if found {
+			if data.Receiver == im.keeper.AccountKeeper.GetModuleAddress(types.ModuleName).String() {
+				im.keeper.Logger(ctx).Info("MsgTransfer to ics module account from withdrawal address")
+				err := im.keeper.HandleMsgTransfer(ctx, data, utils.DeriveIbcDenom(packet.DestinationPort, packet.DestinationChannel, packet.SourcePort, packet.SourceChannel, data.Denom))
+				if err != nil {
+					im.keeper.Logger(ctx).Error("unable to disperse rewards", "error", err.Error())
+				}
 			}
 		}
 	}
 
-	return im.app.OnRecvPacket(ctx, packet, relayer)
+	return ack
 }
 
 // OnAcknowledgementPacket implements the IBCModule interface.

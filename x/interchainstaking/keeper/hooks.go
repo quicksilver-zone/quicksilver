@@ -101,6 +101,10 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNum
 			return false
 		})
 
+		if zone.GetWithdrawalWaitgroup() > 0 {
+			zone.SetWithdrawalWaitgroup(k.Logger(ctx), 0, "epoch waitgroup was unexpected > 0")
+		}
+
 		if err := k.HandleQueuedUnbondings(ctx, zone, epochNumber); err != nil {
 			// we can and need not panic here; logging the error is sufficient.
 			// an error here is not expected, but also not terminal.
@@ -130,16 +134,6 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNum
 			)
 		}
 
-		if zone.WithdrawalWaitgroup > 0 {
-			k.Logger(ctx).Error(
-				"epoch waitgroup was unexpected > 0; this means we did not process the previous epoch!",
-				"chain_id", zone.ChainId,
-				"epoch_identifier", epochIdentifier,
-				"epoch_number", epochNumber,
-			)
-			zone.WithdrawalWaitgroup = 0
-		}
-
 		// OnChanOpenAck calls SetWithdrawalAddress (see ibc_module.go)
 		k.Logger(ctx).Info(
 			"withdrawing rewards",
@@ -160,9 +154,11 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNum
 			bz,
 			sdk.NewInt(-1),
 			types.ModuleName,
-			"delegations",
+			"delegations_epoch",
 			0,
 		)
+
+		_ = zone.IncrementWithdrawalWaitgroup(k.Logger(ctx), 1, "delegations trigger")
 
 		balancesQuery := banktypes.QueryAllBalancesRequest{Address: zone.DelegationAddress.Address}
 		bz = k.cdc.MustMarshal(&balancesQuery)
@@ -178,7 +174,7 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNum
 			0,
 		)
 		// increment waitgroup; decremented in delegationaccountbalance callback
-		zone.WithdrawalWaitgroup++
+		_ = zone.IncrementWithdrawalWaitgroup(k.Logger(ctx), 1, "delegationaccountbalances trigger")
 
 		rewardsQuery := distrtypes.QueryDelegationTotalRewardsRequest{DelegatorAddress: zone.DelegationAddress.Address}
 		bz = k.cdc.MustMarshal(&rewardsQuery)
@@ -198,13 +194,8 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNum
 		// increment the WithdrawalWaitgroup
 		// this allows us to track the response for every protocol delegator
 		// WithdrawalWaitgroup is decremented in RewardsCallback
-		zone.WithdrawalWaitgroup++
-		k.Logger(ctx).Info("Incrementing waitgroup for delegation",
-			"value", zone.WithdrawalWaitgroup,
-			"chain_id", zone.ChainId,
-			"epoch_identifier", epochIdentifier,
-			"epoch_number", epochNumber,
-		)
+		_ = zone.IncrementWithdrawalWaitgroup(k.Logger(ctx), 1, "rewards trigger")
+
 		k.SetZone(ctx, zone)
 
 		return false

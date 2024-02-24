@@ -13,8 +13,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	"github.com/quicksilver-zone/quicksilver/app"
-	lpfarm "github.com/quicksilver-zone/quicksilver/third-party-chains/crescent-types/lpfarm" //nolint:revive
+	"github.com/quicksilver-zone/quicksilver/app" //nolint:revive
 	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/lockup"
 	umeetypes "github.com/quicksilver-zone/quicksilver/third-party-chains/umee-types/leverage/types"
 	"github.com/quicksilver-zone/quicksilver/utils"
@@ -169,108 +168,6 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 							ProofOps:  &crypto.ProofOps{},
 							Height:    10,
 							ProofType: "bank",
-						},
-					},
-				}
-			},
-			nil,
-			"a",
-		},
-		{
-			"invalid_crescent_pool",
-			func() {
-				prk := suite.GetQuicksilverApp(suite.chainA).ParticipationRewardsKeeper
-				userAddress := addressutils.GenerateAccAddressForTest()
-				crescentAddress := addressutils.MustEncodeAddressToBech32("cre", userAddress)
-
-				addr, _ := sdk.GetFromBech32(crescentAddress, "cre")
-
-				key := lpfarm.GetPositionKey(addr, cosmosIBCDenom)
-
-				cd := lpfarm.Position{Farmer: crescentAddress, FarmingAmount: math.NewInt(10000), Denom: "pool7"}
-				bz, err := prk.GetCodec().Marshal(&cd)
-				suite.Require().NoError(err)
-
-				msg = types.MsgSubmitClaim{
-					UserAddress: userAddress.String(),
-					Zone:        "cosmoshub-4",
-					SrcZone:     "testchain1",
-					ClaimType:   cmtypes.ClaimTypeCrescentPool,
-					Proofs: []*cmtypes.Proof{
-						{
-							Key:       key,
-							Data:      bz,
-							ProofOps:  &crypto.ProofOps{},
-							Height:    10,
-							ProofType: types.ProofTypeLPFarm,
-						},
-					},
-				}
-			},
-			nil,
-			"a",
-		},
-		{
-			"invalid_crescent_user",
-			func() {
-				prk := suite.GetQuicksilverApp(suite.chainA).ParticipationRewardsKeeper
-				userAddress := addressutils.GenerateAccAddressForTest()
-				crescentAddress := addressutils.MustEncodeAddressToBech32("cre", addressutils.GenerateAccAddressForTest())
-
-				addr, _ := sdk.GetFromBech32(crescentAddress, "cre")
-
-				key := lpfarm.GetPositionKey(addr, cosmosIBCDenom)
-
-				cd := lpfarm.Position{Farmer: crescentAddress, FarmingAmount: math.NewInt(10000), Denom: "pool1"}
-				bz, err := prk.GetCodec().Marshal(&cd)
-				suite.Require().NoError(err)
-
-				msg = types.MsgSubmitClaim{
-					UserAddress: userAddress.String(),
-					Zone:        "cosmoshub-4",
-					SrcZone:     "testchain1",
-					ClaimType:   cmtypes.ClaimTypeCrescentPool,
-					Proofs: []*cmtypes.Proof{
-						{
-							Key:       key,
-							Data:      bz,
-							ProofOps:  &crypto.ProofOps{},
-							Height:    10,
-							ProofType: types.ProofTypeLPFarm,
-						},
-					},
-				}
-			},
-			nil,
-			"a",
-		},
-		{
-			"negative_farming_amount",
-			func() {
-				prk := suite.GetQuicksilverApp(suite.chainA).ParticipationRewardsKeeper
-				userAddress := addressutils.GenerateAccAddressForTest()
-				crescentAddress := addressutils.MustEncodeAddressToBech32("cre", userAddress)
-
-				addr, _ := sdk.GetFromBech32(crescentAddress, "cre")
-
-				key := lpfarm.GetPositionKey(addr, cosmosIBCDenom)
-
-				cd := lpfarm.Position{Farmer: crescentAddress, FarmingAmount: math.NewInt(-1), Denom: "pool1"}
-				bz, err := prk.GetCodec().Marshal(&cd)
-				suite.Require().NoError(err)
-
-				msg = types.MsgSubmitClaim{
-					UserAddress: userAddress.String(),
-					Zone:        "cosmoshub-4",
-					SrcZone:     "testchain1",
-					ClaimType:   cmtypes.ClaimTypeCrescentPool,
-					Proofs: []*cmtypes.Proof{
-						{
-							Key:       key,
-							Data:      bz,
-							ProofOps:  &crypto.ProofOps{},
-							Height:    10,
-							ProofType: types.ProofTypeLPFarm,
 						},
 					},
 				}
@@ -450,69 +347,6 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 			},
 			&types.MsgSubmitClaimResponse{},
 			"",
-		},
-		{
-			name: "valid_crescent",
-			malleate: func() {
-				prk := suite.GetQuicksilverApp(suite.chainA).ParticipationRewardsKeeper
-				testAddr := addressutils.GenerateAccAddressForTest()
-				crescentAddress := addressutils.MustEncodeAddressToBech32("cre", testAddr)
-				userAddress := addressutils.MustEncodeAddressToBech32("quick", testAddr)
-
-				addr, _ := sdk.GetFromBech32(crescentAddress, "cre")
-
-				key := lpfarm.GetPositionKey(addr, cosmosIBCDenom)
-
-				cd := lpfarm.Position{Farmer: crescentAddress, FarmingAmount: math.NewInt(10000), Denom: "pool1"}
-				bz, err := prk.GetCodec().Marshal(&cd)
-				suite.Require().NoError(err)
-
-				msg = types.MsgSubmitClaim{
-					UserAddress: userAddress,
-					Zone:        "cosmoshub-4",
-					SrcZone:     "testchain1",
-					ClaimType:   cmtypes.ClaimTypeCrescentPool,
-					Proofs: []*cmtypes.Proof{
-						{
-							Key:       key,
-							Data:      bz,
-							ProofOps:  &crypto.ProofOps{},
-							Height:    10,
-							ProofType: types.ProofTypeLPFarm,
-						},
-					},
-				}
-			},
-			want: &types.MsgSubmitClaimResponse{},
-		},
-		{
-			name: "valid_crescent_unbonded_pool_coin",
-			malleate: func() {
-				userAddress := addressutils.GenerateAccAddressForTest()
-				bankkey := banktypes.CreateAccountBalancesPrefix(userAddress)
-				bankkey = append(bankkey, []byte("pool1")...)
-
-				cd := math.NewInt(1000)
-				bz, err := cd.Marshal()
-				suite.Require().NoError(err)
-
-				msg = types.MsgSubmitClaim{
-					UserAddress: userAddress.String(),
-					Zone:        "cosmoshub-4",
-					SrcZone:     "testchain1",
-					ClaimType:   cmtypes.ClaimTypeCrescentPool,
-					Proofs: []*cmtypes.Proof{
-						{
-							Key:       bankkey,
-							Data:      bz,
-							ProofOps:  &crypto.ProofOps{},
-							Height:    10,
-							ProofType: types.ProofTypeBank,
-						},
-					},
-				}
-			},
-			want: &types.MsgSubmitClaimResponse{},
 		},
 	}
 	for _, tt := range tests {
