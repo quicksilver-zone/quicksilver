@@ -22,6 +22,7 @@ const (
 	V010407rc0UpgradeName = "v1.4.7-rc0"
 	V010407rc1UpgradeName = "v1.4.7-rc1"
 	V010407rc2UpgradeName = "v1.4.7-rc2"
+	V010500rc0UpgradeName = "v1.5.0-rc0"
 
 	// mainnet upgrades
 	V010217UpgradeName = "v1.2.17"
