@@ -20,8 +20,8 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/quicksilver-zone/quicksilver/icq-relayer/v7/pkg/config"
-	"github.com/quicksilver-zone/quicksilver/icq-relayer/v7/prommetrics"
+	"github.com/quicksilver-zone/quicksilver/icq-relayer/v8/pkg/config"
+	"github.com/quicksilver-zone/quicksilver/icq-relayer/v8/prommetrics"
 
 	"github.com/go-kit/log"
 
