@@ -380,7 +380,7 @@ func processMigratePeriodicVestingAccount(ctx sdk.Context, appKeepers *keepers.A
 	// Unbond all delagation of account
 	unbonded, err := unbondAllDelegation(ctx, ctx.BlockTime(), appKeepers, from)
 	if err != nil {
-		fmt.Errorf("processMigratePeriodicVestingAccount: unbonded all delegation for %s failed: %v", from.String(), err)
+		fmt.Printf("processMigratePeriodicVestingAccount: unbonded all delegation for %s failed: %v", from.String(), err)
 		return err
 	}
 	fmt.Println("processMigratePeriodicVestingAccount: unbond all delegation amount: " + unbonded.String() + " of account: " + from.String())
