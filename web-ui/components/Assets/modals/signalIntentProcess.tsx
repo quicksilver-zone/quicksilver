@@ -343,7 +343,7 @@ export const SignalIntentModal: React.FC<StakingModalProps> = ({ isOpen, onClose
                   )}
                   <Button
                     mt={4}
-                    width="55%"
+                    width={{ base: '80%', md: '55%' }}
                     _active={{
                       transform: 'scale(0.95)',
                       color: 'complimentary.800',

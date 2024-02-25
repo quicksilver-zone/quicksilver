@@ -716,6 +716,44 @@ export const useDefiData = () => {
   };
 };
 
+export const useGovernanceQuery = (chainName: string) => {
+  const { grpcQueryClient } = useGrpcQueryClient(chainName);
+  const governanceQuery = useQuery(
+    ['governance', chainName],
+    async () => {
+      if (!grpcQueryClient) {
+        throw new Error('RPC Client not ready');
+      }
+      const nextKey = new Uint8Array()
+      const governance = await grpcQueryClient.cosmos.gov.v1beta1.proposals({
+        proposalStatus: cosmos.gov.v1.ProposalStatus.PROPOSAL_STATUS_UNSPECIFIED,
+        pagination: {
+          key: nextKey,
+          offset: Long.fromNumber(0),
+          limit: Long.fromNumber(100),
+          countTotal: true,
+          reverse: true,
+        },
+        voter: '',
+        depositor: '',
+      });
+
+      return governance;
+    },
+    {
+      enabled: !!grpcQueryClient,
+      staleTime: Infinity,
+    },
+  );
+
+  return {
+    governance: governanceQuery.data,
+    isLoading: governanceQuery.isLoading,
+    isError: governanceQuery.isError,
+  };
+
+}
+
 export const useNativeStakeQuery = (chainName: string, address: string) => {
   const { grpcQueryClient } = useGrpcQueryClient(chainName);
   const delegationQuery = useQuery(

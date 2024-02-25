@@ -291,10 +291,11 @@ function QuickApp({ Component, pageProps }: AppProps) {
             },
           },
         }}
+        logLevel="NONE"
         modalTheme={modalThemeOverrides}
         chains={chains}
         assetLists={assets}
-        wallets={availableWallets}
+        wallets={[...keplrWallets, ...cosmostationWallets, ...leapWallets]}
         walletConnectOptions={{
           signClient: {
             projectId: '41a0749c331d209190beeac1c2530c90',

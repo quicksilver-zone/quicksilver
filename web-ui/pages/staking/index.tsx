@@ -54,6 +54,7 @@ export default function Staking() {
 
   const [isStakingModalOpen, setStakingModalOpen] = useState(false);
   const [isTransferModalOpen, setTransferModalOpen] = useState(false);
+  const [isRevertSharesModalOpen, setRevertSharesModalOpen] = useState(false);
 
   return (
     <>
@@ -65,7 +66,7 @@ export default function Staking() {
       <SlideFade offsetY={'200px'} in={true} style={{ width: '100%' }}>
         <Container
           zIndex={2}
-          mt={{ base: '10px', md: '50px' }}
+          mt={{ base: '50px', md: '50px' }}
           position="relative"
           maxW="container.lg"
           height="100vh"
@@ -109,6 +110,8 @@ export default function Staking() {
                 setStakingModalOpen={setStakingModalOpen}
                 isTransferModalOpen={isTransferModalOpen}
                 setTransferModalOpen={setTransferModalOpen}
+                isRevertSharesModalOpen={isRevertSharesModalOpen}
+                setRevertSharesModalOpen={setRevertSharesModalOpen}
                 setBalance={setBalance}
                 setQBalance={setQBalance}
               />

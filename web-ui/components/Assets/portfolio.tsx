@@ -173,7 +173,7 @@ const PortfolioItem: React.FC<PortfolioItemProps> = ({ title, percentage, progre
         </Text>
       </HStack>
 
-      <Box minW="150px" ml={'80px'}>
+      <Box minW={{ base: '30px', md: '150px' }} ml={'80px'}>
         <Progress borderRadius="full" colorScheme="orange" size="sm" value={percentage * 100} />
       </Box>
 

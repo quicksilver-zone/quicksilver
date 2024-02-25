@@ -18,7 +18,7 @@ const MarkdownStyled = styled(ReactMarkdown)`
 `;
 
 export const Loader = () => (
-  <Center w="100%" h="200px" bgColor="rgba(214, 219, 220, 0.1)" borderRadius="xl">
+  <Center w="100%" h="650px" bgColor="rgba(214, 219, 220, 0.1)" borderRadius="xl">
     <Spinner thickness="3px" color="complimentary.900" size="lg" speed="0.4s" />
   </Center>
 );
