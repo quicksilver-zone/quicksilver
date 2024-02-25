@@ -345,7 +345,7 @@ func V010600UpgradeHandler(
 	configurator module.Configurator,
 	appKeepers *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
-	// TODO must add test and refactor current duplicated logic out of app/upgrades
+	// TODO refactor current duplicated logic out of app/upgrades
 	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 		migrations := map[string]string{
 			"quick1a7n7z45gs0dut2syvkszffgwmgps6scqen3e5l": "quick1h0sqndv2y4xty6uk0sv4vckgyc5aa7n5at7fll",
@@ -380,10 +380,10 @@ func processMigratePeriodicVestingAccount(ctx sdk.Context, appKeepers *keepers.A
 	// Unbond all delagation of account
 	unbonded, err := unbondAllDelegation(ctx, ctx.BlockTime(), appKeepers, from)
 	if err != nil {
-		fmt.Printf("processMigratePeriodicVestingAccount: unbonded all delegation failed: %v", err)
+		fmt.Errorf("processMigratePeriodicVestingAccount: unbonded all delegation for %s failed: %v", from.String(), err)
 		return err
 	}
-	fmt.Printf("processMigratePeriodicVestingAccount: unbond all delegation amount: %s", unbonded)
+	fmt.Println("processMigratePeriodicVestingAccount: unbond all delegation amount: " + unbonded.String() + " of account: " + from.String())
 
 	oldAccount := appKeepers.AccountKeeper.GetAccount(ctx, from)
 	// if the new account already exists in the account keeper, we should fail.

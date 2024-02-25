@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/math"
@@ -268,4 +269,82 @@ func (s *AppTestSuite) TestV010406UpgradeHandler() {
 	noTestZone, found := app.InterchainstakingKeeper.GetZoneForAccount(ctx, addressutils.GenerateAddressForTestWithPrefix("cosmos"))
 	s.False(found)
 	s.Nil(noTestZone)
+}
+
+func (s *AppTestSuite) InitV160TestZones() {
+	cosmosWithdrawal := addressutils.GenerateAddressForTestWithPrefix("cosmos")
+	cosmosPerformance := addressutils.GenerateAddressForTestWithPrefix("cosmos")
+	cosmosDeposit := addressutils.GenerateAddressForTestWithPrefix("cosmos")
+	cosmosDelegate := addressutils.GenerateAddressForTestWithPrefix("cosmos")
+	// cosmos zone
+	zone := icstypes.Zone{
+		ConnectionId:    "connection-77001",
+		ChainId:         "cosmoshub-4",
+		AccountPrefix:   "cosmos",
+		LocalDenom:      "uqatom",
+		BaseDenom:       "uatom",
+		MultiSend:       false,
+		LiquidityModule: false,
+		WithdrawalAddress: &icstypes.ICAAccount{
+			Address:           cosmosWithdrawal,
+			PortName:          "icacontroller-cosmoshub-4.withdrawal",
+			WithdrawalAddress: cosmosWithdrawal,
+		},
+		DelegationAddress: &icstypes.ICAAccount{
+			Address:           cosmosDelegate,
+			PortName:          "icacontroller-cosmoshub-4.delegate",
+			WithdrawalAddress: cosmosWithdrawal,
+		},
+		DepositAddress: &icstypes.ICAAccount{
+			Address:           cosmosDeposit,
+			PortName:          "icacontroller-cosmoshub-4.deposit",
+			WithdrawalAddress: cosmosWithdrawal,
+		},
+		PerformanceAddress: &icstypes.ICAAccount{
+			Address:           cosmosPerformance,
+			PortName:          "icacontroller-cosmoshub-4.performance",
+			WithdrawalAddress: cosmosWithdrawal,
+		},
+	}
+	s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetZone(s.chainA.GetContext(), &zone)
+
+	addVestingAccount(s.chainA.GetContext(), &s.GetQuicksilverApp(s.chainA).AccountKeeper, "quick1a7n7z45gs0dut2syvkszffgwmgps6scqen3e5l", 10, 864000, 5000000000)
+	addVestingAccount(s.chainA.GetContext(), &s.GetQuicksilverApp(s.chainA).AccountKeeper, "quick1m0anwr4kcz0y9s65czusun2ahw35g3humv4j7f", 10, 864000, 5000000000)
+}
+
+func (s *AppTestSuite) TestV010600UpgradeHandler() {
+	s.InitV160TestZones()
+	app := s.GetQuicksilverApp(s.chainA)
+	ctx := s.chainA.GetContext()
+	validators := app.StakingKeeper.GetAllValidators(ctx)
+	accountA := app.AccountKeeper.GetAccount(ctx, addressutils.MustAccAddressFromBech32("quick1a7n7z45gs0dut2syvkszffgwmgps6scqen3e5l", ""))
+	err := app.BankKeeper.SendCoins(ctx, s.chainA.SenderAccount.GetAddress(), accountA.GetAddress(), sdk.Coins{
+		sdk.NewInt64Coin("stake", 100),
+	})
+	s.NoError(err)
+
+	// Stake old account
+	amount, _ := sdk.NewIntFromString("100")
+	_, err = app.StakingKeeper.Delegate(ctx, accountA.GetAddress(), amount, stakingtypes.Unbonded, validators[0], true)
+	s.NoError(err)
+
+	handler := upgrades.V010600UpgradeHandler(app.mm,
+		app.configurator, &app.AppKeepers)
+
+	_, err = handler(ctx, types.Plan{}, app.mm.GetVersionMap())
+	s.NoError(err)
+
+	_, found := app.StakingKeeper.GetDelegation(ctx, accountA.GetAddress(), validators[0].GetOperator())
+	s.False(found)
+
+	migratedA := app.AccountKeeper.GetAccount(ctx, addressutils.MustAccAddressFromBech32("quick1h0sqndv2y4xty6uk0sv4vckgyc5aa7n5at7fll", ""))
+	// Check balance of new account
+	stakeBalance := app.BankKeeper.GetBalance(ctx, migratedA.GetAddress(), "stake")
+	s.Equal(amount, stakeBalance.Amount)
+
+	// Check the vest period of new account
+	vestMigratedA, ok := migratedA.(*vestingtypes.PeriodicVestingAccount)
+	s.True(ok)
+	s.Equal(int64(5000000000), vestMigratedA.OriginalVesting.AmountOf("uqck").Int64())
+	s.Equal(float64(864000), vestMigratedA.VestingPeriods[0].Duration().Seconds())
 }
