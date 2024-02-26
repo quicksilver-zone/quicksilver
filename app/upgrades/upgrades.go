@@ -2,21 +2,17 @@ package upgrades
 
 import (
 	"fmt"
-	"time"
 
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	"github.com/quicksilver-zone/quicksilver/app/keepers"
-	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 )
 
@@ -136,74 +132,7 @@ func migrateTestnetIncentives(ctx sdk.Context, appKeepers *keepers.AppKeepers) e
 		"quick1rufya429ss9nlhdram0xkcu0jejsz5atap0xan": "quick124pvdf300p2wmq6cl8wwy2z0637du6ec0nhxen",
 		"quick1f8jp5tr86gn5yvwecr7a4a9zypqf2mg85p96rw": "quick1f708swcmeej2ddfksyvtpaxe07fz0r03f79dlq",
 	}
-	return migrateVestingAccounts(ctx, appKeepers, migrations)
-}
-
-// Migrate the Ingenuity genesis allocation to Notional.
-func migrateIngenuityMultisigToNotional(ctx sdk.Context, appKeepers *keepers.AppKeepers) error {
-	// migrate ingenuity multisig to notional multisig.
-	migrations := map[string]string{
-		"quick1e22za5qrqqp488h5p7vw2pfx8v0y4u444ufeuw": "quick1gxrks2rcj9gthzfgrkjk5lnk0g00cg0cpyntlm",
-	}
-	return migrateVestingAccounts(ctx, appKeepers, migrations)
-}
-
-// Migrate a map of address pairs and migrate from key -> value
-func migrateVestingAccounts(ctx sdk.Context, appKeepers *keepers.AppKeepers, migrations map[string]string) error {
-	for fromBech32, toBech32 := range migrations {
-		from, err := addressutils.AccAddressFromBech32(fromBech32, "quick")
-		if err != nil {
-			return err
-		}
-		to, err := addressutils.AccAddressFromBech32(toBech32, "quick")
-		if err != nil {
-			return err
-		}
-		err = migratePeriodicVestingAccount(ctx, appKeepers, from, to)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-// Migrate a PeriodicVestingAccount from address A to address B, maintaining periods, amounts and end date.
-func migratePeriodicVestingAccount(ctx sdk.Context, appKeepers *keepers.AppKeepers, from sdk.AccAddress, to sdk.AccAddress) error {
-	oldAccount := appKeepers.AccountKeeper.GetAccount(ctx, from)
-	// if the new account already exists in the account keeper, we should fail.
-	if newAccount := appKeepers.AccountKeeper.GetAccount(ctx, to); newAccount != nil {
-		return fmt.Errorf("unable to migrate vesting account; destination is already an account")
-	}
-
-	oldPva, ok := oldAccount.(*vestingtypes.PeriodicVestingAccount)
-	if !ok {
-		return fmt.Errorf("from account is not a PeriodicVestingAccount")
-	}
-
-	// copy the existing PVA.
-	newPva := *oldPva
-
-	// create a new baseVesting account with the address provided.
-	newBva := vestingtypes.NewBaseVestingAccount(authtypes.NewBaseAccountWithAddress(to), oldPva.OriginalVesting, oldPva.EndTime)
-	// change vesting end time so we are able to negate the token lock.
-	// if the endDate has passed, we circumvent the period checking logic.
-	oldPva.BaseVestingAccount.EndTime = ctx.BlockTime().Unix() - 1
-	newPva.BaseVestingAccount = newBva
-
-	// set the old pva (with the altered date), so we can transfer assets.
-	appKeepers.AccountKeeper.SetAccount(ctx, oldPva)
-	// set the new pva with the correct period and end dates, and new address.
-	appKeepers.AccountKeeper.SetAccount(ctx, &newPva)
-
-	// send coins from old account to new.
-	err := appKeepers.BankKeeper.SendCoins(ctx, from, to, appKeepers.BankKeeper.GetAllBalances(ctx, from))
-	if err != nil {
-		return err
-	}
-
-	// delete the old account from the account keeper.
-	appKeepers.AccountKeeper.RemoveAccount(ctx, oldPva)
-	return nil
+	return migrateVestingAccounts(ctx, appKeepers, migrations, migratePeriodicVestingAccount)
 }
 
 func V010407rc1UpgradeHandler(
@@ -332,7 +261,7 @@ func V010407UpgradeHandler(
 			"quick1k67rz3vn73tzp2tatlka2kn2ngtjdw8gpw8zq2": "quick1plq2mrsn0uw2dkksptr9dsyyk62dkk6t7w79j2",
 		}
 
-		if err := migrateVestingAccounts(ctx, appKeepers, migrations); err != nil {
+		if err := migrateVestingAccounts(ctx, appKeepers, migrations, migratePeriodicVestingAccount); err != nil {
 			panic(err)
 		}
 
@@ -345,116 +274,16 @@ func V010600UpgradeHandler(
 	configurator module.Configurator,
 	appKeepers *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
-	// TODO refactor current duplicated logic out of app/upgrades
 	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 		migrations := map[string]string{
 			"quick1a7n7z45gs0dut2syvkszffgwmgps6scqen3e5l": "quick1h0sqndv2y4xty6uk0sv4vckgyc5aa7n5at7fll",
 			"quick1m0anwr4kcz0y9s65czusun2ahw35g3humv4j7f": "quick1n4g6037cjm0e0v2nvwj2ngau7pk758wtwk6lwq",
 		}
 
-		for fromBech32, toBech32 := range migrations {
-			from, err := addressutils.AccAddressFromBech32(fromBech32, "quick")
-			if err != nil {
-				return nil, err
-			}
-			to, err := addressutils.AccAddressFromBech32(toBech32, "quick")
-			if err != nil {
-				return nil, err
-			}
-			err = processMigratePeriodicVestingAccount(ctx, appKeepers, from, to)
-			if err != nil {
-				return nil, err
-			}
+		if err := migrateVestingAccounts(ctx, appKeepers, migrations, migrateVestingAccountWithActions); err != nil {
+			panic(err)
 		}
 
 		return mm.RunMigrations(ctx, configurator, fromVM)
 	}
-}
-
-// TODO: add logic collect rewards
-// processMigratePeriodicVestingAccount moves the unvested from current account ->  new account
-// - Unbonding all assets
-// - Claim rewards
-// - Post migrations
-func processMigratePeriodicVestingAccount(ctx sdk.Context, appKeepers *keepers.AppKeepers, from sdk.AccAddress, to sdk.AccAddress) error {
-	// Unbond all delagation of account
-	unbonded, err := unbondAllDelegation(ctx, ctx.BlockTime(), appKeepers, from)
-	if err != nil {
-		fmt.Printf("processMigratePeriodicVestingAccount: unbonded all delegation for %s failed: %v", from.String(), err)
-		return err
-	}
-	fmt.Println("processMigratePeriodicVestingAccount: unbond all delegation amount: " + unbonded.String() + " of account: " + from.String())
-
-	oldAccount := appKeepers.AccountKeeper.GetAccount(ctx, from)
-	// if the new account already exists in the account keeper, we should fail.
-	if newAccount := appKeepers.AccountKeeper.GetAccount(ctx, to); newAccount != nil {
-		return fmt.Errorf("unable to migrate vesting account; destination is already an account")
-	}
-
-	oldPva, ok := oldAccount.(*vestingtypes.PeriodicVestingAccount)
-	if !ok {
-		return fmt.Errorf("from account is not a PeriodicVestingAccount")
-	}
-
-	// copy the existing PVA.
-	newPva := *oldPva
-
-	// create a new baseVesting account with the address provided.
-	newBva := vestingtypes.NewBaseVestingAccount(authtypes.NewBaseAccountWithAddress(to), oldPva.OriginalVesting, oldPva.EndTime)
-	// change vesting end time so we are able to negate the token lock.
-	// if the endDate has passed, we circumvent the period checking logic.
-	oldPva.BaseVestingAccount.EndTime = ctx.BlockTime().Unix() - 1
-	newPva.BaseVestingAccount = newBva
-
-	// set the old pva (with the altered date), so we can transfer assets.
-	appKeepers.AccountKeeper.SetAccount(ctx, oldPva)
-	// set the new pva with the correct period and end dates, and new address.
-	appKeepers.AccountKeeper.SetAccount(ctx, &newPva)
-
-	// send coins from old account to new.
-	err = appKeepers.BankKeeper.SendCoins(ctx, from, to, appKeepers.BankKeeper.GetAllBalances(ctx, from))
-	if err != nil {
-		return err
-	}
-
-	// delete the old account from the account keeper.
-	appKeepers.AccountKeeper.RemoveAccount(ctx, oldPva)
-	return nil
-}
-
-func unbondAllDelegation(ctx sdk.Context, now time.Time, appKeepers *keepers.AppKeepers, accAddr sdk.AccAddress) (math.Int, error) {
-	unbondedAmt := math.ZeroInt()
-
-	// Undelegate all delegations from the account
-	for _, delegation := range appKeepers.StakingKeeper.GetAllDelegatorDelegations(ctx, accAddr) {
-		validatorValAddr := delegation.GetValidatorAddr()
-		_, found := appKeepers.StakingKeeper.GetValidator(ctx, validatorValAddr)
-		if !found {
-			continue
-		}
-
-		_, err := appKeepers.StakingKeeper.Undelegate(ctx, accAddr, validatorValAddr, delegation.GetShares())
-		if err != nil {
-			return math.ZeroInt(), err
-		}
-	}
-
-	// Complete unbonding of all account's delegations
-	for _, unbondingDelegation := range appKeepers.StakingKeeper.GetAllUnbondingDelegations(ctx, accAddr) {
-		validatorStringAddr := unbondingDelegation.ValidatorAddress
-		validatorValAddr, _ := sdk.ValAddressFromBech32(validatorStringAddr)
-
-		for i := range unbondingDelegation.Entries {
-			unbondingDelegation.Entries[i].CompletionTime = now
-			unbondedAmt = unbondedAmt.Add(unbondingDelegation.Entries[i].Balance)
-		}
-
-		appKeepers.StakingKeeper.SetUnbondingDelegation(ctx, unbondingDelegation)
-		_, err := appKeepers.StakingKeeper.CompleteUnbonding(ctx, accAddr, validatorValAddr)
-		if err != nil {
-			return math.ZeroInt(), err
-		}
-	}
-
-	return unbondedAmt, nil
 }

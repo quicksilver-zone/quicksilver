@@ -317,15 +317,30 @@ func (s *AppTestSuite) TestV010600UpgradeHandler() {
 	app := s.GetQuicksilverApp(s.chainA)
 	ctx := s.chainA.GetContext()
 	validators := app.StakingKeeper.GetAllValidators(ctx)
+	// Setting up
 	accountA := app.AccountKeeper.GetAccount(ctx, addressutils.MustAccAddressFromBech32("quick1a7n7z45gs0dut2syvkszffgwmgps6scqen3e5l", ""))
 	err := app.BankKeeper.SendCoins(ctx, s.chainA.SenderAccount.GetAddress(), accountA.GetAddress(), sdk.Coins{
 		sdk.NewInt64Coin("stake", 100),
 	})
 	s.NoError(err)
 
+	accountB := app.AccountKeeper.GetAccount(ctx, addressutils.MustAccAddressFromBech32("quick1m0anwr4kcz0y9s65czusun2ahw35g3humv4j7f", ""))
+	err = app.BankKeeper.SendCoins(ctx, s.chainA.SenderAccount.GetAddress(), accountB.GetAddress(), sdk.Coins{
+		sdk.NewInt64Coin("stake", 300),
+	})
+	s.NoError(err)
+
 	// Stake old account
-	amount, _ := sdk.NewIntFromString("100")
-	_, err = app.StakingKeeper.Delegate(ctx, accountA.GetAddress(), amount, stakingtypes.Unbonded, validators[0], true)
+	amountA, _ := sdk.NewIntFromString("100")
+	_, err = app.StakingKeeper.Delegate(ctx, accountA.GetAddress(), amountA, stakingtypes.Unbonded, validators[0], true)
+	s.NoError(err)
+
+	amountB, _ := sdk.NewIntFromString("100")
+	_, err = app.StakingKeeper.Delegate(ctx, accountB.GetAddress(), amountB, stakingtypes.Unbonded, validators[0], true)
+	s.NoError(err)
+
+	amountB, _ = sdk.NewIntFromString("200")
+	_, err = app.StakingKeeper.Delegate(ctx, accountB.GetAddress(), amountB, stakingtypes.Unbonded, validators[1], true)
 	s.NoError(err)
 
 	handler := upgrades.V010600UpgradeHandler(app.mm,
@@ -338,13 +353,21 @@ func (s *AppTestSuite) TestV010600UpgradeHandler() {
 	s.False(found)
 
 	migratedA := app.AccountKeeper.GetAccount(ctx, addressutils.MustAccAddressFromBech32("quick1h0sqndv2y4xty6uk0sv4vckgyc5aa7n5at7fll", ""))
-	// Check balance of new account
-	stakeBalance := app.BankKeeper.GetBalance(ctx, migratedA.GetAddress(), "stake")
-	s.Equal(amount, stakeBalance.Amount)
+	stakeBalanceA := app.BankKeeper.GetBalance(ctx, migratedA.GetAddress(), "stake")
+	s.Equal(int64(100), stakeBalanceA.Amount.Int64())
+
+	migratedB := app.AccountKeeper.GetAccount(ctx, addressutils.MustAccAddressFromBech32("quick1n4g6037cjm0e0v2nvwj2ngau7pk758wtwk6lwq", ""))
+	stakeBalanceB := app.BankKeeper.GetBalance(ctx, migratedB.GetAddress(), "stake")
+	s.Equal(int64(300), stakeBalanceB.Amount.Int64())
 
 	// Check the vest period of new account
 	vestMigratedA, ok := migratedA.(*vestingtypes.PeriodicVestingAccount)
 	s.True(ok)
 	s.Equal(int64(5000000000), vestMigratedA.OriginalVesting.AmountOf("uqck").Int64())
 	s.Equal(float64(864000), vestMigratedA.VestingPeriods[0].Duration().Seconds())
+
+	vestMigratedB, ok := migratedB.(*vestingtypes.PeriodicVestingAccount)
+	s.True(ok)
+	s.Equal(int64(5000000000), vestMigratedB.OriginalVesting.AmountOf("uqck").Int64())
+	s.Equal(float64(864000), vestMigratedB.VestingPeriods[0].Duration().Seconds())
 }
