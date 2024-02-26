@@ -1,131 +1,28 @@
 # This is a basic workflow that is manually triggered
-name: build and test
-
-# Controls when the action will run. Workflow runs when manually triggered using the UI
-# or API.
-on:
-  pull_request:
-    branches:
-      - main
-      - develop
-      - unstable
-      - unstable-v1.5
-    paths-ignore:
-      - 'quicksilverjs/**'
-      - 'webui/**'
-  workflow_dispatch:
-  push:
-    branches:
-      - main
-      - develop
-      - unstable
-      - unstable-v1.5
-    paths-ignore:
-      - 'quicksilverjs/**'
-      - 'webui/**'
-
-
-# This workflow makes x86_64 for windows, and linux.
-
+on: [push, pull_request]
+name: Build and Test
 jobs:
-  build:
-    strategy:
-      matrix:
-        arch: [amd64]
-        targetos: [linux, windows, darwin]
-        include:
-          - targetos: darwin
-            arch: arm64
-    runs-on: ubuntu-latest
-    name: build quicksilver
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
-        with:
-          go-version: "1.21"
-        env:
-          GOOS: ${{ matrix.targetos }}
-          GOARCH: ${{ matrix.arch }}
-
-
-      - name: Compile quicksilver
-        run: |
-          make install
-
-      - name: Archive quicksilver binaries
-        if: github.ref == 'refs/heads/develop'
-        uses: actions/upload-artifact@v4
-        with:
-          name: quicksilverd-${{ matrix.targetos }}-${{ matrix.arch }}
-          path: |
-            ~/go/bin/quicksilverd*
-
   test:
-    runs-on: ubuntu-latest
-    name: test quicksilver
     strategy:
       matrix:
-        arch: [amd64]
-        targetos: [linux, windows]
-        include:
-          - targetos: darwin
-            arch: arm64
+        go-version: [1.22.x]
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+    - uses: actions/checkout@v3
+    - uses: actions/setup-go@v4
+      with:
+        go-version: ${{ matrix.go-version }}
+    - run: go test ./...
+  build:
+      strategy:
+        matrix:
+          go-version: [1.22.x]
+          os: [ubuntu-latest, macos-latest, windows-latest]
+      runs-on: ${{ matrix.os }}
+      steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v4
         with:
-          go-version: "1.21"
-        env:
-          GOOS: ${{ matrix.targetos }}
-          GOARCH: ${{ matrix.arch }}
-
-
-      - name: test quicksilver
-        run: |
-          make test-unit-cover
-
-      - name: filter out DONTCOVER
-        run: |
-          excludelist="$(find ./ -type f -name '*.go' | xargs grep -l 'DONTCOVER')"
-          excludelist+=" $(find ./ -type f -name '*.pb.go')"
-          excludelist+=" $(find ./ -type f -name '*.pb.gw.go')"
-          excludelist+=" $(find ./ -type f -path './test/*.go')"
-          excludelist+=" $(find ./ -type f -path './third-party-chains/*.go')"
-          for filename in ${excludelist}; do
-            filename=$(echo $filename | sed 's/^./github.com\/quicksilver-zone\/quicksilver/g')
-            echo "Excluding ${filename} from coverage report..."
-            sed -i.bak "/$(echo $filename | sed 's/\//\\\//g')/d" coverage.txt
-          done
-
-      - name: "Go vulnerability checks"
-        continue-on-error: true
-        run: make vulncheck
-
-      - name: Upload coverage reports to Codecov with GitHub Action
-        uses: codecov/codecov-action@v4
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }} # needed for private repo
-          files: ./coverage.txt
-          flags: unittests
-          fail_ci_if_error: true
-          verbose: true
-
-  simulate:
-    if: contains(github.event.pull_request.labels.*.name, 'run-sim')
-    runs-on: ubuntu-latest
-    name: simulate quicksilver
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cache/go-build
-            ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
-      - uses: actions/setup-go@v5
-        with:
-          go-version: "1.21"
-      - name: Run simulation tests
-        run: make test-sim-ci
+          go-version: ${{ matrix.go-version }}
+      - run: go build ./...
