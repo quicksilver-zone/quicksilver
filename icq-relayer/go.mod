@@ -1,6 +1,8 @@
 module github.com/quicksilver-zone/quicksilver/icq-relayer
 
-go 1.21
+go 1.22
+
+toolchain go1.22.0
 
 require (
 	github.com/cosmos/cosmos-sdk v0.46.15
