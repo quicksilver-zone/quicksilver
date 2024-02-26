@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
+
 	"github.com/quicksilver-zone/quicksilver/app/keepers"
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 )
@@ -103,7 +104,6 @@ func completeAllRedelegations(ctx sdk.Context, now time.Time,
 	appKeepers *keepers.AppKeepers,
 	accAddr sdk.AccAddress,
 ) error {
-
 	for _, activeRedelegation := range appKeepers.StakingKeeper.GetRedelegations(ctx, accAddr, 100) {
 		redelegationSrc, _ := sdk.ValAddressFromBech32(activeRedelegation.ValidatorSrcAddress)
 		redelegationDst, _ := sdk.ValAddressFromBech32(activeRedelegation.ValidatorDstAddress)
