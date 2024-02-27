@@ -1,7 +1,7 @@
 package interchaintest
 
 import (
-	"github.com/strangelove-ventures/interchaintest/v5/ibc"
+	"github.com/strangelove-ventures/interchaintest/v7/ibc"
 )
 
 var (
