@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/tendermint/tendermint/crypto/tmhash"
-	tmtypes "github.com/tendermint/tendermint/types"
+	"github.com/cometbft/cometbft/crypto/tmhash"
+	tmtypes "github.com/cometbft/cometbft/types"
 	"google.golang.org/protobuf/encoding/protowire"
 
 	sdkioerrors "cosmossdk.io/errors"

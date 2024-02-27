@@ -9,9 +9,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cometbft/cometbft/proto/tendermint/types"
 	ics23 "github.com/confio/ics23/go"
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/proto/tendermint/types"
 	"google.golang.org/protobuf/encoding/protowire"
 
 	sdkmath "cosmossdk.io/math"
