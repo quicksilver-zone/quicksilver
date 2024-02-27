@@ -234,6 +234,9 @@ func (k *Keeper) GetLocalDenomZoneMapping(ctx sdk.Context, denom string) (*types
 
 // SetLocalDenomZoneMapping set denom <-> zone mapping.
 func (k *Keeper) SetLocalDenomZoneMapping(ctx sdk.Context, zone *types.Zone) {
+	if zone == nil {
+		return
+	}
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixLocalDenomZoneMapping)
 	bz := k.cdc.MustMarshal(zone)
 	store.Set([]byte(zone.LocalDenom), bz)
