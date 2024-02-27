@@ -18,7 +18,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/simapp"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
@@ -1937,7 +1937,7 @@ func (suite *KeeperTestSuite) TestDepositTxCallback() {
 
 func (suite *KeeperTestSuite) TestSigningInfoCallback() {
 	validator := addressutils.GenerateValAddressForTest()
-	pubKey := simapp.CreateTestPubKeys(1)[0]
+	pubKey := simtestutil.CreateTestPubKeys(1)[0]
 
 	pkAny, err := codectypes.NewAnyWithValue(pubKey)
 	suite.Require().NoError(err)

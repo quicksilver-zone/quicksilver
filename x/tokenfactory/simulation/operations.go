@@ -3,9 +3,10 @@ package simulation
 import (
 	"math/rand"
 
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
-	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdksimtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -126,7 +127,7 @@ func SimulateMsgCreateDenom(ak types.AccountKeeper, bk types.BankKeeper, k keepe
 		txCtx := simulation.OperationInput{
 			R:               r,
 			App:             bApp,
-			TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
+			TxGen:           simtestutil.MakeTestEncodingConfig().TxConfig,
 			Cdc:             nil,
 			Msg:             msg,
 			MsgType:         TypeMsgCreateDenom,
@@ -173,7 +174,7 @@ func SimulateMsgMint(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keepe
 		txCtx := simulation.OperationInput{
 			R:               r,
 			App:             bApp,
-			TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
+			TxGen:           simtestutil.MakeTestEncodingConfig().TxConfig,
 			Cdc:             nil,
 			Msg:             msg,
 			MsgType:         TypeMsgMint,
@@ -228,7 +229,7 @@ func SimulateMsgBurn(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keepe
 		txCtx := simulation.OperationInput{
 			R:               r,
 			App:             bApp,
-			TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
+			TxGen:           simtestutil.MakeTestEncodingConfig().TxConfig,
 			Cdc:             nil,
 			Msg:             msg,
 			MsgType:         TypeMsgBurn,
@@ -276,7 +277,7 @@ func SimulateMsgChangeAdmin(ak types.AccountKeeper, bk types.BankKeeper, k keepe
 		txCtx := simulation.OperationInput{
 			R:               r,
 			App:             bApp,
-			TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
+			TxGen:           simtestutil.MakeTestEncodingConfig().TxConfig,
 			Cdc:             nil,
 			Msg:             msg,
 			MsgType:         TypeMsgChangeAdmin,
@@ -336,7 +337,7 @@ func SimulateMsgSetDenomMetadata(ak types.AccountKeeper, bk types.BankKeeper, k 
 		txCtx := simulation.OperationInput{
 			R:               r,
 			App:             bApp,
-			TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
+			TxGen:           simtestutil.MakeTestEncodingConfig().TxConfig,
 			Cdc:             nil,
 			Msg:             msg,
 			MsgType:         TypeMsgSetDenomMetadata,

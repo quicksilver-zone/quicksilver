@@ -10,6 +10,8 @@ import (
 	"strings"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
+	"github.com/cosmos/cosmos-sdk/runtime"
+
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/spf13/cast"
@@ -26,7 +28,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/version"
@@ -74,7 +75,7 @@ var (
 
 var (
 	_ servertypes.Application = (*Quicksilver)(nil)
-	_ simapp.App              = (*Quicksilver)(nil)
+	_ runtime.AppI            = (*Quicksilver)(nil)
 )
 
 // Quicksilver implements an extended ABCI application.

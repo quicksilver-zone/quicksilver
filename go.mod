@@ -5,16 +5,16 @@ go 1.21
 require (
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/math v1.2.0
-	github.com/CosmWasm/wasmd v0.29.2
-	github.com/CosmWasm/wasmvm v1.1.1
+	github.com/CosmWasm/wasmd v0.45.0
+	github.com/CosmWasm/wasmvm v1.5.0
 	github.com/armon/go-metrics v0.4.1
 	github.com/client9/misspell v0.3.4
 	github.com/cometbft/cometbft-db v0.11.0
 	github.com/confio/ics23/go v0.9.0
 	github.com/cosmos/cosmos-proto v1.0.0-beta.3
-	github.com/cosmos/cosmos-sdk v0.46.16
+	github.com/cosmos/cosmos-sdk v0.47.5
 	github.com/cosmos/gogoproto v1.4.11
-	github.com/cosmos/ibc-go/v5 v5.3.2
+	github.com/cosmos/ibc-go/v7 v7.3.0
 	github.com/gogo/protobuf v1.3.3
 	github.com/golang/protobuf v1.5.3
 	github.com/golangci/golangci-lint v1.56.2
@@ -336,8 +336,6 @@ require (
 replace (
 	// use cosmos fork of keyring
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
-	// https://github.com/CosmWasm/wasmd/pull/938
-	github.com/CosmWasm/wasmd => github.com/notional-labs/wasmd v0.29.0-sdk46.0.20221114145317-d6e67fd50956
 	// Fix upstream GHSA-h395-qcrw-5vmq vulnerability.
 	// TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
 	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.8.1
