@@ -11,8 +11,8 @@ on:
       - unstable
       - unstable-v1.5
     paths-ignore:
-      - 'quicksilverjs/**'
-      - 'webui/**'
+      - "quicksilverjs/**"
+      - "webui/**"
   workflow_dispatch:
   push:
     branches:
@@ -21,9 +21,8 @@ on:
       - unstable
       - unstable-v1.5
     paths-ignore:
-      - 'quicksilverjs/**'
-      - 'webui/**'
-
+      - "quicksilverjs/**"
+      - "webui/**"
 
 # This workflow makes x86_64 for windows, and linux.
 
@@ -46,7 +45,6 @@ jobs:
         env:
           GOOS: ${{ matrix.targetos }}
           GOARCH: ${{ matrix.arch }}
-
 
       - name: Compile quicksilver
         run: |
@@ -79,7 +77,6 @@ jobs:
           GOOS: ${{ matrix.targetos }}
           GOARCH: ${{ matrix.arch }}
 
-
       - name: test quicksilver
         run: |
           make test-unit-cover
@@ -104,6 +101,7 @@ jobs:
       - name: Upload coverage reports to Codecov with GitHub Action
         uses: codecov/codecov-action@v4
         with:
+          token: ${{secrets.CODECOV_TOKEN}}
           files: ./coverage.txt
           flags: unittests
           fail_ci_if_error: true
