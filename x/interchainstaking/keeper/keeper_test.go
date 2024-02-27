@@ -743,3 +743,32 @@ func (suite *KeeperTestSuite) TestIteratePortConnection() {
 	})
 	suite.Equal(8, len(portConnection))
 }
+
+func (suite *KeeperTestSuite) TestLocalDenomZoneMapping() {
+	suite.SetupTest()
+	suite.setupTestZones()
+
+	quicksilver := suite.GetQuicksilverApp(suite.chainA)
+	ctx := suite.chainA.GetContext()
+	icsKeeper := quicksilver.InterchainstakingKeeper
+	zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
+	suite.True(found)
+
+	localDenom := zone.LocalDenom
+	// First, check the mapping doesn't contain zone by local denom
+	_, existed := icsKeeper.GetLocalDenomZoneMapping(ctx, localDenom)
+	suite.False(existed)
+
+	// Now get zone by denom, this will get from list of zones and set it to zone denom mappings
+	zoneByDenom := icsKeeper.GetZoneAndUpdateMappingIfNeeded(ctx, localDenom)
+	suite.True(zoneByDenom != nil)
+
+	// Check if zone by denom exists in the mapping list
+	_, existed = icsKeeper.GetLocalDenomZoneMapping(ctx, localDenom)
+	suite.True(existed)
+
+	// Check if delete zone by denom succeeded
+	icsKeeper.DeleteDenomZoneMapping(ctx, localDenom)
+	_, existed = icsKeeper.GetLocalDenomZoneMapping(ctx, localDenom)
+	suite.False(existed)
+}
