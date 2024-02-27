@@ -9,6 +9,7 @@ import (
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 
 	"github.com/quicksilver-zone/quicksilver/app/keepers"
+	"github.com/quicksilver-zone/quicksilver/utils"
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 )
 
@@ -25,7 +26,9 @@ func migrateIngenuityMultisigToNotional(ctx sdk.Context, appKeepers *keepers.App
 
 // Migrate a map of address pairs and migrate from key -> value
 func migrateVestingAccounts(ctx sdk.Context, appKeepers *keepers.AppKeepers, migrations map[string]string, strategy ProcessMigrateAccountStrategy) error {
-	for fromBech32, toBech32 := range migrations {
+	for _, fromBech32 := range utils.Keys(migrations) {
+		toBech32 := migrations[fromBech32]
+
 		from, err := addressutils.AccAddressFromBech32(fromBech32, "quick")
 		if err != nil {
 			return err
