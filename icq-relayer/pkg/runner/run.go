@@ -38,7 +38,7 @@ import (
 	"google.golang.org/grpc/metadata"
 
 	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
-	tmclient "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint/types"
+	tmclient "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
 	"github.com/dgraph-io/ristretto"
 	cmtjson "github.com/tendermint/tendermint/libs/json"
 	jsonrpcclient "github.com/tendermint/tendermint/rpc/jsonrpc/client"
