@@ -6,6 +6,9 @@ import (
 	"fmt"
 	"time"
 
+	gogotypes "github.com/gogo/protobuf/types"
+
+	"cosmossdk.io/math"
 	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -14,18 +17,40 @@ import (
 	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 )
 
-func (k *Keeper) GetNextWithdrawalRecordSequence(ctx sdk.Context) (sequence uint64) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), nil)
+// InitWithdrawalRecordSequence initializes the sequence.
+func (k *Keeper) InitWithdrawalRecordSequence(ctx sdk.Context) uint64 {
+	var accNumber uint64
+	store := ctx.KVStore(k.storeKey)
+
+	bz := k.cdc.MustMarshal(&gogotypes.UInt64Value{Value: 512})
+	store.Set(types.KeyPrefixRequeuedWithdrawalRecordSeq, bz)
+
+	return accNumber
+}
+
+// GetNextWithdrawalRecordSequence returns and increments the global withdrawal record seqeuence.
+func (k *Keeper) GetNextWithdrawalRecordSequence(ctx sdk.Context) uint64 {
+	var sequence uint64
+	store := ctx.KVStore(k.storeKey)
+
 	bz := store.Get(types.KeyPrefixRequeuedWithdrawalRecordSeq)
 	if bz == nil {
-		bz := make([]byte, 8)
-		binary.BigEndian.PutUint64(bz, uint64(2))
-		store.Set(types.KeyPrefixRequeuedWithdrawalRecordSeq, bz)
-		return 1
+		// initialize the account numbers
+		sequence = 0
+	} else {
+		val := gogotypes.UInt64Value{}
+
+		err := k.cdc.Unmarshal(bz, &val)
+		if err != nil {
+			panic(err)
+		}
+
+		sequence = val.GetValue()
 	}
-	sequence = binary.BigEndian.Uint64(bz)
-	binary.BigEndian.PutUint64(bz, sequence+1)
+
+	bz = k.cdc.MustMarshal(&gogotypes.UInt64Value{Value: sequence + 1})
 	store.Set(types.KeyPrefixRequeuedWithdrawalRecordSeq, bz)
+
 	return sequence
 }
 
