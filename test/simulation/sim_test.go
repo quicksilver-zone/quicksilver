@@ -7,7 +7,6 @@ import (
 	"os"
 	"testing"
 
-	"github.com/CosmWasm/wasmd/x/wasm"
 	dbm "github.com/cometbft/cometbft-db"
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/stretchr/testify/require"
@@ -56,7 +55,6 @@ func BenchmarkSimulation(b *testing.B) {
 		app.DefaultNodeHome,
 		simulation.FlagPeriodValue,
 		app.MakeEncodingConfig(),
-		wasm.EnableAllProposals,
 		app.EmptyAppOptions{},
 		app.GetWasmOpts(app.EmptyAppOptions{}),
 		false,
@@ -117,7 +115,6 @@ func TestAppStateDeterminism(t *testing.T) {
 				app.DefaultNodeHome,
 				simulation.FlagPeriodValue,
 				app.MakeEncodingConfig(),
-				wasm.EnableAllProposals,
 				app.EmptyAppOptions{},
 				app.GetWasmOpts(app.EmptyAppOptions{}),
 				false,

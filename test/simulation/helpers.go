@@ -10,11 +10,15 @@ import (
 	dbm "github.com/cometbft/cometbft-db"
 	"github.com/cometbft/cometbft/libs/log"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/std"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 
 	"github.com/quicksilver-zone/quicksilver/app"
 	"github.com/quicksilver-zone/quicksilver/app/helpers"
@@ -70,9 +74,7 @@ func Operations(quicksilver *app.Quicksilver, cdc codec.JSONCodec, config simtyp
 			panic(err)
 		}
 	}
-
-	simState.ParamChanges = quicksilver.SimulationManager().GenerateParamChanges(config.Seed)
-	simState.Contents = quicksilver.SimulationManager().GetProposalContents(simState)
+	simState.ProposalMsgs = quicksilver.SimulationManager().GetProposalMsgs(simState)
 	return quicksilver.SimulationManager().WeightedOperations(simState)
 }
 
@@ -85,7 +87,7 @@ func CheckExportSimulation(
 ) error {
 	if config.ExportStatePath != "" {
 		fmt.Println("exporting app state...")
-		exported, err := quicksilver.ExportAppStateAndValidators(false, nil)
+		exported, err := quicksilver.ExportAppStateAndValidators(false, nil, nil)
 		if err != nil {
 			return err
 		}
@@ -134,4 +136,37 @@ func GetSimulationLog(storeName string, sdr sdk.StoreDecoderRegistry, kvAs, kvBs
 	}
 
 	return simLog
+}
+
+// TestEncodingConfig defines an encoding configuration that is used for testing
+// purposes. Note, MakeTestEncodingConfig takes a series of AppModuleBasic types
+// which should only contain the relevant module being tested and any potential
+// dependencies.
+type TestEncodingConfig struct {
+	InterfaceRegistry types.InterfaceRegistry
+	Codec             codec.Codec
+	TxConfig          client.TxConfig
+	Amino             *codec.LegacyAmino
+}
+
+func MakeTestEncodingConfig(modules ...module.AppModuleBasic) TestEncodingConfig {
+	cdc := codec.NewLegacyAmino()
+	interfaceRegistry := types.NewInterfaceRegistry()
+	codec := codec.NewProtoCodec(interfaceRegistry)
+
+	encCfg := TestEncodingConfig{
+		InterfaceRegistry: interfaceRegistry,
+		Codec:             codec,
+		TxConfig:          tx.NewTxConfig(codec, tx.DefaultSignModes),
+		Amino:             cdc,
+	}
+
+	mb := module.NewBasicManager(modules...)
+
+	std.RegisterLegacyAminoCodec(encCfg.Amino)
+	std.RegisterInterfaces(encCfg.InterfaceRegistry)
+	mb.RegisterLegacyAminoCodec(encCfg.Amino)
+	mb.RegisterInterfaces(encCfg.InterfaceRegistry)
+
+	return encCfg
 }

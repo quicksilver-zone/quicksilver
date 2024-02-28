@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/CosmWasm/wasmd/x/wasm"
 	dbm "github.com/cometbft/cometbft-db"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -45,9 +44,12 @@ func DefaultConfig() network.Config {
 }
 
 func NewAppConstructor(encCfg EncodingConfig) network.AppConstructor {
-	return func(val network.Validator) servertypes.Application {
+	return func(val network.ValidatorI) servertypes.Application {
+		valCtx := val.GetCtx()
+		appConfig := val.GetAppConfig()
+
 		return NewQuicksilver(
-			val.Ctx.Logger,
+			valCtx.Logger,
 			dbm.NewMemDB(),
 			nil,
 			true,
@@ -55,12 +57,11 @@ func NewAppConstructor(encCfg EncodingConfig) network.AppConstructor {
 			DefaultNodeHome,
 			0,
 			encCfg,
-			wasm.EnableAllProposals,
 			EmptyAppOptions{},
 			GetWasmOpts(EmptyAppOptions{}),
 			false,
 			false,
-			baseapp.SetPruning(purningtypes.NewPruningOptionsFromString(val.AppConfig.Pruning)),
+			baseapp.SetPruning(purningtypes.NewPruningOptionsFromString(appConfig.Pruning)),
 			// baseapp.SetMinGasPrices(val.AppConfig.MinGasPrices),
 		)
 	}

@@ -53,6 +53,7 @@ func ValidateProofOps(
 	path := commitmenttypes.NewMerklePath([]string{module, url.PathEscape(string(key))}...)
 
 	merkleProof, err := commitmenttypes.ConvertProofs(proofOps)
+
 	if err != nil {
 		return errors.New("error converting proofs")
 	}
@@ -62,16 +63,20 @@ func ValidateProofOps(
 		return errors.New("error unmarshaling client state")
 	}
 
+	tmConsensusState, ok := consensusState.(*tmclienttypes.ConsensusState)
+	if !ok {
+		return errors.New("error unmarshaling consensus state")
+	}
+
 	if len(data) != 0 {
 		// if we got a non-nil response, verify inclusion proof.
-		if err := merkleProof.VerifyMembership(tmClientState.ProofSpecs, consensusState.GetRoot(), path, data); err != nil {
+		if err := merkleProof.VerifyMembership(tmClientState.ProofSpecs, tmConsensusState.GetRoot(), path, data); err != nil {
 			return fmt.Errorf("unable to verify inclusion proof: %w", err)
 		}
-		return nil
 
 	}
 	// if we got a nil response, verify non inclusion proof.
-	if err := merkleProof.VerifyNonMembership(tmClientState.ProofSpecs, consensusState.GetRoot(), path); err != nil {
+	if err := merkleProof.VerifyNonMembership(tmClientState.ProofSpecs, tmConsensusState.GetRoot(), path); err != nil {
 		return fmt.Errorf("unable to verify non-inclusion proof: %w", err)
 	}
 	return nil
