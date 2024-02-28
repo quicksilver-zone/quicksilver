@@ -159,7 +159,6 @@ func NewAppKeepers(
 	appOpts servertypes.AppOptions,
 	wasmDir string,
 	wasmConfig wasmtypes.WasmConfig,
-	wasmEnabledProposals []wasmtypes.ProposalType,
 	wasmOpts []wasmkeeper.Option,
 	supplyEndpointEnabled bool,
 ) AppKeepers {
@@ -189,7 +188,6 @@ func NewAppKeepers(
 		appOpts,
 		wasmDir,
 		wasmConfig,
-		wasmEnabledProposals,
 		wasmOpts,
 		supplyEndpointEnabled,
 	)
@@ -213,7 +211,6 @@ func (appKeepers *AppKeepers) InitKeepers(
 	_ servertypes.AppOptions,
 	wasmDir string,
 	wasmConfig wasmtypes.WasmConfig,
-	wasmEnabledProposals []wasmtypes.ProposalType,
 	wasmOpts []wasmkeeper.Option,
 	supplyEndpointEnabled bool,
 ) {
@@ -533,11 +530,6 @@ func (appKeepers *AppKeepers) InitKeepers(
 
 	// register the proposal types
 	govRouter := govv1beta1.NewRouter()
-
-	// The gov proposal types can be individually enabled
-	if len(wasmEnabledProposals) != 0 {
-		govRouter.AddRoute(wasm.RouterKey, wasmkeeper.NewLegacyWasmProposalHandler(appKeepers.WasmKeeper, wasmEnabledProposals))
-	}
 
 	govRouter.AddRoute(govtypes.RouterKey, govv1beta1.ProposalHandler).
 		AddRoute(paramproposal.RouterKey, params.NewParamChangeProposalHandler(appKeepers.ParamsKeeper)).

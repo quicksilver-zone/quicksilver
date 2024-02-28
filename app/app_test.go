@@ -5,7 +5,6 @@ import (
 	"os"
 	"testing"
 
-	"github.com/CosmWasm/wasmd/x/wasm"
 	dbm "github.com/cometbft/cometbft-db"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/crypto/secp256k1"
@@ -52,7 +51,6 @@ func TestQuicksilverExport(t *testing.T) {
 		app.DefaultNodeHome,
 		0,
 		app.MakeEncodingConfig(),
-		wasm.EnableAllProposals,
 		app.EmptyAppOptions{},
 		app.GetWasmOpts(app.EmptyAppOptions{}),
 		false,
@@ -84,12 +82,11 @@ func TestQuicksilverExport(t *testing.T) {
 		app.DefaultNodeHome,
 		0,
 		app.MakeEncodingConfig(),
-		wasm.EnableAllProposals,
 		app.EmptyAppOptions{},
 		app.GetWasmOpts(app.EmptyAppOptions{}),
 		false,
 		false,
 	)
-	_, err = app2.ExportAppStateAndValidators(false, []string{})
+	_, err = app2.ExportAppStateAndValidators(false, []string{}, []string{})
 	require.NoError(t, err, "ExportAppStateAndValidators should not have an error")
 }
