@@ -226,6 +226,15 @@ func (k *Keeper) AllZoneUnbondingRecords(ctx sdk.Context, chainID string) []type
 	return records
 }
 
+func (k *Keeper) AllZoneUnbondingAmounts(ctx sdk.Context, chainId string) sdk.Coins {
+	var amounts sdk.Coins
+	k.IteratePrefixedUnbondingRecords(ctx, []byte(chainId), func(_ int64, record types.UnbondingRecord) (stop bool) {
+		amounts = amounts.Add(record.Amount)
+		return false
+	})
+	return amounts
+}
+
 func (k *Keeper) UpdateWithdrawalRecordsForSlash(ctx sdk.Context, zone *types.Zone, valoper string, delta sdk.Dec) error {
 	var err error
 	k.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, types.WithdrawStatusUnbond, func(_ int64, record types.WithdrawalRecord) bool {
