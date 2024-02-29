@@ -107,7 +107,7 @@ message Statistics {
   // Current number of tokens in the unbonding state.
   cosmos.base.v1beta1.Coin unbonding_amount = 8 [(gogoproto.nullable) = false];
   // Current number of tokens in the queued state.
-  int64 queued_amount = 9;
+  cosmos.base.v1beta1.Coin queued_amount = 9 [(gogoproto.nullable) = false];
   // Number of withdrawal records in the unbonding state.
   uint32 unbonding_count = 10;
   // Number of withdrawal records in the queued state.

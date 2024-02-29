@@ -106,6 +106,17 @@ func (k *Keeper) GetUnbondingAmount(ctx sdk.Context, zone *types.Zone) sdk.Coin 
 	})
 	return out
 }
+func (k *Keeper) GetQueuedAmount(ctx sdk.Context, zone *types.Zone) sdk.Coin {
+	out := sdk.NewCoin(zone.BaseDenom, sdk.ZeroInt())
+	k.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, types.WithdrawStatusQueued, func(index int64, wr types.WithdrawalRecord) (stop bool) {
+		amount := wr.Amount[0]
+		if !amount.IsNegative() {
+			out = out.Add(amount)
+		}
+		return false
+	})
+	return out
+}
 
 // AllZones returns every Zone in the store.
 func (k *Keeper) AllZones(ctx sdk.Context) []types.Zone {
@@ -431,6 +442,7 @@ func (k *Keeper) CollectStatsForZone(ctx sdk.Context, zone *types.Zone) (*types.
 	}
 	out.DistanceToTarget = fmt.Sprintf("%f", distance)
 	out.UnbondingAmount = k.GetUnbondingAmount(ctx, zone)
+	out.QueuedAmount = k.GetQueuedAmount(ctx, zone)
 	return out, nil
 }
 

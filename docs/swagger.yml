@@ -3130,9 +3130,20 @@ paths:
 
                       signatures required by gogoproto.
                   queued_amount:
-                    type: string
-                    format: int64
-                    description: Current number of tokens in the queued state.
+                    type: object
+                    properties:
+                      denom:
+                        type: string
+                      amount:
+                        type: string
+                    description: >-
+                      Coin defines a token with a denomination and an amount.
+
+
+                      NOTE: The amount field is an Int which implements the
+                      custom method
+
+                      signatures required by gogoproto.
                   unbonding_count:
                     type: integer
                     format: int64
@@ -3461,9 +3472,20 @@ paths:
 
                         signatures required by gogoproto.
                     queued_amount:
-                      type: string
-                      format: int64
-                      description: Current number of tokens in the queued state.
+                      type: object
+                      properties:
+                        denom:
+                          type: string
+                        amount:
+                          type: string
+                      description: >-
+                        Coin defines a token with a denomination and an amount.
+
+
+                        NOTE: The amount field is an Int which implements the
+                        custom method
+
+                        signatures required by gogoproto.
                     unbonding_count:
                       type: integer
                       format: int64
