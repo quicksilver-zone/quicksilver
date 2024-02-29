@@ -106,6 +106,7 @@ func (k *Keeper) GetUnbondingAmount(ctx sdk.Context, zone *types.Zone) sdk.Coin 
 	})
 	return out
 }
+
 func (k *Keeper) GetQueuedAmount(ctx sdk.Context, zone *types.Zone) sdk.Coin {
 	out := sdk.NewCoin(zone.BaseDenom, sdk.ZeroInt())
 	k.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, types.WithdrawStatusQueued, func(index int64, wr types.WithdrawalRecord) (stop bool) {
@@ -116,6 +117,34 @@ func (k *Keeper) GetQueuedAmount(ctx sdk.Context, zone *types.Zone) sdk.Coin {
 		return false
 	})
 	return out
+}
+
+func (k *Keeper) GetUnbondingCount(ctx sdk.Context, zone *types.Zone) uint32 {
+	var count uint32
+	k.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, types.WithdrawStatusUnbond, func(_ int64, record types.WithdrawalRecord) (stop bool) {
+		count++
+		return false
+	})
+	return count
+}
+
+func (k *Keeper) GetQueuedCount(ctx sdk.Context, zone *types.Zone) uint32 {
+	var count uint32
+	k.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, types.WithdrawStatusQueued, func(_ int64, record types.WithdrawalRecord) (stop bool) {
+		count++
+		return false
+	})
+	return count
+}
+
+func (k *Keeper) GetUnbondRecordCount(ctx sdk.Context, zone *types.Zone) uint32 {
+	var count uint32
+	k.IterateUnbondingRecords(ctx, func(_ int64, record types.UnbondingRecord) (stop bool) {
+		count++
+		return false
+	})
+	return count
+
 }
 
 // AllZones returns every Zone in the store.
@@ -441,8 +470,13 @@ func (k *Keeper) CollectStatsForZone(ctx sdk.Context, zone *types.Zone) (*types.
 		return nil, err
 	}
 	out.DistanceToTarget = fmt.Sprintf("%f", distance)
+
+	// Unbonding info
 	out.UnbondingAmount = k.GetUnbondingAmount(ctx, zone)
 	out.QueuedAmount = k.GetQueuedAmount(ctx, zone)
+	out.UnbondingCount = uint32(k.GetUnbondingCount(ctx, zone))
+	out.QueuedCount = uint32(k.GetQueuedCount(ctx, zone))
+	out.UnbondRecordCount = uint32(k.GetUnbondRecordCount(ctx, zone))
 	return out, nil
 }
 
