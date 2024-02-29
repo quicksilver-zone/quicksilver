@@ -132,6 +132,21 @@ func (k *Keeper) GetZoneFromContext(ctx sdk.Context) (*types.Zone, error) {
 	return &zone, nil
 }
 
+// GetZoneFromConnectionID determines the zone from the connection ID
+func (k *Keeper) GetZoneFromConnectionID(ctx sdk.Context, connectionID string) (*types.Zone, error) {
+	chainID, err := k.GetChainID(ctx, connectionID)
+	if err != nil {
+		return nil, fmt.Errorf("unable to fetch zone from context: %w", err)
+	}
+	zone, found := k.GetZone(ctx, chainID)
+	if !found {
+		err := fmt.Errorf("unable to fetch zone from context: not found for chainID %s", chainID)
+		k.Logger(ctx).Error(err.Error())
+		return nil, err
+	}
+	return &zone, nil
+}
+
 func (k *Keeper) GetZoneForAccount(ctx sdk.Context, address string) (*types.Zone, bool) {
 	chainID, found := k.GetAddressZoneMapping(ctx, address)
 	if !found {
