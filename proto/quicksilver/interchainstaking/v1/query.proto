@@ -105,10 +105,7 @@ message Statistics {
   string distance_to_target = 7;
 
   // Current number of tokens in the unbonding state.
-  repeated cosmos.base.v1beta1.Coin unbonding_amount = 8 [
-    (gogoproto.nullable) = true,
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
-  ];
+  cosmos.base.v1beta1.Coin unbonding_amount = 8 [(gogoproto.nullable) = false];
   // Current number of tokens in the queued state.
   int64 queued_amount = 9;
   // Number of withdrawal records in the unbonding state.

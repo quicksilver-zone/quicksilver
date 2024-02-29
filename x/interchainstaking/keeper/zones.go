@@ -430,7 +430,7 @@ func (k *Keeper) CollectStatsForZone(ctx sdk.Context, zone *types.Zone) (*types.
 		return nil, err
 	}
 	out.DistanceToTarget = fmt.Sprintf("%f", distance)
-	out.UnbondingAmount = k.AllZoneUnbondingAmounts(ctx, zone.ChainId)
+	out.UnbondingAmount = k.GetUnbondingAmount(ctx, zone)
 	return out, nil
 }
 

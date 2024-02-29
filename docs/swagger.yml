@@ -3115,23 +3115,20 @@ paths:
                   distance_to_target:
                     type: string
                   unbonding_amount:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        denom:
-                          type: string
-                        amount:
-                          type: string
-                      description: >-
-                        Coin defines a token with a denomination and an amount.
+                    type: object
+                    properties:
+                      denom:
+                        type: string
+                      amount:
+                        type: string
+                    description: >-
+                      Coin defines a token with a denomination and an amount.
 
 
-                        NOTE: The amount field is an Int which implements the
-                        custom method
+                      NOTE: The amount field is an Int which implements the
+                      custom method
 
-                        signatures required by gogoproto.
-                    description: Current number of tokens in the unbonding state.
+                      signatures required by gogoproto.
                   queued_amount:
                     type: string
                     format: int64
@@ -3449,24 +3446,20 @@ paths:
                     distance_to_target:
                       type: string
                     unbonding_amount:
-                      type: array
-                      items:
-                        type: object
-                        properties:
-                          denom:
-                            type: string
-                          amount:
-                            type: string
-                        description: >-
-                          Coin defines a token with a denomination and an
-                          amount.
+                      type: object
+                      properties:
+                        denom:
+                          type: string
+                        amount:
+                          type: string
+                      description: >-
+                        Coin defines a token with a denomination and an amount.
 
 
-                          NOTE: The amount field is an Int which implements the
-                          custom method
+                        NOTE: The amount field is an Int which implements the
+                        custom method
 
-                          signatures required by gogoproto.
-                      description: Current number of tokens in the unbonding state.
+                        signatures required by gogoproto.
                     queued_amount:
                       type: string
                       format: int64
