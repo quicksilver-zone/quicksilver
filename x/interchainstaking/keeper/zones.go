@@ -136,11 +136,11 @@ func (k *Keeper) GetZoneFromContext(ctx sdk.Context) (*types.Zone, error) {
 func (k *Keeper) GetZoneFromConnectionID(ctx sdk.Context, connectionID string) (*types.Zone, error) {
 	chainID, err := k.GetChainID(ctx, connectionID)
 	if err != nil {
-		return nil, fmt.Errorf("unable to fetch zone from context: %w", err)
+		return nil, fmt.Errorf("unable to fetch zone from connection id: %w", err)
 	}
 	zone, found := k.GetZone(ctx, chainID)
 	if !found {
-		err := fmt.Errorf("unable to fetch zone from context: not found for chainID %s", chainID)
+		err := fmt.Errorf("unable to fetch zone from connection id: not found for chainID %s", chainID)
 		k.Logger(ctx).Error(err.Error())
 		return nil, err
 	}
