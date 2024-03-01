@@ -201,6 +201,53 @@ func (k *Keeper) AllPortConnections(ctx sdk.Context) (pcs []types.PortConnection
 	return pcs
 }
 
+// GetZoneByLocalDenom returns zone by denom.
+func (k *Keeper) GetZoneByLocalDenom(ctx sdk.Context, denom string) *types.Zone {
+	zone, existed := k.GetLocalDenomZoneMapping(ctx, denom)
+	if existed {
+		return zone
+	}
+	// If get zone from denom zone mapping not found, find it in zones list end set into the mapping
+	k.IterateZones(ctx, func(_ int64, thisZone *types.Zone) bool {
+		if thisZone.LocalDenom == denom {
+			zone = thisZone
+			k.SetLocalDenomZoneMapping(ctx, thisZone)
+			return true
+		}
+		return false
+	})
+	return zone
+}
+
+// GetLocalDenomZoneMapping returns zone by denom.
+func (k *Keeper) GetLocalDenomZoneMapping(ctx sdk.Context, denom string) (*types.Zone, bool) {
+	zone := types.Zone{}
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixLocalDenomZoneMapping)
+	bz := store.Get([]byte(denom))
+	if len(bz) == 0 {
+		return nil, false
+	}
+
+	k.cdc.MustUnmarshal(bz, &zone)
+	return &zone, true
+}
+
+// SetLocalDenomZoneMapping set denom <-> zone mapping.
+func (k *Keeper) SetLocalDenomZoneMapping(ctx sdk.Context, zone *types.Zone) {
+	if zone == nil {
+		return
+	}
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixLocalDenomZoneMapping)
+	bz := k.cdc.MustMarshal(zone)
+	store.Set([]byte(zone.LocalDenom), bz)
+}
+
+// DeleteDenomZoneMapping delete zone info in denom - zone mapping.
+func (k *Keeper) DeleteDenomZoneMapping(ctx sdk.Context, denom string) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixLocalDenomZoneMapping)
+	store.Delete([]byte(denom))
+}
+
 // ### Interval functions >>>
 // * some of these functions (or portions thereof) may be changed to single
 //   query type functions, dependent upon callback features / capabilities;
