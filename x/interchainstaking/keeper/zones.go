@@ -496,6 +496,8 @@ func (k *Keeper) RemoveZoneAndAssociatedRecords(ctx sdk.Context, chainID string)
 				return false
 			})
 
+			k.DeleteDenomZoneMapping(ctx, zone.LocalDenom)
+
 			k.DeleteZone(ctx, zone.ChainId)
 
 		}
