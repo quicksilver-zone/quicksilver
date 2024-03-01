@@ -201,8 +201,8 @@ func (k *Keeper) AllPortConnections(ctx sdk.Context) (pcs []types.PortConnection
 	return pcs
 }
 
-// GetZoneAndUpdateMappingIfNeeded returns zone by denom.
-func (k *Keeper) GetZoneAndUpdateMappingIfNeeded(ctx sdk.Context, denom string) *types.Zone {
+// GetZoneByLocalDenom returns zone by denom.
+func (k *Keeper) GetZoneByLocalDenom(ctx sdk.Context, denom string) *types.Zone {
 	zone, existed := k.GetLocalDenomZoneMapping(ctx, denom)
 	if existed {
 		return zone

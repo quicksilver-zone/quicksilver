@@ -760,7 +760,7 @@ func (suite *KeeperTestSuite) TestLocalDenomZoneMapping() {
 	suite.False(existed)
 
 	// Now get zone by denom, this will get from list of zones and set it to zone denom mappings
-	zoneByDenom := icsKeeper.GetZoneAndUpdateMappingIfNeeded(ctx, localDenom)
+	zoneByDenom := icsKeeper.GetZoneByLocalDenom(ctx, localDenom)
 	suite.True(zoneByDenom != nil)
 
 	// Check if zone by denom exists in the mapping list

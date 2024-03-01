@@ -36,7 +36,7 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 		return nil, fmt.Errorf("unbonding is currently disabled")
 	}
 
-	zone := k.Keeper.GetZoneAndUpdateMappingIfNeeded(ctx, msg.Value.Denom)
+	zone := k.Keeper.GetZoneByLocalDenom(ctx, msg.Value.Denom)
 
 	// does zone exist?
 	if zone == nil {
