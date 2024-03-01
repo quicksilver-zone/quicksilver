@@ -32,7 +32,6 @@ import (
 	ibckeeper "github.com/cosmos/ibc-go/v5/modules/core/keeper"
 	ibctmtypes "github.com/cosmos/ibc-go/v5/modules/light-clients/07-tendermint/types"
 
-	"github.com/quicksilver-zone/quicksilver/utils"
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	epochskeeper "github.com/quicksilver-zone/quicksilver/x/epochs/keeper"
 	interchainquerykeeper "github.com/quicksilver-zone/quicksilver/x/interchainquery/keeper"
@@ -539,15 +538,6 @@ func (k *Keeper) GetChainID(ctx sdk.Context, connectionID string) (string, error
 	}
 
 	return client.ChainId, nil
-}
-
-func (k *Keeper) GetChainIDFromContext(ctx sdk.Context) (string, error) {
-	connectionID := ctx.Context().Value(utils.ContextKey("connectionID"))
-	if connectionID == nil {
-		return "", errors.New("connectionID not in context")
-	}
-
-	return k.GetChainID(ctx, connectionID.(string))
 }
 
 func (k *Keeper) EmitPerformanceBalanceQuery(ctx sdk.Context, zone *types.Zone) error {
