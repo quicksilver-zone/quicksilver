@@ -36,14 +36,7 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 		return nil, fmt.Errorf("unbonding is currently disabled")
 	}
 
-	var zone *types.Zone
-	k.IterateZones(ctx, func(_ int64, thisZone *types.Zone) bool {
-		if thisZone.LocalDenom == msg.Value.GetDenom() {
-			zone = thisZone
-			return true
-		}
-		return false
-	})
+	zone := k.Keeper.GetZoneByLocalDenom(ctx, msg.Value.Denom)
 
 	// does zone exist?
 	if zone == nil {
