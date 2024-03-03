@@ -474,9 +474,9 @@ func (k *Keeper) CollectStatsForZone(ctx sdk.Context, zone *types.Zone) (*types.
 	// Unbonding info
 	out.UnbondingAmount = k.GetUnbondingAmount(ctx, zone)
 	out.QueuedAmount = k.GetQueuedAmount(ctx, zone)
-	out.UnbondingCount = uint32(k.GetUnbondingCount(ctx, zone))
-	out.QueuedCount = uint32(k.GetQueuedCount(ctx, zone))
-	out.UnbondRecordCount = uint32(k.GetUnbondRecordCount(ctx, zone))
+	out.UnbondingCount = k.GetUnbondingCount(ctx, zone)
+	out.QueuedCount = k.GetQueuedCount(ctx, zone)
+	out.UnbondRecordCount = k.GetUnbondRecordCount(ctx, zone)
 	return out, nil
 }
 
