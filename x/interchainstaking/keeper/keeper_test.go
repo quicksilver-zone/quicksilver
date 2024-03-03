@@ -727,3 +727,91 @@ func (suite *KeeperTestSuite) TestLocalDenomZoneMapping() {
 	_, existed = icsKeeper.GetLocalDenomZoneMapping(ctx, localDenom)
 	suite.False(existed)
 }
+
+func (suite *KeeperTestSuite) TestGetQueuedTokensAndCount() {
+	tc := []struct {
+		name           string
+		records        func(zone icstypes.Zone) []icstypes.WithdrawalRecord
+		expectedAmount math.Int
+		expectedCount  uint32
+	}{
+		{
+			name: "no withdrawals",
+			records: func(zone icstypes.Zone) []icstypes.WithdrawalRecord {
+				out := make([]icstypes.WithdrawalRecord, 0)
+				return out
+			},
+			expectedAmount: math.ZeroInt(),
+			expectedCount:  0,
+		},
+		{
+			name: "one queued withdrawal",
+			records: func(zone icstypes.Zone) []icstypes.WithdrawalRecord {
+				out := make([]icstypes.WithdrawalRecord, 0)
+				out = append(out, icstypes.WithdrawalRecord{ChainId: zone.ChainId, Delegator: zone.DelegationAddress.Address, Recipient: addressutils.GenerateAddressForTestWithPrefix(zone.AccountPrefix), Amount: sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, math.NewInt(3000000))), Status: icstypes.WithdrawStatusQueued, Txhash: randomutils.GenerateRandomHashAsHex(64)})
+				return out
+			},
+			expectedAmount: math.NewInt(3000000),
+			expectedCount:  1,
+		},
+		{
+			name: "one non-queued withdrawal",
+			records: func(zone icstypes.Zone) []icstypes.WithdrawalRecord {
+				out := make([]icstypes.WithdrawalRecord, 0)
+				out = append(out, icstypes.WithdrawalRecord{ChainId: zone.ChainId, Delegator: zone.DelegationAddress.Address, Recipient: addressutils.GenerateAddressForTestWithPrefix(zone.AccountPrefix), Amount: sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, math.NewInt(3000000))), Status: icstypes.WithdrawStatusUnbond, Txhash: randomutils.GenerateRandomHashAsHex(64)})
+				return out
+			},
+			expectedAmount: math.ZeroInt(),
+			expectedCount:  0,
+		},
+		{
+			name: "multi queued withdrawal",
+			records: func(zone icstypes.Zone) []icstypes.WithdrawalRecord {
+				out := make([]icstypes.WithdrawalRecord, 0)
+				out = append(out,
+					icstypes.WithdrawalRecord{ChainId: zone.ChainId, Delegator: zone.DelegationAddress.Address, Recipient: addressutils.GenerateAddressForTestWithPrefix(zone.AccountPrefix), Amount: sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, math.NewInt(3000000))), Status: icstypes.WithdrawStatusQueued, Txhash: randomutils.GenerateRandomHashAsHex(64)},
+					icstypes.WithdrawalRecord{ChainId: zone.ChainId, Delegator: zone.DelegationAddress.Address, Recipient: addressutils.GenerateAddressForTestWithPrefix(zone.AccountPrefix), Amount: sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, math.NewInt(10000000))), Status: icstypes.WithdrawStatusQueued, Txhash: randomutils.GenerateRandomHashAsHex(64)},
+					icstypes.WithdrawalRecord{ChainId: zone.ChainId, Delegator: zone.DelegationAddress.Address, Recipient: addressutils.GenerateAddressForTestWithPrefix(zone.AccountPrefix), Amount: sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, math.NewInt(1500000))), Status: icstypes.WithdrawStatusQueued, Txhash: randomutils.GenerateRandomHashAsHex(64)},
+				)
+				return out
+			},
+			expectedAmount: math.NewInt(14500000),
+			expectedCount:  3,
+		},
+		{
+			name: "multi mixed withdrawal",
+			records: func(zone icstypes.Zone) []icstypes.WithdrawalRecord {
+				out := make([]icstypes.WithdrawalRecord, 0)
+				out = append(out,
+					icstypes.WithdrawalRecord{ChainId: zone.ChainId, Delegator: zone.DelegationAddress.Address, Recipient: addressutils.GenerateAddressForTestWithPrefix(zone.AccountPrefix), Amount: sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, math.NewInt(3000000))), Status: icstypes.WithdrawStatusUnbond, Txhash: randomutils.GenerateRandomHashAsHex(64)},
+					icstypes.WithdrawalRecord{ChainId: zone.ChainId, Delegator: zone.DelegationAddress.Address, Recipient: addressutils.GenerateAddressForTestWithPrefix(zone.AccountPrefix), Amount: sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, math.NewInt(10000000))), Status: icstypes.WithdrawStatusQueued, Txhash: randomutils.GenerateRandomHashAsHex(64)},
+					icstypes.WithdrawalRecord{ChainId: zone.ChainId, Delegator: zone.DelegationAddress.Address, Recipient: addressutils.GenerateAddressForTestWithPrefix(zone.AccountPrefix), Amount: sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, math.NewInt(1500000))), Status: icstypes.WithdrawStatusCompleted, Txhash: randomutils.GenerateRandomHashAsHex(64)},
+				)
+				return out
+			},
+			expectedAmount: math.NewInt(10000000),
+			expectedCount:  1,
+		},
+	}
+	for _, tt := range tc {
+		suite.Run(tt.name, func() {
+			suite.SetupTest()
+			suite.setupTestZones()
+
+			quicksilver := suite.GetQuicksilverApp(suite.chainA)
+			ctx := suite.chainA.GetContext()
+			icsKeeper := quicksilver.InterchainstakingKeeper
+			zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
+			suite.True(found)
+
+			for _, record := range tt.records(zone) {
+				icsKeeper.SetWithdrawalRecord(ctx, record)
+			}
+
+			actualAmount, actualCount := icsKeeper.GetQueuedTokensAndCount(ctx, &zone)
+			suite.Equal(tt.expectedAmount, actualAmount.Amount)
+			suite.Equal(zone.BaseDenom, actualAmount.Denom)
+			suite.Equal(tt.expectedCount, actualCount)
+		})
+	}
+}
