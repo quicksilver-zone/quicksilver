@@ -133,7 +133,7 @@ func (k *Keeper) GetQueuedCount(ctx sdk.Context, zone *types.Zone) uint32 {
 
 func (k *Keeper) GetUnbondRecordCount(ctx sdk.Context, zone *types.Zone) uint32 {
 	var count uint32
-	k.IterateUnbondingRecords(ctx, func(_ int64, record types.UnbondingRecord) (stop bool) {
+	k.IteratePrefixedUnbondingRecords(ctx, []byte(zone.ChainId), func(_ int64, record types.UnbondingRecord) (stop bool) {
 		count++
 		return false
 	})
