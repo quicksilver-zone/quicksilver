@@ -62,6 +62,7 @@ var (
 	KeyPrefixValidatorAddrsByConsAddr    = []byte{0x0f}
 	KeyPrefixRedelegationRecord          = []byte{0x10}
 	KeyPrefixLsmCaps                     = []byte{0x11}
+	KeyPrefixLocalDenomZoneMapping       = []byte{0x12}
 )
 
 // ParseStakingDelegationKey parses the KV store key for a delegation from Cosmos x/staking module,
