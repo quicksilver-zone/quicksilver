@@ -95,16 +95,19 @@ func (k *Keeper) GetDelegatedAmount(ctx sdk.Context, zone *types.Zone) sdk.Coin 
 	return out
 }
 
-func (k *Keeper) GetUnbondingAmount(ctx sdk.Context, zone *types.Zone) sdk.Coin {
+// GetUnbondingTokensAndCount return the total amount of unbonding tokens and the count of unbonding for a given zone.
+func (k *Keeper) GetUnbondingTokensAndCount(ctx sdk.Context, zone *types.Zone) (sdk.Coin, uint32) {
 	out := sdk.NewCoin(zone.BaseDenom, sdk.ZeroInt())
+	var count uint32
 	k.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, types.WithdrawStatusUnbond, func(index int64, wr types.WithdrawalRecord) (stop bool) {
 		amount := wr.Amount[0]
 		if !amount.IsNegative() {
 			out = out.Add(amount)
 		}
+		count++
 		return false
 	})
-	return out
+	return out, count
 }
 
 func (k *Keeper) GetQueuedAmount(ctx sdk.Context, zone *types.Zone) sdk.Coin {
@@ -117,15 +120,6 @@ func (k *Keeper) GetQueuedAmount(ctx sdk.Context, zone *types.Zone) sdk.Coin {
 		return false
 	})
 	return out
-}
-
-func (k *Keeper) GetUnbondingCount(ctx sdk.Context, zone *types.Zone) uint32 {
-	var count uint32
-	k.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, types.WithdrawStatusUnbond, func(_ int64, record types.WithdrawalRecord) (stop bool) {
-		count++
-		return false
-	})
-	return count
 }
 
 func (k *Keeper) GetQueuedCount(ctx sdk.Context, zone *types.Zone) uint32 {
@@ -144,7 +138,6 @@ func (k *Keeper) GetUnbondRecordCount(ctx sdk.Context, zone *types.Zone) uint32 
 		return false
 	})
 	return count
-
 }
 
 // AllZones returns every Zone in the store.
@@ -472,9 +465,8 @@ func (k *Keeper) CollectStatsForZone(ctx sdk.Context, zone *types.Zone) (*types.
 	out.DistanceToTarget = fmt.Sprintf("%f", distance)
 
 	// Unbonding info
-	out.UnbondingAmount = k.GetUnbondingAmount(ctx, zone)
+	out.UnbondingAmount, out.UnbondingCount = k.GetUnbondingTokensAndCount(ctx, zone)
 	out.QueuedAmount = k.GetQueuedAmount(ctx, zone)
-	out.UnbondingCount = k.GetUnbondingCount(ctx, zone)
 	out.QueuedCount = k.GetQueuedCount(ctx, zone)
 	out.UnbondRecordCount = k.GetUnbondRecordCount(ctx, zone)
 	return out, nil

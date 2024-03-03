@@ -257,11 +257,12 @@ func (suite *KeeperTestSuite) TestGetDelegatedAmount() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestGetUnbondingAmount() {
+func (suite *KeeperTestSuite) TestGetUnbondingTokensAndCount() {
 	tc := []struct {
-		name     string
-		records  func(zone icstypes.Zone) []icstypes.WithdrawalRecord
-		expected math.Int
+		name           string
+		records        func(zone icstypes.Zone) []icstypes.WithdrawalRecord
+		expectedAmount math.Int
+		expectedCount  uint32
 	}{
 		{
 			name: "no withdrawals",
@@ -269,7 +270,8 @@ func (suite *KeeperTestSuite) TestGetUnbondingAmount() {
 				out := make([]icstypes.WithdrawalRecord, 0)
 				return out
 			},
-			expected: math.ZeroInt(),
+			expectedAmount: math.ZeroInt(),
+			expectedCount:  0,
 		},
 		{
 			name: "one unbonding withdrawal",
@@ -278,7 +280,8 @@ func (suite *KeeperTestSuite) TestGetUnbondingAmount() {
 				out = append(out, icstypes.WithdrawalRecord{ChainId: zone.ChainId, Delegator: zone.DelegationAddress.Address, Recipient: addressutils.GenerateAddressForTestWithPrefix(zone.AccountPrefix), Amount: sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, math.NewInt(3000000))), Status: icstypes.WithdrawStatusUnbond, Txhash: randomutils.GenerateRandomHashAsHex(64)})
 				return out
 			},
-			expected: math.NewInt(3000000),
+			expectedAmount: math.NewInt(3000000),
+			expectedCount:  1,
 		},
 		{
 			name: "one non-unbonding withdrawal",
@@ -287,7 +290,8 @@ func (suite *KeeperTestSuite) TestGetUnbondingAmount() {
 				out = append(out, icstypes.WithdrawalRecord{ChainId: zone.ChainId, Delegator: zone.DelegationAddress.Address, Recipient: addressutils.GenerateAddressForTestWithPrefix(zone.AccountPrefix), Amount: sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, math.NewInt(3000000))), Status: icstypes.WithdrawStatusQueued, Txhash: randomutils.GenerateRandomHashAsHex(64)})
 				return out
 			},
-			expected: math.ZeroInt(),
+			expectedAmount: math.ZeroInt(),
+			expectedCount:  0,
 		},
 		{
 			name: "multi unbonding withdrawal",
@@ -300,7 +304,8 @@ func (suite *KeeperTestSuite) TestGetUnbondingAmount() {
 				)
 				return out
 			},
-			expected: math.NewInt(14500000),
+			expectedAmount: math.NewInt(14500000),
+			expectedCount:  3,
 		},
 		{
 			name: "multi mixed withdrawal",
@@ -313,7 +318,8 @@ func (suite *KeeperTestSuite) TestGetUnbondingAmount() {
 				)
 				return out
 			},
-			expected: math.NewInt(3000000),
+			expectedAmount: math.NewInt(3000000),
+			expectedCount:  1,
 		},
 	}
 
@@ -332,9 +338,10 @@ func (suite *KeeperTestSuite) TestGetUnbondingAmount() {
 				icsKeeper.SetWithdrawalRecord(ctx, record)
 			}
 
-			actual := icsKeeper.GetUnbondingAmount(ctx, &zone)
-			suite.Equal(tt.expected, actual.Amount)
-			suite.Equal(zone.BaseDenom, actual.Denom)
+			actualAmount, actualCount := icsKeeper.GetUnbondingTokensAndCount(ctx, &zone)
+			suite.Equal(tt.expectedAmount, actualAmount.Amount)
+			suite.Equal(zone.BaseDenom, actualAmount.Denom)
+			suite.Equal(tt.expectedCount, actualCount)
 		})
 	}
 }
