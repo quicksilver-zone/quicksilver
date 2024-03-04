@@ -703,7 +703,8 @@ func (k *Keeper) OverrideRedemptionRateNoCap(ctx sdk.Context, zone *types.Zone) 
 func (k *Keeper) GetRatio(ctx sdk.Context, zone *types.Zone, epochRewards sdkmath.Int) (sdk.Dec, bool) {
 	// native asset amount
 	nativeAssetAmount := k.GetDelegatedAmount(ctx, zone).Amount
-	nativeAssetUnbondingAmount := k.GetUnbondingAmount(ctx, zone).Amount
+	nativeAssetUnbonding, _ := k.GetUnbondingTokensAndCount(ctx, zone)
+	nativeAssetUnbondingAmount := nativeAssetUnbonding.Amount
 	nativeAssetUnbonded := zone.DelegationAddress.Balance.AmountOf(zone.BaseDenom)
 
 	// qAsset amount
