@@ -909,8 +909,7 @@ func (suite *KeeperTestSuite) TestHandleWithdrawRewards() {
 				}
 			}
 
-			ctx = ctx.WithContext(context.WithValue(ctx.Context(), utils.ContextKey("connectionID"), zone.ConnectionId))
-			err := quicksilver.InterchainstakingKeeper.HandleWithdrawRewards(ctx, test.msg(&zone))
+			err := quicksilver.InterchainstakingKeeper.HandleWithdrawRewards(ctx, test.msg(&zone), zone.ConnectionId)
 			if test.err {
 				suite.Error(err)
 			} else {
@@ -1122,7 +1121,7 @@ func (suite *KeeperTestSuite) TestReceiveAckErrForBeginRedelegate() {
 	_, found = quicksilver.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, validators[0].ValoperAddress, validators[1].ValoperAddress, 1)
 	suite.True(found)
 
-	err = quicksilver.InterchainstakingKeeper.HandleAcknowledgement(ctx, packet, ackBytes)
+	err = quicksilver.InterchainstakingKeeper.HandleAcknowledgement(ctx, packet, ackBytes, zone.ConnectionId)
 	suite.NoError(err)
 
 	_, found = quicksilver.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, validators[0].ValoperAddress, validators[1].ValoperAddress, 1)
@@ -1493,7 +1492,7 @@ func (suite *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 				suite.True(found)
 			}
 
-			err = quicksilver.InterchainstakingKeeper.HandleAcknowledgement(ctx, packet, ackBytes)
+			err = quicksilver.InterchainstakingKeeper.HandleAcknowledgement(ctx, packet, ackBytes, zone.ConnectionId)
 			suite.NoError(err)
 
 			for _, ubr := range test.unbondingRecords(ctx, quicksilver, zone) {
@@ -1892,7 +1891,9 @@ func (suite *KeeperTestSuite) Test_v045Callback() {
 				Data: packetBytes,
 			}
 			ctx = suite.chainA.GetContext()
-			suite.NoError(quicksilver.InterchainstakingKeeper.HandleAcknowledgement(ctx, packet, icatypes.ModuleCdc.MustMarshalJSON(&acknowledgement)))
+			zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+			suite.True(found)
+			suite.NoError(quicksilver.InterchainstakingKeeper.HandleAcknowledgement(ctx, packet, icatypes.ModuleCdc.MustMarshalJSON(&acknowledgement), zone.ConnectionId))
 
 			suite.True(test.assertStatements(ctx, quicksilver))
 		})
@@ -2000,8 +2001,7 @@ func (suite *KeeperTestSuite) Test_v046Callback() {
 				Data: packetBytes,
 			}
 
-			ctx = ctx.WithContext(context.WithValue(ctx.Context(), utils.ContextKey("connectionID"), "connection-0"))
-			suite.NoError(quicksilver.InterchainstakingKeeper.HandleAcknowledgement(ctx, packet, icatypes.ModuleCdc.MustMarshalJSON(&acknowledgement)))
+			suite.NoError(quicksilver.InterchainstakingKeeper.HandleAcknowledgement(ctx, packet, icatypes.ModuleCdc.MustMarshalJSON(&acknowledgement), "connection-0"))
 
 			suite.True(test.assertStatements(ctx, quicksilver))
 		})
@@ -2462,7 +2462,7 @@ func (suite *KeeperTestSuite) TestReceiveAckForBeginUndelegate() {
 				suite.True(found)
 			}
 
-			err = quicksilver.InterchainstakingKeeper.HandleAcknowledgement(ctx, packet, ackBytes)
+			err = quicksilver.InterchainstakingKeeper.HandleAcknowledgement(ctx, packet, ackBytes, zone.ConnectionId)
 			suite.NoError(err)
 
 			for idx, ewdr := range test.expectedWithdrawalRecords(ctx, quicksilver, zone) {
@@ -2547,7 +2547,7 @@ func (suite *KeeperTestSuite) TestReceiveAckForBeginRedelegateNonNilCompletion()
 	_, found = quicksilver.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, validators[0].ValoperAddress, validators[1].ValoperAddress, 1)
 	suite.True(found)
 
-	err = quicksilver.InterchainstakingKeeper.HandleAcknowledgement(ctx, packet, ackBytes)
+	err = quicksilver.InterchainstakingKeeper.HandleAcknowledgement(ctx, packet, ackBytes, zone.ConnectionId)
 	suite.NoError(err)
 
 	afterRedelegation, found := quicksilver.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, validators[0].ValoperAddress, validators[1].ValoperAddress, 1)
@@ -2641,7 +2641,7 @@ func (suite *KeeperTestSuite) TestReceiveAckForBeginRedelegateNilCompletion() {
 	_, found = quicksilver.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, validators[0].ValoperAddress, validators[1].ValoperAddress, epoch)
 	suite.True(found)
 
-	err = quicksilver.InterchainstakingKeeper.HandleAcknowledgement(ctx, packet, ackBytes)
+	err = quicksilver.InterchainstakingKeeper.HandleAcknowledgement(ctx, packet, ackBytes, zone.ConnectionId)
 	suite.NoError(err)
 
 	_, found = quicksilver.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, validators[0].ValoperAddress, validators[1].ValoperAddress, epoch)
@@ -2720,7 +2720,7 @@ func (suite *KeeperTestSuite) TestReceiveAckForBeginRedelegateNoExistingRecord()
 
 	// call handler
 
-	err = quicksilver.InterchainstakingKeeper.HandleAcknowledgement(ctx, packet, ackBytes)
+	err = quicksilver.InterchainstakingKeeper.HandleAcknowledgement(ctx, packet, ackBytes, zone.ConnectionId)
 	suite.NoError(err)
 
 	createdRecord, found := quicksilver.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, validators[0].ValoperAddress, validators[1].ValoperAddress, epoch)
@@ -2797,8 +2797,7 @@ func (suite *KeeperTestSuite) TestReceiveAckForWithdrawReward() {
 		}
 	}
 
-	ctx = ctx.WithContext(context.WithValue(ctx.Context(), utils.ContextKey("connectionID"), zone.ConnectionId))
-	err = quicksilver.InterchainstakingKeeper.HandleAcknowledgement(ctx, packet, ackBytes)
+	err = quicksilver.InterchainstakingKeeper.HandleAcknowledgement(ctx, packet, ackBytes, zone.ConnectionId)
 	suite.NoError(err)
 
 	allBalancesQueryCnt := 0
@@ -2874,7 +2873,7 @@ func (suite *KeeperTestSuite) TestReceiveAckForRedeemTokens() {
 	suite.NoError(err)
 
 	ctx = ctx.WithContext(context.WithValue(ctx.Context(), utils.ContextKey("connectionID"), suite.path.EndpointA.ConnectionID))
-	err = quicksilver.InterchainstakingKeeper.HandleAcknowledgement(ctx, packet, ackBytes)
+	err = quicksilver.InterchainstakingKeeper.HandleAcknowledgement(ctx, packet, ackBytes, zone.ConnectionId)
 	suite.NoError(err)
 
 	delegationRecord, found = quicksilver.InterchainstakingKeeper.GetDelegation(ctx, zone.ChainId, zone.DelegationAddress.Address, vals[0])
@@ -2953,7 +2952,7 @@ func (suite *KeeperTestSuite) TestReceiveAckForTokenizedShares() {
 	ackBytes, err := icatypes.ModuleCdc.MarshalJSON(&acknowledgement)
 	suite.NoError(err)
 
-	err = quicksilver.InterchainstakingKeeper.HandleAcknowledgement(ctx, packet, ackBytes)
+	err = quicksilver.InterchainstakingKeeper.HandleAcknowledgement(ctx, packet, ackBytes, zone.ConnectionId)
 	suite.NoError(err)
 
 	_, found = quicksilver.InterchainstakingKeeper.GetWithdrawalRecord(ctx, zone.ChainId, txHash, types.WithdrawStatusTokenize)
@@ -3025,7 +3024,7 @@ func (suite *KeeperTestSuite) TestReceiveAckForDelegate() {
 	ackBytes, err := icatypes.ModuleCdc.MarshalJSON(&acknowledgement)
 	suite.NoError(err)
 
-	err = quicksilver.InterchainstakingKeeper.HandleAcknowledgement(ctx, packet, ackBytes)
+	err = quicksilver.InterchainstakingKeeper.HandleAcknowledgement(ctx, packet, ackBytes, zone.ConnectionId)
 	suite.NoError(err)
 
 	newCompleted := ctx.BlockTime()
@@ -3089,7 +3088,7 @@ func (suite *KeeperTestSuite) TestReceiveAckForBankSend() {
 	ackBytes, err := icatypes.ModuleCdc.MarshalJSON(&acknowledgement)
 	suite.NoError(err)
 
-	err = quicksilver.InterchainstakingKeeper.HandleAcknowledgement(ctx, packet, ackBytes)
+	err = quicksilver.InterchainstakingKeeper.HandleAcknowledgement(ctx, packet, ackBytes, zone.ConnectionId)
 	suite.NoError(err)
 }
 
@@ -3144,8 +3143,7 @@ func (suite *KeeperTestSuite) TestReceiveAckErrForBankSend() {
 
 	ackBytes := []byte("{\"error\":\"ABCI code: 32: error handling packet on host chain: see events for details\"}")
 
-	ctx = ctx.WithContext(context.WithValue(ctx.Context(), utils.ContextKey("connectionID"), suite.path.EndpointA.ConnectionID))
-	err = quicksilver.InterchainstakingKeeper.HandleAcknowledgement(ctx, packet, ackBytes)
+	err = quicksilver.InterchainstakingKeeper.HandleAcknowledgement(ctx, packet, ackBytes, zone.ConnectionId)
 	suite.NoError(err)
 
 	newRecord, found := quicksilver.InterchainstakingKeeper.GetWithdrawalRecord(ctx, zone.ChainId, "7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D", types.WithdrawStatusUnbond)
@@ -4060,9 +4058,6 @@ func (suite *KeeperTestSuite) TestGetValidatorForToken() {
 
 			quicksilver := suite.GetQuicksilverApp(suite.chainA)
 			ctx := suite.chainA.GetContext()
-			if test.setupConnection {
-				ctx = ctx.WithContext(context.WithValue(ctx.Context(), utils.ContextKey("connectionID"), suite.path.EndpointA.ConnectionID))
-			}
 
 			zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 
@@ -4070,7 +4065,7 @@ func (suite *KeeperTestSuite) TestGetValidatorForToken() {
 				suite.Fail("unable to retrieve zone for test")
 			}
 			amount := test.amount(ctx, quicksilver, zone)
-			resVal, err := quicksilver.InterchainstakingKeeper.GetValidatorForToken(ctx, amount)
+			resVal, err := quicksilver.InterchainstakingKeeper.GetValidatorForToken(ctx, amount, suite.path.EndpointA.ConnectionID)
 
 			if test.err {
 				suite.Error(err)
@@ -4178,7 +4173,7 @@ func (suite *KeeperTestSuite) TestHandleCompleteSend() {
 
 			msg := tc.message(&zone)
 
-			err := quicksilver.InterchainstakingKeeper.HandleCompleteSend(ctx, msg, tc.memo)
+			err := quicksilver.InterchainstakingKeeper.HandleCompleteSend(ctx, msg, tc.memo, zone.ConnectionId)
 			if tc.expectedError != nil {
 				suite.Equal(tc.expectedError, err)
 			} else {
@@ -4374,7 +4369,7 @@ func (suite *KeeperTestSuite) TestHandleFailedBankSend() {
 			// set address for zone mapping
 			quicksilver.InterchainstakingKeeper.SetAddressZoneMapping(ctx, user, zone.ChainId)
 			msg := test.message(&zone)
-			err := quicksilver.InterchainstakingKeeper.HandleFailedBankSend(ctx, msg, test.memo)
+			err := quicksilver.InterchainstakingKeeper.HandleFailedBankSend(ctx, msg, test.memo, zone.ConnectionId)
 
 			if test.err {
 				suite.Error(err)
@@ -4562,7 +4557,7 @@ func (suite *KeeperTestSuite) TestHandleRedeemTokens() {
 					FirstSeen: &t,
 				})
 
-				err := quicksilver.InterchainstakingKeeper.HandleRedeemTokens(ctx, msg, sdk.NewCoin(zone.BaseDenom, lsmMsg.Amount.Amount), txHash)
+				err := quicksilver.InterchainstakingKeeper.HandleRedeemTokens(ctx, msg, sdk.NewCoin(zone.BaseDenom, lsmMsg.Amount.Amount), txHash, zone.ConnectionId)
 				if test.errs[idx] {
 					suite.Error(err)
 				} else {

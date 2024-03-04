@@ -95,16 +95,42 @@ func (k *Keeper) GetDelegatedAmount(ctx sdk.Context, zone *types.Zone) sdk.Coin 
 	return out
 }
 
-func (k *Keeper) GetUnbondingAmount(ctx sdk.Context, zone *types.Zone) sdk.Coin {
+// GetUnbondingTokensAndCount return the total amount of unbonding tokens and the count of unbonding for a given zone.
+func (k *Keeper) GetUnbondingTokensAndCount(ctx sdk.Context, zone *types.Zone) (sdk.Coin, uint32) {
 	out := sdk.NewCoin(zone.BaseDenom, sdk.ZeroInt())
+	var count uint32
 	k.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, types.WithdrawStatusUnbond, func(index int64, wr types.WithdrawalRecord) (stop bool) {
 		amount := wr.Amount[0]
 		if !amount.IsNegative() {
 			out = out.Add(amount)
 		}
+		count++
 		return false
 	})
-	return out
+	return out, count
+}
+
+func (k *Keeper) GetQueuedTokensAndCount(ctx sdk.Context, zone *types.Zone) (sdk.Coin, uint32) {
+	out := sdk.NewCoin(zone.BaseDenom, sdk.ZeroInt())
+	var count uint32
+	k.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, types.WithdrawStatusQueued, func(index int64, wr types.WithdrawalRecord) (stop bool) {
+		amount := wr.Amount[0]
+		if !amount.IsNegative() {
+			out = out.Add(amount)
+		}
+		count++
+		return false
+	})
+	return out, count
+}
+
+func (k *Keeper) GetUnbondRecordCount(ctx sdk.Context, zone *types.Zone) uint32 {
+	var count uint32
+	k.IteratePrefixedUnbondingRecords(ctx, []byte(zone.ChainId), func(_ int64, record types.UnbondingRecord) (stop bool) {
+		count++
+		return false
+	})
+	return count
 }
 
 // AllZones returns every Zone in the store.
@@ -117,15 +143,15 @@ func (k *Keeper) AllZones(ctx sdk.Context) []types.Zone {
 	return zones
 }
 
-// GetZoneFromContext determines the zone from the current context.
-func (k *Keeper) GetZoneFromContext(ctx sdk.Context) (*types.Zone, error) {
-	chainID, err := k.GetChainIDFromContext(ctx)
+// GetZoneFromConnectionID determines the zone from the connection ID
+func (k *Keeper) GetZoneFromConnectionID(ctx sdk.Context, connectionID string) (*types.Zone, error) {
+	chainID, err := k.GetChainID(ctx, connectionID)
 	if err != nil {
-		return nil, fmt.Errorf("unable to fetch zone from context: %w", err)
+		return nil, fmt.Errorf("unable to fetch zone from connection id: %w", err)
 	}
 	zone, found := k.GetZone(ctx, chainID)
 	if !found {
-		err := fmt.Errorf("unable to fetch zone from context: not found for chainID %s", chainID)
+		err := fmt.Errorf("unable to fetch zone from connection id: not found for chainID %s", chainID)
 		k.Logger(ctx).Error(err.Error())
 		return nil, err
 	}
@@ -430,6 +456,11 @@ func (k *Keeper) CollectStatsForZone(ctx sdk.Context, zone *types.Zone) (*types.
 		return nil, err
 	}
 	out.DistanceToTarget = fmt.Sprintf("%f", distance)
+
+	// Unbonding info
+	out.UnbondingAmount, out.UnbondingCount = k.GetUnbondingTokensAndCount(ctx, zone)
+	out.QueuedAmount, out.QueuedCount = k.GetQueuedTokensAndCount(ctx, zone)
+	out.UnbondRecordCount = k.GetUnbondRecordCount(ctx, zone)
 	return out, nil
 }
 
