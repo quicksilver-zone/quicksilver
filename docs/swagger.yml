@@ -1647,7 +1647,10 @@ paths:
                         protobuf release, and it is not used for type URLs
                         beginning with
 
-                        type.googleapis.com.
+                        type.googleapis.com. As of May 2023, there are no widely
+                        used type server
+
+                        implementations and no plans to implement one.
 
 
                         Schemes other than `http`, `https` (or the empty scheme)
@@ -1692,6 +1695,10 @@ paths:
                         if (any.is(Foo.class)) {
                           foo = any.unpack(Foo.class);
                         }
+                        // or ...
+                        if (any.isSameTypeAs(Foo.getDefaultInstance())) {
+                          foo = any.unpack(Foo.getDefaultInstance());
+                        }
 
                      Example 3: Pack and unpack a message in Python.
 
@@ -1729,7 +1736,6 @@ paths:
                     type
 
                     name "y.z".
-
 
 
                     JSON
@@ -1958,7 +1964,10 @@ paths:
                         protobuf release, and it is not used for type URLs
                         beginning with
 
-                        type.googleapis.com.
+                        type.googleapis.com. As of May 2023, there are no widely
+                        used type server
+
+                        implementations and no plans to implement one.
 
 
                         Schemes other than `http`, `https` (or the empty scheme)
@@ -2003,6 +2012,10 @@ paths:
                         if (any.is(Foo.class)) {
                           foo = any.unpack(Foo.class);
                         }
+                        // or ...
+                        if (any.isSameTypeAs(Foo.getDefaultInstance())) {
+                          foo = any.unpack(Foo.getDefaultInstance());
+                        }
 
                      Example 3: Pack and unpack a message in Python.
 
@@ -2040,7 +2053,6 @@ paths:
                     type
 
                     name "y.z".
-
 
 
                     JSON
@@ -3102,6 +3114,48 @@ paths:
                     format: int64
                   distance_to_target:
                     type: string
+                  unbonding_amount:
+                    type: object
+                    properties:
+                      denom:
+                        type: string
+                      amount:
+                        type: string
+                    description: >-
+                      Coin defines a token with a denomination and an amount.
+
+
+                      NOTE: The amount field is an Int which implements the
+                      custom method
+
+                      signatures required by gogoproto.
+                  queued_amount:
+                    type: object
+                    properties:
+                      denom:
+                        type: string
+                      amount:
+                        type: string
+                    description: >-
+                      Coin defines a token with a denomination and an amount.
+
+
+                      NOTE: The amount field is an Int which implements the
+                      custom method
+
+                      signatures required by gogoproto.
+                  unbonding_count:
+                    type: integer
+                    format: int64
+                    description: Number of withdrawal records in the unbonding state.
+                  queued_count:
+                    type: integer
+                    format: int64
+                    description: Number of withdrawal records in the queued state.
+                  unbond_record_count:
+                    type: integer
+                    format: int64
+                    description: Number of active unbonding records.
         default:
           description: An unexpected error response.
           schema:
@@ -3402,6 +3456,48 @@ paths:
                       format: int64
                     distance_to_target:
                       type: string
+                    unbonding_amount:
+                      type: object
+                      properties:
+                        denom:
+                          type: string
+                        amount:
+                          type: string
+                      description: >-
+                        Coin defines a token with a denomination and an amount.
+
+
+                        NOTE: The amount field is an Int which implements the
+                        custom method
+
+                        signatures required by gogoproto.
+                    queued_amount:
+                      type: object
+                      properties:
+                        denom:
+                          type: string
+                        amount:
+                          type: string
+                      description: >-
+                        Coin defines a token with a denomination and an amount.
+
+
+                        NOTE: The amount field is an Int which implements the
+                        custom method
+
+                        signatures required by gogoproto.
+                    unbonding_count:
+                      type: integer
+                      format: int64
+                      description: Number of withdrawal records in the unbonding state.
+                    queued_count:
+                      type: integer
+                      format: int64
+                      description: Number of withdrawal records in the queued state.
+                    unbond_record_count:
+                      type: integer
+                      format: int64
+                      description: Number of active unbonding records.
               pagination:
                 type: object
                 properties:
