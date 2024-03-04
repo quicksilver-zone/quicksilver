@@ -168,6 +168,20 @@ func (k *Keeper) AllUserWithdrawalRecords(ctx sdk.Context, address string) []typ
 	return records
 }
 
+// GetUserChainRequeuedWithdrawalRecord returns a requeued record for the given user and chain.
+func (k *Keeper) GetUserChainRequeuedWithdrawalRecord(ctx sdk.Context, chainID string, address string) types.WithdrawalRecord {
+	toReturn := types.WithdrawalRecord{}
+
+	k.IterateZoneStatusWithdrawalRecords(ctx, chainID, types.WithdrawStatusQueued, func(_ int64, record types.WithdrawalRecord) (stop bool) {
+		if record.Requeued && record.Delegator == address {
+			toReturn = record
+			return true
+		}
+		return false
+	})
+	return toReturn
+}
+
 // AllZoneWithdrawalRecords returns every record in the store for the specified zone.
 func (k *Keeper) AllZoneWithdrawalRecords(ctx sdk.Context, chainID string) []types.WithdrawalRecord {
 	records := []types.WithdrawalRecord{}
