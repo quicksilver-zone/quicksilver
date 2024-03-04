@@ -18,13 +18,10 @@ import (
 
 // InitWithdrawalRecordSequence initializes the sequence.
 func (k *Keeper) InitWithdrawalRecordSequence(ctx sdk.Context) {
-	var accNumber uint64
 	store := ctx.KVStore(k.storeKey)
 
 	bz := k.cdc.MustMarshal(&gogotypes.UInt64Value{Value: 512})
 	store.Set(types.KeyPrefixRequeuedWithdrawalRecordSeq, bz)
-
-	return accNumber
 }
 
 // GetNextWithdrawalRecordSequence returns and increments the global withdrawal record seqeuence.
