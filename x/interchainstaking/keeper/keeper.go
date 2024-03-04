@@ -32,7 +32,6 @@ import (
 	ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
 	ibctmtypes "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
 
-	"github.com/quicksilver-zone/quicksilver/utils"
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	epochskeeper "github.com/quicksilver-zone/quicksilver/x/epochs/keeper"
 	interchainquerykeeper "github.com/quicksilver-zone/quicksilver/x/interchainquery/keeper"
@@ -199,6 +198,53 @@ func (k *Keeper) AllPortConnections(ctx sdk.Context) (pcs []types.PortConnection
 	})
 
 	return pcs
+}
+
+// GetZoneByLocalDenom returns zone by denom.
+func (k *Keeper) GetZoneByLocalDenom(ctx sdk.Context, denom string) *types.Zone {
+	zone, existed := k.GetLocalDenomZoneMapping(ctx, denom)
+	if existed {
+		return zone
+	}
+	// If get zone from denom zone mapping not found, find it in zones list end set into the mapping
+	k.IterateZones(ctx, func(_ int64, thisZone *types.Zone) bool {
+		if thisZone.LocalDenom == denom {
+			zone = thisZone
+			k.SetLocalDenomZoneMapping(ctx, thisZone)
+			return true
+		}
+		return false
+	})
+	return zone
+}
+
+// GetLocalDenomZoneMapping returns zone by denom.
+func (k *Keeper) GetLocalDenomZoneMapping(ctx sdk.Context, denom string) (*types.Zone, bool) {
+	zone := types.Zone{}
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixLocalDenomZoneMapping)
+	bz := store.Get([]byte(denom))
+	if len(bz) == 0 {
+		return nil, false
+	}
+
+	k.cdc.MustUnmarshal(bz, &zone)
+	return &zone, true
+}
+
+// SetLocalDenomZoneMapping set denom <-> zone mapping.
+func (k *Keeper) SetLocalDenomZoneMapping(ctx sdk.Context, zone *types.Zone) {
+	if zone == nil {
+		return
+	}
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixLocalDenomZoneMapping)
+	bz := k.cdc.MustMarshal(zone)
+	store.Set([]byte(zone.LocalDenom), bz)
+}
+
+// DeleteDenomZoneMapping delete zone info in denom - zone mapping.
+func (k *Keeper) DeleteDenomZoneMapping(ctx sdk.Context, denom string) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixLocalDenomZoneMapping)
+	store.Delete([]byte(denom))
 }
 
 // ### Interval functions >>>
@@ -494,15 +540,6 @@ func (k *Keeper) GetChainID(ctx sdk.Context, connectionID string) (string, error
 	return client.ChainId, nil
 }
 
-func (k *Keeper) GetChainIDFromContext(ctx sdk.Context) (string, error) {
-	connectionID := ctx.Context().Value(utils.ContextKey("connectionID"))
-	if connectionID == nil {
-		return "", errors.New("connectionID not in context")
-	}
-
-	return k.GetChainID(ctx, connectionID.(string))
-}
-
 func (k *Keeper) EmitPerformanceBalanceQuery(ctx sdk.Context, zone *types.Zone) error {
 	_, addr, err := bech32.DecodeAndConvert(zone.PerformanceAddress.Address)
 	if err != nil {
@@ -666,7 +703,8 @@ func (k *Keeper) OverrideRedemptionRateNoCap(ctx sdk.Context, zone *types.Zone) 
 func (k *Keeper) GetRatio(ctx sdk.Context, zone *types.Zone, epochRewards sdkmath.Int) (sdk.Dec, bool) {
 	// native asset amount
 	nativeAssetAmount := k.GetDelegatedAmount(ctx, zone).Amount
-	nativeAssetUnbondingAmount := k.GetUnbondingAmount(ctx, zone).Amount
+	nativeAssetUnbonding, _ := k.GetUnbondingTokensAndCount(ctx, zone)
+	nativeAssetUnbondingAmount := nativeAssetUnbonding.Amount
 	nativeAssetUnbonded := zone.DelegationAddress.Balance.AmountOf(zone.BaseDenom)
 
 	// qAsset amount
