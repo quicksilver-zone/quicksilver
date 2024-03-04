@@ -17,7 +17,7 @@ import (
 )
 
 // InitWithdrawalRecordSequence initializes the sequence.
-func (k *Keeper) InitWithdrawalRecordSequence(ctx sdk.Context) uint64 {
+func (k *Keeper) InitWithdrawalRecordSequence(ctx sdk.Context) {
 	var accNumber uint64
 	store := ctx.KVStore(k.storeKey)
 
