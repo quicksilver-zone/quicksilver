@@ -11,7 +11,7 @@ import (
 
 	"cosmossdk.io/math"
 
-	codec "github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -942,7 +942,6 @@ type txAck struct {
 }
 
 func (suite *KeeperTestSuite) TestHandleFailedUndelegate() {
-
 	user := addressutils.GenerateAddressForTestWithPrefix("quick")
 	user2 := addressutils.GenerateAddressForTestWithPrefix("quick")
 	beneficiary := addressutils.GenerateAddressForTestWithPrefix("cosmos")
@@ -1422,38 +1421,47 @@ func (suite *KeeperTestSuite) TestHandleFailedUndelegate() {
 			}
 
 			suite.ElementsMatch(quicksilver.InterchainstakingKeeper.AllZoneWithdrawalRecords(ctx, suite.chainB.ChainID), test.expected(ctx, quicksilver))
-
 		})
 	}
-
 }
 
 func makeAckForMsgs(ctx sdk.Context, cdc codec.Codec, msgs []sdk.Msg, success bool) (channeltypes.Acknowledgement, error) {
+	// If the operation was not successful, return an error acknowledgement
 	if !success {
-		return channeltypes.NewErrorAcknowledgement(fmt.Errorf("an error happened!")), nil
+		return channeltypes.NewErrorAcknowledgement(fmt.Errorf("an error happened")), nil
 	}
 
+	// Initialize an empty TxMsgData object to hold the responses
 	msgData := sdk.TxMsgData{}
+
+	// Iterate through the messages to process their responses
 	for _, msg := range msgs {
+		// Use UnsafePackAny to avoid the need for a concrete type, which allows for flexibility with msg types
 		actualMsg := codectypes.UnsafePackAny(msg)
-		switch actualMsg.TypeUrl {
-		case "/cosmos.staking.v1beta1.MsgUndelegate":
+
+		// Check if the message type is MsgUndelegate and process accordingly
+		if actualMsg.TypeUrl == "/cosmos.staking.v1beta1.MsgUndelegate" {
+			// Calculate the completion time for undelegation, set to 6 hours from the current block time
 			t := ctx.BlockTime().Add(time.Hour * 6)
+			// Create a response for the MsgUndelegate
 			resp := stakingtypes.MsgUndelegateResponse{CompletionTime: t}
+			// Pack the response into an Any type
 			respAny, err := codectypes.NewAnyWithValue(&resp)
 			if err != nil {
 				return channeltypes.Acknowledgement{}, err
 			}
+			// Append the response to the MsgData responses
 			msgData.MsgResponses = append(msgData.MsgResponses, respAny)
-			continue
 		}
 	}
 
+	// Marshal the msgData into bytes for the acknowledgement payload
 	bz, err := cdc.Marshal(&msgData)
 	if err != nil {
 		return channeltypes.Acknowledgement{}, err
 	}
 
+	// Return a result acknowledgement with the marshaled msgData
 	return channeltypes.NewResultAcknowledgement(bz), nil
 }
 

@@ -1321,9 +1321,6 @@ func (k *Keeper) HandleWithdrawRewards(ctx sdk.Context, msg sdk.Msg, connectionI
 			return nil
 			// return nil here so we don't reject the incoming tx, but log the error and don't trigger RR update for repeated zero.
 		}
-		if err != nil {
-			return err
-		}
 		k.SetZone(ctx, zone)
 	}
 	k.Logger(ctx).Info("Received MsgWithdrawDelegatorReward acknowledgement", "wg", zone.GetWithdrawalWaitgroup(), "delegator", withdrawalMsg.DelegatorAddress)

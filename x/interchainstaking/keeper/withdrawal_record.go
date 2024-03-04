@@ -8,7 +8,6 @@ import (
 
 	gogotypes "github.com/gogo/protobuf/types"
 
-	"cosmossdk.io/math"
 	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
