@@ -15,15 +15,6 @@ import (
 
 type ProcessMigrateAccountStrategy func(ctx sdk.Context, appKeepers *keepers.AppKeepers, from sdk.AccAddress, to sdk.AccAddress) error
 
-// Migrate the Ingenuity genesis allocation to Notional.
-func migrateIngenuityMultisigToNotional(ctx sdk.Context, appKeepers *keepers.AppKeepers) error {
-	// migrate ingenuity multisig to notional multisig.
-	migrations := map[string]string{
-		"quick1e22za5qrqqp488h5p7vw2pfx8v0y4u444ufeuw": "quick1gxrks2rcj9gthzfgrkjk5lnk0g00cg0cpyntlm",
-	}
-	return migrateVestingAccounts(ctx, appKeepers, migrations, migratePeriodicVestingAccount)
-}
-
 // Migrate a map of address pairs and migrate from key -> value
 func migrateVestingAccounts(ctx sdk.Context, appKeepers *keepers.AppKeepers, migrations map[string]string, strategy ProcessMigrateAccountStrategy) error {
 	for _, fromBech32 := range utils.Keys(migrations) {
