@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+
 	"github.com/quicksilver-zone/quicksilver/app/keepers"
 	"github.com/quicksilver-zone/quicksilver/utils"
 	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
@@ -20,7 +21,6 @@ func V010500rc1UpgradeHandler(
 	appKeepers *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-
 		// 993/1229 - pre-populate zone/denom mapping.
 		appKeepers.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zone *icstypes.Zone) (stop bool) {
 			appKeepers.InterchainstakingKeeper.SetLocalDenomZoneMapping(ctx, zone)
@@ -54,7 +54,6 @@ func V010500UpgradeHandler(
 	appKeepers *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-
 		// 993/1229 - pre-populate zone/denom mapping.
 		appKeepers.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zone *icstypes.Zone) (stop bool) {
 			appKeepers.InterchainstakingKeeper.SetLocalDenomZoneMapping(ctx, zone)
@@ -87,7 +86,6 @@ func V010500UpgradeHandler(
 // collate them into a single record for a delegator/recipient/epoch tuple.
 func collateRequeuedWithdrawals(ctx sdk.Context, appKeepers *keepers.AppKeepers) {
 	appKeepers.InterchainstakingKeeper.IterateZones(ctx, func(_ int64, zone *icstypes.Zone) (stop bool) {
-
 		newRecords := map[string]icstypes.WithdrawalRecord{}
 
 		appKeepers.InterchainstakingKeeper.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, icstypes.WithdrawStatusQueued, func(_ int64, record icstypes.WithdrawalRecord) (stop bool) {
