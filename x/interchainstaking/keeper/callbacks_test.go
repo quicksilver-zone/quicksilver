@@ -9,8 +9,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
-
 	ics23 "github.com/confio/ics23/go"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/proto/tendermint/types"
@@ -20,6 +18,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -423,7 +422,7 @@ func (suite *KeeperTestSuite) TestHandleValidatorCallback() {
 
 	pk := ed25519.GenPrivKeyFromSecret([]byte("seed"))
 	pub := pk.PubKey()
-	any := codectypes.UnsafePackAny(pub)
+	anyPk := codectypes.UnsafePackAny(pub)
 
 	tests := []struct {
 		name      string
@@ -460,7 +459,7 @@ func (suite *KeeperTestSuite) TestHandleValidatorCallback() {
 		},
 		{
 			name:      "valid - validator vp to zero",
-			validator: stakingtypes.Validator{OperatorAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", Jailed: true, Status: stakingtypes.Unbonded, Tokens: sdk.NewInt(0), DelegatorShares: sdk.NewDec(0), Commission: stakingtypes.NewCommission(sdk.MustNewDecFromStr("0.25"), sdk.MustNewDecFromStr("0.2"), sdk.MustNewDecFromStr("0.2")), ConsensusPubkey: any},
+			validator: stakingtypes.Validator{OperatorAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", Jailed: true, Status: stakingtypes.Unbonded, Tokens: sdk.NewInt(0), DelegatorShares: sdk.NewDec(0), Commission: stakingtypes.NewCommission(sdk.MustNewDecFromStr("0.25"), sdk.MustNewDecFromStr("0.2"), sdk.MustNewDecFromStr("0.2")), ConsensusPubkey: anyPk},
 			expected: func(ctx sdk.Context) icstypes.Validator {
 				return icstypes.Validator{ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", CommissionRate: sdk.MustNewDecFromStr("0.25"), VotingPower: sdk.NewInt(0), DelegatorShares: sdk.NewDec(0), Score: sdk.ZeroDec(), Status: "BOND_STATUS_UNBONDED", LiquidShares: sdk.ZeroDec(), ValidatorBondShares: sdk.ZeroDec(), Jailed: true, JailedSince: ctx.BlockTime()}
 			},
@@ -469,6 +468,7 @@ func (suite *KeeperTestSuite) TestHandleValidatorCallback() {
 
 	for _, test := range tests {
 		suite.Run(test.name, func() {
+			test := test
 			suite.SetupTest()
 			suite.setupTestZones()
 
