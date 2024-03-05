@@ -370,4 +370,9 @@ func (s *AppTestSuite) TestV010600UpgradeHandler() {
 	s.Require().True(ok)
 	s.Require().Equal(int64(5000000000), vestMigratedB.OriginalVesting.AmountOf("uqck").Int64())
 	s.Require().Equal(float64(864000), vestMigratedB.VestingPeriods[0].Duration().Seconds())
+
+	zone, existed := app.InterchainstakingKeeper.GetLocalDenomZoneMapping(ctx, "uqatom")
+	s.Require().True(existed)
+	s.Require().Equal(zone.ChainId, "cosmoshub-4")
+	s.Require().Equal(zone.ConnectionId, "connection-77001")
 }
