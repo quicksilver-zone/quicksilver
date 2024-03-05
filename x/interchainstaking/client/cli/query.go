@@ -180,3 +180,54 @@ func GetMappedAccountsCmd() *cobra.Command {
 
 	return cmd
 }
+
+func GetWithdrawalRecordsCmd() *cobra.Command {
+	// TODO: implement
+	return &cobra.Command{}
+}
+
+func GetUserWithdrawalRecordCmd() *cobra.Command {
+	// TODO: implement
+	return &cobra.Command{}
+}
+func GetZoneWithdrawalRecords() *cobra.Command {
+	// TODO: implement
+	return &cobra.Command{}
+}
+
+func GetUnbondingRecordsCmd() *cobra.Command {
+	// TODO: implement
+	return &cobra.Command{}
+}
+
+func GetUserUnbondingRecordCmd() *cobra.Command {
+	// TODO: implement
+	return &cobra.Command{}
+}
+
+func GetReceptsCmd() *cobra.Command {
+	// TODO: implement
+	return &cobra.Command{}
+}
+
+func GetTxStatusCmd() *cobra.Command {
+	// TODO: implement
+	return &cobra.Command{}
+}
+
+func GetDelegationRecordsCmd() *cobra.Command {
+	// TODO: implement
+	return &cobra.Command{}
+}
+
+// GetZoneValidatorCmd returns the validators for the given zone.
+func GetZoneValidatorsCmd() *cobra.Command {
+	// ToDO: implement
+	return &cobra.Command{}
+}
+
+// GetZoneCmd returns the information about the zone.
+func GetZoneCmd() *cobra.Command {
+	// TODO: implement
+	return &cobra.Command{}
+}
