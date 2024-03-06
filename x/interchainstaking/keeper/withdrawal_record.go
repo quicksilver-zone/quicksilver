@@ -276,7 +276,10 @@ func (k *Keeper) UpdateWithdrawalRecordsForSlash(ctx sdk.Context, zone *types.Zo
 				return true
 			}
 
-			newAmount := distAmount.Quo(delta).TruncateInt()
+			newAmount := sdkmath.ZeroInt()
+			if !delta.IsZero() {
+				newAmount = distAmount.Quo(delta).TruncateInt()
+			}
 			thisSubAmount := distAmount.TruncateInt().Sub(newAmount)
 			recordSubAmount = recordSubAmount.Add(thisSubAmount)
 			d.Amount = newAmount.Uint64()
