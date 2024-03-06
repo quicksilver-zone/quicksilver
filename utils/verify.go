@@ -6,12 +6,12 @@ import (
 	"fmt"
 	"time"
 
-	tmmath "github.com/tendermint/tendermint/libs/math"
-	"github.com/tendermint/tendermint/light"
-	"github.com/tendermint/tendermint/types"
+	tmmath "github.com/cometbft/cometbft/libs/math"
+	"github.com/cometbft/cometbft/light"
+	"github.com/cometbft/cometbft/types"
 )
 
-// VerifyNonAdjacent is identical to VerifyNonAdjacent in tendermint/tendermint/light/verifier.go, with the exception that
+// VerifyNonAdjacent is identical to VerifyNonAdjacent in cometbft/cometbft/light/verifier.go, with the exception that
 // it does not attempt to validate that the block is _newer_ than the current consensus state.
 func VerifyNonAdjacent(
 	trustedHeader *types.SignedHeader, // height=X

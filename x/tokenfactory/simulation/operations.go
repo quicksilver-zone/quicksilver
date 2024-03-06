@@ -4,10 +4,14 @@ import (
 	"math/rand"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
-	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/std"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	sdksimtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
@@ -126,7 +130,7 @@ func SimulateMsgCreateDenom(ak types.AccountKeeper, bk types.BankKeeper, k keepe
 		txCtx := simulation.OperationInput{
 			R:               r,
 			App:             bApp,
-			TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
+			TxGen:           MakeTestEncodingConfig().TxConfig,
 			Cdc:             nil,
 			Msg:             msg,
 			MsgType:         TypeMsgCreateDenom,
@@ -173,7 +177,7 @@ func SimulateMsgMint(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keepe
 		txCtx := simulation.OperationInput{
 			R:               r,
 			App:             bApp,
-			TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
+			TxGen:           MakeTestEncodingConfig().TxConfig,
 			Cdc:             nil,
 			Msg:             msg,
 			MsgType:         TypeMsgMint,
@@ -228,7 +232,7 @@ func SimulateMsgBurn(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keepe
 		txCtx := simulation.OperationInput{
 			R:               r,
 			App:             bApp,
-			TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
+			TxGen:           MakeTestEncodingConfig().TxConfig,
 			Cdc:             nil,
 			Msg:             msg,
 			MsgType:         TypeMsgBurn,
@@ -276,7 +280,7 @@ func SimulateMsgChangeAdmin(ak types.AccountKeeper, bk types.BankKeeper, k keepe
 		txCtx := simulation.OperationInput{
 			R:               r,
 			App:             bApp,
-			TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
+			TxGen:           MakeTestEncodingConfig().TxConfig,
 			Cdc:             nil,
 			Msg:             msg,
 			MsgType:         TypeMsgChangeAdmin,
@@ -336,7 +340,7 @@ func SimulateMsgSetDenomMetadata(ak types.AccountKeeper, bk types.BankKeeper, k 
 		txCtx := simulation.OperationInput{
 			R:               r,
 			App:             bApp,
-			TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
+			TxGen:           MakeTestEncodingConfig().TxConfig,
 			Cdc:             nil,
 			Msg:             msg,
 			MsgType:         TypeMsgSetDenomMetadata,
@@ -376,4 +380,37 @@ func getTokenFactoryDenomAndItsAdmin(k keeper.Keeper, ctx sdk.Context, r *rand.R
 		return "", nil, err
 	}
 	return denom, addr, nil
+}
+
+// TestEncodingConfig defines an encoding configuration that is used for testing
+// purposes. Note, MakeTestEncodingConfig takes a series of AppModuleBasic types
+// which should only contain the relevant module being tested and any potential
+// dependencies.
+type TestEncodingConfig struct {
+	InterfaceRegistry codectypes.InterfaceRegistry
+	Codec             codec.Codec
+	TxConfig          client.TxConfig
+	Amino             *codec.LegacyAmino
+}
+
+func MakeTestEncodingConfig(modules ...module.AppModuleBasic) TestEncodingConfig {
+	cdc := codec.NewLegacyAmino()
+	interfaceRegistry := codectypes.NewInterfaceRegistry()
+	codec := codec.NewProtoCodec(interfaceRegistry)
+
+	encCfg := TestEncodingConfig{
+		InterfaceRegistry: interfaceRegistry,
+		Codec:             codec,
+		TxConfig:          tx.NewTxConfig(codec, tx.DefaultSignModes),
+		Amino:             cdc,
+	}
+
+	mb := module.NewBasicManager(modules...)
+
+	std.RegisterLegacyAminoCodec(encCfg.Amino)
+	std.RegisterInterfaces(encCfg.InterfaceRegistry)
+	mb.RegisterLegacyAminoCodec(encCfg.Amino)
+	mb.RegisterInterfaces(encCfg.InterfaceRegistry)
+
+	return encCfg
 }

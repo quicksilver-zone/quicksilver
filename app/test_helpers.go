@@ -7,15 +7,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/CosmWasm/wasmd/x/wasm"
+	dbm "github.com/cometbft/cometbft-db"
+	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cometbft/cometbft/crypto/secp256k1"
+	"github.com/cometbft/cometbft/libs/log"
+	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto/secp256k1"
-	"github.com/tendermint/tendermint/libs/log"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	tmtypes "github.com/tendermint/tendermint/types"
-	dbm "github.com/tendermint/tm-db"
 
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	cosmossecp256k1 "github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -25,7 +24,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	ibctesting "github.com/cosmos/ibc-go/v5/testing"
+	ibctesting "github.com/cosmos/ibc-go/v7/testing"
 )
 
 // EmptyAppOptions is a stub implementing AppOptions.
@@ -38,8 +37,8 @@ func (EmptyAppOptions) Get(_ string) interface{} {
 
 // DefaultConsensusParams defines the default Tendermint consensus params used in
 // Quicksilver testing.
-var DefaultConsensusParams = &abci.ConsensusParams{
-	Block: &abci.BlockParams{
+var DefaultConsensusParams = &tmproto.ConsensusParams{
+	Block: &tmproto.BlockParams{
 		MaxBytes: 200000,
 		MaxGas:   -1, // no limit
 	},
@@ -89,7 +88,6 @@ func Setup(t *testing.T, isCheckTx bool) *Quicksilver {
 		DefaultNodeHome,
 		5,
 		MakeEncodingConfig(),
-		wasm.EnableAllProposals,
 		EmptyAppOptions{},
 		GetWasmOpts(EmptyAppOptions{}),
 		false,
@@ -139,7 +137,6 @@ func SetupTestingApp() (testApp ibctesting.TestingApp, genesisState map[string]j
 		DefaultNodeHome,
 		5,
 		MakeEncodingConfig(),
-		wasm.EnableAllProposals,
 		EmptyAppOptions{},
 		GetWasmOpts(EmptyAppOptions{}),
 		true, // set mock state to true
@@ -208,7 +205,7 @@ func GenesisStateWithValSet(t *testing.T,
 	})
 
 	// update total supply
-	bankGenesis := banktypes.NewGenesisState(banktypes.DefaultGenesisState().Params, balances, totalSupply, []banktypes.Metadata{})
+	bankGenesis := banktypes.NewGenesisState(banktypes.DefaultGenesisState().Params, balances, totalSupply, []banktypes.Metadata{}, nil)
 	genesisState[banktypes.ModuleName] = app.AppCodec().MustMarshalJSON(bankGenesis)
 
 	return genesisState

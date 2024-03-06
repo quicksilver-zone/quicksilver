@@ -7,7 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	transfertypes "github.com/cosmos/ibc-go/v5/modules/apps/transfer/types"
+	transfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
 )
 
 func DenomFromRequestKey(query []byte, accAddr sdk.AccAddress) (string, error) {
@@ -28,7 +28,7 @@ func DenomFromRequestKey(query []byte, accAddr sdk.AccAddress) (string, error) {
 	return denom, nil
 }
 
-// DeriveIbcDenom mirrors getDenomForThisChain from the packet-forward-middleware/v5, used under MIT License.
+// DeriveIbcDenom mirrors getDenomForThisChain from the packet-forward-middleware/v7, used under MIT License.
 // See: https://github.com/strangelove-ventures/packet-forward-middleware/blob/86f045c12cc48ffc1f016ff122b89a9f6ac8ed63/router/ibc_middleware.go#L104
 func DeriveIbcDenom(port, channel, counterpartyPort, counterpartyChannel, denom string) string {
 	counterpartyPrefix := transfertypes.GetDenomPrefix(counterpartyPort, counterpartyChannel)

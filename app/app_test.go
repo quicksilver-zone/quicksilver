@@ -5,13 +5,12 @@ import (
 	"os"
 	"testing"
 
-	"github.com/CosmWasm/wasmd/x/wasm"
+	dbm "github.com/cometbft/cometbft-db"
+	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cometbft/cometbft/crypto/secp256k1"
+	"github.com/cometbft/cometbft/libs/log"
+	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto/secp256k1"
-	"github.com/tendermint/tendermint/libs/log"
-	tmtypes "github.com/tendermint/tendermint/types"
-	dbm "github.com/tendermint/tm-db"
 
 	cosmossecp256k1 "github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
@@ -52,7 +51,6 @@ func TestQuicksilverExport(t *testing.T) {
 		app.DefaultNodeHome,
 		0,
 		app.MakeEncodingConfig(),
-		wasm.EnableAllProposals,
 		app.EmptyAppOptions{},
 		app.GetWasmOpts(app.EmptyAppOptions{}),
 		false,
@@ -84,12 +82,11 @@ func TestQuicksilverExport(t *testing.T) {
 		app.DefaultNodeHome,
 		0,
 		app.MakeEncodingConfig(),
-		wasm.EnableAllProposals,
 		app.EmptyAppOptions{},
 		app.GetWasmOpts(app.EmptyAppOptions{}),
 		false,
 		false,
 	)
-	_, err = app2.ExportAppStateAndValidators(false, []string{})
+	_, err = app2.ExportAppStateAndValidators(false, []string{}, []string{})
 	require.NoError(t, err, "ExportAppStateAndValidators should not have an error")
 }

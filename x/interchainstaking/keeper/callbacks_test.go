@@ -9,16 +9,16 @@ import (
 	"testing"
 	"time"
 
-	ics23 "github.com/confio/ics23/go"
+	"github.com/cometbft/cometbft/proto/tendermint/types"
+	ics23 "github.com/cosmos/ics23/go"
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/proto/tendermint/types"
 	"google.golang.org/protobuf/encoding/protowire"
 
 	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/simapp"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
@@ -30,9 +30,9 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	ibctypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
-	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
-	lightclienttypes "github.com/cosmos/ibc-go/v5/modules/light-clients/07-tendermint/types"
+	ibctypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
+	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
+	lightclienttypes "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
 
 	"github.com/quicksilver-zone/quicksilver/app"
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
@@ -77,7 +77,7 @@ func (suite *KeeperTestSuite) setupIbc() (*app.Quicksilver, sdk.Context) {
 	txRes.Header.Header.Time = ctx.BlockTime()
 	// setup ClientConsensusState for checking Header validation
 	// Cheat, and set the client state and consensus state for 07-tendermint-0 to match the incoming header.
-	quicksilver.IBCKeeper.ClientKeeper.SetClientState(ctx, "07-tendermint-0", lightclienttypes.NewClientState("gaiatest-1", lightclienttypes.DefaultTrustLevel, time.Hour, time.Hour, time.Second*50, txRes.Header.TrustedHeight, []*ics23.ProofSpec{}, []string{}, false, false))
+	quicksilver.IBCKeeper.ClientKeeper.SetClientState(ctx, "07-tendermint-0", lightclienttypes.NewClientState("gaiatest-1", lightclienttypes.DefaultTrustLevel, time.Hour, time.Hour, time.Second*50, txRes.Header.TrustedHeight, []*ics23.ProofSpec{}, []string{}))
 	quicksilver.IBCKeeper.ClientKeeper.SetClientConsensusState(ctx, "07-tendermint-0", txRes.Header.TrustedHeight, txRes.Header.ConsensusState())
 
 	return quicksilver, ctx
@@ -1937,7 +1937,7 @@ func (suite *KeeperTestSuite) TestDepositTxCallback() {
 
 func (suite *KeeperTestSuite) TestSigningInfoCallback() {
 	validator := addressutils.GenerateValAddressForTest()
-	pubKey := simapp.CreateTestPubKeys(1)[0]
+	pubKey := simtestutil.CreateTestPubKeys(1)[0]
 
 	pkAny, err := codectypes.NewAnyWithValue(pubKey)
 	suite.Require().NoError(err)
@@ -2252,7 +2252,7 @@ func (suite *KeeperTestSuite) TestDepositLsmTxCallback() {
 		payload.Header.Header.Time = ctx.BlockTime()
 		suite.NoError(err)
 		// cheat, and set the client state and consensus state for 07-tendermint-0 to match the incoming header.
-		quicksilver.IBCKeeper.ClientKeeper.SetClientState(ctx, "07-tendermint-0", lightclienttypes.NewClientState("gaiatest-1", lightclienttypes.DefaultTrustLevel, time.Hour, time.Hour, time.Second*50, payload.Header.TrustedHeight, []*ics23.ProofSpec{}, []string{}, false, false))
+		quicksilver.IBCKeeper.ClientKeeper.SetClientState(ctx, "07-tendermint-0", lightclienttypes.NewClientState("gaiatest-1", lightclienttypes.DefaultTrustLevel, time.Hour, time.Hour, time.Second*50, payload.Header.TrustedHeight, []*ics23.ProofSpec{}, []string{}))
 		quicksilver.IBCKeeper.ClientKeeper.SetClientConsensusState(ctx, "07-tendermint-0", payload.Header.TrustedHeight, payload.Header.ConsensusState())
 
 		requestData := tx.GetTxRequest{
@@ -2350,7 +2350,7 @@ func (suite *KeeperTestSuite) TestDepositTxCallback2() {
 		payload.Header.Header.Time = ctx.BlockTime()
 		suite.NoError(err)
 		// cheat, and set the client state and consensus state for 07-tendermint-0 to match the incoming header.
-		quicksilver.IBCKeeper.ClientKeeper.SetClientState(ctx, "07-tendermint-0", lightclienttypes.NewClientState("gaiatest-1", lightclienttypes.DefaultTrustLevel, time.Hour, time.Hour, time.Second*50, payload.Header.TrustedHeight, []*ics23.ProofSpec{}, []string{}, false, false))
+		quicksilver.IBCKeeper.ClientKeeper.SetClientState(ctx, "07-tendermint-0", lightclienttypes.NewClientState("gaiatest-1", lightclienttypes.DefaultTrustLevel, time.Hour, time.Hour, time.Second*50, payload.Header.TrustedHeight, []*ics23.ProofSpec{}, []string{}))
 		quicksilver.IBCKeeper.ClientKeeper.SetClientConsensusState(ctx, "07-tendermint-0", payload.Header.TrustedHeight, payload.Header.ConsensusState())
 
 		requestData := tx.GetTxRequest{
@@ -2435,7 +2435,7 @@ func (suite *KeeperTestSuite) TestDepositLsmTxCallbackFailOnNonMatchingValidator
 		payload.Header.Header.Time = ctx.BlockTime()
 		suite.NoError(err)
 		// cheat, and set the client state and consensus state for 07-tendermint-0 to match the incoming header.
-		quicksilver.IBCKeeper.ClientKeeper.SetClientState(ctx, "07-tendermint-0", lightclienttypes.NewClientState("gaiatest-1", lightclienttypes.DefaultTrustLevel, time.Hour, time.Hour, time.Second*50, payload.Header.TrustedHeight, []*ics23.ProofSpec{}, []string{}, false, false))
+		quicksilver.IBCKeeper.ClientKeeper.SetClientState(ctx, "07-tendermint-0", lightclienttypes.NewClientState("gaiatest-1", lightclienttypes.DefaultTrustLevel, time.Hour, time.Hour, time.Second*50, payload.Header.TrustedHeight, []*ics23.ProofSpec{}, []string{}))
 		quicksilver.IBCKeeper.ClientKeeper.SetClientConsensusState(ctx, "07-tendermint-0", payload.Header.TrustedHeight, payload.Header.ConsensusState())
 
 		requestData := tx.GetTxRequest{
