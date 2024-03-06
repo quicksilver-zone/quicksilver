@@ -1,7 +1,7 @@
 import { Box, Link, useToast, Text } from '@chakra-ui/react';
-import { SigningStargateClient, Coin, StdFee } from '@cosmjs/stargate';
+import { SigningStargateClient, StdFee } from '@cosmjs/stargate';
 import { ChainName } from '@cosmos-kit/core';
-import { quicksilver } from 'quicksilverjs';
+
 import { Dispatch, SetStateAction } from 'react';
 import { ibc } from 'interchain-query';
 

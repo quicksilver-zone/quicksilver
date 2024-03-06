@@ -1,31 +1,14 @@
-import {
-  Box,
-  Image,
-  Container,
-  Flex,
-  VStack,
-  HStack,
-  Stat,
-  StatLabel,
-  StatNumber,
-  useBreakpointValue,
-  Spacer,
-  Fade,
-  SlideFade,
-  Spinner,
-  SkeletonCircle,
-} from '@chakra-ui/react';
+import { Box, Container, Flex, VStack, HStack, Stat, StatLabel, StatNumber, SlideFade, SkeletonCircle, Image } from '@chakra-ui/react';
 import dynamic from 'next/dynamic';
 import Head from 'next/head';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
-import { Header, NetworkSelect, SideHeader } from '@/components';
+import { NetworkSelect } from '@/components';
 import { StakingBox } from '@/components';
 import { InfoBox } from '@/components';
 import { AssetsAccordian } from '@/components';
 import { useAPYQuery } from '@/hooks/useQueries';
 import { networks as prodNetworks, testNetworks as devNetworks } from '@/state/chains/prod';
-import { useChain } from '@cosmos-kit/react';
 
 const DynamicStakingBox = dynamic(() => Promise.resolve(StakingBox), {
   ssr: false,
@@ -43,7 +26,7 @@ const networks = process.env.NEXT_PUBLIC_CHAIN_ENV === 'mainnet' ? prodNetworks 
 
 export default function Staking() {
   const [selectedNetwork, setSelectedNetwork] = useState(networks[0]);
-  const [isModalOpen, setModalOpen] = useState(false);
+
   let newChainId;
   if (selectedNetwork.chainId === 'provider') {
     newChainId = 'cosmoshub-4';
@@ -57,6 +40,7 @@ export default function Staking() {
     // Default case
     newChainId = selectedNetwork.chainId;
   }
+
   const { APY, isLoading, isError } = useAPYQuery(newChainId);
   const [balance, setBalance] = useState('');
   const [qBalance, setQBalance] = useState('');
@@ -68,27 +52,29 @@ export default function Staking() {
     displayApr = 'Error';
   }
 
-  const flexDirection = useBreakpointValue({ base: 'column', md: 'row' });
+  const [isStakingModalOpen, setStakingModalOpen] = useState(false);
+  const [isTransferModalOpen, setTransferModalOpen] = useState(false);
 
   return (
     <>
       <Head>
         <title>Staking</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <link rel="icon" href="/quicksilver/img/favicon.png" />
+        <link rel="icon" href="/img/favicon.png" />
       </Head>
       <SlideFade offsetY={'200px'} in={true} style={{ width: '100%' }}>
-        <Container top={20} zIndex={2} position="relative" maxW="container.lg" maxH="80vh" h="80vh" mt={{ base: '50px', md: '30px' }}>
-          {/* <Image
-            alt={''}
-            src="/quicksilver/img/metalmisc2.png"
-            zIndex={-10}
-            position="absolute"
-            bottom="-10"
-            left="-10"
-            boxSize="120px"
-          /> */}
-          <Flex zIndex={3} direction="column" h="100%">
+        <Container
+          zIndex={2}
+          mt={{ base: '10px', md: '50px' }}
+          position="relative"
+          maxW="container.lg"
+          height="100vh"
+          display="flex"
+          flexDirection="column"
+          justifyContent="center"
+          alignItems="center"
+        >
+          <Flex justifyContent={'center'} zIndex={3} direction="column" h="100%">
             {/* Dropdown and Statistic */}
             <Box w="50%">
               <HStack justifyContent="space-between" w="100%">
@@ -119,8 +105,10 @@ export default function Staking() {
               {/* Staking Box*/}
               <DynamicStakingBox
                 selectedOption={selectedNetwork}
-                isModalOpen={isModalOpen}
-                setModalOpen={setModalOpen}
+                isStakingModalOpen={isStakingModalOpen}
+                setStakingModalOpen={setStakingModalOpen}
+                isTransferModalOpen={isTransferModalOpen}
+                setTransferModalOpen={setTransferModalOpen}
                 setBalance={setBalance}
                 setQBalance={setQBalance}
               />
@@ -136,6 +124,19 @@ export default function Staking() {
                 <DynamicAssetBox selectedOption={selectedNetwork} balance={balance} qBalance={qBalance} />
               </Flex>
             </Flex>
+            <Box>
+              <Image
+                display={{ base: 'none', lg: 'block', md: 'none' }}
+                position="relative"
+                left="885px"
+                bottom="205px"
+                zIndex={10}
+                src="/img/quicksilverWord.png"
+                alt="Quicksilver"
+                h="100px"
+                transform="rotate(90deg)"
+              />
+            </Box>
           </Flex>
         </Container>
       </SlideFade>

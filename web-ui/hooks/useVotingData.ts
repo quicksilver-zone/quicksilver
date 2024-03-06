@@ -9,7 +9,6 @@ import {
 
 import { useGrpcQueryClient } from './useGrpcQueryClient';
 import { useQueryHooks } from './useQueryHooks2';
-import { useRpcQueryClient } from './useRpcQueryClient2';
 import {
   parseProposals,
   parseQuorum,
@@ -99,28 +98,27 @@ export const useVotingData = (
       },
     });
 
-  const votesQueries = useQueries({
-    queries: (votedProposalsQuery.data || []).map(
-      ({ proposalId }) => ({
-        queryKey: [
-          'voteQuery',
-          proposalId,
-          address,
-        ],
-        queryFn: () =>
-        grpcQueryClient?.cosmos.gov.v1.vote({
-            proposalId,
-            voter: address || '',
-          }),
-        enabled:
-          !!grpcQueryClient &&
-          !!address &&
-          !!votedProposalsQuery.data,
-        keepPreviousData: true,
+    const votesQueries = useQueries({
+      queries: (votedProposalsQuery.data || []).map(({ proposalId }) => {
+      
+        return {
+          queryKey: ['voteQuery', proposalId, address],
+          queryFn: () => {
+           
+            if (!grpcQueryClient || !proposalId || !address) {
+              throw new Error("Required information for query is missing");
+            }
+            return grpcQueryClient.cosmos.gov.v1.vote({
+              proposal_id: proposalId,
+              voter: address || '',
+            });
+          },
+          enabled: !!grpcQueryClient && !!address && !!votedProposalsQuery.data && proposalId !== undefined,
+          keepPreviousData: true,
+        };
       }),
-    ),
-  });
-
+    });
+    
   const singleQueries = {
     quorum: quorumQuery,
     proposals: proposalsQuery,
@@ -193,7 +191,7 @@ export const useVotingData = (
     const votesEntries = votesQueries
       .map((query) => query.data)
       .map((data) => [
-        data?.vote?.proposalId,
+        data?.vote?.proposal_id,
         data?.vote?.options[0].option,
       ]);
 

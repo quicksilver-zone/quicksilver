@@ -32,7 +32,6 @@ import (
 	ibckeeper "github.com/cosmos/ibc-go/v5/modules/core/keeper"
 	ibctmtypes "github.com/cosmos/ibc-go/v5/modules/light-clients/07-tendermint/types"
 
-	"github.com/quicksilver-zone/quicksilver/utils"
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	epochskeeper "github.com/quicksilver-zone/quicksilver/x/epochs/keeper"
 	interchainquerykeeper "github.com/quicksilver-zone/quicksilver/x/interchainquery/keeper"
@@ -40,6 +39,8 @@ import (
 	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 	lsmstakingtypes "github.com/quicksilver-zone/quicksilver/x/lsmtypes"
 )
+
+type TxSubmitFn func(ctx sdk.Context, k *Keeper, msgs []sdk.Msg, account *types.ICAAccount, memo string, messagesPerTx int64) error
 
 // Keeper of this module maintains collections of registered zones.
 type Keeper struct {
@@ -57,6 +58,7 @@ type Keeper struct {
 	Ir                  codectypes.InterfaceRegistry
 	hooks               types.IcsHooks
 	paramStore          paramtypes.Subspace
+	txSubmit            TxSubmitFn
 }
 
 // NewKeeper returns a new instance of zones Keeper.
@@ -102,9 +104,13 @@ func NewKeeper(
 		TransferKeeper:      transferKeeper,
 		ClaimsManagerKeeper: claimsManagerKeeper,
 		hooks:               nil,
-
-		paramStore: ps,
+		txSubmit:            ProdSubmitTx,
+		paramStore:          ps,
 	}
+}
+
+func (k *Keeper) OverrideTxSubmit(fn TxSubmitFn) {
+	k.txSubmit = fn
 }
 
 // SetHooks set the ics hooks.
@@ -163,6 +169,11 @@ func (k *Keeper) GetConnectionForPort(ctx sdk.Context, port string) (string, err
 	return mapping.ConnectionId, nil
 }
 
+func (k *Keeper) DeleteConnectionForPort(ctx sdk.Context, port string) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixPortMapping)
+	store.Delete([]byte(port))
+}
+
 // IteratePortConnections iterates through all of the delegations.
 func (k *Keeper) IteratePortConnections(ctx sdk.Context, cb func(pc types.PortConnectionTuple) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
@@ -187,6 +198,53 @@ func (k *Keeper) AllPortConnections(ctx sdk.Context) (pcs []types.PortConnection
 	})
 
 	return pcs
+}
+
+// GetZoneByLocalDenom returns zone by denom.
+func (k *Keeper) GetZoneByLocalDenom(ctx sdk.Context, denom string) *types.Zone {
+	zone, existed := k.GetLocalDenomZoneMapping(ctx, denom)
+	if existed {
+		return zone
+	}
+	// If get zone from denom zone mapping not found, find it in zones list end set into the mapping
+	k.IterateZones(ctx, func(_ int64, thisZone *types.Zone) bool {
+		if thisZone.LocalDenom == denom {
+			zone = thisZone
+			k.SetLocalDenomZoneMapping(ctx, thisZone)
+			return true
+		}
+		return false
+	})
+	return zone
+}
+
+// GetLocalDenomZoneMapping returns zone by denom.
+func (k *Keeper) GetLocalDenomZoneMapping(ctx sdk.Context, denom string) (*types.Zone, bool) {
+	zone := types.Zone{}
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixLocalDenomZoneMapping)
+	bz := store.Get([]byte(denom))
+	if len(bz) == 0 {
+		return nil, false
+	}
+
+	k.cdc.MustUnmarshal(bz, &zone)
+	return &zone, true
+}
+
+// SetLocalDenomZoneMapping set denom <-> zone mapping.
+func (k *Keeper) SetLocalDenomZoneMapping(ctx sdk.Context, zone *types.Zone) {
+	if zone == nil {
+		return
+	}
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixLocalDenomZoneMapping)
+	bz := k.cdc.MustMarshal(zone)
+	store.Set([]byte(zone.LocalDenom), bz)
+}
+
+// DeleteDenomZoneMapping delete zone info in denom - zone mapping.
+func (k *Keeper) DeleteDenomZoneMapping(ctx sdk.Context, denom string) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixLocalDenomZoneMapping)
+	store.Delete([]byte(denom))
 }
 
 // ### Interval functions >>>
@@ -482,15 +540,6 @@ func (k *Keeper) GetChainID(ctx sdk.Context, connectionID string) (string, error
 	return client.ChainId, nil
 }
 
-func (k *Keeper) GetChainIDFromContext(ctx sdk.Context) (string, error) {
-	connectionID := ctx.Context().Value(utils.ContextKey("connectionID"))
-	if connectionID == nil {
-		return "", errors.New("connectionID not in context")
-	}
-
-	return k.GetChainID(ctx, connectionID.(string))
-}
-
 func (k *Keeper) EmitPerformanceBalanceQuery(ctx sdk.Context, zone *types.Zone) error {
 	_, addr, err := bech32.DecodeAndConvert(zone.PerformanceAddress.Address)
 	if err != nil {
@@ -654,7 +703,8 @@ func (k *Keeper) OverrideRedemptionRateNoCap(ctx sdk.Context, zone *types.Zone) 
 func (k *Keeper) GetRatio(ctx sdk.Context, zone *types.Zone, epochRewards sdkmath.Int) (sdk.Dec, bool) {
 	// native asset amount
 	nativeAssetAmount := k.GetDelegatedAmount(ctx, zone).Amount
-	nativeAssetUnbondingAmount := k.GetUnbondingAmount(ctx, zone).Amount
+	nativeAssetUnbonding, _ := k.GetUnbondingTokensAndCount(ctx, zone)
+	nativeAssetUnbondingAmount := nativeAssetUnbonding.Amount
 	nativeAssetUnbonded := zone.DelegationAddress.Balance.AmountOf(zone.BaseDenom)
 
 	// qAsset amount
@@ -725,14 +775,22 @@ func (k *Keeper) Rebalance(ctx sdk.Context, zone *types.Zone, epochNumber int64)
 	rebalances := types.DetermineAllocationsForRebalancing(currentAllocations, currentLocked, currentSum, lockedSum, targetAllocations, maxCanAllocate, k.Logger(ctx)).RemoveDuplicates()
 	msgs := make([]sdk.Msg, 0)
 	for _, rebalance := range rebalances {
-		msgs = append(msgs, &stakingtypes.MsgBeginRedelegate{DelegatorAddress: zone.DelegationAddress.Address, ValidatorSrcAddress: rebalance.Source, ValidatorDstAddress: rebalance.Target, Amount: sdk.NewCoin(zone.BaseDenom, rebalance.Amount)})
-		k.SetRedelegationRecord(ctx, types.RedelegationRecord{
-			ChainId:     zone.ChainId,
-			EpochNumber: epochNumber,
-			Source:      rebalance.Source,
-			Destination: rebalance.Target,
-			Amount:      rebalance.Amount.Int64(),
-		})
+		if rebalance.Amount.GTE(sdk.NewInt(1_000_000)) {
+			// don't redelegate dust; TODO: config per zone
+			if !rebalance.Amount.IsInt64() {
+				k.Logger(ctx).Error("Rebalance amount out of bound Int64", "amount", rebalance.Amount.String())
+				// Ignore this
+				continue
+			}
+			msgs = append(msgs, &stakingtypes.MsgBeginRedelegate{DelegatorAddress: zone.DelegationAddress.Address, ValidatorSrcAddress: rebalance.Source, ValidatorDstAddress: rebalance.Target, Amount: sdk.NewCoin(zone.BaseDenom, rebalance.Amount)})
+			k.SetRedelegationRecord(ctx, types.RedelegationRecord{
+				ChainId:     zone.ChainId,
+				EpochNumber: epochNumber,
+				Source:      rebalance.Source,
+				Destination: rebalance.Target,
+				Amount:      rebalance.Amount.Int64(),
+			})
+		}
 	}
 	if len(msgs) == 0 {
 		k.Logger(ctx).Debug("No rebalancing required")
@@ -779,4 +837,18 @@ func (k *Keeper) UnmarshalValidator(data []byte) (lsmstakingtypes.Validator, err
 	}
 
 	return validator, nil
+}
+
+func (k *Keeper) SendToWithdrawal(ctx sdk.Context, zone *types.Zone, sender *types.ICAAccount, amount sdk.Coins) error {
+	var msgs []sdk.Msg
+
+	sendMsg := banktypes.MsgSend{
+		FromAddress: sender.Address,
+		ToAddress:   zone.WithdrawalAddress.Address,
+		Amount:      amount,
+	}
+
+	msgs = append(msgs, &sendMsg)
+
+	return k.SubmitTx(ctx, msgs, sender, "", zone.MessagesPerTx)
 }

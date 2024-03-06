@@ -39,38 +39,17 @@ Please ensure your IDE is configured to use Typescript v4.9.3
 
 **UI/UX**
 
-- Finish Mobile breakpoints
-
 - focus on mobile landscape breakpoints, (mainly staking page)
-
-- find different assets for side bar
 
 **Mobile Menu**
 
-- design
-
-- connect wallet button
-
 - graphic elements
-
-- font size / style / decorations
 
 **DevOps**
 
 - make onboarding networks seamless
 
-**Assets Page**
+**Blockers**
 
-- claim rewards claim.test.quicksilver.zone/address/current \*/epoch
-
-- intent query
-
-- unbonding query
-
-**Staking Page**
-
-- check memo intent creation
-
-- validator route app.quicksilver.zone/staking/chainId/valoperAddress
-
-- fix succesful transaction on staking modal not taking you to final step
+- main net reward current & epoch queries
+- update grantee address in query & tx

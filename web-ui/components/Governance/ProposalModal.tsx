@@ -14,8 +14,6 @@ import {
   Center,
   Divider,
   Heading,
-  useColorMode,
-  useColorModeValue,
 } from '@chakra-ui/react';
 import { cosmos } from 'interchain-query';
 import { Proposal } from 'interchain-query/cosmos/gov/v1/gov';
@@ -28,6 +26,7 @@ import { decodeUint8Arr, exponentiate, formatDate, getCoin, getExponent, getPerc
 import { VoteResult, TimeDisplay, VoteRatio, NewLineText, StatusBadge, VoteOption } from './common';
 import { VoteColor } from './ProposalCard';
 import { VoteModal } from './VoteModal';
+
 
 const ProposalStatus = cosmos.gov.v1beta1.ProposalStatus;
 
@@ -52,7 +51,6 @@ export const ProposalModal = ({
 }) => {
   const [showMore, setShowMore] = useState(false);
   const voteModalControl = useDisclosure();
-  const { colorMode } = useColorMode();
 
   const coin = getCoin(chainName);
   const exponent = getExponent(chainName);
@@ -106,8 +104,6 @@ export const ProposalModal = ({
 
   const uint8ArrayValue = proposal.messages[0].value;
   const propinfo = decodeUint8Arr(uint8ArrayValue);
-
-  console.log(propinfo);
 
   const getTitleFromDecoded = (decodedStr: string) => {
     return decodedStr.slice(0, 250).match(/[A-Z][A-Za-z].*(?=\u0012)/)?.[0];
@@ -192,8 +188,13 @@ export const ProposalModal = ({
                 <TimeDisplay title="Voting Ends" time={isDepositPeriod ? 'Not Specified Yet' : formatDate(proposal.votingEndTime)} />
                 <Button
                   isDisabled={!isVotingPeriod}
+                  _active={{
+                    transform: 'scale(0.95)',
+                    color: 'complimentary.800',
+                  }}
                   _hover={{
-                    bgColor: '#181818',
+                    bgColor: 'rgba(255,128,0, 0.25)',
+                    color: 'complimentary.300',
                   }}
                   w="140px"
                   onClick={voteModalControl.onOpen}
@@ -291,8 +292,13 @@ export const ProposalModal = ({
                 <NewLineText text={renderedDescription} />
                 {description && description.length > 200 && (
                   <Button
+                    _active={{
+                      transform: 'scale(0.95)',
+                      color: 'complimentary.800',
+                    }}
                     _hover={{
-                      bgColor: '#181818',
+                      bgColor: 'rgba(255,128,0, 0.25)',
+                      color: 'complimentary.300',
                     }}
                     onClick={() => setShowMore(!showMore)}
                     size="sm"
@@ -304,7 +310,7 @@ export const ProposalModal = ({
             </ModalBody>
 
             <ModalFooter>
-              <Button _hover={{ bgColor: 'complimentary.900' }} mt={-4} color="white" variant="ghost" onClick={onClose}>
+              <Button _hover={{ color: 'complimentary.900' }} mt={-4} color="white" variant="ghost" onClick={onClose}>
                 Close
               </Button>
             </ModalFooter>

@@ -23,12 +23,12 @@ jobs:
           bun-version: latest # or specify a version
 
       - name: Install Dependencies
-        run: | 
+        run: |
             cd web-ui
-            bun install
+            bun install --frozen-lockfile
 
       - name: Build Project
         run: |
-            cd web-ui 
+            cd web-ui
             bun run build
 

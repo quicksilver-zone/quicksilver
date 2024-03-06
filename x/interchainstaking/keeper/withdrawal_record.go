@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"time"
 
+	gogotypes "github.com/gogo/protobuf/types"
+
 	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -14,24 +16,43 @@ import (
 	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 )
 
-func (k *Keeper) GetNextWithdrawalRecordSequence(ctx sdk.Context) (sequence uint64) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), nil)
+// InitWithdrawalRecordSequence initializes the sequence.
+func (k *Keeper) InitWithdrawalRecordSequence(ctx sdk.Context) {
+	store := ctx.KVStore(k.storeKey)
+
+	bz := k.cdc.MustMarshal(&gogotypes.UInt64Value{Value: 512})
+	store.Set(types.KeyPrefixRequeuedWithdrawalRecordSeq, bz)
+}
+
+// GetNextWithdrawalRecordSequence returns and increments the global withdrawal record seqeuence.
+func (k *Keeper) GetNextWithdrawalRecordSequence(ctx sdk.Context) uint64 {
+	var sequence uint64
+	store := ctx.KVStore(k.storeKey)
+
 	bz := store.Get(types.KeyPrefixRequeuedWithdrawalRecordSeq)
 	if bz == nil {
-		bz := make([]byte, 8)
-		binary.BigEndian.PutUint64(bz, uint64(2))
-		store.Set(types.KeyPrefixRequeuedWithdrawalRecordSeq, bz)
-		return 1
+		// initialize the account numbers
+		sequence = 0
+	} else {
+		val := gogotypes.UInt64Value{}
+
+		err := k.cdc.Unmarshal(bz, &val)
+		if err != nil {
+			panic(err)
+		}
+
+		sequence = val.GetValue()
 	}
-	sequence = binary.BigEndian.Uint64(bz)
-	binary.BigEndian.PutUint64(bz, sequence+1)
+
+	bz = k.cdc.MustMarshal(&gogotypes.UInt64Value{Value: sequence + 1})
 	store.Set(types.KeyPrefixRequeuedWithdrawalRecordSeq, bz)
+
 	return sequence
 }
 
-func (k *Keeper) AddWithdrawalRecord(ctx sdk.Context, chainID, delegator string, distributions []*types.Distribution, recipient string, amount sdk.Coins, burnAmount sdk.Coin, hash string, status int32, completionTime time.Time, epochNumber int64) {
-	record := types.WithdrawalRecord{ChainId: chainID, Delegator: delegator, Distribution: distributions, Recipient: recipient, Amount: amount, Status: status, BurnAmount: burnAmount, Txhash: hash, CompletionTime: completionTime, EpochNumber: epochNumber}
-	k.Logger(ctx).Error("addWithdrawalRecord", "record", record)
+func (k *Keeper) AddWithdrawalRecord(ctx sdk.Context, chainID, delegator string, distributions []*types.Distribution, recipient string, burnAmount sdk.Coin, hash string, status int32, completionTime time.Time, epochNumber int64) {
+	record := types.WithdrawalRecord{ChainId: chainID, Delegator: delegator, Distribution: distributions, Recipient: recipient, Status: status, BurnAmount: burnAmount, Txhash: hash, CompletionTime: completionTime, EpochNumber: epochNumber}
+	k.Logger(ctx).Info("addWithdrawalRecord", "record", record)
 	k.SetWithdrawalRecord(ctx, record)
 }
 
@@ -143,6 +164,20 @@ func (k *Keeper) AllUserWithdrawalRecords(ctx sdk.Context, address string) []typ
 	return records
 }
 
+// GetUserChainRequeuedWithdrawalRecord returns a requeued record for the given user and chain.
+func (k *Keeper) GetUserChainRequeuedWithdrawalRecord(ctx sdk.Context, chainID string, address string) types.WithdrawalRecord {
+	toReturn := types.WithdrawalRecord{}
+
+	k.IterateZoneStatusWithdrawalRecords(ctx, chainID, types.WithdrawStatusQueued, func(_ int64, record types.WithdrawalRecord) (stop bool) {
+		if record.Requeued && record.Delegator == address {
+			toReturn = record
+			return true
+		}
+		return false
+	})
+	return toReturn
+}
+
 // AllZoneWithdrawalRecords returns every record in the store for the specified zone.
 func (k *Keeper) AllZoneWithdrawalRecords(ctx sdk.Context, chainID string) []types.WithdrawalRecord {
 	records := []types.WithdrawalRecord{}
@@ -245,7 +280,7 @@ func (k *Keeper) UpdateWithdrawalRecordsForSlash(ctx sdk.Context, zone *types.Zo
 			thisSubAmount := distAmount.TruncateInt().Sub(newAmount)
 			recordSubAmount = recordSubAmount.Add(thisSubAmount)
 			d.Amount = newAmount.Uint64()
-			k.Logger(ctx).Info("Updated withdrawal record due to slashing", "valoper", valoper, "old_amount", d.Amount, "new_amount", newAmount.Int64(), "sub_amount", thisSubAmount.Int64())
+			k.Logger(ctx).Info("Updated withdrawal record due to slashing", "valoper", valoper, "old_amount", d.Amount, "new_amount", newAmount.String(), "sub_amount", thisSubAmount.String())
 		}
 		record.Distribution = distr
 		subAmount := sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, recordSubAmount))

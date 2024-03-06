@@ -2,8 +2,7 @@
 
 import { ChevronDownIcon } from '@chakra-ui/icons';
 import { Menu, MenuButton, MenuList, MenuItem, Button, Flex, Image, Text, useDisclosure } from '@chakra-ui/react';
-import React, { Dispatch, SetStateAction, useState } from 'react';
-import { BsArrowDown } from 'react-icons/bs';
+import React from 'react';
 
 import { networks as prodNetworks, testNetworks as devNetworks } from '@/state/chains/prod';
 
@@ -32,7 +31,7 @@ export const NetworkSelect: React.FC<CustomMenuProps> = ({ buttonTextColor = 'wh
     );
   }
 
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  const { isOpen } = useDisclosure();
 
   return (
     <Menu>
@@ -67,7 +66,7 @@ export const NetworkSelect: React.FC<CustomMenuProps> = ({ buttonTextColor = 'wh
             onClick={() => handleOptionClick(network)}
           >
             <Flex justifyContent="center" alignItems="center" flexDirection="row">
-              <Image alt={network.name.toLowerCase()} px={4} h="40px" src={network.logo} />
+              <Image alt={network.name.toLowerCase()} px={4} borderRadius={'full'} h="40px" src={network.logo} />
               <Text color="white" fontSize="20px" textAlign="center">
                 {network.name}
               </Text>

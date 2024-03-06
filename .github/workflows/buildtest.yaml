@@ -11,8 +11,8 @@ on:
       - unstable
       - unstable-v1.5
     paths-ignore:
-      - 'quicksilverjs/**'
-      - 'webui/**'
+      - "quicksilverjs/**"
+      - "webui/**"
   workflow_dispatch:
   push:
     branches:
@@ -21,9 +21,8 @@ on:
       - unstable
       - unstable-v1.5
     paths-ignore:
-      - 'quicksilverjs/**'
-      - 'webui/**'
-
+      - "quicksilverjs/**"
+      - "webui/**"
 
 # This workflow makes x86_64 for windows, and linux.
 
@@ -47,16 +46,6 @@ jobs:
           GOOS: ${{ matrix.targetos }}
           GOARCH: ${{ matrix.arch }}
 
-      - name: Setup Golang caches
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cache/go-build
-            ~/go/pkg/mod
-          key: ${{ runner.os }}-golang-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-golang-
-
       - name: Compile quicksilver
         run: |
           make install
@@ -75,7 +64,7 @@ jobs:
     strategy:
       matrix:
         arch: [amd64]
-        targetos: [linux, windows, darwin]
+        targetos: [linux, windows]
         include:
           - targetos: darwin
             arch: arm64
@@ -87,15 +76,6 @@ jobs:
         env:
           GOOS: ${{ matrix.targetos }}
           GOARCH: ${{ matrix.arch }}
-      - name: Setup Golang caches
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cache/go-build
-            ~/go/pkg/mod
-          key: ${{ runner.os }}-golang-test-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-golang-test-
 
       - name: test quicksilver
         run: |
@@ -119,9 +99,9 @@ jobs:
         run: make vulncheck
 
       - name: Upload coverage reports to Codecov with GitHub Action
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
-          token: ${{ secrets.CODECOV_TOKEN }} # needed for private repo
+          token: ${{secrets.CODECOV_TOKEN}}
           files: ./coverage.txt
           flags: unittests
           fail_ci_if_error: true
@@ -133,7 +113,7 @@ jobs:
     name: simulate quicksilver
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: |
             ~/.cache/go-build

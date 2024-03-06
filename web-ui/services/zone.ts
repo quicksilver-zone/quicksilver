@@ -1,16 +1,11 @@
-import { setupStakingExtension, QueryClient } from "@cosmjs/stargate";
-import { Tendermint34Client } from "@cosmjs/tendermint-rpc";
+
 import axios from 'axios'
-
-import { ProdZoneInfos } from '@/state/chains/prod'
-
 
 export const statusList = [
     "BOND_STATUS_BONDED",
     "BOND_STATUS_UNBONDING",
     "BOND_STATUS_UNBONDED"
 ]
-
 
 export const getAPY = async (chainId: string) => {
     try {

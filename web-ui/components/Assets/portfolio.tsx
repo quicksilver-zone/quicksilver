@@ -1,5 +1,6 @@
-import { shiftDigits } from '@/utils';
-import { Box, Flex, Text, Icon, VStack, HStack, Heading, Spinner, Tooltip } from '@chakra-ui/react';
+import { Progress, Flex, Text, VStack, HStack, Heading, Spinner, Tooltip, Grid, Box } from '@chakra-ui/react';
+
+import { abbreviateNumber, shiftDigits, formatQasset } from '@/utils';
 
 interface PortfolioItemInterface {
   title: string;
@@ -15,8 +16,16 @@ interface MyPortfolioProps {
   totalValue: number;
   averageApy: number;
   totalYearlyYield: number;
+  isLoading: boolean;
 }
-const MyPortfolio: React.FC<MyPortfolioProps> = ({ portfolioItems, isWalletConnected, totalValue, averageApy, totalYearlyYield }) => {
+const MyPortfolio: React.FC<MyPortfolioProps> = ({
+  portfolioItems,
+  isWalletConnected,
+  totalValue,
+  averageApy,
+  totalYearlyYield,
+  isLoading,
+}) => {
   if (!isWalletConnected) {
     return (
       <Flex
@@ -37,7 +46,7 @@ const MyPortfolio: React.FC<MyPortfolioProps> = ({ portfolioItems, isWalletConne
     );
   }
 
-  if (!totalValue) {
+  if (isLoading) {
     return (
       <Flex
         w="100%"
@@ -86,9 +95,16 @@ const MyPortfolio: React.FC<MyPortfolioProps> = ({ portfolioItems, isWalletConne
                   <Text fontSize="md" fontWeight="light">
                     AVG APY:
                   </Text>
-                  <Text fontSize="md" fontWeight="medium">
-                    {shiftDigits(averageApy.toFixed(2), 2)}%
-                  </Text>
+                  {Number.isNaN(averageApy) && (
+                    <Text fontSize="md" fontWeight="medium">
+                      0%
+                    </Text>
+                  )}
+                  {Number.isFinite(averageApy) && (
+                    <Text fontSize="md" fontWeight="medium">
+                      {shiftDigits(averageApy.toFixed(2), 2)}%
+                    </Text>
+                  )}
                 </HStack>
                 <Text textAlign="center">
                   <Text as="span" fontSize="md" fontWeight="light">
@@ -102,9 +118,15 @@ const MyPortfolio: React.FC<MyPortfolioProps> = ({ portfolioItems, isWalletConne
             </Flex>
           </VStack>
         </Flex>
-
+        {totalValue === 0 && (
+          <Flex w="100%" mt={-10} justifyContent="center" alignItems="center">
+            <Text fontSize="xl" textAlign="center">
+              You have no liquid staked assets.
+            </Text>
+          </Flex>
+        )}
         <Flex justifyContent="flex-start" borderRadius={6} alignItems="flex-start" gap={4}>
-          <VStack alignSelf="stretch" h="158px" overflowY="auto" borderRadius={6} alignItems="flex-start" gap={3}>
+          <VStack alignSelf="stretch" h="158px" overflowY="auto" className="custom-scrollbar" borderRadius={6} alignItems="center" gap={3}>
             {portfolioItems
               .filter((item) => Number(item.amount) > 0)
               .map((item) => (
@@ -115,6 +137,7 @@ const MyPortfolio: React.FC<MyPortfolioProps> = ({ portfolioItems, isWalletConne
                   progressBarColor={item.progressBarColor}
                   amount={item.amount}
                   qTokenPrice={item.qTokenPrice}
+                  totalValue={totalValue}
                 />
               ))}
           </VStack>
@@ -130,30 +153,37 @@ interface PortfolioItemProps {
   progressBarColor: string;
   amount: string;
   qTokenPrice: number;
+  totalValue: number;
 }
 
-const PortfolioItem: React.FC<PortfolioItemProps> = ({ title, percentage, progressBarColor, amount, qTokenPrice }) => (
-  <Flex alignSelf="stretch" justifyContent="space-between" gap={16} alignItems="center">
-    <HStack h="24px" justifyContent="flex-start" alignItems="center" gap={2.75}>
-      <Tooltip label={`Price: ${qTokenPrice.toFixed(2)}`} placement="top">
-        <Text>{Number(amount).toFixed(2).toString()}</Text>
-      </Tooltip>
-      <Text fontSize="md" fontWeight="medium">
-        {title}
-      </Text>
-    </HStack>
-    <HStack justifyContent="center" alignItems="center" gap={4}>
-      <Box w="121px" h="8px" pos="relative">
-        <Box w="121px" h="8px" pos="absolute" bg="complimentary.100" borderRadius="md" />
-        <Box w={`${percentage * 100}%`} h="8px" pos="absolute" bg={progressBarColor} borderRadius="md" />
+const PortfolioItem: React.FC<PortfolioItemProps> = ({ title, percentage, progressBarColor, amount, qTokenPrice, totalValue }) => {
+  const amountLength = amount.toString().length;
+  const amountWidth = Math.min(Math.max(amountLength * 8, 90), 100);
+
+  return (
+    <Grid templateColumns={`minmax(${amountWidth}px, 1fr) 3fr 1fr`} gap={4} alignItems="center" width="100%">
+      <HStack spacing={-5}>
+        <Tooltip label={`Price: ${qTokenPrice.toFixed(2)}`} placement="top">
+          <Text textAlign="left" minWidth="100px" maxWidth="100px">
+            {abbreviateNumber(Number(amount))}
+          </Text>
+        </Tooltip>
+        <Text textAlign={'left'} fontSize="md" fontWeight="medium">
+          {formatQasset(title)}
+        </Text>
+      </HStack>
+
+      <Box minW="150px" ml={'80px'}>
+        <Progress borderRadius="full" colorScheme="orange" size="sm" value={percentage * 100} />
       </Box>
+
       <Tooltip label={`Value: $${(qTokenPrice * Number(amount)).toFixed(2)}`}>
-        <Text w="44px" textAlign="right" fontSize="sm" fontWeight="normal">
-          {`${percentage * 100}%`}
+        <Text textAlign="right" minWidth="50px">
+          {`${(percentage * 100).toFixed(0)}%`}
         </Text>
       </Tooltip>
-    </HStack>
-  </Flex>
-);
+    </Grid>
+  );
+};
 
 export default MyPortfolio;

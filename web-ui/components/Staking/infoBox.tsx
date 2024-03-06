@@ -1,5 +1,5 @@
-import { Box, Image, Text, Accordion, AccordionItem, Flex, AccordionPanel, VStack, HStack, Link, SkeletonCircle } from '@chakra-ui/react';
-import React, { useEffect, useState } from 'react';
+import { Box, Text, Accordion, AccordionItem, Flex, AccordionPanel, VStack, HStack, Link, SkeletonCircle } from '@chakra-ui/react';
+import React from 'react';
 import { BsTrophy, BsCoin, BsClock } from 'react-icons/bs';
 import { RiStockLine } from 'react-icons/ri';
 
@@ -105,7 +105,7 @@ export const InfoBox: React.FC<AssetsAccordianProps> = ({ selectedOption, displa
                 </Text>
               </Flex>
               <Text pr={2} color="complimentary.900">
-                Low
+                3% of Rewards
               </Text>
             </Flex>
           </h2>
@@ -159,7 +159,7 @@ export const InfoBox: React.FC<AssetsAccordianProps> = ({ selectedOption, displa
 
       <Text mt={3} color="white" textAlign="center" bgColor="rgba(0,0,0,0.4)" p={5} width="100%" borderRadius={6} fontWeight="light">
         Want to learn more about rewards, fees, and unbonding on Quicksilver?&nbsp;Check out the{' '}
-        <Link href="https://your-docs-url.com" color="complimentary.900" isExternal>
+        <Link href="https://docs.quicksilver.zone" color="complimentary.900" isExternal>
           docs
         </Link>
         .

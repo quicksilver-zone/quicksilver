@@ -4,6 +4,7 @@ import { cosmos } from 'interchain-query';
 import { Proposal } from 'interchain-query/cosmos/gov/v1/gov';
 import React, { useMemo } from 'react';
 
+
 import { Votes } from '@/hooks';
 import { decodeUint8Arr, getPercentage } from '@/utils';
 

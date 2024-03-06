@@ -95,12 +95,12 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, _ int64)
 	return nil
 }
 
-func (k *Keeper) AfterZoneCreated(ctx sdk.Context, connectionID, chainID, accountPrefix string) error {
+func (k *Keeper) AfterZoneCreated(ctx sdk.Context, zone *icstypes.Zone) error {
 	connectionPd := types.ConnectionProtocolData{
-		ConnectionID: connectionID,
-		ChainID:      chainID,
+		ConnectionID: zone.ConnectionId,
+		ChainID:      zone.ChainId,
 		LastEpoch:    0,
-		Prefix:       accountPrefix,
+		Prefix:       zone.AccountPrefix,
 	}
 
 	if err := connectionPd.ValidateBasic(); err != nil {
@@ -115,6 +115,27 @@ func (k *Keeper) AfterZoneCreated(ctx sdk.Context, connectionID, chainID, accoun
 	k.SetProtocolData(ctx, connectionPd.GenerateKey(), &types.ProtocolData{
 		Type: types.ProtocolDataType_name[int32(types.ProtocolDataTypeConnection)],
 		Data: connectionPdBytes,
+	})
+
+	localDenom := types.LiquidAllowedDenomProtocolData{
+		ChainID:               ctx.ChainID(),
+		RegisteredZoneChainID: zone.ChainId,
+		IbcDenom:              zone.LocalDenom,
+		QAssetDenom:           zone.LocalDenom,
+	}
+
+	if err := localDenom.ValidateBasic(); err != nil {
+		return err
+	}
+
+	localDenomBytes, err := json.Marshal(localDenom)
+	if err != nil {
+		return err
+	}
+
+	k.SetProtocolData(ctx, localDenom.GenerateKey(), &types.ProtocolData{
+		Type: types.ProtocolDataType_name[int32(types.ProtocolDataTypeLiquidToken)],
+		Data: localDenomBytes,
 	})
 
 	return nil
@@ -146,6 +167,6 @@ func (h Hooks) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumbe
 	return h.k.AfterEpochEnd(ctx, epochIdentifier, epochNumber)
 }
 
-func (h Hooks) AfterZoneCreated(ctx sdk.Context, connectionID, chainID, accountPrefix string) error {
-	return h.k.AfterZoneCreated(ctx, connectionID, chainID, accountPrefix)
+func (h Hooks) AfterZoneCreated(ctx sdk.Context, zone *icstypes.Zone) error {
+	return h.k.AfterZoneCreated(ctx, zone)
 }

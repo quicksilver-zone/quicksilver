@@ -1,21 +1,28 @@
-import { Box, Flex, Text, Button, VStack, useColorModeValue, HStack, SkeletonCircle, Spinner } from '@chakra-ui/react';
+import { Box, Flex, Text, VStack, HStack, SkeletonCircle, Spinner } from '@chakra-ui/react';
 import { useChain } from '@cosmos-kit/react';
+import { BsCoin } from 'react-icons/bs';
 
 import { defaultChainName } from '@/config';
-import { useAPYQuery, useBalanceQuery, useZoneQuery } from '@/hooks/useQueries';
+import { useBalanceQuery } from '@/hooks/useQueries';
 import { shiftDigits } from '@/utils';
 
 import { DepositModal } from './modals/qckDepositModal';
 import { WithdrawModal } from './modals/qckWithdrawModal';
 
-const QuickBox = () => {
-  const { address, isWalletConnected } = useChain(defaultChainName);
+
+interface QuickBoxProps {
+  stakingApy?: number;
+}
+
+const QuickBox: React.FC<QuickBoxProps> = ({ stakingApy }) => {
+  const { address } = useChain(defaultChainName);
+
   const { balance, isLoading } = useBalanceQuery(defaultChainName, address ?? '');
-  const tokenBalance = Number(shiftDigits(balance?.balance.amount ?? '', -6))
+  const tokenBalance = Number(shiftDigits(balance?.balance?.amount ?? '', -6))
     .toFixed(2)
     .toString();
 
-  if (!isWalletConnected) {
+  if (!address) {
     return (
       <Flex direction="column" p={5} borderRadius="lg" align="center" justify="space-around" w="full" h="full">
         <Text fontSize="xl" textAlign="center">
@@ -43,12 +50,34 @@ const QuickBox = () => {
     );
   }
 
+  const decimalValue = parseFloat(stakingApy?.toString() ?? '0');
+  const percentageValue = decimalValue * 100;
+  const percentageString = percentageValue.toString();
+
+  const truncatedPercentage = percentageString.slice(0, percentageString.indexOf('.') + 3);
+
+  const quickStakingApy = () => {
+    if (stakingApy) {
+      return (
+        <Text fontSize="lg" fontWeight="semibold">
+          {truncatedPercentage}%
+        </Text>
+      );
+    } else {
+      return (
+        <Box display="inline-block">
+          <SkeletonCircle size="8" startColor="complimentary.900" endColor="complimentary.400" />
+        </Box>
+      );
+    }
+  };
+
   return (
     <Flex direction="column" p={5} borderRadius="lg" align="center" justify="space-around" w="full" h="full">
       <VStack spacing={6}>
         {' '}
         <HStack>
-          <Box w={6} h={6} borderRadius="full" bg="gray.300" />
+          <BsCoin color="#FF8000" size={30} />
           <Text fontSize="3xl" fontWeight="bold">
             QCK
           </Text>
@@ -56,25 +85,20 @@ const QuickBox = () => {
         <HStack>
           <Text fontSize="2xl" fontWeight="bold"></Text>
           <Text fontSize="md" fontWeight="normal">
-            STAKING APY
+            STAKING APY:
           </Text>
+          {quickStakingApy()}
         </HStack>
         <VStack spacing={1} alignItems="flex-start" w="full">
-          <HStack gap={2}>
-            <Text fontSize="sm">QUICKSILVER BALANCE:</Text>
+          <VStack gap={2}>
+            <Text fontSize="sm" textAlign="center">ON QUICKSILVER:</Text>
             {isLoading === true && !balance && <SkeletonCircle size="2" startColor="complimentary.900" endColor="complimentary.400" />}
             {!isLoading && balance && (
-              <Text fontSize="lg" fontWeight="semibold">
-                {tokenBalance}
+              <Text fontSize="lg" fontWeight="semibold" textAlign="center">
+                {tokenBalance} QCK
               </Text>
             )}
-          </HStack>
-          <HStack gap={2}>
-            <Text fontSize="sm">NON-NATIVE BALANCE:</Text>
-            <Text fontSize="lg" fontWeight="semibold">
-              10.12
-            </Text>
-          </HStack>
+          </VStack>
         </VStack>
         <DepositModal />
         <WithdrawModal />

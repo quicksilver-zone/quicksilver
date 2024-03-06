@@ -1,9 +1,8 @@
-import React, { useState } from 'react';
+import { ChevronDownIcon, ChevronUpIcon, ExternalLinkIcon } from '@chakra-ui/icons';
 import {
   Box,
   Button,
   Flex,
-  Heading,
   Table,
   Thead,
   Tbody,
@@ -13,25 +12,17 @@ import {
   Text,
   Select,
   Stack,
-  useColorModeValue,
-  ButtonGroup,
-  HStack,
+  Image,
   Link,
+  Tooltip,
   Center,
   Spinner,
-  useBreakpointValue,
 } from '@chakra-ui/react';
-import { ChevronDownIcon, ExternalLinkIcon } from '@chakra-ui/icons';
+import React, { useState, useEffect } from 'react';
+
 import { useDefiData } from '@/hooks/useQueries';
+
 type ActionButtonTitle = 'Add Liquidity' | 'Borrow' | 'Lend' | 'Mint Stablecoin' | 'Vaults';
-interface DefiAsset {
-  id: string;
-  assetPair: string;
-  apy: number;
-  tvl: string;
-  provider: string;
-  action: string;
-}
 
 const actionTitles: Record<string, ActionButtonTitle> = {
   'add-liquidity': 'Add Liquidity',
@@ -47,7 +38,11 @@ interface DefiData {
   tvl: number;
   provider: string;
   action: string;
+  link: string;
 }
+
+type SortOrder = 'asc' | 'desc';
+type SortableColumn = 'apy' | 'tvl';
 
 const filterCategories: Record<string, (data: DefiData) => boolean> = {
   All: () => true,
@@ -58,7 +53,7 @@ const filterCategories: Record<string, (data: DefiData) => boolean> = {
 };
 
 const formatApy = (apy: number) => {
-  return `${(apy * 100).toFixed(2)}%`; // Converts to percentage and formats to 2 decimal places
+  return `${(apy * 100).toFixed(2)}%`;
 };
 
 const DefiTable = () => {
@@ -74,8 +69,61 @@ const DefiTable = () => {
   const handleFilterClick = (filter: string) => {
     setActiveFilter(filter);
   };
-  const isMobile = useBreakpointValue({ base: true, 1013: true, md: false });
+  const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' && window.innerWidth < 1274);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 1274);
+    };
+
+    window.addEventListener('resize', handleResize);
+
+    // Clean up
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
   const filteredData = defi ? defi.filter(filterCategories[activeFilter]) : [];
+
+  type ProviderKey = 'osmosis' | 'ux' | 'shade';
+
+  const providerIcons: Record<ProviderKey, string> = {
+    osmosis: '/img/osmoIcon.svg',
+    ux: '/img/ux.png',
+    shade: '/img/shd.svg',
+  };
+
+  const isProviderKey = (key: string): key is ProviderKey => {
+    return key in providerIcons;
+  };
+
+  const [sortColumn, setSortColumn] = useState<SortableColumn | null>(null);
+  const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
+
+  const sortData = (data: DefiData[], column: SortableColumn | null, order: SortOrder) => {
+    if (!column) return data;
+    return [...data].sort((a, b) => {
+      let comparison = 0;
+      if (column === 'apy' || column === 'tvl') {
+        comparison = a[column] - b[column];
+      } else {
+        comparison = a[column] > b[column] ? 1 : -1;
+      }
+
+      return order === 'asc' ? comparison : -comparison;
+    });
+  };
+
+  const handleSort = (column: SortableColumn) => {
+    if (sortColumn === column) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortColumn(column);
+      setSortOrder('asc');
+    }
+  };
+
+  const sortedData = sortData(filteredData, sortColumn, sortOrder);
 
   return (
     <Box backdropFilter="blur(50px)" bgColor="rgba(255,255,255,0.1)" flex="1" borderRadius="10px" p={6} rounded="md">
@@ -130,18 +178,64 @@ const DefiTable = () => {
           ))}
         </Stack>
       )}
-      <Box maxH={'480px'} minH={'480px'} overflow={'auto'}>
+      <Box maxH={'480px'} minH={'480px'} overflow={'auto'} className="custom-scrollbar">
         <Table color={'white'} variant="simple">
           <Thead position="sticky">
             <Tr>
-              <Th color={'complimentary.900'}>
-                Asset Pair <ChevronDownIcon />
+              <Th color={'complimentary.900'}>Asset Pair</Th>
+              <Th
+                textAlign={'center'}
+                color={'complimentary.900'}
+                isNumeric
+                onClick={() => handleSort('apy')}
+                style={{ cursor: 'pointer' }}
+              >
+                APY{' '}
+                {sortColumn === 'apy' ? (
+                  sortOrder === 'asc' ? (
+                    <ChevronUpIcon
+                      _hover={{ color: 'complimentary.700', transform: 'scale(1.5)' }}
+                      _active={{ color: 'complimentary.500' }}
+                    />
+                  ) : (
+                    <ChevronDownIcon
+                      _hover={{ color: 'complimentary.700', transform: 'scale(1.5)' }}
+                      _active={{ color: 'complimentary.500' }}
+                    />
+                  )
+                ) : (
+                  <ChevronDownIcon
+                    _hover={{ color: 'complimentary.700', transform: 'scale(1.5)' }}
+                    _active={{ color: 'complimentary.500' }}
+                  />
+                )}
               </Th>
-              <Th textAlign={'center'} color={'complimentary.900'} isNumeric>
-                APY <ChevronDownIcon />
-              </Th>
-              <Th textAlign={'center'} color={'complimentary.900'} isNumeric>
-                TVL <ChevronDownIcon />
+              <Th
+                textAlign={'center'}
+                color={'complimentary.900'}
+                isNumeric
+                style={{ cursor: 'pointer' }}
+                onClick={() => handleSort('tvl')}
+              >
+                TVL{' '}
+                {sortColumn === 'tvl' ? (
+                  sortOrder === 'asc' ? (
+                    <ChevronUpIcon
+                      _hover={{ color: 'complimentary.700', transform: 'scale(1.5)' }}
+                      _active={{ color: 'complimentary.500' }}
+                    />
+                  ) : (
+                    <ChevronDownIcon
+                      _hover={{ color: 'complimentary.700', transform: 'scale(1.5)' }}
+                      _active={{ color: 'complimentary.500' }}
+                    />
+                  )
+                ) : (
+                  <ChevronDownIcon
+                    _hover={{ color: 'complimentary.700', transform: 'scale(1.5)' }}
+                    _active={{ color: 'complimentary.500' }}
+                  />
+                )}
               </Th>
               <Th textAlign={'center'} color={'complimentary.900'}>
                 Provider
@@ -159,17 +253,16 @@ const DefiTable = () => {
                   {' '}
                   {/* Span across all columns */}
                   <Center my={42}>
-                    <Spinner size="4xl" color="complimentary.900" />
+                    <Spinner size="xl" color="complimentary.900" />
                   </Center>
                 </Td>
               </Tr>
             )}
             {defi &&
-              filteredData.map((asset, index) => (
+              sortedData.map((asset, index) => (
                 <Tr _even={{ bg: 'rgba(255, 128, 0, 0.1)' }} key={index} borderBottomColor={'transparent'}>
-                  <Td borderBottomColor="transparent">
+                  <Td textAlign={'center'} borderBottomColor="transparent">
                     <Flex align="center">
-                      <Box w="2rem" h="2rem" bg="gray.200" rounded="full" mr={2}></Box>
                       <Text>{asset.assetPair}</Text>
                     </Flex>
                   </Td>
@@ -177,14 +270,33 @@ const DefiTable = () => {
                     {formatApy(asset.apy)}
                   </Td>
                   <Td textAlign={'center'} borderBottomColor="transparent" isNumeric>
-                    {asset.tvl}
+                    ${asset.tvl.toLocaleString()}
                   </Td>
-                  <Td textAlign={'center'} borderBottomColor="transparent">
-                    {asset.provider}
+                  <Td borderBottomColor="transparent">
+                    {isProviderKey(asset.provider.toLowerCase()) && (
+                      <Tooltip label={`${asset.provider}`}>
+                        <Center>
+                          <Image
+                            src={providerIcons[asset.provider.toLowerCase() as ProviderKey]}
+                            alt={asset.provider}
+                            boxSize="2rem"
+                            objectFit="cover"
+                          />
+                        </Center>
+                      </Tooltip>
+                    )}
                   </Td>
                   <Td textAlign={'center'} borderBottomColor="transparent">
                     <Link href={asset.link} isExternal={true} _hover={{ textDecoration: 'none' }}>
-                      <Button minW="150px" backgroundColor="rgba(255, 128, 0, 0.8)" rightIcon={<ExternalLinkIcon />} variant="ghost">
+                      <Button
+                        _hover={{
+                          bgColor: 'complimentary.1000',
+                        }}
+                        minW="150px"
+                        backgroundColor="rgba(255, 128, 0, 0.8)"
+                        rightIcon={<ExternalLinkIcon />}
+                        variant="ghost"
+                      >
                         {actionTitles[asset.action.toLowerCase().replace(/\s+/g, '-') as keyof typeof actionTitles]}
                       </Button>
                     </Link>
@@ -197,7 +309,7 @@ const DefiTable = () => {
                   {' '}
                   {/* Span across all columns */}
                   <Center my={4}>
-                    <Text color="complimentary.900">No entries found for this category, please check back later!</Text>
+                    <Text color="complimentary.900">Nothing here yet. Stay tuned!</Text>
                   </Center>
                 </Td>
               </Tr>

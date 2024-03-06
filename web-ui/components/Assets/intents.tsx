@@ -1,9 +1,27 @@
 import { ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons';
-import { Box, Flex, Text, Button, IconButton, VStack, Image, Heading, SlideFade, Spinner } from '@chakra-ui/react';
-import { color } from 'framer-motion';
-import { useState } from 'react';
+import {
+  Box,
+  Flex,
+  Text,
+  Button,
+  IconButton,
+  VStack,
+  Image,
+  Heading,
+  SlideFade,
+  Spinner,
+  SkeletonCircle,
+  SkeletonText,
+  Center,
+} from '@chakra-ui/react';
+import { Key, useState } from 'react';
 
-import { useIntentQuery } from '@/hooks/useQueries';
+import { useIntentQuery, useValidatorLogos, useValidatorsQuery } from '@/hooks/useQueries';
+import { networks as prodNetworks, testNetworks as devNetworks } from '@/state/chains/prod';
+import { truncateString } from '@/utils';
+
+import SignalIntentModal from './modals/signalIntentProcess';
+
 
 export interface StakingIntentProps {
   address: string;
@@ -11,38 +29,56 @@ export interface StakingIntentProps {
 }
 
 const StakingIntent: React.FC<StakingIntentProps> = ({ address, isWalletConnected }) => {
-  const validators = [
-    { name: 'Validator 1', logo: '/validator1.png', percentage: '30%' },
-    { name: 'Validator 2', logo: '/validator2.png', percentage: '40%' },
-  ];
+  const networks = process.env.NEXT_PUBLIC_CHAIN_ENV === 'mainnet' ? prodNetworks : devNetworks;
 
-  const chains = ['Stargaze', 'Cosmos', 'Osmosis', 'Regen', 'Sommelier'];
+  const chains = ['Cosmos', 'Osmosis', 'Stargaze', 'Regen', 'Sommelier', 'Juno'];
   const [currentChainIndex, setCurrentChainIndex] = useState(0);
 
-  const currentChainName = chains[currentChainIndex];
-  let newChainName: string | undefined;
-  if (currentChainName === 'Cosmos') {
-    newChainName = 'cosmoshub';
-  } else if (currentChainName === 'Osmosis') {
-    newChainName = 'osmosistestnet';
-  } else if (currentChainName === 'Stargaze') {
-    newChainName = 'stargazetestnet';
-  } else if (currentChainName === 'Regen') {
-    newChainName = 'regen';
-  } else if (currentChainName === 'Sommelier') {
-    newChainName = 'sommelier-3';
-  } else {
-    // Default case
-    newChainName = currentChainName;
+  const [isSignalIntentModalOpen, setIsSignalIntentModalOpen] = useState(false);
+  const openSignalIntentModal = () => setIsSignalIntentModalOpen(true);
+  const closeSignalIntentModal = () => setIsSignalIntentModalOpen(false);
+
+  const currentNetwork = networks[currentChainIndex];
+
+  const { validatorsData } = useValidatorsQuery(currentNetwork.chainName);
+  const { data: validatorLogos } = useValidatorLogos(currentNetwork.chainName, validatorsData || []);
+
+  const { intent, refetch } = useIntentQuery(currentNetwork.chainName, address ?? '');
+
+  interface ValidatorDetails {
+    moniker: string;
+    logoUrl: string | undefined;
   }
-  const { intent, isLoading, isError } = useIntentQuery(newChainName, address ?? '');
+
+  interface ValidatorMap {
+    [valoper_address: string]: ValidatorDetails;
+  }
+
+  const validatorsMap: ValidatorMap =
+    validatorsData?.reduce((map: ValidatorMap, validatorInfo) => {
+      map[validatorInfo.address] = {
+        moniker: validatorInfo.name,
+        logoUrl: validatorLogos?.[validatorInfo.address],
+      };
+      return map;
+    }, {}) || {};
+
+  const validatorsWithDetails =
+    intent?.data?.intent.intents.map((validatorIntent: { valoper_address: string; weight: string }) => {
+      const validatorDetails = validatorsMap[validatorIntent.valoper_address];
+      return {
+        moniker: validatorDetails?.moniker,
+        logoUrl: validatorDetails?.logoUrl,
+        percentage: `${(parseFloat(validatorIntent.weight) * 100).toFixed(2)}%`,
+      };
+    }) || [];
 
   const handleLeftArrowClick = () => {
-    setCurrentChainIndex((prevIndex) => (prevIndex === 0 ? chains.length - 1 : prevIndex - 1));
+    setCurrentChainIndex((prevIndex) => (prevIndex === 0 ? networks.length - 1 : prevIndex - 1));
   };
 
   const handleRightArrowClick = () => {
-    setCurrentChainIndex((prevIndex) => (prevIndex === chains.length - 1 ? 0 : prevIndex + 1));
+    setCurrentChainIndex((prevIndex) => (prevIndex === networks.length - 1 ? 0 : prevIndex + 1));
   };
 
   if (!isWalletConnected) {
@@ -80,10 +116,16 @@ const StakingIntent: React.FC<StakingIntentProps> = ({ address, isWalletConnecte
           <Heading fontSize="lg" fontWeight="bold" textTransform="uppercase">
             Stake Intent
           </Heading>
-          <Button color="GrayText" variant="link">
+          <Button color="GrayText" _hover={{ color: 'complimentary.900' }} variant="link" onClick={openSignalIntentModal}>
             Edit Intent
             <ChevronRightIcon />
           </Button>
+          <SignalIntentModal
+            refetch={refetch}
+            selectedOption={currentNetwork}
+            isOpen={isSignalIntentModalOpen}
+            onClose={closeSignalIntentModal}
+          />
         </Flex>
 
         <Flex borderBottom="1px" borderBottomColor="complimentary.900" alignItems="center" justifyContent="space-between">
@@ -116,18 +158,55 @@ const StakingIntent: React.FC<StakingIntentProps> = ({ address, isWalletConnecte
           />
         </Flex>
 
-        <VStack spacing={2} align="stretch">
-          {validators.map((validator, index) => (
-            <Flex key={index} justifyContent="space-between" w="full" alignItems="center">
-              <Flex alignItems="center" gap={2}>
-                <Image alt="" src={validator.logo} boxSize="24px" borderRadius="full" />
-                <Text fontSize="md">{validator.name}</Text>
-              </Flex>
-              <Text fontSize="lg" fontWeight="bold">
-                {validator.percentage}
-              </Text>
-            </Flex>
-          ))}
+        <VStack pb={4} overflowY="auto" className="custom-scrollbar" gap={4} spacing={2} align="stretch" maxH="250px">
+          {(validatorsWithDetails.length > 0 &&
+            validatorsWithDetails.map(
+              (validator: { logoUrl: string; moniker: string; percentage: string }, index: Key | null | undefined) => (
+                <Flex key={index} justifyContent="space-between" w="full" alignItems="center">
+                  <Flex alignItems="center" gap={2}>
+                    {validator.logoUrl ? (
+                      <Image
+                        borderRadius={'full'}
+                        src={validator.logoUrl}
+                        alt={validator.moniker}
+                        boxSize="26px"
+                        objectFit="cover"
+                        marginRight="8px"
+                      />
+                    ) : (
+                      <SkeletonCircle
+                        boxSize="26px"
+                        objectFit="cover"
+                        marginRight="8px"
+                        display="inline-block"
+                        verticalAlign="middle"
+                        startColor="complimentary.900"
+                        endColor="complimentary.100"
+                      />
+                    )}
+                    {validator.moniker ? (
+                      <Text fontSize="md">{truncateString(validator.moniker, 20)}</Text>
+                    ) : (
+                      <SkeletonText
+                        display="inline-block"
+                        verticalAlign="middle"
+                        startColor="complimentary.900"
+                        endColor="complimentary.100"
+                        noOfLines={1}
+                        width="100px"
+                      />
+                    )}
+                  </Flex>
+                  <Text fontSize="lg" fontWeight="bold">
+                    {validator.percentage}
+                  </Text>
+                </Flex>
+              ),
+            )) || (
+            <Center mt={6}>
+              <Text fontSize="xl">No intent set</Text>
+            </Center>
+          )}
         </VStack>
       </VStack>
     </Box>

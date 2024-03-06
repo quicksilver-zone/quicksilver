@@ -10,24 +10,23 @@ import {
   FormControl,
   FormLabel,
   Input,
-  Select,
   useDisclosure,
   useToast,
   Spinner,
 } from '@chakra-ui/react';
+import { StdFee, coins } from '@cosmjs/stargate';
 import { ChainName } from '@cosmos-kit/core';
 import { useChain, useManager } from '@cosmos-kit/react';
+import BigNumber from 'bignumber.js';
+import { ibc } from 'quicksilverjs';
 import { useState, useMemo, useEffect } from 'react';
 
 import { ChooseChain } from '@/components/react/choose-chain';
 import { handleSelectChainDropdown, ChainOption } from '@/components/types';
-import { ibc } from 'interchain-query';
-import { useBalanceQuery, useIbcBalanceQuery } from '@/hooks/useQueries';
 import { useTx } from '@/hooks';
-import BigNumber from 'bignumber.js';
+import { useIbcBalanceQuery } from '@/hooks/useQueries';
+import { ibcDenomWithdrawMapping } from '@/state/chains/prod';
 import { getCoin, getIbcInfo } from '@/utils';
-import { StdFee, coins } from '@cosmjs/stargate';
-import { store } from '@interchain-ui/react';
 
 interface QDepositModalProps {
   token: string;
@@ -43,7 +42,7 @@ const QWithdrawModal: React.FC<QDepositModalProps> = ({ token }) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const chainOptions = useMemo(() => {
-    const desiredChains = ['osmosis', 'secretnetwork', 'umee'];
+    const desiredChains = ['osmosis', 'umee'];
     return chainRecords
       .filter((chainRecord) => desiredChains.includes(chainRecord.name))
       .map((chainRecord) => ({
@@ -69,16 +68,14 @@ const QWithdrawModal: React.FC<QDepositModalProps> = ({ token }) => {
 
   const chooseChain = <ChooseChain chainName={chainName} chainInfos={chainOptions} onChange={onChainChange} />;
 
-  const fromChain = chainName;
-  const toChain = 'quicksilver';
+  const fromChain = 'quicksilver';
+  const toChain = chainName;
 
   const { transfer } = ibc.applications.transfer.v1.MessageComposer.withTypeUrl;
-  const { address, connect, status, message, wallet } = useChain(fromChain ?? '');
+  const { address } = useChain(toChain ?? '');
   const { address: qAddress } = useChain('quicksilver');
   const { balance } = useIbcBalanceQuery(fromChain ?? '', address ?? '');
   const { tx } = useTx(fromChain ?? '');
-  const qckBalance =
-    balance?.balances.find((b) => b.denom === 'ibc/635CB83EF1DFE598B10A3E90485306FD0D47D34217A4BE5FD9977FA010A5367D')?.amount ?? '';
 
   const onSubmitClick = async () => {
     setIsLoading(true);
@@ -91,11 +88,39 @@ const QWithdrawModal: React.FC<QDepositModalProps> = ({ token }) => {
       gas: '300000',
     };
 
-    const sourcePort = 'transfer';
-    const sourceChannel = 'channel-0';
+    const { sourcePort, sourceChannel } = getIbcInfo(fromChain ?? '', toChain ?? '');
 
-    const token = {
-      denom: 'ibc/635CB83EF1DFE598B10A3E90485306FD0D47D34217A4BE5FD9977FA010A5367D',
+    // Function to get the correct IBC denom trace based on chain and token
+    type ChainDenomMappingKeys = keyof typeof ibcDenomWithdrawMapping;
+
+    type TokenKeys = keyof (typeof ibcDenomWithdrawMapping)['quicksilver'];
+
+    const getIbcDenom = (chainName: string, token: string) => {
+      const chain = chainName as ChainDenomMappingKeys;
+      const chainDenoms = ibcDenomWithdrawMapping[chain];
+
+      if (chainDenoms && token in chainDenoms) {
+        return chainDenoms[token as TokenKeys];
+      }
+
+      return undefined;
+    };
+
+    const ibcDenom = getIbcDenom(fromChain ?? '', token);
+    if (!ibcDenom) {
+      toast({
+        title: 'Error',
+        description: `No IBC denom trace found for ${token} on chain ${fromChain}`,
+        status: 'error',
+        duration: 9000,
+        isClosable: true,
+      });
+      setIsLoading(false);
+      return;
+    }
+
+    const ibcToken = {
+      denom: 'u' + ibcDenom ?? '',
       amount: transferAmount,
     };
 
@@ -105,9 +130,9 @@ const QWithdrawModal: React.FC<QDepositModalProps> = ({ token }) => {
     const msg = transfer({
       sourcePort,
       sourceChannel,
-      sender: address ?? '',
-      receiver: qAddress ?? '',
-      token,
+      sender: qAddress ?? '',
+      receiver: address ?? '',
+      token: ibcToken,
       timeoutHeight: undefined,
       //@ts-ignore
       timeoutTimestamp: timeoutInNanos,

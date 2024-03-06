@@ -1,15 +1,12 @@
 package types_test
 
 import (
-	"encoding/json"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	liquiditytypes "github.com/quicksilver-zone/quicksilver/third-party-chains/crescent-types/liquidity/types"
-	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	"github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 )
 
@@ -77,7 +74,6 @@ func TestDistributionProportions_ValidateBasic(t *testing.T) {
 
 func TestKeyedProtocolData_ValidateBasic(t *testing.T) {
 	testUmeeData := types.UmeeProtocolData{Denom: "test", Data: []byte{0x6e, 0x75, 0x6c, 0x6c}}
-	testAddress := addressutils.GenerateAddressForTestWithPrefix("cosmos")
 
 	invalidOsmosisData := `{
 	"poolname": "osmosispools/1",
@@ -324,100 +320,6 @@ func TestKeyedProtocolData_ValidateBasic(t *testing.T) {
 				&types.ProtocolData{
 					Type: types.ProtocolDataType_name[int32(types.ProtocolDataTypeUmeeTotalBorrows)],
 					Data: marshalledUmeeData[types.UmeeTotalBorrowsProtocolData](testUmeeData),
-				},
-			},
-			false,
-		},
-		{
-			"crescent_pool_invalid",
-			fields{
-				"pool1",
-				&types.ProtocolData{
-					Type: types.ProtocolDataType_name[int32(types.ProtocolDataTypeCrescentPool)],
-					Data: []byte(`{}`),
-				},
-			},
-			true,
-		},
-		{
-			"crescent_pool_valid",
-			fields{
-				"pool1",
-				&types.ProtocolData{
-					Type: types.ProtocolDataType_name[int32(types.ProtocolDataTypeCrescentPool)],
-					Data: func() []byte {
-						pool := &liquiditytypes.Pool{
-							PoolCoinDenom: "pool1",
-							Id:            1,
-						}
-						pooldata, _ := json.Marshal(pool)
-						pd := types.CrescentPoolProtocolData{
-							PoolID:   1,
-							Denom:    "ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3",
-							PoolData: pooldata,
-						}
-						data, _ := json.Marshal(&pd)
-						return data
-					}(),
-				},
-			},
-			false,
-		},
-		{
-			"crescent_pool_coin_supply_invalid",
-			fields{
-				"pool1",
-				&types.ProtocolData{
-					Type: types.ProtocolDataType_name[int32(types.ProtocolDataTypeCrescentPoolCoinSupply)],
-					Data: []byte(`{}`),
-				},
-			},
-			true,
-		},
-		{
-			"crescent_pool_coin_supply_valid",
-			fields{
-				"pool1",
-				&types.ProtocolData{
-					Type: types.ProtocolDataType_name[int32(types.ProtocolDataTypeCrescentPoolCoinSupply)],
-					Data: func() []byte {
-						pd := &types.CrescentPoolCoinSupplyProtocolData{
-							PoolCoinDenom: "pool1",
-							Supply:        []byte{0x6e, 0x75, 0x6c, 0x6c},
-						}
-						data, _ := json.Marshal(pd)
-						return data
-					}(),
-				},
-			},
-			false,
-		},
-		{
-			"crescent_reserve_address_balance_invalid",
-			fields{
-				"test",
-				&types.ProtocolData{
-					Type: types.ProtocolDataType_name[int32(types.ProtocolDataTypeCrescentReserveAddressBalance)],
-					Data: []byte(`{}`),
-				},
-			},
-			true,
-		},
-		{
-			"crescent_reserve_address_balance_valid",
-			fields{
-				"uosmo",
-				&types.ProtocolData{
-					Type: types.ProtocolDataType_name[int32(types.ProtocolDataTypeCrescentReserveAddressBalance)],
-					Data: func() []byte {
-						pd := &types.CrescentReserveAddressBalanceProtocolData{
-							ReserveAddress: testAddress,
-							Denom:          "uosmo",
-							Balance:        []byte{0x6e, 0x75, 0x6c, 0x6c},
-						}
-						data, _ := json.Marshal(pd)
-						return data
-					}(),
 				},
 			},
 			false,

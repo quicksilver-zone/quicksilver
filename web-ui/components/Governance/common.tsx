@@ -1,23 +1,9 @@
-import {
-  Badge,
-  Box,
-  Center,
-  Flex,
-  Icon,
-  Spinner,
-  Stack,
-  Text,
-  useColorModeValue,
-} from '@chakra-ui/react';
+import { Badge, Box, Center, Flex, Icon, Spinner, Stack, Text, useColorModeValue } from '@chakra-ui/react';
 import styled from '@emotion/styled';
 import { cosmos } from 'interchain-query';
 import { ProposalStatus } from 'interchain-query/cosmos/gov/v1beta1/gov';
 import { IconType } from 'react-icons';
-import {
-  AiFillCheckCircle,
-  AiFillCloseCircle,
-  AiFillMinusCircle,
-} from 'react-icons/ai';
+import { AiFillCheckCircle, AiFillCloseCircle, AiFillMinusCircle } from 'react-icons/ai';
 import ReactMarkdown from 'react-markdown';
 
 import { VoteColor } from './ProposalCard';
@@ -32,36 +18,20 @@ const MarkdownStyled = styled(ReactMarkdown)`
 `;
 
 export const Loader = () => (
-  <Center
-    w="100%"
-    h="200px"
-    bgColor="rgba(214, 219, 220, 0.1)"
-    borderRadius="xl"
-  >
+  <Center w="100%" h="200px" bgColor="rgba(214, 219, 220, 0.1)" borderRadius="xl">
     <Spinner thickness="3px" color="complimentary.900" size="lg" speed="0.4s" />
   </Center>
 );
 
 export const DisconnectedContent = () => (
-  <Center
-    w="100%"
-    h="100px"
-    bgColor="rgba(214, 219, 220, 0.1)"
-    borderRadius="xl"
-  >
+  <Center w="100%" h="100px" bgColor="rgba(214, 219, 220, 0.1)" borderRadius="xl">
     <Text fontSize="lg" color="white">
       Please connect your wallet to see the proposals
     </Text>
   </Center>
 );
 
-export const TimeDisplay = ({
-  title,
-  time,
-}: {
-  title: string;
-  time: string;
-}) => (
+export const TimeDisplay = ({ title, time }: { title: string; time: string }) => (
   <Stack spacing="0.5">
     <Text fontSize="sm" fontWeight="semibold" color="white">
       {title}
@@ -92,15 +62,7 @@ export const VoteRatio = ({
   amount: string;
   token: string;
 }) => (
-  <Box
-    py={2}
-    px={4}
-    border="1px solid"
-    borderRadius="md"
-    borderColor="complimentary.900"
-    bgColor="primary.900"
-    w="200px"
-  >
+  <Box py={2} px={4} border="1px solid" borderRadius="md" borderColor="complimentary.900" bgColor="primary.900" w="200px">
     <Text color={VoteColor[type]} fontWeight="bold">
       {type} {ratio}
     </Text>
@@ -151,19 +113,11 @@ export const VoteResult = ({ voteOption }: { voteOption: number }) => {
 
   return (
     <>
-      <Text
-        fontSize="sm"
-        fontWeight="semibold"
-        color={useColorModeValue('gray.600', 'gray.400')}
-      >
+      <Text fontSize="sm" fontWeight="semibold" color={useColorModeValue('gray.600', 'gray.400')}>
         You Voted
       </Text>
       <Flex color={optionConfig.color} alignItems="center" gap="2px">
-        <Icon
-          as={optionConfig.icon}
-          fontSize="lg"
-          transform="translateY(1px)"
-        />
+        <Icon as={optionConfig.icon} fontSize="lg" transform="translateY(1px)" />
         <Text fontSize="sm" fontWeight="bold">
           {optionConfig.option}
         </Text>
@@ -178,9 +132,7 @@ export const NewLineText = ({ text }: { text: string }) => {
     <>
       {text.split('\\n').map((str) => (
         <Box lineHeight="taller" fontSize="sm" key={count++}>
-          <MarkdownStyled linkTarget="_blank" className="markdown-text">
-            {str}
-          </MarkdownStyled>
+          <MarkdownStyled className="markdown-text">{str}</MarkdownStyled>
         </Box>
       ))}
     </>

@@ -1,13 +1,122 @@
 import { useChain } from '@cosmos-kit/react';
-import { Zone } from '@hoangdv2429/quicksilverjs/dist/codegen/quicksilver/interchainstaking/v1/interchainstaking';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import { cosmos } from 'interchain-query';
+import { quicksilver } from 'quicksilverjs';
+import { Zone } from 'quicksilverjs/dist/codegen/quicksilver/interchainstaking/v1/interchainstaking';
 
 import { useGrpcQueryClient } from './useGrpcQueryClient';
 
 import { getCoin, getLogoUrls } from '@/utils';
 import { ExtendedValidator, parseValidators } from '@/utils/staking';
+
+
+type WithdrawalRecord = {
+  chain_id: string;
+  delegator: string;
+  distribution: { valoper: string; amount: string }[];
+  recipient: string;
+  amount: { denom: string; amount: string }[];
+  burn_amount: { denom: string; amount: string };
+  txhash: string;
+  status: number;
+  completion_time: string;
+  requeued: boolean;
+  acknowledged: boolean;
+  epoch_number: string;
+};
+
+type WithdrawalsResponse = {
+  withdrawals: WithdrawalRecord[];
+  pagination: any; 
+};
+
+type UseWithdrawalsQueryReturnType = {
+  data: WithdrawalsResponse | undefined;
+  isLoading: boolean;
+  isError: boolean;
+};
+
+type Amount = {
+  denom: string;
+  amount: string;
+};
+
+
+interface Asset {
+  Type: string;
+  Amount: AssetAmount[];
+}
+
+
+type Errors = {
+  Errors: any; 
+};
+
+
+type LiquidRewardsData = {
+  messages: any[]; 
+  assets: {
+    [key: string]: [
+      {
+        Type: string;
+        Amount: Amount[];
+      }
+    ];
+  };
+  errors: Errors;
+};
+
+
+type UseLiquidRewardsQueryReturnType = {
+  liquidRewards: LiquidRewardsData | undefined;
+  isLoading: boolean;
+  isError: boolean;
+};
+
+interface ProofOp {
+  type: string;
+  key: Uint8Array;  // Updated to Uint8Array
+  data: Uint8Array; // Updated to Uint8Array
+}
+
+interface Proof {
+  key: Uint8Array;  // Updated to Uint8Array
+  data: Uint8Array; // Updated to Uint8Array
+  proof_ops: {
+    ops: ProofOp[];
+  };
+  height: Long; // Assuming height is a number
+  proof_type: string;
+}
+
+interface Message {
+  user_address: string;
+  zone: string;
+  src_zone: string;
+  claim_type: number;
+  proofs: Proof[];
+  // Remove height and proof_type if they are not needed here
+}
+
+interface AssetAmount {
+  denom: string;
+  amount: string;
+}
+
+interface LiquidEpochData {
+  messages: Message[];
+  assets: { [key: string]: Asset[] };
+  errors: Record<string, unknown>; 
+}
+
+// Type for the useLiquidEpochQuery return
+interface UseLiquidEpochQueryReturnType {
+  liquidEpoch: LiquidEpochData | undefined;
+  isLoading: boolean;
+  isError: boolean;
+}
+
 
 
 const BigNumber = require('bignumber.js');
@@ -40,6 +149,104 @@ export const useBalanceQuery = (chainName: string, address: string) => {
     balance: balanceQuery.data,
     isLoading: balanceQuery.isLoading,
     isError: balanceQuery.isError,
+  };
+};
+
+export const useAuthChecker = (address: string) => {
+  const authQuery = useQuery(
+    ['auth', address],
+    async () => {
+      if (!address) {
+        throw new Error('Address is undefined or null');
+      }
+
+      try {
+        const url = `https://lcd.quicksilver.zone/cosmos/authz/v1beta1/grants?granter=${address}&grantee=quick1w5ennfhdqrpyvewf35sv3y3t8yuzwq29mrmyal&msgTypeUrl=/quicksilver.participationrewards.v1.MsgSubmitClaim`;
+        const response = await axios.get(url);
+        return { data: response.data, error: null };
+      } catch (error) {
+        // Capture and return error
+        return { data: null, error: error };
+      }
+    },
+    {
+      enabled: !!address,
+      staleTime: Infinity,
+    },
+  );
+
+  return {
+    authData: authQuery.data?.data,
+    authError: authQuery.data?.error,
+    isLoading: authQuery.isLoading,
+    isError: authQuery.isError,
+  };
+};
+
+export const useParamsQuery = (chainName: string) => {
+  const { grpcQueryClient } = useGrpcQueryClient(chainName);
+
+  const paramsQuery = useQuery(
+    ['params'],
+    async () => {
+      if (!grpcQueryClient) {
+        throw new Error('RPC Client not ready');
+      }
+
+      const params = await grpcQueryClient.cosmos.mint.v1beta1.annualProvisions({
+
+
+      });
+
+      return params;
+    },
+    {
+      enabled: !!grpcQueryClient,
+      staleTime: Infinity,
+    },
+  );
+
+  return {
+    params: paramsQuery.data,
+    isLoading: paramsQuery.isLoading,
+    isError: paramsQuery.isError,
+  };
+
+}
+
+export const useAllBalancesQuery = (chainName: string, address: string) => {
+  const { grpcQueryClient } = useGrpcQueryClient(chainName);
+
+  const balancesQuery = useQuery(
+    ['balances', address],
+    async () => {
+      if (!grpcQueryClient) {
+        throw new Error('RPC Client not ready');
+      }
+      const nextKey = new Uint8Array()
+      const balance = await grpcQueryClient.cosmos.bank.v1beta1.allBalances({
+        address: address || '',
+        pagination: {
+          key: nextKey,
+          offset: Long.fromNumber(0),
+          limit: Long.fromNumber(100),
+          countTotal: true,
+          reverse: false,
+        },
+      });
+
+      return balance;
+    },
+    {
+      enabled: !!grpcQueryClient && !!address,
+      staleTime: Infinity,
+    },
+  );
+
+  return {
+    balance: balancesQuery.data,
+    isLoading: balancesQuery.isLoading,
+    isError: balancesQuery.isError,
   };
 };
 
@@ -127,7 +334,22 @@ export const useQBalanceQuery = (chainName: string, address: string, qAsset: str
 export const useIntentQuery = (chainName: string, address: string) => {
   const { grpcQueryClient } = useGrpcQueryClient('quicksilver');
   const { chain } = useChain(chainName);
-  const chainId = chain.chain_id;
+  const env = process.env.NEXT_PUBLIC_CHAIN_ENV;
+  const baseApiUrl = env === 'testnet' ? 'https://lcd.test.quicksilver.zone' : 'https://lcd.quicksilver.zone';
+  let chainId = chain.chain_id;
+  if (chainName === 'osmosistestnet') {
+    chainId = 'osmo-test-5';
+  } else if (chainName === 'cosmoshubtestnet') {
+    chainId = 'provider';
+  } else if (chainName === 'stargazetestnet') {
+    chainId = 'elgafar-1';
+  } else if (chainName === 'osmo-test-5') {
+    chainId = 'osmosistestnet';
+ 
+  } else {
+
+    chainId = chain.chain_id;
+  }
   const intentQuery = useQuery(
     ['intent', chainName],
     async () => {
@@ -135,7 +357,7 @@ export const useIntentQuery = (chainName: string, address: string) => {
         throw new Error('RPC Client not ready');
       }
 
-      const intent = await axios.get(`https://lcd.test.quicksilver.zone/quicksilver/interchainstaking/v1/zones/${chainId}/delegator_intent/${address}`)
+      const intent = await axios.get(`${baseApiUrl}/quicksilver/interchainstaking/v1/zones/${chainId}/delegator_intent/${address}`)
 
       return intent;
     },
@@ -149,38 +371,91 @@ export const useIntentQuery = (chainName: string, address: string) => {
     intent: intentQuery.data,
     isLoading: intentQuery.isLoading,
     isError: intentQuery.isError,
+    refetch: intentQuery.refetch,
+  };
+};
+
+export const useLiquidRewardsQuery = (address: string): UseLiquidRewardsQueryReturnType => {
+  const liquidRewardsQuery = useQuery(
+    ['liquidRewards', address],
+    async () => {
+      if (!address) {
+        throw new Error('Address is not avaialble');
+      }
+
+      const response = await axios.get<LiquidRewardsData>(`https://claim.test.quicksilver.zone/${address}/current`);
+      return response.data;
+    },
+    {
+      enabled:!!address,
+      staleTime: Infinity,
+    },
+  );
+
+  return {
+    liquidRewards: liquidRewardsQuery.data,
+    isLoading: liquidRewardsQuery.isLoading,
+    isError: liquidRewardsQuery.isError,
+  };
+
+}
+
+export const useLiquidEpochQuery = (address: string): UseLiquidEpochQueryReturnType => {
+  const liquidEpochQuery = useQuery(
+    ['liquidEpoch', address],
+    async () => {
+      if (!address) {
+        throw new Error('Address is not available');
+      }
+
+      const response = await axios.get<LiquidEpochData>(`https://claim.test.quicksilver.zone/${address}/epoch`);
+
+
+      if (response.data.messages.length === 0) {
+        console.error('No messages found'); 
+      }
+
+      return response.data;
+    },
+    {
+      enabled: !!address,
+      staleTime: Infinity,
+    },
+  );
+
+  return {
+    liquidEpoch: liquidEpochQuery.data,
+    isLoading: liquidEpochQuery.isLoading,
+    isError: liquidEpochQuery.isError,
   };
 };
 
 export const useUnbondingQuery = (chainName: string, address: string) => {
-  const { grpcQueryClient } = useGrpcQueryClient('quicksilver');
+  const env = process.env.NEXT_PUBLIC_CHAIN_ENV;
+  const baseApiUrl = env === 'testnet' ? 'https://lcd.test.quicksilver.zone' : 'https://lcd.quicksilver.zone';
+  
   const { chain } = useChain(chainName);
-  const chainId = chain.chain_id;
+  let chainId = chain.chain_id;
+  if (chainName === 'osmosistestnet') {
+    chainId = 'osmo-test-5';
+  } else if (chainName === 'stargazetestnet') {
+    chainId = 'elgafar-1';
+  } else if (chainName === 'osmo-test-5') {
+    chainId = 'osmosistestnet';
+ 
+  } else {
+
+    chainId = chain.chain_id;
+  }
   const unbondingQuery = useQuery(
-    ['unbond', chainName],
+    ['unbond', chainName, address],
     async () => {
-      if (!grpcQueryClient) {
-        throw new Error('RPC Client not ready');
-      }
-      const nextKey = new Uint8Array()
-     const unbonding = await grpcQueryClient.quicksilver.interchainstaking.v1.withdrawalRecords({
-      delegatorAddress: address,
-      chainId: chainId,
-      pagination: {
-        key: nextKey,
-        offset: Long.fromNumber(0),
-        limit: Long.fromNumber(100),
-        countTotal: true,
-        reverse: false,
-      },
-
-      });
-
-      return unbonding;
-
+      const url = `${baseApiUrl}/quicksilver/interchainstaking/v1/zones/${chainId}/withdrawal_records/${address}`;
+      const response = await axios.get<WithdrawalsResponse>(url);
+      return response.data; 
     },
     {
-      enabled: !!grpcQueryClient && !!address,
+      enabled: !!chainId && !!address, 
       staleTime: Infinity,
     },
   );
@@ -192,10 +467,11 @@ export const useUnbondingQuery = (chainName: string, address: string) => {
   };
 };
 
+
 export const useValidatorsQuery = (chainName: string) => {
   const { grpcQueryClient } = useGrpcQueryClient(chainName);
 
-  const fetchValidators = async (nextKey = new Uint8Array()) => {
+  const fetchValidators = async (key = new Uint8Array()) => {
     if (!grpcQueryClient) {
       throw new Error('RPC Client not ready');
     }
@@ -203,9 +479,9 @@ export const useValidatorsQuery = (chainName: string) => {
     const validators = await grpcQueryClient.cosmos.staking.v1beta1.validators({
       status: cosmos.staking.v1beta1.bondStatusToJSON(cosmos.staking.v1beta1.BondStatus.BOND_STATUS_BONDED),
       pagination: {
-        key: nextKey,
+        key: key,
         offset: Long.fromNumber(0),
-        limit: Long.fromNumber(100),
+        limit: Long.fromNumber(500),
         countTotal: true,
         reverse: false,
       },
@@ -213,6 +489,7 @@ export const useValidatorsQuery = (chainName: string) => {
     return validators;
   };
 
+  //TODO: migrate this to use evince cache endpoint.
   const validatorQuery = useQuery(
     ['validators', chainName],
     async () => {
@@ -222,7 +499,7 @@ export const useValidatorsQuery = (chainName: string) => {
       do {
         const response = await fetchValidators(nextKey);
         allValidators = allValidators.concat(response.validators);
-        nextKey = response.pagination.next_key;
+        nextKey = response.pagination.next_key ?? new Uint8Array();
       } while (nextKey && nextKey.length > 0);
       const sorted = allValidators.sort((a, b) => new BigNumber(b.tokens).minus(a.tokens).toNumber());
       return parseValidators(sorted);
@@ -238,6 +515,27 @@ export const useValidatorsQuery = (chainName: string) => {
     isLoading: validatorQuery.isLoading,
     isError: validatorQuery.isError,
   };
+};
+
+export const useTokenPrices = (tokens: string[]) => {
+  const fetchTokenPrices = async () => {
+    return Promise.all(
+      tokens.map(async (token) => {
+        try {
+          const response = await axios.get(`https://api-osmosis.imperator.co/tokens/v2/price/${token}`);
+          return { token, price: response.data.price };
+        } catch (error) {
+          console.error(`Error fetching price for ${token}:`, error);
+          return { token, price: null };
+        }
+      })
+    );
+  };
+
+  return useQuery(['tokenPrices', ...tokens], fetchTokenPrices, {
+    enabled: !!tokens,
+    staleTime: Infinity, 
+  });
 };
 
 const fetchAPY = async (chainId: any) => {
@@ -359,12 +657,12 @@ export const useMissedBlocks = (chainName: string) => {
       const filteredMissedBlocks = response.info.filter(block => {
         const hasAddress = block.address && block.address.trim() !== '';
         const notTombstoned = !block.tombstoned;
-        const notJailed = new Date(block.jailed_until) <= new Date();
-        return hasAddress && notTombstoned && notJailed;
+    
+        return hasAddress && notTombstoned;
       });
       
       allMissedBlocks = allMissedBlocks.concat(filteredMissedBlocks);
-      nextKey = response.pagination.next_key;
+      nextKey = response.pagination?.next_key ?? new Uint8Array();
     } while (nextKey && nextKey.length > 0);
   
     return allMissedBlocks;
@@ -386,6 +684,7 @@ export const useMissedBlocks = (chainName: string) => {
     isError: missedBlocksQuery.isError,
   };
 };
+
 interface DefiData {
     assetPair: string;
     provider: string;
@@ -393,12 +692,13 @@ interface DefiData {
     apy: number;
     tvl: number;
     link: string;
+    id: string;
 }
 export const useDefiData = () => {
   const query = useQuery<DefiData[]>(
     ['defi'],
     async () => {
-      const res = await axios.get('https://data.test.quicksilver.zone/defi');
+      const res = await axios.get(`${process.env.NEXT_PUBLIC_QUICKSILVER_DATA_API}/defi`);
       if (!res.data || res.data.length === 0) {
         throw new Error('Failed to query defi');
       }
@@ -415,3 +715,38 @@ export const useDefiData = () => {
     isError: query.isError,
   };
 };
+
+export const useNativeStakeQuery = (chainName: string, address: string) => {
+  const { grpcQueryClient } = useGrpcQueryClient(chainName);
+  const delegationQuery = useQuery(
+    ['delegations', address],
+    async () => {
+      if (!grpcQueryClient) {
+        throw new Error('RPC Client not ready');
+      }
+      const nextKey = new Uint8Array()
+      const balance = await grpcQueryClient.cosmos.staking.v1beta1.delegatorDelegations({
+        delegator_addr: address || '',
+        pagination: {
+          key: nextKey,
+          offset: Long.fromNumber(0),
+          limit: Long.fromNumber(100),
+          countTotal: true,
+          reverse: false,
+        },
+      });
+
+      return balance;
+    },
+    {
+      enabled: !!grpcQueryClient && !!address,
+      staleTime: Infinity,
+    },
+  );
+
+  return {
+    delegations: delegationQuery.data,
+    delegationsIsLoading: delegationQuery.isLoading,
+    delegationsIsError: delegationQuery.isError,
+  };
+}

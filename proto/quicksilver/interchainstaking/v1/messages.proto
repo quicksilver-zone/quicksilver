@@ -28,6 +28,15 @@ service Msg {
     };
   }
 
+  // CancelRedemption defines a method for cancelling a redemption request in
+  // the queued state.
+  rpc CancelRedemption(MsgCancelQueuedRedemption) returns (MsgCancelQueuedRedemptionResponse) {
+    option (google.api.http) = {
+      post: "/quicksilver/tx/v1/interchainstaking/cancel_redemption"
+      body: "*"
+    };
+  }
+
   // SignalIntent defines a method for signalling voting intent for one or more
   // validators.
   rpc GovCloseChannel(MsgGovCloseChannel) returns (MsgGovCloseChannelResponse) {
@@ -68,6 +77,24 @@ message MsgRequestRedemption {
 
 // MsgRequestRedemptionResponse defines the MsgRequestRedemption response type.
 message MsgRequestRedemptionResponse {}
+
+// MsgCancelQueuedRedemption represents a message type to cancel .
+message MsgCancelQueuedRedemption {
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string chain_id = 1;
+  string hash = 2;
+  string from_address = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// MsgRequestRedemptionResponse defines the MsgRequestRedemption response type.
+message MsgCancelQueuedRedemptionResponse {
+  cosmos.base.v1beta1.Coin returned = 1 [
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags) = "yaml:\"coin\""
+  ];
+}
 
 // MsgSignalIntent represents a message type for signalling voting intent for
 // one or more validators.

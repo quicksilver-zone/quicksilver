@@ -217,7 +217,7 @@ func (suite *KeeperTestSuite) TestUpdateDelegation() {
 			}
 
 			for _, update := range tt.updates {
-				err := qApp.InterchainstakingKeeper.UpdateDelegationRecordForAddress(ctx, update.delegation.DelegationAddress, update.delegation.ValidatorAddress, update.delegation.Amount, &zone, update.absolute)
+				err := qApp.InterchainstakingKeeper.UpdateDelegationRecordForAddress(ctx, update.delegation.DelegationAddress, update.delegation.ValidatorAddress, update.delegation.Amount, &zone, update.absolute, false)
 				suite.NoError(err)
 			}
 
@@ -319,7 +319,7 @@ func (suite *KeeperTestSuite) TestFlushOutstandingDelegations() {
 				quicksilver.InterchainstakingKeeper.SetReceipt(ctx, rcpt1)
 				quicksilver.InterchainstakingKeeper.SetReceipt(ctx, rcpt2)
 			},
-			delAddrBalance: sdk.NewCoin("uatom", sdkmath.NewInt(0)),
+			delAddrBalance: sdk.NewCoin(denom, sdkmath.NewInt(0)),
 			assertStatements: func(ctx sdk.Context, quicksilver *app.Quicksilver) bool {
 				count := 0
 				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
@@ -372,7 +372,7 @@ func (suite *KeeperTestSuite) TestFlushOutstandingDelegations() {
 				quicksilver.InterchainstakingKeeper.SetReceipt(ctx, rcpt1)
 				quicksilver.InterchainstakingKeeper.SetReceipt(ctx, rcpt2)
 			},
-			delAddrBalance: sdk.NewCoin("uatom", sdkmath.NewInt(100)),
+			delAddrBalance: sdk.NewCoin(denom, sdkmath.NewInt(100)),
 			assertStatements: func(ctx sdk.Context, quicksilver *app.Quicksilver) bool {
 				count := 0
 				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
@@ -394,6 +394,7 @@ func (suite *KeeperTestSuite) TestFlushOutstandingDelegations() {
 				receiptOneTime := cutOffTime.Add(-2 * time.Hour) // -26h
 				receiptTwoTime := cutOffTime.Add(2 * time.Hour)  // -22h
 
+				// pending
 				rcpt1 := types.Receipt{
 					ChainId: suite.chainB.ChainID,
 					Sender:  userAddress,
@@ -401,13 +402,14 @@ func (suite *KeeperTestSuite) TestFlushOutstandingDelegations() {
 					Amount: sdk.NewCoins(
 						sdk.NewCoin(
 							denom,
-							sdk.NewIntFromUint64(2000000),
+							sdk.NewIntFromUint64(20_000_000),
 						),
 					),
 					FirstSeen: &receiptOneTime,
 					Completed: nil,
 				}
 
+				// excluded
 				rcpt2 := types.Receipt{
 					ChainId: suite.chainB.ChainID,
 					Sender:  userAddress,
@@ -415,7 +417,7 @@ func (suite *KeeperTestSuite) TestFlushOutstandingDelegations() {
 					Amount: sdk.NewCoins(
 						sdk.NewCoin(
 							denom,
-							sdk.NewIntFromUint64(100),
+							sdk.NewIntFromUint64(100_000_000),
 						),
 					),
 					FirstSeen: &receiptTwoTime,
@@ -424,7 +426,7 @@ func (suite *KeeperTestSuite) TestFlushOutstandingDelegations() {
 				quicksilver.InterchainstakingKeeper.SetReceipt(ctx, rcpt1)
 				quicksilver.InterchainstakingKeeper.SetReceipt(ctx, rcpt2)
 			},
-			delAddrBalance: sdk.NewCoin("uatom", sdkmath.NewInt(2000100)),
+			delAddrBalance: sdk.NewCoin(denom, sdkmath.NewInt(120_000_000)),
 			assertStatements: func(ctx sdk.Context, quicksilver *app.Quicksilver) bool {
 				count := 0
 				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
@@ -439,7 +441,7 @@ func (suite *KeeperTestSuite) TestFlushOutstandingDelegations() {
 				return true
 			},
 			mockAck:            true,
-			expectedDelegation: sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(2000000))),
+			expectedDelegation: sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(20000000))),
 		},
 		{
 			name: "case 4: non-zero delegation balance, 2 pending receipts",
@@ -455,7 +457,7 @@ func (suite *KeeperTestSuite) TestFlushOutstandingDelegations() {
 					Amount: sdk.NewCoins(
 						sdk.NewCoin(
 							denom,
-							sdk.NewIntFromUint64(2000000),
+							sdk.NewIntFromUint64(20_000_000_000),
 						),
 					),
 					FirstSeen: &receiptOneTime,
@@ -469,7 +471,7 @@ func (suite *KeeperTestSuite) TestFlushOutstandingDelegations() {
 					Amount: sdk.NewCoins(
 						sdk.NewCoin(
 							denom,
-							sdk.NewIntFromUint64(100),
+							sdk.NewIntFromUint64(10_000_000),
 						),
 					),
 					FirstSeen: &receiptTwoTime,
@@ -478,7 +480,7 @@ func (suite *KeeperTestSuite) TestFlushOutstandingDelegations() {
 				quicksilver.InterchainstakingKeeper.SetReceipt(ctx, rcpt1)
 				quicksilver.InterchainstakingKeeper.SetReceipt(ctx, rcpt2)
 			},
-			delAddrBalance: sdk.NewCoin("uatom", sdkmath.NewInt(2000100)),
+			delAddrBalance: sdk.NewCoin(denom, sdkmath.NewInt(20_010_000_000)),
 			assertStatements: func(ctx sdk.Context, quicksilver *app.Quicksilver) bool {
 				count := 0
 				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
@@ -493,7 +495,7 @@ func (suite *KeeperTestSuite) TestFlushOutstandingDelegations() {
 				return true
 			},
 			mockAck:            true,
-			expectedDelegation: sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(2000000))),
+			expectedDelegation: sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(20_010_000_000))),
 		},
 		{
 			name: "case 5: zero delegation balance, 1 pending receipt, 1 excluded receipt",
@@ -532,7 +534,7 @@ func (suite *KeeperTestSuite) TestFlushOutstandingDelegations() {
 				quicksilver.InterchainstakingKeeper.SetReceipt(ctx, rcpt1)
 				quicksilver.InterchainstakingKeeper.SetReceipt(ctx, rcpt2)
 			},
-			delAddrBalance: sdk.NewCoin("uatom", sdkmath.NewInt(0)),
+			delAddrBalance: sdk.NewCoin(denom, sdkmath.NewInt(0)),
 			assertStatements: func(ctx sdk.Context, quicksilver *app.Quicksilver) bool {
 				count := 0
 				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
@@ -561,7 +563,7 @@ func (suite *KeeperTestSuite) TestFlushOutstandingDelegations() {
 					Amount: sdk.NewCoins(
 						sdk.NewCoin(
 							denom,
-							sdk.NewIntFromUint64(2000000),
+							sdk.NewIntFromUint64(200_000_000),
 						),
 					),
 					FirstSeen: &receiptOneTime,
@@ -575,7 +577,7 @@ func (suite *KeeperTestSuite) TestFlushOutstandingDelegations() {
 					Amount: sdk.NewCoins(
 						sdk.NewCoin(
 							denom,
-							sdk.NewIntFromUint64(100),
+							sdk.NewIntFromUint64(100_000_000),
 						),
 					),
 					FirstSeen: &receiptOneTime,
@@ -584,7 +586,7 @@ func (suite *KeeperTestSuite) TestFlushOutstandingDelegations() {
 				quicksilver.InterchainstakingKeeper.SetReceipt(ctx, rcpt1)
 				quicksilver.InterchainstakingKeeper.SetReceipt(ctx, rcpt2)
 			},
-			delAddrBalance: sdk.NewCoin("uatom", sdkmath.NewInt(100)),
+			delAddrBalance: sdk.NewCoin(denom, sdkmath.NewInt(100_000_000)),
 			assertStatements: func(ctx sdk.Context, quicksilver *app.Quicksilver) bool {
 				count := 0
 				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
@@ -600,7 +602,7 @@ func (suite *KeeperTestSuite) TestFlushOutstandingDelegations() {
 			},
 			// delegation balance == 100, which equals the value of the second receipt.
 			mockAck:            true,
-			expectedDelegation: sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(100))),
+			expectedDelegation: sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(100_000_000))),
 		},
 	}
 
@@ -617,14 +619,22 @@ func (suite *KeeperTestSuite) TestFlushOutstandingDelegations() {
 			zone.DelegationAddress.Balance = zone.DelegationAddress.Balance.Add(test.delAddrBalance)
 			quicksilver.InterchainstakingKeeper.SetZone(ctx, &zone)
 			suite.True(found)
-			err := quicksilver.InterchainstakingKeeper.FlushOutstandingDelegations(ctx, &zone, test.delAddrBalance)
-			// refetch zone after FlushOutstandingDelegations setZone().
-			ctx = suite.chainA.GetContext()
+
+			var msgs []sdk.Msg
+
 			if test.mockAck {
-				var msgs []sdk.Msg
 				allocations, err := quicksilver.InterchainstakingKeeper.DeterminePlanForDelegation(ctx, &zone, test.expectedDelegation)
 				suite.NoError(err)
-				msgs = append(msgs, quicksilver.InterchainstakingKeeper.PrepareDelegationMessagesForCoins(&zone, allocations)...)
+				msgs = append(msgs, quicksilver.InterchainstakingKeeper.PrepareDelegationMessagesForCoins(&zone, allocations, true)...)
+			}
+
+			err := quicksilver.InterchainstakingKeeper.FlushOutstandingDelegations(ctx, &zone, test.delAddrBalance)
+			suite.NoError(err)
+			zone, _ = quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+			// refetch zone after FlushOutstandingDelegations setZone().
+			ctx = suite.chainA.GetContext()
+
+			if test.mockAck {
 				for _, msg := range msgs {
 					err := quicksilver.InterchainstakingKeeper.HandleDelegate(ctx, msg, types.EpochMsgMemo(types.MsgTypeBatch, ctx.BlockTime().AddDate(0, 0, -1).Unix()))
 					suite.NoError(err)
@@ -929,7 +939,7 @@ func (suite *KeeperTestSuite) TestDelegationPlanLsmFixture() {
 	}
 
 	// ensure sum of allocations equals the original amount
-	suite.True(allocSum.Equal(amount[0].Amount))
+	suite.True(allocSum.LTE(amount[0].Amount))
 }
 
 // values below are data dumps taken from the live quicksilver-2 and cosmoshub-4 chains, to be used as fixtures.

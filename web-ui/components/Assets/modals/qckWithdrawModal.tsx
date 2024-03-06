@@ -10,28 +10,23 @@ import {
   FormControl,
   FormLabel,
   Input,
-  Select,
   useDisclosure,
-  useToast,
   Spinner,
 } from '@chakra-ui/react';
+import { StdFee, coins } from '@cosmjs/stargate';
 import { ChainName } from '@cosmos-kit/core';
 import { useChain, useManager } from '@cosmos-kit/react';
-import { color } from 'framer-motion';
+import BigNumber from 'bignumber.js';
+import { ibc } from 'quicksilverjs';
 import { useState, useMemo, useEffect } from 'react';
 
 import { ChooseChain } from '@/components/react/choose-chain';
 import { handleSelectChainDropdown, ChainOption } from '@/components/types';
 import { useTx } from '@/hooks';
-import { useIbcBalanceQuery } from '@/hooks/useQueries';
-import { getCoin } from '@/utils';
-import { StdFee, coins } from '@cosmjs/stargate';
-import { ibc } from 'interchain-query';
-import BigNumber from 'bignumber.js';
+import { getCoin, getIbcInfo } from '@/utils';
 
 export function WithdrawModal() {
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const toast = useToast();
 
   const [chainName, setChainName] = useState<ChainName | undefined>('osmosis');
   const { chainRecords, getChainLogo } = useManager();
@@ -68,9 +63,9 @@ export function WithdrawModal() {
   const toChain = chainName;
 
   const { transfer } = ibc.applications.transfer.v1.MessageComposer.withTypeUrl;
-  const { address, connect, status, message, wallet } = useChain(toChain ?? '');
+  const { address } = useChain(toChain ?? '');
   const { address: qAddress } = useChain('quicksilver');
-  const { balance } = useIbcBalanceQuery(fromChain ?? '', qAddress ?? '');
+
   const { tx } = useTx(fromChain ?? '');
 
   const onSubmitClick = async () => {
@@ -84,8 +79,7 @@ export function WithdrawModal() {
       gas: '300000',
     };
 
-    const sourcePort = 'transfer';
-    const sourceChannel = 'channel-0';
+    const { sourcePort, sourceChannel } = getIbcInfo(fromChain ?? '', toChain ?? '');
 
     const token = {
       denom: 'uqck',

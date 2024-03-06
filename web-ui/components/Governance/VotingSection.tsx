@@ -2,9 +2,7 @@ import { ChevronDownIcon } from '@chakra-ui/icons';
 import {
   Box,
   Flex,
-  Heading,
   Input,
-  Text,
   InputGroup,
   InputLeftElement,
   Stack,
@@ -16,7 +14,7 @@ import {
   Menu,
   MenuButton,
   MenuItem,
-  AccordionIcon,
+  Image,
 } from '@chakra-ui/react';
 import { ChainName } from '@cosmos-kit/core';
 import { useChain } from '@cosmos-kit/react';
@@ -25,10 +23,12 @@ import React, { useMemo, useState } from 'react';
 import { FaSearch } from 'react-icons/fa';
 
 import { useVotingData } from '@/hooks';
+import { decodeUint8Arr } from '@/utils';
 
 import { DisconnectedContent, Loader } from './common';
 import { ProposalCard } from './ProposalCard';
 import { ProposalModal } from './ProposalModal';
+
 
 function RotateIcon({ isOpen }: { isOpen: boolean }) {
   return (
@@ -54,12 +54,46 @@ export const VotingSection = ({ chainName }: { chainName: ChainName }) => {
 
   const filteredProposals = useMemo(() => {
     if (!data?.proposals) return [];
-    return data.proposals.filter(
-      (proposal) =>
-        proposal.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        proposal.summary.toLowerCase().includes(searchTerm.toLowerCase()),
-    );
-  }, [data, searchTerm]);
+
+    return data.proposals.filter((proposal) => {
+      const decodedContent = decodeUint8Arr(proposal.messages[0].value);
+
+      const contentToSearch = decodedContent.toLowerCase();
+      const titleMatches = decodedContent.toLowerCase().includes(searchTerm.toLowerCase());
+
+      const contentMatches = contentToSearch.includes(searchTerm.toLowerCase());
+
+      let periodMatches = true;
+      let proposalMatches = true;
+
+      const VOTING_PERIOD_STATUS = 2;
+      const PASSED_STATUS = 3;
+      const REJECTED_STATUS = 4;
+
+      // Filter by period
+      switch (selectedPeriodOption) {
+        case 'Voting Period':
+          periodMatches = proposal.status === VOTING_PERIOD_STATUS;
+          break;
+        case 'Passed':
+          periodMatches = proposal.status === PASSED_STATUS;
+          break;
+        case 'Rejected':
+          periodMatches = proposal.status === REJECTED_STATUS;
+          break;
+        default:
+          periodMatches = true;
+      }
+
+      // Filter by proposal type (e.g., voted)
+      if (selectedProposalOption === 'Voted') {
+        const userVote = data?.votes?.[proposal.id.toString()];
+        proposalMatches = userVote !== undefined;
+      }
+
+      return titleMatches && contentMatches && periodMatches && proposalMatches;
+    });
+  }, [data, searchTerm, selectedPeriodOption, selectedProposalOption]);
 
   const content = address ? (
     <Stack spacing={4}>
@@ -139,6 +173,17 @@ export const VotingSection = ({ chainName }: { chainName: ChainName }) => {
                       }}
                       color="white"
                       bgColor="#181818"
+                      onClick={() => setSelectedPeriodOption('All Periods')}
+                    >
+                      All Periods
+                    </MenuItem>
+                    <MenuItem
+                      borderRadius={'5px'}
+                      _hover={{
+                        bgColor: 'rgba(255,128,0, 0.25)',
+                      }}
+                      color="white"
+                      bgColor="#181818"
                       onClick={() => setSelectedPeriodOption('Voting Period')}
                     >
                       Voting Period
@@ -186,7 +231,19 @@ export const VotingSection = ({ chainName }: { chainName: ChainName }) => {
                   >
                     {selectedProposalOption}
                   </MenuButton>
+
                   <MenuList borderColor="black" bgColor="#181818" minW="150px">
+                    <MenuItem
+                      borderRadius={'5px'}
+                      _hover={{
+                        bgColor: 'rgba(255,128,0, 0.25)',
+                      }}
+                      color="white"
+                      bgColor="#181818"
+                      onClick={() => setSelectedProposalOption('All Proposals')}
+                    >
+                      All Proposals
+                    </MenuItem>
                     <MenuItem
                       borderRadius={'5px'}
                       _hover={{
@@ -224,6 +281,21 @@ export const VotingSection = ({ chainName }: { chainName: ChainName }) => {
         >
           {isLoading ? <Loader /> : content}
         </Box>
+        {address && (
+          <Box>
+            <Image
+              display={{ base: 'none', lg: 'block', md: 'none' }}
+              src="/img/quicksilverWord.png"
+              alt="Quicksilver"
+              position="relative"
+              bottom="100"
+              left="660"
+              h={'100px'}
+              transform="rotate(90deg)"
+              transformOrigin="bottom right"
+            />
+          </Box>
+        )}
       </Box>
 
       {selectedProposal && (

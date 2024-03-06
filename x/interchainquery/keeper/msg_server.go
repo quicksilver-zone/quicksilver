@@ -91,14 +91,6 @@ func (k msgServer) SubmitQueryResponse(goCtx context.Context, msg *types.MsgSubm
 		return nil, fmt.Errorf("expected callback %s, but did not find it", q.CallbackId)
 	}
 
-	if q.Ttl > 0 {
-		// don't store if ttl is 0
-		if err := k.SetDatapointForID(ctx, msg.QueryId, msg.Result, sdk.NewInt(msg.Height)); err != nil {
-			k.Logger(ctx).Error("failed to set datapoint", "id", q.Id, "type", q.QueryType)
-			return nil, err
-		}
-	}
-
 	// check for and delete non-repeating queries, update any other
 	// - Period.IsNegative() indicates a single query;
 	// - noDelete indicates a response that triggered a re-query;

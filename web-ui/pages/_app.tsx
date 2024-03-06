@@ -1,31 +1,37 @@
 import '../styles/globals.css';
 import { Chain } from '@chain-registry/types';
-import { Box, ChakraProvider, Container, Fade, Flex } from '@chakra-ui/react';
+import { Box, ChakraProvider, Flex } from '@chakra-ui/react';
 import { Registry } from '@cosmjs/proto-signing';
 import { SigningStargateClientOptions, AminoTypes } from '@cosmjs/stargate';
-import { SignerOptions, WalletViewProps } from '@cosmos-kit/core';
+import { SignerOptions } from '@cosmos-kit/core';
 import { wallets as cosmostationWallets } from '@cosmos-kit/cosmostation';
 import { wallets as keplrWallets } from '@cosmos-kit/keplr';
 import { wallets as leapWallets } from '@cosmos-kit/leap';
 import { ChainProvider, ThemeCustomizationProps } from '@cosmos-kit/react';
 import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
-import { chains, assets } from '@chalabi/chain-registry';
-import { cosmosAminoConverters, cosmosProtoRegistry } from 'interchain-query';
+import { chains, assets } from 'chain-registry';
 import type { AppProps } from 'next/app';
-import { quicksilverProtoRegistry, quicksilverAminoConverters } from 'quicksilverjs';
-import { ibcAminoConverters, ibcProtoRegistry } from 'interchain-query';
+import {
+  quicksilverProtoRegistry,
+  quicksilverAminoConverters,
+  cosmosAminoConverters,
+  cosmosProtoRegistry,
+  ibcAminoConverters,
+  ibcProtoRegistry,
+} from 'quicksilverjs';
 
-import { Header, SideHeader } from '@/components';
+import { DynamicHeaderSection, SideHeader } from '@/components';
 import { defaultTheme } from '@/config';
 
 import '@interchain-ui/react/styles';
 
-function CreateCosmosApp({ Component, pageProps }: AppProps) {
+function QuickApp({ Component, pageProps }: AppProps) {
   const signerOptions: SignerOptions = {
     //@ts-ignore
     signingStargate: (chain: Chain): SigningStargateClientOptions | undefined => {
-      const mergedRegistry = new Registry([...cosmosProtoRegistry, ...quicksilverProtoRegistry, ...ibcProtoRegistry]);
+      //@ts-ignore
+      const mergedRegistry = new Registry([...quicksilverProtoRegistry, ...ibcProtoRegistry, ...cosmosProtoRegistry]);
 
       const mergedAminoTypes = new AminoTypes({
         ...cosmosAminoConverters,
@@ -66,6 +72,7 @@ function CreateCosmosApp({ Component, pageProps }: AppProps) {
     regen: env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_RPC_ENDPOINT_REGEN : process.env.NEXT_PUBLIC_MAINNET_RPC_ENDPOINT_REGEN,
     osmosis:
       env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_RPC_ENDPOINT_OSMOSIS : process.env.NEXT_PUBLIC_MAINNET_RPC_ENDPOINT_OSMOSIS,
+    juno: env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_RPC_ENDPOINT_JUNO : process.env.NEXT_PUBLIC_MAINNET_RPC_ENDPOINT_JUNO,
   };
 
   const lcdEndpoints = {
@@ -82,9 +89,14 @@ function CreateCosmosApp({ Component, pageProps }: AppProps) {
     regen: env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_LCD_ENDPOINT_REGEN : process.env.NEXT_PUBLIC_MAINNET_LCD_ENDPOINT_REGEN,
     osmosis:
       env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_LCD_ENDPOINT_OSMOSIS : process.env.NEXT_PUBLIC_MAINNET_LCD_ENDPOINT_OSMOSIS,
+    juno: env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_LCD_ENDPOINT_JUNO : process.env.NEXT_PUBLIC_MAINNET_LCD_ENDPOINT_JUNO,
   };
 
   const modalThemeOverrides: ThemeCustomizationProps = {
+    modalContentStyles: {
+      backgroundColor: 'rgba(0,0,0,0.75)',
+      opacity: 0,
+    },
     overrides: {
       'connect-modal': {
         bg: {
@@ -99,7 +111,16 @@ function CreateCosmosApp({ Component, pageProps }: AppProps) {
           light: '#FFFFFF',
           dark: '#FFFFFF',
         },
+        focusedBg: {
+          light: 'rgba(0,0,0,0.75)',
+          dark: 'rgba(32,32,32,0.9)',
+        },
+        disabledBg: {
+          light: 'rgba(0,0,0,0.75)',
+          dark: 'rgba(32,32,32,0.9)',
+        },
       },
+
       'clipboard-copy-text': {
         bg: {
           light: '#FFFFFF',
@@ -151,6 +172,7 @@ function CreateCosmosApp({ Component, pageProps }: AppProps) {
           light: '#FF8000',
           dark: '#FF8000',
         },
+        borderColor: { light: 'black', dark: 'black' },
         hoverBorderColor: {
           light: 'black',
           dark: 'black',
@@ -163,6 +185,7 @@ function CreateCosmosApp({ Component, pageProps }: AppProps) {
           light: '#000000',
           dark: '#FFFFFF',
         },
+        focusedBorderColor: { light: '#FFFFFF', dark: '#FFFFFF' },
       },
       'connect-modal-qr-code': {
         bg: {
@@ -176,26 +199,53 @@ function CreateCosmosApp({ Component, pageProps }: AppProps) {
       },
       'connect-modal-install-button': {
         bg: {
-          light: '#F0F0F0', // Example background color for light theme
-          dark: '#FF8000', // Example background color for dark theme
+          light: '#F0F0F0',
+          dark: '#FF8000',
         },
-        // Other properties for 'connect-modal-install-button' if needed
       },
       'connect-modal-qr-code-error': {
         bg: {
-          light: '#FFEEEE', // Example background color for light theme
-          dark: '#FFFFFF', // Example background color for dark theme
+          light: '#FFEEEE',
+          dark: '#FFFFFF',
         },
-        // Other properties for 'connect-modal-qr-code-error' if needed
       },
       'connect-modal-qr-code-error-button': {
         bg: {
-          light: '#FFCCCC', // Example background color for light theme
-          dark: '#552222', // Example background color for dark theme
+          light: '#FFCCCC',
+          dark: '#552222',
         },
       },
     },
   };
+
+  function isWalletClientAvailable(walletName: string) {
+    if (typeof window === 'undefined') {
+      return false;
+    }
+
+    switch (walletName) {
+      case 'Keplr':
+        return typeof window.keplr !== 'undefined';
+      case 'Cosmostation':
+        return typeof window.cosmostation !== 'undefined';
+      case 'Leap':
+        return typeof window.leap !== 'undefined';
+      default:
+        return false;
+    }
+  }
+
+  const availableWallets = [];
+
+  if (isWalletClientAvailable('Keplr')) {
+    availableWallets.push(...keplrWallets);
+  }
+  if (isWalletClientAvailable('Cosmostation')) {
+    availableWallets.push(...cosmostationWallets);
+  }
+  if (isWalletClientAvailable('Leap')) {
+    availableWallets.push(...leapWallets);
+  }
 
   return (
     <ChakraProvider theme={defaultTheme}>
@@ -235,32 +285,36 @@ function CreateCosmosApp({ Component, pageProps }: AppProps) {
               rpc: [rpcEndpoints.osmosis ?? ''],
               rest: [lcdEndpoints.osmosis ?? ''],
             },
+            umee: {
+              rpc: ['https://rpc-umee-ia.cosmosia.notional.ventures/'],
+              rest: ['https://api-umee-ia.cosmosia.notional.ventures/'],
+            },
           },
         }}
         modalTheme={modalThemeOverrides}
         chains={chains}
         assetLists={assets}
-        //@ts-ignore
-        wallets={[...keplrWallets, ...cosmostationWallets, ...leapWallets]}
+        wallets={availableWallets}
         walletConnectOptions={{
           signClient: {
-            projectId: 'a8510432ebb71e6948cfd6cde54b70f7',
+            projectId: '41a0749c331d209190beeac1c2530c90',
             relayUrl: 'wss://relay.walletconnect.org',
             metadata: {
-              name: 'Quicksilver Dashboard',
-              description: 'Interact with the Quicksilver Network',
-              url: 'https://docs.quicksilver.zone/',
+              name: 'Quicksilver',
+              description: 'Quicksilver App',
+              url: 'https://apps.qucksilver.zone/',
               icons: [],
             },
           },
         }}
+        //@ts-ignore
         signerOptions={signerOptions}
       >
         <QueryClientProvider client={queryClient}>
           <ReactQueryDevtools initialIsOpen={true} />
           <Box w="100vw" h="100vh" bgSize="fit" bgPosition="right center" bgAttachment="fixed" bgRepeat="no-repeat">
             <Flex justifyContent={'space-between'} alignItems={'center'}>
-              <Header chainName="quicksilver" />
+              <DynamicHeaderSection chainName="quicksilver" />
               <SideHeader />
             </Flex>
             <Component {...pageProps} />
@@ -271,4 +325,4 @@ function CreateCosmosApp({ Component, pageProps }: AppProps) {
   );
 }
 
-export default CreateCosmosApp;
+export default QuickApp;
