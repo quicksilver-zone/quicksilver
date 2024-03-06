@@ -99,7 +99,7 @@ func (k Keeper) UserLastEpochClaims(c context.Context, q *types.QueryClaimsReque
 		}
 
 		// First byte was 0x01, so no need to consider it; + 1 to skip the separator.
-		idx += 1
+		idx++
 
 		if bytes.Equal(key[idx:idx+len(addrBytes)], addrBytes) {
 			out = append(out, claim)
