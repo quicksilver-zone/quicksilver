@@ -111,12 +111,11 @@ func (k *Keeper) GetUnbondingTokensAndCount(ctx sdk.Context, zone *types.Zone) (
 }
 
 func (k *Keeper) GetQueuedTokensAndCount(ctx sdk.Context, zone *types.Zone) (sdk.Coin, uint32) {
-	out := sdk.NewCoin(zone.BaseDenom, sdk.ZeroInt())
+	out := sdk.NewCoin(zone.LocalDenom, sdk.ZeroInt())
 	var count uint32
 	k.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, types.WithdrawStatusQueued, func(index int64, wr types.WithdrawalRecord) (stop bool) {
-		amount := wr.Amount[0]
-		if !amount.IsNegative() {
-			out = out.Add(amount)
+		if !wr.BurnAmount.IsNegative() {
+			out = out.Add(wr.BurnAmount)
 		}
 		count++
 		return false
