@@ -259,6 +259,7 @@ func GetUserWithdrawalRecordsCmd() *cobra.Command {
 	flags.AddQueryFlagsToCmd(cmd)
 	return cmd
 }
+
 func GetZoneWithdrawalRecords() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "zone-withdrawal-records [chain-id]",
@@ -412,9 +413,6 @@ func GetZoneRedelegationRecordsCmd() *cobra.Command {
 			}
 			queryClient := types.NewQueryClient(clientCtx)
 
-			if err != nil {
-				return err
-			}
 			chainID := args[0]
 			req := &types.QueryRedelegationRecordsRequest{
 				ChainId: chainID,
