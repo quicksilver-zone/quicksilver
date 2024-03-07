@@ -245,18 +245,7 @@ func (k *Keeper) ZoneWithdrawalRecords(c context.Context, req *types.QueryWithdr
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	zone, found := k.GetZone(ctx, req.GetChainId())
-	if !found {
-		return nil, status.Error(codes.NotFound, fmt.Sprintf("no zone found matching %s", req.GetChainId()))
-	}
-
-	withdrawalrecords := make([]types.WithdrawalRecord, 0)
-	k.IterateZoneWithdrawalRecords(ctx, zone.ChainId, func(index int64, record types.WithdrawalRecord) (stop bool) {
-		if record.Delegator == req.DelegatorAddress {
-			withdrawalrecords = append(withdrawalrecords, record)
-		}
-		return false
-	})
+	withdrawalrecords := k.AllZoneWithdrawalRecords(ctx, req.ChainId)
 
 	return &types.QueryWithdrawalRecordsResponse{Withdrawals: withdrawalrecords}, nil
 }
@@ -269,7 +258,7 @@ func (k *Keeper) WithdrawalRecords(c context.Context, req *types.QueryWithdrawal
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	withdrawalrecords := k.AllZoneWithdrawalRecords(ctx, req.ChainId)
+	withdrawalrecords := k.AllWithdrawalRecords(ctx)
 
 	return &types.QueryWithdrawalRecordsResponse{Withdrawals: withdrawalrecords}, nil
 }
