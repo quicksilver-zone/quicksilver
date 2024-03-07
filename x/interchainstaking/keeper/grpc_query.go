@@ -244,6 +244,10 @@ func (k *Keeper) ZoneWithdrawalRecords(c context.Context, req *types.QueryWithdr
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
+	_, found := k.GetZone(ctx, req.ChainId)
+	if !found {
+		return nil, status.Error(codes.NotFound, fmt.Sprintf("no zone found matching %s", req.GetChainId()))
+	}
 
 	withdrawalrecords := k.AllZoneWithdrawalRecords(ctx, req.ChainId)
 
