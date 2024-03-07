@@ -15,6 +15,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	cosmossecp256k1 "github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -92,6 +93,7 @@ func Setup(t *testing.T, isCheckTx bool) *Quicksilver {
 		GetWasmOpts(EmptyAppOptions{}),
 		false,
 		false,
+		baseapp.SetChainID("mercury-1"),
 	)
 
 	genesisState := NewDefaultGenesisState()
@@ -209,4 +211,68 @@ func GenesisStateWithValSet(t *testing.T,
 	genesisState[banktypes.ModuleName] = app.AppCodec().MustMarshalJSON(bankGenesis)
 
 	return genesisState
+}
+
+// SetupWithChainId initializes a new Quicksilver with a given chain id
+func SetupWithChainID(t *testing.T, isCheckTx bool, chainID string) *Quicksilver {
+	t.Helper()
+
+	privVal := mock.NewPV()
+	pubKey, err := privVal.GetPubKey()
+	require.NoError(t, err)
+
+	// create validator set with single validator
+	validator := tmtypes.NewValidator(pubKey, 1)
+	valSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
+
+	// generate genesis account
+	senderPrivKey := secp256k1.GenPrivKey()
+	senderPubKey := cosmossecp256k1.PubKey{
+		Key: senderPrivKey.PubKey().Bytes(),
+	}
+
+	acc := authtypes.NewBaseAccount(senderPrivKey.PubKey().Address().Bytes(), &senderPubKey, 0, 0)
+	balance := banktypes.Balance{
+		Address: acc.GetAddress().String(),
+		Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000000000000))),
+	}
+
+	db := dbm.NewMemDB()
+	app := NewQuicksilver(
+		log.NewNopLogger(),
+		db,
+		nil,
+		true,
+		map[int64]bool{},
+		DefaultNodeHome,
+		5,
+		MakeEncodingConfig(),
+		EmptyAppOptions{},
+		GetWasmOpts(EmptyAppOptions{}),
+		false,
+		false,
+		baseapp.SetChainID(chainID),
+	)
+
+	genesisState := NewDefaultGenesisState()
+	genesisState = GenesisStateWithValSet(t, app, genesisState, valSet, []authtypes.GenesisAccount{acc}, balance)
+
+	if !isCheckTx {
+		stateBytes, err := json.MarshalIndent(genesisState, "", " ")
+		if err != nil {
+			panic(err)
+		}
+
+		// Initialize the chain
+		app.InitChain(
+			abci.RequestInitChain{
+				ChainId:         chainID,
+				Validators:      []abci.ValidatorUpdate{},
+				ConsensusParams: DefaultConsensusParams,
+				AppStateBytes:   stateBytes,
+			},
+		)
+	}
+
+	return app
 }

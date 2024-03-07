@@ -62,6 +62,7 @@ func NewAppConstructor(encCfg EncodingConfig) network.AppConstructor {
 			false,
 			false,
 			baseapp.SetPruning(purningtypes.NewPruningOptionsFromString(appConfig.Pruning)),
+			baseapp.SetChainID("quicktest-1"),
 			// baseapp.SetMinGasPrices(val.AppConfig.MinGasPrices),
 		)
 	}
