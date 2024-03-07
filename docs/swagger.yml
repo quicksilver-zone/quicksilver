@@ -3096,6 +3096,9 @@ paths:
                         type: string
                       base_chainID:
                         type: string
+                  dust_threshold:
+                    type: string
+                    format: int64
               stats:
                 type: object
                 properties:
@@ -3436,6 +3439,9 @@ paths:
                           type: string
                         base_chainID:
                           type: string
+                    dust_threshold:
+                      type: string
+                      format: int64
               stats:
                 type: array
                 items:
