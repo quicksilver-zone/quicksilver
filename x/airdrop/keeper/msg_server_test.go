@@ -514,9 +514,11 @@ func (suite *KeeperTestSuite) Test_msgServer_IncentivePoolSpend() {
 			name: "invalid authority",
 			malleate: func() {
 				msg = types.MsgIncentivePoolSpend{
-					Authority: "invalid",
-					ToAddress: userAddress,
-					Amount:    coins,
+					Authority:   "invalid",
+					ToAddress:   userAddress,
+					Amount:      coins,
+					Title:       "Invalid Incentive Pool Spend Title",
+					Description: "Invalid Incentive Pool Spend Description",
 				}
 			},
 			want:    nil,
@@ -526,9 +528,11 @@ func (suite *KeeperTestSuite) Test_msgServer_IncentivePoolSpend() {
 			name: "valid",
 			malleate: func() {
 				msg = types.MsgIncentivePoolSpend{
-					Authority: modAccAddr,
-					ToAddress: userAddress,
-					Amount:    coins,
+					Authority:   modAccAddr,
+					ToAddress:   userAddress,
+					Amount:      coins,
+					Title:       "Valid Incentive Pool Spend Title",
+					Description: "Valid Incentive Pool Spend Description",
 				}
 			},
 			want:    &types.MsgIncentivePoolSpendResponse{},

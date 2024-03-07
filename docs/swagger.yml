@@ -159,6 +159,10 @@ paths:
                     method
 
                     signatures required by gogoproto.
+              title:
+                type: string
+              description:
+                type: string
             description: >-
               MsgIncentivePoolSpend represents a message to send coins from one
               account to another.
