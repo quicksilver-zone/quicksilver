@@ -10,7 +10,7 @@ import (
 	types1 "github.com/cosmos/cosmos-sdk/x/bank/types"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	grpc1 "github.com/gogo/protobuf/grpc"
-	proto "github.com/gogo/protobuf/proto"
+	proto "github.com/cosmos/gogoproto/proto"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -511,6 +511,8 @@ func (m *MsgSetDenomMetadataResponse) XXX_DiscardUnknown() {
 var xxx_messageInfo_MsgSetDenomMetadataResponse proto.InternalMessageInfo
 
 func init() {
+	fmt.Println("hello!!!!!!!!!!!!!!!!")
+
 	proto.RegisterType((*MsgCreateDenom)(nil), "quicksilver.tokenfactory.v1beta1.MsgCreateDenom")
 	proto.RegisterType((*MsgCreateDenomResponse)(nil), "quicksilver.tokenfactory.v1beta1.MsgCreateDenomResponse")
 	proto.RegisterType((*MsgMint)(nil), "quicksilver.tokenfactory.v1beta1.MsgMint")

@@ -22,6 +22,7 @@ import (
 
 	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
+	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
 	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
 
 	"github.com/quicksilver-zone/quicksilver/app"
@@ -1466,7 +1467,11 @@ func makeAckForMsgs(ctx sdk.Context, cdc codec.Codec, msgs []sdk.Msg, success bo
 }
 
 func makePacketFromMsgs(cdc codec.Codec, msgs []sdk.Msg, memo string) (channeltypes.Packet, error) {
-	data, err := icatypes.SerializeCosmosTx(cdc, msgs)
+	protoMsgs := make([]proto.Message, len(msgs))
+	for i, msg := range msgs {
+		protoMsgs[i] = msg.(proto.Message)
+	}
+	data, err := icatypes.SerializeCosmosTx(cdc, protoMsgs)
 	if err != nil {
 		return channeltypes.Packet{}, err
 	}
