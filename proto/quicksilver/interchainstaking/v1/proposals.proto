@@ -27,6 +27,7 @@ message RegisterZoneProposal {
   bool unbonding_enabled = 12;
   int64 decimals = 13;
   bool is_118 = 14;
+  int64 dustThreshold = 15 [(gogoproto.moretags) = "yaml:\"dust_threshold\""];
 }
 
 message RegisterZoneProposalWithDeposit {
@@ -48,6 +49,7 @@ message RegisterZoneProposalWithDeposit {
   bool unbonding_enabled = 13 [(gogoproto.moretags) = "yaml:\"deposits_enabled\""];
   int64 decimals = 14 [(gogoproto.moretags) = "yaml:\"decimals\""];
   bool is_118 = 15;
+  int64 dustThreshold = 16 [(gogoproto.moretags) = "yaml:\"dust_threshold\""];
 }
 
 message UpdateZoneProposal {
@@ -60,6 +62,7 @@ message UpdateZoneProposal {
   string chain_id = 3 [(gogoproto.moretags) = "yaml:\"chain_id\""];
 
   repeated UpdateZoneValue changes = 4 [(gogoproto.moretags) = "yaml:\"changes\""];
+  int64 dustThreshold = 5 [(gogoproto.moretags) = "yaml:\"dust_threshold\""];
 }
 
 message UpdateZoneProposalWithDeposit {
@@ -72,6 +75,7 @@ message UpdateZoneProposalWithDeposit {
 
   repeated UpdateZoneValue changes = 4 [(gogoproto.moretags) = "yaml:\"changes\""];
   string deposit = 5 [(gogoproto.moretags) = "yaml:\"deposit\""];
+  int64 dustThreshold = 6 [(gogoproto.moretags) = "yaml:\"dust_threshold\""];
 }
 
 // UpdateZoneValue defines an individual parameter change, for use in
