@@ -24,6 +24,7 @@ func TestRegisterZoneProposal_ValidateBasic(t *testing.T) {
 		Decimals         int64
 		MessagesPerTx    int64
 		Is118            bool
+		DustThreshold    int64
 	}
 	tests := []struct {
 		name    string
@@ -46,6 +47,7 @@ func TestRegisterZoneProposal_ValidateBasic(t *testing.T) {
 				Decimals:         6,
 				MessagesPerTx:    5,
 				Is118:            true,
+				DustThreshold:    1000000,
 			},
 			wantErr: false,
 		},
@@ -65,6 +67,7 @@ func TestRegisterZoneProposal_ValidateBasic(t *testing.T) {
 				Decimals:         6,
 				MessagesPerTx:    5,
 				Is118:            true,
+				DustThreshold:    1000000,
 			},
 			wantErr: true,
 		},
@@ -84,6 +87,7 @@ func TestRegisterZoneProposal_ValidateBasic(t *testing.T) {
 				Decimals:         6,
 				MessagesPerTx:    5,
 				Is118:            true,
+				DustThreshold:    1000000,
 			},
 			wantErr: true,
 		},
@@ -103,6 +107,7 @@ func TestRegisterZoneProposal_ValidateBasic(t *testing.T) {
 				Decimals:         6,
 				MessagesPerTx:    5,
 				Is118:            true,
+				DustThreshold:    1000000,
 			},
 			wantErr: true,
 		},
@@ -122,6 +127,7 @@ func TestRegisterZoneProposal_ValidateBasic(t *testing.T) {
 				Decimals:         6,
 				MessagesPerTx:    5,
 				Is118:            true,
+				DustThreshold:    1000000,
 			},
 			wantErr: true,
 		},
@@ -141,6 +147,7 @@ func TestRegisterZoneProposal_ValidateBasic(t *testing.T) {
 				Decimals:         6,
 				MessagesPerTx:    5,
 				Is118:            true,
+				DustThreshold:    1000000,
 			},
 			wantErr: true,
 		},
@@ -160,6 +167,7 @@ func TestRegisterZoneProposal_ValidateBasic(t *testing.T) {
 				Decimals:         0,
 				MessagesPerTx:    5,
 				Is118:            true,
+				DustThreshold:    1000000,
 			},
 			wantErr: true,
 		},
@@ -179,6 +187,7 @@ func TestRegisterZoneProposal_ValidateBasic(t *testing.T) {
 				Decimals:         0,
 				MessagesPerTx:    0,
 				Is118:            true,
+				DustThreshold:    1000000,
 			},
 			wantErr: true,
 		},
@@ -198,6 +207,7 @@ func TestRegisterZoneProposal_ValidateBasic(t *testing.T) {
 				Decimals:         0,
 				MessagesPerTx:    -1,
 				Is118:            true,
+				DustThreshold:    1000000,
 			},
 			wantErr: true,
 		},
@@ -218,6 +228,7 @@ func TestRegisterZoneProposal_ValidateBasic(t *testing.T) {
 				tt.fields.Decimals,
 				tt.fields.MessagesPerTx,
 				tt.fields.Is118,
+				tt.fields.DustThreshold,
 			)
 
 			err := m.ValidateBasic()
