@@ -30,6 +30,15 @@ func GetQueryCmd() *cobra.Command {
 		GetDelegatorIntentCmd(),
 		GetDepositAccountCmd(),
 		GetMappedAccountsCmd(),
+		GetWithdrawalRecordsCmd(),
+		GetUserWithdrawalRecordsCmd(),
+		GetZoneWithdrawalRecords(),
+		GetUnbondingRecordsCmd(),
+		GetReceiptsCmd(),
+		GetTxStatusCmd(),
+		GetZoneRedelegationRecordsCmd(),
+		GetZoneValidatorsCmd(),
+		GetZoneCmd(),
 	)
 
 	return cmd
@@ -182,52 +191,306 @@ func GetMappedAccountsCmd() *cobra.Command {
 }
 
 func GetWithdrawalRecordsCmd() *cobra.Command {
-	// TODO: implement
-	return &cobra.Command{}
+	cmd := &cobra.Command{
+		Use:   "withdrawal-records",
+		Short: "Query all withdrawal records",
+		Example: strings.TrimSpace(
+			fmt.Sprintf(`$ %s query interchainstaking withdrawal-records`,
+				version.AppName,
+			)),
+		Args: cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			req := &types.QueryWithdrawalRecordsRequest{
+				Pagination: pageReq,
+			}
+
+			res, err := queryClient.WithdrawalRecords(cmd.Context(), req)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
 }
 
-func GetUserWithdrawalRecordCmd() *cobra.Command {
-	// TODO: implement
-	return &cobra.Command{}
+func GetUserWithdrawalRecordsCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "user-withdrawal-record [user-address]",
+		Short: "Query withdrawal record for a given address.",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			// args
+			address := args[0]
+
+			queryClient := types.NewQueryClient(clientCtx)
+			req := &types.QueryUserWithdrawalRecordsRequest{
+				UserAddress: address,
+			}
+
+			res, err := queryClient.UserWithdrawalRecords(cmd.Context(), req)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
 }
 func GetZoneWithdrawalRecords() *cobra.Command {
-	// TODO: implement
-	return &cobra.Command{}
+	cmd := &cobra.Command{
+		Use:   "zone-withdrawal-records [chain-id]",
+		Short: "Query withdrawal records for a given zone.",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			// args
+			chainID := args[0]
+
+			queryClient := types.NewQueryClient(clientCtx)
+			req := &types.QueryWithdrawalRecordsRequest{
+				ChainId: chainID,
+			}
+
+			res, err := queryClient.ZoneWithdrawalRecords(cmd.Context(), req)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
 }
 
 func GetUnbondingRecordsCmd() *cobra.Command {
-	// TODO: implement
-	return &cobra.Command{}
+	cmd := &cobra.Command{
+		Use:   "unbonding-records",
+		Short: "Query all unbonding records",
+		Example: strings.TrimSpace(
+			fmt.Sprintf(`$ %s query interchainstaking unbonding-records`,
+				version.AppName,
+			)),
+		Args: cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			req := &types.QueryUnbondingRecordsRequest{
+				Pagination: pageReq,
+			}
+
+			res, err := queryClient.UnbondingRecords(cmd.Context(), req)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
 }
 
-func GetUserUnbondingRecordCmd() *cobra.Command {
-	// TODO: implement
-	return &cobra.Command{}
-}
+func GetReceiptsCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "recepts",
+		Short: "Query all receipts",
+		Example: strings.TrimSpace(
+			fmt.Sprintf(`$ %s query interchainstaking receipts`,
+				version.AppName,
+			)),
+		Args: cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
 
-func GetReceptsCmd() *cobra.Command {
-	// TODO: implement
-	return &cobra.Command{}
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			req := &types.QueryReceiptsRequest{
+				Pagination: pageReq,
+			}
+
+			res, err := queryClient.Receipts(cmd.Context(), req)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
 }
 
 func GetTxStatusCmd() *cobra.Command {
-	// TODO: implement
-	return &cobra.Command{}
+	cmd := &cobra.Command{
+		Use:   "tx-status [chain-id] [tx-hash]",
+		Short: "Query the status of a transaction",
+		Args:  cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			chainID := args[0]
+			txHash := args[1]
+
+			queryClient := types.NewQueryClient(clientCtx)
+			req := &types.QueryTxStatusRequest{
+				ChainId: chainID,
+				TxHash:  txHash,
+			}
+
+			res, err := queryClient.TxStatus(cmd.Context(), req)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
 }
 
-func GetDelegationRecordsCmd() *cobra.Command {
-	// TODO: implement
-	return &cobra.Command{}
+func GetZoneRedelegationRecordsCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "zone-redelegation-records",
+		Short: "Query re-delegation records for a given zone.",
+		Example: strings.TrimSpace(
+			fmt.Sprintf(`$ %s query interchainstaking zone-redelegation-records`,
+				version.AppName,
+			)),
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+
+			if err != nil {
+				return err
+			}
+			chainID := args[0]
+			req := &types.QueryRedelegationRecordsRequest{
+				ChainId: chainID,
+			}
+
+			// TODO: refactor this. Should be RedelegationRecords
+			res, err := queryClient.RedelegationRecords(cmd.Context(), req)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
 }
 
 // GetZoneValidatorCmd returns the validators for the given zone.
 func GetZoneValidatorsCmd() *cobra.Command {
-	// ToDO: implement
-	return &cobra.Command{}
+	cmd := &cobra.Command{
+		Use:   "zone-validators",
+		Short: "Query validators for a given zone.",
+		Example: strings.TrimSpace(
+			fmt.Sprintf(`$ %s query interchainstaking zone-validators`,
+				version.AppName,
+			)),
+		Args: cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+
+			req := &types.QueryZoneValidatorsRequest{}
+
+			res, err := queryClient.ZoneValidators(cmd.Context(), req)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
 }
 
 // GetZoneCmd returns the information about the zone.
 func GetZoneCmd() *cobra.Command {
-	// TODO: implement
-	return &cobra.Command{}
+	cmd := &cobra.Command{
+		Use:   "zone [chain-id]",
+		Short: "Query zone information for a given chain.",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			chainID := args[0]
+
+			queryClient := types.NewQueryClient(clientCtx)
+			req := &types.QueryZoneRequest{
+				ChainId: chainID,
+			}
+
+			res, err := queryClient.Zone(cmd.Context(), req)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
 }

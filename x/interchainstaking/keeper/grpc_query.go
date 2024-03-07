@@ -293,6 +293,7 @@ func (k *Keeper) UnbondingRecords(c context.Context, req *types.QueryUnbondingRe
 	return &types.QueryUnbondingRecordsResponse{Unbondings: unbondings}, nil
 }
 
+// TODO: refactor this. Should be ZoneRedelegationRecords since it's only for a specific zone
 func (k *Keeper) RedelegationRecords(c context.Context, req *types.QueryRedelegationRecordsRequest) (*types.QueryRedelegationRecordsResponse, error) {
 	// TODO: implement pagination
 	if req == nil {
