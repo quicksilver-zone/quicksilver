@@ -180,7 +180,6 @@ func delegationCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.
 	}
 
 	delegation := stakingtypes.Delegation{}
-	// delegations _can_ legitimately be nil here, so explicitly DON'T guard against this.
 	err := k.cdc.Unmarshal(args, &delegation)
 	if err != nil {
 		return err
@@ -189,32 +188,41 @@ func delegationCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.
 	k.Logger(ctx).Debug("Delegation callback", "delegation", delegation, "chain", zone.ChainId)
 
 	if delegation.Shares.IsNil() || delegation.Shares.IsZero() {
-		// delegation never gets removed, even with zero shares.
-		delegator, validator, err := types.ParseStakingDelegationKey(query.Request)
-		if err != nil {
-			return err
-		}
-		validatorAddress, err := addressutils.EncodeAddressToBech32(zone.GetValoperPrefix(), validator)
-		if err != nil {
-			return err
-		}
-		delegatorAddress, err := addressutils.EncodeAddressToBech32(zone.GetAccountPrefix(), delegator)
-		if err != nil {
-			return err
-		}
-
-		if delegation, ok := k.GetDelegation(ctx, zone.ChainId, delegatorAddress, validatorAddress); ok {
-			err := k.RemoveDelegation(ctx, zone.ChainId, delegation)
-			if err != nil {
-				return err
-			}
-		}
-		return nil
+		return handleZeroDelegation(k, ctx, query, &zone)
 	}
+
+	return updateDelegationRecord(k, ctx, delegation, &zone, isEpoch)
+}
+
+func handleZeroDelegation(k *Keeper, ctx sdk.Context, query icqtypes.Query, zone *types.Zone) error {
+	delegator, validator, err := types.ParseStakingDelegationKey(query.Request)
+	if err != nil {
+		return err
+	}
+
+	validatorAddress, err := addressutils.EncodeAddressToBech32(zone.GetValoperPrefix(), validator)
+	if err != nil {
+		return err
+	}
+
+	delegatorAddress, err := addressutils.EncodeAddressToBech32(zone.GetAccountPrefix(), delegator)
+	if err != nil {
+		return err
+	}
+
+	if delegation, ok := k.GetDelegation(ctx, zone.ChainId, delegatorAddress, validatorAddress); ok {
+		return k.RemoveDelegation(ctx, zone.ChainId, delegation)
+	}
+
+	return nil
+}
+
+func updateDelegationRecord(k *Keeper, ctx sdk.Context, delegation stakingtypes.Delegation, zone *types.Zone, isEpoch bool) error {
 	valAddrBytes, err := addressutils.ValAddressFromBech32(delegation.ValidatorAddress, zone.GetValoperPrefix())
 	if err != nil {
 		return err
 	}
+
 	val, found := k.GetValidator(ctx, zone.ChainId, valAddrBytes)
 	if !found {
 		err := fmt.Errorf("unable to get validator: %s", delegation.ValidatorAddress)
@@ -222,7 +230,7 @@ func delegationCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.
 		return err
 	}
 
-	return k.UpdateDelegationRecordForAddress(ctx, delegation.DelegatorAddress, delegation.ValidatorAddress, sdk.NewCoin(zone.BaseDenom, val.SharesToTokens(delegation.Shares)), &zone, true, isEpoch)
+	return k.UpdateDelegationRecordForAddress(ctx, delegation.DelegatorAddress, delegation.ValidatorAddress, sdk.NewCoin(zone.BaseDenom, val.SharesToTokens(delegation.Shares)), zone, true, isEpoch)
 }
 
 func PerfBalanceCallback(k *Keeper, ctx sdk.Context, response []byte, query icqtypes.Query) error {
@@ -290,51 +298,77 @@ func SigningInfoCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes
 
 	k.Logger(ctx).Debug("Validator signing info callback", "zone", zone.ChainId)
 
-	valSigningInfo := slashingtypes.ValidatorSigningInfo{}
-	if len(args) == 0 {
-		k.Logger(ctx).Error("unable to find signing info for validator", "query", query.Request)
-		return nil
-	}
-	err := k.cdc.Unmarshal(args, &valSigningInfo)
+	valSigningInfo, err := getValidatorSigningInfo(k, ctx, args, query)
 	if err != nil {
 		return err
 	}
-	if valSigningInfo.Tombstoned {
-		consAddr, err := addressutils.AddressFromBech32(valSigningInfo.Address, "")
-		if err != nil {
-			return err
-		}
-		valAddr, found := k.GetValidatorAddrByConsAddr(ctx, zone.ChainId, consAddr)
-		if !found {
-			return fmt.Errorf("can not get validator address from consensus address: %s", valSigningInfo.Address)
-		}
 
-		k.Logger(ctx).Info("tombstoned validator found", "valoper", valAddr)
-
-		valAddrBytes, err := addressutils.ValAddressFromBech32(valAddr, zone.GetValoperPrefix())
-		if err != nil {
-			return err
-		}
-		val, found := k.GetValidator(ctx, zone.ChainId, valAddrBytes)
-		// NOTE: this shouldn't be reachable, but keeping here as it doesn't do any harm.
-		if !found {
-			err := k.SetValidator(ctx, zone.ChainId, types.Validator{
-				ValoperAddress: valAddr,
-				Jailed:         true,
-				Tombstoned:     true,
-			})
-			if err != nil {
-				return err
-			}
-		} else {
-			val.Tombstoned = true
-			if err = k.SetValidator(ctx, zone.ChainId, val); err != nil {
-				return err
-			}
-		}
-		k.Logger(ctx).Info(fmt.Sprintf("%q on chainID: %q was found to already have been tombstoned, added information", val.ValoperAddress, zone.ChainId))
-
+	if !valSigningInfo.Tombstoned {
+		return nil
 	}
+
+	valAddr, err := getValidatorAddressByConsensusAddress(k, ctx, &zone, valSigningInfo.Address)
+	if err != nil {
+		return err
+	}
+
+	return handleTombstonedValidator(k, ctx, &zone, valAddr)
+}
+
+func getValidatorSigningInfo(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) (*slashingtypes.ValidatorSigningInfo, error) {
+	if len(args) == 0 {
+		k.Logger(ctx).Error("unable to find signing info for validator", "query", query.Request)
+		return nil, nil
+	}
+
+	valSigningInfo := slashingtypes.ValidatorSigningInfo{}
+	err := k.cdc.Unmarshal(args, &valSigningInfo)
+	if err != nil {
+		return nil, err
+	}
+
+	return &valSigningInfo, nil
+}
+
+func getValidatorAddressByConsensusAddress(k *Keeper, ctx sdk.Context, zone *types.Zone, consAddr string) (string, error) {
+	consensusAddr, err := addressutils.AddressFromBech32(consAddr, "")
+	if err != nil {
+		return "", err
+	}
+
+	valAddr, found := k.GetValidatorAddrByConsAddr(ctx, zone.ChainId, consensusAddr)
+	if !found {
+		return "", fmt.Errorf("can not get validator address from consensus address: %s", consAddr)
+	}
+
+	return valAddr, nil
+}
+
+func handleTombstonedValidator(k *Keeper, ctx sdk.Context, zone *types.Zone, valAddr string) error {
+	k.Logger(ctx).Info("tombstoned validator found", "valoper", valAddr)
+
+	valAddrBytes, err := addressutils.ValAddressFromBech32(valAddr, zone.GetValoperPrefix())
+	if err != nil {
+		return err
+	}
+
+	val, found := k.GetValidator(ctx, zone.ChainId, valAddrBytes)
+	if !found {
+		val = types.Validator{
+			ValoperAddress: valAddr,
+			Jailed:         true,
+			Tombstoned:     true,
+		}
+	} else {
+		val.Tombstoned = true
+	}
+
+	if err := k.SetValidator(ctx, zone.ChainId, val); err != nil {
+		return err
+	}
+
+	k.Logger(ctx).Info(fmt.Sprintf("%q on chainID: %q was found to already have been tombstoned, added information", val.ValoperAddress, zone.ChainId))
+
 	return nil
 }
 
