@@ -299,20 +299,22 @@ func GetUnbondingRecordsCmd() *cobra.Command {
 			fmt.Sprintf(`$ %s query interchainstaking unbonding-records`,
 				version.AppName,
 			)),
-		Args: cobra.NoArgs,
-		RunE: func(cmd *cobra.Command, _ []string) error {
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
 			}
 			queryClient := types.NewQueryClient(clientCtx)
 
+			chainID := args[0]
 			pageReq, err := client.ReadPageRequest(cmd.Flags())
 			if err != nil {
 				return err
 			}
 
 			req := &types.QueryUnbondingRecordsRequest{
+				ChainId:    chainID,
 				Pagination: pageReq,
 			}
 
