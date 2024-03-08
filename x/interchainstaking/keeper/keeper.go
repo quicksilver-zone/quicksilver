@@ -325,11 +325,9 @@ func (k *Keeper) SetValidatorsForZone(ctx sdk.Context, data []byte, icqQuery icq
 func (k *Keeper) SetValidatorForZone(ctx sdk.Context, zone *types.Zone, data []byte) error {
 	if data == nil {
 		k.Logger(ctx).Error("expected validator state, got nil")
-		// return nil here, as if we receive nil we fail to unmarshal (as nil validators are invalid),
-		// so we can never hope to resolve this query. Possibly received a valset update from a
-		// different chain.
 		return nil
 	}
+
 	validator, err := k.UnmarshalValidator(data)
 	if err != nil {
 		k.Logger(ctx).Error("unable to unmarshal validator info for zone", "zone", zone.ChainId, "err", err)
@@ -340,138 +338,157 @@ func (k *Keeper) SetValidatorForZone(ctx sdk.Context, zone *types.Zone, data []b
 	if err != nil {
 		return err
 	}
+
 	val, found := k.GetValidator(ctx, zone.ChainId, valAddrBytes)
 	if !found {
-		k.Logger(ctx).Debug("Unable to find validator - adding...", "valoper", validator.OperatorAddress)
+		return k.handleNewValidator(ctx, zone, validator)
+	}
 
-		jailTime := time.Time{}
-		if validator.IsJailed() {
-			var pk cryptotypes.PubKey
-			err := k.cdc.UnpackAny(validator.ConsensusPubkey, &pk)
-			if err != nil {
-				return err
-			}
-			consAddr := sdk.ConsAddress(pk.Address().Bytes())
-			k.SetValidatorAddrByConsAddr(ctx, zone.ChainId, validator.OperatorAddress, consAddr)
-			jailTime = ctx.BlockTime()
+	if val.Tombstoned {
+		k.Logger(ctx).Debug(fmt.Sprintf("%q on chainID: %q was found to already have been tombstoned; not updating state.", validator.OperatorAddress, zone.ChainId))
+		return nil
+	}
 
-			err = k.EmitSigningInfoQuery(ctx, zone.ConnectionId, zone.ChainId, validator)
-			if err != nil {
-				return err
-			}
-		}
+	if err := k.handleJailStatusTransition(ctx, zone, val, validator); err != nil {
+		return err
+	}
 
-		if err := k.SetValidator(ctx, zone.ChainId, types.Validator{
-			ValoperAddress:  validator.OperatorAddress,
-			CommissionRate:  validator.GetCommission(),
-			VotingPower:     validator.Tokens,
-			DelegatorShares: validator.DelegatorShares,
-			Score:           sdk.ZeroDec(),
-			Status:          validator.Status.String(),
-			Jailed:          validator.IsJailed(),
-			JailedSince:     jailTime,
-		}); err != nil {
-			return err
-		}
+	if err := k.updateValidatorFields(ctx, zone, val, validator); err != nil {
+		return err
+	}
 
+	if err := k.SetValidator(ctx, zone.ChainId, val); err != nil {
+		return err
+	}
+
+	if _, found := k.GetPerformanceDelegation(ctx, zone.ChainId, zone.PerformanceAddress, validator.OperatorAddress); !found {
 		if err := k.MakePerformanceDelegation(ctx, zone, validator.OperatorAddress); err != nil {
 			return err
 		}
-	} else {
-		if val.Tombstoned {
-			k.Logger(ctx).Debug(fmt.Sprintf("%q on chainID: %q was found to already have been tombstoned; not updating state.", validator.OperatorAddress, zone.ChainId))
-			return nil
+	}
+
+	return nil
+}
+
+func (k *Keeper) handleNewValidator(ctx sdk.Context, zone *types.Zone, validator lsmstakingtypes.Validator) error {
+	k.Logger(ctx).Debug("Unable to find validator - adding...", "valoper", validator.OperatorAddress)
+
+	jailTime := time.Time{}
+	if validator.IsJailed() {
+		var pk cryptotypes.PubKey
+		err := k.cdc.UnpackAny(validator.ConsensusPubkey, &pk)
+		if err != nil {
+			return err
 		}
+		consAddr := sdk.ConsAddress(pk.Address().Bytes())
+		k.SetValidatorAddrByConsAddr(ctx, zone.ChainId, validator.OperatorAddress, consAddr)
+		jailTime = ctx.BlockTime()
 
-		if !val.Jailed && validator.IsJailed() {
-			k.Logger(ctx).Info("Transitioning validator to jailed state", "valoper", validator.OperatorAddress, "old_vp", val.VotingPower, "new_vp", validator.Tokens, "new_shares", validator.DelegatorShares, "old_shares", val.DelegatorShares)
-
-			var pk cryptotypes.PubKey
-			err := k.cdc.UnpackAny(validator.ConsensusPubkey, &pk)
-			if err != nil {
-				return err
-			}
-			consAddr := sdk.ConsAddress(pk.Address().Bytes())
-			k.SetValidatorAddrByConsAddr(ctx, zone.ChainId, validator.OperatorAddress, consAddr)
-
-			err = k.EmitSigningInfoQuery(ctx, zone.ConnectionId, zone.ChainId, validator)
-			if err != nil {
-				return err
-			}
-
-			val.Jailed = true
-			val.JailedSince = ctx.BlockTime()
-
-			// be defensive, so we don't get division weirdness!
-			if !val.VotingPower.IsPositive() {
-				return fmt.Errorf("existing voting power must be greater than zero, received %s", val.VotingPower)
-			}
-			if validator.Tokens.IsNegative() {
-				return fmt.Errorf("incoming voting power must not be negative, received %s", validator.Tokens)
-			}
-			if validator.Tokens.IsZero() {
-				// edge case: if validator tokens is now zero, val was slashed to zero.
-				err = k.UpdateWithdrawalRecordsForSlash(ctx, zone, val.ValoperAddress, sdk.ZeroDec())
-				if err != nil {
-					return err
-				}
-			} else {
-				// determine difference between previous vp/shares ratio and new ratio.
-				prevRatio := val.DelegatorShares.Quo(sdk.NewDecFromInt(val.VotingPower))
-				newRatio := validator.DelegatorShares.Quo(sdk.NewDecFromInt(validator.Tokens))
-				delta := newRatio.Quo(prevRatio)
-				err = k.UpdateWithdrawalRecordsForSlash(ctx, zone, val.ValoperAddress, delta)
-				if err != nil {
-					return err
-				}
-			}
-		} else if val.Jailed && !validator.IsJailed() {
-			k.Logger(ctx).Debug("Transitioning validator to unjailed state", "valoper", validator.OperatorAddress)
-
-			val.Jailed = false
-			val.JailedSince = time.Time{}
+		err = k.EmitSigningInfoQuery(ctx, zone.ConnectionId, zone.ChainId, validator)
+		if err != nil {
+			return err
 		}
+	}
 
-		if !val.CommissionRate.Equal(validator.GetCommission()) {
-			k.Logger(ctx).Debug("Validator commission rate change; updating...", "valoper", validator.OperatorAddress, "oldRate", val.CommissionRate, "newRate", validator.GetCommission())
-			val.CommissionRate = validator.GetCommission()
+	if err := k.SetValidator(ctx, zone.ChainId, types.Validator{
+		ValoperAddress:  validator.OperatorAddress,
+		CommissionRate:  validator.GetCommission(),
+		VotingPower:     validator.Tokens,
+		DelegatorShares: validator.DelegatorShares,
+		Score:           sdk.ZeroDec(),
+		Status:          validator.Status.String(),
+		Jailed:          validator.IsJailed(),
+		JailedSince:     jailTime,
+	}); err != nil {
+		return err
+	}
+
+	if err := k.MakePerformanceDelegation(ctx, zone, validator.OperatorAddress); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (k *Keeper) handleJailStatusTransition(ctx sdk.Context, zone *types.Zone, val types.Validator, validator lsmstakingtypes.Validator) error {
+	if !val.Jailed && validator.IsJailed() {
+		k.Logger(ctx).Info("Transitioning validator to jailed state", "valoper", validator.OperatorAddress, "old_vp", val.VotingPower, "new_vp", validator.Tokens, "new_shares", validator.DelegatorShares, "old_shares", val.DelegatorShares)
+
+		var pk cryptotypes.PubKey
+		err := k.cdc.UnpackAny(validator.ConsensusPubkey, &pk)
+		if err != nil {
+			return err
 		}
+		consAddr := sdk.ConsAddress(pk.Address().Bytes())
+		k.SetValidatorAddrByConsAddr(ctx, zone.ChainId, validator.OperatorAddress, consAddr)
 
-		if !val.VotingPower.Equal(validator.Tokens) {
-			k.Logger(ctx).Debug("Validator voting power change; updating", "valoper", validator.OperatorAddress, "oldPower", val.VotingPower, "newPower", validator.Tokens)
-			val.VotingPower = validator.Tokens
-		}
-
-		if !val.DelegatorShares.Equal(validator.DelegatorShares) {
-			k.Logger(ctx).Debug("Validator delegator shares change; updating", "valoper", validator.OperatorAddress, "oldShares", val.DelegatorShares, "newShares", validator.DelegatorShares)
-			val.DelegatorShares = validator.DelegatorShares
-		}
-
-		if val.Status != validator.Status.String() {
-			k.Logger(ctx).Debug("Transitioning validator status", "valoper", validator.OperatorAddress, "previous", val.Status, "current", validator.Status.String())
-
-			val.Status = validator.Status.String()
-		}
-
-		if !validator.ValidatorBondShares.IsNil() && !val.ValidatorBondShares.Equal(validator.ValidatorBondShares) {
-			k.Logger(ctx).Info("Validator bonded shares change; updating", "valoper", validator.OperatorAddress, "oldShares", val.ValidatorBondShares, "newShares", validator.ValidatorBondShares)
-			val.ValidatorBondShares = validator.ValidatorBondShares
-		}
-
-		if !validator.LiquidShares.IsNil() && !val.LiquidShares.Equal(validator.LiquidShares) {
-			k.Logger(ctx).Info("Validator liquid shares change; updating", "valoper", validator.OperatorAddress, "oldShares", val.LiquidShares, "newShares", validator.LiquidShares)
-			val.LiquidShares = validator.LiquidShares
-		}
-
-		if err := k.SetValidator(ctx, zone.ChainId, val); err != nil {
+		err = k.EmitSigningInfoQuery(ctx, zone.ConnectionId, zone.ChainId, validator)
+		if err != nil {
 			return err
 		}
 
-		if _, found := k.GetPerformanceDelegation(ctx, zone.ChainId, zone.PerformanceAddress, validator.OperatorAddress); !found {
-			if err := k.MakePerformanceDelegation(ctx, zone, validator.OperatorAddress); err != nil {
+		val.Jailed = true
+		val.JailedSince = ctx.BlockTime()
+
+		if !val.VotingPower.IsPositive() {
+			return fmt.Errorf("existing voting power must be greater than zero, received %s", val.VotingPower)
+		}
+		if validator.Tokens.IsNegative() {
+			return fmt.Errorf("incoming voting power must not be negative, received %s", validator.Tokens)
+		}
+		if validator.Tokens.IsZero() {
+			err = k.UpdateWithdrawalRecordsForSlash(ctx, zone, val.ValoperAddress, sdk.ZeroDec())
+			if err != nil {
+				return err
+			}
+		} else {
+			prevRatio := val.DelegatorShares.Quo(sdk.NewDecFromInt(val.VotingPower))
+			newRatio := validator.DelegatorShares.Quo(sdk.NewDecFromInt(validator.Tokens))
+			delta := newRatio.Quo(prevRatio)
+			err = k.UpdateWithdrawalRecordsForSlash(ctx, zone, val.ValoperAddress, delta)
+			if err != nil {
 				return err
 			}
 		}
+	} else if val.Jailed && !validator.IsJailed() {
+		k.Logger(ctx).Debug("Transitioning validator to unjailed state", "valoper", validator.OperatorAddress)
+
+		val.Jailed = false
+		val.JailedSince = time.Time{}
+	}
+
+	return nil
+}
+
+func (k *Keeper) updateValidatorFields(ctx sdk.Context, zone *types.Zone, val types.Validator, validator lsmstakingtypes.Validator) error {
+	if !val.CommissionRate.Equal(validator.GetCommission()) {
+		k.Logger(ctx).Debug("Validator commission rate change; updating...", "valoper", validator.OperatorAddress, "oldRate", val.CommissionRate, "newRate", validator.GetCommission())
+		val.CommissionRate = validator.GetCommission()
+	}
+
+	if !val.VotingPower.Equal(validator.Tokens) {
+		k.Logger(ctx).Debug("Validator voting power change; updating", "valoper", validator.OperatorAddress, "oldPower", val.VotingPower, "newPower", validator.Tokens)
+		val.VotingPower = validator.Tokens
+	}
+
+	if !val.DelegatorShares.Equal(validator.DelegatorShares) {
+		k.Logger(ctx).Debug("Validator delegator shares change; updating", "valoper", validator.OperatorAddress, "oldShares", val.DelegatorShares, "newShares", validator.DelegatorShares)
+		val.DelegatorShares = validator.DelegatorShares
+	}
+
+	if val.Status != validator.Status.String() {
+		k.Logger(ctx).Debug("Transitioning validator status", "valoper", validator.OperatorAddress, "previous", val.Status, "current", validator.Status.String())
+		val.Status = validator.Status.String()
+	}
+
+	if !validator.ValidatorBondShares.IsNil() && !val.ValidatorBondShares.Equal(validator.ValidatorBondShares) {
+		k.Logger(ctx).Info("Validator bonded shares change; updating", "valoper", validator.OperatorAddress, "oldShares", val.ValidatorBondShares, "newShares", validator.ValidatorBondShares)
+		val.ValidatorBondShares = validator.ValidatorBondShares
+	}
+
+	if !validator.LiquidShares.IsNil() && !val.LiquidShares.Equal(validator.LiquidShares) {
+		k.Logger(ctx).Info("Validator liquid shares change; updating", "valoper", validator.OperatorAddress, "oldShares", val.LiquidShares, "newShares", validator.LiquidShares)
+		val.LiquidShares = validator.LiquidShares
 	}
 
 	return nil

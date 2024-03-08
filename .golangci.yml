@@ -12,7 +12,9 @@ linters:
     - errcheck
     - gci
     - goconst
+    - gocognit
     - gocritic
+    - gocyclo
     - gofumpt
     - gosec
     - gosimple
