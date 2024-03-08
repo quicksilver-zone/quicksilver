@@ -62,7 +62,7 @@ func (c Callbacks) Has(id string) bool {
 	return found
 }
 
-func (c Callbacks) AddCallback(id string, fn any) icqtypes.QueryCallbacks {
+func (c Callbacks) AddCallback(id string, fn interface{}) icqtypes.QueryCallbacks {
 	c.callbacks[id], _ = fn.(Callback)
 	return c
 }
@@ -73,7 +73,9 @@ func (c Callbacks) RegisterCallbacks() icqtypes.QueryCallbacks {
 		AddCallback("validator", Callback(ValidatorCallback)).
 		AddCallback("rewards", Callback(RewardsCallback)).
 		AddCallback("delegations", Callback(DelegationsCallback)).
+		AddCallback("delegations_epoch", Callback(DelegationsEpochCallback)).
 		AddCallback("delegation", Callback(DelegationCallback)).
+		AddCallback("delegation_epoch", Callback(DelegationEpochCallback)).
 		AddCallback("distributerewards", Callback(DistributeRewardsFromWithdrawAccount)).
 		AddCallback("depositinterval", Callback(DepositIntervalCallback)).
 		AddCallback("deposittx", Callback(DepositTxCallback)).
@@ -124,9 +126,9 @@ func RewardsCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Que
 
 	// decrement waitgroup as we have received back the query
 	// (initially incremented in AfterEpochEnd)
-	err = zone.DecrementWithdrawalWaitgroup(k.Logger(ctx), 1, "rewards callback")
-	if err != nil {
-		return err
+	if err = zone.DecrementWithdrawalWaitgroup(k.Logger(ctx), 1, "rewards callback"); err != nil {
+		// given that there _could_ be a backlog of message, we don't want to bail here, else they will remain undeliverable.
+		k.Logger(ctx).Error(err.Error())
 	}
 
 	k.Logger(ctx).Debug("QueryDelegationRewards callback", "wg", zone.GetWithdrawalWaitgroup(), "delegatorAddress", rewardsQuery.DelegatorAddress, "zone", query.ChainId)
@@ -134,7 +136,15 @@ func RewardsCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Que
 	return k.WithdrawDelegationRewardsForResponse(ctx, &zone, rewardsQuery.DelegatorAddress, args)
 }
 
+func DelegationsEpochCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
+	return delegationsCallback(k, ctx, args, query, true)
+}
+
 func DelegationsCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
+	return delegationsCallback(k, ctx, args, query, false)
+}
+
+func delegationsCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Query, isEpoch bool) error {
 	zone, found := k.GetZone(ctx, query.GetChainId())
 	if !found {
 		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
@@ -152,56 +162,55 @@ func DelegationsCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes
 
 	k.Logger(ctx).Debug("Delegations callback triggered", "chain", zone.ChainId)
 
-	return k.UpdateDelegationRecordsForAddress(ctx, zone, delegationQuery.DelegatorAddr, args)
+	return k.UpdateDelegationRecordsForAddress(ctx, zone, delegationQuery.DelegatorAddr, args, isEpoch)
+}
+
+func DelegationEpochCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
+	return delegationCallback(k, ctx, args, query, true)
 }
 
 func DelegationCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
+	return delegationCallback(k, ctx, args, query, false)
+}
+
+func delegationCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Query, isEpoch bool) error {
 	zone, found := k.GetZone(ctx, query.GetChainId())
 	if !found {
 		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
 	}
 
 	delegation := stakingtypes.Delegation{}
+	// delegations _can_ legitimately be nil here, so explicitly DON'T guard against this.
 	err := k.cdc.Unmarshal(args, &delegation)
 	if err != nil {
 		return err
 	}
 
-	if shouldRemoveDelegation(delegation) {
-		return handleDelegationRemoval(k, ctx, &zone, query)
-	}
+	k.Logger(ctx).Debug("Delegation callback", "delegation", delegation, "chain", zone.ChainId)
 
-	return processDelegation(k, ctx, delegation, &zone)
-}
-
-func shouldRemoveDelegation(delegation stakingtypes.Delegation) bool {
-	return delegation.Shares.IsNil() || delegation.Shares.IsZero()
-}
-
-func handleDelegationRemoval(k *Keeper, ctx sdk.Context, zone *types.Zone, query icqtypes.Query) error {
-	delegator, validator, err := types.ParseStakingDelegationKey(query.Request)
-	if err != nil {
-		return err
-	}
-	validatorAddress, err := addressutils.EncodeAddressToBech32(zone.GetValoperPrefix(), validator)
-	if err != nil {
-		return err
-	}
-	delegatorAddress, err := addressutils.EncodeAddressToBech32(zone.GetAccountPrefix(), delegator)
-	if err != nil {
-		return err
-	}
-
-	if delegation, ok := k.GetDelegation(ctx, zone.ChainId, delegatorAddress, validatorAddress); ok {
-		err := k.RemoveDelegation(ctx, zone.ChainId, delegation)
+	if delegation.Shares.IsNil() || delegation.Shares.IsZero() {
+		// delegation never gets removed, even with zero shares.
+		delegator, validator, err := types.ParseStakingDelegationKey(query.Request)
 		if err != nil {
 			return err
 		}
-	}
-	return nil
-}
+		validatorAddress, err := addressutils.EncodeAddressToBech32(zone.GetValoperPrefix(), validator)
+		if err != nil {
+			return err
+		}
+		delegatorAddress, err := addressutils.EncodeAddressToBech32(zone.GetAccountPrefix(), delegator)
+		if err != nil {
+			return err
+		}
 
-func processDelegation(k *Keeper, ctx sdk.Context, delegation stakingtypes.Delegation, zone *types.Zone) error {
+		if delegation, ok := k.GetDelegation(ctx, zone.ChainId, delegatorAddress, validatorAddress); ok {
+			err := k.RemoveDelegation(ctx, zone.ChainId, delegation)
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	}
 	valAddrBytes, err := addressutils.ValAddressFromBech32(delegation.ValidatorAddress, zone.GetValoperPrefix())
 	if err != nil {
 		return err
@@ -213,7 +222,7 @@ func processDelegation(k *Keeper, ctx sdk.Context, delegation stakingtypes.Deleg
 		return err
 	}
 
-	return k.UpdateDelegationRecordForAddress(ctx, delegation.DelegatorAddress, delegation.ValidatorAddress, sdk.NewCoin(zone.BaseDenom, val.SharesToTokens(delegation.Shares)), zone, true)
+	return k.UpdateDelegationRecordForAddress(ctx, delegation.DelegatorAddress, delegation.ValidatorAddress, sdk.NewCoin(zone.BaseDenom, val.SharesToTokens(delegation.Shares)), &zone, true, isEpoch)
 }
 
 func PerfBalanceCallback(k *Keeper, ctx sdk.Context, response []byte, query icqtypes.Query) error {
@@ -291,45 +300,41 @@ func SigningInfoCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes
 		return err
 	}
 	if valSigningInfo.Tombstoned {
-		return handleTombstonedValidator(k, ctx, &zone, valSigningInfo)
-	}
-	return nil
-}
-
-func handleTombstonedValidator(k *Keeper, ctx sdk.Context, zone *types.Zone, valSigningInfo slashingtypes.ValidatorSigningInfo) error {
-	consAddr, err := addressutils.AddressFromBech32(valSigningInfo.Address, "")
-	if err != nil {
-		return err
-	}
-	valAddr, found := k.GetValidatorAddrByConsAddr(ctx, zone.ChainId, consAddr)
-	if !found {
-		return fmt.Errorf("can not get validator address from consensus address: %s", valSigningInfo.Address)
-	}
-
-	k.Logger(ctx).Info("tombstoned validator found", "valoper", valAddr)
-
-	valAddrBytes, err := addressutils.ValAddressFromBech32(valAddr, zone.GetValoperPrefix())
-	if err != nil {
-		return err
-	}
-	val, found := k.GetValidator(ctx, zone.ChainId, valAddrBytes)
-	if !found {
-		err := k.SetValidator(ctx, zone.ChainId, types.Validator{
-			ValoperAddress: valAddr,
-			Jailed:         true,
-			Tombstoned:     true,
-		})
+		consAddr, err := addressutils.AddressFromBech32(valSigningInfo.Address, "")
 		if err != nil {
 			return err
 		}
-	} else {
-		val.Tombstoned = true
-		if err = k.SetValidator(ctx, zone.ChainId, val); err != nil {
+		valAddr, found := k.GetValidatorAddrByConsAddr(ctx, zone.ChainId, consAddr)
+		if !found {
+			return fmt.Errorf("can not get validator address from consensus address: %s", valSigningInfo.Address)
+		}
+
+		k.Logger(ctx).Info("tombstoned validator found", "valoper", valAddr)
+
+		valAddrBytes, err := addressutils.ValAddressFromBech32(valAddr, zone.GetValoperPrefix())
+		if err != nil {
 			return err
 		}
-	}
-	k.Logger(ctx).Info(fmt.Sprintf("%q on chainID: %q was found to already have been tombstoned, added information", val.ValoperAddress, zone.ChainId))
+		val, found := k.GetValidator(ctx, zone.ChainId, valAddrBytes)
+		// NOTE: this shouldn't be reachable, but keeping here as it doesn't do any harm.
+		if !found {
+			err := k.SetValidator(ctx, zone.ChainId, types.Validator{
+				ValoperAddress: valAddr,
+				Jailed:         true,
+				Tombstoned:     true,
+			})
+			if err != nil {
+				return err
+			}
+		} else {
+			val.Tombstoned = true
+			if err = k.SetValidator(ctx, zone.ChainId, val); err != nil {
+				return err
+			}
+		}
+		k.Logger(ctx).Info(fmt.Sprintf("%q on chainID: %q was found to already have been tombstoned, added information", val.ValoperAddress, zone.ChainId))
 
+	}
 	return nil
 }
 
@@ -635,9 +640,9 @@ func DelegationAccountBalanceCallback(k *Keeper, ctx sdk.Context, args []byte, q
 	}
 
 	k.Logger(ctx).Info("Received balance response for denom", "denom", coin.Denom)
-	err = zone.DecrementWithdrawalWaitgroup(k.Logger(ctx), 1, "delegationaccountbalance callback")
-	if err != nil {
-		return err
+	if err = zone.DecrementWithdrawalWaitgroup(k.Logger(ctx), 1, "delegationaccountbalance callback"); err != nil {
+		// given that there _could_ be a backlog of message, we don't want to bail here, else they will remain undeliverable.
+		k.Logger(ctx).Error(err.Error())
 	}
 
 	// set the zone amount.
@@ -658,6 +663,12 @@ func DelegationAccountBalanceCallback(k *Keeper, ctx sdk.Context, args []byte, q
 	// if token is not valid for staking, then send to withdrawal account.
 	if valid, _ := zone.ValidateCoinsForZone(sdk.NewCoins(coin), k.GetValidatorAddressesAsMap(ctx, zone.ChainId)); !valid {
 		k.Logger(ctx).Info("token is not a valid staking token, so sending to withdrawal account for disbursal", "chain", zone.ChainId, "assets", coin)
+		if zone.GetWithdrawalWaitgroup() == 0 {
+			k.Logger(ctx).Info("triggering redemption rate calc in lieu of delegation flush")
+			if err := k.TriggerRedemptionRate(ctx, &zone); err != nil {
+				return err
+			}
+		}
 		return k.SendToWithdrawal(ctx, &zone, zone.DelegationAddress, sdk.NewCoins(coin))
 	}
 
@@ -673,7 +684,8 @@ func DelegationAccountBalancesCallback(k *Keeper, ctx sdk.Context, args []byte, 
 	k.cdc.MustUnmarshal(args, &result)
 
 	if err := zone.DecrementWithdrawalWaitgroup(k.Logger(ctx), 1, "delegationaccountbalances callback"); err != nil {
-		return err
+		// given that there _could_ be a backlog of message, we don't want to bail here, else they will remain undeliverable.
+		k.Logger(ctx).Error(err.Error())
 	}
 
 	addressBytes, err := addressutils.AccAddressFromBech32(zone.DelegationAddress.Address, zone.AccountPrefix)

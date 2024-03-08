@@ -13,8 +13,8 @@ import (
 	"github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
 )
 
-func GenerateQueryHash(connectionID, chainID, queryType string, request []byte, module string) string {
-	return fmt.Sprintf("%x", crypto.Sha256(append([]byte(module+connectionID+chainID+queryType), request...)))
+func GenerateQueryHash(connectionID, chainID, queryType string, request []byte, module string, callbackID string) string {
+	return fmt.Sprintf("%x", crypto.Sha256(append([]byte(module+connectionID+chainID+queryType+callbackID), request...)))
 }
 
 // ----------------------------------------------------------------
@@ -30,7 +30,7 @@ func (Keeper) NewQuery(
 	ttl uint64,
 ) *types.Query {
 	return &types.Query{
-		Id:           GenerateQueryHash(connectionID, chainID, queryType, request, module),
+		Id:           GenerateQueryHash(connectionID, chainID, queryType, request, module, callbackID),
 		ConnectionId: connectionID,
 		ChainId:      chainID,
 		QueryType:    queryType,

@@ -32,7 +32,6 @@ import (
 	ibckeeper "github.com/cosmos/ibc-go/v5/modules/core/keeper"
 	ibctmtypes "github.com/cosmos/ibc-go/v5/modules/light-clients/07-tendermint/types"
 
-	"github.com/quicksilver-zone/quicksilver/utils"
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	epochskeeper "github.com/quicksilver-zone/quicksilver/x/epochs/keeper"
 	interchainquerykeeper "github.com/quicksilver-zone/quicksilver/x/interchainquery/keeper"
@@ -201,6 +200,53 @@ func (k *Keeper) AllPortConnections(ctx sdk.Context) (pcs []types.PortConnection
 	return pcs
 }
 
+// GetZoneByLocalDenom returns zone by denom.
+func (k *Keeper) GetZoneByLocalDenom(ctx sdk.Context, denom string) *types.Zone {
+	zone, existed := k.GetLocalDenomZoneMapping(ctx, denom)
+	if existed {
+		return zone
+	}
+	// If get zone from denom zone mapping not found, find it in zones list end set into the mapping
+	k.IterateZones(ctx, func(_ int64, thisZone *types.Zone) bool {
+		if thisZone.LocalDenom == denom {
+			zone = thisZone
+			k.SetLocalDenomZoneMapping(ctx, thisZone)
+			return true
+		}
+		return false
+	})
+	return zone
+}
+
+// GetLocalDenomZoneMapping returns zone by denom.
+func (k *Keeper) GetLocalDenomZoneMapping(ctx sdk.Context, denom string) (*types.Zone, bool) {
+	zone := types.Zone{}
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixLocalDenomZoneMapping)
+	bz := store.Get([]byte(denom))
+	if len(bz) == 0 {
+		return nil, false
+	}
+
+	k.cdc.MustUnmarshal(bz, &zone)
+	return &zone, true
+}
+
+// SetLocalDenomZoneMapping set denom <-> zone mapping.
+func (k *Keeper) SetLocalDenomZoneMapping(ctx sdk.Context, zone *types.Zone) {
+	if zone == nil {
+		return
+	}
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixLocalDenomZoneMapping)
+	bz := k.cdc.MustMarshal(zone)
+	store.Set([]byte(zone.LocalDenom), bz)
+}
+
+// DeleteDenomZoneMapping delete zone info in denom - zone mapping.
+func (k *Keeper) DeleteDenomZoneMapping(ctx sdk.Context, denom string) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixLocalDenomZoneMapping)
+	store.Delete([]byte(denom))
+}
+
 // ### Interval functions >>>
 // * some of these functions (or portions thereof) may be changed to single
 //   query type functions, dependent upon callback features / capabilities;
@@ -360,16 +406,24 @@ func (k *Keeper) SetValidatorForZone(ctx sdk.Context, zone *types.Zone, data []b
 			if !val.VotingPower.IsPositive() {
 				return fmt.Errorf("existing voting power must be greater than zero, received %s", val.VotingPower)
 			}
-			if !validator.Tokens.IsPositive() {
-				return fmt.Errorf("incoming voting power must be greater than zero, received %s", validator.Tokens)
+			if validator.Tokens.IsNegative() {
+				return fmt.Errorf("incoming voting power must not be negative, received %s", validator.Tokens)
 			}
-			// determine difference between previous vp/shares ratio and new ratio.
-			prevRatio := val.DelegatorShares.Quo(sdk.NewDecFromInt(val.VotingPower))
-			newRatio := validator.DelegatorShares.Quo(sdk.NewDecFromInt(validator.Tokens))
-			delta := newRatio.Quo(prevRatio)
-			err = k.UpdateWithdrawalRecordsForSlash(ctx, zone, val.ValoperAddress, delta)
-			if err != nil {
-				return err
+			if validator.Tokens.IsZero() {
+				// edge case: if validator tokens is now zero, val was slashed to zero.
+				err = k.UpdateWithdrawalRecordsForSlash(ctx, zone, val.ValoperAddress, sdk.ZeroDec())
+				if err != nil {
+					return err
+				}
+			} else {
+				// determine difference between previous vp/shares ratio and new ratio.
+				prevRatio := val.DelegatorShares.Quo(sdk.NewDecFromInt(val.VotingPower))
+				newRatio := validator.DelegatorShares.Quo(sdk.NewDecFromInt(validator.Tokens))
+				delta := newRatio.Quo(prevRatio)
+				err = k.UpdateWithdrawalRecordsForSlash(ctx, zone, val.ValoperAddress, delta)
+				if err != nil {
+					return err
+				}
 			}
 		} else if val.Jailed && !validator.IsJailed() {
 			k.Logger(ctx).Debug("Transitioning validator to unjailed state", "valoper", validator.OperatorAddress)
@@ -492,15 +546,6 @@ func (k *Keeper) GetChainID(ctx sdk.Context, connectionID string) (string, error
 	}
 
 	return client.ChainId, nil
-}
-
-func (k *Keeper) GetChainIDFromContext(ctx sdk.Context) (string, error) {
-	connectionID := ctx.Context().Value(utils.ContextKey("connectionID"))
-	if connectionID == nil {
-		return "", errors.New("connectionID not in context")
-	}
-
-	return k.GetChainID(ctx, connectionID.(string))
 }
 
 func (k *Keeper) EmitPerformanceBalanceQuery(ctx sdk.Context, zone *types.Zone) error {
@@ -666,7 +711,8 @@ func (k *Keeper) OverrideRedemptionRateNoCap(ctx sdk.Context, zone *types.Zone) 
 func (k *Keeper) GetRatio(ctx sdk.Context, zone *types.Zone, epochRewards sdkmath.Int) (sdk.Dec, bool) {
 	// native asset amount
 	nativeAssetAmount := k.GetDelegatedAmount(ctx, zone).Amount
-	nativeAssetUnbondingAmount := k.GetUnbondingAmount(ctx, zone).Amount
+	nativeAssetUnbonding, _ := k.GetUnbondingTokensAndCount(ctx, zone)
+	nativeAssetUnbondingAmount := nativeAssetUnbonding.Amount
 	nativeAssetUnbonded := zone.DelegationAddress.Balance.AmountOf(zone.BaseDenom)
 
 	// qAsset amount

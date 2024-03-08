@@ -63,7 +63,7 @@ func TestMsgSubmitQueryResponse(t *testing.T) {
 
 	msg := types.MsgSubmitQueryResponse{
 		ChainId:     chainB.ChainID + "-N",
-		QueryId:     keeper.GenerateQueryHash(path.EndpointB.ConnectionID, chainB.ChainID, "cosmos.staking.v1beta1.Query/Validators", bz, ""),
+		QueryId:     keeper.GenerateQueryHash(path.EndpointB.ConnectionID, chainB.ChainID, "cosmos.staking.v1beta1.Query/Validators", bz, "", ""),
 		Result:      GetSimApp(chainB).AppCodec().MustMarshalJSON(&qvr),
 		Height:      chainB.CurrentHeader.Height,
 		FromAddress: testAddress.String(),

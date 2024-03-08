@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/tendermint/tendermint/libs/log"
@@ -54,72 +53,6 @@ func (Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }
 
-func (k *Keeper) SetDatapointForID(ctx sdk.Context, id string, result []byte, height math.Int) error {
-	mapping := types.DataPoint{Id: id, RemoteHeight: height, LocalHeight: sdk.NewInt(ctx.BlockHeight()), Value: result}
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixData)
-	bz := k.cdc.MustMarshal(&mapping)
-	store.Set([]byte(id), bz)
-	return nil
-}
-
-func (k *Keeper) GetDatapointForID(ctx sdk.Context, id string) (types.DataPoint, error) {
-	mapping := types.DataPoint{}
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixData)
-	bz := store.Get([]byte(id))
-	if len(bz) == 0 {
-		return types.DataPoint{}, fmt.Errorf("unable to find data for id %s", id)
-	}
-
-	k.cdc.MustUnmarshal(bz, &mapping)
-	return mapping, nil
-}
-
-// IterateDatapoints iterate through datapoints.
-func (k Keeper) IterateDatapoints(ctx sdk.Context, fn func(index int64, dp types.DataPoint) (stop bool)) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixData)
-	iterator := sdk.KVStorePrefixIterator(store, nil)
-	defer iterator.Close()
-
-	i := int64(0)
-	for ; iterator.Valid(); iterator.Next() {
-		datapoint := types.DataPoint{}
-		k.cdc.MustUnmarshal(iterator.Value(), &datapoint)
-		stop := fn(i, datapoint)
-
-		if stop {
-			break
-		}
-		i++
-	}
-}
-
-// DeleteDatapoint deletes datapoint.
-func (k Keeper) DeleteDatapoint(ctx sdk.Context, id string) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixData)
-	store.Delete([]byte(id))
-}
-
-func (k *Keeper) GetDatapoint(ctx sdk.Context, module, connectionID, chainID, queryType string, request []byte) (types.DataPoint, error) {
-	id := GenerateQueryHash(connectionID, chainID, queryType, request, module)
-	return k.GetDatapointForID(ctx, id)
-}
-
-func (k *Keeper) GetDatapointOrRequest(ctx sdk.Context, module, connectionID, chainID, queryType string, request []byte, maxAge uint64) (types.DataPoint, error) {
-	val, err := k.GetDatapoint(ctx, module, connectionID, chainID, queryType, request)
-	if err != nil {
-		// no datapoint
-		k.MakeRequest(ctx, connectionID, chainID, queryType, request, sdk.NewInt(-1), "", "", maxAge)
-		return types.DataPoint{}, errors.New("no data; query submitted")
-	}
-
-	if val.LocalHeight.LT(sdk.NewInt(ctx.BlockHeight() - int64(maxAge))) { // this is somewhat arbitrary; TODO: make this better
-		k.MakeRequest(ctx, connectionID, chainID, queryType, request, sdk.NewInt(-1), "", "", maxAge)
-		return types.DataPoint{}, errors.New("stale data; query submitted")
-	}
-	// check ttl
-	return val, nil
-}
-
 func (k *Keeper) MakeRequest(
 	ctx sdk.Context,
 	connectionID,
@@ -142,8 +75,7 @@ func (k *Keeper) MakeRequest(
 		"callback", callbackID,
 		"ttl", ttl,
 	)
-
-	key := GenerateQueryHash(connectionID, chainID, queryType, request, module)
+	key := GenerateQueryHash(connectionID, chainID, queryType, request, module, callbackID)
 	existingQuery, found := k.GetQuery(ctx, key)
 
 	if found {

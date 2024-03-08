@@ -27,7 +27,7 @@ func (suite *KeeperTestSuite) TestQuery() {
 	suite.GetSimApp(suite.chainA).InterchainQueryKeeper.SetQuery(suite.chainA.GetContext(), *query)
 
 	// get the stored query
-	id := keeper.GenerateQueryHash(query.ConnectionId, query.ChainId, query.QueryType, query.Request, "")
+	id := keeper.GenerateQueryHash(query.ConnectionId, query.ChainId, query.QueryType, query.Request, "", "")
 	getQuery, found := suite.GetSimApp(suite.chainA).InterchainQueryKeeper.GetQuery(suite.chainA.GetContext(), id)
 	suite.True(found)
 	suite.Equal(suite.path.EndpointB.ConnectionID, getQuery.ConnectionId)

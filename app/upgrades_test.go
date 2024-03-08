@@ -1,6 +1,7 @@
 package app
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -12,6 +13,7 @@ import (
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	ibctesting "github.com/cosmos/ibc-go/v5/testing"
@@ -268,4 +270,446 @@ func (s *AppTestSuite) TestV010406UpgradeHandler() {
 	noTestZone, found := app.InterchainstakingKeeper.GetZoneForAccount(ctx, addressutils.GenerateAddressForTestWithPrefix("cosmos"))
 	s.False(found)
 	s.Nil(noTestZone)
+}
+
+func (s *AppTestSuite) InitV150TestZones() {
+	cosmosWithdrawal := addressutils.GenerateAddressForTestWithPrefix("cosmos")
+	cosmosPerformance := addressutils.GenerateAddressForTestWithPrefix("cosmos")
+	cosmosDeposit := addressutils.GenerateAddressForTestWithPrefix("cosmos")
+	cosmosDelegate := addressutils.GenerateAddressForTestWithPrefix("cosmos")
+	// cosmos zone
+	zone := icstypes.Zone{
+		ConnectionId:    "connection-77001",
+		ChainId:         "cosmoshub-4",
+		AccountPrefix:   "cosmos",
+		LocalDenom:      "uqatom",
+		BaseDenom:       "uatom",
+		MultiSend:       false,
+		LiquidityModule: false,
+		WithdrawalAddress: &icstypes.ICAAccount{
+			Address:           cosmosWithdrawal,
+			PortName:          "icacontroller-cosmoshub-4.withdrawal",
+			WithdrawalAddress: cosmosWithdrawal,
+		},
+		DelegationAddress: &icstypes.ICAAccount{
+			Address:           cosmosDelegate,
+			PortName:          "icacontroller-cosmoshub-4.delegate",
+			WithdrawalAddress: cosmosWithdrawal,
+		},
+		DepositAddress: &icstypes.ICAAccount{
+			Address:           cosmosDeposit,
+			PortName:          "icacontroller-cosmoshub-4.deposit",
+			WithdrawalAddress: cosmosWithdrawal,
+		},
+		PerformanceAddress: &icstypes.ICAAccount{
+			Address:           cosmosPerformance,
+			PortName:          "icacontroller-cosmoshub-4.performance",
+			WithdrawalAddress: cosmosWithdrawal,
+		},
+	}
+	s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetZone(s.chainA.GetContext(), &zone)
+
+	addVestingAccount(s.chainA.GetContext(), &s.GetQuicksilverApp(s.chainA).AccountKeeper, "quick1a7n7z45gs0dut2syvkszffgwmgps6scqen3e5l", 10, 864000, 5000000000)
+	addVestingAccount(s.chainA.GetContext(), &s.GetQuicksilverApp(s.chainA).AccountKeeper, "quick1m0anwr4kcz0y9s65czusun2ahw35g3humv4j7f", 10, 864000, 5000000000)
+}
+
+func (s *AppTestSuite) TestV010500UpgradeHandler() {
+	s.InitV150TestZones()
+	app := s.GetQuicksilverApp(s.chainA)
+	ctx := s.chainA.GetContext()
+	validators := app.StakingKeeper.GetAllValidators(ctx)
+	// Setting up
+	accountA := app.AccountKeeper.GetAccount(ctx, addressutils.MustAccAddressFromBech32("quick1a7n7z45gs0dut2syvkszffgwmgps6scqen3e5l", ""))
+	err := app.BankKeeper.SendCoins(ctx, s.chainA.SenderAccount.GetAddress(), accountA.GetAddress(), sdk.Coins{
+		sdk.NewInt64Coin("stake", 100),
+	})
+	s.NoError(err)
+
+	accountB := app.AccountKeeper.GetAccount(ctx, addressutils.MustAccAddressFromBech32("quick1m0anwr4kcz0y9s65czusun2ahw35g3humv4j7f", ""))
+	err = app.BankKeeper.SendCoins(ctx, s.chainA.SenderAccount.GetAddress(), accountB.GetAddress(), sdk.Coins{
+		sdk.NewInt64Coin("stake", 300),
+	})
+	s.NoError(err)
+
+	// Stake old account
+	amountA, _ := sdk.NewIntFromString("100")
+	_, err = app.StakingKeeper.Delegate(ctx, accountA.GetAddress(), amountA, stakingtypes.Unbonded, validators[0], true)
+	s.NoError(err)
+
+	amountB, _ := sdk.NewIntFromString("100")
+	_, err = app.StakingKeeper.Delegate(ctx, accountB.GetAddress(), amountB, stakingtypes.Unbonded, validators[0], true)
+	s.NoError(err)
+
+	amountB, _ = sdk.NewIntFromString("200")
+	_, err = app.StakingKeeper.Delegate(ctx, accountB.GetAddress(), amountB, stakingtypes.Unbonded, validators[1], true)
+	s.NoError(err)
+
+	// set withdrawal records
+	zone, found := app.InterchainstakingKeeper.GetZone(ctx, "cosmoshub-4")
+	s.True(found)
+
+	user1 := addressutils.GenerateAddressForTestWithPrefix("quick")
+	user2 := addressutils.GenerateAddressForTestWithPrefix("quick")
+	recipient1 := addressutils.GenerateAddressForTestWithPrefix("quick")
+	recipient2 := addressutils.GenerateAddressForTestWithPrefix("quick")
+
+	// queued
+	app.InterchainstakingKeeper.SetWithdrawalRecord(s.chainA.GetContext(), icstypes.WithdrawalRecord{
+		ChainId:      zone.ChainId,
+		Delegator:    user1,
+		Recipient:    recipient1,
+		BurnAmount:   sdk.NewCoin("uqatom", math.NewInt(3000)),
+		Requeued:     true,
+		Txhash:       fmt.Sprintf("%064d", 1),
+		Acknowledged: false,
+		Status:       icstypes.WithdrawStatusQueued,
+		EpochNumber:  1,
+	})
+	app.InterchainstakingKeeper.SetWithdrawalRecord(s.chainA.GetContext(), icstypes.WithdrawalRecord{
+		ChainId:      zone.ChainId,
+		Delegator:    user1,
+		Recipient:    recipient1,
+		BurnAmount:   sdk.NewCoin("uqatom", math.NewInt(3000)),
+		Requeued:     true,
+		Txhash:       fmt.Sprintf("%064d", 2),
+		Acknowledged: false,
+		Status:       icstypes.WithdrawStatusQueued,
+		EpochNumber:  1,
+	})
+	app.InterchainstakingKeeper.SetWithdrawalRecord(s.chainA.GetContext(), icstypes.WithdrawalRecord{
+		ChainId:      zone.ChainId,
+		Delegator:    user1,
+		Recipient:    recipient1,
+		BurnAmount:   sdk.NewCoin("uqatom", math.NewInt(3000)),
+		Requeued:     true,
+		Txhash:       fmt.Sprintf("%064d", 3),
+		Acknowledged: false,
+		Status:       icstypes.WithdrawStatusQueued,
+		EpochNumber:  1,
+	})
+	app.InterchainstakingKeeper.SetWithdrawalRecord(s.chainA.GetContext(), icstypes.WithdrawalRecord{
+		ChainId:      zone.ChainId,
+		Delegator:    user1,
+		Recipient:    recipient2,
+		BurnAmount:   sdk.NewCoin("uqatom", math.NewInt(4000)),
+		Requeued:     true,
+		Txhash:       fmt.Sprintf("%064d", 4),
+		Acknowledged: false,
+		Status:       icstypes.WithdrawStatusQueued,
+		EpochNumber:  1,
+	})
+	app.InterchainstakingKeeper.SetWithdrawalRecord(s.chainA.GetContext(), icstypes.WithdrawalRecord{
+		ChainId:      zone.ChainId,
+		Delegator:    user2,
+		Recipient:    recipient2,
+		BurnAmount:   sdk.NewCoin("uqatom", math.NewInt(5000)),
+		Requeued:     true,
+		Txhash:       fmt.Sprintf("%064d", 5),
+		Acknowledged: false,
+		Status:       icstypes.WithdrawStatusQueued,
+		EpochNumber:  1,
+	})
+
+	// unbonding
+
+	app.InterchainstakingKeeper.SetWithdrawalRecord(s.chainA.GetContext(), icstypes.WithdrawalRecord{
+		ChainId:   zone.ChainId,
+		Delegator: user1,
+		Recipient: recipient1,
+		Distribution: []*icstypes.Distribution{
+			{
+				Valoper: "cosmosvaloper100000000000000000000000000000000000",
+				Amount:  600,
+			},
+			{
+				Valoper: "cosmosvaloper111111111111111111111111111111111111",
+				Amount:  400,
+			},
+			{
+				Valoper: "cosmosvaloper122222222222222222222222222222222222",
+				Amount:  200,
+			},
+		},
+		BurnAmount:     sdk.NewCoin("uqatom", math.NewInt(1000)),
+		Amount:         sdk.NewCoins(sdk.NewCoin("uatom", math.NewInt(1200))),
+		Requeued:       true,
+		Txhash:         fmt.Sprintf("%064d", 6),
+		Acknowledged:   true,
+		Status:         icstypes.WithdrawStatusUnbond,
+		EpochNumber:    1,
+		CompletionTime: ctx.BlockTime().Add(180 * time.Minute),
+	})
+	app.InterchainstakingKeeper.SetWithdrawalRecord(s.chainA.GetContext(), icstypes.WithdrawalRecord{
+		ChainId:   zone.ChainId,
+		Delegator: user1,
+		Recipient: recipient1,
+		Distribution: []*icstypes.Distribution{
+			{
+				Valoper: "cosmosvaloper100000000000000000000000000000000000",
+				Amount:  600,
+			},
+			{
+				Valoper: "cosmosvaloper111111111111111111111111111111111111",
+				Amount:  800,
+			},
+			{
+				Valoper: "cosmosvaloper122222222222222222222222222222222222",
+				Amount:  800,
+			},
+			{
+				Valoper: "cosmosvaloper133333333333333333333333333333333333",
+				Amount:  800,
+			},
+		},
+		BurnAmount:     sdk.NewCoin("uqatom", math.NewInt(2000)),
+		Amount:         sdk.NewCoins(sdk.NewCoin("uatom", math.NewInt(2400))),
+		Requeued:       true,
+		Txhash:         fmt.Sprintf("%064d", 7),
+		Acknowledged:   true,
+		Status:         icstypes.WithdrawStatusUnbond,
+		EpochNumber:    1,
+		CompletionTime: ctx.BlockTime().Add(182 * time.Minute),
+	})
+	app.InterchainstakingKeeper.SetWithdrawalRecord(s.chainA.GetContext(), icstypes.WithdrawalRecord{
+		ChainId:   zone.ChainId,
+		Delegator: user2,
+		Recipient: recipient2,
+		Distribution: []*icstypes.Distribution{
+			{
+				Valoper: "cosmosvaloper100000000000000000000000000000000000",
+				Amount:  600,
+			},
+			{
+				Valoper: "cosmosvaloper122222222222222222222222222222222222",
+				Amount:  200,
+			},
+			{
+				Valoper: "cosmosvaloper133333333333333333333333333333333333",
+				Amount:  800,
+			},
+			{
+				Valoper: "cosmosvaloper144444444444444444444444444444444444",
+				Amount:  2000,
+			},
+		},
+		BurnAmount:     sdk.NewCoin("uqatom", math.NewInt(3000)),
+		Amount:         sdk.NewCoins(sdk.NewCoin("uatom", math.NewInt(3600))),
+		Requeued:       true,
+		Txhash:         fmt.Sprintf("%064d", 8),
+		Acknowledged:   true,
+		Status:         icstypes.WithdrawStatusUnbond,
+		EpochNumber:    1,
+		CompletionTime: ctx.BlockTime().Add(182 * time.Minute),
+	})
+	app.InterchainstakingKeeper.SetWithdrawalRecord(s.chainA.GetContext(), icstypes.WithdrawalRecord{
+		ChainId:   zone.ChainId,
+		Delegator: user2,
+		Recipient: recipient2,
+		Distribution: []*icstypes.Distribution{
+			{
+				Valoper: "cosmosvaloper100000000000000000000000000000000000",
+				Amount:  800,
+			},
+			{
+				Valoper: "cosmosvaloper122222222222222222222222222222222222",
+				Amount:  400,
+			},
+			{
+				Valoper: "cosmosvaloper133333333333333333333333333333333333",
+				Amount:  1200,
+			},
+			{
+				Valoper: "cosmosvaloper144444444444444444444444444444444444",
+				Amount:  2200,
+			},
+		},
+		BurnAmount:   sdk.NewCoin("uqatom", math.NewInt(4000)),
+		Amount:       sdk.NewCoins(sdk.NewCoin("uatom", math.NewInt(4800))),
+		Requeued:     true,
+		Txhash:       fmt.Sprintf("%064d", 9),
+		Acknowledged: true,
+		Status:       icstypes.WithdrawStatusUnbond,
+		EpochNumber:  1,
+	})
+	app.InterchainstakingKeeper.SetWithdrawalRecord(s.chainA.GetContext(), icstypes.WithdrawalRecord{
+		ChainId:   zone.ChainId,
+		Delegator: user2,
+		Recipient: recipient1,
+		Distribution: []*icstypes.Distribution{
+			{
+				Valoper: "cosmosvaloper100000000000000000000000000000000000",
+				Amount:  1000,
+			},
+			{
+				Valoper: "cosmosvaloper122222222222222222222222222222222222",
+				Amount:  1200,
+			},
+			{
+				Valoper: "cosmosvaloper133333333333333333333333333333333333",
+				Amount:  1200,
+			},
+			{
+				Valoper: "cosmosvaloper144444444444444444444444444444444444",
+				Amount:  1600,
+			},
+		},
+		BurnAmount:   sdk.NewCoin("uqatom", math.NewInt(5000)),
+		Amount:       sdk.NewCoins(sdk.NewCoin("uatom", math.NewInt(6000))),
+		Requeued:     true,
+		Txhash:       fmt.Sprintf("%064d", 10),
+		Acknowledged: false,
+		Status:       icstypes.WithdrawStatusUnbond,
+		EpochNumber:  1,
+	})
+	app.InterchainstakingKeeper.SetWithdrawalRecord(s.chainA.GetContext(), icstypes.WithdrawalRecord{
+		ChainId:   zone.ChainId,
+		Delegator: user1,
+		Recipient: recipient1,
+		Distribution: []*icstypes.Distribution{
+			{
+				Valoper: "cosmosvaloper100000000000000000000000000000000000",
+				Amount:  1500,
+			},
+			{
+				Valoper: "cosmosvaloper122222222222222222222222222222222222",
+				Amount:  1500,
+			},
+			{
+				Valoper: "cosmosvaloper133333333333333333333333333333333333",
+				Amount:  1500,
+			},
+			{
+				Valoper: "cosmosvaloper144444444444444444444444444444444444",
+				Amount:  1500,
+			},
+			{
+				Valoper: "cosmosvaloper155555555555555555555555555555555555",
+				Amount:  1500,
+			},
+		},
+		BurnAmount:   sdk.NewCoin("uqatom", math.NewInt(6000)),
+		Amount:       sdk.NewCoins(sdk.NewCoin("uatom", math.NewInt(7500))),
+		Requeued:     true,
+		Txhash:       fmt.Sprintf("%064d", 11),
+		Acknowledged: true,
+		Status:       icstypes.WithdrawStatusUnbond,
+		EpochNumber:  2,
+	})
+	app.InterchainstakingKeeper.SetWithdrawalRecord(s.chainA.GetContext(), icstypes.WithdrawalRecord{
+		ChainId:   zone.ChainId,
+		Delegator: user2,
+		Recipient: recipient2,
+		Distribution: []*icstypes.Distribution{
+			{
+				Valoper: "cosmosvaloper100000000000000000000000000000000000",
+				Amount:  1750,
+			},
+			{
+				Valoper: "cosmosvaloper122222222222222222222222222222222222",
+				Amount:  1750,
+			},
+			{
+				Valoper: "cosmosvaloper133333333333333333333333333333333333",
+				Amount:  1750,
+			},
+			{
+				Valoper: "cosmosvaloper144444444444444444444444444444444444",
+				Amount:  1750,
+			},
+			{
+				Valoper: "cosmosvaloper155555555555555555555555555555555555",
+				Amount:  1750,
+			},
+		},
+		BurnAmount:   sdk.NewCoin("uqatom", math.NewInt(7000)),
+		Amount:       sdk.NewCoins(sdk.NewCoin("uatom", math.NewInt(8750))),
+		Requeued:     true,
+		Txhash:       fmt.Sprintf("%064d", 12),
+		Acknowledged: true,
+		Status:       icstypes.WithdrawStatusUnbond,
+		EpochNumber:  2,
+	})
+
+	handler := upgrades.V010500UpgradeHandler(app.mm,
+		app.configurator, &app.AppKeepers)
+
+	_, err = handler(ctx, types.Plan{}, app.mm.GetVersionMap())
+	s.NoError(err)
+
+	_, found = app.StakingKeeper.GetDelegation(ctx, accountA.GetAddress(), validators[0].GetOperator())
+	s.False(found)
+
+	migratedA := app.AccountKeeper.GetAccount(ctx, addressutils.MustAccAddressFromBech32("quick1h0sqndv2y4xty6uk0sv4vckgyc5aa7n5at7fll", ""))
+	stakeBalanceA := app.BankKeeper.GetBalance(ctx, migratedA.GetAddress(), "stake")
+	s.Equal(int64(100), stakeBalanceA.Amount.Int64())
+
+	migratedB := app.AccountKeeper.GetAccount(ctx, addressutils.MustAccAddressFromBech32("quick1n4g6037cjm0e0v2nvwj2ngau7pk758wtwk6lwq", ""))
+	stakeBalanceB := app.BankKeeper.GetBalance(ctx, migratedB.GetAddress(), "stake")
+	s.Equal(int64(300), stakeBalanceB.Amount.Int64())
+
+	// Check the vest period of new account
+	vestMigratedA, ok := migratedA.(*vestingtypes.PeriodicVestingAccount)
+	s.True(ok)
+	s.Equal(int64(5000000000), vestMigratedA.OriginalVesting.AmountOf("uqck").Int64())
+	s.Equal(float64(864000), vestMigratedA.VestingPeriods[0].Duration().Seconds())
+
+	vestMigratedB, ok := migratedB.(*vestingtypes.PeriodicVestingAccount)
+	s.True(ok)
+	s.Equal(int64(5000000000), vestMigratedB.OriginalVesting.AmountOf("uqck").Int64())
+	s.Equal(float64(864000), vestMigratedB.VestingPeriods[0].Duration().Seconds())
+
+	z, existed := app.InterchainstakingKeeper.GetLocalDenomZoneMapping(ctx, "uqatom")
+	s.True(existed)
+	s.Equal(z.ChainId, "cosmoshub-4")
+	s.Equal(z.ConnectionId, "connection-77001")
+
+	// 512 should be the sum of 01, 02, 03
+	wdr, found := app.InterchainstakingKeeper.GetWithdrawalRecord(ctx, z.ChainId, fmt.Sprintf("%064d", 512), icstypes.WithdrawStatusQueued)
+	s.True(found)
+	s.Equal(wdr.BurnAmount, sdk.NewCoin("uqatom", math.NewInt(9000)))
+	s.Equal(wdr.CompletionTime, time.Time{})
+	s.True(wdr.Requeued)
+	s.Nil(wdr.Amount)
+	s.Nil(wdr.Distribution)
+
+	// 513 and 514 should be 04 and 05 requeued respectively (due to differing recipient)
+	wdr, found = app.InterchainstakingKeeper.GetWithdrawalRecord(ctx, z.ChainId, fmt.Sprintf("%064d", 513), icstypes.WithdrawStatusQueued)
+	fmt.Println(wdr)
+	s.True(found)
+	s.Equal(wdr.BurnAmount, sdk.NewCoin("uqatom", math.NewInt(4000)))
+	s.Equal(wdr.CompletionTime, time.Time{})
+	s.True(wdr.Requeued)
+	s.Nil(wdr.Amount)
+	s.Nil(wdr.Distribution)
+
+	wdr, found = app.InterchainstakingKeeper.GetWithdrawalRecord(ctx, z.ChainId, fmt.Sprintf("%064d", 514), icstypes.WithdrawStatusQueued)
+	s.True(found)
+	s.Equal(wdr.BurnAmount, sdk.NewCoin("uqatom", math.NewInt(5000)))
+	s.Equal(wdr.CompletionTime, time.Time{})
+	s.True(wdr.Requeued)
+	s.Nil(wdr.Amount)
+	s.Nil(wdr.Distribution)
+
+	// 010 shouldn't be touched; it was not acknowledged and will be requeued.
+	wdr, found = app.InterchainstakingKeeper.GetWithdrawalRecord(ctx, z.ChainId, fmt.Sprintf("%064d", 10), icstypes.WithdrawStatusUnbond)
+	s.True(found)
+	s.Equal(wdr.BurnAmount, sdk.NewCoin("uqatom", math.NewInt(5000)))
+	s.Equal(wdr.CompletionTime, time.Time{})
+	s.True(wdr.Requeued)
+	s.False(wdr.Acknowledged)
+	s.Equal(wdr.Amount, sdk.NewCoins(sdk.NewCoin("uatom", math.NewInt(6000))))
+
+	// 06 + 07 are a pair; distribution should be merged.
+	wdr, found = app.InterchainstakingKeeper.GetWithdrawalRecord(ctx, z.ChainId, fmt.Sprintf("%064d", 515), icstypes.WithdrawStatusUnbond)
+	s.True(found)
+	s.Equal(wdr.BurnAmount, sdk.NewCoin("uqatom", math.NewInt(3000)))
+	// use the latest completion time (+182 mins)
+	s.Equal(wdr.CompletionTime, ctx.BlockTime().Add(182*time.Minute))
+	s.True(wdr.Requeued)
+	s.True(wdr.Acknowledged)
+	s.Equal(wdr.Amount, sdk.NewCoins(sdk.NewCoin("uatom", math.NewInt(3600))))
+	s.ElementsMatch(wdr.Distribution, []*icstypes.Distribution{{Valoper: "cosmosvaloper100000000000000000000000000000000000", Amount: 1200}, {Valoper: "cosmosvaloper111111111111111111111111111111111111", Amount: 1200}, {Valoper: "cosmosvaloper122222222222222222222222222222222222", Amount: 1000}, {Valoper: "cosmosvaloper133333333333333333333333333333333333", Amount: 800}})
+
+	wdrs := app.InterchainstakingKeeper.AllWithdrawalRecords(ctx)
+	s.Equal(len(wdrs), 8)
 }
