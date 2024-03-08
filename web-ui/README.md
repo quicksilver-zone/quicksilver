@@ -31,25 +31,31 @@ Please use this Prettier config to format your code before opening a pull reques
 
 Please ensure your IDE is configured to use Typescript v4.9.3
 
-### Development ToDo
+### TODO:
+
+**Staking**
+
+- [ ] Add support for Dymension
+- [ ] Add more weight options IE `equal`, `custom`, `most votes`, `lowest commission` etc
+- [ ] Make back button in staking modal larger
+- [ ] Fix skeleton spam when searching for non existent validator in staking modal
 
 **Governance**
 
-- add liquid staked governance (when its built)
+- [ ] Build liquid governance page
 
 **UI/UX**
 
-- focus on mobile landscape breakpoints, (mainly staking page)
+- [ ] Double check breakpoints
 
 **Mobile Menu**
 
-- graphic elements
+- [ ] improve mobile menu
 
 **DevOps**
 
-- make onboarding networks seamless
+- [ ] Add doc for adding networks
 
 **Blockers**
 
-- main net reward current & epoch queries
-- update grantee address in query & tx
+- [ ] Fix CCX in assets page

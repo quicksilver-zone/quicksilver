@@ -26,12 +26,11 @@ import chains from 'chain-registry';
 import { cosmos } from 'quicksilverjs';
 import React, { useEffect, useState } from 'react';
 
+import { MultiModal } from './validatorSelectionModal';
 
 import { useTx } from '@/hooks';
 import { useZoneQuery } from '@/hooks/useQueries';
 import { shiftDigits } from '@/utils';
-
-import { MultiModal } from './validatorSelectionModal';
 
 const ChakraModalContent = styled(ModalContent)`
   position: relative;
@@ -434,9 +433,9 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
                         mt={2}
                         color="white"
                         _hover={{
-                          bgColor: 'rgba(255, 128, 0, 0.25)',
+                          bgColor: 'rgba(255, 128, 0, 0.5)',
                         }}
-                        variant="ghost"
+                        bgColor="rgba(255, 128, 0, 0.25)"
                         width="35%"
                         size="xs"
                         onClick={() => setModalOpen(true)}
@@ -538,6 +537,7 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
                     position={'absolute'}
                     bottom={3}
                     left={'51%'}
+                    fontSize={'2xl'}
                     bgColor="none"
                     _hover={{
                       bgColor: 'none',
@@ -596,6 +596,7 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
                   <Flex mt={4} justifyContent={'space-between'} width={'100%'} alignItems={'center'}>
                     <Button
                       bgColor="none"
+                      fontSize={'2xl'}
                       _hover={{
                         bgColor: 'none',
                         color: 'complimentary.900',
@@ -690,6 +691,7 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
                   <Button
                     position={'absolute'}
                     bottom={3}
+                    fontSize={'2xl'}
                     left={'51%'}
                     bgColor="none"
                     _hover={{

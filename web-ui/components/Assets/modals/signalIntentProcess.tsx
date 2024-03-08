@@ -23,10 +23,9 @@ import { assets } from 'chain-registry';
 import { quicksilver } from 'quicksilverjs';
 import React, { useEffect, useState } from 'react';
 
-import { useTx } from '@/hooks';
-
 import { IntentMultiModal } from './intentMultiModal';
 
+import { useTx } from '@/hooks';
 
 const ChakraModalContent = styled(ModalContent)`
   position: relative;
@@ -101,11 +100,7 @@ export const SignalIntentModal: React.FC<StakingModalProps> = ({ isOpen, onClose
   };
 
   const retreatStep = () => {
-    if (step === 3) {
-      setStep(1); // If on step 3 and checkbox is checked, go back to step 1
-    } else {
-      setStep((prevStep) => Math.max(prevStep - 1, 1)); // Otherwise, go to the previous step
-    }
+    setStep((prevStep) => Math.max(prevStep - 1, 1)); // Otherwise, go to the previous step
   };
 
   const totalWeights = 1;
@@ -327,9 +322,9 @@ export const SignalIntentModal: React.FC<StakingModalProps> = ({ isOpen, onClose
                         mt={2}
                         color="white"
                         _hover={{
-                          bgColor: 'rgba(255, 128, 0, 0.25)',
+                          bgColor: 'rgba(255, 128, 0, 0.5)',
                         }}
-                        variant="ghost"
+                        bgColor="rgba(255, 128, 0, 0.25)"
                         width="35%"
                         size="xs"
                         onClick={() => setModalOpen(true)}
@@ -415,6 +410,7 @@ export const SignalIntentModal: React.FC<StakingModalProps> = ({ isOpen, onClose
                     position={'absolute'}
                     bottom={3}
                     left={'51%'}
+                    fontSize={'2xl'}
                     bgColor="none"
                     _hover={{
                       bgColor: 'none',
@@ -501,6 +497,7 @@ export const SignalIntentModal: React.FC<StakingModalProps> = ({ isOpen, onClose
                         transform: 'scale(0.95)',
                         color: 'complimentary.800',
                       }}
+                      fontSize={'2xl'}
                       _hover={{
                         bgColor: 'rgba(255,128,0, 0.25)',
                         color: 'complimentary.300',
@@ -552,6 +549,7 @@ export const SignalIntentModal: React.FC<StakingModalProps> = ({ isOpen, onClose
                     position={'absolute'}
                     bottom={3}
                     left={'51%'}
+                    fontSize={'2xl'}
                     bgColor="none"
                     _hover={{
                       bgColor: 'none',
