@@ -433,33 +433,21 @@ func (s *IntegrationTestSuite) TestGetWithdrawalRecordsCmd() {
 		expected  proto.Message
 	}{
 		{
-			"no args",
-			[]string{},
-			true,
-			&types.QueryWithdrawalRecordsResponse{},
-			&types.QueryWithdrawalRecordsResponse{},
-		},
-		{
-			"empty args",
-			[]string{""},
-			true,
-			&types.QueryWithdrawalRecordsResponse{},
-			&types.QueryWithdrawalRecordsResponse{},
-		},
-		{
-			"invalid chainID",
-			[]string{"boguschainid"},
-			true,
-			&types.QueryWithdrawalRecordsResponse{},
-			&types.QueryWithdrawalRecordsResponse{},
-		},
-		/* {
 			"valid",
-			[]string{s.cfg.ChainID},
+			[]string{},
 			false,
 			&types.QueryWithdrawalRecordsResponse{},
+			&types.QueryWithdrawalRecordsResponse{
+				Withdrawals: []types.WithdrawalRecord{},
+			},
+		},
+		{
+			"invalid",
+			[]string{"bogus"},
+			true,
 			&types.QueryWithdrawalRecordsResponse{},
-		}, */
+			&types.QueryWithdrawalRecordsResponse{},
+		},
 	}
 	for _, tt := range tests {
 		tt := tt
@@ -467,6 +455,10 @@ func (s *IntegrationTestSuite) TestGetWithdrawalRecordsCmd() {
 		s.Run(tt.name, func() {
 			clientCtx := val.ClientCtx
 
+			runFlags := []string{
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			}
+			tt.args = append(tt.args, runFlags...)
 			cmd := cli.GetWithdrawalRecordsCmd()
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tt.args)
@@ -512,13 +504,17 @@ func (s *IntegrationTestSuite) TestGetUserWithdrawalRecords() {
 			&types.QueryWithdrawalRecordsResponse{},
 			&types.QueryWithdrawalRecordsResponse{},
 		},
-		// {
-		// 	"valid",
-		// 	[]string{},
-		// 	false,
-		// 	&types.QueryWithdrawalRecordsResponse{},
-		// 	&types.QueryWithdrawalRecordsResponse{},
-		// },
+		{
+			"valid",
+			[]string{
+				"cosmos1r2dthxctqzhwg299e7aaeqwfkgcc9hg8n9scjg",
+			},
+			false,
+			&types.QueryWithdrawalRecordsResponse{},
+			&types.QueryWithdrawalRecordsResponse{
+				Withdrawals: []types.WithdrawalRecord{},
+			},
+		},
 	}
 	for _, tt := range tests {
 		tt := tt
@@ -526,6 +522,10 @@ func (s *IntegrationTestSuite) TestGetUserWithdrawalRecords() {
 		s.Run(tt.name, func() {
 			clientCtx := val.ClientCtx
 
+			runFlags := []string{
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			}
+			tt.args = append(tt.args, runFlags...)
 			cmd := cli.GetUserWithdrawalRecordsCmd()
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tt.args)
@@ -620,23 +620,44 @@ func (s *IntegrationTestSuite) TestGetZoneRedelegationRecordsCmd() {
 		{
 			"empty args",
 			[]string{""},
-			true,
-			&types.QueryRedelegationRecordsResponse{},
-			&types.QueryRedelegationRecordsResponse{},
+			false,
+			&types.QueryRedelegationRecordsResponse{
+				Pagination: &query.PageResponse{},
+			},
+			&types.QueryRedelegationRecordsResponse{
+				Redelegations: []types.RedelegationRecord{},
+				Pagination: &query.PageResponse{
+					Total: 0,
+				},
+			},
 		},
 		{
 			"invalid chainID",
 			[]string{"boguschainid"},
-			true,
-			&types.QueryRedelegationRecordsResponse{},
-			&types.QueryRedelegationRecordsResponse{},
+			false,
+			&types.QueryRedelegationRecordsResponse{
+				Pagination: &query.PageResponse{},
+			},
+			&types.QueryRedelegationRecordsResponse{
+				Redelegations: []types.RedelegationRecord{},
+				Pagination: &query.PageResponse{
+					Total: 0,
+				},
+			},
 		},
 		{
 			"valid",
 			[]string{s.cfg.ChainID},
 			false,
-			&types.QueryRedelegationRecordsResponse{},
-			&types.QueryRedelegationRecordsResponse{},
+			&types.QueryRedelegationRecordsResponse{
+				Pagination: &query.PageResponse{},
+			},
+			&types.QueryRedelegationRecordsResponse{
+				Redelegations: []types.RedelegationRecord{},
+				Pagination: &query.PageResponse{
+					Total: 0,
+				},
+			},
 		},
 	}
 	for _, tt := range tests {

@@ -419,7 +419,6 @@ func GetZoneRedelegationRecordsCmd() *cobra.Command {
 				ChainId: chainID,
 			}
 
-			// TODO: refactor this. Should be RedelegationRecords
 			res, err := queryClient.RedelegationRecords(cmd.Context(), req)
 			if err != nil {
 				return err
