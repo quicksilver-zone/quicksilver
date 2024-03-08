@@ -14,7 +14,7 @@ import {
   SkeletonCircle,
   Tooltip,
 } from '@chakra-ui/react';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { ParsedValidator as Validator } from '@/utils';
 
@@ -25,9 +25,9 @@ export const ValidatorsTable: React.FC<{
   searchTerm?: string;
   logos: any;
 }> = ({ validators, onValidatorClick, selectedValidators, searchTerm, logos }) => {
-  const [sortedValidators, setSortedValidators] = React.useState<Validator[]>([]);
-  const [sortBy, setSortBy] = React.useState<string | null>(null);
-  const [sortOrder, setSortOrder] = React.useState<'asc' | 'desc'>('asc');
+  const [sortedValidators, setSortedValidators] = useState<Validator[]>([]);
+  const [sortBy, setSortBy] = useState<string | null>(null);
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
   const handleSort = (column: string) => {
     if (sortBy === column) {
@@ -38,16 +38,16 @@ export const ValidatorsTable: React.FC<{
     }
   };
 
-  const [totalVotingPower, setTotalVotingPower] = React.useState(0);
+  const [totalVotingPower, setTotalVotingPower] = useState(0);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const totalVP = validators.reduce((acc, validator) => {
       return acc + (validator.votingPower || 0);
     }, 0);
     setTotalVotingPower(totalVP);
   }, [validators]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     let filteredValidators = [...validators];
 
     if (searchTerm) {
@@ -117,7 +117,7 @@ export const ValidatorsTable: React.FC<{
         }}
       >
         <TableContainer>
-          <Table mb={2} border="1px solid rgba(255,128,0, 0.25)" variant="simple" height="lg" minH={'sm'}>
+          <Table mb={2} border="1px solid rgba(255,128,0, 0.25)" variant="simple" height="lg">
             <TableCaption>Active validators</TableCaption>
             <Thead position="sticky">
               <Tr>
@@ -188,6 +188,7 @@ export const ValidatorsTable: React.FC<{
                     const validatorLogo = logos[validator.address];
                     return (
                       <Tr
+                        maxH={'50px'}
                         cursor="pointer"
                         key={index}
                         _hover={{
@@ -202,18 +203,8 @@ export const ValidatorsTable: React.FC<{
                         backgroundColor={
                           selectedValidators.some((v) => v.name === validator.name) ? 'rgba(255, 128, 0, 0.25)' : 'transparent'
                         }
-                        style={{ maxHeight: '50px' }}
                       >
-                        <Td
-                          maxW={'200px'}
-                          border="1px solid rgba(255,128,0, 0.25)"
-                          color="white"
-                          style={{
-                            whiteSpace: 'nowrap',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                          }}
-                        >
+                        <Td maxW={'200px'} border="1px solid rgba(255,128,0, 0.25)" color="white">
                           {!validatorLogo && (
                             <SkeletonCircle
                               boxSize="26px"
