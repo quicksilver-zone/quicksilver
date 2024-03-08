@@ -32,7 +32,7 @@ func GetQueryCmd() *cobra.Command {
 		GetMappedAccountsCmd(),
 		GetWithdrawalRecordsCmd(),
 		GetUserWithdrawalRecordsCmd(),
-		GetZoneWithdrawalRecords(),
+		GetZoneWithdrawalRecordsCmd(),
 		GetUnbondingRecordsCmd(),
 		GetReceiptsCmd(),
 		GetTxStatusCmd(),
@@ -260,7 +260,7 @@ func GetUserWithdrawalRecordsCmd() *cobra.Command {
 	return cmd
 }
 
-func GetZoneWithdrawalRecords() *cobra.Command {
+func GetZoneWithdrawalRecordsCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "zone-withdrawal-records [chain-id]",
 		Short: "Query withdrawal records for a given zone.",
@@ -336,8 +336,8 @@ func GetReceiptsCmd() *cobra.Command {
 			fmt.Sprintf(`$ %s query interchainstaking receipts`,
 				version.AppName,
 			)),
-		Args: cobra.NoArgs,
-		RunE: func(cmd *cobra.Command, _ []string) error {
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
@@ -348,8 +348,9 @@ func GetReceiptsCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-
+			chainID := args[0]
 			req := &types.QueryReceiptsRequest{
+				ChainId:    chainID,
 				Pagination: pageReq,
 			}
 
@@ -437,18 +438,24 @@ func GetZoneValidatorsCmd() *cobra.Command {
 		Use:   "zone-validators",
 		Short: "Query validators for a given zone.",
 		Example: strings.TrimSpace(
-			fmt.Sprintf(`$ %s query interchainstaking zone-validators`,
+			fmt.Sprintf(`$ %s query interchainstaking zone-validators [zone-id]`,
 				version.AppName,
 			)),
-		Args: cobra.NoArgs,
-		RunE: func(cmd *cobra.Command, _ []string) error {
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
 			}
 			queryClient := types.NewQueryClient(clientCtx)
 
-			req := &types.QueryZoneValidatorsRequest{}
+			chainID := args[0]
+			if chainID == "" {
+				return fmt.Errorf("chain-id cannot be empty")
+			}
+			req := &types.QueryZoneValidatorsRequest{
+				ChainId: chainID,
+			}
 
 			res, err := queryClient.ZoneValidators(cmd.Context(), req)
 			if err != nil {
