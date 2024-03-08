@@ -479,7 +479,6 @@ func (s *IntegrationTestSuite) TestGetWithdrawalRecordsCmd() {
 			}
 		})
 	}
-
 }
 
 func (s *IntegrationTestSuite) TestGetUserWithdrawalRecords() {
@@ -865,6 +864,7 @@ func (s *IntegrationTestSuite) TestGetReceiptsCmd() {
 		})
 	}
 }
+
 func TestIntegrationTestSuite(t *testing.T) {
 	suite.Run(t, new(IntegrationTestSuite))
 }
