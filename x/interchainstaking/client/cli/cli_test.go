@@ -931,6 +931,67 @@ func (s *IntegrationTestSuite) TestGetUnbondingRecordsCmd() {
 	}
 }
 
+func (s *IntegrationTestSuite) TestGetZoneCmd() {
+	val := s.network.Validators[0]
+
+	tests := []struct {
+		name      string
+		args      []string
+		expectErr bool
+		respType  proto.Message
+	}{
+		{
+			"no args",
+			[]string{},
+			true,
+			&types.QueryZoneResponse{},
+		},
+		{
+			"empty args",
+			[]string{""},
+			true,
+			&types.QueryZoneResponse{},
+		},
+		{
+			"invalid chainID",
+			[]string{"boguschainid"},
+			true,
+			&types.QueryZoneResponse{},
+		},
+		{
+			"valid",
+			[]string{s.zones[0].ChainId},
+			false,
+			&types.QueryZoneResponse{
+				Zone:  s.zones[0],
+				Stats: &types.Statistics{},
+			},
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+
+		s.Run(tt.name, func() {
+			clientCtx := val.ClientCtx
+
+			runFlags := []string{
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			}
+			tt.args = append(tt.args, runFlags...)
+
+			cmd := cli.GetZoneCmd()
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tt.args)
+			if tt.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tt.respType), out.String())
+
+			}
+		})
+	}
+}
+
 func TestIntegrationTestSuite(t *testing.T) {
 	suite.Run(t, new(IntegrationTestSuite))
 }
