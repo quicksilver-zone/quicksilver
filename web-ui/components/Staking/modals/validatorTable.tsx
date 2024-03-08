@@ -1,19 +1,4 @@
-import {
-  Box,
-  Table,
-  TableCaption,
-  Tbody,
-  Td,
-  Th,
-  Thead,
-  Tr,
-  Flex,
-  TableContainer,
-  Image,
-  SkeletonText,
-  SkeletonCircle,
-  Tooltip,
-} from '@chakra-ui/react';
+import { Box, Table, TableCaption, Tbody, Td, Th, Thead, Tr, Flex, TableContainer, Image, SkeletonCircle, Tooltip } from '@chakra-ui/react';
 import React, { useEffect, useState } from 'react';
 
 import { ParsedValidator as Validator } from '@/utils';

@@ -38,11 +38,9 @@ Please ensure your IDE is configured to use Typescript v4.9.3
 - [ ] Add support for Dymension
 - [ ] Add more weight options IE `equal`, `custom`, `most votes`, `lowest commission` etc
 - [ ] Make back button in staking modal larger
-- [ ] Fix skeleton spam when searching for non existent validator in staking modal
+- [x] Fix skeleton spam when searching for non existent validator in staking modal
 
 **Governance**
-
-- [ ] Build liquid governance page
 
 **UI/UX**
 
@@ -56,6 +54,7 @@ Please ensure your IDE is configured to use Typescript v4.9.3
 
 - [ ] Add doc for adding networks
 
-**Blockers**
+**Has Blockers**
 
 - [ ] Fix CCX in assets page
+- [ ] Build liquid governance page

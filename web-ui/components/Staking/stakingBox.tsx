@@ -34,6 +34,9 @@ import { quicksilver } from 'quicksilverjs';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { FaStar } from 'react-icons/fa';
 
+import RevertSharesProcessModal from './modals/revertSharesProcessModal';
+import StakingProcessModal from './modals/stakingProcessModal';
+import TransferProcessModal from './modals/transferProcessModal';
 
 import { useTx } from '@/hooks';
 import {
@@ -47,10 +50,6 @@ import {
 } from '@/hooks/useQueries';
 import { useToaster, ToastType, type CustomToast } from '@/hooks/useToaster';
 import { getExponent, shiftDigits } from '@/utils';
-
-import RevertSharesProcessModal from './modals/revertSharesProcessModal';
-import StakingProcessModal from './modals/stakingProcessModal';
-import TransferProcessModal from './modals/transferProcessModal';
 
 type StakingBoxProps = {
   selectedOption: {
@@ -325,6 +324,7 @@ export const StakingBox = ({
           </Tab>
         </TabList>
         <TabPanels>
+          {/* Staking TabPanel */}
           <SlideFade offsetY="-80px" in={activeTabIndex === 0}>
             <TabPanel>
               <VStack spacing={8} align="center">
@@ -698,6 +698,7 @@ export const StakingBox = ({
               </VStack>
             </TabPanel>
           </SlideFade>
+          {/* Unstake TabPanel */}
           <SlideFade offsetY="200px" in={activeTabIndex === 1}>
             <TabPanel>
               <VStack spacing={8} align="center">
@@ -830,7 +831,7 @@ export const StakingBox = ({
                   <Spacer /> {/* This pushes the next Stat component to the right */}
                   <Stat py={4} textAlign="right" color="white">
                     <StatNumber textColor="complimentary.900">
-                      {(Number(tokenAmount) * Number(zone?.redemption_rate || 1)).toFixed(2)}
+                      {(Number(tokenAmount) * Number(zone?.last_redemption_rate || 1)).toFixed(2)}
                     </StatNumber>
                   </Stat>
                 </HStack>
