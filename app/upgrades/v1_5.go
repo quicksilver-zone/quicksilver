@@ -141,7 +141,6 @@ func initialiseClaimsMetaData(ctx sdk.Context, appKeepers *keepers.AppKeepers) e
 			QAssetDenom:           zone.LocalDenom,
 			IbcDenom:              zone.LocalDenom,
 		})
-
 		if err != nil {
 			return true
 		}
@@ -161,7 +160,6 @@ func initialiseClaimsMetaData(ctx sdk.Context, appKeepers *keepers.AppKeepers) e
 				QAssetDenom:           zone.LocalDenom,
 				IbcDenom:              utils.DeriveIbcDenom("transfer", channels[chain], "transfer", channel.Counterparty.ChannelId, zone.LocalDenom),
 			})
-
 			if err != nil {
 				return true
 			}

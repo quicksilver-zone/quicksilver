@@ -16,9 +16,9 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
+	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
 	ibctesting "github.com/cosmos/ibc-go/v5/testing"
 
-	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
 	"github.com/quicksilver-zone/quicksilver/app/upgrades"
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
