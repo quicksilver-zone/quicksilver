@@ -12,7 +12,7 @@ import RewardsClaim from '@/components/Assets/rewardsClaim';
 import UnbondingAssetsTable from '@/components/Assets/unbondingTable';
 import { useAPYQuery, useAuthChecker, useLiquidRewardsQuery, useQBalanceQuery, useTokenPrices, useZoneQuery } from '@/hooks/useQueries';
 import { useLiveZones } from '@/state/LiveZonesContext';
-import { shiftDigits, toNumber } from '@/utils';
+import { shiftDigits, truncateToTwoDecimals } from '@/utils';
 
 export interface PortfolioItemInterface {
   title: string;
@@ -22,9 +22,20 @@ export interface PortfolioItemInterface {
   qTokenPrice: number;
 }
 
-type NumericRedemptionRates = {
-  [key: string]: number;
-};
+interface RedemptionRate {
+  current: number;
+  last: number;
+}
+
+interface RedemptionRates {
+  atom: RedemptionRate;
+  osmo: RedemptionRate;
+  stars: RedemptionRate;
+  regen: RedemptionRate;
+  somm: RedemptionRate;
+  juno: RedemptionRate;
+  [key: string]: RedemptionRate;
+}
 
 type BalanceRates = {
   [key: string]: string;
@@ -40,6 +51,7 @@ function Home() {
 
   const { data: tokenPrices, isLoading: isLoadingPrices } = useTokenPrices(tokens);
 
+  // TODO: Use live chain ids from .env
   const COSMOSHUB_CHAIN_ID = process.env.NEXT_PUBLIC_COSMOSHUB_CHAIN_ID;
   const OSMOSIS_CHAIN_ID = process.env.NEXT_PUBLIC_OSMOSIS_CHAIN_ID;
   const STARGAZE_CHAIN_ID = process.env.NEXT_PUBLIC_STARGAZE_CHAIN_ID;
@@ -48,9 +60,10 @@ function Home() {
   const JUNO_CHAIN_ID = process.env.NEXT_PUBLIC_JUNO_CHAIN_ID;
   const DYDX_CHAIN_ID = process.env.NEXT_PUBLIC_DYDX_CHAIN_ID;
 
-  // Retrieve list of zones that are enabled for liquid staking
+  // Retrieve list of zones that are enabled for liquid staking || Will use the above instead
   const { liveNetworks } = useLiveZones();
 
+  // TODO: Figure out how to cycle through live networks and retrieve data for each with less lines of code
   // Retrieve balance for each token
   // Depending on whether the chain exists in liveNetworks or not, the query will be enabled/disabled
   const { balance: qAtom, isLoading: isLoadingQABalance } = useQBalanceQuery('quicksilver', address ?? '', 'atom');
@@ -129,14 +142,32 @@ function Home() {
   );
 
   // useMemo hook to cache redemption rate data
-  const redemptionRates: NumericRedemptionRates = useMemo(
+  const redemptionRates: RedemptionRates = useMemo(
     () => ({
-      atom: CosmosZone?.redemption_rate ? parseFloat(CosmosZone.redemption_rate) : 1,
-      osmo: OsmoZone?.redemption_rate ? parseFloat(OsmoZone.redemption_rate) : 1,
-      stars: StarZone?.redemption_rate ? parseFloat(StarZone.redemption_rate) : 1,
-      regen: RegenZone?.redemption_rate ? parseFloat(RegenZone.redemption_rate) : 1,
-      somm: SommZone?.redemption_rate ? parseFloat(SommZone.redemption_rate) : 1,
-      juno: JunoZone?.redemption_rate ? parseFloat(JunoZone.redemption_rate) : 1,
+      atom: {
+        current: CosmosZone?.redemption_rate ? parseFloat(CosmosZone.redemption_rate) : 1,
+        last: CosmosZone?.last_redemption_rate ? parseFloat(CosmosZone.last_redemption_rate) : 1,
+      },
+      osmo: {
+        current: OsmoZone?.redemption_rate ? parseFloat(OsmoZone.redemption_rate) : 1,
+        last: OsmoZone?.last_redemption_rate ? parseFloat(OsmoZone.last_redemption_rate) : 1,
+      },
+      stars: {
+        current: StarZone?.redemption_rate ? parseFloat(StarZone.redemption_rate) : 1,
+        last: StarZone?.last_redemption_rate ? parseFloat(StarZone.last_redemption_rate) : 1,
+      },
+      regen: {
+        current: RegenZone?.redemption_rate ? parseFloat(RegenZone.redemption_rate) : 1,
+        last: RegenZone?.last_redemption_rate ? parseFloat(RegenZone.last_redemption_rate) : 1,
+      },
+      somm: {
+        current: SommZone?.redemption_rate ? parseFloat(SommZone.redemption_rate) : 1,
+        last: SommZone?.last_redemption_rate ? parseFloat(SommZone.last_redemption_rate) : 1,
+      },
+      juno: {
+        current: JunoZone?.redemption_rate ? parseFloat(JunoZone.redemption_rate) : 1,
+        last: JunoZone?.last_redemption_rate ? parseFloat(JunoZone.last_redemption_rate) : 1,
+      },
     }),
     [CosmosZone, OsmoZone, StarZone, RegenZone, SommZone, JunoZone],
   );
@@ -148,73 +179,70 @@ function Home() {
   const [totalYearlyYield, setTotalYearlyYield] = useState(0);
 
   // useEffect hook to compute portfolio metrics when dependencies change
+  // TODO: cache the computation and make it faster
+  const computedValues = useMemo(() => {
+    if (isLoadingAll) {
+      return { updatedItems: [], totalValue: 0, weightedAPY: 0, totalYearlyYield: 0 };
+    }
+
+    let totalValue = 0;
+    let totalYearlyYield = 0;
+    let weightedAPY = 0;
+    let updatedItems = [];
+
+    for (const token of Object.keys(qBalances)) {
+      const baseToken = token.replace('q', '').toLowerCase();
+      const tokenPriceInfo = tokenPrices?.find((priceInfo) => priceInfo.token === baseToken);
+      const qTokenPrice = tokenPriceInfo ? tokenPriceInfo.price * Number(redemptionRates[baseToken].current) : 0;
+      const qTokenBalance = qBalances[token];
+      const itemValue = Number(qTokenBalance) * qTokenPrice;
+
+      const qTokenAPY = qAPYRates[token] || 0;
+      const yearlyYield = itemValue * Number(qTokenAPY);
+      totalValue += itemValue;
+      totalYearlyYield += yearlyYield;
+      weightedAPY += (itemValue / totalValue) * Number(qTokenAPY);
+
+      updatedItems.push({
+        title: token.toUpperCase(),
+        percentage: 0,
+        progressBarColor: 'complimentary.700',
+        amount: qTokenBalance,
+        qTokenPrice: qTokenPrice || 0,
+      });
+    }
+
+    updatedItems = updatedItems.map((item) => {
+      const itemValue = Number(item.amount) * item.qTokenPrice;
+      return {
+        ...item,
+        percentage: (((itemValue / totalValue) * 100) / 100).toFixed(2),
+      };
+    });
+
+    return { updatedItems, totalValue, weightedAPY, totalYearlyYield };
+  }, [isLoadingAll, qBalances, tokenPrices, redemptionRates, qAPYRates]);
 
   useEffect(() => {
-    const updatePortfolioItems = async () => {
-      // Check if all data is loaded
-      if (isLoadingAll) {
-        return;
-      }
-
-      let totalValue = 0;
-      let totalYearlyYield = 0;
-      let weightedAPY = 0;
-      let updatedItems = [];
-
-      // Loop through each token to compute value, APY, and yield
-      for (const token of Object.keys(qBalances)) {
-        const baseToken = token.replace('q', '').toLowerCase();
-        // Find the price for the current token
-        const tokenPriceInfo = tokenPrices?.find((priceInfo: { token: string }) => priceInfo.token === baseToken);
-        const qTokenPrice = tokenPriceInfo ? tokenPriceInfo.price * Number(redemptionRates[baseToken]) : 0;
-        const qTokenBalance = qBalances[token];
-        const itemValue = Number(qTokenBalance) * qTokenPrice;
-
-        const qTokenAPY = qAPYRates[token] || 0;
-        const yearlyYield = itemValue * Number(qTokenAPY);
-        // Accumulate total values and compute weighted APY
-        totalValue += itemValue;
-        totalYearlyYield += yearlyYield;
-        weightedAPY += (itemValue / totalValue) * Number(qTokenAPY);
-
-        updatedItems.push({
-          title: token.toUpperCase(),
-          percentage: 0,
-          progressBarColor: 'complimentary.700',
-          amount: qTokenBalance,
-          qTokenPrice: qTokenPrice || 0,
-        });
-      }
-
-      // Recalculate percentages for each item based on total value
-      updatedItems = updatedItems.map((item) => {
-        const itemValue = Number(item.amount) * item.qTokenPrice;
-        return {
-          ...item,
-          percentage: (((itemValue / totalValue) * 100) / 100).toFixed(2),
-        };
-      });
-
-      // Update state with calculated data
-      setPortfolioItems(updatedItems);
-      setTotalPortfolioValue(totalValue);
-      setAverageAPY(weightedAPY);
-      setTotalYearlyYield(totalYearlyYield);
-    };
-
-    updatePortfolioItems();
-  }, [qBalances, CosmosZone, OsmoZone, StarZone, RegenZone, SommZone, JunoZone, redemptionRates, qAPYRates, tokenPrices, isLoadingAll]);
+    if (!isLoadingAll) {
+      setPortfolioItems(computedValues.updatedItems);
+      setTotalPortfolioValue(computedValues.totalValue);
+      setAverageAPY(computedValues.weightedAPY);
+      setTotalYearlyYield(computedValues.totalYearlyYield);
+    }
+  }, [computedValues, isLoadingAll]);
 
   const assetsData = useMemo(() => {
     return Object.keys(qBalances).map((token) => {
       return {
         name: token.toUpperCase(),
-        balance: toNumber(qBalances[token], 2).toString(),
+        balance: truncateToTwoDecimals(Number(qBalances[token])).toString(),
         apy: parseFloat(qAPYRates[token]?.toFixed(2)) || 0,
         native: token.replace('q', '').toUpperCase(),
+        redemptionRates: redemptionRates[token.replace('q', '').toLowerCase()].last.toString(),
       };
     });
-  }, [qBalances, qAPYRates]);
+  }, [qBalances, qAPYRates, redemptionRates]);
 
   const { liquidRewards } = useLiquidRewardsQuery(address ?? '');
   const { authData, authError } = useAuthChecker(address ?? '');
@@ -244,11 +272,11 @@ function Home() {
             <Container
               p={4}
               m={0}
-              textAlign={'left'} // This sets the text alignment for the container
+              textAlign={'left'}
               flexDir="column"
               position="relative"
-              justifyContent="flex-start" // Aligns items to the start of the container, along the cross axis
-              alignItems="flex-start" // Aligns items to the start of the container, along the main axis
+              justifyContent="flex-start"
+              alignItems="flex-start"
               maxW="5xl"
             >
               <Head>

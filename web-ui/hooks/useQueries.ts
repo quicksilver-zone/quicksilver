@@ -76,17 +76,17 @@ type UseLiquidRewardsQueryReturnType = {
 
 interface ProofOp {
   type: string;
-  key: Uint8Array;  // Updated to Uint8Array
-  data: Uint8Array; // Updated to Uint8Array
+  key: Uint8Array; 
+  data: Uint8Array; 
 }
 
 interface Proof {
-  key: Uint8Array;  // Updated to Uint8Array
-  data: Uint8Array; // Updated to Uint8Array
+  key: Uint8Array;  
+  data: Uint8Array; 
   proof_ops: {
     ops: ProofOp[];
   };
-  height: Long; // Assuming height is a number
+  height: Long; 
   proof_type: string;
 }
 
@@ -96,7 +96,7 @@ interface Message {
   src_zone: string;
   claim_type: number;
   proofs: Proof[];
-  // Remove height and proof_type if they are not needed here
+ 
 }
 
 interface AssetAmount {

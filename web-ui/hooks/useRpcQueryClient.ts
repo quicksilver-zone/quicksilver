@@ -10,7 +10,7 @@ export const useRpcQueryClient = (chainName: string) => {
   let rpcEndpoint: string | HttpEndpoint | undefined;
 
   const env = process.env.NEXT_PUBLIC_CHAIN_ENV; 
-
+// Builds the query client with the proper endpoint
   const endpoints: { [key: string]: string | undefined } = {
     quicksilver: env === 'testnet' ? process.env.TESTNET_RPC_ENDPOINT_QUICKSILVER : process.env.MAINNET_RPC_ENDPOINT_QUICKSILVER,
     cosmoshub: env === 'testnet' ? process.env.TESTNET_RPC_ENDPOINT_COSMOSHUB : process.env.MAINNET_RPC_ENDPOINT_COSMOSHUB,

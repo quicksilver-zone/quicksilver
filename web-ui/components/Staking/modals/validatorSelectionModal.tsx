@@ -24,11 +24,10 @@ import {
 import React from 'react';
 import { FaSearch } from 'react-icons/fa';
 
+import { ValidatorsTable } from './validatorTable';
 
 import { useValidatorsQuery } from '@/hooks/useQueries';
 import { useValidatorLogos } from '@/hooks/useQueries';
-
-import { ValidatorsTable } from './validatorTable';
 
 interface MultiModalProps {
   isOpen: boolean;

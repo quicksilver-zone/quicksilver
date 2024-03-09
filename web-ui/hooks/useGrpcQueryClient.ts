@@ -11,7 +11,7 @@ export const useGrpcQueryClient = (chainName: string) => {
   const env = process.env.NEXT_PUBLIC_CHAIN_ENV; 
 
 
-
+// Build the query client with the correct endpoint
   const endpoints: { [key: string]: string | undefined } = {
     quicksilver: env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_LCD_ENDPOINT_QUICKSILVER : process.env.NEXT_PUBLIC_MAINNET_LCD_ENDPOINT_QUICKSILVER,
     cosmoshub: env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_LCD_ENDPOINT_COSMOSHUB : process.env.NEXT_PUBLIC_MAINNET_LCD_ENDPOINT_COSMOSHUB,

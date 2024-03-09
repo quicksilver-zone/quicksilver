@@ -37,7 +37,7 @@ Please ensure your IDE is configured to use Typescript v4.9.3
 
 - [ ] Add support for Dymension
 - [ ] Add more weight options IE `equal`, `custom`, `most votes`, `lowest commission` etc
-- [ ] Make back button in staking modal larger
+- [x] Make back button in staking modal larger
 - [x] Fix skeleton spam when searching for non existent validator in staking modal
 
 **Governance**
@@ -58,3 +58,7 @@ Please ensure your IDE is configured to use Typescript v4.9.3
 
 - [ ] Fix CCX in assets page
 - [ ] Build liquid governance page
+
+**Assets**
+
+- [ ] Fix the way queries for networks and entries in components are created. Rather than defining one for each network, create a function that iterates through the .env entry for live networks and creates the queries and components for each. `pages/assets.tsx`

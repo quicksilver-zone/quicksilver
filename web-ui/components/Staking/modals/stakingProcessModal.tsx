@@ -77,7 +77,7 @@ interface StakingModalProps {
 }
 
 export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClose, selectedOption, tokenAmount, address }) => {
-  const [step, setStep] = React.useState(1);
+  const [step, setStep] = useState(1);
   const getProgressColor = (circleStep: number) => {
     if (step >= circleStep) return 'complimentary.900';
     return 'rgba(255,255,255,0.2)';
@@ -105,7 +105,7 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
   const labels = ['Choose validators', `Set weights`, `Sign & Submit`, `Receive q${selectedOption?.value}`];
   const [isModalOpen, setModalOpen] = useState(false);
 
-  const [selectedValidators, setSelectedValidators] = React.useState<{ name: string; operatorAddress: string }[]>([]);
+  const [selectedValidators, setSelectedValidators] = useState<{ name: string; operatorAddress: string }[]>([]);
 
   const advanceStep = () => {
     if (selectedValidators.length > 0) {
@@ -337,10 +337,6 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
         advanceStep();
       }
     }
-  };
-
-  type Weights = {
-    [key: string]: number;
   };
 
   const handleEqualWeightAssignment = () => {
