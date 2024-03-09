@@ -1,6 +1,7 @@
 package upgrades
 
 import (
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -11,6 +12,8 @@ import (
 	"github.com/quicksilver-zone/quicksilver/app/keepers"
 	"github.com/quicksilver-zone/quicksilver/utils"
 	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
+	prkeeper "github.com/quicksilver-zone/quicksilver/x/participationrewards/keeper"
+	prtypes "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 )
 
 // =========== TESTNET UPGRADE HANDLER ===========
@@ -81,9 +84,211 @@ func V010500UpgradeHandler(
 		}
 
 		// add claims metadata
+		if err := initialiseClaimsMetaData(ctx, appKeepers); err != nil {
+			panic(err)
+		}
 
 		return mm.RunMigrations(ctx, configurator, fromVM)
 	}
+}
+
+func addProtocolData(ctx sdk.Context, keeper *prkeeper.Keeper, prtype prtypes.ProtocolDataType, data prtypes.ProtocolDataI) error {
+	json, err := json.Marshal(data)
+	if err != nil {
+		return err
+	}
+
+	protocolData := prtypes.ProtocolData{
+		Type: prtypes.ProtocolDataType_name[int32(prtype)],
+		Data: json,
+	}
+
+	keeper.SetProtocolData(ctx, data.GenerateKey(), &protocolData)
+	return nil
+}
+
+func initialiseClaimsMetaData(ctx sdk.Context, appKeepers *keepers.AppKeepers) error {
+	prk := appKeepers.ParticipationRewardsKeeper
+
+	// transfer channels
+	channels := map[string]string{
+		"osmosis-1":   "channel-2",
+		"cosmoshub-4": "channel-1",
+		"stargaze-1":  "channel-0",
+		"juno-1":      "channel-86",
+		"sommelier-3": "channel-101",
+		"regen-1":     "channel-17",
+		"umee-1":      "channel-49",
+		"secret-4":    "channel-52",
+	}
+
+	// ProtocolDataTypeConnection
+	appKeepers.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zone *icstypes.Zone) (stop bool) {
+		// add connection for each zone
+		addProtocolData(ctx, prk, prtypes.ProtocolDataTypeConnection, &prtypes.ConnectionProtocolData{
+			ConnectionID: zone.ConnectionId,
+			ChainID:      zone.ChainId,
+			Prefix:       zone.AccountPrefix,
+		})
+
+		// add local (QS) denom for each chain
+		addProtocolData(ctx, prk, prtypes.ProtocolDataTypeLiquidToken, &prtypes.LiquidAllowedDenomProtocolData{
+			ChainID:               ctx.ChainID(),
+			RegisteredZoneChainID: zone.ChainId,
+			QAssetDenom:           zone.LocalDenom,
+			IbcDenom:              zone.LocalDenom,
+		})
+
+		// add liquid tokens for qasset on osmosis, secret, umee and the host zone itself.
+		chainsToAdd := []string{"osmosis-1", "secret-4", "umee-1", zone.ChainId}
+		for _, chain := range chainsToAdd {
+			channel, found := appKeepers.IBCKeeper.ChannelKeeper.GetChannel(ctx, "transfer", channels[chain])
+			if !found {
+				panic(fmt.Errorf("unable to find channel %s", channels[chain]))
+			}
+
+			addProtocolData(ctx, prk, prtypes.ProtocolDataTypeLiquidToken, &prtypes.LiquidAllowedDenomProtocolData{
+				ChainID:               chain,
+				RegisteredZoneChainID: zone.ChainId,
+				QAssetDenom:           zone.LocalDenom,
+				IbcDenom:              utils.DeriveIbcDenom("transfer", channels[chain], "transfer", channel.Counterparty.ChannelId, zone.LocalDenom),
+			})
+		}
+
+		return false
+	})
+
+	// osmosis params
+	addProtocolData(ctx, prk, prtypes.ProtocolDataTypeOsmosisParams, &prtypes.OsmosisParamsProtocolData{
+		ChainID:   "osmosis-1",
+		BaseChain: "osmosis-1",
+		BaseDenom: "uosmo",
+	})
+
+	osmoPools := []*prtypes.OsmosisPoolProtocolData{
+		// incentivised pools
+		{
+			PoolID:   903,
+			PoolName: "qSTARS/STARS",
+			PoolData: []byte(`{"address":"osmo1cxlrfu8r0v3cyqj78fuvlsmhjdgna0r7tum8cpd0g3x7w7pte8fsfvcs84","id":903,"pool_params":{"swap_fee":"0.003000000000000000","exit_fee":"0.000000000000000000"},"future_pool_governor":"24h","total_shares":{"denom":"gamm/pool/903","amount":"36839899550979704528582"},"pool_liquidity":[{"denom":"ibc/46C83BB054E12E189882B5284542DB605D94C99827E367C9192CF0579CD5BC83","amount":"238430845376"},{"denom":"ibc/987C17B11ABC2B20019178ACE62929FE9840202CE79498E29FE8E5CB02B7C0A4","amount":"721246955212"}],"scaling_factors":["1","1"],"scaling_factor_controller":""}`),
+			PoolType: prtypes.PoolTypeStableSwap,
+			Denoms: map[string]prtypes.DenomWithZone{
+				"ibc/46C83BB054E12E189882B5284542DB605D94C99827E367C9192CF0579CD5BC83": {Denom: "uqstars", ChainID: "stargaze-1"},
+				"ibc/987C17B11ABC2B20019178ACE62929FE9840202CE79498E29FE8E5CB02B7C0A4": {Denom: "ustars", ChainID: "stargaze-1"},
+			},
+			IsIncentivized: true,
+		},
+		{
+			PoolID:   944,
+			PoolName: "ATOM/qATOM",
+			PoolData: []byte(`{"address":"osmo1awr39mc2hrkt8gq8gt3882ru40ay45k8a3yg69nyypqe9g0ryycs66lhkh","id":944,"pool_params":{"swap_fee":"0.003000000000000000","exit_fee":"0.000000000000000000"},"future_pool_governor":"168h","total_shares":{"denom":"gamm/pool/944","amount":"6108537302303463956540"},"pool_liquidity":[{"denom":"ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2","amount":"42678069500"},{"denom":"ibc/FA602364BEC305A696CBDF987058E99D8B479F0318E47314C49173E8838C5BAC","amount":"70488173547"}],"scaling_factors":["1202853876","1000000000"],"scaling_factor_controller":"osmo16x03wcp37kx5e8ehckjxvwcgk9j0cqnhm8m3yy"}`),
+			PoolType: prtypes.PoolTypeStableSwap,
+			Denoms: map[string]prtypes.DenomWithZone{
+				"ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2": {Denom: "uatom", ChainID: "cosmoshub-4"},
+				"ibc/FA602364BEC305A696CBDF987058E99D8B479F0318E47314C49173E8838C5BAC": {Denom: "uqatom", ChainID: "cosmoshub-4"},
+			},
+			IsIncentivized: true,
+		},
+		{
+			PoolID:   948,
+			PoolName: "REGEN/qREGEN",
+			PoolData: []byte(`{"address":"osmo1hylqy4uu5el36wykhzzhj786eh8rx4epyvg6nrtl503wjufz8z3sdptdzw","id":948,"pool_params":{"swap_fee":"0.003000000000000000","exit_fee":"0.000000000000000000"},"future_pool_governor":"168h","total_shares":{"denom":"gamm/pool/948","amount":"205748905065147865419005"},"pool_liquidity":[{"denom":"ibc/1DCC8A6CB5689018431323953344A9F6CC4D0BFB261E88C9F7777372C10CD076","amount":"258144972321"},{"denom":"ibc/79A676508A2ECA1021EDDC7BB9CF70CEEC9514C478DA526A5A8B3E78506C2206","amount":"171893185502"}],"scaling_factors":["1264169382","1000000000"],"scaling_factor_controller":"osmo16x03wcp37kx5e8ehckjxvwcgk9j0cqnhm8m3yy"}`),
+			PoolType: prtypes.PoolTypeStableSwap,
+			Denoms: map[string]prtypes.DenomWithZone{
+				"ibc/1DCC8A6CB5689018431323953344A9F6CC4D0BFB261E88C9F7777372C10CD076": {Denom: "uregen", ChainID: "regen-1"},
+				"ibc/79A676508A2ECA1021EDDC7BB9CF70CEEC9514C478DA526A5A8B3E78506C2206": {Denom: "uqregen", ChainID: "regen-1"},
+			},
+			IsIncentivized: true,
+		},
+		{
+			PoolID:   956,
+			PoolName: "qOSMO/OSMO",
+			PoolData: []byte(`{"address":"osmo1q023e9m4d3ffvr96xwaeraa62yfvufkufkr7yf7lmacgkuspsuqsga4xp2","id":956,"pool_params":{"swap_fee":"0.003000000000000000","exit_fee":"0.000000000000000000"},"future_pool_governor":"168h","total_shares":{"denom":"gamm/pool/956","amount":"2443712227421775628369"},"pool_liquidity":[{"denom":"ibc/42D24879D4569CE6477B7E88206ADBFE47C222C6CAD51A54083E4A72594269FC","amount":"5378958960"},{"denom":"uosmo","amount":"4563791740"}],"scaling_factors":["1000000000","1141529049"],"scaling_factor_controller":"osmo16x03wcp37kx5e8ehckjxvwcgk9j0cqnhm8m3yy"}`),
+			PoolType: prtypes.PoolTypeStableSwap,
+			Denoms: map[string]prtypes.DenomWithZone{
+				"ibc/42D24879D4569CE6477B7E88206ADBFE47C222C6CAD51A54083E4A72594269FC": {Denom: "uqosmo", ChainID: "osmosis-1"},
+				"uosmo": {Denom: "", ChainID: "osmosis-1"},
+			},
+			IsIncentivized: true,
+		},
+		{
+			PoolID:   1087,
+			PoolName: "SOMM/qSOMM",
+			PoolData: []byte(`{"address":"osmo1unwajz776rcsvaaehrq82qldwfw4zeqp7jgty09cw4lytuwfw3pqvs0cmt","id":1087,"pool_params":{"swap_fee":"0.003000000000000000","exit_fee":"0.000000000000000000"},"future_pool_governor":"168h","total_shares":{"denom":"gamm/pool/1087","amount":"2103498772356422991482414"},"pool_liquidity":[{"denom":"ibc/9BBA9A1C257E971E38C1422780CE6F0B0686F0A3085E2D61118D904BFE0F5F5E","amount":"150351552009"},{"denom":"ibc/EAF76AD1EEF7B16D167D87711FB26ABE881AC7D9F7E6D0CF313D5FA530417208","amount":"273114101299"}],"scaling_factors":["1032934412","1000000000"],"scaling_factor_controller":"osmo16x03wcp37kx5e8ehckjxvwcgk9j0cqnhm8m3yy"}`),
+			PoolType: prtypes.PoolTypeStableSwap,
+			Denoms: map[string]prtypes.DenomWithZone{
+				"ibc/9BBA9A1C257E971E38C1422780CE6F0B0686F0A3085E2D61118D904BFE0F5F5E": {Denom: "usomm", ChainID: "sommelier-3"},
+				"ibc/EAF76AD1EEF7B16D167D87711FB26ABE881AC7D9F7E6D0CF313D5FA530417208": {Denom: "uqsomm", ChainID: "sommelier-3"},
+			},
+			IsIncentivized: true,
+		},
+		// price pools
+		{
+			PoolID:   1,
+			PoolName: "ATOM/OSMO",
+			PoolData: []byte(`{"address":"osmo1mw0ac6rwlp5r8wapwk3zs6g29h8fcscxqakdzw9emkne6c8wjp9q0t3v8t","id":1,"pool_params":{"swap_fee":"0.002000000000000000","exit_fee":"0.000000000000000000","smooth_weight_change_params":null},"future_pool_governor":"24h","total_shares":{"denom":"gamm/pool/1","amount":"57132468094739651740591169"},"pool_assets":[{"token":{"denom":"ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2","amount":"776914339293"},"weight":"536870912000000"},{"token":{"denom":"uosmo","amount":"6458328512048"},"weight":"536870912000000"}],"total_weight":"1073741824000000"}`),
+			PoolType: prtypes.PoolTypeBalancer,
+			Denoms: map[string]prtypes.DenomWithZone{
+				"ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2": {Denom: "uatom", ChainID: "cosmoshub-4"},
+				"uosmo": {Denom: "uosmo", ChainID: "osmosis-1"},
+			},
+			IsIncentivized: false,
+		},
+		{
+			PoolID:   627,
+			PoolName: "SOMM/OSMO",
+			PoolData: []byte(`{"address":"osmo19qawwfrlkz9upglmpqj6akgz9ap7v2mnd05pxzgmxw3ywz58wnvqtet2mg","id":627,"pool_params":{"swap_fee":"0.002000000000000000","exit_fee":"0.000000000000000000","smooth_weight_change_params":null},"future_pool_governor":"24h","total_shares":{"denom":"gamm/pool/627","amount":"65307069985087982755662"},"pool_assets":[{"token":{"denom":"ibc/9BBA9A1C257E971E38C1422780CE6F0B0686F0A3085E2D61118D904BFE0F5F5E","amount":"324082699777"},"weight":"536870912000000"},{"token":{"denom":"uosmo","amount":"35173517987"},"weight":"536870912000000"}],"total_weight":"1073741824000000"}`),
+			PoolType: prtypes.PoolTypeBalancer,
+			Denoms: map[string]prtypes.DenomWithZone{
+				"ibc/9BBA9A1C257E971E38C1422780CE6F0B0686F0A3085E2D61118D904BFE0F5F5E": {Denom: "usomm", ChainID: "sommelier-3"},
+				"uosmo": {Denom: "uosmo", ChainID: "osmosis-1"},
+			},
+			IsIncentivized: false,
+		},
+		{
+			PoolID:   497,
+			PoolName: "JUNO/OSMO",
+			PoolData: []byte(`{"address":"osmo1h7yfu7x4qsv2urnkl4kzydgxegdfyjdry5ee4xzj98jwz0uh07rqdkmprr","id":497,"pool_params":{"swap_fee":"0.003000000000000000","exit_fee":"0.000000000000000000","smooth_weight_change_params":null},"future_pool_governor":"","total_shares":{"denom":"gamm/pool/497","amount":"162333695811959156414166"},"pool_assets":[{"token":{"denom":"ibc/46B44899322F3CD854D2D46DEEF881958467CDD4B3B10086DA49296BBED94BED","amount":"611902251727"},"weight":"536870912000000"},{"token":{"denom":"uosmo","amount":"157137434465"},"weight":"536870912000000"}],"total_weight":"1073741824000000"}`),
+			PoolType: prtypes.PoolTypeBalancer,
+			Denoms: map[string]prtypes.DenomWithZone{
+				"ibc/46B44899322F3CD854D2D46DEEF881958467CDD4B3B10086DA49296BBED94BED": {Denom: "ujuno", ChainID: "juno-1"},
+				"uosmo": {Denom: "uosmo", ChainID: "osmosis-1"},
+			},
+			IsIncentivized: false,
+		},
+		{
+			PoolID:   42,
+			PoolName: "REGEN/OSMO",
+			PoolData: []byte(`{"address":"osmo1txawpctjs6phpqsnkx2r5qud7yvekw93394anhuzz4dquy5jggssgqtn0l","id":42, "pool_params":{"swap_fee":"0.002000000000000000","exit_fee":"0.000000000000000000","smooth_weight_change_params":null},"future_pool_governor":"24h","total_shares":{"denom":"gamm/pool/42","amount":"26709992201368381268416"},"pool_assets":[{"token":{"denom":"ibc/1DCC8A6CB5689018431323953344A9F6CC4D0BFB261E88C9F7777372C10CD076","amount":"1051059067702"},"weight":"536870912000000"},{"token":{"denom":"uosmo","amount":"36676123833"},"weight":"536870912000000"}],"total_weight":"1073741824000000"}`),
+			PoolType: prtypes.PoolTypeBalancer,
+			Denoms: map[string]prtypes.DenomWithZone{
+				"ibc/1DCC8A6CB5689018431323953344A9F6CC4D0BFB261E88C9F7777372C10CD076": {Denom: "uregen", ChainID: "regen-1"},
+				"uosmo": {Denom: "uosmo", ChainID: "osmosis-1"},
+			},
+			IsIncentivized: false,
+		},
+		{
+			PoolID:   604,
+			PoolName: "STARS/OSMO",
+			PoolData: []byte(`{"address":"osmo1thscstwxp87g0ygh7le3h92f9ff4sel9y9d2eysa25p43yf43rysk7jp93","id":604,"pool_params":{"swap_fee":"0.003000000000000000","exit_fee":"0.000000000000000000","smooth_weight_change_params":null},"future_pool_governor":"24h","total_shares":{"denom":"gamm/pool/604","amount":"80971873633391327384"},"pool_assets":[{"token":{"denom":"ibc/987C17B11ABC2B20019178ACE62929FE9840202CE79498E29FE8E5CB02B7C0A4","amount":"19005838130969"},"weight":"21474836480"},{"token":{"denom":"uosmo","amount":"465805350468"},"weight":"21474836480"}],"total_weight":"42949672960"}`),
+			PoolType: prtypes.PoolTypeBalancer,
+			Denoms: map[string]prtypes.DenomWithZone{
+				"ibc/987C17B11ABC2B20019178ACE62929FE9840202CE79498E29FE8E5CB02B7C0A4": {Denom: "ustars", ChainID: "stargaze-1"},
+				"uosmo": {Denom: "uosmo", ChainID: "osmosis-1"},
+			},
+			IsIncentivized: false,
+		},
+	}
+	// osmosis pools
+	for _, pool := range osmoPools {
+		addProtocolData(ctx, prk, prtypes.ProtocolDataTypeOsmosisPool, pool)
+	}
+
+	// enable params
+	params := prk.GetParams(ctx)
+	params.ClaimsEnabled = true
+	prk.SetParams(ctx, params)
+	return nil
 }
 
 // for epochs 137 through 144 the redemption rate was adversely affected on cosmoshub-4 and unbonding users received less than they ought to have done.
