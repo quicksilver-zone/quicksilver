@@ -27,21 +27,15 @@ func (suite *KeeperTestSuite) TestCalcTokenValues() {
 			},
 			osmosisPools: []types.OsmosisPoolProtocolData{
 				{
-					PoolID:         956,
-					PoolName:       "qOsmo/osmo",
-					LastUpdated:    time.Now().UTC(),
-					PoolType:       "stableswap",
-					PoolData:       json.RawMessage("{\"address\":\"osmo1q023e9m4d3ffvr96xwaeraa62yfvufkufkr7yf7lmacgkuspsuqsga4xp2\",\"id\":956,\"pool_params\":{\"swap_fee\":\"0.003000000000000000\",\"exit_fee\":\"0.000000000000000000\"},\"future_pool_governor\":\"168h\",\"total_shares\":{\"denom\":\"gamm/pool/956\",\"amount\":\"118922578939571354422559\"},\"pool_liquidity\":[{\"denom\":\"ibc/42D24879D4569CE6477B7E88206ADBFE47C222C6CAD51A54083E4A72594269FC\",\"amount\":\"217240952822\"},{\"denom\":\"uosmo\",\"amount\":\"260096955062\"}],\"scaling_factors\":[\"1000000000\",\"1045466083\"],\"scaling_factor_controller\":\"osmo16x03wcp37kx5e8ehckjxvwcgk9j0cqnhm8m3yy\"}"),
-					Denoms:         map[string]types.DenomWithZone{},
-					IsIncentivized: true,
-				},
-				{
-					PoolID:         944,
-					PoolName:       "atom/qAtom",
-					LastUpdated:    time.Now().UTC(),
-					PoolType:       "stableswap",
-					PoolData:       json.RawMessage("{\"address\":\"osmo1awr39mc2hrkt8gq8gt3882ru40ay45k8a3yg69nyypqe9g0ryycs66lhkh\",\"id\":944,\"pool_params\":{\"swap_fee\":\"0.003000000000000000\",\"exit_fee\":\"0.000000000000000000\"},\"future_pool_governor\":\"168h\",\"total_shares\":{\"denom\":\"gamm/pool/944\",\"amount\":\"9298235648962291280150\"},\"pool_liquidity\":[{\"denom\":\"ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2\",\"amount\":\"73166403902\"},{\"denom\":\"ibc/FA602364BEC305A696CBDF987058E99D8B479F0318E47314C49173E8838C5BAC\",\"amount\":\"98593533184\"}],\"scaling_factors\":[\"1071353717\",\"1000000000\"],\"scaling_factor_controller\":\"osmo16x03wcp37kx5e8ehckjxvwcgk9j0cqnhm8m3yy\"}"),
-					Denoms:         map[string]types.DenomWithZone{},
+					PoolID:      944,
+					PoolName:    "atom/qAtom",
+					LastUpdated: time.Now().UTC(),
+					PoolType:    "stableswap",
+					PoolData:    []byte(`{"address":"osmo1awr39mc2hrkt8gq8gt3882ru40ay45k8a3yg69nyypqe9g0ryycs66lhkh","id":"944","pool_params":{"swap_fee":"0.003000000000000000","exit_fee":"0.000000000000000000"},"future_pool_governor":"168h","total_shares":{"denom":"gamm/pool/944","amount":"6108537302303463956540"},"pool_liquidity":[{"denom":"ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2","amount":"42678069500"},{"denom":"ibc/FA602364BEC305A696CBDF987058E99D8B479F0318E47314C49173E8838C5BAC","amount":"70488173547"}],"scaling_factors":["1202853876","1000000000"],"scaling_factor_controller":"osmo16x03wcp37kx5e8ehckjxvwcgk9j0cqnhm8m3yy"}`),
+					Denoms: map[string]types.DenomWithZone{
+						"ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2": {Denom: "uatom", ChainID: "cosmoshub-4"},
+						"ibc/FA602364BEC305A696CBDF987058E99D8B479F0318E47314C49173E8838C5BAC": {Denom: "uqatom", ChainID: "cosmoshub-4"},
+					},
 					IsIncentivized: true,
 				},
 				{
@@ -67,6 +61,18 @@ func (suite *KeeperTestSuite) TestCalcTokenValues() {
 						"uosmo": {Denom: "uosmo", ChainID: "osmosis-1"},
 					},
 					IsIncentivized: false,
+				},
+				{
+					PoolID:      956,
+					PoolName:    "qOsmo/osmo",
+					LastUpdated: time.Now().UTC(),
+					PoolType:    "stableswap",
+					PoolData:    json.RawMessage("{\"address\":\"osmo1q023e9m4d3ffvr96xwaeraa62yfvufkufkr7yf7lmacgkuspsuqsga4xp2\",\"id\":956,\"pool_params\":{\"swap_fee\":\"0.003000000000000000\",\"exit_fee\":\"0.000000000000000000\"},\"future_pool_governor\":\"168h\",\"total_shares\":{\"denom\":\"gamm/pool/956\",\"amount\":\"118922578939571354422559\"},\"pool_liquidity\":[{\"denom\":\"ibc/42D24879D4569CE6477B7E88206ADBFE47C222C6CAD51A54083E4A72594269FC\",\"amount\":\"217240952822\"},{\"denom\":\"uosmo\",\"amount\":\"260096955062\"}],\"scaling_factors\":[\"1000000000\",\"1045466083\"],\"scaling_factor_controller\":\"osmo16x03wcp37kx5e8ehckjxvwcgk9j0cqnhm8m3yy\"}"),
+					Denoms: map[string]types.DenomWithZone{
+						"ibc/42D24879D4569CE6477B7E88206ADBFE47C222C6CAD51A54083E4A72594269FC": {Denom: "uqosmo", ChainID: "osmosis-1"},
+						"uosmo": {Denom: "uosmo", ChainID: "osmosis-1"},
+					},
+					IsIncentivized: true,
 				},
 			},
 			expectedTvs: keeper.TokenValues{
