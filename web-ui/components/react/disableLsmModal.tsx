@@ -14,7 +14,7 @@ import {
 import { StdFee } from '@cosmjs/amino';
 import { useChain } from '@cosmos-kit/react';
 import { assets, chains } from 'chain-registry';
-import { MsgDisableTokenizeShares, MsgEnableTokenizeShares } from 'quicksilverjs/dist/codegen/cosmos/staking/v1beta1/lsm';
+import { cosmos } from 'quicksilverjs';
 import { useState } from 'react';
 
 import { useTx } from '@/hooks';
@@ -28,13 +28,25 @@ export const DisableLsmModal: React.FC<DisableLsmModalProps> = ({ isOpen, onClos
   const { address } = useChain('cosmoshub');
   const { tx } = useTx('cosmoshub');
 
-  const msgDisable = MsgDisableTokenizeShares.fromPartial({
+  // TODO: requires quicksilverjs update to better support disable & enable lsm msgs
+  const msgEnableValue = {
     delegator_address: address ?? '',
-  });
+  };
+  const enableBinary = cosmos.staking.v1beta1.MsgEnableTokenizeShares.encode(msgEnableValue).finish();
 
   const msgEnable = {
-    typeUrl: MsgEnableTokenizeShares.typeUrl,
-    value: MsgDisableTokenizeShares.encode({ delegator_address: address ?? '' }),
+    typeUrl: cosmos.staking.v1beta1.MsgEnableTokenizeShares.typeUrl,
+    value: enableBinary,
+  };
+
+  const msgDisableValue = {
+    delegator_address: address ?? '',
+  };
+  const disableBinary = cosmos.staking.v1beta1.MsgDisableTokenizeShares.encode(msgDisableValue).finish();
+
+  const msgDisable = {
+    typeUrl: cosmos.staking.v1beta1.MsgDisableTokenizeShares.typeUrl,
+    value: disableBinary,
   };
 
   const [isSigningEnable, setIsSigningEnable] = useState<boolean>(false);
@@ -110,7 +122,7 @@ export const DisableLsmModal: React.FC<DisableLsmModalProps> = ({ isOpen, onClos
           </Text>
           <Spacer h={4} />
           <Text color="white" lineHeight="tall">
-            Keep in mind you will not be able to natively stake your LSM-enabled assets like Atom without re-enabling LSM.
+            Remember that you will not be able to directly stake your LSM-supported assets, such as Atom, unless you re-enable LSM.
           </Text>
         </ModalBody>
         <ModalFooter>
