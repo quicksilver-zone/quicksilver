@@ -93,14 +93,14 @@ func V010500UpgradeHandler(
 }
 
 func addProtocolData(ctx sdk.Context, keeper *prkeeper.Keeper, prtype prtypes.ProtocolDataType, data prtypes.ProtocolDataI) error {
-	json, err := json.Marshal(data)
+	jsonData, err := json.Marshal(data)
 	if err != nil {
 		return err
 	}
 
 	protocolData := prtypes.ProtocolData{
 		Type: prtypes.ProtocolDataType_name[int32(prtype)],
-		Data: json,
+		Data: jsonData,
 	}
 
 	keeper.SetProtocolData(ctx, data.GenerateKey(), &protocolData)
@@ -121,49 +121,68 @@ func initialiseClaimsMetaData(ctx sdk.Context, appKeepers *keepers.AppKeepers) e
 		"umee-1":      "channel-49",
 		"secret-4":    "channel-52",
 	}
-
+	var err error
 	// ProtocolDataTypeConnection
 	appKeepers.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zone *icstypes.Zone) (stop bool) {
 		// add connection for each zone
-		addProtocolData(ctx, prk, prtypes.ProtocolDataTypeConnection, &prtypes.ConnectionProtocolData{
+		err = addProtocolData(ctx, prk, prtypes.ProtocolDataTypeConnection, &prtypes.ConnectionProtocolData{
 			ConnectionID: zone.ConnectionId,
 			ChainID:      zone.ChainId,
 			Prefix:       zone.AccountPrefix,
 		})
+		if err != nil {
+			return true
+		}
 
 		// add local (QS) denom for each chain
-		addProtocolData(ctx, prk, prtypes.ProtocolDataTypeLiquidToken, &prtypes.LiquidAllowedDenomProtocolData{
+		err = addProtocolData(ctx, prk, prtypes.ProtocolDataTypeLiquidToken, &prtypes.LiquidAllowedDenomProtocolData{
 			ChainID:               ctx.ChainID(),
 			RegisteredZoneChainID: zone.ChainId,
 			QAssetDenom:           zone.LocalDenom,
 			IbcDenom:              zone.LocalDenom,
 		})
 
+		if err != nil {
+			return true
+		}
+
 		// add liquid tokens for qasset on osmosis, secret, umee and the host zone itself.
 		chainsToAdd := []string{"osmosis-1", "secret-4", "umee-1", zone.ChainId}
 		for _, chain := range chainsToAdd {
 			channel, found := appKeepers.IBCKeeper.ChannelKeeper.GetChannel(ctx, "transfer", channels[chain])
 			if !found {
-				panic(fmt.Errorf("unable to find channel %s", channels[chain]))
+				err = fmt.Errorf("unable to find channel %s", channels[chain])
+				return true
 			}
 
-			addProtocolData(ctx, prk, prtypes.ProtocolDataTypeLiquidToken, &prtypes.LiquidAllowedDenomProtocolData{
+			err = addProtocolData(ctx, prk, prtypes.ProtocolDataTypeLiquidToken, &prtypes.LiquidAllowedDenomProtocolData{
 				ChainID:               chain,
 				RegisteredZoneChainID: zone.ChainId,
 				QAssetDenom:           zone.LocalDenom,
 				IbcDenom:              utils.DeriveIbcDenom("transfer", channels[chain], "transfer", channel.Counterparty.ChannelId, zone.LocalDenom),
 			})
+
+			if err != nil {
+				return true
+			}
 		}
 
 		return false
 	})
 
+	if err != nil {
+		return err
+	}
+
 	// osmosis params
-	addProtocolData(ctx, prk, prtypes.ProtocolDataTypeOsmosisParams, &prtypes.OsmosisParamsProtocolData{
+	err = addProtocolData(ctx, prk, prtypes.ProtocolDataTypeOsmosisParams, &prtypes.OsmosisParamsProtocolData{
 		ChainID:   "osmosis-1",
 		BaseChain: "osmosis-1",
 		BaseDenom: "uosmo",
 	})
+	if err != nil {
+		return err
+	}
 
 	osmoPools := []*prtypes.OsmosisPoolProtocolData{
 		// incentivised pools
@@ -281,7 +300,10 @@ func initialiseClaimsMetaData(ctx sdk.Context, appKeepers *keepers.AppKeepers) e
 	}
 	// osmosis pools
 	for _, pool := range osmoPools {
-		addProtocolData(ctx, prk, prtypes.ProtocolDataTypeOsmosisPool, pool)
+		err = addProtocolData(ctx, prk, prtypes.ProtocolDataTypeOsmosisPool, pool)
+		if err != nil {
+			return err
+		}
 	}
 
 	// enable params
