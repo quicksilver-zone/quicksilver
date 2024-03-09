@@ -196,7 +196,7 @@ export const SignalIntentModal: React.FC<StakingModalProps> = ({ isOpen, onClose
     setIsSigning(true);
 
     try {
-      const result = await tx([msgSignalIntent], {
+      await tx([msgSignalIntent], {
         fee,
         onSuccess: () => {
           refetch();

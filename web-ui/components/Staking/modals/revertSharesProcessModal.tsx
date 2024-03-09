@@ -162,7 +162,7 @@ export const RevertSharesProcessModal: React.FC<StakingModalProps> = ({
     setIsSigning(true);
 
     try {
-      const result = await tx([msg], {
+      await tx([msg], {
         fee,
         onSuccess: () => {
           setStep(2);

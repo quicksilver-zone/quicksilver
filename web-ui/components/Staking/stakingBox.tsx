@@ -171,7 +171,7 @@ export const StakingBox = ({
     event.preventDefault();
     setIsSigning(true);
     try {
-      const result = await tx([msgRequestRedemption], {
+      await tx([msgRequestRedemption], {
         fee,
       });
     } catch (error) {

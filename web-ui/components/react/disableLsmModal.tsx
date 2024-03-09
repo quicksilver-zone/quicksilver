@@ -62,7 +62,7 @@ export const DisableLsmModal: React.FC<DisableLsmModalProps> = ({ isOpen, onClos
     setIsSingingDisable(true);
 
     try {
-      const result = await tx([], {
+      await tx([], {
         fee,
         onSuccess: () => {
           onClose();
@@ -82,7 +82,7 @@ export const DisableLsmModal: React.FC<DisableLsmModalProps> = ({ isOpen, onClos
     setIsSigningEnable(true);
 
     try {
-      const result = await tx([msgEnable], {
+      await tx([msgEnable], {
         fee,
         onSuccess: () => {
           onClose();

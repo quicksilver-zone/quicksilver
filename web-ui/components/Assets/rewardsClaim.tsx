@@ -79,7 +79,7 @@ export const RewardsClaim: React.FC<RewardsClaimInterface> = ({ address, onClose
     setIsSigning(true);
 
     try {
-      const result = await tx([msgGrant], {
+      await tx([msgGrant], {
         fee,
         onSuccess: () => {},
       });
@@ -115,7 +115,7 @@ export const RewardsClaim: React.FC<RewardsClaimInterface> = ({ address, onClose
         });
       });
 
-      const result = await tx(msgSubmitClaims, {
+      await tx(msgSubmitClaims, {
         fee,
         onSuccess: () => {},
       });

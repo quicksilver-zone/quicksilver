@@ -194,7 +194,7 @@ export const TransferProcessModal: React.FC<StakingModalProps> = ({
     setIsSigning(true);
     setTransactionStatus('Pending');
     try {
-      const result = await tx([msg], {
+      await tx([msg], {
         fee,
         onSuccess: () => {
           setStep(2);
@@ -228,7 +228,7 @@ export const TransferProcessModal: React.FC<StakingModalProps> = ({
     setIsSigning(true);
     setTransactionStatus('Pending');
     try {
-      const result = await tx([msgSend], {
+      await tx([msgSend], {
         fee: sendFee,
         onSuccess: () => {
           setStep(3);

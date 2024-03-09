@@ -209,7 +209,7 @@ export const StakingBox = ({ selectedOption, valoperAddress }: StakingBoxProps) 
     event.preventDefault();
     setIsSigning(true);
     try {
-      const result = await tx([msgRequestRedemption], {
+      await tx([msgRequestRedemption], {
         fee,
         onSuccess: () => {},
       });
@@ -292,7 +292,7 @@ export const StakingBox = ({ selectedOption, valoperAddress }: StakingBoxProps) 
     setIsSigning(true);
 
     try {
-      const result = await sendTx([msgSend], {
+      await sendTx([msgSend], {
         memo,
         fee: stakeFee,
         onSuccess: () => {},
@@ -705,7 +705,11 @@ export const StakingBox = ({ selectedOption, valoperAddress }: StakingBoxProps) 
                   <Spacer /> {/* This pushes the next Stat component to the right */}
                   <Stat py={4} textAlign="right" color="white">
                     <StatNumber textColor="complimentary.900">
-                      {(Number(tokenAmount) * Number(zone?.redemption_rate || 1)).toFixed(2)}
+                      {!isZoneLoading ? (
+                        (Number(tokenAmount) * Number(zone?.redemption_rate || 1)).toFixed(2)
+                      ) : (
+                        <Spinner thickness="2px" speed="0.65s" emptyColor="gray.200" color="complimentary.900" size="sm" />
+                      )}
                     </StatNumber>
                   </Stat>
                 </HStack>

@@ -273,7 +273,7 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
     setIsSigning(true);
     setTransactionStatus('Pending');
     try {
-      const result = await tx([msgSend], {
+      await tx([msgSend], {
         memo,
         fee,
         onSuccess: () => {

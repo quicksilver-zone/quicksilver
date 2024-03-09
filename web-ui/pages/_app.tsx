@@ -54,6 +54,7 @@ function QuickApp({ Component, pageProps }: AppProps) {
   };
 
   const env = process.env.NEXT_PUBLIC_CHAIN_ENV;
+  const walletConnectToken = process.env.NEXT_PRIVATE_WALLET_CONNECT_TOKEN;
 
   const rpcEndpoints = {
     quicksilver:
@@ -274,7 +275,7 @@ function QuickApp({ Component, pageProps }: AppProps) {
             wallets={[...keplrWallets, ...cosmostationWallets, ...leapWallets]}
             walletConnectOptions={{
               signClient: {
-                projectId: '41a0749c331d209190beeac1c2530c90',
+                projectId: walletConnectToken ?? '',
                 relayUrl: 'wss://relay.walletconnect.org',
                 metadata: {
                   name: 'Quicksilver',
