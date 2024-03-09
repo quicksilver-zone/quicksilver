@@ -48,7 +48,7 @@ export const RewardsClaim: React.FC<RewardsClaimInterface> = ({ address, onClose
   };
 
   const binaryMessage = GenericAuthorization.encode(genericAuth).finish();
-
+  // TODO: handle types better here
   const msgGrant = grant({
     granter: address,
     grantee: 'quick1w5ennfhdqrpyvewf35sv3y3t8yuzwq29mrmyal',
@@ -105,6 +105,7 @@ export const RewardsClaim: React.FC<RewardsClaimInterface> = ({ address, onClose
     try {
       const msgSubmitClaims = liquidEpoch.messages.map((message) => {
         const transformedProofs = transformProofs(message.proofs);
+        // TODO: handle types better here
         return submitClaim({
           userAddress: message.user_address,
           zone: message.zone,

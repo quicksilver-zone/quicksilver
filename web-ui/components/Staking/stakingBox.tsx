@@ -26,7 +26,6 @@ import {
   Image,
   SkeletonCircle,
   Link,
-  useToast,
 } from '@chakra-ui/react';
 import { Coin, StdFee } from '@cosmjs/amino';
 import { useChain } from '@cosmos-kit/react';
@@ -48,7 +47,6 @@ import {
   useValidatorsQuery,
   useZoneQuery,
 } from '@/hooks/useQueries';
-import { useToaster, ToastType, type CustomToast } from '@/hooks/useToaster';
 import { getExponent, shiftDigits } from '@/utils';
 
 type StakingBoxProps = {
@@ -180,7 +178,10 @@ export const StakingBox = ({
       setIsSigning(false);
     }
   };
-  // You can use this Toast hadnler and the below message to show there is an issue with unbonding
+
+  // import { useToaster, ToastType, type CustomToast } from '@/hooks/useToaster';
+  // import useToast from chakra-ui
+  // You can use this Toast handler and the below message to show there is an issue with unbonding
   // const toaster = useToaster();
 
   const handleTabsChange = (index: number) => {

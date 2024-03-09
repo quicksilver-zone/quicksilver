@@ -197,7 +197,7 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
     };
   });
 
-  const { data: zone } = useZoneQuery(selectedOption?.chainId ?? '');
+  const { data: zone, isLoading: isZoneLoading } = useZoneQuery(selectedOption?.chainId ?? '');
 
   const valToByte = (val: number) => {
     if (val > 1) {
@@ -662,7 +662,11 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
                     <HStack mt={2} textAlign={'left'} fontWeight={'light'} fontSize="lg" color="white">
                       <Text fontWeight={'bold'}>Receiving:</Text>
                       <Text color="complimentary.900">
-                        {(Number(tokenAmount) / Number(zone?.redemption_rate)).toFixed(2)} q{selectedOption?.value}
+                        {!isZoneLoading ? (
+                          `${(Number(tokenAmount) / Number(zone?.redemption_rate || 1)).toFixed(2)} q${selectedOption?.value}`
+                        ) : (
+                          <Spinner thickness="2px" speed="0.65s" emptyColor="gray.200" color="complimentary.900" size="sm" />
+                        )}
                       </Text>
                     </HStack>
                     <Text mt={2} textAlign={'left'} fontWeight={'hairline'}>
