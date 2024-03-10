@@ -16,6 +16,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
+	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
 	ibctesting "github.com/cosmos/ibc-go/v5/testing"
 
 	"github.com/quicksilver-zone/quicksilver/app/upgrades"
@@ -273,44 +274,36 @@ func (s *AppTestSuite) TestV010406UpgradeHandler() {
 }
 
 func (s *AppTestSuite) InitV150TestZones() {
-	cosmosWithdrawal := addressutils.GenerateAddressForTestWithPrefix("cosmos")
-	cosmosPerformance := addressutils.GenerateAddressForTestWithPrefix("cosmos")
-	cosmosDeposit := addressutils.GenerateAddressForTestWithPrefix("cosmos")
-	cosmosDelegate := addressutils.GenerateAddressForTestWithPrefix("cosmos")
-	// cosmos zone
-	zone := icstypes.Zone{
-		ConnectionId:    "connection-77001",
-		ChainId:         "cosmoshub-4",
-		AccountPrefix:   "cosmos",
-		LocalDenom:      "uqatom",
-		BaseDenom:       "uatom",
-		MultiSend:       false,
-		LiquidityModule: false,
-		WithdrawalAddress: &icstypes.ICAAccount{
-			Address:           cosmosWithdrawal,
-			PortName:          "icacontroller-cosmoshub-4.withdrawal",
-			WithdrawalAddress: cosmosWithdrawal,
-		},
-		DelegationAddress: &icstypes.ICAAccount{
-			Address:           cosmosDelegate,
-			PortName:          "icacontroller-cosmoshub-4.delegate",
-			WithdrawalAddress: cosmosWithdrawal,
-		},
-		DepositAddress: &icstypes.ICAAccount{
-			Address:           cosmosDeposit,
-			PortName:          "icacontroller-cosmoshub-4.deposit",
-			WithdrawalAddress: cosmosWithdrawal,
-		},
-		PerformanceAddress: &icstypes.ICAAccount{
-			Address:           cosmosPerformance,
-			PortName:          "icacontroller-cosmoshub-4.performance",
-			WithdrawalAddress: cosmosWithdrawal,
-		},
-	}
+	// zone to match prod
+	zone := icstypes.Zone{ConnectionId: "connection-1", ChainId: "cosmoshub-4", AccountPrefix: "cosmos", LocalDenom: "uqatom", BaseDenom: "uatom"}
 	s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetZone(s.chainA.GetContext(), &zone)
 
+	zone = icstypes.Zone{ConnectionId: "connection-0", ChainId: "stargaze-1", AccountPrefix: "stars", LocalDenom: "uqstars", BaseDenom: "ustars"}
+	s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetZone(s.chainA.GetContext(), &zone)
+
+	zone = icstypes.Zone{ConnectionId: "connection-50", ChainId: "juno-1", AccountPrefix: "juno", LocalDenom: "uqjuno", BaseDenom: "ujuno"}
+	s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetZone(s.chainA.GetContext(), &zone)
+
+	zone = icstypes.Zone{ConnectionId: "connection-2", ChainId: "osmosis-1", AccountPrefix: "osmo", LocalDenom: "uqosmo", BaseDenom: "uosmo"}
+	s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetZone(s.chainA.GetContext(), &zone)
+
+	zone = icstypes.Zone{ConnectionId: "connection-9", ChainId: "regen-1", AccountPrefix: "regen", LocalDenom: "uqregen", BaseDenom: "uregen"}
+	s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetZone(s.chainA.GetContext(), &zone)
+
+	zone = icstypes.Zone{ConnectionId: "connection-54", ChainId: "sommelier-3", AccountPrefix: "somm", LocalDenom: "uqsomm", BaseDenom: "usomm"}
+	s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetZone(s.chainA.GetContext(), &zone)
 	addVestingAccount(s.chainA.GetContext(), &s.GetQuicksilverApp(s.chainA).AccountKeeper, "quick1a7n7z45gs0dut2syvkszffgwmgps6scqen3e5l", 10, 864000, 5000000000)
 	addVestingAccount(s.chainA.GetContext(), &s.GetQuicksilverApp(s.chainA).AccountKeeper, "quick1m0anwr4kcz0y9s65czusun2ahw35g3humv4j7f", 10, 864000, 5000000000)
+
+	// set counterparty channels to match prod so we can assert denoms
+	s.GetQuicksilverApp(s.chainA).IBCKeeper.ChannelKeeper.SetChannel(s.chainA.GetContext(), "transfer", "channel-0", channeltypes.Channel{Counterparty: channeltypes.NewCounterparty("transfer", "channel-124")})
+	s.GetQuicksilverApp(s.chainA).IBCKeeper.ChannelKeeper.SetChannel(s.chainA.GetContext(), "transfer", "channel-1", channeltypes.Channel{Counterparty: channeltypes.NewCounterparty("transfer", "channel-467")})
+	s.GetQuicksilverApp(s.chainA).IBCKeeper.ChannelKeeper.SetChannel(s.chainA.GetContext(), "transfer", "channel-2", channeltypes.Channel{Counterparty: channeltypes.NewCounterparty("transfer", "channel-522")})
+	s.GetQuicksilverApp(s.chainA).IBCKeeper.ChannelKeeper.SetChannel(s.chainA.GetContext(), "transfer", "channel-52", channeltypes.Channel{Counterparty: channeltypes.NewCounterparty("transfer", "channel-65")})
+	s.GetQuicksilverApp(s.chainA).IBCKeeper.ChannelKeeper.SetChannel(s.chainA.GetContext(), "transfer", "channel-49", channeltypes.Channel{Counterparty: channeltypes.NewCounterparty("transfer", "channel-53")})
+	s.GetQuicksilverApp(s.chainA).IBCKeeper.ChannelKeeper.SetChannel(s.chainA.GetContext(), "transfer", "channel-101", channeltypes.Channel{Counterparty: channeltypes.NewCounterparty("transfer", "channel-59")})
+	s.GetQuicksilverApp(s.chainA).IBCKeeper.ChannelKeeper.SetChannel(s.chainA.GetContext(), "transfer", "channel-86", channeltypes.Channel{Counterparty: channeltypes.NewCounterparty("transfer", "channel-272")})
+	s.GetQuicksilverApp(s.chainA).IBCKeeper.ChannelKeeper.SetChannel(s.chainA.GetContext(), "transfer", "channel-17", channeltypes.Channel{Counterparty: channeltypes.NewCounterparty("transfer", "channel-62")})
 }
 
 func (s *AppTestSuite) TestV010500UpgradeHandler() {
@@ -661,7 +654,7 @@ func (s *AppTestSuite) TestV010500UpgradeHandler() {
 	z, existed := app.InterchainstakingKeeper.GetLocalDenomZoneMapping(ctx, "uqatom")
 	s.True(existed)
 	s.Equal(z.ChainId, "cosmoshub-4")
-	s.Equal(z.ConnectionId, "connection-77001")
+	s.Equal(z.ConnectionId, "connection-1")
 
 	// 512 should be the sum of 01, 02, 03
 	wdr, found := app.InterchainstakingKeeper.GetWithdrawalRecord(ctx, z.ChainId, fmt.Sprintf("%064d", 512), icstypes.WithdrawStatusQueued)
@@ -674,7 +667,6 @@ func (s *AppTestSuite) TestV010500UpgradeHandler() {
 
 	// 513 and 514 should be 04 and 05 requeued respectively (due to differing recipient)
 	wdr, found = app.InterchainstakingKeeper.GetWithdrawalRecord(ctx, z.ChainId, fmt.Sprintf("%064d", 513), icstypes.WithdrawStatusQueued)
-	fmt.Println(wdr)
 	s.True(found)
 	s.Equal(wdr.BurnAmount, sdk.NewCoin("uqatom", math.NewInt(4000)))
 	s.Equal(wdr.CompletionTime, time.Time{})
@@ -711,5 +703,21 @@ func (s *AppTestSuite) TestV010500UpgradeHandler() {
 	s.ElementsMatch(wdr.Distribution, []*icstypes.Distribution{{Valoper: "cosmosvaloper100000000000000000000000000000000000", Amount: 1200}, {Valoper: "cosmosvaloper111111111111111111111111111111111111", Amount: 1200}, {Valoper: "cosmosvaloper122222222222222222222222222222222222", Amount: 1000}, {Valoper: "cosmosvaloper133333333333333333333333333333333333", Amount: 800}})
 
 	wdrs := app.InterchainstakingKeeper.AllWithdrawalRecords(ctx)
-	s.Equal(len(wdrs), 8)
+	s.Equal(35, len(wdrs)) // 8 from requeue collation, 27 new records from restituion
+
+	// test protocol data
+
+	tvs, err := app.ParticipationRewardsKeeper.CalcTokenValues(ctx)
+	s.NoError(err)
+	expectedTvs := map[string]sdk.Dec{ // relative prices between assets as of 2024-03-09T11:00
+		"uosmo":  sdk.MustNewDecFromStr("1.000000000000000000"),
+		"uatom":  sdk.MustNewDecFromStr("8.312793554467208113"),
+		"ustars": sdk.MustNewDecFromStr("0.024508540336823926"),
+		"uregen": sdk.MustNewDecFromStr("0.034894445954581256"),
+		"usomm":  sdk.MustNewDecFromStr("0.108532538179923692"),
+		"ujuno":  sdk.MustNewDecFromStr("0.256801530018076838"),
+	}
+	for denom, value := range tvs {
+		s.Equal(expectedTvs[denom], value)
+	}
 }

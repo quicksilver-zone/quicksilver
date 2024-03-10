@@ -61,13 +61,12 @@ func (k *Keeper) CalcTokenValues(ctx sdk.Context) (TokenValues, error) {
 		isBasePair := false
 
 		for _, ibcDenom := range utils.Keys(pool.Denoms) {
-			if pool.Denoms[ibcDenom].ChainID == baseChain {
+			if pool.Denoms[ibcDenom].ChainID == baseChain && pool.Denoms[ibcDenom].Denom == baseDenom {
 				isBasePair = true
 				baseIBCDenom = ibcDenom
 			} else {
 				zone, ok := k.icsKeeper.GetZone(ctx, pool.Denoms[ibcDenom].ChainID)
 				if !ok {
-					// errs[idxLabel] = fmt.Errorf("zone not found, %s", denom.ChainId)
 					return false
 				}
 
@@ -201,7 +200,7 @@ func (k *Keeper) DistributeToUsersFromModule(ctx sdk.Context, userAllocations []
 
 // DistributeToUsers sends the allocated user rewards to the user address.
 func (k *Keeper) DistributeToUsersFromAddress(ctx sdk.Context, userAllocations []types.UserAllocation, fromAddress string) error {
-	k.Logger(ctx).Info("distributeto users from account", "allocations", userAllocations)
+	k.Logger(ctx).Info("distribute to users from account", "allocations", userAllocations)
 
 	fromAddrBytes, err := addressutils.AccAddressFromBech32(fromAddress, "")
 	if err != nil {
