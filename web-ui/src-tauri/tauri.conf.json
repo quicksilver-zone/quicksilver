@@ -45,7 +45,7 @@
         "providerShortName": null,
         "signingIdentity": null
       },
-      "resources": ["quicksilverd"],
+      "resources": ["../networks/mainnet/genesis.json"],
       "shortDescription": "Quicksilver liquid staking for cosmos",
       "targets": "all",
       "windows": {
