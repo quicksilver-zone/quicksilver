@@ -4,6 +4,7 @@
   "private": true,
   "homepage": "https://quicksilver-zone.github.io/quicksilver/",
   "scripts": {
+    "tauri": "tauri",
     "build": "next build",
     "dev": "next dev",
     "start": "next start",
@@ -59,6 +60,7 @@
     "simplex-noise": "^4.0.1"
   },
   "devDependencies": {
+    "@tauri-apps/cli": "^1.5.11",
     "@testing-library/react": "^14.0.0",
     "@types/node": "20.11.0",
     "@types/react": "18.0.25",
