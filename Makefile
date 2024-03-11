@@ -15,7 +15,7 @@ QS_BINARY = quicksilverd
 QS_DIR = quicksilver
 BUILDDIR ?= $(CURDIR)/build
 HTTPS_GIT := https://github.com/quicksilver-zone/quicksilver.git
-
+PROTO_BUILDER_IMAGE=ghcr.io/cosmos/proto-builder:0.14.0
 DOCKER := $(shell which docker)
 DOCKERCOMPOSE := $(shell which docker-compose)
 DOCKER_BUF := $(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace bufbuild/buf
@@ -70,7 +70,7 @@ ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=quicksilver \
           -X github.com/cosmos/cosmos-sdk/version.AppName=$(QS_BINARY) \
           -X github.com/cosmos/cosmos-sdk/version.Version=$(VERSION) \
           -X github.com/cosmos/cosmos-sdk/version.Commit=$(COMMIT) \
-          -X github.com/tendermint/tendermint/version.TMCoreSemVer=$(TMVERSION)
+          -X github.com/cometbft/cometbft/version.TMCoreSemVer=$(TMVERSION)
 
 # DB backend selection
 ifeq (cleveldb,$(findstring cleveldb,$(COSMOS_BUILD_OPTIONS)))
@@ -511,7 +511,7 @@ proto-all: proto-gen
 proto-gen: proto-format
 	@echo "🤖 Generating code from protobuf..."
 	@$(DOCKER) run --rm --volume "$(PWD)":/workspace --workdir /workspace \
-		quicksilver-proto sh ./proto/generate.sh
+		$(PROTO_BUILDER_IMAGE) sh ./proto/generate.sh
 	@echo "✅ Completed code generation!"
 
 proto-lint:

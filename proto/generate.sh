@@ -1,5 +1,7 @@
+PROTO_BUILDER=$1
 cd proto
-buf generate
+buf generate --template buf.gen.yaml
+
 cd ..
 
 cp -r github.com/quicksilver-zone/quicksilver/* ./
