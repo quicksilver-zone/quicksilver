@@ -246,3 +246,12 @@ message Receipt {
     (gogoproto.stdtime) = true
   ];
 }
+
+message ValidatorDenyList {
+  string chain_id = 1;
+  repeated Validator denied_vals = 2 [(gogoproto.nullable) = false];
+  google.protobuf.Timestamp last_updated = 3 [
+    (gogoproto.nullable) = true,
+    (gogoproto.stdtime) = true
+  ];
+}
