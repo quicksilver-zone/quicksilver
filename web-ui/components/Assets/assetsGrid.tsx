@@ -2,11 +2,12 @@ import { WarningIcon } from '@chakra-ui/icons';
 import { Box, VStack, Text, Divider, HStack, Flex, Grid, GridItem, Spinner, Tooltip } from '@chakra-ui/react';
 import React from 'react';
 
+import { truncateToTwoDecimals } from '@/utils';
+import { shiftDigits, formatQasset } from '@/utils';
+
 import QDepositModal from './modals/qTokenDepositModal';
 import QWithdrawModal from './modals/qTokenWithdrawlModal';
 
-import { truncateToTwoDecimals } from '@/utils';
-import { shiftDigits, formatQasset } from '@/utils';
 
 interface AssetCardProps {
   assetName: string;
