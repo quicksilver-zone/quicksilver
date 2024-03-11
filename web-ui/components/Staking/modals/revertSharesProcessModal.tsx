@@ -124,7 +124,7 @@ export const RevertSharesProcessModal: React.FC<StakingModalProps> = ({
         amount: feeAmount.toString(),
       },
     ],
-    gas: '750000', // test txs were using well in excess of 600k
+    gas: '750000',
   };
 
   const { tx, responseEvents } = useTx(newChainName ?? '');
