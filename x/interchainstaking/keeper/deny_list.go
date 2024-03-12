@@ -8,22 +8,14 @@ import (
 // SetZoneValidatorToDenyList sets the zone validator deny list
 func (k *Keeper) SetZoneValidatorToDenyList(ctx sdk.Context, chainID string, validator types.Validator) error {
 	store := ctx.KVStore(k.storeKey)
-	key := []byte(chainID)
-	denyList, found := k.GetZoneValidatorDenyList(ctx, chainID)
-	if !found {
-		denyList = types.NewValidatorDenyListForZone(chainID)
-	}
-	// Append if not already in the list
-	for _, v := range denyList.DeniedVals {
-		if v.ValoperAddress == validator.ValoperAddress {
-			return types.ErrValidatorAlreadyInDenyList
-		}
-	}
-	denyList.DeniedVals = append(denyList.DeniedVals, validator)
-	store.Set(key, types.MustMarshalDenyList(k.cdc, denyList))
+
+	key := types.GetZoneDeniedValidatorKey(chainID)
+	b := types.MustMarshalValidator(k.cdc, validator)
+	store.Set(key, b)
 	return nil
 }
 
+// GetZoneValidatorDenyList get the validator deny list of a specific zone
 func (k *Keeper) GetZoneValidatorDenyList(ctx sdk.Context, chainID string) (types.ValidatorDenyList, bool) {
 	store := ctx.KVStore(k.storeKey)
 
@@ -36,5 +28,34 @@ func (k *Keeper) GetZoneValidatorDenyList(ctx sdk.Context, chainID string) (type
 	denyList := types.MustUnmarshalDenyList(k.cdc, value)
 
 	return denyList, true
+}
 
+// // IterateDelegatorDelegations iterates through one delegator's delegations.
+// func (k *Keeper) IterateDelegatorDelegations(ctx sdk.Context, chainID string, delegator sdk.AccAddress, cb func(delegation types.Delegation) (stop bool)) {
+// 	store := ctx.KVStore(k.storeKey)
+// 	delegatorPrefixKey := types.GetDelegationsKey(chainID, delegator)
+// 	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey)
+// 	defer iterator.Close()
+
+//		for ; iterator.Valid(); iterator.Next() {
+//			delegation := types.MustUnmarshalDelegation(k.cdc, iterator.Value())
+//			if cb(delegation) {
+//				break
+//			}
+//		}
+//	}
+func (k *Keeper) IterateZoneDeniedValidator(ctx sdk.Context, chainID string, cb func(validator types.Validator) (stop bool)) {
+	store := ctx.KVStore(k.storeKey)
+	deniedValPrefixKey := types.GetZoneDeniedValidatorKey(chainID)
+	iterator := sdk.KVStorePrefixIterator(store, deniedValPrefixKey)
+
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		validator := types.MustUnmarshalValidator(k.cdc, iterator.Value())
+		if cb(validator) {
+			break
+		}
+
+	}
 }

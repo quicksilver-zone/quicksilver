@@ -63,7 +63,7 @@ var (
 	KeyPrefixRedelegationRecord          = []byte{0x10}
 	KeyPrefixLsmCaps                     = []byte{0x11}
 	KeyPrefixLocalDenomZoneMapping       = []byte{0x12}
-	KeyPrefixValidatorDenyList           = []byte{0x13}
+	KeyPrefixDeniedValidator             = []byte{0x13}
 )
 
 // ParseStakingDelegationKey parses the KV store key for a delegation from Cosmos x/staking module,
@@ -167,6 +167,7 @@ func GetZoneValidatorAddrsByConsAddrKey(chainID string) []byte {
 	return append(KeyPrefixValidatorAddrsByConsAddr, []byte(chainID)...)
 }
 
-func GetZoneValidatorDenyList(chainID string) []byte {
-	return append(KeyPrefixValidatorDenyList, []byte(chainID)...)
+// GetZoneValidatorDenyListKey gets the validator deny list key prefix for a given chain.
+func GetZoneDeniedValidatorKey(chainID string) []byte {
+	return append(KeyPrefixDeniedValidator, []byte(chainID)...)
 }
