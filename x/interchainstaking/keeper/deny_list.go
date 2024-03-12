@@ -16,34 +16,24 @@ func (k *Keeper) SetZoneValidatorToDenyList(ctx sdk.Context, chainID string, val
 }
 
 // GetZoneValidatorDenyList get the validator deny list of a specific zone
-func (k *Keeper) GetZoneValidatorDenyList(ctx sdk.Context, chainID string) (types.ValidatorDenyList, bool) {
+func (k *Keeper) GetZoneValidatorDenyList(ctx sdk.Context, chainID string) ([]types.Validator, bool) {
 	store := ctx.KVStore(k.storeKey)
 
 	key := []byte(chainID)
 	value := store.Get(key)
 	if value == nil {
-		return types.ValidatorDenyList{}, false
+		return []types.Validator{}, false
 	}
 
-	denyList := types.MustUnmarshalDenyList(k.cdc, value)
+	denyList := []types.Validator{}
+	k.IterateZoneDeniedValidator(ctx, chainID, func(validator types.Validator) bool {
+		denyList = append(denyList, validator)
+		return false
+	})
 
 	return denyList, true
 }
 
-// // IterateDelegatorDelegations iterates through one delegator's delegations.
-// func (k *Keeper) IterateDelegatorDelegations(ctx sdk.Context, chainID string, delegator sdk.AccAddress, cb func(delegation types.Delegation) (stop bool)) {
-// 	store := ctx.KVStore(k.storeKey)
-// 	delegatorPrefixKey := types.GetDelegationsKey(chainID, delegator)
-// 	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey)
-// 	defer iterator.Close()
-
-//		for ; iterator.Valid(); iterator.Next() {
-//			delegation := types.MustUnmarshalDelegation(k.cdc, iterator.Value())
-//			if cb(delegation) {
-//				break
-//			}
-//		}
-//	}
 func (k *Keeper) IterateZoneDeniedValidator(ctx sdk.Context, chainID string, cb func(validator types.Validator) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 	deniedValPrefixKey := types.GetZoneDeniedValidatorKey(chainID)
