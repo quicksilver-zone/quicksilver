@@ -51,6 +51,29 @@ func V010500rc1UpgradeHandler(
 
 // =========== PRODUCTION UPGRADE HANDLER ===========
 
+func V010501UpgradeHandler(
+	mm *module.Manager,
+	configurator module.Configurator,
+	appKeepers *keepers.AppKeepers,
+) upgradetypes.UpgradeHandler {
+	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+
+		// update claims denoms
+		if err := resetLiquidClaimsDenoms(ctx, appKeepers); err != nil {
+			panic(err)
+		}
+
+		// iterate over all withdrawal records on cosmoshub with status 0 (undefined), and set to status 2 (queued)
+		appKeepers.InterchainstakingKeeper.IterateZoneStatusWithdrawalRecords(ctx, "cosmoshub-4", 0, func(index int64, record icstypes.WithdrawalRecord) (stop bool) {
+			appKeepers.InterchainstakingKeeper.UpdateWithdrawalRecordStatus(ctx, &record, icstypes.WithdrawStatusQueued)
+			return false
+		})
+
+		return mm.RunMigrations(ctx, configurator, fromVM)
+
+	}
+}
+
 func V010500UpgradeHandler(
 	mm *module.Manager,
 	configurator module.Configurator,
@@ -107,6 +130,55 @@ func addProtocolData(ctx sdk.Context, keeper *prkeeper.Keeper, prtype prtypes.Pr
 	return nil
 }
 
+// v1.5.0 had the port/channel and counterparty port/channel args flipped so calculated the IBC denom of
+// qAssets as if they had come _from_ each chain, not _to_ each chain.
+func resetLiquidClaimsDenoms(ctx sdk.Context, appKeepers *keepers.AppKeepers) error {
+	prk := appKeepers.ParticipationRewardsKeeper
+
+	// transfer channels
+	channels := map[string]string{
+		"osmosis-1":      "channel-2",
+		"cosmoshub-4":    "channel-1",
+		"stargaze-1":     "channel-0",
+		"juno-1":         "channel-86",
+		"sommelier-3":    "channel-101",
+		"regen-1":        "channel-17",
+		"umee-1":         "channel-49",
+		"secret-4":       "channel-52",
+		"dydx-mainnet-1": "channel-164",
+	}
+	var err error
+	// ProtocolDataTypeConnection
+	appKeepers.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zone *icstypes.Zone) (stop bool) {
+		// add liquid tokens for qasset on osmosis, secret, umee and the host zone itself.
+		chainsToAdd := []string{"osmosis-1", "secret-4", "umee-1", zone.ChainId}
+		for _, chain := range chainsToAdd {
+			channel, found := appKeepers.IBCKeeper.ChannelKeeper.GetChannel(ctx, "transfer", channels[chain])
+			if !found {
+				err = fmt.Errorf("unable to find channel %s", channels[chain])
+				return true
+			}
+
+			err = addProtocolData(ctx, prk, prtypes.ProtocolDataTypeLiquidToken, &prtypes.LiquidAllowedDenomProtocolData{
+				ChainID:               chain,
+				RegisteredZoneChainID: zone.ChainId,
+				QAssetDenom:           zone.LocalDenom,
+				IbcDenom:              utils.DeriveIbcDenom("transfer", channel.Counterparty.ChannelId, "transfer", channels[chain], zone.LocalDenom),
+			})
+			if err != nil {
+				return true
+			}
+		}
+
+		return false
+	})
+
+	return err
+}
+
+// initialiseClaimsMetaData does what it says on the tin, and bootstraps the claims metadata.
+// note to future self: the logic to derive the ibc denom has reversed params, and this should
+// not be used in future to determine qasset ibc denoms. v1.5.1 handler fixes this.
 func initialiseClaimsMetaData(ctx sdk.Context, appKeepers *keepers.AppKeepers) error {
 	prk := appKeepers.ParticipationRewardsKeeper
 
