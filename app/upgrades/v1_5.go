@@ -57,7 +57,6 @@ func V010501UpgradeHandler(
 	appKeepers *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-
 		// update claims denoms
 		if err := resetLiquidClaimsDenoms(ctx, appKeepers); err != nil {
 			panic(err)
@@ -70,7 +69,6 @@ func V010501UpgradeHandler(
 		})
 
 		return mm.RunMigrations(ctx, configurator, fromVM)
-
 	}
 }
 
