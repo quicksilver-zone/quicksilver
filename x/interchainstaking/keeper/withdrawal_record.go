@@ -52,6 +52,9 @@ func (k *Keeper) GetNextWithdrawalRecordSequence(ctx sdk.Context) uint64 {
 
 func (k *Keeper) AddWithdrawalRecord(ctx sdk.Context, chainID, delegator string, distributions []*types.Distribution, recipient string, burnAmount sdk.Coin, hash string, status int32, completionTime time.Time, epochNumber int64) {
 	record := types.WithdrawalRecord{ChainId: chainID, Delegator: delegator, Distribution: distributions, Recipient: recipient, Status: status, BurnAmount: burnAmount, Txhash: hash, CompletionTime: completionTime, EpochNumber: epochNumber}
+	if record.BurnAmount.IsNegative() || record.BurnAmount.IsZero() {
+		panic(fmt.Errorf("burnAmount cannot be negative or zero"))
+	}
 	k.Logger(ctx).Info("addWithdrawalRecord", "record", record)
 	k.SetWithdrawalRecord(ctx, record)
 }
@@ -80,6 +83,9 @@ func (k *Keeper) SetWithdrawalRecord(ctx sdk.Context, record types.WithdrawalRec
 	key, err := hex.DecodeString(record.Txhash)
 	if err != nil {
 		panic(err)
+	}
+	if record.BurnAmount.IsNegative() || record.BurnAmount.IsZero() {
+		panic(fmt.Errorf("burnAmount cannot be negative or zero"))
 	}
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.GetWithdrawalKey(record.ChainId, record.Status))
 	bz := k.cdc.MustMarshal(&record)
