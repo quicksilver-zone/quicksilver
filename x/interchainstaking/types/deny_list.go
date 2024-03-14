@@ -21,7 +21,6 @@ func UnmarshalValidator(cdc codec.BinaryCodec, value []byte) (Validator, error) 
 
 func MustUnmarshalValidator(cdc codec.BinaryCodec, value []byte) Validator {
 	validator, err := UnmarshalValidator(cdc, value)
-
 	if err != nil {
 		panic(err)
 	}

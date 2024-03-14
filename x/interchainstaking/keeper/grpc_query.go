@@ -344,10 +344,7 @@ func (k *Keeper) ValidatorDenyList(c context.Context, req *types.QueryDenyListRe
 	}
 	ctx := sdk.UnwrapSDKContext(c)
 
-	validators, found := k.GetZoneValidatorDenyList(ctx, req.ChainId)
-	if !found {
-		return nil, status.Error(codes.NotFound, fmt.Sprintf("no deny list found matching %s", req.ChainId))
-	}
+	validators := k.GetZoneValidatorDenyList(ctx, req.ChainId)
 
 	return &types.QueryDenyListResponse{Validators: validators}, nil
 }

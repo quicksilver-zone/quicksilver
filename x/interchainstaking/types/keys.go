@@ -167,6 +167,11 @@ func GetZoneValidatorAddrsByConsAddrKey(chainID string) []byte {
 	return append(KeyPrefixValidatorAddrsByConsAddr, []byte(chainID)...)
 }
 
+// GetDeniedValidatorKey gets the validator deny list key prefix for a given chain.
+func GetDeniedValidatorKey(chainID string, validatorAddress string) []byte {
+	return append(KeyPrefixDeniedValidator, append([]byte(chainID), []byte(validatorAddress)...)...)
+}
+
 // GetZoneValidatorDenyListKey gets the validator deny list key prefix for a given chain.
 func GetZoneDeniedValidatorKey(chainID string) []byte {
 	return append(KeyPrefixDeniedValidator, []byte(chainID)...)
