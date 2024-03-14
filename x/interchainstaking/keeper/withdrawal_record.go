@@ -84,6 +84,11 @@ func (k *Keeper) SetWithdrawalRecord(ctx sdk.Context, record types.WithdrawalRec
 	if err != nil {
 		panic(err)
 	}
+	// check if burnAmount is set
+	if record.BurnAmount.IsNil() {
+		panic(fmt.Errorf("burnAmount cannot be nil"))
+	}
+
 	if record.BurnAmount.IsNegative() || record.BurnAmount.IsZero() {
 		panic(fmt.Errorf("burnAmount cannot be negative or zero"))
 	}
