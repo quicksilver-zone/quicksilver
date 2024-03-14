@@ -34,6 +34,21 @@ func (k *Keeper) GetZoneValidatorDenyList(ctx sdk.Context, chainID string) ([]ty
 	return denyList, true
 }
 
+func (k *Keeper) GetDeniedValidatorInDenyList(ctx sdk.Context, chainID string, validatorAddress string) (types.Validator, bool) {
+	out := types.Validator{}
+	found := false
+	k.IterateZoneDeniedValidator(ctx, chainID, func(validator types.Validator) bool {
+		if validator.ValoperAddress == validatorAddress {
+			out = validator
+			found = true
+			return true
+		}
+		return false
+	})
+	return out, found
+
+}
+
 func (k *Keeper) IterateZoneDeniedValidator(ctx sdk.Context, chainID string, cb func(validator types.Validator) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 	deniedValPrefixKey := types.GetZoneDeniedValidatorKey(chainID)
@@ -46,6 +61,5 @@ func (k *Keeper) IterateZoneDeniedValidator(ctx sdk.Context, chainID string, cb 
 		if cb(validator) {
 			break
 		}
-
 	}
 }

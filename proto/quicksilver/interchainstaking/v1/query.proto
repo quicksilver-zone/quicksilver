@@ -255,3 +255,11 @@ message QueryMappedAccountsResponse {
   map<string, bytes> RemoteAddressMap = 1 [(gogoproto.nullable) = false];
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
+
+message QueryDenyListRequest{
+  string chain_id = 1 [(gogoproto.moretags) = "yaml:\"chain_id\""];
+}
+message QueryDenyListResponse{
+  repeated string deny_list = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
