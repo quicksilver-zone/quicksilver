@@ -260,6 +260,6 @@ message QueryDenyListRequest {
   string chain_id = 1 [(gogoproto.moretags) = "yaml:\"chain_id\""];
 }
 message QueryDenyListResponse {
-  repeated Validator validators = 1 [(gogoproto.nullable) = false];
+  repeated string validators = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }

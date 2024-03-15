@@ -10,14 +10,17 @@ func (k *Keeper) SetZoneValidatorToDenyList(ctx sdk.Context, chainID string, val
 	store := ctx.KVStore(k.storeKey)
 
 	key := types.GetDeniedValidatorKey(chainID, validator.ValoperAddress)
-	b := types.MustMarshalValidator(k.cdc, validator)
-	store.Set(key, b)
+	addrBytes, err := sdk.ValAddressFromBech32(validator.ValoperAddress)
+	if err != nil {
+		return err
+	}
+	store.Set(key, addrBytes.Bytes())
 	return nil
 }
 
 // GetZoneValidatorDenyList get the validator deny list of a specific zone
-func (k *Keeper) GetZoneValidatorDenyList(ctx sdk.Context, chainID string) (denyList []types.Validator) {
-	k.IterateZoneDeniedValidator(ctx, chainID, func(validator types.Validator) bool {
+func (k *Keeper) GetZoneValidatorDenyList(ctx sdk.Context, chainID string) (denyList []string) {
+	k.IterateZoneDeniedValidator(ctx, chainID, func(validator string) bool {
 		denyList = append(denyList, validator)
 		return false
 	})
@@ -26,16 +29,19 @@ func (k *Keeper) GetZoneValidatorDenyList(ctx sdk.Context, chainID string) (deny
 }
 
 func (k *Keeper) GetDeniedValidatorInDenyList(ctx sdk.Context, chainID string, validatorAddress string) (types.Validator, bool) {
-	out := types.Validator{}
 	key := types.GetDeniedValidatorKey(chainID, validatorAddress)
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(key)
 	if bz == nil {
-		return out, false
+		return types.Validator{}, false
 	}
 
-	k.cdc.MustUnmarshal(bz, &out)
-	return out, true
+	val, found := k.GetValidator(ctx, chainID, bz)
+	if !found {
+		return types.Validator{}, false
+	}
+
+	return val, true
 
 }
 
@@ -46,7 +52,7 @@ func (k *Keeper) RemoveValidatorFromDenyList(ctx sdk.Context, chainID string, va
 	store.Delete(key)
 }
 
-func (k *Keeper) IterateZoneDeniedValidator(ctx sdk.Context, chainID string, cb func(validator types.Validator) (stop bool)) {
+func (k *Keeper) IterateZoneDeniedValidator(ctx sdk.Context, chainID string, cb func(validator string) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 	deniedValPrefixKey := types.GetZoneDeniedValidatorKey(chainID)
 
@@ -54,7 +60,7 @@ func (k *Keeper) IterateZoneDeniedValidator(ctx sdk.Context, chainID string, cb 
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
-		validator := types.MustUnmarshalValidator(k.cdc, iterator.Value())
+		validator := sdk.ValAddress(iterator.Value()).String()
 		if cb(validator) {
 			break
 		}
