@@ -68,8 +68,7 @@ ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=quicksilver \
           -X github.com/cosmos/cosmos-sdk/version.AppName=$(QS_BINARY) \
           -X github.com/cosmos/cosmos-sdk/version.Version=$(VERSION) \
           -X github.com/cosmos/cosmos-sdk/version.Commit=$(COMMIT) \
-          -X github.com/tendermint/tendermint/version.TMCoreSemVer=$(TMVERSION) \
-	  -X github.com/cosmos/cosmos-sdk/types.DBBackend=pebbledb
+          -X github.com/tendermint/tendermint/version.TMCoreSemVer=$(TMVERSION)
 
 ifeq ($(LINK_STATICALLY),true)
 	ldflags += -linkmode=external -extldflags "-Wl,-z,muldefs -static"
