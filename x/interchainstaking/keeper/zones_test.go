@@ -295,7 +295,7 @@ func (suite *KeeperTestSuite) TestRemoveZoneAndAssociatedRecords() {
 		Status:         types.WithdrawStatusUnbond,
 		CompletionTime: time.Now().UTC().Add(time.Hour),
 	}
-	quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(ctx, record)
+	_ = quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(ctx, record)
 
 	// Handle
 	quicksilver.InterchainstakingKeeper.RemoveZoneAndAssociatedRecords(ctx, chainID)

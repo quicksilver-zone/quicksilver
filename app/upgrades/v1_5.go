@@ -431,7 +431,7 @@ func reimburseUsersWithdrawnOnLowRR(ctx sdk.Context, appKeepers *keepers.AppKeep
 			return err
 		}
 
-		appKeepers.InterchainstakingKeeper.SetWithdrawalRecord(ctx,
+		_ = appKeepers.InterchainstakingKeeper.SetWithdrawalRecord(ctx,
 			icstypes.WithdrawalRecord{
 				ChainId:      "cosmoshub-4",
 				Delegator:    delegator,
@@ -489,7 +489,7 @@ func collateRequeuedWithdrawals(ctx sdk.Context, appKeepers *keepers.AppKeepers)
 		})
 
 		for _, key := range utils.Keys(newRecords) {
-			appKeepers.InterchainstakingKeeper.SetWithdrawalRecord(ctx, newRecords[key])
+			_ = appKeepers.InterchainstakingKeeper.SetWithdrawalRecord(ctx, newRecords[key])
 		}
 
 		newRecords = map[string]icstypes.WithdrawalRecord{}
@@ -556,7 +556,7 @@ func collateRequeuedWithdrawals(ctx sdk.Context, appKeepers *keepers.AppKeepers)
 		})
 
 		for _, key := range utils.Keys(newRecords) {
-			appKeepers.InterchainstakingKeeper.SetWithdrawalRecord(ctx, newRecords[key])
+			_ = appKeepers.InterchainstakingKeeper.SetWithdrawalRecord(ctx, newRecords[key])
 		}
 
 		return false

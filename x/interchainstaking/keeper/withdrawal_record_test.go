@@ -38,7 +38,7 @@ func (suite *KeeperTestSuite) TestUpdateWithdrawalRecordsForSlash() {
 					Txhash:     "3BE21C1057ABBFBC44BE8993D2A4701C751507FF9901AA110B5993BA070C176B",
 					Status:     types.WithdrawStatusUnbond,
 				}
-				keeper.SetWithdrawalRecord(ctx, withdrawalRecord)
+				_ = keeper.SetWithdrawalRecord(ctx, withdrawalRecord)
 			},
 			ExpectedRecords: func(ctx sdk.Context, keeper *icskeeper.Keeper) (out []types.WithdrawalRecord) {
 				zone, _ := keeper.GetZone(ctx, suite.chainB.ChainID)
@@ -87,7 +87,7 @@ func (suite *KeeperTestSuite) TestUpdateWithdrawalRecordsForSlash() {
 					Txhash:     "3BE21C1057ABBFBC44BE8993D2A4701C751507FF9901AA110B5993BA070C176B",
 					Status:     types.WithdrawStatusUnbond,
 				}
-				keeper.SetWithdrawalRecord(ctx, withdrawalRecord)
+				_ = keeper.SetWithdrawalRecord(ctx, withdrawalRecord)
 				withdrawalRecord = types.WithdrawalRecord{
 					ChainId:   zone.ChainId,
 					Delegator: zone.DelegationAddress.Address,
@@ -103,7 +103,7 @@ func (suite *KeeperTestSuite) TestUpdateWithdrawalRecordsForSlash() {
 					Txhash:     "FB087A50A4836CBDFACA70D393AF110C28935276267B7BA2838BE3CEEA08F762",
 					Status:     types.WithdrawStatusUnbond,
 				}
-				keeper.SetWithdrawalRecord(ctx, withdrawalRecord)
+				_ = keeper.SetWithdrawalRecord(ctx, withdrawalRecord)
 			},
 			ExpectedRecords: func(ctx sdk.Context, keeper *icskeeper.Keeper) (out []types.WithdrawalRecord) {
 				zone, _ := keeper.GetZone(ctx, suite.chainB.ChainID)
@@ -163,7 +163,7 @@ func (suite *KeeperTestSuite) TestUpdateWithdrawalRecordsForSlash() {
 					Txhash:     "3BE21C1057ABBFBC44BE8993D2A4701C751507FF9901AA110B5993BA070C176B",
 					Status:     types.WithdrawStatusUnbond,
 				}
-				keeper.SetWithdrawalRecord(ctx, withdrawalRecord)
+				_ = keeper.SetWithdrawalRecord(ctx, withdrawalRecord)
 			},
 			ExpectedRecords: func(ctx sdk.Context, keeper *icskeeper.Keeper) (out []types.WithdrawalRecord) {
 				zone, _ := keeper.GetZone(ctx, suite.chainB.ChainID)
@@ -206,7 +206,7 @@ func (suite *KeeperTestSuite) TestUpdateWithdrawalRecordsForSlash() {
 					Txhash:     "8A698A142447087E5DC01F7BC3886EC1A6606D377D1FAC766FB279AD09F1407C",
 					Status:     types.WithdrawStatusUnbond,
 				}
-				keeper.SetWithdrawalRecord(ctx, withdrawalRecord)
+				_ = keeper.SetWithdrawalRecord(ctx, withdrawalRecord)
 			},
 			ExpectedRecords: func(ctx sdk.Context, keeper *icskeeper.Keeper) (out []types.WithdrawalRecord) {
 				zone, _ := keeper.GetZone(ctx, suite.chainB.ChainID)

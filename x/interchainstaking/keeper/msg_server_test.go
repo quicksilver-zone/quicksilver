@@ -836,7 +836,7 @@ func (suite *KeeperTestSuite) TestMsgCancelQueuedRedemeption() {
 				ctx := s.chainA.GetContext()
 				k := s.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
 				address := addressutils.GenerateAddressForTestWithPrefix("quick")
-				k.SetWithdrawalRecord(ctx, icstypes.WithdrawalRecord{
+				_ = k.SetWithdrawalRecord(ctx, icstypes.WithdrawalRecord{
 					ChainId:        s.chainB.ChainID,
 					Delegator:      address,
 					BurnAmount:     sdk.NewCoin("uqatom", math.NewInt(500)),
@@ -861,7 +861,7 @@ func (suite *KeeperTestSuite) TestMsgCancelQueuedRedemeption() {
 				// generate two addresses, one for the withdrawal record we are looking up; one for the tx.
 				withdrawalAddress := addressutils.GenerateAddressForTestWithPrefix("quick")
 				address := addressutils.GenerateAddressForTestWithPrefix("quick")
-				k.SetWithdrawalRecord(ctx, icstypes.WithdrawalRecord{
+				_ = k.SetWithdrawalRecord(ctx, icstypes.WithdrawalRecord{
 					ChainId:        s.chainB.ChainID,
 					Delegator:      withdrawalAddress,
 					BurnAmount:     sdk.NewCoin("uqatom", math.NewInt(500)),
@@ -884,7 +884,7 @@ func (suite *KeeperTestSuite) TestMsgCancelQueuedRedemeption() {
 				ctx := s.chainA.GetContext()
 				k := s.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
 				address := addressutils.GenerateAddressForTestWithPrefix("quick")
-				k.SetWithdrawalRecord(ctx, icstypes.WithdrawalRecord{
+				_ = k.SetWithdrawalRecord(ctx, icstypes.WithdrawalRecord{
 					ChainId:        s.chainB.ChainID,
 					Delegator:      address,
 					BurnAmount:     sdk.NewCoin("uqatom", math.NewInt(500)),

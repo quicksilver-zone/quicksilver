@@ -335,7 +335,7 @@ func (suite *KeeperTestSuite) TestGetUnbondingTokensAndCount() {
 			suite.True(found)
 
 			for _, record := range tt.records(zone) {
-				icsKeeper.SetWithdrawalRecord(ctx, record)
+				_ = icsKeeper.SetWithdrawalRecord(ctx, record)
 			}
 
 			actualAmount, actualCount := icsKeeper.GetUnbondingTokensAndCount(ctx, &zone)
@@ -501,7 +501,7 @@ func (suite *KeeperTestSuite) TestGetRatio() {
 			suite.True(found)
 
 			for _, record := range tt.records(ctx, quicksilver, zone) {
-				icsKeeper.SetWithdrawalRecord(ctx, record)
+				_ = icsKeeper.SetWithdrawalRecord(ctx, record)
 			}
 
 			for _, delegation := range tt.delegations(ctx, quicksilver, zone) {
@@ -805,7 +805,7 @@ func (suite *KeeperTestSuite) TestGetQueuedTokensAndCount() {
 			suite.True(found)
 
 			for _, record := range tt.records(zone) {
-				icsKeeper.SetWithdrawalRecord(ctx, record)
+				_ = icsKeeper.SetWithdrawalRecord(ctx, record)
 			}
 
 			actualAmount, actualCount := icsKeeper.GetQueuedTokensAndCount(ctx, &zone)
