@@ -307,10 +307,7 @@ func (k *Keeper) UpdateWithdrawalRecordsForSlash(ctx sdk.Context, zone *types.Zo
 		}
 		record.Amount = record.Amount.Sub(subAmount...)
 		err = k.SetWithdrawalRecord(ctx, record)
-		if err != nil {
-			return true
-		}
-		return false
+		return err != nil
 	})
 	return err
 }

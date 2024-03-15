@@ -348,7 +348,7 @@ func (s *AppTestSuite) TestV010500UpgradeHandler() {
 	recipient2 := addressutils.GenerateAddressForTestWithPrefix("quick")
 
 	// queued
-	_ = app.InterchainstakingKeeper.SetWithdrawalRecord(s.chainA.GetContext(), icstypes.WithdrawalRecord{
+	err = app.InterchainstakingKeeper.SetWithdrawalRecord(s.chainA.GetContext(), icstypes.WithdrawalRecord{
 		ChainId:      zone.ChainId,
 		Delegator:    user1,
 		Recipient:    recipient1,
@@ -359,7 +359,8 @@ func (s *AppTestSuite) TestV010500UpgradeHandler() {
 		Status:       icstypes.WithdrawStatusQueued,
 		EpochNumber:  1,
 	})
-	_ = app.InterchainstakingKeeper.SetWithdrawalRecord(s.chainA.GetContext(), icstypes.WithdrawalRecord{
+	s.NoError(err)
+	err = app.InterchainstakingKeeper.SetWithdrawalRecord(s.chainA.GetContext(), icstypes.WithdrawalRecord{
 		ChainId:      zone.ChainId,
 		Delegator:    user1,
 		Recipient:    recipient1,
@@ -370,7 +371,8 @@ func (s *AppTestSuite) TestV010500UpgradeHandler() {
 		Status:       icstypes.WithdrawStatusQueued,
 		EpochNumber:  1,
 	})
-	_ = app.InterchainstakingKeeper.SetWithdrawalRecord(s.chainA.GetContext(), icstypes.WithdrawalRecord{
+	s.NoError(err)
+	err = app.InterchainstakingKeeper.SetWithdrawalRecord(s.chainA.GetContext(), icstypes.WithdrawalRecord{
 		ChainId:      zone.ChainId,
 		Delegator:    user1,
 		Recipient:    recipient1,
@@ -381,7 +383,8 @@ func (s *AppTestSuite) TestV010500UpgradeHandler() {
 		Status:       icstypes.WithdrawStatusQueued,
 		EpochNumber:  1,
 	})
-	_ = app.InterchainstakingKeeper.SetWithdrawalRecord(s.chainA.GetContext(), icstypes.WithdrawalRecord{
+	s.NoError(err)
+	err = app.InterchainstakingKeeper.SetWithdrawalRecord(s.chainA.GetContext(), icstypes.WithdrawalRecord{
 		ChainId:      zone.ChainId,
 		Delegator:    user1,
 		Recipient:    recipient2,
@@ -392,7 +395,8 @@ func (s *AppTestSuite) TestV010500UpgradeHandler() {
 		Status:       icstypes.WithdrawStatusQueued,
 		EpochNumber:  1,
 	})
-	_ = app.InterchainstakingKeeper.SetWithdrawalRecord(s.chainA.GetContext(), icstypes.WithdrawalRecord{
+	s.NoError(err)
+	err = app.InterchainstakingKeeper.SetWithdrawalRecord(s.chainA.GetContext(), icstypes.WithdrawalRecord{
 		ChainId:      zone.ChainId,
 		Delegator:    user2,
 		Recipient:    recipient2,
@@ -403,10 +407,11 @@ func (s *AppTestSuite) TestV010500UpgradeHandler() {
 		Status:       icstypes.WithdrawStatusQueued,
 		EpochNumber:  1,
 	})
+	s.NoError(err)
 
 	// unbonding
 
-	_ = app.InterchainstakingKeeper.SetWithdrawalRecord(s.chainA.GetContext(), icstypes.WithdrawalRecord{
+	err = app.InterchainstakingKeeper.SetWithdrawalRecord(s.chainA.GetContext(), icstypes.WithdrawalRecord{
 		ChainId:   zone.ChainId,
 		Delegator: user1,
 		Recipient: recipient1,
@@ -433,7 +438,8 @@ func (s *AppTestSuite) TestV010500UpgradeHandler() {
 		EpochNumber:    1,
 		CompletionTime: ctx.BlockTime().Add(180 * time.Minute),
 	})
-	_ = app.InterchainstakingKeeper.SetWithdrawalRecord(s.chainA.GetContext(), icstypes.WithdrawalRecord{
+	s.NoError(err)
+	err = app.InterchainstakingKeeper.SetWithdrawalRecord(s.chainA.GetContext(), icstypes.WithdrawalRecord{
 		ChainId:   zone.ChainId,
 		Delegator: user1,
 		Recipient: recipient1,
@@ -464,7 +470,8 @@ func (s *AppTestSuite) TestV010500UpgradeHandler() {
 		EpochNumber:    1,
 		CompletionTime: ctx.BlockTime().Add(182 * time.Minute),
 	})
-	_ = app.InterchainstakingKeeper.SetWithdrawalRecord(s.chainA.GetContext(), icstypes.WithdrawalRecord{
+	s.NoError(err)
+	err = app.InterchainstakingKeeper.SetWithdrawalRecord(s.chainA.GetContext(), icstypes.WithdrawalRecord{
 		ChainId:   zone.ChainId,
 		Delegator: user2,
 		Recipient: recipient2,
@@ -495,7 +502,8 @@ func (s *AppTestSuite) TestV010500UpgradeHandler() {
 		EpochNumber:    1,
 		CompletionTime: ctx.BlockTime().Add(182 * time.Minute),
 	})
-	_ = app.InterchainstakingKeeper.SetWithdrawalRecord(s.chainA.GetContext(), icstypes.WithdrawalRecord{
+	s.NoError(err)
+	err = app.InterchainstakingKeeper.SetWithdrawalRecord(s.chainA.GetContext(), icstypes.WithdrawalRecord{
 		ChainId:   zone.ChainId,
 		Delegator: user2,
 		Recipient: recipient2,
@@ -525,7 +533,8 @@ func (s *AppTestSuite) TestV010500UpgradeHandler() {
 		Status:       icstypes.WithdrawStatusUnbond,
 		EpochNumber:  1,
 	})
-	_ = app.InterchainstakingKeeper.SetWithdrawalRecord(s.chainA.GetContext(), icstypes.WithdrawalRecord{
+	s.NoError(err)
+	err = app.InterchainstakingKeeper.SetWithdrawalRecord(s.chainA.GetContext(), icstypes.WithdrawalRecord{
 		ChainId:   zone.ChainId,
 		Delegator: user2,
 		Recipient: recipient1,
@@ -555,7 +564,8 @@ func (s *AppTestSuite) TestV010500UpgradeHandler() {
 		Status:       icstypes.WithdrawStatusUnbond,
 		EpochNumber:  1,
 	})
-	_ = app.InterchainstakingKeeper.SetWithdrawalRecord(s.chainA.GetContext(), icstypes.WithdrawalRecord{
+	s.NoError(err)
+	err = app.InterchainstakingKeeper.SetWithdrawalRecord(s.chainA.GetContext(), icstypes.WithdrawalRecord{
 		ChainId:   zone.ChainId,
 		Delegator: user1,
 		Recipient: recipient1,
@@ -589,7 +599,8 @@ func (s *AppTestSuite) TestV010500UpgradeHandler() {
 		Status:       icstypes.WithdrawStatusUnbond,
 		EpochNumber:  2,
 	})
-	_ = app.InterchainstakingKeeper.SetWithdrawalRecord(s.chainA.GetContext(), icstypes.WithdrawalRecord{
+	s.NoError(err)
+	err = app.InterchainstakingKeeper.SetWithdrawalRecord(s.chainA.GetContext(), icstypes.WithdrawalRecord{
 		ChainId:   zone.ChainId,
 		Delegator: user2,
 		Recipient: recipient2,
@@ -623,7 +634,7 @@ func (s *AppTestSuite) TestV010500UpgradeHandler() {
 		Status:       icstypes.WithdrawStatusUnbond,
 		EpochNumber:  2,
 	})
-
+	s.NoError(err)
 	handler := upgrades.V010500UpgradeHandler(app.mm,
 		app.configurator, &app.AppKeepers)
 

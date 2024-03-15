@@ -445,7 +445,8 @@ func (suite *KeeperTestSuite) TestHandleQueuedUnbondings() {
 
 			// set up zones
 			for _, record := range records {
-				_ = quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(ctx, record)
+				err := quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(ctx, record)
+				suite.NoError(err)
 			}
 
 			for _, delegation := range delegations {
@@ -615,8 +616,9 @@ func (suite *KeeperTestSuite) TestHandleWithdrawForUser() {
 
 			// set up zones
 			for _, record := range records {
-				_ = quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(ctx, record)
-				err := quicksilver.BankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(record.BurnAmount))
+				err := quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(ctx, record)
+				suite.NoError(err)
+				err = quicksilver.BankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(record.BurnAmount))
 				suite.NoError(err)
 				err = quicksilver.BankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, types.EscrowModuleAccount, sdk.NewCoins(record.BurnAmount))
 				suite.NoError(err)
@@ -732,8 +734,9 @@ func (suite *KeeperTestSuite) TestHandleWithdrawForUserLSM() {
 			startBalance := quicksilver.BankKeeper.GetAllBalances(ctx, quicksilver.AccountKeeper.GetModuleAddress(types.ModuleName))
 			// set up zones
 			for _, record := range records {
-				_ = quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(ctx, record)
-				err := quicksilver.BankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(record.BurnAmount))
+				err := quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(ctx, record)
+				suite.NoError(err)
+				err = quicksilver.BankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(record.BurnAmount))
 				suite.NoError(err)
 				err = quicksilver.BankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, types.EscrowModuleAccount, sdk.NewCoins(record.BurnAmount))
 				suite.NoError(err)
@@ -1599,7 +1602,8 @@ func (suite *KeeperTestSuite) TestHandleFailedUnbondSend() {
 			if test.record != nil {
 				// set up zones
 				record = test.record(&zone)
-				_ = quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(ctx, record)
+				err := quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(ctx, record)
+				suite.NoError(err)
 			}
 
 			// set address for zone mapping
@@ -4524,7 +4528,8 @@ func (suite *KeeperTestSuite) TestHandleFailedBankSend() {
 			var record types.WithdrawalRecord
 			if test.record != nil {
 				record = test.record(&zone)
-				_ = quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(ctx, record)
+				err := quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(ctx, record)
+				suite.NoError(err)
 			}
 
 			// set address for zone mapping

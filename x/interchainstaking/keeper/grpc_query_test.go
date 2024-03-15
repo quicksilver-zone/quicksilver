@@ -784,7 +784,7 @@ func (suite *KeeperTestSuite) TestKeeper_ZoneWithdrawalRecords() {
 				}
 
 				// set records
-				_ = icsKeeper.AddWithdrawalRecord(
+				err := icsKeeper.AddWithdrawalRecord(
 					ctx,
 					zone.ChainId,
 					delegatorAddress,
@@ -796,6 +796,7 @@ func (suite *KeeperTestSuite) TestKeeper_ZoneWithdrawalRecords() {
 					time.Time{},
 					icsKeeper.EpochsKeeper.GetEpochInfo(ctx, epochstypes.EpochIdentifierEpoch).CurrentEpoch,
 				)
+				suite.NoError(err)
 			},
 			&types.QueryWithdrawalRecordsRequest{
 				ChainId:          suite.chainB.ChainID,
@@ -888,7 +889,7 @@ func (suite *KeeperTestSuite) TestKeeper_UserWithdrawalRecords() {
 				}
 
 				// set records
-				_ = icsKeeper.AddWithdrawalRecord(
+				err := icsKeeper.AddWithdrawalRecord(
 					ctx,
 					zone.ChainId,
 					delegatorAddress,
@@ -900,6 +901,7 @@ func (suite *KeeperTestSuite) TestKeeper_UserWithdrawalRecords() {
 					time.Time{},
 					icsKeeper.EpochsKeeper.GetEpochInfo(ctx, epochstypes.EpochIdentifierEpoch).CurrentEpoch,
 				)
+				suite.NoError(err)
 			},
 			&types.QueryUserWithdrawalRecordsRequest{
 				UserAddress: delegatorAddress,
@@ -980,7 +982,7 @@ func (suite *KeeperTestSuite) TestKeeper_WithdrawalRecords() {
 				}
 
 				// set records
-				_ = icsKeeper.AddWithdrawalRecord(
+				err := icsKeeper.AddWithdrawalRecord(
 					ctx,
 					zone.ChainId,
 					delegatorAddress,
@@ -992,6 +994,7 @@ func (suite *KeeperTestSuite) TestKeeper_WithdrawalRecords() {
 					time.Time{},
 					icsKeeper.EpochsKeeper.GetEpochInfo(ctx, epochstypes.EpochIdentifierEpoch).CurrentEpoch,
 				)
+				suite.NoError(err)
 			},
 			&types.QueryWithdrawalRecordsRequest{},
 			false,

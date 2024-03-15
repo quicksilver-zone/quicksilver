@@ -334,7 +334,8 @@ func (suite *KeeperTestSuite) TestAggregateIntent() {
 				icsKeeper.SetDelegatorIntent(ctx, &zone, intent, false)
 			}
 
-			_ = icsKeeper.AggregateDelegatorIntents(ctx, &zone)
+			err := icsKeeper.AggregateDelegatorIntents(ctx, &zone)
+			suite.NoError(err)
 
 			// refresh zone to pull new aggregate
 			zone, found = icsKeeper.GetZone(ctx, suite.chainB.ChainID)
