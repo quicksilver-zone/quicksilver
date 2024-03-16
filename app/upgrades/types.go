@@ -31,6 +31,7 @@ const (
 	V010406UpgradeName = "v1.4.6"
 	V010407UpgradeName = "v1.4.7"
 	V010500UpgradeName = "v1.5.0"
+	V010501UpgradeName = "v1.5.1"
 	V010600UpgradeName = "v1.6.0"
 )
 
