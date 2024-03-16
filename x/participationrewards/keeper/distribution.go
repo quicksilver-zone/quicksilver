@@ -21,19 +21,22 @@ func (k *Keeper) CalcTokenValues(ctx sdk.Context) (TokenValues, error) {
 
 	data, found := k.GetProtocolData(ctx, types.ProtocolDataTypeOsmosisParams, "osmosisparams")
 	if !found {
-		return nil, errors.New("could not find osmosisparams protocol data")
+		return TokenValues{}, errors.New("could not find osmosisparams protocol data")
 	}
 	osmoParams, err := types.UnmarshalProtocolData(types.ProtocolDataTypeOsmosisParams, data.Data)
 	if err != nil {
-		return nil, err
+		return TokenValues{}, err
 	}
 
 	baseDenom := osmoParams.(*types.OsmosisParamsProtocolData).BaseDenom
 	baseChain := osmoParams.(*types.OsmosisParamsProtocolData).BaseChain
 
-	tvs := make(TokenValues)
+	tvs := make(map[string]sdk.Dec)
+
+	// add base value
 	tvs[baseDenom] = sdk.OneDec()
 
+	// capture errors from iteratora
 	errs := make(map[string]error)
 	k.IteratePrefixedProtocolDatas(ctx, types.GetPrefixProtocolDataKey(types.ProtocolDataTypeOsmosisPool), func(idx int64, _ []byte, data types.ProtocolData) bool {
 		idxLabel := fmt.Sprintf("index[%d]", idx)
@@ -42,47 +45,61 @@ func (k *Keeper) CalcTokenValues(ctx sdk.Context) (TokenValues, error) {
 			errs[idxLabel] = err
 			return true
 		}
-		pool, ok := ipool.(*types.OsmosisPoolProtocolData)
-		if !ok || len(pool.Denoms) != 2 {
-			return true
+		pool, _ := ipool.(*types.OsmosisPoolProtocolData)
+
+		// pool must be a base pair
+		if len(pool.Denoms) != 2 {
+			// not a pair: skip
+			return false
 		}
 
+		// values to be captured and used
+		//  - baseIBCDenom -> the cosmos IBC denom in this pair
+		//  - queryIBCDenom -> the target IBC denom in this pair
+		//  - valueDenom -> the target zone.BaseDenom
 		var baseIBCDenom, queryIBCDenom, valueDenom string
 		isBasePair := false
 
 		for _, ibcDenom := range utils.Keys(pool.Denoms) {
-			if pool.Denoms[ibcDenom].ChainID == baseChain {
+			if pool.Denoms[ibcDenom].ChainID == baseChain && pool.Denoms[ibcDenom].Denom == baseDenom {
 				isBasePair = true
 				baseIBCDenom = ibcDenom
-				continue
+			} else {
+				zone, ok := k.icsKeeper.GetZone(ctx, pool.Denoms[ibcDenom].ChainID)
+				if !ok {
+					return false
+				}
+
+				if pool.Denoms[ibcDenom].Denom == zone.BaseDenom {
+					queryIBCDenom = ibcDenom
+					valueDenom = zone.BaseDenom
+				} else {
+					return false
+				}
 			}
-			zone, ok := k.icsKeeper.GetZone(ctx, pool.Denoms[ibcDenom].ChainID)
-			if !ok || pool.Denoms[ibcDenom].Denom != zone.BaseDenom {
+		}
+
+		if isBasePair {
+			if pool.PoolData == nil {
+				errs[idxLabel] = fmt.Errorf("pool data is nil, awaiting OsmosisPoolUpdateCallback")
 				return true
 			}
-			queryIBCDenom = ibcDenom
-			valueDenom = zone.BaseDenom
+			gammPool, err := pool.GetPool()
+			if err != nil {
+				errs[idxLabel] = err
+				return true
+			}
+
+			value, err := gammPool.SpotPrice(ctx, baseIBCDenom, queryIBCDenom)
+			if err != nil {
+				errs[idxLabel] = err
+				return true
+			}
+
+			tvs[valueDenom] = value
 		}
 
-		if !isBasePair || pool.PoolData == nil {
-			errs[idxLabel] = fmt.Errorf("invalid base pair or pool data is nil, awaiting OsmosisPoolUpdateCallback")
-			return true
-		}
-
-		gammPool, err := pool.GetPool()
-		if err != nil {
-			errs[idxLabel] = err
-			return true
-		}
-
-		value, err := gammPool.SpotPrice(ctx, baseIBCDenom, queryIBCDenom)
-		if err != nil {
-			errs[idxLabel] = err
-			return true
-		}
-
-		tvs[valueDenom] = value
-		return true
+		return false
 	})
 
 	if len(errs) > 0 {
@@ -183,7 +200,7 @@ func (k *Keeper) DistributeToUsersFromModule(ctx sdk.Context, userAllocations []
 
 // DistributeToUsers sends the allocated user rewards to the user address.
 func (k *Keeper) DistributeToUsersFromAddress(ctx sdk.Context, userAllocations []types.UserAllocation, fromAddress string) error {
-	k.Logger(ctx).Info("distributeto users from account", "allocations", userAllocations)
+	k.Logger(ctx).Info("distribute to users from account", "allocations", userAllocations)
 
 	fromAddrBytes, err := addressutils.AccAddressFromBech32(fromAddress, "")
 	if err != nil {
