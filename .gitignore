@@ -1,5 +1,7 @@
 ##### Chain #######
 
+web-ui/src-tauri/target
+
 # OS
 .DS_Store
 *.swp
