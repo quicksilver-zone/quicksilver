@@ -1,11 +1,11 @@
 use reqwest;
 use serde_json::Value;
 use std::collections::HashMap;
-use std::fs::write;
-use std::io::BufRead;
-use std::process::{Command, Stdio};
-use tauri::api::file::read_binary;
+use std::process::Stdio;
+use tauri::api::process::CommandEvent;
 use tauri::Manager;
+use tokio::io::AsyncBufReadExt;
+use tokio::sync::mpsc;
 
 fn main() {
     // Prevents additional console window on Windows in release, DO NOT REMOVE!!
@@ -26,8 +26,7 @@ fn main() {
             );
             env_vars.insert(
                 "QUICKSILVERD_STATESYNC_RPC_SERVERS".to_string(),
-                "https://quicksilver-rpc.polkachu.com:443,https://quicksilver-rpc.polkachu.com:443"
-                    .to_string(),
+                "https://quicksilver-rpc.polkachu.com:443,https://quicksilver-rpc.polkachu.com:443".to_string(),
             );
 
             // Get the latest block height and calculate the block height for state sync
@@ -45,73 +44,55 @@ fn main() {
             let home_dir = tauri::api::path::home_dir().unwrap();
             let genesis_path = home_dir.join(".quicksilverd/config/genesis.json");
             if !genesis_path.exists() {
-                let mut init_command = Command::new("quicksilverd");
+                let mut init_command = std::process::Command::new("quicksilverd");
                 init_command.arg("init").arg("test");
                 let _ = init_command.output().expect("Failed to initialize chain");
             }
 
-            // Copy the file from resources to $HOME/.quicksilverd/config/genesis.json
-            let resource_path = "./resources/genesis.json";
-            let destination_path = tauri::api::path::home_dir()
-                .unwrap()
-                .join(".quicksilverd/config/genesis.json");
+            // copy the genesis file to the quicksilverd config directory
+            let config_dir = home_dir.join(".quicksilverd/config");
+    
 
-            match read_binary(resource_path) {
-                Ok(file_contents) => match write(&destination_path, &file_contents) {
-                    Ok(_) => {
-                        println!("File copied successfully!");
-                    }
-                    Err(e) => {
-                        eprintln!("Error writing file: {}", e);
-                    }
-                },
-                Err(e) => {
-                    eprintln!("Error reading file: {}", e);
+            let rt = tokio::runtime::Runtime::new().unwrap();
+            rt.block_on(async move {
+                // Create a Command to launch the quicksilverd process
+                let mut quicksilverd_command = tokio::process::Command::new("quicksilverd");
+                quicksilverd_command
+                    .arg("start")
+                    .arg("--x-crisis-skip-assert-invariants")
+                    .arg("--iavl-disable-fastnode=false");
+
+                // Set the environment variables
+                for (key, value) in env_vars {
+                    quicksilverd_command.env(key, value);
                 }
-            }
 
-            // Spawn the quicksilverd process and capture its output
-            let mut child = Command::new("quicksilverd")
-                .arg("start")
-                .arg("--x-crisis-skip-assert-invariants")
-                .arg("--iavl-disable-fastnode=false")
-                .envs(&env_vars)
-                .stdout(Stdio::piped())
-                .stderr(Stdio::piped())
-                .spawn()
-                .expect("Failed to spawn quicksilverd");
+                let (tx, mut rx) = mpsc::channel::<CommandEvent>(32); // Adjust the buffer size as needed
 
-            // Show the application window
-            window.show().unwrap();
+                // Spawn the quicksilverd process
+                let mut child = quicksilverd_command
+                    .stdout(Stdio::piped())
+                    .spawn()
+                    .expect("Failed to spawn quicksilverd");
 
-            // Read the stdout of the quicksilverd process
-            let stdout = child.stdout.take().unwrap();
-            let stdout_reader = std::io::BufReader::new(stdout);
-
-            // Read the stderr of the quicksilverd process
-            let stderr = child.stderr.take().unwrap();
-            let stderr_reader = std::io::BufReader::new(stderr);
-
-            // Spawn a thread to read and print the stdout and stderr
-            std::thread::spawn(move || {
-                // Inside your thread spawn, after creating stdout_reader and stderr_reader
-                let mut stdout_lines = stdout_reader.lines().peekable();
-                let mut stderr_lines = stderr_reader.lines().peekable();
-
-                loop {
-                    if stdout_lines.peek().is_none() && stderr_lines.peek().is_none() {
-                        break;
+                let stdout = child.stdout.take().expect("Failed to capture stdout");
+                let tx_clone = tx.clone();
+                tokio::spawn(async move {
+                    let mut reader = tokio::io::BufReader::new(stdout).lines();
+                    while let Ok(Some(line)) = reader.next_line().await {
+                        tx_clone
+                            .send(CommandEvent::Stdout(line))
+                            .await
+                            .expect("Failed to send event");
                     }
+                });
 
-                    if let Some(Ok(output)) = stdout_lines.next() {
-                        println!("stdout: {}", output);
+                // Read events from the quicksilverd process
+                while let Some(event) = rx.recv().await {
+                    if let CommandEvent::Stdout(line) = event {
                         window
-                            .emit("message", Some(format!("'{}'", output)))
-                            .unwrap();
-                    }
-
-                    if let Some(Ok(output)) = stderr_lines.next() {
-                        eprintln!("stderr: {}", output);
+                            .emit("message", Some(format!("'{}'", line)))
+                            .expect("Failed to emit event");
                     }
                 }
             });
