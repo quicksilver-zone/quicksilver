@@ -22,6 +22,7 @@ import (
 	"github.com/quicksilver-zone/quicksilver/app/upgrades"
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
+	prtypes "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 )
 
 func init() {
@@ -720,4 +721,26 @@ func (s *AppTestSuite) TestV010500UpgradeHandler() {
 	for denom, value := range tvs {
 		s.Equal(expectedTvs[denom], value)
 	}
+}
+
+func (s *AppTestSuite) TestV010501UpgradeHandler() {
+	s.InitV150TestZones()
+	app := s.GetQuicksilverApp(s.chainA)
+	ctx := s.chainA.GetContext()
+
+	handler := upgrades.V010501UpgradeHandler(app.mm,
+		app.configurator, &app.AppKeepers)
+
+	_, err := handler(ctx, types.Plan{}, app.mm.GetVersionMap())
+	s.NoError(err)
+
+	osmosisQatom, found := app.ParticipationRewardsKeeper.GetProtocolData(ctx, prtypes.ProtocolDataTypeLiquidToken, "osmosis-1_ibc/FA602364BEC305A696CBDF987058E99D8B479F0318E47314C49173E8838C5BAC")
+	s.True(found)
+	prdata, err := prtypes.UnmarshalProtocolData(prtypes.ProtocolDataTypeLiquidToken, osmosisQatom.Data)
+	s.NoError(err)
+	lpd, ok := prdata.(*prtypes.LiquidAllowedDenomProtocolData)
+	s.True(ok)
+	s.Equal("osmosis-1", lpd.ChainID)
+	s.Equal("cosmoshub-4", lpd.RegisteredZoneChainID)
+	s.Equal("uqatom", lpd.QAssetDenom)
 }
