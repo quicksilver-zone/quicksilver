@@ -267,6 +267,30 @@ func (k *Keeper) WithdrawalRecords(c context.Context, req *types.QueryWithdrawal
 	return &types.QueryWithdrawalRecordsResponse{Withdrawals: withdrawalrecords}, nil
 }
 
+func (k *Keeper) UserZoneWithdrawalRecords(c context.Context, req *types.QueryWithdrawalRecordsRequest) (*types.QueryWithdrawalRecordsResponse, error) {
+	// TODO: implement pagination
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+
+	zone, found := k.GetZone(ctx, req.GetChainId())
+	if !found {
+		return nil, status.Error(codes.NotFound, fmt.Sprintf("no zone found matching %s", req.GetChainId()))
+	}
+
+	withdrawalrecords := make([]types.WithdrawalRecord, 0)
+	k.IterateZoneWithdrawalRecords(ctx, zone.ChainId, func(index int64, record types.WithdrawalRecord) (stop bool) {
+		if record.Delegator == req.DelegatorAddress {
+			withdrawalrecords = append(withdrawalrecords, record)
+		}
+		return false
+	})
+
+	return &types.QueryWithdrawalRecordsResponse{Withdrawals: withdrawalrecords}, nil
+}
+
 func (k *Keeper) UserWithdrawalRecords(c context.Context, req *types.QueryUserWithdrawalRecordsRequest) (*types.QueryWithdrawalRecordsResponse, error) {
 	// TODO: implement pagination
 	if req == nil {
