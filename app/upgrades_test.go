@@ -755,3 +755,89 @@ func (s *AppTestSuite) TestV010501UpgradeHandler() {
 	s.Equal("cosmoshub-4", lpd.RegisteredZoneChainID)
 	s.Equal("uqatom", lpd.QAssetDenom)
 }
+
+// Init a zone with some zero burnAmount withdrawal records
+
+func (s *AppTestSuite) InitV151rc1TestZone() {
+	cosmosWithdrawal := addressutils.GenerateAddressForTestWithPrefix("cosmos")
+	cosmosPerformance := addressutils.GenerateAddressForTestWithPrefix("cosmos")
+	cosmosDeposit := addressutils.GenerateAddressForTestWithPrefix("cosmos")
+	cosmosDelegate := addressutils.GenerateAddressForTestWithPrefix("cosmos")
+	// cosmos zone
+	zone := icstypes.Zone{
+		ConnectionId:    "connection-77001",
+		ChainId:         "cosmoshub-4",
+		AccountPrefix:   "cosmos",
+		LocalDenom:      "uqatom",
+		BaseDenom:       "uatom",
+		MultiSend:       false,
+		LiquidityModule: false,
+		WithdrawalAddress: &icstypes.ICAAccount{
+			Address:           cosmosWithdrawal,
+			PortName:          "icacontroller-cosmoshub-4.withdrawal",
+			WithdrawalAddress: cosmosWithdrawal,
+		},
+		DelegationAddress: &icstypes.ICAAccount{
+			Address:           cosmosDelegate,
+			PortName:          "icacontroller-cosmoshub-4.delegate",
+			WithdrawalAddress: cosmosWithdrawal,
+		},
+		DepositAddress: &icstypes.ICAAccount{
+			Address:           cosmosDeposit,
+			PortName:          "icacontroller-cosmoshub-4.deposit",
+			WithdrawalAddress: cosmosWithdrawal,
+		},
+		PerformanceAddress: &icstypes.ICAAccount{
+			Address:           cosmosPerformance,
+			PortName:          "icacontroller-cosmoshub-4.performance",
+			WithdrawalAddress: cosmosWithdrawal,
+		},
+	}
+	s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetZone(s.chainA.GetContext(), &zone)
+
+	// set withdrawal records
+	invalidWithdrawal := icstypes.WithdrawalRecord{
+		ChainId:        zone.ChainId,
+		Delegator:      cosmosDelegate,
+		Recipient:      cosmosWithdrawal,
+		BurnAmount:     sdk.NewCoin("uqatom", math.NewInt(0)),
+		Requeued:       true,
+		Txhash:         fmt.Sprintf("%064d", 1),
+		Acknowledged:   false,
+		Status:         icstypes.WithdrawStatusQueued,
+		EpochNumber:    1,
+		CompletionTime: time.Time{},
+	}
+	s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.OldSetWithdrawalRecord(s.chainA.GetContext(), invalidWithdrawal)
+	validWithdrawal := icstypes.WithdrawalRecord{
+		ChainId:        zone.ChainId,
+		Delegator:      cosmosDelegate,
+		Recipient:      cosmosWithdrawal,
+		BurnAmount:     sdk.NewCoin("uqatom", math.NewInt(1000)),
+		Requeued:       true,
+		Txhash:         fmt.Sprintf("%064d", 2),
+		Acknowledged:   false,
+		Status:         icstypes.WithdrawStatusQueued,
+		EpochNumber:    1,
+		CompletionTime: time.Time{},
+	}
+	s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.OldSetWithdrawalRecord(s.chainA.GetContext(), validWithdrawal)
+}
+
+func (s *AppTestSuite) TestV010501rc1UpgradeHandler() {
+	s.InitV151rc1TestZone()
+	app := s.GetQuicksilverApp(s.chainA)
+	ctx := s.chainA.GetContext()
+
+	handler := upgrades.V010501rc1UpgradeHandler(app.mm,
+		app.configurator, &app.AppKeepers)
+
+	_, err := handler(ctx, types.Plan{}, app.mm.GetVersionMap())
+	s.NoError(err)
+	// check if the invalid withdrawal record is removed
+	_, found := app.InterchainstakingKeeper.GetWithdrawalRecord(ctx, "cosmoshub-4", fmt.Sprintf("%064d", 1), icstypes.WithdrawStatusQueued)
+	s.False(found)
+	// check if the valid withdrawal record is still there
+	_, found = app.InterchainstakingKeeper.GetWithdrawalRecord(ctx, "cosmoshub-4", fmt.Sprintf("%064d", 2), icstypes.WithdrawStatusQueued)
+	s.True(found)
+}
