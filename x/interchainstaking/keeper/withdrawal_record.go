@@ -313,6 +313,7 @@ func (k *Keeper) UpdateWithdrawalRecordsForSlash(ctx sdk.Context, zone *types.Zo
 }
 
 // OldSetWithdrawalRecord store the withdrawal record without checking the burnAmount. This is used for testing only.
+// OldSetWithdrawalRecord stores the withdrawal record without checking the burnAmount. WARNING: This function is intended for testing purposes only and should not be used in production code.
 func (k *Keeper) OldSetWithdrawalRecord(ctx sdk.Context, record types.WithdrawalRecord) {
 	key, err := hex.DecodeString(record.Txhash)
 	if err != nil {
