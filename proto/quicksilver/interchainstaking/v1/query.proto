@@ -199,7 +199,11 @@ message QueryDelegationsRequest {
 
 message QueryDelegationsResponse {
   repeated Delegation delegations = 1 [(gogoproto.nullable) = false];
-  int64 tvl = 2;
+  string tvl = 2 [
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false
+  ];
   cosmos.base.query.v1beta1.PageResponse pagination = 3;
 }
 
