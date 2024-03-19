@@ -436,11 +436,11 @@ OUTER:
 func (k *Keeper) CollectStatsForZone(ctx sdk.Context, zone *types.Zone) (*types.Statistics, error) {
 	out := &types.Statistics{}
 	out.ChainId = zone.ChainId
-	out.Delegated = k.GetDelegatedAmount(ctx, zone).Amount.Int64()
+	out.Delegated = k.GetDelegatedAmount(ctx, zone).Amount
 	userMap := map[string]bool{}
 	k.IterateZoneReceipts(ctx, zone.ChainId, func(_ int64, receipt types.Receipt) bool {
 		for _, coin := range receipt.Amount {
-			out.Deposited += coin.Amount.Int64()
+			out.Deposited = out.Deposited.Add(coin.Amount)
 			if _, found := userMap[receipt.Sender]; !found {
 				userMap[receipt.Sender] = true
 				out.Depositors++
@@ -449,7 +449,7 @@ func (k *Keeper) CollectStatsForZone(ctx sdk.Context, zone *types.Zone) (*types.
 		}
 		return false
 	})
-	out.Supply = k.BankKeeper.GetSupply(ctx, zone.LocalDenom).Amount.Int64()
+	out.Supply = k.BankKeeper.GetSupply(ctx, zone.LocalDenom).Amount
 	distance, err := k.DistanceToTarget(ctx, zone)
 	if err != nil {
 		return nil, err

@@ -1651,10 +1651,7 @@ paths:
                         protobuf release, and it is not used for type URLs
                         beginning with
 
-                        type.googleapis.com. As of May 2023, there are no widely
-                        used type server
-
-                        implementations and no plans to implement one.
+                        type.googleapis.com.
 
 
                         Schemes other than `http`, `https` (or the empty scheme)
@@ -1699,10 +1696,6 @@ paths:
                         if (any.is(Foo.class)) {
                           foo = any.unpack(Foo.class);
                         }
-                        // or ...
-                        if (any.isSameTypeAs(Foo.getDefaultInstance())) {
-                          foo = any.unpack(Foo.getDefaultInstance());
-                        }
 
                      Example 3: Pack and unpack a message in Python.
 
@@ -1740,6 +1733,7 @@ paths:
                     type
 
                     name "y.z".
+
 
 
                     JSON
@@ -1968,10 +1962,7 @@ paths:
                         protobuf release, and it is not used for type URLs
                         beginning with
 
-                        type.googleapis.com. As of May 2023, there are no widely
-                        used type server
-
-                        implementations and no plans to implement one.
+                        type.googleapis.com.
 
 
                         Schemes other than `http`, `https` (or the empty scheme)
@@ -2016,10 +2007,6 @@ paths:
                         if (any.is(Foo.class)) {
                           foo = any.unpack(Foo.class);
                         }
-                        // or ...
-                        if (any.isSameTypeAs(Foo.getDefaultInstance())) {
-                          foo = any.unpack(Foo.getDefaultInstance());
-                        }
 
                      Example 3: Pack and unpack a message in Python.
 
@@ -2057,6 +2044,7 @@ paths:
                     type
 
                     name "y.z".
+
 
 
                     JSON
@@ -3103,7 +3091,6 @@ paths:
                     type: string
                   deposited:
                     type: string
-                    format: int64
                   deposits:
                     type: string
                     format: int64
@@ -3112,10 +3099,8 @@ paths:
                     format: int64
                   delegated:
                     type: string
-                    format: int64
                   supply:
                     type: string
-                    format: int64
                   distance_to_target:
                     type: string
                   unbonding_amount:
@@ -3445,7 +3430,6 @@ paths:
                       type: string
                     deposited:
                       type: string
-                      format: int64
                     deposits:
                       type: string
                       format: int64
@@ -3454,10 +3438,8 @@ paths:
                       format: int64
                     delegated:
                       type: string
-                      format: int64
                     supply:
                       type: string
-                      format: int64
                     distance_to_target:
                       type: string
                     unbonding_amount:

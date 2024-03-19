@@ -97,11 +97,23 @@ service Query {
 
 message Statistics {
   string chain_id = 1;
-  int64 deposited = 2;
+  string deposited = 2 [
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false
+  ];
   int64 deposits = 3;
   int64 depositors = 4;
-  int64 delegated = 5;
-  int64 supply = 6;
+  string delegated = 5 [
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false
+  ];
+  string supply = 6 [
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false
+  ];
   string distance_to_target = 7;
 
   // Current number of tokens in the unbonding state.
