@@ -234,14 +234,20 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
     numericAmount = 0;
   }
 
-  const smallestUnitAmount = numericAmount * Math.pow(10, 6);
+  let smallestUnitAmount: number;
+
+  if (zone?.chainId === 'dydx-mainnet-1') {
+    smallestUnitAmount = numericAmount * Math.pow(10, 18);
+  } else {
+    smallestUnitAmount = numericAmount * Math.pow(10, 6);
+  }
 
   const { send } = cosmos.bank.v1beta1.MessageComposer.withTypeUrl;
 
   const msgSend = send({
-    from_address: address ?? '',
-    to_address: zone?.deposit_address?.address ?? '',
-    amount: coins(smallestUnitAmount.toFixed(0), zone?.base_denom ?? ''),
+    fromAddress: address ?? '',
+    toAddress: zone?.depositAddress?.address ?? '',
+    amount: coins(smallestUnitAmount.toFixed(0), zone?.baseDenom ?? ''),
   });
 
   const mainTokens = assets.find(({ chain_name }) => chain_name === newChainName);
@@ -664,7 +670,7 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
                       <Text fontWeight={'bold'}>Receiving:</Text>
                       <Text color="complimentary.900">
                         {!isZoneLoading ? (
-                          `${(Number(tokenAmount) / Number(zone?.redemption_rate || 1)).toFixed(2)} q${selectedOption?.value}`
+                          `${(Number(tokenAmount) / Number(zone?.redemptionRate || 1)).toFixed(2)} q${selectedOption?.value}`
                         ) : (
                           <Spinner thickness="2px" speed="0.65s" emptyColor="gray.200" color="complimentary.900" size="sm" />
                         )}

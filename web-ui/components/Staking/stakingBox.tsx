@@ -133,7 +133,8 @@ export const StakingBox = ({
 
   const [inputError, setInputError] = useState(false);
 
-  const qAssetsExponent = shiftDigits(qAssets, -6);
+  const exponent = qBalance?.balance.denom === 'aqdydx' ? -18 : -6;
+  const qAssetsExponent = shiftDigits(qAssets, exponent);
   const qAssetsDisplay = qAssetsExponent.includes('.') ? qAssetsExponent.substring(0, qAssetsExponent.indexOf('.') + 3) : qAssetsExponent;
 
   const maxUnstakingAmount = truncateToThreeDecimals(Number(qAssetsDisplay));
@@ -147,11 +148,11 @@ export const StakingBox = ({
   const { requestRedemption } = quicksilver.interchainstaking.v1.MessageComposer.withTypeUrl;
   const numericAmount = Number(tokenAmount);
   const smallestUnitAmount = numericAmount * Math.pow(10, 6);
-  const value: Coin = { amount: smallestUnitAmount.toFixed(0), denom: zone?.local_denom ?? '' };
+  const value: Coin = { amount: smallestUnitAmount.toFixed(0), denom: zone?.localDenom ?? '' };
   const msgRequestRedemption = requestRedemption({
     value: value,
-    from_address: qAddress ?? '',
-    destination_address: address ?? '',
+    fromAddress: qAddress ?? '',
+    destinationAddress: address ?? '',
   });
 
   const fee: StdFee = {
@@ -180,6 +181,7 @@ export const StakingBox = ({
     }
   };
 
+  // DO NOT REMOVE THESE COMMENTS
   // import { useToaster, ToastType, type CustomToast } from '@/hooks/useToaster';
   // import useToast from chakra-ui
   // You can use this Toast handler and the below message to show there is an issue with unbonding
@@ -199,7 +201,7 @@ export const StakingBox = ({
   };
 
   const { delegations, delegationsIsError, delegationsIsLoading } = useNativeStakeQuery(selectedOption.chainName, address ?? '');
-  const delegationsResponse = delegations?.delegation_responses;
+  const delegationsResponse = delegations?.delegationResponses;
   const nativeStakedAmount = delegationsResponse?.reduce((acc: number, delegationResponse: { balance: { amount: any } }) => {
     const amount = Number(delegationResponse?.balance?.amount) || 0;
     return acc + amount;
@@ -271,8 +273,8 @@ export const StakingBox = ({
         const [validatorAddress, uniqueId] = balance.denom.split('/');
         return {
           delegation: {
-            delegator_address: '',
-            validator_address: validatorAddress,
+            delegatorAddress: '',
+            validatorAddress: validatorAddress,
             unique_id: uniqueId,
             shares: '',
           },
@@ -525,7 +527,7 @@ export const StakingBox = ({
                       <Stat py={4} textAlign="right" color="white">
                         <StatNumber textColor="complimentary.900">
                           {!isZoneLoading ? (
-                            (Number(tokenAmount) * Number(zone?.redemption_rate || 1)).toFixed(2)
+                            (Number(tokenAmount) * Number(zone?.redemptionRate || 1)).toFixed(2)
                           ) : (
                             <Spinner thickness="2px" speed="0.65s" emptyColor="gray.200" color="complimentary.900" size="sm" />
                           )}
@@ -838,7 +840,7 @@ export const StakingBox = ({
                   <Stat py={4} textAlign="right" color="white">
                     <StatNumber textColor="complimentary.900">
                       {!isZoneLoading ? (
-                        (Number(tokenAmount) * Number(zone?.redemption_rate || 1)).toFixed(2)
+                        (Number(tokenAmount) * Number(zone?.redemptionRate || 1)).toFixed(2)
                       ) : (
                         <Spinner thickness="2px" speed="0.65s" emptyColor="gray.200" color="complimentary.900" size="sm" />
                       )}

@@ -1,38 +1,20 @@
 import { CloseIcon } from '@chakra-ui/icons';
-import { Box, Flex, Text, VStack, Button, HStack, Spinner } from '@chakra-ui/react';
+import { Box, Flex, Text, VStack, Button, HStack, Spinner, Checkbox } from '@chakra-ui/react';
 import { assets } from 'chain-registry';
 import { GenericAuthorization } from 'interchain-query/cosmos/authz/v1beta1/authz';
 import { quicksilver, cosmos } from 'quicksilverjs';
 import React, { useState } from 'react';
 
 import { useTx } from '@/hooks';
-import { useLiquidEpochQuery } from '@/hooks/useQueries';
+import { useIncorrectAuthChecker, useLiquidEpochQuery } from '@/hooks/useQueries';
 
 interface RewardsClaimInterface {
   address: string;
   onClose: () => void;
 }
-
-function transformProofs(proofs: any[]) {
-  return proofs.map((proof) => ({
-    key: proof.key,
-    data: proof.data,
-    proofOps: proof.proof_ops
-      ? {
-          ops: proof.proof_ops.ops.map((op: { type: any; key: any; data: any }) => ({
-            type: op.type,
-            key: op.key,
-            data: op.data,
-          })),
-        }
-      : undefined,
-    height: proof.height,
-    proofType: proof.proof_type,
-  }));
-}
-
 export const RewardsClaim: React.FC<RewardsClaimInterface> = ({ address, onClose }) => {
   const { tx } = useTx('quicksilver' ?? '');
+  const { authData } = useIncorrectAuthChecker(address);
 
   const [isSigning, setIsSigning] = useState<boolean>(false);
   const [isError, setIsError] = useState<boolean>(false);
@@ -41,24 +23,29 @@ export const RewardsClaim: React.FC<RewardsClaimInterface> = ({ address, onClose
 
   const { submitClaim } = quicksilver.participationrewards.v1.MessageComposer.withTypeUrl;
 
-  const { grant } = cosmos.authz.v1beta1.MessageComposer.withTypeUrl;
+  const { grant, revoke } = cosmos.authz.v1beta1.MessageComposer.withTypeUrl;
 
   const genericAuth = {
     msg: quicksilver.participationrewards.v1.MsgSubmitClaim.typeUrl,
   };
 
-  const binaryMessage = GenericAuthorization.encode(genericAuth).finish();
-  // TODO: handle types better here
+  const utf8Msg = GenericAuthorization.encode(genericAuth).finish();
+
   const msgGrant = grant({
     granter: address,
-    grantee: 'quick1w5ennfhdqrpyvewf35sv3y3t8yuzwq29mrmyal',
+    grantee: 'quick1psevptdp90jad76zt9y9x2nga686hutgmasmwd',
     grant: {
-      //@ts-ignore
       authorization: {
-        $typeUrl: cosmos.authz.v1beta1.GenericAuthorization.typeUrl,
-        value: binaryMessage,
+        typeUrl: cosmos.authz.v1beta1.GenericAuthorization.typeUrl,
+        value: utf8Msg,
       },
     },
+  });
+
+  const msgRevokeBad = revoke({
+    granter: address,
+    grantee: 'quick1w5ennfhdqrpyvewf35sv3y3t8yuzwq29mrmyal',
+    msgTypeUrl: quicksilver.participationrewards.v1.MsgSubmitClaim.typeUrl,
   });
 
   const mainTokens = assets.find(({ chain_name }) => chain_name === 'quicksilver');
@@ -77,15 +64,21 @@ export const RewardsClaim: React.FC<RewardsClaimInterface> = ({ address, onClose
   const handleAutoClaimRewards = async (event: React.MouseEvent) => {
     event.preventDefault();
     setIsSigning(true);
-
     try {
+      if (authData) {
+        // Call msgRevokeBad
+        await tx([msgRevokeBad], {
+          fee,
+          onSuccess: () => {},
+        });
+      }
+      // Continue with msgGrant
       await tx([msgGrant], {
         fee,
         onSuccess: () => {},
       });
     } catch (error) {
       console.error('Transaction failed', error);
-
       setIsError(true);
     } finally {
       setIsSigning(false);
@@ -104,15 +97,15 @@ export const RewardsClaim: React.FC<RewardsClaimInterface> = ({ address, onClose
 
     try {
       const msgSubmitClaims = liquidEpoch.messages.map((message) => {
-        const transformedProofs = transformProofs(message.proofs);
-        // TODO: handle types better here
         return submitClaim({
           userAddress: message.user_address,
           zone: message.zone,
           srcZone: message.src_zone,
           claimType: message.claim_type,
-          //@ts-ignore
-          proofs: transformedProofs,
+          proofs: message.proofs.map((proof) => ({
+            ...proof,
+            proofType: '',
+          })),
         });
       });
 
@@ -131,9 +124,9 @@ export const RewardsClaim: React.FC<RewardsClaimInterface> = ({ address, onClose
 
   const [autoClaimEnabled, setAutoClaimEnabled] = useState(true);
 
-  // const handleAutoClaimToggle = () => {
-  //   setAutoClaimEnabled(!autoClaimEnabled);
-  // };
+  const handleAutoClaimToggle = () => {
+    setAutoClaimEnabled(!autoClaimEnabled);
+  };
 
   const transactionHandler = autoClaimEnabled ? handleAutoClaimRewards : handleClaimRewards;
 
@@ -143,13 +136,13 @@ export const RewardsClaim: React.FC<RewardsClaimInterface> = ({ address, onClose
         <CloseIcon color="white" cursor="pointer" onClick={onClose} _hover={{ color: 'complimentary.900' }} />
         <VStack alignItems="flex-start" spacing="2">
           <Text fontSize="xl" fontWeight="bold" color="white">
-            Cross Chain Claims (XCC) is coming!
+            Cross Chain Claims
           </Text>
           <Text pb={2} color="white" fontSize="md">
-            Click the button below to set your authz grant for automatic cross chain claims.
+            Click the button below to claim your cross chain rewards. Click the checkbox to enable automatic claiming.
           </Text>
           <HStack gap={8} justifyContent={'space-between'}>
-            {/* <Checkbox
+            <Checkbox
               _selected={{ bgColor: 'transparent' }}
               _active={{
                 borderColor: 'complimentary.900',
@@ -162,14 +155,17 @@ export const RewardsClaim: React.FC<RewardsClaimInterface> = ({ address, onClose
                 boxShadow: '0 0 0 3px #FF8000',
               }}
               isChecked={autoClaimEnabled}
-              //onChange={handleAutoClaimToggle}
+              onChange={handleAutoClaimToggle}
               colorScheme="orange"
             >
               <Text color="white" fontSize="sm">
                 Enable Automatic Claiming
               </Text>
-            </Checkbox> */}
-            {/* <Tooltip
+            </Checkbox>
+
+            {/* 
+            // Section for showing a message when claims are disabled. DO NOT DELETE
+            <Tooltip
               mr={12}
               label={
                 <React.Fragment>
@@ -202,7 +198,7 @@ export const RewardsClaim: React.FC<RewardsClaimInterface> = ({ address, onClose
                 onClick={transactionHandler}
                 size="sm"
                 alignSelf="end"
-                isDisabled={!autoClaimEnabled}
+                isDisabled={!address}
               >
                 {isError ? 'Try Again' : isSigning ? <Spinner /> : autoClaimEnabled ? 'Auto Claim' : 'Claim Rewards'}
               </Button>

@@ -100,8 +100,6 @@ export function WithdrawModal() {
       timeoutTimestamp: timeoutInNanos,
     });
 
-    console.log(msg);
-
     await tx([msg], {
       fee,
       onSuccess: () => {

@@ -125,8 +125,9 @@ function Home() {
       qRegen: regenAPY ?? 0,
       qSomm: sommAPY ?? 0,
       qJuno: junoAPY ?? 0,
+      qDydx: dydxAPY ?? 0,
     }),
-    [cosmosAPY, osmoAPY, starsAPY, regenAPY, sommAPY, junoAPY],
+    [cosmosAPY, osmoAPY, starsAPY, regenAPY, sommAPY, junoAPY, dydxAPY],
   );
   // useMemo hook to cache qBalance data
   const qBalances: BalanceRates = useMemo(
@@ -137,39 +138,44 @@ function Home() {
       qRegen: shiftDigits(qRegen?.balance?.amount ?? '000000', -6),
       qSomm: shiftDigits(qSomm?.balance?.amount ?? '000000', -6),
       qJuno: shiftDigits(qJuno?.balance?.amount ?? '000000', -6),
+      qDydx: shiftDigits(qDydx?.balance?.amount ?? '000000', -18),
     }),
-    [qAtom, qOsmo, qStars, qRegen, qSomm, qJuno],
+    [qAtom, qOsmo, qStars, qRegen, qSomm, qJuno, qDydx],
   );
 
   // useMemo hook to cache redemption rate data
   const redemptionRates: RedemptionRates = useMemo(
     () => ({
       atom: {
-        current: CosmosZone?.redemption_rate ? parseFloat(CosmosZone.redemption_rate) : 1,
-        last: CosmosZone?.last_redemption_rate ? parseFloat(CosmosZone.last_redemption_rate) : 1,
+        current: CosmosZone?.redemptionRate ? parseFloat(CosmosZone.redemptionRate) : 1,
+        last: CosmosZone?.lastRedemptionRate ? parseFloat(CosmosZone.lastRedemptionRate) : 1,
       },
       osmo: {
-        current: OsmoZone?.redemption_rate ? parseFloat(OsmoZone.redemption_rate) : 1,
-        last: OsmoZone?.last_redemption_rate ? parseFloat(OsmoZone.last_redemption_rate) : 1,
+        current: OsmoZone?.redemptionRate ? parseFloat(OsmoZone.redemptionRate) : 1,
+        last: OsmoZone?.lastRedemptionRate ? parseFloat(OsmoZone.lastRedemptionRate) : 1,
       },
       stars: {
-        current: StarZone?.redemption_rate ? parseFloat(StarZone.redemption_rate) : 1,
-        last: StarZone?.last_redemption_rate ? parseFloat(StarZone.last_redemption_rate) : 1,
+        current: StarZone?.redemptionRate ? parseFloat(StarZone.redemptionRate) : 1,
+        last: StarZone?.lastRedemptionRate ? parseFloat(StarZone.lastRedemptionRate) : 1,
       },
       regen: {
-        current: RegenZone?.redemption_rate ? parseFloat(RegenZone.redemption_rate) : 1,
-        last: RegenZone?.last_redemption_rate ? parseFloat(RegenZone.last_redemption_rate) : 1,
+        current: RegenZone?.redemptionRate ? parseFloat(RegenZone.redemptionRate) : 1,
+        last: RegenZone?.lastRedemptionRate ? parseFloat(RegenZone.lastRedemptionRate) : 1,
       },
       somm: {
-        current: SommZone?.redemption_rate ? parseFloat(SommZone.redemption_rate) : 1,
-        last: SommZone?.last_redemption_rate ? parseFloat(SommZone.last_redemption_rate) : 1,
+        current: SommZone?.redemptionRate ? parseFloat(SommZone.redemptionRate) : 1,
+        last: SommZone?.lastRedemptionRate ? parseFloat(SommZone.lastRedemptionRate) : 1,
       },
       juno: {
-        current: JunoZone?.redemption_rate ? parseFloat(JunoZone.redemption_rate) : 1,
-        last: JunoZone?.last_redemption_rate ? parseFloat(JunoZone.last_redemption_rate) : 1,
+        current: JunoZone?.redemptionRate ? parseFloat(JunoZone.redemptionRate) : 1,
+        last: JunoZone?.lastRedemptionRate ? parseFloat(JunoZone.lastRedemptionRate) : 1,
+      },
+      dydx: {
+        current: DydxZone?.redemptionRate ? parseFloat(DydxZone.redemptionRate) : 1,
+        last: DydxZone?.lastRedemptionRate ? parseFloat(DydxZone.lastRedemptionRate) : 1,
       },
     }),
-    [CosmosZone, OsmoZone, StarZone, RegenZone, SommZone, JunoZone],
+    [CosmosZone, OsmoZone, StarZone, RegenZone, SommZone, JunoZone, DydxZone],
   );
 
   // State hooks for portfolio items, total portfolio value, and other metrics

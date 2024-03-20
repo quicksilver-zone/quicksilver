@@ -172,9 +172,9 @@ export const SignalIntentModal: React.FC<StakingModalProps> = ({ isOpen, onClose
 
   const { signalIntent } = quicksilver.interchainstaking.v1.MessageComposer.withTypeUrl;
   const msgSignalIntent = signalIntent({
-    chain_id: selectedOption?.chainId ?? '',
+    chainId: selectedOption?.chainId ?? '',
     intents: formattedIntentsString,
-    from_address: address ?? '',
+    fromAddress: address ?? '',
   });
 
   const mainTokens = assets.find(({ chain_name }) => chain_name === 'quicksilver');

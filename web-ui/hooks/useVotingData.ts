@@ -110,7 +110,7 @@ export const useVotingData = (
               throw new Error("Required information for query is missing");
             }
             return grpcQueryClient.cosmos.gov.v1beta1.vote({
-              proposal_id: new Long(Number(proposalId)),
+              proposalId: new Long(Number(proposalId)),
               voter: address || '',
             });
           },

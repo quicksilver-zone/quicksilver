@@ -67,16 +67,17 @@ export const MultiModal: React.FC<MultiModalProps> = ({
     });
   };
 
-  const handleQuickSelect = (count: number) => {
-    if (!validatorsData || !validators) return;
+  // TODO: Implement quick select and rankings
+  // const handleQuickSelect = (count: number) => {
+  //   if (!validatorsData || !validators) return;
 
-    const topValidators = validators.slice(0, count).map((validator) => ({
-      name: validator.name,
-      operatorAddress: validator.address,
-    }));
+  //   const topValidators = validators.slice(0, count).map((validator) => ({
+  //     name: validator.name,
+  //     operatorAddress: validator.address,
+  //   }));
 
-    setSelectedValidators(topValidators);
-  };
+  //   setSelectedValidators(topValidators);
+  // };
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(event.target.value.toLowerCase());

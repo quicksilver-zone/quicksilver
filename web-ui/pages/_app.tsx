@@ -34,20 +34,15 @@ const queryClient = new QueryClient({
 function QuickApp({ Component, pageProps }: AppProps) {
   const { themeClass } = useTheme();
   const signerOptions: SignerOptions = {
-    //@ts-ignore
-    signingStargate: (chain: Chain): SigningStargateClientOptions | undefined => {
-      //@ts-ignore
+    signingStargate: (_chain: string | Chain): SigningStargateClientOptions | undefined => {
       const mergedRegistry = new Registry([...quicksilverProtoRegistry, ...ibcProtoRegistry, ...cosmosProtoRegistry]);
-
       const mergedAminoTypes = new AminoTypes({
         ...cosmosAminoConverters,
         ...quicksilverAminoConverters,
         ...ibcAminoConverters,
       });
-
       return {
         aminoTypes: mergedAminoTypes,
-        //@ts-ignore
         registry: mergedRegistry,
       };
     },
@@ -272,6 +267,7 @@ function QuickApp({ Component, pageProps }: AppProps) {
             modalTheme={modalThemeOverrides}
             chains={chains}
             assetLists={assets}
+            // @ts-ignore
             wallets={[...keplrWallets, ...cosmostationWallets, ...leapWallets]}
             walletConnectOptions={{
               signClient: {

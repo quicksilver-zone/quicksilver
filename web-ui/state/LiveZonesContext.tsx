@@ -21,7 +21,7 @@ export const LiveZonesProvider: React.FC<LiveZonesProviderProps> = ({ children }
     const fetchLiveZones = async () => {
       try {
         const response = await axios.get(`${process.env.NEXT_PUBLIC_QUICKSILVER_API}/quicksilver/interchainstaking/v1/zones`);
-        const liveZones = response.data.zones.map((zone: Zone) => zone.chain_id);
+        const liveZones = response.data.zones.map((zone: Zone) => zone.chainId);
         setLiveNetworks(liveZones);
       } catch (error) {
         console.error('Failed to fetch live zones:', error);

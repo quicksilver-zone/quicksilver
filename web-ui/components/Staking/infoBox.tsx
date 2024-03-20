@@ -21,7 +21,7 @@ export const InfoBox: React.FC<AssetsAccordianProps> = ({ selectedOption, displa
     if (!isZoneLoading && zone) {
       return (
         <Text color={'complimentary.900'}>
-          1 q{selectedOption.value.toUpperCase()} = {Number(zone.redemption_rate).toFixed(2)} {selectedOption.value.toUpperCase()}
+          1 q{selectedOption.value.toUpperCase()} = {Number(zone.redemptionRate).toFixed(2)} {selectedOption.value.toUpperCase()}
         </Text>
       );
     } else {
@@ -51,7 +51,7 @@ export const InfoBox: React.FC<AssetsAccordianProps> = ({ selectedOption, displa
 
   const renderUnbondingPeriod = () => {
     if (!isZoneLoading && zone) {
-      return <Text color={'complimentary.900'}>{(Number(zone?.unbonding_period) / 86400000000000).toString()} days</Text>;
+      return <Text color={'complimentary.900'}>{(Number(zone?.unbondingPeriod) / 86400000000000).toString()} days</Text>;
     } else {
       return (
         <Box display="inline-block">

@@ -150,7 +150,7 @@ export const RevertSharesProcessModal: React.FC<StakingModalProps> = ({
   const { redeemTokensForShares } = cosmos.staking.v1beta1.MessageComposer.withTypeUrl;
 
   const msg = redeemTokensForShares({
-    delegator_address: address,
+    delegatorAddress: address,
     amount: {
       denom: denom ?? combinedDenom,
       amount: selectedValidator.tokenAmount.toString(),

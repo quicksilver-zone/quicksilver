@@ -141,11 +141,7 @@ export const StakingBox = ({ selectedOption, valoperAddress }: StakingBoxProps) 
   const exp = getExponent(selectedOption.chainName);
   const { balance, isLoading } = useBalanceQuery(selectedOption.chainName, address ?? '');
 
-  const {
-    balance: qBalance,
-    isLoading: qIsLoading,
-    isError: qIsError,
-  } = useQBalanceQuery('quicksilver', qAddress ?? '', selectedOption.value.toLowerCase());
+  const { balance: qBalance } = useQBalanceQuery('quicksilver', qAddress ?? '', selectedOption.value.toLowerCase());
 
   const qAssets = qBalance?.balance.amount || '';
 
@@ -170,7 +166,8 @@ export const StakingBox = ({ selectedOption, valoperAddress }: StakingBoxProps) 
 
   const [inputError, setInputError] = useState(false);
 
-  const qAssetsExponent = shiftDigits(qAssets, -6);
+  const exponent = qBalance?.balance.denom === 'aqdydx' ? -18 : -6;
+  const qAssetsExponent = shiftDigits(qAssets, exponent);
   const qAssetsDisplay = qAssetsExponent.includes('.') ? qAssetsExponent.substring(0, qAssetsExponent.indexOf('.') + 3) : qAssetsExponent;
 
   const maxUnstakingAmount = truncateToThreeDecimals(Number(qAssetsDisplay));
@@ -184,13 +181,13 @@ export const StakingBox = ({ selectedOption, valoperAddress }: StakingBoxProps) 
   const { requestRedemption } = quicksilver.interchainstaking.v1.MessageComposer.withTypeUrl;
   const numericAmount = Number(tokenAmount);
   const smallestUnitAmount = numericAmount * Math.pow(10, 6);
-  const value: Coin = { amount: smallestUnitAmount.toFixed(0), denom: zone?.local_denom ?? '' };
+  const value: Coin = { amount: smallestUnitAmount.toFixed(0), denom: zone?.localDenom ?? '' };
 
   // Create the message only executes if the unstake button is clickable
   const msgRequestRedemption = requestRedemption({
     value: value,
-    from_address: qAddress ?? '',
-    destination_address: address ?? '',
+    fromAddress: qAddress ?? '',
+    destinationAddress: address ?? '',
   });
 
   const fee: StdFee = {
@@ -264,9 +261,9 @@ export const StakingBox = ({ selectedOption, valoperAddress }: StakingBoxProps) 
   const { send } = cosmos.bank.v1beta1.MessageComposer.withTypeUrl;
   // Create the message only executes if the liquid stake button is clickable
   const msgSend = send({
-    from_address: address ?? '',
-    to_address: zone?.deposit_address?.address ?? '',
-    amount: coins(smallestUnitAmount.toFixed(0), zone?.base_denom ?? ''),
+    fromAddress: address ?? '',
+    toAddress: zone?.depositAddress?.address ?? '',
+    amount: coins(smallestUnitAmount.toFixed(0), zone?.baseDenom ?? ''),
   });
 
   const mainTokens = assets.find(({ chain_name }) => chain_name === selectedOption.chainName);
@@ -546,7 +543,7 @@ export const StakingBox = ({ selectedOption, valoperAddress }: StakingBoxProps) 
                     <Stat py={4} textAlign="right" color="white">
                       <StatNumber textColor="complimentary.900">
                         {!isZoneLoading ? (
-                          (Number(tokenAmount) * Number(zone?.redemption_rate || 1)).toFixed(2)
+                          (Number(tokenAmount) * Number(zone?.redemptionRate || 1)).toFixed(2)
                         ) : (
                           <Spinner thickness="2px" speed="0.65s" emptyColor="gray.200" color="complimentary.900" size="sm" />
                         )}
@@ -706,7 +703,7 @@ export const StakingBox = ({ selectedOption, valoperAddress }: StakingBoxProps) 
                   <Stat py={4} textAlign="right" color="white">
                     <StatNumber textColor="complimentary.900">
                       {!isZoneLoading ? (
-                        (Number(tokenAmount) * Number(zone?.redemption_rate || 1)).toFixed(2)
+                        (Number(tokenAmount) * Number(zone?.redemptionRate || 1)).toFixed(2)
                       ) : (
                         <Spinner thickness="2px" speed="0.65s" emptyColor="gray.200" color="complimentary.900" size="sm" />
                       )}
