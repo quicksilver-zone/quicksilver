@@ -855,5 +855,4 @@ func (s *AppTestSuite) UncheckedSetWithdrawalRecord(ctx sdk.Context, app *Quicks
 	store := prefix.NewStore(ctx.KVStore(app.GetKey(icstypes.StoreKey)), icstypes.GetWithdrawalKey(record.ChainId, record.Status))
 	bz := app.InterchainstakingKeeper.GetCodec().MustMarshal(&record)
 	store.Set(key, bz)
-
 }
