@@ -2,6 +2,7 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 )
 
@@ -42,7 +43,6 @@ func (k *Keeper) GetDeniedValidatorInDenyList(ctx sdk.Context, chainID string, v
 	}
 
 	return val, true
-
 }
 
 // RemoveValidatorFromDenyList removes a validator from the deny list. Panic if the validator is not in the deny list
