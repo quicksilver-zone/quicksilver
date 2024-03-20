@@ -73,14 +73,12 @@ var (
                      ........                         .........
 `
 
-	connectionManager     types.CacheManager[prewards.ConnectionProtocolData]
-	osmosisPoolsManager   types.CacheManager[prewards.OsmosisPoolProtocolData]
-	crescentPoolsManager  types.CacheManager[prewards.CrescentPoolProtocolData]
-	osmosisParamsManager  types.CacheManager[prewards.OsmosisParamsProtocolData]
-	umeeParamsManager     types.CacheManager[prewards.UmeeParamsProtocolData]
-	crescentParamsManager types.CacheManager[prewards.CrescentParamsProtocolData]
-	tokenManager          types.CacheManager[prewards.LiquidAllowedDenomProtocolData]
-	zonesManager          types.CacheManager[icstypes.Zone]
+	connectionManager    types.CacheManager[prewards.ConnectionProtocolData]
+	osmosisPoolsManager  types.CacheManager[prewards.OsmosisPoolProtocolData]
+	osmosisParamsManager types.CacheManager[prewards.OsmosisParamsProtocolData]
+	umeeParamsManager    types.CacheManager[prewards.UmeeParamsProtocolData]
+	tokenManager         types.CacheManager[prewards.LiquidAllowedDenomProtocolData]
+	zonesManager         types.CacheManager[icstypes.Zone]
 )
 
 func main() {
@@ -113,9 +111,7 @@ func main() {
 	connectionManager.Init(ctx, cfg.SourceLcd+"/quicksilver/participationrewards/v1/protocoldata/ProtocolDataTypeConnection/", types.DataTypeProtocolData, time.Minute*5)
 	osmosisParamsManager.Init(ctx, cfg.SourceLcd+"/quicksilver/participationrewards/v1/protocoldata/ProtocolDataTypeOsmosisParams/", types.DataTypeProtocolData, time.Hour*24)
 	umeeParamsManager.Init(ctx, cfg.SourceLcd+"/quicksilver/participationrewards/v1/protocoldata/ProtocolDataTypeUmeeParams/", types.DataTypeProtocolData, time.Hour*24)
-	crescentParamsManager.Init(ctx, cfg.SourceLcd+"/quicksilver/participationrewards/v1/protocoldata/ProtocolDataTypeCrescentParams/", types.DataTypeProtocolData, time.Hour*24)
 	osmosisPoolsManager.Init(ctx, cfg.SourceLcd+"/quicksilver/participationrewards/v1/protocoldata/ProtocolDataTypeOsmosisPool/", types.DataTypeProtocolData, time.Minute*5)
-	crescentPoolsManager.Init(ctx, cfg.SourceLcd+"/quicksilver/participationrewards/v1/protocoldata/ProtocolDataTypeCrescentPool/", types.DataTypeProtocolData, time.Minute*5)
 	tokenManager.Init(ctx, cfg.SourceLcd+"/quicksilver/participationrewards/v1/protocoldata/ProtocolDataTypeLiquidToken/", types.DataTypeProtocolData, time.Minute*5)
 	zonesManager.Init(ctx, cfg.SourceLcd+"/quicksilver/interchainstaking/v1/zones", types.DataTypeZone, time.Hour*24)
 	config := sdk.GetConfig()
@@ -127,8 +123,8 @@ func main() {
 	case "serve":
 		r := mux.NewRouter()
 		r.HandleFunc("/cache", handlers.GetCacheHandler(ctx, cfg, &connectionManager, &osmosisPoolsManager, &osmosisParamsManager, &tokenManager))
-		r.HandleFunc("/{address}/epoch", handlers.GetEpochHandler(ctx, cfg, &connectionManager, &osmosisPoolsManager, &crescentPoolsManager, &osmosisParamsManager, &umeeParamsManager, &crescentParamsManager, &tokenManager, &zonesManager))
-		r.HandleFunc("/{address}/current", handlers.GetCurrentHandler(ctx, cfg, &connectionManager, &osmosisPoolsManager, &crescentPoolsManager, &osmosisParamsManager, &umeeParamsManager, &crescentParamsManager, &tokenManager, &zonesManager))
+		r.HandleFunc("/{address}/epoch", handlers.GetEpochHandler(ctx, cfg, &connectionManager, &osmosisPoolsManager, &osmosisParamsManager, &umeeParamsManager, &tokenManager, &zonesManager))
+		r.HandleFunc("/{address}/current", handlers.GetCurrentHandler(ctx, cfg, &connectionManager, &osmosisPoolsManager, &osmosisParamsManager, &umeeParamsManager, &tokenManager, &zonesManager))
 		// r.HandleFunc("/{address}/airdrop/{claimId}", handlers.AirdropHandler)
 		r.HandleFunc("/version", handlers.GetVersionHandler(Version))
 		http.Handle("/", r)

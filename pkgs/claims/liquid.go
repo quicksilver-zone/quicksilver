@@ -97,13 +97,13 @@ func LiquidClaim(
 	// 3:
 	err = failsim.FailureHook(failures, 3, err, fmt.Sprintf("no endpoint in config for %s", chain))
 	if err != nil {
-		return nil, nil, err
+		return map[string]prewards.MsgSubmitClaim{}, map[string]sdk.Coins{}, nil
 	}
 	client, err := types.NewRPCClient(host, 30*time.Second)
 	// 4:
 	err = failsim.FailureHook(failures, 4, err, fmt.Sprintf("failure connecting to host %q", host))
 	if err != nil {
-		return nil, nil, err
+		return map[string]prewards.MsgSubmitClaim{}, map[string]sdk.Coins{}, nil
 	}
 	// fetch timestamp of block
 	interfaceRegistry := cdctypes.NewInterfaceRegistry()

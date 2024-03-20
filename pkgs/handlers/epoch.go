@@ -24,10 +24,8 @@ func GetEpochHandler(
 	cfg types.Config,
 	connectionManager *types.CacheManager[prewards.ConnectionProtocolData],
 	osmosisPoolsManager *types.CacheManager[prewards.OsmosisPoolProtocolData],
-	crescentPoolsManager *types.CacheManager[prewards.CrescentPoolProtocolData],
 	osmosisParamsManager *types.CacheManager[prewards.OsmosisParamsProtocolData],
 	umeeParamsManager *types.CacheManager[prewards.UmeeParamsProtocolData],
-	crescentParamsManager *types.CacheManager[prewards.CrescentParamsProtocolData],
 	tokensManager *types.CacheManager[prewards.LiquidAllowedDenomProtocolData],
 	zonesManager *types.CacheManager[icstypes.Zone],
 ) func(http.ResponseWriter, *http.Request) {
@@ -132,29 +130,6 @@ func GetEpochHandler(
 						errors["UmeeClaim"] = err
 					}
 					response = UpdateResponse(response, messages, assets, "liquid")
-				}
-			}
-		}
-
-		// crescent claim
-		fmt.Println("check config for crescent chain id...")
-		if len(crescentParamsManager.Get(ctx)) == 0 {
-			errors["CrescentConfig"] = fmt.Errorf("crescent params not set")
-		} else {
-			chain = crescentParamsManager.Get(ctx)[0].ChainID
-			if err = ValidateChainConfig("Crescent", chain, failAt); err != nil {
-				errors["CrescentConfig"] = err
-			} else {
-				fmt.Println("check crescent last epoch height...")
-				if height, err = ValidateHeight(connections, chain, failAt); err != nil {
-					errors["CrescentHeight"] = err
-				} else {
-					fmt.Println("fetch crescent claim...")
-					messages, assets, err = claims.CrescentClaim(ctx, cfg, crescentPoolsManager, tokensManager, zonesManager, vars["address"], chain, height)
-					if err != nil {
-						errors["CrescentClaim"] = err
-					}
-					response = UpdateResponse(response, messages, assets, "crescentpool")
 				}
 			}
 		}

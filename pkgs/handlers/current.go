@@ -20,10 +20,8 @@ func GetCurrentHandler(
 	cfg types.Config,
 	connectionManager *types.CacheManager[prewards.ConnectionProtocolData],
 	osmosisPoolsManager *types.CacheManager[prewards.OsmosisPoolProtocolData],
-	crescentPoolsManager *types.CacheManager[prewards.CrescentPoolProtocolData],
 	osmosisParamsManager *types.CacheManager[prewards.OsmosisParamsProtocolData],
 	umeeParamsManager *types.CacheManager[prewards.UmeeParamsProtocolData],
-	crescentParamsManager *types.CacheManager[prewards.CrescentParamsProtocolData],
 	tokensManager *types.CacheManager[prewards.LiquidAllowedDenomProtocolData],
 	zonesManager *types.CacheManager[icstypes.Zone],
 ) func(http.ResponseWriter, *http.Request) {
@@ -79,29 +77,6 @@ func GetCurrentHandler(
 			for chainID, asset := range assets {
 				response.Assets[chainID] = append(response.Assets[chainID], types.Asset{Type: "umeepool", Amount: asset})
 			}
-		}
-
-		if len(crescentParamsManager.Get(ctx)) > 0 {
-			// crescent claim
-			_, assets, err := claims.CrescentClaim(
-				ctx,
-				cfg,
-				crescentPoolsManager,
-				tokensManager,
-				zonesManager,
-				vars["address"],
-				crescentParamsManager.Get(ctx)[0].ChainID,
-				0,
-			)
-			if err != nil {
-				fmt.Fprintf(w, "Error: %s", err)
-				return
-			}
-
-			for chainID, asset := range assets {
-				response.Assets[chainID] = append(response.Assets[chainID], types.Asset{Type: "crescentpool", Amount: asset})
-			}
-
 		}
 
 		connections := connectionManager.Get(ctx)
