@@ -1,6 +1,7 @@
 package app
 
 import (
+	"encoding/hex"
 	"fmt"
 	"testing"
 	"time"
@@ -9,6 +10,7 @@ import (
 
 	"cosmossdk.io/math"
 
+	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -808,7 +810,7 @@ func (s *AppTestSuite) InitV151rc1TestZone() {
 		EpochNumber:    1,
 		CompletionTime: time.Time{},
 	}
-	s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.OldSetWithdrawalRecord(s.chainA.GetContext(), invalidWithdrawal)
+	s.UncheckedSetWithdrawalRecord(s.chainA.GetContext(), s.GetQuicksilverApp(s.chainA), invalidWithdrawal)
 	validWithdrawal := icstypes.WithdrawalRecord{
 		ChainId:        zone.ChainId,
 		Delegator:      cosmosDelegate,
@@ -821,7 +823,7 @@ func (s *AppTestSuite) InitV151rc1TestZone() {
 		EpochNumber:    1,
 		CompletionTime: time.Time{},
 	}
-	s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.OldSetWithdrawalRecord(s.chainA.GetContext(), validWithdrawal)
+	s.UncheckedSetWithdrawalRecord(s.chainA.GetContext(), s.GetQuicksilverApp(s.chainA), validWithdrawal)
 }
 
 func (s *AppTestSuite) TestV010501rc1UpgradeHandler() {
@@ -840,4 +842,18 @@ func (s *AppTestSuite) TestV010501rc1UpgradeHandler() {
 	// check if the valid withdrawal record is still there
 	_, found = app.InterchainstakingKeeper.GetWithdrawalRecord(ctx, "cosmoshub-4", fmt.Sprintf("%064d", 2), icstypes.WithdrawStatusQueued)
 	s.True(found)
+}
+
+// UncheckedSetWithdrawalRecord store the withdrawal record without checking the burnAmount.
+// WARNING: This function is intended for testing purposes only and should not be used in production code.
+func (s *AppTestSuite) UncheckedSetWithdrawalRecord(ctx sdk.Context, app *Quicksilver, record icstypes.WithdrawalRecord) {
+	key, err := hex.DecodeString(record.Txhash)
+	if err != nil {
+		panic(err)
+	}
+
+	store := prefix.NewStore(ctx.KVStore(app.GetKey(icstypes.StoreKey)), icstypes.GetWithdrawalKey(record.ChainId, record.Status))
+	bz := app.InterchainstakingKeeper.GetCodec().MustMarshal(&record)
+	store.Set(key, bz)
+
 }
