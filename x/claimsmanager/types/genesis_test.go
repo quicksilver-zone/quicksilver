@@ -3,6 +3,7 @@ package types_test
 import (
 	"testing"
 
+	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
@@ -45,7 +46,7 @@ func TestGenesisState_Validate(t *testing.T) {
 					{
 						UserAddress: addressutils.GenerateAccAddressForTest().String(),
 						ChainId:     "testzone-1",
-						Amount:      0,
+						Amount:      math.ZeroInt(),
 					},
 				},
 			},
@@ -59,7 +60,7 @@ func TestGenesisState_Validate(t *testing.T) {
 					{
 						UserAddress: addressutils.GenerateAccAddressForTest().String(),
 						ChainId:     "testzone-1",
-						Amount:      1000000,
+						Amount:      math.NewInt(1000000),
 					},
 				},
 			},

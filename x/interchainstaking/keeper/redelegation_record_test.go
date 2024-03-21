@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"time"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
@@ -26,7 +27,7 @@ func (suite *KeeperTestSuite) TestRedelegationRecordSetGetIterate() {
 		EpochNumber:    1,
 		Source:         testValidatorOne,
 		Destination:    testValidatorTwo,
-		Amount:         3000,
+		Amount:         sdkmath.NewInt(3000),
 		CompletionTime: time.Now().Add(time.Hour).UTC(),
 	}
 
@@ -74,7 +75,7 @@ func (suite *KeeperTestSuite) TestGCCompletedRedelegations() {
 		EpochNumber:    1,
 		Source:         testValidatorOne,
 		Destination:    testValidatorTwo,
-		Amount:         3000,
+		Amount:         sdkmath.NewInt(3000),
 		CompletionTime: currentTime.Add(time.Hour).UTC(),
 	}
 	quicksilver.InterchainstakingKeeper.SetRedelegationRecord(ctx, record)
@@ -84,7 +85,7 @@ func (suite *KeeperTestSuite) TestGCCompletedRedelegations() {
 		EpochNumber:    1,
 		Source:         testValidatorOne,
 		Destination:    testValidatorThree,
-		Amount:         3000,
+		Amount:         sdkmath.NewInt(3000),
 		CompletionTime: currentTime.Add(-time.Hour).UTC(),
 	}
 	quicksilver.InterchainstakingKeeper.SetRedelegationRecord(ctx, record)
@@ -93,7 +94,7 @@ func (suite *KeeperTestSuite) TestGCCompletedRedelegations() {
 		EpochNumber:    1,
 		Source:         testValidatorThree,
 		Destination:    testValidatorTwo,
-		Amount:         3000,
+		Amount:         sdkmath.NewInt(3000),
 		CompletionTime: time.Time{},
 	}
 	quicksilver.InterchainstakingKeeper.SetRedelegationRecord(ctx, record)
@@ -133,7 +134,7 @@ func (suite *KeeperTestSuite) TestDeleteRedelegationRecordByKey() {
 		EpochNumber:    1,
 		Source:         testValidatorOne,
 		Destination:    testValidatorTwo,
-		Amount:         3000,
+		Amount:         sdkmath.NewInt(3000),
 		CompletionTime: currentTime.Add(time.Hour).UTC(),
 	}
 	quicksilver.InterchainstakingKeeper.SetRedelegationRecord(ctx, record)
@@ -143,7 +144,7 @@ func (suite *KeeperTestSuite) TestDeleteRedelegationRecordByKey() {
 		EpochNumber:    1,
 		Source:         testValidatorOne,
 		Destination:    testValidatorThree,
-		Amount:         3000,
+		Amount:         sdkmath.NewInt(3000),
 		CompletionTime: currentTime.Add(-time.Hour).UTC(),
 	}
 	quicksilver.InterchainstakingKeeper.SetRedelegationRecord(ctx, record)
@@ -152,7 +153,7 @@ func (suite *KeeperTestSuite) TestDeleteRedelegationRecordByKey() {
 		EpochNumber:    1,
 		Source:         testValidatorThree,
 		Destination:    testValidatorTwo,
-		Amount:         3000,
+		Amount:         sdkmath.NewInt(3000),
 		CompletionTime: time.Time{},
 	}
 	quicksilver.InterchainstakingKeeper.SetRedelegationRecord(ctx, record)
@@ -192,11 +193,11 @@ func (suite *KeeperTestSuite) TestGCCompletedUnbondings() {
 		Distribution: []*types.Distribution{
 			{
 				Valoper: vals[0].ValoperAddress,
-				Amount:  500,
+				Amount:  sdkmath.NewInt(500),
 			},
 			{
 				Valoper: vals[1].ValoperAddress,
-				Amount:  500,
+				Amount:  sdkmath.NewInt(500),
 			},
 		},
 		Recipient:      user1.String(),
@@ -214,11 +215,11 @@ func (suite *KeeperTestSuite) TestGCCompletedUnbondings() {
 		Distribution: []*types.Distribution{
 			{
 				Valoper: vals[0].ValoperAddress,
-				Amount:  500,
+				Amount:  sdkmath.NewInt(500),
 			},
 			{
 				Valoper: vals[1].ValoperAddress,
-				Amount:  500,
+				Amount:  sdkmath.NewInt(500),
 			},
 		},
 		Recipient:      user2.String(),
@@ -236,11 +237,11 @@ func (suite *KeeperTestSuite) TestGCCompletedUnbondings() {
 		Distribution: []*types.Distribution{
 			{
 				Valoper: vals[0].ValoperAddress,
-				Amount:  500,
+				Amount:  sdkmath.NewInt(500),
 			},
 			{
 				Valoper: vals[1].ValoperAddress,
-				Amount:  500,
+				Amount:  sdkmath.NewInt(500),
 			},
 		},
 		Recipient:      user2.String(),

@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/math"
 	"github.com/CosmWasm/wasmd/x/wasm"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/libs/log"
@@ -242,7 +243,7 @@ func (suite *KeeperTestSuite) TestRemoveZoneAndAssociatedRecords() {
 			EpochNumber: 1,
 			Source:      vals[1].ValoperAddress,
 			Destination: vals[0].ValoperAddress,
-			Amount:      10000000,
+			Amount:      math.NewInt(10000000),
 		})
 	// create delegation
 	delegation := types.Delegation{
@@ -281,11 +282,11 @@ func (suite *KeeperTestSuite) TestRemoveZoneAndAssociatedRecords() {
 		Distribution: []*types.Distribution{
 			{
 				Valoper: vals[1].ValoperAddress,
-				Amount:  1000000,
+				Amount:  math.NewInt(1000000),
 			},
 			{
 				Valoper: vals[2].ValoperAddress,
-				Amount:  1000000,
+				Amount:  math.NewInt(1000000),
 			},
 		},
 		Recipient:      addressutils.GenerateAccAddressForTest().String(),

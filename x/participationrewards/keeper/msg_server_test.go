@@ -516,7 +516,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitLocalClaim() {
 				ChainId:       suite.chainB.ChainID,
 				Module:        cmtypes.ClaimTypeLiquidToken,
 				SourceChainId: suite.chainA.ChainID,
-				Amount:        100,
+				Amount:        math.NewInt(100),
 			}},
 		},
 	}

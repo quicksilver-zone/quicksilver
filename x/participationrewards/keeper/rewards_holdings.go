@@ -70,23 +70,22 @@ func (k Keeper) CalcUserHoldingsAllocations(ctx sdk.Context, zone *icstypes.Zone
 	userAmountsMap := make(map[string]math.Int)
 
 	k.ClaimsManagerKeeper.IterateClaims(ctx, zone.ChainId, func(_ int64, claim cmtypes.Claim) (stop bool) {
-		amount := math.NewIntFromUint64(claim.Amount)
 		k.Logger(ctx).Info(
 			"claim",
 			"type", cmtypes.ClaimType_name[int32(claim.Module)],
 			"user", claim.UserAddress,
 			"zone", claim.ChainId,
-			"amount", amount,
+			"amount", claim.Amount,
 		)
 
 		if _, exists := userAmountsMap[claim.UserAddress]; !exists {
 			userAmountsMap[claim.UserAddress] = math.ZeroInt()
 		}
 
-		userAmountsMap[claim.UserAddress] = userAmountsMap[claim.UserAddress].Add(amount)
+		userAmountsMap[claim.UserAddress] = userAmountsMap[claim.UserAddress].Add(claim.Amount)
 
 		// total zone assets held remotely
-		zoneAmount = zoneAmount.Add(amount)
+		zoneAmount = zoneAmount.Add(claim.Amount)
 
 		return false
 	})

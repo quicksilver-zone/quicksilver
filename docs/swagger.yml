@@ -775,9 +775,11 @@ paths:
                         spec)
                     source_chain_id:
                       type: string
-                    amount:
+                    _amount:
                       type: string
                       format: uint64
+                    amount:
+                      type: string
                   description: >-
                     Claim define the users claim for holding assets within a
                     given zone.
@@ -935,9 +937,11 @@ paths:
                         spec)
                     source_chain_id:
                       type: string
-                    amount:
+                    _amount:
                       type: string
                       format: uint64
+                    amount:
+                      type: string
                   description: >-
                     Claim define the users claim for holding assets within a
                     given zone.
@@ -1097,9 +1101,11 @@ paths:
                         spec)
                     source_chain_id:
                       type: string
-                    amount:
+                    _amount:
                       type: string
                       format: uint64
+                    amount:
+                      type: string
                   description: >-
                     Claim define the users claim for holding assets within a
                     given zone.
@@ -1259,9 +1265,11 @@ paths:
                         spec)
                     source_chain_id:
                       type: string
-                    amount:
+                    _amount:
                       type: string
                       format: uint64
+                    amount:
+                      type: string
                   description: >-
                     Claim define the users claim for holding assets within a
                     given zone.
@@ -2673,9 +2681,11 @@ paths:
                         properties:
                           valoper:
                             type: string
-                          amount:
+                          _amount:
                             type: string
                             format: uint64
+                          amount:
+                            type: string
                     recipient:
                       type: string
                     amount:
@@ -4111,12 +4121,14 @@ paths:
                       type: string
                     destination:
                       type: string
-                    amount:
+                    _amount:
                       type: string
                       format: int64
                     completion_time:
                       type: string
                       format: date-time
+                    amount:
+                      type: string
               pagination:
                 type: object
                 properties:
@@ -4568,9 +4580,11 @@ paths:
                         properties:
                           valoper:
                             type: string
-                          amount:
+                          _amount:
                             type: string
                             format: uint64
+                          amount:
+                            type: string
                     recipient:
                       type: string
                     amount:
@@ -4764,9 +4778,11 @@ paths:
                         properties:
                           valoper:
                             type: string
-                          amount:
+                          _amount:
                             type: string
                             format: uint64
+                          amount:
+                            type: string
                     recipient:
                       type: string
                     amount:
