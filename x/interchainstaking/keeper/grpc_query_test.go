@@ -1362,7 +1362,7 @@ func (suite *KeeperTestSuite) TestKeeper_ZoneValidatorDenyList() {
 		},
 		{
 			name:           "zone not found",
-			req:            &types.QueryDenyListRequest{ChainId: "boguschain"},
+			req:            &types.QueryDenyListRequest{ChainId: "abcd"},
 			wantErr:        false,
 			expectedLength: 0,
 		},
@@ -1370,7 +1370,7 @@ func (suite *KeeperTestSuite) TestKeeper_ZoneValidatorDenyList() {
 			name:           "zone valid request",
 			req:            &types.QueryDenyListRequest{ChainId: suite.chainB.ChainID},
 			wantErr:        false,
-			expectedLength: 1,
+			expectedLength: 2,
 		},
 	}
 	for _, tc := range testCases {
@@ -1381,8 +1381,18 @@ func (suite *KeeperTestSuite) TestKeeper_ZoneValidatorDenyList() {
 			quicksilver := suite.GetQuicksilverApp(suite.chainA)
 			ctx := suite.chainA.GetContext()
 			icsKeeper := quicksilver.InterchainstakingKeeper
-			validator := icsKeeper.GetValidators(ctx, suite.chainB.ChainID)[0]
-			err := icsKeeper.SetZoneValidatorToDenyList(ctx, suite.chainB.ChainID, validator)
+
+			// Set 2 validators to deny list
+			validator1 := icsKeeper.GetValidators(ctx, suite.chainB.ChainID)[0]
+			valAddr, err := sdk.ValAddressFromBech32(validator1.ValoperAddress)
+			suite.NoError(err)
+			err = icsKeeper.SetZoneValidatorToDenyList(ctx, suite.chainB.ChainID, valAddr)
+			suite.NoError(err)
+
+			validator2 := icsKeeper.GetValidators(ctx, suite.chainB.ChainID)[1]
+			valAddr, err = sdk.ValAddressFromBech32(validator2.ValoperAddress)
+			suite.NoError(err)
+			err = icsKeeper.SetZoneValidatorToDenyList(ctx, suite.chainB.ChainID, valAddr)
 			suite.NoError(err)
 			denyList, err := icsKeeper.ValidatorDenyList(ctx, tc.req)
 			if tc.wantErr {
@@ -1391,8 +1401,8 @@ func (suite *KeeperTestSuite) TestKeeper_ZoneValidatorDenyList() {
 				suite.Empty(denyList)
 			} else {
 				suite.NotNil(denyList)
-				if tc.expectedLength == 1 {
-					suite.Equal(&types.QueryDenyListResponse{Validators: []string{validator.ValoperAddress}}, denyList)
+				if tc.expectedLength == 2 {
+					suite.Equal(&types.QueryDenyListResponse{Validators: []string{validator1.ValoperAddress, validator2.ValoperAddress}}, denyList)
 				} else {
 					suite.Empty(denyList.Validators)
 				}
