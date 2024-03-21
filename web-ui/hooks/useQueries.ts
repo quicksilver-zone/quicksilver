@@ -1,8 +1,7 @@
 import { useChain } from '@cosmos-kit/react';
-import { useQuery } from '@tanstack/react-query';
+import { useQueries, useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import { cosmos } from 'interchain-query';
-import { quicksilver } from 'quicksilverjs';
 import { Zone } from 'quicksilverjs/dist/codegen/quicksilver/interchainstaking/v1/interchainstaking';
 
 import { useGrpcQueryClient } from './useGrpcQueryClient';
@@ -76,17 +75,17 @@ type UseLiquidRewardsQueryReturnType = {
 
 interface ProofOp {
   type: string;
-  key: Uint8Array;  // Updated to Uint8Array
-  data: Uint8Array; // Updated to Uint8Array
+  key: Uint8Array; 
+  data: Uint8Array; 
 }
 
 interface Proof {
-  key: Uint8Array;  // Updated to Uint8Array
-  data: Uint8Array; // Updated to Uint8Array
+  key: Uint8Array;  
+  data: Uint8Array; 
   proof_ops: {
     ops: ProofOp[];
   };
-  height: Long; // Assuming height is a number
+  height: Long; 
   proof_type: string;
 }
 
@@ -96,7 +95,7 @@ interface Message {
   src_zone: string;
   claim_type: number;
   proofs: Proof[];
-  // Remove height and proof_type if they are not needed here
+ 
 }
 
 interface AssetAmount {
@@ -110,13 +109,12 @@ interface LiquidEpochData {
   errors: Record<string, unknown>; 
 }
 
-// Type for the useLiquidEpochQuery return
+
 interface UseLiquidEpochQueryReturnType {
   liquidEpoch: LiquidEpochData | undefined;
   isLoading: boolean;
   isError: boolean;
 }
-
 
 
 const BigNumber = require('bignumber.js');
@@ -152,6 +150,37 @@ export const useBalanceQuery = (chainName: string, address: string) => {
   };
 };
 
+export const useIncorrectAuthChecker = (address: string) => {
+  const authQuery = useQuery(
+    ['authWrong', address],
+    async () => {
+      if (!address) {
+        throw new Error('Address is undefined or null');
+      }
+
+      try {
+        const url = `https://lcd.quicksilver.zone/cosmos/authz/v1beta1/grants?granter=${address}&grantee=quick1w5ennfhdqrpyvewf35sv3y3t8yuzwq29mrmyal&msgTypeUrl=/quicksilver.participationrewards.v1.MsgSubmitClaim`;
+        const response = await axios.get(url);
+        return { data: response.data, error: null };
+      } catch (error) {
+        // Capture and return error
+        return { data: null, error: error };
+      }
+    },
+    {
+      enabled: !!address,
+      staleTime: Infinity,
+    },
+  );
+
+  return {  
+    authData: authQuery.data?.data,
+    authError: authQuery.data?.error,
+    isLoading: authQuery.isLoading,
+    isError: authQuery.isError,
+  };
+};
+
 export const useAuthChecker = (address: string) => {
   const authQuery = useQuery(
     ['auth', address],
@@ -161,7 +190,7 @@ export const useAuthChecker = (address: string) => {
       }
 
       try {
-        const url = `https://lcd.quicksilver.zone/cosmos/authz/v1beta1/grants?granter=${address}&grantee=quick1w5ennfhdqrpyvewf35sv3y3t8yuzwq29mrmyal&msgTypeUrl=/quicksilver.participationrewards.v1.MsgSubmitClaim`;
+        const url = `https://lcd.quicksilver.zone/cosmos/authz/v1beta1/grants?granter=${address}&grantee=quick1psevptdp90jad76zt9y9x2nga686hutgmasmwd&msgTypeUrl=/quicksilver.participationrewards.v1.MsgSubmitClaim`;
         const response = await axios.get(url);
         return { data: response.data, error: null };
       } catch (error) {
@@ -223,11 +252,11 @@ export const useAllBalancesQuery = (chainName: string, address: string) => {
       if (!grpcQueryClient) {
         throw new Error('RPC Client not ready');
       }
-      const nextKey = new Uint8Array()
+      const next_key = new Uint8Array()
       const balance = await grpcQueryClient.cosmos.bank.v1beta1.allBalances({
         address: address || '',
         pagination: {
-          key: nextKey,
+          key: next_key,
           offset: Long.fromNumber(0),
           limit: Long.fromNumber(100),
           countTotal: true,
@@ -258,11 +287,11 @@ export const useIbcBalanceQuery = (chainName: string, address: string) => {
       if (!grpcQueryClient) {
         throw new Error('RPC Client not ready');
       }
-      const nextKey = new Uint8Array()
+      const next_key = new Uint8Array()
       const balance = await grpcQueryClient.cosmos.bank.v1beta1.allBalances({
         address: address || '',
         pagination: {
-          key: nextKey,
+          key: next_key,
           offset: Long.fromNumber(0),
           limit: Long.fromNumber(100),
           countTotal: true,
@@ -302,24 +331,28 @@ export const useTokenPriceQuery = (tokenSymbol: string) => {
   });
 };
 
-export const useQBalanceQuery = (chainName: string, address: string, qAsset: string) => {
+export const useQBalanceQuery = (chainName: string, address: string, qAsset: string, liveNetworks?: string[], chainId?: string) => {
   const { grpcQueryClient } = useGrpcQueryClient(chainName);
+
+  const isLive = liveNetworks?.includes(chainId ?? '');
+
   const balanceQuery = useQuery(
     ['balance', qAsset],
     async () => {
       if (!grpcQueryClient) {
         throw new Error('RPC Client not ready');
       }
+      const denom = qAsset === 'dydx' ? 'aq'+ qAsset : 'uq' + qAsset;
 
       const balance = await grpcQueryClient.cosmos.bank.v1beta1.balance({
         address: address || '',
-        denom: 'uq' + qAsset,
+        denom: denom,
       });
 
       return balance;
     },
     {
-      enabled: !!grpcQueryClient && !!address,
+      enabled: !!grpcQueryClient && !!address && isLive,
       staleTime: Infinity,
     },
   );
@@ -383,7 +416,7 @@ export const useLiquidRewardsQuery = (address: string): UseLiquidRewardsQueryRet
         throw new Error('Address is not avaialble');
       }
 
-      const response = await axios.get<LiquidRewardsData>(`https://claim.test.quicksilver.zone/${address}/current`);
+      const response = await axios.get<LiquidRewardsData>(`https://claim.quicksilver.zone/${address}/current`);
       return response.data;
     },
     {
@@ -408,7 +441,7 @@ export const useLiquidEpochQuery = (address: string): UseLiquidEpochQueryReturnT
         throw new Error('Address is not available');
       }
 
-      const response = await axios.get<LiquidEpochData>(`https://claim.test.quicksilver.zone/${address}/epoch`);
+      const response = await axios.get<LiquidEpochData>(`https://claim.quicksilver.zone/${address}/epoch`);
 
 
       if (response.data.messages.length === 0) {
@@ -486,21 +519,23 @@ export const useValidatorsQuery = (chainName: string) => {
         reverse: false,
       },
     });
+
     return validators;
   };
+
 
   //TODO: migrate this to use evince cache endpoint.
   const validatorQuery = useQuery(
     ['validators', chainName],
     async () => {
       let allValidators: any[] = [];
-      let nextKey = new Uint8Array();
+      let next_key = new Uint8Array();
 
       do {
-        const response = await fetchValidators(nextKey);
+        const response = await fetchValidators(next_key);
         allValidators = allValidators.concat(response.validators);
-        nextKey = response.pagination.next_key ?? new Uint8Array();
-      } while (nextKey && nextKey.length > 0);
+        next_key = response.pagination.next_key ?? new Uint8Array();
+      } while (next_key && next_key.length > 0);
       const sorted = allValidators.sort((a, b) => new BigNumber(b.tokens).minus(a.tokens).toNumber());
       return parseValidators(sorted);
     },
@@ -548,13 +583,16 @@ const fetchAPY = async (chainId: any) => {
   return chainInfo ? chainInfo.apr : 0;
 };
 
-export const useAPYQuery = (chainId: any) => {
+
+
+export const useAPYQuery = (chainId: any, liveNetworks?: string[] ) => {
+  const isLive = liveNetworks?.some(network => network === chainId);
   const query = useQuery(
       ['APY', chainId],
       () => fetchAPY(chainId),
       {
           staleTime: Infinity,
-          enabled: !!chainId,
+          enabled: !!chainId && isLive,
       }
   );
 
@@ -565,17 +603,72 @@ export const useAPYQuery = (chainId: any) => {
   };
 };
 
-export const useZoneQuery = (chainId: string) => {
+function parseZone(apiZone: any): Zone {
+
+  return {
+    connectionId: apiZone.connection_id,
+    chainId: apiZone.chain_id,
+    depositAddress: apiZone.deposit_address,
+    withdrawalAddress: apiZone.withdrawal_address,
+    performanceAddress: apiZone.performance_address,
+    delegationAddress: apiZone.delegation_address,
+    accountPrefix: apiZone.account_prefix,
+    localDenom: apiZone.local_denom,
+    baseDenom: apiZone.base_denom,
+    redemptionRate: apiZone.redemption_rate,
+    lastRedemptionRate: apiZone.last_redemption_rate,
+    validators: apiZone.validators,
+    aggregateIntent: apiZone.aggregate_intent,
+    multiSend: apiZone.multi_send,
+    liquidityModule: apiZone.liquidity_module,
+    withdrawalWaitgroup: apiZone.withdrawal_waitgroup,
+    ibcNextValidatorsHash: apiZone.ibc_next_validators_hash,
+    validatorSelectionAllocation: apiZone.validator_selection_allocation,
+    holdingsAllocation: apiZone.holdings_allocation,
+    lastEpochHeight: apiZone.last_epoch_height,
+    tvl: apiZone.tvl,
+    unbondingPeriod: apiZone.unbonding_period,
+    messagesPerTx: apiZone.messages_per_tx,
+    decimals: apiZone.decimals,
+    returnToSender: apiZone.return_to_sender,
+    unbondingEnabled: apiZone.unbonding_enabled,
+    depositsEnabled: apiZone.deposits_enabled,
+    is118: apiZone.is118,
+    subzoneInfo: apiZone.subzoneInfo,
+  };
+}
+
+export function useZonesData(networks: { chainId: string }[]) {
+  return useQueries({
+    queries: networks.map(({ chainId }) => ({
+      queryKey: ['zone', chainId],
+      queryFn: async () => {
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_QUICKSILVER_API}/quicksilver/interchainstaking/v1/zones`);
+        const zones: any[] = response.data.zones; 
+        const apiZone = zones.find(z => z.chain_id === chainId);
+        if (!apiZone) {
+          throw new Error(`No zone with chain id ${chainId} found`);
+        }
+        return parseZone(apiZone); 
+      },
+      enabled: !!chainId,
+    }))
+  });
+}
+
+export const useZoneQuery = (chainId: string, liveNetworks?: string[]) => {
+  const isLive = liveNetworks?.some(network => network === chainId);
   return useQuery<Zone, Error>(
     ['zone', chainId],
     async () => {
+      
       const res = await axios.get(`${process.env.NEXT_PUBLIC_QUICKSILVER_API}/quicksilver/interchainstaking/v1/zones`);
       const { zones } = res.data;
 
       if (!zones || zones.length === 0) {
         throw new Error('Failed to query zones');
       }
-
+    
       const apiZone = zones.find((z: { chain_id: string }) => z.chain_id === chainId);
       if (!apiZone) {
         throw new Error(`No zone with chain id ${chainId} found`);
@@ -584,35 +677,40 @@ export const useZoneQuery = (chainId: string) => {
       // Parse or map the API zone data to your Zone interface
       const parsedZone: Zone = {
         connectionId: apiZone.connection_id,
-        chainId: apiZone.chain_id,
-        depositAddress: apiZone.deposit_address,
-        withdrawalAddress: apiZone.withdrawal_address,
-        performanceAddress: apiZone.performance_address,
-        delegationAddress: apiZone.delegation_address,
-        accountPrefix: apiZone.account_prefix,
-        localDenom: apiZone.local_denom,
-        baseDenom: apiZone.base_denom,
-        redemptionRate: apiZone.redemption_rate,
-        lastRedemptionRate: apiZone.last_redemption_rate,
-        validators: apiZone.validators,
-        aggregateIntent: apiZone.aggregate_intent,
-        multiSend: apiZone.multi_send,
-        liquidityModule: apiZone.liquidity_module,
-        withdrawalWaitgroup: apiZone.withdrawal_waitgroup,
-        ibcNextValidatorsHash: apiZone.ibc_next_validators_hash,
-        validatorSelectionAllocation: apiZone.validator_selection_allocation,
-        holdingsAllocation: apiZone.holdings_allocation,
-        lastEpochHeight: apiZone.last_epoch_height,
-        tvl: apiZone.tvl,
-        unbondingPeriod: apiZone.unbonding_period,
-        messagesPerTx: apiZone.messages_per_tx,
-        // ... other fields as needed
+    chainId: apiZone.chain_id,
+    depositAddress: apiZone.deposit_address,
+    withdrawalAddress: apiZone.withdrawal_address,
+    performanceAddress: apiZone.performance_address,
+    delegationAddress: apiZone.delegation_address,
+    accountPrefix: apiZone.account_prefix,
+    localDenom: apiZone.local_denom,
+    baseDenom: apiZone.base_denom,
+    redemptionRate: apiZone.redemption_rate,
+    lastRedemptionRate: apiZone.last_redemption_rate,
+    validators: apiZone.validators,
+    aggregateIntent: apiZone.aggregate_intent,
+    multiSend: apiZone.multi_send,
+    liquidityModule: apiZone.liquidity_module,
+    withdrawalWaitgroup: apiZone.withdrawal_waitgroup,
+    ibcNextValidatorsHash: apiZone.ibc_next_validators_hash,
+    validatorSelectionAllocation: apiZone.validator_selection_allocation,
+    holdingsAllocation: apiZone.holdings_allocation,
+    lastEpochHeight: apiZone.last_epoch_height,
+    tvl: apiZone.tvl,
+    unbondingPeriod: apiZone.unbonding_period,
+    messagesPerTx: apiZone.messages_per_tx,
+    decimals: apiZone.decimals,
+    returnToSender: apiZone.return_to_sender,
+    unbondingEnabled: apiZone.unbonding_enabled,
+    depositsEnabled: apiZone.deposits_enabled,
+    is118: apiZone.is118,
+    subzoneInfo: apiZone.subzoneInfo,
       };
 
       return parsedZone;
     },
     {
-      enabled: !!chainId,
+      enabled: !!chainId && isLive
     }
   );
 };
@@ -640,12 +738,12 @@ export const useMissedBlocks = (chainName: string) => {
     }
   
     let allMissedBlocks: any[] = [];
-    let nextKey = new Uint8Array();
+    let next_key = new Uint8Array();
   
     do {
       const response = await grpcQueryClient.cosmos.slashing.v1beta1.signingInfos({
         pagination: {
-          key: nextKey,
+          key: next_key,
           offset: Long.fromNumber(0),
           limit: Long.fromNumber(100),
           countTotal: true,
@@ -662,8 +760,8 @@ export const useMissedBlocks = (chainName: string) => {
       });
       
       allMissedBlocks = allMissedBlocks.concat(filteredMissedBlocks);
-      nextKey = response.pagination?.next_key ?? new Uint8Array();
-    } while (nextKey && nextKey.length > 0);
+      next_key = response.pagination?.next_key ?? new Uint8Array();
+    } while (next_key && next_key.length > 0);
   
     return allMissedBlocks;
   };
@@ -716,6 +814,44 @@ export const useDefiData = () => {
   };
 };
 
+export const useGovernanceQuery = (chainName: string) => {
+  const { grpcQueryClient } = useGrpcQueryClient(chainName);
+  const governanceQuery = useQuery(
+    ['governance', chainName],
+    async () => {
+      if (!grpcQueryClient) {
+        throw new Error('RPC Client not ready');
+      }
+      const next_key = new Uint8Array()
+      const governance = await grpcQueryClient.cosmos.gov.v1beta1.proposals({
+        proposalStatus: cosmos.gov.v1.ProposalStatus.PROPOSAL_STATUS_UNSPECIFIED,
+        pagination: {
+          key: next_key,
+          offset: Long.fromNumber(0),
+          limit: Long.fromNumber(100),
+          countTotal: true,
+          reverse: true,
+        },
+        voter: '',
+        depositor: '',
+      });
+
+      return governance;
+    },
+    {
+      enabled: !!grpcQueryClient,
+      staleTime: Infinity,
+    },
+  );
+
+  return {
+    governance: governanceQuery.data,
+    isLoading: governanceQuery.isLoading,
+    isError: governanceQuery.isError,
+  };
+
+}
+
 export const useNativeStakeQuery = (chainName: string, address: string) => {
   const { grpcQueryClient } = useGrpcQueryClient(chainName);
   const delegationQuery = useQuery(
@@ -724,18 +860,18 @@ export const useNativeStakeQuery = (chainName: string, address: string) => {
       if (!grpcQueryClient) {
         throw new Error('RPC Client not ready');
       }
-      const nextKey = new Uint8Array()
+      const next_key = new Uint8Array()
       const balance = await grpcQueryClient.cosmos.staking.v1beta1.delegatorDelegations({
         delegator_addr: address || '',
         pagination: {
-          key: nextKey,
+          key: next_key,
           offset: Long.fromNumber(0),
           limit: Long.fromNumber(100),
           countTotal: true,
           reverse: false,
         },
       });
-
+  
       return balance;
     },
     {

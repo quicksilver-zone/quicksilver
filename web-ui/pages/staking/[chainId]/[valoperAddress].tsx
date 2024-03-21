@@ -78,7 +78,7 @@ export default function Home() {
           <Head>
             <title>Staking on {selectedNetwork?.name}</title>
             <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-            <link rel="icon" href="/img/favicon.png" />
+            <link rel="icon" href="/img/favicon-main.png" />
           </Head>
           {selectedNetwork && validValoperAddress && isValidValoperAddress() ? (
             <StakingBox valoperAddress={validValoperAddress} selectedOption={selectedNetwork} />
@@ -141,11 +141,7 @@ export const StakingBox = ({ selectedOption, valoperAddress }: StakingBoxProps) 
   const exp = getExponent(selectedOption.chainName);
   const { balance, isLoading } = useBalanceQuery(selectedOption.chainName, address ?? '');
 
-  const {
-    balance: qBalance,
-    isLoading: qIsLoading,
-    isError: qIsError,
-  } = useQBalanceQuery('quicksilver', qAddress ?? '', selectedOption.value.toLowerCase());
+  const { balance: qBalance } = useQBalanceQuery('quicksilver', qAddress ?? '', selectedOption.value.toLowerCase());
 
   const qAssets = qBalance?.balance.amount || '';
 
@@ -170,7 +166,8 @@ export const StakingBox = ({ selectedOption, valoperAddress }: StakingBoxProps) 
 
   const [inputError, setInputError] = useState(false);
 
-  const qAssetsExponent = shiftDigits(qAssets, -6);
+  const exponent = qBalance?.balance.denom === 'aqdydx' ? -18 : -6;
+  const qAssetsExponent = shiftDigits(qAssets, exponent);
   const qAssetsDisplay = qAssetsExponent.includes('.') ? qAssetsExponent.substring(0, qAssetsExponent.indexOf('.') + 3) : qAssetsExponent;
 
   const maxUnstakingAmount = truncateToThreeDecimals(Number(qAssetsDisplay));
@@ -178,18 +175,15 @@ export const StakingBox = ({ selectedOption, valoperAddress }: StakingBoxProps) 
 
   const [isSigning, setIsSigning] = useState<boolean>(false);
 
-  const [isError, setIsError] = useState<boolean>(false);
-  const [transactionStatus, setTransactionStatus] = useState('Pending');
-
   const env = process.env.NEXT_PUBLIC_CHAIN_ENV;
   const quicksilverChainName = env === 'testnet' ? 'quicksilvertestnet' : 'quicksilver';
-
-  const isCalculationDataLoaded = tokenAmount && !isNaN(Number(tokenAmount)) && zone && !isNaN(Number(zone.redemptionRate));
 
   const { requestRedemption } = quicksilver.interchainstaking.v1.MessageComposer.withTypeUrl;
   const numericAmount = Number(tokenAmount);
   const smallestUnitAmount = numericAmount * Math.pow(10, 6);
   const value: Coin = { amount: smallestUnitAmount.toFixed(0), denom: zone?.localDenom ?? '' };
+
+  // Create the message only executes if the unstake button is clickable
   const msgRequestRedemption = requestRedemption({
     value: value,
     fromAddress: qAddress ?? '',
@@ -212,16 +206,12 @@ export const StakingBox = ({ selectedOption, valoperAddress }: StakingBoxProps) 
     event.preventDefault();
     setIsSigning(true);
     try {
-      const result = await tx([msgRequestRedemption], {
+      await tx([msgRequestRedemption], {
         fee,
-        onSuccess: () => {
-          setTransactionStatus('Success');
-        },
+        onSuccess: () => {},
       });
     } catch (error) {
       console.error('Transaction failed', error);
-      setTransactionStatus('Failed');
-      setIsError(true);
     } finally {
       setIsSigning(false);
     }
@@ -269,7 +259,7 @@ export const StakingBox = ({ selectedOption, valoperAddress }: StakingBoxProps) 
   let memo = memoBuffer.length > 0 && valoperAddress ? memoBuffer.toString('base64') : '';
 
   const { send } = cosmos.bank.v1beta1.MessageComposer.withTypeUrl;
-
+  // Create the message only executes if the liquid stake button is clickable
   const msgSend = send({
     fromAddress: address ?? '',
     toAddress: zone?.depositAddress?.address ?? '',
@@ -297,19 +287,15 @@ export const StakingBox = ({ selectedOption, valoperAddress }: StakingBoxProps) 
   const handleLiquidStake = async (event: React.MouseEvent) => {
     event.preventDefault();
     setIsSigning(true);
-    setTransactionStatus('Pending');
+
     try {
-      const result = await sendTx([msgSend], {
+      await sendTx([msgSend], {
         memo,
         fee: stakeFee,
-        onSuccess: () => {
-          setTransactionStatus('Success');
-        },
+        onSuccess: () => {},
       });
     } catch (error) {
       console.error('Transaction failed', error);
-      setTransactionStatus('Failed');
-      setIsError(true);
     } finally {
       setIsSigning(false);
     }
@@ -548,7 +534,7 @@ export const StakingBox = ({ selectedOption, valoperAddress }: StakingBoxProps) 
                     </Flex>
                   </Flex>
                   <Divider bgColor="complimentary.900" />
-                  <HStack justifyContent="space-between" alignItems="left" w="100%" mt={-8}>
+                  <HStack pt={2} justifyContent="space-between" alignItems="left" w="100%" mt={-8}>
                     <Stat textAlign="left" color="white">
                       <StatLabel>What you&apos;ll get</StatLabel>
                       <StatNumber>q{selectedOption.value.toUpperCase()}:</StatNumber>
@@ -556,7 +542,11 @@ export const StakingBox = ({ selectedOption, valoperAddress }: StakingBoxProps) 
                     <Spacer /> {/* This pushes the next Stat component to the right */}
                     <Stat py={4} textAlign="right" color="white">
                       <StatNumber textColor="complimentary.900">
-                        {(Number(tokenAmount) / (Number(zone?.redemptionRate) || 1)).toFixed(2)}
+                        {!isZoneLoading ? (
+                          (Number(tokenAmount) * Number(zone?.redemptionRate || 1)).toFixed(2)
+                        ) : (
+                          <Spinner thickness="2px" speed="0.65s" emptyColor="gray.200" color="complimentary.900" size="sm" />
+                        )}
                       </StatNumber>
                     </Stat>
                   </HStack>
@@ -712,7 +702,11 @@ export const StakingBox = ({ selectedOption, valoperAddress }: StakingBoxProps) 
                   <Spacer /> {/* This pushes the next Stat component to the right */}
                   <Stat py={4} textAlign="right" color="white">
                     <StatNumber textColor="complimentary.900">
-                      {(Number(tokenAmount) * Number(zone?.redemptionRate || 1)).toFixed(2)}
+                      {!isZoneLoading ? (
+                        (Number(tokenAmount) * Number(zone?.redemptionRate || 1)).toFixed(2)
+                      ) : (
+                        <Spinner thickness="2px" speed="0.65s" emptyColor="gray.200" color="complimentary.900" size="sm" />
+                      )}
                     </StatNumber>
                   </Stat>
                 </HStack>

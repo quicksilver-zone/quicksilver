@@ -5,6 +5,7 @@ const defaultThemeObject = {
     initialColorMode: 'light',
     useSystemColorMode: false,
   },
+  // Chakra UI cosmology wallet modal color manipulation 
   styles: {
     global: (props: { colorMode: string }) => ({
       '._1n3anio3': {

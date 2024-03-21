@@ -1,5 +1,7 @@
 import { useToast, Text, Box, Link } from '@chakra-ui/react';
 
+import { convertChainName } from '@/utils';
+
 export enum ToastType {
   Info = 'info',
   Error = 'error',
@@ -28,7 +30,7 @@ export const useToaster = () => {
     let description;
 
     if (type === ToastType.Success && txHash) {
-      const mintscanUrl = `https://www.mintscan.io/${chainName}/txs/${txHash}`;
+      const mintscanUrl = `https://www.mintscan.io/${convertChainName(chainName ?? '')}/txs/${txHash}`;
       description = (
         <Box pr="20px">
           <Text fontSize="sm" color="white">

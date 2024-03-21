@@ -15,7 +15,7 @@ import {
   StatNumber,
   Spinner,
 } from '@chakra-ui/react';
-import { coins, StdFee } from '@cosmjs/amino';
+import { StdFee } from '@cosmjs/amino';
 import styled from '@emotion/styled';
 import chains from 'chain-registry';
 import { assets } from 'chain-registry';
@@ -23,7 +23,6 @@ import { cosmos } from 'quicksilverjs';
 import React, { useEffect, useState } from 'react';
 
 import { useTx } from '@/hooks';
-import { useZoneQuery } from '@/hooks/useQueries';
 import { shiftDigits } from '@/utils';
 
 const ChakraModalContent = styled(ModalContent)`
@@ -79,7 +78,7 @@ interface StakingModalProps {
   denom: string;
 }
 
-export const TransferProcessModal: React.FC<StakingModalProps> = ({
+export const RevertSharesProcessModal: React.FC<StakingModalProps> = ({
   isOpen,
   onClose,
   selectedOption,
@@ -88,14 +87,6 @@ export const TransferProcessModal: React.FC<StakingModalProps> = ({
   isTokenized,
   denom,
 }) => {
-  useEffect(() => {
-    if (isTokenized === true) {
-      setStep(2);
-    }
-    if (isTokenized === undefined) {
-      setStep(1);
-    }
-  }, [isTokenized, selectedValidator]);
   const [step, setStep] = useState(1);
   const getProgressColor = (circleStep: number) => {
     if (step >= circleStep) return 'complimentary.900';
@@ -118,35 +109,13 @@ export const TransferProcessModal: React.FC<StakingModalProps> = ({
     newChainName = selectedOption?.chainName;
   }
 
-  const { data: zone } = useZoneQuery(selectedOption?.chainId ?? '');
-  const labels = ['Tokenize Shares', `Transfer`, `Receive q${selectedOption?.value}`];
-  const [transactionStatus, setTransactionStatus] = useState('Pending');
-  function truncateString(str: string, num: number) {
-    if (str.length > num) {
-      return str.slice(0, num) + '...';
-    } else {
-      return str;
-    }
-  }
-
-  const { tokenizeShares } = cosmos.staking.v1beta1.MessageComposer.withTypeUrl;
-
-  const msg = tokenizeShares({
-    delegatorAddress: address,
-    validatorAddress: selectedValidator.operatorAddress,
-    amount: {
-      denom: 'u' + selectedOption?.value.toLowerCase(),
-      amount: selectedValidator.tokenAmount.toString(),
-    },
-    tokenizedShareOwner: address,
-  });
+  const labels = ['Revert Shares', `Receive Tokens`];
 
   const mainTokens = assets.find(({ chain_name }) => chain_name === newChainName);
   const fees = chains.chains.find(({ chain_name }) => chain_name === newChainName)?.fees?.fee_tokens;
   const mainDenom = mainTokens?.assets[0].base ?? '';
   const fixedMinGasPrice = fees?.find(({ denom }) => denom === mainDenom)?.high_gas_price ?? '';
   const feeAmount = Number(fixedMinGasPrice) * 750000;
-  const sendFeeAmount = Number(fixedMinGasPrice) * 100000;
 
   const fee: StdFee = {
     amount: [
@@ -155,18 +124,7 @@ export const TransferProcessModal: React.FC<StakingModalProps> = ({
         amount: feeAmount.toString(),
       },
     ],
-    gas: '1000000', // increased to 1,000,000 from 750,000
-  };
-
-  // don't use the same fee for both txs, as a send is piddly!
-  const sendFee: StdFee = {
-    amount: [
-      {
-        denom: mainDenom,
-        amount: sendFeeAmount.toString(),
-      },
-    ],
-    gas: '100000',
+    gas: '750000',
   };
 
   const { tx, responseEvents } = useTx(newChainName ?? '');
@@ -174,70 +132,45 @@ export const TransferProcessModal: React.FC<StakingModalProps> = ({
 
   // prettier-ignore
   useEffect(() => {
-
-    const tokenizeSharesEvent = responseEvents?.find(event => event.type === 'tokenize_shares');
   
-    if (tokenizeSharesEvent) {
- 
-      const validatorValue = tokenizeSharesEvent.attributes.find(attr => attr.key === 'validator')?.value;
-      const shareRecordIdValue = tokenizeSharesEvent.attributes.find(attr => attr.key === 'share_record_id')?.value;
+      const tokenizeSharesEvent = responseEvents?.find(event => event.type === 'tokenize_shares');
+    
+      if (tokenizeSharesEvent) {
+   
+        const validatorValue = tokenizeSharesEvent.attributes.find(attr => attr.key === 'validator')?.value;
+        const shareRecordIdValue = tokenizeSharesEvent.attributes.find(attr => attr.key === 'share_record_id')?.value;
+    
   
-
-      if (validatorValue && shareRecordIdValue) {
-        setCombinedDenom(`${validatorValue}/${shareRecordIdValue}`);
+        if (validatorValue && shareRecordIdValue) {
+          setCombinedDenom(`${validatorValue}/${shareRecordIdValue}`);
+        }
       }
-    }
-  }, [responseEvents]);
+    }, [responseEvents]);
 
-  const handleTokenizeShares = async (event: React.MouseEvent) => {
+  const { redeemTokensForShares } = cosmos.staking.v1beta1.MessageComposer.withTypeUrl;
+
+  const msg = redeemTokensForShares({
+    delegatorAddress: address,
+    amount: {
+      denom: denom ?? combinedDenom,
+      amount: selectedValidator.tokenAmount.toString(),
+    },
+  });
+
+  const handleRevertShares = async (event: React.MouseEvent) => {
     event.preventDefault();
     setIsSigning(true);
-    setTransactionStatus('Pending');
+
     try {
       await tx([msg], {
         fee,
         onSuccess: () => {
           setStep(2);
-          setTransactionStatus('Success');
         },
       });
     } catch (error) {
       console.error('Transaction failed', error);
-      setTransactionStatus('Failed');
-      setIsError(true);
-    } finally {
-      setIsSigning(false);
-    }
-  };
 
-  const { send } = cosmos.bank.v1beta1.MessageComposer.withTypeUrl;
-
-  let numericAmount = selectedValidator.tokenAmount;
-  if (isNaN(Number(numericAmount)) || Number(numericAmount) <= 0) {
-    numericAmount = '0';
-  }
-
-  const msgSend = send({
-    fromAddress: address ?? '',
-    toAddress: zone?.depositAddress?.address ?? '',
-    amount: coins(numericAmount, denom ?? combinedDenom),
-  });
-
-  const handleSend = async (event: React.MouseEvent) => {
-    event.preventDefault();
-    setIsSigning(true);
-    setTransactionStatus('Pending');
-    try {
-      await tx([msgSend], {
-        fee: sendFee,
-        onSuccess: () => {
-          setStep(3);
-          setTransactionStatus('Success');
-        },
-      });
-    } catch (error) {
-      console.error('Transaction failed', error);
-      setTransactionStatus('Failed');
       setIsError(true);
     } finally {
       setIsSigning(false);
@@ -247,22 +180,22 @@ export const TransferProcessModal: React.FC<StakingModalProps> = ({
   return (
     <Modal isOpen={isOpen} onClose={onClose} size={{ base: '3xl', md: '2xl' }}>
       <ModalOverlay />
-      <ChakraModalContent h={{ md: '44%', base: '80%' }} maxH={'100%'}>
-        <ModalBody borderRadius={4} h="44%" maxH={'100%'}>
+      <ChakraModalContent h={{ md: '30%', base: '35%' }} maxH={'100%'}>
+        <ModalBody borderRadius={4} h="30%" maxH={'100%'}>
           <ModalCloseButton zIndex={1000} color="white" />
           <HStack position={'relative'} h="100%" spacing="48px" align="stretch">
             {/* Left Section */}
             <Flex flexDirection="column" justifyContent="space-between" width="40%" p={4} bg="#1E1C19" height="100%">
               <Box position="relative">
                 <Stat>
-                  <StatLabel color="rgba(255,255,255,0.5)">TRANSFER DELEGATION</StatLabel>
-                  <StatNumber color="white">{truncateString(selectedValidator.moniker, 13)}</StatNumber>
+                  <StatLabel color="rgba(255,255,255,0.5)">REVERT</StatLabel>
+
                   <StatNumber display={{ base: 'none', md: 'block' }} color="white">
                     {shiftDigits(selectedValidator.tokenAmount, -6)}&nbsp;
                     {selectedOption?.value}
                   </StatNumber>
                 </Stat>
-                {[1, 2, 3].map((circleStep, index) => (
+                {[1, 2].map((circleStep, index) => (
                   <Flex key={circleStep} align="center" mt={10} mb={circleStep !== 4 ? '48px' : '0'}>
                     <Circle
                       size="36px"
@@ -277,7 +210,7 @@ export const TransferProcessModal: React.FC<StakingModalProps> = ({
                       borderColor="rgba(255,255,255,0.5)"
                     >
                       {circleStep}
-                      {circleStep !== 3 && (
+                      {circleStep !== 2 && (
                         <>
                           <Box
                             width="2px"
@@ -311,18 +244,18 @@ export const TransferProcessModal: React.FC<StakingModalProps> = ({
             <Flex width="67%" flexDirection="column" justifyContent="center" alignItems="center">
               {step === 1 && (
                 <>
-                  <Flex maxW="300px" flexDirection={'column'} justifyContent={'left'} alignItems={'center'}>
-                    <Text textAlign={'left'} fontWeight={'bold'} fontSize="lg" color="white">
-                      Tokenize Shares
+                  <Flex maxW="300px" flexDirection={'column'} justifyContent={'flex-start'} alignItems={'center'}>
+                    <Text textAlign={'center'} fontWeight={'bold'} fontSize="lg" color="white">
+                      You are about to revert your shares back to tokens.
                     </Text>
-                    <Text mt={2} textAlign={'center'} fontWeight={'light'} fontSize="lg" color="white">
-                      Tokenize your delegation in order to transfer it to Quicksilver
+                    <Text mt={2} textAlign={'left'} fontWeight={'light'} fontSize="lg" color="white">
+                      Reverting&nbsp;&nbsp;{shiftDigits(selectedValidator.tokenAmount, -6)}&nbsp; {selectedOption?.value}
                     </Text>
                   </Flex>
 
                   <Button
                     mt={4}
-                    width={{ base: '80%', md: '55%' }}
+                    width={{ base: '80%', md: '30%' }}
                     _active={{
                       transform: 'scale(0.95)',
                       color: 'complimentary.800',
@@ -331,47 +264,17 @@ export const TransferProcessModal: React.FC<StakingModalProps> = ({
                       bgColor: 'rgba(255,128,0, 0.25)',
                       color: 'complimentary.300',
                     }}
-                    onClick={handleTokenizeShares}
+                    onClick={handleRevertShares}
                   >
-                    {isError ? 'Try Again' : isSigning ? <Spinner /> : 'Tokenize Shares'}
+                    {isError ? 'Try Again' : isSigning ? <Spinner /> : 'Revert'}
                   </Button>
                 </>
               )}
               {step === 2 && (
                 <>
                   <Text textAlign={'center'} fontWeight={'bold'} fontSize="lg" color="white">
-                    Send your tokenized shares to Quicksilver
+                    Your shares have been successfully reverted back to tokens and should arrive in your wallet.
                   </Text>
-                  <Button
-                    mt={4}
-                    width="55%"
-                    _active={{
-                      transform: 'scale(0.95)',
-                      color: 'complimentary.800',
-                    }}
-                    _hover={{
-                      bgColor: 'rgba(255,128,0, 0.25)',
-                      color: 'complimentary.300',
-                    }}
-                    onClick={handleSend}
-                  >
-                    {isError ? 'Try Again' : isSigning ? <Spinner /> : 'Transfer'}
-                  </Button>
-                </>
-              )}
-
-              {step === 3 && (
-                <>
-                  <Box justifyContent={'center'}>
-                    <Flex maxW="300px" flexDirection={'column'} justifyContent={'left'} alignItems={'center'}>
-                      <Text textAlign={'left'} fontWeight={'bold'} fontSize="lg" color="white">
-                        Transaction {transactionStatus}
-                      </Text>
-                      <Text mt={2} textAlign={'center'} fontWeight={'light'} fontSize="lg" color="white">
-                        Your q{selectedOption?.value} will arrive to your wallet in a few minutes.
-                      </Text>
-                    </Flex>
-                  </Box>
                 </>
               )}
             </Flex>
@@ -381,4 +284,4 @@ export const TransferProcessModal: React.FC<StakingModalProps> = ({
     </Modal>
   );
 };
-export default TransferProcessModal;
+export default RevertSharesProcessModal;

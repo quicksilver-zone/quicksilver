@@ -31,25 +31,33 @@ Please use this Prettier config to format your code before opening a pull reques
 
 Please ensure your IDE is configured to use Typescript v4.9.3
 
-### Development ToDo
+### TODO:
+
+**Staking**
+
+- [ ] Add support for Dymension
+- [ ] Add more weight options IE `equal`, `custom`, `most votes`, `lowest commission` etc
+- [x] Make back button in staking modal larger
+- [x] Fix skeleton spam when searching for non existent validator in staking modal
 
 **Governance**
 
-- add liquid staked governance (when its built)
-
 **UI/UX**
 
-- focus on mobile landscape breakpoints, (mainly staking page)
+- [ ] Double check breakpoints
 
 **Mobile Menu**
 
-- graphic elements
+- [ ] improve mobile menu
 
 **DevOps**
 
-- make onboarding networks seamless
+- [ ] Add doc for adding networks
 
-**Blockers**
+**Has Blockers**
 
-- main net reward current & epoch queries
-- update grantee address in query & tx
+- [ ] Build liquid governance page
+
+**Assets**
+
+- [ ] Fix the way queries for networks and entries in components are created. Rather than defining one for each network, create a function that iterates through the .env entry or liveNetworks call for live networks and creates the queries and components for each. `pages/assets.tsx`

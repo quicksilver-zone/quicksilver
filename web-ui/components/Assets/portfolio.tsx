@@ -162,7 +162,7 @@ const PortfolioItem: React.FC<PortfolioItemProps> = ({ title, percentage, progre
 
   return (
     <Grid templateColumns={`minmax(${amountWidth}px, 1fr) 3fr 1fr`} gap={4} alignItems="center" width="100%">
-      <HStack spacing={-5}>
+      <HStack mb={2} spacing={-5}>
         <Tooltip label={`Price: ${qTokenPrice.toFixed(2)}`} placement="top">
           <Text textAlign="left" minWidth="100px" maxWidth="100px">
             {abbreviateNumber(Number(amount))}
@@ -173,7 +173,7 @@ const PortfolioItem: React.FC<PortfolioItemProps> = ({ title, percentage, progre
         </Text>
       </HStack>
 
-      <Box minW="150px" ml={'80px'}>
+      <Box minW={{ base: '30px', md: '150px' }} ml={'80px'}>
         <Progress borderRadius="full" colorScheme="orange" size="sm" value={percentage * 100} />
       </Box>
 

@@ -15,7 +15,7 @@ import {
 } from '@chakra-ui/react';
 import { coins, StdFee } from '@cosmjs/stargate';
 import { useChain } from '@cosmos-kit/react';
-import { cosmos } from 'quicksilverjs';
+import { cosmos } from 'interchain-query';
 import { useState } from 'react';
 
 import { useTx } from '@/hooks';
@@ -30,7 +30,7 @@ interface VoteModalProps {
   updateVotes: () => void;
   vote: number | undefined;
   title: string;
-  proposalId: BigInt;
+  proposalId: bigint;
 }
 
 export const VoteModal: React.FC<VoteModalProps> = ({ modalControl, chainName, updateVotes, title, vote, proposalId }) => {

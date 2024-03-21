@@ -19,11 +19,11 @@ import {
   Checkbox,
 } from '@chakra-ui/react';
 import { coins, StdFee } from '@cosmjs/amino';
-import { useChain } from '@cosmos-kit/react';
 import styled from '@emotion/styled';
 import { bech32 } from 'bech32';
-import { assets, chains } from 'chain-registry';
-import { cosmos } from 'interchain-query';
+import { assets } from 'chain-registry';
+import chains from 'chain-registry';
+import { cosmos } from 'quicksilverjs';
 import React, { useEffect, useState } from 'react';
 
 
@@ -74,10 +74,11 @@ interface StakingModalProps {
     chainName: string;
     chainId: string;
   };
+  address: string;
 }
 
-export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClose, selectedOption, tokenAmount }) => {
-  const [step, setStep] = React.useState(1);
+export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClose, selectedOption, tokenAmount, address }) => {
+  const [step, setStep] = useState(1);
   const getProgressColor = (circleStep: number) => {
     if (step >= circleStep) return 'complimentary.900';
     return 'rgba(255,255,255,0.2)';
@@ -102,12 +103,10 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
     newChainName = selectedOption?.chainName;
   }
 
-  const { address } = useChain(newChainName || '');
-
   const labels = ['Choose validators', `Set weights`, `Sign & Submit`, `Receive q${selectedOption?.value}`];
   const [isModalOpen, setModalOpen] = useState(false);
 
-  const [selectedValidators, setSelectedValidators] = React.useState<{ name: string; operatorAddress: string }[]>([]);
+  const [selectedValidators, setSelectedValidators] = useState<{ name: string; operatorAddress: string }[]>([]);
 
   const advanceStep = () => {
     if (selectedValidators.length > 0) {
@@ -199,7 +198,7 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
     };
   });
 
-  const { data: zone } = useZoneQuery(selectedOption?.chainId ?? '');
+  const { data: zone, isLoading: isZoneLoading } = useZoneQuery(selectedOption?.chainId ?? '');
 
   const valToByte = (val: number) => {
     if (val > 1) {
@@ -235,7 +234,13 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
     numericAmount = 0;
   }
 
-  const smallestUnitAmount = numericAmount * Math.pow(10, 6);
+  let smallestUnitAmount: number;
+
+  if (zone?.chainId === 'dydx-mainnet-1') {
+    smallestUnitAmount = numericAmount * Math.pow(10, 18);
+  } else {
+    smallestUnitAmount = numericAmount * Math.pow(10, 6);
+  }
 
   const { send } = cosmos.bank.v1beta1.MessageComposer.withTypeUrl;
 
@@ -246,7 +251,7 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
   });
 
   const mainTokens = assets.find(({ chain_name }) => chain_name === newChainName);
-  const fees = chains.find(({ chain_name }) => chain_name === newChainName)?.fees?.fee_tokens;
+  const fees = chains.chains.find(({ chain_name }) => chain_name === newChainName)?.fees?.fee_tokens;
   const mainDenom = mainTokens?.assets[0].base ?? '';
   let feeAmount;
   if (selectedOption?.chainName === 'sommelier') {
@@ -275,7 +280,7 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
     setIsSigning(true);
     setTransactionStatus('Pending');
     try {
-      const result = await tx([msgSend], {
+      await tx([msgSend], {
         memo,
         fee,
         onSuccess: () => {
@@ -341,10 +346,6 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
     }
   };
 
-  type Weights = {
-    [key: string]: number;
-  };
-
   const handleEqualWeightAssignment = () => {
     const numberOfValidators = selectedValidators.length;
     const equalWeight = (1 / numberOfValidators).toFixed(4);
@@ -358,8 +359,8 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
   return (
     <Modal isOpen={isOpen} onClose={onClose} size={{ base: '3xl', md: '2xl' }}>
       <ModalOverlay />
-      <ChakraModalContent h={{ base: '55%', md: '48%' }} maxH={'100%'}>
-        <ModalBody borderRadius={4} h="48%" maxH={'100%'}>
+      <ChakraModalContent position={'absolute'} h={{ base: '65%', md: '50%' }} maxH={'550px'}>
+        <ModalBody borderRadius={4} h="50%" maxH={'100%'}>
           <ModalCloseButton zIndex={1000} color="white" />
           <HStack position={'relative'} h="100%" spacing="48px" align="stretch">
             {/* Left Section */}
@@ -435,9 +436,9 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
                         mt={2}
                         color="white"
                         _hover={{
-                          bgColor: 'rgba(255, 128, 0, 0.25)',
+                          bgColor: 'rgba(255, 128, 0, 0.5)',
                         }}
-                        variant="ghost"
+                        bgColor="rgba(255, 128, 0, 0.25)"
                         width="35%"
                         size="xs"
                         onClick={() => setModalOpen(true)}
@@ -451,7 +452,7 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
                   )}
                   <Button
                     mt={4}
-                    width="55%"
+                    width={{ base: '80%', md: '55%' }}
                     _active={{
                       transform: 'scale(0.95)',
                       color: 'complimentary.800',
@@ -539,6 +540,7 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
                     position={'absolute'}
                     bottom={3}
                     left={'51%'}
+                    fontSize={'2xl'}
                     bgColor="none"
                     _hover={{
                       bgColor: 'none',
@@ -597,6 +599,7 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
                   <Flex mt={4} justifyContent={'space-between'} width={'100%'} alignItems={'center'}>
                     <Button
                       bgColor="none"
+                      fontSize={'2xl'}
                       _hover={{
                         bgColor: 'none',
                         color: 'complimentary.900',
@@ -633,8 +636,25 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
               {step === 3 && (
                 <>
                   <Box justifyContent={'center'}>
-                    <Text fontWeight={'bold'} fontSize="lg" w="250px" textAlign={'left'} color="white">
+                    <Text
+                      display={{ base: 'none', md: 'block' }}
+                      fontWeight={'bold'}
+                      fontSize="lg"
+                      w="250px"
+                      textAlign={'left'}
+                      color="white"
+                    >
                       You’re going to liquid stake {tokenAmount} {selectedOption?.value} on Quicksilver
+                    </Text>
+                    <Text
+                      display={{ base: 'block', md: 'none' }}
+                      fontWeight={'bold'}
+                      fontSize="md"
+                      w="250px"
+                      textAlign={'left'}
+                      color="white"
+                    >
+                      Liquid staking {tokenAmount} {selectedOption?.value}
                     </Text>
                     {selectedValidators.length > 0 && (
                       <Flex mt={2} textAlign={'left'} alignItems="baseline" gap="2">
@@ -649,7 +669,11 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
                     <HStack mt={2} textAlign={'left'} fontWeight={'light'} fontSize="lg" color="white">
                       <Text fontWeight={'bold'}>Receiving:</Text>
                       <Text color="complimentary.900">
-                        {(Number(tokenAmount) / Number(zone?.redemptionRate)).toFixed(2)} q{selectedOption?.value}
+                        {!isZoneLoading ? (
+                          `${(Number(tokenAmount) / Number(zone?.redemptionRate || 1)).toFixed(2)} q${selectedOption?.value}`
+                        ) : (
+                          <Spinner thickness="2px" speed="0.65s" emptyColor="gray.200" color="complimentary.900" size="sm" />
+                        )}
                       </Text>
                     </HStack>
                     <Text mt={2} textAlign={'left'} fontWeight={'hairline'}>
@@ -674,6 +698,7 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
                   <Button
                     position={'absolute'}
                     bottom={3}
+                    fontSize={'2xl'}
                     left={'51%'}
                     bgColor="none"
                     _hover={{

@@ -15,7 +15,7 @@ import {
 } from '@/components';
 
 export const WalletButton: React.FC = () => {
-  const chains = useChains(['quicksilver', 'cosmoshub', 'osmosis', 'stargaze', 'juno', 'sommelier', 'regen', 'umee']);
+  const chains = useChains(['quicksilver', 'cosmoshub', 'osmosis', 'stargaze', 'juno', 'sommelier', 'regen', 'umee', 'dydx']);
 
   const { connect, openView, status, message, wallet, isWalletError } = chains.quicksilver;
 

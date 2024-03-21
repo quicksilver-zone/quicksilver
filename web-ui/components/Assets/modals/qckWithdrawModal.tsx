@@ -17,11 +17,11 @@ import { StdFee, coins } from '@cosmjs/stargate';
 import { ChainName } from '@cosmos-kit/core';
 import { useChain, useManager } from '@cosmos-kit/react';
 import BigNumber from 'bignumber.js';
-import { ibc } from 'quicksilverjs';
+import { ibc } from 'interchain-query';
 import { useState, useMemo, useEffect } from 'react';
 
 import { ChooseChain } from '@/components/react/choose-chain';
-import { handleSelectChainDropdown, ChainOption } from '@/components/types';
+import { handleSelectChainDropdown, ChainOption, ChooseChainInfo } from '@/components/types';
 import { useTx } from '@/hooks';
 import { getCoin, getIbcInfo } from '@/utils';
 
@@ -38,7 +38,7 @@ export function WithdrawModal() {
       .filter((chainRecord) => chainRecord.name === 'osmosis')
       .map((chainRecord) => ({
         chainName: chainRecord?.name,
-        label: chainRecord?.chain.pretty_name,
+        label: chainRecord?.chain?.pretty_name,
         value: chainRecord?.name,
         icon: getChainLogo(chainRecord.name),
       }));
@@ -57,7 +57,7 @@ export function WithdrawModal() {
     }
   };
 
-  const chooseChain = <ChooseChain chainName={chainName} chainInfos={chainOptions} onChange={onChainChange} />;
+  const chooseChain = <ChooseChain chainName={chainName} chainInfos={chainOptions as ChooseChainInfo[]} onChange={onChainChange} />;
 
   const fromChain = 'quicksilver';
   const toChain = chainName;
@@ -79,7 +79,7 @@ export function WithdrawModal() {
       gas: '300000',
     };
 
-    const { sourcePort, sourceChannel } = getIbcInfo(fromChain ?? '', toChain ?? '');
+    const { source_port, source_channel } = getIbcInfo(fromChain ?? '', toChain ?? '');
 
     const token = {
       denom: 'uqck',
@@ -90,15 +90,14 @@ export function WithdrawModal() {
     const timeoutInNanos = (stamp + 1.2e6) * 1e6;
 
     const msg = transfer({
-      sourcePort,
-      sourceChannel,
+      sourcePort: source_port,
+      sourceChannel: source_channel,
       sender: qAddress ?? '',
       receiver: address ?? '',
       token,
       timeoutHeight: undefined,
       //@ts-ignore
       timeoutTimestamp: timeoutInNanos,
-      memo: '',
     });
 
     await tx([msg], {

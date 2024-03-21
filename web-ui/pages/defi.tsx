@@ -9,7 +9,7 @@ export default function Home() {
       <Head>
         <title>DeFi</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <link rel="icon" href="/img/favicon.png" />
+        <link rel="icon" href="/img/favicon-main.png" />
       </Head>
       <SlideFade offsetY={'200px'} in={true} style={{ width: '100%' }}>
         <Flex height="100vh" mt={{ base: '-20px' }} alignItems="center" justifyContent="center">

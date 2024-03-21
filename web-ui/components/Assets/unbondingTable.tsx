@@ -12,8 +12,18 @@ const statusCodes = new Map<number, string>([
   [5, 'COMPLETED'],
 ]);
 
-const formatDate = (dateString: string | number | Date) => {
-  return new Date(dateString).toLocaleDateString(undefined);
+const formatDateAndTime = (dateString: string | number | Date) => {
+  const date = new Date(dateString);
+  const options: Intl.DateTimeFormatOptions = {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+
+    hour12: false,
+  };
+  return date.toLocaleString(undefined, options);
 };
 
 const formatDenom = (denom: string) => {
@@ -26,9 +36,10 @@ interface UnbondingAssetsTableProps {
 }
 
 const UnbondingAssetsTable: React.FC<UnbondingAssetsTableProps> = ({ address, isWalletConnected }) => {
-  const chains = ['Cosmos', 'Stargaze', 'Osmosis', 'Regen', 'Sommelier', 'Juno'];
+  const chains = ['Cosmos', 'Stargaze', 'Osmosis', 'Regen', 'Sommelier', 'Juno', 'Dydx'];
   const [currentChainIndex, setCurrentChainIndex] = useState(0);
 
+  // Switcher lets us use a pretty name for the chain in the UI, but query the chain by its actual name.
   const currentChainName = chains[currentChainIndex];
   let newChainName: string | undefined;
   if (currentChainName === 'Cosmos') {
@@ -43,6 +54,8 @@ const UnbondingAssetsTable: React.FC<UnbondingAssetsTableProps> = ({ address, is
     newChainName = 'sommelier';
   } else if (currentChainName === 'Juno') {
     newChainName = 'juno';
+  } else if (currentChainName === 'Dydx') {
+    newChainName = 'dydx';
   } else {
     // Default case
     newChainName = currentChainName;
@@ -58,6 +71,12 @@ const UnbondingAssetsTable: React.FC<UnbondingAssetsTableProps> = ({ address, is
   const handleRightArrowClick = () => {
     setCurrentChainIndex((prevIndex: number) => (prevIndex === chains.length - 1 ? 0 : prevIndex + 1));
   };
+
+  const hideOnMobile = {
+    base: 'none',
+    md: 'table-cell',
+  };
+
   const noUnbondingAssets = isWalletConnected && unbondingData?.withdrawals.length === 0;
   if (!isWalletConnected) {
     return (
@@ -241,16 +260,16 @@ const UnbondingAssetsTable: React.FC<UnbondingAssetsTableProps> = ({ address, is
                     <Th borderBottomColor={'transparent'} color="complimentary.900">
                       Burn Amount
                     </Th>
-                    <Th borderBottomColor={'transparent'} color="complimentary.900">
+                    <Th borderBottomColor={'transparent'} color="complimentary.900" display={hideOnMobile}>
                       Status
                     </Th>
                     <Th borderBottomColor={'transparent'} color="complimentary.900">
                       Redemption Amount
                     </Th>
-                    <Th borderBottomColor={'transparent'} color="complimentary.900">
+                    <Th borderBottomColor={'transparent'} color="complimentary.900" display={hideOnMobile}>
                       Epoch Number
                     </Th>
-                    <Th borderBottomColor={'transparent'} color="complimentary.900">
+                    <Th borderBottomColor={'transparent'} color="complimentary.900" display={hideOnMobile}>
                       Completion Time
                     </Th>
                   </Tr>
@@ -261,17 +280,21 @@ const UnbondingAssetsTable: React.FC<UnbondingAssetsTableProps> = ({ address, is
                       <Td borderBottomColor={'transparent'}>
                         {Number(shiftDigits(withdrawal.burn_amount.amount, -6))} {formatDenom(withdrawal.burn_amount.denom)}
                       </Td>
-                      <Td borderBottomColor={'transparent'}>{statusCodes.get(withdrawal.status)}</Td>
+                      <Td borderBottomColor={'transparent'} display={hideOnMobile}>
+                        {statusCodes.get(withdrawal.status)}
+                      </Td>
                       <Td borderBottomColor={'transparent'}>
                         {withdrawal.amount.map((amt) => `${shiftDigits(amt.amount, -6)} ${formatDenom(amt.denom)}`).join(', ')}
                       </Td>
-                      <Td borderBottomColor={'transparent'}>{withdrawal.epoch_number}</Td>
-                      <Td borderBottomColor={'transparent'}>
+                      <Td borderBottomColor={'transparent'} display={hideOnMobile}>
+                        {withdrawal.epoch_number}
+                      </Td>
+                      <Td borderBottomColor={'transparent'} display={hideOnMobile}>
                         {withdrawal.status === 2
                           ? 'Pending'
                           : withdrawal.status === 4
-                          ? 'A few moments'
-                          : formatDate(withdrawal.completion_time)}
+                            ? 'A few moments'
+                            : formatDateAndTime(withdrawal.completion_time)}
                       </Td>
                     </Tr>
                   ))}

@@ -337,3 +337,14 @@ func (k *Keeper) MappedAccounts(c context.Context, req *types.QueryMappedAccount
 
 	return &types.QueryMappedAccountsResponse{RemoteAddressMap: remoteAddressMap}, nil
 }
+
+func (k *Keeper) ValidatorDenyList(c context.Context, req *types.QueryDenyListRequest) (*types.QueryDenyListResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(c)
+
+	validators := k.GetZoneValidatorDenyList(ctx, req.ChainId)
+
+	return &types.QueryDenyListResponse{Validators: validators}, nil
+}

@@ -15,6 +15,7 @@ import {
   MenuButton,
   MenuItem,
   Image,
+  Text,
 } from '@chakra-ui/react';
 import { ChainName } from '@cosmos-kit/core';
 import { useChain } from '@cosmos-kit/react';
@@ -50,6 +51,7 @@ export const VotingSection = ({ chainName }: { chainName: ChainName }) => {
   const { address } = useChain(chainName);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { data, isLoading, refetch } = useVotingData(chainName);
+
   const [searchTerm, setSearchTerm] = useState('');
 
   const filteredProposals = useMemo(() => {
@@ -117,7 +119,10 @@ export const VotingSection = ({ chainName }: { chainName: ChainName }) => {
     <>
       <Box mb={16}>
         <Flex mb={4} alignContent="center" alignItems="center" justifyContent={'space-between'} w="100%" flexDirection={'row'}>
-          <InputGroup>
+          <Text display={{ base: 'flex', md: 'none' }} pb={2} color="white" fontSize="24px">
+            Proposals
+          </Text>
+          <InputGroup display={{ base: 'none', md: 'block' }}>
             <Input
               textAlign="right"
               type="text"
@@ -264,6 +269,7 @@ export const VotingSection = ({ chainName }: { chainName: ChainName }) => {
         <Box
           pr={2}
           maxHeight="2xl"
+          minH={"2xl"}
           overflowY="scroll"
           sx={{
             '&::-webkit-scrollbar': {

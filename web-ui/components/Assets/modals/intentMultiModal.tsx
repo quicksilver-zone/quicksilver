@@ -94,15 +94,13 @@ export const IntentMultiModal: React.FC<MultiModalProps> = ({
               </h2>
               <AccordionPanel textAlign="left" alignContent="center" justifyContent="center" mt={-2}>
                 <Text fontWeight="light" pl={6} maxW="95%" color="white" fontSize="16px" letterSpacing={'wider'}>
-                  Choose which validator(s) you would like to liquid stake to. You can select from the list below or utilize the quick
-                  select to pick the highest ranked validators. To learn more about rankings read the{' '}
-                  <Link textDecor={'underline'}>Validator Selection Doc</Link>.
+                  Choose which validator(s) you would like to liquid stake to.
                 </Text>
               </AccordionPanel>
             </AccordionItem>
           </Accordion>
         </ModalHeader>
-        <ModalCloseButton color="white" /> {/* Positioning by default should be top right */}
+        <ModalCloseButton color="white" />
         <Divider bgColor="complimentary.900" alignSelf="center" w="88%" m="auto" />
         <ModalBody bgColor="#1A1A1A" borderRadius={'6px'} justifyContent="center">
           {isLoading ? (

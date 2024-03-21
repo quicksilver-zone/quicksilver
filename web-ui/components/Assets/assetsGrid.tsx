@@ -2,6 +2,7 @@ import { WarningIcon } from '@chakra-ui/icons';
 import { Box, VStack, Text, Divider, HStack, Flex, Grid, GridItem, Spinner, Tooltip } from '@chakra-ui/react';
 import React from 'react';
 
+import { truncateToTwoDecimals } from '@/utils';
 import { shiftDigits, formatQasset } from '@/utils';
 
 import QDepositModal from './modals/qTokenDepositModal';
@@ -13,6 +14,7 @@ interface AssetCardProps {
   balance: string;
   apy: number;
   nativeAssetName: string;
+  redemptionRates: string;
   isWalletConnected: boolean;
   nonNative: LiquidRewardsData | undefined;
 }
@@ -24,6 +26,7 @@ interface AssetGridProps {
     balance: string;
     apy: number;
     native: string;
+    redemptionRates: string;
   }>;
   nonNative: LiquidRewardsData | undefined;
 }
@@ -50,17 +53,12 @@ type LiquidRewardsData = {
   errors: Errors;
 };
 
-function truncateToTwoDecimals(num: number) {
-  const multiplier = Math.pow(10, 2);
-  return Math.floor(num * multiplier) / multiplier;
-}
-
-const AssetCard: React.FC<AssetCardProps> = ({ assetName, balance, apy }) => {
+const AssetCard: React.FC<AssetCardProps> = ({ assetName, balance, apy, redemptionRates }) => {
   const calculateTotalBalance = (nonNative: LiquidRewardsData | undefined, nativeAssetName: string) => {
     if (!nonNative) {
       return '0';
     }
-    const chainIds = ['osmosis-1', 'secret-1', 'umee-1', 'cosmoshub-4', 'stargaze-1', 'sommelier-3', 'regen-1', 'juno-1'];
+    const chainIds = ['osmosis-1', 'secret-1', 'umee-1', 'cosmoshub-4', 'stargaze-1', 'sommelier-3', 'regen-1', 'juno-1', 'dydx-mainnet-1'];
     let totalAmount = 0;
 
     chainIds.forEach((chainId) => {
@@ -69,13 +67,13 @@ const AssetCard: React.FC<AssetCardProps> = ({ assetName, balance, apy }) => {
         assetsInChain.forEach((asset: any) => {
           const assetAmount = asset.Amount.find((amount: { denom: string }) => amount.denom === `uq${nativeAssetName.toLowerCase()}`);
           if (assetAmount) {
-            totalAmount += parseInt(assetAmount.amount, 10); // assuming amount is a string
+            totalAmount += parseInt(assetAmount.amount, 10);
           }
         });
       }
     });
 
-    return shiftDigits(totalAmount.toString(), -6); // Adjust the shift as per your data's scale
+    return shiftDigits(totalAmount.toString(), -6);
   };
 
   // const nativeAssets = nonNative?.assets['quicksilver-2']
@@ -105,7 +103,7 @@ const AssetCard: React.FC<AssetCardProps> = ({ assetName, balance, apy }) => {
   }
 
   return (
-    <VStack bg={'rgba(255,255,255,0.1)'} p={4} boxShadow="lg" align="center" spacing={4} borderRadius="lg">
+    <VStack bg={'rgba(255,255,255,0.1)'} p={4} boxShadow="lg" align="center" spacing={4} borderRadius="lg" minH="220px">
       <VStack w="full" align="center" alignItems={'center'} spacing={3}>
         <HStack w="full" justify="space-between">
           <Text fontWeight="bold" fontSize={'xl'} isTruncated>
@@ -132,18 +130,35 @@ const AssetCard: React.FC<AssetCardProps> = ({ assetName, balance, apy }) => {
               {balance.toString()} {assetName}
             </Text>
           </GridItem>
-          {/*<GridItem>
-            <Text fontSize="md" textAlign="left">
-              NON-NATIVE:
-            </Text>
-          </GridItem>
-          <GridItem>
-            <Text fontSize="md" textAlign="right" fontWeight="semibold">
-            </Text>
-          </GridItem>*/}
+          {balance > '0' ? (
+            <>
+              <GridItem>
+                <Text fontSize="md" textAlign="left">
+                  REDEEMABLE FOR:
+                </Text>
+              </GridItem>
+              <GridItem>
+                <Text fontSize="md" textAlign="right" fontWeight="semibold">
+                  {truncateToTwoDecimals(Number(balance) * Number(redemptionRates)).toString()} {assetName.slice('q'.length)}
+                </Text>
+              </GridItem>
+            </>
+          ) : (
+            <>
+              <GridItem>
+                <Text fontSize="md" textAlign="left" visibility="hidden">
+                  REDEEMABLE FOR:
+                </Text>
+              </GridItem>
+              <GridItem>
+                <Text fontSize="md" textAlign="right" fontWeight="semibold" visibility="hidden">
+                  Placeholder
+                </Text>
+              </GridItem>
+            </>
+          )}
         </Grid>
       </VStack>
-
       <HStack w="full" pb={4} pt={4} spacing={2}>
         <QDepositModal token={assetName} />
         <QWithdrawModal token={assetName} />
@@ -159,9 +174,6 @@ const AssetsGrid: React.FC<AssetGridProps> = ({ assets, isWalletConnected, nonNa
         <Text fontSize="xl" fontWeight="bold" color="white">
           qAssets
         </Text>
-        <Tooltip label={'Non-native qAsset amounts will not be displayed here until Cross chain claims (XCC) is configured by governance.'}>
-          <WarningIcon alignSelf={'center'} color="complimentary.900" />
-        </Tooltip>
       </HStack>
       {!isWalletConnected && (
         <Flex
@@ -195,6 +207,7 @@ const AssetsGrid: React.FC<AssetGridProps> = ({ assets, isWalletConnected, nonNa
                 balance={asset.balance}
                 apy={asset.apy}
                 nonNative={nonNative}
+                redemptionRates={asset.redemptionRates}
               />
             </Box>
           ))}

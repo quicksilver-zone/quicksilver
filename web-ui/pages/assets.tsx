@@ -1,4 +1,4 @@
-import { Box, Container, Flex, SlideFade, Spacer, Text, Image } from '@chakra-ui/react';
+import { Box, Container, Flex, SlideFade, Spacer, Text, Center } from '@chakra-ui/react';
 import { useChain } from '@cosmos-kit/react';
 import dynamic from 'next/dynamic';
 import Head from 'next/head';
@@ -11,7 +11,8 @@ import QuickBox from '@/components/Assets/quickbox';
 import RewardsClaim from '@/components/Assets/rewardsClaim';
 import UnbondingAssetsTable from '@/components/Assets/unbondingTable';
 import { useAPYQuery, useAuthChecker, useLiquidRewardsQuery, useQBalanceQuery, useTokenPrices, useZoneQuery } from '@/hooks/useQueries';
-import { shiftDigits, toNumber } from '@/utils';
+import { useLiveZones } from '@/state/LiveZonesContext';
+import { shiftDigits, truncateToTwoDecimals } from '@/utils';
 
 export interface PortfolioItemInterface {
   title: string;
@@ -21,9 +22,20 @@ export interface PortfolioItemInterface {
   qTokenPrice: number;
 }
 
-type NumericRedemptionRates = {
-  [key: string]: number;
-};
+interface RedemptionRate {
+  current: number;
+  last: number;
+}
+
+interface RedemptionRates {
+  atom: RedemptionRate;
+  osmo: RedemptionRate;
+  stars: RedemptionRate;
+  regen: RedemptionRate;
+  somm: RedemptionRate;
+  juno: RedemptionRate;
+  [key: string]: RedemptionRate;
+}
 
 type BalanceRates = {
   [key: string]: string;
@@ -35,24 +47,32 @@ type APYRates = {
 
 function Home() {
   const { address } = useChain('quicksilver');
-  const tokens = ['atom', 'osmo', 'stars', 'regen', 'somm', 'juno']; // Example tokens
+  const tokens = ['atom', 'osmo', 'stars', 'regen', 'somm', 'juno', 'dydx'];
 
   const { data: tokenPrices, isLoading: isLoadingPrices } = useTokenPrices(tokens);
 
+  // TODO: Use live chain ids from .env
   const COSMOSHUB_CHAIN_ID = process.env.NEXT_PUBLIC_COSMOSHUB_CHAIN_ID;
   const OSMOSIS_CHAIN_ID = process.env.NEXT_PUBLIC_OSMOSIS_CHAIN_ID;
   const STARGAZE_CHAIN_ID = process.env.NEXT_PUBLIC_STARGAZE_CHAIN_ID;
   const REGEN_CHAIN_ID = process.env.NEXT_PUBLIC_REGEN_CHAIN_ID;
   const SOMMELIER_CHAIN_ID = process.env.NEXT_PUBLIC_SOMMELIER_CHAIN_ID;
   const JUNO_CHAIN_ID = process.env.NEXT_PUBLIC_JUNO_CHAIN_ID;
+  const DYDX_CHAIN_ID = process.env.NEXT_PUBLIC_DYDX_CHAIN_ID;
 
+  // Retrieve list of zones that are enabled for liquid staking || Will use the above instead
+  const { liveNetworks } = useLiveZones();
+
+  // TODO: Figure out how to cycle through live networks and retrieve data for each with less lines of code
   // Retrieve balance for each token
+  // Depending on whether the chain exists in liveNetworks or not, the query will be enabled/disabled
   const { balance: qAtom, isLoading: isLoadingQABalance } = useQBalanceQuery('quicksilver', address ?? '', 'atom');
   const { balance: qOsmo, isLoading: isLoadingQOBalance } = useQBalanceQuery('quicksilver', address ?? '', 'osmo');
   const { balance: qStars, isLoading: isLoadingQSBalance } = useQBalanceQuery('quicksilver', address ?? '', 'stars');
   const { balance: qRegen, isLoading: isLoadingQRBalance } = useQBalanceQuery('quicksilver', address ?? '', 'regen');
   const { balance: qSomm, isLoading: isLoadingQSOBalance } = useQBalanceQuery('quicksilver', address ?? '', 'somm');
   const { balance: qJuno, isLoading: isLoadingQJBalance } = useQBalanceQuery('quicksilver', address ?? '', 'juno');
+  const { balance: qDydx, isLoading: isLoadingQDBalance } = useQBalanceQuery('quicksilver', address ?? '', 'dydx');
 
   // Retrieve zone data for each token
   const { data: CosmosZone, isLoading: isLoadingCosmosZone } = useZoneQuery(COSMOSHUB_CHAIN_ID ?? '');
@@ -61,6 +81,7 @@ function Home() {
   const { data: RegenZone, isLoading: isLoadingRegenZone } = useZoneQuery(REGEN_CHAIN_ID ?? '');
   const { data: SommZone, isLoading: isLoadingSommZone } = useZoneQuery(SOMMELIER_CHAIN_ID ?? '');
   const { data: JunoZone, isLoading: isLoadingJunoZone } = useZoneQuery(JUNO_CHAIN_ID ?? '');
+  const { data: DydxZone, isLoading: isLoadingDydxZone } = useZoneQuery(DYDX_CHAIN_ID ?? '');
   // Retrieve APY data for each token
   const { APY: cosmosAPY, isLoading: isLoadingCosmosApy } = useAPYQuery('cosmoshub-4');
   const { APY: osmoAPY, isLoading: isLoadingOsmoApy } = useAPYQuery('osmosis-1');
@@ -69,6 +90,7 @@ function Home() {
   const { APY: sommAPY, isLoading: isLoadingSommApy } = useAPYQuery('sommelier-3');
   const { APY: quickAPY } = useAPYQuery('quicksilver-2');
   const { APY: junoAPY, isLoading: isLoadingJunoApy } = useAPYQuery('juno-1');
+  const { APY: dydxAPY, isLoading: isLoadingDydxApy } = useAPYQuery('dydx-mainnet-1');
 
   const isLoadingAll =
     isLoadingPrices ||
@@ -78,55 +100,82 @@ function Home() {
     isLoadingQRBalance ||
     isLoadingQSOBalance ||
     isLoadingQJBalance ||
+    isLoadingQDBalance ||
     isLoadingCosmosZone ||
     isLoadingOsmoZone ||
     isLoadingStarZone ||
     isLoadingRegenZone ||
     isLoadingSommZone ||
     isLoadingJunoZone ||
+    isLoadingDydxZone ||
     isLoadingCosmosApy ||
     isLoadingOsmoApy ||
     isLoadingStarsApy ||
     isLoadingRegenApy ||
     isLoadingSommApy ||
-    isLoadingJunoApy;
+    isLoadingJunoApy ||
+    isLoadingDydxApy;
 
   // useMemo hook to cache APY data
   const qAPYRates: APYRates = useMemo(
     () => ({
-      qAtom: cosmosAPY,
-      qOsmo: osmoAPY,
-      qStars: starsAPY,
-      qRegen: regenAPY,
-      qSomm: sommAPY,
-      qJuno: junoAPY,
+      qAtom: cosmosAPY ?? 0,
+      qOsmo: osmoAPY ?? 0,
+      qStars: starsAPY ?? 0,
+      qRegen: regenAPY ?? 0,
+      qSomm: sommAPY ?? 0,
+      qJuno: junoAPY ?? 0,
+      qDydx: dydxAPY ?? 0,
     }),
-    [cosmosAPY, osmoAPY, starsAPY, regenAPY, sommAPY, junoAPY],
+    [cosmosAPY, osmoAPY, starsAPY, regenAPY, sommAPY, junoAPY, dydxAPY],
   );
   // useMemo hook to cache qBalance data
   const qBalances: BalanceRates = useMemo(
     () => ({
-      qAtom: shiftDigits(qAtom?.balance?.amount ?? '', -6),
-      qOsmo: shiftDigits(qOsmo?.balance?.amount ?? '', -6),
-      qStars: shiftDigits(qStars?.balance?.amount ?? '', -6),
-      qRegen: shiftDigits(qRegen?.balance?.amount ?? '', -6),
-      qSomm: shiftDigits(qSomm?.balance?.amount ?? '', -6),
-      qJuno: shiftDigits(qJuno?.balance?.amount ?? '', -6),
+      qAtom: shiftDigits(qAtom?.balance?.amount ?? '000000', -6),
+      qOsmo: shiftDigits(qOsmo?.balance?.amount ?? '000000', -6),
+      qStars: shiftDigits(qStars?.balance?.amount ?? '000000', -6),
+      qRegen: shiftDigits(qRegen?.balance?.amount ?? '000000', -6),
+      qSomm: shiftDigits(qSomm?.balance?.amount ?? '000000', -6),
+      qJuno: shiftDigits(qJuno?.balance?.amount ?? '000000', -6),
+      qDydx: shiftDigits(qDydx?.balance?.amount ?? '000000', -18),
     }),
-    [qAtom, qOsmo, qStars, qRegen, qSomm, qJuno],
+    [qAtom, qOsmo, qStars, qRegen, qSomm, qJuno, qDydx],
   );
 
   // useMemo hook to cache redemption rate data
-  const redemptionRates: NumericRedemptionRates = useMemo(
+  const redemptionRates: RedemptionRates = useMemo(
     () => ({
-      atom: CosmosZone?.redemptionRate ? parseFloat(CosmosZone.redemptionRate) : 1,
-      osmo: OsmoZone?.redemptionRate ? parseFloat(OsmoZone.redemptionRate) : 1,
-      stars: StarZone?.redemptionRate ? parseFloat(StarZone.redemptionRate) : 1,
-      regen: RegenZone?.redemptionRate ? parseFloat(RegenZone.redemptionRate) : 1,
-      somm: SommZone?.redemptionRate ? parseFloat(SommZone.redemptionRate) : 1,
-      juno: JunoZone?.redemptionRate ? parseFloat(JunoZone.redemptionRate) : 1,
+      atom: {
+        current: CosmosZone?.redemptionRate ? parseFloat(CosmosZone.redemptionRate) : 1,
+        last: CosmosZone?.lastRedemptionRate ? parseFloat(CosmosZone.lastRedemptionRate) : 1,
+      },
+      osmo: {
+        current: OsmoZone?.redemptionRate ? parseFloat(OsmoZone.redemptionRate) : 1,
+        last: OsmoZone?.lastRedemptionRate ? parseFloat(OsmoZone.lastRedemptionRate) : 1,
+      },
+      stars: {
+        current: StarZone?.redemptionRate ? parseFloat(StarZone.redemptionRate) : 1,
+        last: StarZone?.lastRedemptionRate ? parseFloat(StarZone.lastRedemptionRate) : 1,
+      },
+      regen: {
+        current: RegenZone?.redemptionRate ? parseFloat(RegenZone.redemptionRate) : 1,
+        last: RegenZone?.lastRedemptionRate ? parseFloat(RegenZone.lastRedemptionRate) : 1,
+      },
+      somm: {
+        current: SommZone?.redemptionRate ? parseFloat(SommZone.redemptionRate) : 1,
+        last: SommZone?.lastRedemptionRate ? parseFloat(SommZone.lastRedemptionRate) : 1,
+      },
+      juno: {
+        current: JunoZone?.redemptionRate ? parseFloat(JunoZone.redemptionRate) : 1,
+        last: JunoZone?.lastRedemptionRate ? parseFloat(JunoZone.lastRedemptionRate) : 1,
+      },
+      dydx: {
+        current: DydxZone?.redemptionRate ? parseFloat(DydxZone.redemptionRate) : 1,
+        last: DydxZone?.lastRedemptionRate ? parseFloat(DydxZone.lastRedemptionRate) : 1,
+      },
     }),
-    [CosmosZone, OsmoZone, StarZone, RegenZone, SommZone, JunoZone],
+    [CosmosZone, OsmoZone, StarZone, RegenZone, SommZone, JunoZone, DydxZone],
   );
 
   // State hooks for portfolio items, total portfolio value, and other metrics
@@ -134,77 +183,72 @@ function Home() {
   const [totalPortfolioValue, setTotalPortfolioValue] = useState(0);
   const [averageApy, setAverageAPY] = useState(0);
   const [totalYearlyYield, setTotalYearlyYield] = useState(0);
-  const [isLoading, setIsLoading] = useState(false);
+
   // useEffect hook to compute portfolio metrics when dependencies change
+  // TODO: cache the computation and make it faster
+  const computedValues = useMemo(() => {
+    if (isLoadingAll) {
+      return { updatedItems: [], totalValue: 0, weightedAPY: 0, totalYearlyYield: 0 };
+    }
+
+    let totalValue = 0;
+    let totalYearlyYield = 0;
+    let weightedAPY = 0;
+    let updatedItems = [];
+
+    for (const token of Object.keys(qBalances)) {
+      const baseToken = token.replace('q', '').toLowerCase();
+      const tokenPriceInfo = tokenPrices?.find((priceInfo) => priceInfo.token === baseToken);
+      const qTokenPrice = tokenPriceInfo ? tokenPriceInfo.price * Number(redemptionRates[baseToken].current) : 0;
+      const qTokenBalance = qBalances[token];
+      const itemValue = Number(qTokenBalance) * qTokenPrice;
+
+      const qTokenAPY = qAPYRates[token] || 0;
+      const yearlyYield = itemValue * Number(qTokenAPY);
+      totalValue += itemValue;
+      totalYearlyYield += yearlyYield;
+      weightedAPY += (itemValue / totalValue) * Number(qTokenAPY);
+
+      updatedItems.push({
+        title: token.toUpperCase(),
+        percentage: 0,
+        progressBarColor: 'complimentary.700',
+        amount: qTokenBalance,
+        qTokenPrice: qTokenPrice || 0,
+      });
+    }
+
+    updatedItems = updatedItems.map((item) => {
+      const itemValue = Number(item.amount) * item.qTokenPrice;
+      return {
+        ...item,
+        percentage: (((itemValue / totalValue) * 100) / 100).toFixed(2),
+      };
+    });
+
+    return { updatedItems, totalValue, weightedAPY, totalYearlyYield };
+  }, [isLoadingAll, qBalances, tokenPrices, redemptionRates, qAPYRates]);
 
   useEffect(() => {
-    const updatePortfolioItems = async () => {
-      // Check if all data is loaded
-      if (isLoadingAll) {
-        return;
-      }
-
-      setIsLoading(true);
-      let totalValue = 0;
-      let totalYearlyYield = 0;
-      let weightedAPY = 0;
-      let updatedItems = [];
-
-      // Loop through each token to compute value, APY, and yield
-      for (const token of Object.keys(qBalances)) {
-        const baseToken = token.replace('q', '').toLowerCase();
-        // Find the price for the current token
-        const tokenPriceInfo = tokenPrices?.find((priceInfo: { token: string }) => priceInfo.token === baseToken);
-        const qTokenPrice = tokenPriceInfo ? tokenPriceInfo.price * Number(redemptionRates[baseToken]) : 0;
-        const qTokenBalance = qBalances[token];
-        const itemValue = Number(qTokenBalance) * qTokenPrice;
-
-        const qTokenAPY = qAPYRates[token] || 0;
-        const yearlyYield = itemValue * Number(qTokenAPY);
-        // Accumulate total values and compute weighted APY
-        totalValue += itemValue;
-        totalYearlyYield += yearlyYield;
-        weightedAPY += (itemValue / totalValue) * Number(qTokenAPY);
-
-        updatedItems.push({
-          title: token.toUpperCase(),
-          percentage: 0,
-          progressBarColor: 'complimentary.700',
-          amount: qTokenBalance,
-          qTokenPrice: qTokenPrice || 0,
-        });
-      }
-
-      // Recalculate percentages for each item based on total value
-      updatedItems = updatedItems.map((item) => {
-        const itemValue = Number(item.amount) * item.qTokenPrice;
-        return {
-          ...item,
-          percentage: (((itemValue / totalValue) * 100) / 100).toFixed(2),
-        };
-      });
-
-      // Update state with calculated data
-      setPortfolioItems(updatedItems);
-      setTotalPortfolioValue(totalValue);
-      setAverageAPY(weightedAPY);
-      setTotalYearlyYield(totalYearlyYield);
-      setIsLoading(false);
-    };
-
-    updatePortfolioItems();
-  }, [qBalances, CosmosZone, OsmoZone, StarZone, RegenZone, SommZone, redemptionRates, qAPYRates, tokenPrices, isLoadingAll]);
+    if (!isLoadingAll) {
+      setPortfolioItems(computedValues.updatedItems);
+      setTotalPortfolioValue(computedValues.totalValue);
+      setAverageAPY(computedValues.weightedAPY);
+      setTotalYearlyYield(computedValues.totalYearlyYield);
+    }
+  }, [computedValues, isLoadingAll]);
 
   const assetsData = useMemo(() => {
     return Object.keys(qBalances).map((token) => {
       return {
         name: token.toUpperCase(),
-        balance: toNumber(qBalances[token], 2).toString(),
+        balance: truncateToTwoDecimals(Number(qBalances[token])).toString(),
         apy: parseFloat(qAPYRates[token]?.toFixed(2)) || 0,
         native: token.replace('q', '').toUpperCase(),
+        redemptionRates: redemptionRates[token.replace('q', '').toLowerCase()].last.toString(),
       };
     });
-  }, [qBalances, qAPYRates]);
+  }, [qBalances, qAPYRates, redemptionRates]);
 
   const { liquidRewards } = useLiquidRewardsQuery(address ?? '');
   const { authData, authError } = useAuthChecker(address ?? '');
@@ -226,6 +270,50 @@ function Home() {
     setUserClosedRewardsClaim(true);
   };
 
+  if (!address) {
+    return (
+      <SlideFade offsetY={'200px'} in={true} style={{ width: '100%' }}>
+        <Center>
+          <Flex height="100vh" mt={{ base: '-20px' }} alignItems="center" justifyContent="center">
+            <Container
+              p={4}
+              m={0}
+              textAlign={'left'}
+              flexDir="column"
+              position="relative"
+              justifyContent="flex-start"
+              alignItems="flex-start"
+              maxW="5xl"
+            >
+              <Head>
+                <title>Assets</title>
+                <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+                <link rel="icon" href="/img/favicon-main.png" />
+              </Head>
+              <Text pb={2} color="white" fontSize="24px">
+                Assets
+              </Text>
+              <Flex py={6} alignItems="center" alignContent={'center'} justifyContent={'space-between'} gap="4">
+                <Flex
+                  backdropFilter="blur(50px)"
+                  bgColor="rgba(255,255,255,0.1)"
+                  borderRadius="10px"
+                  p={12}
+                  maxW="5xl"
+                  h="md"
+                  justifyContent="center"
+                  alignItems="center"
+                >
+                  <Text fontSize="xl">Please connect your wallet to interact with your qAssets.</Text>
+                </Flex>
+              </Flex>
+            </Container>
+          </Flex>
+        </Center>
+      </SlideFade>
+    );
+  }
+
   return (
     <>
       <SlideFade offsetY={'200px'} in={true} style={{ width: '100%' }}>
@@ -242,7 +330,7 @@ function Home() {
           <Head>
             <title>Assets</title>
             <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-            <link rel="icon" href="/img/favicon.png" />
+            <link rel="icon" href="/img/favicon-main.png" />
           </Head>
           <Text pb={2} color="white" fontSize="24px">
             Assets

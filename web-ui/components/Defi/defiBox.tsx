@@ -17,6 +17,7 @@ import {
   Tooltip,
   Center,
   Spinner,
+  useBreakpointValue,
 } from '@chakra-ui/react';
 import React, { useState, useEffect } from 'react';
 
@@ -97,8 +98,8 @@ const DefiTable = () => {
     return key in providerIcons;
   };
 
-  const [sortColumn, setSortColumn] = useState<SortableColumn | null>(null);
-  const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
+  const [sortColumn, setSortColumn] = useState<SortableColumn>('apy');
+  const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
 
   const sortData = (data: DefiData[], column: SortableColumn | null, order: SortOrder) => {
     if (!column) return data;
@@ -178,68 +179,74 @@ const DefiTable = () => {
           ))}
         </Stack>
       )}
-      <Box maxH={'480px'} minH={'480px'} overflow={'auto'} className="custom-scrollbar">
+      <Box maxH={'480px'} minH={'480px'} overflowX={isMobile ? 'scroll' : 'hidden'} className="custom-scrollbar">
         <Table color={'white'} variant="simple">
           <Thead position="sticky">
             <Tr>
-              <Th color={'complimentary.900'}>Asset Pair</Th>
-              <Th
-                textAlign={'center'}
-                color={'complimentary.900'}
-                isNumeric
-                onClick={() => handleSort('apy')}
-                style={{ cursor: 'pointer' }}
-              >
-                APY{' '}
-                {sortColumn === 'apy' ? (
-                  sortOrder === 'asc' ? (
-                    <ChevronUpIcon
-                      _hover={{ color: 'complimentary.700', transform: 'scale(1.5)' }}
-                      _active={{ color: 'complimentary.500' }}
-                    />
+              {!isMobile && <Th color={'complimentary.900'}>Asset Pair</Th>}
+              {!isMobile && (
+                <Th
+                  textAlign={'center'}
+                  color={'complimentary.900'}
+                  isNumeric
+                  onClick={() => handleSort('apy')}
+                  style={{ cursor: 'pointer' }}
+                >
+                  APY{' '}
+                  {sortColumn === 'apy' ? (
+                    sortOrder === 'asc' ? (
+                      <ChevronUpIcon
+                        _hover={{ color: 'complimentary.700', transform: 'scale(1.5)' }}
+                        _active={{ color: 'complimentary.500' }}
+                      />
+                    ) : (
+                      <ChevronDownIcon
+                        _hover={{ color: 'complimentary.700', transform: 'scale(1.5)' }}
+                        _active={{ color: 'complimentary.500' }}
+                      />
+                    )
                   ) : (
                     <ChevronDownIcon
                       _hover={{ color: 'complimentary.700', transform: 'scale(1.5)' }}
                       _active={{ color: 'complimentary.500' }}
                     />
-                  )
-                ) : (
-                  <ChevronDownIcon
-                    _hover={{ color: 'complimentary.700', transform: 'scale(1.5)' }}
-                    _active={{ color: 'complimentary.500' }}
-                  />
-                )}
-              </Th>
-              <Th
-                textAlign={'center'}
-                color={'complimentary.900'}
-                isNumeric
-                style={{ cursor: 'pointer' }}
-                onClick={() => handleSort('tvl')}
-              >
-                TVL{' '}
-                {sortColumn === 'tvl' ? (
-                  sortOrder === 'asc' ? (
-                    <ChevronUpIcon
-                      _hover={{ color: 'complimentary.700', transform: 'scale(1.5)' }}
-                      _active={{ color: 'complimentary.500' }}
-                    />
+                  )}
+                </Th>
+              )}
+              {!isMobile && (
+                <Th
+                  textAlign={'center'}
+                  color={'complimentary.900'}
+                  isNumeric
+                  style={{ cursor: 'pointer' }}
+                  onClick={() => handleSort('tvl')}
+                >
+                  TVL{' '}
+                  {sortColumn === 'tvl' ? (
+                    sortOrder === 'asc' ? (
+                      <ChevronUpIcon
+                        _hover={{ color: 'complimentary.700', transform: 'scale(1.5)' }}
+                        _active={{ color: 'complimentary.500' }}
+                      />
+                    ) : (
+                      <ChevronDownIcon
+                        _hover={{ color: 'complimentary.700', transform: 'scale(1.5)' }}
+                        _active={{ color: 'complimentary.500' }}
+                      />
+                    )
                   ) : (
                     <ChevronDownIcon
                       _hover={{ color: 'complimentary.700', transform: 'scale(1.5)' }}
                       _active={{ color: 'complimentary.500' }}
                     />
-                  )
-                ) : (
-                  <ChevronDownIcon
-                    _hover={{ color: 'complimentary.700', transform: 'scale(1.5)' }}
-                    _active={{ color: 'complimentary.500' }}
-                  />
-                )}
-              </Th>
+                  )}
+                </Th>
+              )}
+
               <Th textAlign={'center'} color={'complimentary.900'}>
                 Provider
               </Th>
+
               <Th textAlign={'center'} color={'complimentary.900'}>
                 Action
               </Th>
@@ -261,17 +268,24 @@ const DefiTable = () => {
             {defi &&
               sortedData.map((asset, index) => (
                 <Tr _even={{ bg: 'rgba(255, 128, 0, 0.1)' }} key={index} borderBottomColor={'transparent'}>
-                  <Td textAlign={'center'} borderBottomColor="transparent">
-                    <Flex align="center">
-                      <Text>{asset.assetPair}</Text>
-                    </Flex>
-                  </Td>
-                  <Td textAlign={'center'} borderBottom="0" borderBottomColor="transparent" isNumeric>
-                    {formatApy(asset.apy)}
-                  </Td>
-                  <Td textAlign={'center'} borderBottomColor="transparent" isNumeric>
-                    ${asset.tvl.toLocaleString()}
-                  </Td>
+                  {!isMobile && (
+                    <Td textAlign={'center'} borderBottomColor="transparent">
+                      <Flex align="center">
+                        <Text>{asset.assetPair}</Text>
+                      </Flex>
+                    </Td>
+                  )}
+                  {!isMobile && (
+                    <Td textAlign={'center'} borderBottom="0" borderBottomColor="transparent" isNumeric>
+                      {formatApy(asset.apy)}
+                    </Td>
+                  )}
+                  {!isMobile && (
+                    <Td textAlign={'center'} borderBottomColor="transparent" isNumeric>
+                      ${asset.tvl.toLocaleString()}
+                    </Td>
+                  )}
+
                   <Td borderBottomColor="transparent">
                     {isProviderKey(asset.provider.toLowerCase()) && (
                       <Tooltip label={`${asset.provider}`}>
@@ -286,6 +300,7 @@ const DefiTable = () => {
                       </Tooltip>
                     )}
                   </Td>
+
                   <Td textAlign={'center'} borderBottomColor="transparent">
                     <Link href={asset.link} isExternal={true} _hover={{ textDecoration: 'none' }}>
                       <Button
@@ -293,6 +308,7 @@ const DefiTable = () => {
                           bgColor: 'complimentary.1000',
                         }}
                         minW="150px"
+                        color={'white'}
                         backgroundColor="rgba(255, 128, 0, 0.8)"
                         rightIcon={<ExternalLinkIcon />}
                         variant="ghost"

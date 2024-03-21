@@ -197,7 +197,7 @@ a {
 .custom-scrollbar {
   overflow-y: auto;
   scrollbar-width: thin;
-  scrollbar-color: transparent transparent; /* Makes the track transparent */
+  scrollbar-color: transparent transparent;
 }
 
 .custom-scrollbar::-webkit-scrollbar {
@@ -206,7 +206,7 @@ a {
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
-  background: transparent; /* Makes the track transparent */
+  background: transparent;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
