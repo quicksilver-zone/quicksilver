@@ -82,7 +82,7 @@ interface ProofOp {
 interface Proof {
   key: Uint8Array;  
   data: Uint8Array; 
-  proofOps: {
+  proof_ops: {
     ops: ProofOp[];
   };
   height: Long; 

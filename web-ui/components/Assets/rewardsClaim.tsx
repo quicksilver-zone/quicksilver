@@ -104,6 +104,7 @@ export const RewardsClaim: React.FC<RewardsClaimInterface> = ({ address, onClose
           claimType: message.claim_type,
           proofs: message.proofs.map((proof) => ({
             ...proof,
+            proofOps: proof.proof_ops,
             proofType: proof.proof_type,
           })),
         });
