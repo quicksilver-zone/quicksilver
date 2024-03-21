@@ -530,7 +530,7 @@ export const StakingBox = ({
                       <Stat py={4} textAlign="right" color="white">
                         <StatNumber textColor="complimentary.900">
                           {!isZoneLoading ? (
-                            (Number(tokenAmount) * Number(zone?.redemptionRate || 1)).toFixed(2)
+                            (Number(tokenAmount) / Number(zone?.redemptionRate || 1)).toFixed(2)
                           ) : (
                             <Spinner thickness="2px" speed="0.65s" emptyColor="gray.200" color="complimentary.900" size="sm" />
                           )}
@@ -710,6 +710,17 @@ export const StakingBox = ({
             </TabPanel>
           </SlideFade>
           {/* Unstake TabPanel */}
+          { selectedOption.value.toUpperCase() == "DYDX" && (
+            <SlideFade offsetY="200px" in={activeTabIndex === 1}>
+              <TabPanel>
+                <VStack spacing={8} align="center">
+                  <Text fontWeight="light" textAlign="center" color="white">
+                    DyDx unstaking will be live very soon!
+                  </Text>
+                </VStack>
+              </TabPanel>
+            </SlideFade>
+           ) || (
           <SlideFade offsetY="200px" in={activeTabIndex === 1}>
             <TabPanel>
               <VStack spacing={8} align="center">
@@ -872,6 +883,7 @@ export const StakingBox = ({
               </VStack>
             </TabPanel>
           </SlideFade>
+          )}
         </TabPanels>
       </Tabs>
     </Box>
