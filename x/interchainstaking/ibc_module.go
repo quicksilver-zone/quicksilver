@@ -1,7 +1,6 @@
 package interchainstaking
 
 import (
-	"context"
 	"errors"
 	"fmt"
 
@@ -13,7 +12,6 @@ import (
 	host "github.com/cosmos/ibc-go/v5/modules/core/24-host"
 	ibcexported "github.com/cosmos/ibc-go/v5/modules/core/exported"
 
-	"github.com/quicksilver-zone/quicksilver/utils"
 	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/keeper"
 )
 
@@ -126,9 +124,7 @@ func (im IBCModule) OnAcknowledgementPacket(
 		ctx.Logger().Error(err.Error())
 		return err
 	}
-	ctx = ctx.WithContext(context.WithValue(ctx.Context(), utils.ContextKey("connectionID"), connectionID))
-
-	err = im.keeper.HandleAcknowledgement(ctx, packet, acknowledgement)
+	err = im.keeper.HandleAcknowledgement(ctx, packet, acknowledgement, connectionID)
 	if err != nil {
 		im.keeper.Logger(ctx).Error("CALLBACK ERROR:", "error", err.Error())
 	}

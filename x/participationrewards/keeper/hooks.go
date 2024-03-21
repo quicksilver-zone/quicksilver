@@ -76,7 +76,7 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, _ int64)
 
 	if allocation == nil {
 		// if allocation is unset, then return early to avoid panic
-		k.Logger(ctx).Error("nil allocation", "error", err.Error())
+		k.Logger(ctx).Error("nil allocation")
 		return nil
 	}
 
