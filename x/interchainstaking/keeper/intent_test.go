@@ -266,7 +266,7 @@ func (suite *KeeperTestSuite) TestAggregateIntent() {
 			},
 			// expected: func(zone icstypes.Zone) icstypes.ValidatorIntents {
 			// 	out := icstypes.ValidatorIntents{}
-			// 	out = append(out, &icstyIntepes.ValidatorIntent{ValoperAddress: zone.GetValidatorsAddressesAsSlice()[0], Weight: sdk.OneDec().Quo(sdk.NewDec(2))})
+			// 	out = append(out, &icstypes.ValidatorIntent{ValoperAddress: zone.GetValidatorsAddressesAsSlice()[0], Weight: sdk.OneDec().Quo(sdk.NewDec(2))})
 			// 	out = append(out, &icstypes.ValidatorIntent{ValoperAddress: zone.GetValidatorsAddressesAsSlice()[1], Weight: sdk.OneDec().Quo(sdk.NewDec(2))})
 
 			// 	return out.Sort()
