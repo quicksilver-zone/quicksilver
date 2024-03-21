@@ -176,7 +176,7 @@ export const AccountControlModal: React.FC<AccountControlModalProps> = ({ isOpen
       // Continue with msgGrant
       if (correctAccount) {
         // Call msgRevokeBad
-        await authTx([msgRevokeBad], {
+        await authTx([revokeGrant], {
           fee,
           onSuccess: () => {},
         });

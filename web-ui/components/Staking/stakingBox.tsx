@@ -269,6 +269,7 @@ export const StakingBox = ({
 
   // Combine delegationsResponse with valoper entries from allBalances
   const combinedDelegations = safeDelegationsResponse.concat(
+    // @ts-ignore
     safeAllBalances
       .filter((balance) => balance.denom.includes('valoper'))
       .map((balance) => {
