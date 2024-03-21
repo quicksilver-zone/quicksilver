@@ -28,20 +28,20 @@ linters:
     - typecheck
     - stylecheck
     - revive
-#   - testifylint
+    #    - testifylint
     - typecheck
     - tenv
     - unconvert
-    - unparam 
+    - unparam
     - unused
     - misspell
 
 issues:
   exclude-rules:
-    - text: 'differs only by capitalization to method'
+    - text: "differs only by capitalization to method"
       linters:
         - revive
-    - text: 'Use of weak random number generator'
+    - text: "Use of weak random number generator"
       linters:
         - gosec
 
@@ -108,12 +108,12 @@ linters-settings:
         disabled: true
       - name: unused-parameter
         disabled: true
-      - name: unhandled-error 
+      - name: unhandled-error
         disabled: true
         arguments:
-          - 'b.WriteString'
-          - 'respJSON.Write'
-          - 'fmt.Printf'
-          - 'fmt.Print'
-          - 'fmt.Println'
-          - 'fmt.Fprintf'
+          - "b.WriteString"
+          - "respJSON.Write"
+          - "fmt.Printf"
+          - "fmt.Print"
+          - "fmt.Println"
+          - "fmt.Fprintf"
