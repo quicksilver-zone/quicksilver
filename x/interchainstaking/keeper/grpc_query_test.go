@@ -1346,3 +1346,58 @@ func (suite *KeeperTestSuite) TestKeeper_Zone() {
 		})
 	}
 }
+
+func (suite *KeeperTestSuite) TestKeeper_ZoneValidatorDenyList() {
+	testCases := []struct {
+		name           string
+		req            *types.QueryDenyListRequest
+		wantErr        bool
+		expectedLength int
+	}{
+		{
+			name:           "empty request",
+			req:            nil,
+			wantErr:        true,
+			expectedLength: 0,
+		},
+		{
+			name:           "zone not found",
+			req:            &types.QueryDenyListRequest{ChainId: "boguschain"},
+			wantErr:        false,
+			expectedLength: 0,
+		},
+		{
+			name:           "zone valid request",
+			req:            &types.QueryDenyListRequest{ChainId: suite.chainB.ChainID},
+			wantErr:        false,
+			expectedLength: 1,
+		},
+	}
+	for _, tc := range testCases {
+		suite.Run(tc.name, func() {
+			suite.SetupTest()
+			suite.setupTestZones()
+
+			quicksilver := suite.GetQuicksilverApp(suite.chainA)
+			ctx := suite.chainA.GetContext()
+			icsKeeper := quicksilver.InterchainstakingKeeper
+			validator := icsKeeper.GetValidators(ctx, suite.chainB.ChainID)[0]
+			err := icsKeeper.SetZoneValidatorToDenyList(ctx, suite.chainB.ChainID, validator)
+			suite.NoError(err)
+			denyList, err := icsKeeper.ValidatorDenyList(ctx, tc.req)
+			if tc.wantErr {
+				suite.T().Logf("Error:\n%v\n", err)
+				suite.Error(err)
+				suite.Empty(denyList)
+			} else {
+				suite.NotNil(denyList)
+				if tc.expectedLength == 1 {
+					suite.Equal(&types.QueryDenyListResponse{Validators: []string{validator.ValoperAddress}}, denyList)
+				} else {
+					suite.Empty(denyList.Validators)
+				}
+
+			}
+		})
+	}
+}
