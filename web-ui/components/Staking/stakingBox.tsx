@@ -33,7 +33,6 @@ import { quicksilver } from 'quicksilverjs';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { FaStar } from 'react-icons/fa';
 
-
 import { useTx } from '@/hooks';
 import {
   useAllBalancesQuery,
@@ -46,8 +45,10 @@ import {
 } from '@/hooks/useQueries';
 import { getExponent, shiftDigits } from '@/utils';
 
+import RevertSharesProcessModal from './modals/revertSharesProcessModal';
 import StakingProcessModal from './modals/stakingProcessModal';
 import TransferProcessModal from './modals/transferProcessModal';
+
 
 type StakingBoxProps = {
   selectedOption: {
@@ -61,6 +62,8 @@ type StakingBoxProps = {
   setStakingModalOpen: (isOpen: boolean) => void;
   isTransferModalOpen: boolean;
   setTransferModalOpen: (isOpen: boolean) => void;
+  isRevertSharesModalOpen: boolean;
+  setRevertSharesModalOpen: (isOpen: boolean) => void;
   setBalance: (balance: string) => void;
   setQBalance: (qBalance: string) => void;
 };
@@ -71,6 +74,8 @@ export const StakingBox = ({
   setStakingModalOpen,
   isTransferModalOpen,
   setTransferModalOpen,
+  isRevertSharesModalOpen,
+  setRevertSharesModalOpen,
   setBalance,
   setQBalance,
 }: StakingBoxProps) => {
@@ -82,6 +87,9 @@ export const StakingBox = ({
 
   const openTransferModal = () => setTransferModalOpen(true);
   const closeTransferModal = () => setTransferModalOpen(false);
+
+  const openRevertSharesModal = () => setRevertSharesModalOpen(true);
+  const closeRevertSharesModal = () => setRevertSharesModalOpen(false);
 
   const { address } = useChain(selectedOption.chainName);
 
@@ -98,7 +106,7 @@ export const StakingBox = ({
 
   const baseBalance = shiftDigits(balance?.balance?.amount || '0', -exp);
 
-  const { data: zone } = useZoneQuery(selectedOption.chainId);
+  const { data: zone, isLoading: isZoneLoading } = useZoneQuery(selectedOption.chainId);
 
   useEffect(() => {
     setQBalance(qAssets);
@@ -125,7 +133,8 @@ export const StakingBox = ({
 
   const [inputError, setInputError] = useState(false);
 
-  const qAssetsExponent = shiftDigits(qAssets, -6);
+  const exponent = qBalance?.balance.denom === 'aqdydx' ? -18 : -6;
+  const qAssetsExponent = shiftDigits(qAssets, exponent);
   const qAssetsDisplay = qAssetsExponent.includes('.') ? qAssetsExponent.substring(0, qAssetsExponent.indexOf('.') + 3) : qAssetsExponent;
 
   const maxUnstakingAmount = truncateToThreeDecimals(Number(qAssetsDisplay));
@@ -162,7 +171,7 @@ export const StakingBox = ({
     event.preventDefault();
     setIsSigning(true);
     try {
-      const result = await tx([msgRequestRedemption], {
+      await tx([msgRequestRedemption], {
         fee,
       });
     } catch (error) {
@@ -172,13 +181,29 @@ export const StakingBox = ({
     }
   };
 
+  // DO NOT REMOVE THESE COMMENTS
+  // import { useToaster, ToastType, type CustomToast } from '@/hooks/useToaster';
+  // import useToast from chakra-ui
+  // You can use this Toast handler and the below message to show there is an issue with unbonding
+  // const toaster = useToaster();
+
   const handleTabsChange = (index: number) => {
     setActiveTabIndex(index);
     setTokenAmount('');
+    // You can use this Toast Msg to show there is an issue with unbonding
+    // if (index === 1) {
+    //   toaster.toast({
+    //     type: ToastType.Error,
+    //     title: 'Issues with unbonding',
+    //     message: 'Unbondings can be submitted but are currently not being processed and will be queued until the issue is resolved.',
+    //   });
+    // }
   };
 
   const { delegations, delegationsIsError, delegationsIsLoading } = useNativeStakeQuery(selectedOption.chainName, address ?? '');
+
   const delegationsResponse = delegations?.delegation_responses;
+
   const nativeStakedAmount = delegationsResponse?.reduce((acc: number, delegationResponse: { balance: { amount: any } }) => {
     const amount = Number(delegationResponse?.balance?.amount) || 0;
     return acc + amount;
@@ -244,17 +269,21 @@ export const StakingBox = ({
 
   // Combine delegationsResponse with valoper entries from allBalances
   const combinedDelegations = safeDelegationsResponse.concat(
+    // @ts-ignore
     safeAllBalances
       .filter((balance) => balance.denom.includes('valoper'))
       .map((balance) => {
         const [validatorAddress, uniqueId] = balance.denom.split('/');
         return {
           delegation: {
+            delegator_address: '',
             validator_address: validatorAddress,
             unique_id: uniqueId,
+            shares: '',
           },
           balance: {
             amount: balance.amount,
+            denom: balance.denom,
           },
           isTokenized: true,
           denom: balance.denom,
@@ -302,6 +331,7 @@ export const StakingBox = ({
           </Tab>
         </TabList>
         <TabPanels>
+          {/* Staking TabPanel */}
           <SlideFade offsetY="-80px" in={activeTabIndex === 0}>
             <TabPanel>
               <VStack spacing={8} align="center">
@@ -311,20 +341,20 @@ export const StakingBox = ({
                 </Text>
                 {selectedOption.name === 'Cosmos Hub' && (
                   <Flex textAlign={'left'} justifyContent={'flex-start'}>
-                    {(nativeStakedAmount > 0 || hasTokenized) && (
+                    {((nativeStakedAmount ?? 0) > 0 || hasTokenized) && (
                       <Tooltip
                         label={
                           !address
                             ? 'Please connect your wallet to enable this option.'
                             : !nativeStakedAmount && !hasTokenized
-                            ? "You don't have any native staked tokens or tokenized shares."
-                            : nativeStakedAmount > 0
-                            ? `You currently have ${shiftDigits(nativeStakedAmount, -6)} ${
-                                selectedOption.value
-                              } natively staked to ${delegationsResponse?.length} validators.`
-                            : hasTokenized
-                            ? 'You have tokenized shares available for transfer.'
-                            : ''
+                              ? "You don't have any native staked tokens or tokenized shares."
+                              : nativeStakedAmount ?? 0 > 0
+                                ? `You currently have ${shiftDigits(nativeStakedAmount ?? '', -6)} ${
+                                    selectedOption.value
+                                  } natively staked to ${delegationsResponse?.length} validators.`
+                                : hasTokenized
+                                  ? 'You have tokenized shares available for transfer.'
+                                  : ''
                         }
                       >
                         <HStack>
@@ -434,19 +464,12 @@ export const StakingBox = ({
                                 </Skeleton>
                               ) : (
                                 <Text color="complimentary.900" fontWeight="light">
-                                  {address ? (
-                                    balance?.balance?.amount && Number(balance?.balance?.amount) !== 0 ? (
-                                      `${truncatedBalance} ${selectedOption.value.toUpperCase()}`
-                                    ) : (
-                                      <Link
-                                        href={`https://app.osmosis.zone/?from=USDC&to=${selectedOption.value.toUpperCase()}`}
-                                        isExternal
-                                      >
-                                        Get {selectedOption.value.toUpperCase()} tokens here
-                                      </Link>
-                                    )
+                                  {balance?.balance?.amount && Number(balance.balance.amount) > 0 ? (
+                                    `${truncatedBalance} ${selectedOption.value.toUpperCase()}`
                                   ) : (
-                                    '0'
+                                    <Link href={`https://app.osmosis.zone/?from=USDC&to=${selectedOption.value.toUpperCase()}`} isExternal>
+                                      Get {selectedOption.value.toUpperCase()} tokens here
+                                    </Link>
                                   )}
                                 </Text>
                               )}
@@ -498,7 +521,7 @@ export const StakingBox = ({
                       </Flex>
                     </Flex>
                     <Divider bgColor="complimentary.900" />
-                    <HStack justifyContent="space-between" alignItems="left" w="100%" mt={-8}>
+                    <HStack pt={2} justifyContent="space-between" alignItems="left" w="100%" mt={-8}>
                       <Stat textAlign="left" color="white">
                         <StatLabel>What you&apos;ll get</StatLabel>
                         <StatNumber>q{selectedOption.value.toUpperCase()}:</StatNumber>
@@ -506,7 +529,11 @@ export const StakingBox = ({
                       <Spacer /> {/* This pushes the next Stat component to the right */}
                       <Stat py={4} textAlign="right" color="white">
                         <StatNumber textColor="complimentary.900">
-                          {(Number(tokenAmount) / (Number(zone?.redemptionRate) || 1)).toFixed(2)}
+                          {!isZoneLoading ? (
+                            (Number(tokenAmount) / Number(zone?.redemptionRate || 1)).toFixed(2)
+                          ) : (
+                            <Spinner thickness="2px" speed="0.65s" emptyColor="gray.200" color="complimentary.900" size="sm" />
+                          )}
                         </StatNumber>
                       </Stat>
                     </HStack>
@@ -532,6 +559,7 @@ export const StakingBox = ({
                       isOpen={isStakingModalOpen}
                       onClose={closeStakingModal}
                       selectedOption={selectedOption}
+                      address={address ?? ''}
                     />
                   </>
                 )}
@@ -542,6 +570,7 @@ export const StakingBox = ({
                         <Box className="custom-scrollbar" maxH="290px" overflowY="scroll" w="fit-content" onScroll={handleScroll}>
                           {/* Combine delegationsResponse with valoper entries from allBalances */}
                           {combinedDelegations.map(
+                            // @ts-ignore
                             (
                               delegation: {
                                 delegation: { validator_address: string | number; unique_id: any };
@@ -576,8 +605,8 @@ export const StakingBox = ({
                                   key={uniqueKey}
                                   mb={2}
                                 >
-                                  <Flex py={2} align="center">
-                                    <Box boxSize="50px" borderRadius="md" ml={4}>
+                                  <Flex py={2} align="center" justify="space-between">
+                                    <HStack align="center" ml={4}>
                                       {!validatorLogo ? (
                                         <SkeletonCircle size="8" startColor="complimentary.900" endColor="complimentary.400" />
                                       ) : (
@@ -589,25 +618,45 @@ export const StakingBox = ({
                                           borderRadius={'full'}
                                         />
                                       )}
-                                    </Box>
-                                    <VStack align="start" ml={2}>
-                                      <HStack>
-                                        <Text fontSize="md">{validator?.name ?? 'Validator'}</Text>
-                                        {delegation.isTokenized && (
-                                          <Tooltip
-                                            label="This share is tokenized and can be transferred to quicksilver."
-                                            aria-label="Tokenized Share"
-                                          >
-                                            <Box>
-                                              <FaStar color="#FF8000" />
-                                            </Box>
-                                          </Tooltip>
-                                        )}
-                                      </HStack>
-                                      <Text color={'complimentary.900'} fontSize="md">
-                                        {shiftDigits(delegation.balance.amount, -6)} {selectedOption.value}
-                                      </Text>
-                                    </VStack>
+                                      <VStack align="start">
+                                        <HStack>
+                                          <Text fontSize="md">{validator?.name ?? 'Validator'}</Text>
+                                          {delegation.isTokenized && (
+                                            <Tooltip
+                                              label="This share is tokenized and can be transferred to quicksilver."
+                                              aria-label="Tokenized Share"
+                                            >
+                                              <Box>
+                                                <FaStar color="#FF8000" />
+                                              </Box>
+                                            </Tooltip>
+                                          )}
+                                        </HStack>
+                                        <Text color={'complimentary.900'} fontSize="md">
+                                          {shiftDigits(delegation.balance.amount, -6)} {selectedOption.value}
+                                        </Text>
+                                      </VStack>
+                                    </HStack>
+                                    {isSelected && delegation.isTokenized && (
+                                      <Button
+                                        onClick={openRevertSharesModal}
+                                        _active={{
+                                          transform: 'scale(0.95)',
+                                          color: 'complimentary.800',
+                                        }}
+                                        _hover={{
+                                          bgColor: 'rgba(255,128,0, 0.25)',
+                                          color: 'complimentary.300',
+                                        }}
+                                        color="white"
+                                        size="sm"
+                                        variant="outline"
+                                        mb={6}
+                                        mr={2}
+                                      >
+                                        Revert
+                                      </Button>
+                                    )}
                                   </Flex>
                                 </Box>
                               );
@@ -646,11 +695,32 @@ export const StakingBox = ({
                       isTokenized={selectedValidatorData.isTokenized}
                       denom={selectedValidatorData.denom}
                     />
+                    <RevertSharesProcessModal
+                      address={address ?? ''}
+                      selectedValidator={selectedValidatorData}
+                      isOpen={isRevertSharesModalOpen}
+                      onClose={closeRevertSharesModal}
+                      selectedOption={selectedOption}
+                      isTokenized={selectedValidatorData.isTokenized}
+                      denom={selectedValidatorData.denom}
+                    />
                   </Flex>
                 )}
               </VStack>
             </TabPanel>
           </SlideFade>
+          {/* Unstake TabPanel */}
+          { selectedOption.value.toUpperCase() == "DYDX" && (
+            <SlideFade offsetY="200px" in={activeTabIndex === 1}>
+              <TabPanel>
+                <VStack spacing={8} align="center">
+                  <Text fontWeight="light" textAlign="center" color="white">
+                    DyDx unstaking will be live very soon!
+                  </Text>
+                </VStack>
+              </TabPanel>
+            </SlideFade>
+           ) || (
           <SlideFade offsetY="200px" in={activeTabIndex === 1}>
             <TabPanel>
               <VStack spacing={8} align="center">
@@ -775,7 +845,7 @@ export const StakingBox = ({
                   </Flex>
                 </Flex>
                 <Divider bgColor="complimentary.900" />
-                <HStack justifyContent="space-between" alignItems="left" w="100%" mt={-8}>
+                <HStack pt={2} justifyContent="space-between" alignItems="left" w="100%" mt={-8}>
                   <Stat textAlign="left" color="white">
                     <StatLabel>What you&apos;ll get</StatLabel>
                     <StatNumber>{selectedOption.value.toUpperCase()}:</StatNumber>
@@ -783,7 +853,11 @@ export const StakingBox = ({
                   <Spacer /> {/* This pushes the next Stat component to the right */}
                   <Stat py={4} textAlign="right" color="white">
                     <StatNumber textColor="complimentary.900">
-                      {(Number(tokenAmount) * Number(zone?.redemptionRate || 1)).toFixed(2)}
+                      {!isZoneLoading ? (
+                        (Number(tokenAmount) * Number(zone?.redemptionRate || 1)).toFixed(2)
+                      ) : (
+                        <Spinner thickness="2px" speed="0.65s" emptyColor="gray.200" color="complimentary.900" size="sm" />
+                      )}
                     </StatNumber>
                   </Stat>
                 </HStack>
@@ -809,6 +883,7 @@ export const StakingBox = ({
               </VStack>
             </TabPanel>
           </SlideFade>
+          )}
         </TabPanels>
       </Tabs>
     </Box>
