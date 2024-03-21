@@ -65,6 +65,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		UnbondingPeriod:              0,
 		MessagesPerTx:                0,
 		Is_118:                       true,
+		DustThreshold:                1000000,
 	}
 	zone.Validators = append(zone.Validators,
 		&types.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), DelegatorShares: sdk.NewDec(2000), Score: sdk.ZeroDec(), ValidatorBondShares: sdk.ZeroDec(), LiquidShares: sdk.ZeroDec()},
@@ -162,6 +163,7 @@ func (s *IntegrationTestSuite) ZonesEqual(zoneA, zoneB types.Zone) bool {
 	s.Require().Equal(zoneA.LastEpochHeight, zoneB.LastEpochHeight)
 	s.Require().Equal(zoneA.LiquidityModule, zoneB.LiquidityModule)
 	s.Require().Equal(zoneA.LocalDenom, zoneB.LocalDenom)
+	s.Require().Equal(zoneA.DustThreshold, zoneB.DustThreshold)
 	for i := range zoneA.Validators {
 		s.Require().Equal(zoneA.Validators[i], zoneB.Validators[i])
 	}

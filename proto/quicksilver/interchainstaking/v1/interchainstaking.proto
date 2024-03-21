@@ -50,6 +50,7 @@ message Zone {
   bool return_to_sender = 27;
   bool is_118 = 28;
   SubzoneInfo subzoneInfo = 29;
+  int64 dust_threshold = 30;
 }
 
 message SubzoneInfo {
