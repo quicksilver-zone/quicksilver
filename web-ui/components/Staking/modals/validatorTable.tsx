@@ -1,20 +1,5 @@
-import {
-  Box,
-  Table,
-  TableCaption,
-  Tbody,
-  Td,
-  Th,
-  Thead,
-  Tr,
-  Flex,
-  TableContainer,
-  Image,
-  SkeletonText,
-  SkeletonCircle,
-  Tooltip,
-} from '@chakra-ui/react';
-import React from 'react';
+import { Box, Table, TableCaption, Tbody, Td, Th, Thead, Tr, Flex, TableContainer, Image, SkeletonCircle, Tooltip } from '@chakra-ui/react';
+import React, { useEffect, useState } from 'react';
 
 import { ParsedValidator as Validator } from '@/utils';
 
@@ -25,9 +10,9 @@ export const ValidatorsTable: React.FC<{
   searchTerm?: string;
   logos: any;
 }> = ({ validators, onValidatorClick, selectedValidators, searchTerm, logos }) => {
-  const [sortedValidators, setSortedValidators] = React.useState<Validator[]>([]);
-  const [sortBy, setSortBy] = React.useState<string | null>(null);
-  const [sortOrder, setSortOrder] = React.useState<'asc' | 'desc'>('asc');
+  const [sortedValidators, setSortedValidators] = useState<Validator[]>([]);
+  const [sortBy, setSortBy] = useState<string | null>(null);
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
   const handleSort = (column: string) => {
     if (sortBy === column) {
@@ -38,16 +23,16 @@ export const ValidatorsTable: React.FC<{
     }
   };
 
-  const [totalVotingPower, setTotalVotingPower] = React.useState(0);
+  const [totalVotingPower, setTotalVotingPower] = useState(0);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const totalVP = validators.reduce((acc, validator) => {
       return acc + (validator.votingPower || 0);
     }, 0);
     setTotalVotingPower(totalVP);
   }, [validators]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     let filteredValidators = [...validators];
 
     if (searchTerm) {
@@ -167,88 +152,72 @@ export const ValidatorsTable: React.FC<{
               </Tr>
             </Thead>
             <Tbody borderRadius={'10px'}>
-              {sortedValidators.length === 0
-                ? Array.from({ length: 5 }).map((_, index) => (
-                    <Tr key={index}>
-                      <Td border="1px solid rgba(255,128,0, 0.25)">
-                        <SkeletonCircle size="8" />
-                        <SkeletonText mt="4" noOfLines={1} spacing="4" />
+              {sortedValidators.length === 0 && searchTerm ? (
+                <Tr height="50px">
+                  {' '}
+                  <Td colSpan={3} textAlign="center" border="1px solid rgba(255,128,0, 0.25)" color="white">
+                    No matches found
+                  </Td>
+                </Tr>
+              ) : (
+                sortedValidators.map((validator, index) => {
+                  const votingPowerPercentage = totalVotingPower > 0 ? ((validator.votingPower || 0) / totalVotingPower) * 100 : 0;
+                  const validatorLogo = logos[validator.address];
+                  return (
+                    <Tr
+                      maxH={'50px'}
+                      cursor="pointer"
+                      key={index}
+                      _hover={{
+                        bgColor: 'rgba(255,128,0, 0.1)',
+                      }}
+                      onClick={() =>
+                        onValidatorClick({
+                          name: validator.name || '',
+                          operatorAddress: validator.address || '',
+                        })
+                      }
+                      backgroundColor={
+                        selectedValidators.some((v) => v.name === validator.name) ? 'rgba(255, 128, 0, 0.25)' : 'transparent'
+                      }
+                    >
+                      <Td maxW={'200px'} border="1px solid rgba(255,128,0, 0.25)" color="white">
+                        {!validatorLogo && (
+                          <SkeletonCircle
+                            boxSize="26px"
+                            objectFit="cover"
+                            marginRight="8px"
+                            display="inline-block"
+                            verticalAlign="middle"
+                            startColor="complimentary.900"
+                            endColor="complimentary.100"
+                          />
+                        )}
+                        {validatorLogo && (
+                          <Image
+                            borderRadius={'full'}
+                            src={validatorLogo}
+                            alt={validator.name}
+                            boxSize="26px"
+                            objectFit="cover"
+                            marginRight="8px"
+                            display="inline-block"
+                            verticalAlign="middle"
+                          />
+                        )}
+                        {(validator.name.length || 0) > 20 ? validator.name.substring(0, 14) + '...' : validator.name || ''}
                       </Td>
-                      <Td border="1px solid rgba(255,128,0, 0.25)">
-                        <SkeletonText mt="4" noOfLines={1} spacing="4" />
+                      <Td border="1px solid rgba(255,128,0, 0.25)" color="white">
+                        {validator.commission ? validator.commission : 'N/A'}
                       </Td>
 
-                      <Td border="1px solid rgba(255,128,0, 0.25)">
-                        <SkeletonText mt="4" noOfLines={1} spacing="4" />
+                      <Td border="1px solid rgba(255,128,0, 0.25)" color="white">
+                        {`${votingPowerPercentage.toFixed(2)}%`}
                       </Td>
                     </Tr>
-                  ))
-                : sortedValidators.map((validator, index) => {
-                    const votingPowerPercentage = totalVotingPower > 0 ? ((validator.votingPower || 0) / totalVotingPower) * 100 : 0;
-                    const validatorLogo = logos[validator.address];
-                    return (
-                      <Tr
-                        cursor="pointer"
-                        key={index}
-                        _hover={{
-                          bgColor: 'rgba(255,128,0, 0.1)',
-                        }}
-                        onClick={() =>
-                          onValidatorClick({
-                            name: validator.name || '',
-                            operatorAddress: validator.address || '',
-                          })
-                        }
-                        backgroundColor={
-                          selectedValidators.some((v) => v.name === validator.name) ? 'rgba(255, 128, 0, 0.25)' : 'transparent'
-                        }
-                        style={{ maxHeight: '50px' }}
-                      >
-                        <Td
-                          maxW={'200px'}
-                          border="1px solid rgba(255,128,0, 0.25)"
-                          color="white"
-                          style={{
-                            whiteSpace: 'nowrap',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                          }}
-                        >
-                          {!validatorLogo && (
-                            <SkeletonCircle
-                              boxSize="26px"
-                              objectFit="cover"
-                              marginRight="8px"
-                              display="inline-block"
-                              verticalAlign="middle"
-                              startColor="complimentary.900"
-                              endColor="complimentary.100"
-                            />
-                          )}
-                          {validatorLogo && (
-                            <Image
-                              borderRadius={'full'}
-                              src={validatorLogo}
-                              alt={validator.name}
-                              boxSize="26px"
-                              objectFit="cover"
-                              marginRight="8px"
-                              display="inline-block"
-                              verticalAlign="middle"
-                            />
-                          )}
-                          {(validator.name.length || 0) > 20 ? validator.name.substring(0, 14) || '' + '...' : validator.name || ''}
-                        </Td>
-                        <Td border="1px solid rgba(255,128,0, 0.25)" color="white">
-                          {validator.commission ? validator.commission : 'N/A'}
-                        </Td>
-
-                        <Td border="1px solid rgba(255,128,0, 0.25)" color="white">
-                          {`${votingPowerPercentage.toFixed(2)}%`}
-                        </Td>
-                      </Tr>
-                    );
-                  })}
+                  );
+                })
+              )}
             </Tbody>
           </Table>
         </TableContainer>
