@@ -86,7 +86,7 @@ interface Proof {
     ops: ProofOp[];
   };
   height: Long; 
-  proofTypes: string;
+  proofType: string;
 }
 
 interface Message {

@@ -102,10 +102,7 @@ export const RewardsClaim: React.FC<RewardsClaimInterface> = ({ address, onClose
           zone: message.zone,
           srcZone: message.src_zone,
           claimType: message.claim_type,
-          proofs: message.proofs.map((proof) => ({
-            ...proof,
-            proofType: '',
-          })),
+          proofs: message.proofs,
         });
       });
 
