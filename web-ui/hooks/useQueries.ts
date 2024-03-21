@@ -862,7 +862,7 @@ export const useNativeStakeQuery = (chainName: string, address: string) => {
       }
       const next_key = new Uint8Array()
       const balance = await grpcQueryClient.cosmos.staking.v1beta1.delegatorDelegations({
-        delegatorAddr: address || '',
+        delegator_addr: address || '',
         pagination: {
           key: next_key,
           offset: Long.fromNumber(0),
@@ -871,7 +871,7 @@ export const useNativeStakeQuery = (chainName: string, address: string) => {
           reverse: false,
         },
       });
-
+  
       return balance;
     },
     {

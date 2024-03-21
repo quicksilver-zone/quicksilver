@@ -33,6 +33,10 @@ import { quicksilver } from 'quicksilverjs';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { FaStar } from 'react-icons/fa';
 
+import RevertSharesProcessModal from './modals/revertSharesProcessModal';
+import StakingProcessModal from './modals/stakingProcessModal';
+import TransferProcessModal from './modals/transferProcessModal';
+
 import { useTx } from '@/hooks';
 import {
   useAllBalancesQuery,
@@ -44,11 +48,6 @@ import {
   useZoneQuery,
 } from '@/hooks/useQueries';
 import { getExponent, shiftDigits } from '@/utils';
-
-import RevertSharesProcessModal from './modals/revertSharesProcessModal';
-import StakingProcessModal from './modals/stakingProcessModal';
-import TransferProcessModal from './modals/transferProcessModal';
-
 
 type StakingBoxProps = {
   selectedOption: {
@@ -201,7 +200,9 @@ export const StakingBox = ({
   };
 
   const { delegations, delegationsIsError, delegationsIsLoading } = useNativeStakeQuery(selectedOption.chainName, address ?? '');
-  const delegationsResponse = delegations?.delegationResponses;
+
+  const delegationsResponse = delegations?.delegation_responses;
+
   const nativeStakedAmount = delegationsResponse?.reduce((acc: number, delegationResponse: { balance: { amount: any } }) => {
     const amount = Number(delegationResponse?.balance?.amount) || 0;
     return acc + amount;
@@ -273,8 +274,8 @@ export const StakingBox = ({
         const [validatorAddress, uniqueId] = balance.denom.split('/');
         return {
           delegation: {
-            delegatorAddress: '',
-            validatorAddress: validatorAddress,
+            delegator_address: '',
+            validator_address: validatorAddress,
             unique_id: uniqueId,
             shares: '',
           },

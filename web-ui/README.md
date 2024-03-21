@@ -56,9 +56,8 @@ Please ensure your IDE is configured to use Typescript v4.9.3
 
 **Has Blockers**
 
-- [ ] Fix CCX in assets page
 - [ ] Build liquid governance page
 
 **Assets**
 
-- [ ] Fix the way queries for networks and entries in components are created. Rather than defining one for each network, create a function that iterates through the .env entry for live networks and creates the queries and components for each. `pages/assets.tsx`
+- [ ] Fix the way queries for networks and entries in components are created. Rather than defining one for each network, create a function that iterates through the .env entry or liveNetworks call for live networks and creates the queries and components for each. `pages/assets.tsx`
