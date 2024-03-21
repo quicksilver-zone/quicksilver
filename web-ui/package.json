@@ -1,6 +1,6 @@
 {
   "name": "bun-qs",
-  "version": "0.15.3",
+  "version": "0.15.4",
   "private": true,
   "homepage": "https://quicksilver-zone.github.io/quicksilver/",
   "scripts": {
@@ -35,7 +35,7 @@
     "bech32": "^2.0.0",
     "chain-registry": "1.28.0",
     "chakra-react-select": "^4.7.6",
-    "cosmjs-types": "0.5.0",
+    "cosmjs-types": "0.9.0",
     "crypto-js": "^4.2.0",
     "dayjs": "^1.11.9",
     "express": "^4.18.2",
