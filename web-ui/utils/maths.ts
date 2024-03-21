@@ -26,6 +26,11 @@ export const toNumber = (
     .toNumber();
 };
 
+export function truncateToTwoDecimals(num: number) {
+  const multiplier = Math.pow(10, 2);
+  return Math.floor(num * multiplier) / multiplier;
+}
+
 export const sum = (...args: string[]) => {
   return args
     .reduce(

@@ -6,6 +6,7 @@ export const ibcDenomWithdrawMapping = {
       qREGEN: 'qregen',
       qSOMM: 'qsomm',
       qJUNO: 'qjuno',
+      qDYDX: 'qdydx',
     }
   };
 
@@ -16,7 +17,8 @@ export const ibcDenomWithdrawMapping = {
       qSTARS: 'ibc/46C83BB054E12E189882B5284542DB605D94C99827E367C9192CF0579CD5BC83',
       qREGEN: 'ibc/79A676508A2ECA1021EDDC7BB9CF70CEEC9514C478DA526A5A8B3E78506C2206',
       qSOMM: 'ibc/EAF76AD1EEF7B16D167D87711FB26ABE881AC7D9F7E6D0CF313D5FA530417208',
-      qJUNO: 'ibc/B4E18E61E1505C2F371B621E49B09E983F6A138F251A7B5286A6BDF739FD0D54'
+      qJUNO: 'ibc/B4E18E61E1505C2F371B621E49B09E983F6A138F251A7B5286A6BDF739FD0D54',
+      qDYDX: ''
     },
     umee: {
       qATOM: 'ibc/454725EA4029BAA99C293904336DE9A4B84E2BF7D83B9C56EE6B03E8A65FB5A1',
@@ -24,7 +26,8 @@ export const ibcDenomWithdrawMapping = {
       qSTARS: 'ibc/31946162F3E898B9E3A21792DD2AC740F2E82E7B92769BDF239C3DDA1726BB9F',
       qREGEN: 'ibc/16F0C7E49C2FE3A99E92A20DBCF4006B38ABC4E29F7F37829AD40F2C585BE835',
       qSOMM: 'ibc/ACF9DA139FE5BC8F95AC4A12B0B6D7710274DEDAC57284B881BEE1896F40642D',
-      qJUNO: 'ibc/CA0BEF2524A37205009210EFCFB09585FBA9648C5F065FA078944A5C6704E8DC'
+      qJUNO: 'ibc/CA0BEF2524A37205009210EFCFB09585FBA9648C5F065FA078944A5C6704E8DC',
+      qDYDX: ''
     },
   };
 
@@ -45,6 +48,14 @@ export const networks = [
       chainName: 'osmosis',
       chainId: 'osmosis-1',
     },
+    {
+      value: 'DYDX',
+      logo: '/img/networks/dydx.png',
+      qlogo: '/img/networks/qdydx.png',
+      name: 'Dydx',
+      chainName: 'dydx',
+    chainId: 'dydx-mainnet-1',
+        },
     {
       value: 'STARS',
       logo: '/img/networks/stargaze.svg',

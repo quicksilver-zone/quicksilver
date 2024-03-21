@@ -204,7 +204,7 @@ export const ProposalModal = ({
               </Flex>
               <Center my={4} />
               <Divider bgColor="complimentary.500" />
-              <Box mt={4}>
+              <Box display={{ base: 'none', md: 'block' }} mt={4}>
                 <Heading fontSize="sm" color="white" mb={4}>
                   Vote Details
                 </Heading>

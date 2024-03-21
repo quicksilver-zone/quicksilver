@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"slices"
 	"time"
 
 	"github.com/tendermint/tendermint/libs/log"
@@ -752,7 +753,7 @@ func (k *Keeper) GetAggregateIntentOrDefault(ctx sdk.Context, zone *types.Zone) 
 	}
 
 	jailedThreshold := k.EpochsKeeper.GetEpochInfo(ctx, "epoch").Duration * 2
-
+	denyList := k.GetZoneValidatorDenyList(ctx, zone.ChainId)
 	// filter intents here...
 	// check validators for tombstoned
 	for _, validatorIntent := range intents {
@@ -777,9 +778,9 @@ func (k *Keeper) GetAggregateIntentOrDefault(ctx sdk.Context, zone *types.Zone) 
 		}
 
 		// we should never let denylist validators into the list, even if they are explicitly selected
-		// if in deny list {
-		// continue
-		// }
+		if slices.Contains(denyList, validator.ValoperAddress) {
+			continue
+		}
 		filteredIntents = append(filteredIntents, validatorIntent)
 	}
 

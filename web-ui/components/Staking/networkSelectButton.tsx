@@ -2,7 +2,8 @@
 
 import { ChevronDownIcon } from '@chakra-ui/icons';
 import { Menu, MenuButton, MenuList, MenuItem, Button, Flex, Image, Text, useDisclosure } from '@chakra-ui/react';
-import React from 'react';
+import axios from 'axios';
+import React, { useEffect, useState } from 'react';
 
 import { networks as prodNetworks, testNetworks as devNetworks } from '@/state/chains/prod';
 
@@ -13,6 +14,15 @@ interface CustomMenuProps {
   selectedOption: (typeof networks)[0];
   setSelectedNetwork: (network: (typeof networks)[0]) => void;
 }
+
+type Network = {
+  value: string;
+  logo: string;
+  qlogo: string;
+  name: string;
+  chainName: string;
+  chainId: string;
+};
 
 export const NetworkSelect: React.FC<CustomMenuProps> = ({ buttonTextColor = 'white', selectedOption, setSelectedNetwork }) => {
   const handleOptionClick = (network: (typeof networks)[0]) => {
@@ -32,6 +42,29 @@ export const NetworkSelect: React.FC<CustomMenuProps> = ({ buttonTextColor = 'wh
   }
 
   const { isOpen } = useDisclosure();
+
+  const fetchLiveZones = async () => {
+    try {
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_QUICKSILVER_API}/quicksilver/interchainstaking/v1/zones`);
+      const liveZones = response.data.zones.map((zone: { chain_id: any }) => zone.chain_id);
+      return liveZones;
+    } catch (error) {
+      console.error('Failed to fetch live zones:', error);
+      return [];
+    }
+  };
+
+  const [liveNetworks, setLiveNetworks] = useState<Network[]>([]);
+
+  useEffect(() => {
+    const getLiveZones = async () => {
+      const liveZones = await fetchLiveZones();
+      const filteredNetworks = networks.filter((network) => liveZones.includes(network.chainId));
+      setLiveNetworks(filteredNetworks);
+    };
+
+    getLiveZones();
+  }, []);
 
   return (
     <Menu>
@@ -53,7 +86,7 @@ export const NetworkSelect: React.FC<CustomMenuProps> = ({ buttonTextColor = 'wh
         {selectedOption.value.toUpperCase()}
       </MenuButton>
       <MenuList borderColor="rgba(35,35,35,1)" mt={1} bgColor="rgba(35,35,35,1)">
-        {networks.map((network) => (
+        {liveNetworks.map((network) => (
           <MenuItem
             key={network.value}
             py={4}
