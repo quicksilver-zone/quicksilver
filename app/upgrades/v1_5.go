@@ -58,7 +58,7 @@ func V010503rc0UpgradeHandler(
 	appKeepers *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-		// update all withdrawal records' distributons to use new Amount field.
+		// update all withdrawal records' distributors to use new Amount field.
 		appKeepers.InterchainstakingKeeper.IterateWithdrawalRecords(ctx, func(index int64, record icstypes.WithdrawalRecord) (stop bool) {
 			if record.Distribution == nil {
 				// skip records that are queued.
@@ -121,7 +121,7 @@ func V010503UpgradeHandler(
 			return false
 		})
 
-		// update all withdrawal records' distributons to use new Amount field.
+		// update all withdrawal records' distributors to use new Amount field.
 		appKeepers.InterchainstakingKeeper.IterateWithdrawalRecords(ctx, func(index int64, record icstypes.WithdrawalRecord) (stop bool) {
 			if record.Distribution == nil {
 				// skip records that are queued.
