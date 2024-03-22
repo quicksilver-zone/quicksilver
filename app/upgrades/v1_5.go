@@ -93,6 +93,7 @@ func V010503rc0UpgradeHandler(
 		// for all redelegation records, migrate
 		appKeepers.InterchainstakingKeeper.IterateRedelegationRecords(ctx, func(index int64, key []byte, record icstypes.RedelegationRecord) (stop bool) {
 			record.Amount = math.NewInt(record.XAmount)
+			appKeepers.InterchainstakingKeeper.SetRedelegationRecord(ctx, record)
 			return false
 		})
 
@@ -156,6 +157,7 @@ func V010503UpgradeHandler(
 		// for all redelegation records, migrate
 		appKeepers.InterchainstakingKeeper.IterateRedelegationRecords(ctx, func(index int64, key []byte, record icstypes.RedelegationRecord) (stop bool) {
 			record.Amount = math.NewInt(record.XAmount)
+			appKeepers.InterchainstakingKeeper.SetRedelegationRecord(ctx, record)
 			return false
 		})
 
