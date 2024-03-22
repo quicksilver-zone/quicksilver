@@ -3,13 +3,12 @@ package keeper_test
 import (
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	sdkmath "cosmossdk.io/math"
 	"github.com/quicksilver-zone/quicksilver/app"
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	cmtypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
@@ -136,7 +135,7 @@ func (suite *KeeperTestSuite) TestKeeper_IntentStore() {
 		sdk.NewCoins(
 			sdk.NewCoin(
 				zone.BaseDenom,
-				math.NewInt(7313913),
+				sdkmath.NewInt(7313913),
 			),
 		),
 		nil,
