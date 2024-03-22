@@ -324,7 +324,6 @@ func (suite *KeeperTestSuite) TestAggregateIntent() {
 			icsKeeper := quicksilver.InterchainstakingKeeper
 			zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
 			suite.True(found)
-
 			// give each user some funds
 			for addrString, balance := range tt.balances() {
 				suite.giveFunds(ctx, zone.LocalDenom, balance, addrString)
@@ -334,8 +333,14 @@ func (suite *KeeperTestSuite) TestAggregateIntent() {
 				icsKeeper.SetDelegatorIntent(ctx, &zone, intent, false)
 			}
 
-			// TODO: handle this error
-			_ = icsKeeper.AggregateDelegatorIntents(ctx, &zone)
+
+			// If the supply is zero, mint some coins to avoid zero ordializedSum
+			if quicksilver.BankKeeper.GetSupply(ctx, zone.LocalDenom).IsZero() {
+				err := quicksilver.MintKeeper.MintCoins(ctx, sdk.NewCoins(sdk.NewCoin(zone.LocalDenom, sdk.NewInt(1000))))
+				suite.NoError(err)
+			}
+			err := icsKeeper.AggregateDelegatorIntents(ctx, &zone)
+			suite.NoError(err)
 
 			// refresh zone to pull new aggregate
 			zone, found = icsKeeper.GetZone(ctx, suite.chainB.ChainID)

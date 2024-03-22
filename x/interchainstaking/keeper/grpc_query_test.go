@@ -1349,3 +1349,68 @@ func (suite *KeeperTestSuite) TestKeeper_Zone() {
 		})
 	}
 }
+
+func (suite *KeeperTestSuite) TestKeeper_ZoneValidatorDenyList() {
+	testCases := []struct {
+		name           string
+		req            *types.QueryDenyListRequest
+		wantErr        bool
+		expectedLength int
+	}{
+		{
+			name:           "empty request",
+			req:            nil,
+			wantErr:        true,
+			expectedLength: 0,
+		},
+		{
+			name:           "zone not found",
+			req:            &types.QueryDenyListRequest{ChainId: "abcd"},
+			wantErr:        false,
+			expectedLength: 0,
+		},
+		{
+			name:           "zone valid request",
+			req:            &types.QueryDenyListRequest{ChainId: suite.chainB.ChainID},
+			wantErr:        false,
+			expectedLength: 2,
+		},
+	}
+	for _, tc := range testCases {
+		suite.Run(tc.name, func() {
+			suite.SetupTest()
+			suite.setupTestZones()
+
+			quicksilver := suite.GetQuicksilverApp(suite.chainA)
+			ctx := suite.chainA.GetContext()
+			icsKeeper := quicksilver.InterchainstakingKeeper
+
+			// Set 2 validators to deny list
+			validator1 := icsKeeper.GetValidators(ctx, suite.chainB.ChainID)[0]
+			valAddr, err := sdk.ValAddressFromBech32(validator1.ValoperAddress)
+			suite.NoError(err)
+			err = icsKeeper.SetZoneValidatorToDenyList(ctx, suite.chainB.ChainID, valAddr)
+			suite.NoError(err)
+
+			validator2 := icsKeeper.GetValidators(ctx, suite.chainB.ChainID)[1]
+			valAddr, err = sdk.ValAddressFromBech32(validator2.ValoperAddress)
+			suite.NoError(err)
+			err = icsKeeper.SetZoneValidatorToDenyList(ctx, suite.chainB.ChainID, valAddr)
+			suite.NoError(err)
+			denyList, err := icsKeeper.ValidatorDenyList(ctx, tc.req)
+			if tc.wantErr {
+				suite.T().Logf("Error:\n%v\n", err)
+				suite.Error(err)
+				suite.Empty(denyList)
+			} else {
+				suite.NotNil(denyList)
+				if tc.expectedLength == 2 {
+					suite.Equal(&types.QueryDenyListResponse{Validators: []string{validator1.ValoperAddress, validator2.ValoperAddress}}, denyList)
+				} else {
+					suite.Empty(denyList.Validators)
+				}
+
+			}
+		})
+	}
+}
