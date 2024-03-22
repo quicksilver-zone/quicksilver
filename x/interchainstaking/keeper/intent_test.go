@@ -374,7 +374,7 @@ func (suite *KeeperTestSuite) TestAggregateIntentWithPRClaims() {
 			},
 			claims: func(ctx sdk.Context, app *app.Quicksilver, zone icstypes.Zone) map[string]cmtypes.Claim {
 				return map[string]cmtypes.Claim{
-					user1.String(): {UserAddress: user1.String(), ChainId: zone.ChainId, Module: cmtypes.ClaimTypeLiquidToken, Amount: sdkmath.OneInt(), SourceChainId: "osmosis-1"},
+					user1.String(): {UserAddress: user1.String(), ChainId: zone.ChainId, Module: cmtypes.ClaimTypeLiquidToken, Amount: sdkmath.NewInt(1000), SourceChainId: "osmosis-1"},
 				}
 			},
 			balances: func(denom string) map[string]sdk.Coins { return map[string]sdk.Coins{} },
