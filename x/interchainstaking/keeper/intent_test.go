@@ -9,6 +9,7 @@ import (
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/quicksilver-zone/quicksilver/app"
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	cmtypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
@@ -374,7 +375,7 @@ func (suite *KeeperTestSuite) TestAggregateIntentWithPRClaims() {
 			},
 			claims: func(ctx sdk.Context, app *app.Quicksilver, zone icstypes.Zone) map[string]cmtypes.Claim {
 				return map[string]cmtypes.Claim{
-					user1.String(): {UserAddress: user1.String(), ChainId: zone.ChainId, Module: cmtypes.ClaimTypeLiquidToken, Amount: 1000, SourceChainId: "osmosis-1"},
+					user1.String(): {UserAddress: user1.String(), ChainId: zone.ChainId, Module: cmtypes.ClaimTypeLiquidToken, Amount: sdkmath.OneInt(), SourceChainId: "osmosis-1"},
 				}
 			},
 			balances: func(denom string) map[string]sdk.Coins { return map[string]sdk.Coins{} },
@@ -394,7 +395,7 @@ func (suite *KeeperTestSuite) TestAggregateIntentWithPRClaims() {
 			},
 			claims: func(ctx sdk.Context, app *app.Quicksilver, zone icstypes.Zone) map[string]cmtypes.Claim {
 				return map[string]cmtypes.Claim{
-					user1.String(): {UserAddress: user1.String(), ChainId: zone.ChainId, Module: cmtypes.ClaimTypeLiquidToken, Amount: 1, SourceChainId: "osmosis-1"},
+					user1.String(): {UserAddress: user1.String(), ChainId: zone.ChainId, Module: cmtypes.ClaimTypeLiquidToken, Amount: sdkmath.OneInt(), SourceChainId: "osmosis-1"},
 				}
 			},
 			balances: func(denom string) map[string]sdk.Coins {
@@ -417,7 +418,7 @@ func (suite *KeeperTestSuite) TestAggregateIntentWithPRClaims() {
 			},
 			claims: func(ctx sdk.Context, app *app.Quicksilver, zone icstypes.Zone) map[string]cmtypes.Claim {
 				return map[string]cmtypes.Claim{
-					user1.String(): {UserAddress: user1.String(), ChainId: zone.ChainId, Module: cmtypes.ClaimTypeLiquidToken, Amount: 1000, SourceChainId: "osmosis-1"},
+					user1.String(): {UserAddress: user1.String(), ChainId: zone.ChainId, Module: cmtypes.ClaimTypeLiquidToken, Amount: sdkmath.NewInt(1000), SourceChainId: "osmosis-1"},
 				}
 			},
 			balances: func(denom string) map[string]sdk.Coins {
