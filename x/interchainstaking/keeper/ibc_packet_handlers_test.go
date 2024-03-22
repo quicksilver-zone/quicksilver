@@ -165,23 +165,16 @@ func (suite *KeeperTestSuite) TestHandleQueuedUnbondings() {
 		{
 			name: "valid",
 			records: func(ctx sdk.Context, qs *app.Quicksilver, zone *types.Zone) []types.WithdrawalRecord {
-				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
-
 				return []types.WithdrawalRecord{
 					{
-						ChainId:   zone.ChainId,
-						Delegator: addressutils.GenerateAccAddressForTest().String(),
-						Distribution: []*types.Distribution{
-							{Valoper: vals[0], Amount: math.NewInt(1000000)},
-							{Valoper: vals[1], Amount: math.NewInt(1000000)},
-							{Valoper: vals[2], Amount: math.NewInt(1000000)},
-							{Valoper: vals[3], Amount: math.NewInt(1000000)},
-						},
-						Recipient:  addressutils.GenerateAddressForTestWithPrefix(zone.AccountPrefix),
-						Amount:     sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(4000000))),
-						BurnAmount: sdk.NewCoin("uqatom", sdk.NewInt(4000000)),
-						Txhash:     "7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
-						Status:     types.WithdrawStatusQueued,
+						ChainId:      zone.ChainId,
+						Delegator:    addressutils.GenerateAccAddressForTest().String(),
+						Distribution: nil,
+						Recipient:    addressutils.GenerateAddressForTestWithPrefix(zone.AccountPrefix),
+						Amount:       nil,
+						BurnAmount:   sdk.NewCoin("uqatom", sdk.NewInt(4000000)),
+						Txhash:       "7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
+						Status:       types.WithdrawStatusQueued,
 					},
 				}
 			},
@@ -217,39 +210,75 @@ func (suite *KeeperTestSuite) TestHandleQueuedUnbondings() {
 			expectError:      false,
 		},
 		{
-			name: "valid - two",
+			name: "valid - int64 overflow",
 			records: func(ctx sdk.Context, qs *app.Quicksilver, zone *types.Zone) []types.WithdrawalRecord {
-				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
 				return []types.WithdrawalRecord{
 					{
-						ChainId:   zone.ChainId,
-						Delegator: addressutils.GenerateAccAddressForTest().String(),
-						Distribution: []*types.Distribution{
-							{Valoper: vals[0], Amount: math.NewInt(1000000)},
-							{Valoper: vals[1], Amount: math.NewInt(1000000)},
-							{Valoper: vals[2], Amount: math.NewInt(1000000)},
-							{Valoper: vals[3], Amount: math.NewInt(1000000)},
-						},
-						Recipient:  addressutils.GenerateAddressForTestWithPrefix(zone.AccountPrefix),
-						Amount:     sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(4000000))),
-						BurnAmount: sdk.NewCoin("uqatom", sdk.NewInt(4000000)),
-						Txhash:     "7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
-						Status:     types.WithdrawStatusQueued,
+						ChainId:      zone.ChainId,
+						Delegator:    addressutils.GenerateAccAddressForTest().String(),
+						Distribution: nil,
+						Recipient:    addressutils.GenerateAddressForTestWithPrefix(zone.AccountPrefix),
+						Amount:       nil,
+						BurnAmount:   sdk.NewCoin("uqatom", sdk.NewInt(4000000000000).Mul(sdk.NewInt(4000000000000))),
+						Txhash:       "7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
+						Status:       types.WithdrawStatusQueued,
+					},
+				}
+			},
+			delegations: func(ctx sdk.Context, qs *app.Quicksilver, zone *types.Zone) []types.Delegation {
+				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
+				return []types.Delegation{
+					{
+						DelegationAddress: zone.DelegationAddress.Address,
+						ValidatorAddress:  vals[0],
+						Amount:            sdk.NewCoin("uatom", sdk.NewInt(1000000000000).Mul(sdk.NewInt(4000000000000))),
 					},
 					{
-						ChainId:   zone.ChainId,
-						Delegator: addressutils.GenerateAccAddressForTest().String(),
-						Distribution: []*types.Distribution{
-							{Valoper: vals[0], Amount: math.NewInt(5000000)},
-							{Valoper: vals[1], Amount: math.NewInt(2500000)},
-							{Valoper: vals[2], Amount: math.NewInt(5000000)},
-							{Valoper: vals[3], Amount: math.NewInt(2500000)},
-						},
-						Recipient:  addressutils.GenerateAddressForTestWithPrefix(zone.AccountPrefix),
-						Amount:     sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(15000000))),
-						BurnAmount: sdk.NewCoin("uqatom", sdk.NewInt(15000000)),
-						Txhash:     "d786f7d4c94247625c2882e921a790790eb77a00d0534d5c3154d0a9c5ab68f5",
-						Status:     types.WithdrawStatusQueued,
+						DelegationAddress: zone.DelegationAddress.Address,
+						ValidatorAddress:  vals[1],
+						Amount:            sdk.NewCoin("uatom", sdk.NewInt(1000000000000).Mul(sdk.NewInt(4000000000000))),
+					},
+					{
+						DelegationAddress: zone.DelegationAddress.Address,
+						ValidatorAddress:  vals[2],
+						Amount:            sdk.NewCoin("uatom", sdk.NewInt(1000000000000).Mul(sdk.NewInt(4000000000000))),
+					},
+					{
+						DelegationAddress: zone.DelegationAddress.Address,
+						ValidatorAddress:  vals[3],
+						Amount:            sdk.NewCoin("uatom", sdk.NewInt(1000000000000).Mul(sdk.NewInt(4000000000000))),
+					},
+				}
+			},
+			redelegations: func(ctx sdk.Context, qs *app.Quicksilver, zone *types.Zone) []types.RedelegationRecord {
+				return []types.RedelegationRecord{}
+			},
+			expectTransition: []bool{true},
+			expectError:      false,
+		},
+		{
+			name: "valid - two",
+			records: func(ctx sdk.Context, qs *app.Quicksilver, zone *types.Zone) []types.WithdrawalRecord {
+				return []types.WithdrawalRecord{
+					{
+						ChainId:      zone.ChainId,
+						Delegator:    addressutils.GenerateAccAddressForTest().String(),
+						Distribution: nil,
+						Recipient:    addressutils.GenerateAddressForTestWithPrefix(zone.AccountPrefix),
+						Amount:       nil,
+						BurnAmount:   sdk.NewCoin("uqatom", sdk.NewInt(4000000)),
+						Txhash:       "7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
+						Status:       types.WithdrawStatusQueued,
+					},
+					{
+						ChainId:      zone.ChainId,
+						Delegator:    addressutils.GenerateAccAddressForTest().String(),
+						Distribution: nil,
+						Recipient:    addressutils.GenerateAddressForTestWithPrefix(zone.AccountPrefix),
+						Amount:       nil,
+						BurnAmount:   sdk.NewCoin("uqatom", sdk.NewInt(15000000)),
+						Txhash:       "d786f7d4c94247625c2882e921a790790eb77a00d0534d5c3154d0a9c5ab68f5",
+						Status:       types.WithdrawStatusQueued,
 					},
 				}
 			},
@@ -287,22 +316,16 @@ func (suite *KeeperTestSuite) TestHandleQueuedUnbondings() {
 		{
 			name: "invalid - locked tokens",
 			records: func(ctx sdk.Context, qs *app.Quicksilver, zone *types.Zone) []types.WithdrawalRecord {
-				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
 				return []types.WithdrawalRecord{
 					{
-						ChainId:   zone.ChainId,
-						Delegator: addressutils.GenerateAccAddressForTest().String(),
-						Distribution: []*types.Distribution{
-							{Valoper: vals[0], Amount: math.NewInt(1000000)},
-							{Valoper: vals[1], Amount: math.NewInt(1000000)},
-							{Valoper: vals[2], Amount: math.NewInt(1000000)},
-							{Valoper: vals[3], Amount: math.NewInt(1000000)},
-						},
-						Recipient:  addressutils.GenerateAddressForTestWithPrefix(zone.AccountPrefix),
-						Amount:     sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(4000000))),
-						BurnAmount: sdk.NewCoin("uqatom", sdk.NewInt(4000000)),
-						Txhash:     "7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
-						Status:     types.WithdrawStatusQueued,
+						ChainId:      zone.ChainId,
+						Delegator:    addressutils.GenerateAccAddressForTest().String(),
+						Distribution: nil,
+						Recipient:    addressutils.GenerateAddressForTestWithPrefix(zone.AccountPrefix),
+						Amount:       nil,
+						BurnAmount:   sdk.NewCoin("uqatom", sdk.NewInt(4000000)),
+						Txhash:       "7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
+						Status:       types.WithdrawStatusQueued,
 					},
 				}
 			},
@@ -350,37 +373,26 @@ func (suite *KeeperTestSuite) TestHandleQueuedUnbondings() {
 		{
 			name: "mixed - locked tokens but both succeed (previously failed)",
 			records: func(ctx sdk.Context, qs *app.Quicksilver, zone *types.Zone) []types.WithdrawalRecord {
-				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
 				return []types.WithdrawalRecord{
 					{
-						ChainId:   zone.ChainId,
-						Delegator: addressutils.GenerateAccAddressForTest().String(),
-						Distribution: []*types.Distribution{
-							{Valoper: vals[0], Amount: math.NewInt(5000000)},
-							{Valoper: vals[1], Amount: math.NewInt(2500000)},
-							{Valoper: vals[2], Amount: math.NewInt(5000000)},
-							{Valoper: vals[3], Amount: math.NewInt(2500000)},
-						},
-						Recipient:  addressutils.GenerateAddressForTestWithPrefix(zone.AccountPrefix),
-						Amount:     sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(15000000))),
-						BurnAmount: sdk.NewCoin("uqatom", sdk.NewInt(15000000)),
-						Txhash:     "d786f7d4c94247625c2882e921a790790eb77a00d0534d5c3154d0a9c5ab68f5",
-						Status:     types.WithdrawStatusQueued,
+						ChainId:      zone.ChainId,
+						Delegator:    addressutils.GenerateAccAddressForTest().String(),
+						Distribution: nil,
+						Recipient:    addressutils.GenerateAddressForTestWithPrefix(zone.AccountPrefix),
+						Amount:       nil,
+						BurnAmount:   sdk.NewCoin("uqatom", sdk.NewInt(15000000)),
+						Txhash:       "d786f7d4c94247625c2882e921a790790eb77a00d0534d5c3154d0a9c5ab68f5",
+						Status:       types.WithdrawStatusQueued,
 					},
 					{
-						ChainId:   zone.ChainId,
-						Delegator: addressutils.GenerateAccAddressForTest().String(),
-						Distribution: []*types.Distribution{
-							{Valoper: vals[0], Amount: math.NewInt(1000000)},
-							{Valoper: vals[1], Amount: math.NewInt(1000000)},
-							{Valoper: vals[2], Amount: math.NewInt(1000000)},
-							{Valoper: vals[3], Amount: math.NewInt(1000000)},
-						},
-						Recipient:  addressutils.GenerateAddressForTestWithPrefix(zone.AccountPrefix),
-						Amount:     sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(4000000))),
-						BurnAmount: sdk.NewCoin("uqatom", sdk.NewInt(4000000)),
-						Txhash:     "7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
-						Status:     types.WithdrawStatusQueued,
+						ChainId:      zone.ChainId,
+						Delegator:    addressutils.GenerateAccAddressForTest().String(),
+						Distribution: nil,
+						Recipient:    addressutils.GenerateAddressForTestWithPrefix(zone.AccountPrefix),
+						Amount:       nil,
+						BurnAmount:   sdk.NewCoin("uqatom", sdk.NewInt(4000000)),
+						Txhash:       "7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
+						Status:       types.WithdrawStatusQueued,
 					},
 				}
 			},
@@ -506,19 +518,14 @@ func (suite *KeeperTestSuite) TestHandleWithdrawForUser() {
 			records: func(zone *types.Zone) []types.WithdrawalRecord {
 				return []types.WithdrawalRecord{
 					{
-						ChainId:   zone.ChainId,
-						Delegator: addressutils.GenerateAccAddressForTest().String(),
-						Distribution: []*types.Distribution{
-							{Valoper: addressutils.GenerateValAddressForTest().String(), Amount: math.NewInt(1000000)},
-							{Valoper: addressutils.GenerateValAddressForTest().String(), Amount: math.NewInt(1000000)},
-							{Valoper: addressutils.GenerateValAddressForTest().String(), Amount: math.NewInt(1000000)},
-							{Valoper: addressutils.GenerateValAddressForTest().String(), Amount: math.NewInt(1000000)},
-						},
-						Recipient:  addressutils.GenerateAddressForTestWithPrefix(zone.AccountPrefix),
-						Amount:     sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(4000000))),
-						BurnAmount: sdk.NewCoin("uqatom", sdk.NewInt(4000000)),
-						Txhash:     "7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
-						Status:     types.WithdrawStatusQueued,
+						ChainId:      zone.ChainId,
+						Delegator:    addressutils.GenerateAccAddressForTest().String(),
+						Distribution: nil,
+						Recipient:    addressutils.GenerateAddressForTestWithPrefix(zone.AccountPrefix),
+						Amount:       nil,
+						BurnAmount:   sdk.NewCoin("uqatom", sdk.NewInt(4000000)),
+						Txhash:       "7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
+						Status:       types.WithdrawStatusQueued,
 					},
 				}
 			},
