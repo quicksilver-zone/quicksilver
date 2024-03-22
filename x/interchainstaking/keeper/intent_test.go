@@ -4,9 +4,11 @@ import (
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 
 	"github.com/quicksilver-zone/quicksilver/app"
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
+	cmtypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
 	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 )
 
@@ -352,120 +354,131 @@ func (suite *KeeperTestSuite) TestAggregateIntent() {
 	}
 }
 
-// func (suite *KeeperTestSuite) TestAggregateIntentWithPRClaims() {
-// 	tc := []struct {
-// 		name     string
-// 		intents  func(zone icstypes.Zone) []icstypes.DelegatorIntent
-// 		balances func(denom string) map[string]sdk.Coins
-// 		claims   func(zone icstypes.Zone) map[string]cmtypes.Claim
-// 		expected func(zone icstypes.Zone) icstypes.ValidatorIntents
-// 	}{
-// 		{
-// 			name: "single intent; zero balance, but claim, returns single weighting",
-// 			intents: func(zone icstypes.Zone) []icstypes.DelegatorIntent {
-// 				out := make([]icstypes.DelegatorIntent, 0)
-// 				out = append(out, icstypes.DelegatorIntent{Delegator: user1.String(), Intents: icstypes.ValidatorIntents{&icstypes.ValidatorIntent{ValoperAddress: zone.GetValidatorsAddressesAsSlice()[0], Weight: sdk.OneDec()}}})
-// 				return out
-// 			},
-// 			claims: func(zone icstypes.Zone) map[string]cmtypes.Claim {
-// 				return map[string]cmtypes.Claim{
-// 					user1.String(): {UserAddress: user1.String(), ChainID: zone.ChainID, Module: cmtypes.ClaimTypeLiquidToken, Amount: 1000, SourceChainId: "osmosis-1"},
-// 				}
-// 			},
-// 			balances: func(denom string) map[string]sdk.Coins { return map[string]sdk.Coins{} },
-// 			expected: func(zone icstypes.Zone) icstypes.ValidatorIntents {
-// 				// four delegators each at 25%
-// 				out := icstypes.ValidatorIntents{}
-// 				out = append(out, &icstypes.ValidatorIntent{ValoperAddress: zone.GetValidatorsAddressesAsSlice()[0], Weight: sdk.OneDec()})
-// 				return out.Sort()
-// 			},
-// 		},
-// 		{
-// 			name: "single intent; with balance and claim, returns single weighting",
-// 			intents: func(zone icstypes.Zone) []icstypes.DelegatorIntent {
-// 				out := make([]icstypes.DelegatorIntent, 0)
-// 				out = append(out, icstypes.DelegatorIntent{Delegator: user1.String(), Intents: icstypes.ValidatorIntents{&icstypes.ValidatorIntent{ValoperAddress: zone.GetValidatorsAddressesAsSlice()[0], Weight: sdk.OneDec()}}})
-// 				return out
-// 			},
-// 			claims: func(zone icstypes.Zone) map[string]cmtypes.Claim {
-// 				return map[string]cmtypes.Claim{
-// 					user1.String(): {UserAddress: user1.String(), ChainID: zone.ChainID, Module: cmtypes.ClaimTypeLiquidToken, Amount: 1000, SourceChainId: "osmosis-1"},
-// 				}
-// 			},
-// 			balances: func(denom string) map[string]sdk.Coins {
-// 				return map[string]sdk.Coins{user1.String(): sdk.NewCoins(sdk.NewCoin(denom, sdk.OneInt()))}
-// 			},
-// 			expected: func(zone icstypes.Zone) icstypes.ValidatorIntents {
-// 				out := icstypes.ValidatorIntents{}
-// 				out = append(out, &icstypes.ValidatorIntent{ValoperAddress: zone.GetValidatorsAddressesAsSlice()[0], Weight: sdk.OneDec()})
-// 				return out.Sort()
-// 			},
-// 		},
-// 		{
-// 			name: "two intents; one balance and one claim, returns equal weighting",
-// 			intents: func(zone icstypes.Zone) []icstypes.DelegatorIntent {
-// 				out := make([]icstypes.DelegatorIntent, 0)
-// 				out = append(out, icstypes.DelegatorIntent{Delegator: user1.String(), Intents: icstypes.ValidatorIntents{&icstypes.ValidatorIntent{ValoperAddress: zone.GetValidatorsAddressesAsSlice()[0], Weight: sdk.OneDec()}}})
-// 				// next intent cannot be set, as local asset balance does not qualify
-// 				// out = append(out, icstypes.DelegatorIntent{Delegator: user2.String(), Intents: icstypes.ValidatorIntents{&icstypes.ValidatorIntent{ValoperAddress: zone.GetValidatorsAddressesAsSlice()[1], Weight: sdk.OneDec()}}})
-// 				return out
-// 			},
-// 			claims: func(zone icstypes.Zone) map[string]cmtypes.Claim {
-// 				return map[string]cmtypes.Claim{
-// 					user1.String(): {UserAddress: user1.String(), ChainID: zone.ChainID, Module: cmtypes.ClaimTypeLiquidToken, Amount: 1000, SourceChainId: "osmosis-1"},
-// 				}
-// 			},
-// 			balances: func(denom string) map[string]sdk.Coins {
-// 				return map[string]sdk.Coins{user2.String(): sdk.NewCoins(sdk.NewCoin(denom, sdk.NewInt(1000)))}
-// 			},
-// 			expected: func(zone icstypes.Zone) icstypes.ValidatorIntents {
-// 				out := icstypes.ValidatorIntents{}
-// 				out = append(out, &icstypes.ValidatorIntent{ValoperAddress: zone.GetValidatorsAddressesAsSlice()[0], Weight: sdk.OneDec()})
-// 				// only remote assets are considered, thus user2 balance is ignored...
-// 				// out = append(out, &icstypes.ValidatorIntent{ValoperAddress: zone.GetValidatorsAddressesAsSlice()[1], Weight: sdk.OneDec().Quo(sdk.NewDec(2))})
-// 				return out.Sort()
-// 			},
-// 		},
-// 	}
+func (suite *KeeperTestSuite) TestAggregateIntentWithPRClaims() {
+	tc := []struct {
+		name     string
+		intents  func(ctx sdk.Context, app *app.Quicksilver, zone icstypes.Zone) []icstypes.DelegatorIntent
+		balances func(denom string) map[string]sdk.Coins
+		claims   func(ctx sdk.Context, app *app.Quicksilver, zone icstypes.Zone) map[string]cmtypes.Claim
+		expected func(ctx sdk.Context, app *app.Quicksilver, zone icstypes.Zone) icstypes.ValidatorIntents
+	}{
+		{
+			name: "single intent; zero balance, but claim, returns single weighting",
+			intents: func(ctx sdk.Context, app *app.Quicksilver, zone icstypes.Zone) []icstypes.DelegatorIntent {
+				out := make([]icstypes.DelegatorIntent, 0)
+				out = append(out, icstypes.DelegatorIntent{Delegator: user1.String(), Intents: icstypes.ValidatorIntents{&icstypes.ValidatorIntent{ValoperAddress: app.InterchainstakingKeeper.GetValidators(ctx, zone.ChainId)[0].ValoperAddress, Weight: sdk.OneDec()}}})
+				return out
+			},
+			claims: func(ctx sdk.Context, app *app.Quicksilver, zone icstypes.Zone) map[string]cmtypes.Claim {
+				return map[string]cmtypes.Claim{
+					user1.String(): {UserAddress: user1.String(), ChainId: zone.ChainId, Module: cmtypes.ClaimTypeLiquidToken, Amount: 1000, SourceChainId: "osmosis-1"},
+				}
+			},
+			balances: func(denom string) map[string]sdk.Coins { return map[string]sdk.Coins{} },
+			expected: func(ctx sdk.Context, app *app.Quicksilver, zone icstypes.Zone) icstypes.ValidatorIntents {
+				// four delegators each at 25%
+				out := icstypes.ValidatorIntents{}
+				out = append(out, &icstypes.ValidatorIntent{ValoperAddress: app.InterchainstakingKeeper.GetValidators(ctx, zone.ChainId)[0].ValoperAddress, Weight: sdk.OneDec()})
+				return out.Sort()
+			},
+		},
+		{
+			name: "single intent; with balance and claim, returns single weighting",
+			intents: func(ctx sdk.Context, app *app.Quicksilver, zone icstypes.Zone) []icstypes.DelegatorIntent {
+				out := make([]icstypes.DelegatorIntent, 0)
+				out = append(out, icstypes.DelegatorIntent{Delegator: user1.String(), Intents: icstypes.ValidatorIntents{&icstypes.ValidatorIntent{ValoperAddress: app.InterchainstakingKeeper.GetValidators(ctx, zone.ChainId)[0].ValoperAddress, Weight: sdk.OneDec()}}})
+				return out
+			},
+			claims: func(ctx sdk.Context, app *app.Quicksilver, zone icstypes.Zone) map[string]cmtypes.Claim {
+				return map[string]cmtypes.Claim{
+					user1.String(): {UserAddress: user1.String(), ChainId: zone.ChainId, Module: cmtypes.ClaimTypeLiquidToken, Amount: 1, SourceChainId: "osmosis-1"},
+				}
+			},
+			balances: func(denom string) map[string]sdk.Coins {
+				return map[string]sdk.Coins{user1.String(): sdk.NewCoins(sdk.NewCoin(denom, sdk.OneInt()))}
+			},
+			expected: func(ctx sdk.Context, app *app.Quicksilver, zone icstypes.Zone) icstypes.ValidatorIntents {
+				out := icstypes.ValidatorIntents{}
+				out = append(out, &icstypes.ValidatorIntent{ValoperAddress: app.InterchainstakingKeeper.GetValidators(ctx, zone.ChainId)[0].ValoperAddress, Weight: sdk.OneDec()})
+				return out.Sort()
+			},
+		},
+		{
+			name: "two intents; one balance and one claim, returns equal weighting",
+			intents: func(ctx sdk.Context, app *app.Quicksilver, zone icstypes.Zone) []icstypes.DelegatorIntent {
+				out := make([]icstypes.DelegatorIntent, 0)
+				out = append(out, icstypes.DelegatorIntent{Delegator: user1.String(), Intents: icstypes.ValidatorIntents{&icstypes.ValidatorIntent{ValoperAddress: app.InterchainstakingKeeper.GetValidators(ctx, zone.ChainId)[0].ValoperAddress, Weight: sdk.OneDec()}}})
+				// next intent cannot be set, as local asset balance does not qualify
+				// out = append(out, icstypes.DelegatorIntent{Delegator: user2.String(), Intents: icstypes.ValidatorIntents{&icstypes.ValidatorIntent{ValoperAddress: zone.GetValidatorsAddressesAsSlice()[1], Weight: sdk.OneDec()}}})
+				return out
+			},
+			claims: func(ctx sdk.Context, app *app.Quicksilver, zone icstypes.Zone) map[string]cmtypes.Claim {
+				return map[string]cmtypes.Claim{
+					user1.String(): {UserAddress: user1.String(), ChainId: zone.ChainId, Module: cmtypes.ClaimTypeLiquidToken, Amount: 1000, SourceChainId: "osmosis-1"},
+				}
+			},
+			balances: func(denom string) map[string]sdk.Coins {
+				return map[string]sdk.Coins{user2.String(): sdk.NewCoins(sdk.NewCoin(denom, sdk.NewInt(1000)))}
+			},
+			expected: func(ctx sdk.Context, app *app.Quicksilver, zone icstypes.Zone) icstypes.ValidatorIntents {
+				out := icstypes.ValidatorIntents{}
+				out = append(out, &icstypes.ValidatorIntent{ValoperAddress: app.InterchainstakingKeeper.GetValidators(ctx, zone.ChainId)[0].ValoperAddress, Weight: sdk.OneDec()})
+				// only remote assets are considered, thus user2 balance is ignored...
+				// out = append(out, &icstypes.ValidatorIntent{ValoperAddress: app.InterchainstakingKeeper.GetValidators(ctx, zone.ChainId)[1].ValoperAddress, Weight: sdk.OneDec().Quo(sdk.NewDec(2))})
+				return out.Sort()
+			},
+		},
+	}
 
-// 	for _, tt := range tc {
-// 		suite.Run(tt.name, func() {
-// 			suite.SetupTest()
-// 			suite.setupTestZones()
+	for _, tt := range tc {
+		suite.Run(tt.name, func() {
+			suite.SetupTest()
+			suite.setupTestZones()
 
-// 			quicksilver := suite.GetQuicksilverApp(suite.chainA)
-// 			ctx := suite.chainA.GetContext()
-// 			icsKeeper := quicksilver.InterchainstakingKeeper
-// 			zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
-// 			suite.True(found)
+			quicksilver := suite.GetQuicksilverApp(suite.chainA)
+			ctx := suite.chainA.GetContext()
+			icsKeeper := quicksilver.InterchainstakingKeeper
+			zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
+			suite.True(found)
 
-// 			// give each user some funds
-// 			for addrString, balance := range tt.balances(zone.LocalDenom) {
-// 				quicksilver.MintKeeper.MintCoins(ctx, balance)
-// 				addr, err := utils.AccAddressFromBech32(addrString, "")
-// 				suite.NoError(err)
-// 				quicksilver.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, addr, balance)
-// 			}
+			// give each user some funds
+			for addrString, balance := range tt.balances(zone.LocalDenom) {
+				err := quicksilver.MintKeeper.MintCoins(ctx, balance)
+				suite.NoError(err)
+				addr, err := addressutils.AccAddressFromBech32(addrString, zone.AccountPrefix)
+				suite.NoError(err)
+				err = quicksilver.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, addr, balance)
+				suite.NoError(err)
+			}
 
-// 			for _, intent := range tt.intents(zone) {
-// 				icsKeeper.SetDelegatorIntent(ctx, zone, intent, false)
-// 			}
+			for _, intent := range tt.intents(ctx, quicksilver, zone) {
+				icsKeeper.SetDelegatorIntent(ctx, &zone, intent, false)
+			}
 
-// 			for _, claim := range tt.claims(zone) {
-// 				quicksilver.ClaimsManagerKeeper.SetLastEpochClaim(ctx, &claim)
-// 			}
+			for _, claim := range tt.claims(ctx, quicksilver, zone) {
+				claim := claim
+				quicksilver.ClaimsManagerKeeper.SetLastEpochClaim(ctx, &claim)
+			}
 
-// 			icsKeeper.AggregateDelegatorIntents(ctx, zone)
+			// If the supply is zero, mint some coins to avoid zero ordializedSum
+			if quicksilver.BankKeeper.GetSupply(ctx, zone.LocalDenom).IsZero() {
+				err := quicksilver.MintKeeper.MintCoins(ctx, sdk.NewCoins(sdk.NewCoin(zone.LocalDenom, sdk.NewInt(1000))))
+				suite.NoError(err)
+			}
 
-// 			// refresh zone to pull new aggregate
-// 			zone, found = icsKeeper.GetZone(ctx, suite.chainB.ChainID)
-// 			suite.True(found)
+			err := icsKeeper.AggregateDelegatorIntents(ctx, &zone)
+			suite.NoError(err)
 
-// 			actual := zone.GetAggregateIntentOrDefault()
-// 			suite.Equal(tt.expected(zone), actual)
-// 		})
-// 	}
-// }
+			// refresh zone to pull new aggregate
+			zone, found = icsKeeper.GetZone(ctx, suite.chainB.ChainID)
+			suite.True(found)
+
+			actual, err := icsKeeper.GetAggregateIntentOrDefault(ctx, &zone)
+			suite.NoError(err)
+			suite.Equal(tt.expected(ctx, quicksilver, zone), actual)
+		})
+	}
+}
 
 // TODO: convert to keeper tests
 
