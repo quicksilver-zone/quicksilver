@@ -103,7 +103,7 @@ func (k *Keeper) AggregateDelegatorIntents(ctx sdk.Context, zone *types.Zone) er
 		// grab offchain asset value, and raise the users' base value by this amount.
 		// currently ignoring base value (locally held assets)
 		k.ClaimsManagerKeeper.IterateLastEpochUserClaims(ctx, zone.ChainId, delIntent.Delegator, func(index int64, data prtypes.Claim) (stop bool) {
-			balance.Amount = balance.Amount.Add(sdkmath.NewIntFromUint64(data.Amount))
+			balance.Amount = balance.Amount.Add(data.Amount)
 			// claim amounts are in zone.baseDenom - but given weights are all relative to one another this okay.
 			k.Logger(ctx).Debug(
 				"intents - found claim for user",
@@ -202,7 +202,7 @@ func (k *Keeper) UpdateDelegatorIntent(ctx sdk.Context, delegator sdk.AccAddress
 
 	// grab offchain asset value, and raise the users' base value by this amount.
 	k.ClaimsManagerKeeper.IterateLastEpochUserClaims(ctx, zone.ChainId, delegator.String(), func(index int64, claim prtypes.Claim) (stop bool) {
-		claimAmt = claimAmt.Add(sdkmath.NewIntFromUint64(claim.Amount))
+		claimAmt = claimAmt.Add(claim.Amount)
 		k.Logger(ctx).Info("Update intents - found claim for user", "user", delIntent.Delegator, "claim amount", claim.Amount, "new balance", claimAmt)
 		return false
 	})

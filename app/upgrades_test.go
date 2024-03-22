@@ -413,15 +413,15 @@ func (s *AppTestSuite) TestV010500UpgradeHandler() {
 		Distribution: []*icstypes.Distribution{
 			{
 				Valoper: "cosmosvaloper100000000000000000000000000000000000",
-				Amount:  600,
+				Amount:  math.NewInt(600),
 			},
 			{
 				Valoper: "cosmosvaloper111111111111111111111111111111111111",
-				Amount:  400,
+				Amount:  math.NewInt(400),
 			},
 			{
 				Valoper: "cosmosvaloper122222222222222222222222222222222222",
-				Amount:  200,
+				Amount:  math.NewInt(200),
 			},
 		},
 		BurnAmount:     sdk.NewCoin("uqatom", math.NewInt(1000)),
@@ -440,19 +440,19 @@ func (s *AppTestSuite) TestV010500UpgradeHandler() {
 		Distribution: []*icstypes.Distribution{
 			{
 				Valoper: "cosmosvaloper100000000000000000000000000000000000",
-				Amount:  600,
+				Amount:  math.NewInt(600),
 			},
 			{
 				Valoper: "cosmosvaloper111111111111111111111111111111111111",
-				Amount:  800,
+				Amount:  math.NewInt(800),
 			},
 			{
 				Valoper: "cosmosvaloper122222222222222222222222222222222222",
-				Amount:  800,
+				Amount:  math.NewInt(800),
 			},
 			{
 				Valoper: "cosmosvaloper133333333333333333333333333333333333",
-				Amount:  800,
+				Amount:  math.NewInt(800),
 			},
 		},
 		BurnAmount:     sdk.NewCoin("uqatom", math.NewInt(2000)),
@@ -471,19 +471,19 @@ func (s *AppTestSuite) TestV010500UpgradeHandler() {
 		Distribution: []*icstypes.Distribution{
 			{
 				Valoper: "cosmosvaloper100000000000000000000000000000000000",
-				Amount:  600,
+				Amount:  math.NewInt(600),
 			},
 			{
 				Valoper: "cosmosvaloper122222222222222222222222222222222222",
-				Amount:  200,
+				Amount:  math.NewInt(200),
 			},
 			{
 				Valoper: "cosmosvaloper133333333333333333333333333333333333",
-				Amount:  800,
+				Amount:  math.NewInt(800),
 			},
 			{
 				Valoper: "cosmosvaloper144444444444444444444444444444444444",
-				Amount:  2000,
+				Amount:  math.NewInt(2000),
 			},
 		},
 		BurnAmount:     sdk.NewCoin("uqatom", math.NewInt(3000)),
@@ -502,19 +502,19 @@ func (s *AppTestSuite) TestV010500UpgradeHandler() {
 		Distribution: []*icstypes.Distribution{
 			{
 				Valoper: "cosmosvaloper100000000000000000000000000000000000",
-				Amount:  800,
+				Amount:  math.NewInt(800),
 			},
 			{
 				Valoper: "cosmosvaloper122222222222222222222222222222222222",
-				Amount:  400,
+				Amount:  math.NewInt(400),
 			},
 			{
 				Valoper: "cosmosvaloper133333333333333333333333333333333333",
-				Amount:  1200,
+				Amount:  math.NewInt(1200),
 			},
 			{
 				Valoper: "cosmosvaloper144444444444444444444444444444444444",
-				Amount:  2200,
+				Amount:  math.NewInt(2200),
 			},
 		},
 		BurnAmount:   sdk.NewCoin("uqatom", math.NewInt(4000)),
@@ -532,19 +532,19 @@ func (s *AppTestSuite) TestV010500UpgradeHandler() {
 		Distribution: []*icstypes.Distribution{
 			{
 				Valoper: "cosmosvaloper100000000000000000000000000000000000",
-				Amount:  1000,
+				Amount:  math.NewInt(1000),
 			},
 			{
 				Valoper: "cosmosvaloper122222222222222222222222222222222222",
-				Amount:  1200,
+				Amount:  math.NewInt(1200),
 			},
 			{
 				Valoper: "cosmosvaloper133333333333333333333333333333333333",
-				Amount:  1200,
+				Amount:  math.NewInt(1200),
 			},
 			{
 				Valoper: "cosmosvaloper144444444444444444444444444444444444",
-				Amount:  1600,
+				Amount:  math.NewInt(1600),
 			},
 		},
 		BurnAmount:   sdk.NewCoin("uqatom", math.NewInt(5000)),
@@ -562,23 +562,23 @@ func (s *AppTestSuite) TestV010500UpgradeHandler() {
 		Distribution: []*icstypes.Distribution{
 			{
 				Valoper: "cosmosvaloper100000000000000000000000000000000000",
-				Amount:  1500,
+				Amount:  math.NewInt(1500),
 			},
 			{
 				Valoper: "cosmosvaloper122222222222222222222222222222222222",
-				Amount:  1500,
+				Amount:  math.NewInt(1500),
 			},
 			{
 				Valoper: "cosmosvaloper133333333333333333333333333333333333",
-				Amount:  1500,
+				Amount:  math.NewInt(1500),
 			},
 			{
 				Valoper: "cosmosvaloper144444444444444444444444444444444444",
-				Amount:  1500,
+				Amount:  math.NewInt(1500),
 			},
 			{
 				Valoper: "cosmosvaloper155555555555555555555555555555555555",
-				Amount:  1500,
+				Amount:  math.NewInt(1500),
 			},
 		},
 		BurnAmount:   sdk.NewCoin("uqatom", math.NewInt(6000)),
@@ -596,23 +596,23 @@ func (s *AppTestSuite) TestV010500UpgradeHandler() {
 		Distribution: []*icstypes.Distribution{
 			{
 				Valoper: "cosmosvaloper100000000000000000000000000000000000",
-				Amount:  1750,
+				Amount:  math.NewInt(1750),
 			},
 			{
 				Valoper: "cosmosvaloper122222222222222222222222222222222222",
-				Amount:  1750,
+				Amount:  math.NewInt(1750),
 			},
 			{
 				Valoper: "cosmosvaloper133333333333333333333333333333333333",
-				Amount:  1750,
+				Amount:  math.NewInt(1750),
 			},
 			{
 				Valoper: "cosmosvaloper144444444444444444444444444444444444",
-				Amount:  1750,
+				Amount:  math.NewInt(1750),
 			},
 			{
 				Valoper: "cosmosvaloper155555555555555555555555555555555555",
-				Amount:  1750,
+				Amount:  math.NewInt(1750),
 			},
 		},
 		BurnAmount:   sdk.NewCoin("uqatom", math.NewInt(7000)),
@@ -701,7 +701,7 @@ func (s *AppTestSuite) TestV010500UpgradeHandler() {
 	s.True(wdr.Requeued)
 	s.True(wdr.Acknowledged)
 	s.Equal(wdr.Amount, sdk.NewCoins(sdk.NewCoin("uatom", math.NewInt(3600))))
-	s.ElementsMatch(wdr.Distribution, []*icstypes.Distribution{{Valoper: "cosmosvaloper100000000000000000000000000000000000", Amount: 1200}, {Valoper: "cosmosvaloper111111111111111111111111111111111111", Amount: 1200}, {Valoper: "cosmosvaloper122222222222222222222222222222222222", Amount: 1000}, {Valoper: "cosmosvaloper133333333333333333333333333333333333", Amount: 800}})
+	s.ElementsMatch(wdr.Distribution, []*icstypes.Distribution{{Valoper: "cosmosvaloper100000000000000000000000000000000000", Amount: math.NewInt(1200)}, {Valoper: "cosmosvaloper111111111111111111111111111111111111", Amount: math.NewInt(1200)}, {Valoper: "cosmosvaloper122222222222222222222222222222222222", Amount: math.NewInt(1000)}, {Valoper: "cosmosvaloper133333333333333333333333333333333333", Amount: math.NewInt(800)}})
 
 	wdrs := app.InterchainstakingKeeper.AllWithdrawalRecords(ctx)
 	s.Equal(35, len(wdrs)) // 8 from requeue collation, 27 new records from restituion
