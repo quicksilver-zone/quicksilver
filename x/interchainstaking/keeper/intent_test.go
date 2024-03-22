@@ -1,10 +1,13 @@
 package keeper_test
 
 import (
+	"github.com/stretchr/testify/require"
+
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/quicksilver-zone/quicksilver/app"
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
@@ -480,103 +483,158 @@ func (suite *KeeperTestSuite) TestAggregateIntentWithPRClaims() {
 	}
 }
 
-// TODO: convert to keeper tests
+func (suite *KeeperTestSuite) TestDefaultIntent() {
+	suite.SetupTest()
+	suite.setupTestZones()
+	t := suite.T()
+	icsKeeper := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
+	ctx := suite.chainA.GetContext()
 
-// func TestDefaultIntent(t *testing.T) {
-// 	zone := types.Zone{ConnectionId: "connection-0", ChainId: "cosmoshub-4", AccountPrefix: "cosmos", LocalDenom: "uqatom", BaseDenom: "uatom"}
-// 	zone.Validators = append(zone.Validators,
-// 		&types.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
-// 		&types.Validator{ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
-// 		&types.Validator{ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
-// 		&types.Validator{ValoperAddress: "cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
-// 		&types.Validator{ValoperAddress: "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
-// 	)
+	zone := icstypes.Zone{ConnectionId: "connection-0", ChainId: "cosmoshub-4", AccountPrefix: "cosmos", LocalDenom: "uqatom", BaseDenom: "uatom"}
+	zone.Validators = append(zone.Validators,
+		&icstypes.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+		&icstypes.Validator{ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+		&icstypes.Validator{ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+		&icstypes.Validator{ValoperAddress: "cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+		&icstypes.Validator{ValoperAddress: "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+	)
 
-// 	out := zone.DefaultAggregateIntents()
-// 	require.Equal(t, len(out), 5)
-// 	for _, v := range out {
-// 		if !v.Weight.Equal(sdk.NewDecWithPrec(2, 1)) {
-// 			t.Errorf("Expected %v, got %v", sdk.NewDecWithPrec(2, 1), v.Weight)
-// 		}
-// 	}
-// }
+	// Need to set validators in the store to calculate the aggregate intent properly
+	for _, val := range zone.Validators {
+		err := icsKeeper.SetValidator(ctx, zone.ChainId, *val)
+		require.NoError(t, err)
+	}
 
-// func TestDefaultIntentWithJailed(t *testing.T) {
-// 	zone := types.Zone{ConnectionId: "connection-0", ChainId: "cosmoshub-4", AccountPrefix: "cosmos", LocalDenom: "uqatom", BaseDenom: "uatom"}
-// 	zone.Validators = append(zone.Validators,
-// 		&types.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded, Jailed: true},
-// 		&types.Validator{ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
-// 		&types.Validator{ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
-// 		&types.Validator{ValoperAddress: "cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
-// 		&types.Validator{ValoperAddress: "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
-// 	)
+	out := icsKeeper.DefaultAggregateIntents(ctx, zone.ChainId)
+	require.Equal(t, len(out), 5)
+	for _, v := range out {
+		if !v.Weight.Equal(sdk.NewDecWithPrec(2, 1)) {
+			t.Errorf("Expected %v, got %v", sdk.NewDecWithPrec(2, 1), v.Weight)
+		}
+	}
+}
 
-// 	out := zone.DefaultAggregateIntents()
-// 	require.Equal(t, len(out), 4)
+func (suite *KeeperTestSuite) TestDefaultIntentWithJailed() {
+	suite.SetupTest()
+	suite.setupTestZones()
+	t := suite.T()
+	icsKeeper := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
+	ctx := suite.chainA.GetContext()
 
-// 	for _, v := range out {
-// 		if !v.Weight.Equal(sdk.NewDecWithPrec(25, 2)) {
-// 			t.Errorf("Expected %v, got %v", sdk.NewDecWithPrec(25, 2), v.Weight)
-// 		}
-// 	}
-// }
+	zone := icstypes.Zone{ConnectionId: "connection-0", ChainId: "cosmoshub-4", AccountPrefix: "cosmos", LocalDenom: "uqatom", BaseDenom: "uatom"}
+	zone.Validators = append(zone.Validators,
+		&icstypes.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded, Jailed: true},
+		&icstypes.Validator{ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+		&icstypes.Validator{ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+		&icstypes.Validator{ValoperAddress: "cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+		&icstypes.Validator{ValoperAddress: "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+	)
 
-// func TestDefaultIntentWithTombstoned(t *testing.T) {
-// 	zone := types.Zone{ConnectionId: "connection-0", ChainId: "cosmoshub-4", AccountPrefix: "cosmos", LocalDenom: "uqatom", BaseDenom: "uatom"}
-// 	zone.Validators = append(zone.Validators,
-// 		&types.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded, Tombstoned: true},
-// 		&types.Validator{ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
-// 		&types.Validator{ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
-// 		&types.Validator{ValoperAddress: "cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
-// 		&types.Validator{ValoperAddress: "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
-// 	)
+	// Need to set validators in the store to calculate the aggregate intent properly
+	for _, val := range zone.Validators {
+		err := icsKeeper.SetValidator(ctx, zone.ChainId, *val)
+		require.NoError(t, err)
+	}
+	out := icsKeeper.DefaultAggregateIntents(ctx, zone.ChainId)
+	require.Equal(t, len(out), 4)
 
-// 	out := zone.DefaultAggregateIntents()
-// 	require.Equal(t, len(out), 4)
+	for _, v := range out {
+		if !v.Weight.Equal(sdk.NewDecWithPrec(25, 2)) {
+			t.Errorf("Expected %v, got %v", sdk.NewDecWithPrec(25, 2), v.Weight)
+		}
+	}
+}
 
-// 	for _, v := range out {
-// 		if !v.Weight.Equal(sdk.NewDecWithPrec(25, 2)) {
-// 			t.Errorf("Expected %v, got %v", sdk.NewDecWithPrec(25, 2), v.Weight)
-// 		}
-// 	}
-// }
+func (suite *KeeperTestSuite) TestDefaultIntentWithTombstoned() {
+	suite.SetupTest()
+	suite.setupTestZones()
+	t := suite.T()
+	icsKeeper := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
+	ctx := suite.chainA.GetContext()
 
-// func TestDefaultIntentWithCommission100(t *testing.T) {
-// 	zone := types.Zone{ConnectionId: "connection-0", ChainId: "cosmoshub-4", AccountPrefix: "cosmos", LocalDenom: "uqatom", BaseDenom: "uatom"}
-// 	zone.Validators = append(zone.Validators,
-// 		&types.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdk.MustNewDecFromStr("1"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
-// 		&types.Validator{ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
-// 		&types.Validator{ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
-// 		&types.Validator{ValoperAddress: "cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
-// 		&types.Validator{ValoperAddress: "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
-// 	)
+	zone := icstypes.Zone{ConnectionId: "connection-0", ChainId: "cosmoshub-4", AccountPrefix: "cosmos", LocalDenom: "uqatom", BaseDenom: "uatom"}
+	zone.Validators = append(zone.Validators,
+		&icstypes.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded, Tombstoned: true},
+		&icstypes.Validator{ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+		&icstypes.Validator{ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+		&icstypes.Validator{ValoperAddress: "cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+		&icstypes.Validator{ValoperAddress: "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+	)
 
-// 	out := zone.DefaultAggregateIntents()
-// 	require.Equal(t, len(out), 4)
+	// Need to set validators in the store to calculate the aggregate intent properly
+	for _, val := range zone.Validators {
+		err := icsKeeper.SetValidator(ctx, zone.ChainId, *val)
+		suite.NoError(err)
+	}
+	out := icsKeeper.DefaultAggregateIntents(ctx, zone.ChainId)
+	require.Equal(t, len(out), 4)
 
-// 	for _, v := range out {
-// 		if !v.Weight.Equal(sdk.NewDecWithPrec(25, 2)) {
-// 			t.Errorf("Expected %v, got %v", sdk.NewDecWithPrec(25, 2), v.Weight)
-// 		}
-// 	}
-// }
+	for _, v := range out {
+		if !v.Weight.Equal(sdk.NewDecWithPrec(25, 2)) {
+			t.Errorf("Expected %v, got %v", sdk.NewDecWithPrec(25, 2), v.Weight)
+		}
+	}
+}
 
-// func TestDefaultIntentWithOneUnbondedOneUnbonding(t *testing.T) {
-// 	zone := types.Zone{ConnectionId: "connection-0", ChainId: "cosmoshub-4", AccountPrefix: "cosmos", LocalDenom: "uqatom", BaseDenom: "uatom"}
-// 	zone.Validators = append(zone.Validators,
-// 		&types.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusUnbonded},
-// 		&types.Validator{ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusUnbonding},
-// 		&types.Validator{ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
-// 		&types.Validator{ValoperAddress: "cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
-// 		&types.Validator{ValoperAddress: "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
-// 	)
+func (suite *KeeperTestSuite) TestDefaultIntentWithCommission100() {
+	suite.SetupTest()
+	suite.setupTestZones()
+	t := suite.T()
+	icsKeeper := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
+	ctx := suite.chainA.GetContext()
 
-// 	out := zone.DefaultAggregateIntents()
-// 	require.Equal(t, len(out), 3)
+	zone := icstypes.Zone{ConnectionId: "connection-0", ChainId: "cosmoshub-4", AccountPrefix: "cosmos", LocalDenom: "uqatom", BaseDenom: "uatom"}
+	zone.Validators = append(zone.Validators,
+		&icstypes.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdk.MustNewDecFromStr("1"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+		&icstypes.Validator{ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+		&icstypes.Validator{ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+		&icstypes.Validator{ValoperAddress: "cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+		&icstypes.Validator{ValoperAddress: "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+	)
 
-// 	for _, v := range out {
-// 		if !v.Weight.Equal(sdk.OneDec().Quo(sdk.NewDec(3))) {
-// 			t.Errorf("Expected %v, got %v", sdk.OneDec().Quo(sdk.NewDec(3)), v.Weight)
-// 		}
-// 	}
-// }
+	// Need to set validators in the store to calculate the aggregate intent properly
+	for _, val := range zone.Validators {
+		err := icsKeeper.SetValidator(ctx, zone.ChainId, *val)
+		require.NoError(t, err)
+	}
+	out := icsKeeper.DefaultAggregateIntents(ctx, zone.ChainId)
+	require.Equal(t, len(out), 4)
+
+	for _, v := range out {
+		if !v.Weight.Equal(sdk.NewDecWithPrec(25, 2)) {
+			t.Errorf("Expected %v, got %v", sdk.NewDecWithPrec(25, 2), v.Weight)
+		}
+	}
+}
+
+func (suite *KeeperTestSuite) TestDefaultIntentWithOneUnbondedOneUnbonding() {
+	suite.SetupTest()
+	suite.setupTestZones()
+	t := suite.T()
+	icsKeeper := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
+	ctx := suite.chainA.GetContext()
+
+	zone := icstypes.Zone{ConnectionId: "connection-0", ChainId: "cosmoshub-4", AccountPrefix: "cosmos", LocalDenom: "uqatom", BaseDenom: "uatom"}
+	zone.Validators = append(zone.Validators,
+		&icstypes.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusUnbonded},
+		&icstypes.Validator{ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusUnbonding},
+		&icstypes.Validator{ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+		&icstypes.Validator{ValoperAddress: "cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+		&icstypes.Validator{ValoperAddress: "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+	)
+
+	// Need to set validators in the store to calculate the aggregate intent properly
+	for _, val := range zone.Validators {
+		err := icsKeeper.SetValidator(ctx, zone.ChainId, *val)
+		require.NoError(t, err)
+	}
+
+	out := icsKeeper.DefaultAggregateIntents(ctx, zone.ChainId)
+	require.Equal(t, len(out), 3)
+
+	for _, v := range out {
+		if !v.Weight.Equal(sdk.OneDec().Quo(sdk.NewDec(3))) {
+			t.Errorf("Expected %v, got %v", sdk.OneDec().Quo(sdk.NewDec(3)), v.Weight)
+		}
+	}
+}
