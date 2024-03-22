@@ -1444,7 +1444,14 @@ func (*Keeper) prepareRewardsDistributionMsgs(zone types.Zone, rewards sdkmath.I
 }
 
 func isNumericString(in string) bool {
-	_, err := strconv.Atoi(in)
+	// It is okay to use strconv.ParseInt to test if a value is numeric
+	// because the total supply of QCK is:
+	//      400_000_000 (400 million) qck aka 400_000_000_000_000 uqck
+	// and to parse numeric values, say in the smallest unit of uqck
+	//      MaxInt64: (1<<63)-1 = 9_223_372_036_854_775_807 uqck aka
+	//                            9_223_372_036_854.775 (9.223 Trillion) qck
+        // so the function is appropriate as its range won't be exceeded.
+	_, err := strconv.ParseInt(in, 10, 64)
 	return err == nil
 }
 
