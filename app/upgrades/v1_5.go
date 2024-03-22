@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	"cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
@@ -526,16 +528,16 @@ func collateRequeuedWithdrawals(ctx sdk.Context, appKeepers *keepers.AppKeepers)
 				}
 				// merge distributions
 				newRecord.Distribution = func(dist1, dist2 []*icstypes.Distribution) []*icstypes.Distribution {
-					distMap := map[string]uint64{}
+					distMap := map[string]math.Int{}
 					for _, dist := range dist1 {
 						distMap[dist.Valoper] = dist.Amount
 					}
 
 					for _, dist := range dist2 {
 						if _, ok = distMap[dist.Valoper]; !ok {
-							distMap[dist.Valoper] = 0
+							distMap[dist.Valoper] = math.ZeroInt()
 						}
-						distMap[dist.Valoper] += dist.Amount
+						distMap[dist.Valoper] = distMap[dist.Valoper].Add(dist.Amount)
 					}
 
 					out := make([]*icstypes.Distribution, 0, len(distMap))

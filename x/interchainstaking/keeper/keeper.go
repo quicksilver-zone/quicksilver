@@ -797,7 +797,7 @@ func (k *Keeper) Rebalance(ctx sdk.Context, zone *types.Zone, epochNumber int64)
 				EpochNumber: epochNumber,
 				Source:      rebalance.Source,
 				Destination: rebalance.Target,
-				Amount:      rebalance.Amount.Int64(),
+				Amount:      rebalance.Amount,
 			})
 		}
 	}
