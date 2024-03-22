@@ -333,7 +333,6 @@ func (suite *KeeperTestSuite) TestAggregateIntent() {
 				icsKeeper.SetDelegatorIntent(ctx, &zone, intent, false)
 			}
 
-
 			// If the supply is zero, mint some coins to avoid zero ordializedSum
 			if quicksilver.BankKeeper.GetSupply(ctx, zone.LocalDenom).IsZero() {
 				err := quicksilver.MintKeeper.MintCoins(ctx, sdk.NewCoins(sdk.NewCoin(zone.LocalDenom, sdk.NewInt(1000))))
