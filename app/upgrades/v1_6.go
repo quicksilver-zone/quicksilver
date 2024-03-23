@@ -17,6 +17,14 @@ func V010600UpgradeHandler(
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 		// no action yet.
+		// migrate killer queen incentives
+		migrations := map[string]string{
+			"quick1qfyntnmlvznvrkk9xqppmcxqcluv7wd74nmyus": "quick1898x2jpjfelg4jvl4hqm9a9vugyctfdcl9t64x",
+		}
+		err := migrateVestingAccounts(ctx, appKeepers, migrations, migratePeriodicVestingAccount)
+		if err != nil {
+			panic(err)
+		}
 
 		return mm.RunMigrations(ctx, configurator, fromVM)
 	}
