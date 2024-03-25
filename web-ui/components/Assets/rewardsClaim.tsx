@@ -55,7 +55,7 @@ export const RewardsClaim: React.FC<RewardsClaimInterface> = ({ address, onClose
     amount: [
       {
         denom: mainDenom,
-        amount: '50',
+        amount: '5000',
       },
     ],
     gas: '500000',
@@ -66,17 +66,18 @@ export const RewardsClaim: React.FC<RewardsClaimInterface> = ({ address, onClose
     setIsSigning(true);
     try {
       if (authData) {
-        // Call msgRevokeBad
-        await tx([msgRevokeBad], {
+        // Call msgRevokeBad and msgGrant
+        await tx([msgRevokeBad, msgGrant], {
+          fee,
+          onSuccess: () => {},
+        });
+      } else {
+        // Call msgGrant
+        await tx([msgGrant], {
           fee,
           onSuccess: () => {},
         });
       }
-      // Continue with msgGrant
-      await tx([msgGrant], {
-        fee,
-        onSuccess: () => {},
-      });
     } catch (error) {
       console.error('Transaction failed', error);
       setIsError(true);
@@ -84,7 +85,6 @@ export const RewardsClaim: React.FC<RewardsClaimInterface> = ({ address, onClose
       setIsSigning(false);
     }
   };
-
   const handleClaimRewards = async (event: React.MouseEvent) => {
     event.preventDefault();
     setIsSigning(true);
