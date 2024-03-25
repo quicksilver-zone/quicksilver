@@ -272,6 +272,160 @@ func (m *MsgSignalIntentResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgSignalIntentResponse proto.InternalMessageInfo
 
+// MsgAddValidatorDenyList represents a message type for adding validator to deny list
+type MsgAddValidatorDenyList struct {
+	ChainId         string `protobuf:"bytes,1,opt,name=chain_id,json=chainId,proto3" json:"chain_id,omitempty" yaml:"chain_id"`
+	OperatorAddress string `protobuf:"bytes,2,opt,name=operator_address,json=operatorAddress,proto3" json:"operator_address,omitempty" yaml:"chain_id"`
+	FromAddress     string `protobuf:"bytes,3,opt,name=from_address,json=fromAddress,proto3" json:"from_address,omitempty"`
+}
+
+func (m *MsgAddValidatorDenyList) Reset()         { *m = MsgAddValidatorDenyList{} }
+func (m *MsgAddValidatorDenyList) String() string { return proto.CompactTextString(m) }
+func (*MsgAddValidatorDenyList) ProtoMessage()    {}
+func (*MsgAddValidatorDenyList) Descriptor() ([]byte, []int) {
+	return fileDescriptor_ee484030fa140a82, []int{6}
+}
+func (m *MsgAddValidatorDenyList) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgAddValidatorDenyList) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgAddValidatorDenyList.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgAddValidatorDenyList) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgAddValidatorDenyList.Merge(m, src)
+}
+func (m *MsgAddValidatorDenyList) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgAddValidatorDenyList) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgAddValidatorDenyList.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgAddValidatorDenyList proto.InternalMessageInfo
+
+// MsgAddValidatorDenyListResponse defines the MsgSignalIntent response type.
+type MsgAddValidatorDenyListResponse struct {
+}
+
+func (m *MsgAddValidatorDenyListResponse) Reset()         { *m = MsgAddValidatorDenyListResponse{} }
+func (m *MsgAddValidatorDenyListResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgAddValidatorDenyListResponse) ProtoMessage()    {}
+func (*MsgAddValidatorDenyListResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_ee484030fa140a82, []int{7}
+}
+func (m *MsgAddValidatorDenyListResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgAddValidatorDenyListResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgAddValidatorDenyListResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgAddValidatorDenyListResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgAddValidatorDenyListResponse.Merge(m, src)
+}
+func (m *MsgAddValidatorDenyListResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgAddValidatorDenyListResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgAddValidatorDenyListResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgAddValidatorDenyListResponse proto.InternalMessageInfo
+
+// MsgRemoveValidatorDenyList represents a message type for removing validator from deny list
+type MsgRemoveValidatorDenyList struct {
+	ChainId         string `protobuf:"bytes,1,opt,name=chain_id,json=chainId,proto3" json:"chain_id,omitempty" yaml:"chain_id"`
+	OperatorAddress string `protobuf:"bytes,2,opt,name=operator_address,json=operatorAddress,proto3" json:"operator_address,omitempty" yaml:"chain_id"`
+	FromAddress     string `protobuf:"bytes,3,opt,name=from_address,json=fromAddress,proto3" json:"from_address,omitempty"`
+}
+
+func (m *MsgRemoveValidatorDenyList) Reset()         { *m = MsgRemoveValidatorDenyList{} }
+func (m *MsgRemoveValidatorDenyList) String() string { return proto.CompactTextString(m) }
+func (*MsgRemoveValidatorDenyList) ProtoMessage()    {}
+func (*MsgRemoveValidatorDenyList) Descriptor() ([]byte, []int) {
+	return fileDescriptor_ee484030fa140a82, []int{8}
+}
+func (m *MsgRemoveValidatorDenyList) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgRemoveValidatorDenyList) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgRemoveValidatorDenyList.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgRemoveValidatorDenyList) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgRemoveValidatorDenyList.Merge(m, src)
+}
+func (m *MsgRemoveValidatorDenyList) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgRemoveValidatorDenyList) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgRemoveValidatorDenyList.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgRemoveValidatorDenyList proto.InternalMessageInfo
+
+// MsgRemoveValidatorDenyListResponse defines the MsgSignalIntent response type.
+type MsgRemoveValidatorDenyListResponse struct {
+}
+
+func (m *MsgRemoveValidatorDenyListResponse) Reset()         { *m = MsgRemoveValidatorDenyListResponse{} }
+func (m *MsgRemoveValidatorDenyListResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgRemoveValidatorDenyListResponse) ProtoMessage()    {}
+func (*MsgRemoveValidatorDenyListResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_ee484030fa140a82, []int{9}
+}
+func (m *MsgRemoveValidatorDenyListResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgRemoveValidatorDenyListResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgRemoveValidatorDenyListResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgRemoveValidatorDenyListResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgRemoveValidatorDenyListResponse.Merge(m, src)
+}
+func (m *MsgRemoveValidatorDenyListResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgRemoveValidatorDenyListResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgRemoveValidatorDenyListResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgRemoveValidatorDenyListResponse proto.InternalMessageInfo
+
 func init() {
 	proto.RegisterType((*MsgRequestRedemption)(nil), "quicksilver.interchainstaking.v1.MsgRequestRedemption")
 	proto.RegisterType((*MsgRequestRedemptionResponse)(nil), "quicksilver.interchainstaking.v1.MsgRequestRedemptionResponse")
@@ -279,6 +433,10 @@ func init() {
 	proto.RegisterType((*MsgCancelQueuedRedemptionResponse)(nil), "quicksilver.interchainstaking.v1.MsgCancelQueuedRedemptionResponse")
 	proto.RegisterType((*MsgSignalIntent)(nil), "quicksilver.interchainstaking.v1.MsgSignalIntent")
 	proto.RegisterType((*MsgSignalIntentResponse)(nil), "quicksilver.interchainstaking.v1.MsgSignalIntentResponse")
+	proto.RegisterType((*MsgAddValidatorDenyList)(nil), "quicksilver.interchainstaking.v1.MsgAddValidatorDenyList")
+	proto.RegisterType((*MsgAddValidatorDenyListResponse)(nil), "quicksilver.interchainstaking.v1.MsgAddValidatorDenyListResponse")
+	proto.RegisterType((*MsgRemoveValidatorDenyList)(nil), "quicksilver.interchainstaking.v1.MsgRemoveValidatorDenyList")
+	proto.RegisterType((*MsgRemoveValidatorDenyListResponse)(nil), "quicksilver.interchainstaking.v1.MsgRemoveValidatorDenyListResponse")
 }
 
 func init() {
@@ -286,55 +444,64 @@ func init() {
 }
 
 var fileDescriptor_ee484030fa140a82 = []byte{
-	// 760 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x96, 0x4f, 0x4f, 0x1b, 0x47,
-	0x18, 0xc6, 0x3d, 0xd0, 0x16, 0x18, 0x68, 0xa1, 0x0b, 0x52, 0xf1, 0x0a, 0xad, 0xe9, 0x9e, 0x50,
-	0x5b, 0x76, 0xb1, 0x69, 0x69, 0x6b, 0x0a, 0x12, 0x76, 0x25, 0x44, 0x55, 0x1f, 0xba, 0xdc, 0xda,
-	0x83, 0x35, 0xde, 0x7d, 0xbb, 0x5e, 0xb1, 0x3b, 0xb3, 0xec, 0x8c, 0x57, 0x90, 0x63, 0x4e, 0x39,
-	0x26, 0xca, 0x17, 0xe0, 0x23, 0xe4, 0x80, 0x72, 0xcd, 0x21, 0x39, 0x70, 0x44, 0xc9, 0x21, 0x39,
-	0x59, 0x11, 0xe4, 0x90, 0x53, 0x0e, 0x7c, 0x82, 0x68, 0xff, 0xd8, 0xd8, 0xe0, 0x88, 0xc5, 0xe1,
-	0xb6, 0x3b, 0xef, 0x3c, 0xcf, 0x3e, 0xbf, 0x77, 0xde, 0xb1, 0x8c, 0xf5, 0xfd, 0x96, 0x63, 0xee,
-	0x71, 0xc7, 0x0d, 0x21, 0xd0, 0x1d, 0x2a, 0x20, 0x30, 0x9b, 0xc4, 0xa1, 0x5c, 0x90, 0x3d, 0x87,
-	0xda, 0x7a, 0x58, 0xd4, 0x3d, 0xe0, 0x9c, 0xd8, 0xc0, 0x35, 0x3f, 0x60, 0x82, 0x49, 0x8b, 0x3d,
-	0x02, 0xed, 0x9a, 0x40, 0x0b, 0x8b, 0xb2, 0x62, 0x32, 0xee, 0x31, 0xae, 0x37, 0x08, 0x07, 0x3d,
-	0x2c, 0x36, 0x40, 0x90, 0xa2, 0x6e, 0x32, 0x87, 0x26, 0x0e, 0x72, 0x3e, 0xa9, 0xd7, 0xe3, 0x37,
-	0x3d, 0x79, 0x49, 0x4b, 0x73, 0x36, 0xb3, 0x59, 0xb2, 0x1e, 0x3d, 0xa5, 0xab, 0x0b, 0x36, 0x63,
-	0xb6, 0x0b, 0x3a, 0xf1, 0x1d, 0x9d, 0x50, 0xca, 0x04, 0x11, 0x0e, 0xa3, 0x1d, 0xcd, 0xca, 0x8d,
-	0x04, 0x7e, 0xc0, 0x7c, 0xc6, 0x89, 0x9b, 0x2a, 0xd4, 0x0f, 0x08, 0xcf, 0xd5, 0xb8, 0x6d, 0xc0,
-	0x7e, 0x0b, 0xb8, 0x30, 0xc0, 0x02, 0xcf, 0x8f, 0x1c, 0xa5, 0x3f, 0xf1, 0x97, 0x21, 0x71, 0x5b,
-	0x30, 0x8f, 0x16, 0xd1, 0xd2, 0x64, 0x29, 0xaf, 0xa5, 0xe1, 0x22, 0x12, 0x2d, 0x25, 0xd1, 0xaa,
-	0xcc, 0xa1, 0x95, 0xd9, 0x93, 0x76, 0x21, 0x77, 0xd1, 0x2e, 0x4c, 0x1e, 0x12, 0xcf, 0x2d, 0xab,
-	0x11, 0x9d, 0x6a, 0x24, 0x62, 0x69, 0x07, 0xcf, 0x5a, 0xc0, 0x85, 0x43, 0xe3, 0x98, 0x75, 0x62,
-	0x59, 0x01, 0x70, 0x3e, 0x3f, 0xb2, 0x88, 0x96, 0x26, 0x2a, 0xf3, 0x2f, 0x8f, 0x97, 0xe7, 0x52,
-	0xdb, 0xad, 0xa4, 0xb2, 0x2b, 0x02, 0x87, 0xda, 0x86, 0xd4, 0x23, 0x4a, 0x2b, 0xd2, 0x3a, 0x9e,
-	0xfa, 0x3f, 0x60, 0x5e, 0xd7, 0x63, 0xf4, 0x06, 0x8f, 0xc9, 0x68, 0x77, 0xba, 0x54, 0x1e, 0x7f,
-	0x70, 0x54, 0xc8, 0xbd, 0x3f, 0x2a, 0xe4, 0x54, 0x05, 0x2f, 0x0c, 0xe2, 0x35, 0x80, 0xfb, 0x8c,
-	0x72, 0x50, 0x1f, 0x21, 0x9c, 0xaf, 0x71, 0xbb, 0x4a, 0xa8, 0x09, 0xee, 0x3f, 0x2d, 0x68, 0x81,
-	0xd5, 0xd3, 0x95, 0x3c, 0x1e, 0x8f, 0x3b, 0x5a, 0x77, 0xac, 0xb8, 0x31, 0x13, 0xc6, 0x58, 0xfc,
-	0xbe, 0x63, 0x49, 0x12, 0xfe, 0xa2, 0x49, 0x78, 0x33, 0x61, 0x33, 0xe2, 0xe7, 0xbb, 0xca, 0xcc,
-	0xf0, 0xf7, 0x9f, 0x8c, 0xd4, 0x09, 0x2e, 0xfd, 0x85, 0xc7, 0x03, 0x10, 0xad, 0x80, 0x82, 0x35,
-	0xe4, 0x99, 0x75, 0xf5, 0xea, 0x53, 0x84, 0xa7, 0x6b, 0xdc, 0xde, 0x75, 0x6c, 0x4a, 0xdc, 0x1d,
-	0x2a, 0x80, 0x0a, 0x49, 0xbb, 0x8a, 0x5e, 0x99, 0xbd, 0x68, 0x17, 0xa6, 0x53, 0x83, 0xb4, 0xa2,
-	0x5e, 0xf6, 0xe3, 0x27, 0x3c, 0xe6, 0xc4, 0xca, 0xce, 0x71, 0x4b, 0x17, 0xed, 0xc2, 0x37, 0xc9,
-	0xf6, 0xb4, 0xa0, 0x1a, 0x9d, 0x2d, 0x77, 0xd5, 0xa9, 0x3c, 0xfe, 0xee, 0x4a, 0xee, 0x4e, 0x7f,
-	0x4a, 0x4f, 0x26, 0xf0, 0x68, 0x8d, 0xdb, 0xd2, 0x73, 0x84, 0xbf, 0xbd, 0x3e, 0xee, 0x6b, 0xda,
-	0x4d, 0x77, 0x59, 0x1b, 0x34, 0x36, 0xf2, 0xe6, 0x70, 0xba, 0xee, 0xb8, 0xad, 0xdd, 0x7f, 0xf5,
-	0xee, 0xf1, 0xc8, 0x4a, 0x19, 0xfd, 0xa0, 0xfe, 0xd8, 0xf7, 0xfb, 0x23, 0x0e, 0xa2, 0xeb, 0x7a,
-	0xfd, 0x0e, 0x07, 0x60, 0x01, 0x78, 0xd2, 0x31, 0xc2, 0x53, 0x7d, 0xc7, 0x53, 0xcc, 0x14, 0xa4,
-	0x57, 0x22, 0xff, 0x7e, 0x6b, 0xc9, 0xf0, 0xb1, 0x93, 0x73, 0x96, 0x5e, 0x23, 0x3c, 0x93, 0xcc,
-	0x71, 0x4f, 0xef, 0xd7, 0x33, 0xe5, 0x18, 0x3c, 0xfe, 0x72, 0xf5, 0x33, 0xc4, 0x5d, 0x9c, 0xad,
-	0x18, 0x67, 0x3d, 0xc2, 0x59, 0xcb, 0x84, 0x63, 0xc6, 0x7e, 0xf5, 0xe0, 0x12, 0xe2, 0x05, 0xc2,
-	0xd3, 0xdb, 0x2c, 0xac, 0xba, 0x8c, 0x43, 0xb5, 0x49, 0x28, 0x05, 0x57, 0xfa, 0x39, 0x53, 0xb6,
-	0x2b, 0x2a, 0xf9, 0x8f, 0x61, 0x54, 0x5d, 0x94, 0x8d, 0x18, 0xe5, 0xd7, 0x08, 0xa5, 0x94, 0x0d,
-	0x25, 0x72, 0xa9, 0x9b, 0x69, 0xe4, 0x13, 0x84, 0x67, 0xb6, 0x59, 0x68, 0x00, 0xf3, 0x81, 0x76,
-	0x38, 0x7e, 0xc9, 0x9a, 0xa8, 0x4f, 0x26, 0x6f, 0x0c, 0x25, 0xeb, 0x92, 0x6c, 0xc6, 0x24, 0xbf,
-	0x45, 0x24, 0xab, 0x19, 0xaf, 0x46, 0x64, 0xd3, 0x45, 0x79, 0x86, 0xf0, 0xd7, 0xdb, 0x2c, 0xdc,
-	0x05, 0xf1, 0x37, 0xf7, 0xaa, 0xc4, 0xe7, 0x52, 0x29, 0x6b, 0xa0, 0x4b, 0x8d, 0x5c, 0xbe, 0xbd,
-	0xe6, 0xae, 0x08, 0x2a, 0xff, 0x9d, 0x9c, 0x29, 0xe8, 0xf4, 0x4c, 0x41, 0x6f, 0xcf, 0x14, 0xf4,
-	0xf0, 0x5c, 0xc9, 0x9d, 0x9e, 0x2b, 0xb9, 0x37, 0xe7, 0x4a, 0xee, 0xdf, 0x2d, 0xdb, 0x11, 0xcd,
-	0x56, 0x43, 0x33, 0x99, 0xd7, 0x6b, 0xbc, 0x7c, 0x8f, 0x51, 0xe8, 0xfb, 0xd2, 0xc1, 0x80, 0xaf,
-	0x88, 0x43, 0x1f, 0x78, 0xe3, 0xab, 0xf8, 0x0f, 0xc0, 0xea, 0xc7, 0x00, 0x00, 0x00, 0xff, 0xff,
-	0x96, 0x7f, 0x1e, 0x07, 0xf6, 0x08, 0x00, 0x00,
+	// 902 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xdc, 0x96, 0x4f, 0x6f, 0xdc, 0x44,
+	0x18, 0xc6, 0x77, 0x5a, 0xa0, 0xe9, 0xa4, 0x25, 0xc1, 0x89, 0xd4, 0xac, 0x55, 0xed, 0xa6, 0x16,
+	0x87, 0x0a, 0xa8, 0xdd, 0x4d, 0x21, 0x40, 0x42, 0x03, 0xc9, 0x46, 0xac, 0x82, 0x9a, 0x03, 0x8e,
+	0xc4, 0x01, 0x0e, 0xab, 0xc9, 0xfa, 0xc5, 0x3b, 0xaa, 0x3d, 0xe3, 0x7a, 0x66, 0xad, 0x86, 0x23,
+	0x27, 0x0e, 0x1c, 0x40, 0x7c, 0x81, 0x7e, 0x88, 0x8a, 0x2b, 0x07, 0x38, 0xe4, 0x18, 0xd1, 0x03,
+	0x9c, 0x22, 0x94, 0x80, 0xc4, 0x09, 0x89, 0x7c, 0x02, 0x34, 0xe3, 0x3f, 0xd9, 0x24, 0x8e, 0xe2,
+	0x6c, 0x72, 0xe2, 0xb6, 0xf6, 0x3b, 0xcf, 0xe3, 0xe7, 0x37, 0xf3, 0xfa, 0xf5, 0x62, 0xe7, 0xc9,
+	0x80, 0xf6, 0x1e, 0x0b, 0x1a, 0x24, 0x10, 0x3b, 0x94, 0x49, 0x88, 0x7b, 0x7d, 0x42, 0x99, 0x90,
+	0xe4, 0x31, 0x65, 0xbe, 0x93, 0xb4, 0x9c, 0x10, 0x84, 0x20, 0x3e, 0x08, 0x3b, 0x8a, 0xb9, 0xe4,
+	0xc6, 0xec, 0x90, 0xc0, 0x3e, 0x21, 0xb0, 0x93, 0x96, 0xd9, 0xe8, 0x71, 0x11, 0x72, 0xe1, 0x6c,
+	0x12, 0x01, 0x4e, 0xd2, 0xda, 0x04, 0x49, 0x5a, 0x4e, 0x8f, 0x53, 0x96, 0x3a, 0x98, 0xf5, 0xb4,
+	0xde, 0xd5, 0x57, 0x4e, 0x7a, 0x91, 0x95, 0xa6, 0x7d, 0xee, 0xf3, 0xf4, 0xbe, 0xfa, 0x95, 0xdd,
+	0xbd, 0xed, 0x73, 0xee, 0x07, 0xe0, 0x90, 0x88, 0x3a, 0x84, 0x31, 0x2e, 0x89, 0xa4, 0x9c, 0xe5,
+	0x9a, 0xfb, 0x67, 0x12, 0x44, 0x31, 0x8f, 0xb8, 0x20, 0x41, 0xa6, 0xb0, 0xfe, 0x41, 0x78, 0x7a,
+	0x5d, 0xf8, 0x2e, 0x3c, 0x19, 0x80, 0x90, 0x2e, 0x78, 0x10, 0x46, 0xca, 0xd1, 0x58, 0xc5, 0x2f,
+	0x27, 0x24, 0x18, 0xc0, 0x0c, 0x9a, 0x45, 0x77, 0xc7, 0xe7, 0xea, 0x76, 0x16, 0x4e, 0x91, 0xd8,
+	0x19, 0x89, 0xdd, 0xe6, 0x94, 0xad, 0x4c, 0x6d, 0xef, 0x36, 0x6b, 0x07, 0xbb, 0xcd, 0xf1, 0x2d,
+	0x12, 0x06, 0x0b, 0x96, 0xa2, 0xb3, 0xdc, 0x54, 0x6c, 0xac, 0xe1, 0x29, 0x0f, 0x84, 0xa4, 0x4c,
+	0xc7, 0xec, 0x12, 0xcf, 0x8b, 0x41, 0x88, 0x99, 0x2b, 0xb3, 0xe8, 0xee, 0xf5, 0x95, 0x99, 0x5f,
+	0x9f, 0xdf, 0x9b, 0xce, 0x6c, 0x97, 0xd3, 0xca, 0x86, 0x8c, 0x29, 0xf3, 0x5d, 0x63, 0x48, 0x94,
+	0x55, 0x8c, 0x45, 0x7c, 0xe3, 0xcb, 0x98, 0x87, 0x85, 0xc7, 0xd5, 0x33, 0x3c, 0xc6, 0xd5, 0xea,
+	0xec, 0xd6, 0xc2, 0xd8, 0x37, 0xcf, 0x9a, 0xb5, 0xbf, 0x9f, 0x35, 0x6b, 0x56, 0x03, 0xdf, 0x2e,
+	0xe3, 0x75, 0x41, 0x44, 0x9c, 0x09, 0xb0, 0xbe, 0x47, 0xb8, 0xbe, 0x2e, 0xfc, 0x36, 0x61, 0x3d,
+	0x08, 0x3e, 0x1d, 0xc0, 0x00, 0xbc, 0xa1, 0x5d, 0xa9, 0xe3, 0x31, 0xbd, 0xa3, 0x5d, 0xea, 0xe9,
+	0x8d, 0xb9, 0xee, 0x5e, 0xd3, 0xd7, 0x6b, 0x9e, 0x61, 0xe0, 0x97, 0xfa, 0x44, 0xf4, 0x53, 0x36,
+	0x57, 0xff, 0xbe, 0xac, 0xcc, 0x1c, 0xdf, 0x39, 0x35, 0x52, 0x1e, 0xdc, 0xf8, 0x04, 0x8f, 0xc5,
+	0x20, 0x07, 0x31, 0x03, 0x6f, 0xc4, 0x33, 0x2b, 0xf4, 0xd6, 0x8f, 0x08, 0x4f, 0xac, 0x0b, 0x7f,
+	0x83, 0xfa, 0x8c, 0x04, 0x6b, 0x4c, 0x02, 0x93, 0x86, 0x7d, 0x1c, 0x7d, 0x65, 0xea, 0x60, 0xb7,
+	0x39, 0x91, 0x19, 0x64, 0x15, 0xeb, 0x70, 0x3f, 0xde, 0xc2, 0xd7, 0xa8, 0x56, 0xe6, 0xc7, 0x6d,
+	0x1c, 0xec, 0x36, 0x5f, 0x4d, 0x97, 0x67, 0x05, 0xcb, 0xcd, 0x97, 0x5c, 0xd6, 0x4e, 0xd5, 0xf1,
+	0xad, 0x63, 0xb9, 0x8b, 0x83, 0xdd, 0x41, 0xba, 0xb6, 0xec, 0x79, 0x9f, 0x91, 0x80, 0x7a, 0x44,
+	0xf2, 0x78, 0x15, 0xd8, 0xd6, 0x23, 0x2a, 0xce, 0xcf, 0xb6, 0x84, 0x27, 0x79, 0x04, 0xb1, 0xf2,
+	0x38, 0xd6, 0xd3, 0xa5, 0xba, 0x89, 0x7c, 0xf1, 0x25, 0xf7, 0xf2, 0x1d, 0xdc, 0x3c, 0x85, 0xa8,
+	0xa0, 0x7e, 0x81, 0xb0, 0xa9, 0xfb, 0x3d, 0xe4, 0x09, 0xfc, 0x6f, 0xc0, 0x5f, 0xc7, 0xd6, 0xe9,
+	0x50, 0x39, 0xfb, 0xdc, 0xb7, 0x37, 0xf1, 0xd5, 0x75, 0xe1, 0x1b, 0x3f, 0x23, 0xfc, 0xda, 0xc9,
+	0x01, 0x37, 0x6f, 0x9f, 0x35, 0xbd, 0xed, 0xb2, 0x41, 0x61, 0x2e, 0x8d, 0xa6, 0x2b, 0x4e, 0x64,
+	0xfe, 0xeb, 0x17, 0x7f, 0xfe, 0x70, 0xe5, 0xfe, 0x02, 0x7a, 0xc3, 0x7a, 0xf3, 0xc8, 0x17, 0x47,
+	0x3e, 0x55, 0x03, 0xfa, 0xe4, 0xd4, 0x8e, 0xc1, 0x03, 0x08, 0x8d, 0xe7, 0x08, 0xdf, 0x38, 0xf2,
+	0x42, 0xb6, 0x2a, 0x05, 0x19, 0x96, 0x98, 0xef, 0x9f, 0x5b, 0x32, 0x7a, 0xec, 0xf4, 0xcd, 0x36,
+	0x7e, 0x43, 0x78, 0x32, 0x9d, 0x5c, 0x43, 0x7b, 0xbf, 0x58, 0x29, 0x47, 0xf9, 0xc0, 0x33, 0xdb,
+	0x17, 0x10, 0x17, 0x38, 0xcb, 0x1a, 0x67, 0x51, 0xe1, 0xcc, 0x57, 0xc2, 0xe9, 0x69, 0xbf, 0x6e,
+	0x7c, 0x08, 0xf1, 0x0b, 0xc2, 0x13, 0x1d, 0x9e, 0xb4, 0x03, 0x2e, 0xa0, 0xdd, 0x27, 0x8c, 0x41,
+	0x60, 0xbc, 0x5d, 0x29, 0xdb, 0x31, 0x95, 0xf9, 0xc1, 0x28, 0xaa, 0x02, 0xe5, 0xa1, 0x46, 0x79,
+	0x57, 0xa1, 0xcc, 0x55, 0x43, 0x51, 0x2e, 0xdd, 0x5e, 0x16, 0x79, 0x1b, 0xe1, 0xc9, 0x0e, 0x4f,
+	0x5c, 0xe0, 0x11, 0xb0, 0x9c, 0xe3, 0x9d, 0xaa, 0x89, 0x8e, 0xc8, 0xcc, 0x87, 0x23, 0xc9, 0x0a,
+	0x92, 0x25, 0x4d, 0xf2, 0x9e, 0x22, 0x79, 0x50, 0xf1, 0xd5, 0x50, 0x36, 0x05, 0xca, 0x4f, 0x08,
+	0xdf, 0xec, 0xf0, 0x64, 0x03, 0xe4, 0x23, 0x11, 0xb6, 0x49, 0x24, 0x8c, 0xb9, 0xaa, 0x81, 0x0e,
+	0x35, 0xe6, 0xc2, 0xf9, 0x35, 0x97, 0x46, 0xf0, 0x17, 0xc2, 0xb7, 0x3a, 0x3c, 0x29, 0xfd, 0x48,
+	0x55, 0xee, 0x92, 0x32, 0xb5, 0xb9, 0x7a, 0x11, 0x75, 0xc1, 0xf7, 0xb1, 0xe6, 0xfb, 0x48, 0xf1,
+	0x2d, 0x56, 0xe2, 0x23, 0x9e, 0xd7, 0x4d, 0x72, 0xbb, 0xae, 0x07, 0x6c, 0x2b, 0x50, 0x2c, 0xff,
+	0x22, 0x6c, 0xea, 0x36, 0x28, 0xff, 0x2c, 0x7d, 0x58, 0xbd, 0x8f, 0x4a, 0x0d, 0xcc, 0xce, 0x05,
+	0x0d, 0x0a, 0xe0, 0x35, 0x0d, 0xdc, 0x56, 0xc0, 0x4b, 0x15, 0x0f, 0x54, 0x19, 0x96, 0x30, 0xaf,
+	0x7c, 0xb1, 0xbd, 0xd7, 0x40, 0x3b, 0x7b, 0x0d, 0xf4, 0xc7, 0x5e, 0x03, 0x7d, 0xb7, 0xdf, 0xa8,
+	0xed, 0xec, 0x37, 0x6a, 0xbf, 0xef, 0x37, 0x6a, 0x9f, 0x2f, 0xfb, 0x54, 0xf6, 0x07, 0x9b, 0x76,
+	0x8f, 0x87, 0xc3, 0xcf, 0xb8, 0xf7, 0x15, 0x67, 0x70, 0xe4, 0xa1, 0x4f, 0x4b, 0x1e, 0x28, 0xb7,
+	0x22, 0x10, 0x9b, 0xaf, 0xe8, 0xbf, 0xf3, 0x0f, 0xfe, 0x0b, 0x00, 0x00, 0xff, 0xff, 0xef, 0x56,
+	0x6e, 0xf1, 0xc4, 0x0c, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -363,6 +530,8 @@ type MsgClient interface {
 	GovCloseChannel(ctx context.Context, in *MsgGovCloseChannel, opts ...grpc.CallOption) (*MsgGovCloseChannelResponse, error)
 	GovReopenChannel(ctx context.Context, in *MsgGovReopenChannel, opts ...grpc.CallOption) (*MsgGovReopenChannelResponse, error)
 	GovSetLsmCaps(ctx context.Context, in *MsgGovSetLsmCaps, opts ...grpc.CallOption) (*MsgGovSetLsmCapsResponse, error)
+	GovAddValidatorDenyList(ctx context.Context, in *MsgGovAddValidatorDenyList, opts ...grpc.CallOption) (*MsgGovAddValidatorDenyListResponse, error)
+	GovRemoveValidatorDenyList(ctx context.Context, in *MsgGovRemoveValidatorDenyList, opts ...grpc.CallOption) (*MsgGovRemoveValidatorDenyListResponse, error)
 }
 
 type msgClient struct {
@@ -427,6 +596,24 @@ func (c *msgClient) GovSetLsmCaps(ctx context.Context, in *MsgGovSetLsmCaps, opt
 	return out, nil
 }
 
+func (c *msgClient) GovAddValidatorDenyList(ctx context.Context, in *MsgGovAddValidatorDenyList, opts ...grpc.CallOption) (*MsgGovAddValidatorDenyListResponse, error) {
+	out := new(MsgGovAddValidatorDenyListResponse)
+	err := c.cc.Invoke(ctx, "/quicksilver.interchainstaking.v1.Msg/GovAddValidatorDenyList", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) GovRemoveValidatorDenyList(ctx context.Context, in *MsgGovRemoveValidatorDenyList, opts ...grpc.CallOption) (*MsgGovRemoveValidatorDenyListResponse, error) {
+	out := new(MsgGovRemoveValidatorDenyListResponse)
+	err := c.cc.Invoke(ctx, "/quicksilver.interchainstaking.v1.Msg/GovRemoveValidatorDenyList", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
 	// RequestRedemption defines a method for requesting burning of qAssets for
@@ -443,6 +630,8 @@ type MsgServer interface {
 	GovCloseChannel(context.Context, *MsgGovCloseChannel) (*MsgGovCloseChannelResponse, error)
 	GovReopenChannel(context.Context, *MsgGovReopenChannel) (*MsgGovReopenChannelResponse, error)
 	GovSetLsmCaps(context.Context, *MsgGovSetLsmCaps) (*MsgGovSetLsmCapsResponse, error)
+	GovAddValidatorDenyList(context.Context, *MsgGovAddValidatorDenyList) (*MsgGovAddValidatorDenyListResponse, error)
+	GovRemoveValidatorDenyList(context.Context, *MsgGovRemoveValidatorDenyList) (*MsgGovRemoveValidatorDenyListResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
@@ -466,6 +655,12 @@ func (*UnimplementedMsgServer) GovReopenChannel(ctx context.Context, req *MsgGov
 }
 func (*UnimplementedMsgServer) GovSetLsmCaps(ctx context.Context, req *MsgGovSetLsmCaps) (*MsgGovSetLsmCapsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GovSetLsmCaps not implemented")
+}
+func (*UnimplementedMsgServer) GovAddValidatorDenyList(ctx context.Context, req *MsgGovAddValidatorDenyList) (*MsgGovAddValidatorDenyListResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GovAddValidatorDenyList not implemented")
+}
+func (*UnimplementedMsgServer) GovRemoveValidatorDenyList(ctx context.Context, req *MsgGovRemoveValidatorDenyList) (*MsgGovRemoveValidatorDenyListResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GovRemoveValidatorDenyList not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
@@ -580,6 +775,42 @@ func _Msg_GovSetLsmCaps_Handler(srv interface{}, ctx context.Context, dec func(i
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_GovAddValidatorDenyList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgGovAddValidatorDenyList)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).GovAddValidatorDenyList(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/quicksilver.interchainstaking.v1.Msg/GovAddValidatorDenyList",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).GovAddValidatorDenyList(ctx, req.(*MsgGovAddValidatorDenyList))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_GovRemoveValidatorDenyList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgGovRemoveValidatorDenyList)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).GovRemoveValidatorDenyList(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/quicksilver.interchainstaking.v1.Msg/GovRemoveValidatorDenyList",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).GovRemoveValidatorDenyList(ctx, req.(*MsgGovRemoveValidatorDenyList))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Msg_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "quicksilver.interchainstaking.v1.Msg",
 	HandlerType: (*MsgServer)(nil),
@@ -607,6 +838,14 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GovSetLsmCaps",
 			Handler:    _Msg_GovSetLsmCaps_Handler,
+		},
+		{
+			MethodName: "GovAddValidatorDenyList",
+			Handler:    _Msg_GovAddValidatorDenyList_Handler,
+		},
+		{
+			MethodName: "GovRemoveValidatorDenyList",
+			Handler:    _Msg_GovRemoveValidatorDenyList_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -827,6 +1066,140 @@ func (m *MsgSignalIntentResponse) MarshalToSizedBuffer(dAtA []byte) (int, error)
 	return len(dAtA) - i, nil
 }
 
+func (m *MsgAddValidatorDenyList) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgAddValidatorDenyList) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgAddValidatorDenyList) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.FromAddress) > 0 {
+		i -= len(m.FromAddress)
+		copy(dAtA[i:], m.FromAddress)
+		i = encodeVarintMessages(dAtA, i, uint64(len(m.FromAddress)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.OperatorAddress) > 0 {
+		i -= len(m.OperatorAddress)
+		copy(dAtA[i:], m.OperatorAddress)
+		i = encodeVarintMessages(dAtA, i, uint64(len(m.OperatorAddress)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.ChainId) > 0 {
+		i -= len(m.ChainId)
+		copy(dAtA[i:], m.ChainId)
+		i = encodeVarintMessages(dAtA, i, uint64(len(m.ChainId)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgAddValidatorDenyListResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgAddValidatorDenyListResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgAddValidatorDenyListResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgRemoveValidatorDenyList) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgRemoveValidatorDenyList) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgRemoveValidatorDenyList) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.FromAddress) > 0 {
+		i -= len(m.FromAddress)
+		copy(dAtA[i:], m.FromAddress)
+		i = encodeVarintMessages(dAtA, i, uint64(len(m.FromAddress)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.OperatorAddress) > 0 {
+		i -= len(m.OperatorAddress)
+		copy(dAtA[i:], m.OperatorAddress)
+		i = encodeVarintMessages(dAtA, i, uint64(len(m.OperatorAddress)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.ChainId) > 0 {
+		i -= len(m.ChainId)
+		copy(dAtA[i:], m.ChainId)
+		i = encodeVarintMessages(dAtA, i, uint64(len(m.ChainId)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgRemoveValidatorDenyListResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgRemoveValidatorDenyListResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgRemoveValidatorDenyListResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintMessages(dAtA []byte, offset int, v uint64) int {
 	offset -= sovMessages(v)
 	base := offset
@@ -920,6 +1293,66 @@ func (m *MsgSignalIntent) Size() (n int) {
 }
 
 func (m *MsgSignalIntentResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgAddValidatorDenyList) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.ChainId)
+	if l > 0 {
+		n += 1 + l + sovMessages(uint64(l))
+	}
+	l = len(m.OperatorAddress)
+	if l > 0 {
+		n += 1 + l + sovMessages(uint64(l))
+	}
+	l = len(m.FromAddress)
+	if l > 0 {
+		n += 1 + l + sovMessages(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgAddValidatorDenyListResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgRemoveValidatorDenyList) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.ChainId)
+	if l > 0 {
+		n += 1 + l + sovMessages(uint64(l))
+	}
+	l = len(m.OperatorAddress)
+	if l > 0 {
+		n += 1 + l + sovMessages(uint64(l))
+	}
+	l = len(m.FromAddress)
+	if l > 0 {
+		n += 1 + l + sovMessages(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgRemoveValidatorDenyListResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1533,6 +1966,398 @@ func (m *MsgSignalIntentResponse) Unmarshal(dAtA []byte) error {
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: MsgSignalIntentResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipMessages(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthMessages
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgAddValidatorDenyList) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowMessages
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgAddValidatorDenyList: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgAddValidatorDenyList: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ChainId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMessages
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthMessages
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthMessages
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ChainId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field OperatorAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMessages
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthMessages
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthMessages
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.OperatorAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field FromAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMessages
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthMessages
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthMessages
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.FromAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipMessages(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthMessages
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgAddValidatorDenyListResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowMessages
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgAddValidatorDenyListResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgAddValidatorDenyListResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipMessages(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthMessages
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgRemoveValidatorDenyList) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowMessages
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgRemoveValidatorDenyList: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgRemoveValidatorDenyList: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ChainId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMessages
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthMessages
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthMessages
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ChainId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field OperatorAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMessages
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthMessages
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthMessages
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.OperatorAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field FromAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMessages
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthMessages
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthMessages
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.FromAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipMessages(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthMessages
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgRemoveValidatorDenyListResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowMessages
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgRemoveValidatorDenyListResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgRemoveValidatorDenyListResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:

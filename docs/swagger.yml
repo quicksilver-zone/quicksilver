@@ -2169,6 +2169,55 @@ paths:
           type: boolean
       tags:
         - QueryInterchainQuery
+  /quicksilver/tx/v1/interchainstaking/add_validator_denylist:
+    post:
+      operationId: GovAddValidatorDenyList
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            properties:
+              title:
+                type: string
+              description:
+                type: string
+              chain_id:
+                type: string
+              operator_address:
+                type: string
+              authority:
+                type: string
+      tags:
+        - Msg
   /quicksilver/tx/v1/interchainstaking/cancel_redemption:
     post:
       summary: |-
@@ -2417,6 +2466,55 @@ paths:
               of qAssets
 
               for native assets.
+      tags:
+        - Msg
+  /quicksilver/tx/v1/interchainstaking/remove_validator_denylist:
+    post:
+      operationId: GovRemoveValidatorDenyList
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            properties:
+              title:
+                type: string
+              description:
+                type: string
+              chain_id:
+                type: string
+              operator_address:
+                type: string
+              authority:
+                type: string
       tags:
         - Msg
   /quicksilver/tx/v1/interchainstaking/reopen_channel:
