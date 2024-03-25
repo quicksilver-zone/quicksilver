@@ -299,3 +299,85 @@ func (k msgServer) GovSetLsmCaps(goCtx context.Context, msg *types.MsgGovSetLsmC
 
 	return &types.MsgGovSetLsmCapsResponse{}, nil
 }
+
+func (k msgServer) GovAddValidatorDenyList(goCtx context.Context, msg *types.MsgGovAddValidatorDenyList) (*types.MsgGovAddValidatorDenyListResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	// checking msg authority is the gov module address
+	if k.Keeper.GetGovAuthority(ctx) != msg.Authority {
+		return nil,
+			govtypes.ErrInvalidSigner.Wrapf(
+				"invalid authority: expected %s, got %s",
+				k.Keeper.GetGovAuthority(ctx), msg.Authority,
+			)
+	}
+
+	zone, found := k.Keeper.GetZone(ctx, msg.ChainId)
+	if !found {
+		return nil,
+			fmt.Errorf(
+				"no zone found for: %s",
+				msg.ChainId,
+			)
+	}
+
+	if err := k.SetZoneValidatorToDenyList(ctx, zone.ChainId, sdk.ValAddress(msg.OperatorAddress)); err != nil {
+		return nil, err
+	}
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+		),
+		sdk.NewEvent(
+			types.EventTypeAddValidatorDenyList,
+			sdk.NewAttribute(types.AttributeKeyOperatorAddress, msg.OperatorAddress),
+			sdk.NewAttribute(types.AttributeKeyChainID, msg.ChainId),
+		),
+	})
+
+	return &types.MsgGovAddValidatorDenyListResponse{}, nil
+}
+
+func (k msgServer) GovRemoveValidatorDenyList(goCtx context.Context, msg *types.MsgGovRemoveValidatorDenyList) (*types.MsgGovRemoveValidatorDenyListResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	// checking msg authority is the gov module address
+	if k.Keeper.GetGovAuthority(ctx) != msg.Authority {
+		return nil,
+			govtypes.ErrInvalidSigner.Wrapf(
+				"invalid authority: expected %s, got %s",
+				k.Keeper.GetGovAuthority(ctx), msg.Authority,
+			)
+	}
+
+	zone, found := k.Keeper.GetZone(ctx, msg.ChainId)
+	if !found {
+		return nil,
+			fmt.Errorf(
+				"no zone found for: %s",
+				msg.ChainId,
+			)
+	}
+
+	if found := k.GetDeniedValidatorInDenyList(ctx, zone.ChainId, sdk.ValAddress(msg.OperatorAddress)); !found {
+		return nil, fmt.Errorf("validator %s not found in deny list", msg.OperatorAddress)
+	}
+
+	k.RemoveValidatorFromDenyList(ctx, zone.ChainId, sdk.ValAddress(msg.OperatorAddress))
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+		),
+		sdk.NewEvent(
+			types.EventTypeRemoveValidatorDenyList,
+			sdk.NewAttribute(types.AttributeKeyOperatorAddress, msg.OperatorAddress),
+			sdk.NewAttribute(types.AttributeKeyChainID, msg.ChainId),
+		),
+	})
+
+	return &types.MsgGovRemoveValidatorDenyListResponse{}, nil
+}
