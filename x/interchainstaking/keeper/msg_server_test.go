@@ -932,3 +932,76 @@ func (suite *KeeperTestSuite) TestMsgCancelQueuedRedemeption() {
 		})
 	}
 }
+
+func (suite *KeeperTestSuite) TestMsgGovAddValidatorToDenyList() {
+	dummyChainID := "dummychain"
+	tests := []struct {
+		name      string
+		malleate  func(s *KeeperTestSuite) *icstypes.MsgGovAddValidatorDenyList
+		expectErr string
+	}{
+		{
+			"invalid authority",
+			func(s *KeeperTestSuite) *icstypes.MsgGovAddValidatorDenyList {
+				return &icstypes.MsgGovAddValidatorDenyList{
+					ChainId:         dummyChainID,
+					OperatorAddress: s.chainB.Vals.Validators[0].Address.String(),
+					Authority:       testAddress,
+				}
+			},
+			"expected gov account as only signer for proposal message",
+		},
+		{
+			"invalid chain-id",
+			func(s *KeeperTestSuite) *icstypes.MsgGovAddValidatorDenyList {
+				k := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
+
+				return &icstypes.MsgGovAddValidatorDenyList{
+					ChainId:         dummyChainID,
+					OperatorAddress: s.chainB.Vals.Validators[0].Address.String(),
+					Authority:       sdk.MustBech32ifyAddressBytes(sdk.GetConfig().GetBech32AccountAddrPrefix(), k.AccountKeeper.GetModuleAddress(govtypes.ModuleName)),
+				}
+			},
+			fmt.Sprintf("no zone found for: %s", dummyChainID),
+		},
+		{
+			"valid",
+			func(s *KeeperTestSuite) *icstypes.MsgGovAddValidatorDenyList {
+				k := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
+
+				return &icstypes.MsgGovAddValidatorDenyList{
+					ChainId:         s.chainB.ChainID,
+					OperatorAddress: s.chainB.Vals.Validators[0].Address.String(),
+					Authority:       sdk.MustBech32ifyAddressBytes(sdk.GetConfig().GetBech32AccountAddrPrefix(), k.AccountKeeper.GetModuleAddress(govtypes.ModuleName)),
+				}
+			},
+			"",
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+
+		suite.Run(tt.name, func() {
+			suite.SetupTest()
+			suite.setupTestZones()
+
+			msg := tt.malleate(suite)
+
+			msgSrv := icskeeper.NewMsgServerImpl(suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper)
+			res, err := msgSrv.GovAddValidatorDenyList(sdk.WrapSDKContext(suite.chainA.GetContext()), msg)
+			if len(tt.expectErr) != 0 {
+				suite.ErrorContains(err, tt.expectErr)
+				suite.Nil(res)
+			} else {
+				suite.NoError(err)
+				suite.NotNil(res)
+			}
+
+			qapp := suite.GetQuicksilverApp(suite.chainA)
+			icsKeeper := qapp.InterchainstakingKeeper
+			_, found := icsKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
+			suite.True(found)
+		})
+	}
+}
