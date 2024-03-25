@@ -168,13 +168,11 @@ export const AccountControlModal: React.FC<AccountControlModalProps> = ({ isOpen
     try {
       if (incorrectAccount) {
         // Call msgRevokeBad
-        await authTx([msgRevokeBad], {
+        await authTx([msgRevokeBad, revokeGrant], {
           fee,
           onSuccess: () => {},
         });
-      }
-      // Continue with msgGrant
-      if (correctAccount) {
+      } else {
         // Call revokeGrant
         await authTx([revokeGrant], {
           fee,
