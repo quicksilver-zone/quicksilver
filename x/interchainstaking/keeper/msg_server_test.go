@@ -958,7 +958,6 @@ func (suite *KeeperTestSuite) TestMsgGovAddValidatorToDenyList() {
 		{
 			"invalid chain-id",
 			func(s *KeeperTestSuite) *icstypes.MsgGovAddValidatorDenyList {
-
 				return &icstypes.MsgGovAddValidatorDenyList{
 					ChainId:         dummyChainID,
 					OperatorAddress: bech32ValoperAddr,
@@ -970,7 +969,6 @@ func (suite *KeeperTestSuite) TestMsgGovAddValidatorToDenyList() {
 		{
 			"valid",
 			func(s *KeeperTestSuite) *icstypes.MsgGovAddValidatorDenyList {
-
 				return &icstypes.MsgGovAddValidatorDenyList{
 					ChainId:         s.chainB.ChainID,
 					OperatorAddress: bech32ValoperAddr,
