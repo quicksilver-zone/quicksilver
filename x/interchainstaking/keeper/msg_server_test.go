@@ -967,6 +967,17 @@ func (suite *KeeperTestSuite) TestMsgGovAddValidatorToDenyList() {
 			fmt.Sprintf("no zone found for: %s", dummyChainID),
 		},
 		{
+			"invalid operator address",
+			func(s *KeeperTestSuite) *icstypes.MsgGovAddValidatorDenyList {
+				return &icstypes.MsgGovAddValidatorDenyList{
+					ChainId:         s.chainB.ChainID,
+					OperatorAddress: "invalid",
+					Authority:       govModuleAddr,
+				}
+			},
+			"decoding bech32 failed",
+		},
+		{
 			"valid",
 			func(s *KeeperTestSuite) *icstypes.MsgGovAddValidatorDenyList {
 				return &icstypes.MsgGovAddValidatorDenyList{
@@ -1034,6 +1045,17 @@ func (suite *KeeperTestSuite) TestMsgGovRemoveValidatorToDenyList() {
 			fmt.Sprintf("no zone found for: %s", dummyChainID),
 		},
 		{
+			"invalid operator address",
+			func(s *KeeperTestSuite) *icstypes.MsgGovRemoveValidatorDenyList {
+				return &icstypes.MsgGovRemoveValidatorDenyList{
+					ChainId:         s.chainB.ChainID,
+					OperatorAddress: "invalid",
+					Authority:       govModuleAddr,
+				}
+			},
+			"decoding bech32 failed",
+		},
+		{
 			"valid msg, but not in deny list",
 			func(s *KeeperTestSuite) *icstypes.MsgGovRemoveValidatorDenyList {
 				return &icstypes.MsgGovRemoveValidatorDenyList{
@@ -1048,7 +1070,7 @@ func (suite *KeeperTestSuite) TestMsgGovRemoveValidatorToDenyList() {
 			"valid msg, validator in deny list",
 			func(s *KeeperTestSuite) *icstypes.MsgGovRemoveValidatorDenyList {
 				k := s.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
-				err := k.SetZoneValidatorToDenyList(s.chainA.GetContext(), s.chainB.ChainID, sdk.ValAddress(s.chainB.Vals.Validators[0].Address))
+				err := k.SetZoneValidatorToDenyList(s.chainA.GetContext(), s.chainB.ChainID, testValAddr)
 				suite.NoError(err)
 				return &icstypes.MsgGovRemoveValidatorDenyList{
 					ChainId:         s.chainB.ChainID,
