@@ -66,7 +66,7 @@ func (k *Keeper) IterateRedelegationRecords(ctx sdk.Context, fn func(index int64
 	k.IteratePrefixedRedelegationRecords(ctx, nil, fn)
 }
 
-// AllRedelegationRecords returns every record in the store for the specified zone.
+// AllRedelegationRecords returns every record in the store
 func (k *Keeper) AllRedelegationRecords(ctx sdk.Context) []types.RedelegationRecord {
 	records := []types.RedelegationRecord{}
 	k.IterateRedelegationRecords(ctx, func(_ int64, _ []byte, record types.RedelegationRecord) (stop bool) {
