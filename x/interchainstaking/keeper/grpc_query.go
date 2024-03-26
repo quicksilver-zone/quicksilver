@@ -241,6 +241,36 @@ func (k *Keeper) ZoneWithdrawalRecords(c context.Context, req *types.QueryWithdr
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
+	_, found := k.GetZone(ctx, req.ChainId)
+	if !found {
+		return nil, status.Error(codes.NotFound, fmt.Sprintf("no zone found matching %s", req.GetChainId()))
+	}
+
+	withdrawalrecords := k.AllZoneWithdrawalRecords(ctx, req.ChainId)
+
+	return &types.QueryWithdrawalRecordsResponse{Withdrawals: withdrawalrecords}, nil
+}
+
+func (k *Keeper) WithdrawalRecords(c context.Context, req *types.QueryWithdrawalRecordsRequest) (*types.QueryWithdrawalRecordsResponse, error) {
+	// TODO: implement pagination
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+
+	withdrawalrecords := k.AllWithdrawalRecords(ctx)
+
+	return &types.QueryWithdrawalRecordsResponse{Withdrawals: withdrawalrecords}, nil
+}
+
+func (k *Keeper) UserZoneWithdrawalRecords(c context.Context, req *types.QueryWithdrawalRecordsRequest) (*types.QueryWithdrawalRecordsResponse, error) {
+	// TODO: implement pagination
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
 
 	zone, found := k.GetZone(ctx, req.GetChainId())
 	if !found {
@@ -254,19 +284,6 @@ func (k *Keeper) ZoneWithdrawalRecords(c context.Context, req *types.QueryWithdr
 		}
 		return false
 	})
-
-	return &types.QueryWithdrawalRecordsResponse{Withdrawals: withdrawalrecords}, nil
-}
-
-func (k *Keeper) WithdrawalRecords(c context.Context, req *types.QueryWithdrawalRecordsRequest) (*types.QueryWithdrawalRecordsResponse, error) {
-	// TODO: implement pagination
-	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
-	}
-
-	ctx := sdk.UnwrapSDKContext(c)
-
-	withdrawalrecords := k.AllZoneWithdrawalRecords(ctx, req.ChainId)
 
 	return &types.QueryWithdrawalRecordsResponse{Withdrawals: withdrawalrecords}, nil
 }
