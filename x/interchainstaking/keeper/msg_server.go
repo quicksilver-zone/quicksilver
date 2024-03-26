@@ -320,8 +320,12 @@ func (k msgServer) GovAddValidatorDenyList(goCtx context.Context, msg *types.Msg
 				msg.ChainId,
 			)
 	}
+	valAddr, err := addressutils.ValAddressFromBech32(msg.OperatorAddress, zone.GetValoperPrefix())
+	if err != nil {
+		return nil, err
+	}
 
-	if err := k.SetZoneValidatorToDenyList(ctx, zone.ChainId, sdk.ValAddress(msg.OperatorAddress)); err != nil {
+	if err := k.SetZoneValidatorToDenyList(ctx, zone.ChainId, valAddr); err != nil {
 		return nil, err
 	}
 
@@ -360,12 +364,15 @@ func (k msgServer) GovRemoveValidatorDenyList(goCtx context.Context, msg *types.
 				msg.ChainId,
 			)
 	}
-
-	if found := k.GetDeniedValidatorInDenyList(ctx, zone.ChainId, sdk.ValAddress(msg.OperatorAddress)); !found {
+	valAddr, err := addressutils.ValAddressFromBech32(msg.OperatorAddress, zone.GetValoperPrefix())
+	if err != nil {
+		return nil, err
+	}
+	if found := k.GetDeniedValidatorInDenyList(ctx, zone.ChainId, valAddr); !found {
 		return nil, fmt.Errorf("validator %s not found in deny list", msg.OperatorAddress)
 	}
 
-	k.RemoveValidatorFromDenyList(ctx, zone.ChainId, sdk.ValAddress(msg.OperatorAddress))
+	k.RemoveValidatorFromDenyList(ctx, zone.ChainId, valAddr)
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
