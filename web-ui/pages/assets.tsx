@@ -358,7 +358,7 @@ function Home() {
               backdropFilter="blur(50px)"
               bgColor="rgba(255,255,255,0.1)"
               borderRadius="10px"
-              p={5}
+              px={5}
               w={{ base: 'full', md: '2xl' }}
               h="sm"
             >

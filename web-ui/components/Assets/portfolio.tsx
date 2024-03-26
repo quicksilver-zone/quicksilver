@@ -65,7 +65,7 @@ const MyPortfolio: React.FC<MyPortfolioProps> = ({
   }
 
   return (
-    <Flex w="100%" h="100%" p={4} borderRadius="lg" flexDirection="column" justifyContent="center" alignItems="center" gap={6}>
+    <Flex w="100%" h="100%" px={4} mt={5} borderRadius="lg" flexDirection="column" justifyContent="center" alignItems="center" gap={6}>
       <Heading color={'white'} alignSelf="stretch" fontSize="lg" fontWeight="bold" textTransform="uppercase" noOfLines={1}>
         My QUICKSILVER Portfolio
       </Heading>
@@ -119,7 +119,7 @@ const MyPortfolio: React.FC<MyPortfolioProps> = ({
           </VStack>
         </Flex>
         {totalValue === 0 && (
-          <Flex w="100%" mt={-10} justifyContent="center" alignItems="center">
+          <Flex w="100%" justifyContent="center" alignItems="center">
             <Text fontSize="xl" textAlign="center">
               You have no liquid staked assets.
             </Text>
