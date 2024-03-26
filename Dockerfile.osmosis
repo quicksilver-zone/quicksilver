@@ -2,14 +2,14 @@
 # Build 
 # --------------------------------------------------------
 
-FROM golang:1.20.11-alpine3.18 as build
+FROM golang:1.21.8-alpine3.18 as build
 
 RUN set -eux; apk add --no-cache ca-certificates build-base;
 RUN apk add git
 # Needed by github.com/zondax/hid
 RUN apk add linux-headers
 
-RUN git clone https://github.com/osmosis-labs/osmosis /osmosis --branch v21.1.4
+RUN git clone https://github.com/osmosis-labs/osmosis /osmosis --branch v23.0.0-rc1
 WORKDIR /osmosis
 
 RUN ARCH=$(uname -m) && WASMVM_VERSION=$(go list -m github.com/CosmWasm/wasmvm | sed 's/.* //') && \
