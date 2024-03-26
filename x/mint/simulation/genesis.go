@@ -5,6 +5,7 @@ package simulation
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 	"math/rand"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -23,7 +24,7 @@ const (
 	mintingRewardsDistributionStartEpochKey = "minting_rewards_distribution_start_epoch"
 
 	epochIdentifier = "day"
-	maxInt64        = int(^uint(0) >> 1)
+	maxInt64        = int64(math.MaxInt64)
 )
 
 // genDistributionProportions generates randomized DistributionProportions.
@@ -44,19 +45,19 @@ func genDistributionProportions(r *rand.Rand) types.DistributionProportions {
 }
 
 func genEpochProvisions(r *rand.Rand) sdk.Dec {
-	return sdk.NewDec(int64(r.Intn(maxInt64)))
+	return sdk.NewDec(r.Int63n(maxInt64))
 }
 
 func genReductionFactor(r *rand.Rand) sdk.Dec {
-	return sdk.NewDecWithPrec(int64(r.Intn(10)), 1)
+	return sdk.NewDecWithPrec(r.Int63n(10), 1)
 }
 
 func genReductionPeriodInEpochs(r *rand.Rand) int64 {
-	return int64(r.Intn(maxInt64))
+	return r.Int63n(maxInt64)
 }
 
 func genMintintRewardsDistributionStartEpoch(r *rand.Rand) int64 {
-	return int64(r.Intn(maxInt64))
+	return r.Int63n(maxInt64)
 }
 
 // RandomizedGenState generates a random GenesisState for mint.
