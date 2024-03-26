@@ -1453,11 +1453,11 @@ func (suite *KeeperTestSuite) TestKeeper_UserZoneWithdrawalRecords() {
 				distributions := []*types.Distribution{
 					{
 						Valoper: icsKeeper.GetValidators(ctx, suite.chainB.ChainID)[0].ValoperAddress,
-						Amount:  10000000,
+						Amount:  sdk.NewInt(10000000),
 					},
 					{
 						Valoper: icsKeeper.GetValidators(ctx, suite.chainB.ChainID)[1].ValoperAddress,
-						Amount:  20000000,
+						Amount:  sdk.NewInt(20000000),
 					},
 				}
 
@@ -1491,11 +1491,11 @@ func (suite *KeeperTestSuite) TestKeeper_UserZoneWithdrawalRecords() {
 				distributions := []*types.Distribution{
 					{
 						Valoper: icsKeeper.GetValidators(ctx, suite.chainB.ChainID)[0].ValoperAddress,
-						Amount:  10000000,
+						Amount:  sdk.NewInt(10000000),
 					},
 					{
 						Valoper: icsKeeper.GetValidators(ctx, suite.chainB.ChainID)[1].ValoperAddress,
-						Amount:  20000000,
+						Amount:  sdk.NewInt(20000000),
 					},
 				}
 

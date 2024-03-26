@@ -19,6 +19,10 @@ import (
 	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 )
 
+const (
+	testDelegator = "cosmos1r2dthxctqzhwg299e7aaeqwfkgcc9hg8n9scjg"
+)
+
 type IntegrationTestSuite struct {
 	suite.Suite
 
@@ -68,7 +72,6 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		Is_118:                       true,
 	}
 
-	// TODO: I think setting validators here isn't enough, we need to set them in the store by using the keeper
 	zone.Validators = append(zone.Validators,
 		&types.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), DelegatorShares: sdk.NewDec(2000), Score: sdk.ZeroDec(), ValidatorBondShares: sdk.ZeroDec(), LiquidShares: sdk.ZeroDec()},
 		&types.Validator{ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), DelegatorShares: sdk.NewDec(2000), Score: sdk.ZeroDec(), ValidatorBondShares: sdk.ZeroDec(), LiquidShares: sdk.ZeroDec()},
@@ -77,9 +80,30 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		&types.Validator{ValoperAddress: "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), DelegatorShares: sdk.NewDec(2000), Score: sdk.ZeroDec(), ValidatorBondShares: sdk.ZeroDec(), LiquidShares: sdk.ZeroDec()},
 	)
 
+	delegationIntents := []types.DelegatorIntentsForZone{
+		{
+			ChainId: zone.ChainId,
+			DelegationIntent: []*types.DelegatorIntent{
+				{
+					Delegator: testDelegator,
+					Intents: types.ValidatorIntents{
+						{
+							ValoperAddress: zone.Validators[0].ValoperAddress,
+							Weight:         sdk.NewDec(1),
+						},
+						{
+							ValoperAddress: zone.Validators[1].ValoperAddress,
+							Weight:         sdk.NewDec(1),
+						},
+					},
+				},
+			},
+		},
+	}
 	// setup basic genesis state
 	newGenesis := types.DefaultGenesis()
 	newGenesis.Zones = []types.Zone{zone}
+	newGenesis.DelegatorIntents = delegationIntents
 	updateGenesisConfigState(types.ModuleName, newGenesis)
 	s.zones = []types.Zone{zone}
 
@@ -175,7 +199,6 @@ func (s *IntegrationTestSuite) ZonesEqual(zoneA, zoneB types.Zone) bool {
 
 func (s *IntegrationTestSuite) TestGetDelegatorIntentCmd() {
 	val := s.network.Validators[0]
-
 	tests := []struct {
 		name      string
 		args      []string
@@ -204,20 +227,33 @@ func (s *IntegrationTestSuite) TestGetDelegatorIntentCmd() {
 			&types.QueryDelegatorIntentResponse{},
 			&types.QueryDelegatorIntentResponse{},
 		},
-		/* {
+		{
 			"valid",
-			[]string{s.cfg.ChainID, ""},
+			[]string{s.zones[0].ChainId, testDelegator},
 			false,
 			&types.QueryDelegatorIntentResponse{},
-			&types.QueryDelegatorIntentResponse{},
-		}, */
+			&types.QueryDelegatorIntentResponse{
+				Intent: &types.DelegatorIntent{
+					Delegator: testDelegator,
+					Intents: types.ValidatorIntents{
+						{
+							ValoperAddress: s.zones[0].Validators[0].ValoperAddress,
+							Weight:         sdk.NewDec(1),
+						},
+						{
+							ValoperAddress: s.zones[0].Validators[1].ValoperAddress,
+							Weight:         sdk.NewDec(1),
+						},
+					},
+				},
+			},
+		},
 	}
 	for _, tt := range tests {
 		tt := tt
 
 		s.Run(tt.name, func() {
 			clientCtx := val.ClientCtx
-
 			runFlags := []string{
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			}

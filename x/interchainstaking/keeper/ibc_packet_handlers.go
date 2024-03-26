@@ -1450,7 +1450,7 @@ func isNumericString(in string) bool {
 	// and to parse numeric values, say in the smallest unit of uqck
 	//      MaxInt64: (1<<63)-1 = 9_223_372_036_854_775_807 uqck aka
 	//                            9_223_372_036_854.775 (9.223 Trillion) qck
-        // so the function is appropriate as its range won't be exceeded.
+	// so the function is appropriate as its range won't be exceeded.
 	_, err := strconv.ParseInt(in, 10, 64)
 	return err == nil
 }
