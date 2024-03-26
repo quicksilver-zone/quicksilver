@@ -89,7 +89,12 @@ message ICAAccount {
 
 message Distribution {
   string valoper = 1;
-  uint64 amount = 2;
+  uint64 _amount = 2 [deprecated = true];
+  string amount = 3 [
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false
+  ];
 }
 
 message WithdrawalRecord {
@@ -134,19 +139,14 @@ message RedelegationRecord {
   int64 epoch_number = 2;
   string source = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   string destination = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  int64 amount = 5;
+  int64 _amount = 5 [deprecated = true];
   google.protobuf.Timestamp completion_time = 6 [
     (gogoproto.nullable) = false,
     (gogoproto.stdtime) = true
   ];
-}
-
-message TransferRecord {
-  string sender = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  string recipient = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  cosmos.base.v1beta1.Coin amount = 3 [
-    (cosmos_proto.scalar) = "cosmos.Coin",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin",
+  string amount = 7 [
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable) = false
   ];
 }

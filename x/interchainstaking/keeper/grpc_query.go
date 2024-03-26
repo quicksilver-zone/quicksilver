@@ -189,10 +189,7 @@ func (k *Keeper) Delegations(c context.Context, req *types.QueryDelegationsReque
 		return false
 	})
 
-	if sum.IsInt64() {
-		return &types.QueryDelegationsResponse{Delegations: delegations, Tvl: sum.Int64()}, nil
-	}
-	return &types.QueryDelegationsResponse{Delegations: delegations}, status.Error(codes.OutOfRange, "tvl out of bound Int64")
+	return &types.QueryDelegationsResponse{Delegations: delegations, Tvl: sum}, nil
 }
 
 func (k *Keeper) Receipts(c context.Context, req *types.QueryReceiptsRequest) (*types.QueryReceiptsResponse, error) {
@@ -353,4 +350,15 @@ func (k *Keeper) MappedAccounts(c context.Context, req *types.QueryMappedAccount
 	})
 
 	return &types.QueryMappedAccountsResponse{RemoteAddressMap: remoteAddressMap}, nil
+}
+
+func (k *Keeper) ValidatorDenyList(c context.Context, req *types.QueryDenyListRequest) (*types.QueryDenyListResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(c)
+
+	validators := k.GetZoneValidatorDenyList(ctx, req.ChainId)
+
+	return &types.QueryDenyListResponse{Validators: validators}, nil
 }
