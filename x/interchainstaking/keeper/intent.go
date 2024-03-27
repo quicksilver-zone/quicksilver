@@ -19,9 +19,9 @@ import (
 
 func (*Keeper) getStoreKey(zone *types.Zone, snapshot bool) []byte {
 	if snapshot {
-		return append(types.KeyPrefixSnapshotIntent, []byte(zone.ChainId)...)
+		return append(types.KeyPrefixSnapshotIntent, zone.ChainId...)
 	}
-	return append(types.KeyPrefixIntent, []byte(zone.ChainId)...)
+	return append(types.KeyPrefixIntent, zone.ChainId...)
 }
 
 // GetDelegatorIntent returns intent info by zone and delegator.

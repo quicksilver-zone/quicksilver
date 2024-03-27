@@ -27,7 +27,7 @@ func TestGetKeyZoneDrop(t *testing.T) {
 			args{
 				chainID: testID,
 			},
-			append([]byte{0x1}, []byte(testID)...),
+			append([]byte{0x1}, testID...),
 		},
 	}
 	for _, tt := range tests {
@@ -61,7 +61,7 @@ func TestGetKeyClaimRecord(t *testing.T) {
 				chainID: testID,
 				addr:    testAcc,
 			},
-			append(append([]byte{0x2}, []byte(testID)...), testAcc...),
+			append(append([]byte{0x2}, testID...), testAcc...),
 		},
 	}
 	for _, tt := range tests {

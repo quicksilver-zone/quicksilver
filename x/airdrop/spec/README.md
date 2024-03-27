@@ -6,10 +6,10 @@ The purpose of this module is to distribute QCK airdrops to users for engaging i
 
 **Objectives:**
 
-* Provide airdrop to qualifying users;
-* Couple airdrop to specific actions or tasks;
-* Airdrops configured on a per zone basis;
-* Must decay to zero over a specified period, starting at a specific time / block height;
+- Provide airdrop to qualifying users;
+- Couple airdrop to specific actions or tasks;
+- Airdrops configured on a per zone basis;
+- Must decay to zero over a specified period, starting at a specific time / block height;
 
 ## Contents
 
@@ -44,9 +44,9 @@ A `ZoneDrop` is considered `Active` if, and only if, the current `BlockTime` is 
 
 **Formula:**
 
-* active:  `BlockTime` > `StartTime` && `BlockTime` < `StartTime`+`Duration`+`Decay`;
-* future:  `BlockTime` < `StartTime`;
-* expired: `BlockTime` > `StartTime`+`Duration`+`Decay`;
+- active: `BlockTime` > `StartTime` && `BlockTime` < `StartTime`+`Duration`+`Decay`;
+- future: `BlockTime` < `StartTime`;
+- expired: `BlockTime` > `StartTime`+`Duration`+`Decay`;
 
 #### Duration & Decay
 
@@ -159,7 +159,7 @@ var (
 )
 
 func GetKeyZoneDrop(chainID string) []byte {
-	return append(KeyPrefixZoneDrop, []byte(chainID)...)
+	return append(KeyPrefixZoneDrop, chainID...)
 }
 
 // ZoneDrop represents an airdrop for a specific zone.
@@ -182,11 +182,11 @@ var (
 )
 
 func GetKeyClaimRecord(chainID string, addr sdk.AccAddress) []byte {
-	return append(append(KeyPrefixClaimRecord, []byte(chainID)...), addr...)
+	return append(append(KeyPrefixClaimRecord, chainID...), addr...)
 }
 
 func GetPrefixClaimRecord(chainID string) []byte {
-	return append(KeyPrefixClaimRecord, []byte(chainID)...)
+	return append(KeyPrefixClaimRecord, chainID...)
 }
 
 // ClaimRecord represents a users' claim (including completed claims) for a
@@ -265,18 +265,18 @@ Events emitted by module for tracking messages and index transactions;
 ### RegisterZoneDropProposal
 
 | Type              | Attribute Key | Attribute Value |
-|:------------------|:--------------|:----------------|
+| :---------------- | :------------ | :-------------- |
 | message           | module        | airdrop         |
 | register_zonedrop | chain_id      | {chain_id}      |
 
 ### MsgClaim
 
-| Type              | Attribute Key | Attribute Value |
-|:------------------|:--------------|:----------------|
-| airdrop_claim     | sender        | {address}       |
-| airdrop_claim     | zone          | {chain_id}      |
-| airdrop_claim     | action        | {action}        |
-| airdrop_claim     | amount        | {amount}        |
+| Type          | Attribute Key | Attribute Value |
+| :------------ | :------------ | :-------------- |
+| airdrop_claim | sender        | {address}       |
+| airdrop_claim | zone          | {chain_id}      |
+| airdrop_claim | action        | {action}        |
+| airdrop_claim | amount        | {amount}        |
 
 ## Hooks
 
@@ -432,12 +432,12 @@ type QueryClaimRecordResponse struct {
 
 Module parameters:
 
-| Key   | Type  | Example |
-|:-- ---|:-- ---|:--   ---|
+| Key | Type | Example |
+| :-- | :--- | :------ |
 
 Description of parameters:
 
-* `param_name` - short description;
+- `param_name` - short description;
 
 ## Proposals
 
@@ -459,4 +459,3 @@ N/A
 ## End Block
 
 At the end of every block the module iterates through all unconcluded airdrops (expired but not yet concluded) and calls `EndZoneDrop` for each instance, that deletes all associated `ClaimRecord`s.
-
