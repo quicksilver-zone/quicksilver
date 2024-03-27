@@ -827,7 +827,7 @@ func (s *AppTestSuite) TestV010503UpgradeHandler() {
 
 // Init a zone with some zero burnAmount withdrawal records
 
-func (s *AppTestSuite) InitV151rc1TestZone() {
+func (s *AppTestSuite) InitV160rc0TestZone() {
 	cosmosWithdrawal := addressutils.GenerateAddressForTestWithPrefix("cosmos")
 	cosmosPerformance := addressutils.GenerateAddressForTestWithPrefix("cosmos")
 	cosmosDeposit := addressutils.GenerateAddressForTestWithPrefix("cosmos")
@@ -893,12 +893,12 @@ func (s *AppTestSuite) InitV151rc1TestZone() {
 	s.UncheckedSetWithdrawalRecord(s.chainA.GetContext(), s.GetQuicksilverApp(s.chainA), validWithdrawal)
 }
 
-func (s *AppTestSuite) TestV010501rc1UpgradeHandler() {
-	s.InitV151rc1TestZone()
+func (s *AppTestSuite) TestV010600rc0UpgradeHandler() {
+	s.InitV160rc0TestZone()
 	app := s.GetQuicksilverApp(s.chainA)
 	ctx := s.chainA.GetContext()
 
-	handler := upgrades.V010501rc1UpgradeHandler(app.mm,
+	handler := upgrades.V010600rc0UpgradeHandler(app.mm,
 		app.configurator, &app.AppKeepers)
 
 	_, err := handler(ctx, types.Plan{}, app.mm.GetVersionMap())
