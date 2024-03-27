@@ -342,8 +342,7 @@ function Home() {
               backdropFilter="blur(50px)"
               bgColor="rgba(255,255,255,0.1)"
               borderRadius="10px"
-              p={5}
-              w={{ base: 'full', md: 'sm' }}
+              w={{ base: 'full', md: 'md' }}
               h="sm"
               flexDir="column"
               justifyContent="space-around"
@@ -387,7 +386,7 @@ function Home() {
 
           <Spacer />
           {/* Assets Grid */}
-          <AssetsGrid nonNative={liquidRewards} isWalletConnected={address !== undefined} assets={assetsData} />
+          <AssetsGrid address={address} nonNative={liquidRewards} isWalletConnected={address !== undefined} assets={assetsData} />
           <Spacer />
           {/* Unbonding Table */}
           <Box h="full" w="full" mt="20px">

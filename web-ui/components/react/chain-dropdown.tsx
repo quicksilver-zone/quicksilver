@@ -103,11 +103,6 @@ const SelectOptions = ({ data, value, onChange }: ChangeChainMenuType) => {
         backgroundClip: 'content-box',
       },
     }),
-    clearIndicator: (provided: SystemStyleObject) => ({
-      ...provided,
-      borderRadius: 'full',
-      color: '#FF8000',
-    }),
     dropdownIndicator: (provided: SystemStyleObject) => ({
       ...provided,
       bg: 'transparent',
@@ -234,7 +229,7 @@ const SelectOptions = ({ data, value, onChange }: ChangeChainMenuType) => {
       instanceId="select-chain"
       placeholder="Choose a chain"
       chakraStyles={customStyles}
-      isClearable={true}
+      isClearable={false}
       isMulti={false}
       isOptionDisabled={(option) => option.isDisabled || false}
       blurInputOnSelect={true}

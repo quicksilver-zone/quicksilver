@@ -30,11 +30,6 @@ type WithdrawalsResponse = {
   pagination: any; 
 };
 
-type UseWithdrawalsQueryReturnType = {
-  data: WithdrawalsResponse | undefined;
-  isLoading: boolean;
-  isError: boolean;
-};
 
 type Amount = {
   denom: string;

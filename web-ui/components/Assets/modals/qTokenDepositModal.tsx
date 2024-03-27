@@ -30,10 +30,11 @@ import { getCoin, getIbcInfo } from '@/utils';
 
 export interface QDepositModalProps {
   token: string;
+  isOpen: boolean;
+  onClose: () => void;
 }
 
-const QDepositModal: React.FC<QDepositModalProps> = ({ token }) => {
-  const { isOpen, onOpen, onClose } = useDisclosure();
+const QDepositModal: React.FC<QDepositModalProps> = ({ token, isOpen, onClose }) => {
   const toast = useToast();
 
   const [chainName, setChainName] = useState<ChainName | undefined>('osmosis');
@@ -149,99 +150,79 @@ const QDepositModal: React.FC<QDepositModalProps> = ({ token }) => {
   };
 
   return (
-    <>
-      <Button
-        _active={{
-          transform: 'scale(0.95)',
-          color: 'complimentary.800',
-        }}
-        _hover={{
-          bgColor: 'rgba(255,128,0, 0.25)',
-          color: 'complimentary.300',
-        }}
-        color="white"
-        flex={1}
-        size="sm"
-        variant="outline"
-        onClick={onOpen}
-      >
-        Deposit
-      </Button>
+    <Modal isOpen={isOpen} onClose={onClose}>
+      <ModalOverlay />
+      <ModalContent bgColor="rgb(32,32,32)">
+        <ModalHeader color="white">Deposit {token} Tokens</ModalHeader>
+        <ModalCloseButton color={'complimentary.900'} />
+        <ModalBody>
+          {/* Chain Selection Dropdown */}
+          <FormControl>
+            <FormLabel color={'white'}>From Chain</FormLabel>
+            {chooseChain}
+          </FormControl>
 
-      <Modal isOpen={isOpen} onClose={onClose}>
-        <ModalOverlay />
-        <ModalContent bgColor="rgb(32,32,32)">
-          <ModalHeader color="white">Deposit {token} Tokens</ModalHeader>
-          <ModalCloseButton color={'complimentary.900'} />
-          <ModalBody>
-            {/* Chain Selection Dropdown */}
-            <FormControl>
-              <FormLabel color={'white'}>From Chain</FormLabel>
-              {chooseChain}
-            </FormControl>
-
-            {/* Amount Input */}
-            <FormControl mt={4}>
-              <FormLabel color="white">Amount</FormLabel>
-              <Input
-                _active={{
-                  borderColor: 'complimentary.900',
-                }}
-                _selected={{
-                  borderColor: 'complimentary.900',
-                }}
-                _hover={{
-                  borderColor: 'complimentary.900',
-                }}
-                _focus={{
-                  borderColor: 'complimentary.900',
-                  boxShadow: '0 0 0 3px #FF8000',
-                }}
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                color={'white'}
-                placeholder="Enter amount"
-              />
-            </FormControl>
-          </ModalBody>
-
-          <ModalFooter>
-            <Button
+          {/* Amount Input */}
+          <FormControl mt={4}>
+            <FormLabel color="white">Amount</FormLabel>
+            <Input
               _active={{
-                transform: 'scale(0.95)',
-                color: 'complimentary.800',
+                borderColor: 'complimentary.900',
+              }}
+              _selected={{
+                borderColor: 'complimentary.900',
               }}
               _hover={{
-                bgColor: 'rgba(255,128,0, 0.25)',
-                color: 'complimentary.300',
+                borderColor: 'complimentary.900',
               }}
-              minW="100px"
-              mr={3}
-              onClick={onSubmitClick}
-              disabled={!amount}
-            >
-              {isLoading === true && <Spinner size="sm" />}
-              {isLoading === false && 'Deposit'}
-            </Button>
-            <Button
-              _active={{
-                transform: 'scale(0.95)',
-                color: 'complimentary.800',
+              _focus={{
+                borderColor: 'complimentary.900',
+                boxShadow: '0 0 0 3px #FF8000',
               }}
-              _hover={{
-                bgColor: 'rgba(255,128,0, 0.25)',
-                color: 'complimentary.300',
-              }}
-              color="white"
-              variant="ghost"
-              onClick={onClose}
-            >
-              Cancel
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-    </>
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              color={'white'}
+              placeholder="Enter amount"
+            />
+          </FormControl>
+        </ModalBody>
+
+        <ModalFooter>
+          <Button
+            _active={{
+              transform: 'scale(0.95)',
+              color: 'complimentary.800',
+            }}
+            _hover={{
+              bgColor: 'rgba(255,128,0, 0.25)',
+              color: 'complimentary.300',
+            }}
+            minW="100px"
+            mr={3}
+            onClick={onSubmitClick}
+            isDisabled={!amount || !address}
+          >
+            {isLoading === true && <Spinner size="sm" />}
+            {isLoading === false && 'Deposit'}
+          </Button>
+          <Button
+            _active={{
+              transform: 'scale(0.95)',
+              color: 'complimentary.800',
+            }}
+            _hover={{
+              bgColor: 'rgba(255,128,0, 0.25)',
+              color: 'complimentary.300',
+            }}
+            color="white"
+            variant="ghost"
+            onClick={onClose}
+          >
+            Cancel
+          </Button>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
   );
 };
 
