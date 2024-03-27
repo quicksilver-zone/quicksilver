@@ -31,10 +31,10 @@ func (suite *KeeperTestSuite) TestUpdateWithdrawalRecordsForSlash() {
 					Delegator: zone.DelegationAddress.Address,
 					Recipient: "cosmos1v4gek4mld0k5yhpe0fsln4takg558cdpyexv2rxr3dh45f2fqrgsw52m97",
 					Distribution: []*types.Distribution{
-						{Amount: 10000, Valoper: validators[0]},
-						{Amount: 10000, Valoper: validators[1]},
-						{Amount: 10000, Valoper: validators[2]},
-						{Amount: 10000, Valoper: validators[3]},
+						{Amount: math.NewInt(10000), Valoper: validators[0]},
+						{Amount: math.NewInt(10000), Valoper: validators[1]},
+						{Amount: math.NewInt(10000), Valoper: validators[2]},
+						{Amount: math.NewInt(10000), Valoper: validators[3]},
 					},
 					Amount:     sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, math.NewInt(40000))),
 					BurnAmount: sdk.NewCoin(zone.LocalDenom, math.NewInt(32356)),
@@ -52,10 +52,10 @@ func (suite *KeeperTestSuite) TestUpdateWithdrawalRecordsForSlash() {
 						Delegator: zone.DelegationAddress.Address,
 						Recipient: "cosmos1v4gek4mld0k5yhpe0fsln4takg558cdpyexv2rxr3dh45f2fqrgsw52m97",
 						Distribution: []*types.Distribution{
-							{Amount: 10000, Valoper: validators[0]},
-							{Amount: 9500, Valoper: validators[1]},
-							{Amount: 10000, Valoper: validators[2]},
-							{Amount: 10000, Valoper: validators[3]},
+							{Amount: math.NewInt(10000), Valoper: validators[0]},
+							{Amount: math.NewInt(9500), Valoper: validators[1]},
+							{Amount: math.NewInt(10000), Valoper: validators[2]},
+							{Amount: math.NewInt(10000), Valoper: validators[3]},
 						},
 						Amount:     sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, math.NewInt(39500))),
 						BurnAmount: sdk.NewCoin(zone.LocalDenom, math.NewInt(32356)),
@@ -80,10 +80,10 @@ func (suite *KeeperTestSuite) TestUpdateWithdrawalRecordsForSlash() {
 					Delegator: zone.DelegationAddress.Address,
 					Recipient: "cosmos1v4gek4mld0k5yhpe0fsln4takg558cdpyexv2rxr3dh45f2fqrgsw52m97",
 					Distribution: []*types.Distribution{
-						{Amount: 10000, Valoper: validators[0]},
-						{Amount: 10000, Valoper: validators[1]},
-						{Amount: 10000, Valoper: validators[2]},
-						{Amount: 10000, Valoper: validators[3]},
+						{Amount: math.NewInt(10000), Valoper: validators[0]},
+						{Amount: math.NewInt(10000), Valoper: validators[1]},
+						{Amount: math.NewInt(10000), Valoper: validators[2]},
+						{Amount: math.NewInt(10000), Valoper: validators[3]},
 					},
 					Amount:     sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, math.NewInt(40000))),
 					BurnAmount: sdk.NewCoin(zone.LocalDenom, math.NewInt(32356)),
@@ -96,10 +96,10 @@ func (suite *KeeperTestSuite) TestUpdateWithdrawalRecordsForSlash() {
 					Delegator: zone.DelegationAddress.Address,
 					Recipient: "cosmos1nvkpj5n5mhy2ntvgn2cklntwx9ujvfvcacz5et",
 					Distribution: []*types.Distribution{
-						{Amount: 13000, Valoper: validators[0]},
-						{Amount: 14000, Valoper: validators[1]},
-						{Amount: 10000, Valoper: validators[2]},
-						{Amount: 11000, Valoper: validators[3]},
+						{Amount: math.NewInt(13000), Valoper: validators[0]},
+						{Amount: math.NewInt(14000), Valoper: validators[1]},
+						{Amount: math.NewInt(10000), Valoper: validators[2]},
+						{Amount: math.NewInt(11000), Valoper: validators[3]},
 					},
 					Amount:     sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, math.NewInt(48000))),
 					BurnAmount: sdk.NewCoin(zone.LocalDenom, math.NewInt(36503)),
@@ -117,10 +117,10 @@ func (suite *KeeperTestSuite) TestUpdateWithdrawalRecordsForSlash() {
 						Delegator: zone.DelegationAddress.Address,
 						Recipient: "cosmos1v4gek4mld0k5yhpe0fsln4takg558cdpyexv2rxr3dh45f2fqrgsw52m97",
 						Distribution: []*types.Distribution{
-							{Amount: 10000, Valoper: validators[0]},
-							{Amount: 9500, Valoper: validators[1]},
-							{Amount: 10000, Valoper: validators[2]},
-							{Amount: 10000, Valoper: validators[3]},
+							{Amount: math.NewInt(10000), Valoper: validators[0]},
+							{Amount: math.NewInt(9500), Valoper: validators[1]},
+							{Amount: math.NewInt(10000), Valoper: validators[2]},
+							{Amount: math.NewInt(10000), Valoper: validators[3]},
 						},
 						Amount:     sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, math.NewInt(39500))),
 						BurnAmount: sdk.NewCoin(zone.LocalDenom, math.NewInt(32356)),
@@ -132,10 +132,10 @@ func (suite *KeeperTestSuite) TestUpdateWithdrawalRecordsForSlash() {
 						Delegator: zone.DelegationAddress.Address,
 						Recipient: "cosmos1nvkpj5n5mhy2ntvgn2cklntwx9ujvfvcacz5et",
 						Distribution: []*types.Distribution{
-							{Amount: 13000, Valoper: validators[0]},
-							{Amount: 13300, Valoper: validators[1]},
-							{Amount: 10000, Valoper: validators[2]},
-							{Amount: 11000, Valoper: validators[3]},
+							{Amount: math.NewInt(13000), Valoper: validators[0]},
+							{Amount: math.NewInt(13300), Valoper: validators[1]},
+							{Amount: math.NewInt(10000), Valoper: validators[2]},
+							{Amount: math.NewInt(11000), Valoper: validators[3]},
 						},
 						Amount:     sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, math.NewInt(47300))),
 						BurnAmount: sdk.NewCoin(zone.LocalDenom, math.NewInt(36503)),
@@ -159,7 +159,7 @@ func (suite *KeeperTestSuite) TestUpdateWithdrawalRecordsForSlash() {
 					Delegator: zone.DelegationAddress.Address,
 					Recipient: "cosmos1v4gek4mld0k5yhpe0fsln4takg558cdpyexv2rxr3dh45f2fqrgsw52m97",
 					Distribution: []*types.Distribution{
-						{Amount: 9223372036854775807 + 1, Valoper: validators[1]}, // max int64 +1 - check for overflow
+						{Amount: math.NewInt(9223372036854775807).Add(math.OneInt()), Valoper: validators[1]}, // max int64 +1 - check for overflow
 					},
 					Amount:     sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, math.NewInt(40000))),
 					BurnAmount: sdk.NewCoin(zone.LocalDenom, math.NewInt(32356)),
@@ -177,7 +177,7 @@ func (suite *KeeperTestSuite) TestUpdateWithdrawalRecordsForSlash() {
 						Delegator: zone.DelegationAddress.Address,
 						Recipient: "cosmos1v4gek4mld0k5yhpe0fsln4takg558cdpyexv2rxr3dh45f2fqrgsw52m97",
 						Distribution: []*types.Distribution{
-							{Amount: 9223372036854775807 + 1, Valoper: validators[1]},
+							{Amount: math.NewInt(9223372036854775807).Add(math.OneInt()), Valoper: validators[1]},
 						},
 						Amount:     sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, math.NewInt(40000))),
 						BurnAmount: sdk.NewCoin(zone.LocalDenom, math.NewInt(32356)),
@@ -202,7 +202,7 @@ func (suite *KeeperTestSuite) TestUpdateWithdrawalRecordsForSlash() {
 					Delegator: zone.DelegationAddress.Address,
 					Recipient: "cosmos1nna7k5lywn99cd63elcfqm6p8c5c4qcug4aef5",
 					Distribution: []*types.Distribution{
-						{Amount: 100000000, Valoper: validators[1]}, // slashed amount exceeds total amount
+						{Amount: math.NewInt(100000000), Valoper: validators[1]}, // slashed amount exceeds total amount
 					},
 					Amount:     sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, math.NewInt(10))),
 					BurnAmount: sdk.NewCoin(zone.LocalDenom, math.NewInt(10)),
@@ -220,7 +220,7 @@ func (suite *KeeperTestSuite) TestUpdateWithdrawalRecordsForSlash() {
 						Delegator: zone.DelegationAddress.Address,
 						Recipient: "cosmos1nna7k5lywn99cd63elcfqm6p8c5c4qcug4aef5",
 						Distribution: []*types.Distribution{
-							{Amount: 100000000, Valoper: validators[1]}, // slashed amount exceeds total amount
+							{Amount: math.NewInt(100000000), Valoper: validators[1]}, // slashed amount exceeds total amount
 						},
 						Amount:     sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, math.NewInt(10))),
 						BurnAmount: sdk.NewCoin(zone.LocalDenom, math.NewInt(10)),

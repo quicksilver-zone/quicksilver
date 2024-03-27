@@ -324,6 +324,8 @@ func (k *Keeper) FlushOutstandingDelegations(ctx sdk.Context, zone *types.Zone, 
 		return false
 	})
 
+	pendingAmount = pendingAmount.Add(k.GetInflightUnbondingAmount(ctx, zone))
+
 	coinsToFlush, hasNeg := sdk.NewCoins(delAddrBalance).SafeSub(pendingAmount...)
 	if hasNeg || coinsToFlush.IsZero() {
 		k.Logger(ctx).Info("delegate account balance negative, or nothing to flush, setting outdated receipts")

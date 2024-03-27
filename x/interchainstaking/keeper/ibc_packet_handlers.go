@@ -442,7 +442,7 @@ func (k *Keeper) HandleWithdrawForUser(ctx sdk.Context, zone *types.Zone, msg *b
 
 		dlist := make(map[int]struct{})
 		for i, dist := range withdrawalRecord.Distribution {
-			if msg.Amount[0].Amount.Equal(sdk.NewIntFromUint64(dist.Amount)) { // check valoper here too?
+			if msg.Amount[0].Amount.Equal(dist.Amount) { // check valoper here too?
 				dlist[i] = struct{}{}
 				// matched amount
 				if len(withdrawalRecord.Distribution) == len(dlist) {
@@ -520,6 +520,18 @@ func (k *Keeper) HandleMaturedUnbondings(ctx sdk.Context, zone *types.Zone) erro
 		return false
 	})
 	return nil
+}
+
+func (k *Keeper) GetInflightUnbondingAmount(ctx sdk.Context, zone *types.Zone) sdk.Coin {
+	outCoin := sdk.NewCoin(zone.BaseDenom, sdk.ZeroInt())
+	k.IterateZoneWithdrawalRecords(ctx, zone.ChainId, func(idx int64, withdrawal types.WithdrawalRecord) bool {
+		if (withdrawal.Status == types.WithdrawStatusUnbond && ctx.BlockTime().After(withdrawal.CompletionTime) && withdrawal.Acknowledged) || // status unbond, completion has pass
+			withdrawal.Status == types.WithdrawStatusSend { // already in state send.
+			outCoin = outCoin.Add(withdrawal.Amount[0])
+		}
+		return false
+	})
+	return outCoin
 }
 
 func (k *Keeper) HandleTokenizedShares(ctx sdk.Context, msg sdk.Msg, sharesAmount sdk.Coin, memo string) error {
@@ -601,7 +613,7 @@ func (k *Keeper) HandleBeginRedelegate(ctx sdk.Context, msg sdk.Msg, completion 
 				EpochNumber:    epochNumber,
 				Source:         redelegateMsg.ValidatorSrcAddress,
 				Destination:    redelegateMsg.ValidatorDstAddress,
-				Amount:         redelegateMsg.Amount.Amount.Int64(),
+				Amount:         redelegateMsg.Amount.Amount,
 				CompletionTime: completion,
 			}
 		}
@@ -876,7 +888,7 @@ func (k *Keeper) HandleFailedUndelegate(ctx sdk.Context, msg sdk.Msg, memo strin
 		// - save old record
 		// - create new record for unhandled burn amount
 		newDistribution := make([]*types.Distribution, 0)
-		relatedAmount := uint64(0)
+		relatedAmount := sdkmath.ZeroInt()
 		for _, dist := range wdr.Distribution {
 			if dist.Valoper != ubr.Validator {
 				newDistribution = append(newDistribution, dist)
@@ -887,7 +899,7 @@ func (k *Keeper) HandleFailedUndelegate(ctx sdk.Context, msg sdk.Msg, memo strin
 
 		amount := wdr.Amount.AmountOf(zone.BaseDenom)
 		rr := sdk.NewDecFromInt(wdr.BurnAmount.Amount).Quo(sdk.NewDecFromInt(amount))
-		relatedQAsset := sdk.NewDec(int64(relatedAmount)).Mul(rr).TruncateInt()
+		relatedQAsset := sdk.NewDecFromInt(relatedAmount).Mul(rr).TruncateInt()
 
 		if len(newDistribution) == 0 {
 			// if this was the final record, delete the withdrawal record
@@ -895,7 +907,7 @@ func (k *Keeper) HandleFailedUndelegate(ctx sdk.Context, msg sdk.Msg, memo strin
 		} else {
 			// else update it
 			wdr.Distribution = newDistribution
-			wdr.Amount = wdr.Amount.Sub(sdk.NewCoin(zone.BaseDenom, sdk.NewIntFromUint64(relatedAmount)))
+			wdr.Amount = wdr.Amount.Sub(sdk.NewCoin(zone.BaseDenom, relatedAmount))
 			wdr.BurnAmount = wdr.BurnAmount.SubAmount(relatedQAsset)
 			err = k.SetWithdrawalRecord(ctx, wdr)
 			if err != nil {
@@ -1463,9 +1475,22 @@ func (*Keeper) prepareRewardsDistributionMsgs(zone types.Zone, rewards sdkmath.I
 	}
 }
 
-func equalLsmCoin(valoper string, amount uint64, lsmAmount sdk.Coin) bool {
-	if strings.HasPrefix(lsmAmount.Denom, valoper) {
-		return lsmAmount.Amount.Equal(sdk.NewIntFromUint64(amount))
+func isNumericString(in string) bool {
+	// It is okay to use strconv.ParseInt to test if a value is numeric
+	// because the total supply of QCK is:
+	//      400_000_000 (400 million) qck aka 400_000_000_000_000 uqck
+	// and to parse numeric values, say in the smallest unit of uqck
+	//      MaxInt64: (1<<63)-1 = 9_223_372_036_854_775_807 uqck aka
+	//                            9_223_372_036_854.775 (9.223 Trillion) qck
+	// so the function is appropriate as its range won't be exceeded.
+	_, err := strconv.ParseInt(in, 10, 64)
+	return err == nil
+}
+
+func equalLsmCoin(valoper string, amount sdkmath.Int, lsmAmount sdk.Coin) bool {
+	parts := strings.Split(lsmAmount.Denom, "/")
+	if len(parts) == 2 && strings.HasPrefix(parts[0], valoper) && isNumericString(parts[1]) {
+		return lsmAmount.Amount.Equal(amount)
 	}
 	return false
 }

@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
@@ -19,21 +21,21 @@ var _ Submodule = &LiquidTokensModule{}
 func (*LiquidTokensModule) Hooks(_ sdk.Context, _ *Keeper) {
 }
 
-func (*LiquidTokensModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.MsgSubmitClaim) (uint64, error) {
+func (*LiquidTokensModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.MsgSubmitClaim) (math.Int, error) {
 	// message
 	// check denom is valid vs allowed
 
 	zone, ok := k.icsKeeper.GetZone(ctx, msg.Zone)
 	if !ok {
-		return 0, fmt.Errorf("unable to find registered zone for chain id: %s", msg.Zone)
+		return sdk.ZeroInt(), fmt.Errorf("unable to find registered zone for chain id: %s", msg.Zone)
 	}
 
 	_, addr, err := bech32.DecodeAndConvert(msg.UserAddress)
 	if err != nil {
-		return 0, err
+		return sdk.ZeroInt(), err
 	}
 
-	amount := uint64(0)
+	amount := sdk.ZeroInt()
 	for _, proof := range msg.Proofs {
 		// determine denoms from key
 		if proof.Data == nil {
@@ -44,7 +46,7 @@ func (*LiquidTokensModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.
 		// or if the denom found is not valid.
 		denom, err := utils.DenomFromRequestKey(proof.Key, addr)
 		if err != nil {
-			return 0, err
+			return sdk.ZeroInt(), err
 		}
 
 		data, found := k.GetProtocolData(ctx, types.ProtocolDataTypeLiquidToken, fmt.Sprintf("%s_%s", msg.SrcZone, denom))
@@ -55,14 +57,14 @@ func (*LiquidTokensModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.
 		denomData := types.LiquidAllowedDenomProtocolData{}
 		err = json.Unmarshal(data.Data, &denomData)
 		if err != nil {
-			return 0, err
+			return sdk.ZeroInt(), err
 		}
 		if denomData.QAssetDenom == zone.LocalDenom && denomData.IbcDenom == denom {
 			coin, err := bankkeeper.UnmarshalBalanceCompat(k.cdc, proof.Data, denomData.IbcDenom)
 			if err != nil {
-				return 0, err
+				return sdk.ZeroInt(), err
 			}
-			amount += coin.Amount.Uint64()
+			amount = amount.Add(coin.Amount)
 		}
 	}
 	return amount, nil

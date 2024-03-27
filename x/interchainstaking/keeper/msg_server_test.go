@@ -253,7 +253,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 					EpochNumber:    1,
 					Source:         zoneVals[0],
 					Destination:    zoneVals[1],
-					Amount:         3000000,
+					Amount:         math.NewInt(3000000),
 					CompletionTime: suite.chainA.GetContext().BlockTime().Add(time.Hour),
 				})
 			},

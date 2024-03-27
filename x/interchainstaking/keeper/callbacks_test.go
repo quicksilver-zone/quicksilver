@@ -528,7 +528,7 @@ func (suite *KeeperTestSuite) TestHandleValidatorCallbackJailedWithSlashing() {
 					Distribution: []*icstypes.Distribution{
 						{
 							Valoper: vals[0].ValoperAddress,
-							Amount:  1000,
+							Amount:  sdkmath.NewInt(1000),
 						},
 					},
 					Recipient:      user1.String(),
@@ -547,7 +547,7 @@ func (suite *KeeperTestSuite) TestHandleValidatorCallbackJailedWithSlashing() {
 					Distribution: []*icstypes.Distribution{
 						{
 							Valoper: vals[0].ValoperAddress,
-							Amount:  950,
+							Amount:  sdkmath.NewInt(950),
 						},
 					},
 					Recipient:      user1.String(),
@@ -578,11 +578,11 @@ func (suite *KeeperTestSuite) TestHandleValidatorCallbackJailedWithSlashing() {
 					Distribution: []*icstypes.Distribution{
 						{
 							Valoper: vals[0].ValoperAddress,
-							Amount:  500,
+							Amount:  sdkmath.NewInt(500),
 						},
 						{
 							Valoper: vals[1].ValoperAddress,
-							Amount:  500,
+							Amount:  sdkmath.NewInt(500),
 						},
 					},
 					Recipient:      user1.String(),
@@ -601,11 +601,11 @@ func (suite *KeeperTestSuite) TestHandleValidatorCallbackJailedWithSlashing() {
 					Distribution: []*icstypes.Distribution{
 						{
 							Valoper: vals[0].ValoperAddress,
-							Amount:  475,
+							Amount:  sdkmath.NewInt(475),
 						},
 						{
 							Valoper: vals[1].ValoperAddress,
-							Amount:  500,
+							Amount:  sdkmath.NewInt(500),
 						},
 					},
 					Recipient:      user1.String(),
@@ -636,11 +636,11 @@ func (suite *KeeperTestSuite) TestHandleValidatorCallbackJailedWithSlashing() {
 					Distribution: []*icstypes.Distribution{
 						{
 							Valoper: vals[1].ValoperAddress,
-							Amount:  500,
+							Amount:  sdkmath.NewInt(500),
 						},
 						{
 							Valoper: vals[2].ValoperAddress,
-							Amount:  500,
+							Amount:  sdkmath.NewInt(500),
 						},
 					},
 					Recipient:      user1.String(),
@@ -659,11 +659,11 @@ func (suite *KeeperTestSuite) TestHandleValidatorCallbackJailedWithSlashing() {
 					Distribution: []*icstypes.Distribution{
 						{
 							Valoper: vals[1].ValoperAddress,
-							Amount:  500,
+							Amount:  sdkmath.NewInt(500),
 						},
 						{
 							Valoper: vals[2].ValoperAddress,
-							Amount:  500,
+							Amount:  sdkmath.NewInt(500),
 						},
 					},
 					Recipient:      user1.String(),
