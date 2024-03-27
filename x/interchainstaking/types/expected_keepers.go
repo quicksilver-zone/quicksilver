@@ -49,6 +49,7 @@ type IcsHooks interface {
 type ClaimsManagerKeeper interface {
 	IterateLastEpochClaims(ctx sdk.Context, chainID string, fn func(index int64, data claimsmanagertypes.Claim) (stop bool))
 	IterateLastEpochUserClaims(ctx sdk.Context, chainID, address string, fn func(index int64, data claimsmanagertypes.Claim) (stop bool))
+	IterateUserClaims(ctx sdk.Context, chainID, address string, fn func(index int64, data claimsmanagertypes.Claim) (stop bool))
 	SetClaim(ctx sdk.Context, claim *claimsmanagertypes.Claim)
 }
 
