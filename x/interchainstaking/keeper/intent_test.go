@@ -361,7 +361,6 @@ func (suite *KeeperTestSuite) TestAggregateIntentWithPRClaims() {
 	tc := []struct {
 		name     string
 		intents  func(ctx sdk.Context, app *app.Quicksilver, zone icstypes.Zone) []icstypes.DelegatorIntent
-		balances func(denom string) map[string]sdk.Coins
 		claims   func(ctx sdk.Context, app *app.Quicksilver, zone icstypes.Zone) map[string]cmtypes.Claim
 		expected func(ctx sdk.Context, app *app.Quicksilver, zone icstypes.Zone) icstypes.ValidatorIntents
 	}{
@@ -377,7 +376,6 @@ func (suite *KeeperTestSuite) TestAggregateIntentWithPRClaims() {
 					user1.String(): {UserAddress: user1.String(), ChainId: zone.ChainId, Module: cmtypes.ClaimTypeLiquidToken, Amount: sdkmath.NewInt(1000), SourceChainId: "osmosis-1"},
 				}
 			},
-			balances: func(denom string) map[string]sdk.Coins { return map[string]sdk.Coins{} },
 			expected: func(ctx sdk.Context, app *app.Quicksilver, zone icstypes.Zone) icstypes.ValidatorIntents {
 				// four delegators each at 25%
 				out := icstypes.ValidatorIntents{}
@@ -397,13 +395,24 @@ func (suite *KeeperTestSuite) TestAggregateIntentWithPRClaims() {
 					user1.String(): {UserAddress: user1.String(), ChainId: zone.ChainId, Module: cmtypes.ClaimTypeLiquidToken, Amount: sdkmath.OneInt(), SourceChainId: "osmosis-1"},
 				}
 			},
-			balances: func(denom string) map[string]sdk.Coins {
-				return map[string]sdk.Coins{user1.String(): sdk.NewCoins(sdk.NewCoin(denom, sdk.OneInt()))}
-			},
 			expected: func(ctx sdk.Context, app *app.Quicksilver, zone icstypes.Zone) icstypes.ValidatorIntents {
 				out := icstypes.ValidatorIntents{}
 				out = append(out, &icstypes.ValidatorIntent{ValoperAddress: app.InterchainstakingKeeper.GetValidators(ctx, zone.ChainId)[0].ValoperAddress, Weight: sdk.OneDec()})
 				return out.Sort()
+			},
+		},
+		{
+			name: "one user, multiple claims, 100% supply, returns single weighting",
+			intents: func(ctx sdk.Context, app *app.Quicksilver, zone icstypes.Zone) []icstypes.DelegatorIntent {
+				out := make([]icstypes.DelegatorIntent, 0)
+				out = append(out, icstypes.DelegatorIntent{Delegator: user1.String(), Intents: icstypes.ValidatorIntents{&icstypes.ValidatorIntent{ValoperAddress: app.InterchainstakingKeeper.GetValidators(ctx, zone.ChainId)[0].ValoperAddress, Weight: sdk.OneDec()}}})
+				return out
+			},
+			claims: func(ctx sdk.Context, app *app.Quicksilver, zone icstypes.Zone) map[string]cmtypes.Claim {
+				return map[string]cmtypes.Claim{
+					user1.String(): {UserAddress: user1.String(), ChainId: zone.ChainId, Module: cmtypes.ClaimTypeLiquidToken, Amount: sdkmath.NewInt(1000), SourceChainId: "osmosis-1"},
+					user1.String(): {UserAddress: user1.String(), ChainId: zone.ChainId, Module: cmtypes.ClaimTypeLiquidToken, Amount: sdkmath.NewInt(1000), SourceChainId: "osmosis-1"},
+				}
 			},
 		},
 		{
@@ -419,9 +428,6 @@ func (suite *KeeperTestSuite) TestAggregateIntentWithPRClaims() {
 				return map[string]cmtypes.Claim{
 					user1.String(): {UserAddress: user1.String(), ChainId: zone.ChainId, Module: cmtypes.ClaimTypeLiquidToken, Amount: sdkmath.NewInt(1000), SourceChainId: "osmosis-1"},
 				}
-			},
-			balances: func(denom string) map[string]sdk.Coins {
-				return map[string]sdk.Coins{user2.String(): sdk.NewCoins(sdk.NewCoin(denom, sdk.NewInt(1000)))}
 			},
 			expected: func(ctx sdk.Context, app *app.Quicksilver, zone icstypes.Zone) icstypes.ValidatorIntents {
 				out := icstypes.ValidatorIntents{}
@@ -444,13 +450,16 @@ func (suite *KeeperTestSuite) TestAggregateIntentWithPRClaims() {
 			zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
 			suite.True(found)
 
-			// give each user some funds
-			for addrString, balance := range tt.balances(zone.LocalDenom) {
-				err := quicksilver.MintKeeper.MintCoins(ctx, balance)
+			// fund users based on claims
+			for _, claim := range tt.claims(ctx, quicksilver, zone) {
+				userAddr := claim.UserAddress
+				amount := sdk.NewCoins(sdk.NewCoin(zone.LocalDenom, claim.Amount))
+
+				err := quicksilver.MintKeeper.MintCoins(ctx, amount)
 				suite.NoError(err)
-				addr, err := addressutils.AccAddressFromBech32(addrString, zone.AccountPrefix)
+				addr, err := addressutils.AccAddressFromBech32(userAddr, zone.AccountPrefix)
 				suite.NoError(err)
-				err = quicksilver.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, addr, balance)
+				err = quicksilver.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, addr, amount)
 				suite.NoError(err)
 			}
 
