@@ -2,7 +2,7 @@ package app
 
 import (
 	"github.com/CosmWasm/wasmd/x/wasm"
-	packetforward "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v5/packetforward"
+	"github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v5/packetforward"
 	packetforwardtypes "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v5/packetforward/types"
 
 	"github.com/cosmos/cosmos-sdk/types/module"
