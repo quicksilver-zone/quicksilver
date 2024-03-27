@@ -359,32 +359,14 @@ func (suite *KeeperTestSuite) TestAggregateIntent() {
 
 func (suite *KeeperTestSuite) TestAggregateIntentWithPRClaims() {
 	tc := []struct {
-		name     string
-		intents  func(ctx sdk.Context, app *app.Quicksilver, zone icstypes.Zone) []icstypes.DelegatorIntent
-		claims   func(ctx sdk.Context, app *app.Quicksilver, zone icstypes.Zone) map[string]cmtypes.Claim
-		expected func(ctx sdk.Context, app *app.Quicksilver, zone icstypes.Zone) icstypes.ValidatorIntents
+		name           string
+		intents        func(ctx sdk.Context, app *app.Quicksilver, zone icstypes.Zone) []icstypes.DelegatorIntent
+		claims         func(ctx sdk.Context, app *app.Quicksilver, zone icstypes.Zone) map[string]cmtypes.Claim
+		unclaimedRatio sdk.Int
+		expected       func(ctx sdk.Context, app *app.Quicksilver, zone icstypes.Zone) icstypes.ValidatorIntents
 	}{
 		{
-			name: "single intent; zero balance, but claim, returns single weighting",
-			intents: func(ctx sdk.Context, app *app.Quicksilver, zone icstypes.Zone) []icstypes.DelegatorIntent {
-				out := make([]icstypes.DelegatorIntent, 0)
-				out = append(out, icstypes.DelegatorIntent{Delegator: user1.String(), Intents: icstypes.ValidatorIntents{&icstypes.ValidatorIntent{ValoperAddress: app.InterchainstakingKeeper.GetValidators(ctx, zone.ChainId)[0].ValoperAddress, Weight: sdk.OneDec()}}})
-				return out
-			},
-			claims: func(ctx sdk.Context, app *app.Quicksilver, zone icstypes.Zone) map[string]cmtypes.Claim {
-				return map[string]cmtypes.Claim{
-					user1.String(): {UserAddress: user1.String(), ChainId: zone.ChainId, Module: cmtypes.ClaimTypeLiquidToken, Amount: sdkmath.NewInt(1000), SourceChainId: "osmosis-1"},
-				}
-			},
-			expected: func(ctx sdk.Context, app *app.Quicksilver, zone icstypes.Zone) icstypes.ValidatorIntents {
-				// four delegators each at 25%
-				out := icstypes.ValidatorIntents{}
-				out = append(out, &icstypes.ValidatorIntent{ValoperAddress: app.InterchainstakingKeeper.GetValidators(ctx, zone.ChainId)[0].ValoperAddress, Weight: sdk.OneDec()})
-				return out.Sort()
-			},
-		},
-		{
-			name: "single intent; with balance and claim, returns single weighting",
+			name: "single intent and claim, claims equals 100% supply, returns single weighting",
 			intents: func(ctx sdk.Context, app *app.Quicksilver, zone icstypes.Zone) []icstypes.DelegatorIntent {
 				out := make([]icstypes.DelegatorIntent, 0)
 				out = append(out, icstypes.DelegatorIntent{Delegator: user1.String(), Intents: icstypes.ValidatorIntents{&icstypes.ValidatorIntent{ValoperAddress: app.InterchainstakingKeeper.GetValidators(ctx, zone.ChainId)[0].ValoperAddress, Weight: sdk.OneDec()}}})
@@ -395,6 +377,7 @@ func (suite *KeeperTestSuite) TestAggregateIntentWithPRClaims() {
 					user1.String(): {UserAddress: user1.String(), ChainId: zone.ChainId, Module: cmtypes.ClaimTypeLiquidToken, Amount: sdkmath.OneInt(), SourceChainId: "osmosis-1"},
 				}
 			},
+			unclaimedRatio: sdk.ZeroInt(),
 			expected: func(ctx sdk.Context, app *app.Quicksilver, zone icstypes.Zone) icstypes.ValidatorIntents {
 				out := icstypes.ValidatorIntents{}
 				out = append(out, &icstypes.ValidatorIntent{ValoperAddress: app.InterchainstakingKeeper.GetValidators(ctx, zone.ChainId)[0].ValoperAddress, Weight: sdk.OneDec()})
@@ -414,9 +397,15 @@ func (suite *KeeperTestSuite) TestAggregateIntentWithPRClaims() {
 					user1.String(): {UserAddress: user1.String(), ChainId: zone.ChainId, Module: cmtypes.ClaimTypeLiquidToken, Amount: sdkmath.NewInt(1000), SourceChainId: "osmosis-1"},
 				}
 			},
+			unclaimedRatio: sdk.ZeroInt(),
+			expected: func(ctx sdk.Context, app *app.Quicksilver, zone icstypes.Zone) icstypes.ValidatorIntents {
+				out := icstypes.ValidatorIntents{}
+				out = append(out, &icstypes.ValidatorIntent{ValoperAddress: app.InterchainstakingKeeper.GetValidators(ctx, zone.ChainId)[0].ValoperAddress, Weight: sdk.OneDec()})
+				return out.Sort()
+			},
 		},
 		{
-			name: "two intents; one balance and one claim, returns equal weighting",
+			name: "two intents, and one claim, 100% supply, returns equal weighting",
 			intents: func(ctx sdk.Context, app *app.Quicksilver, zone icstypes.Zone) []icstypes.DelegatorIntent {
 				out := make([]icstypes.DelegatorIntent, 0)
 				out = append(out, icstypes.DelegatorIntent{Delegator: user1.String(), Intents: icstypes.ValidatorIntents{&icstypes.ValidatorIntent{ValoperAddress: app.InterchainstakingKeeper.GetValidators(ctx, zone.ChainId)[0].ValoperAddress, Weight: sdk.OneDec()}}})
@@ -429,6 +418,7 @@ func (suite *KeeperTestSuite) TestAggregateIntentWithPRClaims() {
 					user1.String(): {UserAddress: user1.String(), ChainId: zone.ChainId, Module: cmtypes.ClaimTypeLiquidToken, Amount: sdkmath.NewInt(1000), SourceChainId: "osmosis-1"},
 				}
 			},
+			unclaimedRatio: sdk.ZeroInt(),
 			expected: func(ctx sdk.Context, app *app.Quicksilver, zone icstypes.Zone) icstypes.ValidatorIntents {
 				out := icstypes.ValidatorIntents{}
 				out = append(out, &icstypes.ValidatorIntent{ValoperAddress: app.InterchainstakingKeeper.GetValidators(ctx, zone.ChainId)[0].ValoperAddress, Weight: sdk.OneDec()})
@@ -463,6 +453,12 @@ func (suite *KeeperTestSuite) TestAggregateIntentWithPRClaims() {
 				suite.NoError(err)
 			}
 
+			// add additional supply
+			currSupply := quicksilver.BankKeeper.GetSupply(ctx, zone.LocalDenom)
+			additionalAmount := currSupply.Amount.Mul(tt.unclaimedRatio)
+			err := quicksilver.MintKeeper.MintCoins(ctx, sdk.NewCoins(sdk.NewCoin(zone.LocalDenom, additionalAmount)))
+			suite.NoError(err)
+
 			for _, intent := range tt.intents(ctx, quicksilver, zone) {
 				icsKeeper.SetDelegatorIntent(ctx, &zone, intent, false)
 			}
@@ -472,13 +468,7 @@ func (suite *KeeperTestSuite) TestAggregateIntentWithPRClaims() {
 				quicksilver.ClaimsManagerKeeper.SetLastEpochClaim(ctx, &claim)
 			}
 
-			// If the supply is zero, mint some coins to avoid zero ordializedSum
-			if quicksilver.BankKeeper.GetSupply(ctx, zone.LocalDenom).IsZero() {
-				err := quicksilver.MintKeeper.MintCoins(ctx, sdk.NewCoins(sdk.NewCoin(zone.LocalDenom, sdk.NewInt(1000))))
-				suite.NoError(err)
-			}
-
-			err := icsKeeper.AggregateDelegatorIntents(ctx, &zone)
+			err = icsKeeper.AggregateDelegatorIntents(ctx, &zone)
 			suite.NoError(err)
 
 			// refresh zone to pull new aggregate
