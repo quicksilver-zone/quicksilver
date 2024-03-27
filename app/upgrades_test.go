@@ -797,8 +797,10 @@ func (s *AppTestSuite) TestV010503UpgradeHandler() {
 		EpochNumber:  2,
 	}
 
-	app.InterchainstakingKeeper.SetWithdrawalRecord(ctx, wdr1)
-	app.InterchainstakingKeeper.SetWithdrawalRecord(ctx, wdr2)
+	err := app.InterchainstakingKeeper.SetWithdrawalRecord(ctx, wdr1)
+	s.NoError(err)
+	err = app.InterchainstakingKeeper.SetWithdrawalRecord(ctx, wdr2)
+	s.NoError(err)
 
 	app.ClaimsManagerKeeper.SetClaim(ctx, &cmtypes.Claim{UserAddress: user1, ChainId: s.chainB.ChainID, Module: cmtypes.ClaimTypeLiquidToken, SourceChainId: "osmosis-1", XAmount: 3000})
 	app.ClaimsManagerKeeper.SetLastEpochClaim(ctx, &cmtypes.Claim{UserAddress: user1, ChainId: s.chainB.ChainID, Module: cmtypes.ClaimTypeLiquidToken, SourceChainId: "osmosis-1", XAmount: 2900})
@@ -806,7 +808,7 @@ func (s *AppTestSuite) TestV010503UpgradeHandler() {
 	handler := upgrades.V010503UpgradeHandler(app.mm,
 		app.configurator, &app.AppKeepers)
 
-	_, err := handler(ctx, types.Plan{}, app.mm.GetVersionMap())
+	_, err = handler(ctx, types.Plan{}, app.mm.GetVersionMap())
 	s.NoError(err)
 
 	wdr2actual, found := app.InterchainstakingKeeper.GetWithdrawalRecord(ctx, wdr2.ChainId, wdr2.Txhash, wdr2.Status)
