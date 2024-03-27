@@ -136,7 +136,7 @@ message MsgGovAddValidatorDenyList {
   string description = 2;
 
   string chain_id = 3 [(gogoproto.moretags) = "yaml:\"chain_id\""];
-  string operator_address = 4 [(gogoproto.moretags) = "yaml:\"chain_id\""];
+  string operator_address = 4 [(gogoproto.moretags) = "yaml:\"operator_address\""];
 
   string authority = 5 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
@@ -151,7 +151,7 @@ message MsgGovRemoveValidatorDenyList {
   string description = 2;
 
   string chain_id = 3 [(gogoproto.moretags) = "yaml:\"chain_id\""];
-  string operator_address = 4 [(gogoproto.moretags) = "yaml:\"chain_id\""];
+  string operator_address = 4 [(gogoproto.moretags) = "yaml:\"operator_address\""];
 
   string authority = 5 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
