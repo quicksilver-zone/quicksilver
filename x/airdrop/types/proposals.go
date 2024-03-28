@@ -16,8 +16,8 @@ var _ govv1beta1.Content = &RegisterZoneDropProposal{}
 
 func (m *RegisterZoneDropProposal) GetDescription() string { return m.Description }
 func (m *RegisterZoneDropProposal) GetTitle() string       { return m.Title }
-func (m *RegisterZoneDropProposal) ProposalRoute() string  { return RouterKey }
-func (m *RegisterZoneDropProposal) ProposalType() string   { return ProposalTypeRegisterZoneDrop }
+func (*RegisterZoneDropProposal) ProposalRoute() string    { return RouterKey }
+func (*RegisterZoneDropProposal) ProposalType() string     { return ProposalTypeRegisterZoneDrop }
 
 // ValidateBasic runs basic stateless validity checks.
 //

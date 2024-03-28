@@ -371,7 +371,7 @@ func unmarshalJSON(i *big.Int, bz []byte) error {
 }
 
 // MarshalYAML returns the YAML representation.
-func (i BigInt) MarshalYAML() (interface{}, error) {
+func (i BigInt) MarshalYAML() (any, error) {
 	return i.String(), nil
 }
 

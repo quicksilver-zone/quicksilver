@@ -8,7 +8,7 @@ import (
 )
 
 // GetZoneDropAccountAddress returns the zone airdrop account address.
-func (k *Keeper) GetZoneDropAccountAddress(chainID string) sdk.AccAddress {
+func (*Keeper) GetZoneDropAccountAddress(chainID string) sdk.AccAddress {
 	name := types.ModuleName + "." + chainID
 	return authtypes.NewModuleAddress(name)
 }
@@ -99,7 +99,7 @@ func (k *Keeper) AllActiveZoneDrops(ctx sdk.Context) []types.ZoneDrop {
 //
 // isActive:  s <= timenow <= s+D+d
 // notActive: timenow < s || timenow > s+D+d.
-func (k *Keeper) IsActiveZoneDrop(ctx sdk.Context, zd types.ZoneDrop) bool {
+func (*Keeper) IsActiveZoneDrop(ctx sdk.Context, zd types.ZoneDrop) bool {
 	bt := ctx.BlockTime()
 
 	// negated checks here ensure inclusive range
@@ -129,7 +129,7 @@ func (k *Keeper) AllFutureZoneDrops(ctx sdk.Context) []types.ZoneDrop {
 //
 // isFuture:  timenow < s
 // notFuture: s <= timenow.
-func (k *Keeper) IsFutureZoneDrop(ctx sdk.Context, zd types.ZoneDrop) bool {
+func (*Keeper) IsFutureZoneDrop(ctx sdk.Context, zd types.ZoneDrop) bool {
 	bt := ctx.BlockTime()
 
 	return bt.Before(zd.StartTime)
@@ -158,7 +158,7 @@ func (k *Keeper) AllExpiredZoneDrops(ctx sdk.Context) []types.ZoneDrop {
 //
 // isExpired:  timenow > s+D+d
 // notExpired: timenow < s+D+d.
-func (k *Keeper) IsExpiredZoneDrop(ctx sdk.Context, zd types.ZoneDrop) bool {
+func (*Keeper) IsExpiredZoneDrop(ctx sdk.Context, zd types.ZoneDrop) bool {
 	bt := ctx.BlockTime()
 
 	return bt.After(zd.StartTime.Add(zd.Duration).Add(zd.Decay))

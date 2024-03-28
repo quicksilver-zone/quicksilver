@@ -74,7 +74,7 @@ func (im IBCModule) OnChanOpenAck(
 }
 
 // OnChanOpenConfirm implements the IBCModule interface.
-func (im IBCModule) OnChanOpenConfirm(
+func (IBCModule) OnChanOpenConfirm(
 	_ sdk.Context,
 	_,
 	_ string,
@@ -83,7 +83,7 @@ func (im IBCModule) OnChanOpenConfirm(
 }
 
 // OnChanCloseInit implements the IBCModule interface.
-func (im IBCModule) OnChanCloseInit(
+func (IBCModule) OnChanCloseInit(
 	_ sdk.Context,
 	_,
 	_ string,
@@ -103,7 +103,7 @@ func (IBCModule) OnChanCloseConfirm(
 // OnRecvPacket implements the IBCModule interface. A successful acknowledgement
 // is returned if the packet data is successfully decoded and the receive application
 // logic returns without error.
-func (im IBCModule) OnRecvPacket(
+func (IBCModule) OnRecvPacket(
 	_ sdk.Context,
 	_ channeltypes.Packet,
 	_ sdk.AccAddress,

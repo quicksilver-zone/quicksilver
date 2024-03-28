@@ -73,11 +73,16 @@ func (m *OsmosisModule) Hooks(ctx sdk.Context, k *Keeper) {
 	})
 }
 
+
 func (*OsmosisModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.MsgSubmitClaim) (math.Int, error) {
 	amount := sdk.ZeroInt()
 	var lock osmolockup.PeriodLock
 	for _, proof := range msg.Proofs {
-		if proof.ProofType == types.ProofTypeBank {
+		var lock osmolockup.PeriodLock
+		var err error
+
+		switch proof.ProofType {
+		case types.ProofTypeBank:
 			addr, poolDenom, err := banktypes.AddressAndDenomFromBalancesStore(proof.Key[1:])
 			if err != nil {
 				return sdk.ZeroInt(), err
@@ -91,9 +96,8 @@ func (*OsmosisModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.MsgSu
 				return sdk.ZeroInt(), err
 			}
 			lock = osmolockup.NewPeriodLock(uint64(poolID), addr, time.Hour, time.Time{}, sdk.NewCoins(coin))
-		} else {
-			lock = osmolockup.PeriodLock{}
-			err := k.cdc.Unmarshal(proof.Data, &lock)
+		default:
+			err = k.cdc.Unmarshal(proof.Data, &lock)
 			if err != nil {
 				return sdk.ZeroInt(), err
 			}
@@ -107,6 +111,7 @@ func (*OsmosisModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.MsgSu
 				return sdk.ZeroInt(), errors.New("not a valid proof for submitting user")
 			}
 		}
+
 		sdkAmount, err := osmosistypes.DetermineApplicableTokensInPool(ctx, k, lock, msg.Zone)
 		if err != nil {
 			return sdk.ZeroInt(), err

@@ -188,7 +188,7 @@ func RandLTEBound[T constraints.Integer](r *rand.Rand, upperbound T) T {
 	return t
 }
 
-func RandSelect[T interface{}](r *rand.Rand, args ...T) T {
+func RandSelect[T any](r *rand.Rand, args ...T) T {
 	choice := RandLTBound(r, len(args))
 	return args[choice]
 }

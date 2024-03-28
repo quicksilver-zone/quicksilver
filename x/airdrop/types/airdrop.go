@@ -12,73 +12,71 @@ import (
 func (zd *ZoneDrop) ValidateBasic() error {
 	errs := make(map[string]error)
 
-	// must be defined
-	if zd.ChainId == "" {
-		errs["ChainID"] = ErrUndefinedAttribute
-	}
-
-	// must be greater or equal to 0
-	//
-	// - equal will result in immediate decay;
-	// - greater specifies period of full claim;
-	//
-	// specific bounds can be applied via proposal process
-	if zd.Duration.Microseconds() < 0 {
-		errs["Duration"] = fmt.Errorf("%w, must not be negative", ErrInvalidDuration)
-	}
-
-	// must be greater or equal to 0
-	//
-	// - equal will result in a full airdrop reward with immediate cut off on
-	//   expiry;
-	// - greater will result in a proportionally discounted airdrop reward over
-	//   the duration of decay;
-	//
-	// specific bounds can be applied via proposal process
-	if zd.Decay.Microseconds() < 0 {
-		errs["Decay"] = fmt.Errorf("%w, must not be negative", ErrInvalidDuration)
-	}
-
-	// sum of Duration and Decay may not be zero as this will result in
-	// immediate expiry of the zone airdrop
-	if zd.Duration.Microseconds()+zd.Decay.Microseconds() == 0 {
-		if _, exists := errs["Duration"]; !exists {
-			errs["Duration"] = fmt.Errorf("%w, sum of Duration and Decay must not be zero", ErrInvalidDuration)
-		}
-		if _, exists := errs["Decay"]; !exists {
-			errs["Decay"] = fmt.Errorf("%w, sum of Duration and Decay must not be zero", ErrInvalidDuration)
-		}
-	}
-
-	// must be positive value
-	if zd.Allocation == 0 {
-		errs["Allocation"] = ErrUndefinedAttribute
-	}
-
-	// must have at least one defined
-	if len(zd.Actions) == 0 {
-		errs["Actions"] = ErrUndefinedAttribute
-	} else {
-		// may not exceed defined types.Action bounds
-		// * (-1) to account for enum: 0 = undefined (protobuf3 spec)
-		if len(zd.Actions) > len(Action_name)-1 {
-			errs["Action"] = fmt.Errorf("exceeds number of defined actions (%d)", len(Action_name)-1)
-		} else {
-			weightSum := sdk.ZeroDec()
-			for _, aw := range zd.Actions {
-				weightSum = weightSum.Add(aw)
-			}
-			if !weightSum.Equal(sdk.OneDec()) {
-				errs["Actions"] = fmt.Errorf("%w, got %s", ErrActionWeights, weightSum)
-			}
-		}
-	}
+	validateChainID(zd, errs)
+	validateDuration(zd, errs)
+	validateDecay(zd, errs)
+	validateSumDurationDecay(zd, errs)
+	validateAllocation(zd, errs)
+	validateActions(zd, errs)
 
 	if len(errs) > 0 {
 		return multierror.New(errs)
 	}
 
 	return nil
+}
+
+func validateChainID(zd *ZoneDrop, errs map[string]error) {
+	if zd.ChainId == "" {
+		errs["ChainID"] = ErrUndefinedAttribute
+	}
+}
+
+func validateDuration(zd *ZoneDrop, errs map[string]error) {
+	if zd.Duration.Microseconds() < 0 {
+		errs["Duration"] = fmt.Errorf("%w, must not be negative", ErrInvalidDuration)
+	}
+}
+
+func validateDecay(zd *ZoneDrop, errs map[string]error) {
+	if zd.Decay.Microseconds() < 0 {
+		errs["Decay"] = fmt.Errorf("%w, must not be negative", ErrInvalidDuration)
+	}
+}
+
+func validateSumDurationDecay(zd *ZoneDrop, errs map[string]error) {
+	if zd.Duration.Microseconds()+zd.Decay.Microseconds() == 0 {
+		errs["Duration"] = fmt.Errorf("%w, sum of Duration and Decay must not be zero", ErrInvalidDuration)
+		errs["Decay"] = fmt.Errorf("%w, sum of Duration and Decay must not be zero", ErrInvalidDuration)
+	}
+}
+
+func validateAllocation(zd *ZoneDrop, errs map[string]error) {
+	if zd.Allocation == 0 {
+		errs["Allocation"] = ErrUndefinedAttribute
+	}
+}
+
+func validateActions(zd *ZoneDrop, errs map[string]error) {
+	if len(zd.Actions) == 0 {
+		errs["Actions"] = ErrUndefinedAttribute
+		return
+	}
+	if len(zd.Actions) > len(Action_name)-1 {
+		errs["Action"] = fmt.Errorf("exceeds number of defined actions (%d)", len(Action_name)-1)
+		return
+	}
+	validateActionWeights(zd, errs)
+}
+
+func validateActionWeights(zd *ZoneDrop, errs map[string]error) {
+	weightSum := sdk.ZeroDec()
+	for _, aw := range zd.Actions {
+		weightSum = weightSum.Add(aw)
+	}
+	if !weightSum.Equal(sdk.OneDec()) {
+		errs["Actions"] = fmt.Errorf("%w, got %s", ErrActionWeights, weightSum)
+	}
 }
 
 func (cr *ClaimRecord) ValidateBasic() error {

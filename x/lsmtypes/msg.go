@@ -49,10 +49,10 @@ func NewMsgUnbondValidator(valAddr sdk.ValAddress) *MsgUnbondValidator {
 }
 
 // Route implements the sdk.Msg interface.
-func (msg MsgUnbondValidator) Route() string { return RouterKey }
+func (MsgUnbondValidator) Route() string { return RouterKey }
 
 // Type implements the sdk.Msg interface.
-func (msg MsgUnbondValidator) Type() string { return TypeMsgUnbondValidator }
+func (MsgUnbondValidator) Type() string { return TypeMsgUnbondValidator }
 
 // GetSigners implements the sdk.Msg interface.
 func (msg MsgUnbondValidator) GetSigners() []sdk.AccAddress {
@@ -91,10 +91,10 @@ func NewMsgTokenizeShares(delAddr sdk.AccAddress, valAddr sdk.ValAddress, amount
 }
 
 // Route implements the sdk.Msg interface.
-func (msg MsgTokenizeShares) Route() string { return RouterKey }
+func (MsgTokenizeShares) Route() string { return RouterKey }
 
 // Type implements the sdk.Msg interface.
-func (msg MsgTokenizeShares) Type() string { return TypeMsgTokenizeShares }
+func (MsgTokenizeShares) Type() string { return TypeMsgTokenizeShares }
 
 // GetSigners implements the sdk.Msg interface.
 func (msg MsgTokenizeShares) GetSigners() []sdk.AccAddress {
@@ -144,10 +144,10 @@ func NewMsgRedeemTokensForShares(delAddr sdk.AccAddress, amount sdk.Coin) *MsgRe
 }
 
 // Route implements the sdk.Msg interface.
-func (msg MsgRedeemTokensForShares) Route() string { return RouterKey }
+func (MsgRedeemTokensForShares) Route() string { return RouterKey }
 
 // Type implements the sdk.Msg interface.
-func (msg MsgRedeemTokensForShares) Type() string { return TypeMsgRedeemTokensForShares }
+func (MsgRedeemTokensForShares) Type() string { return TypeMsgRedeemTokensForShares }
 
 // GetSigners implements the sdk.Msg interface.
 func (msg MsgRedeemTokensForShares) GetSigners() []sdk.AccAddress {
@@ -192,10 +192,10 @@ func NewMsgTransferTokenizeShareRecord(recordID uint64, sender, newOwner sdk.Acc
 }
 
 // Route implements the sdk.Msg interface.
-func (msg MsgTransferTokenizeShareRecord) Route() string { return RouterKey }
+func (MsgTransferTokenizeShareRecord) Route() string { return RouterKey }
 
 // Type implements the sdk.Msg interface.
-func (msg MsgTransferTokenizeShareRecord) Type() string { return TypeMsgTransferTokenizeShareRecord }
+func (MsgTransferTokenizeShareRecord) Type() string { return TypeMsgTransferTokenizeShareRecord }
 
 // GetSigners implements the sdk.Msg interface.
 func (msg MsgTransferTokenizeShareRecord) GetSigners() []sdk.AccAddress {
@@ -234,10 +234,10 @@ func NewMsgDisableTokenizeShares(delAddr sdk.AccAddress) *MsgDisableTokenizeShar
 }
 
 // Route implements the sdk.Msg interface.
-func (msg MsgDisableTokenizeShares) Route() string { return RouterKey }
+func (MsgDisableTokenizeShares) Route() string { return RouterKey }
 
 // Type implements the sdk.Msg interface.
-func (msg MsgDisableTokenizeShares) Type() string { return TypeMsgDisableTokenizeShares }
+func (MsgDisableTokenizeShares) Type() string { return TypeMsgDisableTokenizeShares }
 
 // GetSigners implements the sdk.Msg interface.
 func (msg MsgDisableTokenizeShares) GetSigners() []sdk.AccAddress {
@@ -273,10 +273,10 @@ func NewMsgEnableTokenizeShares(delAddr sdk.AccAddress) *MsgEnableTokenizeShares
 }
 
 // Route implements the sdk.Msg interface.
-func (msg MsgEnableTokenizeShares) Route() string { return RouterKey }
+func (MsgEnableTokenizeShares) Route() string { return RouterKey }
 
 // Type implements the sdk.Msg interface.
-func (msg MsgEnableTokenizeShares) Type() string { return TypeMsgEnableTokenizeShares }
+func (MsgEnableTokenizeShares) Type() string { return TypeMsgEnableTokenizeShares }
 
 // GetSigners implements the sdk.Msg interface.
 func (msg MsgEnableTokenizeShares) GetSigners() []sdk.AccAddress {
@@ -313,10 +313,10 @@ func NewMsgValidatorBond(delAddr sdk.AccAddress, valAddr sdk.ValAddress) *MsgVal
 }
 
 // Route implements the sdk.Msg interface.
-func (msg MsgValidatorBond) Route() string { return RouterKey }
+func (MsgValidatorBond) Route() string { return RouterKey }
 
 // Type implements the sdk.Msg interface.
-func (msg MsgValidatorBond) Type() string { return TypeMsgValidatorBond }
+func (MsgValidatorBond) Type() string { return TypeMsgValidatorBond }
 
 // GetSigners implements the sdk.Msg interface.
 func (msg MsgValidatorBond) GetSigners() []sdk.AccAddress {
@@ -352,8 +352,8 @@ func NewMsgWithdrawTokenizeShareRecordReward(ownerAddr sdk.AccAddress, recordID 
 	}
 }
 
-func (msg MsgWithdrawTokenizeShareRecordReward) Route() string { return ModuleName }
-func (msg MsgWithdrawTokenizeShareRecordReward) Type() string {
+func (MsgWithdrawTokenizeShareRecordReward) Route() string { return ModuleName }
+func (MsgWithdrawTokenizeShareRecordReward) Type() string {
 	return TypeMsgWithdrawTokenizeShareRecordReward
 }
 
@@ -386,9 +386,9 @@ func NewMsgWithdrawAllTokenizeShareRecordReward(ownerAddr sdk.AccAddress) *MsgWi
 	}
 }
 
-func (msg MsgWithdrawAllTokenizeShareRecordReward) Route() string { return ModuleName }
+func (MsgWithdrawAllTokenizeShareRecordReward) Route() string { return ModuleName }
 
-func (msg MsgWithdrawAllTokenizeShareRecordReward) Type() string {
+func (MsgWithdrawAllTokenizeShareRecordReward) Type() string {
 	return TypeMsgWithdrawAllTokenizeShareRecordReward
 }
 

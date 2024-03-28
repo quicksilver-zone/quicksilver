@@ -337,71 +337,63 @@ func (k *Keeper) completeClaim(ctx sdk.Context, cr *types.ClaimRecord, action ty
 // after updating the relevant claim record.
 func (k *Keeper) getClaimAmountAndUpdateRecord(ctx sdk.Context, cr *types.ClaimRecord, action types.Action) (uint64, error) {
 	var claimAmount uint64
+	var err error // Declare err here
 
-	// check and initialize ActionsCompleted map
 	if cr.ActionsCompleted == nil {
 		cr.ActionsCompleted = make(map[int32]*types.CompletedAction)
 	}
 
-	// The concept here is to intuitively claim all outstanding deposit tiers
-	// that are below the current deposit claim (improved user experience).
-	//
-	// ActionDepositT5: t5amount
-	// ActionDepositT4: t4amount
-	// ActionDepositT3: t3amount  <-- eg. for T3
-	// ActionDepositT2: t2amount  <-- add to claimAmount if not CompletedAction
-	// ActionDepositT1: t1amount  <-- add to claimAmount if not CompletedAction
-	//
-	// For any given deposit action above ActionDepositT1, sum the claimable
-	// amounts of non completed deposit actions and mark them as complete.
-	// Then, if no errors occurred, update the ClaimRecord state.
-
-	// check for summable ActionDeposit (T2-T5, T1 has nothing below it to sum)
 	if action > types.ActionDepositT1 && action <= types.ActionDepositT5 {
-		// check ActionDeposits from T1 to the target tier
-		// this also ensures that for any completed ActionDeposit tier, all
-		// tiers below are guaranteed to be completed as well.
-		for a := types.ActionDepositT1; a <= action; a++ {
-			if _, exists := cr.ActionsCompleted[int32(a)]; !exists {
-				// obtain claimable amount per deposit action
-				claimable, err := k.GetClaimableAmountForAction(ctx, cr.ChainId, cr.Address, a)
-				if err != nil {
-					return 0, err
-				}
-
-				// update claim record (transient, not yet written to state)
-				cr.ActionsCompleted[int32(a)] = &types.CompletedAction{
-					CompleteTime: ctx.BlockTime(),
-					ClaimAmount:  claimable,
-				}
-
-				// sum total claimable
-				claimAmount += claimable
-			}
-		}
-	} else {
-		// obtain claimable amount
-		claimable, err := k.GetClaimableAmountForAction(ctx, cr.ChainId, cr.Address, action)
+		claimAmount, err = k.processSummableDeposits(ctx, cr, action) // Use '=' instead of ':='
 		if err != nil {
 			return 0, err
 		}
-
-		// set claim amount
-		claimAmount = claimable
-
-		// update claim record
-		cr.ActionsCompleted[int32(action)] = &types.CompletedAction{
-			CompleteTime: ctx.BlockTime(),
-			ClaimAmount:  claimAmount,
+	} else {
+		claimAmount, err = k.processSingleAction(ctx, cr, action) // Use '=' instead of ':='
+		if err != nil {
+			return 0, err
 		}
 	}
 
-	// set claim record (persistent)
-	if err := k.SetClaimRecord(ctx, *cr); err != nil {
+	if err := k.SetClaimRecord(ctx, *cr); err != nil { // This now checks the correct 'err'
 		return 0, err
 	}
 
 	return claimAmount, nil
+}
+
+func (k *Keeper) processSummableDeposits(ctx sdk.Context, cr *types.ClaimRecord, action types.Action) (uint64, error) {
+	var claimAmount uint64
+	for a := types.ActionDepositT1; a <= action; a++ {
+		if _, exists := cr.ActionsCompleted[int32(a)]; !exists {
+			claimable, err := k.GetClaimableAmountForAction(ctx, cr.ChainId, cr.Address, a)
+			if err != nil {
+				return 0, err
+			}
+
+			cr.ActionsCompleted[int32(a)] = &types.CompletedAction{
+				CompleteTime: ctx.BlockTime(),
+				ClaimAmount:  claimable,
+			}
+
+			claimAmount += claimable
+		}
+	}
+	return claimAmount, nil
+}
+
+func (k *Keeper) processSingleAction(ctx sdk.Context, cr *types.ClaimRecord, action types.Action) (uint64, error) {
+	claimable, err := k.GetClaimableAmountForAction(ctx, cr.ChainId, cr.Address, action)
+	if err != nil {
+		return 0, err
+	}
+
+	cr.ActionsCompleted[int32(action)] = &types.CompletedAction{
+		CompleteTime: ctx.BlockTime(),
+		ClaimAmount:  claimable,
+	}
+
+	return claimable, nil
 }
 
 func (k *Keeper) sendCoins(ctx sdk.Context, cr types.ClaimRecord, amount uint64) (sdk.Coins, error) {

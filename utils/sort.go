@@ -7,7 +7,7 @@ import (
 	"golang.org/x/exp/constraints"
 )
 
-func Keys[V interface{}](in map[string]V) []string {
+func Keys[V any](in map[string]V) []string {
 	out := make([]string, 0)
 
 	for k := range in {
@@ -27,7 +27,7 @@ func SortSlice[T constraints.Ordered](s []T) {
 	})
 }
 
-func Unique[V interface{}](in []V) []V {
+func Unique[V any](in []V) []V {
 	keys := make(map[string]struct{}, len(in))
 	list := []V{}
 	for _, entry := range in {

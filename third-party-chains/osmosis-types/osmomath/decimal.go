@@ -700,7 +700,7 @@ func (d *BigDec) UnmarshalJSON(bz []byte) error {
 }
 
 // MarshalYAML returns the YAML representation.
-func (d BigDec) MarshalYAML() (interface{}, error) {
+func (d BigDec) MarshalYAML() (any, error) {
 	return d.String(), nil
 }
 

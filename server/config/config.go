@@ -40,7 +40,7 @@ type SupplyConfig struct {
 
 // AppConfig helps to override default appConfig template and configs.
 // return "", nil if no custom configuration is required for the application.
-func AppConfig(denom string) (customAppTemplate string, customAppConfig interface{}) {
+func AppConfig(denom string) (customAppTemplate string, customAppConfig any) {
 	// Optionally allow the chain developer to overwrite the SDK's default
 	// server config.
 	srvCfg := config.DefaultConfig()

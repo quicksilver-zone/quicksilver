@@ -108,11 +108,8 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 	}
 
 	for msgIndex, msg := range msgs {
-		// use msgData for v0.45 and below and msgResponse for v0.46+
-		//nolint:staticcheck // SA1019 ignore this!
 		var msgResponse []byte
 
-		// check that the msgResponses slice is at least the length of the current index.
 		switch {
 		case !success:
 			// no-op - there is no msgresponse for a AckErr
@@ -124,165 +121,190 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 			return fmt.Errorf("could not find msgresponse for index %d", msgIndex)
 		}
 
-		switch msg.Type {
-		case "/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward":
-			if !success {
-				withdrawalMsg, ok := msg.Msg.(*distrtypes.MsgWithdrawDelegatorReward)
-				if !ok {
-					return errors.New("unable to unmarshal MsgWithdrawDelegatorReward")
-				}
-				k.Logger(ctx).Error("failed to withdraw rewards; will try again next epoch", "validator", withdrawalMsg.ValidatorAddress)
-				return nil
-			}
-			k.Logger(ctx).Info("Rewards withdrawn")
-			if err := k.HandleWithdrawRewards(ctx, msg.Msg, connectionID); err != nil {
-				return err
-			}
-			continue
-		case "/cosmos.staking.v1beta1.MsgRedeemTokensForShares":
-			if !success {
-				if err := k.HandleFailedRedeemTokens(ctx, msg.Msg, packetData.Memo); err != nil {
-					return err
-				}
-				continue
-			}
-			response := lsmstakingtypes.MsgRedeemTokensForSharesResponse{}
-
-			err = proto.Unmarshal(msgResponse, &response)
-			if err != nil {
-				k.Logger(ctx).Error("unable to unmarshal MsgRedeemTokensForShares response", "error", err)
-				return err
-			}
-
-			k.Logger(ctx).Info("Tokens redeemed for shares", "response", response)
-			// we should update delegation records here.
-			if err := k.HandleRedeemTokens(ctx, msg.Msg, response.Amount, packetData.Memo, connectionID); err != nil {
-				return err
-			}
-			continue
-		case "/cosmos.staking.v1beta1.MsgTokenizeShares":
-			if !success {
-				// We can safely ignore this, as this can reasonably fail, and we cater for this in the flush logic.
-				return nil
-			}
-			response := lsmstakingtypes.MsgTokenizeSharesResponse{}
-
-			err = proto.Unmarshal(msgResponse, &response)
-			if err != nil {
-				k.Logger(ctx).Error("unable to unpack MsgTokenizeShares response", "error", err)
-				return err
-			}
-
-			k.Logger(ctx).Info("Shares tokenized", "response", response)
-			if err := k.HandleTokenizedShares(ctx, msg.Msg, response.Amount, packetData.Memo); err != nil {
-				return err
-			}
-			continue
-		case "/cosmos.staking.v1beta1.MsgDelegate":
-			if !success {
-				if err := k.HandleFailedDelegate(ctx, msg.Msg, packetData.Memo); err != nil {
-					return err
-				}
-				continue
-			}
-			response := stakingtypes.MsgDelegateResponse{}
-			err = proto.Unmarshal(msgResponse, &response)
-			if err != nil {
-				k.Logger(ctx).Error("unable to unpack MsgDelegate response", "error", err)
-				return err
-			}
-
-			k.Logger(ctx).Info("Delegated", "response", response)
-			// we should update delegation records here.
-			if err := k.HandleDelegate(ctx, msg.Msg, packetData.Memo); err != nil {
-				return err
-			}
-			continue
-		case "/cosmos.staking.v1beta1.MsgBeginRedelegate":
-			if success {
-				response := stakingtypes.MsgBeginRedelegateResponse{}
-				err = proto.Unmarshal(msgResponse, &response)
-				k.Logger(ctx).Info("unmarshalling msgResponse", "response", response)
-				if err != nil {
-					k.Logger(ctx).Error("unable to unpack MsgBeginRedelegate response", "error", err)
-					return err
-				}
-
-				k.Logger(ctx).Info("Redelegation initiated", "response", response)
-				if err := k.HandleBeginRedelegate(ctx, msg.Msg, response.CompletionTime, packetData.Memo); err != nil {
-					return err
-				}
-			} else {
-				if err := k.HandleFailedBeginRedelegate(ctx, msg.Msg, packetData.Memo); err != nil {
-					return err
-				}
-			}
-			continue
-		case "/cosmos.staking.v1beta1.MsgUndelegate":
-			if success {
-				response := stakingtypes.MsgUndelegateResponse{}
-				err = proto.Unmarshal(msgResponse, &response)
-				if err != nil {
-					k.Logger(ctx).Error("unable to unpack MsgUndelegate response", "error", err)
-					return err
-				}
-
-				k.Logger(ctx).Info("Undelegation started", "response", response)
-				if err := k.HandleUndelegate(ctx, msg.Msg, response.CompletionTime, packetData.Memo); err != nil {
-					return err
-				}
-			} else {
-				if err := k.HandleFailedUndelegate(ctx, msg.Msg, packetData.Memo); err != nil {
-					return err
-				}
-			}
-			continue
-
-		case "/cosmos.bank.v1beta1.MsgSend":
-			if !success {
-				if err := k.HandleFailedBankSend(ctx, msg.Msg, packetData.Memo, connectionID); err != nil {
-					k.Logger(ctx).Error("unable to handle failed MsgSend", "error", err)
-					return err
-				}
-				continue
-			}
-			response := banktypes.MsgSendResponse{}
-			err = proto.Unmarshal(msgResponse, &response)
-			if err != nil {
-				k.Logger(ctx).Error("unable to unpack MsgSend response", "error", err)
-				return err
-			}
-
-			k.Logger(ctx).Info("Funds Transferred", "response", response)
-			// check tokenTransfers - if end user unescrow and burn txs
-			if err := k.HandleCompleteSend(ctx, msg.Msg, packetData.Memo, connectionID); err != nil {
-				return err
-			}
-		case "/cosmos.distribution.v1beta1.MsgSetWithdrawAddress":
-			if !success {
-				// safely ignore this, as we'll try again anyway.
-				return nil
-			}
-			response := distrtypes.MsgSetWithdrawAddressResponse{}
-			err = proto.Unmarshal(msgResponse, &response)
-			if err != nil {
-				k.Logger(ctx).Error("unable to unpack MsgSetWithdrawAddress response", "error", err)
-				return err
-			}
-
-			k.Logger(ctx).Info("Withdraw Address Updated", "response", response)
-			if err := k.HandleUpdatedWithdrawAddress(ctx, msg.Msg); err != nil {
-				return err
-			}
-		case "/ibc.applications.transfer.v1.MsgTransfer":
-			k.Logger(ctx).Debug("Received MsgTransfer acknowledgement; no action")
-			return nil
-
-		default:
-			k.Logger(ctx).Error("unhandled acknowledgement packet", "type", reflect.TypeOf(msg.Msg).Name())
+		if err := handleMsgType(k, ctx, msg, msgResponse, success, packetData, connectionID); err != nil {
+			return err
 		}
 	}
 
+	return nil
+}
+
+func handleMsgType(k *Keeper, ctx sdk.Context, msg TypedMsg, msgResponse []byte, success bool, packetData icatypes.InterchainAccountPacketData, connectionID string) error {
+	switch msg.Type {
+	case "/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward":
+		return handleMsgWithdrawDelegatorReward(k, ctx, msg.Msg, success, connectionID)
+	case "/cosmos.staking.v1beta1.MsgRedeemTokensForShares":
+		return handleMsgRedeemTokensForShares(k, ctx, msg.Msg, msgResponse, success, packetData.Memo, connectionID)
+	case "/cosmos.staking.v1beta1.MsgTokenizeShares":
+		return handleMsgTokenizeShares(k, ctx, msg.Msg, msgResponse, success, packetData.Memo)
+	case "/cosmos.staking.v1beta1.MsgDelegate":
+		return handleMsgDelegate(k, ctx, msg.Msg, msgResponse, success, packetData.Memo)
+	case "/cosmos.staking.v1beta1.MsgBeginRedelegate":
+		return handleMsgBeginRedelegate(k, ctx, msg.Msg, msgResponse, success, packetData.Memo)
+	case "/cosmos.staking.v1beta1.MsgUndelegate":
+		return handleMsgUndelegate(k, ctx, msg.Msg, msgResponse, success, packetData.Memo)
+	case "/cosmos.bank.v1beta1.MsgSend":
+		return handleMsgSend(k, ctx, msg.Msg, msgResponse, success, packetData.Memo, connectionID)
+	case "/cosmos.distribution.v1beta1.MsgSetWithdrawAddress":
+		return handleMsgSetWithdrawAddress(k, ctx, msg.Msg, msgResponse, success)
+	case "/ibc.applications.transfer.v1.MsgTransfer":
+		k.Logger(ctx).Debug("Received MsgTransfer acknowledgement; no action")
+		return nil
+	default:
+		k.Logger(ctx).Error("unhandled acknowledgement packet", "type", reflect.TypeOf(msg.Msg).Name())
+		return nil
+	}
+}
+
+func handleMsgWithdrawDelegatorReward(k *Keeper, ctx sdk.Context, msg sdk.Msg, success bool, connectionID string) error {
+	if !success {
+		withdrawalMsg, ok := msg.(*distrtypes.MsgWithdrawDelegatorReward)
+		if !ok {
+			return errors.New("unable to unmarshal MsgWithdrawDelegatorReward")
+		}
+		k.Logger(ctx).Error("failed to withdraw rewards; will try again next epoch", "validator", withdrawalMsg.ValidatorAddress)
+		return nil
+	}
+	k.Logger(ctx).Info("Rewards withdrawn")
+	if err := k.HandleWithdrawRewards(ctx, msg, connectionID); err != nil {
+		return err
+	}
+	return nil
+}
+
+func handleMsgRedeemTokensForShares(k *Keeper, ctx sdk.Context, msg sdk.Msg, msgResponse []byte, success bool, memo string, connectionID string) error {
+	if !success {
+		if err := k.HandleFailedRedeemTokens(ctx, msg, memo); err != nil {
+			return err
+		}
+		return nil
+	}
+	response := lsmstakingtypes.MsgRedeemTokensForSharesResponse{}
+	err := proto.Unmarshal(msgResponse, &response)
+	if err != nil {
+		k.Logger(ctx).Error("unable to unmarshal MsgRedeemTokensForShares response", "error", err)
+		return err
+	}
+	k.Logger(ctx).Info("Tokens redeemed for shares", "response", response)
+	if err := k.HandleRedeemTokens(ctx, msg, response.Amount, memo, connectionID); err != nil {
+		return err
+	}
+	return nil
+}
+
+func handleMsgTokenizeShares(k *Keeper, ctx sdk.Context, msg sdk.Msg, msgResponse []byte, success bool, memo string) error {
+	if !success {
+		return nil
+	}
+	response := lsmstakingtypes.MsgTokenizeSharesResponse{}
+	err := proto.Unmarshal(msgResponse, &response)
+	if err != nil {
+		k.Logger(ctx).Error("unable to unpack MsgTokenizeShares response", "error", err)
+		return err
+	}
+	k.Logger(ctx).Info("Shares tokenized", "response", response)
+	if err := k.HandleTokenizedShares(ctx, msg, response.Amount, memo); err != nil {
+		return err
+	}
+	return nil
+}
+
+func handleMsgDelegate(k *Keeper, ctx sdk.Context, msg sdk.Msg, msgResponse []byte, success bool, memo string) error {
+	if !success {
+		if err := k.HandleFailedDelegate(ctx, msg, memo); err != nil {
+			return err
+		}
+		return nil
+	}
+	response := stakingtypes.MsgDelegateResponse{}
+	err := proto.Unmarshal(msgResponse, &response)
+	if err != nil {
+		k.Logger(ctx).Error("unable to unpack MsgDelegate response", "error", err)
+		return err
+	}
+	k.Logger(ctx).Info("Delegated", "response", response)
+	if err := k.HandleDelegate(ctx, msg, memo); err != nil {
+		return err
+	}
+	return nil
+}
+
+func handleMsgBeginRedelegate(k *Keeper, ctx sdk.Context, msg sdk.Msg, msgResponse []byte, success bool, memo string) error {
+	if success {
+		response := stakingtypes.MsgBeginRedelegateResponse{}
+		err := proto.Unmarshal(msgResponse, &response)
+		k.Logger(ctx).Info("unmarshalling msgResponse", "response", response)
+		if err != nil {
+			k.Logger(ctx).Error("unable to unpack MsgBeginRedelegate response", "error", err)
+			return err
+		}
+		k.Logger(ctx).Info("Redelegation initiated", "response", response)
+		if err := k.HandleBeginRedelegate(ctx, msg, response.CompletionTime, memo); err != nil {
+			return err
+		}
+	} else {
+		if err := k.HandleFailedBeginRedelegate(ctx, msg, memo); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func handleMsgUndelegate(k *Keeper, ctx sdk.Context, msg sdk.Msg, msgResponse []byte, success bool, memo string) error {
+	if success {
+		response := stakingtypes.MsgUndelegateResponse{}
+		err := proto.Unmarshal(msgResponse, &response)
+		if err != nil {
+			k.Logger(ctx).Error("unable to unpack MsgUndelegate response", "error", err)
+			return err
+		}
+		k.Logger(ctx).Info("Undelegation started", "response", response)
+		if err := k.HandleUndelegate(ctx, msg, response.CompletionTime, memo); err != nil {
+			return err
+		}
+	} else {
+		if err := k.HandleFailedUndelegate(ctx, msg, memo); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func handleMsgSend(k *Keeper, ctx sdk.Context, msg sdk.Msg, msgResponse []byte, success bool, memo string, connectionID string) error {
+	if !success {
+		if err := k.HandleFailedBankSend(ctx, msg, memo, connectionID); err != nil {
+			k.Logger(ctx).Error("unable to handle failed MsgSend", "error", err)
+			return err
+		}
+		return nil
+	}
+	response := banktypes.MsgSendResponse{}
+	err := proto.Unmarshal(msgResponse, &response)
+	if err != nil {
+		k.Logger(ctx).Error("unable to unpack MsgSend response", "error", err)
+		return err
+	}
+	k.Logger(ctx).Info("Funds Transferred", "response", response)
+	if err := k.HandleCompleteSend(ctx, msg, memo, connectionID); err != nil {
+		return err
+	}
+	return nil
+}
+
+func handleMsgSetWithdrawAddress(k *Keeper, ctx sdk.Context, msg sdk.Msg, msgResponse []byte, success bool) error {
+	if !success {
+		return nil
+	}
+	response := distrtypes.MsgSetWithdrawAddressResponse{}
+	err := proto.Unmarshal(msgResponse, &response)
+	if err != nil {
+		k.Logger(ctx).Error("unable to unpack MsgSetWithdrawAddress response", "error", err)
+		return err
+	}
+	k.Logger(ctx).Info("Withdraw Address Updated", "response", response)
+	if err := k.HandleUpdatedWithdrawAddress(ctx, msg); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -458,7 +480,7 @@ func (k *Keeper) HandleWithdrawForUser(ctx sdk.Context, zone *types.Zone, msg *b
 
 	// case 1: total amount - native unbonding
 	// this statement is ridiculous, but currently calling coins.Equals against coins with different denoms panics; which is pretty useless.
-	if len(withdrawalRecord.Amount) == 1 && len(msg.Amount) == 1 && msg.Amount[0].Denom == withdrawalRecord.Amount[0].Denom && withdrawalRecord.Amount.IsEqual(msg.Amount) {
+	if k.isMatchingWithdrawal(withdrawalRecord, msg) {
 		k.Logger(ctx).Info("found matching withdrawal; marking as completed")
 		k.UpdateWithdrawalRecordStatus(ctx, &withdrawalRecord, types.WithdrawStatusCompleted)
 		if err := k.BankKeeper.BurnCoins(ctx, types.EscrowModuleAccount, sdk.NewCoins(withdrawalRecord.BurnAmount)); err != nil {
@@ -467,9 +489,19 @@ func (k *Keeper) HandleWithdrawForUser(ctx sdk.Context, zone *types.Zone, msg *b
 		}
 		k.Logger(ctx).Info("burned coins post-withdrawal", "coins", withdrawalRecord.BurnAmount)
 	} else {
-
 		// case 2: per validator amounts - LSM unbonding
+		if err := k.processPerValidatorWithdrawal(ctx, &withdrawalRecord, msg); err != nil {
+			return err
+		}
+	}
 
+	period := int64(k.GetParam(ctx, types.KeyValidatorSetInterval))
+	query := stakingtypes.QueryValidatorsRequest{}
+	return k.EmitValSetQuery(ctx, zone.ConnectionId, zone.ChainId, query, sdkmath.NewInt(period))
+}
+
+// New method to process per-validator withdrawals
+func (k Keeper) processPerValidatorWithdrawal(ctx sdk.Context, withdrawalRecord *types.WithdrawalRecord, msg *banktypes.MsgSend) error {
 		dlist := make(map[int]struct{})
 		for i, dist := range withdrawalRecord.Distribution {
 			if msg.Amount[0].Amount.Equal(dist.Amount) { // check valoper here too?
@@ -484,27 +516,43 @@ func (k *Keeper) HandleWithdrawForUser(ctx sdk.Context, zone *types.Zone, msg *b
 						return err
 					}
 					k.Logger(ctx).Info("burned coins post-withdrawal", "coins", withdrawalRecord.BurnAmount)
-				}
+	}
+	if len(dlist) > 0 {
+		withdrawalRecord.Distribution = k.removeMatchedDistributions(withdrawalRecord.Distribution, dlist)
+		k.Logger(ctx).Info("found matching withdrawal; awaiting additional messages")
+		k.SetWithdrawalRecord(ctx, *withdrawalRecord)
+	}
+	return nil
+}
+
+// Helper method to remove matched distributions
+func (Keeper) removeMatchedDistributions(distributions []*types.Distribution, dlist map[int]struct{}) []*types.Distribution {
+	newDist := make([]*types.Distribution, 0)
+	for idx, dist := range distributions {
+		if _, remove := dlist[idx]; !remove {
+			newDist = append(newDist, dist)
+		}
+	}
+	return newDist
+}
+
+func (*Keeper) isMatchingWithdrawal(withdrawalRecord types.WithdrawalRecord, msg *banktypes.MsgSend) bool {
+	if len(withdrawalRecord.Amount) != len(msg.Amount) {
+		return false
+	}
+	for _, wrCoin := range withdrawalRecord.Amount {
+		matchFound := false
+		for _, msgCoin := range msg.Amount {
+			if wrCoin.Denom == msgCoin.Denom && wrCoin.Amount.Equal(msgCoin.Amount) {
+				matchFound = true
 				break
 			}
 		}
-
-		if len(dlist) > 0 {
-			newDist := make([]*types.Distribution, 0)
-			for idx := range withdrawalRecord.Distribution {
-				if _, remove := dlist[idx]; !remove {
-					newDist = append(newDist, withdrawalRecord.Distribution[idx])
-				}
-			}
-			k.Logger(ctx).Info("found matching withdrawal; awaiting additional messages")
-			withdrawalRecord.Distribution = newDist
-			k.SetWithdrawalRecord(ctx, withdrawalRecord)
+		if !matchFound {
+			return false
 		}
 	}
-
-	period := int64(k.GetParam(ctx, types.KeyValidatorSetInterval))
-	query := stakingtypes.QueryValidatorsRequest{}
-	return k.EmitValSetQuery(ctx, zone.ConnectionId, zone.ChainId, query, math.NewInt(period))
+	return true
 }
 
 func (k *Keeper) GCCompletedRedelegations(ctx sdk.Context) error {
@@ -680,13 +728,12 @@ func (k *Keeper) HandleBeginRedelegate(ctx sdk.Context, msg sdk.Msg, completion 
 	}
 	srcDelegation.Amount, err = srcDelegation.Amount.SafeSub(redelegateMsg.Amount)
 	if err != nil {
-		if strings.Contains(err.Error(), "negative coin amount") {
-			// we received a negative srcDelegation. Obviously this cannot happen, but we can get a crossed re/un/delegation, all which fetch absolute values.
-			k.Logger(ctx).Error("possible race condition; unable to sub redelegation amount. requerying delegation anyway")
-		} else {
-			// we got some other, unrecoverable err
+		if !strings.Contains(err.Error(), "negative coin amount") {
+			// If the error is not due to a negative coin amount, return the error immediately.
 			return err
 		}
+		// Log the error for a negative coin amount but continue execution.
+		k.Logger(ctx).Error("possible race condition; unable to sub redelegation amount. requerying delegation anyway")
 	} else {
 		k.SetDelegation(ctx, zone.ChainId, srcDelegation)
 	}
@@ -1145,12 +1192,15 @@ func (k *Keeper) HandleFailedDelegate(ctx sdk.Context, msg sdk.Msg, memo string)
 
 func (k *Keeper) HandleUpdatedWithdrawAddress(ctx sdk.Context, msg sdk.Msg) error {
 	k.Logger(ctx).Info("Received MsgSetWithdrawAddress acknowledgement")
-	// first, type assertion. we should have distrtypes.MsgSetWithdrawAddress
+
+	// First, type assertion. We should have distrtypes.MsgSetWithdrawAddress
 	original, ok := msg.(*distrtypes.MsgSetWithdrawAddress)
 	if !ok {
 		k.Logger(ctx).Error("unable to cast source message to MsgSetWithdrawAddress")
 		return errors.New("unable to cast source message to MsgSetWithdrawAddress")
 	}
+
+	var err error
 	zone, found := k.GetZoneForDelegateAccount(ctx, original.DelegatorAddress)
 	if !found {
 		zone, found = k.GetZoneForPerformanceAccount(ctx, original.DelegatorAddress)
@@ -1159,20 +1209,15 @@ func (k *Keeper) HandleUpdatedWithdrawAddress(ctx sdk.Context, msg sdk.Msg) erro
 			if !found {
 				return errors.New("unable to find zone")
 			}
-			if err := zone.DepositAddress.SetWithdrawalAddress(original.WithdrawAddress); err != nil {
-				return err
-			}
-		}
-		if err := zone.PerformanceAddress.SetWithdrawalAddress(original.WithdrawAddress); err != nil {
-			return err
-		}
-	} else {
-		if err := zone.DelegationAddress.SetWithdrawalAddress(original.WithdrawAddress); err != nil {
-			return err
 		}
 	}
-	k.SetZone(ctx, zone)
 
+	err = zone.DelegationAddress.SetWithdrawalAddress(original.WithdrawAddress)
+	if err != nil {
+		return err
+	}
+
+	k.SetZone(ctx, zone)
 	return nil
 }
 

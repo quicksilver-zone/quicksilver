@@ -58,7 +58,7 @@ func (c Callbacks) Has(id string) bool {
 	return found
 }
 
-func (c Callbacks) AddCallback(id string, fn interface{}) icqtypes.QueryCallbacks {
+func (c Callbacks) AddCallback(id string, fn any) icqtypes.QueryCallbacks {
 	c.callbacks[id], _ = fn.(Callback)
 	return c
 }
