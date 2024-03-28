@@ -567,7 +567,7 @@ func (suite *KeeperTestSuite) TestAggregateIntentWithPRClaims() {
 
 			for _, claim := range tt.claims(ctx, quicksilver, zone) {
 				claim := claim
-				quicksilver.ClaimsManagerKeeper.SetLastEpochClaim(ctx, &claim)
+				quicksilver.ClaimsManagerKeeper.SetClaim(ctx, &claim)
 			}
 
 			err = icsKeeper.AggregateDelegatorIntents(ctx, &zone)
