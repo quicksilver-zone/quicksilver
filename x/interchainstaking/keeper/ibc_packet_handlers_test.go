@@ -17,6 +17,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	icatypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/types"
@@ -28,6 +29,7 @@ import (
 	"github.com/quicksilver-zone/quicksilver/utils"
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	"github.com/quicksilver-zone/quicksilver/utils/randomutils"
+	cmtypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
 	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 	lsmstakingtypes "github.com/quicksilver-zone/quicksilver/x/lsmtypes"
 )
@@ -42,39 +44,97 @@ var TestChannel = channeltypes.Channel{
 const queryAllBalancesPath = "cosmos.bank.v1beta1.Query/AllBalances"
 
 func (suite *KeeperTestSuite) TestHandleMsgTransferGood() {
-	nineDec := sdk.NewDecWithPrec(9, 2)
+	user1 := addressutils.GenerateAddressForTestWithPrefix("quick")
+	user2 := addressutils.GenerateAddressForTestWithPrefix("quick")
+	user3 := addressutils.GenerateAddressForTestWithPrefix("quick")
 
 	tcs := []struct {
-		name             string
-		amount           sdk.Coin
-		fcAmount         math.Int
-		withdrawalAmount math.Int
-		feeAmount        *sdk.Dec
+		name                 string
+		amount               sdk.Coin
+		claims               []cmtypes.Claim
+		expectedFeeCollector math.Int
+		supply               sdk.Coin
+		expectedBalances     map[string]math.Int
+		feeAmount            sdk.Dec
 	}{
 		{
-			name:             "staking denom - all goes to fc",
-			amount:           sdk.NewCoin("uatom", math.NewInt(100)),
-			fcAmount:         math.NewInt(100),
-			withdrawalAmount: math.ZeroInt(),
+			name:                 "staking denom - 100% to fc",
+			amount:               sdk.NewCoin("uatom", math.NewInt(100)),
+			supply:               sdk.NewCoin("uatom", math.NewInt(1000)),
+			expectedFeeCollector: math.NewInt(100),
 		},
 		{
-			name:             "ibc denom denom - all goes to fc",
-			amount:           sdk.NewCoin("transfer/channel-569/untrn", math.NewInt(100)),
-			fcAmount:         math.NewInt(2),
-			withdrawalAmount: math.NewInt(98),
+			name:                 "non staking denom, no claims - 100% to fc",
+			amount:               sdk.NewCoin("transfer/channel-569/untrn", math.NewInt(100)),
+			supply:               sdk.NewCoin("uatom", math.NewInt(1000)),
+			expectedFeeCollector: math.NewInt(100),
 		},
 		{
-			name:             "non staking denom - default (2.5%) to fc, remainder to withdrawal",
-			amount:           sdk.NewCoin("ujuno", math.NewInt(100)),
-			fcAmount:         math.NewInt(2),
-			withdrawalAmount: math.NewInt(98),
+			name:   "non staking denom, claims 100%, default (2.5%) to fc, remainder proportional to users",
+			amount: sdk.NewCoin("ujuno", math.NewInt(100)),
+			claims: []cmtypes.Claim{
+				{UserAddress: user1, ChainId: suite.chainB.ChainID, Module: cmtypes.ClaimTypeLiquidToken, SourceChainId: "osmosis-1", Amount: math.NewInt(1000)},
+				{UserAddress: user1, ChainId: suite.chainB.ChainID, Module: cmtypes.ClaimTypeLiquidToken, SourceChainId: "quicksilver-2", Amount: math.NewInt(1000)},
+				{UserAddress: user1, ChainId: suite.chainB.ChainID, Module: cmtypes.ClaimTypeLiquidToken, SourceChainId: "juno-1", Amount: math.NewInt(2000)},
+			},
+			supply:               sdk.NewCoin("uatom", math.NewInt(4000)),
+			expectedFeeCollector: math.NewInt(3),
+			expectedBalances: map[string]math.Int{
+				user1: math.NewInt(97),
+			},
 		},
 		{
-			name:             "non staking denom - non-default (9%) to fc, remainder to withdrawal",
-			amount:           sdk.NewCoin("uakt", math.NewInt(100)),
-			fcAmount:         math.NewInt(9),
-			withdrawalAmount: math.NewInt(91),
-			feeAmount:        &nineDec, // 0.09 = 9%
+			name:   "non staking denom, claims 100%, non-default (9%) to fc, remainder proportional to users",
+			amount: sdk.NewCoin("ujuno", math.NewInt(1000)),
+			claims: []cmtypes.Claim{
+				{UserAddress: user1, ChainId: suite.chainB.ChainID, Module: cmtypes.ClaimTypeLiquidToken, SourceChainId: "osmosis-1", Amount: math.NewInt(1000)},
+				{UserAddress: user1, ChainId: suite.chainB.ChainID, Module: cmtypes.ClaimTypeLiquidToken, SourceChainId: "quicksilver-2", Amount: math.NewInt(1000)},
+				{UserAddress: user1, ChainId: suite.chainB.ChainID, Module: cmtypes.ClaimTypeLiquidToken, SourceChainId: "juno-1", Amount: math.NewInt(2000)},
+				{UserAddress: user2, ChainId: suite.chainB.ChainID, Module: cmtypes.ClaimTypeLiquidToken, SourceChainId: "juno-1", Amount: math.NewInt(2000)},
+			},
+			supply:               sdk.NewCoin("uatom", math.NewInt(6000)),
+			expectedFeeCollector: math.NewInt(92),
+			expectedBalances: map[string]math.Int{
+				user1: math.NewInt(605),
+				user2: math.NewInt(303),
+			},
+			feeAmount: sdk.NewDecWithPrec(9, 2),
+		},
+		{
+			name:   "non staking denom, claims >100% - default (2.5%) to fc, remainder proportional to users",
+			amount: sdk.NewCoin("ujuno", math.NewInt(1000)),
+			claims: []cmtypes.Claim{
+				{UserAddress: user1, ChainId: suite.chainB.ChainID, Module: cmtypes.ClaimTypeLiquidToken, SourceChainId: "osmosis-1", Amount: math.NewInt(1000)},
+				{UserAddress: user1, ChainId: suite.chainB.ChainID, Module: cmtypes.ClaimTypeLiquidToken, SourceChainId: "quicksilver-2", Amount: math.NewInt(1000)},
+				{UserAddress: user1, ChainId: suite.chainB.ChainID, Module: cmtypes.ClaimTypeLiquidToken, SourceChainId: "juno-1", Amount: math.NewInt(2000)},
+				{UserAddress: user2, ChainId: suite.chainB.ChainID, Module: cmtypes.ClaimTypeLiquidToken, SourceChainId: "juno-1", Amount: math.NewInt(2000)},
+				{UserAddress: user3, ChainId: suite.chainB.ChainID, Module: cmtypes.ClaimTypeLiquidToken, SourceChainId: "quicksilver-2", Amount: math.NewInt(1000)},
+			},
+			supply:               sdk.NewCoin("uatom", math.NewInt(6000)),
+			expectedFeeCollector: math.NewInt(27),
+			expectedBalances: map[string]math.Int{
+				user1: math.NewInt(556),
+				user2: math.NewInt(278),
+				user3: math.NewInt(139),
+			},
+		},
+		{
+			name:   "non staking denom, claims <100% - default (2.5%) to fc, remainder proportional to users",
+			amount: sdk.NewCoin("ujuno", math.NewInt(1000)),
+			claims: []cmtypes.Claim{
+				{UserAddress: user1, ChainId: suite.chainB.ChainID, Module: cmtypes.ClaimTypeLiquidToken, SourceChainId: "osmosis-1", Amount: math.NewInt(1000)},
+				{UserAddress: user1, ChainId: suite.chainB.ChainID, Module: cmtypes.ClaimTypeLiquidToken, SourceChainId: "quicksilver-2", Amount: math.NewInt(1000)},
+				{UserAddress: user1, ChainId: suite.chainB.ChainID, Module: cmtypes.ClaimTypeLiquidToken, SourceChainId: "juno-1", Amount: math.NewInt(1000)},
+				{UserAddress: user2, ChainId: suite.chainB.ChainID, Module: cmtypes.ClaimTypeLiquidToken, SourceChainId: "juno-1", Amount: math.NewInt(1000)},
+				{UserAddress: user3, ChainId: suite.chainB.ChainID, Module: cmtypes.ClaimTypeLiquidToken, SourceChainId: "quicksilver-2", Amount: math.NewInt(1000)},
+			},
+			supply:               sdk.NewCoin("uatom", math.NewInt(6000)),
+			expectedFeeCollector: math.NewInt(190),
+			expectedBalances: map[string]math.Int{
+				user1: math.NewInt(486),
+				user2: math.NewInt(162),
+				user3: math.NewInt(162),
+			},
 		},
 	}
 	for _, tc := range tcs {
@@ -94,11 +154,19 @@ func (suite *KeeperTestSuite) TestHandleMsgTransferGood() {
 			err := quicksilver.BankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(ibcDenom, tc.amount.Amount)))
 			suite.NoError(err)
 
-			if tc.feeAmount != nil {
+			if !tc.feeAmount.IsNil() {
 				params := quicksilver.InterchainstakingKeeper.GetParams(ctx)
-				params.CommissionRate.Set(*tc.feeAmount)
+				params.CommissionRate.Set(tc.feeAmount)
 				quicksilver.InterchainstakingKeeper.SetParams(ctx, params)
 			}
+
+			for _, claim := range tc.claims {
+				claim := claim // no implicit memory aliasing
+				quicksilver.ClaimsManagerKeeper.SetLastEpochClaim(ctx, &claim)
+			}
+
+			err = quicksilver.BankKeeper.MintCoins(ctx, minttypes.ModuleName, sdk.NewCoins(tc.supply))
+			suite.NoError(err)
 
 			zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 			suite.True(found)
@@ -120,18 +188,17 @@ func (suite *KeeperTestSuite) TestHandleMsgTransferGood() {
 
 			txMaccBalance := quicksilver.BankKeeper.GetAllBalances(ctx, txMacc)
 			feeMaccBalance := quicksilver.BankKeeper.GetAllBalances(ctx, feeMacc)
-			zoneAddress, err := addressutils.AccAddressFromBech32(zone.WithdrawalAddress.Address, "")
 			suite.NoError(err)
-			wdAccountBalance := quicksilver.BankKeeper.GetAllBalances(ctx, zoneAddress)
 
 			// assert that ics module balance is nil
 			suite.Equal(sdk.Coins{}, txMaccBalance)
 
 			// assert that fee collector module balance is the expected value
-			suite.Equal(feeMaccBalance.AmountOf(ibcDenom), tc.fcAmount)
+			suite.Equal(feeMaccBalance.AmountOf(ibcDenom), tc.expectedFeeCollector)
 
-			// assert that zone withdrawal address balance (local chain) is the expected value
-			suite.Equal(wdAccountBalance.AmountOf(ibcDenom), tc.withdrawalAmount)
+			for address, balance := range tc.expectedBalances {
+				suite.Equal(quicksilver.BankKeeper.GetBalance(ctx, addressutils.MustAccAddressFromBech32(address, ""), ibcDenom), sdk.NewCoin(ibcDenom, balance))
+			}
 		})
 	}
 }

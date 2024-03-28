@@ -9,10 +9,12 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	"github.com/quicksilver-zone/quicksilver/app/keepers"
 	"github.com/quicksilver-zone/quicksilver/utils"
+	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	cmtypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
 	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 	prkeeper "github.com/quicksilver-zone/quicksilver/x/participationrewards/keeper"
@@ -107,6 +109,31 @@ func V010503rc0UpgradeHandler(
 }
 
 // =========== PRODUCTION UPGRADE HANDLER ===========
+
+func V010504UpgradeHandler(
+	mm *module.Manager,
+	configurator module.Configurator,
+	appKeepers *keepers.AppKeepers,
+) upgradetypes.UpgradeHandler {
+	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		appKeepers.InterchainstakingKeeper.IterateZones(ctx, func(_ int64, zone *icstypes.Zone) (stop bool) {
+			// ship everything in local corresponding account to withdrawal account address to fee collector.
+			account, err := addressutils.AccAddressFromBech32(zone.WithdrawalAddress.Address, "")
+			if err != nil {
+				panic(err)
+			}
+
+			accountBalance := appKeepers.BankKeeper.GetAllBalances(ctx, account)
+			err = appKeepers.BankKeeper.SendCoinsFromAccountToModule(ctx, account, authtypes.FeeCollectorName, accountBalance)
+			if err != nil {
+				panic(err)
+			}
+
+			return false
+		})
+		return mm.RunMigrations(ctx, configurator, fromVM)
+	}
+}
 
 func V010503UpgradeHandler(
 	mm *module.Manager,
