@@ -59,6 +59,20 @@ service Msg {
       body: "*"
     };
   }
+
+  rpc GovAddValidatorDenyList(MsgGovAddValidatorDenyList) returns (MsgGovAddValidatorDenyListResponse) {
+    option (google.api.http) = {
+      post: "/quicksilver/tx/v1/interchainstaking/add_validator_denylist"
+      body: "*"
+    };
+  }
+
+  rpc GovRemoveValidatorDenyList(MsgGovRemoveValidatorDenyList) returns (MsgGovRemoveValidatorDenyListResponse) {
+    option (google.api.http) = {
+      post: "/quicksilver/tx/v1/interchainstaking/remove_validator_denylist"
+      body: "*"
+    };
+  }
 }
 
 // MsgRequestRedemption represents a message type to request a burn of qAssets

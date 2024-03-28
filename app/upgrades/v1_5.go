@@ -5,12 +5,17 @@ import (
 	"fmt"
 	"time"
 
+	"cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	"github.com/quicksilver-zone/quicksilver/app/keepers"
 	"github.com/quicksilver-zone/quicksilver/utils"
+	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
+	cmtypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
 	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 	prkeeper "github.com/quicksilver-zone/quicksilver/x/participationrewards/keeper"
 	prtypes "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
@@ -49,7 +54,143 @@ func V010500rc1UpgradeHandler(
 	}
 }
 
+func V010503rc0UpgradeHandler(
+	mm *module.Manager,
+	configurator module.Configurator,
+	appKeepers *keepers.AppKeepers,
+) upgradetypes.UpgradeHandler {
+	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		// update all withdrawal records' distributors to use new Amount field.
+		appKeepers.InterchainstakingKeeper.IterateWithdrawalRecords(ctx, func(index int64, record icstypes.WithdrawalRecord) (stop bool) {
+			if record.Distribution == nil {
+				// skip records that are queued.
+				return false
+			}
+
+			newDist := make([]*icstypes.Distribution, 0, len(record.Distribution))
+			for _, d := range record.Distribution {
+				d.Amount = math.NewIntFromUint64(d.XAmount)
+				d.XAmount = 0
+				newDist = append(newDist, d)
+			}
+			record.Distribution = newDist
+			appKeepers.InterchainstakingKeeper.SetWithdrawalRecord(ctx, record)
+
+			return false
+		})
+
+		// for all claims, update to use new Amount field
+		appKeepers.ClaimsManagerKeeper.IterateAllClaims(ctx, func(index int64, key []byte, data cmtypes.Claim) (stop bool) {
+			data.Amount = math.NewIntFromUint64(data.XAmount)
+			appKeepers.ClaimsManagerKeeper.SetClaim(ctx, &data)
+			return false
+		})
+
+		appKeepers.ClaimsManagerKeeper.IterateAllLastEpochClaims(ctx, func(index int64, key []byte, data cmtypes.Claim) (stop bool) {
+			data.Amount = math.NewIntFromUint64(data.XAmount)
+			appKeepers.ClaimsManagerKeeper.SetClaim(ctx, &data)
+			return false
+		})
+
+		// for all redelegation records, migrate
+		appKeepers.InterchainstakingKeeper.IterateRedelegationRecords(ctx, func(index int64, key []byte, record icstypes.RedelegationRecord) (stop bool) {
+			record.Amount = math.NewInt(record.XAmount)
+			appKeepers.InterchainstakingKeeper.SetRedelegationRecord(ctx, record)
+			return false
+		})
+
+		appKeepers.InterchainstakingKeeper.SetConnectionForPort(ctx, "connection-4", "icacontroller-osmo-test-5.performance")
+
+		return mm.RunMigrations(ctx, configurator, fromVM)
+	}
+}
+
 // =========== PRODUCTION UPGRADE HANDLER ===========
+
+func V010504UpgradeHandler(
+	mm *module.Manager,
+	configurator module.Configurator,
+	appKeepers *keepers.AppKeepers,
+) upgradetypes.UpgradeHandler {
+	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		appKeepers.InterchainstakingKeeper.IterateZones(ctx, func(_ int64, zone *icstypes.Zone) (stop bool) {
+			// ship everything in local corresponding account to withdrawal account address to fee collector.
+			account, err := addressutils.AccAddressFromBech32(zone.WithdrawalAddress.Address, "")
+			if err != nil {
+				panic(err)
+			}
+
+			accountBalance := appKeepers.BankKeeper.GetAllBalances(ctx, account)
+			err = appKeepers.BankKeeper.SendCoinsFromAccountToModule(ctx, account, authtypes.FeeCollectorName, accountBalance)
+			if err != nil {
+				panic(err)
+			}
+
+			return false
+		})
+		return mm.RunMigrations(ctx, configurator, fromVM)
+	}
+}
+
+func V010503UpgradeHandler(
+	mm *module.Manager,
+	configurator module.Configurator,
+	appKeepers *keepers.AppKeepers,
+) upgradetypes.UpgradeHandler {
+	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		// fix paid up juno records wher ack was never received.
+		appKeepers.InterchainstakingKeeper.IterateZoneStatusWithdrawalRecords(ctx, "juno-1", 4, func(index int64, record icstypes.WithdrawalRecord) (stop bool) {
+			// burn burnAmount!
+			if err := appKeepers.BankKeeper.BurnCoins(ctx, icstypes.EscrowModuleAccount, sdk.NewCoins(record.BurnAmount)); err != nil {
+				// if we can't burn the coins, fail.
+				panic(err)
+			}
+			appKeepers.InterchainstakingKeeper.DeleteWithdrawalRecord(ctx, record.ChainId, record.Txhash, record.Status)
+			return false
+		})
+
+		// update all withdrawal records' distributors to use new Amount field.
+		appKeepers.InterchainstakingKeeper.IterateWithdrawalRecords(ctx, func(index int64, record icstypes.WithdrawalRecord) (stop bool) {
+			if record.Distribution == nil {
+				// skip records that are queued.
+				return false
+			}
+
+			newDist := make([]*icstypes.Distribution, 0, len(record.Distribution))
+			for _, d := range record.Distribution {
+				d.Amount = math.NewIntFromUint64(d.XAmount)
+				d.XAmount = 0
+				newDist = append(newDist, d)
+			}
+			record.Distribution = newDist
+			appKeepers.InterchainstakingKeeper.SetWithdrawalRecord(ctx, record)
+
+			return false
+		})
+
+		// for all claims, update to use new Amount field
+		appKeepers.ClaimsManagerKeeper.IterateAllClaims(ctx, func(index int64, key []byte, data cmtypes.Claim) (stop bool) {
+			data.Amount = math.NewIntFromUint64(data.XAmount)
+			appKeepers.ClaimsManagerKeeper.SetClaim(ctx, &data)
+			return false
+		})
+
+		appKeepers.ClaimsManagerKeeper.IterateAllLastEpochClaims(ctx, func(index int64, key []byte, data cmtypes.Claim) (stop bool) {
+			data.Amount = math.NewIntFromUint64(data.XAmount)
+			appKeepers.ClaimsManagerKeeper.SetLastEpochClaim(ctx, &data)
+			return false
+		})
+
+		// for all redelegation records, migrate
+		appKeepers.InterchainstakingKeeper.IterateRedelegationRecords(ctx, func(index int64, key []byte, record icstypes.RedelegationRecord) (stop bool) {
+			record.Amount = math.NewInt(record.XAmount)
+			appKeepers.InterchainstakingKeeper.SetRedelegationRecord(ctx, record)
+			return false
+		})
+
+		return mm.RunMigrations(ctx, configurator, fromVM)
+	}
+}
 
 func V010501UpgradeHandler(
 	mm *module.Manager,
@@ -526,16 +667,16 @@ func collateRequeuedWithdrawals(ctx sdk.Context, appKeepers *keepers.AppKeepers)
 				}
 				// merge distributions
 				newRecord.Distribution = func(dist1, dist2 []*icstypes.Distribution) []*icstypes.Distribution {
-					distMap := map[string]uint64{}
+					distMap := map[string]math.Int{}
 					for _, dist := range dist1 {
 						distMap[dist.Valoper] = dist.Amount
 					}
 
 					for _, dist := range dist2 {
 						if _, ok = distMap[dist.Valoper]; !ok {
-							distMap[dist.Valoper] = 0
+							distMap[dist.Valoper] = math.ZeroInt()
 						}
-						distMap[dist.Valoper] += dist.Amount
+						distMap[dist.Valoper] = distMap[dist.Valoper].Add(dist.Amount)
 					}
 
 					out := make([]*icstypes.Distribution, 0, len(distMap))
