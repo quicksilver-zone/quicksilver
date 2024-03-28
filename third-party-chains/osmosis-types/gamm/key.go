@@ -46,7 +46,7 @@ func ValidatePoolShareDenom(denom string) error {
 }
 
 func GetDenomPrefix(denom string) []byte {
-	return append(KeyTotalLiquidity, []byte(denom)...)
+	return append(KeyTotalLiquidity, denom...)
 }
 
 func GetPoolShareDenom(poolId uint64) string {

@@ -655,7 +655,7 @@ func SortableDecBytes(dec BigDec) []byte {
 	}
 	// We move the negative sign to the front of all the left padded 0s, to make negative numbers come before positive numbers
 	if dec.IsNegative() {
-		return append([]byte("-"), []byte(fmt.Sprintf(fmt.Sprintf("%%0%ds", Precision*2+1), dec.Abs().String()))...)
+		return append([]byte("-"), fmt.Sprintf(fmt.Sprintf("%%0%ds", Precision*2+1), dec.Abs().String())...)
 	}
 	return []byte(fmt.Sprintf(fmt.Sprintf("%%0%ds", Precision*2+1), dec.String()))
 }

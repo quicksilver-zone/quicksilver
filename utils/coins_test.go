@@ -25,7 +25,7 @@ func TestDenomFromRequestKey(t *testing.T) {
 			func() (sdk.AccAddress, []byte) {
 				accAddr := addressutils.GenerateAccAddressForTest()
 				key := banktypes.CreateAccountBalancesPrefix(accAddr.Bytes())
-				key = append(key, []byte(expectedDenom)...)
+				key = append(key, expectedDenom...)
 				return accAddr, key
 			},
 			"",
@@ -38,7 +38,7 @@ func TestDenomFromRequestKey(t *testing.T) {
 				checkAddr, err := addressutils.AccAddressFromBech32("cosmos1ent5eg0xn3pskf3fhdw8mky88ry7t4kx628ru3pzp4nqjp6eufusphlldy", "cosmos")
 				require.NoError(t, err)
 				key := banktypes.CreateAccountBalancesPrefix(keyAddr.Bytes())
-				key = append(key, []byte(expectedDenom)...)
+				key = append(key, expectedDenom...)
 				return checkAddr, key
 			},
 			"account mismatch; expected cosmos135rd8ft0dyq8fv3w3hhmaa55qu3pe668j99qh67mg747ew4ad03qsgq8vh, got cosmos1ent5eg0xn3pskf3fhdw8mky88ry7t4kx628ru3pzp4nqjp6eufusphlldy",
@@ -48,7 +48,7 @@ func TestDenomFromRequestKey(t *testing.T) {
 			func() (sdk.AccAddress, []byte) {
 				accAddr := sdk.AccAddress{}
 				key := banktypes.CreateAccountBalancesPrefix(accAddr.Bytes())
-				key = append(key, []byte(expectedDenom)...)
+				key = append(key, expectedDenom...)
 				return accAddr, key
 			},
 			"invalid key",
@@ -58,7 +58,7 @@ func TestDenomFromRequestKey(t *testing.T) {
 			func() (sdk.AccAddress, []byte) {
 				accAddr := addressutils.GenerateAccAddressForTest()
 				key := banktypes.CreateAccountBalancesPrefix(accAddr.Bytes())
-				key = append(key, []byte("")...)
+				key = append(key, ""...)
 				return accAddr, key
 			},
 			"key contained no denom",

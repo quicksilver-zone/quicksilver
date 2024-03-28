@@ -218,7 +218,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 			func() {
 				userAddress := addressutils.GenerateAccAddressForTest()
 				bankkey := banktypes.CreateAccountBalancesPrefix(userAddress)
-				bankkey = append(bankkey, []byte("gamm/1")...)
+				bankkey = append(bankkey, "gamm/1"...)
 
 				cd := math.NewInt(10000000)
 				bz, err := cd.Marshal()
@@ -314,7 +314,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 
 				userAddress, _ := addressutils.EncodeAddressToBech32("umee", address)
 				bankkey := banktypes.CreateAccountBalancesPrefix(address)
-				bankkey = append(bankkey, []byte("u/uumee")...)
+				bankkey = append(bankkey, "u/uumee"...)
 
 				leveragekey := umeetypes.KeyCollateralAmount(address, "u/uumee")
 

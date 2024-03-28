@@ -63,7 +63,7 @@ func (k *Keeper) GetPerformanceDelegation(ctx sdk.Context, chainID string, perfo
 func (k *Keeper) IterateAllDelegations(ctx sdk.Context, chainID string, cb func(delegation types.Delegation) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 
-	iterator := sdk.KVStorePrefixIterator(store, append(types.KeyPrefixDelegation, []byte(chainID)...))
+	iterator := sdk.KVStorePrefixIterator(store, append(types.KeyPrefixDelegation, chainID...))
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
@@ -88,7 +88,7 @@ func (k *Keeper) GetAllDelegations(ctx sdk.Context, chainID string) (delegations
 func (k *Keeper) IterateAllPerformanceDelegations(ctx sdk.Context, chainID string, cb func(delegation types.Delegation) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 
-	iterator := sdk.KVStorePrefixIterator(store, append(types.KeyPrefixPerformanceDelegation, []byte(chainID)...))
+	iterator := sdk.KVStorePrefixIterator(store, append(types.KeyPrefixPerformanceDelegation, chainID...))
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
