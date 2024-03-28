@@ -73,12 +73,10 @@ func (m *OsmosisModule) Hooks(ctx sdk.Context, k *Keeper) {
 	})
 }
 
-
 func (*OsmosisModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.MsgSubmitClaim) (math.Int, error) {
 	amount := sdk.ZeroInt()
 	var lock osmolockup.PeriodLock
 	for _, proof := range msg.Proofs {
-		var lock osmolockup.PeriodLock
 		var err error
 
 		switch proof.ProofType {

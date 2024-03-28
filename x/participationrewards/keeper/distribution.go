@@ -66,16 +66,11 @@ func (k *Keeper) CalcTokenValues(ctx sdk.Context) (TokenValues, error) {
 				baseIBCDenom = ibcDenom
 			} else {
 				zone, ok := k.icsKeeper.GetZone(ctx, pool.Denoms[ibcDenom].ChainID)
-				if !ok {
+				if !ok || pool.Denoms[ibcDenom].Denom != zone.BaseDenom {
 					return false
 				}
-
-				if pool.Denoms[ibcDenom].Denom == zone.BaseDenom {
-					queryIBCDenom = ibcDenom
-					valueDenom = zone.BaseDenom
-				} else {
-					return false
-				}
+				queryIBCDenom = ibcDenom
+				valueDenom = zone.BaseDenom
 			}
 		}
 

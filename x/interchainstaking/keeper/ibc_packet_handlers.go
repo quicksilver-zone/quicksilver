@@ -11,6 +11,7 @@ import (
 	"github.com/golang/protobuf/proto" // nolint:staticcheck
 
 	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -502,20 +503,22 @@ func (k *Keeper) HandleWithdrawForUser(ctx sdk.Context, zone *types.Zone, msg *b
 
 // New method to process per-validator withdrawals
 func (k Keeper) processPerValidatorWithdrawal(ctx sdk.Context, withdrawalRecord *types.WithdrawalRecord, msg *banktypes.MsgSend) error {
-		dlist := make(map[int]struct{})
-		for i, dist := range withdrawalRecord.Distribution {
-			if msg.Amount[0].Amount.Equal(dist.Amount) { // check valoper here too?
-				dlist[i] = struct{}{}
-				// matched amount
-				if len(withdrawalRecord.Distribution) == len(dlist) {
-					// we just removed the last element
-					k.Logger(ctx).Info("found matching withdrawal; marking as completed")
-					k.UpdateWithdrawalRecordStatus(ctx, &withdrawalRecord, types.WithdrawStatusCompleted)
-					if err := k.BankKeeper.BurnCoins(ctx, types.EscrowModuleAccount, sdk.NewCoins(withdrawalRecord.BurnAmount)); err != nil {
-						// if we can't burn the coins, fail.
-						return err
-					}
-					k.Logger(ctx).Info("burned coins post-withdrawal", "coins", withdrawalRecord.BurnAmount)
+	dlist := make(map[int]struct{})
+	for i, dist := range withdrawalRecord.Distribution {
+		if msg.Amount[0].Amount.Equal(dist.Amount) { // check valoper here too?
+			dlist[i] = struct{}{}
+			// matched amount
+			if len(withdrawalRecord.Distribution) == len(dlist) {
+				// we just removed the last element
+				k.Logger(ctx).Info("found matching withdrawal; marking as completed")
+				k.UpdateWithdrawalRecordStatus(ctx, withdrawalRecord, types.WithdrawStatusCompleted)
+				if err := k.BankKeeper.BurnCoins(ctx, types.EscrowModuleAccount, sdk.NewCoins(withdrawalRecord.BurnAmount)); err != nil {
+					// if we can't burn the coins, fail.
+					return err
+				}
+				k.Logger(ctx).Info("burned coins post-withdrawal", "coins", withdrawalRecord.BurnAmount)
+			}
+		}
 	}
 	if len(dlist) > 0 {
 		withdrawalRecord.Distribution = k.removeMatchedDistributions(withdrawalRecord.Distribution, dlist)
