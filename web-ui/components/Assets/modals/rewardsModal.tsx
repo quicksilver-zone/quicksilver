@@ -57,12 +57,6 @@ const RewardsModal = ({
     { name: 'SCRT', amount: '300', chainId: 'secret-1' },
   ];
 
-  const { liquidEpoch } = useLiquidEpochQuery(address);
-  console.log({ liquidEpoch });
-
-  const { liquidRewards } = useLiquidRewardsQuery(address);
-  console.log({ liquidRewards });
-
   return (
     <Modal size={'xl'} isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
@@ -106,7 +100,7 @@ const RewardsModal = ({
             w="160px"
             variant="outline"
           >
-            Retrieve
+            Unwind
           </Button>
         </ModalBody>
 

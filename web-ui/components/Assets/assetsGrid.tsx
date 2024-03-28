@@ -15,7 +15,7 @@ import {
   StatNumber,
   IconButton,
 } from '@chakra-ui/react';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import QDepositModal from './modals/qTokenDepositModal';
 import QWithdrawModal from './modals/qTokenWithdrawlModal';
@@ -70,42 +70,88 @@ type LiquidRewardsData = {
   errors: Errors;
 };
 
+const formatNumber = (num: number) => {
+  if (num < 1000) {
+    return num.toFixed(2).toString();
+  }
+  if (num >= 1000 && num < 1000000) {
+    return (num / 1000).toFixed(1) + 'K';
+  }
+  if (num >= 1000000 && num < 1000000000) {
+    return (num / 1000000).toFixed(1) + 'M';
+  }
+  if (num >= 1000000000) {
+    return (num / 1000000000).toFixed(1) + 'B';
+  }
+};
+
 const AssetCard: React.FC<AssetCardProps> = ({ address, assetName, balance, apy, redemptionRates }) => {
   const { liquidRewards, isError, isLoading } = useLiquidRewardsQuery(address ?? '');
-  const calculateInterchainBalance = (nonNative: LiquidRewardsData | undefined, nativeAssetName: string) => {
-    if (!nonNative) return '0';
 
-    // Initialize total amount
-    let totalAmount = 0;
-    const assetDenom = `uq${assetName.toLowerCase().replace('q', '')}`;
-
-    Object.keys(nonNative.assets).forEach((chainId) => {
-      if (chainId !== 'quicksilver-2') {
-        nonNative.assets[chainId].forEach((asset) => {
-          const assetAmount = asset.Amount.find((amount) => amount.denom === assetDenom);
-          if (assetAmount) {
-            totalAmount += parseInt(assetAmount.amount, 10);
-          }
-        });
-      }
-    });
-
-    return shiftDigits(totalAmount.toString(), -6);
+  const chainIdToName: { [key: string]: string } = {
+    'osmosis-1': 'osmosis',
+    'secret-1': 'secretnetwork',
+    'umee-1': 'umee',
+    'cosmoshub-4': 'cosmoshub',
+    'stargaze-1': 'stargaze',
+    'sommelier-3': 'sommelier',
+    'regen-1': 'regen',
+    'juno-1': 'juno',
+    'dydx-mainnet-1': 'dydx',
   };
 
-  const interchainBalance = calculateInterchainBalance(liquidRewards, assetName);
+  const getChainName = (chainId: string) => {
+    return chainIdToName[chainId] || chainId;
+  };
 
-  console.log({ interchainBalance });
+  const convertAmount = (amount: string, denom: string) => {
+    if (denom.startsWith('a')) {
+      return shiftDigits(amount, -18);
+    }
+
+    return shiftDigits(amount, -6);
+  };
+
+  const [interchainDetails, setInterchainDetails] = useState({});
+
+  useEffect(() => {
+    const calculateInterchainBalance = () => {
+      if (!liquidRewards) return '0';
+
+      let totalAmount = 0;
+      const assetDenom = `uq${assetName.toLowerCase().replace('q', '')}`;
+      const aAssetDenom = `a${assetName.toLowerCase().replace('q', '')}`;
+
+      const details: { [key: string]: number } = {};
+
+      Object.keys(liquidRewards.assets).forEach((chainId) => {
+        if (chainId !== 'quicksilver-2') {
+          liquidRewards.assets[chainId].forEach((asset) => {
+            asset.Amount.forEach((amount) => {
+              if (amount.denom === assetDenom || amount.denom === aAssetDenom) {
+                const convertedAmount = parseFloat(convertAmount(amount.amount, amount.denom));
+                totalAmount += convertedAmount;
+                details[getChainName(chainId)] = (details[getChainName(chainId)] || 0) + convertedAmount;
+              }
+            });
+          });
+        }
+      });
+
+      setInterchainDetails(details);
+      return totalAmount.toString();
+    };
+
+    calculateInterchainBalance();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [liquidRewards, assetName]);
+
+  const interchainBalance = Object.values(interchainDetails as { [key: string]: number })
+    .reduce((acc: number, val: number) => acc + val, 0)
+    .toString();
+
   const withdrawDisclosure = useDisclosure();
   const depositDisclosure = useDisclosure();
-
-  // const nativeAssets = nonNative?.assets['quicksilver-2']
-  //   ? nonNative.assets['quicksilver-2'][0].Amount.find((amount) => amount.denom === `uq${nativeAssetName.toLowerCase()}`)
-  //   : undefined;
-
-  // const formattedNonNativeBalance = calculateTotalBalance(nonNative, nativeAssetName);
-
-  // const formattedNativebalance = nativeAssets ? shiftDigits(nativeAssets.amount, -6) : '0';
 
   if (balance === undefined || balance === null || apy === undefined || apy === null) {
     return (
@@ -146,7 +192,7 @@ const AssetCard: React.FC<AssetCardProps> = ({ address, assetName, balance, apy,
           <Stat color={'white'}>
             <StatLabel fontSize={'lg'}>On Quicksilver</StatLabel>
             <StatNumber color={'complimentary.900'} fontSize={'md'}>
-              {balance} {assetName}
+              {formatNumber(parseFloat(balance))} {assetName}
             </StatNumber>
 
             {Number(balance) > 0 && (
@@ -155,7 +201,7 @@ const AssetCard: React.FC<AssetCardProps> = ({ address, assetName, balance, apy,
                   Redeem For
                 </StatHelpText>
                 <StatHelpText mt={-2} color={'complimentary.400'} fontSize={'sm'}>
-                  {(Number(balance) * Number(redemptionRates)).toFixed(2)} {assetName.replace('q', '')}
+                  {formatNumber(parseFloat(balance) / Number(redemptionRates))} {assetName.replace('q', '')}
                 </StatHelpText>
               </>
             )}
@@ -168,16 +214,18 @@ const AssetCard: React.FC<AssetCardProps> = ({ address, assetName, balance, apy,
             w="130px"
             variant="outline"
             onClick={withdrawDisclosure.onOpen}
+            isDisabled={Number(balance) === 0}
           >
             Withdraw
           </Button>
-          <QWithdrawModal isOpen={withdrawDisclosure.isOpen} onClose={withdrawDisclosure.onClose} token={assetName} />
+          <QWithdrawModal max={balance} isOpen={withdrawDisclosure.isOpen} onClose={withdrawDisclosure.onClose} token={assetName} />
         </VStack>
+
         <VStack minH="150px" alignItems="left">
           <Stat color={'white'}>
             <StatLabel fontSize={'lg'}>Interchain</StatLabel>
             <StatNumber color={'complimentary.900'} fontSize={'md'}>
-              {interchainBalance} {assetName}
+              {formatNumber(parseFloat(interchainBalance))} {assetName}
             </StatNumber>
 
             {Number(interchainBalance) > 0 && (
@@ -186,7 +234,7 @@ const AssetCard: React.FC<AssetCardProps> = ({ address, assetName, balance, apy,
                   Redeem For
                 </StatHelpText>
                 <StatHelpText mt={-2} color={'complimentary.400'} fontSize={'sm'}>
-                  {(Number(interchainBalance) * Number(redemptionRates)).toFixed(2)} {assetName.replace('q', '')}
+                  {formatNumber(parseFloat(interchainBalance) / Number(redemptionRates))} {assetName.replace('q', '')}
                 </StatHelpText>
               </>
             )}
@@ -199,10 +247,16 @@ const AssetCard: React.FC<AssetCardProps> = ({ address, assetName, balance, apy,
             w="130px"
             variant="outline"
             onClick={depositDisclosure.onOpen}
+            isDisabled={Number(interchainBalance) === 0}
           >
             Deposit
           </Button>
-          <QDepositModal isOpen={depositDisclosure.isOpen} onClose={depositDisclosure.onClose} token={assetName} />
+          <QDepositModal
+            interchainDetails={interchainDetails}
+            isOpen={depositDisclosure.isOpen}
+            onClose={depositDisclosure.onClose}
+            token={assetName}
+          />
         </VStack>
       </HStack>
     </VStack>
@@ -255,12 +309,6 @@ const AssetsGrid: React.FC<AssetGridProps> = ({ address, assets, isWalletConnect
         return qAssetName;
     }
   };
-
-  const { balance: allBalances } = useAllBalancesQuery('quicksilver', address ?? '');
-  console.log({ allBalances });
-
-  const { balance: ibcBalances } = useIbcBalanceQuery('quicksilver', address ?? '');
-  console.log({ ibcBalances });
 
   return (
     <>

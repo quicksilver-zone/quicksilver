@@ -10,9 +10,12 @@ import {
   FormControl,
   FormLabel,
   Input,
+  HStack,
   useDisclosure,
   useToast,
   Spinner,
+  InputGroup,
+  InputRightElement,
 } from '@chakra-ui/react';
 import { StdFee, coins } from '@cosmjs/stargate';
 import { ChainName } from '@cosmos-kit/core';
@@ -32,38 +35,42 @@ export interface QDepositModalProps {
   token: string;
   isOpen: boolean;
   onClose: () => void;
+  interchainDetails: { [chainId: string]: number };
 }
 
-const QDepositModal: React.FC<QDepositModalProps> = ({ token, isOpen, onClose }) => {
+const QDepositModal: React.FC<QDepositModalProps> = ({ token, isOpen, onClose, interchainDetails }) => {
   const toast = useToast();
-
-  const [chainName, setChainName] = useState<ChainName | undefined>('osmosis');
   const { chainRecords, getChainLogo } = useManager();
+  const [chainName, setChainName] = useState<ChainName | undefined>('osmosis');
   const [amount, setAmount] = useState<string>('');
+  const [maxAmount, setMaxAmount] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
 
   const chainOptions = useMemo(() => {
-    const desiredChains = ['osmosis', 'umee'];
+    const availableChains = Object.keys(interchainDetails);
     return chainRecords
-      .filter((chainRecord) => desiredChains.includes(chainRecord.name))
+      .filter((chainRecord) => availableChains.includes(chainRecord.name))
       .map((chainRecord) => ({
-        chainName: chainRecord?.name,
-        label: chainRecord?.chain?.pretty_name,
-        value: chainRecord?.name,
+        chainName: chainRecord.name,
+        label: chainRecord?.chain?.pretty_name || chainRecord.name,
+        value: chainRecord.name,
         icon: getChainLogo(chainRecord.name),
       }));
-  }, [chainRecords, getChainLogo]);
+  }, [chainRecords, getChainLogo, interchainDetails]);
 
   useEffect(() => {
-    setChainName(window.localStorage.getItem('selected-chain') || 'osmosis');
-  }, []);
+    const storedChainName = window.localStorage.getItem('selected-chain');
+    const defaultChainName = chainOptions[0]?.chainName || 'osmosis';
+    const initialChainName = storedChainName || defaultChainName;
+    setChainName(initialChainName);
+    setMaxAmount(interchainDetails[initialChainName]?.toString() || '0');
+  }, [chainOptions, interchainDetails]);
 
-  const onChainChange: handleSelectChainDropdown = async (selectedValue: ChainOption | null) => {
-    setChainName(selectedValue?.chainName);
+  const onChainChange: handleSelectChainDropdown = (selectedValue: ChainOption | null) => {
     if (selectedValue?.chainName) {
-      window?.localStorage.setItem('selected-chain', selectedValue?.chainName);
-    } else {
-      window?.localStorage.removeItem('selected-chain');
+      setChainName(selectedValue.chainName);
+      setMaxAmount(interchainDetails[selectedValue.chainName]?.toString() || '0');
+      window.localStorage.setItem('selected-chain', selectedValue.chainName);
     }
   };
 
@@ -75,7 +82,7 @@ const QDepositModal: React.FC<QDepositModalProps> = ({ token, isOpen, onClose })
   const { transfer } = ibc.applications.transfer.v1.MessageComposer.withTypeUrl;
   const { address, connect, status, message, wallet } = useChain(fromChain ?? '');
   const { address: qAddress } = useChain('quicksilver');
-  const { balance } = useIbcBalanceQuery(fromChain ?? '', address ?? '');
+
   const { tx } = useTx(fromChain ?? '');
 
   const onSubmitClick = async () => {
@@ -163,27 +170,59 @@ const QDepositModal: React.FC<QDepositModalProps> = ({ token, isOpen, onClose })
           </FormControl>
 
           {/* Amount Input */}
+
           <FormControl mt={4}>
             <FormLabel color="white">Amount</FormLabel>
-            <Input
-              _active={{
-                borderColor: 'complimentary.900',
-              }}
-              _selected={{
-                borderColor: 'complimentary.900',
-              }}
-              _hover={{
-                borderColor: 'complimentary.900',
-              }}
-              _focus={{
-                borderColor: 'complimentary.900',
-                boxShadow: '0 0 0 3px #FF8000',
-              }}
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              color={'white'}
-              placeholder="Enter amount"
-            />
+            <InputGroup>
+              <Input
+                type="number"
+                pr="4.5rem" // Padding to ensure text doesn't overlap with buttons
+                _active={{
+                  borderColor: 'complimentary.900',
+                }}
+                _selected={{
+                  borderColor: 'complimentary.900',
+                }}
+                _hover={{
+                  borderColor: 'complimentary.900',
+                }}
+                _focus={{
+                  borderColor: 'complimentary.900',
+                  boxShadow: '0 0 0 3px #FF8000',
+                }}
+                value={amount}
+                onChange={(e) => setAmount(e.target.value <= maxAmount ? e.target.value : maxAmount)}
+                max={maxAmount}
+                color={'white'}
+                placeholder="Enter amount"
+              />
+              <InputRightElement>
+                <HStack mr={14} spacing={1}>
+                  <Button
+                    variant={'ghost'}
+                    color="complimentary.900"
+                    h="1.75rem"
+                    size="xs"
+                    _active={{ transform: 'scale(0.95)', color: 'complimentary.800' }}
+                    _hover={{ bgColor: 'transparent', color: 'complimentary.400' }}
+                    onClick={() => setAmount((parseFloat(maxAmount) / 2).toString())}
+                  >
+                    Half
+                  </Button>
+                  <Button
+                    variant={'ghost'}
+                    color="complimentary.900"
+                    _active={{ transform: 'scale(0.95)', color: 'complimentary.800' }}
+                    _hover={{ bgColor: 'transparent', color: 'complimentary.400' }}
+                    h="1.75rem"
+                    size="xs"
+                    onClick={() => setAmount(maxAmount)}
+                  >
+                    Max
+                  </Button>
+                </HStack>
+              </InputRightElement>
+            </InputGroup>
           </FormControl>
         </ModalBody>
 

@@ -52,8 +52,8 @@ const SelectOptions = ({ data, value, onChange }: ChangeChainMenuType) => {
       h: menuHeight,
       mt: 4,
       mb: 0,
-      bg: 'rgb(32,32,32)',
-      boxShadow: '0 1px 5px #FF8000',
+      bg: 'rgb(26, 25, 25)',
+
       borderRadius: '0.3rem',
       color: 'white',
       _active: {
@@ -74,18 +74,12 @@ const SelectOptions = ({ data, value, onChange }: ChangeChainMenuType) => {
       borderRadius: 'none',
       color: 'white',
       p: 2,
-      _active: {
-        borderColor: 'complimentary.900',
-      },
-      _selected: {
-        borderColor: 'complimentary.900',
-      },
+
       _hover: {
         borderColor: 'complimentary.900',
       },
       _focus: {
         borderColor: 'complimentary.900',
-        boxShadow: '0 0 0 3px #FF8000',
       },
       // For Firefox
       scrollbarWidth: 'auto',
@@ -120,13 +114,13 @@ const SelectOptions = ({ data, value, onChange }: ChangeChainMenuType) => {
           mt: 2,
         },
         _active: {
-          bg: 'complimentary.900',
+          bg: 'rgba(255, 119, 0, 0.15)',
         },
         _hover: {
-          bg: 'complimentary.700',
+          bg: 'rgba(255, 119, 0, 0.25)',
         },
         _selected: {
-          bg: 'complimentary.900',
+          bg: 'rgba(255, 119, 0, 0.4)',
         },
 
         _disabled: { bg: 'transparent', _hover: { bg: 'transparent' } },
@@ -256,7 +250,7 @@ const SelectOptions = ({ data, value, onChange }: ChangeChainMenuType) => {
 
 export const ChangeChainDropdown = ({ data, selectedItem, onChange }: ChangeChainDropdownType) => {
   return (
-    <Box w="full" position="relative" zIndex={150}>
+    <Box color={'white'} w="full" position="relative" zIndex={150}>
       <SelectOptions data={data} value={selectedItem} onChange={onChange} />
     </Box>
   );

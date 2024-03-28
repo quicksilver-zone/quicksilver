@@ -13,6 +13,9 @@ import {
   useDisclosure,
   useToast,
   Spinner,
+  HStack,
+  InputGroup,
+  InputRightElement,
 } from '@chakra-ui/react';
 import { StdFee, coins } from '@cosmjs/stargate';
 import { ChainName } from '@cosmos-kit/core';
@@ -29,12 +32,13 @@ import { ibcDenomWithdrawMapping } from '@/state/chains/prod';
 import { getCoin, getIbcInfo } from '@/utils';
 
 interface QDepositModalProps {
+  max: string;
   token: string;
   isOpen: boolean;
   onClose: () => void;
 }
 
-const QWithdrawModal: React.FC<QDepositModalProps> = ({ token, isOpen, onClose }) => {
+const QWithdrawModal: React.FC<QDepositModalProps> = ({ max, token, isOpen, onClose }) => {
   const toast = useToast();
 
   const [chainName, setChainName] = useState<ChainName | undefined>('osmosis');
@@ -75,7 +79,7 @@ const QWithdrawModal: React.FC<QDepositModalProps> = ({ token, isOpen, onClose }
   const { transfer } = ibc.applications.transfer.v1.MessageComposer.withTypeUrl;
   const { address } = useChain(toChain ?? '');
   const { address: qAddress } = useChain('quicksilver');
-  const { balance } = useIbcBalanceQuery(fromChain ?? '', address ?? '');
+
   const { tx } = useTx(fromChain ?? '');
 
   const onSubmitClick = async () => {
@@ -120,8 +124,9 @@ const QWithdrawModal: React.FC<QDepositModalProps> = ({ token, isOpen, onClose }
       return;
     }
 
+    const qckDenom = token === 'qDYDX' ? 'a' + ibcDenom : 'u' + ibcDenom;
     const ibcToken = {
-      denom: 'u' + ibcDenom ?? '',
+      denom: qckDenom ?? '',
       amount: transferAmount,
     };
 
@@ -163,27 +168,59 @@ const QWithdrawModal: React.FC<QDepositModalProps> = ({ token, isOpen, onClose }
           </FormControl>
 
           {/* Amount Input */}
+
           <FormControl mt={4}>
             <FormLabel color="white">Amount</FormLabel>
-            <Input
-              _active={{
-                borderColor: 'complimentary.900',
-              }}
-              _selected={{
-                borderColor: 'complimentary.900',
-              }}
-              _hover={{
-                borderColor: 'complimentary.900',
-              }}
-              _focus={{
-                borderColor: 'complimentary.900',
-                boxShadow: '0 0 0 3px #FF8000',
-              }}
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              color={'white'}
-              placeholder="Enter amount"
-            />
+            <InputGroup>
+              <Input
+                type="number"
+                pr="4.5rem" // Padding to ensure text doesn't overlap with buttons
+                _active={{
+                  borderColor: 'complimentary.900',
+                }}
+                _selected={{
+                  borderColor: 'complimentary.900',
+                }}
+                _hover={{
+                  borderColor: 'complimentary.900',
+                }}
+                _focus={{
+                  borderColor: 'complimentary.900',
+                  boxShadow: '0 0 0 3px #FF8000',
+                }}
+                value={amount}
+                onChange={(e) => setAmount(e.target.value <= max ? e.target.value : max)}
+                max={max}
+                color={'white'}
+                placeholder="Enter amount"
+              />
+              <InputRightElement>
+                <HStack mr={14} spacing={1}>
+                  <Button
+                    variant={'ghost'}
+                    color="complimentary.900"
+                    h="1.75rem"
+                    size="xs"
+                    _active={{ transform: 'scale(0.95)', color: 'complimentary.800' }}
+                    _hover={{ bgColor: 'transparent', color: 'complimentary.400' }}
+                    onClick={() => setAmount((parseFloat(max) / 2).toString())}
+                  >
+                    Half
+                  </Button>
+                  <Button
+                    variant={'ghost'}
+                    color="complimentary.900"
+                    _active={{ transform: 'scale(0.95)', color: 'complimentary.800' }}
+                    _hover={{ bgColor: 'transparent', color: 'complimentary.400' }}
+                    h="1.75rem"
+                    size="xs"
+                    onClick={() => setAmount(max)}
+                  >
+                    Max
+                  </Button>
+                </HStack>
+              </InputRightElement>
+            </InputGroup>
           </FormControl>
         </ModalBody>
 

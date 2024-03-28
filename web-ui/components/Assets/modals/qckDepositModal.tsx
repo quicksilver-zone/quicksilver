@@ -192,6 +192,7 @@ export function DepositModal() {
               mr={3}
               onClick={onSubmitClick}
               disabled={!amount}
+              isDisabled={!amount}
             >
               {isLoading === true && <Spinner size="sm" />}
               {isLoading === false && 'Deposit'}
