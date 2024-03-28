@@ -208,7 +208,7 @@ func (suite *KeeperTestSuite) TestGCCompletedUnbondings() {
 		Status:         types.WithdrawStatusCompleted,
 		CompletionTime: currentTime.Add(-25 * time.Hour).UTC(),
 	}
-	quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(ctx, record1)
+	_ = quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(ctx, record1)
 
 	record2 := types.WithdrawalRecord{
 		ChainId:   suite.chainB.ChainID,
@@ -230,7 +230,7 @@ func (suite *KeeperTestSuite) TestGCCompletedUnbondings() {
 		Status:         types.WithdrawStatusUnbond,
 		CompletionTime: currentTime.Add(25 * time.Hour).UTC(),
 	}
-	quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(ctx, record2)
+	_ = quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(ctx, record2)
 
 	record3 := types.WithdrawalRecord{
 		ChainId:   suite.chainB.ChainID,
@@ -252,7 +252,7 @@ func (suite *KeeperTestSuite) TestGCCompletedUnbondings() {
 		Status:         types.WithdrawStatusUnbond,
 		CompletionTime: time.Time{},
 	}
-	quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(ctx, record3)
+	_ = quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(ctx, record3)
 
 	records = quicksilver.InterchainstakingKeeper.AllWithdrawalRecords(ctx)
 	suite.Equal(3, len(records))

@@ -1,6 +1,7 @@
 package app
 
 import (
+	"encoding/hex"
 	"fmt"
 	"testing"
 	"time"
@@ -9,6 +10,7 @@ import (
 
 	"cosmossdk.io/math"
 
+	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -349,7 +351,7 @@ func (s *AppTestSuite) TestV010500UpgradeHandler() {
 	recipient2 := addressutils.GenerateAddressForTestWithPrefix("quick")
 
 	// queued
-	app.InterchainstakingKeeper.SetWithdrawalRecord(s.chainA.GetContext(), icstypes.WithdrawalRecord{
+	err = app.InterchainstakingKeeper.SetWithdrawalRecord(s.chainA.GetContext(), icstypes.WithdrawalRecord{
 		ChainId:      zone.ChainId,
 		Delegator:    user1,
 		Recipient:    recipient1,
@@ -360,7 +362,8 @@ func (s *AppTestSuite) TestV010500UpgradeHandler() {
 		Status:       icstypes.WithdrawStatusQueued,
 		EpochNumber:  1,
 	})
-	app.InterchainstakingKeeper.SetWithdrawalRecord(s.chainA.GetContext(), icstypes.WithdrawalRecord{
+	s.NoError(err)
+	err = app.InterchainstakingKeeper.SetWithdrawalRecord(s.chainA.GetContext(), icstypes.WithdrawalRecord{
 		ChainId:      zone.ChainId,
 		Delegator:    user1,
 		Recipient:    recipient1,
@@ -371,7 +374,8 @@ func (s *AppTestSuite) TestV010500UpgradeHandler() {
 		Status:       icstypes.WithdrawStatusQueued,
 		EpochNumber:  1,
 	})
-	app.InterchainstakingKeeper.SetWithdrawalRecord(s.chainA.GetContext(), icstypes.WithdrawalRecord{
+	s.NoError(err)
+	err = app.InterchainstakingKeeper.SetWithdrawalRecord(s.chainA.GetContext(), icstypes.WithdrawalRecord{
 		ChainId:      zone.ChainId,
 		Delegator:    user1,
 		Recipient:    recipient1,
@@ -382,7 +386,8 @@ func (s *AppTestSuite) TestV010500UpgradeHandler() {
 		Status:       icstypes.WithdrawStatusQueued,
 		EpochNumber:  1,
 	})
-	app.InterchainstakingKeeper.SetWithdrawalRecord(s.chainA.GetContext(), icstypes.WithdrawalRecord{
+	s.NoError(err)
+	err = app.InterchainstakingKeeper.SetWithdrawalRecord(s.chainA.GetContext(), icstypes.WithdrawalRecord{
 		ChainId:      zone.ChainId,
 		Delegator:    user1,
 		Recipient:    recipient2,
@@ -393,7 +398,8 @@ func (s *AppTestSuite) TestV010500UpgradeHandler() {
 		Status:       icstypes.WithdrawStatusQueued,
 		EpochNumber:  1,
 	})
-	app.InterchainstakingKeeper.SetWithdrawalRecord(s.chainA.GetContext(), icstypes.WithdrawalRecord{
+	s.NoError(err)
+	err = app.InterchainstakingKeeper.SetWithdrawalRecord(s.chainA.GetContext(), icstypes.WithdrawalRecord{
 		ChainId:      zone.ChainId,
 		Delegator:    user2,
 		Recipient:    recipient2,
@@ -404,10 +410,11 @@ func (s *AppTestSuite) TestV010500UpgradeHandler() {
 		Status:       icstypes.WithdrawStatusQueued,
 		EpochNumber:  1,
 	})
+	s.NoError(err)
 
 	// unbonding
 
-	app.InterchainstakingKeeper.SetWithdrawalRecord(s.chainA.GetContext(), icstypes.WithdrawalRecord{
+	err = app.InterchainstakingKeeper.SetWithdrawalRecord(s.chainA.GetContext(), icstypes.WithdrawalRecord{
 		ChainId:   zone.ChainId,
 		Delegator: user1,
 		Recipient: recipient1,
@@ -434,7 +441,8 @@ func (s *AppTestSuite) TestV010500UpgradeHandler() {
 		EpochNumber:    1,
 		CompletionTime: ctx.BlockTime().Add(180 * time.Minute),
 	})
-	app.InterchainstakingKeeper.SetWithdrawalRecord(s.chainA.GetContext(), icstypes.WithdrawalRecord{
+	s.NoError(err)
+	err = app.InterchainstakingKeeper.SetWithdrawalRecord(s.chainA.GetContext(), icstypes.WithdrawalRecord{
 		ChainId:   zone.ChainId,
 		Delegator: user1,
 		Recipient: recipient1,
@@ -465,7 +473,8 @@ func (s *AppTestSuite) TestV010500UpgradeHandler() {
 		EpochNumber:    1,
 		CompletionTime: ctx.BlockTime().Add(182 * time.Minute),
 	})
-	app.InterchainstakingKeeper.SetWithdrawalRecord(s.chainA.GetContext(), icstypes.WithdrawalRecord{
+	s.NoError(err)
+	err = app.InterchainstakingKeeper.SetWithdrawalRecord(s.chainA.GetContext(), icstypes.WithdrawalRecord{
 		ChainId:   zone.ChainId,
 		Delegator: user2,
 		Recipient: recipient2,
@@ -496,7 +505,8 @@ func (s *AppTestSuite) TestV010500UpgradeHandler() {
 		EpochNumber:    1,
 		CompletionTime: ctx.BlockTime().Add(182 * time.Minute),
 	})
-	app.InterchainstakingKeeper.SetWithdrawalRecord(s.chainA.GetContext(), icstypes.WithdrawalRecord{
+	s.NoError(err)
+	err = app.InterchainstakingKeeper.SetWithdrawalRecord(s.chainA.GetContext(), icstypes.WithdrawalRecord{
 		ChainId:   zone.ChainId,
 		Delegator: user2,
 		Recipient: recipient2,
@@ -526,7 +536,8 @@ func (s *AppTestSuite) TestV010500UpgradeHandler() {
 		Status:       icstypes.WithdrawStatusUnbond,
 		EpochNumber:  1,
 	})
-	app.InterchainstakingKeeper.SetWithdrawalRecord(s.chainA.GetContext(), icstypes.WithdrawalRecord{
+	s.NoError(err)
+	err = app.InterchainstakingKeeper.SetWithdrawalRecord(s.chainA.GetContext(), icstypes.WithdrawalRecord{
 		ChainId:   zone.ChainId,
 		Delegator: user2,
 		Recipient: recipient1,
@@ -556,7 +567,8 @@ func (s *AppTestSuite) TestV010500UpgradeHandler() {
 		Status:       icstypes.WithdrawStatusUnbond,
 		EpochNumber:  1,
 	})
-	app.InterchainstakingKeeper.SetWithdrawalRecord(s.chainA.GetContext(), icstypes.WithdrawalRecord{
+	s.NoError(err)
+	err = app.InterchainstakingKeeper.SetWithdrawalRecord(s.chainA.GetContext(), icstypes.WithdrawalRecord{
 		ChainId:   zone.ChainId,
 		Delegator: user1,
 		Recipient: recipient1,
@@ -590,7 +602,8 @@ func (s *AppTestSuite) TestV010500UpgradeHandler() {
 		Status:       icstypes.WithdrawStatusUnbond,
 		EpochNumber:  2,
 	})
-	app.InterchainstakingKeeper.SetWithdrawalRecord(s.chainA.GetContext(), icstypes.WithdrawalRecord{
+	s.NoError(err)
+	err = app.InterchainstakingKeeper.SetWithdrawalRecord(s.chainA.GetContext(), icstypes.WithdrawalRecord{
 		ChainId:   zone.ChainId,
 		Delegator: user2,
 		Recipient: recipient2,
@@ -624,7 +637,7 @@ func (s *AppTestSuite) TestV010500UpgradeHandler() {
 		Status:       icstypes.WithdrawStatusUnbond,
 		EpochNumber:  2,
 	})
-
+	s.NoError(err)
 	handler := upgrades.V010500UpgradeHandler(app.mm,
 		app.configurator, &app.AppKeepers)
 
@@ -784,8 +797,10 @@ func (s *AppTestSuite) TestV010503UpgradeHandler() {
 		EpochNumber:  2,
 	}
 
-	app.InterchainstakingKeeper.SetWithdrawalRecord(ctx, wdr1)
-	app.InterchainstakingKeeper.SetWithdrawalRecord(ctx, wdr2)
+	err := app.InterchainstakingKeeper.SetWithdrawalRecord(ctx, wdr1)
+	s.NoError(err)
+	err = app.InterchainstakingKeeper.SetWithdrawalRecord(ctx, wdr2)
+	s.NoError(err)
 
 	app.ClaimsManagerKeeper.SetClaim(ctx, &cmtypes.Claim{UserAddress: user1, ChainId: s.chainB.ChainID, Module: cmtypes.ClaimTypeLiquidToken, SourceChainId: "osmosis-1", XAmount: 3000})
 	app.ClaimsManagerKeeper.SetLastEpochClaim(ctx, &cmtypes.Claim{UserAddress: user1, ChainId: s.chainB.ChainID, Module: cmtypes.ClaimTypeLiquidToken, SourceChainId: "osmosis-1", XAmount: 2900})
@@ -793,7 +808,7 @@ func (s *AppTestSuite) TestV010503UpgradeHandler() {
 	handler := upgrades.V010503UpgradeHandler(app.mm,
 		app.configurator, &app.AppKeepers)
 
-	_, err := handler(ctx, types.Plan{}, app.mm.GetVersionMap())
+	_, err = handler(ctx, types.Plan{}, app.mm.GetVersionMap())
 	s.NoError(err)
 
 	wdr2actual, found := app.InterchainstakingKeeper.GetWithdrawalRecord(ctx, wdr2.ChainId, wdr2.Txhash, wdr2.Status)
@@ -810,4 +825,103 @@ func (s *AppTestSuite) TestV010503UpgradeHandler() {
 
 	leclaims := app.ClaimsManagerKeeper.AllZoneLastEpochUserClaims(ctx, s.chainB.ChainID, user1)
 	s.Equal(leclaims[0].Amount, math.NewInt(2900))
+}
+
+// Init a zone with some zero burnAmount withdrawal records
+
+func (s *AppTestSuite) InitV160rc0TestZone() {
+	cosmosWithdrawal := addressutils.GenerateAddressForTestWithPrefix("cosmos")
+	cosmosPerformance := addressutils.GenerateAddressForTestWithPrefix("cosmos")
+	cosmosDeposit := addressutils.GenerateAddressForTestWithPrefix("cosmos")
+	cosmosDelegate := addressutils.GenerateAddressForTestWithPrefix("cosmos")
+	// cosmos zone
+	zone := icstypes.Zone{
+		ConnectionId:    "connection-77001",
+		ChainId:         "cosmoshub-4",
+		AccountPrefix:   "cosmos",
+		LocalDenom:      "uqatom",
+		BaseDenom:       "uatom",
+		MultiSend:       false,
+		LiquidityModule: false,
+		WithdrawalAddress: &icstypes.ICAAccount{
+			Address:           cosmosWithdrawal,
+			PortName:          "icacontroller-cosmoshub-4.withdrawal",
+			WithdrawalAddress: cosmosWithdrawal,
+		},
+		DelegationAddress: &icstypes.ICAAccount{
+			Address:           cosmosDelegate,
+			PortName:          "icacontroller-cosmoshub-4.delegate",
+			WithdrawalAddress: cosmosWithdrawal,
+		},
+		DepositAddress: &icstypes.ICAAccount{
+			Address:           cosmosDeposit,
+			PortName:          "icacontroller-cosmoshub-4.deposit",
+			WithdrawalAddress: cosmosWithdrawal,
+		},
+		PerformanceAddress: &icstypes.ICAAccount{
+			Address:           cosmosPerformance,
+			PortName:          "icacontroller-cosmoshub-4.performance",
+			WithdrawalAddress: cosmosWithdrawal,
+		},
+	}
+	s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetZone(s.chainA.GetContext(), &zone)
+
+	// set withdrawal records
+	invalidWithdrawal := icstypes.WithdrawalRecord{
+		ChainId:        zone.ChainId,
+		Delegator:      cosmosDelegate,
+		Recipient:      cosmosWithdrawal,
+		BurnAmount:     sdk.NewCoin("uqatom", math.NewInt(0)),
+		Requeued:       true,
+		Txhash:         fmt.Sprintf("%064d", 1),
+		Acknowledged:   false,
+		Status:         icstypes.WithdrawStatusQueued,
+		EpochNumber:    1,
+		CompletionTime: time.Time{},
+	}
+	s.UncheckedSetWithdrawalRecord(s.chainA.GetContext(), s.GetQuicksilverApp(s.chainA), invalidWithdrawal)
+	validWithdrawal := icstypes.WithdrawalRecord{
+		ChainId:        zone.ChainId,
+		Delegator:      cosmosDelegate,
+		Recipient:      cosmosWithdrawal,
+		BurnAmount:     sdk.NewCoin("uqatom", math.NewInt(1000)),
+		Requeued:       true,
+		Txhash:         fmt.Sprintf("%064d", 2),
+		Acknowledged:   false,
+		Status:         icstypes.WithdrawStatusQueued,
+		EpochNumber:    1,
+		CompletionTime: time.Time{},
+	}
+	s.UncheckedSetWithdrawalRecord(s.chainA.GetContext(), s.GetQuicksilverApp(s.chainA), validWithdrawal)
+}
+
+func (s *AppTestSuite) TestV010600rc0UpgradeHandler() {
+	s.InitV160rc0TestZone()
+	app := s.GetQuicksilverApp(s.chainA)
+	ctx := s.chainA.GetContext()
+
+	handler := upgrades.V010600rc0UpgradeHandler(app.mm,
+		app.configurator, &app.AppKeepers)
+
+	_, err := handler(ctx, types.Plan{}, app.mm.GetVersionMap())
+	s.NoError(err)
+	// check if the invalid withdrawal record is removed
+	_, found := app.InterchainstakingKeeper.GetWithdrawalRecord(ctx, "cosmoshub-4", fmt.Sprintf("%064d", 1), icstypes.WithdrawStatusQueued)
+	s.False(found)
+	// check if the valid withdrawal record is still there
+	_, found = app.InterchainstakingKeeper.GetWithdrawalRecord(ctx, "cosmoshub-4", fmt.Sprintf("%064d", 2), icstypes.WithdrawStatusQueued)
+	s.True(found)
+}
+
+// UncheckedSetWithdrawalRecord store the withdrawal record without checking the burnAmount.
+// WARNING: This function is intended for testing purposes only and should not be used in production code.
+func (s *AppTestSuite) UncheckedSetWithdrawalRecord(ctx sdk.Context, app *Quicksilver, record icstypes.WithdrawalRecord) {
+	key, err := hex.DecodeString(record.Txhash)
+	if err != nil {
+		panic(err)
+	}
+
+	store := prefix.NewStore(ctx.KVStore(app.GetKey(icstypes.StoreKey)), icstypes.GetWithdrawalKey(record.ChainId, record.Status))
+	bz := app.InterchainstakingKeeper.GetCodec().MustMarshal(&record)
+	store.Set(key, bz)
 }

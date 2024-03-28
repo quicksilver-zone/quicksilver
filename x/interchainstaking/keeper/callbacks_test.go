@@ -689,7 +689,7 @@ func (suite *KeeperTestSuite) TestHandleValidatorCallbackJailedWithSlashing() {
 			zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 			suite.True(found)
 
-			quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(ctx, test.withdrawal(ctx, quicksilver, zone))
+			_ = quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(ctx, test.withdrawal(ctx, quicksilver, zone))
 
 			bz, err := quicksilver.AppCodec().Marshal(test.validator(ctx, quicksilver, zone))
 			suite.NoError(err)

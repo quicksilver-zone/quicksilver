@@ -58,7 +58,10 @@ func InitGenesis(ctx sdk.Context, k *keeper.Keeper, genState types.GenesisState)
 	}
 
 	for _, withdrawal := range genState.WithdrawalRecords {
-		k.SetWithdrawalRecord(ctx, withdrawal)
+		err := k.SetWithdrawalRecord(ctx, withdrawal)
+		if err != nil {
+			panic(err)
+		}
 	}
 }
 
