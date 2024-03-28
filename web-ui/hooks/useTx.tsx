@@ -4,8 +4,9 @@ import { useChain } from '@cosmos-kit/react';
 import { cosmos } from 'interchain-query';
 import { TxRaw } from 'interchain-query/cosmos/tx/v1beta1/tx';
 import { Event } from 'interchain-query/tendermint/abci/types';
-import { useToaster, ToastType, type CustomToast } from './useToaster';
 import { useState } from 'react';
+
+import { useToaster, ToastType, type CustomToast } from './useToaster';
 
 interface Msg {
   typeUrl: string;

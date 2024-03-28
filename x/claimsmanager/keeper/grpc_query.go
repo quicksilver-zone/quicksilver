@@ -68,9 +68,16 @@ func (k Keeper) UserClaims(c context.Context, q *types.QueryClaimsRequest) (*typ
 	addrBytes := []byte(q.Address)
 
 	k.IterateAllClaims(ctx, func(_ int64, key []byte, claim types.Claim) (stop bool) {
+		// The assumption is that IterateAllClaims returns non-empty keys.
 		// check for the presence of the addr bytes in the key.
-		// first prefix byte is 0x00; so cater for that! Then + 1 to skip the separator.
-		idx := bytes.Index(key[1:], []byte{0x00}) + 1 + 1
+		// first prefix byte is 0x00; so cater for that!
+		idx := bytes.Index(key[1:], []byte{0x00})
+		if idx < 0 {
+			return false
+		}
+
+		idx += 1 + 1 // add + 1 to skip the separator.
+
 		if bytes.Equal(key[idx:idx+len(addrBytes)], addrBytes) {
 			out = append(out, claim)
 		}
@@ -86,8 +93,14 @@ func (k Keeper) UserLastEpochClaims(c context.Context, q *types.QueryClaimsReque
 	addrBytes := []byte(q.Address)
 	k.IterateAllLastEpochClaims(ctx, func(_ int64, key []byte, claim types.Claim) (stop bool) {
 		// check for the presence of the addr bytes in the key.
-		// First byte is 0x01 here, so no need to consider it; + 1 to skip the separator.
-		idx := bytes.Index(key, []byte{0x00}) + 1
+		idx := bytes.Index(key, []byte{0x00})
+		if idx < 0 {
+			return false
+		}
+
+		// First byte was 0x01, so no need to consider it; + 1 to skip the separator.
+		idx++
+
 		if bytes.Equal(key[idx:idx+len(addrBytes)], addrBytes) {
 			out = append(out, claim)
 		}

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"slices"
 	"time"
 
 	"github.com/tendermint/tendermint/libs/log"
@@ -406,16 +407,24 @@ func (k *Keeper) SetValidatorForZone(ctx sdk.Context, zone *types.Zone, data []b
 			if !val.VotingPower.IsPositive() {
 				return fmt.Errorf("existing voting power must be greater than zero, received %s", val.VotingPower)
 			}
-			if !validator.Tokens.IsPositive() {
-				return fmt.Errorf("incoming voting power must be greater than zero, received %s", validator.Tokens)
+			if validator.Tokens.IsNegative() {
+				return fmt.Errorf("incoming voting power must not be negative, received %s", validator.Tokens)
 			}
-			// determine difference between previous vp/shares ratio and new ratio.
-			prevRatio := val.DelegatorShares.Quo(sdk.NewDecFromInt(val.VotingPower))
-			newRatio := validator.DelegatorShares.Quo(sdk.NewDecFromInt(validator.Tokens))
-			delta := newRatio.Quo(prevRatio)
-			err = k.UpdateWithdrawalRecordsForSlash(ctx, zone, val.ValoperAddress, delta)
-			if err != nil {
-				return err
+			if validator.Tokens.IsZero() {
+				// edge case: if validator tokens is now zero, val was slashed to zero.
+				err = k.UpdateWithdrawalRecordsForSlash(ctx, zone, val.ValoperAddress, sdk.ZeroDec())
+				if err != nil {
+					return err
+				}
+			} else {
+				// determine difference between previous vp/shares ratio and new ratio.
+				prevRatio := val.DelegatorShares.Quo(sdk.NewDecFromInt(val.VotingPower))
+				newRatio := validator.DelegatorShares.Quo(sdk.NewDecFromInt(validator.Tokens))
+				delta := newRatio.Quo(prevRatio)
+				err = k.UpdateWithdrawalRecordsForSlash(ctx, zone, val.ValoperAddress, delta)
+				if err != nil {
+					return err
+				}
 			}
 		} else if val.Jailed && !validator.IsJailed() {
 			k.Logger(ctx).Debug("Transitioning validator to unjailed state", "valoper", validator.OperatorAddress)
@@ -731,7 +740,7 @@ func (k *Keeper) GetAggregateIntentOrDefault(ctx sdk.Context, zone *types.Zone) 
 	}
 
 	jailedThreshold := k.EpochsKeeper.GetEpochInfo(ctx, "epoch").Duration * 2
-
+	denyList := k.GetZoneValidatorDenyList(ctx, zone.ChainId)
 	// filter intents here...
 	// check validators for tombstoned
 	for _, validatorIntent := range intents {
@@ -756,9 +765,9 @@ func (k *Keeper) GetAggregateIntentOrDefault(ctx sdk.Context, zone *types.Zone) 
 		}
 
 		// we should never let denylist validators into the list, even if they are explicitly selected
-		// if in deny list {
-		// continue
-		// }
+		if slices.Contains(denyList, validator.ValoperAddress) {
+			continue
+		}
 		filteredIntents = append(filteredIntents, validatorIntent)
 	}
 
@@ -788,7 +797,7 @@ func (k *Keeper) Rebalance(ctx sdk.Context, zone *types.Zone, epochNumber int64)
 				EpochNumber: epochNumber,
 				Source:      rebalance.Source,
 				Destination: rebalance.Target,
-				Amount:      rebalance.Amount.Int64(),
+				Amount:      rebalance.Amount,
 			})
 		}
 	}

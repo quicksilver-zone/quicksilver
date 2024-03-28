@@ -45,6 +45,7 @@ func (k *Keeper) GetNextWithdrawalRecordSequence(ctx sdk.Context) uint64 {
 	}
 
 	bz = k.cdc.MustMarshal(&gogotypes.UInt64Value{Value: sequence + 1})
+
 	store.Set(types.KeyPrefixRequeuedWithdrawalRecordSeq, bz)
 
 	return sequence
@@ -170,6 +171,7 @@ func (k *Keeper) GetUserChainRequeuedWithdrawalRecord(ctx sdk.Context, chainID s
 
 	k.IterateZoneStatusWithdrawalRecords(ctx, chainID, types.WithdrawStatusQueued, func(_ int64, record types.WithdrawalRecord) (stop bool) {
 		if record.Requeued && record.Delegator == address {
+			fmt.Println("FOUND MATCHING RECORD")
 			toReturn = record
 			return true
 		}
@@ -270,16 +272,19 @@ func (k *Keeper) UpdateWithdrawalRecordsForSlash(ctx sdk.Context, zone *types.Zo
 			if d.Valoper != valoper {
 				continue
 			}
-			distAmount := sdk.NewDec(int64(d.Amount))
+			distAmount := sdk.NewDecFromInt(d.Amount)
 			if distAmount.IsNegative() {
 				err = fmt.Errorf("distAmount cannot be negative; suspected overflow")
 				return true
 			}
 
-			newAmount := distAmount.Quo(delta).TruncateInt()
+			newAmount := sdkmath.ZeroInt()
+			if !delta.IsZero() {
+				newAmount = distAmount.Quo(delta).TruncateInt()
+			}
 			thisSubAmount := distAmount.TruncateInt().Sub(newAmount)
 			recordSubAmount = recordSubAmount.Add(thisSubAmount)
-			d.Amount = newAmount.Uint64()
+			d.Amount = newAmount
 			k.Logger(ctx).Info("Updated withdrawal record due to slashing", "valoper", valoper, "old_amount", d.Amount, "new_amount", newAmount.String(), "sub_amount", thisSubAmount.String())
 		}
 		record.Distribution = distr

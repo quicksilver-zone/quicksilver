@@ -629,7 +629,7 @@ func (suite *KeeperTestSuite) addClaim(address, chainID string, claimType cmtype
 		ChainId:       chainID,
 		Module:        claimType,
 		SourceChainId: sourceChainID,
-		Amount:        amount,
+		Amount:        math.NewIntFromUint64(amount),
 	}
 	suite.GetQuicksilverApp(suite.chainA).ClaimsManagerKeeper.SetClaim(suite.chainA.GetContext(), &claim)
 }

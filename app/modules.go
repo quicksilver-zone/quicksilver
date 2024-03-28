@@ -2,8 +2,8 @@ package app
 
 import (
 	"github.com/CosmWasm/wasmd/x/wasm"
-	packetforward "github.com/strangelove-ventures/packet-forward-middleware/v5/router"
-	packetforwardtypes "github.com/strangelove-ventures/packet-forward-middleware/v5/router/types"
+	"github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v5/packetforward"
+	packetforwardtypes "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v5/packetforward/types"
 
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"

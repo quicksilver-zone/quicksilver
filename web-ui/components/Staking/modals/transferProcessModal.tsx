@@ -155,7 +155,7 @@ export const TransferProcessModal: React.FC<StakingModalProps> = ({
         amount: feeAmount.toString(),
       },
     ],
-    gas: '750000', // test txs were using well in excess of 600k
+    gas: '1000000', // increased to 1,000,000 from 750,000
   };
 
   // don't use the same fee for both txs, as a send is piddly!
@@ -194,7 +194,7 @@ export const TransferProcessModal: React.FC<StakingModalProps> = ({
     setIsSigning(true);
     setTransactionStatus('Pending');
     try {
-      const result = await tx([msg], {
+      await tx([msg], {
         fee,
         onSuccess: () => {
           setStep(2);
@@ -228,7 +228,7 @@ export const TransferProcessModal: React.FC<StakingModalProps> = ({
     setIsSigning(true);
     setTransactionStatus('Pending');
     try {
-      const result = await tx([msgSend], {
+      await tx([msgSend], {
         fee: sendFee,
         onSuccess: () => {
           setStep(3);
@@ -247,8 +247,8 @@ export const TransferProcessModal: React.FC<StakingModalProps> = ({
   return (
     <Modal isOpen={isOpen} onClose={onClose} size={{ base: '3xl', md: '2xl' }}>
       <ModalOverlay />
-      <ChakraModalContent h={{ md: '48%', base: '80%' }} maxH={'100%'}>
-        <ModalBody borderRadius={4} h="48%" maxH={'100%'}>
+      <ChakraModalContent h={{ md: '44%', base: '80%' }} maxH={'100%'}>
+        <ModalBody borderRadius={4} h="44%" maxH={'100%'}>
           <ModalCloseButton zIndex={1000} color="white" />
           <HStack position={'relative'} h="100%" spacing="48px" align="stretch">
             {/* Left Section */}
@@ -257,7 +257,7 @@ export const TransferProcessModal: React.FC<StakingModalProps> = ({
                 <Stat>
                   <StatLabel color="rgba(255,255,255,0.5)">TRANSFER DELEGATION</StatLabel>
                   <StatNumber color="white">{truncateString(selectedValidator.moniker, 13)}</StatNumber>
-                  <StatNumber color="white">
+                  <StatNumber display={{ base: 'none', md: 'block' }} color="white">
                     {shiftDigits(selectedValidator.tokenAmount, -6)}&nbsp;
                     {selectedOption?.value}
                   </StatNumber>
@@ -322,7 +322,7 @@ export const TransferProcessModal: React.FC<StakingModalProps> = ({
 
                   <Button
                     mt={4}
-                    width="55%"
+                    width={{ base: '80%', md: '55%' }}
                     _active={{
                       transform: 'scale(0.95)',
                       color: 'complimentary.800',
