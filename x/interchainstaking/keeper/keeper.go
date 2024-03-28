@@ -350,11 +350,11 @@ func (k *Keeper) SetValidatorForZone(ctx sdk.Context, zone *types.Zone, data []b
 		return nil
 	}
 
-	if err := k.handleJailStatusTransition(ctx, zone, val, validator); err != nil {
+	if err := k.handleJailStatusTransition(ctx, zone, &val, validator); err != nil {
 		return err
 	}
 
-	if err := k.updateValidatorFields(ctx, val, validator); err != nil {
+	if err := k.updateValidatorFields(ctx, &val, validator); err != nil {
 		return err
 	}
 
@@ -407,7 +407,7 @@ func (k *Keeper) handleNewValidator(ctx sdk.Context, zone *types.Zone, validator
 	return k.MakePerformanceDelegation(ctx, zone, validator.OperatorAddress)
 }
 
-func (k *Keeper) handleJailStatusTransition(ctx sdk.Context, zone *types.Zone, val types.Validator, validator lsmstakingtypes.Validator) error {
+func (k *Keeper) handleJailStatusTransition(ctx sdk.Context, zone *types.Zone, val *types.Validator, validator lsmstakingtypes.Validator) error {
 	if !val.Jailed && validator.IsJailed() {
 		k.Logger(ctx).Info("Transitioning validator to jailed state", "valoper", validator.OperatorAddress, "old_vp", val.VotingPower, "new_vp", validator.Tokens, "new_shares", validator.DelegatorShares, "old_shares", val.DelegatorShares)
 
@@ -457,7 +457,7 @@ func (k *Keeper) handleJailStatusTransition(ctx sdk.Context, zone *types.Zone, v
 	return nil
 }
 
-func (k *Keeper) updateValidatorFields(ctx sdk.Context, val types.Validator, validator lsmstakingtypes.Validator) error {
+func (k *Keeper) updateValidatorFields(ctx sdk.Context, val *types.Validator, validator lsmstakingtypes.Validator) error {
 	if !val.CommissionRate.Equal(validator.GetCommission()) {
 		k.Logger(ctx).Debug("Validator commission rate change; updating...", "valoper", validator.OperatorAddress, "oldRate", val.CommissionRate, "newRate", validator.GetCommission())
 		val.CommissionRate = validator.GetCommission()
