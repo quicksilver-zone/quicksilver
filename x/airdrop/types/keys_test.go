@@ -92,7 +92,7 @@ func TestGetPrefixClaimRecord(t *testing.T) {
 			args{
 				chainID: testID,
 			},
-			append([]byte{0x2}, []byte(testID)...),
+			append([]byte{0x2}, testID...),
 		},
 	}
 	for _, tt := range tests {
