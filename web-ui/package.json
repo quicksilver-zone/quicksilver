@@ -57,7 +57,7 @@
     "@testing-library/react": "^14.0.0",
     "@types/node": "20.11.16",
     "@types/react": "18.2.52",
-    "@types/react-dom": "18.2.18",
+    "@types/react-dom": "18.2.23",
     "eslint": "8.56.0",
     "eslint-config-next": "13.0.5",
     "eslint-plugin-unused-imports": "^3.0.0",
