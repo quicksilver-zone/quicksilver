@@ -374,16 +374,35 @@ WITHDRAWAL:
 	}
 
 	// sanity checks
+	sumOut, err := sumOutCheck(coinsOutPerValidator, tokensAllocatedForWithdrawalPerValidator, denom)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	sumIn, err := sumInCheck(amountToWithdrawPerWithdrawal, distributionsPerWithdrawal, denom)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	if !sumIn.Equal(sumOut) {
+		return nil, nil, nil, fmt.Errorf("sumIn <-> sumOut mismatch; sumIn = %s, sumOut = %s", sumIn.Amount.String(), sumOut.Amount.String())
+	}
+
+	return coinsOutPerValidator, txHashesPerValidator, distributionsPerWithdrawal, nil
+}
+
+func sumOutCheck(coinsOutPerValidator map[string]sdk.Coin, tokensAllocatedForWithdrawalPerValidator map[string]sdkmath.Int, denom string) (sdk.Coin, error) {
 	sumOut := sdk.NewCoin(denom, sdkmath.ZeroInt())
 	for valoper, coinPerVal := range coinsOutPerValidator {
-		if !coinPerVal.Amount.Equal(_tokensAllocatedForWithdrawalPerValidator[valoper]) {
-			return nil, nil, nil, fmt.Errorf("allocation <-> coinOut mismatch for %s; in = %v, out = %v", valoper, _tokensAllocatedForWithdrawalPerValidator[valoper], coinPerVal)
+		if !coinPerVal.Amount.Equal(tokensAllocatedForWithdrawalPerValidator[valoper]) {
+			return sdk.Coin{}, fmt.Errorf("allocation <-> coinOut mismatch for %s; in = %v, out = %v", valoper, tokensAllocatedForWithdrawalPerValidator[valoper], coinPerVal)
 		}
 		sumOut = sumOut.Add(coinPerVal)
 	}
+	return sumOut, nil
+}
 
+func sumInCheck(amountToWithdrawPerWithdrawal map[string]sdk.Coin, distributionsPerWithdrawal map[string][]*types.Distribution, denom string) (sdk.Coin, error) {
 	sumIn := sdk.NewCoin(denom, sdkmath.ZeroInt())
-	for hash, tx := range _amountToWithdrawPerWithdrawal {
+	for hash, tx := range amountToWithdrawPerWithdrawal {
 		sumIn = sumIn.Add(tx)
 		dist := func(in []*types.Distribution) sdkmath.Int {
 			sum := sdkmath.ZeroInt()
@@ -394,13 +413,9 @@ WITHDRAWAL:
 		}(distributionsPerWithdrawal[hash])
 
 		if !tx.Amount.Equal(dist) {
-			return nil, nil, nil, fmt.Errorf("amountToWithdrawPerWithdrawal <-> distributionsPerWithdrawal mismatch for %s; tx = %v, dist = %v", hash, tx, dist)
+			return sdk.Coin{}, fmt.Errorf("amountToWithdrawPerWithdrawal <-> distributionsPerWithdrawal mismatch for %s; tx = %v, dist = %v", hash, tx, dist)
 		}
 	}
 
-	if !sumIn.Equal(sumOut) {
-		return nil, nil, nil, fmt.Errorf("sumIn <-> sumOut mismatch; sumIn = %s, sumOut = %s", sumIn.Amount.String(), sumOut.Amount.String())
-	}
-
-	return coinsOutPerValidator, txHashesPerValidator, distributionsPerWithdrawal, nil
+	return sumIn, nil
 }
