@@ -385,7 +385,7 @@ func (suite *KeeperTestSuite) TestAggregateIntentWithPRClaims() {
 			},
 		},
 		{
-			name: "one single-val intent, multiple claims, 100% supply, returns single weighting",
+			name: "one single-val intent, multiple claims, 100% supply, returns equal weighting between three remaining validators",
 			intents: func(ctx sdk.Context, app *app.Quicksilver, zone icstypes.Zone) []icstypes.DelegatorIntent {
 				out := make([]icstypes.DelegatorIntent, 0)
 				out = append(out, icstypes.DelegatorIntent{Delegator: user1.String(), Intents: icstypes.ValidatorIntents{&icstypes.ValidatorIntent{ValoperAddress: app.InterchainstakingKeeper.GetValidators(ctx, zone.ChainId)[0].ValoperAddress, Weight: sdk.OneDec()}}})
@@ -394,13 +394,16 @@ func (suite *KeeperTestSuite) TestAggregateIntentWithPRClaims() {
 			claims: func(ctx sdk.Context, app *app.Quicksilver, zone icstypes.Zone) map[string]cmtypes.Claim {
 				return map[string]cmtypes.Claim{
 					user1.String(): {UserAddress: user1.String(), ChainId: zone.ChainId, Module: cmtypes.ClaimTypeLiquidToken, Amount: sdkmath.NewInt(1000), SourceChainId: "osmosis-1"},
-					user1.String(): {UserAddress: user1.String(), ChainId: zone.ChainId, Module: cmtypes.ClaimTypeLiquidToken, Amount: sdkmath.NewInt(1000), SourceChainId: "osmosis-1"},
+					user2.String(): {UserAddress: user2.String(), ChainId: zone.ChainId, Module: cmtypes.ClaimTypeLiquidToken, Amount: sdkmath.NewInt(1000), SourceChainId: "osmosis-1"},
 				}
 			},
 			unclaimedRatio: sdkmath.ZeroInt(),
 			expected: func(ctx sdk.Context, app *app.Quicksilver, zone icstypes.Zone) icstypes.ValidatorIntents {
 				out := icstypes.ValidatorIntents{}
-				out = append(out, &icstypes.ValidatorIntent{ValoperAddress: app.InterchainstakingKeeper.GetValidators(ctx, zone.ChainId)[0].ValoperAddress, Weight: sdk.OneDec()})
+				out = append(out, &icstypes.ValidatorIntent{ValoperAddress: app.InterchainstakingKeeper.GetValidators(ctx, zone.ChainId)[0].ValoperAddress, Weight: sdk.NewDec(5).Quo(sdk.NewDec(8))})
+				out = append(out, &icstypes.ValidatorIntent{ValoperAddress: app.InterchainstakingKeeper.GetValidators(ctx, zone.ChainId)[1].ValoperAddress, Weight: sdk.NewDec(1).Quo(sdk.NewDec(8))})
+				out = append(out, &icstypes.ValidatorIntent{ValoperAddress: app.InterchainstakingKeeper.GetValidators(ctx, zone.ChainId)[2].ValoperAddress, Weight: sdk.NewDec(1).Quo(sdk.NewDec(8))})
+				out = append(out, &icstypes.ValidatorIntent{ValoperAddress: app.InterchainstakingKeeper.GetValidators(ctx, zone.ChainId)[3].ValoperAddress, Weight: sdk.NewDec(1).Quo(sdk.NewDec(8))})
 				return out.Sort()
 			},
 		},
