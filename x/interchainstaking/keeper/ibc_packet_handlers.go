@@ -11,7 +11,6 @@ import (
 	"github.com/golang/protobuf/proto" // nolint:staticcheck
 
 	"cosmossdk.io/math"
-	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -167,18 +166,12 @@ func handleMsgWithdrawDelegatorReward(k *Keeper, ctx sdk.Context, msg sdk.Msg, s
 		return nil
 	}
 	k.Logger(ctx).Info("Rewards withdrawn")
-	if err := k.HandleWithdrawRewards(ctx, msg, connectionID); err != nil {
-		return err
-	}
-	return nil
+	return k.HandleWithdrawRewards(ctx, msg, connectionID)
 }
 
 func handleMsgRedeemTokensForShares(k *Keeper, ctx sdk.Context, msg sdk.Msg, msgResponse []byte, success bool, memo string, connectionID string) error {
 	if !success {
-		if err := k.HandleFailedRedeemTokens(ctx, msg, memo); err != nil {
-			return err
-		}
-		return nil
+		return k.HandleFailedRedeemTokens(ctx, msg, memo)
 	}
 	response := lsmstakingtypes.MsgRedeemTokensForSharesResponse{}
 	err := proto.Unmarshal(msgResponse, &response)
@@ -187,10 +180,7 @@ func handleMsgRedeemTokensForShares(k *Keeper, ctx sdk.Context, msg sdk.Msg, msg
 		return err
 	}
 	k.Logger(ctx).Info("Tokens redeemed for shares", "response", response)
-	if err := k.HandleRedeemTokens(ctx, msg, response.Amount, memo, connectionID); err != nil {
-		return err
-	}
-	return nil
+	return k.HandleRedeemTokens(ctx, msg, response.Amount, memo, connectionID)
 }
 
 func handleMsgTokenizeShares(k *Keeper, ctx sdk.Context, msg sdk.Msg, msgResponse []byte, success bool, memo string) error {
@@ -204,18 +194,12 @@ func handleMsgTokenizeShares(k *Keeper, ctx sdk.Context, msg sdk.Msg, msgRespons
 		return err
 	}
 	k.Logger(ctx).Info("Shares tokenized", "response", response)
-	if err := k.HandleTokenizedShares(ctx, msg, response.Amount, memo); err != nil {
-		return err
-	}
-	return nil
+	return k.HandleTokenizedShares(ctx, msg, response.Amount, memo)
 }
 
 func handleMsgDelegate(k *Keeper, ctx sdk.Context, msg sdk.Msg, msgResponse []byte, success bool, memo string) error {
 	if !success {
-		if err := k.HandleFailedDelegate(ctx, msg, memo); err != nil {
-			return err
-		}
-		return nil
+		return k.HandleFailedDelegate(ctx, msg, memo)
 	}
 	response := stakingtypes.MsgDelegateResponse{}
 	err := proto.Unmarshal(msgResponse, &response)
@@ -224,10 +208,7 @@ func handleMsgDelegate(k *Keeper, ctx sdk.Context, msg sdk.Msg, msgResponse []by
 		return err
 	}
 	k.Logger(ctx).Info("Delegated", "response", response)
-	if err := k.HandleDelegate(ctx, msg, memo); err != nil {
-		return err
-	}
-	return nil
+	return k.HandleDelegate(ctx, msg, memo)
 }
 
 func handleMsgBeginRedelegate(k *Keeper, ctx sdk.Context, msg sdk.Msg, msgResponse []byte, success bool, memo string) error {
@@ -286,10 +267,7 @@ func handleMsgSend(k *Keeper, ctx sdk.Context, msg sdk.Msg, msgResponse []byte, 
 		return err
 	}
 	k.Logger(ctx).Info("Funds Transferred", "response", response)
-	if err := k.HandleCompleteSend(ctx, msg, memo, connectionID); err != nil {
-		return err
-	}
-	return nil
+	return k.HandleCompleteSend(ctx, msg, memo, connectionID)
 }
 
 func handleMsgSetWithdrawAddress(k *Keeper, ctx sdk.Context, msg sdk.Msg, msgResponse []byte, success bool) error {
@@ -303,10 +281,7 @@ func handleMsgSetWithdrawAddress(k *Keeper, ctx sdk.Context, msg sdk.Msg, msgRes
 		return err
 	}
 	k.Logger(ctx).Info("Withdraw Address Updated", "response", response)
-	if err := k.HandleUpdatedWithdrawAddress(ctx, msg); err != nil {
-		return err
-	}
-	return nil
+	return k.HandleUpdatedWithdrawAddress(ctx, msg)
 }
 
 func (*Keeper) HandleTimeout(_ sdk.Context, _ channeltypes.Packet) error {
@@ -498,7 +473,7 @@ func (k *Keeper) HandleWithdrawForUser(ctx sdk.Context, zone *types.Zone, msg *b
 
 	period := int64(k.GetParam(ctx, types.KeyValidatorSetInterval))
 	query := stakingtypes.QueryValidatorsRequest{}
-	return k.EmitValSetQuery(ctx, zone.ConnectionId, zone.ChainId, query, sdkmath.NewInt(period))
+	return k.EmitValSetQuery(ctx, zone.ConnectionId, zone.ChainId, query, math.NewInt(period))
 }
 
 // New method to process per-validator withdrawals

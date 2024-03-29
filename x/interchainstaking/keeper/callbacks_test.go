@@ -86,7 +86,19 @@ func (suite *KeeperTestSuite) setupIbc() (*app.Quicksilver, sdk.Context) {
 
 func (suite *KeeperTestSuite) TestHandleValsetCallback() {
 	newVal := addressutils.GenerateValAddressForTest()
-
+	// helper function to check if a query is found
+	checkQueryFound := func(require *require.Assertions, ctx sdk.Context, quicksilver *app.Quicksilver, in stakingtypes.Validators) {
+		foundQuery := false
+		_, addr, _ := bech32.DecodeAndConvert(in[0].OperatorAddress)
+		data := stakingtypes.GetValidatorKey(addr)
+		for _, i := range quicksilver.InterchainQueryKeeper.AllQueries(ctx) {
+			if i.QueryType == storeStakingKey && bytes.Equal(i.Request, data) {
+				foundQuery = true
+				break
+			}
+		}
+		require.True(foundQuery)
+	}
 	tests := []struct {
 		name   string
 		valset func(in stakingtypes.Validators) stakingtypes.QueryValidatorsResponse
@@ -108,16 +120,7 @@ func (suite *KeeperTestSuite) TestHandleValsetCallback() {
 				return stakingtypes.QueryValidatorsResponse{Validators: in}
 			},
 			checks: func(require *require.Assertions, ctx sdk.Context, quicksilver *app.Quicksilver, in stakingtypes.Validators) {
-				foundQuery := false
-				_, addr, _ := bech32.DecodeAndConvert(in[0].OperatorAddress)
-				data := stakingtypes.GetValidatorKey(addr)
-				for _, i := range quicksilver.InterchainQueryKeeper.AllQueries(ctx) {
-					if i.QueryType == storeStakingKey && bytes.Equal(i.Request, data) {
-						foundQuery = true
-						break
-					}
-				}
-				require.True(foundQuery)
+				checkQueryFound(require, ctx, quicksilver, in)
 			},
 		},
 		{
@@ -128,22 +131,7 @@ func (suite *KeeperTestSuite) TestHandleValsetCallback() {
 				return stakingtypes.QueryValidatorsResponse{Validators: in}
 			},
 			checks: func(require *require.Assertions, ctx sdk.Context, quicksilver *app.Quicksilver, in stakingtypes.Validators) {
-				foundQuery := false
-				foundQuery2 := false
-				_, addr, _ := bech32.DecodeAndConvert(in[1].OperatorAddress)
-				data := stakingtypes.GetValidatorKey(addr)
-				_, addr2, _ := bech32.DecodeAndConvert(in[2].OperatorAddress)
-				data2 := stakingtypes.GetValidatorKey(addr2)
-				for _, i := range quicksilver.InterchainQueryKeeper.AllQueries(ctx) {
-					if i.QueryType == storeStakingKey && bytes.Equal(i.Request, data) {
-						foundQuery = true
-					}
-					if i.QueryType == storeStakingKey && bytes.Equal(i.Request, data2) {
-						foundQuery2 = true
-					}
-				}
-				require.True(foundQuery)
-				require.True(foundQuery2)
+				checkQueryFound(require, ctx, quicksilver, in)
 			},
 		},
 		{
@@ -153,16 +141,7 @@ func (suite *KeeperTestSuite) TestHandleValsetCallback() {
 				return stakingtypes.QueryValidatorsResponse{Validators: in}
 			},
 			checks: func(require *require.Assertions, ctx sdk.Context, quicksilver *app.Quicksilver, in stakingtypes.Validators) {
-				foundQuery := false
-				_, addr, _ := bech32.DecodeAndConvert(in[0].OperatorAddress)
-				data := stakingtypes.GetValidatorKey(addr)
-				for _, i := range quicksilver.InterchainQueryKeeper.AllQueries(ctx) {
-					if i.QueryType == storeStakingKey && bytes.Equal(i.Request, data) {
-						foundQuery = true
-						break
-					}
-				}
-				require.True(foundQuery)
+				checkQueryFound(require, ctx, quicksilver, in)
 			},
 		},
 		{
@@ -173,22 +152,7 @@ func (suite *KeeperTestSuite) TestHandleValsetCallback() {
 				return stakingtypes.QueryValidatorsResponse{Validators: in}
 			},
 			checks: func(require *require.Assertions, ctx sdk.Context, quicksilver *app.Quicksilver, in stakingtypes.Validators) {
-				foundQuery := false
-				foundQuery2 := false
-				_, addr, _ := bech32.DecodeAndConvert(in[1].OperatorAddress)
-				data := stakingtypes.GetValidatorKey(addr)
-				_, addr2, _ := bech32.DecodeAndConvert(in[2].OperatorAddress)
-				data2 := stakingtypes.GetValidatorKey(addr2)
-				for _, i := range quicksilver.InterchainQueryKeeper.AllQueries(ctx) {
-					if i.QueryType == storeStakingKey && bytes.Equal(i.Request, data) {
-						foundQuery = true
-					}
-					if i.QueryType == storeStakingKey && bytes.Equal(i.Request, data2) {
-						foundQuery2 = true
-					}
-				}
-				require.True(foundQuery)
-				require.True(foundQuery2)
+				checkQueryFound(require, ctx, quicksilver, in)
 			},
 		},
 		{
@@ -199,22 +163,7 @@ func (suite *KeeperTestSuite) TestHandleValsetCallback() {
 				return stakingtypes.QueryValidatorsResponse{Validators: in}
 			},
 			checks: func(require *require.Assertions, ctx sdk.Context, quicksilver *app.Quicksilver, in stakingtypes.Validators) {
-				foundQuery := false
-				foundQuery2 := false
-				_, addr, _ := bech32.DecodeAndConvert(in[1].OperatorAddress)
-				data := stakingtypes.GetValidatorKey(addr)
-				_, addr2, _ := bech32.DecodeAndConvert(in[2].OperatorAddress)
-				data2 := stakingtypes.GetValidatorKey(addr2)
-				for _, i := range quicksilver.InterchainQueryKeeper.AllQueries(ctx) {
-					if i.QueryType == storeStakingKey && bytes.Equal(i.Request, data) {
-						foundQuery = true
-					}
-					if i.QueryType == storeStakingKey && bytes.Equal(i.Request, data2) {
-						foundQuery2 = true
-					}
-				}
-				require.True(foundQuery)
-				require.True(foundQuery2)
+				checkQueryFound(require, ctx, quicksilver, in)
 			},
 		},
 		{
@@ -225,22 +174,7 @@ func (suite *KeeperTestSuite) TestHandleValsetCallback() {
 				return stakingtypes.QueryValidatorsResponse{Validators: in}
 			},
 			checks: func(require *require.Assertions, ctx sdk.Context, quicksilver *app.Quicksilver, in stakingtypes.Validators) {
-				foundQuery := false
-				foundQuery2 := false
-				_, addr, _ := bech32.DecodeAndConvert(in[0].OperatorAddress)
-				data := stakingtypes.GetValidatorKey(addr)
-				_, addr2, _ := bech32.DecodeAndConvert(in[2].OperatorAddress)
-				data2 := stakingtypes.GetValidatorKey(addr2)
-				for _, i := range quicksilver.InterchainQueryKeeper.AllQueries(ctx) {
-					if i.QueryType == storeStakingKey && bytes.Equal(i.Request, data) {
-						foundQuery = true
-					}
-					if i.QueryType == storeStakingKey && bytes.Equal(i.Request, data2) {
-						foundQuery2 = true
-					}
-				}
-				require.True(foundQuery)
-				require.True(foundQuery2)
+				checkQueryFound(require, ctx, quicksilver, in)
 			},
 		},
 		{
@@ -252,14 +186,7 @@ func (suite *KeeperTestSuite) TestHandleValsetCallback() {
 				return stakingtypes.QueryValidatorsResponse{Validators: in}
 			},
 			checks: func(require *require.Assertions, ctx sdk.Context, quicksilver *app.Quicksilver, in stakingtypes.Validators) {
-				foundQuery := false
-				data := stakingtypes.GetValidatorKey(newVal)
-				for _, i := range quicksilver.InterchainQueryKeeper.AllQueries(ctx) {
-					if i.QueryType == storeStakingKey && bytes.Equal(i.Request, data) {
-						foundQuery = true
-					}
-				}
-				require.True(foundQuery)
+				checkQueryFound(require, ctx, quicksilver, in)
 			},
 		},
 		{
@@ -269,15 +196,7 @@ func (suite *KeeperTestSuite) TestHandleValsetCallback() {
 				return stakingtypes.QueryValidatorsResponse{Validators: in}
 			},
 			checks: func(require *require.Assertions, ctx sdk.Context, quicksilver *app.Quicksilver, in stakingtypes.Validators) {
-				foundQuery := false
-				_, addr, _ := bech32.DecodeAndConvert(in[0].OperatorAddress)
-				data := stakingtypes.GetValidatorKey(addr)
-				for _, i := range quicksilver.InterchainQueryKeeper.AllQueries(ctx) {
-					if i.QueryType == storeStakingKey && bytes.Equal(i.Request, data) {
-						foundQuery = true
-					}
-				}
-				require.True(foundQuery)
+				checkQueryFound(require, ctx, quicksilver, in)
 			},
 		},
 	}

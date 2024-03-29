@@ -408,53 +408,54 @@ func (k *Keeper) handleNewValidator(ctx sdk.Context, zone *types.Zone, validator
 }
 
 func (k *Keeper) handleJailStatusTransition(ctx sdk.Context, zone *types.Zone, val *types.Validator, validator lsmstakingtypes.Validator) error {
-	if !val.Jailed && validator.IsJailed() {
+	if val.Jailed == validator.IsJailed() {
+		return nil
+	}
+
+	if !val.Jailed {
 		k.Logger(ctx).Info("Transitioning validator to jailed state", "valoper", validator.OperatorAddress, "old_vp", val.VotingPower, "new_vp", validator.Tokens, "new_shares", validator.DelegatorShares, "old_shares", val.DelegatorShares)
 
-		var pk cryptotypes.PubKey
-		err := k.cdc.UnpackAny(validator.ConsensusPubkey, &pk)
+		err := k.handleValidatorJailed(ctx, zone, val, validator)
 		if err != nil {
 			return err
 		}
-		consAddr := sdk.ConsAddress(pk.Address().Bytes())
-		k.SetValidatorAddrByConsAddr(ctx, zone.ChainId, validator.OperatorAddress, consAddr)
-
-		err = k.EmitSigningInfoQuery(ctx, zone.ConnectionId, zone.ChainId, validator)
-		if err != nil {
-			return err
-		}
-
 		val.Jailed = true
 		val.JailedSince = ctx.BlockTime()
-
-		if !val.VotingPower.IsPositive() {
-			return fmt.Errorf("existing voting power must be greater than zero, received %s", val.VotingPower)
-		}
-		if validator.Tokens.IsNegative() {
-			return fmt.Errorf("incoming voting power must not be negative, received %s", validator.Tokens)
-		}
-		if validator.Tokens.IsZero() {
-			err = k.UpdateWithdrawalRecordsForSlash(ctx, zone, val.ValoperAddress, sdk.ZeroDec())
-			if err != nil {
-				return err
-			}
-		} else {
-			prevRatio := val.DelegatorShares.Quo(sdk.NewDecFromInt(val.VotingPower))
-			newRatio := validator.DelegatorShares.Quo(sdk.NewDecFromInt(validator.Tokens))
-			delta := newRatio.Quo(prevRatio)
-			err = k.UpdateWithdrawalRecordsForSlash(ctx, zone, val.ValoperAddress, delta)
-			if err != nil {
-				return err
-			}
-		}
 	} else if val.Jailed && !validator.IsJailed() {
 		k.Logger(ctx).Debug("Transitioning validator to unjailed state", "valoper", validator.OperatorAddress)
-
 		val.Jailed = false
 		val.JailedSince = time.Time{}
 	}
 
 	return nil
+}
+
+func (k *Keeper) handleValidatorJailed(ctx sdk.Context, zone *types.Zone, val *types.Validator, validator lsmstakingtypes.Validator) error {
+	var pk cryptotypes.PubKey
+	err := k.cdc.UnpackAny(validator.ConsensusPubkey, &pk)
+	if err != nil {
+		return err
+	}
+	consAddr := sdk.ConsAddress(pk.Address().Bytes())
+	k.SetValidatorAddrByConsAddr(ctx, zone.ChainId, validator.OperatorAddress, consAddr)
+
+	err = k.EmitSigningInfoQuery(ctx, zone.ConnectionId, zone.ChainId, validator)
+	if err != nil {
+		return err
+	}
+
+	val.Jailed = true
+	val.JailedSince = ctx.BlockTime()
+
+	if !val.VotingPower.IsPositive() {
+		return fmt.Errorf("existing voting power must be greater than zero, received %s", val.VotingPower)
+	}
+	if validator.Tokens.IsNegative() {
+		return fmt.Errorf("incoming voting power must not be negative, received %s", validator.Tokens)
+	}
+
+	// if the validator is jailed, we need to slash the validator
+	return k.handleUpdateWithdrawalRecords(ctx, zone, val, validator)
 }
 
 func (k *Keeper) updateValidatorFields(ctx sdk.Context, val *types.Validator, validator lsmstakingtypes.Validator) error {
@@ -489,6 +490,16 @@ func (k *Keeper) updateValidatorFields(ctx sdk.Context, val *types.Validator, va
 	}
 
 	return nil
+}
+
+func (k *Keeper) handleUpdateWithdrawalRecords(ctx sdk.Context, zone *types.Zone, val *types.Validator, validator lsmstakingtypes.Validator) error {
+	if validator.Tokens.IsZero() {
+		return k.UpdateWithdrawalRecordsForSlash(ctx, zone, val.ValoperAddress, sdk.ZeroDec())
+	}
+	prevRatio := val.DelegatorShares.Quo(sdk.NewDecFromInt(val.VotingPower))
+	newRatio := validator.DelegatorShares.Quo(sdk.NewDecFromInt(validator.Tokens))
+	delta := newRatio.Quo(prevRatio)
+	return k.UpdateWithdrawalRecordsForSlash(ctx, zone, val.ValoperAddress, delta)
 }
 
 func (k *Keeper) depositInterval(ctx sdk.Context) zoneItrFn {

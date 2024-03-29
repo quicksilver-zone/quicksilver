@@ -40,10 +40,14 @@ func (k *Keeper) HandleChannelOpenAck(ctx sdk.Context, portID, connectionID stri
 
 	ctx.Logger().Info("found matching address", "chain", zone.ChainId, "address", address, "port", portID)
 	portParts := strings.Split(portID, ".")
-
+	if len(portParts) != 2 {
+		err := fmt.Errorf("unexpected portID format: got %s", portID)
+		ctx.Logger().Error(err.Error())
+		return err
+	}
 	switch {
 	// deposit address
-	case len(portParts) == 2 && portParts[1] == types.ICASuffixDeposit:
+	case portParts[1] == types.ICASuffixDeposit:
 
 		if zone.DepositAddress == nil {
 			zone.DepositAddress, err = types.NewICAAccount(address, portID)
@@ -73,7 +77,7 @@ func (k *Keeper) HandleChannelOpenAck(ctx sdk.Context, portID, connectionID stri
 		}
 
 	// withdrawal address
-	case len(portParts) == 2 && portParts[1] == types.ICASuffixWithdrawal:
+	case portParts[1] == types.ICASuffixWithdrawal:
 		if zone.WithdrawalAddress == nil {
 			zone.WithdrawalAddress, err = types.NewICAAccount(address, portID)
 			if err != nil {
@@ -83,7 +87,7 @@ func (k *Keeper) HandleChannelOpenAck(ctx sdk.Context, portID, connectionID stri
 		}
 
 	// delegation addresses
-	case len(portParts) == 2 && portParts[1] == types.ICASuffixDelegate:
+	case portParts[1] == types.ICASuffixDelegate:
 		if zone.DelegationAddress == nil {
 			zone.DelegationAddress, err = types.NewICAAccount(address, portID)
 			if err != nil {
@@ -94,7 +98,7 @@ func (k *Keeper) HandleChannelOpenAck(ctx sdk.Context, portID, connectionID stri
 		}
 
 	// performance address
-	case len(portParts) == 2 && portParts[1] == types.ICASuffixPerformance:
+	case portParts[1] == types.ICASuffixPerformance:
 		if zone.PerformanceAddress == nil {
 			ctx.Logger().Info("create performance account")
 			zone.PerformanceAddress, err = types.NewICAAccount(address, portID)
