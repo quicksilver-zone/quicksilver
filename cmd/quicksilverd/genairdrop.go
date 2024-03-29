@@ -20,6 +20,7 @@ import (
 )
 
 // AddGenesisAirdropCmd returns add-genesis-airdrop cobra Command.
+// nolint:gocognit
 func AddGenesisAirdropCmd(defaultNodeHome string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "add-genesis-airdrop [address] [chain_id] [allocation] [base_value]",

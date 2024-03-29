@@ -21,6 +21,7 @@ func filter(in map[string]math.Int) map[string]math.Int {
 	return out
 }
 
+// nolint:gocognit
 func DetermineAllocationsForUndelegation(currentAllocations map[string]math.Int, lockedAllocations map[string]bool, currentSum math.Int, targetAllocations ValidatorIntents, availablePerValidator map[string]math.Int, amount sdk.Coins) (map[string]math.Int, error) {
 	outWeights := make(map[string]math.Int)
 	if len(amount) != 1 {
@@ -179,6 +180,7 @@ func DetermineAllocationsForUndelegation(currentAllocations map[string]math.Int,
 	return filter(outWeights), nil
 }
 
+// nolint:gocognit
 func DetermineAllocationsForUndelegationPredef(currentAllocations map[string]math.Int, lockedAllocations map[string]bool, currentSum math.Int, targetAllocations ValidatorIntents, availablePerValidator map[string]math.Int, amount sdk.Coins) (map[string]math.Int, error) {
 	outWeights := make(map[string]math.Int, len(availablePerValidator))
 	if len(amount) != 1 {

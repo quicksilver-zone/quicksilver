@@ -591,6 +591,7 @@ func reimburseUsersWithdrawnOnLowRR(ctx sdk.Context, appKeepers *keepers.AppKeep
 
 // collateRequeuedWithdrawals will iterate, per zone, over requeued queued and active withdrawal records and
 // collate them into a single record for a delegator/recipient/epoch tuple.
+// nolint:gocognit
 func collateRequeuedWithdrawals(ctx sdk.Context, appKeepers *keepers.AppKeepers) {
 	appKeepers.InterchainstakingKeeper.IterateZones(ctx, func(_ int64, zone *icstypes.Zone) (stop bool) {
 		newRecords := map[string]icstypes.WithdrawalRecord{}

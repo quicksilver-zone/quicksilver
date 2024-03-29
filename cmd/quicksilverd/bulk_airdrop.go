@@ -117,6 +117,7 @@ func AddZonedropCmd(defaultNodeHome string) *cobra.Command {
 }
 
 // BulkGenesisAirdropCmd returns add-genesis-airdrop cobra Command.
+// nolint:gocognit
 func BulkGenesisAirdropCmd(defaultNodeHome string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "bulk-genesis-airdrop [file.csv] [chain_id]",
