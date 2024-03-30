@@ -103,7 +103,7 @@ const RewardsModal = ({
 
       const [_, channel] = tokenDetail?.trace.split('/') ?? '';
       const sourcePort = 'transfer';
-      const sourceChannel = channel;
+      const sourceChannel = destination === 'osmosis' ? 'channel-2' : channel;
       const senderAddress = address ?? '';
 
       const ibcToken = {
@@ -116,8 +116,6 @@ const RewardsModal = ({
 
       const chainIdToName: { [key: string]: string } = {
         'osmosis-1': 'osmosis',
-        'secret-1': 'secretnetwork',
-        'umee-1': 'umee',
         'cosmoshub-4': 'cosmoshub',
         'stargaze-1': 'stargaze',
         'sommelier-3': 'sommelier',
@@ -131,7 +129,7 @@ const RewardsModal = ({
       };
 
       const chain = chains[getChainName(tokenDetail?.originChainId ?? '') ?? ''];
-      const receiverAddress = chain?.address ?? '';
+      const receiverAddress = destination === 'osmosis' ? chains.osmosis.address ?? '' : chain?.address ?? '';
 
       const msg = transfer({
         sourcePort,
@@ -149,8 +147,8 @@ const RewardsModal = ({
 
     try {
       const fee: StdFee = {
-        amount: coins('1000', 'uqck'),
-        gas: '300000',
+        amount: coins('5000', 'uqck'),
+        gas: '3000000',
       };
 
       await tx(messages, {
