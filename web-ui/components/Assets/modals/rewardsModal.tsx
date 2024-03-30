@@ -24,18 +24,21 @@ import {
   HStack,
   TableContainer,
   Menu,
+  Fade,
   MenuButton,
   MenuItem,
   MenuList,
+  Box,
 } from '@chakra-ui/react';
 import { StdFee, coins } from '@cosmjs/amino';
 import { useChains } from '@cosmos-kit/react';
 import { ibc } from 'interchain-query';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { FaInfoCircle } from 'react-icons/fa';
 
 import { useTx } from '@/hooks';
 import { useAllBalancesQuery, useSkipAssets } from '@/hooks/useQueries';
+import { shiftDigits } from '@/utils';
 
 const RewardsModal = ({
   address,
@@ -51,6 +54,13 @@ const RewardsModal = ({
   const { balance } = useAllBalancesQuery('quicksilver', address);
   const [isSigning, setIsSigning] = useState<boolean>(false);
   const [isError, setIsError] = useState<boolean>(false);
+  const [isBottomVisible, setIsBottomVisible] = useState(true);
+
+  const handleScroll = useCallback((event: React.UIEvent<HTMLDivElement>) => {
+    const target = event.currentTarget;
+    const isBottom = target.scrollHeight - target.scrollTop <= target.clientHeight;
+    setIsBottomVisible(!isBottom);
+  }, []);
 
   const chains = useChains(['cosmoshub', 'osmosis', 'stargaze', 'juno', 'sommelier', 'regen', 'dydx']);
 
@@ -77,6 +87,7 @@ const RewardsModal = ({
             originChainId: denomDetail.originChainID,
             trace: denomDetail.trace,
             logoURI: denomDetail.logoURI,
+            decimals: denomDetail.decimals,
           };
         }
 
@@ -174,7 +185,7 @@ const RewardsModal = ({
           <HStack>
             <Text>Rewards</Text>
             <Tooltip
-              label="These are tokens from fees, staking rewards, and qAsset rewards. Select a direction then use the unwind button to bridge them."
+              label="These are tokens from fees, staking rewards, and holding qAsset's. Select a direction then use the unwind button to bridge them."
               fontSize="md"
               placement="right"
             >
@@ -187,83 +198,117 @@ const RewardsModal = ({
         </ModalHeader>
         <ModalCloseButton color={'complimentary.900'} />
         <ModalBody>
-          <TableContainer maxH="170px" overflowY="auto">
-            <Table variant="simple" colorScheme="whiteAlpha" size="sm">
-              <Thead position="sticky" top={0} bg="rgb(32,32,32)" zIndex={1}>
-                <Tr>
-                  <Th color="complimentary.900">Token</Th>
-                  <Th color="complimentary.900" isNumeric>
-                    Amount
-                  </Th>
-                </Tr>
-              </Thead>
-              <Tbody overflowY={'auto'} maxH="250px">
-                {tokenDetails.map((detail, index) => (
-                  <Tr key={index}>
-                    <Td color="white">
-                      <HStack>
-                        <Image w="32px" h="32px" alt={detail?.originDenom} src={detail?.logoURI} />
-                        <Text fontSize={'large'}>{detail?.originDenom.slice(1).toUpperCase()}</Text>
-                      </HStack>
-                    </Td>
-                    <Td fontSize={'large'} color="white" isNumeric>
-                      {detail?.amount}
-                    </Td>
-                  </Tr>
-                ))}
-              </Tbody>
-            </Table>
-          </TableContainer>
-
-          <Flex justifyContent={'center'}>
-            <Button
-              mt={4}
-              _active={{ transform: 'scale(0.95)', color: 'complimentary.800' }}
-              _hover={{ bgColor: 'rgba(255,128,0, 0.25)', color: 'complimentary.300' }}
-              color="white"
-              size="sm"
-              w="160px"
-              variant="outline"
-              onClick={onSubmitClick}
-            >
-              {isSigning === true && <Spinner size="sm" />}
-              {isSigning === false && 'Unwind'}
-            </Button>
-          </Flex>
-          <Flex justifyContent={'center'} mt={4}>
-            <Menu>
-              <MenuButton
-                as={Button}
-                rightIcon={<ChevronDownIcon />}
-                _active={{ transform: 'scale(0.95)', color: 'complimentary.800' }}
-                _hover={{ bgColor: 'rgba(255,128,0, 0.25)', color: 'complimentary.300' }}
-                color="white"
-                size="sm"
-                w="130px"
-                bgColor={'rgb(26,26,26)'}
-              >
-                {destination === 'parentChains' ? 'Parent Chains' : destination === 'osmosis' ? 'Osmosis' : 'Direction'}
-              </MenuButton>
-              <MenuList minWidth="140px" bgColor="#1a1a1a" color="white">
-                <MenuItem
-                  onClick={() => setDestination('parentChains')}
-                  bgColor={'rgb(26,26,26)'}
-                  _hover={{ bg: '#2a2a2a' }}
-                  _focus={{ bg: '#2a2a2a' }}
+          {tokenDetails.length === 0 && (
+            <Text color="white" textAlign={'center'} fontSize="md">
+              No rewards available to claim
+            </Text>
+          )}
+          {tokenDetails.length >= 1 && (
+            <>
+              <Box position="relative">
+                <TableContainer className="custom-scrollbar" maxH="260px" overflowY="auto" onScroll={handleScroll} position="relative">
+                  <Table variant="simple" colorScheme="whiteAlpha" size="sm">
+                    <Thead position="sticky" top={0} bg="rgb(32,32,32)" zIndex={1}>
+                      <Tr>
+                        <Th color="complimentary.900">Token</Th>
+                        <Th color="complimentary.900" isNumeric>
+                          Amount
+                        </Th>
+                      </Tr>
+                    </Thead>
+                    <Tbody overflowY={'auto'} maxH="250px">
+                      {tokenDetails.map((detail, index) => (
+                        <Tr key={index}>
+                          <Td color="white">
+                            <HStack>
+                              <Image w="32px" h="32px" alt={detail?.originDenom} src={detail?.logoURI} />
+                              <Text fontSize={'large'}>
+                                {detail?.originDenom
+                                  ? detail.originDenom.toLowerCase().startsWith('factory/')
+                                    ? (() => {
+                                        const lastSegment = detail.originDenom.split('/').pop() || '';
+                                        return lastSegment.startsWith('u') ? lastSegment.slice(1).toUpperCase() : lastSegment.toUpperCase();
+                                      })()
+                                    : detail.originDenom.slice(1).toUpperCase()
+                                  : ''}
+                              </Text>
+                            </HStack>
+                          </Td>
+                          <Td fontSize={'large'} color="white" isNumeric>
+                            {Number(shiftDigits(detail?.amount ?? '', -Number(detail?.decimals)))
+                              .toFixed(2)
+                              .toString()}
+                          </Td>
+                        </Tr>
+                      ))}
+                    </Tbody>
+                  </Table>
+                </TableContainer>
+                {isBottomVisible && tokenDetails.length > 6 && (
+                  <Fade in={isBottomVisible}>
+                    <Box
+                      position="absolute"
+                      bottom="0"
+                      left="0"
+                      right="0"
+                      height="70px"
+                      bgGradient="linear(to top, #1A1A1A, transparent)"
+                      pointerEvents="none"
+                      zIndex="1"
+                    />
+                  </Fade>
+                )}
+              </Box>
+              <Flex justifyContent={'center'}>
+                <Button
+                  mt={4}
+                  _active={{ transform: 'scale(0.95)', color: 'complimentary.800' }}
+                  _hover={{ bgColor: 'rgba(255,128,0, 0.25)', color: 'complimentary.300' }}
+                  color="white"
+                  size="sm"
+                  w="160px"
+                  variant="outline"
+                  onClick={onSubmitClick}
                 >
-                  Parent Chains
-                </MenuItem>
-                <MenuItem
-                  onClick={() => setDestination('osmosis')}
-                  bgColor={'rgb(26,26,26)'}
-                  _hover={{ bg: '#2a2a2a' }}
-                  _focus={{ bg: '#2a2a2a' }}
-                >
-                  Osmosis
-                </MenuItem>
-              </MenuList>
-            </Menu>
-          </Flex>
+                  {isSigning === true && <Spinner size="sm" />}
+                  {isSigning === false && 'Unwind'}
+                </Button>
+              </Flex>
+              <Flex justifyContent={'center'} mt={4}>
+                <Menu>
+                  <MenuButton
+                    as={Button}
+                    _active={{ transform: 'scale(0.95)', color: 'complimentary.800' }}
+                    _hover={{ bgColor: 'rgba(255,128,0, 0.25)', color: 'complimentary.300' }}
+                    color="white"
+                    size="sm"
+                    w="130px"
+                    bgColor={'rgb(26,26,26)'}
+                  >
+                    {destination === 'parentChains' ? 'Parent Chains' : destination === 'osmosis' ? 'Osmosis' : 'Direction'}
+                  </MenuButton>
+                  <MenuList maxW="130px" minWidth="130px" bgColor="#1a1a1a" color="white">
+                    <MenuItem
+                      onClick={() => setDestination('parentChains')}
+                      bgColor={'rgb(26,26,26)'}
+                      _hover={{ bg: '#2a2a2a' }}
+                      _focus={{ bg: '#2a2a2a' }}
+                    >
+                      Parent Chains
+                    </MenuItem>
+                    <MenuItem
+                      onClick={() => setDestination('osmosis')}
+                      bgColor={'rgb(26,26,26)'}
+                      _hover={{ bg: '#2a2a2a' }}
+                      _focus={{ bg: '#2a2a2a' }}
+                    >
+                      Osmosis
+                    </MenuItem>
+                  </MenuList>
+                </Menu>
+              </Flex>
+            </>
+          )}
         </ModalBody>
 
         <ModalFooter></ModalFooter>

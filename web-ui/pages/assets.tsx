@@ -227,7 +227,7 @@ function Home() {
     });
 
     return { updatedItems, totalValue, weightedAPY, totalYearlyYield };
-  }, [isLoadingAll, qBalances, tokenPrices, redemptionRates, qAPYRates]);
+  }, [isLoadingAll, qBalances, tokenPrices, redemptionRates, qAPYRates, address]);
 
   useEffect(() => {
     if (!isLoadingAll) {

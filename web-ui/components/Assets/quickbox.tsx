@@ -101,7 +101,7 @@ const QuickBox: React.FC<QuickBoxProps> = ({ stakingApy }) => {
           variant="outline"
           onClick={onOpen}
         >
-          Rewards
+          Unwind
         </Button>
       </VStack>
       <RewardsModal address={address} isOpen={isOpen} onClose={onClose} />

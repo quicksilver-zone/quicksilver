@@ -1,4 +1,3 @@
-import { ChevronLeftIcon, ChevronRightIcon, WarningIcon } from '@chakra-ui/icons';
 import {
   Box,
   VStack,
@@ -13,7 +12,6 @@ import {
   StatHelpText,
   StatLabel,
   StatNumber,
-  IconButton,
   SimpleGrid,
 } from '@chakra-ui/react';
 import React, { useEffect, useState } from 'react';
@@ -21,7 +19,7 @@ import React, { useEffect, useState } from 'react';
 import QDepositModal from './modals/qTokenDepositModal';
 import QWithdrawModal from './modals/qTokenWithdrawlModal';
 
-import { useAllBalancesQuery, useIbcBalanceQuery, useLiquidRewardsQuery } from '@/hooks/useQueries';
+import { useLiquidRewardsQuery } from '@/hooks/useQueries';
 import { truncateToTwoDecimals } from '@/utils';
 import { shiftDigits, formatQasset } from '@/utils';
 
