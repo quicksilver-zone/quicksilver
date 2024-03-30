@@ -1,4 +1,5 @@
 import { useChain } from '@cosmos-kit/react';
+import {SkipRouter, SKIP_API_URL} from '@skip-router/core';
 import { useQueries, useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import { cosmos } from 'interchain-query';
@@ -111,6 +112,9 @@ interface UseLiquidEpochQueryReturnType {
   isError: boolean;
 }
 
+const skipClient = new SkipRouter({
+  apiURL: SKIP_API_URL,
+});
 
 const BigNumber = require('bignumber.js');
 const Long = require('long');
@@ -881,3 +885,52 @@ export const useNativeStakeQuery = (chainName: string, address: string) => {
     delegationsIsError: delegationQuery.isError,
   };
 }
+
+export const useSkipAssets = (chainId: string) => {
+
+  const assetsQuery = useQuery(
+    ['assets', chainId],
+    async () => {
+      const assets = await skipClient.assets({
+        chainID: chainId,
+        includeEvmAssets: true,
+        includeCW20Assets: true,
+        includeSvmAssets: true,
+      });
+
+      return assets;
+    },
+    {
+      staleTime: Infinity,
+    },
+  );
+
+  return {
+    assets: assetsQuery.data,
+    assetsIsLoading: assetsQuery.isLoading,
+    assetsIsError: assetsQuery.isError,
+  };
+};
+
+export const useRecommendations = (source_asset_denom: string, source_asset_chain_id: string, dest_chain_id: string) => {
+  const recommendationsQuery = useQuery(
+    ['requests', source_asset_chain_id],
+    async () => {
+      const recommendations = await skipClient.recommendAssets([{
+        sourceAssetDenom: source_asset_denom,
+        sourceAssetChainID: source_asset_chain_id,
+        destChainID: dest_chain_id,
+      }]);
+      return recommendations;
+    },
+    {
+      staleTime: Infinity,
+    },
+  );
+
+  return {
+    recommendations: recommendationsQuery.data,
+    recommendationsIsLoading: recommendationsQuery.isLoading,
+    recommendationsIsError: recommendationsQuery.isError,
+  };
+};

@@ -14,6 +14,7 @@ import {
   StatLabel,
   StatNumber,
   IconButton,
+  SimpleGrid,
 } from '@chakra-ui/react';
 import React, { useEffect, useState } from 'react';
 
@@ -120,7 +121,7 @@ const AssetCard: React.FC<AssetCardProps> = ({ address, assetName, balance, apy,
 
       let totalAmount = 0;
       const assetDenom = `uq${assetName.toLowerCase().replace('q', '')}`;
-      const aAssetDenom = `a${assetName.toLowerCase().replace('q', '')}`;
+      const aAssetDenom = `aq${assetName.toLowerCase().replace('q', '')}`;
 
       const details: { [key: string]: number } = {};
 
@@ -317,7 +318,7 @@ const AssetsGrid: React.FC<AssetGridProps> = ({ address, assets, isWalletConnect
         <Text fontSize="xl" fontWeight="bold" color="white">
           qAssets
         </Text>
-        <Flex alignItems="center" gap="2">
+        {/* <Flex alignItems="center" gap="2">
           <IconButton
             icon={<ChevronLeftIcon />}
             onClick={() => scrollByOne('left')}
@@ -345,7 +346,7 @@ const AssetsGrid: React.FC<AssetGridProps> = ({ address, assets, isWalletConnect
             isDisabled={focusedIndex === assets.length - 1}
             _disabled={{ cursor: 'default' }}
           />
-        </Flex>
+        </Flex> */}
       </Flex>
 
       {/* Carousel content */}
@@ -366,7 +367,7 @@ const AssetsGrid: React.FC<AssetGridProps> = ({ address, assets, isWalletConnect
           </Text>
         </Flex>
       ) : (
-        <HStack overflowX="auto" spacing={8} w="full" py={4} ref={scrollRef}>
+        <SimpleGrid columns={3} spacing={8} w="full" py={4} ref={scrollRef}>
           {assets.map((asset, index) => (
             <Box
               key={index}
@@ -387,7 +388,7 @@ const AssetsGrid: React.FC<AssetGridProps> = ({ address, assets, isWalletConnect
               />
             </Box>
           ))}
-        </HStack>
+        </SimpleGrid>
       )}
     </>
   );
