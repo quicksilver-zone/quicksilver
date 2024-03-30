@@ -19,20 +19,17 @@ import {
   Tr,
   Th,
   Td,
-  Box,
   Icon,
   Flex,
   HStack,
   TableContainer,
-  Radio,
-  RadioGroup,
-  Stack,
   Menu,
   MenuButton,
   MenuItem,
   MenuList,
 } from '@chakra-ui/react';
 import { StdFee, coins } from '@cosmjs/amino';
+import { useChains } from '@cosmos-kit/react';
 import { ibc } from 'interchain-query';
 import { useState } from 'react';
 import { FaInfoCircle } from 'react-icons/fa';
@@ -54,6 +51,8 @@ const RewardsModal = ({
   const { balance } = useAllBalancesQuery('quicksilver', address);
   const [isSigning, setIsSigning] = useState<boolean>(false);
   const [isError, setIsError] = useState<boolean>(false);
+
+  const chains = useChains(['cosmoshub', 'osmosis', 'stargaze', 'juno', 'sommelier', 'regen', 'dydx']);
 
   const { assets: skipAssets } = useSkipAssets('quicksilver-2');
 
@@ -115,11 +114,30 @@ const RewardsModal = ({
       const stamp = Date.now();
       const timeoutInNanos = (stamp + 1.2e6) * 1e6;
 
+      const chainIdToName: { [key: string]: string } = {
+        'osmosis-1': 'osmosis',
+        'secret-1': 'secretnetwork',
+        'umee-1': 'umee',
+        'cosmoshub-4': 'cosmoshub',
+        'stargaze-1': 'stargaze',
+        'sommelier-3': 'sommelier',
+        'regen-1': 'regen',
+        'juno-1': 'juno',
+        'dydx-mainnet-1': 'dydx',
+      };
+
+      const getChainName = (chainId: string) => {
+        return chainIdToName[chainId] || chainId;
+      };
+
+      const chain = chains[getChainName(tokenDetail?.originChainId ?? '') ?? ''];
+      const receiverAddress = chain?.address ?? '';
+
       const msg = transfer({
         sourcePort,
         sourceChannel,
         sender: senderAddress,
-        receiver: '',
+        receiver: receiverAddress,
         token: ibcToken,
         timeoutHeight: undefined,
         //@ts-ignore
