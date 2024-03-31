@@ -257,19 +257,19 @@ const UnbondingAssetsTable: React.FC<UnbondingAssetsTableProps> = ({ address, is
               <Table variant="simple" color="white">
                 <Thead boxShadow="0px 0.5px 0px 0px rgba(255,255,255,1)" position={'sticky'} bgColor="#1A1A1A" top="0" zIndex="sticky">
                   <Tr>
-                    <Th borderBottomColor={'transparent'} color="complimentary.900">
+                    <Th textAlign="center" borderBottomColor={'transparent'} color="complimentary.900">
                       Burn Amount
                     </Th>
-                    <Th borderBottomColor={'transparent'} color="complimentary.900" display={hideOnMobile}>
+                    <Th textAlign="center" borderBottomColor={'transparent'} color="complimentary.900" display={hideOnMobile}>
                       Status
                     </Th>
-                    <Th borderBottomColor={'transparent'} color="complimentary.900">
+                    <Th textAlign="center" borderBottomColor={'transparent'} color="complimentary.900">
                       Redemption Amount
                     </Th>
-                    <Th borderBottomColor={'transparent'} color="complimentary.900" display={hideOnMobile}>
+                    <Th textAlign="center" borderBottomColor={'transparent'} color="complimentary.900" display={hideOnMobile}>
                       Epoch Number
                     </Th>
-                    <Th borderBottomColor={'transparent'} color="complimentary.900" display={hideOnMobile}>
+                    <Th textAlign="center" borderBottomColor={'transparent'} color="complimentary.900" display={hideOnMobile}>
                       Completion Time
                     </Th>
                   </Tr>
@@ -277,19 +277,19 @@ const UnbondingAssetsTable: React.FC<UnbondingAssetsTableProps> = ({ address, is
                 <Tbody>
                   {unbondingData?.withdrawals.map((withdrawal, index) => (
                     <Tr _even={{ bg: 'rgba(255, 128, 0, 0.1)' }} key={index}>
-                      <Td borderBottomColor={'transparent'}>
+                      <Td textAlign="center" borderBottomColor={'transparent'}>
                         {Number(shiftDigits(withdrawal.burn_amount.amount, -6))} {formatDenom(withdrawal.burn_amount.denom)}
                       </Td>
-                      <Td borderBottomColor={'transparent'} display={hideOnMobile}>
+                      <Td textAlign="center" borderBottomColor={'transparent'} display={hideOnMobile}>
                         {statusCodes.get(withdrawal.status)}
                       </Td>
-                      <Td borderBottomColor={'transparent'}>
+                      <Td textAlign="center" borderBottomColor={'transparent'}>
                         {withdrawal.amount.map((amt) => `${shiftDigits(amt.amount, -6)} ${formatDenom(amt.denom)}`).join(', ')}
                       </Td>
-                      <Td borderBottomColor={'transparent'} display={hideOnMobile}>
+                      <Td textAlign="center" borderBottomColor={'transparent'} display={hideOnMobile}>
                         {withdrawal.epoch_number}
                       </Td>
-                      <Td borderBottomColor={'transparent'} display={hideOnMobile}>
+                      <Td textAlign="center" borderBottomColor={'transparent'} display={hideOnMobile}>
                         {withdrawal.status === 2
                           ? 'Pending'
                           : withdrawal.status === 4

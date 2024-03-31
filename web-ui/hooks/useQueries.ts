@@ -360,6 +360,7 @@ export const useQBalanceQuery = (chainName: string, address: string, qAsset: str
     balance: balanceQuery.data,
     isLoading: balanceQuery.isLoading,
     isError: balanceQuery.isError,
+    refetch: balanceQuery.refetch,
   };
 };
 

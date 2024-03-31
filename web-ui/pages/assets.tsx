@@ -16,7 +16,7 @@ import { shiftDigits, truncateToTwoDecimals } from '@/utils';
 
 export interface PortfolioItemInterface {
   title: string;
-  percentage: string;
+  percentage: number;
   progressBarColor: string;
   amount: string;
   qTokenPrice: number;
@@ -52,7 +52,6 @@ function Home() {
 
   const { data: tokenPrices, isLoading: isLoadingPrices } = useTokenPrices(tokens);
 
-  // TODO: Use live chain ids from .env
   const COSMOSHUB_CHAIN_ID = process.env.NEXT_PUBLIC_COSMOSHUB_CHAIN_ID;
   const OSMOSIS_CHAIN_ID = process.env.NEXT_PUBLIC_OSMOSIS_CHAIN_ID;
   const STARGAZE_CHAIN_ID = process.env.NEXT_PUBLIC_STARGAZE_CHAIN_ID;
@@ -61,15 +60,21 @@ function Home() {
   const JUNO_CHAIN_ID = process.env.NEXT_PUBLIC_JUNO_CHAIN_ID;
   const DYDX_CHAIN_ID = process.env.NEXT_PUBLIC_DYDX_CHAIN_ID;
 
-  const chainIds = [
-    { name: 'cosmoshub', chainId: COSMOSHUB_CHAIN_ID, denom: 'atom' },
-    { name: 'osmosis', chainId: OSMOSIS_CHAIN_ID, denom: 'osmo' },
-    { name: 'stargaze', chainId: STARGAZE_CHAIN_ID, denom: 'stars' },
-    { name: 'regen', chainId: REGEN_CHAIN_ID, denom: 'regen' },
-    { name: 'sommelier', chainId: SOMMELIER_CHAIN_ID, denom: 'somm' },
-    { name: 'juno', chainId: JUNO_CHAIN_ID, denom: 'juno' },
-    { name: 'dydx', chainId: DYDX_CHAIN_ID, denom: 'dydx' },
-  ];
+  const WHITELISTED_ZONES = process.env.NEXT_PUBLIC_WHITELISTED_ZONES?.split(',') || [];
+  // TODO: add env vars for chain names and denoms then map over var list to get chainIds
+  const chainIds = useMemo(
+    () =>
+      [
+        { name: 'cosmoshub', chainId: process.env.NEXT_PUBLIC_COSMOSHUB_CHAIN_ID, denom: 'atom' },
+        { name: 'osmosis', chainId: process.env.NEXT_PUBLIC_OSMOSIS_CHAIN_ID, denom: 'osmo' },
+        { name: 'stargaze', chainId: process.env.NEXT_PUBLIC_STARGAZE_CHAIN_ID, denom: 'stars' },
+        { name: 'regen', chainId: process.env.NEXT_PUBLIC_REGEN_CHAIN_ID, denom: 'regen' },
+        { name: 'sommelier', chainId: process.env.NEXT_PUBLIC_SOMMELIER_CHAIN_ID, denom: 'somm' },
+        { name: 'juno', chainId: process.env.NEXT_PUBLIC_JUNO_CHAIN_ID, denom: 'juno' },
+        { name: 'dydx', chainId: process.env.NEXT_PUBLIC_DYDX_CHAIN_ID, denom: 'dydx' },
+      ].filter((chain) => WHITELISTED_ZONES.includes(chain.name)),
+    [],
+  );
 
   const tokenToZoneMapping: { [key: string]: string } = useMemo(() => {
     return {
@@ -84,7 +89,7 @@ function Home() {
   }, []);
 
   // Dynamic retrieval of balance and zone data
-
+  // Example of how to access: balances['cosmoshub'], zones['cosmoshub']
   const balances: BalanceRates = {};
   const zones: RedemptionRates = {
     cosmoshub: {
@@ -123,7 +128,7 @@ function Home() {
 
   chainIds.forEach(({ name, chainId, denom }) => {
     // eslint-disable-next-line react-hooks/rules-of-hooks
-    const { balance, isLoading: isLoadingBalance } = useQBalanceQuery('quicksilver', address ?? '', denom);
+    const { balance, isLoading: isLoadingBalance, refetch: qBalanceRefetch } = useQBalanceQuery('quicksilver', address ?? '', denom);
     // eslint-disable-next-line react-hooks/rules-of-hooks
     const { data: zone, isLoading: isLoadingZone } = useZoneQuery(chainId ?? '');
     // eslint-disable-next-line react-hooks/rules-of-hooks
@@ -144,17 +149,11 @@ function Home() {
   console.log({ balances });
   console.log({ apys });
 
-  // Example of how to access: balances['cosmoshub'], zones['cosmoshub']
-
-  // To check if all data is loaded, you can iterate over isLoadingBalances and isLoadingZones
   const isLoadingAllData = Object.values({ ...isLoadingBalances, ...isLoadingZones, ...isLoadingApys, isLoadingPrices }).some(
     (isLoading) => isLoading,
   );
 
-  // Retrieve list of zones that are enabled for liquid staking || Will use the above instead
-  const { liveNetworks } = useLiveZones();
-
-  // TODO: Figure out how to cycle through live networks and retrieve data for each with less lines of code
+  // TODO: update portfolio compute to use above
   // Retrieve balance for each token
   // Depending on whether the chain exists in liveNetworks or not, the query will be enabled/disabled
   const { balance: qAtom, isLoading: isLoadingQABalance } = useQBalanceQuery('quicksilver', address ?? '', 'atom');
@@ -231,7 +230,7 @@ function Home() {
       qJuno: shiftDigits(qJuno?.balance?.amount ?? '000000', -6),
       qDydx: shiftDigits(qDydx?.balance?.amount ?? '000000', -18),
     }),
-    [qAtom, qOsmo, qStars, qRegen, qSomm, qJuno, qDydx],
+    [qAtom, qOsmo, qStars, qRegen, qSomm, qJuno, qDydx, address],
   );
 
   // useMemo hook to cache redemption rate data
@@ -291,7 +290,7 @@ function Home() {
       const zone = tokenToZoneMapping[token];
       const baseToken = token.replace('q', '').toLowerCase();
       const tokenPriceInfo = tokenPrices?.find((priceInfo) => priceInfo.token === baseToken);
-      const qTokenPrice = tokenPriceInfo ? tokenPriceInfo.price * Number(redemptionRates[zone].current) : 0;
+      const qTokenPrice = tokenPriceInfo ? tokenPriceInfo.price / Number(redemptionRates[zone].current) : 0;
       const qTokenBalance = qBalances[token];
       const itemValue = Number(qTokenBalance) * qTokenPrice;
 
@@ -302,7 +301,7 @@ function Home() {
       weightedAPY += (itemValue / totalValue) * Number(qTokenAPY);
 
       updatedItems.push({
-        title: token.toUpperCase(),
+        title: token,
         percentage: 0,
         progressBarColor: 'complimentary.700',
         amount: qTokenBalance,
@@ -314,12 +313,12 @@ function Home() {
       const itemValue = Number(item.amount) * item.qTokenPrice;
       return {
         ...item,
-        percentage: (((itemValue / totalValue) * 100) / 100).toFixed(2),
+        percentage: ((itemValue / totalValue) * 100) / 100,
       };
     });
 
     return { updatedItems, totalValue, weightedAPY, totalYearlyYield };
-  }, [isLoadingAll, qBalances, tokenToZoneMapping, tokenPrices, redemptionRates, qAPYRates]);
+  }, [isLoadingAll, qBalances, tokenToZoneMapping, tokenPrices, redemptionRates, qAPYRates, address]);
 
   useEffect(() => {
     if (!isLoadingAll) {
