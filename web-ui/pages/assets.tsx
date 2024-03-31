@@ -71,15 +71,17 @@ function Home() {
     { name: 'dydx', chainId: DYDX_CHAIN_ID, denom: 'dydx' },
   ];
 
-  const tokenToZoneMapping: { [key: string]: string } = {
-    qAtom: 'cosmoshub',
-    qOsmo: 'osmosis',
-    qStars: 'stargaze',
-    qJuno: 'juno',
-    qSomm: 'sommelier',
-    qRegen: 'regen',
-    qDydx: 'dydx',
-  };
+  const tokenToZoneMapping: { [key: string]: string } = useMemo(() => {
+    return {
+      qAtom: 'cosmoshub',
+      qOsmo: 'osmosis',
+      qStars: 'stargaze',
+      qJuno: 'juno',
+      qSomm: 'sommelier',
+      qRegen: 'regen',
+      qDydx: 'dydx',
+    };
+  }, []);
 
   // Dynamic retrieval of balance and zone data
 
@@ -317,7 +319,7 @@ function Home() {
     });
 
     return { updatedItems, totalValue, weightedAPY, totalYearlyYield };
-  }, [isLoadingAll, qBalances, tokenPrices, redemptionRates, qAPYRates, address]);
+  }, [isLoadingAll, qBalances, tokenToZoneMapping, tokenPrices, redemptionRates, qAPYRates]);
 
   useEffect(() => {
     if (!isLoadingAll) {
@@ -339,7 +341,7 @@ function Home() {
         redemptionRates: redemptionRates[zone]?.last.toString() || '0',
       };
     });
-  }, [qBalances, qAPYRates, redemptionRates]);
+  }, [qBalances, tokenToZoneMapping, qAPYRates, redemptionRates]);
 
   const { liquidRewards } = useLiquidRewardsQuery(address ?? '');
   const { authData, authError } = useAuthChecker(address ?? '');

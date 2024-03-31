@@ -59,7 +59,7 @@ const MyPortfolio: React.FC<MyPortfolioProps> = ({
         gap={6}
         color="white"
       >
-        <Spinner w={'200px'} h="200px" color="complimentary.900" />
+        <Spinner w={'220px'} h="220px" color="complimentary.900" />
       </Flex>
     );
   }
