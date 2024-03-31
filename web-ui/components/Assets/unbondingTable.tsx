@@ -27,7 +27,7 @@ const formatDateAndTime = (dateString: string | number | Date) => {
 };
 
 const formatDenom = (denom: string) => {
-  return denom.startsWith('u') ? formatQasset(denom.substring(1).toUpperCase()) : denom.toUpperCase();
+  return formatQasset(denom.substring(1).toUpperCase());
 };
 
 interface UnbondingAssetsTableProps {
@@ -275,29 +275,32 @@ const UnbondingAssetsTable: React.FC<UnbondingAssetsTableProps> = ({ address, is
                   </Tr>
                 </Thead>
                 <Tbody>
-                  {unbondingData?.withdrawals.map((withdrawal, index) => (
-                    <Tr _even={{ bg: 'rgba(255, 128, 0, 0.1)' }} key={index}>
-                      <Td textAlign="center" borderBottomColor={'transparent'}>
-                        {Number(shiftDigits(withdrawal.burn_amount.amount, -6))} {formatDenom(withdrawal.burn_amount.denom)}
-                      </Td>
-                      <Td textAlign="center" borderBottomColor={'transparent'} display={hideOnMobile}>
-                        {statusCodes.get(withdrawal.status)}
-                      </Td>
-                      <Td textAlign="center" borderBottomColor={'transparent'}>
-                        {withdrawal.amount.map((amt) => `${shiftDigits(amt.amount, -6)} ${formatDenom(amt.denom)}`).join(', ')}
-                      </Td>
-                      <Td textAlign="center" borderBottomColor={'transparent'} display={hideOnMobile}>
-                        {withdrawal.epoch_number}
-                      </Td>
-                      <Td textAlign="center" borderBottomColor={'transparent'} display={hideOnMobile}>
-                        {withdrawal.status === 2
-                          ? 'Pending'
-                          : withdrawal.status === 4
-                            ? 'A few moments'
-                            : formatDateAndTime(withdrawal.completion_time)}
-                      </Td>
-                    </Tr>
-                  ))}
+                  {unbondingData?.withdrawals.map((withdrawal, index) => {
+                    const shiftAmount = formatDenom(withdrawal.burn_amount.denom) === 'qDYDX' ? -18 : -6;
+                    return (
+                      <Tr _even={{ bg: 'rgba(255, 128, 0, 0.1)' }} key={index}>
+                        <Td textAlign="center" borderBottomColor={'transparent'}>
+                          {Number(shiftDigits(withdrawal.burn_amount.amount, shiftAmount))} {formatDenom(withdrawal.burn_amount.denom)}
+                        </Td>
+                        <Td textAlign="center" borderBottomColor={'transparent'} display={hideOnMobile}>
+                          {statusCodes.get(withdrawal.status)}
+                        </Td>
+                        <Td textAlign="center" borderBottomColor={'transparent'}>
+                          {withdrawal.amount.map((amt) => `${shiftDigits(amt.amount, shiftAmount)} ${formatDenom(amt.denom)}`).join(', ')}
+                        </Td>
+                        <Td textAlign="center" borderBottomColor={'transparent'} display={hideOnMobile}>
+                          {withdrawal.epoch_number}
+                        </Td>
+                        <Td textAlign="center" borderBottomColor={'transparent'} display={hideOnMobile}>
+                          {withdrawal.status === 2
+                            ? 'Pending'
+                            : withdrawal.status === 4
+                              ? 'A few moments'
+                              : formatDateAndTime(withdrawal.completion_time)}
+                        </Td>
+                      </Tr>
+                    );
+                  })}
                 </Tbody>
               </Table>
             </TableContainer>
