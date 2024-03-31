@@ -14,7 +14,7 @@ import {
   SkeletonText,
   Center,
 } from '@chakra-ui/react';
-import { Key, useState } from 'react';
+import { Key, useEffect, useState } from 'react';
 
 import SignalIntentModal from './modals/signalIntentProcess';
 
@@ -43,6 +43,10 @@ const StakingIntent: React.FC<StakingIntentProps> = ({ address, isWalletConnecte
   const { data: validatorLogos } = useValidatorLogos(currentNetwork.chainName, validatorsData || []);
 
   const { intent, refetch } = useIntentQuery(currentNetwork.chainName, address ?? '');
+
+  useEffect(() => {
+    refetch();
+  }, [currentNetwork.chainName, address, refetch]);
 
   interface ValidatorDetails {
     moniker: string;

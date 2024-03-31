@@ -383,7 +383,7 @@ export const useIntentQuery = (chainName: string, address: string) => {
     chainId = chain.chain_id;
   }
   const intentQuery = useQuery(
-    ['intent', chainName && address],
+    ['intent', chainName],
     async () => {
       if (!grpcQueryClient) {
         throw new Error('RPC Client not ready');

@@ -126,8 +126,11 @@ function Home() {
     const { data: zone, isLoading: isLoadingZone } = useZoneQuery(chainId ?? '');
     // eslint-disable-next-line react-hooks/rules-of-hooks
     const { APY: apy, isLoading: isLoadingApy } = useAPYQuery(chainId ?? '');
-
-    balances[name as keyof typeof balances] = balance?.balance.amount || '0';
+    let shift = 6;
+    if (denom === 'dydx') {
+      shift = 18;
+    }
+    balances[name as keyof typeof balances] = shiftDigits(balance?.balance.amount ?? '', -shift) || '0';
     zones[name as keyof typeof zones] = (zone as unknown as RedemptionRate) || ({ current: 0, last: 0 } as RedemptionRate);
     apys[name as keyof typeof apys] = apy || 0;
     isLoadingBalances[name] = isLoadingBalance;

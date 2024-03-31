@@ -345,7 +345,7 @@ export const AccountControlModal: React.FC<AccountControlModalProps> = ({ isOpen
             </Text>
             <Stat mt={4}>
               <StatHelpText color="red" fontSize="sm">
-                You must wait the unbonding period of the chain in order to re-enable LSM
+                Once you re enable this feature, you must wait the unbonding period of the chain in order to use the LSM functions again.
               </StatHelpText>
             </Stat>
           </ModalBody>
