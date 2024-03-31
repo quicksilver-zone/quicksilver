@@ -28,12 +28,13 @@ interface RedemptionRate {
 }
 
 interface RedemptionRates {
-  atom: RedemptionRate;
-  osmo: RedemptionRate;
-  stars: RedemptionRate;
+  cosmoshub: RedemptionRate;
+  osmosis: RedemptionRate;
+  stargaze: RedemptionRate;
   regen: RedemptionRate;
-  somm: RedemptionRate;
+  sommelier: RedemptionRate;
   juno: RedemptionRate;
+  dydx: RedemptionRate;
   [key: string]: RedemptionRate;
 }
 
@@ -59,6 +60,91 @@ function Home() {
   const SOMMELIER_CHAIN_ID = process.env.NEXT_PUBLIC_SOMMELIER_CHAIN_ID;
   const JUNO_CHAIN_ID = process.env.NEXT_PUBLIC_JUNO_CHAIN_ID;
   const DYDX_CHAIN_ID = process.env.NEXT_PUBLIC_DYDX_CHAIN_ID;
+
+  const chainIds = [
+    { name: 'cosmoshub', chainId: COSMOSHUB_CHAIN_ID, denom: 'atom' },
+    { name: 'osmosis', chainId: OSMOSIS_CHAIN_ID, denom: 'osmo' },
+    { name: 'stargaze', chainId: STARGAZE_CHAIN_ID, denom: 'stars' },
+    { name: 'regen', chainId: REGEN_CHAIN_ID, denom: 'regen' },
+    { name: 'sommelier', chainId: SOMMELIER_CHAIN_ID, denom: 'somm' },
+    { name: 'juno', chainId: JUNO_CHAIN_ID, denom: 'juno' },
+    { name: 'dydx', chainId: DYDX_CHAIN_ID, denom: 'dydx' },
+  ];
+
+  const tokenToZoneMapping: { [key: string]: string } = {
+    qAtom: 'cosmoshub',
+    qOsmo: 'osmosis',
+    qStars: 'stargaze',
+    qJuno: 'juno',
+    qSomm: 'sommelier',
+    qRegen: 'regen',
+    qDydx: 'dydx',
+  };
+
+  // Dynamic retrieval of balance and zone data
+
+  const balances: BalanceRates = {};
+  const zones: RedemptionRates = {
+    cosmoshub: {
+      current: 0,
+      last: 0,
+    },
+    osmosis: {
+      current: 0,
+      last: 0,
+    },
+    stargaze: {
+      current: 0,
+      last: 0,
+    },
+    regen: {
+      current: 0,
+      last: 0,
+    },
+    sommelier: {
+      current: 0,
+      last: 0,
+    },
+    juno: {
+      current: 0,
+      last: 0,
+    },
+    dydx: {
+      current: 0,
+      last: 0,
+    },
+  };
+  const apys: APYRates = {};
+  const isLoadingBalances: Record<string, boolean> = {};
+  const isLoadingZones: Record<string, boolean> = {};
+  const isLoadingApys: Record<string, boolean> = {};
+
+  chainIds.forEach(({ name, chainId, denom }) => {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const { balance, isLoading: isLoadingBalance } = useQBalanceQuery('quicksilver', address ?? '', denom);
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const { data: zone, isLoading: isLoadingZone } = useZoneQuery(chainId ?? '');
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const { APY: apy, isLoading: isLoadingApy } = useAPYQuery(chainId ?? '');
+
+    balances[name as keyof typeof balances] = balance?.balance.amount || '0';
+    zones[name as keyof typeof zones] = (zone as unknown as RedemptionRate) || ({ current: 0, last: 0 } as RedemptionRate);
+    apys[name as keyof typeof apys] = apy || 0;
+    isLoadingBalances[name] = isLoadingBalance;
+    isLoadingZones[name] = isLoadingZone;
+    isLoadingApys[name] = isLoadingApy;
+  });
+
+  console.log({ zones });
+  console.log({ balances });
+  console.log({ apys });
+
+  // Example of how to access: balances['cosmoshub'], zones['cosmoshub']
+
+  // To check if all data is loaded, you can iterate over isLoadingBalances and isLoadingZones
+  const isLoadingAllData = Object.values({ ...isLoadingBalances, ...isLoadingZones, ...isLoadingApys, isLoadingPrices }).some(
+    (isLoading) => isLoading,
+  );
 
   // Retrieve list of zones that are enabled for liquid staking || Will use the above instead
   const { liveNetworks } = useLiveZones();
@@ -146,15 +232,15 @@ function Home() {
   // useMemo hook to cache redemption rate data
   const redemptionRates: RedemptionRates = useMemo(
     () => ({
-      atom: {
+      cosmoshub: {
         current: CosmosZone?.redemptionRate ? parseFloat(CosmosZone.redemptionRate) : 1,
         last: CosmosZone?.lastRedemptionRate ? parseFloat(CosmosZone.lastRedemptionRate) : 1,
       },
-      osmo: {
+      osmosis: {
         current: OsmoZone?.redemptionRate ? parseFloat(OsmoZone.redemptionRate) : 1,
         last: OsmoZone?.lastRedemptionRate ? parseFloat(OsmoZone.lastRedemptionRate) : 1,
       },
-      stars: {
+      stargaze: {
         current: StarZone?.redemptionRate ? parseFloat(StarZone.redemptionRate) : 1,
         last: StarZone?.lastRedemptionRate ? parseFloat(StarZone.lastRedemptionRate) : 1,
       },
@@ -162,7 +248,7 @@ function Home() {
         current: RegenZone?.redemptionRate ? parseFloat(RegenZone.redemptionRate) : 1,
         last: RegenZone?.lastRedemptionRate ? parseFloat(RegenZone.lastRedemptionRate) : 1,
       },
-      somm: {
+      sommelier: {
         current: SommZone?.redemptionRate ? parseFloat(SommZone.redemptionRate) : 1,
         last: SommZone?.lastRedemptionRate ? parseFloat(SommZone.lastRedemptionRate) : 1,
       },
@@ -197,9 +283,10 @@ function Home() {
     let updatedItems = [];
 
     for (const token of Object.keys(qBalances)) {
+      const zone = tokenToZoneMapping[token];
       const baseToken = token.replace('q', '').toLowerCase();
       const tokenPriceInfo = tokenPrices?.find((priceInfo) => priceInfo.token === baseToken);
-      const qTokenPrice = tokenPriceInfo ? tokenPriceInfo.price * Number(redemptionRates[baseToken].current) : 0;
+      const qTokenPrice = tokenPriceInfo ? tokenPriceInfo.price * Number(redemptionRates[zone].current) : 0;
       const qTokenBalance = qBalances[token];
       const itemValue = Number(qTokenBalance) * qTokenPrice;
 
@@ -240,12 +327,13 @@ function Home() {
 
   const assetsData = useMemo(() => {
     return Object.keys(qBalances).map((token) => {
+      const zone = tokenToZoneMapping[token];
       return {
         name: token.toUpperCase(),
         balance: truncateToTwoDecimals(Number(qBalances[token])).toString(),
         apy: parseFloat(qAPYRates[token]?.toFixed(2)) || 0,
         native: token.replace('q', '').toUpperCase(),
-        redemptionRates: redemptionRates[token.replace('q', '').toLowerCase()].last.toString(),
+        redemptionRates: redemptionRates[zone]?.last.toString() || '0',
       };
     });
   }, [qBalances, qAPYRates, redemptionRates]);

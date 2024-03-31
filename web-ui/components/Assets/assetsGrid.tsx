@@ -115,7 +115,7 @@ const AssetCard: React.FC<AssetCardProps> = ({ address, assetName, balance, apy,
 
   useEffect(() => {
     const calculateInterchainBalance = () => {
-      if (!liquidRewards) return '0';
+      if (!liquidRewards || !liquidRewards.assets) return '0';
 
       let totalAmount = 0;
       const assetDenom = `uq${assetName.toLowerCase().replace('q', '')}`;
@@ -270,44 +270,44 @@ const AssetsGrid: React.FC<AssetGridProps> = ({ address, assets, isWalletConnect
     setFocusedIndex(index);
   };
 
-  const scrollByOne = (direction: 'left' | 'right') => {
-    if (!scrollRef.current) return;
+  // const scrollByOne = (direction: 'left' | 'right') => {
+  //   if (!scrollRef.current) return;
 
-    const cardWidth = 380;
-    let newIndex = focusedIndex;
+  //   const cardWidth = 380;
+  //   let newIndex = focusedIndex;
 
-    if (direction === 'left' && focusedIndex > 0) {
-      scrollRef.current.scrollBy({ left: -cardWidth, behavior: 'smooth' });
-      newIndex = focusedIndex - 1;
-    } else if (direction === 'right' && focusedIndex < assets.length - 1) {
-      scrollRef.current.scrollBy({ left: cardWidth, behavior: 'smooth' });
-      newIndex = focusedIndex + 1;
-    }
+  //   if (direction === 'left' && focusedIndex > 0) {
+  //     scrollRef.current.scrollBy({ left: -cardWidth, behavior: 'smooth' });
+  //     newIndex = focusedIndex - 1;
+  //   } else if (direction === 'right' && focusedIndex < assets.length - 1) {
+  //     scrollRef.current.scrollBy({ left: cardWidth, behavior: 'smooth' });
+  //     newIndex = focusedIndex + 1;
+  //   }
 
-    setFocusedIndex(newIndex);
-  };
+  //   setFocusedIndex(newIndex);
+  // };
 
-  const getZoneName = (qAssetName: string) => {
-    switch (qAssetName) {
-      case 'QATOM':
-        return 'Cosmos';
-      case 'QOSMO':
-        return 'Osmosis';
-      case 'QSTARS':
-        return 'Stargaze';
-      case 'QSOMM':
-        return 'Sommelier';
-      case 'QREGEN':
-        return 'Regen';
-      case 'QJUNO':
-        return 'Juno';
-      case 'QDYDX':
-        return 'DyDx';
+  // const getZoneName = (qAssetName: string) => {
+  //   switch (qAssetName) {
+  //     case 'QATOM':
+  //       return 'Cosmos';
+  //     case 'QOSMO':
+  //       return 'Osmosis';
+  //     case 'QSTARS':
+  //       return 'Stargaze';
+  //     case 'QSOMM':
+  //       return 'Sommelier';
+  //     case 'QREGEN':
+  //       return 'Regen';
+  //     case 'QJUNO':
+  //       return 'Juno';
+  //     case 'QDYDX':
+  //       return 'DyDx';
 
-      default:
-        return qAssetName;
-    }
-  };
+  //     default:
+  //       return qAssetName;
+  //   }
+  // };
 
   return (
     <>
