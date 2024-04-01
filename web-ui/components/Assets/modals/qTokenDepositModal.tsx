@@ -11,7 +11,8 @@ import {
   FormLabel,
   Input,
   HStack,
-  useDisclosure,
+  Text,
+  Divider,
   useToast,
   Spinner,
   InputGroup,
@@ -160,7 +161,7 @@ const QDepositModal: React.FC<QDepositModalProps> = ({ token, isOpen, onClose, i
     <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
       <ModalContent bgColor="rgb(32,32,32)">
-        <ModalHeader color="white">Deposit {token} Tokens</ModalHeader>
+      <ModalHeader color="white"><Text>Deposit {token} Tokens</Text>  <Divider mt={3} bgColor={'cyan.500'} /></ModalHeader>
         <ModalCloseButton color={'complimentary.900'} />
         <ModalBody>
           {/* Chain Selection Dropdown */}

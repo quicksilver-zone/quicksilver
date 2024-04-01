@@ -17,11 +17,12 @@ import {
 } from '@chakra-ui/react';
 import { Key, useCallback, useEffect, useState } from 'react';
 
-import SignalIntentModal from './modals/signalIntentProcess';
 
 import { useIntentQuery, useValidatorLogos, useValidatorsQuery } from '@/hooks/useQueries';
 import { networks as prodNetworks, testNetworks as devNetworks } from '@/state/chains/prod';
 import { truncateString } from '@/utils';
+
+import SignalIntentModal from './modals/signalIntentProcess';
 
 export interface StakingIntentProps {
   address: string;
@@ -52,9 +53,7 @@ const StakingIntent: React.FC<StakingIntentProps> = ({ address, isWalletConnecte
 
   const { intent, refetch } = useIntentQuery(currentNetwork.chainName, address ?? '');
 
-  useEffect(() => {
-    refetch();
-  }, [currentNetwork.chainName, address, refetch]);
+
 
   interface ValidatorDetails {
     moniker: string;

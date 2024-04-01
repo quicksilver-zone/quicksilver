@@ -1,14 +1,13 @@
 import { Flex, Text, VStack, HStack, Heading, Spinner, SimpleGrid, Center, Image } from '@chakra-ui/react';
 import { Divider } from '@interchain-ui/react';
 
-import { shiftDigits } from '@/utils';
+import { shiftDigits, formatNumber } from '@/utils';
 
 interface PortfolioItemInterface {
   title: string;
-  percentage: number;
-  progressBarColor: string;
   amount: string;
   qTokenPrice: number;
+  chainId: string;
 }
 
 interface MyPortfolioProps {
@@ -88,7 +87,7 @@ const MyPortfolio: React.FC<MyPortfolioProps> = ({
                     TOTAL VALUE
                   </Text>
                   <Text fontSize="2xl" fontWeight="bold">
-                    ${totalValue.toFixed(2)}
+                    ${formatNumber(totalValue)}
                   </Text>
                 </VStack>
               </Center>
@@ -105,10 +104,10 @@ const MyPortfolio: React.FC<MyPortfolioProps> = ({
               <Center>
                 <VStack spacing={1}>
                   <Text fontSize="sm" fontWeight="medium" textTransform="uppercase">
-                    YIELD PER YEAR
+                    Est. Yield
                   </Text>
                   <Text fontSize="2xl" fontWeight="bold">
-                    ${totalYearlyYield.toFixed(2)}
+                    ${formatNumber(totalYearlyYield)}
                   </Text>
                 </VStack>
               </Center>
@@ -153,8 +152,6 @@ const MyPortfolio: React.FC<MyPortfolioProps> = ({
                 <PortfolioItem
                   key={item.title}
                   title={item.title}
-                  percentage={Number(item.percentage)}
-                  progressBarColor={item.progressBarColor}
                   amount={item.amount}
                   qTokenPrice={item.qTokenPrice}
                   totalValue={totalValue}
@@ -170,29 +167,35 @@ const MyPortfolio: React.FC<MyPortfolioProps> = ({
 
 interface PortfolioItemProps {
   title: string;
-  percentage: number;
-  progressBarColor: string;
+
   amount: string;
   qTokenPrice: number;
   totalValue: number;
   index: number;
 }
 
-const PortfolioItem: React.FC<PortfolioItemProps> = ({ title, percentage, progressBarColor, amount, qTokenPrice, totalValue, index }) => {
+const PortfolioItem: React.FC<PortfolioItemProps> = ({ title, amount, qTokenPrice, index }) => {
   const tokenValue = Number(amount) * qTokenPrice;
-  let formattedPercentage = percentage.toFixed(2);
 
-  formattedPercentage = Number(formattedPercentage) < 1 && Number(formattedPercentage) > 0 ? formattedPercentage : percentage.toFixed(0);
-
-  const imgType = title === 'qAtom' ? 'svg' : 'png';
+  const imgType = title === 'qATOM' ? 'svg' : 'png';
 
   return (
-    <SimpleGrid textAlign={'center'} alignItems={'center'} minW="400px" columns={3} spacing={4} key={title.length} py={1}>
+    <SimpleGrid
+      _even={{ bg: 'rgba(255, 128, 0, 0.1)' }}
+      _odd={{ bg: 'rgba(180, 173, 167, 0.1)' }}
+      key={index}
+      textAlign={'center'}
+      alignItems={'center'}
+      minW="400px"
+      columns={3}
+      spacing={4}
+      py={1}
+    >
       <HStack gap={3}>
-        <Image alt={`${title}`} ml={2} src={`/img/networks/${title}.${imgType}`} boxSize="33px" />
+        <Image alt={`${title}`} ml={2} borderRadius={'full'} src={`/img/networks/${title.toLowerCase()}.${imgType}`} boxSize="33px" />
         <Text>q{title.toLocaleLowerCase().slice(1).toLocaleUpperCase()}</Text>
       </HStack>
-      <Text>{Number(amount).toFixed(2)}</Text>
+      <Text> {formatNumber(parseFloat(amount))}</Text>
       <Text>{tokenValue < 0.01 ? '>$0.01' : '$' + tokenValue.toFixed(2)}</Text>
     </SimpleGrid>
   );

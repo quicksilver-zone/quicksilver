@@ -10,47 +10,36 @@ import MyPortfolio from '@/components/Assets/portfolio';
 import QuickBox from '@/components/Assets/quickbox';
 import RewardsClaim from '@/components/Assets/rewardsClaim';
 import UnbondingAssetsTable from '@/components/Assets/unbondingTable';
-import { useAPYQuery, useAuthChecker, useLiquidRewardsQuery, useQBalanceQuery, useTokenPrices, useZoneQuery } from '@/hooks/useQueries';
-import { useLiveZones } from '@/state/LiveZonesContext';
-import { shiftDigits, truncateToTwoDecimals } from '@/utils';
+import {
+  useAPYQuery,
+  useAPYsQuery,
+  useAuthChecker,
+  useLiquidRewardsQuery,
+  useQBalancesQuery,
+  useTokenPrices,
+  useRedemptionRatesQuery,
+} from '@/hooks/useQueries';
+import { shiftDigits } from '@/utils';
 
 export interface PortfolioItemInterface {
   title: string;
-  percentage: number;
-  progressBarColor: string;
   amount: string;
   qTokenPrice: number;
+  chainId: string;
 }
-
-interface RedemptionRate {
-  current: number;
-  last: number;
-}
-
-interface RedemptionRates {
-  cosmoshub: RedemptionRate;
-  osmosis: RedemptionRate;
-  stargaze: RedemptionRate;
-  regen: RedemptionRate;
-  sommelier: RedemptionRate;
-  juno: RedemptionRate;
-  dydx: RedemptionRate;
-  [key: string]: RedemptionRate;
-}
-
-type BalanceRates = {
-  [key: string]: string;
-};
-
-type APYRates = {
-  [key: string]: Number;
-};
 
 function Home() {
   const { address } = useChain('quicksilver');
   const tokens = ['atom', 'osmo', 'stars', 'regen', 'somm', 'juno', 'dydx'];
+  const getExponent = (denom: string) => (denom === 'aqdydx' ? 18 : 6);
 
   const { data: tokenPrices, isLoading: isLoadingPrices } = useTokenPrices(tokens);
+  const { qbalance, qIsLoading, qIsError, qRefetch } = useQBalancesQuery('quicksilver-2', address ?? '');
+  const { APYs, APYsLoading, APYsError, APYsRefetch } = useAPYsQuery();
+  const { redemptionRates, redemptionError, redemptionLoading, redemptionRefetch } = useRedemptionRatesQuery();
+  const { APY: quickAPY } = useAPYQuery('quicksilver-2');
+
+  const isLoadingAll = qIsLoading || APYsLoading || redemptionLoading || isLoadingPrices;
 
   const COSMOSHUB_CHAIN_ID = process.env.NEXT_PUBLIC_COSMOSHUB_CHAIN_ID;
   const OSMOSIS_CHAIN_ID = process.env.NEXT_PUBLIC_OSMOSIS_CHAIN_ID;
@@ -60,287 +49,62 @@ function Home() {
   const JUNO_CHAIN_ID = process.env.NEXT_PUBLIC_JUNO_CHAIN_ID;
   const DYDX_CHAIN_ID = process.env.NEXT_PUBLIC_DYDX_CHAIN_ID;
 
-  const WHITELISTED_ZONES = process.env.NEXT_PUBLIC_WHITELISTED_ZONES?.split(',') || [];
-  // TODO: add env vars for chain names and denoms then map over var list to get chainIds
-  const chainIds = useMemo(
-    () =>
-      [
-        { name: 'cosmoshub', chainId: process.env.NEXT_PUBLIC_COSMOSHUB_CHAIN_ID, denom: 'atom' },
-        { name: 'osmosis', chainId: process.env.NEXT_PUBLIC_OSMOSIS_CHAIN_ID, denom: 'osmo' },
-        { name: 'stargaze', chainId: process.env.NEXT_PUBLIC_STARGAZE_CHAIN_ID, denom: 'stars' },
-        { name: 'regen', chainId: process.env.NEXT_PUBLIC_REGEN_CHAIN_ID, denom: 'regen' },
-        { name: 'sommelier', chainId: process.env.NEXT_PUBLIC_SOMMELIER_CHAIN_ID, denom: 'somm' },
-        { name: 'juno', chainId: process.env.NEXT_PUBLIC_JUNO_CHAIN_ID, denom: 'juno' },
-        { name: 'dydx', chainId: process.env.NEXT_PUBLIC_DYDX_CHAIN_ID, denom: 'dydx' },
-      ].filter((chain) => WHITELISTED_ZONES.includes(chain.name)),
-    [],
-  );
-
-  const tokenToZoneMapping: { [key: string]: string } = useMemo(() => {
+  const tokenToChainIdMap: { [key: string]: string | undefined } = useMemo(() => {
     return {
-      qAtom: 'cosmoshub',
-      qOsmo: 'osmosis',
-      qStars: 'stargaze',
-      qJuno: 'juno',
-      qSomm: 'sommelier',
-      qRegen: 'regen',
-      qDydx: 'dydx',
+      atom: COSMOSHUB_CHAIN_ID,
+      osmo: OSMOSIS_CHAIN_ID,
+      stars: STARGAZE_CHAIN_ID,
+      regen: REGEN_CHAIN_ID,
+      somm: SOMMELIER_CHAIN_ID,
+      juno: JUNO_CHAIN_ID,
+      dydx: DYDX_CHAIN_ID,
     };
-  }, []);
+  }, [COSMOSHUB_CHAIN_ID, OSMOSIS_CHAIN_ID, STARGAZE_CHAIN_ID, REGEN_CHAIN_ID, SOMMELIER_CHAIN_ID, JUNO_CHAIN_ID, DYDX_CHAIN_ID]);
 
-  // Dynamic retrieval of balance and zone data
-  // Example of how to access: balances['cosmoshub'], zones['cosmoshub']
-  const balances: BalanceRates = {};
-  const zones: RedemptionRates = {
-    cosmoshub: {
-      current: 0,
-      last: 0,
-    },
-    osmosis: {
-      current: 0,
-      last: 0,
-    },
-    stargaze: {
-      current: 0,
-      last: 0,
-    },
-    regen: {
-      current: 0,
-      last: 0,
-    },
-    sommelier: {
-      current: 0,
-      last: 0,
-    },
-    juno: {
-      current: 0,
-      last: 0,
-    },
-    dydx: {
-      current: 0,
-      last: 0,
-    },
-  };
-  const apys: APYRates = {};
-  const isLoadingBalances: Record<string, boolean> = {};
-  const isLoadingZones: Record<string, boolean> = {};
-  const isLoadingApys: Record<string, boolean> = {};
+  function getChainIdForToken(tokenToChainIdMap: { [x: string]: any }, baseToken: string) {
+    return tokenToChainIdMap[baseToken.toLowerCase()] || null;
+  }
 
-  chainIds.forEach(({ name, chainId, denom }) => {
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    const { balance, isLoading: isLoadingBalance, refetch: qBalanceRefetch } = useQBalanceQuery('quicksilver', address ?? '', denom);
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    const { data: zone, isLoading: isLoadingZone } = useZoneQuery(chainId ?? '');
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    const { APY: apy, isLoading: isLoadingApy } = useAPYQuery(chainId ?? '');
-    let shift = 6;
-    if (denom === 'dydx') {
-      shift = 18;
-    }
-    balances[name as keyof typeof balances] = shiftDigits(balance?.balance.amount ?? '', -shift) || '0';
-    zones[name as keyof typeof zones] = (zone as unknown as RedemptionRate) || ({ current: 0, last: 0 } as RedemptionRate);
-    apys[name as keyof typeof apys] = apy || 0;
-    isLoadingBalances[name] = isLoadingBalance;
-    isLoadingZones[name] = isLoadingZone;
-    isLoadingApys[name] = isLoadingApy;
-  });
+  // Data for the portfolio
+  // the query return `qbalance` is an array of quicksilver staked assets held by the user
+  // portfolioItems maps over the assets in qbalance and returns the title, amount, qTokenPrice, and chainId.
+  const portfolioItems: PortfolioItemInterface[] = useMemo(() => {
+    if (!qbalance || !APYs || !redemptionRates || isLoadingAll) return [];
 
-  console.log({ zones });
-  console.log({ balances });
-  console.log({ apys });
+    return qbalance.map((asset) => {
+      const baseToken = asset.denom.substring(2);
+      const chainId = getChainIdForToken(tokenToChainIdMap, baseToken);
+      const tokenPriceInfo = tokenPrices?.find((info) => info.token === baseToken);
+      const redemptionRate = chainId && redemptionRates && redemptionRates[chainId] ? redemptionRates[chainId].current || 1 : 1;
+      const qTokenPrice = tokenPriceInfo ? tokenPriceInfo.price * redemptionRate : 0;
+      const exp = getExponent(asset.denom);
 
-  const isLoadingAllData = Object.values({ ...isLoadingBalances, ...isLoadingZones, ...isLoadingApys, isLoadingPrices }).some(
-    (isLoading) => isLoading,
-  );
-
-  // TODO: update portfolio compute to use above
-  // Retrieve balance for each token
-  // Depending on whether the chain exists in liveNetworks or not, the query will be enabled/disabled
-  const { balance: qAtom, isLoading: isLoadingQABalance } = useQBalanceQuery('quicksilver', address ?? '', 'atom');
-  const { balance: qOsmo, isLoading: isLoadingQOBalance } = useQBalanceQuery('quicksilver', address ?? '', 'osmo');
-  const { balance: qStars, isLoading: isLoadingQSBalance } = useQBalanceQuery('quicksilver', address ?? '', 'stars');
-  const { balance: qRegen, isLoading: isLoadingQRBalance } = useQBalanceQuery('quicksilver', address ?? '', 'regen');
-  const { balance: qSomm, isLoading: isLoadingQSOBalance } = useQBalanceQuery('quicksilver', address ?? '', 'somm');
-  const { balance: qJuno, isLoading: isLoadingQJBalance } = useQBalanceQuery('quicksilver', address ?? '', 'juno');
-  const { balance: qDydx, isLoading: isLoadingQDBalance } = useQBalanceQuery('quicksilver', address ?? '', 'dydx');
-
-  // Retrieve zone data for each token
-  const { data: CosmosZone, isLoading: isLoadingCosmosZone } = useZoneQuery(COSMOSHUB_CHAIN_ID ?? '');
-  const { data: OsmoZone, isLoading: isLoadingOsmoZone } = useZoneQuery(OSMOSIS_CHAIN_ID ?? '');
-  const { data: StarZone, isLoading: isLoadingStarZone } = useZoneQuery(STARGAZE_CHAIN_ID ?? '');
-  const { data: RegenZone, isLoading: isLoadingRegenZone } = useZoneQuery(REGEN_CHAIN_ID ?? '');
-  const { data: SommZone, isLoading: isLoadingSommZone } = useZoneQuery(SOMMELIER_CHAIN_ID ?? '');
-  const { data: JunoZone, isLoading: isLoadingJunoZone } = useZoneQuery(JUNO_CHAIN_ID ?? '');
-  const { data: DydxZone, isLoading: isLoadingDydxZone } = useZoneQuery(DYDX_CHAIN_ID ?? '');
-  // Retrieve APY data for each token
-  const { APY: cosmosAPY, isLoading: isLoadingCosmosApy } = useAPYQuery('cosmoshub-4');
-  const { APY: osmoAPY, isLoading: isLoadingOsmoApy } = useAPYQuery('osmosis-1');
-  const { APY: starsAPY, isLoading: isLoadingStarsApy } = useAPYQuery('stargaze-1');
-  const { APY: regenAPY, isLoading: isLoadingRegenApy } = useAPYQuery('regen-1');
-  const { APY: sommAPY, isLoading: isLoadingSommApy } = useAPYQuery('sommelier-3');
-  const { APY: quickAPY } = useAPYQuery('quicksilver-2');
-  const { APY: junoAPY, isLoading: isLoadingJunoApy } = useAPYQuery('juno-1');
-  const { APY: dydxAPY, isLoading: isLoadingDydxApy } = useAPYQuery('dydx-mainnet-1');
-
-  const isLoadingAll =
-    isLoadingPrices ||
-    isLoadingQABalance ||
-    isLoadingQOBalance ||
-    isLoadingQSBalance ||
-    isLoadingQRBalance ||
-    isLoadingQSOBalance ||
-    isLoadingQJBalance ||
-    isLoadingQDBalance ||
-    isLoadingCosmosZone ||
-    isLoadingOsmoZone ||
-    isLoadingStarZone ||
-    isLoadingRegenZone ||
-    isLoadingSommZone ||
-    isLoadingJunoZone ||
-    isLoadingDydxZone ||
-    isLoadingCosmosApy ||
-    isLoadingOsmoApy ||
-    isLoadingStarsApy ||
-    isLoadingRegenApy ||
-    isLoadingSommApy ||
-    isLoadingJunoApy ||
-    isLoadingDydxApy;
-
-  // useMemo hook to cache APY data
-  const qAPYRates: APYRates = useMemo(
-    () => ({
-      qAtom: cosmosAPY ?? 0,
-      qOsmo: osmoAPY ?? 0,
-      qStars: starsAPY ?? 0,
-      qRegen: regenAPY ?? 0,
-      qSomm: sommAPY ?? 0,
-      qJuno: junoAPY ?? 0,
-      qDydx: dydxAPY ?? 0,
-    }),
-    [cosmosAPY, osmoAPY, starsAPY, regenAPY, sommAPY, junoAPY, dydxAPY],
-  );
-  // useMemo hook to cache qBalance data
-  const qBalances: BalanceRates = useMemo(
-    () => ({
-      qAtom: shiftDigits(qAtom?.balance?.amount ?? '000000', -6),
-      qOsmo: shiftDigits(qOsmo?.balance?.amount ?? '000000', -6),
-      qStars: shiftDigits(qStars?.balance?.amount ?? '000000', -6),
-      qRegen: shiftDigits(qRegen?.balance?.amount ?? '000000', -6),
-      qSomm: shiftDigits(qSomm?.balance?.amount ?? '000000', -6),
-      qJuno: shiftDigits(qJuno?.balance?.amount ?? '000000', -6),
-      qDydx: shiftDigits(qDydx?.balance?.amount ?? '000000', -18),
-    }),
-    [qAtom, qOsmo, qStars, qRegen, qSomm, qJuno, qDydx, address],
-  );
-
-  // useMemo hook to cache redemption rate data
-  const redemptionRates: RedemptionRates = useMemo(
-    () => ({
-      cosmoshub: {
-        current: CosmosZone?.redemptionRate ? parseFloat(CosmosZone.redemptionRate) : 1,
-        last: CosmosZone?.lastRedemptionRate ? parseFloat(CosmosZone.lastRedemptionRate) : 1,
-      },
-      osmosis: {
-        current: OsmoZone?.redemptionRate ? parseFloat(OsmoZone.redemptionRate) : 1,
-        last: OsmoZone?.lastRedemptionRate ? parseFloat(OsmoZone.lastRedemptionRate) : 1,
-      },
-      stargaze: {
-        current: StarZone?.redemptionRate ? parseFloat(StarZone.redemptionRate) : 1,
-        last: StarZone?.lastRedemptionRate ? parseFloat(StarZone.lastRedemptionRate) : 1,
-      },
-      regen: {
-        current: RegenZone?.redemptionRate ? parseFloat(RegenZone.redemptionRate) : 1,
-        last: RegenZone?.lastRedemptionRate ? parseFloat(RegenZone.lastRedemptionRate) : 1,
-      },
-      sommelier: {
-        current: SommZone?.redemptionRate ? parseFloat(SommZone.redemptionRate) : 1,
-        last: SommZone?.lastRedemptionRate ? parseFloat(SommZone.lastRedemptionRate) : 1,
-      },
-      juno: {
-        current: JunoZone?.redemptionRate ? parseFloat(JunoZone.redemptionRate) : 1,
-        last: JunoZone?.lastRedemptionRate ? parseFloat(JunoZone.lastRedemptionRate) : 1,
-      },
-      dydx: {
-        current: DydxZone?.redemptionRate ? parseFloat(DydxZone.redemptionRate) : 1,
-        last: DydxZone?.lastRedemptionRate ? parseFloat(DydxZone.lastRedemptionRate) : 1,
-      },
-    }),
-    [CosmosZone, OsmoZone, StarZone, RegenZone, SommZone, JunoZone, DydxZone],
-  );
-
-  // State hooks for portfolio items, total portfolio value, and other metrics
-  const [portfolioItems, setPortfolioItems] = useState<PortfolioItemInterface[]>([]);
-  const [totalPortfolioValue, setTotalPortfolioValue] = useState(0);
-  const [averageApy, setAverageAPY] = useState(0);
-  const [totalYearlyYield, setTotalYearlyYield] = useState(0);
-
-  // useEffect hook to compute portfolio metrics when dependencies change
-  // TODO: cache the computation and make it faster
-  const computedValues = useMemo(() => {
-    if (isLoadingAll) {
-      return { updatedItems: [], totalValue: 0, weightedAPY: 0, totalYearlyYield: 0 };
-    }
-
-    let totalValue = 0;
-    let totalYearlyYield = 0;
-    let weightedAPY = 0;
-    let updatedItems = [];
-
-    for (const token of Object.keys(qBalances)) {
-      const zone = tokenToZoneMapping[token];
-      const baseToken = token.replace('q', '').toLowerCase();
-      const tokenPriceInfo = tokenPrices?.find((priceInfo) => priceInfo.token === baseToken);
-      const qTokenPrice = tokenPriceInfo ? tokenPriceInfo.price / Number(redemptionRates[zone].current) : 0;
-      const qTokenBalance = qBalances[token];
-      const itemValue = Number(qTokenBalance) * qTokenPrice;
-
-      const qTokenAPY = qAPYRates[token] || 0;
-      const yearlyYield = itemValue * Number(qTokenAPY);
-      totalValue += itemValue;
-      totalYearlyYield += yearlyYield;
-      weightedAPY += (itemValue / totalValue) * Number(qTokenAPY);
-
-      updatedItems.push({
-        title: token,
-        percentage: 0,
-        progressBarColor: 'complimentary.700',
-        amount: qTokenBalance,
-        qTokenPrice: qTokenPrice || 0,
-      });
-    }
-
-    updatedItems = updatedItems.map((item) => {
-      const itemValue = Number(item.amount) * item.qTokenPrice;
       return {
-        ...item,
-        percentage: ((itemValue / totalValue) * 100) / 100,
+        title: 'q' + asset.denom.slice(2).toUpperCase(),
+        amount: shiftDigits(Number(asset.amount), -exp).toString(),
+        qTokenPrice: qTokenPrice,
+        chainId: chainId ?? '',
       };
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [qbalance, APYs, redemptionRates, isLoadingAll, tokenPrices]);
 
-    return { updatedItems, totalValue, weightedAPY, totalYearlyYield };
-  }, [isLoadingAll, qBalances, tokenToZoneMapping, tokenPrices, redemptionRates, qAPYRates, address]);
+  const totalPortfolioValue = useMemo(
+    () => portfolioItems.reduce((acc, item) => acc + Number(item.amount) * item.qTokenPrice, 0),
+    [portfolioItems],
+  );
+  const averageApy = useMemo(() => {
+    const totalWeightedApy = portfolioItems.reduce(
+      (acc, item) => acc + Number(item.amount) * item.qTokenPrice * (APYs[item.chainId] || 0),
+      0,
+    );
+    return totalWeightedApy / totalPortfolioValue || 0;
+  }, [portfolioItems, APYs, totalPortfolioValue]);
 
-  useEffect(() => {
-    if (!isLoadingAll) {
-      setPortfolioItems(computedValues.updatedItems);
-      setTotalPortfolioValue(computedValues.totalValue);
-      setAverageAPY(computedValues.weightedAPY);
-      setTotalYearlyYield(computedValues.totalYearlyYield);
-    }
-  }, [computedValues, isLoadingAll]);
-
-  const assetsData = useMemo(() => {
-    return Object.keys(qBalances).map((token) => {
-      const zone = tokenToZoneMapping[token];
-      return {
-        name: token.toUpperCase(),
-        balance: truncateToTwoDecimals(Number(qBalances[token])).toString(),
-        apy: parseFloat(qAPYRates[token]?.toFixed(2)) || 0,
-        native: token.replace('q', '').toUpperCase(),
-        redemptionRates: redemptionRates[zone]?.last.toString() || '0',
-      };
-    });
-  }, [qBalances, tokenToZoneMapping, qAPYRates, redemptionRates]);
+  const totalYearlyYield = useMemo(
+    () => portfolioItems.reduce((acc, item) => acc + Number(item.amount) * item.qTokenPrice * (APYs[item.chainId] || 0), 0),
+    [portfolioItems, APYs],
+  );
 
   const { liquidRewards } = useLiquidRewardsQuery(address ?? '');
   const { authData, authError } = useAuthChecker(address ?? '');
@@ -356,11 +120,39 @@ function Home() {
     }
   }, [authData, authError, userClosedRewardsClaim]);
 
-  // Function to close the RewardsClaim component
   const closeRewardsClaim = () => {
     setShowRewardsClaim(false);
     setUserClosedRewardsClaim(true);
   };
+
+  // Data for the assets grid
+  // the query return `qbalance` is an array of quicksilver staked assets held by the user
+  // assetsData maps over the assets in qbalance and returns the name, balance, apy, native asset denom, and redemption rate.
+  const assetsData = useMemo(() => {
+    return qbalance?.map((asset) => {
+      const baseToken = asset.denom.substring(2).toLowerCase();
+
+      const chainId = getChainIdForToken(tokenToChainIdMap, baseToken);
+      
+      // remove dydx till added to apr query
+      const apy = (chainId && chainId !== 'dydx-mainnet-1' && APYs && APYs.hasOwnProperty(chainId)) ? APYs[chainId] : 0;
+
+      const redemptionRate = chainId && redemptionRates && redemptionRates[chainId] ? redemptionRates[chainId].current || 1 : 1;
+
+      const exp = getExponent(asset.denom);
+
+      return {
+        name: 'q' + asset.denom.slice(2).toUpperCase(),
+        balance: shiftDigits(Number(asset.amount), -exp).toString(),
+        apy: parseFloat(((apy * 100) / 100).toFixed(4)),
+        native: baseToken.toUpperCase(),
+        redemptionRates: redemptionRate.toString(),
+      };
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [qbalance, APYs, redemptionRates]);
+
+  const showAssetsGrid = qbalance && qbalance.length > 0 && !qIsLoading && !qIsError;
 
   if (!address) {
     return (
@@ -478,7 +270,16 @@ function Home() {
 
           <Spacer />
           {/* Assets Grid */}
-          <AssetsGrid address={address} nonNative={liquidRewards} isWalletConnected={address !== undefined} assets={assetsData} />
+          {showAssetsGrid && (
+            <AssetsGrid
+              liquidRewards={liquidRewards}
+              address={address}
+              nonNative={liquidRewards}
+              isWalletConnected={address !== undefined}
+              assets={assetsData}
+            />
+          )}
+
           <Spacer />
           {/* Unbonding Table */}
           <Box h="full" w="full" mt="20px">

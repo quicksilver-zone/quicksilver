@@ -1,27 +1,14 @@
-import {
-  Box,
-  Flex,
-  Text,
-  VStack,
-  HStack,
-  SkeletonCircle,
-  Spinner,
-  Button,
-  Divider,
-  Stat,
-  StatLabel,
-  StatNumber,
-  useDisclosure,
-} from '@chakra-ui/react';
+import { Box, Flex, Text, VStack, HStack, Spinner, Button, Stat, StatLabel, StatNumber, useDisclosure } from '@chakra-ui/react';
 import { useChain } from '@cosmos-kit/react';
+
+import { defaultChainName } from '@/config';
+import { useBalanceQuery } from '@/hooks/useQueries';
+import { shiftDigits } from '@/utils';
 
 import { DepositModal } from './modals/qckDepositModal';
 import { WithdrawModal } from './modals/qckWithdrawModal';
 import RewardsModal from './modals/rewardsModal';
 
-import { defaultChainName } from '@/config';
-import { useBalanceQuery } from '@/hooks/useQueries';
-import { shiftDigits } from '@/utils';
 interface QuickBoxProps {
   stakingApy?: number;
 }
@@ -86,7 +73,7 @@ const QuickBox: React.FC<QuickBoxProps> = ({ stakingApy }) => {
         <VStack>
           <Stat color={'white'}>
             <StatLabel fontSize={'lg'}>Quicksilver Balance</StatLabel>
-            <StatNumber textAlign={'center'} color={'complimentary.900'} fontSize={'md'}>
+            <StatNumber textAlign={'center'} color={'complimentary.900'} fontSize={'lg'}>
               {tokenBalance} QCK
             </StatNumber>
           </Stat>

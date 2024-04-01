@@ -6,14 +6,10 @@ import { FiAlertTriangle } from 'react-icons/fi';
 import { defaultChainName as chainName } from '@/config';
 
 import {
-  Astronaut,
   Error,
   Connected,
-  ConnectedShowAddress,
-  ConnectedUserInfo,
   Connecting,
   ConnectStatusWarn,
-  CopyAddressBtn,
   Disconnected,
   NotExist,
   Rejected,
@@ -25,13 +21,6 @@ import {
 export const WalletSection = () => {
   const { connect, openView, status, username, address, message, wallet, chain: chainInfo } = useChain(chainName);
   const { getChainLogo } = useManager();
-
-  const chain = {
-    chainName,
-    label: chainInfo.pretty_name,
-    value: chainName,
-    icon: getChainLogo(chainName),
-  };
 
   // Events
   const onClickConnect: MouseEventHandler = async (e) => {
@@ -64,9 +53,6 @@ export const WalletSection = () => {
       error={<RejectedWarn icon={<Icon as={FiAlertTriangle} mt={1} />} wordOfWarning={`${wallet?.prettyName}: ${message}`} />}
     />
   );
-
-  const userInfo = username && <ConnectedUserInfo username={username} icon={<Astronaut />} />;
-  const addressBtn = <CopyAddressBtn walletStatus={status} connected={<ConnectedShowAddress address={address} isLoading={false} />} />;
 
   return (
     <Center py={16}>

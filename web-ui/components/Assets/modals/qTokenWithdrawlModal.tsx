@@ -7,10 +7,11 @@ import {
   ModalBody,
   ModalCloseButton,
   Button,
+  Text,
+  Divider,
   FormControl,
   FormLabel,
   Input,
-  useDisclosure,
   useToast,
   Spinner,
   HStack,
@@ -158,7 +159,7 @@ const QWithdrawModal: React.FC<QDepositModalProps> = ({ max, token, isOpen, onCl
     <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
       <ModalContent bgColor="rgb(32,32,32)">
-        <ModalHeader color="white">Withdraw {token} Tokens</ModalHeader>
+      <ModalHeader color="white"><Text>Withdraw {token} Tokens</Text>  <Divider mt={3} bgColor={'cyan.500'} /></ModalHeader>
         <ModalCloseButton color={'complimentary.900'} />
         <ModalBody>
           {/* Chain Selection Dropdown */}

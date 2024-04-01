@@ -6,6 +6,8 @@ import {
   ModalFooter,
   ModalBody,
   ModalCloseButton,
+  Text,
+  Divider,
   Button,
   FormControl,
   FormLabel,
@@ -132,7 +134,7 @@ export function WithdrawModal() {
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent bgColor="rgb(32,32,32)">
-          <ModalHeader color="white">Withdraw QCK Tokens</ModalHeader>
+        <ModalHeader color="white"><Text>Withdraw QCK Tokens</Text>  <Divider mt={3} bgColor={'cyan.500'} /></ModalHeader>
           <ModalCloseButton color={'complimentary.900'} />
           <ModalBody>
             {/* Chain Selection Dropdown */}

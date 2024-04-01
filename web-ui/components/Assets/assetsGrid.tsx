@@ -16,12 +16,11 @@ import {
 } from '@chakra-ui/react';
 import React, { useEffect, useState } from 'react';
 
+import { shiftDigits, formatQasset, formatNumber } from '@/utils';
+
 import QDepositModal from './modals/qTokenDepositModal';
 import QWithdrawModal from './modals/qTokenWithdrawlModal';
 
-import { useLiquidRewardsQuery } from '@/hooks/useQueries';
-import { truncateToTwoDecimals } from '@/utils';
-import { shiftDigits, formatQasset } from '@/utils';
 
 interface AssetCardProps {
   address: string;
@@ -32,6 +31,7 @@ interface AssetCardProps {
   redemptionRates: string;
   isWalletConnected: boolean;
   nonNative: LiquidRewardsData | undefined;
+  liquidRewards: LiquidRewardsData | undefined;
 }
 
 interface AssetGridProps {
@@ -45,6 +45,7 @@ interface AssetGridProps {
     redemptionRates: string;
   }>;
   nonNative: LiquidRewardsData | undefined;
+  liquidRewards: LiquidRewardsData | undefined;
 }
 
 type Amount = {
@@ -69,24 +70,7 @@ type LiquidRewardsData = {
   errors: Errors;
 };
 
-const formatNumber = (num: number) => {
-  if (num < 1000) {
-    return num.toFixed(2).toString();
-  }
-  if (num >= 1000 && num < 1000000) {
-    return (num / 1000).toFixed(1) + 'K';
-  }
-  if (num >= 1000000 && num < 1000000000) {
-    return (num / 1000000).toFixed(1) + 'M';
-  }
-  if (num >= 1000000000) {
-    return (num / 1000000000).toFixed(1) + 'B';
-  }
-};
-
-const AssetCard: React.FC<AssetCardProps> = ({ address, assetName, balance, apy, redemptionRates }) => {
-  const { liquidRewards, isError, isLoading } = useLiquidRewardsQuery(address ?? '');
-
+const AssetCard: React.FC<AssetCardProps> = ({ address, assetName, balance, apy, redemptionRates, liquidRewards }) => {
   const chainIdToName: { [key: string]: string } = {
     'osmosis-1': 'osmosis',
     'secret-1': 'secretnetwork',
@@ -178,7 +162,7 @@ const AssetCard: React.FC<AssetCardProps> = ({ address, assetName, balance, apy,
         </Text>
         <HStack>
           <Text fontSize="md" fontWeight="bold" isTruncated>
-            {truncateToTwoDecimals(Number(shiftDigits(apy, 2)))}%
+            {Number(shiftDigits(apy, 2))}%
           </Text>
           <Text fontSize="xs" fontWeight="light" isTruncated>
             APY
@@ -262,7 +246,7 @@ const AssetCard: React.FC<AssetCardProps> = ({ address, assetName, balance, apy,
   );
 };
 
-const AssetsGrid: React.FC<AssetGridProps> = ({ address, assets, isWalletConnected, nonNative }) => {
+const AssetsGrid: React.FC<AssetGridProps> = ({ address, assets, isWalletConnected, nonNative, liquidRewards }) => {
   const scrollRef = React.useRef<HTMLDivElement>(null);
   const [focusedIndex, setFocusedIndex] = useState(0);
 
@@ -366,7 +350,7 @@ const AssetsGrid: React.FC<AssetGridProps> = ({ address, assets, isWalletConnect
         </Flex>
       ) : (
         <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={8} w="full" py={4} ref={scrollRef}>
-          {assets.map((asset, index) => (
+          {assets?.map((asset, index) => (
             <Box
               key={index}
               minW="350px"
@@ -383,6 +367,7 @@ const AssetsGrid: React.FC<AssetGridProps> = ({ address, assets, isWalletConnect
                 apy={asset.apy}
                 nonNative={nonNative}
                 redemptionRates={asset.redemptionRates}
+                liquidRewards={liquidRewards}
               />
             </Box>
           ))}

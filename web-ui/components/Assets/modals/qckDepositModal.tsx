@@ -11,6 +11,8 @@ import {
   FormLabel,
   Input,
   useDisclosure,
+  Divider,
+  Text,
   Spinner,
 } from '@chakra-ui/react';
 import { StdFee } from '@cosmjs/stargate';
@@ -24,7 +26,6 @@ import { useState, useMemo, useEffect } from 'react';
 import { ChooseChain } from '@/components/react/choose-chain';
 import { handleSelectChainDropdown, ChainOption, ChooseChainInfo } from '@/components/types';
 import { useTx } from '@/hooks';
-import { useIbcBalanceQuery } from '@/hooks/useQueries';
 import { getIbcInfo, shiftDigits } from '@/utils';
 
 export function DepositModal() {
@@ -67,7 +68,6 @@ export function DepositModal() {
   const { transfer } = ibc.applications.transfer.v1.MessageComposer.withTypeUrl;
   const { address } = useChain(fromChain ?? '');
   const { address: qAddress } = useChain('quicksilver');
-  const { balance } = useIbcBalanceQuery(fromChain ?? '', address ?? '');
   const { tx } = useTx(fromChain ?? '');
 
   const onSubmitClick = async () => {
@@ -144,7 +144,7 @@ export function DepositModal() {
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent bgColor="rgb(32,32,32)">
-          <ModalHeader color="white">Deposit QCK Tokens</ModalHeader>
+          <ModalHeader color="white"><Text>Deposit QCK Tokens</Text>  <Divider mt={3} bgColor={'cyan.500'} /></ModalHeader>
           <ModalCloseButton color={'complimentary.900'} />
           <ModalBody>
             {/* Chain Selection Dropdown */}
