@@ -14,13 +14,14 @@ import {
   StatNumber,
   SimpleGrid,
 } from '@chakra-ui/react';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
+
+import { shiftDigits, formatQasset, formatNumber } from '@/utils';
 
 import QDepositModal from './modals/qTokenDepositModal';
 import QWithdrawModal from './modals/qTokenWithdrawlModal';
 
-import { shiftDigits, formatQasset, formatNumber } from '@/utils';
 
 
 interface AssetCardProps {
@@ -258,6 +259,47 @@ const AssetsGrid: React.FC<AssetGridProps> = ({ address, assets, isWalletConnect
     setFocusedIndex(index);
   };
 
+  const combinedAssets = useMemo(() => {
+    const assetMap = new Map();
+  
+ 
+    assets.forEach((asset) => {
+      assetMap.set(asset.name, { ...asset, source: 'native', interchainBalance: '0' });
+    });
+  
+  
+    Object.values(liquidRewards?.assets || {}).forEach((chainAssets) => {
+      chainAssets.forEach((assetGroup) => {
+        assetGroup.Amount.forEach(({ denom, amount }) => {
+
+          const standardizedDenom = denom.startsWith('uq') || denom.startsWith('aq') 
+            ? 'q' + denom.substring(2).toUpperCase() 
+            : denom.toUpperCase();
+  
+          const existingAsset = assetMap.get(standardizedDenom);
+          const exp = denom.startsWith('uq') || denom.startsWith('aq') ? 18 : 6;
+          if (existingAsset) {
+     
+            existingAsset.interchainBalance = (parseFloat(existingAsset.interchainBalance) + shiftDigits(parseFloat(amount), -exp)).toString();
+          } else {
+            assetMap.set(standardizedDenom, {
+              name: standardizedDenom,
+              balance: '0', 
+              interchainBalance: shiftDigits(parseFloat(amount), -exp).toString(),
+              apy: 0,  
+              native: denom.replace('uq', '').toUpperCase(),  
+              redemptionRates: '1', 
+              source: 'liquidRewards',
+            });
+          }
+        });
+      });
+    });
+  
+    return Array.from(assetMap.values());
+  }, [assets, liquidRewards]);
+
+
   // const scrollByOne = (direction: 'left' | 'right') => {
   //   if (!scrollRef.current) return;
 
@@ -335,7 +377,7 @@ const AssetsGrid: React.FC<AssetGridProps> = ({ address, assets, isWalletConnect
         </Flex> */}
       </Flex>
 
-      {/* Carousel content */}
+      {/* Asset Grid content */}
       {!isWalletConnected ? (
         <Flex
           backdropFilter="blur(50px)"
@@ -354,7 +396,7 @@ const AssetsGrid: React.FC<AssetGridProps> = ({ address, assets, isWalletConnect
         </Flex>
       ) : (
         <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={8} w="full" py={4} ref={scrollRef}>
-          {assets?.map((asset, index) => (
+           {combinedAssets.map((asset, index) => (
             <Box
               key={index}
               minW="350px"
@@ -362,18 +404,19 @@ const AssetsGrid: React.FC<AssetGridProps> = ({ address, assets, isWalletConnect
               transition="transform 0.1s"
               onMouseEnter={() => handleMouseEnter(index)}
             >
-              <AssetCard
-                address={address}
-                isWalletConnected={isWalletConnected}
-                assetName={formatQasset(asset.name)}
-                nativeAssetName={asset.native}
-                balance={asset.balance}
-                apy={asset.apy}
-                nonNative={nonNative}
-                redemptionRates={asset.redemptionRates}
-                liquidRewards={liquidRewards}
-                refetch={refetch}
-              />
+               <AssetCard
+          key={asset.name}
+          address={address}
+          isWalletConnected={isWalletConnected}
+          assetName={formatQasset(asset.name)}
+          nativeAssetName={asset.native}
+          balance={asset.balance}
+          apy={asset.apy}
+          nonNative={nonNative}
+          redemptionRates={asset.redemptionRates}
+          liquidRewards={liquidRewards}
+          refetch={refetch}
+        />
             </Box>
           ))}
         </SimpleGrid>
