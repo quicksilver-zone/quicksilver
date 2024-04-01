@@ -2031,6 +2031,16 @@ func (m *RedelegationRecord) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	{
+		size := m.Amount.Size()
+		i -= size
+		if _, err := m.Amount.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintInterchainstaking(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x3a
 	n9, err9 := github_com_cosmos_gogoproto_types.StdTimeMarshalTo(m.CompletionTime, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdTime(m.CompletionTime):])
 	if err9 != nil {
 		return 0, err9
@@ -2113,10 +2123,9 @@ func (m *Validator) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	}
 	i--
 	dAtA[i] = 0x52
-	n11, err11 := github_com_cosmos_gogoproto_types.StdTimeMarshalTo(m.JailedSince, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdTime(m.JailedSince):])
-	if err11 != nil {
-		return 0, err11
-
+	n10, err10 := github_com_cosmos_gogoproto_types.StdTimeMarshalTo(m.JailedSince, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdTime(m.JailedSince):])
+	if err10 != nil {
+		return 0, err10
 	}
 	i -= n10
 	i = encodeVarintInterchainstaking(dAtA, i, uint64(n10))
@@ -2398,10 +2407,9 @@ func (m *Receipt) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	var l int
 	_ = l
 	if m.Completed != nil {
-		n13, err13 := github_com_cosmos_gogoproto_types.StdTimeMarshalTo(*m.Completed, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdTime(*m.Completed):])
-		if err13 != nil {
-			return 0, err13
-
+		n12, err12 := github_com_cosmos_gogoproto_types.StdTimeMarshalTo(*m.Completed, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdTime(*m.Completed):])
+		if err12 != nil {
+			return 0, err12
 		}
 		i -= n12
 		i = encodeVarintInterchainstaking(dAtA, i, uint64(n12))
@@ -2409,9 +2417,9 @@ func (m *Receipt) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		dAtA[i] = 0x32
 	}
 	if m.FirstSeen != nil {
-		n14, err14 := github_com_cosmos_gogoproto_types.StdTimeMarshalTo(*m.FirstSeen, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdTime(*m.FirstSeen):])
-		if err14 != nil {
-			return 0, err14
+		n13, err13 := github_com_cosmos_gogoproto_types.StdTimeMarshalTo(*m.FirstSeen, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdTime(*m.FirstSeen):])
+		if err13 != nil {
+			return 0, err13
 		}
 		i -= n13
 		i = encodeVarintInterchainstaking(dAtA, i, uint64(n13))

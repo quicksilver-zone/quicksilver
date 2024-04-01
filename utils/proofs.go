@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"net/url"
 
-	"github.com/cometbft/cometbft/proto/tendermint/crypto"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/cometbft/cometbft/proto/tendermint/crypto"
 
 	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
 	commitmenttypes "github.com/cosmos/ibc-go/v7/modules/core/23-commitment/types"
@@ -53,7 +53,6 @@ func ValidateProofOps(
 	path := commitmenttypes.NewMerklePath([]string{module, url.PathEscape(string(key))}...)
 
 	merkleProof, err := commitmenttypes.ConvertProofs(proofOps)
-
 	if err != nil {
 		return errors.New("error converting proofs")
 	}
@@ -73,7 +72,6 @@ func ValidateProofOps(
 		if err := merkleProof.VerifyMembership(tmClientState.ProofSpecs, tmConsensusState.GetRoot(), path, data); err != nil {
 			return fmt.Errorf("unable to verify inclusion proof: %w", err)
 		}
-
 	}
 	// if we got a nil response, verify non inclusion proof.
 	if err := merkleProof.VerifyNonMembership(tmClientState.ProofSpecs, tmConsensusState.GetRoot(), path); err != nil {

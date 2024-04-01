@@ -4,14 +4,14 @@ import (
 	"encoding/json"
 	"time"
 
-	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/cometbft/cometbft/proto/tendermint/crypto"
-
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+
+	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cometbft/cometbft/proto/tendermint/crypto"
 
 	"github.com/quicksilver-zone/quicksilver/app" //nolint:revive
 	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/lockup"

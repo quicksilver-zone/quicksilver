@@ -7,8 +7,6 @@ import (
 	"os/exec"
 	"strconv"
 
-	"github.com/cometbft/cometbft/config"
-	tmstore "github.com/cometbft/cometbft/store"
 	"github.com/spf13/cobra"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/opt"
@@ -17,6 +15,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 
 	tmdb "github.com/cometbft/cometbft-db"
+	"github.com/cometbft/cometbft/config"
+	tmstore "github.com/cometbft/cometbft/store"
 )
 
 const (

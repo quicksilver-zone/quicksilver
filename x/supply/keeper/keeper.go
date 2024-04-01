@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"github.com/cometbft/cometbft/libs/log"
-
 	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -10,6 +8,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
+	"github.com/cometbft/cometbft/libs/log"
 
 	"github.com/quicksilver-zone/quicksilver/x/supply/types"
 )

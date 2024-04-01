@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"testing"
 
-	tmcli "github.com/cometbft/cometbft/libs/cli"
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 
@@ -13,6 +12,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
+
+	tmcli "github.com/cometbft/cometbft/libs/cli"
 
 	"github.com/quicksilver-zone/quicksilver/app"
 	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/client/cli"
@@ -616,7 +617,7 @@ func (s *IntegrationTestSuite) TestGetZoneWithdrawalRecordsCmd() {
 
 			runFlags := []string{
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=true", flags.FlagDryRun),
 			}
 

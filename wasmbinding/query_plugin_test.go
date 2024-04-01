@@ -7,7 +7,6 @@ import (
 	"time"
 
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/golang/protobuf/proto" // nolint:staticcheck
 	"github.com/stretchr/testify/suite"
 
@@ -17,6 +16,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	"github.com/quicksilver-zone/quicksilver/app"
 	"github.com/quicksilver-zone/quicksilver/wasmbinding"

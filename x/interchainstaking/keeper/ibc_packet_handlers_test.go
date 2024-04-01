@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/math"
@@ -19,7 +20,6 @@ import (
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/cosmos/gogoproto/proto"
 
 	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
@@ -1783,11 +1783,11 @@ func (suite *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 						Distribution: []*types.Distribution{
 							{
 								Valoper: vals[0],
-								Amount:  1000,
+								Amount:  sdk.NewInt(1000),
 							},
 							{
 								Valoper: vals[1],
-								Amount:  1000,
+								Amount:  sdk.NewInt(1000),
 							},
 						},
 						Recipient:  addressutils.GenerateAddressForTestWithPrefix(zone.GetAccountPrefix()),
@@ -1828,7 +1828,7 @@ func (suite *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 						Distribution: []*types.Distribution{
 							{
 								Valoper: vals[1],
-								Amount:  1000,
+								Amount:  sdk.NewInt(1000),
 							},
 						},
 						Recipient:  addressutils.GenerateAddressForTestWithPrefix(zone.GetAccountPrefix()),
@@ -1862,7 +1862,7 @@ func (suite *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 						Distribution: []*types.Distribution{
 							{
 								Valoper: vals[0],
-								Amount:  1000,
+								Amount:  sdk.NewInt(1000),
 							},
 						},
 						Recipient:  addressutils.GenerateAddressForTestWithPrefix(zone.GetAccountPrefix()),
@@ -1922,11 +1922,11 @@ func (suite *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 						Distribution: []*types.Distribution{
 							{
 								Valoper: vals[0],
-								Amount:  1000,
+								Amount:  sdk.NewInt(1000),
 							},
 							{
 								Valoper: vals[1],
-								Amount:  500,
+								Amount:  sdk.NewInt(500),
 							},
 						},
 						Recipient:  addressutils.GenerateAddressForTestWithPrefix(zone.GetAccountPrefix()),
@@ -1941,11 +1941,11 @@ func (suite *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 						Distribution: []*types.Distribution{
 							{
 								Valoper: vals[0],
-								Amount:  1000,
+								Amount:  sdk.NewInt(1000),
 							},
 							{
 								Valoper: vals[1],
-								Amount:  2000,
+								Amount:  sdk.NewInt(2000),
 							},
 						},
 						Recipient:  addressutils.GenerateAddressForTestWithPrefix(zone.GetAccountPrefix()),
@@ -1960,11 +1960,11 @@ func (suite *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 						Distribution: []*types.Distribution{
 							{
 								Valoper: vals[0],
-								Amount:  600,
+								Amount:  sdk.NewInt(600),
 							},
 							{
 								Valoper: vals[1],
-								Amount:  400,
+								Amount:  sdk.NewInt(400),
 							},
 						},
 						Recipient:  addressutils.GenerateAddressForTestWithPrefix(zone.GetAccountPrefix()),
@@ -2005,7 +2005,7 @@ func (suite *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 						Distribution: []*types.Distribution{
 							{
 								Valoper: vals[0],
-								Amount:  1000,
+								Amount:  sdk.NewInt(1000),
 							},
 						},
 						Recipient:  addressutils.GenerateAddressForTestWithPrefix(zone.GetAccountPrefix()),
@@ -2020,7 +2020,7 @@ func (suite *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 						Distribution: []*types.Distribution{
 							{
 								Valoper: vals[0],
-								Amount:  1000,
+								Amount:  sdk.NewInt(1000),
 							},
 						},
 						Recipient:  addressutils.GenerateAddressForTestWithPrefix(zone.GetAccountPrefix()),
@@ -2035,7 +2035,7 @@ func (suite *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 						Distribution: []*types.Distribution{
 							{
 								Valoper: vals[0],
-								Amount:  600,
+								Amount:  sdk.NewInt(1000),
 							},
 						},
 						Recipient:  addressutils.GenerateAddressForTestWithPrefix(zone.GetAccountPrefix()),
@@ -2142,6 +2142,7 @@ func (suite *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 		})
 	}
 }
+
 func (suite *KeeperTestSuite) TestRebalanceDueToIntentChange() {
 	suite.SetupTest()
 	suite.setupTestZones()
