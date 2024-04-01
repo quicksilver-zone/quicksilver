@@ -16,10 +16,11 @@ import {
 } from '@chakra-ui/react';
 import React, { useEffect, useState } from 'react';
 
-import { shiftDigits, formatQasset, formatNumber } from '@/utils';
 
 import QDepositModal from './modals/qTokenDepositModal';
 import QWithdrawModal from './modals/qTokenWithdrawlModal';
+
+import { shiftDigits, formatQasset, formatNumber } from '@/utils';
 
 
 interface AssetCardProps {
@@ -32,6 +33,7 @@ interface AssetCardProps {
   isWalletConnected: boolean;
   nonNative: LiquidRewardsData | undefined;
   liquidRewards: LiquidRewardsData | undefined;
+  refetch: () => void;
 }
 
 interface AssetGridProps {
@@ -46,6 +48,7 @@ interface AssetGridProps {
   }>;
   nonNative: LiquidRewardsData | undefined;
   liquidRewards: LiquidRewardsData | undefined;
+  refetch: () => void;
 }
 
 type Amount = {
@@ -70,7 +73,7 @@ type LiquidRewardsData = {
   errors: Errors;
 };
 
-const AssetCard: React.FC<AssetCardProps> = ({ address, assetName, balance, apy, redemptionRates, liquidRewards }) => {
+const AssetCard: React.FC<AssetCardProps> = ({ address, assetName, balance, apy, redemptionRates, liquidRewards, refetch }) => {
   const chainIdToName: { [key: string]: string } = {
     'osmosis-1': 'osmosis',
     'secret-1': 'secretnetwork',
@@ -201,7 +204,7 @@ const AssetCard: React.FC<AssetCardProps> = ({ address, assetName, balance, apy,
           >
             Withdraw
           </Button>
-          <QWithdrawModal max={balance} isOpen={withdrawDisclosure.isOpen} onClose={withdrawDisclosure.onClose} token={assetName} />
+          <QWithdrawModal refetch={refetch} max={balance} isOpen={withdrawDisclosure.isOpen} onClose={withdrawDisclosure.onClose} token={assetName} />
         </VStack>
 
         <VStack minH="150px" alignItems="left">
@@ -235,6 +238,7 @@ const AssetCard: React.FC<AssetCardProps> = ({ address, assetName, balance, apy,
             Deposit
           </Button>
           <QDepositModal
+          refetch={refetch}
             interchainDetails={interchainDetails}
             isOpen={depositDisclosure.isOpen}
             onClose={depositDisclosure.onClose}
@@ -246,7 +250,7 @@ const AssetCard: React.FC<AssetCardProps> = ({ address, assetName, balance, apy,
   );
 };
 
-const AssetsGrid: React.FC<AssetGridProps> = ({ address, assets, isWalletConnected, nonNative, liquidRewards }) => {
+const AssetsGrid: React.FC<AssetGridProps> = ({ address, assets, isWalletConnected, nonNative, liquidRewards, refetch }) => {
   const scrollRef = React.useRef<HTMLDivElement>(null);
   const [focusedIndex, setFocusedIndex] = useState(0);
 
@@ -368,6 +372,7 @@ const AssetsGrid: React.FC<AssetGridProps> = ({ address, assets, isWalletConnect
                 nonNative={nonNative}
                 redemptionRates={asset.redemptionRates}
                 liquidRewards={liquidRewards}
+                refetch={refetch}
               />
             </Box>
           ))}

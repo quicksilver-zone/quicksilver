@@ -196,7 +196,7 @@ const PortfolioItem: React.FC<PortfolioItemProps> = ({ title, amount, qTokenPric
         <Text>q{title.toLocaleLowerCase().slice(1).toLocaleUpperCase()}</Text>
       </HStack>
       <Text> {formatNumber(parseFloat(amount))}</Text>
-      <Text>{tokenValue < 0.01 ? '>$0.01' : '$' + tokenValue.toFixed(2)}</Text>
+      <Text>{tokenValue < 0.01 ? '>$0.01' : '$' + formatNumber(tokenValue)}</Text>
     </SimpleGrid>
   );
 };

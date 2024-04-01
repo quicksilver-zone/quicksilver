@@ -28,7 +28,6 @@ import { useState, useMemo, useEffect } from 'react';
 import { ChooseChain } from '@/components/react/choose-chain';
 import { handleSelectChainDropdown, ChainOption, ChooseChainInfo } from '@/components/types';
 import { useTx } from '@/hooks';
-import { useIbcBalanceQuery } from '@/hooks/useQueries';
 import { ibcDenomDepositMapping } from '@/state/chains/prod';
 import { getCoin, getIbcInfo } from '@/utils';
 
@@ -37,9 +36,10 @@ export interface QDepositModalProps {
   isOpen: boolean;
   onClose: () => void;
   interchainDetails: { [chainId: string]: number };
+  refetch: () => void;
 }
 
-const QDepositModal: React.FC<QDepositModalProps> = ({ token, isOpen, onClose, interchainDetails }) => {
+const QDepositModal: React.FC<QDepositModalProps> = ({ token, isOpen, onClose, interchainDetails, refetch }) => {
   const toast = useToast();
   const { chainRecords, getChainLogo } = useManager();
   const [chainName, setChainName] = useState<ChainName | undefined>('osmosis');
@@ -151,6 +151,7 @@ const QDepositModal: React.FC<QDepositModalProps> = ({ token, isOpen, onClose, i
       fee,
       onSuccess: () => {
         setAmount('');
+        refetch();
       },
     });
 

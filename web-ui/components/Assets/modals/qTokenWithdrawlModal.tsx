@@ -37,9 +37,10 @@ interface QDepositModalProps {
   token: string;
   isOpen: boolean;
   onClose: () => void;
+  refetch: () => void;
 }
 
-const QWithdrawModal: React.FC<QDepositModalProps> = ({ max, token, isOpen, onClose }) => {
+const QWithdrawModal: React.FC<QDepositModalProps> = ({ max, token, isOpen, onClose, refetch }) => {
   const toast = useToast();
 
   const [chainName, setChainName] = useState<ChainName | undefined>('osmosis');
@@ -87,6 +88,7 @@ const QWithdrawModal: React.FC<QDepositModalProps> = ({ max, token, isOpen, onCl
     setIsLoading(true);
 
     const coin = getCoin(fromChain ?? '');
+    console.log(amount)
     const transferAmount = new BigNumber(amount).shiftedBy(6).toString();
 
     const fee: StdFee = {
@@ -149,6 +151,7 @@ const QWithdrawModal: React.FC<QDepositModalProps> = ({ max, token, isOpen, onCl
       fee,
       onSuccess: () => {
         setAmount('');
+        refetch();
       },
     });
 

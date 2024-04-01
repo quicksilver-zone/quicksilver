@@ -38,6 +38,8 @@ function Home() {
   const { APYs, APYsLoading, APYsError, APYsRefetch } = useAPYsQuery();
   const { redemptionRates, redemptionError, redemptionLoading, redemptionRefetch } = useRedemptionRatesQuery();
   const { APY: quickAPY } = useAPYQuery('quicksilver-2');
+  const { liquidRewards } = useLiquidRewardsQuery(address ?? '');
+  const { authData, authError } = useAuthChecker(address ?? '');
 
   const isLoadingAll = qIsLoading || APYsLoading || redemptionLoading || isLoadingPrices;
 
@@ -64,30 +66,36 @@ function Home() {
   function getChainIdForToken(tokenToChainIdMap: { [x: string]: any }, baseToken: string) {
     return tokenToChainIdMap[baseToken.toLowerCase()] || null;
   }
+const nonNative  = liquidRewards?.assets
+const portfolioItems: PortfolioItemInterface[] = useMemo(() => {
+  if (!qbalance || !APYs || !redemptionRates || isLoadingAll || !liquidRewards) return [];
 
-  // Data for the portfolio
-  // the query return `qbalance` is an array of quicksilver staked assets held by the user
-  // portfolioItems maps over the assets in qbalance and returns the title, amount, qTokenPrice, and chainId.
-  const portfolioItems: PortfolioItemInterface[] = useMemo(() => {
-    if (!qbalance || !APYs || !redemptionRates || isLoadingAll) return [];
+  // Flatten nonNative assets into a single array and accumulate amounts for each denom
+  const amountsMap = new Map();
+  Object.values(nonNative || {}).flat().flatMap(reward => reward.Amount).forEach(({ denom, amount }) => {
+    const currentAmount = amountsMap.get(denom) || 0;
+    amountsMap.set(denom, currentAmount + Number(amount));
+  });
 
-    return qbalance.map((asset) => {
-      const baseToken = asset.denom.substring(2);
-      const chainId = getChainIdForToken(tokenToChainIdMap, baseToken);
-      const tokenPriceInfo = tokenPrices?.find((info) => info.token === baseToken);
-      const redemptionRate = chainId && redemptionRates && redemptionRates[chainId] ? redemptionRates[chainId].current || 1 : 1;
-      const qTokenPrice = tokenPriceInfo ? tokenPriceInfo.price * redemptionRate : 0;
-      const exp = getExponent(asset.denom);
+  // Map over the accumulated results to create portfolio items
+  return Array.from(amountsMap.entries()).map(([denom, amount]) => {
+    const normalizedDenom = denom.slice(2); // assuming the denom always has a 'q' prefix
+    const chainId = getChainIdForToken(tokenToChainIdMap, normalizedDenom);
+    const tokenPriceInfo = tokenPrices?.find((info) => info.token === normalizedDenom);
+    const redemptionRate = chainId && redemptionRates[chainId] ? redemptionRates[chainId].current : 1;
+    const qTokenPrice = tokenPriceInfo ? tokenPriceInfo.price * redemptionRate : 0;
+    const exp = getExponent(denom);
+    const normalizedAmount = shiftDigits(amount, -exp);
 
-      return {
-        title: 'q' + asset.denom.slice(2).toUpperCase(),
-        amount: shiftDigits(Number(asset.amount), -exp).toString(),
-        qTokenPrice: qTokenPrice,
-        chainId: chainId ?? '',
-      };
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [qbalance, APYs, redemptionRates, isLoadingAll, tokenPrices]);
+    return {
+      title: 'q' + normalizedDenom.toUpperCase(),
+      amount: normalizedAmount.toString(),
+      qTokenPrice: qTokenPrice,
+      chainId: chainId ?? '',
+    };
+  });
+}, [qbalance, APYs, redemptionRates, isLoadingAll, liquidRewards, nonNative, tokenToChainIdMap, tokenPrices]);
+
 
   const totalPortfolioValue = useMemo(
     () => portfolioItems.reduce((acc, item) => acc + Number(item.amount) * item.qTokenPrice, 0),
@@ -106,8 +114,7 @@ function Home() {
     [portfolioItems, APYs],
   );
 
-  const { liquidRewards } = useLiquidRewardsQuery(address ?? '');
-  const { authData, authError } = useAuthChecker(address ?? '');
+
 
   const [showRewardsClaim, setShowRewardsClaim] = useState(false);
   const [userClosedRewardsClaim, setUserClosedRewardsClaim] = useState(false);
@@ -272,6 +279,7 @@ function Home() {
           {/* Assets Grid */}
           {showAssetsGrid && (
             <AssetsGrid
+              refetch={qRefetch}
               liquidRewards={liquidRewards}
               address={address}
               nonNative={liquidRewards}
