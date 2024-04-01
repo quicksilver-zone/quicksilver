@@ -775,9 +775,6 @@ paths:
                         spec)
                     source_chain_id:
                       type: string
-                    _amount:
-                      type: string
-                      format: uint64
                     amount:
                       type: string
                   description: >-
@@ -937,9 +934,6 @@ paths:
                         spec)
                     source_chain_id:
                       type: string
-                    _amount:
-                      type: string
-                      format: uint64
                     amount:
                       type: string
                   description: >-
@@ -1101,9 +1095,6 @@ paths:
                         spec)
                     source_chain_id:
                       type: string
-                    _amount:
-                      type: string
-                      format: uint64
                     amount:
                       type: string
                   description: >-
@@ -1265,9 +1256,6 @@ paths:
                         spec)
                     source_chain_id:
                       type: string
-                    _amount:
-                      type: string
-                      format: uint64
                     amount:
                       type: string
                   description: >-
@@ -2783,9 +2771,6 @@ paths:
                         properties:
                           valoper:
                             type: string
-                          _amount:
-                            type: string
-                            format: uint64
                           amount:
                             type: string
                     recipient:
@@ -4223,9 +4208,6 @@ paths:
                       type: string
                     destination:
                       type: string
-                    _amount:
-                      type: string
-                      format: int64
                     completion_time:
                       type: string
                       format: date-time
@@ -4682,9 +4664,6 @@ paths:
                         properties:
                           valoper:
                             type: string
-                          _amount:
-                            type: string
-                            format: uint64
                           amount:
                             type: string
                     recipient:
@@ -4880,9 +4859,6 @@ paths:
                         properties:
                           valoper:
                             type: string
-                          _amount:
-                            type: string
-                            format: uint64
                           amount:
                             type: string
                     recipient:
