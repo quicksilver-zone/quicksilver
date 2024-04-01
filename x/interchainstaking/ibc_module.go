@@ -9,7 +9,6 @@ import (
 
 	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
 	porttypes "github.com/cosmos/ibc-go/v7/modules/core/05-port/types"
-	host "github.com/cosmos/ibc-go/v7/modules/core/24-host"
 	ibcexported "github.com/cosmos/ibc-go/v7/modules/core/exported"
 
 	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/keeper"
@@ -40,7 +39,7 @@ func (im IBCModule) OnChanOpenInit(
 	_ channeltypes.Counterparty,
 	_ string,
 ) (string, error) {
-	return "", im.keeper.ClaimCapability(ctx, chanCap, host.ChannelCapabilityPath(portID, channelID))
+	return "", nil
 }
 
 // OnChanOpenTry implements the IBCModule interface.

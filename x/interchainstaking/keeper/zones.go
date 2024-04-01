@@ -18,9 +18,23 @@ import (
 	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 )
 
+func (k *Keeper) EmptyZone() types.Zone {
+	return types.Zone{
+		ChainId:            "",
+		ConnectionId:       "",
+		LocalDenom:         "",
+		BaseDenom:          "",
+		AccountPrefix:      "",
+		RedemptionRate:     sdk.NewDec(0),
+		LastRedemptionRate: sdk.NewDec(0),
+		UnbondingEnabled:   false,
+		LiquidityModule:    false,
+	}
+}
+
 // GetZone returns zone info by chainID.
 func (k *Keeper) GetZone(ctx sdk.Context, chainID string) (types.Zone, bool) {
-	zone := types.Zone{}
+	zone := k.EmptyZone()
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixZone)
 	bz := store.Get([]byte(chainID))
 	if len(bz) == 0 {

@@ -47,7 +47,7 @@ message Validator {
   // delegator_shares defines total shares issued to a validator's delegators.
   string delegator_shares = 6 [
     (gogoproto.moretags) = "yaml:\"delegator_shares\"",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable) = false
   ];
   // description defines the description terms for the validator.
@@ -81,13 +81,13 @@ message Validator {
   // Number of shares self bonded from the validator
   string validator_bond_shares = 14 [
     (gogoproto.moretags) = "yaml:\"validator_bond_shares\"",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable) = false
   ];
   // Number of shares either tokenized or owned by a liquid staking provider
   string liquid_shares = 15 [
     (gogoproto.moretags) = "yaml:\"liquid_shares\"",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable) = false
   ];
 }

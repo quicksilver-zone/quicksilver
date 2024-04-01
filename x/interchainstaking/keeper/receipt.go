@@ -292,7 +292,7 @@ func ProdSubmitTx(ctx sdk.Context, k *Keeper, msgs []sdk.Msg, account *types.ICA
 	}
 
 	timeoutTimestamp := uint64(ctx.BlockTime().Add(ICATimeout).UnixNano())
-
+	timeoutHeight := clienttypes.ZeroHeight()
 	for {
 		// if no messages, no chunks!
 		if len(msgs) == 0 {
@@ -309,7 +309,7 @@ func ProdSubmitTx(ctx sdk.Context, k *Keeper, msgs []sdk.Msg, account *types.ICA
 		msgs = msgs[chunkSize:]
 
 		// TODO: refactor this: https://github.com/cosmos/ibc-go/pull/2607
-		chunkProtoMsgs := make([]proto.Message, len(msgsChunk))
+		chunkProtoMsgs := []proto.Message{}
 		for _, msg := range msgsChunk {
 			protoMsg, ok := msg.(proto.Message)
 			if !ok {
@@ -331,7 +331,7 @@ func ProdSubmitTx(ctx sdk.Context, k *Keeper, msgs []sdk.Msg, account *types.ICA
 			Memo: memo,
 		}
 
-		_, err = k.ICAControllerKeeper.SendTx(ctx, chanCap, connectionID, portID, packetData, timeoutTimestamp)
+		_, err = k.IBCKeeper.ChannelKeeper.SendPacket(ctx, chanCap, portID, channelID, timeoutHeight, timeoutTimestamp, packetData.GetBytes())
 		if err != nil {
 			return err
 		}
