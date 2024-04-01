@@ -8,6 +8,8 @@ import (
 	"strings"
 	"time"
 
+	"cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
@@ -71,49 +73,49 @@ func (m *OsmosisModule) Hooks(ctx sdk.Context, k *Keeper) {
 	})
 }
 
-func (*OsmosisModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.MsgSubmitClaim) (uint64, error) {
-	var amount uint64
+func (*OsmosisModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.MsgSubmitClaim) (math.Int, error) {
+	amount := sdk.ZeroInt()
 	var lock osmolockup.PeriodLock
 	for _, proof := range msg.Proofs {
 		if proof.ProofType == types.ProofTypeBank {
 			addr, poolDenom, err := banktypes.AddressAndDenomFromBalancesStore(proof.Key[1:])
 			if err != nil {
-				return 0, err
+				return sdk.ZeroInt(), err
 			}
 			coin, err := keeper.UnmarshalBalanceCompat(k.cdc, proof.Data, poolDenom)
 			if err != nil {
-				return 0, err
+				return sdk.ZeroInt(), err
 			}
 			poolID, err := strconv.Atoi(poolDenom[strings.LastIndex(poolDenom, "/")+1:])
 			if err != nil {
-				return 0, err
+				return sdk.ZeroInt(), err
 			}
 			lock = osmolockup.NewPeriodLock(uint64(poolID), addr, time.Hour, time.Time{}, sdk.NewCoins(coin))
 		} else {
 			lock = osmolockup.PeriodLock{}
 			err := k.cdc.Unmarshal(proof.Data, &lock)
 			if err != nil {
-				return 0, err
+				return sdk.ZeroInt(), err
 			}
 
 			_, lockupOwner, err := bech32.DecodeAndConvert(lock.Owner)
 			if err != nil {
-				return 0, err
+				return sdk.ZeroInt(), err
 			}
 
 			if sdk.AccAddress(lockupOwner).String() != msg.UserAddress {
-				return 0, errors.New("not a valid proof for submitting user")
+				return sdk.ZeroInt(), errors.New("not a valid proof for submitting user")
 			}
 		}
 		sdkAmount, err := osmosistypes.DetermineApplicableTokensInPool(ctx, k, lock, msg.Zone)
 		if err != nil {
-			return 0, err
+			return sdk.ZeroInt(), err
 		}
 
 		if sdkAmount.IsNil() || sdkAmount.IsNegative() {
-			return 0, errors.New("unexpected amount")
+			return sdk.ZeroInt(), errors.New("unexpected amount")
 		}
-		amount += sdkAmount.Uint64()
+		amount = amount.Add(sdkAmount)
 	}
 	return amount, nil
 }

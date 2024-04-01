@@ -68,6 +68,12 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, _ int64)
 		sub.Hooks(ctx, k)
 	}
 
+	// ensure we archive claims before we return!
+	k.icsKeeper.IterateZones(ctx, func(index int64, zone *icstypes.Zone) (stop bool) {
+		k.ClaimsManagerKeeper.ArchiveAndGarbageCollectClaims(ctx, zone.ChainId)
+		return false
+	})
+
 	tvs, err := k.CalcTokenValues(ctx)
 	if err != nil {
 		k.Logger(ctx).Error("unable to calculate token values", "error", err.Error())
@@ -76,7 +82,7 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, _ int64)
 
 	if allocation == nil {
 		// if allocation is unset, then return early to avoid panic
-		k.Logger(ctx).Error("nil allocation", "error", err.Error())
+		k.Logger(ctx).Error("nil allocation")
 		return nil
 	}
 
@@ -85,13 +91,14 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, _ int64)
 		return nil
 	}
 
-	if !allocation.Lockup.IsZero() {
-		// at genesis lockup will be disabled, and enabled when ICS is used.
-		if err := k.AllocateLockupRewards(ctx, allocation.Lockup); err != nil {
-			k.Logger(ctx).Error(err.Error())
-			return err
-		}
-	}
+	// TODO: remove 'lockup' allocation logic.
+	// if !allocation.Lockup.IsZero() {
+	// 	// at genesis lockup will be disabled, and enabled when ICS is used.
+	// 	if err := k.AllocateLockupRewards(ctx, allocation.Lockup); err != nil {
+	// 		k.Logger(ctx).Error(err.Error())
+	// 		return err
+	// 	}
+	// }
 	return nil
 }
 

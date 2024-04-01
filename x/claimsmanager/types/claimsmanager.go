@@ -3,10 +3,12 @@ package types
 import (
 	"github.com/ingenuity-build/multierror"
 
+	"cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func NewClaim(address, chainID string, module ClaimType, srcChainID string, amount uint64) Claim {
+func NewClaim(address, chainID string, module ClaimType, srcChainID string, amount math.Int) Claim {
 	return Claim{UserAddress: address, ChainId: chainID, Module: module, SourceChainId: srcChainID, Amount: amount}
 }
 
@@ -23,7 +25,7 @@ func (c *Claim) ValidateBasic() error {
 		errs["ChainID"] = ErrUndefinedAttribute
 	}
 
-	if c.Amount <= 0 {
+	if c.Amount.IsNil() || !c.Amount.IsPositive() {
 		errs["Amount"] = ErrNotPositive
 	}
 

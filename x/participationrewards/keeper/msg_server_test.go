@@ -218,7 +218,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 			func() {
 				userAddress := addressutils.GenerateAccAddressForTest()
 				bankkey := banktypes.CreateAccountBalancesPrefix(userAddress)
-				bankkey = append(bankkey, []byte("gamm/1")...)
+				bankkey = append(bankkey, "gamm/1"...)
 
 				cd := math.NewInt(10000000)
 				bz, err := cd.Marshal()
@@ -314,7 +314,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 
 				userAddress, _ := addressutils.EncodeAddressToBech32("umee", address)
 				bankkey := banktypes.CreateAccountBalancesPrefix(address)
-				bankkey = append(bankkey, []byte("u/uumee")...)
+				bankkey = append(bankkey, "u/uumee"...)
 
 				leveragekey := umeetypes.KeyCollateralAmount(address, "u/uumee")
 
@@ -516,7 +516,65 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitLocalClaim() {
 				ChainId:       suite.chainB.ChainID,
 				Module:        cmtypes.ClaimTypeLiquidToken,
 				SourceChainId: suite.chainA.ChainID,
-				Amount:        100,
+				Amount:        math.NewInt(100),
+			}},
+		},
+		{
+			"local_callback_value_valid_denom_overflow",
+			func(ctx sdk.Context, appA *app.Quicksilver) {
+				suite.NoError(appA.BankKeeper.MintCoins(ctx, "mint", sdk.NewCoins(sdk.NewCoin("uqatom", sdk.NewInt(1000000000000000000).Mul(sdk.NewInt(1000))))))
+				suite.NoError(appA.BankKeeper.SendCoinsFromModuleToAccount(ctx, "mint", address, sdk.NewCoins(sdk.NewCoin("uqatom", sdk.NewInt(1000000000000000000).Mul(sdk.NewInt(1000))))))
+
+				// add uqatom to the list of allowed denoms for this zone
+				rawPd := types.LiquidAllowedDenomProtocolData{
+					ChainID:               suite.chainA.ChainID,
+					IbcDenom:              "uqatom",
+					QAssetDenom:           "uqatom",
+					RegisteredZoneChainID: suite.chainB.ChainID,
+				}
+
+				blob, err := json.Marshal(rawPd)
+				suite.NoError(err)
+				pd := types.NewProtocolData(types.ProtocolDataType_name[int32(types.ProtocolDataTypeLiquidToken)], blob)
+
+				appA.ParticipationRewardsKeeper.SetProtocolData(ctx, rawPd.GenerateKey(), pd)
+			},
+			func(ctx sdk.Context, appA *app.Quicksilver) *types.MsgSubmitClaim {
+				key := banktypes.CreatePrefixedAccountStoreKey(address, []byte("uqatom"))
+
+				query := abci.RequestQuery{
+					Data:   key,
+					Path:   "/store/bank/key",
+					Height: ctx.BlockHeight() - 2,
+					Prove:  true,
+				}
+
+				resp := appA.BaseApp.Query(query)
+
+				return &types.MsgSubmitClaim{
+					UserAddress: address.String(),
+					Zone:        suite.chainB.ChainID,
+					SrcZone:     suite.chainA.ChainID,
+					ClaimType:   cmtypes.ClaimTypeLiquidToken,
+					Proofs: []*cmtypes.Proof{
+						{
+							Key:       resp.Key,
+							Data:      resp.Value,
+							ProofOps:  resp.ProofOps,
+							Height:    resp.Height,
+							ProofType: "bank",
+						},
+					},
+				}
+			},
+			&types.MsgSubmitClaimResponse{},
+			"",
+			[]cmtypes.Claim{{
+				UserAddress:   address.String(),
+				ChainId:       suite.chainB.ChainID,
+				Module:        cmtypes.ClaimTypeLiquidToken,
+				SourceChainId: suite.chainA.ChainID,
+				Amount:        sdk.NewInt(1000000000000000000).Mul(sdk.NewInt(1000)),
 			}},
 		},
 	}

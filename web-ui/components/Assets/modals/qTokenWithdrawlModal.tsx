@@ -18,11 +18,11 @@ import { StdFee, coins } from '@cosmjs/stargate';
 import { ChainName } from '@cosmos-kit/core';
 import { useChain, useManager } from '@cosmos-kit/react';
 import BigNumber from 'bignumber.js';
-import { ibc } from 'quicksilverjs';
+import { ibc } from 'interchain-query';
 import { useState, useMemo, useEffect } from 'react';
 
 import { ChooseChain } from '@/components/react/choose-chain';
-import { handleSelectChainDropdown, ChainOption } from '@/components/types';
+import { handleSelectChainDropdown, ChainOption, ChooseChainInfo } from '@/components/types';
 import { useTx } from '@/hooks';
 import { useIbcBalanceQuery } from '@/hooks/useQueries';
 import { ibcDenomWithdrawMapping } from '@/state/chains/prod';
@@ -47,7 +47,7 @@ const QWithdrawModal: React.FC<QDepositModalProps> = ({ token }) => {
       .filter((chainRecord) => desiredChains.includes(chainRecord.name))
       .map((chainRecord) => ({
         chainName: chainRecord?.name,
-        label: chainRecord?.chain.pretty_name,
+        label: chainRecord?.chain?.pretty_name,
         value: chainRecord?.name,
         icon: getChainLogo(chainRecord.name),
       }));
@@ -66,7 +66,7 @@ const QWithdrawModal: React.FC<QDepositModalProps> = ({ token }) => {
     }
   };
 
-  const chooseChain = <ChooseChain chainName={chainName} chainInfos={chainOptions} onChange={onChainChange} />;
+  const chooseChain = <ChooseChain chainName={chainName} chainInfos={chainOptions as ChooseChainInfo[]} onChange={onChainChange} />;
 
   const fromChain = 'quicksilver';
   const toChain = chainName;
@@ -88,7 +88,7 @@ const QWithdrawModal: React.FC<QDepositModalProps> = ({ token }) => {
       gas: '300000',
     };
 
-    const { sourcePort, sourceChannel } = getIbcInfo(fromChain ?? '', toChain ?? '');
+    const { source_port, source_channel } = getIbcInfo(fromChain ?? '', toChain ?? '');
 
     // Function to get the correct IBC denom trace based on chain and token
     type ChainDenomMappingKeys = keyof typeof ibcDenomWithdrawMapping;
@@ -128,15 +128,14 @@ const QWithdrawModal: React.FC<QDepositModalProps> = ({ token }) => {
     const timeoutInNanos = (stamp + 1.2e6) * 1e6;
 
     const msg = transfer({
-      sourcePort,
-      sourceChannel,
+      sourcePort: source_port,
+      sourceChannel: source_channel,
       sender: qAddress ?? '',
       receiver: address ?? '',
       token: ibcToken,
       timeoutHeight: undefined,
       //@ts-ignore
       timeoutTimestamp: timeoutInNanos,
-      memo: '',
     });
 
     await tx([msg], {

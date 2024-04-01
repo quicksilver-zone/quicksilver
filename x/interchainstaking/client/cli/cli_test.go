@@ -12,10 +12,15 @@ import (
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
 
 	"github.com/quicksilver-zone/quicksilver/app"
 	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/client/cli"
 	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
+)
+
+const (
+	testDelegator = "cosmos1r2dthxctqzhwg299e7aaeqwfkgcc9hg8n9scjg"
 )
 
 type IntegrationTestSuite struct {
@@ -66,6 +71,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		MessagesPerTx:                0,
 		Is_118:                       true,
 	}
+
 	zone.Validators = append(zone.Validators,
 		&types.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), DelegatorShares: sdk.NewDec(2000), Score: sdk.ZeroDec(), ValidatorBondShares: sdk.ZeroDec(), LiquidShares: sdk.ZeroDec()},
 		&types.Validator{ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), DelegatorShares: sdk.NewDec(2000), Score: sdk.ZeroDec(), ValidatorBondShares: sdk.ZeroDec(), LiquidShares: sdk.ZeroDec()},
@@ -74,9 +80,30 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		&types.Validator{ValoperAddress: "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), DelegatorShares: sdk.NewDec(2000), Score: sdk.ZeroDec(), ValidatorBondShares: sdk.ZeroDec(), LiquidShares: sdk.ZeroDec()},
 	)
 
+	delegationIntents := []types.DelegatorIntentsForZone{
+		{
+			ChainId: zone.ChainId,
+			DelegationIntent: []*types.DelegatorIntent{
+				{
+					Delegator: testDelegator,
+					Intents: types.ValidatorIntents{
+						{
+							ValoperAddress: zone.Validators[0].ValoperAddress,
+							Weight:         sdk.NewDec(1),
+						},
+						{
+							ValoperAddress: zone.Validators[1].ValoperAddress,
+							Weight:         sdk.NewDec(1),
+						},
+					},
+				},
+			},
+		},
+	}
 	// setup basic genesis state
 	newGenesis := types.DefaultGenesis()
 	newGenesis.Zones = []types.Zone{zone}
+	newGenesis.DelegatorIntents = delegationIntents
 	updateGenesisConfigState(types.ModuleName, newGenesis)
 	s.zones = []types.Zone{zone}
 
@@ -172,7 +199,6 @@ func (s *IntegrationTestSuite) ZonesEqual(zoneA, zoneB types.Zone) bool {
 
 func (s *IntegrationTestSuite) TestGetDelegatorIntentCmd() {
 	val := s.network.Validators[0]
-
 	tests := []struct {
 		name      string
 		args      []string
@@ -201,20 +227,33 @@ func (s *IntegrationTestSuite) TestGetDelegatorIntentCmd() {
 			&types.QueryDelegatorIntentResponse{},
 			&types.QueryDelegatorIntentResponse{},
 		},
-		/* {
+		{
 			"valid",
-			[]string{s.cfg.ChainID, ""},
+			[]string{s.zones[0].ChainId, testDelegator},
 			false,
 			&types.QueryDelegatorIntentResponse{},
-			&types.QueryDelegatorIntentResponse{},
-		}, */
+			&types.QueryDelegatorIntentResponse{
+				Intent: &types.DelegatorIntent{
+					Delegator: testDelegator,
+					Intents: types.ValidatorIntents{
+						{
+							ValoperAddress: s.zones[0].Validators[0].ValoperAddress,
+							Weight:         sdk.NewDec(1),
+						},
+						{
+							ValoperAddress: s.zones[0].Validators[1].ValoperAddress,
+							Weight:         sdk.NewDec(1),
+						},
+					},
+				},
+			},
+		},
 	}
 	for _, tt := range tests {
 		tt := tt
 
 		s.Run(tt.name, func() {
 			clientCtx := val.ClientCtx
-
 			runFlags := []string{
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			}
@@ -414,6 +453,576 @@ func (s *IntegrationTestSuite) TestGetSignalIntentTxCmd() {
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tt.respType), out.String())
 				txResp := tt.respType.(*sdk.TxResponse)
 				s.Require().Equal(tt.expectedCode, txResp.Code, fmt.Sprintf("%v\n", txResp))
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestGetWithdrawalRecordsCmd() {
+	val := s.network.Validators[0]
+
+	tests := []struct {
+		name      string
+		args      []string
+		expectErr bool
+		respType  proto.Message
+		expected  proto.Message
+	}{
+		{
+			"valid",
+			[]string{},
+			false,
+			&types.QueryWithdrawalRecordsResponse{},
+			&types.QueryWithdrawalRecordsResponse{
+				Withdrawals: []types.WithdrawalRecord{},
+			},
+		},
+		{
+			"invalid",
+			[]string{"bogus"},
+			true,
+			&types.QueryWithdrawalRecordsResponse{},
+			&types.QueryWithdrawalRecordsResponse{},
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+
+		s.Run(tt.name, func() {
+			clientCtx := val.ClientCtx
+
+			runFlags := []string{
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			}
+			tt.args = append(tt.args, runFlags...)
+			cmd := cli.GetWithdrawalRecordsCmd()
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tt.args)
+			if tt.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tt.respType), out.String())
+				s.Require().Equal(tt.expected, tt.respType)
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestGetUserWithdrawalRecords() {
+	val := s.network.Validators[0]
+
+	tests := []struct {
+		name      string
+		args      []string
+		expectErr bool
+		respType  proto.Message
+		expected  proto.Message
+	}{
+		{
+			"no args",
+			[]string{},
+			true,
+			&types.QueryWithdrawalRecordsResponse{},
+			&types.QueryWithdrawalRecordsResponse{},
+		},
+		{
+			"empty args",
+			[]string{""},
+			true,
+			&types.QueryWithdrawalRecordsResponse{},
+			&types.QueryWithdrawalRecordsResponse{},
+		},
+		{
+			"invalid chainID",
+			[]string{"boguschainid"},
+			true,
+			&types.QueryWithdrawalRecordsResponse{},
+			&types.QueryWithdrawalRecordsResponse{},
+		},
+		{
+			"valid",
+			[]string{
+				"cosmos1r2dthxctqzhwg299e7aaeqwfkgcc9hg8n9scjg",
+			},
+			false,
+			&types.QueryWithdrawalRecordsResponse{},
+			&types.QueryWithdrawalRecordsResponse{
+				Withdrawals: []types.WithdrawalRecord{},
+			},
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+
+		s.Run(tt.name, func() {
+			clientCtx := val.ClientCtx
+
+			runFlags := []string{
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			}
+			tt.args = append(tt.args, runFlags...)
+			cmd := cli.GetUserWithdrawalRecordsCmd()
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tt.args)
+			if tt.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tt.respType), out.String())
+				s.Require().Equal(tt.expected, tt.respType)
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestGetZoneWithdrawalRecordsCmd() {
+	val := s.network.Validators[0]
+
+	tests := []struct {
+		name      string
+		args      []string
+		expectErr bool
+		respType  proto.Message
+		expected  proto.Message
+	}{
+		{
+			"no args",
+			[]string{},
+			true,
+			&types.QueryWithdrawalRecordsResponse{},
+			&types.QueryWithdrawalRecordsResponse{},
+		},
+		{
+			"empty args",
+			[]string{""},
+			true,
+			&types.QueryWithdrawalRecordsResponse{},
+			&types.QueryWithdrawalRecordsResponse{},
+		},
+		{
+			"invalid chainID",
+			[]string{"boguschainid"},
+			true,
+			&types.QueryWithdrawalRecordsResponse{},
+			&types.QueryWithdrawalRecordsResponse{},
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+
+		s.Run(tt.name, func() {
+			clientCtx := val.ClientCtx
+
+			runFlags := []string{
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=true", flags.FlagDryRun),
+			}
+
+			tt.args = append(tt.args, runFlags...)
+
+			cmd := cli.GetZoneWithdrawalRecordsCmd()
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tt.args)
+			if tt.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tt.respType), out.String())
+				s.Require().Equal(tt.expected, tt.respType)
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestGetZoneRedelegationRecordsCmd() {
+	val := s.network.Validators[0]
+
+	tests := []struct {
+		name      string
+		args      []string
+		expectErr bool
+		respType  proto.Message
+		expected  proto.Message
+	}{
+		{
+			"no args",
+			[]string{},
+			true,
+			&types.QueryRedelegationRecordsResponse{},
+			&types.QueryRedelegationRecordsResponse{},
+		},
+		{
+			"empty args",
+			[]string{""},
+			false,
+			&types.QueryRedelegationRecordsResponse{
+				Pagination: &query.PageResponse{},
+			},
+			&types.QueryRedelegationRecordsResponse{
+				Redelegations: []types.RedelegationRecord{},
+				Pagination: &query.PageResponse{
+					Total: 0,
+				},
+			},
+		},
+		{
+			"invalid chainID",
+			[]string{"boguschainid"},
+			false,
+			&types.QueryRedelegationRecordsResponse{
+				Pagination: &query.PageResponse{},
+			},
+			&types.QueryRedelegationRecordsResponse{
+				Redelegations: []types.RedelegationRecord{},
+				Pagination: &query.PageResponse{
+					Total: 0,
+				},
+			},
+		},
+		{
+			"valid",
+			[]string{s.cfg.ChainID},
+			false,
+			&types.QueryRedelegationRecordsResponse{
+				Pagination: &query.PageResponse{},
+			},
+			&types.QueryRedelegationRecordsResponse{
+				Redelegations: []types.RedelegationRecord{},
+				Pagination: &query.PageResponse{
+					Total: 0,
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+
+		s.Run(tt.name, func() {
+			clientCtx := val.ClientCtx
+
+			runFlags := []string{
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			}
+			tt.args = append(tt.args, runFlags...)
+
+			cmd := cli.GetZoneRedelegationRecordsCmd()
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tt.args)
+			if tt.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tt.respType), out.String())
+				s.Require().Equal(tt.expected, tt.respType)
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestGetZoneValidatorsCmd() {
+	val := s.network.Validators[0]
+
+	tests := []struct {
+		name      string
+		args      []string
+		expectErr bool
+		respType  proto.Message
+		expected  proto.Message
+	}{
+		{
+			"no args",
+			[]string{},
+			true,
+			&types.QueryZoneValidatorsResponse{},
+			&types.QueryZoneValidatorsResponse{},
+		},
+		{
+			"empty args",
+			[]string{""},
+			true,
+			&types.QueryZoneValidatorsResponse{},
+			&types.QueryZoneValidatorsResponse{},
+		},
+		{
+			"invalid chainID",
+			[]string{"boguschainid"},
+			false,
+			&types.QueryZoneValidatorsResponse{},
+			&types.QueryZoneValidatorsResponse{
+				Validators: []types.Validator{},
+				Pagination: &query.PageResponse{
+					Total: 0,
+				},
+			},
+		},
+		// Not work because of the validator is not set in the store(SetValidatorForZone)
+		// {
+		// 	"valid",
+		// 	[]string{s.zones[0].ChainId},
+		// 	false,
+		// 	&types.QueryZoneValidatorsResponse{},
+		// 	&types.QueryZoneValidatorsResponse{
+		// 		// Convert from []*types.Validator to []types.Validator
+		// 		Validators: func() []types.Validator {
+		// 			var validators []types.Validator
+		// 			for _, val := range s.zones[0].Validators {
+		// 				validators = append(validators, *val)
+		// 			}
+		// 			return validators
+		// 		}(),
+		// 		Pagination: &query.PageResponse{
+		// 			Total: 5,
+		// 		},
+		// 	},
+		// },
+	}
+	for _, tt := range tests {
+		tt := tt
+
+		s.Run(tt.name, func() {
+			clientCtx := val.ClientCtx
+
+			runFlags := []string{
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			}
+			tt.args = append(tt.args, runFlags...)
+
+			cmd := cli.GetZoneValidatorsCmd()
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tt.args)
+			if tt.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tt.respType), out.String())
+				s.Require().Equal(tt.expected, tt.respType)
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestGetTxStatusCmd() {
+	val := s.network.Validators[0]
+
+	tests := []struct {
+		name      string
+		args      []string
+		expectErr bool
+		respType  proto.Message
+	}{
+		{
+			"no args",
+			[]string{},
+			true,
+			&sdk.TxResponse{},
+		},
+		{
+			"empty args",
+			[]string{""},
+			true,
+			&sdk.TxResponse{},
+		},
+		{
+			"only one arg",
+			[]string{"boguschainid"},
+			true,
+			&sdk.TxResponse{},
+		},
+		// TODO: Add a test for a valid tx hash
+		// {
+		// 	"valid",
+		// 	[]string{"chainid", "0"},
+		// 	false,
+		// 	&sdk.TxResponse{},
+		// },
+	}
+	for _, tt := range tests {
+		tt := tt
+
+		s.Run(tt.name, func() {
+			clientCtx := val.ClientCtx
+
+			runFlags := []string{
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			}
+			tt.args = append(tt.args, runFlags...)
+
+			cmd := cli.GetTxStatusCmd()
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tt.args)
+			if tt.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tt.respType), out.String())
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestGetReceiptsCmd() {
+	val := s.network.Validators[0]
+
+	tests := []struct {
+		name        string
+		args        []string
+		expectErr   bool
+		respType    proto.Message
+		expectedLen int
+	}{
+		{
+			"no args",
+			[]string{},
+			true,
+			&types.QueryReceiptsResponse{},
+			0,
+		},
+		{
+			"empty args",
+			[]string{""},
+			true,
+			&types.QueryReceiptsResponse{},
+			0,
+		},
+		{
+			"invalid chainID",
+			[]string{"boguschainid"},
+			true,
+			&types.QueryReceiptsResponse{},
+			0,
+		},
+		{
+			"valid",
+			[]string{s.zones[0].ChainId},
+			false,
+			&types.QueryReceiptsResponse{},
+			1,
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+
+		s.Run(tt.name, func() {
+			clientCtx := val.ClientCtx
+
+			runFlags := []string{
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			}
+			tt.args = append(tt.args, runFlags...)
+
+			cmd := cli.GetReceiptsCmd()
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tt.args)
+			if tt.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tt.respType), out.String())
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestGetUnbondingRecordsCmd() {
+	val := s.network.Validators[0]
+
+	tests := []struct {
+		name      string
+		args      []string
+		expectErr bool
+		respType  proto.Message
+	}{
+		{
+			"no args",
+			[]string{},
+			true,
+			&types.QueryUnbondingRecordsResponse{},
+		},
+		{
+			"valid",
+			[]string{s.zones[0].ChainId},
+			false,
+			&types.QueryUnbondingRecordsResponse{},
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+
+		s.Run(tt.name, func() {
+			clientCtx := val.ClientCtx
+
+			runFlags := []string{
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			}
+			tt.args = append(tt.args, runFlags...)
+
+			cmd := cli.GetUnbondingRecordsCmd()
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tt.args)
+			if tt.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tt.respType), out.String())
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestGetZoneCmd() {
+	val := s.network.Validators[0]
+
+	tests := []struct {
+		name      string
+		args      []string
+		expectErr bool
+		respType  proto.Message
+	}{
+		{
+			"no args",
+			[]string{},
+			true,
+			&types.QueryZoneResponse{},
+		},
+		{
+			"empty args",
+			[]string{""},
+			true,
+			&types.QueryZoneResponse{},
+		},
+		{
+			"invalid chainID",
+			[]string{"boguschainid"},
+			true,
+			&types.QueryZoneResponse{},
+		},
+		{
+			"valid",
+			[]string{s.zones[0].ChainId},
+			false,
+			&types.QueryZoneResponse{
+				Zone:  s.zones[0],
+				Stats: &types.Statistics{},
+			},
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+
+		s.Run(tt.name, func() {
+			clientCtx := val.ClientCtx
+
+			runFlags := []string{
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			}
+			tt.args = append(tt.args, runFlags...)
+
+			cmd := cli.GetZoneCmd()
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tt.args)
+			if tt.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tt.respType), out.String())
+
 			}
 		})
 	}

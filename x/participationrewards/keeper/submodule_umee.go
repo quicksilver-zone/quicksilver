@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -132,7 +134,7 @@ func (UmeeModule) Hooks(ctx sdk.Context, k *Keeper) {
 			connectionData.ConnectionID,
 			connectionData.ChainID,
 			icstypes.BankStoreKey,
-			append(accountPrefix, []byte(balance.Denom)...),
+			append(accountPrefix, balance.Denom...),
 			sdk.NewInt(-1),
 			types.ModuleName,
 			UmeeLeverageModuleBalanceUpdateCallbackID,
@@ -177,15 +179,15 @@ func getDenomFromProof(proof *cmtypes.Proof, addr []byte) (string, error) {
 	return denom, err
 }
 
-func (UmeeModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.MsgSubmitClaim) (uint64, error) {
+func (UmeeModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.MsgSubmitClaim) (math.Int, error) {
 	zone, ok := k.icsKeeper.GetZone(ctx, msg.Zone)
 	if !ok {
-		return 0, fmt.Errorf("unable to find registered zone for chain id: %s", msg.Zone)
+		return sdk.ZeroInt(), fmt.Errorf("unable to find registered zone for chain id: %s", msg.Zone)
 	}
 
 	_, addr, err := bech32.DecodeAndConvert(msg.UserAddress)
 
-	amount := uint64(0)
+	amount := sdk.ZeroInt()
 	for _, proof := range msg.Proofs {
 		// determine denoms from keys
 		if proof.Data == nil {
@@ -194,7 +196,7 @@ func (UmeeModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.MsgSubmit
 
 		udenom, err := getDenomFromProof(proof, addr)
 		if err != nil {
-			return 0, err
+			return sdk.ZeroInt(), err
 		}
 
 		denom := leveragetypes.ToTokenDenom(udenom)
@@ -207,18 +209,18 @@ func (UmeeModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.MsgSubmit
 		denomData := types.LiquidAllowedDenomProtocolData{}
 		err = json.Unmarshal(data.Data, &denomData)
 		if err != nil {
-			return 0, err
+			return sdk.ZeroInt(), err
 		}
 		if denomData.QAssetDenom == zone.LocalDenom && denomData.IbcDenom == denom {
 			uToken, err := bankkeeper.UnmarshalBalanceCompat(k.cdc, proof.Data, udenom)
 			if err != nil {
-				return 0, err
+				return sdk.ZeroInt(), err
 			}
 			token, err := umee.ExchangeUToken(ctx, uToken, k)
 			if err != nil {
-				return 0, err
+				return sdk.ZeroInt(), err
 			}
-			amount += token.Amount.Uint64()
+			amount = amount.Add(token.Amount)
 		}
 	}
 

@@ -44,7 +44,7 @@ type StakingKeeper interface {
 type ClaimsManagerKeeper interface {
 	ArchiveAndGarbageCollectClaims(ctx sdk.Context, chainID string)
 	IterateClaims(ctx sdk.Context, chainID string, fn func(index int64, data claimsmanagertypes.Claim) (stop bool))
-	IterateLastEpochUserClaims(ctx sdk.Context, chainID, address string, fn func(index int64, data claimsmanagertypes.Claim) (stop bool))
+	IterateLastEpochClaims(ctx sdk.Context, chainID string, fn func(index int64, data claimsmanagertypes.Claim) (stop bool))
 	GetSelfConsensusState(ctx sdk.Context, key string) (ibctmtypes.ConsensusState, bool)
 	SetClaim(ctx sdk.Context, claim *claimsmanagertypes.Claim)
 }

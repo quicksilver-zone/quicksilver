@@ -159,6 +159,10 @@ paths:
                     method
 
                     signatures required by gogoproto.
+              title:
+                type: string
+              description:
+                type: string
             description: >-
               MsgIncentivePoolSpend represents a message to send coins from one
               account to another.
@@ -771,9 +775,11 @@ paths:
                         spec)
                     source_chain_id:
                       type: string
-                    amount:
+                    _amount:
                       type: string
                       format: uint64
+                    amount:
+                      type: string
                   description: >-
                     Claim define the users claim for holding assets within a
                     given zone.
@@ -931,9 +937,11 @@ paths:
                         spec)
                     source_chain_id:
                       type: string
-                    amount:
+                    _amount:
                       type: string
                       format: uint64
+                    amount:
+                      type: string
                   description: >-
                     Claim define the users claim for holding assets within a
                     given zone.
@@ -1093,9 +1101,11 @@ paths:
                         spec)
                     source_chain_id:
                       type: string
-                    amount:
+                    _amount:
                       type: string
                       format: uint64
+                    amount:
+                      type: string
                   description: >-
                     Claim define the users claim for holding assets within a
                     given zone.
@@ -1255,9 +1265,11 @@ paths:
                         spec)
                     source_chain_id:
                       type: string
-                    amount:
+                    _amount:
                       type: string
                       format: uint64
+                    amount:
+                      type: string
                   description: >-
                     Claim define the users claim for holding assets within a
                     given zone.
@@ -2149,6 +2161,55 @@ paths:
           type: boolean
       tags:
         - QueryInterchainQuery
+  /quicksilver/tx/v1/interchainstaking/add_validator_denylist:
+    post:
+      operationId: GovAddValidatorDenyList
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            properties:
+              title:
+                type: string
+              description:
+                type: string
+              chain_id:
+                type: string
+              operator_address:
+                type: string
+              authority:
+                type: string
+      tags:
+        - Msg
   /quicksilver/tx/v1/interchainstaking/cancel_redemption:
     post:
       summary: |-
@@ -2397,6 +2458,55 @@ paths:
               of qAssets
 
               for native assets.
+      tags:
+        - Msg
+  /quicksilver/tx/v1/interchainstaking/remove_validator_denylist:
+    post:
+      operationId: GovRemoveValidatorDenyList
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            properties:
+              title:
+                type: string
+              description:
+                type: string
+              chain_id:
+                type: string
+              operator_address:
+                type: string
+              authority:
+                type: string
       tags:
         - Msg
   /quicksilver/tx/v1/interchainstaking/reopen_channel:
@@ -2673,9 +2783,11 @@ paths:
                         properties:
                           valoper:
                             type: string
-                          amount:
+                          _amount:
                             type: string
                             format: uint64
+                          amount:
+                            type: string
                     recipient:
                       type: string
                     amount:
@@ -3091,7 +3203,6 @@ paths:
                     type: string
                   deposited:
                     type: string
-                    format: int64
                   deposits:
                     type: string
                     format: int64
@@ -3100,10 +3211,8 @@ paths:
                     format: int64
                   delegated:
                     type: string
-                    format: int64
                   supply:
                     type: string
-                    format: int64
                   distance_to_target:
                     type: string
                   unbonding_amount:
@@ -3433,7 +3542,6 @@ paths:
                       type: string
                     deposited:
                       type: string
-                      format: int64
                     deposits:
                       type: string
                       format: int64
@@ -3442,10 +3550,8 @@ paths:
                       format: int64
                     delegated:
                       type: string
-                      format: int64
                     supply:
                       type: string
-                      format: int64
                     distance_to_target:
                       type: string
                     unbonding_amount:
@@ -3641,7 +3747,6 @@ paths:
                       format: int64
               tvl:
                 type: string
-                format: int64
               pagination:
                 type: object
                 properties:
@@ -4118,12 +4223,14 @@ paths:
                       type: string
                     destination:
                       type: string
-                    amount:
+                    _amount:
                       type: string
                       format: int64
                     completion_time:
                       type: string
                       format: date-time
+                    amount:
+                      type: string
               pagination:
                 type: object
                 properties:
@@ -4575,9 +4682,11 @@ paths:
                         properties:
                           valoper:
                             type: string
-                          amount:
+                          _amount:
                             type: string
                             format: uint64
+                          amount:
+                            type: string
                     recipient:
                       type: string
                     amount:
@@ -4771,9 +4880,11 @@ paths:
                         properties:
                           valoper:
                             type: string
-                          amount:
+                          _amount:
                             type: string
                             format: uint64
+                          amount:
+                            type: string
                     recipient:
                       type: string
                     amount:

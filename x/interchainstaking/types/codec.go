@@ -35,6 +35,8 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		&MsgGovCloseChannel{},
 		&MsgGovReopenChannel{},
 		&MsgGovSetLsmCaps{},
+		&MsgGovAddValidatorDenyList{},
+		&MsgGovRemoveValidatorDenyList{},
 	)
 
 	registry.RegisterImplementations(

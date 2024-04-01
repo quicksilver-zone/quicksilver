@@ -37,6 +37,8 @@ default_target: all
 # process build tags
 
 build_tags = netgo
+build_tags += pebbledb
+
 ifeq ($(LEDGER_ENABLED),true)
   ifeq ($(OS),Windows_NT)
     GCCEXE = $(shell where gcc.exe 2> NUL)
@@ -60,10 +62,6 @@ ifeq ($(LEDGER_ENABLED),true)
   endif
 endif
 
-ifeq (cleveldb,$(findstring cleveldb,$(COSMOS_BUILD_OPTIONS)))
-  build_tags += gcc
-endif
-
 # process linker flags
 
 ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=quicksilver \
@@ -71,30 +69,6 @@ ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=quicksilver \
           -X github.com/cosmos/cosmos-sdk/version.Version=$(VERSION) \
           -X github.com/cosmos/cosmos-sdk/version.Commit=$(COMMIT) \
           -X github.com/cometbft/cometbft/version.TMCoreSemVer=$(TMVERSION)
-
-# DB backend selection
-ifeq (cleveldb,$(findstring cleveldb,$(COSMOS_BUILD_OPTIONS)))
-  ldflags += -X github.com/cosmos/cosmos-sdk/types.DBBackend=cleveldb
-endif
-ifeq (badgerdb,$(findstring badgerdb,$(COSMOS_BUILD_OPTIONS)))
-  ldflags += -X github.com/cosmos/cosmos-sdk/types.DBBackend=badgerdb
-endif
-# handle rocksdb
-ifeq (rocksdb,$(findstring rocksdb,$(COSMOS_BUILD_OPTIONS)))
-  CGO_ENABLED=1
-  build_tags += rocksdb
-  ldflags += -X github.com/cosmos/cosmos-sdk/types.DBBackend=rocksdb
-endif
-# handle boltdb
-ifeq (boltdb,$(findstring boltdb,$(COSMOS_BUILD_OPTIONS)))
-  build_tags += boltdb
-  ldflags += -X github.com/cosmos/cosmos-sdk/types.DBBackend=boltdb
-endif
-# handle pebbledb
-ifeq (pebbledb,$(findstring pebbledb,$(COSMOS_BUILD_OPTIONS)))
-  build_tags += pebbledb
-  ldflags += -X github.com/cosmos/cosmos-sdk/types.DBBackend=pebbledb
-endif
 
 ifeq ($(LINK_STATICALLY),true)
 	ldflags += -linkmode=external -extldflags "-Wl,-z,muldefs -static"
@@ -130,8 +104,7 @@ BUILD_TARGETS := build install
 
 check_version:
 ifneq ($(GO_MINOR_VERSION),21)
-	@echo "ERROR: Go version 1.21 is required for building Quicksilver. Detected version: $(GO_MAJOR_VERSION).$(GO_MINOR_VERSION). There are 
-consensus breaking changes between binaries compiled with different Go versions."
+	@echo "ERROR: Go version 1.21 is required for building Quicksilver. Detected version: $(GO_MAJOR_VERSION).$(GO_MINOR_VERSION). There are consensus breaking changes between binaries compiled with different Go versions."
 	exit 1
 endif
 

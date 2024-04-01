@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"math"
 
+	sdkmath "cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
@@ -111,12 +113,11 @@ func (k *Keeper) GetUnbondingTokensAndCount(ctx sdk.Context, zone *types.Zone) (
 }
 
 func (k *Keeper) GetQueuedTokensAndCount(ctx sdk.Context, zone *types.Zone) (sdk.Coin, uint32) {
-	out := sdk.NewCoin(zone.BaseDenom, sdk.ZeroInt())
+	out := sdk.NewCoin(zone.LocalDenom, sdk.ZeroInt())
 	var count uint32
 	k.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, types.WithdrawStatusQueued, func(index int64, wr types.WithdrawalRecord) (stop bool) {
-		amount := wr.Amount[0]
-		if !amount.IsNegative() {
-			out = out.Add(amount)
+		if !wr.BurnAmount.IsNegative() {
+			out = out.Add(wr.BurnAmount)
 		}
 		count++
 		return false
@@ -350,7 +351,7 @@ func (k *Keeper) SetAccountBalance(ctx sdk.Context, zone types.Zone, address str
 				zone.ConnectionId,
 				zone.ChainId,
 				types.BankStoreKey,
-				append(data, []byte(coin.Denom)...),
+				append(data, coin.Denom...),
 				sdk.NewInt(-1),
 				types.ModuleName,
 				"accountbalance",
@@ -368,7 +369,7 @@ func (k *Keeper) SetAccountBalance(ctx sdk.Context, zone types.Zone, address str
 			zone.ConnectionId,
 			zone.ChainId,
 			types.BankStoreKey,
-			append(data, []byte(coin.Denom)...),
+			append(data, coin.Denom...),
 			sdk.NewInt(-1),
 			types.ModuleName,
 			"accountbalance",
@@ -437,11 +438,12 @@ OUTER:
 func (k *Keeper) CollectStatsForZone(ctx sdk.Context, zone *types.Zone) (*types.Statistics, error) {
 	out := &types.Statistics{}
 	out.ChainId = zone.ChainId
-	out.Delegated = k.GetDelegatedAmount(ctx, zone).Amount.Int64()
+	out.Deposited = sdkmath.ZeroInt()
+	out.Delegated = k.GetDelegatedAmount(ctx, zone).Amount
 	userMap := map[string]bool{}
 	k.IterateZoneReceipts(ctx, zone.ChainId, func(_ int64, receipt types.Receipt) bool {
 		for _, coin := range receipt.Amount {
-			out.Deposited += coin.Amount.Int64()
+			out.Deposited = out.Deposited.Add(coin.Amount)
 			if _, found := userMap[receipt.Sender]; !found {
 				userMap[receipt.Sender] = true
 				out.Depositors++
@@ -450,7 +452,7 @@ func (k *Keeper) CollectStatsForZone(ctx sdk.Context, zone *types.Zone) (*types.
 		}
 		return false
 	})
-	out.Supply = k.BankKeeper.GetSupply(ctx, zone.LocalDenom).Amount.Int64()
+	out.Supply = k.BankKeeper.GetSupply(ctx, zone.LocalDenom).Amount
 	distance, err := k.DistanceToTarget(ctx, zone)
 	if err != nil {
 		return nil, err
