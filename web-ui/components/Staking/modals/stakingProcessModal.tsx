@@ -29,12 +29,13 @@ import React, { useEffect, useState } from 'react';
 
 
 
+import { MultiModal } from './validatorSelectionModal';
+
 import { useTx } from '@/hooks';
 import { useFeeEstimation } from '@/hooks/useFeeEstimation';
 import { useZoneQuery } from '@/hooks/useQueries';
 import { shiftDigits } from '@/utils';
 
-import { MultiModal } from './validatorSelectionModal';
 
 
 
@@ -80,9 +81,10 @@ interface StakingModalProps {
     chainId: string;
   };
   address: string;
+  refetch: () => void;
 }
 
-export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClose, selectedOption, tokenAmount, address }) => {
+export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClose, selectedOption, tokenAmount, address, refetch }) => {
   const [step, setStep] = useState(1);
   const getProgressColor = (circleStep: number) => {
     if (step >= circleStep) return 'complimentary.900';
@@ -285,6 +287,7 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
         memo,
         fee: feeAmountQuery,
         onSuccess: () => {
+          refetch();
           setStep(4);
           setTransactionStatus('Success');
         },

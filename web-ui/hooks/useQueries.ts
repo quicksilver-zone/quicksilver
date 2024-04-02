@@ -148,6 +148,7 @@ export const useBalanceQuery = (chainName: string, address: string) => {
     balance: balanceQuery.data,
     isLoading: balanceQuery.isLoading,
     isError: balanceQuery.isError,
+    refetchBalance: balanceQuery.refetch,
   };
 };
 
@@ -277,6 +278,7 @@ export const useAllBalancesQuery = (chainName: string, address: string) => {
     balance: balancesQuery.data,
     isLoading: balancesQuery.isLoading,
     isError: balancesQuery.isError,
+    refetch: balancesQuery.refetch,
   };
 };
 

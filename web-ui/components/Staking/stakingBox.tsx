@@ -35,6 +35,10 @@ import { FaStar } from 'react-icons/fa';
 
 
 
+import RevertSharesProcessModal from './modals/revertSharesProcessModal';
+import StakingProcessModal from './modals/stakingProcessModal';
+import TransferProcessModal from './modals/transferProcessModal';
+
 import { useTx } from '@/hooks';
 import { useFeeEstimation } from '@/hooks/useFeeEstimation';
 import {
@@ -48,9 +52,6 @@ import {
 } from '@/hooks/useQueries';
 import { getExponent, shiftDigits } from '@/utils';
 
-import RevertSharesProcessModal from './modals/revertSharesProcessModal';
-import StakingProcessModal from './modals/stakingProcessModal';
-import TransferProcessModal from './modals/transferProcessModal';
 
 
 type StakingBoxProps = {
@@ -99,11 +100,17 @@ export const StakingBox = ({
   const { address: qAddress } = useChain('quicksilver');
   const exp = getExponent(selectedOption.chainName);
 
-  const { balance, isLoading } = useBalanceQuery(selectedOption.chainName, address ?? '');
+  const { balance, isLoading, refetchBalance } = useBalanceQuery(selectedOption.chainName, address ?? '');
 
-  const { balance: allBalances } = useAllBalancesQuery(selectedOption.chainName, address ?? '');
+  const { balance: allBalances, refetch: allRefetch } = useAllBalancesQuery(selectedOption.chainName, address ?? '');
 
-  const { balance: qBalance } = useQBalanceQuery('quicksilver', qAddress ?? '', selectedOption.value.toLowerCase());
+  const { balance: qBalance, refetch: qRefetch } = useQBalanceQuery('quicksilver', qAddress ?? '', selectedOption.value.toLowerCase());
+
+  const allRefetchBalances = () => {
+    allRefetch();
+    refetchBalance();
+    qRefetch();
+  }
 
   const qAssets = qBalance?.balance.amount || '';
 
@@ -169,6 +176,9 @@ export const StakingBox = ({
     const fee = await estimateFee(qAddress ?? '', [msgRequestRedemption]);
     try {
       await tx([msgRequestRedemption], {
+        onSuccess() {
+          allRefetchBalances();
+        },
         fee,
       });
     } catch (error) {
@@ -557,6 +567,7 @@ export const StakingBox = ({
                       onClose={closeStakingModal}
                       selectedOption={selectedOption}
                       address={address ?? ''}
+                      refetch={allRefetchBalances}
                     />
                   </>
                 )}
