@@ -19,10 +19,11 @@ import React, { useEffect, useState } from 'react';
 
 
 
+import { shiftDigits, formatQasset, formatNumber } from '@/utils';
+
 import QDepositModal from './modals/qTokenDepositModal';
 import QWithdrawModal from './modals/qTokenWithdrawlModal';
 
-import { shiftDigits, formatQasset, formatNumber } from '@/utils';
 
 
 
