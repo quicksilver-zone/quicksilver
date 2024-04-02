@@ -36,6 +36,7 @@ import { FaStar } from 'react-icons/fa';
 
 
 
+
 import { useTx } from '@/hooks';
 import { useFeeEstimation } from '@/hooks/useFeeEstimation';
 import {
@@ -52,6 +53,7 @@ import { getExponent, shiftDigits } from '@/utils';
 import RevertSharesProcessModal from './modals/revertSharesProcessModal';
 import StakingProcessModal from './modals/stakingProcessModal';
 import TransferProcessModal from './modals/transferProcessModal';
+
 
 
 
@@ -206,7 +208,7 @@ export const StakingBox = ({
     // }
   };
 
-  const { delegations, delegationsIsError, delegationsIsLoading } = useNativeStakeQuery(selectedOption.chainName, address ?? '');
+  const { delegations, delegationsIsError, delegationsIsLoading, refetchDelegations } = useNativeStakeQuery(selectedOption.chainName, address ?? '');
 
   const delegationsResponse = delegations?.delegation_responses;
 
@@ -710,6 +712,7 @@ export const StakingBox = ({
                       selectedOption={selectedOption}
                       isTokenized={selectedValidatorData.isTokenized}
                       denom={selectedValidatorData.denom}
+                      refetch={refetchDelegations}
                     />
                   </Flex>
                 )}

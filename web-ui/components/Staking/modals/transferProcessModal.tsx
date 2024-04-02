@@ -76,6 +76,7 @@ interface StakingModalProps {
   address: string;
   isTokenized: boolean;
   denom: string;
+  refetch: () => void;
 }
 
 export const TransferProcessModal: React.FC<StakingModalProps> = ({
@@ -86,6 +87,7 @@ export const TransferProcessModal: React.FC<StakingModalProps> = ({
   address,
   isTokenized,
   denom,
+  refetch,
 }) => {
   useEffect(() => {
     if (isTokenized === true) {

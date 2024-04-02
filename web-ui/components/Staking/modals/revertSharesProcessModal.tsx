@@ -77,6 +77,7 @@ interface StakingModalProps {
   address: string;
   isTokenized: boolean;
   denom: string;
+  refetch: () => void;
 }
 
 export const RevertSharesProcessModal: React.FC<StakingModalProps> = ({
@@ -85,8 +86,8 @@ export const RevertSharesProcessModal: React.FC<StakingModalProps> = ({
   selectedOption,
   selectedValidator,
   address,
-  isTokenized,
   denom,
+  refetch,
 }) => {
   const [step, setStep] = useState(1);
   const getProgressColor = (circleStep: number) => {
@@ -154,6 +155,7 @@ export const RevertSharesProcessModal: React.FC<StakingModalProps> = ({
       await tx([msg], {
         fee,
         onSuccess: () => {
+          refetch();
           setStep(2);
         },
       });

@@ -1007,6 +1007,7 @@ export const useNativeStakeQuery = (chainName: string, address: string) => {
     delegations: delegationQuery.data,
     delegationsIsLoading: delegationQuery.isLoading,
     delegationsIsError: delegationQuery.isError,
+    refetchDelegations: delegationQuery.refetch
   };
 }
 
