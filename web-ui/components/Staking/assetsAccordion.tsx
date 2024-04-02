@@ -53,7 +53,7 @@ export const AssetsAccordian: React.FC<AssetsAccordianProps> = ({ selectedOption
   const balanceDisplay = balance.includes('.') ? balance.substring(0, balance.indexOf('.') + 4) : balance;
 
   const renderQAssets = () => {
-    if (qBalance) {
+    if (qBalance && liquidRewards) {
       return (
         <Text pr={2} color="complimentary.900">
           {qAssetsDisplay}
