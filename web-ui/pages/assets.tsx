@@ -32,7 +32,8 @@ export interface PortfolioItemInterface {
 function Home() {
   const { address } = useChain('quicksilver');
   const tokens = ['atom', 'osmo', 'stars', 'regen', 'somm', 'juno', 'dydx'];
-  const getExponent = (denom: string) => (denom === 'aqdydx' ? 18 : 6);
+  const getExponentAsset = (denom: string) => (denom === 'qdydx' ? 18 : 6);
+  const getExponentPort = (denom: string) => (denom === 'aqdydx' ? 18 : 6);
 
   const { grpcQueryClient } = useGrpcQueryClient('quicksilver');
 
@@ -89,12 +90,12 @@ const portfolioItems: PortfolioItemInterface[] = useMemo(() => {
 
   // Map over the accumulated results to create portfolio items
   return Array.from(amountsMap.entries()).map(([denom, amount]) => {
-    const normalizedDenom = denom.slice(2); // assuming the denom always has a 'q' prefix
+    const normalizedDenom = denom.slice(2); 
     const chainId = getChainIdForToken(tokenToChainIdMap, normalizedDenom);
     const tokenPriceInfo = tokenPrices?.find((info) => info.token === normalizedDenom);
     const redemptionRate = chainId && redemptionRates[chainId] ? redemptionRates[chainId].current : 1;
     const qTokenPrice = tokenPriceInfo ? tokenPriceInfo.price * redemptionRate : 0;
-    const exp = getExponent(denom);
+    const exp = getExponentPort(denom);
     const normalizedAmount = shiftDigits(amount, -exp);
 
     return {
@@ -160,7 +161,7 @@ const assetsData = useMemo(() => {
 
     const apy = (chainId && chainId !== 'dydx-mainnet-1' && APYs && APYs.hasOwnProperty(chainId)) ? APYs[chainId] : 0;
     const redemptionRate = chainId && redemptionRates && redemptionRates[chainId] ? redemptionRates[chainId].current || 1 : 1;
-    const exp = apyAsset ? getExponent(apyAsset) : 0;
+    const exp = apyAsset ? getExponentAsset(apyAsset) : 0;
 
     return {
       name: token.toUpperCase(),
