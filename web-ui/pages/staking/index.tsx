@@ -28,7 +28,7 @@ const networks = process.env.NEXT_PUBLIC_CHAIN_ENV === 'mainnet' ? prodNetworks 
 export default function Staking() {
   const [selectedNetwork, setSelectedNetwork] = useState(networks[0]);
 
-  const {address} = useChain('quicksilver')
+  const {address} = useChain('quicksilver');
 
   let newChainId;
   if (selectedNetwork.chainId === 'provider') {

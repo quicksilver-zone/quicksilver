@@ -113,7 +113,7 @@ export const StakingBox = ({
     allRefetch();
     refetchBalance();
     qRefetch();
-  }
+  };
 
   const qAssets = qBalance?.balance.amount || '';
 
@@ -703,6 +703,7 @@ export const StakingBox = ({
                       selectedOption={selectedOption}
                       isTokenized={selectedValidatorData.isTokenized}
                       denom={selectedValidatorData.denom}
+                      refetch={refetchDelegations}
                     />
                     <RevertSharesProcessModal
                       address={address ?? ''}

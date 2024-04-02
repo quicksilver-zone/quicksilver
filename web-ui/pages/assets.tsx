@@ -50,7 +50,7 @@ function Home() {
   const refetchAll = () => {
     qRefetch();
     liquidRefetch();
-  }
+  };
 
   const isLoadingAll = qIsLoading || APYsLoading || redemptionLoading || isLoadingPrices;
 
