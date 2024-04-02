@@ -35,9 +35,6 @@ import { FaStar } from 'react-icons/fa';
 
 
 
-import RevertSharesProcessModal from './modals/revertSharesProcessModal';
-import StakingProcessModal from './modals/stakingProcessModal';
-import TransferProcessModal from './modals/transferProcessModal';
 
 import { useTx } from '@/hooks';
 import { useFeeEstimation } from '@/hooks/useFeeEstimation';
@@ -51,6 +48,10 @@ import {
   useZoneQuery,
 } from '@/hooks/useQueries';
 import { getExponent, shiftDigits } from '@/utils';
+
+import RevertSharesProcessModal from './modals/revertSharesProcessModal';
+import StakingProcessModal from './modals/stakingProcessModal';
+import TransferProcessModal from './modals/transferProcessModal';
 
 
 
@@ -164,8 +165,6 @@ export const StakingBox = ({
     fromAddress: qAddress ?? '',
     destinationAddress: address ?? '',
   });
-
-
 
   const { tx } = useTx(quicksilverChainName);
   const { estimateFee } = useFeeEstimation(quicksilverChainName);
