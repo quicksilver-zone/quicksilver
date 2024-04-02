@@ -1,4 +1,4 @@
-import { ChevronDownIcon } from '@chakra-ui/icons';
+
 import {
   Modal,
   ModalOverlay,
@@ -30,7 +30,6 @@ import {
   MenuList,
   Box,
 } from '@chakra-ui/react';
-import { StdFee, coins } from '@cosmjs/amino';
 import { useChains } from '@cosmos-kit/react';
 import { ibc } from 'interchain-query';
 import { useCallback, useState } from 'react';
@@ -54,7 +53,6 @@ const RewardsModal = ({
 }) => {
   const { balance } = useAllBalancesQuery('quicksilver', address);
   const [isSigning, setIsSigning] = useState<boolean>(false);
-  const [isError, setIsError] = useState<boolean>(false);
   const [isBottomVisible, setIsBottomVisible] = useState(true);
 
   const handleScroll = useCallback((event: React.UIEvent<HTMLDivElement>) => {
@@ -105,7 +103,7 @@ const RewardsModal = ({
 
   const onSubmitClick = async () => {
     setIsSigning(true);
-    setIsError(false);
+
     const messages = [];
 
     for (const tokenDetail of tokenDetails) {
@@ -169,7 +167,7 @@ const RewardsModal = ({
       });
       setIsSigning(false);
     } catch (error) {
-      setIsError(true);
+
       setIsSigning(false);
     }
   };

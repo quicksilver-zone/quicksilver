@@ -161,7 +161,7 @@ export const TransferProcessModal: React.FC<StakingModalProps> = ({
     }
   }, [responseEvents]);
 
-  const { estimateFee } = useFeeEstimation(newChainName ?? '')
+  const { estimateFee } = useFeeEstimation(newChainName ?? '');
 
   const handleTokenizeShares = async (event: React.MouseEvent) => {
     event.preventDefault();

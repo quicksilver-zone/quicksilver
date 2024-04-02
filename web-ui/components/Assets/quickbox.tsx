@@ -1,13 +1,14 @@
-import { Box, Flex, Text, VStack, HStack, Spinner, Button, Stat, StatLabel, StatNumber, useDisclosure } from '@chakra-ui/react';
+import { Flex, Text, VStack, HStack, Spinner, Button, Stat, StatLabel, StatNumber, useDisclosure } from '@chakra-ui/react';
 import { useChain } from '@cosmos-kit/react';
+
+import { DepositModal } from './modals/qckDepositModal';
+import { WithdrawModal } from './modals/qckWithdrawModal';
+import RewardsModal from './modals/rewardsModal';
 
 import { defaultChainName } from '@/config';
 import { useBalanceQuery } from '@/hooks/useQueries';
 import { shiftDigits } from '@/utils';
 
-import { DepositModal } from './modals/qckDepositModal';
-import { WithdrawModal } from './modals/qckWithdrawModal';
-import RewardsModal from './modals/rewardsModal';
 
 interface QuickBoxProps {
   stakingApy?: number;

@@ -113,7 +113,7 @@ export const RevertSharesProcessModal: React.FC<StakingModalProps> = ({
   const labels = ['Revert Shares', `Receive Tokens`];
 
   const { tx, responseEvents } = useTx(newChainName ?? '');
-  const { estimateFee } = useFeeEstimation(newChainName ?? '')
+  const { estimateFee } = useFeeEstimation(newChainName ?? '');
   const [combinedDenom, setCombinedDenom] = useState<string>();
 
   // prettier-ignore

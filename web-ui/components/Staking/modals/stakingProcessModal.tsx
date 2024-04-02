@@ -28,12 +28,13 @@ import React, { useEffect, useState } from 'react';
 
 
 
+import { MultiModal } from './validatorSelectionModal';
+
 import { useTx } from '@/hooks';
 import { useFeeEstimation } from '@/hooks/useFeeEstimation';
 import { useZoneQuery } from '@/hooks/useQueries';
 import { shiftDigits } from '@/utils';
 
-import { MultiModal } from './validatorSelectionModal';
 
 
 const ChakraModalContent = styled(ModalContent)`
@@ -268,7 +269,7 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
 
   const { tx } = useTx(newChainName ?? '');
 
-  const { estimateFee } = useFeeEstimation(newChainName ?? '')
+  const { estimateFee } = useFeeEstimation(newChainName ?? '');
 
 
   const handleLiquidStake = async (event: React.MouseEvent) => {
