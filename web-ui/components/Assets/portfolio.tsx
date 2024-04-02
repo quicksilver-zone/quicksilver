@@ -46,7 +46,7 @@ const MyPortfolio: React.FC<MyPortfolioProps> = ({
     );
   }
 
-  if (isLoading) {
+  if (isLoading && !portfolioItems.length) {
     return (
       <Flex
         w="100%"
