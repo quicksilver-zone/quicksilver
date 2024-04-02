@@ -10,6 +10,7 @@ import MyPortfolio from '@/components/Assets/portfolio';
 import QuickBox from '@/components/Assets/quickbox';
 import RewardsClaim from '@/components/Assets/rewardsClaim';
 import UnbondingAssetsTable from '@/components/Assets/unbondingTable';
+import { useGrpcQueryClient } from '@/hooks/useGrpcQueryClient';
 import {
   useAPYQuery,
   useAPYsQuery,
@@ -33,13 +34,22 @@ function Home() {
   const tokens = ['atom', 'osmo', 'stars', 'regen', 'somm', 'juno', 'dydx'];
   const getExponent = (denom: string) => (denom === 'aqdydx' ? 18 : 6);
 
+  const { grpcQueryClient } = useGrpcQueryClient('quicksilver');
+
   const { data: tokenPrices, isLoading: isLoadingPrices } = useTokenPrices(tokens);
-  const { qbalance, qIsLoading, qIsError, qRefetch } = useQBalancesQuery('quicksilver-2', address ?? '');
+  const { qbalance, qIsLoading, qIsError, qRefetch } = useQBalancesQuery('quicksilver-2', address ?? '', grpcQueryClient);
   const { APYs, APYsLoading } = useAPYsQuery();
   const { redemptionRates, redemptionLoading } = useRedemptionRatesQuery();
   const { APY: quickAPY } = useAPYQuery('quicksilver-2');
-  const { liquidRewards } = useLiquidRewardsQuery(address ?? '');
+  const { liquidRewards, refetch: liquidRefetch } = useLiquidRewardsQuery(address ?? '');
   const { authData, authError } = useAuthChecker(address ?? '');
+
+  
+
+  const refetchAll = () => {
+    qRefetch();
+    liquidRefetch();
+  }
 
   const isLoadingAll = qIsLoading || APYsLoading || redemptionLoading || isLoadingPrices;
 
@@ -94,7 +104,8 @@ const portfolioItems: PortfolioItemInterface[] = useMemo(() => {
       chainId: chainId ?? '',
     };
   });
-}, [qbalance, APYs, redemptionRates, isLoadingAll, liquidRewards, nonNative, tokenToChainIdMap, tokenPrices]);
+// eslint-disable-next-line react-hooks/exhaustive-deps
+}, [qbalance, APYs, redemptionRates, isLoadingAll, liquidRewards, nonNative, tokenToChainIdMap, tokenPrices, refetchAll]);
 
 
   const totalPortfolioValue = useMemo(
@@ -145,7 +156,6 @@ const assetsData = useMemo(() => {
 
     const asset = qbalance?.find(a => a.denom.substring(2).toLowerCase() === baseToken);
     const apyAsset = qtokens.find(a => a.substring(1).toLowerCase() === baseToken);
-
     const chainId = apyAsset ? getChainIdForToken(tokenToChainIdMap, baseToken) : undefined;
 
     const apy = (chainId && chainId !== 'dydx-mainnet-1' && APYs && APYs.hasOwnProperty(chainId)) ? APYs[chainId] : 0;
@@ -160,7 +170,8 @@ const assetsData = useMemo(() => {
       redemptionRates: redemptionRate.toString(),
     };
   });
-}, [qtokens, qbalance, tokenToChainIdMap, APYs, redemptionRates]);
+// eslint-disable-next-line react-hooks/exhaustive-deps
+}, [qtokens, qbalance, tokenToChainIdMap, APYs, redemptionRates, refetchAll]);
 
   const showAssetsGrid = qbalance && qbalance.length > 0 && !qIsLoading && !qIsError;
 
@@ -282,7 +293,7 @@ const assetsData = useMemo(() => {
           {/* Assets Grid */}
           {showAssetsGrid && (
             <AssetsGrid
-              refetch={qRefetch}
+              refetch={refetchAll}
               liquidRewards={liquidRewards}
               address={address}
               nonNative={liquidRewards}

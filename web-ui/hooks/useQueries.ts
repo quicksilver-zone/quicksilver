@@ -68,6 +68,7 @@ type UseLiquidRewardsQueryReturnType = {
   liquidRewards: LiquidRewardsData | undefined;
   isLoading: boolean;
   isError: boolean;
+  refetch: () => void;
 };
 
 interface ProofOp {
@@ -365,8 +366,8 @@ export const useQBalanceQuery = (chainName: string, address: string, qAsset: str
   };
 };
 
-export const useQBalancesQuery = (chainName: string, address: string) => {
-  const { grpcQueryClient } = useGrpcQueryClient(chainName);
+export const useQBalancesQuery = (chainName: string, address: string, grpcQueryClient: { cosmos: { bank: { v1beta1: { allBalances: (arg0: { address: string; pagination: { key: Uint8Array; offset: any; limit: any; countTotal: boolean; reverse: boolean; }; }) => any; }; }; }; } | undefined) => {
+
 
   const allQBalanceQuery = useQuery(
     ['balances', address],
@@ -393,7 +394,7 @@ export const useQBalancesQuery = (chainName: string, address: string) => {
     },
     {
       enabled: !!grpcQueryClient && !!address,
-      staleTime: Infinity,
+      staleTime: 0,
     },
   );
 
@@ -473,7 +474,7 @@ export const useLiquidRewardsQuery = (address: string): UseLiquidRewardsQueryRet
     },
     {
       enabled:!!address,
-      staleTime: Infinity,
+      staleTime: 0,
     },
   );
 
@@ -481,6 +482,7 @@ export const useLiquidRewardsQuery = (address: string): UseLiquidRewardsQueryRet
     liquidRewards: liquidRewardsQuery.data,
     isLoading: liquidRewardsQuery.isLoading,
     isError: liquidRewardsQuery.isError,
+    refetch: liquidRewardsQuery.refetch,
   };
 
 }
