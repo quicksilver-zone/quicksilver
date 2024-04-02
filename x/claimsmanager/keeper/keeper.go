@@ -74,7 +74,11 @@ func (k Keeper) StoreSelfConsensusState(ctx sdk.Context, key string) error {
 		return err
 	}
 
-	state, _ := selfConsState.(*ibctmtypes.ConsensusState)
+	state, ok := selfConsState.(*ibctmtypes.ConsensusState)
+	if !ok {
+		k.Logger(ctx).Error("Error casting self consensus state")
+		return fmt.Errorf("error casting self consensus state")
+	}
 	k.SetSelfConsensusState(ctx, key, state)
 
 	return nil

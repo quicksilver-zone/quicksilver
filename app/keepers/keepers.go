@@ -516,7 +516,7 @@ func (appKeepers *AppKeepers) InitKeepers(
 		AddRoute(wasm.ModuleName, wasm.NewIBCHandler(appKeepers.WasmKeeper, appKeepers.IBCKeeper.ChannelKeeper, appKeepers.IBCKeeper.ChannelKeeper)).
 		AddRoute(icacontrollertypes.SubModuleName, icaControllerIBCModule).
 		AddRoute(icahosttypes.SubModuleName, icaHostIBCModule).
-		AddRoute(interchainstakingtypes.ModuleName, icaControllerIBCModule)
+		AddRoute(interchainstakingtypes.ModuleName, interchainstakingIBCModule)
 	appKeepers.IBCKeeper.SetRouter(ibcRouter)
 
 	// create evidence keeper with router
