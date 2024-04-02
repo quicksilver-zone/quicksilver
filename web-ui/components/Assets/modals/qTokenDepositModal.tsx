@@ -82,7 +82,7 @@ const QDepositModal: React.FC<QDepositModalProps> = ({ token, isOpen, onClose, i
   const toChain = 'quicksilver';
 
   const { transfer } = ibc.applications.transfer.v1.MessageComposer.withTypeUrl;
-  const { address, connect, status, message, wallet } = useChain(fromChain ?? '');
+  const { address } = useChain(fromChain ?? '');
   const { address: qAddress } = useChain('quicksilver');
 
   const { tx } = useTx(fromChain ?? '');
@@ -91,7 +91,6 @@ const QDepositModal: React.FC<QDepositModalProps> = ({ token, isOpen, onClose, i
   const onSubmitClick = async () => {
     setIsLoading(true);
 
-    const coin = getCoin(fromChain ?? '');
     const transferAmount = new BigNumber(amount).shiftedBy(6).toString();
 
     const { source_port, source_channel } = getIbcInfo(fromChain ?? '', toChain ?? '');
@@ -192,7 +191,7 @@ const QDepositModal: React.FC<QDepositModalProps> = ({ token, isOpen, onClose, i
                   boxShadow: '0 0 0 3px #FF8000',
                 }}
                 value={amount}
-                onChange={(e) => setAmount(e.target.value <= maxAmount ? e.target.value : maxAmount)}
+                onChange={(e) => setAmount(e.target.value <= maxAmount ? e.target.value : BigNumber(maxAmount).toString())}
                 max={maxAmount}
                 color={'white'}
                 placeholder="Enter amount"
@@ -206,7 +205,7 @@ const QDepositModal: React.FC<QDepositModalProps> = ({ token, isOpen, onClose, i
                     size="xs"
                     _active={{ transform: 'scale(0.95)', color: 'complimentary.800' }}
                     _hover={{ bgColor: 'transparent', color: 'complimentary.400' }}
-                    onClick={() => setAmount((parseFloat(maxAmount) / 2).toString())}
+                    onClick={() => setAmount(BigNumber(parseFloat(maxAmount) / 2).toFixed(6).toString())}
                   >
                     Half
                   </Button>
@@ -217,7 +216,7 @@ const QDepositModal: React.FC<QDepositModalProps> = ({ token, isOpen, onClose, i
                     _hover={{ bgColor: 'transparent', color: 'complimentary.400' }}
                     h="1.75rem"
                     size="xs"
-                    onClick={() => setAmount(maxAmount)}
+                    onClick={() => setAmount(BigNumber(maxAmount).toFixed(6).toString())}
                   >
                     Max
                   </Button>

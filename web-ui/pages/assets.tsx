@@ -135,21 +135,22 @@ const portfolioItems: PortfolioItemInterface[] = useMemo(() => {
   // Data for the assets grid
   // the query return `qbalance` is an array of quicksilver staked assets held by the user
   // assetsData maps over the assets in qbalance and returns the name, balance, apy, native asset denom, and redemption rate.
-  const qtokens = ['qatom', 'qosmo', 'qstars', 'qregen', 'qsomm', 'qjuno', 'qdydx']; // List of all possible assets
+  const qtokens = useMemo(() => ['qatom', 'qosmo', 'qstars', 'qregen', 'qsomm', 'qjuno', 'qdydx'], []);
 
 const assetsData = useMemo(() => {
   return qtokens.map((token) => {
-    // Extract the base token name from the token identifier
+
     const baseToken = token.substring(1).toLowerCase();
 
-    // Attempt to find a matching asset in qbalance
-    const asset = qbalance?.find(a => a.denom.substring(2).toLowerCase() === baseToken);
 
-    const chainId = asset ? getChainIdForToken(tokenToChainIdMap, baseToken) : undefined;
+    const asset = qbalance?.find(a => a.denom.substring(2).toLowerCase() === baseToken);
+    const apyAsset = qtokens.find(a => a.substring(1).toLowerCase() === baseToken);
+
+    const chainId = apyAsset ? getChainIdForToken(tokenToChainIdMap, baseToken) : undefined;
 
     const apy = (chainId && chainId !== 'dydx-mainnet-1' && APYs && APYs.hasOwnProperty(chainId)) ? APYs[chainId] : 0;
     const redemptionRate = chainId && redemptionRates && redemptionRates[chainId] ? redemptionRates[chainId].current || 1 : 1;
-    const exp = asset ? getExponent(asset.denom) : 0;
+    const exp = apyAsset ? getExponent(apyAsset) : 0;
 
     return {
       name: token.toUpperCase(),
@@ -160,7 +161,7 @@ const assetsData = useMemo(() => {
     };
   });
 }, [qtokens, qbalance, tokenToChainIdMap, APYs, redemptionRates]);
-  console.log(assetsData)
+
   const showAssetsGrid = qbalance && qbalance.length > 0 && !qIsLoading && !qIsError;
 
   if (!address) {

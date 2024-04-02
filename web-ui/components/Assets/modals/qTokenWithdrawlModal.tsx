@@ -142,7 +142,7 @@ const QWithdrawModal: React.FC<QDepositModalProps> = ({ max, token, isOpen, onCl
       timeoutTimestamp: timeoutInNanos,
     });
 
-    const fee = await estimateFee(address ?? '', [msg]);
+    const fee = await estimateFee(qAddress ?? '', [msg]);
 
     await tx([msg], {
       fee,
@@ -190,13 +190,13 @@ const QWithdrawModal: React.FC<QDepositModalProps> = ({ max, token, isOpen, onCl
                   boxShadow: '0 0 0 3px #FF8000',
                 }}
                 value={amount}
-                onChange={(e) => setAmount(e.target.value <= max ? e.target.value : max)}
+                onChange={(e) => setAmount(e.target.value <= max ? e.target.value : BigNumber(max).toString())}
                 max={max}
                 color={'white'}
                 placeholder="Enter amount"
               />
               <InputRightElement>
-                <HStack mr={14} spacing={1}>
+              <HStack mr={14} spacing={1}>
                   <Button
                     variant={'ghost'}
                     color="complimentary.900"
@@ -204,7 +204,7 @@ const QWithdrawModal: React.FC<QDepositModalProps> = ({ max, token, isOpen, onCl
                     size="xs"
                     _active={{ transform: 'scale(0.95)', color: 'complimentary.800' }}
                     _hover={{ bgColor: 'transparent', color: 'complimentary.400' }}
-                    onClick={() => setAmount((parseFloat(max) / 2).toString())}
+                    onClick={() => setAmount(BigNumber(parseFloat(max) / 2).toFixed(6).toString())}
                   >
                     Half
                   </Button>
@@ -215,7 +215,7 @@ const QWithdrawModal: React.FC<QDepositModalProps> = ({ max, token, isOpen, onCl
                     _hover={{ bgColor: 'transparent', color: 'complimentary.400' }}
                     h="1.75rem"
                     size="xs"
-                    onClick={() => setAmount(max)}
+                    onClick={() => setAmount(BigNumber(max).toFixed(6).toString())}
                   >
                     Max
                   </Button>
