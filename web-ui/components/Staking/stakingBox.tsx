@@ -33,7 +33,10 @@ import { quicksilver } from 'quicksilverjs';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { FaStar } from 'react-icons/fa';
 
+
+
 import { useTx } from '@/hooks';
+import { useFeeEstimation } from '@/hooks/useFeeEstimation';
 import {
   useAllBalancesQuery,
   useBalanceQuery,
@@ -155,21 +158,15 @@ export const StakingBox = ({
     destinationAddress: address ?? '',
   });
 
-  const fee: StdFee = {
-    amount: [
-      {
-        denom: 'uqck',
-        amount: '50',
-      },
-    ],
-    gas: '500000',
-  };
+
 
   const { tx } = useTx(quicksilverChainName);
+  const { estimateFee } = useFeeEstimation(quicksilverChainName);
 
   const handleLiquidUnstake = async (event: React.MouseEvent) => {
     event.preventDefault();
     setIsSigning(true);
+    const fee = await estimateFee(qAddress ?? '', [msgRequestRedemption]);
     try {
       await tx([msgRequestRedemption], {
         fee,

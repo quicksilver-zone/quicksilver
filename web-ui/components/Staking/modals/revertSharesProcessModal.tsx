@@ -23,6 +23,7 @@ import { cosmos } from 'quicksilverjs';
 import React, { useEffect, useState } from 'react';
 
 import { useTx } from '@/hooks';
+import { useFeeEstimation } from '@/hooks/useFeeEstimation';
 import { shiftDigits } from '@/utils';
 
 const ChakraModalContent = styled(ModalContent)`
@@ -111,23 +112,8 @@ export const RevertSharesProcessModal: React.FC<StakingModalProps> = ({
 
   const labels = ['Revert Shares', `Receive Tokens`];
 
-  const mainTokens = assets.find(({ chain_name }) => chain_name === newChainName);
-  const fees = chains.chains.find(({ chain_name }) => chain_name === newChainName)?.fees?.fee_tokens;
-  const mainDenom = mainTokens?.assets[0].base ?? '';
-  const fixedMinGasPrice = fees?.find(({ denom }) => denom === mainDenom)?.high_gas_price ?? '';
-  const feeAmount = Number(fixedMinGasPrice) * 750000;
-
-  const fee: StdFee = {
-    amount: [
-      {
-        denom: mainDenom,
-        amount: feeAmount.toString(),
-      },
-    ],
-    gas: '750000',
-  };
-
   const { tx, responseEvents } = useTx(newChainName ?? '');
+  const { estimateFee } = useFeeEstimation(newChainName ?? '')
   const [combinedDenom, setCombinedDenom] = useState<string>();
 
   // prettier-ignore
@@ -156,10 +142,13 @@ export const RevertSharesProcessModal: React.FC<StakingModalProps> = ({
       amount: selectedValidator.tokenAmount.toString(),
     },
   });
+  
 
   const handleRevertShares = async (event: React.MouseEvent) => {
     event.preventDefault();
     setIsSigning(true);
+
+    const fee = await estimateFee(address, [msg])
 
     try {
       await tx([msg], {

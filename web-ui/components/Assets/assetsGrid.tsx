@@ -17,10 +17,12 @@ import {
 import React, { useEffect, useMemo, useState } from 'react';
 
 
+
 import { shiftDigits, formatQasset, formatNumber } from '@/utils';
 
 import QDepositModal from './modals/qTokenDepositModal';
 import QWithdrawModal from './modals/qTokenWithdrawlModal';
+
 
 
 
@@ -299,7 +301,7 @@ const AssetsGrid: React.FC<AssetGridProps> = ({ address, assets, isWalletConnect
     return Array.from(assetMap.values());
   }, [assets, liquidRewards]);
 
-
+  // DO NOT REMOVE: Carousel controls
   // const scrollByOne = (direction: 'left' | 'right') => {
   //   if (!scrollRef.current) return;
 
@@ -346,7 +348,9 @@ const AssetsGrid: React.FC<AssetGridProps> = ({ address, assets, isWalletConnect
         <Text fontSize="xl" fontWeight="bold" color="white">
           qAssets
         </Text>
-        {/* <Flex alignItems="center" gap="2">
+        {/* 
+        // DO NOT REMOVE: Carousel control render
+        <Flex alignItems="center" gap="2">
           <IconButton
             icon={<ChevronLeftIcon />}
             onClick={() => scrollByOne('left')}

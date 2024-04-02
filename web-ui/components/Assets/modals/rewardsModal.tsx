@@ -37,6 +37,7 @@ import { useCallback, useState } from 'react';
 import { FaInfoCircle } from 'react-icons/fa';
 
 import { useTx } from '@/hooks';
+import { useFeeEstimation } from '@/hooks/useFeeEstimation';
 import { useAllBalancesQuery, useSkipAssets } from '@/hooks/useQueries';
 import { shiftDigits } from '@/utils';
 
@@ -100,6 +101,7 @@ const RewardsModal = ({
 
   const { tx } = useTx('quicksilver');
   const { transfer } = ibc.applications.transfer.v1.MessageComposer.withTypeUrl;
+  const { estimateFee } = useFeeEstimation('quicksilver');
 
   const onSubmitClick = async () => {
     setIsSigning(true);
@@ -157,10 +159,7 @@ const RewardsModal = ({
     }
 
     try {
-      const fee: StdFee = {
-        amount: coins('5000', 'uqck'),
-        gas: '3000000',
-      };
+     const fee = await estimateFee(address, messages);
 
       await tx(messages, {
         fee,

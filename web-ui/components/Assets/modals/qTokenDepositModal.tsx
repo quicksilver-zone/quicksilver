@@ -28,6 +28,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { ChooseChain } from '@/components/react/choose-chain';
 import { handleSelectChainDropdown, ChainOption, ChooseChainInfo } from '@/components/types';
 import { useTx } from '@/hooks';
+import { useFeeEstimation } from '@/hooks/useFeeEstimation';
 import { ibcDenomDepositMapping } from '@/state/chains/prod';
 import { getCoin, getIbcInfo } from '@/utils';
 
@@ -85,17 +86,13 @@ const QDepositModal: React.FC<QDepositModalProps> = ({ token, isOpen, onClose, i
   const { address: qAddress } = useChain('quicksilver');
 
   const { tx } = useTx(fromChain ?? '');
+  const { estimateFee } = useFeeEstimation(fromChain ?? '');
 
   const onSubmitClick = async () => {
     setIsLoading(true);
 
     const coin = getCoin(fromChain ?? '');
     const transferAmount = new BigNumber(amount).shiftedBy(6).toString();
-
-    const fee: StdFee = {
-      amount: coins('1000', coin.base),
-      gas: '300000',
-    };
 
     const { source_port, source_channel } = getIbcInfo(fromChain ?? '', toChain ?? '');
 
@@ -146,6 +143,8 @@ const QDepositModal: React.FC<QDepositModalProps> = ({ token, isOpen, onClose, i
       //@ts-ignore
       timeoutTimestamp: timeoutInNanos,
     });
+
+    const fee = await estimateFee(address ?? '', [msg]);
 
     await tx([msg], {
       fee,
