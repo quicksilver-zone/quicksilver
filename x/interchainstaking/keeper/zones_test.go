@@ -344,7 +344,7 @@ func (suite *KeeperTestSuite) TestRemoveZoneAndAssociatedRecords() {
 	// check zone
 	zone, found = quicksilver.InterchainstakingKeeper.GetZone(ctx, chainID)
 	suite.False(found, "No zone stored in the keeper")
-	suite.Equal(types.Zone{}, zone, "Expecting the blank zone")
+	suite.Equal(quicksilver.InterchainstakingKeeper.EmptyZone(), zone, "Expecting the blank zone")
 }
 
 // TODO: convert to keeper tests
