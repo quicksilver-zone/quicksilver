@@ -13,14 +13,16 @@ import {
   StatLabel,
   StatNumber,
   SimpleGrid,
+  Skeleton,
 } from '@chakra-ui/react';
 import React, { useEffect, useState } from 'react';
 
 
-import { shiftDigits, formatQasset, formatNumber } from '@/utils';
 
 import QDepositModal from './modals/qTokenDepositModal';
 import QWithdrawModal from './modals/qTokenWithdrawlModal';
+
+import { shiftDigits, formatQasset, formatNumber } from '@/utils';
 
 
 
@@ -176,23 +178,38 @@ const AssetCard: React.FC<AssetCardProps> = ({ address, assetName, balance, apy,
       <Divider bgColor={'complimentary.900'} />
       <HStack h="140px" justifyContent={'space-between'} w="full">
         <VStack minH="150px" alignItems="left">
-          <Stat color={'white'}>
-            <StatLabel fontSize={'lg'}>On Quicksilver</StatLabel>
-            <StatNumber color={'complimentary.900'} fontSize={'md'}>
-              {formatNumber(parseFloat(balance))} {assetName}
-            </StatNumber>
+        <Stat color={'white'}>
+    <StatLabel fontSize={'lg'}>On Quicksilver</StatLabel>
 
-            {Number(balance) > 0 && (
-              <>
-                <StatHelpText mt={2} fontSize={'md'}>
-                  Redeem For
-                </StatHelpText>
-                <StatHelpText mt={-2} color={'complimentary.400'} fontSize={'sm'}>
-                  {formatNumber(parseFloat(balance) / Number(redemptionRates))} {assetName.replace('q', '')}
-                </StatHelpText>
-              </>
-            )}
-          </Stat>
+    {!balance || !liquidRewards ? (
+      <Skeleton startColor="complimentary.900"
+      endColor="complimentary.100" height="10px" width="auto" />
+    ) : (
+      <StatNumber color={'complimentary.900'} fontSize={'md'}>
+        {formatNumber(parseFloat(balance))} {assetName}
+      </StatNumber>
+    )}
+
+    {!balance || !liquidRewards ?(
+      <>
+        <Skeleton startColor="complimentary.900"
+                        endColor="complimentary.100" height="10px" width="auto" mt={2} />
+        <Skeleton startColor="complimentary.900"
+                        endColor="complimentary.100" height="10px" width="auto" mt={2} />
+      </>
+    ) : (
+      Number(balance) > 0 && (
+        <>
+          <StatHelpText mt={2} fontSize={'md'}>
+            Redeem For
+          </StatHelpText>
+          <StatHelpText mt={-2} color={'complimentary.400'} fontSize={'sm'}>
+            {formatNumber(parseFloat(balance) / Number(redemptionRates))} {assetName.replace('q', '')}
+          </StatHelpText>
+        </>
+      )
+    )}
+  </Stat>
           <Button
             _active={{ transform: 'scale(0.95)', color: 'complimentary.800' }}
             _hover={{ bgColor: 'rgba(255,128,0, 0.25)', color: 'complimentary.300' }}
@@ -209,23 +226,38 @@ const AssetCard: React.FC<AssetCardProps> = ({ address, assetName, balance, apy,
         </VStack>
 
         <VStack minH="150px" alignItems="left">
-          <Stat color={'white'}>
-            <StatLabel fontSize={'lg'}>Interchain</StatLabel>
-            <StatNumber color={'complimentary.900'} fontSize={'md'}>
-              {formatNumber(parseFloat(interchainBalance))} {assetName}
-            </StatNumber>
+        <Stat color={'white'}>
+    <StatLabel fontSize={'lg'}>Interchain</StatLabel>
 
-            {Number(interchainBalance) > 0 && (
-              <>
-                <StatHelpText mt={2} fontSize={'md'}>
-                  Redeem For
-                </StatHelpText>
-                <StatHelpText mt={-2} color={'complimentary.400'} fontSize={'sm'}>
-                  {formatNumber(parseFloat(interchainBalance) / Number(redemptionRates))} {assetName.replace('q', '')}
-                </StatHelpText>
-              </>
-            )}
-          </Stat>
+    {!balance || !liquidRewards || !interchainBalance ? (
+      <Skeleton startColor="complimentary.900"
+      endColor="complimentary.100" height="10px" width="auto" />
+    ) : (
+      <StatNumber color={'complimentary.900'} fontSize={'md'}>
+        {formatNumber(parseFloat(interchainBalance))} {assetName}
+      </StatNumber>
+    )}
+
+    {!balance || !liquidRewards || !interchainBalance ? (
+      <>
+        <Skeleton startColor="complimentary.900"
+                        endColor="complimentary.100" height="10px" width="auto" mt={2} />
+        <Skeleton startColor="complimentary.900"
+                        endColor="complimentary.100" height="10px" width="auto" mt={2} />
+      </>
+    ) : (
+      Number(interchainBalance) > 0 && (
+        <>
+          <StatHelpText mt={2} fontSize={'md'}>
+            Redeem For
+          </StatHelpText>
+          <StatHelpText mt={-2} color={'complimentary.400'} fontSize={'sm'}>
+            {formatNumber(parseFloat(interchainBalance) / Number(redemptionRates))} {assetName.replace('q', '')}
+          </StatHelpText>
+        </>
+      )
+    )}
+  </Stat>
           <Button
             _active={{ transform: 'scale(0.95)', color: 'complimentary.800' }}
             _hover={{ bgColor: 'rgba(255,128,0, 0.25)', color: 'complimentary.300' }}
