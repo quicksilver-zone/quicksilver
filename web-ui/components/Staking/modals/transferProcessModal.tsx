@@ -15,14 +15,13 @@ import {
   StatNumber,
   Spinner,
 } from '@chakra-ui/react';
-import { coins, StdFee } from '@cosmjs/amino';
+import { coins } from '@cosmjs/amino';
 import styled from '@emotion/styled';
-import chains from 'chain-registry';
-import { assets } from 'chain-registry';
 import { cosmos } from 'quicksilverjs';
 import React, { useEffect, useState } from 'react';
 
 import { useTx } from '@/hooks';
+import { useFeeEstimation } from '@/hooks/useFeeEstimation';
 import { useZoneQuery } from '@/hooks/useQueries';
 import { shiftDigits } from '@/utils';
 
@@ -77,6 +76,7 @@ interface StakingModalProps {
   address: string;
   isTokenized: boolean;
   denom: string;
+  refetch: () => void;
 }
 
 export const TransferProcessModal: React.FC<StakingModalProps> = ({
@@ -87,6 +87,7 @@ export const TransferProcessModal: React.FC<StakingModalProps> = ({
   address,
   isTokenized,
   denom,
+  refetch,
 }) => {
   useEffect(() => {
     if (isTokenized === true) {
@@ -141,33 +142,6 @@ export const TransferProcessModal: React.FC<StakingModalProps> = ({
     tokenizedShareOwner: address,
   });
 
-  const mainTokens = assets.find(({ chain_name }) => chain_name === newChainName);
-  const fees = chains.chains.find(({ chain_name }) => chain_name === newChainName)?.fees?.fee_tokens;
-  const mainDenom = mainTokens?.assets[0].base ?? '';
-  const fixedMinGasPrice = fees?.find(({ denom }) => denom === mainDenom)?.high_gas_price ?? '';
-  const feeAmount = Number(fixedMinGasPrice) * 750000;
-  const sendFeeAmount = Number(fixedMinGasPrice) * 100000;
-
-  const fee: StdFee = {
-    amount: [
-      {
-        denom: mainDenom,
-        amount: feeAmount.toString(),
-      },
-    ],
-    gas: '1000000', // increased to 1,000,000 from 750,000
-  };
-
-  // don't use the same fee for both txs, as a send is piddly!
-  const sendFee: StdFee = {
-    amount: [
-      {
-        denom: mainDenom,
-        amount: sendFeeAmount.toString(),
-      },
-    ],
-    gas: '100000',
-  };
 
   const { tx, responseEvents } = useTx(newChainName ?? '');
   const [combinedDenom, setCombinedDenom] = useState<string>();
@@ -189,10 +163,13 @@ export const TransferProcessModal: React.FC<StakingModalProps> = ({
     }
   }, [responseEvents]);
 
+  const { estimateFee } = useFeeEstimation(newChainName ?? '');
+
   const handleTokenizeShares = async (event: React.MouseEvent) => {
     event.preventDefault();
     setIsSigning(true);
     setTransactionStatus('Pending');
+    const fee = await estimateFee(address, [msg])
     try {
       await tx([msg], {
         fee,
@@ -227,9 +204,10 @@ export const TransferProcessModal: React.FC<StakingModalProps> = ({
     event.preventDefault();
     setIsSigning(true);
     setTransactionStatus('Pending');
+    const fee = await estimateFee(address, [msgSend])
     try {
       await tx([msgSend], {
-        fee: sendFee,
+        fee: fee,
         onSuccess: () => {
           setStep(3);
           setTransactionStatus('Success');

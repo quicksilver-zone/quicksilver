@@ -1,15 +1,31 @@
-import { WarningIcon } from '@chakra-ui/icons';
-import { Box, VStack, Text, Divider, HStack, Flex, Grid, GridItem, Spinner, Tooltip } from '@chakra-ui/react';
-import React from 'react';
+import {
+  Box,
+  VStack,
+  Text,
+  Divider,
+  HStack,
+  Flex,
+  Spinner,
+  Button,
+  useDisclosure,
+  Stat,
+  StatHelpText,
+  StatLabel,
+  StatNumber,
+  SimpleGrid,
+} from '@chakra-ui/react';
+import React, { useEffect, useState } from 'react';
 
-import { truncateToTwoDecimals } from '@/utils';
-import { shiftDigits, formatQasset } from '@/utils';
+
+import { shiftDigits, formatQasset, formatNumber } from '@/utils';
 
 import QDepositModal from './modals/qTokenDepositModal';
 import QWithdrawModal from './modals/qTokenWithdrawlModal';
 
 
+
 interface AssetCardProps {
+  address: string;
   assetName: string;
   balance: string;
   apy: number;
@@ -17,9 +33,12 @@ interface AssetCardProps {
   redemptionRates: string;
   isWalletConnected: boolean;
   nonNative: LiquidRewardsData | undefined;
+  liquidRewards: LiquidRewardsData | undefined;
+  refetch: () => void;
 }
 
 interface AssetGridProps {
+  address: string;
   isWalletConnected: boolean;
   assets: Array<{
     name: string;
@@ -29,6 +48,8 @@ interface AssetGridProps {
     redemptionRates: string;
   }>;
   nonNative: LiquidRewardsData | undefined;
+  liquidRewards: LiquidRewardsData | undefined;
+  refetch: () => void;
 }
 
 type Amount = {
@@ -53,36 +74,71 @@ type LiquidRewardsData = {
   errors: Errors;
 };
 
-const AssetCard: React.FC<AssetCardProps> = ({ assetName, balance, apy, redemptionRates }) => {
-  const calculateTotalBalance = (nonNative: LiquidRewardsData | undefined, nativeAssetName: string) => {
-    if (!nonNative) {
-      return '0';
-    }
-    const chainIds = ['osmosis-1', 'secret-1', 'umee-1', 'cosmoshub-4', 'stargaze-1', 'sommelier-3', 'regen-1', 'juno-1', 'dydx-mainnet-1'];
-    let totalAmount = 0;
-
-    chainIds.forEach((chainId) => {
-      const assetsInChain = nonNative?.assets[chainId];
-      if (assetsInChain) {
-        assetsInChain.forEach((asset: any) => {
-          const assetAmount = asset.Amount.find((amount: { denom: string }) => amount.denom === `uq${nativeAssetName.toLowerCase()}`);
-          if (assetAmount) {
-            totalAmount += parseInt(assetAmount.amount, 10);
-          }
-        });
-      }
-    });
-
-    return shiftDigits(totalAmount.toString(), -6);
+const AssetCard: React.FC<AssetCardProps> = ({ address, assetName, balance, apy, redemptionRates, liquidRewards, refetch }) => {
+  const chainIdToName: { [key: string]: string } = {
+    'osmosis-1': 'osmosis',
+    'secret-1': 'secretnetwork',
+    'umee-1': 'umee',
+    'cosmoshub-4': 'cosmoshub',
+    'stargaze-1': 'stargaze',
+    'sommelier-3': 'sommelier',
+    'regen-1': 'regen',
+    'juno-1': 'juno',
+    'dydx-mainnet-1': 'dydx',
   };
 
-  // const nativeAssets = nonNative?.assets['quicksilver-2']
-  //   ? nonNative.assets['quicksilver-2'][0].Amount.find((amount) => amount.denom === `uq${nativeAssetName.toLowerCase()}`)
-  //   : undefined;
+  const getChainName = (chainId: string) => {
+    return chainIdToName[chainId] || chainId;
+  };
 
-  // const formattedNonNativeBalance = calculateTotalBalance(nonNative, nativeAssetName);
+  const convertAmount = (amount: string, denom: string) => {
+    if (denom.startsWith('a')) {
+      return shiftDigits(amount, -18);
+    }
 
-  // const formattedNativebalance = nativeAssets ? shiftDigits(nativeAssets.amount, -6) : '0';
+    return shiftDigits(amount, -6);
+  };
+
+  const [interchainDetails, setInterchainDetails] = useState({});
+
+  useEffect(() => {
+    const calculateInterchainBalance = () => {
+      if (!liquidRewards || !liquidRewards.assets) return '0';
+
+      let totalAmount = 0;
+      const assetDenom = `uq${assetName.toLowerCase().replace('q', '')}`;
+      const aAssetDenom = `aq${assetName.toLowerCase().replace('q', '')}`;
+
+      const details: { [key: string]: number } = {};
+
+      Object.keys(liquidRewards.assets).forEach((chainId) => {
+        if (chainId !== 'quicksilver-2') {
+          liquidRewards.assets[chainId].forEach((asset) => {
+            asset.Amount.forEach((amount) => {
+              if (amount.denom === assetDenom || amount.denom === aAssetDenom) {
+                const convertedAmount = parseFloat(convertAmount(amount.amount, amount.denom));
+                totalAmount += convertedAmount;
+                details[getChainName(chainId)] = (details[getChainName(chainId)] || 0) + convertedAmount;
+              }
+            });
+          });
+        }
+      });
+
+      setInterchainDetails(details);
+      return totalAmount.toString();
+    };
+
+    calculateInterchainBalance();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [liquidRewards, assetName]);
+
+  const interchainBalance = Object.values(interchainDetails as { [key: string]: number })
+    .reduce((acc: number, val: number) => acc + val, 0)
+    .toString();
+
+  const withdrawDisclosure = useDisclosure();
+  const depositDisclosure = useDisclosure();
 
   if (balance === undefined || balance === null || apy === undefined || apy === null) {
     return (
@@ -103,79 +159,185 @@ const AssetCard: React.FC<AssetCardProps> = ({ assetName, balance, apy, redempti
   }
 
   return (
-    <VStack bg={'rgba(255,255,255,0.1)'} p={4} boxShadow="lg" align="center" spacing={4} borderRadius="lg" minH="220px">
-      <VStack w="full" align="center" alignItems={'center'} spacing={3}>
-        <HStack w="full" justify="space-between">
-          <Text fontWeight="bold" fontSize={'xl'} isTruncated>
-            {assetName}
+    <VStack bg={'rgba(255,255,255,0.1)'} p={4} boxShadow="lg" align="center" spacing={4} borderRadius="lg" maxH="240px" minH="240px">
+      <HStack w="full" justify="space-between">
+        <Text fontWeight="bold" fontSize={'xl'} isTruncated>
+          {assetName}
+        </Text>
+        <HStack>
+          <Text fontSize="md" fontWeight="bold" isTruncated>
+            {Number(shiftDigits(apy, 2))}%
           </Text>
-          <HStack>
-            <Text fontSize="xs" fontWeight="light" isTruncated>
-              APY:
-            </Text>
-            <Text fontSize="md" fontWeight="bold" isTruncated>
-              {truncateToTwoDecimals(Number(shiftDigits(apy, 2)))}%
-            </Text>
-          </HStack>
+          <Text fontSize="xs" fontWeight="light" isTruncated>
+            APY
+          </Text>
         </HStack>
-        <Divider bgColor={'complimentary.900'} />
-        <Grid mt={4} templateColumns="repeat(2, 1fr)" gap={4} w="full">
-          <GridItem>
-            <Text fontSize="md" textAlign="left">
-              ON QUICKSILVER:
-            </Text>
-          </GridItem>
-          <GridItem>
-            <Text fontSize="md" textAlign="right" fontWeight="semibold">
-              {balance.toString()} {assetName}
-            </Text>
-          </GridItem>
-          {balance > '0' ? (
-            <>
-              <GridItem>
-                <Text fontSize="md" textAlign="left">
-                  REDEEMABLE FOR:
-                </Text>
-              </GridItem>
-              <GridItem>
-                <Text fontSize="md" textAlign="right" fontWeight="semibold">
-                  {truncateToTwoDecimals(Number(balance) * Number(redemptionRates)).toString()} {assetName.slice('q'.length)}
-                </Text>
-              </GridItem>
-            </>
-          ) : (
-            <>
-              <GridItem>
-                <Text fontSize="md" textAlign="left" visibility="hidden">
-                  REDEEMABLE FOR:
-                </Text>
-              </GridItem>
-              <GridItem>
-                <Text fontSize="md" textAlign="right" fontWeight="semibold" visibility="hidden">
-                  Placeholder
-                </Text>
-              </GridItem>
-            </>
-          )}
-        </Grid>
-      </VStack>
-      <HStack w="full" pb={4} pt={4} spacing={2}>
-        <QDepositModal token={assetName} />
-        <QWithdrawModal token={assetName} />
+      </HStack>
+      <Divider bgColor={'complimentary.900'} />
+      <HStack h="140px" justifyContent={'space-between'} w="full">
+        <VStack minH="150px" alignItems="left">
+          <Stat color={'white'}>
+            <StatLabel fontSize={'lg'}>On Quicksilver</StatLabel>
+            <StatNumber color={'complimentary.900'} fontSize={'md'}>
+              {formatNumber(parseFloat(balance))} {assetName}
+            </StatNumber>
+
+            {Number(balance) > 0 && (
+              <>
+                <StatHelpText mt={2} fontSize={'md'}>
+                  Redeem For
+                </StatHelpText>
+                <StatHelpText mt={-2} color={'complimentary.400'} fontSize={'sm'}>
+                  {formatNumber(parseFloat(balance) / Number(redemptionRates))} {assetName.replace('q', '')}
+                </StatHelpText>
+              </>
+            )}
+          </Stat>
+          <Button
+            _active={{ transform: 'scale(0.95)', color: 'complimentary.800' }}
+            _hover={{ bgColor: 'rgba(255,128,0, 0.25)', color: 'complimentary.300' }}
+            color="white"
+            size="sm"
+            w="130px"
+            variant="outline"
+            onClick={withdrawDisclosure.onOpen}
+            isDisabled={Number(balance) === 0}
+          >
+            Withdraw
+          </Button>
+          <QWithdrawModal refetch={refetch} max={balance} isOpen={withdrawDisclosure.isOpen} onClose={withdrawDisclosure.onClose} token={assetName} />
+        </VStack>
+
+        <VStack minH="150px" alignItems="left">
+          <Stat color={'white'}>
+            <StatLabel fontSize={'lg'}>Interchain</StatLabel>
+            <StatNumber color={'complimentary.900'} fontSize={'md'}>
+              {formatNumber(parseFloat(interchainBalance))} {assetName}
+            </StatNumber>
+
+            {Number(interchainBalance) > 0 && (
+              <>
+                <StatHelpText mt={2} fontSize={'md'}>
+                  Redeem For
+                </StatHelpText>
+                <StatHelpText mt={-2} color={'complimentary.400'} fontSize={'sm'}>
+                  {formatNumber(parseFloat(interchainBalance) / Number(redemptionRates))} {assetName.replace('q', '')}
+                </StatHelpText>
+              </>
+            )}
+          </Stat>
+          <Button
+            _active={{ transform: 'scale(0.95)', color: 'complimentary.800' }}
+            _hover={{ bgColor: 'rgba(255,128,0, 0.25)', color: 'complimentary.300' }}
+            color="white"
+            size="sm"
+            w="130px"
+            variant="outline"
+            onClick={depositDisclosure.onOpen}
+            isDisabled={Number(interchainBalance) === 0}
+          >
+            Deposit
+          </Button>
+          <QDepositModal
+          refetch={refetch}
+            interchainDetails={interchainDetails}
+            isOpen={depositDisclosure.isOpen}
+            onClose={depositDisclosure.onClose}
+            token={assetName}
+          />
+        </VStack>
       </HStack>
     </VStack>
   );
 };
 
-const AssetsGrid: React.FC<AssetGridProps> = ({ assets, isWalletConnected, nonNative }) => {
+const AssetsGrid: React.FC<AssetGridProps> = ({ address, assets, isWalletConnected, nonNative, liquidRewards, refetch }) => {
+  const scrollRef = React.useRef<HTMLDivElement>(null);
+  const [focusedIndex, setFocusedIndex] = useState(0);
+
+  const handleMouseEnter = (index: number) => {
+    setFocusedIndex(index);
+  };
+
+  // const scrollByOne = (direction: 'left' | 'right') => {
+  //   if (!scrollRef.current) return;
+
+  //   const cardWidth = 380;
+  //   let newIndex = focusedIndex;
+
+  //   if (direction === 'left' && focusedIndex > 0) {
+  //     scrollRef.current.scrollBy({ left: -cardWidth, behavior: 'smooth' });
+  //     newIndex = focusedIndex - 1;
+  //   } else if (direction === 'right' && focusedIndex < assets.length - 1) {
+  //     scrollRef.current.scrollBy({ left: cardWidth, behavior: 'smooth' });
+  //     newIndex = focusedIndex + 1;
+  //   }
+
+  //   setFocusedIndex(newIndex);
+  // };
+
+  // const getZoneName = (qAssetName: string) => {
+  //   switch (qAssetName) {
+  //     case 'QATOM':
+  //       return 'Cosmos';
+  //     case 'QOSMO':
+  //       return 'Osmosis';
+  //     case 'QSTARS':
+  //       return 'Stargaze';
+  //     case 'QSOMM':
+  //       return 'Sommelier';
+  //     case 'QREGEN':
+  //       return 'Regen';
+  //     case 'QJUNO':
+  //       return 'Juno';
+  //     case 'QDYDX':
+  //       return 'DyDx';
+
+  //     default:
+  //       return qAssetName;
+  //   }
+  // };
+
   return (
     <>
-      <HStack alignItems="center" mb={4}>
+      {/* Carousel controls and title */}
+      <Flex justifyContent="space-between" alignItems="center" mb={4}>
         <Text fontSize="xl" fontWeight="bold" color="white">
           qAssets
         </Text>
-      </HStack>
-      {!isWalletConnected && (
+        {/* <Flex alignItems="center" gap="2">
+          <IconButton
+            icon={<ChevronLeftIcon />}
+            onClick={() => scrollByOne('left')}
+            aria-label="Scroll left"
+            variant="ghost"
+            _hover={{ bgColor: 'transparent', color: 'complimentary.900' }}
+            _active={{ transform: 'scale(0.75)', color: 'complimentary.800' }}
+            color="white"
+            isDisabled={focusedIndex === 0}
+            _disabled={{ cursor: 'default' }}
+          />
+          <Box minWidth="100px" textAlign="center">
+            <Text fontSize="md" fontWeight="bold" color="white">
+              {getZoneName(assets[focusedIndex]?.name)}
+            </Text>
+          </Box>
+          <IconButton
+            icon={<ChevronRightIcon />}
+            onClick={() => scrollByOne('right')}
+            aria-label="Scroll right"
+            variant="ghost"
+            _hover={{ bgColor: 'transparent', color: 'complimentary.900' }}
+            _active={{ transform: 'scale(0.75)', color: 'complimentary.800' }}
+            color="white"
+            isDisabled={focusedIndex === assets.length - 1}
+            _disabled={{ cursor: 'default' }}
+          />
+        </Flex> */}
+      </Flex>
+
+      {/* Carousel content */}
+      {!isWalletConnected ? (
         <Flex
           backdropFilter="blur(50px)"
           bgColor="rgba(255,255,255,0.1)"
@@ -191,16 +353,18 @@ const AssetsGrid: React.FC<AssetGridProps> = ({ assets, isWalletConnected, nonNa
             Wallet is not connected! Please connect your wallet to interact with your qAssets.
           </Text>
         </Flex>
-      )}
-      {isWalletConnected && (
-        <Grid
-          templateColumns={{ base: 'repeat(1, 1fr)', sm: 'repeat(1, 1fr)', md: 'repeat(1, 1fr)', lg: 'repeat(3, 1fr)' }}
-          gap={8}
-          w="100%"
-        >
-          {assets.map((asset, index) => (
-            <Box key={index} minW="350px">
+      ) : (
+        <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={8} w="full" py={4} ref={scrollRef}>
+          {assets?.map((asset, index) => (
+            <Box
+              key={index}
+              minW="350px"
+              transform={focusedIndex === index ? 'translateY(-10px)' : 'none'}
+              transition="transform 0.1s"
+              onMouseEnter={() => handleMouseEnter(index)}
+            >
               <AssetCard
+                address={address}
                 isWalletConnected={isWalletConnected}
                 assetName={formatQasset(asset.name)}
                 nativeAssetName={asset.native}
@@ -208,12 +372,15 @@ const AssetsGrid: React.FC<AssetGridProps> = ({ assets, isWalletConnected, nonNa
                 apy={asset.apy}
                 nonNative={nonNative}
                 redemptionRates={asset.redemptionRates}
+                liquidRewards={liquidRewards}
+                refetch={refetch}
               />
             </Box>
           ))}
-        </Grid>
+        </SimpleGrid>
       )}
     </>
   );
 };
+
 export default AssetsGrid;
