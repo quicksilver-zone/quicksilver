@@ -16,7 +16,7 @@ export function useSkipExecute(skipClient: SkipRouter) {
         let broadcastToastId: ToastId | null = null;
 
         try {
-            console.log({ route, userAddresses });
+   
             return await skipClient.executeRoute({
                 route,
                 userAddresses,

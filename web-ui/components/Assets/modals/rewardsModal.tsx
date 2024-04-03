@@ -161,7 +161,7 @@ const handleExecuteRoute = async () => {
   for (const route of routesData) {
     try {
       await executeRoute(route, addresses, refetch);
-      console.log('Transaction for route completed');
+
     } catch (error) {
       console.error('Error executing route:', error);
       setIsSigning(false);
