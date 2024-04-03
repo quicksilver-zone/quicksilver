@@ -1,7 +1,9 @@
 import { useChain } from '@cosmos-kit/react';
+import {SkipRouter, SKIP_API_URL} from '@skip-router/core';
 import { useQueries, useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import { cosmos } from 'interchain-query';
+import { QueryAllBalancesResponse } from 'quicksilverjs/dist/codegen/cosmos/bank/v1beta1/query';
 import { Zone } from 'quicksilverjs/dist/codegen/quicksilver/interchainstaking/v1/interchainstaking';
 
 import { useGrpcQueryClient } from './useGrpcQueryClient';
@@ -30,11 +32,6 @@ type WithdrawalsResponse = {
   pagination: any; 
 };
 
-type UseWithdrawalsQueryReturnType = {
-  data: WithdrawalsResponse | undefined;
-  isLoading: boolean;
-  isError: boolean;
-};
 
 type Amount = {
   denom: string;
@@ -71,6 +68,7 @@ type UseLiquidRewardsQueryReturnType = {
   liquidRewards: LiquidRewardsData | undefined;
   isLoading: boolean;
   isError: boolean;
+  refetch: () => void;
 };
 
 interface ProofOp {
@@ -81,12 +79,13 @@ interface ProofOp {
 
 interface Proof {
   key: Uint8Array;  
-  data: Uint8Array; 
-  proof_ops: {
+  data: Uint8Array;
+  proofType: string;
+  proofOps: {
     ops: ProofOp[];
   };
   height: Long; 
-  proof_type: string;
+  proofTypes: string;
 }
 
 interface Message {
@@ -116,6 +115,9 @@ interface UseLiquidEpochQueryReturnType {
   isError: boolean;
 }
 
+const skipClient = new SkipRouter({
+  apiURL: SKIP_API_URL,
+});
 
 const BigNumber = require('bignumber.js');
 const Long = require('long');
@@ -147,6 +149,7 @@ export const useBalanceQuery = (chainName: string, address: string) => {
     balance: balanceQuery.data,
     isLoading: balanceQuery.isLoading,
     isError: balanceQuery.isError,
+    refetchBalance: balanceQuery.refetch,
   };
 };
 
@@ -209,6 +212,7 @@ export const useAuthChecker = (address: string) => {
     authError: authQuery.data?.error,
     isLoading: authQuery.isLoading,
     isError: authQuery.isError,
+    authRefetch: authQuery.refetch,
   };
 };
 
@@ -276,6 +280,7 @@ export const useAllBalancesQuery = (chainName: string, address: string) => {
     balance: balancesQuery.data,
     isLoading: balancesQuery.isLoading,
     isError: balancesQuery.isError,
+    refetch: balancesQuery.refetch,
   };
 };
 
@@ -361,6 +366,57 @@ export const useQBalanceQuery = (chainName: string, address: string, qAsset: str
     balance: balanceQuery.data,
     isLoading: balanceQuery.isLoading,
     isError: balanceQuery.isError,
+    refetch: balanceQuery.refetch,
+  };
+};
+
+export const useQBalancesQuery = (chainName: string, address: string, grpcQueryClient: { cosmos: { bank: { v1beta1: { allBalances: (arg0: { address: string; pagination: { key: Uint8Array; offset: any; limit: any; countTotal: boolean; reverse: boolean; }; }) => any; }; }; }; } | undefined) => {
+
+
+  const allQBalanceQuery = useQuery(
+    ['balances', address],
+    async () => {
+      if (!grpcQueryClient) {
+        throw new Error('RPC Client not ready');
+      }
+
+
+
+      const next_key = new Uint8Array();
+      const balance = await grpcQueryClient.cosmos.bank.v1beta1.allBalances({
+        address: address || '',
+        pagination: {
+          key: next_key,
+          offset: Long.fromNumber(0),
+          limit: Long.fromNumber(100),
+          countTotal: true,
+          reverse: false,
+        },
+      });
+
+      return balance;
+    },
+    {
+      enabled: !!grpcQueryClient && !!address,
+      staleTime: 0,
+    },
+  );
+
+  const sortAndFindQAssets = (balances: QueryAllBalancesResponse) => {
+    return balances.balances?.filter(b => 
+        (b.denom.startsWith('uq') || b.denom.startsWith('aq')) &&
+        !b.denom.startsWith('uqck') &&
+        !b.denom.includes('ibc/') 
+      )
+      .sort((a, b) => a.denom.localeCompare(b.denom));
+  };
+
+
+  return {
+    qbalance: sortAndFindQAssets(allQBalanceQuery.data ?? {} as QueryAllBalancesResponse),
+    qIsLoading: allQBalanceQuery.isLoading,
+    qIsError: allQBalanceQuery.isError,
+    qRefetch: allQBalanceQuery.refetch,
   };
 };
 
@@ -369,6 +425,8 @@ export const useIntentQuery = (chainName: string, address: string) => {
   const { chain } = useChain(chainName);
   const env = process.env.NEXT_PUBLIC_CHAIN_ENV;
   const baseApiUrl = env === 'testnet' ? 'https://lcd.test.quicksilver.zone' : 'https://lcd.quicksilver.zone';
+  
+  // Determine the chain ID based on the chain name
   let chainId = chain.chain_id;
   if (chainName === 'osmosistestnet') {
     chainId = 'osmo-test-5';
@@ -378,25 +436,24 @@ export const useIntentQuery = (chainName: string, address: string) => {
     chainId = 'elgafar-1';
   } else if (chainName === 'osmo-test-5') {
     chainId = 'osmosistestnet';
- 
   } else {
-
     chainId = chain.chain_id;
   }
+
   const intentQuery = useQuery(
-    ['intent', chainName],
+    ['intent', chainName, address], 
     async () => {
       if (!grpcQueryClient) {
         throw new Error('RPC Client not ready');
       }
 
       const intent = await axios.get(`${baseApiUrl}/quicksilver/interchainstaking/v1/zones/${chainId}/delegator_intent/${address}`)
-
       return intent;
     },
     {
-      enabled: !!grpcQueryClient && !!address,
+      enabled: !!grpcQueryClient && !!address, 
       staleTime: Infinity,
+      cacheTime: 0, 
     },
   );
 
@@ -421,7 +478,7 @@ export const useLiquidRewardsQuery = (address: string): UseLiquidRewardsQueryRet
     },
     {
       enabled:!!address,
-      staleTime: Infinity,
+      staleTime: 0,
     },
   );
 
@@ -429,6 +486,7 @@ export const useLiquidRewardsQuery = (address: string): UseLiquidRewardsQueryRet
     liquidRewards: liquidRewardsQuery.data,
     isLoading: liquidRewardsQuery.isLoading,
     isError: liquidRewardsQuery.isError,
+    refetch: liquidRewardsQuery.refetch,
   };
 
 }
@@ -583,6 +641,19 @@ const fetchAPY = async (chainId: any) => {
   return chainInfo ? chainInfo.apr : 0;
 };
 
+const fetchAPYs = async () => {
+  const res = await axios.get(`${process.env.NEXT_PUBLIC_QUICKSILVER_DATA_API}/apr`);
+  const { chains } = res.data;
+  if (!chains) {
+    return {};
+  }
+  const apys = chains.reduce((acc: { [x: string]: any; }, chain: { chain_id: string | number; apr: any; }) => {
+    acc[chain.chain_id] = chain.apr;
+    return acc;
+  }, {});
+  return apys;
+};
+
 
 
 export const useAPYQuery = (chainId: any, liveNetworks?: string[] ) => {
@@ -600,6 +671,24 @@ export const useAPYQuery = (chainId: any, liveNetworks?: string[] ) => {
       APY: query.data,
       isLoading: query.isLoading,
       isError: query.isError,
+  };
+};
+
+export const useAPYsQuery = () => {
+  const query = useQuery(
+    ['APY'],
+    () => fetchAPYs(),
+    {
+      staleTime: Infinity,
+      enabled: true,
+    }
+  );
+
+  return {
+    APYs: query.data,
+    APYsLoading: query.isLoading,
+    APYsError: query.isError,
+    APYsRefetch : query.refetch,
   };
 };
 
@@ -713,6 +802,42 @@ export const useZoneQuery = (chainId: string, liveNetworks?: string[]) => {
       enabled: !!chainId && isLive
     }
   );
+};
+
+export const useRedemptionRatesQuery = () => {
+  const query = useQuery(
+    ['zones'],
+    async () => {
+      const res = await axios.get(`${process.env.NEXT_PUBLIC_QUICKSILVER_API}/quicksilver/interchainstaking/v1/zones`);
+      const { zones } = res.data;
+
+      if (!zones || zones.length === 0) {
+        throw new Error('Failed to query zones');
+      }
+      
+
+      const rates = zones.reduce((acc: { [x: string]: { current: number; last: number; }; }, zone: { chain_id: string | number; redemption_rate: string; last_redemption_rate: string; }) => {
+        acc[zone.chain_id] = {
+          current: parseFloat(zone.redemption_rate),
+          last: parseFloat(zone.last_redemption_rate),
+        };
+        return acc;
+      }, {});
+
+      return rates;
+    },
+    {
+      staleTime: Infinity,
+      enabled: true,
+    }
+  );
+
+  return {
+    redemptionRates: query.data,
+    redemptionLoading: query.isLoading,
+    redemptionError: query.isError,
+    redemptionRefetch: query.refetch,
+  };
 };
 
 export const useValidatorLogos = (
@@ -884,5 +1009,84 @@ export const useNativeStakeQuery = (chainName: string, address: string) => {
     delegations: delegationQuery.data,
     delegationsIsLoading: delegationQuery.isLoading,
     delegationsIsError: delegationQuery.isError,
+    refetchDelegations: delegationQuery.refetch
   };
 }
+
+export const useSkipAssets = (chainId: string) => {
+
+  const assetsQuery = useQuery(
+    ['skipAssets', chainId],
+    async () => {
+      const assets = await skipClient.assets({
+        chainID: chainId,
+        includeEvmAssets: true,
+        includeCW20Assets: true,
+        includeSvmAssets: true,
+      });
+
+      return assets;
+    },
+    {
+      staleTime: Infinity,
+    },
+  );
+
+  return {
+    assets: assetsQuery.data,
+    assetsIsLoading: assetsQuery.isLoading,
+    assetsIsError: assetsQuery.isError,
+  };
+};
+
+export const useSkipReccomendedRoutes = (reccomendedRoutes: { sourceDenom: string; sourceChainId: string; destChainId: string; }[]) => {
+  const routesQueries = useQueries({
+    queries: reccomendedRoutes.map((reccomendedRoutes) => ({
+      queryKey: ['skipReccomendedRoutes', reccomendedRoutes.sourceChainId, reccomendedRoutes.sourceDenom, reccomendedRoutes.destChainId],
+      queryFn: async () => {
+        const routes = await skipClient.recommendAssets({
+          sourceAssetDenom: reccomendedRoutes.sourceDenom,
+          sourceAssetChainID: reccomendedRoutes.sourceChainId,
+          destChainID: reccomendedRoutes.destChainId,
+        });
+        return routes;
+      },
+      enabled: !!reccomendedRoutes.sourceDenom && !!reccomendedRoutes.sourceChainId && !!reccomendedRoutes.destChainId,
+      staleTime: Infinity,
+    }))
+  });
+
+  return {
+    routes: routesQueries.map(query => query.data),
+    routesIsLoading: routesQueries.some(query => query.isLoading),
+    routesIsError: routesQueries.some(query => query.isError),
+  };
+};
+
+export const useSkipRoutesData = (routes: { amountIn: string, sourceDenom: string; sourceChainId: string; destDenom: string, destChainId: string; }[]) => {
+  const routesDataQuery = useQueries({
+    queries: routes.map((route) => ({
+      queryKey: ['skipRoutesData', route.amountIn, route.sourceDenom, route.sourceChainId, route.destDenom, route.destChainId],
+      queryFn: async () => {
+        const routes = await skipClient.route({
+          amountIn: route.amountIn,
+          sourceAssetDenom: route.sourceDenom,
+          sourceAssetChainID: route.sourceChainId,
+          destAssetDenom: route.destDenom,
+          destAssetChainID: route.destChainId,
+          cumulativeAffiliateFeeBPS: '0',
+          allowMultiTx: true,
+        });
+        return routes;
+      },
+      enabled: !!route.sourceDenom && !!route.sourceChainId && !!route.destChainId,
+      staleTime: Infinity,
+    }))
+  });
+
+  return {
+    routesData: routesDataQuery.map(query => query.data),
+    routesDataIsLoading: routesDataQuery.some(query => query.isLoading),
+    routesDataIsError: routesDataQuery.some(query => query.isError),
+  };
+};
