@@ -30,28 +30,47 @@ import {
   MenuList,
   Box,
 } from '@chakra-ui/react';
-import { useChains } from '@cosmos-kit/react';
+import { useChain, useChains } from '@cosmos-kit/react';
+import {SkipRouter, SKIP_API_URL} from "@skip-router/core"
 import { ibc } from 'interchain-query';
 import { useCallback, useState } from 'react';
 import { FaInfoCircle } from 'react-icons/fa';
 
+
 import { useTx } from '@/hooks';
 import { useFeeEstimation } from '@/hooks/useFeeEstimation';
-import { useAllBalancesQuery, useSkipAssets } from '@/hooks/useQueries';
+import { useAllBalancesQuery, useSkipAssets, useSkipReccomendedRoutes, useSkipRoutesData } from '@/hooks/useQueries';
+import { useSkipExecute } from '@/hooks/useSkipExecute';
 import { shiftDigits } from '@/utils';
 
 const RewardsModal = ({
   address,
-
   isOpen,
   onClose,
 }: {
   address: string;
-
   isOpen: boolean;
   onClose: () => void;
 }) => {
-  const { balance } = useAllBalancesQuery('quicksilver', address);
+  const { wallet } = useChain('quicksilver');
+
+  const walletMapping: { [key: string]: any } = {
+    'Keplr': window.keplr?.getOfflineSignerOnlyAmino,
+    'Cosmostation':  window.cosmostation?.providers.keplr.getOfflineSignerOnlyAmino,
+    'Leap': window.leap.getOfflineSignerOnlyAmino, 
+  };
+  
+  const offlineSigner = wallet ? walletMapping[wallet.prettyName] : undefined;
+  const skipClient = new SkipRouter({
+    apiURL: SKIP_API_URL,
+    getCosmosSigner: offlineSigner,
+    endpointOptions: {
+      endpoints: {
+        "quicksilver-2": { rpc: "https://rpc.quicksilver.zone/" },
+      },
+    },
+  });
+  const { balance, refetch } = useAllBalancesQuery('quicksilver', address);
   const [isSigning, setIsSigning] = useState<boolean>(false);
   const [isBottomVisible, setIsBottomVisible] = useState(true);
 
@@ -64,9 +83,9 @@ const RewardsModal = ({
   const chains = useChains(['cosmoshub', 'osmosis', 'stargaze', 'juno', 'sommelier', 'regen', 'dydx']);
 
   const { assets: skipAssets } = useSkipAssets('quicksilver-2');
-
   const balanceData = balance?.balances || [];
 
+  // maps through the balance query to get the token details and assigns them to the correct values for the skip router
   const getMappedTokenDetails = () => {
     const denomArray = skipAssets?.['quicksilver-2'] || [];
 
@@ -97,13 +116,69 @@ const RewardsModal = ({
 
   const tokenDetails = getMappedTokenDetails();
 
-  const { tx } = useTx('quicksilver');
+  // maps through the token details to get the route objects for the skip router
+  const osmosisRouteObjects = tokenDetails.map(token => ({
+    sourceDenom: token?.denom ?? '',
+    sourceChainId: 'quicksilver-2',
+    destChainId: 'osmosis-1', 
+  }));
+
+  const { routes: osmosisRoutes } = useSkipReccomendedRoutes(osmosisRouteObjects)
+// maps through the token details and the route objects to get the specific token details for the skip router
+const osmosisRoutesDataObjects = tokenDetails.flatMap((token, index) => {
+  return osmosisRoutes[index]?.flatMap(route => {
+    return route.recommendations.map(recommendation => {
+      return {
+        amountIn: token?.amount ?? '0',
+        sourceDenom: token?.denom ?? '',
+        sourceChainId: 'quicksilver-2',
+        destDenom: recommendation.asset.denom ?? '',
+        destChainId: recommendation.asset.chainID ?? '',
+      };
+    });
+  });
+}).filter(Boolean) as { amountIn: string; sourceDenom: string; sourceChainId: string; destDenom: string; destChainId: string; }[]; 
+const { routesData } = useSkipRoutesData(osmosisRoutesDataObjects)
+
+
+const executeRoute = useSkipExecute(skipClient);
+// uses all the data gathered to create the ibc transactions for sending assets to osmosis. 
+const handleExecuteRoute = async () => {
+  setIsSigning(true);
+
+  const addresses = {
+    'quicksilver-2': address,
+    'osmosis-1': chains.osmosis.address,
+    'cosmoshub-4': chains.cosmoshub.address,
+    'stargaze-1': chains.stargaze.address,
+    'sommelier-3': chains.sommelier.address,
+    'regen-1': chains.regen.address,
+    'juno-1': chains.juno.address,
+    'dydx-mainnet-1': chains.dydx.address,
+  };
+
+  // Execute each route in sequence
+  for (const route of routesData) {
+    try {
+      await executeRoute(route, addresses, refetch);
+      console.log('Transaction for route completed');
+    } catch (error) {
+      console.error('Error executing route:', error);
+      setIsSigning(false);
+      return; 
+    }
+  }
+
+  setIsSigning(false);
+};
+
+const { tx } = useTx('quicksilver');
   const { transfer } = ibc.applications.transfer.v1.MessageComposer.withTypeUrl;
   const { estimateFee } = useFeeEstimation('quicksilver');
 
   const onSubmitClick = async () => {
     setIsSigning(true);
-
+    
     const messages = [];
 
     for (const tokenDetail of tokenDetails) {
@@ -114,7 +189,7 @@ const RewardsModal = ({
 
       const [_, channel] = tokenDetail?.trace.split('/') ?? '';
       const sourcePort = 'transfer';
-      const sourceChannel = destination === 'osmosis' ? 'channel-2' : channel;
+      const sourceChannel = channel;
       const senderAddress = address ?? '';
 
       const ibcToken = {
@@ -140,7 +215,7 @@ const RewardsModal = ({
       };
 
       const chain = chains[getChainName(tokenDetail?.originChainId ?? '') ?? ''];
-      const receiverAddress = destination === 'osmosis' ? chains.osmosis.address ?? '' : chain?.address ?? '';
+      const receiverAddress = chain?.address ?? '';
 
       const msg = transfer({
         sourcePort,
@@ -265,7 +340,7 @@ const RewardsModal = ({
                   size="sm"
                   w="160px"
                   variant="outline"
-                  onClick={onSubmitClick}
+                  onClick={() => destination === 'osmosis' ? handleExecuteRoute() : onSubmitClick()}
                 >
                   {isSigning === true && <Spinner size="sm" />}
                   {isSigning === false && 'Unwind'}
@@ -288,7 +363,7 @@ const RewardsModal = ({
                     <MenuItem
                       onClick={() => setDestination('parentChains')}
                       bgColor={'rgb(26,26,26)'}
-                      _hover={{ bg: '#2a2a2a' }}
+                      _hover={{ bg: 'complimentary.400' }}
                       _focus={{ bg: '#2a2a2a' }}
                     >
                       Parent Chains
@@ -296,7 +371,7 @@ const RewardsModal = ({
                     <MenuItem
                       onClick={() => setDestination('osmosis')}
                       bgColor={'rgb(26,26,26)'}
-                      _hover={{ bg: '#2a2a2a' }}
+                      _hover={{ bg: 'complimentary.400' }}
                       _focus={{ bg: '#2a2a2a' }}
                     >
                       Osmosis

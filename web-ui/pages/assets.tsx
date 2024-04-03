@@ -42,7 +42,7 @@ function Home() {
   const { redemptionRates, redemptionLoading } = useRedemptionRatesQuery();
   const { APY: quickAPY } = useAPYQuery('quicksilver-2');
   const { liquidRewards, refetch: liquidRefetch } = useLiquidRewardsQuery(address ?? '');
-  const { authData, authError } = useAuthChecker(address ?? '');
+  const { authData, authError, authRefetch } = useAuthChecker(address ?? '');
 
   
 
@@ -323,7 +323,7 @@ const assetsData = useMemo(() => {
         </Container>
         {showRewardsClaim && (
           <SlideFade in={showRewardsClaim} offsetY="20px" style={{ position: 'fixed', right: '20px', bottom: '20px', zIndex: 10 }}>
-            <RewardsClaim address={address ?? ''} onClose={closeRewardsClaim} />
+            <RewardsClaim refetch={authRefetch} address={address ?? ''} onClose={closeRewardsClaim} />
           </SlideFade>
         )}
       </SlideFade>

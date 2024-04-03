@@ -79,7 +79,8 @@ interface ProofOp {
 
 interface Proof {
   key: Uint8Array;  
-  data: Uint8Array; 
+  data: Uint8Array;
+  proofType: string;
   proofOps: {
     ops: ProofOp[];
   };
@@ -211,6 +212,7 @@ export const useAuthChecker = (address: string) => {
     authError: authQuery.data?.error,
     isLoading: authQuery.isLoading,
     isError: authQuery.isError,
+    authRefetch: authQuery.refetch,
   };
 };
 
@@ -1014,7 +1016,7 @@ export const useNativeStakeQuery = (chainName: string, address: string) => {
 export const useSkipAssets = (chainId: string) => {
 
   const assetsQuery = useQuery(
-    ['assets', chainId],
+    ['skipAssets', chainId],
     async () => {
       const assets = await skipClient.assets({
         chainID: chainId,
@@ -1037,25 +1039,54 @@ export const useSkipAssets = (chainId: string) => {
   };
 };
 
-export const useRecommendations = (source_asset_denom: string, source_asset_chain_id: string, dest_chain_id: string) => {
-  const recommendationsQuery = useQuery(
-    ['requests', source_asset_chain_id],
-    async () => {
-      const recommendations = await skipClient.recommendAssets([{
-        sourceAssetDenom: source_asset_denom,
-        sourceAssetChainID: source_asset_chain_id,
-        destChainID: dest_chain_id,
-      }]);
-      return recommendations;
-    },
-    {
+export const useSkipReccomendedRoutes = (reccomendedRoutes: { sourceDenom: string; sourceChainId: string; destChainId: string; }[]) => {
+  const routesQueries = useQueries({
+    queries: reccomendedRoutes.map((reccomendedRoutes) => ({
+      queryKey: ['skipReccomendedRoutes', reccomendedRoutes.sourceChainId, reccomendedRoutes.sourceDenom, reccomendedRoutes.destChainId],
+      queryFn: async () => {
+        const routes = await skipClient.recommendAssets({
+          sourceAssetDenom: reccomendedRoutes.sourceDenom,
+          sourceAssetChainID: reccomendedRoutes.sourceChainId,
+          destChainID: reccomendedRoutes.destChainId,
+        });
+        return routes;
+      },
+      enabled: !!reccomendedRoutes.sourceDenom && !!reccomendedRoutes.sourceChainId && !!reccomendedRoutes.destChainId,
       staleTime: Infinity,
-    },
-  );
+    }))
+  });
 
   return {
-    recommendations: recommendationsQuery.data,
-    recommendationsIsLoading: recommendationsQuery.isLoading,
-    recommendationsIsError: recommendationsQuery.isError,
+    routes: routesQueries.map(query => query.data),
+    routesIsLoading: routesQueries.some(query => query.isLoading),
+    routesIsError: routesQueries.some(query => query.isError),
+  };
+};
+
+export const useSkipRoutesData = (routes: { amountIn: string, sourceDenom: string; sourceChainId: string; destDenom: string, destChainId: string; }[]) => {
+  const routesDataQuery = useQueries({
+    queries: routes.map((route) => ({
+      queryKey: ['skipRoutesData', route.amountIn, route.sourceDenom, route.sourceChainId, route.destDenom, route.destChainId],
+      queryFn: async () => {
+        const routes = await skipClient.route({
+          amountIn: route.amountIn,
+          sourceAssetDenom: route.sourceDenom,
+          sourceAssetChainID: route.sourceChainId,
+          destAssetDenom: route.destDenom,
+          destAssetChainID: route.destChainId,
+          cumulativeAffiliateFeeBPS: '0',
+          allowMultiTx: true,
+        });
+        return routes;
+      },
+      enabled: !!route.sourceDenom && !!route.sourceChainId && !!route.destChainId,
+      staleTime: Infinity,
+    }))
+  });
+
+  return {
+    routesData: routesDataQuery.map(query => query.data),
+    routesDataIsLoading: routesDataQuery.some(query => query.isLoading),
+    routesDataIsError: routesDataQuery.some(query => query.isError),
   };
 };

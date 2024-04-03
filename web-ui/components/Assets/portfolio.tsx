@@ -1,4 +1,4 @@
-import { Flex, Text, VStack, HStack, Heading, Spinner, SimpleGrid, Center, Image } from '@chakra-ui/react';
+import { Flex, Text, VStack, HStack, Heading, Spinner, SimpleGrid, Center, Image, SkeletonText } from '@chakra-ui/react';
 import { Divider } from '@interchain-ui/react';
 
 import { shiftDigits, formatNumber } from '@/utils';
@@ -114,6 +114,14 @@ const MyPortfolio: React.FC<MyPortfolioProps> = ({
             </SimpleGrid>
           </VStack>
         </Flex>
+        {isLoading && (
+          <Flex w="100%" justifyContent="center" alignItems="center">
+           <SkeletonText noOfLines={1} h={'20px'} w={'120px'} startColor='compplimentary.900' endColor='complimentary.100'  />
+           <SkeletonText noOfLines={1} h={'20px'} w={'120px'} startColor='rgb(107, 105, 105)' endColor='rgb(168, 168, 168)'  />
+           <SkeletonText noOfLines={1} h={'20px'} w={'120px'} startColor='compplimentary.900' endColor='complimentary.100'  />
+           <SkeletonText noOfLines={1} h={'20px'} w={'120px'} startColor='rgb(107, 105, 105)' endColor='rgb(168, 168, 168)'  />
+          </Flex>
+        )}
         {totalValue === 0 && (
           <Flex w="100%" justifyContent="center" alignItems="center">
             <Text fontSize="xl" textAlign="center">
