@@ -139,7 +139,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 				return err
 			}
 			continue
-		case "/cosmos.staking.v1beta1.MsgRedeemTokensForShares":
+		case "/quicksilver.lsmtypes.lsmtypes.MsgRedeemTokensForShares":
 			if !success {
 				if err := k.HandleFailedRedeemTokens(ctx, msg.Msg, packetData.Memo); err != nil {
 					return err
