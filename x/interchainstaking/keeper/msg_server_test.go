@@ -10,7 +10,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-
 	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
 	connectiontypes "github.com/cosmos/ibc-go/v7/modules/core/03-connection/types"
 	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
@@ -657,8 +656,10 @@ func (suite *KeeperTestSuite) TestGovReopenChannel() {
 				}
 				quicksilver.IBCKeeper.ChannelKeeper.SetChannel(ctx, portID, channelID, channelSet)
 
-				quicksilver.IBCKeeper.ClientKeeper.SetClientState(ctx, connectionEnd.ClientId, &tmclienttypes.ClientState{ChainId: suite.chainB.ChainID, TrustingPeriod: time.Hour, LatestHeight: clienttypes.Height{RevisionNumber: 1, RevisionHeight: 100}})
-
+				quicksilver.IBCKeeper.ClientKeeper.SetClientState(ctx, connectionEnd.ClientId, &tmclienttypes.ClientState{ChainId: suite.chainB.ChainID, TrustingPeriod: time.Hour, LatestHeight: clienttypes.Height{RevisionNumber: 1, RevisionHeight: uint64(ctx.BlockHeight())}})
+				quicksilver.IBCKeeper.ClientKeeper.SetClientConsensusState(ctx, connectionEnd.ClientId, clienttypes.Height{RevisionNumber: 1, RevisionHeight: uint64(ctx.BlockHeight())}, &tmclienttypes.ConsensusState{
+					Timestamp: ctx.BlockHeader().Time,
+				})
 				return &icstypes.MsgGovReopenChannel{
 					ConnectionId: connectionID,
 					PortId:       portID,
