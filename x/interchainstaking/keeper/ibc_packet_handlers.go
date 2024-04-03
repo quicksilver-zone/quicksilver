@@ -160,7 +160,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 				return err
 			}
 			continue
-		case "/cosmos.staking.v1beta1.MsgTokenizeShares":
+		case "/quicksilver.lsmtypes.lsmtypes.MsgTokenizeShares":
 			if !success {
 				// We can safely ignore this, as this can reasonably fail, and we cater for this in the flush logic.
 				return nil
