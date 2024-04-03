@@ -62,8 +62,6 @@ const UnbondingAssetsTable: React.FC<UnbondingAssetsTableProps> = ({ address, is
   }
 
   const { unbondingData, isLoading } = useUnbondingQuery(newChainName, address);
-  const userUnbondingData = unbondingData?.withdrawals.filter((withdrawal) => withdrawal.delegator === address);
-
 
   // Handlers for chain slider
   const handleLeftArrowClick = () => {
@@ -79,7 +77,7 @@ const UnbondingAssetsTable: React.FC<UnbondingAssetsTableProps> = ({ address, is
     md: 'table-cell',
   };
 
-  const noUnbondingAssets = isWalletConnected && userUnbondingData?.length === 0;
+  const noUnbondingAssets = isWalletConnected && unbondingData?.withdrawals.length === 0;
   if (!isWalletConnected) {
     return (
       <Flex direction="column" gap={4}>
@@ -277,7 +275,7 @@ const UnbondingAssetsTable: React.FC<UnbondingAssetsTableProps> = ({ address, is
                   </Tr>
                 </Thead>
                 <Tbody>
-                  {userUnbondingData?.map((withdrawal, index) => {
+                  {unbondingData?.withdrawals.map((withdrawal, index) => {
                     const shiftAmount = formatDenom(withdrawal.burn_amount.denom) === 'qDYDX' ? -18 : -6;
                     return (
                       <Tr _even={{ bg: 'rgba(255, 128, 0, 0.1)' }} key={index}>
