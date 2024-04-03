@@ -3,7 +3,7 @@ package app
 import (
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	packetforward "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7/packetforward"
+	"github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7/packetforward"
 	packetforwardtypes "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7/packetforward/types"
 
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -134,7 +134,7 @@ var (
 		participationrewardstypes.ModuleName:       nil,
 		airdroptypes.ModuleName:                    nil,
 		packetforwardtypes.ModuleName:              nil,
-		wasm.ModuleName:                            {authtypes.Burner},
+		wasmtypes.ModuleName:                       {authtypes.Burner},
 		tokenfactorytypes.ModuleName:               {authtypes.Minter, authtypes.Burner},
 	}
 )
@@ -271,7 +271,7 @@ func orderBeginBlockers() []string {
 		paramstypes.ModuleName,
 		vestingtypes.ModuleName,
 		tokenfactorytypes.ModuleName,
-		wasm.ModuleName,
+		wasmtypes.ModuleName,
 		supplytypes.ModuleName,
 	}
 }
@@ -315,7 +315,7 @@ func orderEndBlockers() []string {
 		participationrewardstypes.ModuleName,
 		airdroptypes.ModuleName,
 		tokenfactorytypes.ModuleName,
-		wasm.ModuleName,
+		wasmtypes.ModuleName,
 		supplytypes.ModuleName,
 		// currently no-op.
 	}
@@ -361,7 +361,7 @@ func orderInitBlockers() []string {
 		tokenfactorytypes.ModuleName,
 		supplytypes.ModuleName,
 		// wasmd
-		wasm.ModuleName,
+		wasmtypes.ModuleName,
 		// NOTE: crisis module must go at the end to check for invariants on each module
 		crisistypes.ModuleName,
 	}

@@ -139,7 +139,6 @@ func (suite *KeeperTestSuite) setupChannelForICA(ctx sdk.Context, chainID, conne
 		ctx,
 		chanPath,
 	)
-
 	if err != nil {
 		return err
 	}

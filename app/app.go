@@ -10,6 +10,7 @@ import (
 
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/spf13/cast"
 
@@ -205,7 +206,7 @@ func NewQuicksilver(
 			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
 		},
 		WasmConfig:        wasmConfig,
-		TxCounterStoreKey: app.GetKey(wasm.StoreKey),
+		TxCounterStoreKey: app.GetKey(wasmtypes.StoreKey),
 		IBCKeeper:         app.IBCKeeper,
 	}
 
@@ -422,8 +423,8 @@ func GetMaccPerms() map[string][]string {
 	return dupMaccPerms
 }
 
-func GetWasmOpts(appOpts servertypes.AppOptions) []wasm.Option {
-	var wasmOpts []wasm.Option
+func GetWasmOpts(appOpts servertypes.AppOptions) []wasmkeeper.Option {
+	var wasmOpts []wasmkeeper.Option
 	if cast.ToBool(appOpts.Get("telemetry.enabled")) {
 		wasmOpts = append(wasmOpts, wasmkeeper.WithVMCacheMetrics(prometheus.DefaultRegisterer))
 	}
