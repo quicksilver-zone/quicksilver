@@ -37,14 +37,12 @@ Please ensure your IDE is configured to use Typescript v4.9.3
 
 - [ ] Add support for Dymension
 - [ ] Add more weight options IE `equal`, `custom`, `most votes`, `lowest commission` etc
-- [x] Make back button in staking modal larger
-- [x] Fix skeleton spam when searching for non existent validator in staking modal
 
 **Governance**
 
 **UI/UX**
 
-- [ ] Double check breakpoints
+- [ ] refetch on tx success
 
 **Mobile Menu**
 
@@ -52,7 +50,7 @@ Please ensure your IDE is configured to use Typescript v4.9.3
 
 **DevOps**
 
-- [ ] Add doc for adding networks
+- [ ] Finish doc for adding networks
 
 **Has Blockers**
 

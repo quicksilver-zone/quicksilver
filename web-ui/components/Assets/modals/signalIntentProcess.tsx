@@ -23,7 +23,9 @@ import { assets } from 'chain-registry';
 import { quicksilver } from 'quicksilverjs';
 import React, { useEffect, useState } from 'react';
 
+
 import { useTx } from '@/hooks';
+import { useFeeEstimation } from '@/hooks/useFeeEstimation';
 
 import { IntentMultiModal } from './intentMultiModal';
 
@@ -177,24 +179,14 @@ export const SignalIntentModal: React.FC<StakingModalProps> = ({ isOpen, onClose
     fromAddress: address ?? '',
   });
 
-  const mainTokens = assets.find(({ chain_name }) => chain_name === 'quicksilver');
-  const mainDenom = mainTokens?.assets[0].base ?? 'uqck';
-
-  const fee: StdFee = {
-    amount: [
-      {
-        denom: mainDenom,
-        amount: '5000',
-      },
-    ],
-    gas: '500000',
-  };
-
   const { tx } = useTx('quicksilver' ?? '');
+  const { estimateFee } = useFeeEstimation('quicksilver' ?? '');
 
   const handleSignalIntent = async (event: React.MouseEvent) => {
     event.preventDefault();
     setIsSigning(true);
+
+    const fee = await estimateFee(address ?? "", [msgSignalIntent])
 
     try {
       await tx([msgSignalIntent], {

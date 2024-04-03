@@ -27,11 +27,18 @@ import { cosmos } from 'quicksilverjs';
 import React, { useEffect, useState } from 'react';
 
 
+
+
+
 import { useTx } from '@/hooks';
+import { useFeeEstimation } from '@/hooks/useFeeEstimation';
 import { useZoneQuery } from '@/hooks/useQueries';
 import { shiftDigits } from '@/utils';
 
 import { MultiModal } from './validatorSelectionModal';
+
+
+
 
 const ChakraModalContent = styled(ModalContent)`
   position: relative;
@@ -75,9 +82,10 @@ interface StakingModalProps {
     chainId: string;
   };
   address: string;
+  refetch: () => void;
 }
 
-export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClose, selectedOption, tokenAmount, address }) => {
+export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClose, selectedOption, tokenAmount, address, refetch }) => {
   const [step, setStep] = useState(1);
   const getProgressColor = (circleStep: number) => {
     if (step >= circleStep) return 'complimentary.900';
@@ -263,27 +271,24 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
     feeAmount = shiftDigits(fixedMinGasPrice, 6).toString();
   }
 
-  const fee: StdFee = {
-    amount: [
-      {
-        denom: mainDenom,
-        amount: feeAmount,
-      },
-    ],
-    gas: '500000',
-  };
-
   const { tx } = useTx(newChainName ?? '');
+
+  const { estimateFee } = useFeeEstimation(newChainName ?? '');
+
 
   const handleLiquidStake = async (event: React.MouseEvent) => {
     event.preventDefault();
     setIsSigning(true);
     setTransactionStatus('Pending');
+
+    const feeAmountQuery = await estimateFee(address, [msgSend]);
+
     try {
       await tx([msgSend], {
         memo,
-        fee,
+        fee: feeAmountQuery,
         onSuccess: () => {
+          refetch();
           setStep(4);
           setTransactionStatus('Success');
         },
