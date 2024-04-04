@@ -67,6 +67,8 @@ import (
 	claimsmanagertypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
 	epochskeeper "github.com/quicksilver-zone/quicksilver/x/epochs/keeper"
 	epochstypes "github.com/quicksilver-zone/quicksilver/x/epochs/types"
+	emkeeper "github.com/quicksilver-zone/quicksilver/x/eventmanager/keeper"
+	emtypes "github.com/quicksilver-zone/quicksilver/x/eventmanager/types"
 	interchainquerykeeper "github.com/quicksilver-zone/quicksilver/x/interchainquery/keeper"
 	interchainquerytypes "github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
 	"github.com/quicksilver-zone/quicksilver/x/interchainstaking"
@@ -110,6 +112,7 @@ type AppKeepers struct {
 	ClaimsManagerKeeper        claimsmanagerkeeper.Keeper
 	InterchainstakingKeeper    *interchainstakingkeeper.Keeper
 	InterchainQueryKeeper      interchainquerykeeper.Keeper
+	EventManagerKeeper         emkeeper.Keeper
 	ParticipationRewardsKeeper *participationrewardskeeper.Keeper
 	AirdropKeeper              *airdropkeeper.Keeper
 	SupplyKeeper               supplykeeper.Keeper
@@ -376,8 +379,7 @@ func (appKeepers *AppKeepers) InitKeepers(
 	// claimsmanagerModule := claimsmanager.NewAppModule(appCodec, appKeepers.ClaimsManagerKeeper)
 
 	appKeepers.InterchainQueryKeeper = interchainquerykeeper.NewKeeper(appCodec, appKeepers.keys[interchainquerytypes.StoreKey], appKeepers.IBCKeeper)
-
-	// interchainQueryModule := interchainquery.NewAppModule(appCodec, appKeepers.InterchainQueryKeeper)
+	appKeepers.EventManagerKeeper = emkeeper.NewKeeper(appCodec, appKeepers.keys[emtypes.StoreKey])
 
 	appKeepers.InterchainstakingKeeper = interchainstakingkeeper.NewKeeper(
 		appCodec,
@@ -418,7 +420,9 @@ func (appKeepers *AppKeepers) InitKeepers(
 		panic(err)
 	}
 
-	// participationrewardsModule := participationrewards.NewAppModule(appCodec, appKeepers.ParticipationRewardsKeeper)
+	if err := appKeepers.EventManagerKeeper.SetCallbackHandler(interchainstakingtypes.ModuleName, appKeepers.InterchainstakingKeeper.EventCallbackHandler()); err != nil {
+		panic(err)
+	}
 
 	if err := appKeepers.InterchainQueryKeeper.SetCallbackHandler(participationrewardstypes.ModuleName, appKeepers.ParticipationRewardsKeeper.CallbackHandler()); err != nil {
 		panic(err)
@@ -535,6 +539,7 @@ func (*AppKeepers) initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *cod
 	paramsKeeper.Subspace(minttypes.ModuleName)
 	paramsKeeper.Subspace(interchainstakingtypes.ModuleName)
 	paramsKeeper.Subspace(interchainquerytypes.ModuleName)
+	paramsKeeper.Subspace(emtypes.ModuleName)
 	paramsKeeper.Subspace(participationrewardstypes.ModuleName)
 	paramsKeeper.Subspace(airdroptypes.ModuleName)
 
