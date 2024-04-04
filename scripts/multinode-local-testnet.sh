@@ -21,7 +21,8 @@ quicksilverd keys add validator2 --keyring-backend=test --home=$HOME/.quicksilve
 quicksilverd keys add validator3 --keyring-backend=test --home=$HOME/.quicksilverd/validator3
 
 # create validator node with tokens to transfer to the three other nodes
-quicksilverd add-genesis-account $(quicksilverd keys show validator1 -a --keyring-backend=test --home=$HOME/.quicksilverd/validator1) 100000000000stake --home=$HOME/.quicksilverd/validator1
+VAL1_ADDR=$(quicksilverd keys show validator1 -a --keyring-backend=test --home=$HOME/.quicksilverd/validator1 | tail -n1)
+quicksilverd add-genesis-account $VAL1_ADDR 100000000000stake --home=$HOME/.quicksilverd/validator1
 quicksilverd gentx validator1 500000000stake --keyring-backend=test --home=$HOME/.quicksilverd/validator1 --chain-id=testing
 quicksilverd collect-gentxs --home=$HOME/.quicksilverd/validator1
 
