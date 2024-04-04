@@ -97,6 +97,8 @@ func ValidatorSelectionRewardsCallback(ctx sdk.Context, k *Keeper, response []by
 		return err
 	}
 
+	defer k.EventManagerKeeper.MarkCompleted(ctx, types.ModuleName, query.ChainId, "validator_performance")
+
 	k.Logger(ctx).Info(
 		"callback zone score",
 		"zone", zs.ZoneID,
@@ -139,6 +141,8 @@ func OsmosisPoolUpdateCallback(ctx sdk.Context, k *Keeper, response []byte, quer
 	}
 
 	poolID := sdk.BigEndianToUint64(query.Request[1:])
+	defer k.EventManagerKeeper.MarkCompleted(ctx, types.ModuleName, "", fmt.Sprintf("submodule/osmosispool/%d", poolID))
+
 	key := fmt.Sprintf("%d", poolID)
 	data, pool, err := GetAndUnmarshalProtocolData[*types.OsmosisPoolProtocolData](ctx, k, key, types.ProtocolDataTypeOsmosisPool)
 	if err != nil {
@@ -209,6 +213,8 @@ func UmeeReservesUpdateCallback(ctx sdk.Context, k *Keeper, response []byte, que
 	}
 
 	denom := umeetypes.DenomFromKey(query.Request, umeetypes.KeyPrefixReserveAmount)
+	defer k.EventManagerKeeper.MarkCompleted(ctx, types.ModuleName, "", fmt.Sprintf("submodule/umeereserves/%s", denom))
+
 	data, reserves, err := GetAndUnmarshalProtocolData[*types.UmeeReservesProtocolData](ctx, k, denom, types.ProtocolDataTypeUmeeReserves)
 	if err != nil {
 		return err
@@ -239,6 +245,8 @@ func UmeeTotalBorrowsUpdateCallback(ctx sdk.Context, k *Keeper, response []byte,
 	}
 
 	denom := umeetypes.DenomFromKey(query.Request, umeetypes.KeyPrefixAdjustedTotalBorrow)
+	defer k.EventManagerKeeper.MarkCompleted(ctx, types.ModuleName, "", fmt.Sprintf("submodule/umeetotalborrows/%s", denom))
+
 	data, borrows, err := GetAndUnmarshalProtocolData[*types.UmeeTotalBorrowsProtocolData](ctx, k, denom, types.ProtocolDataTypeUmeeTotalBorrows)
 	if err != nil {
 		return err
@@ -269,6 +277,8 @@ func UmeeInterestScalarUpdateCallback(ctx sdk.Context, k *Keeper, response []byt
 	}
 
 	denom := umeetypes.DenomFromKey(query.Request, umeetypes.KeyPrefixInterestScalar)
+	defer k.EventManagerKeeper.MarkCompleted(ctx, types.ModuleName, "", fmt.Sprintf("submodule/umeeinterestscalar/%s", denom))
+
 	data, interest, err := GetAndUnmarshalProtocolData[*types.UmeeInterestScalarProtocolData](ctx, k, denom, types.ProtocolDataTypeUmeeInterestScalar)
 	if err != nil {
 		return err
@@ -299,6 +309,8 @@ func UmeeUTokenSupplyUpdateCallback(ctx sdk.Context, k *Keeper, response []byte,
 	}
 
 	denom := umeetypes.DenomFromKey(query.Request, umeetypes.KeyPrefixUtokenSupply)
+	defer k.EventManagerKeeper.MarkCompleted(ctx, types.ModuleName, "", fmt.Sprintf("submodule/umeeutokensupply/%s", denom))
+
 	data, supply, err := GetAndUnmarshalProtocolData[*types.UmeeUTokenSupplyProtocolData](ctx, k, denom, types.ProtocolDataTypeUmeeUTokenSupply)
 	if err != nil {
 		return err
@@ -329,6 +341,8 @@ func UmeeLeverageModuleBalanceUpdateCallback(ctx sdk.Context, k *Keeper, respons
 		return err
 	}
 
+	defer k.EventManagerKeeper.MarkCompleted(ctx, types.ModuleName, "", fmt.Sprintf("submodule/umeeleveragebalance/%s", denom))
+
 	balanceCoin, err := bankkeeper.UnmarshalBalanceCompat(k.cdc, response, denom)
 	if err != nil {
 		return err
@@ -355,6 +369,11 @@ func UmeeLeverageModuleBalanceUpdateCallback(ctx sdk.Context, k *Keeper, respons
 
 // SetEpochBlockCallback records the block height of the registered zone at the epoch boundary.
 func SetEpochBlockCallback(ctx sdk.Context, k *Keeper, args []byte, query icqtypes.Query) error {
+	defer k.EventManagerKeeper.MarkCompleted(ctx, types.ModuleName, query.ChainId, "get_epoch_height")
+	data, ok := k.GetProtocolData(ctx, types.ProtocolDataTypeConnection, query.ChainId)
+	if !ok {
+		return fmt.Errorf("unable to find protocol data for connection/%s", query.ChainId)
+	}
 	k.Logger(ctx).Debug("epoch callback called")
 	data, connectionData, err := GetAndUnmarshalProtocolData[*types.ConnectionProtocolData](ctx, k, query.ChainId, types.ProtocolDataTypeConnection)
 	if err != nil {

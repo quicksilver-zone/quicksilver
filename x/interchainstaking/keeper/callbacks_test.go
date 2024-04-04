@@ -753,7 +753,6 @@ func (suite *KeeperTestSuite) TestHandleRewardsCallbackNonDelegator() {
 		ctx := suite.chainA.GetContext()
 
 		zone, _ := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
-		suite.NoError(zone.IncrementWithdrawalWaitgroup(quicksilver.Logger(), 1, "test rewards callback handler"))
 		quicksilver.InterchainstakingKeeper.SetZone(ctx, &zone)
 
 		user := addressutils.GenerateAccAddressForTest()
@@ -789,7 +788,6 @@ func (suite *KeeperTestSuite) TestHandleRewardsCallbackEmptyResponse() {
 		ctx := suite.chainA.GetContext()
 
 		zone, _ := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
-		suite.NoError(zone.IncrementWithdrawalWaitgroup(quicksilver.Logger(), 1, "test rewards callback handler"))
 
 		quicksilver.InterchainstakingKeeper.SetZone(ctx, &zone)
 
@@ -819,9 +817,6 @@ func (suite *KeeperTestSuite) TestHandleValideRewardsCallback() {
 		ctx := suite.chainA.GetContext()
 
 		zone, _ := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
-		suite.NoError(zone.IncrementWithdrawalWaitgroup(quicksilver.Logger(), 1, "test rewards callback handler"))
-
-		quicksilver.InterchainstakingKeeper.SetZone(ctx, &zone)
 
 		queryReq := distrtypes.QueryDelegationTotalRewardsRequest{
 			DelegatorAddress: zone.DelegationAddress.Address,
@@ -2509,60 +2504,52 @@ func (suite *KeeperTestSuite) TestDepositLsmTxCallbackFailOnNonMatchingValidator
 
 func (suite *KeeperTestSuite) TestDelegationAccountBalancesCallback() {
 	tcs := []struct {
-		Name               string
-		PreviousBalance    sdk.Coins
-		IncomingBalance    sdk.Coins
-		ExpectedQueryCount int
-		ExpectedWaitgroup  uint32
+		Name            string
+		PreviousBalance sdk.Coins
+		IncomingBalance sdk.Coins
+		ExpectedCount   int
 	}{
 		{
-			Name:               "initial nil, incoming uqck",
-			PreviousBalance:    sdk.NewCoins(),
-			IncomingBalance:    sdk.NewCoins(sdk.NewCoin("uqck", sdk.NewInt(1))),
-			ExpectedQueryCount: 1, // uqck
-			ExpectedWaitgroup:  1,
+			Name:            "initial nil, incoming uqck",
+			PreviousBalance: sdk.NewCoins(),
+			IncomingBalance: sdk.NewCoins(sdk.NewCoin("uqck", sdk.NewInt(1))),
+			ExpectedCount:   1, // uqck
 		},
 		{
-			Name:               "initial uqck, incoming uqck",
-			PreviousBalance:    sdk.NewCoins(sdk.NewCoin("uqck", sdk.NewInt(1))),
-			IncomingBalance:    sdk.NewCoins(sdk.NewCoin("uqck", sdk.NewInt(1))),
-			ExpectedQueryCount: 1, // uqck
-			ExpectedWaitgroup:  1,
+			Name:            "initial uqck, incoming uqck",
+			PreviousBalance: sdk.NewCoins(sdk.NewCoin("uqck", sdk.NewInt(1))),
+			IncomingBalance: sdk.NewCoins(sdk.NewCoin("uqck", sdk.NewInt(1))),
+			ExpectedCount:   1, // uqck
 		},
 		{
-			Name:               "initial uqck, incoming lsm",
-			PreviousBalance:    sdk.NewCoins(sdk.NewCoin("uqck", sdk.NewInt(1))),
-			IncomingBalance:    sdk.NewCoins(sdk.NewCoin(addressutils.GenerateAddressForTestWithPrefix("cosmosvaloper")+"/1", sdk.NewInt(1))),
-			ExpectedQueryCount: 2, // uqck
-			ExpectedWaitgroup:  2,
+			Name:            "initial uqck, incoming lsm",
+			PreviousBalance: sdk.NewCoins(sdk.NewCoin("uqck", sdk.NewInt(1))),
+			IncomingBalance: sdk.NewCoins(sdk.NewCoin(addressutils.GenerateAddressForTestWithPrefix("cosmosvaloper")+"/1", sdk.NewInt(1))),
+			ExpectedCount:   2, // uqck + lsm share
 		},
 		{
-			Name:               "initial uqck, incoming lsm + qck",
-			PreviousBalance:    sdk.NewCoins(sdk.NewCoin("uqck", sdk.NewInt(1))),
-			IncomingBalance:    sdk.NewCoins(sdk.NewCoin(addressutils.GenerateAddressForTestWithPrefix("cosmosvaloper")+"/1", sdk.NewInt(1)), sdk.NewCoin("uqck", sdk.NewInt(1))),
-			ExpectedQueryCount: 2, // uqck
-			ExpectedWaitgroup:  2,
+			Name:            "initial uqck, incoming lsm + qck",
+			PreviousBalance: sdk.NewCoins(sdk.NewCoin("uqck", sdk.NewInt(1))),
+			IncomingBalance: sdk.NewCoins(sdk.NewCoin(addressutils.GenerateAddressForTestWithPrefix("cosmosvaloper")+"/1", sdk.NewInt(1)), sdk.NewCoin("uqck", sdk.NewInt(1))),
+			ExpectedCount:   2, // uqck + lsm share
 		},
 		{
-			Name:               "initial lsm, incoming uqck",
-			PreviousBalance:    sdk.NewCoins(sdk.NewCoin(addressutils.GenerateAddressForTestWithPrefix("cosmosvaloper")+"/1", sdk.NewInt(1))),
-			IncomingBalance:    sdk.NewCoins(sdk.NewCoin("uqck", sdk.NewInt(1))),
-			ExpectedQueryCount: 2, // uqck
-			ExpectedWaitgroup:  2,
+			Name:            "initial lsm, incoming uqck",
+			PreviousBalance: sdk.NewCoins(sdk.NewCoin(addressutils.GenerateAddressForTestWithPrefix("cosmosvaloper")+"/1", sdk.NewInt(1))),
+			IncomingBalance: sdk.NewCoins(sdk.NewCoin("uqck", sdk.NewInt(1))),
+			ExpectedCount:   2, // uqck + lsm share
 		},
 		{
-			Name:               "initial uqck, incoming nil",
-			PreviousBalance:    sdk.NewCoins(sdk.NewCoin("uqck", sdk.NewInt(1))),
-			IncomingBalance:    sdk.NewCoins(),
-			ExpectedQueryCount: 1, // uqck
-			ExpectedWaitgroup:  1,
+			Name:            "initial uqck, incoming nil",
+			PreviousBalance: sdk.NewCoins(sdk.NewCoin("uqck", sdk.NewInt(1))),
+			IncomingBalance: sdk.NewCoins(),
+			ExpectedCount:   1, // uqck
 		},
 		{
-			Name:               "initial nil, incoming nil",
-			PreviousBalance:    sdk.NewCoins(),
-			IncomingBalance:    sdk.NewCoins(),
-			ExpectedQueryCount: 0, // uqck
-			ExpectedWaitgroup:  0,
+			Name:            "initial nil, incoming nil",
+			PreviousBalance: sdk.NewCoins(),
+			IncomingBalance: sdk.NewCoins(),
+			ExpectedCount:   0,
 		},
 	}
 
@@ -2576,7 +2563,6 @@ func (suite *KeeperTestSuite) TestDelegationAccountBalancesCallback() {
 			ctx := suite.chainA.GetContext()
 
 			zone, _ := app.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
-			zone.SetWithdrawalWaitgroup(app.Logger(), 1, "init")
 			zone.DelegationAddress.Balance = t.PreviousBalance
 			app.InterchainstakingKeeper.SetZone(ctx, &zone)
 
@@ -2594,8 +2580,9 @@ func (suite *KeeperTestSuite) TestDelegationAccountBalancesCallback() {
 			suite.Require().NoError(err)
 
 			// refetch zone
-			zone, _ = app.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
-			suite.Require().Equal(t.ExpectedWaitgroup, zone.GetWithdrawalWaitgroup())
+
+			_, count := app.EventManagerKeeper.GetEvents(ctx, icstypes.ModuleName, suite.chainB.ChainID, "query_delegationaccountbalance_epoch/")
+			suite.Equal(t.ExpectedCount, count)
 
 			_, addr, err := bech32.DecodeAndConvert(zone.DelegationAddress.Address)
 			suite.Require().NoError(err)
@@ -2630,7 +2617,6 @@ func (suite *KeeperTestSuite) TestDelegationAccountBalanceCallbackDenomMismatch(
 		ctx := suite.chainA.GetContext()
 
 		zone, _ := app.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
-		zone.SetWithdrawalWaitgroup(app.Logger(), 2, "init")
 		zone.DelegationAddress.Balance = sdk.NewCoins(sdk.NewCoin("uatom", sdkmath.NewInt(500_000_000)))
 		app.InterchainstakingKeeper.SetZone(ctx, &zone)
 
@@ -2704,7 +2690,6 @@ func (suite *KeeperTestSuite) TestDelegationAccountBalanceCallback() {
 		ctx := suite.chainA.GetContext()
 
 		zone, _ := app.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
-		zone.SetWithdrawalWaitgroup(app.Logger(), 2, "init")
 		zone.DelegationAddress.Balance = sdk.NewCoins(sdk.NewCoin("uatom", sdkmath.NewInt(500_000_000)))
 		app.InterchainstakingKeeper.SetZone(ctx, &zone)
 
@@ -2721,7 +2706,16 @@ func (suite *KeeperTestSuite) TestDelegationAccountBalanceCallback() {
 
 		ctx = suite.chainA.GetContext()
 		zone, _ = app.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
-		suite.Equal(uint32(5), zone.GetWithdrawalWaitgroup()) // initial 2 is reduced to 1, but incremented by 4 (4x delegation messages) == 5
+
+		_, found := app.EventManagerKeeper.GetEvent(ctx, icstypes.ModuleName, zone.ChainId, "query_delegationaccountbalance_epoch/uatom")
+
+		suite.False(found)
+
+		for _, valoperAddress := range app.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId) {
+			_, count := app.EventManagerKeeper.GetEvents(ctx, icstypes.ModuleName, zone.ChainId, fmt.Sprintf("delegation/%s", valoperAddress))
+			suite.Equal(1, count)
+		}
+
 		suite.Equal(sdk.NewInt(500_000_000), zone.DelegationAddress.Balance.AmountOf("uatom"))
 	})
 }
@@ -2739,7 +2733,6 @@ func (suite *KeeperTestSuite) TestDelegationAccountBalanceCallbackLSM() {
 
 		valOper := app.InterchainstakingKeeper.GetValidatorAddresses(ctx, suite.chainB.ChainID)[0]
 		denom := valOper + "/1"
-		zone.SetWithdrawalWaitgroup(app.Logger(), 2, "init")
 		zone.DelegationAddress.Balance = sdk.NewCoins(sdk.NewCoin("uatom", sdkmath.NewInt(500)))
 		app.InterchainstakingKeeper.SetZone(ctx, &zone)
 
@@ -2756,7 +2749,14 @@ func (suite *KeeperTestSuite) TestDelegationAccountBalanceCallbackLSM() {
 
 		ctx = suite.chainA.GetContext()
 		zone, _ = app.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
-		suite.Equal(uint32(2), zone.GetWithdrawalWaitgroup()) // initial 2 is reduced to 1, but incremented by 1 (1x redeem token messages) == 2
+
+		_, found := app.EventManagerKeeper.GetEvent(ctx, icstypes.ModuleName, zone.ChainId, "query_delegationaccountbalance_epoch/uatom")
+
+		suite.False(found)
+
+		_, count := app.EventManagerKeeper.GetEvents(ctx, icstypes.ModuleName, zone.ChainId, fmt.Sprintf("delegation/%s", valOper))
+		suite.Equal(1, count)
+
 		suite.Equal(sdk.NewInt(500), zone.DelegationAddress.Balance.AmountOf("uatom"))
 		suite.Equal(sdk.NewInt(10), zone.DelegationAddress.Balance.AmountOf(denom))
 	})
@@ -2778,7 +2778,6 @@ func (suite *KeeperTestSuite) TestDelegationAccountBalanceCallbackLSMBadZone() {
 
 		valOper := addressutils.GenerateAddressForTestWithPrefix("quickvaloper")
 		denom := valOper + "/1"
-		zone.SetWithdrawalWaitgroup(app.Logger(), 2, "init")
 		zone.DelegationAddress.Balance = sdk.NewCoins(sdk.NewCoin("uatom", sdkmath.NewInt(500)))
 		app.InterchainstakingKeeper.SetZone(ctx, &zone)
 
@@ -2795,7 +2794,14 @@ func (suite *KeeperTestSuite) TestDelegationAccountBalanceCallbackLSMBadZone() {
 
 		ctx = suite.chainA.GetContext()
 		zone, _ = app.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
-		suite.Equal(uint32(1), zone.GetWithdrawalWaitgroup()) // initial 2 is reduced to 1, and not incremented (no wg increment for sendToWithdrawal)
+
+		_, found := app.EventManagerKeeper.GetEvent(ctx, icstypes.ModuleName, zone.ChainId, "query_delegationaccountbalance_epoch/uatom")
+
+		suite.False(found)
+
+		_, count := app.EventManagerKeeper.GetEvents(ctx, icstypes.ModuleName, zone.ChainId, fmt.Sprintf("delegation/%s", valOper))
+		suite.Equal(0, count)
+
 		suite.Equal(sdk.NewInt(500), zone.DelegationAddress.Balance.AmountOf("uatom"))
 		suite.Equal(sdk.NewInt(10), zone.DelegationAddress.Balance.AmountOf(denom))
 		suite.Equal(1, len(txk.Txs))

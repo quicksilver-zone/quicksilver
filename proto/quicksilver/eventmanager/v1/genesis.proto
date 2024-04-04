@@ -1,0 +1,81 @@
+syntax = "proto3";
+package quicksilver.eventmanager.v1;
+
+import "cosmos_proto/cosmos.proto";
+import "gogoproto/gogo.proto";
+import "google/protobuf/any.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/quicksilver-zone/quicksilver/x/eventmanager/types";
+
+message Event {
+  string chain_id = 1;
+  int32 event_type = 2;
+  string identifier = 3;
+  int32 event_status = 4;
+  string module = 5;
+  string callback = 6;
+  bytes payload = 7;
+  google.protobuf.Any execute_condition = 8 [(cosmos_proto.accepts_interface) = "quicksilver.interchainstaking.ConditionI"];
+  int64 emitted_height = 9;
+  google.protobuf.Timestamp expiry_time = 10 [
+    (gogoproto.stdtime) = true,
+    (gogoproto.nullable) = true
+  ];
+}
+
+// GenesisState defines the eventmanager module's genesis state.
+message GenesisState {}
+
+enum FieldOperator {
+  option (gogoproto.goproto_enum_prefix) = false;
+  FIELD_OPERATOR_UNSPECIFIED = 0;
+  FIELD_OPERATOR_EQUAL = 1;
+  FIELD_OPERATOR_CONTAINS = 2;
+  FIELD_OPERATOR_BEGINSWITH = 3;
+  FIELD_OPERATOR_ENDSWITH = 4;
+}
+
+enum Comparator {
+  option (gogoproto.goproto_enum_prefix) = false;
+  COMPARATOR_UNSPECIFIED = 0;
+  COMPARATOR_EQUAL = 1;
+  COMPARATOR_GREATER_THAN = 2;
+  COMPARATOR_LESS_THAN = 3;
+  COMPARATOR_GREATER_THAN_OR_EQUAL = 4;
+  COMPARATOR_LESS_THAN_OR_EQUAL = 5;
+}
+
+message FieldValue {
+  string field = 1;
+  string value = 2;
+  FieldOperator operator = 3;
+  bool negate = 4;
+}
+
+message ConditionAny {
+  repeated FieldValue fields = 1;
+  bool negate = 2;
+}
+
+message ConditionAll {
+  repeated FieldValue fields = 1;
+  bool negate = 2;
+}
+
+message ConditionCount {
+  repeated FieldValue fields = 1;
+  Comparator comparator = 2;
+  int64 value = 3;
+  bool negate = 4;
+}
+
+message ConditionAnd {
+  google.protobuf.Any condition1 = 1 [(cosmos_proto.accepts_interface) = "quicksilver.interchainstaking.ConditionI"];
+  google.protobuf.Any condition2 = 2 [(cosmos_proto.accepts_interface) = "quicksilver.interchainstaking.ConditionI"];
+}
+
+message ConditionOr {
+  google.protobuf.Any condition1 = 1 [(cosmos_proto.accepts_interface) = "quicksilver.interchainstaking.ConditionI"];
+  google.protobuf.Any condition2 = 2 [(cosmos_proto.accepts_interface) = "quicksilver.interchainstaking.ConditionI"];
+}

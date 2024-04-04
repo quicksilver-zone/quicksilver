@@ -2,6 +2,7 @@ package types
 
 import (
 	"context"
+	time "time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
@@ -12,6 +13,7 @@ import (
 
 	claimsmanagertypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
 	epochstypes "github.com/quicksilver-zone/quicksilver/x/epochs/types"
+	emtypes "github.com/quicksilver-zone/quicksilver/x/eventmanager/types"
 )
 
 // ChannelKeeper defines the expected IBC channel keeper.
@@ -66,4 +68,10 @@ type EpochsKeeper interface {
 type AuthzKeeper interface {
 	Grant(goCtx context.Context, msg *authz.MsgGrant) (*authz.MsgGrantResponse, error)
 	GetAuthorizations(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress) ([]authz.Authorization, error)
+}
+
+type EventManagerKeeper interface {
+	AddEvent(ctx sdk.Context, module, chainID, identifier, callback string, eventType, status int32, condtion emtypes.ConditionI, payload []byte)
+	AddEventWithExpiry(ctx sdk.Context, module, chainID, identifier string, eventType, status int32, expiry time.Time)
+	MarkCompleted(ctx sdk.Context, module string, chainID string, identifier string)
 }

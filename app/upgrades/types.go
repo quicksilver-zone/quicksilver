@@ -53,6 +53,8 @@ const (
 	V010702UpgradeName = "v1.7.2"
 	V010704UpgradeName = "v1.7.4"
 	V010705UpgradeName = "v1.7.5"
+
+	V010900UpgradeName = "v1.9.0"
 )
 
 // Upgrade defines a struct containing necessary fields that a SoftwareUpgradeProposal

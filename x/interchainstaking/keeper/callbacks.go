@@ -28,6 +28,7 @@ import (
 	"github.com/quicksilver-zone/quicksilver/utils"
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	"github.com/quicksilver-zone/quicksilver/utils/proofs"
+	emtypes "github.com/quicksilver-zone/quicksilver/x/eventmanager/types"
 	icqtypes "github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
 	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 )
@@ -67,7 +68,7 @@ func (c Callbacks) AddCallback(id string, fn interface{}) icqtypes.QueryCallback
 }
 
 func (c Callbacks) RegisterCallbacks() icqtypes.QueryCallbacks {
-	a := c.
+	return c.
 		AddCallback("valset", Callback(ValsetCallback)).
 		AddCallback("validator", Callback(ValidatorCallback)).
 		AddCallback("rewards", Callback(RewardsCallback)).
@@ -84,8 +85,6 @@ func (c Callbacks) RegisterCallbacks() icqtypes.QueryCallbacks {
 		AddCallback("delegationaccountbalance", Callback(DelegationAccountBalanceCallback)).
 		AddCallback("delegationaccountbalances", Callback(DelegationAccountBalancesCallback)).
 		AddCallback("signinginfo", Callback(SigningInfoCallback))
-
-	return a.(Callbacks)
 }
 
 // -----------------------------------
@@ -123,19 +122,13 @@ func RewardsCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Que
 		return err
 	}
 
-	// decrement waitgroup as we have received back the query
-	// (initially incremented in AfterEpochEnd)
-	if err = zone.DecrementWithdrawalWaitgroup(k.Logger(ctx), 1, "rewards callback"); err != nil {
-		// given that there _could_ be a backlog of message, we don't want to bail here, else they will remain undeliverable.
-		k.Logger(ctx).Error(err.Error())
-	}
-
-	k.Logger(ctx).Debug("QueryDelegationRewards callback", "wg", zone.GetWithdrawalWaitgroup(), "delegatorAddress", rewardsQuery.DelegatorAddress, "zone", query.ChainId)
+	defer k.EventManagerKeeper.MarkCompleted(ctx, types.ModuleName, zone.ChainId, "query_rewards_epoch")
 
 	return k.WithdrawDelegationRewardsForResponse(ctx, &zone, rewardsQuery.DelegatorAddress, args)
 }
 
 func DelegationsEpochCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
+	defer k.EventManagerKeeper.MarkCompleted(ctx, types.ModuleName, query.ChainId, "query_delegations_epoch")
 	return delegationsCallback(k, ctx, args, query, true)
 }
 
@@ -603,6 +596,7 @@ func DelegationAccountBalanceCallback(k *Keeper, ctx sdk.Context, args []byte, q
 	if !found {
 		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
 	}
+
 	// strip the BalancesPrefix from the request key, as AddressFromBalancesStore expects this to be removed
 	// by the prefixIterator. query.Request is a value that Quicksilver always sets, and is not user generated,
 	// but lets us be safe here :)
@@ -615,6 +609,9 @@ func DelegationAccountBalanceCallback(k *Keeper, ctx sdk.Context, args []byte, q
 	if err != nil {
 		return err
 	}
+
+	identifier := fmt.Sprintf("query_delegationaccountbalance_epoch/%s", denom)
+	defer k.EventManagerKeeper.MarkCompleted(ctx, types.ModuleName, query.ChainId, identifier)
 
 	coin, err := bankkeeper.UnmarshalBalanceCompat(k.cdc, args, denom)
 	if err != nil {
@@ -642,10 +639,6 @@ func DelegationAccountBalanceCallback(k *Keeper, ctx sdk.Context, args []byte, q
 	}
 
 	k.Logger(ctx).Info("Received balance response for denom", "denom", coin.Denom)
-	if err = zone.DecrementWithdrawalWaitgroup(k.Logger(ctx), 1, "delegationaccountbalance callback"); err != nil {
-		// given that there _could_ be a backlog of message, we don't want to bail here, else they will remain undeliverable.
-		k.Logger(ctx).Error(err.Error())
-	}
 
 	// set the zone amount.
 	balance := zone.DelegationAddress.Balance
@@ -665,12 +658,6 @@ func DelegationAccountBalanceCallback(k *Keeper, ctx sdk.Context, args []byte, q
 	// if token is not valid for staking, then send to withdrawal account.
 	if valid, _ := zone.ValidateCoinsForZone(sdk.NewCoins(coin), k.GetValidatorAddressesAsMap(ctx, zone.ChainId)); !valid {
 		k.Logger(ctx).Info("token is not a valid staking token, so sending to withdrawal account for disbursal", "chain", zone.ChainId, "assets", coin)
-		if zone.GetWithdrawalWaitgroup() == 0 {
-			k.Logger(ctx).Info("triggering redemption rate calc in lieu of delegation flush")
-			if err := k.TriggerRedemptionRate(ctx, &zone); err != nil {
-				return err
-			}
-		}
 		return k.SendToWithdrawal(ctx, &zone, zone.DelegationAddress, sdk.NewCoins(coin))
 	}
 
@@ -685,10 +672,7 @@ func DelegationAccountBalancesCallback(k *Keeper, ctx sdk.Context, args []byte, 
 	result := banktypes.QueryAllBalancesResponse{}
 	k.cdc.MustUnmarshal(args, &result)
 
-	if err := zone.DecrementWithdrawalWaitgroup(k.Logger(ctx), 1, "delegationaccountbalances callback"); err != nil {
-		// given that there _could_ be a backlog of message, we don't want to bail here, else they will remain undeliverable.
-		k.Logger(ctx).Error(err.Error())
-	}
+	defer k.EventManagerKeeper.MarkCompleted(ctx, types.ModuleName, query.ChainId, "query_delegationaccountbalances_epoch")
 
 	addressBytes, err := addressutils.AccAddressFromBech32(zone.DelegationAddress.Address, zone.AccountPrefix)
 	if err != nil {
@@ -712,10 +696,18 @@ func DelegationAccountBalancesCallback(k *Keeper, ctx sdk.Context, args []byte, 
 			0,
 		)
 
-		if err = zone.IncrementWithdrawalWaitgroup(k.Logger(ctx), 1, fmt.Sprintf("delegation account balance for %s", coin.Denom)); err != nil {
-			return err
-		}
-		k.Logger(ctx).Info("Emitting balance request for denom", "denom", coin.Denom, "waitgroup", zone.GetWithdrawalWaitgroup())
+		k.EventManagerKeeper.AddEvent(
+			ctx,
+			types.ModuleName,
+			query.ChainId,
+			fmt.Sprintf("query_delegationaccountbalance_epoch/%s", coin.Denom),
+			"",
+			emtypes.EventTypeICQAccountBalance,
+			emtypes.EventStatusActive,
+			nil,
+			nil,
+		)
+
 	}
 	k.SetZone(ctx, &zone)
 

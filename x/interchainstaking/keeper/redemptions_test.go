@@ -313,7 +313,7 @@ func (suite *KeeperTestSuite) TestStargazeHandleQueuedUnbondingsUnderflow() {
 	zone, f := quicksilver.InterchainstakingKeeper.GetZone(ctx, "stargaze-1")
 	suite.True(f)
 
-	err = quicksilver.InterchainstakingKeeper.HandleQueuedUnbondings(ctx, &zone, 129)
+	err = quicksilver.InterchainstakingKeeper.HandleQueuedUnbondings(ctx, zone.ChainId, 129, zone.LastRedemptionRate)
 	suite.NoError(err)
 
 	suite.Equal(len(txk.Txs), 1)

@@ -1,6 +1,9 @@
 package keeper
 
 import (
+	"crypto/sha256"
+	"encoding/binary"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"sort"
@@ -9,10 +12,12 @@ import (
 	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/quicksilver-zone/quicksilver/utils"
 	epochstypes "github.com/quicksilver-zone/quicksilver/x/epochs/types"
+	emtypes "github.com/quicksilver-zone/quicksilver/x/eventmanager/types"
 	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 )
 
@@ -144,10 +149,34 @@ func (k *Keeper) GetUnlockedTokensForZone(ctx sdk.Context, zone *types.Zone) (ma
 	return availablePerValidator, total, nil
 }
 
+func (k *Keeper) ScheduleQueuedUnbondings(ctx sdk.Context, zone *types.Zone, epoch int64) error {
+	cond, err := emtypes.NewConditionAll(ctx, emtypes.NewFieldValues(emtypes.FieldEqual(emtypes.FieldIdentifier, fmt.Sprintf("distribute_unbonding/%d", epoch-7))), true)
+	if err != nil {
+		return err
+	}
+
+	// can we exec this now if condition is satisfied?
+
+	params := UnbondingsParams{Epoch: uint64(epoch), Zone: zone.ChainId, Rate: sdk.MinDec(zone.RedemptionRate, zone.LastRedemptionRate)}
+	paramsBytes, err := json.Marshal(params)
+	if err != nil {
+		return err
+	}
+	k.EventManagerKeeper.AddEvent(ctx, types.ModuleName, zone.ChainId, "schedule_queued_unbondings", ExecuteQueuedUnbondingsCb, emtypes.EventTypeUnbond, emtypes.EventStatusPending, cond,
+		paramsBytes,
+	)
+	return nil
+}
+
 // HandleQueuedUnbondings is called once per epoch to aggregate all queued unbondings into
 // a single unbond transaction per delegation.
-func (k *Keeper) HandleQueuedUnbondings(ctx sdk.Context, zone *types.Zone, epoch int64) error {
+func (k *Keeper) HandleQueuedUnbondings(ctx sdk.Context, chainId string, epoch int64, rate sdk.Dec) error {
+	zone, found := k.GetZone(ctx, chainId)
+	if !found {
+		return fmt.Errorf("unable to find zone %s", chainId)
+	}
 	// total amount coins to withdraw
+
 	totalToWithdraw := sdk.NewCoin(zone.BaseDenom, sdk.ZeroInt())
 
 	// map of distributions per withdrawal
@@ -157,13 +186,13 @@ func (k *Keeper) HandleQueuedUnbondings(ctx sdk.Context, zone *types.Zone, epoch
 	amountToWithdrawPerWithdrawal := make(map[string]sdk.Coin, 0)
 
 	// find total number of unlockedTokens (not locked by previous redelegations) for the given zone
-	_, totalAvailable, err := k.GetUnlockedTokensForZone(ctx, zone)
+	_, totalAvailable, err := k.GetUnlockedTokensForZone(ctx, &zone)
 	if err != nil {
 		return err
 	}
 
 	// get min of LastRedemptionRate (N-1) and RedemptionRate (N)
-	rate := sdk.MinDec(zone.LastRedemptionRate, zone.RedemptionRate)
+	//rate := sdk.MinDec(zone.LastRedemptionRate, zone.RedemptionRate)
 
 	// iterate all withdrawal records for the zone in the QUEUED state.
 	k.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, types.WithdrawStatusQueued, func(idx int64, withdrawal types.WithdrawalRecord) bool {
@@ -209,7 +238,7 @@ func (k *Keeper) HandleQueuedUnbondings(ctx sdk.Context, zone *types.Zone, epoch
 		return nil
 	}
 
-	tokensAllocatedForWithdrawalPerValidator, err := k.DeterminePlanForUndelegation(ctx, zone, sdk.NewCoins(totalToWithdraw))
+	tokensAllocatedForWithdrawalPerValidator, err := k.DeterminePlanForUndelegation(ctx, &zone, sdk.NewCoins(totalToWithdraw))
 	if err != nil {
 		return err
 	}
@@ -236,9 +265,40 @@ func (k *Keeper) HandleQueuedUnbondings(ctx sdk.Context, zone *types.Zone, epoch
 	var msgs []sdk.Msg
 	for _, valoper := range utils.Keys(coinsOutPerValidator) {
 		if !coinsOutPerValidator[valoper].Amount.IsZero() {
-			msgs = append(msgs, &stakingtypes.MsgUndelegate{DelegatorAddress: zone.DelegationAddress.Address, ValidatorAddress: valoper, Amount: coinsOutPerValidator[valoper]})
+			msg := &stakingtypes.MsgUndelegate{DelegatorAddress: zone.DelegationAddress.Address, ValidatorAddress: valoper, Amount: coinsOutPerValidator[valoper]}
+			msgs = append(msgs, msg)
+
+			k.EventManagerKeeper.AddEvent(ctx,
+				types.ModuleName,
+				zone.ChainId,
+				fmt.Sprintf("unbond/%d/%s/%s", epoch, valoper, sha256.Sum256(msg.GetSignBytes())),
+				"",
+				emtypes.EventTypeICAUnbond,
+				emtypes.EventStatusActive,
+				nil,
+				nil,
+			)
 		}
 	}
+
+	newCondition, err := emtypes.NewConditionAll(ctx, emtypes.NewFieldValues(emtypes.FieldBegins(emtypes.FieldIdentifier, fmt.Sprintf("unbond/%d", epoch))), true)
+	if err != nil {
+		return err
+	}
+
+	epochByte := make([]byte, 8)
+	binary.BigEndian.PutUint64(epochByte, uint64(epoch))
+
+	k.EventManagerKeeper.AddEvent(ctx,
+		types.ModuleName,
+		zone.ChainId,
+		fmt.Sprintf("distribute_unbonding/%d", epoch),
+		"",
+		emtypes.EventTypeUnbond,
+		emtypes.EventStatusPending,
+		newCondition,
+		epochByte,
+	)
 
 	k.Logger(ctx).Info("unbonding messages to send", "msg", msgs)
 
@@ -253,11 +313,6 @@ func (k *Keeper) HandleQueuedUnbondings(ctx sdk.Context, zone *types.Zone, epoch
 			k.SetUnbondingRecord(ctx, types.UnbondingRecord{ChainId: zone.ChainId, EpochNumber: epoch, Validator: valoper, RelatedTxhash: txHashesPerValidator[valoper], Amount: coinsOutPerValidator[valoper]})
 		}
 	}
-
-	if err = zone.IncrementWithdrawalWaitgroup(k.Logger(ctx), uint32(len(msgs)), "trigger unbonding messages"); err != nil { //nolint:gosec
-		return err
-	}
-	k.SetZone(ctx, zone)
 
 	return nil
 }
@@ -407,4 +462,85 @@ WITHDRAWAL:
 	}
 
 	return coinsOutPerValidator, txHashesPerValidator, distributionsPerWithdrawal, nil
+}
+
+func (k *Keeper) PayoutUnbondings(ctx sdk.Context, epoch int64, chainId string) error {
+	zone, ok := k.GetZone(ctx, chainId)
+	if !ok {
+		return fmt.Errorf("zone not found")
+	}
+	k.IterateZoneStatusWithdrawalRecords(ctx, chainId, types.WithdrawStatusUnbond, func(idx int64, withdrawal types.WithdrawalRecord) bool {
+		if ctx.BlockTime().After(withdrawal.CompletionTime) && withdrawal.Acknowledged { // completion date has passed.
+			k.Logger(ctx).Info("found completed unbonding")
+			sendMsg := &banktypes.MsgSend{FromAddress: zone.DelegationAddress.GetAddress(), ToAddress: withdrawal.Recipient, Amount: sdk.Coins{withdrawal.Amount[0]}}
+			err := k.SubmitTx(ctx, []sdk.Msg{sendMsg}, zone.DelegationAddress, types.TxUnbondSendMemo(withdrawal.Txhash), zone.MessagesPerTx)
+
+			if err != nil {
+				k.Logger(ctx).Error("error submitting transaction - requeue withdrawal", "error", err)
+
+				// do not update status and increment completion time
+				withdrawal.DelayCompletion(ctx, types.DefaultWithdrawalRequeueDelay)
+				err = k.SetWithdrawalRecord(ctx, withdrawal)
+				if err != nil {
+					k.Logger(ctx).Error("error updating withdrawal record", "error", err)
+				}
+
+			} else {
+				k.Logger(ctx).Info("sending funds", "for", withdrawal.Delegator, "delegate_account", zone.DelegationAddress.GetAddress(), "to", withdrawal.Recipient, "amount", withdrawal.Amount)
+				k.UpdateWithdrawalRecordStatus(ctx, &withdrawal, types.WithdrawStatusSend)
+			}
+		}
+		return false
+	})
+
+	return nil
+}
+
+func (k *Keeper) HandleMaturedWithdrawals(ctx sdk.Context, zone *types.Zone) error {
+	// k.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, types.WithdrawStatusUnbond, func(idx int64, withdrawal types.WithdrawalRecord) bool {
+	// 	if ctx.BlockTime().After(withdrawal.CompletionTime) && withdrawal.Acknowledged { // completion date has passed.
+	// 		k.Logger(ctx).Info("found completed unbonding")
+	// 		sendMsg := &banktypes.MsgSend{FromAddress: zone.DelegationAddress.GetAddress(), ToAddress: withdrawal.Recipient, Amount: sdk.Coins{withdrawal.Amount[0]}}
+	// 		err := k.SubmitTx(ctx, []sdk.Msg{sendMsg}, zone.DelegationAddress, types.TxUnbondSendMemo(withdrawal.Txhash), zone.MessagesPerTx)
+
+	// 		if err != nil {
+	// 			k.Logger(ctx).Error("error submitting transaction - requeue withdrawal", "error", err)
+
+	// 			// do not update status and increment completion time
+	// 			withdrawal.DelayCompletion(ctx, types.DefaultWithdrawalRequeueDelay)
+	// 			err = k.SetWithdrawalRecord(ctx, withdrawal)
+	// 			if err != nil {
+	// 				k.Logger(ctx).Error("error updating withdrawal record", "error", err)
+	// 			}
+
+	// 		} else {
+	// 			k.Logger(ctx).Info("sending funds", "for", withdrawal.Delegator, "delegate_account", zone.DelegationAddress.GetAddress(), "to", withdrawal.Recipient, "amount", withdrawal.Amount)
+	// 			k.UpdateWithdrawalRecordStatus(ctx, &withdrawal, types.WithdrawStatusSend)
+	// 		}
+	// 	}
+	// 	return false
+	// })
+	return nil
+}
+
+func (k *Keeper) HandleMaturedUnbondings(ctx sdk.Context) {
+	// k.IterateUnbondingRecords(ctx, func(idx int64, record types.UnbondingRecord) bool {
+	// 	if ctx.BlockTime().After(record.CompletionTime) {
+	// 		k.Logger(ctx).Info("found matured unbonding", "chain", record.ChainId, "validator", record.Validator, "epoch", record.EpochNumber, "completion", record.CompletionTime)
+	// 		k.DeleteUnbondingRecord(ctx, record.ChainId, record.Validator, record.EpochNumber)
+	// 	}
+	// 	return false
+	// })
+}
+
+func (k *Keeper) GetInflightUnbondingAmount(ctx sdk.Context, zone *types.Zone) sdk.Coin {
+	outCoin := sdk.NewCoin(zone.BaseDenom, sdk.ZeroInt())
+	k.IterateZoneWithdrawalRecords(ctx, zone.ChainId, func(idx int64, withdrawal types.WithdrawalRecord) bool {
+		if (withdrawal.Status == types.WithdrawStatusUnbond && ctx.BlockTime().After(withdrawal.CompletionTime) && withdrawal.Acknowledged) || // status unbond, completion has pass
+			withdrawal.Status == types.WithdrawStatusSend { // already in state send.
+			outCoin = outCoin.Add(withdrawal.Amount[0])
+		}
+		return false
+	})
+	return outCoin
 }
