@@ -66,8 +66,8 @@ cp $HOME/.quicksilverd/validator1/config/genesis.json $HOME/.quicksilverd/valida
 cp $HOME/.quicksilverd/validator1/config/genesis.json $HOME/.quicksilverd/validator3/config/genesis.json
 
 # copy tendermint node id of validator1 to persistent peers of validator2-3
-sed -i -E "s|persistent_peers = \"\"|persistent_peers = \"$(quicksilverd tendermint show-node-id --home=$HOME/.quicksilverd/validator1)@localhost:26656\"|g" $HOME/.quicksilverd/validator2/config/config.toml
-sed -i -E "s|persistent_peers = \"\"|persistent_peers = \"$(quicksilverd tendermint show-node-id --home=$HOME/.quicksilverd/validator1)@localhost:26656\"|g" $HOME/.quicksilverd/validator3/config/config.toml
+sed -i -E "s|persistent_peers = \"\"|persistent_peers = \"$(quicksilverd tendermint show-node-id --home=$HOME/.quicksilverd/validator1 | tail -n1)@localhost:26656\"|g" $HOME/.quicksilverd/validator2/config/config.toml
+sed -i -E "s|persistent_peers = \"\"|persistent_peers = \"$(quicksilverd tendermint show-node-id --home=$HOME/.quicksilverd/validator1 | tail -n1)@localhost:26656\"|g" $HOME/.quicksilverd/validator3/config/config.toml
 
 
 # start all three validators
