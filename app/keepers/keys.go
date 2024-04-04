@@ -26,6 +26,7 @@ import (
 	airdroptypes "github.com/quicksilver-zone/quicksilver/x/airdrop/types"
 	claimsmanagertypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
 	epochstypes "github.com/quicksilver-zone/quicksilver/x/epochs/types"
+	emtypes "github.com/quicksilver-zone/quicksilver/x/eventmanager/types"
 	interchainquerytypes "github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
 	interchainstakingtypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 	minttypes "github.com/quicksilver-zone/quicksilver/x/mint/types"
@@ -61,6 +62,7 @@ func KVStoreKeys() []string {
 		epochstypes.StoreKey,
 		interchainstakingtypes.StoreKey,
 		interchainquerytypes.StoreKey,
+		emtypes.StoreKey,
 		participationrewardstypes.StoreKey,
 		airdroptypes.StoreKey,
 		supplytypes.StoreKey,
