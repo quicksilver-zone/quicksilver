@@ -1,6 +1,9 @@
 package keeper
 
 import (
+	"fmt"
+
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -86,27 +89,37 @@ func (k Keeper) Trigger(ctx sdk.Context, module string, chainID string) {
 		if e.EventStatus == types.EventStatusPending {
 			err := k.Call(ctx, e.Module, e.Callback, e.Payload)
 			if err != nil {
+				fmt.Println("omfg", "errr", err.Error())
 				k.Logger(ctx).Error("unable to execute callback", "module", e.Module, "id", e.Identifier, "callback", e.Callback, "error", err)
 			}
+			e.EventStatus = types.EventStatusActive
+			k.SetEvent(ctx, e)
 		}
 		return false
 	})
 }
 
-func (k Keeper) AddEvent(ctx sdk.Context, module, chainID, identifier, callback string, status int32, condition ConditionI, payload []byte) error {
-	conditionBytes := []byte{}
-	if condition != nil {
-		conditionBytes = condition.Marshal()
+func (k Keeper) AddEvent(ctx sdk.Context,
+	module, chainID, identifier, callback string,
+	eventType, status int32,
+	condition types.ConditionI,
+	payload []byte,
+) {
+
+	conditionAny, err := codectypes.NewAnyWithValue(condition)
+	if err != nil {
+		panic(err)
 	}
 
 	event := types.Event{
 		ChainId:          chainID,
 		Module:           module,
 		Identifier:       identifier,
+		EventType:        eventType,
 		Callback:         callback,
 		Payload:          payload,
 		EventStatus:      status,
-		ExecuteCondition: conditionBytes,
+		ExecuteCondition: conditionAny,
 		EmittedHeight:    ctx.BlockHeight(),
 	}
 
