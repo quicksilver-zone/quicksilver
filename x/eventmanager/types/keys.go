@@ -15,20 +15,24 @@ const (
 )
 
 const (
-	EventStatusUnspecified = 0
-	EventStatusActive      = 1
-	EventStatusPending     = 2
-)
+	EventStatusUnspecified = int32(0)
+	EventStatusActive      = int32(1)
+	EventStatusPending     = int32(2)
 
-const (
-	EventTypeUnspecified         = 0x00
-	EventTypeICQQueryRewards     = 0x01
-	EventTypeICQQueryDelegations = 0x02
-	EventTypeICQAccountBalances  = 0x03
-	EventTypeICQAccountBalance   = 0x04
-	EventTypeICAWithdrawRewards  = 0x05
-	EventTypeICADelegate         = 0x06
-	EventTypeICAUnbond           = 0x07
+	EventTypeUnspecified         = int32(0x00)
+	EventTypeICQQueryRewards     = int32(0x01)
+	EventTypeICQQueryDelegations = int32(0x02)
+	EventTypeICQAccountBalances  = int32(0x03)
+	EventTypeICQAccountBalance   = int32(0x04)
+	EventTypeICAWithdrawRewards  = int32(0x05)
+	EventTypeICADelegate         = int32(0x06)
+	EventTypeICAUnbond           = int32(0x07)
+
+	FieldEventType   = "eventtype"
+	FieldModule      = "module"
+	FieldEventStatus = "eventstatus"
+	FieldChainID     = "chainid"
+	FieldIdentifier  = "identifier"
 )
 
 var (
