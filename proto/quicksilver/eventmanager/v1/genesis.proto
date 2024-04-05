@@ -22,10 +22,19 @@ message Event {
 // GenesisState defines the eventmanager module's genesis state.
 message GenesisState {}
 
+enum FieldOperator {
+  UNSPECIFIED = 0;
+  EQUAL = 1;
+  CONTAINS = 2;
+  BEGINSWITH = 3;
+  ENDSWITH = 4;
+}
+
 message FieldValue {
   string field = 1;
   string value = 2;
-  bool negate = 3;
+  FieldOperator operator = 3;
+  bool negate = 4;
 }
 
 message ConditionAny {

@@ -33,6 +33,7 @@ const (
 	FieldEventStatus = "eventstatus"
 	FieldChainID     = "chainid"
 	FieldIdentifier  = "identifier"
+	FieldCallback    = "callback"
 )
 
 var (
