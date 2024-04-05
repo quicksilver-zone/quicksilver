@@ -92,3 +92,23 @@ func (k Keeper) Trigger(ctx sdk.Context, module string, chainID string) {
 		return false
 	})
 }
+
+func (k Keeper) AddEvent(ctx sdk.Context, module, chainID, identifier, callback string, status int32, condition ConditionI, payload []byte) error {
+	conditionBytes := []byte{}
+	if condition != nil {
+		conditionBytes = condition.Marshal()
+	}
+
+	event := types.Event{
+		ChainId:          chainID,
+		Module:           module,
+		Identifier:       identifier,
+		Callback:         callback,
+		Payload:          payload,
+		EventStatus:      status,
+		ExecuteCondition: conditionBytes,
+		EmittedHeight:    ctx.BlockHeight(),
+	}
+
+	k.SetEvent(ctx, event)
+}

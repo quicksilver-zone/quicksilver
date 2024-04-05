@@ -7,6 +7,7 @@ import (
 
 type ConditionI interface {
 	Resolve(ctx sdk.Context, k *Keeper) bool
+	Marshal(ctx sdk.Context) []byte
 }
 
 // type ConditionExistsAny struct {
