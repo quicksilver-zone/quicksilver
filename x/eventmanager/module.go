@@ -1,7 +1,6 @@
-package interchainquery
+package eventmanager
 
 import (
-	"context"
 	"encoding/json"
 	"math/rand"
 
@@ -16,8 +15,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
-	"github.com/quicksilver-zone/quicksilver/x/interchainquery/keeper"
-	"github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
+	"github.com/quicksilver-zone/quicksilver/x/eventmanager/keeper"
+	"github.com/quicksilver-zone/quicksilver/x/eventmanager/types"
 )
 
 var (
@@ -52,6 +51,7 @@ func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 
 // RegisterInterfaces registers the module's interface types.
 func (AppModuleBasic) RegisterInterfaces(reg cdctypes.InterfaceRegistry) {
+	types.RegisterInterfaces(reg)
 }
 
 // DefaultGenesis returns the capability module's default genesis state.
@@ -66,10 +66,10 @@ func (AppModuleBasic) ValidateGenesis(_ codec.JSONCodec, _ client.TxEncodingConf
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the module.
 func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
-	err := types.RegisterQuerySrvrHandlerClient(context.Background(), mux, types.NewQuerySrvrClient(clientCtx))
-	if err != nil {
-		panic(err)
-	}
+	// err := types.RegisterQuerySrvrHandlerClient(context.Background(), mux, types.NewQuerySrvrClient(clientCtx))
+	// if err != nil {
+	// 	panic(err)
+	// }
 }
 
 // GetTxCmd returns the capability module's root tx command.
@@ -121,7 +121,7 @@ func (AppModule) LegacyQuerierHandler(_ *codec.LegacyAmino) sdk.Querier {
 // RegisterServices registers a GRPC query service to respond to the
 // module-specific GRPC queries.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
-	types.RegisterQuerySrvrServer(cfg.QueryServer(), am.keeper)
+	//types.RegisterQuerySrvrServer(cfg.QueryServer(), am.keeper)
 }
 
 // RegisterInvariants registers the capability module's invariants.
