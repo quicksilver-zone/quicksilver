@@ -43,7 +43,8 @@ func (c EventCallbacks) AddCallback(id string, fn interface{}) types.EventCallba
 
 func (c EventCallbacks) RegisterCallbacks() types.EventCallbacks {
 	a := c.
-		AddCallback("testCallback", EventCallback(testCallback))
+		AddCallback("testCallback", EventCallback(testCallback)).
+		AddCallback("testCallbackWithArgs", EventCallback(testCallbackWithArgs))
 
 	return a.(EventCallbacks)
 }
@@ -54,6 +55,11 @@ func (c EventCallbacks) RegisterCallbacks() types.EventCallbacks {
 
 func testCallback(k *keeper.Keeper, ctx sdk.Context, args []byte) error {
 	GLOBAL_VAR = 12345
+	return nil
+}
+
+func testCallbackWithArgs(k *keeper.Keeper, ctx sdk.Context, args []byte) error {
+	GLOBAL_VAR = int(args[0])
 	return nil
 }
 
@@ -99,19 +105,30 @@ func (suite *KeeperTestSuite) TestEventLifecycleWithCondition() {
 
 	app.EventManagerKeeper.SetCallbackHandler(types.ModuleName, callbackHandler)
 
-	condition := &types.ConditionAll{Fields: []*types.FieldValue{{Field: types.FieldModule, Value: types.ModuleName, Negate: true}}, Negate: false}
+	condition, err := types.NewConditionAll(ctx, []*types.FieldValue{
+		{Field: types.FieldModule, Value: types.ModuleName, Operator: types.FieldOperator_EQUAL, Negate: false},
+		{Field: types.FieldEventStatus, Value: fmt.Sprintf("%d", types.EventStatusActive), Operator: types.FieldOperator_EQUAL, Negate: false},
+	}, true)
 
+	suite.NoError(err)
+
+	app.EventManagerKeeper.AddEvent(ctx, types.ModuleName, suite.chainB.ChainID, "test1", "", types.EventTypeICAUnbond, types.EventStatusActive, nil, nil)
 	app.EventManagerKeeper.AddEvent(ctx, types.ModuleName, suite.chainB.ChainID, "test", "testCallback", types.EventTypeICADelegate, types.EventStatusPending, condition, nil)
 
 	events := app.EventManagerKeeper.AllEvents(ctx)
 
-	suite.Equal(1, len(events))
+	suite.Equal(2, len(events))
 
 	GLOBAL_VAR = 0
 
-	app.EventManagerKeeper.Trigger(ctx, types.ModuleName, suite.chainB.ChainID)
+	// martCompleted doesn't require an explicit callback
+	app.EventManagerKeeper.MarkCompleted(ctx, types.ModuleName, suite.chainB.ChainID, "test1")
 
 	event, found := app.EventManagerKeeper.GetEvent(ctx, types.ModuleName, suite.chainB.ChainID, "test")
+
+	events = app.EventManagerKeeper.AllEvents(ctx)
+
+	suite.Equal(1, len(events))
 
 	fmt.Println(event)
 	suite.True(found)
@@ -119,7 +136,70 @@ func (suite *KeeperTestSuite) TestEventLifecycleWithCondition() {
 
 	suite.Equal(event.EventStatus, types.EventStatusActive)
 
-	app.EventManagerKeeper.DeleteEvent(ctx, types.ModuleName, suite.chainB.ChainID, "test")
+	app.EventManagerKeeper.MarkCompleted(ctx, types.ModuleName, suite.chainB.ChainID, "test")
+
+	events = app.EventManagerKeeper.AllEvents(ctx)
+
+	suite.Equal(0, len(events))
+}
+
+func (suite *KeeperTestSuite) TestEventLifecycleWithCondition2() {
+	app := suite.GetSimApp(suite.chainA)
+	ctx := suite.chainA.GetContext()
+
+	callbackHandler := EventCallbacks{&app.EventManagerKeeper, make(map[string]EventCallback, 0)}
+
+	app.EventManagerKeeper.SetCallbackHandler(types.ModuleName, callbackHandler)
+
+	condition1, err := types.NewConditionAll(ctx, []*types.FieldValue{
+		{Field: types.FieldModule, Value: types.ModuleName, Operator: types.FieldOperator_EQUAL, Negate: false},
+		{Field: types.FieldEventType, Value: fmt.Sprintf("%d", types.EventTypeICAUnbond), Operator: types.FieldOperator_EQUAL, Negate: false},
+	}, true)
+	suite.NoError(err)
+
+	condition2, err := types.NewConditionAll(ctx, []*types.FieldValue{
+		{Field: types.FieldModule, Value: types.ModuleName, Operator: types.FieldOperator_EQUAL, Negate: false},
+		{Field: types.FieldEventType, Value: fmt.Sprintf("%d", types.EventTypeICADelegate), Operator: types.FieldOperator_EQUAL, Negate: false},
+	}, true)
+	suite.NoError(err)
+
+	conditionAnd, err := types.NewConditionAnd(ctx, condition1, condition2)
+	suite.NoError(err)
+
+	app.EventManagerKeeper.AddEvent(ctx, types.ModuleName, suite.chainB.ChainID, "test1", "", types.EventTypeICAUnbond, types.EventStatusActive, nil, nil)
+	app.EventManagerKeeper.AddEvent(ctx, types.ModuleName, suite.chainB.ChainID, "test", "testCallbackWithArgs", types.EventTypeICADelegate, types.EventStatusPending, condition1, []byte{0x01})
+	app.EventManagerKeeper.AddEvent(ctx, types.ModuleName, suite.chainB.ChainID, "test2", "testCallbackWithArgs", types.EventTypeICAWithdrawRewards, types.EventStatusPending, conditionAnd, []byte{0x02})
+
+	events := app.EventManagerKeeper.AllEvents(ctx)
+
+	suite.Equal(3, len(events))
+
+	GLOBAL_VAR = 0
+
+	// markCompleted doesn't require an explicit callback
+	app.EventManagerKeeper.MarkCompleted(ctx, types.ModuleName, suite.chainB.ChainID, "test1")
+
+	event, found := app.EventManagerKeeper.GetEvent(ctx, types.ModuleName, suite.chainB.ChainID, "test")
+	suite.True(found)
+
+	events = app.EventManagerKeeper.AllEvents(ctx)
+
+	suite.Equal(2, len(events))
+
+	fmt.Println(event)
+	suite.Equal(1, GLOBAL_VAR)
+
+	suite.Equal(event.EventStatus, types.EventStatusActive)
+
+	app.EventManagerKeeper.MarkCompleted(ctx, types.ModuleName, suite.chainB.ChainID, "test")
+
+	suite.Equal(2, GLOBAL_VAR)
+
+	events = app.EventManagerKeeper.AllEvents(ctx)
+
+	suite.Equal(1, len(events))
+
+	app.EventManagerKeeper.MarkCompleted(ctx, types.ModuleName, suite.chainB.ChainID, "test2")
 
 	events = app.EventManagerKeeper.AllEvents(ctx)
 
