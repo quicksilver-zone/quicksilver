@@ -58,6 +58,7 @@ type Keeper struct {
 	TransferKeeper      ibctransferkeeper.Keeper
 	ClaimsManagerKeeper types.ClaimsManagerKeeper
 	EpochsKeeper        types.EpochsKeeper
+	EventManagerKeeper  types.EventManagerKeeper
 	Ir                  codectypes.InterfaceRegistry
 	hooks               types.IcsHooks
 	paramStore          paramtypes.Subspace
@@ -78,6 +79,7 @@ func NewKeeper(
 	ibcKeeper *ibckeeper.Keeper,
 	transferKeeper ibctransferkeeper.Keeper,
 	claimsManagerKeeper types.ClaimsManagerKeeper,
+	eventManagerKeeper types.EventManagerKeeper,
 	ps paramtypes.Subspace,
 ) *Keeper {
 	if addr := accountKeeper.GetModuleAddress(types.ModuleName); addr == nil {
@@ -107,6 +109,7 @@ func NewKeeper(
 		IBCKeeper:           ibcKeeper,
 		TransferKeeper:      transferKeeper,
 		ClaimsManagerKeeper: claimsManagerKeeper,
+		EventManagerKeeper:  eventManagerKeeper,
 		hooks:               nil,
 		txSubmit:            ProdSubmitTx,
 		paramStore:          ps,
