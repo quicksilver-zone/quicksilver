@@ -29,6 +29,10 @@ func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey) Keeper {
 	}
 }
 
+func (k *Keeper) GetCodec() codec.Codec {
+	return k.cdc
+}
+
 func (k *Keeper) SetCallbackHandler(module string, handler types.EventCallbacks) error {
 	_, found := k.callbacks[module]
 	if found {
