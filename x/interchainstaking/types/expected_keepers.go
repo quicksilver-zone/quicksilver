@@ -9,6 +9,7 @@ import (
 
 	claimsmanagertypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
 	epochstypes "github.com/quicksilver-zone/quicksilver/x/epochs/types"
+	emkeeper "github.com/quicksilver-zone/quicksilver/x/eventmanager/keeper"
 )
 
 // ChannelKeeper defines the expected IBC channel keeper.
@@ -55,4 +56,8 @@ type ClaimsManagerKeeper interface {
 
 type EpochsKeeper interface {
 	GetEpochInfo(ctx sdk.Context, identifier string) epochstypes.EpochInfo
+}
+
+type EventManagerKeeper interface {
+	AddEvent(ctx sdk.Context, module, chainID, identifier, callback string, payload []byte, status int32, condtion emkeeper.ConditionI) error
 }
