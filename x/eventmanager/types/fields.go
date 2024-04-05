@@ -1,60 +1,106 @@
 package types
 
 import (
+	fmt "fmt"
 	"strconv"
+	"strings"
 )
 
-func (e Event) ResolveAllFieldValues(fvs []*FieldValue) bool {
+func (e Event) ResolveAllFieldValues(fvs []*FieldValue) (bool, error) {
 	for _, fv := range fvs {
-		if !e.resolveFieldValue(fv) {
-			return false
+		res, err := e.resolveFieldValue(fv)
+		if err != nil {
+			return false, err
+		}
+		if !res {
+			return false, nil
 		}
 	}
-	return true
+	// return true if none of the conditions failed.
+	return true, nil
 }
 
-func (e Event) ResolveAnyFieldValues(fvs []*FieldValue) bool {
+func (e Event) ResolveAnyFieldValues(fvs []*FieldValue) (bool, error) {
 	for _, fv := range fvs {
-		if e.resolveFieldValue(fv) {
-			return true
+		res, err := e.resolveFieldValue(fv)
+		if err != nil {
+			return false, err
+		}
+		if res {
+			return true, nil
 		}
 	}
-	return false
+	// return false if none of the conditons passed.
+	return false, nil
 }
 
-func (e Event) resolveFieldValue(fv *FieldValue) bool {
+func (e Event) resolveFieldValue(fv *FieldValue) (bool, error) {
 
-	if fv.Field == FieldEventType {
+	switch {
+	case fv.Field == FieldEventType:
+		if fv.Operator != FieldOperator_EQUAL {
+			return false, fmt.Errorf("bad operator %d for field %s", fv.Operator, fv.Field)
+		}
 		v, err := strconv.ParseInt(fv.Value, 10, 32)
 		if err != nil {
-			return fv.Negate
+			return fv.Negate, err
 		}
 		if v == int64(e.EventType) {
-			return !fv.Negate
+			return !fv.Negate, nil
 		}
-		return fv.Negate
-	}
-
-	if fv.Field == FieldEventStatus {
+		return fv.Negate, nil
+	case fv.Field == FieldEventStatus:
+		if fv.Operator != FieldOperator_EQUAL {
+			return false, fmt.Errorf("bad operator %d for field %s", fv.Operator, fv.Field)
+		}
 		v, err := strconv.ParseInt(fv.Value, 10, 32)
 		if err != nil {
-			return fv.Negate
+			return fv.Negate, err
 		}
 		if v == int64(e.EventType) {
-			return !fv.Negate
+			return !fv.Negate, nil
 		}
-		return fv.Negate
+		return fv.Negate, nil
+	case fv.Field == FieldModule:
+		res, err := compare(fv.Operator, fv.Value, e.Module)
+		if err != nil {
+			return false, nil
+		}
+		return res != fv.Negate, nil
+	case fv.Field == FieldIdentifier:
+		res, err := compare(fv.Operator, fv.Value, e.Identifier)
+		if err != nil {
+			return false, nil
+		}
+		return res != fv.Negate, nil
+	case fv.Field == FieldChainID:
+		res, err := compare(fv.Operator, fv.Value, e.ChainId)
+		if err != nil {
+			return false, nil
+		}
+		return res != fv.Negate, nil
+	case fv.Field == FieldCallback:
+		res, err := compare(fv.Operator, fv.Value, e.ChainId)
+		if err != nil {
+			return false, nil
+		}
+		return res != fv.Negate, nil
 	}
 
-	if fv.Field == FieldModule && fv.Value == e.Module {
-		return !fv.Negate
-	}
-	if fv.Field == FieldIdentifier && fv.Value == e.Identifier {
-		return !fv.Negate
-	}
-	if fv.Field == FieldChainID && fv.Value == e.ChainId {
-		return !fv.Negate
-	}
+	return fv.Negate, nil
+}
 
-	return fv.Negate
+func compare(operator FieldOperator, testValue, value string) (bool, error) {
+	switch operator {
+	case FieldOperator_EQUAL:
+		return testValue == value, nil
+	case FieldOperator_CONTAINS:
+		return strings.Contains(value, testValue), nil
+	case FieldOperator_BEGINSWITH:
+		return strings.HasPrefix(value, testValue), nil
+	case FieldOperator_ENDSWITH:
+		return strings.HasSuffix(value, testValue), nil
+	default:
+		return false, fmt.Errorf("unrecognised operator %d", operator)
+	}
 }
