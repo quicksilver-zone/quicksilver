@@ -1,0 +1,27 @@
+syntax = "proto3";
+package quicksilver.eventmanager.v1;
+
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "quicksilver/eventmanager/v1/genesis.proto";
+
+option go_package = "github.com/quicksilver-zone/quicksilver/x/eventmanager/types";
+
+// Query defines the gRPC querier service.
+service Query {
+  // Events query events
+  rpc Events(QueryEventsRequest) returns (QueryEventsResponse) {
+    option (google.api.http).get = "/quicksilver/eventmanager/v1/events/{chain_id}";
+  }
+}
+
+message QueryEventsRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+  string chain_id = 2;
+}
+
+message QueryEventsResponse {
+  repeated Event events = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}

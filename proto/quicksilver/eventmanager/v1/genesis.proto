@@ -1,0 +1,23 @@
+syntax = "proto3";
+package quicksilver.eventmanager.v1;
+
+import "gogoproto/gogo.proto";
+import "google/protobuf/duration.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/quicksilver-zone/quicksilver/x/eventmanager/types";
+
+message Event {
+  string chain_id = 1;
+  int32 event_type = 2;
+  string identifier = 3;
+  int32 event_status = 4;
+  string module = 5;
+  string callback = 6;
+  bytes payload = 7;
+  bytes execute_condition = 8;
+  int64 emitted_height = 9;
+}
+
+// GenesisState defines the eventmanager module's genesis state.
+message GenesisState {}

@@ -412,6 +412,7 @@ func (appKeepers *AppKeepers) InitKeepers(
 		appKeepers.IBCKeeper,
 		appKeepers.TransferKeeper,
 		appKeepers.ClaimsManagerKeeper,
+		appKeepers.EventManagerKeeper,
 		appKeepers.GetSubspace(interchainstakingtypes.ModuleName),
 	)
 
