@@ -1,9 +1,9 @@
 syntax = "proto3";
 package quicksilver.eventmanager.v1;
 
+import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
-import "google/protobuf/duration.proto";
-import "google/protobuf/timestamp.proto";
+import "google/protobuf/any.proto";
 
 option go_package = "github.com/quicksilver-zone/quicksilver/x/eventmanager/types";
 
@@ -15,9 +15,35 @@ message Event {
   string module = 5;
   string callback = 6;
   bytes payload = 7;
-  bytes execute_condition = 8;
+  google.protobuf.Any execute_condition = 8 [(cosmos_proto.accepts_interface) = "quicksilver.interchainstaking.ConditionI"];
   int64 emitted_height = 9;
 }
 
 // GenesisState defines the eventmanager module's genesis state.
 message GenesisState {}
+
+message FieldValue {
+  string field = 1;
+  string value = 2;
+  bool negate = 3;
+}
+
+message ConditionAny {
+  repeated FieldValue fields = 1;
+  bool negate = 2;
+}
+
+message ConditionAll {
+  repeated FieldValue fields = 1;
+  bool negate = 2;
+}
+
+message ConditionAnd {
+  google.protobuf.Any condition1 = 1 [(cosmos_proto.accepts_interface) = "quicksilver.interchainstaking.ConditionI"];
+  google.protobuf.Any condition2 = 2 [(cosmos_proto.accepts_interface) = "quicksilver.interchainstaking.ConditionI"];
+}
+
+message ConditionOr {
+  google.protobuf.Any condition1 = 1 [(cosmos_proto.accepts_interface) = "quicksilver.interchainstaking.ConditionI"];
+  google.protobuf.Any condition2 = 2 [(cosmos_proto.accepts_interface) = "quicksilver.interchainstaking.ConditionI"];
+}
