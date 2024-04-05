@@ -238,6 +238,7 @@ func (k *Keeper) HandleQueuedUnbondings(ctx sdk.Context, zone *types.Zone, epoch
 	for _, valoper := range utils.Keys(coinsOutPerValidator) {
 		if !coinsOutPerValidator[valoper].Amount.IsZero() {
 			msgs = append(msgs, &stakingtypes.MsgUndelegate{DelegatorAddress: zone.DelegationAddress.Address, ValidatorAddress: valoper, Amount: coinsOutPerValidator[valoper]})
+
 			k.EventManagerKeeper.AddEvent(ctx,
 				types.ModuleName,
 				zone.ChainId,
@@ -265,10 +266,10 @@ func (k *Keeper) HandleQueuedUnbondings(ctx sdk.Context, zone *types.Zone, epoch
 		}
 	}
 
-	if err = zone.IncrementWithdrawalWaitgroup(k.Logger(ctx), uint32(len(msgs)), "trigger unbonding messages"); err != nil {
-		return err
-	}
-	k.SetZone(ctx, zone)
+	// if err = zone.IncrementWithdrawalWaitgroup(k.Logger(ctx), uint32(len(msgs)), "trigger unbonding messages"); err != nil {
+	// 	return err
+	// }
+	//k.SetZone(ctx, zone)
 
 	return nil
 }
