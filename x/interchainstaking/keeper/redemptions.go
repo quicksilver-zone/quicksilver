@@ -13,6 +13,7 @@ import (
 
 	"github.com/quicksilver-zone/quicksilver/utils"
 	epochstypes "github.com/quicksilver-zone/quicksilver/x/epochs/types"
+	emtypes "github.com/quicksilver-zone/quicksilver/x/eventmanager/types"
 	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 )
 
@@ -237,6 +238,16 @@ func (k *Keeper) HandleQueuedUnbondings(ctx sdk.Context, zone *types.Zone, epoch
 	for _, valoper := range utils.Keys(coinsOutPerValidator) {
 		if !coinsOutPerValidator[valoper].Amount.IsZero() {
 			msgs = append(msgs, &stakingtypes.MsgUndelegate{DelegatorAddress: zone.DelegationAddress.Address, ValidatorAddress: valoper, Amount: coinsOutPerValidator[valoper]})
+			k.EventManagerKeeper.AddEvent(ctx,
+				types.ModuleName,
+				zone.ChainId,
+				fmt.Sprintf("%s/%s", types.EpochWithdrawalMemo(epoch), valoper),
+				"unbondAck",
+				emtypes.EventTypeICAUnbond,
+				emtypes.EventStatusActive,
+				nil,
+				nil,
+			)
 		}
 	}
 

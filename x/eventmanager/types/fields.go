@@ -2,16 +2,9 @@ package types
 
 import (
 	"strconv"
-	"strings"
 )
 
-type FieldValue struct {
-	Field  string
-	Value  string
-	Negate bool
-}
-
-func (e Event) ResolveAllFieldValues(fvs []FieldValue) bool {
+func (e Event) ResolveAllFieldValues(fvs []*FieldValue) bool {
 	for _, fv := range fvs {
 		if !e.resolveFieldValue(fv) {
 			return false
@@ -20,7 +13,7 @@ func (e Event) ResolveAllFieldValues(fvs []FieldValue) bool {
 	return true
 }
 
-func (e Event) ResolveAnyFieldValues(fvs []FieldValue) bool {
+func (e Event) ResolveAnyFieldValues(fvs []*FieldValue) bool {
 	for _, fv := range fvs {
 		if e.resolveFieldValue(fv) {
 			return true
@@ -29,9 +22,9 @@ func (e Event) ResolveAnyFieldValues(fvs []FieldValue) bool {
 	return false
 }
 
-func (e Event) resolveFieldValue(fv FieldValue) bool {
+func (e Event) resolveFieldValue(fv *FieldValue) bool {
 
-	if strings.ToLower(fv.Field) == "eventtype" {
+	if fv.Field == FieldEventType {
 		v, err := strconv.ParseInt(fv.Value, 10, 32)
 		if err != nil {
 			return fv.Negate
@@ -42,7 +35,7 @@ func (e Event) resolveFieldValue(fv FieldValue) bool {
 		return fv.Negate
 	}
 
-	if strings.ToLower(fv.Field) == "eventstatus" {
+	if fv.Field == FieldEventStatus {
 		v, err := strconv.ParseInt(fv.Value, 10, 32)
 		if err != nil {
 			return fv.Negate
@@ -53,13 +46,13 @@ func (e Event) resolveFieldValue(fv FieldValue) bool {
 		return fv.Negate
 	}
 
-	if strings.ToLower(fv.Field) == "module" && fv.Value == e.Module {
+	if fv.Field == FieldModule && fv.Value == e.Module {
 		return !fv.Negate
 	}
-	if strings.ToLower(fv.Field) == "identifier" && fv.Value == e.Identifier {
+	if fv.Field == FieldIdentifier && fv.Value == e.Identifier {
 		return !fv.Negate
 	}
-	if strings.ToLower(fv.Field) == "chainid" && fv.Value == e.ChainId {
+	if fv.Field == FieldChainID && fv.Value == e.ChainId {
 		return !fv.Negate
 	}
 
