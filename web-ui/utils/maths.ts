@@ -26,6 +26,38 @@ export const toNumber = (
     .toNumber();
 };
 
+export const formatNumber = (num: number) => {
+  if (num === 0) return '0';
+  if (num < 0.001) return '<0.001';
+
+  const truncate = (number: number, decimalPlaces: number) => {
+    const numStr = number.toString();
+    const dotIndex = numStr.indexOf('.');
+    if (dotIndex === -1) return numStr; 
+    const endIndex = decimalPlaces > 0 ? dotIndex + decimalPlaces + 1 : dotIndex;
+    return numStr.substring(0, endIndex);
+  };
+
+  if (num < 1) {
+    return truncate(num, 3);
+  }
+  if (num < 100) {
+    return truncate(num, 1);
+  }
+  if (num < 1000) {
+    return truncate(num, 0);
+  }
+  if (num >= 1000 && num < 1000000) {
+    return truncate(num / 1000, 0) + 'K';
+  }
+  if (num >= 1000000 && num < 1000000000) {
+    return truncate(num / 1000000, 0) + 'M';
+  }
+  if (num >= 1000000000) {
+    return truncate(num / 1000000000, 0) + 'B';
+  }
+};
+
 export function truncateToTwoDecimals(num: number) {
   const multiplier = Math.pow(10, 2);
   return Math.floor(num * multiplier) / multiplier;
