@@ -694,7 +694,7 @@ export const StakingBox = ({ selectedOption, valoperAddress }: StakingBoxProps) 
                   </Flex>
                 </Flex>
                 <Divider bgColor="complimentary.900" />
-                <HStack justifyContent="space-between" alignItems="left" w="100%" mt={-8}>
+                <HStack pt={2} justifyContent="space-between" alignItems="left" w="100%" mt={-8}>
                   <Stat textAlign="left" color="white">
                     <StatLabel>What you&apos;ll get</StatLabel>
                     <StatNumber>{selectedOption.value.toUpperCase()}:</StatNumber>
