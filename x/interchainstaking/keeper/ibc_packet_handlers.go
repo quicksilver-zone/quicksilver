@@ -336,7 +336,7 @@ func (k *Keeper) HandleMsgTransfer(ctx sdk.Context, msg ibctransfertypes.Fungibl
 func (k *Keeper) DistributeToClaimants(ctx sdk.Context, zone *types.Zone, zoneAddress sdk.AccAddress, rewardsCoin sdk.Coin) (sdk.Coin, error) {
 	var err error
 	toDistribute := rewardsCoin.Amount
-	supply := k.BankKeeper.GetSupply(ctx, zone.BaseDenom).Amount
+	supply := k.BankKeeper.GetSupply(ctx, zone.LocalDenom).Amount
 	claimTotal := math.ZeroInt()
 	k.ClaimsManagerKeeper.IterateLastEpochClaims(ctx, zone.ChainId, func(index int64, data cmtypes.Claim) (stop bool) {
 		claimTotal = claimTotal.Add(data.Amount)

@@ -60,13 +60,13 @@ func (suite *KeeperTestSuite) TestHandleMsgTransferGood() {
 		{
 			name:                 "staking denom - 100% to fc",
 			amount:               sdk.NewCoin("uatom", math.NewInt(100)),
-			supply:               sdk.NewCoin("uatom", math.NewInt(1000)),
+			supply:               sdk.NewCoin("uqatom", math.NewInt(1000)),
 			expectedFeeCollector: math.NewInt(100),
 		},
 		{
 			name:                 "non staking denom, no claims - 100% to fc",
 			amount:               sdk.NewCoin("transfer/channel-569/untrn", math.NewInt(100)),
-			supply:               sdk.NewCoin("uatom", math.NewInt(1000)),
+			supply:               sdk.NewCoin("uqatom", math.NewInt(1000)),
 			expectedFeeCollector: math.NewInt(100),
 		},
 		{
@@ -77,7 +77,7 @@ func (suite *KeeperTestSuite) TestHandleMsgTransferGood() {
 				{UserAddress: user1, ChainId: suite.chainB.ChainID, Module: cmtypes.ClaimTypeLiquidToken, SourceChainId: "quicksilver-2", Amount: math.NewInt(1000)},
 				{UserAddress: user1, ChainId: suite.chainB.ChainID, Module: cmtypes.ClaimTypeLiquidToken, SourceChainId: "juno-1", Amount: math.NewInt(2000)},
 			},
-			supply:               sdk.NewCoin("uatom", math.NewInt(4000)),
+			supply:               sdk.NewCoin("uqatom", math.NewInt(4000)),
 			expectedFeeCollector: math.NewInt(3),
 			expectedBalances: map[string]math.Int{
 				user1: math.NewInt(97),
@@ -92,7 +92,7 @@ func (suite *KeeperTestSuite) TestHandleMsgTransferGood() {
 				{UserAddress: user1, ChainId: suite.chainB.ChainID, Module: cmtypes.ClaimTypeLiquidToken, SourceChainId: "juno-1", Amount: math.NewInt(2000)},
 				{UserAddress: user2, ChainId: suite.chainB.ChainID, Module: cmtypes.ClaimTypeLiquidToken, SourceChainId: "juno-1", Amount: math.NewInt(2000)},
 			},
-			supply:               sdk.NewCoin("uatom", math.NewInt(6000)),
+			supply:               sdk.NewCoin("uqatom", math.NewInt(6000)),
 			expectedFeeCollector: math.NewInt(92),
 			expectedBalances: map[string]math.Int{
 				user1: math.NewInt(605),
@@ -110,7 +110,7 @@ func (suite *KeeperTestSuite) TestHandleMsgTransferGood() {
 				{UserAddress: user2, ChainId: suite.chainB.ChainID, Module: cmtypes.ClaimTypeLiquidToken, SourceChainId: "juno-1", Amount: math.NewInt(2000)},
 				{UserAddress: user3, ChainId: suite.chainB.ChainID, Module: cmtypes.ClaimTypeLiquidToken, SourceChainId: "quicksilver-2", Amount: math.NewInt(1000)},
 			},
-			supply:               sdk.NewCoin("uatom", math.NewInt(6000)),
+			supply:               sdk.NewCoin("uqatom", math.NewInt(6000)),
 			expectedFeeCollector: math.NewInt(27),
 			expectedBalances: map[string]math.Int{
 				user1: math.NewInt(556),
@@ -128,7 +128,7 @@ func (suite *KeeperTestSuite) TestHandleMsgTransferGood() {
 				{UserAddress: user2, ChainId: suite.chainB.ChainID, Module: cmtypes.ClaimTypeLiquidToken, SourceChainId: "juno-1", Amount: math.NewInt(1000)},
 				{UserAddress: user3, ChainId: suite.chainB.ChainID, Module: cmtypes.ClaimTypeLiquidToken, SourceChainId: "quicksilver-2", Amount: math.NewInt(1000)},
 			},
-			supply:               sdk.NewCoin("uatom", math.NewInt(6000)),
+			supply:               sdk.NewCoin("uqatom", math.NewInt(6000)),
 			expectedFeeCollector: math.NewInt(190),
 			expectedBalances: map[string]math.Int{
 				user1: math.NewInt(486),
