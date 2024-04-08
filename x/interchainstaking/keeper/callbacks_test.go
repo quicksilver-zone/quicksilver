@@ -1024,7 +1024,7 @@ func (suite *KeeperTestSuite) TestAllBalancesCallback() {
 			if queryInfo.ChainId == zone.ChainId &&
 				queryInfo.ConnectionId == zone.ConnectionId &&
 				queryInfo.QueryType == icstypes.BankStoreKey &&
-				bytes.Equal(queryInfo.Request, append(data, []byte(response.Balances[0].GetDenom())...)) {
+				bytes.Equal(queryInfo.Request, append(data, response.Balances[0].GetDenom()...)) {
 				found = true
 				return true
 			}
@@ -1074,7 +1074,7 @@ func (suite *KeeperTestSuite) TestAllBalancesCallbackWithExistingWg() {
 			if queryInfo.ChainId == zone.ChainId &&
 				queryInfo.ConnectionId == zone.ConnectionId &&
 				queryInfo.QueryType == icstypes.BankStoreKey &&
-				bytes.Equal(queryInfo.Request, append(data, []byte(response.Balances[0].GetDenom())...)) {
+				bytes.Equal(queryInfo.Request, append(data, response.Balances[0].GetDenom()...)) {
 				found = true
 				return true
 			}
@@ -1127,7 +1127,7 @@ func (suite *KeeperTestSuite) TestAllBalancesCallbackExistingBalanceNowNil() {
 			if queryInfo.ChainId == zone.ChainId &&
 				queryInfo.ConnectionId == zone.ConnectionId &&
 				queryInfo.QueryType == icstypes.BankStoreKey &&
-				bytes.Equal(queryInfo.Request, append(data, []byte("uqck")...)) {
+				bytes.Equal(queryInfo.Request, append(data, "uqck"...)) {
 				found = true
 				return true
 			}
@@ -1175,7 +1175,7 @@ func (suite *KeeperTestSuite) TestAllBalancesCallbackExistingBalanceNowNil() {
 			if queryInfo.ChainId == zone.ChainId &&
 				queryInfo.ConnectionId == zone.ConnectionId &&
 				queryInfo.QueryType == icstypes.BankStoreKey &&
-				bytes.Equal(queryInfo.Request, append(data, []byte("uqck")...)) {
+				bytes.Equal(queryInfo.Request, append(data, "uqck"...)) {
 				found = true
 				return true
 			}
@@ -1224,7 +1224,7 @@ func (suite *KeeperTestSuite) TestAllBalancesCallbackMulti() {
 				if queryInfo.ChainId == zone.ChainId &&
 					queryInfo.ConnectionId == zone.ConnectionId &&
 					queryInfo.QueryType == icstypes.BankStoreKey &&
-					bytes.Equal(queryInfo.Request, append(data, []byte(coin.GetDenom())...)) {
+					bytes.Equal(queryInfo.Request, append(data, coin.GetDenom()...)) {
 					found = true
 					return true
 				}
@@ -1256,7 +1256,7 @@ func (suite *KeeperTestSuite) TestAccountBalanceCallback() {
 		for _, addr := range []string{zone.DepositAddress.Address, zone.WithdrawalAddress.Address} {
 			accAddr, err := sdk.AccAddressFromBech32(addr)
 			suite.NoError(err)
-			data := append(banktypes.CreateAccountBalancesPrefix(accAddr), []byte("qck")...)
+			data := append(banktypes.CreateAccountBalancesPrefix(accAddr), "qck"...)
 
 			err = keeper.AccountBalanceCallback(quicksilver.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: data})
 			suite.NoError(err)
@@ -1286,7 +1286,7 @@ func (suite *KeeperTestSuite) TestAccountBalance046Callback() {
 		for _, addr := range []string{zone.DepositAddress.Address, zone.WithdrawalAddress.Address} {
 			accAddr, err := sdk.AccAddressFromBech32(addr)
 			suite.NoError(err)
-			data := append(banktypes.CreateAccountBalancesPrefix(accAddr), []byte("qck")...)
+			data := append(banktypes.CreateAccountBalancesPrefix(accAddr), "qck"...)
 
 			err = keeper.AccountBalanceCallback(quicksilver.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: data})
 			suite.NoError(err)
@@ -1315,7 +1315,7 @@ func (suite *KeeperTestSuite) TestAccountBalanceCallbackMismatch() {
 		for _, addr := range []string{zone.DepositAddress.Address, zone.WithdrawalAddress.Address} {
 			accAddr, err := sdk.AccAddressFromBech32(addr)
 			suite.NoError(err)
-			data := append(banktypes.CreateAccountBalancesPrefix(accAddr), []byte("stake")...)
+			data := append(banktypes.CreateAccountBalancesPrefix(accAddr), "stake"...)
 
 			err = keeper.AccountBalanceCallback(quicksilver.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: data})
 			suite.ErrorContains(err, "received coin denom qck does not match requested denom stake")
@@ -1344,7 +1344,7 @@ func (suite *KeeperTestSuite) TestAccountBalanceCallbackNil() {
 		for _, addr := range []string{zone.DepositAddress.Address, zone.WithdrawalAddress.Address} {
 			accAddr, err := sdk.AccAddressFromBech32(addr)
 			suite.NoError(err)
-			data := append(banktypes.CreateAccountBalancesPrefix(accAddr), []byte("stake")...)
+			data := append(banktypes.CreateAccountBalancesPrefix(accAddr), "stake"...)
 
 			err = keeper.AccountBalanceCallback(quicksilver.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: data})
 			suite.NoError(err)
@@ -2512,7 +2512,7 @@ func (suite *KeeperTestSuite) TestDelegationAccountBalancesCallback() {
 					if queryInfo.ChainId == zone.ChainId &&
 						queryInfo.ConnectionId == zone.ConnectionId &&
 						queryInfo.QueryType == icstypes.BankStoreKey &&
-						bytes.Equal(queryInfo.Request, append(data, []byte(b.GetDenom())...)) {
+						bytes.Equal(queryInfo.Request, append(data, b.GetDenom()...)) {
 						found = true
 						return true
 					}
@@ -2544,7 +2544,7 @@ func (suite *KeeperTestSuite) TestDelegationAccountBalanceCallbackDenomMismatch(
 
 		accAddr, err := sdk.AccAddressFromBech32(zone.DelegationAddress.Address)
 		suite.Require().NoError(err)
-		data := append(banktypes.CreateAccountBalancesPrefix(accAddr), []byte("uqck")...)
+		data := append(banktypes.CreateAccountBalancesPrefix(accAddr), "uqck"...)
 
 		err = keeper.DelegationAccountBalanceCallback(app.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: data})
 		suite.Require().Error(err)
@@ -2618,7 +2618,7 @@ func (suite *KeeperTestSuite) TestDelegationAccountBalanceCallback() {
 
 		accAddr, err := sdk.AccAddressFromBech32(zone.DelegationAddress.Address)
 		suite.Require().NoError(err)
-		data := append(banktypes.CreateAccountBalancesPrefix(accAddr), []byte("uatom")...)
+		data := append(banktypes.CreateAccountBalancesPrefix(accAddr), "uatom"...)
 
 		err = keeper.DelegationAccountBalanceCallback(app.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: data})
 		suite.Require().NoError(err)
@@ -2653,7 +2653,7 @@ func (suite *KeeperTestSuite) TestDelegationAccountBalanceCallbackLSM() {
 
 		accAddr, err := sdk.AccAddressFromBech32(zone.DelegationAddress.Address)
 		suite.Require().NoError(err)
-		data := append(banktypes.CreateAccountBalancesPrefix(accAddr), []byte(denom)...)
+		data := append(banktypes.CreateAccountBalancesPrefix(accAddr), denom...)
 
 		err = keeper.DelegationAccountBalanceCallback(app.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: data})
 		suite.Require().NoError(err)
@@ -2692,7 +2692,7 @@ func (suite *KeeperTestSuite) TestDelegationAccountBalanceCallbackLSMBadZone() {
 
 		accAddr, err := sdk.AccAddressFromBech32(zone.DelegationAddress.Address)
 		suite.Require().NoError(err)
-		data := append(banktypes.CreateAccountBalancesPrefix(accAddr), []byte(denom)...)
+		data := append(banktypes.CreateAccountBalancesPrefix(accAddr), denom...)
 
 		err = keeper.DelegationAccountBalanceCallback(app.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: data})
 		suite.Require().NoError(err)
@@ -2737,7 +2737,7 @@ func (suite *KeeperTestSuite) TestPerfBalanceCallbackUpdate() {
 		address := zone.PerformanceAddress.Address
 		accAddr, err := sdk.AccAddressFromBech32(address)
 		suite.NoError(err)
-		data := append(banktypes.CreateAccountBalancesPrefix(accAddr), []byte("uatom")...)
+		data := append(banktypes.CreateAccountBalancesPrefix(accAddr), "uatom"...)
 
 		err = keeper.PerfBalanceCallback(quicksilver.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: data})
 		suite.NoError(err)
@@ -2785,7 +2785,7 @@ func TestRejectNonADR027(t *testing.T) {
 
 	// bodyBz's length prefix is 5, with `5` as varint encoding. We also try a
 	// longer varint encoding for 5: `133 00`.
-	longVarintBodyBz := append(append([]byte{bodyBz[0]}, byte(133), byte(0o0)), bodyBz[2:]...)
+	longVarintBodyBz := append(append([]byte{bodyBz[0]}, 133, 0o0), bodyBz[2:]...)
 
 	tests := []struct {
 		name      string

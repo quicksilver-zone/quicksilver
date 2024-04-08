@@ -134,7 +134,7 @@ func (UmeeModule) Hooks(ctx sdk.Context, k *Keeper) {
 			connectionData.ConnectionID,
 			connectionData.ChainID,
 			icstypes.BankStoreKey,
-			append(accountPrefix, []byte(balance.Denom)...),
+			append(accountPrefix, balance.Denom...),
 			sdk.NewInt(-1),
 			types.ModuleName,
 			UmeeLeverageModuleBalanceUpdateCallbackID,

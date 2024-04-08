@@ -586,7 +586,7 @@ func (k *Keeper) EmitPerformanceBalanceQuery(ctx sdk.Context, zone *types.Zone) 
 		zone.ConnectionId,
 		zone.ChainId,
 		types.BankStoreKey,
-		append(data, []byte(zone.BaseDenom)...),
+		append(data, zone.BaseDenom...),
 		sdk.NewInt(-1),
 		types.ModuleName,
 		"perfbalance",

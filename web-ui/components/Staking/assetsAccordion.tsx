@@ -1,7 +1,10 @@
 import { Box, Image, Text, Accordion, AccordionItem, Flex, AccordionButton, SkeletonCircle } from '@chakra-ui/react';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
+import { useLiquidRewardsQuery } from '@/hooks/useQueries';
 import { shiftDigits } from '@/utils';
+
+const BigNumber = require('bignumber.js');
 
 type AssetsAccordianProps = {
   selectedOption: {
@@ -13,17 +16,44 @@ type AssetsAccordianProps = {
   };
   balance: string;
   qBalance: string;
+  address: string;
 };
 
-export const AssetsAccordian: React.FC<AssetsAccordianProps> = ({ selectedOption, balance, qBalance }) => {
-  const exponent = selectedOption.value === 'DYDX' ? -18 : -6;
-  const qAssets = shiftDigits(qBalance, exponent);
+export const AssetsAccordian: React.FC<AssetsAccordianProps> = ({ selectedOption, balance, qBalance, address }) => {
 
-  const qAssetsDisplay = qAssets.includes('.') ? qAssets.substring(0, qAssets.indexOf('.') + 3) : qAssets;
+  const { liquidRewards } = useLiquidRewardsQuery(address);
+  const [updatedQBalance, setUpdatedQBalance] = useState(qBalance);
+
+  useEffect(() => {
+    const calculateLiquidRewards = () => {
+      let totalAmount = new BigNumber(0);
+      const denomToFind = selectedOption.value === 'DYDX' ? `aq${selectedOption.value.toLowerCase()}` : `uq${selectedOption.value.toLowerCase()}`;
+
+      for (const chain in liquidRewards?.assets) {
+        const chainAssets = liquidRewards?.assets[chain];
+        chainAssets.forEach((assetGroup) => {
+          if (assetGroup.Type === "liquid") {
+            assetGroup.Amount.forEach((asset) => {
+              if (asset.denom === denomToFind) {
+                totalAmount = totalAmount.plus(asset.amount);
+              }
+            });
+          }
+        });
+      }
+
+      const exponent = selectedOption.value === 'DYDX' ? 18 : 6;
+      return totalAmount.shiftedBy(-exponent).toString();
+    };
+
+    setUpdatedQBalance(calculateLiquidRewards());
+  }, [selectedOption, liquidRewards, qBalance]);
+
+  const qAssetsDisplay = updatedQBalance.includes('.') ? updatedQBalance.substring(0, updatedQBalance.indexOf('.') + 3) : updatedQBalance;
   const balanceDisplay = balance.includes('.') ? balance.substring(0, balance.indexOf('.') + 4) : balance;
 
   const renderQAssets = () => {
-    if (qBalance) {
+    if (qBalance && liquidRewards) {
       return (
         <Text pr={2} color="complimentary.900">
           {qAssetsDisplay}

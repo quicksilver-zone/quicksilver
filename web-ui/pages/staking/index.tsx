@@ -1,4 +1,5 @@
 import { Box, Container, Flex, VStack, HStack, Stat, StatLabel, StatNumber, SlideFade, SkeletonCircle, Image } from '@chakra-ui/react';
+import { useChain } from '@cosmos-kit/react-lite';
 import dynamic from 'next/dynamic';
 import Head from 'next/head';
 import { useState } from 'react';
@@ -26,6 +27,8 @@ const networks = process.env.NEXT_PUBLIC_CHAIN_ENV === 'mainnet' ? prodNetworks 
 
 export default function Staking() {
   const [selectedNetwork, setSelectedNetwork] = useState(networks[0]);
+
+  const {address} = useChain('quicksilver');
 
   let newChainId;
   if (selectedNetwork.chainId === 'provider') {
@@ -124,7 +127,7 @@ export default function Staking() {
 
                 <Box h="10px" />
                 {/* Bottom Half (1/3) */}
-                <DynamicAssetBox selectedOption={selectedNetwork} balance={balance} qBalance={qBalance} />
+                <DynamicAssetBox address={address ?? ""} selectedOption={selectedNetwork} balance={balance} qBalance={qBalance} />
               </Flex>
             </Flex>
             <Box>

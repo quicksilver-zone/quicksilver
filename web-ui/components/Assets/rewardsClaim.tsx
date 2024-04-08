@@ -1,19 +1,23 @@
 import { CloseIcon } from '@chakra-ui/icons';
 import { Box, Flex, Text, VStack, Button, HStack, Spinner, Checkbox } from '@chakra-ui/react';
+import { StdFee } from '@cosmjs/amino';
 import { assets } from 'chain-registry';
 import { GenericAuthorization } from 'interchain-query/cosmos/authz/v1beta1/authz';
 import { quicksilver, cosmos } from 'quicksilverjs';
 import React, { useState } from 'react';
 
 import { useTx } from '@/hooks';
+import { useFeeEstimation } from '@/hooks/useFeeEstimation';
 import { useIncorrectAuthChecker, useLiquidEpochQuery } from '@/hooks/useQueries';
 
 interface RewardsClaimInterface {
   address: string;
   onClose: () => void;
+  refetch: () => void;
 }
-export const RewardsClaim: React.FC<RewardsClaimInterface> = ({ address, onClose }) => {
+export const RewardsClaim: React.FC<RewardsClaimInterface> = ({ address, onClose, refetch }) => {
   const { tx } = useTx('quicksilver' ?? '');
+  const { estimateFee } = useFeeEstimation('quicksilver');
   const { authData } = useIncorrectAuthChecker(address);
 
   const [isSigning, setIsSigning] = useState<boolean>(false);
@@ -48,35 +52,39 @@ export const RewardsClaim: React.FC<RewardsClaimInterface> = ({ address, onClose
     msgTypeUrl: quicksilver.participationrewards.v1.MsgSubmitClaim.typeUrl,
   });
 
-  const mainTokens = assets.find(({ chain_name }) => chain_name === 'quicksilver');
-  const mainDenom = mainTokens?.assets[0].base ?? 'uqck';
-
-  const fee = {
-    amount: [
-      {
-        denom: mainDenom,
-        amount: '50',
-      },
-    ],
-    gas: '500000',
-  };
-
   const handleAutoClaimRewards = async (event: React.MouseEvent) => {
     event.preventDefault();
     setIsSigning(true);
+
+    const feeBoth: StdFee = {
+      amount: [
+        {
+          denom: 'uqck',
+          amount: '1000000',
+        },
+      ],
+      gas: '2000000',
+    }
+    
+    const feeSingle = await estimateFee(address, [msgGrant]);
     try {
       if (authData) {
-        // Call msgRevokeBad
-        await tx([msgRevokeBad], {
-          fee,
-          onSuccess: () => {},
+        // Call msgRevokeBad and msgGrant
+        await tx([msgRevokeBad, msgGrant], {
+          fee: feeBoth,
+          onSuccess: () => {
+            refetch();
+          },
+        });
+      } else {
+        // Call msgGrant
+        await tx([msgGrant], {
+          fee: feeSingle,
+          onSuccess: () => {
+            refetch();
+          },
         });
       }
-      // Continue with msgGrant
-      await tx([msgGrant], {
-        fee,
-        onSuccess: () => {},
-      });
     } catch (error) {
       console.error('Transaction failed', error);
       setIsError(true);
@@ -85,6 +93,25 @@ export const RewardsClaim: React.FC<RewardsClaimInterface> = ({ address, onClose
     }
   };
 
+  function transformProofs(proofs: any[]) {
+    return proofs.map((proof) => ({
+      key: proof.key,
+      data: proof.data,
+      proofOps: proof.proof_ops
+        ? {
+            //@ts-ignore
+            ops: proof.proof_ops.ops.map((op) => ({
+              type: op.type,
+              key: op.key,
+              data: op.data,
+            })),
+          }
+        : undefined,
+      height: proof.height,
+      proofType: proof.proof_type,
+    }));
+  }
+  
   const handleClaimRewards = async (event: React.MouseEvent) => {
     event.preventDefault();
     setIsSigning(true);
@@ -97,19 +124,17 @@ export const RewardsClaim: React.FC<RewardsClaimInterface> = ({ address, onClose
 
     try {
       const msgSubmitClaims = liquidEpoch.messages.map((message) => {
+        const transformedProofs = transformProofs(message.proofs);
         return submitClaim({
           userAddress: message.user_address,
           zone: message.zone,
           srcZone: message.src_zone,
           claimType: message.claim_type,
-          proofs: message.proofs.map((proof) => ({
-            ...proof,
-            proofOps: proof.proof_ops,
-            proofType: proof.proof_type,
-          })),
+          //@ts-ignore
+          proofs: transformedProofs,
         });
       });
-
+      const fee = await estimateFee(address, msgSubmitClaims);
       await tx(msgSubmitClaims, {
         fee,
         onSuccess: () => {},

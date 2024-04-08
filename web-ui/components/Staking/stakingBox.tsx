@@ -33,7 +33,12 @@ import { quicksilver } from 'quicksilverjs';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { FaStar } from 'react-icons/fa';
 
+
+
+
+
 import { useTx } from '@/hooks';
+import { useFeeEstimation } from '@/hooks/useFeeEstimation';
 import {
   useAllBalancesQuery,
   useBalanceQuery,
@@ -48,6 +53,8 @@ import { getExponent, shiftDigits } from '@/utils';
 import RevertSharesProcessModal from './modals/revertSharesProcessModal';
 import StakingProcessModal from './modals/stakingProcessModal';
 import TransferProcessModal from './modals/transferProcessModal';
+
+
 
 
 type StakingBoxProps = {
@@ -96,11 +103,17 @@ export const StakingBox = ({
   const { address: qAddress } = useChain('quicksilver');
   const exp = getExponent(selectedOption.chainName);
 
-  const { balance, isLoading } = useBalanceQuery(selectedOption.chainName, address ?? '');
+  const { balance, isLoading, refetchBalance } = useBalanceQuery(selectedOption.chainName, address ?? '');
 
-  const { balance: allBalances } = useAllBalancesQuery(selectedOption.chainName, address ?? '');
+  const { balance: allBalances, refetch: allRefetch } = useAllBalancesQuery(selectedOption.chainName, address ?? '');
 
-  const { balance: qBalance } = useQBalanceQuery('quicksilver', qAddress ?? '', selectedOption.value.toLowerCase());
+  const { balance: qBalance, refetch: qRefetch } = useQBalanceQuery('quicksilver', qAddress ?? '', selectedOption.value.toLowerCase());
+
+  const allRefetchBalances = () => {
+    allRefetch();
+    refetchBalance();
+    qRefetch();
+  };
 
   const qAssets = qBalance?.balance.amount || '';
 
@@ -155,23 +168,18 @@ export const StakingBox = ({
     destinationAddress: address ?? '',
   });
 
-  const fee: StdFee = {
-    amount: [
-      {
-        denom: 'uqck',
-        amount: '50',
-      },
-    ],
-    gas: '500000',
-  };
-
   const { tx } = useTx(quicksilverChainName);
+  const { estimateFee } = useFeeEstimation(quicksilverChainName);
 
   const handleLiquidUnstake = async (event: React.MouseEvent) => {
     event.preventDefault();
     setIsSigning(true);
+    const fee = await estimateFee(qAddress ?? '', [msgRequestRedemption]);
     try {
       await tx([msgRequestRedemption], {
+        onSuccess() {
+          allRefetchBalances();
+        },
         fee,
       });
     } catch (error) {
@@ -200,7 +208,7 @@ export const StakingBox = ({
     // }
   };
 
-  const { delegations, delegationsIsError, delegationsIsLoading } = useNativeStakeQuery(selectedOption.chainName, address ?? '');
+  const { delegations, delegationsIsError, delegationsIsLoading, refetchDelegations } = useNativeStakeQuery(selectedOption.chainName, address ?? '');
 
   const delegationsResponse = delegations?.delegation_responses;
 
@@ -560,6 +568,7 @@ export const StakingBox = ({
                       onClose={closeStakingModal}
                       selectedOption={selectedOption}
                       address={address ?? ''}
+                      refetch={allRefetchBalances}
                     />
                   </>
                 )}
@@ -663,7 +672,7 @@ export const StakingBox = ({
                             },
                           )}
                         </Box>
-                        {isBottomVisible && (
+                        {isBottomVisible && combinedDelegations.length > 3 && (
                           <Box
                             position="absolute"
                             bottom="0"
@@ -694,6 +703,7 @@ export const StakingBox = ({
                       selectedOption={selectedOption}
                       isTokenized={selectedValidatorData.isTokenized}
                       denom={selectedValidatorData.denom}
+                      refetch={refetchDelegations}
                     />
                     <RevertSharesProcessModal
                       address={address ?? ''}
@@ -703,6 +713,7 @@ export const StakingBox = ({
                       selectedOption={selectedOption}
                       isTokenized={selectedValidatorData.isTokenized}
                       denom={selectedValidatorData.denom}
+                      refetch={refetchDelegations}
                     />
                   </Flex>
                 )}
@@ -710,17 +721,6 @@ export const StakingBox = ({
             </TabPanel>
           </SlideFade>
           {/* Unstake TabPanel */}
-          { selectedOption.value.toUpperCase() == "DYDX" && (
-            <SlideFade offsetY="200px" in={activeTabIndex === 1}>
-              <TabPanel>
-                <VStack spacing={8} align="center">
-                  <Text fontWeight="light" textAlign="center" color="white">
-                    DyDx unstaking will be live very soon!
-                  </Text>
-                </VStack>
-              </TabPanel>
-            </SlideFade>
-           ) || (
           <SlideFade offsetY="200px" in={activeTabIndex === 1}>
             <TabPanel>
               <VStack spacing={8} align="center">
@@ -854,7 +854,7 @@ export const StakingBox = ({
                   <Stat py={4} textAlign="right" color="white">
                     <StatNumber textColor="complimentary.900">
                       {!isZoneLoading ? (
-                        (Number(tokenAmount) * Number(zone?.redemptionRate || 1)).toFixed(2)
+                        (Number(tokenAmount) * Math.min(Number(zone?.redemptionRate), Number(zone?.lastRedemptionRate))).toFixed(2)
                       ) : (
                         <Spinner thickness="2px" speed="0.65s" emptyColor="gray.200" color="complimentary.900" size="sm" />
                       )}
@@ -883,7 +883,6 @@ export const StakingBox = ({
               </VStack>
             </TabPanel>
           </SlideFade>
-          )}
         </TabPanels>
       </Tabs>
     </Box>

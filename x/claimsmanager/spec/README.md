@@ -67,11 +67,11 @@ var (
 func GetGenericKeyClaim(key []byte, chainID string, address string, module ClaimType, srcChainID string) []byte {
 	typeBytes := make([]byte, 4)
 	binary.BigEndian.PutUint32(typeBytes, uint32(module))
-	key = append(key, []byte(chainID)...)
+	key = append(key, chainID...)
 	key = append(key, byte(0x00))
-	key = append(key, []byte(address)...)
+	key = append(key, address...)
 	key = append(key, typeBytes...)
-	return append(key, []byte(srcChainID)...)
+	return append(key, srcChainID...)
 }
 
 func GetKeyClaim(chainID string, address string, module ClaimType, srcChainID string) []byte {
@@ -79,14 +79,14 @@ func GetKeyClaim(chainID string, address string, module ClaimType, srcChainID st
 }
 
 func GetPrefixClaim(chainID string) []byte {
-	return append(KeyPrefixClaim, []byte(chainID)...)
+	return append(KeyPrefixClaim, chainID...)
 }
 
 func GetPrefixUserClaim(chainID string, address string) []byte {
 	key := KeyPrefixClaim
-	key = append(key, []byte(chainID)...)
+	key = append(key, chainID...)
 	key = append(key, byte(0x00))
-	key = append(key, []byte(address)...)
+	key = append(key, address...)
 	return key
 }
 
@@ -95,14 +95,14 @@ func GetKeyLastEpochClaim(chainID string, address string, module ClaimType, srcC
 }
 
 func GetPrefixLastEpochClaim(chainID string) []byte {
-	return append(KeyPrefixLastEpochClaim, []byte(chainID)...)
+	return append(KeyPrefixLastEpochClaim, chainID...)
 }
 
 func GetPrefixLastEpochUserClaim(chainID string, address string) []byte {
 	key := KeyPrefixLastEpochClaim
-	key = append(key, []byte(chainID)...)
+	key = append(key, chainID...)
 	key = append(key, byte(0x00))
-	key = append(key, []byte(address)...)
+	key = append(key, address...)
 	return key
 }
 
@@ -210,4 +210,3 @@ N/A
 ## End Block
 
 N/A
-

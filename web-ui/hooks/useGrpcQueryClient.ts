@@ -1,15 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
 import { quicksilver } from 'quicksilverjs';
 
-
 const createGrpcGateWayClient = quicksilver.ClientFactory.createGrpcGateWayClient;
 
 export const useGrpcQueryClient = (chainName: string) => {
 
-
   let grpcEndpoint: string | undefined;
   const env = process.env.NEXT_PUBLIC_CHAIN_ENV; 
-
 
 // Build the query client with the correct endpoint
   const endpoints: { [key: string]: string | undefined } = {
@@ -23,10 +20,7 @@ export const useGrpcQueryClient = (chainName: string) => {
     dydx: env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_LCD_ENDPOINT_DYDX : process.env.NEXT_PUBLIC_MAINNET_LCD_ENDPOINT_DYDX,
   };
 
-
   grpcEndpoint = endpoints[chainName];
-
-
 
   const grpcQueryClientQuery = useQuery({
     queryKey: ['grpcQueryClient', grpcEndpoint],
