@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"encoding/json"
+	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -10,6 +12,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	epochstypes "github.com/quicksilver-zone/quicksilver/x/epochs/types"
+	emtypes "github.com/quicksilver-zone/quicksilver/x/eventmanager/types"
 	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 )
 
@@ -146,19 +149,61 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNum
 		delegationQuery := stakingtypes.QueryDelegatorDelegationsRequest{DelegatorAddr: zone.DelegationAddress.Address, Pagination: &query.PageRequest{Limit: uint64(len(vals))}}
 		bz := k.cdc.MustMarshal(&delegationQuery)
 
-		k.ICQKeeper.MakeRequest(
-			ctx,
-			zone.ConnectionId,
-			zone.ChainId,
-			"cosmos.staking.v1beta1.Query/DelegatorDelegations",
-			bz,
-			sdk.NewInt(-1),
-			types.ModuleName,
-			"delegations_epoch",
-			0,
-		)
+		delegationParams := DelegatorDelegationsParams{
+			ChainID:      zone.ChainId,
+			ConnectionID: zone.ConnectionId,
+			Request:      bz,
+		}
 
-		_ = zone.IncrementWithdrawalWaitgroup(k.Logger(ctx), 1, "delegations trigger")
+		delegationPayload, err := json.Marshal(&delegationParams)
+		if err != nil {
+			panic(err)
+		}
+		delegationCondition1, err := emtypes.NewConditionAll(ctx,
+			emtypes.NewFieldValues(
+				emtypes.FieldEqual(emtypes.FieldChainID, zone.ChainId),
+				emtypes.FieldEqual(emtypes.FieldModule, types.ModuleName),
+				emtypes.FieldEqual(emtypes.FieldEventType, fmt.Sprintf("%d", emtypes.EventTypeICAUnbond)),
+				emtypes.FieldBegins(emtypes.FieldIdentifier, types.EpochWithdrawalMemo(epochNumber)),
+			),
+			true,
+		)
+		if err != nil {
+			panic(err)
+		}
+		delegationCondition2, err := emtypes.NewConditionAll(ctx,
+			emtypes.NewFieldValues(
+				emtypes.FieldEqual(emtypes.FieldChainID, zone.ChainId),
+				emtypes.FieldEqual(emtypes.FieldModule, types.ModuleName),
+				emtypes.FieldEqual(emtypes.FieldEventType, fmt.Sprintf("%d", emtypes.EventTypeICADelegate)),
+				emtypes.FieldBegins(emtypes.FieldIdentifier, fmt.Sprintf("batch/%d", epochNumber)),
+			),
+			true,
+		)
+		if err != nil {
+			panic(err)
+		}
+
+		delegationCondition, err := emtypes.NewConditionAnd(
+			ctx,
+			delegationCondition1,
+			delegationCondition2,
+		)
+		if err != nil {
+			panic(err)
+		}
+
+		k.EventManagerKeeper.AddEvent(
+			ctx,
+			types.ModuleName,
+			zone.ChainId,
+			"query_delegations_epoch",
+			ICQEmitDelegatorDelegations,
+			emtypes.EventTypeICQQueryDelegations,
+			emtypes.EventStatusPending,
+			delegationCondition,
+			delegationPayload,
+		)
 
 		balancesQuery := banktypes.QueryAllBalancesRequest{Address: zone.DelegationAddress.Address}
 		bz = k.cdc.MustMarshal(&balancesQuery)
@@ -173,8 +218,18 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNum
 			"delegationaccountbalances",
 			0,
 		)
-		// increment waitgroup; decremented in delegationaccountbalance callback
-		_ = zone.IncrementWithdrawalWaitgroup(k.Logger(ctx), 1, "delegationaccountbalances trigger")
+
+		k.EventManagerKeeper.AddEvent(
+			ctx,
+			types.ModuleName,
+			zone.ChainId,
+			"query_delegationaccountbalances_epoch",
+			"",
+			emtypes.EventTypeICQAccountBalances,
+			emtypes.EventStatusActive,
+			nil,
+			nil,
+		)
 
 		rewardsQuery := distrtypes.QueryDelegationTotalRewardsRequest{DelegatorAddress: zone.DelegationAddress.Address}
 		bz = k.cdc.MustMarshal(&rewardsQuery)
@@ -191,12 +246,60 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNum
 			0,
 		)
 
-		// increment the WithdrawalWaitgroup
-		// this allows us to track the response for every protocol delegator
-		// WithdrawalWaitgroup is decremented in RewardsCallback
-		_ = zone.IncrementWithdrawalWaitgroup(k.Logger(ctx), 1, "rewards trigger")
+		k.EventManagerKeeper.AddEvent(
+			ctx,
+			types.ModuleName,
+			zone.ChainId,
+			"query_rewards_epoch",
+			"",
+			emtypes.EventTypeICQQueryRewards,
+			emtypes.EventStatusActive,
+			nil,
+			nil,
+		)
 
-		k.SetZone(ctx, zone)
+		rrCondition1, err := emtypes.NewConditionAll(ctx,
+			emtypes.NewFieldValues(
+				emtypes.FieldEqual(emtypes.FieldChainID, zone.ChainId),
+				emtypes.FieldEqual(emtypes.FieldModule, types.ModuleName),
+				emtypes.FieldEqual(emtypes.FieldEventType, fmt.Sprintf("%d", emtypes.EventTypeICAWithdrawRewards)),
+			),
+			true,
+		)
+		if err != nil {
+			panic(err)
+		}
+		rrCondition2, err := emtypes.NewConditionAll(ctx,
+			emtypes.NewFieldValues(
+				emtypes.FieldEqual(emtypes.FieldChainID, zone.ChainId),
+				emtypes.FieldEqual(emtypes.FieldModule, types.ModuleName),
+				emtypes.FieldEqual(emtypes.FieldEventType, fmt.Sprintf("%d", emtypes.EventTypeICQQueryDelegations)),
+			),
+			true,
+		)
+		if err != nil {
+			panic(err)
+		}
+		rrCondition, err := emtypes.NewConditionAnd(ctx, rrCondition1, rrCondition2)
+		if err != nil {
+			panic(err)
+		}
+		rrConditionAnd, err := emtypes.NewConditionAnd(ctx, rrCondition, delegationCondition)
+		if err != nil {
+			panic(err)
+		}
+
+		k.EventManagerKeeper.AddEvent(
+			ctx,
+			types.ModuleName,
+			zone.ChainId,
+			"trigger_rr",
+			TriggerCalculateRedemptionRate,
+			emtypes.EventTypeICQQueryRewards,
+			emtypes.EventStatusPending,
+			rrConditionAnd,
+			[]byte(zone.ChainId),
+		)
 
 		return false
 	})
