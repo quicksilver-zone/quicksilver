@@ -14,6 +14,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/quicksilver-zone/quicksilver/utils"
+	emtypes "github.com/quicksilver-zone/quicksilver/x/eventmanager/types"
 	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 	lsmstakingtypes "github.com/quicksilver-zone/quicksilver/x/lsmtypes"
 )
@@ -263,26 +264,23 @@ func (k *Keeper) WithdrawDelegationRewardsForResponse(ctx sdk.Context, zone *typ
 			k.Logger(ctx).Info("Withdraw rewards", "delegator", delegator, "validator", del.ValidatorAddress, "amount", del.Reward)
 
 			msgs = append(msgs, &distrtypes.MsgWithdrawDelegatorReward{DelegatorAddress: delegator, ValidatorAddress: del.ValidatorAddress})
+			k.EventManagerKeeper.AddEvent(
+				ctx,
+				types.ModuleName,
+				zone.ChainId,
+				fmt.Sprintf("%s/%s", "withdraw_rewards_epoch", del.ValidatorAddress),
+				"",
+				emtypes.EventTypeICAWithdrawRewards,
+				emtypes.EventStatusActive,
+				nil,
+				nil,
+			)
 		}
 	}
 
 	if len(msgs) == 0 {
-		// always setZone here because calling method update waitgroup.
-		k.SetZone(ctx, zone)
 		return nil
 	}
-	// increment withdrawal waitgroup for every withdrawal msg sent
-	// this allows us to track individual msg responses and ensure all
-	// responses have been received and handled...
-	// HandleWithdrawRewards contains the opposing decrement.
-	if len(msgs) > math.MaxUint32 {
-		return fmt.Errorf("number of messages exceeds uint32 range: %d", len(msgs))
-	}
-	if err = zone.IncrementWithdrawalWaitgroup(k.Logger(ctx), uint32(len(msgs)), "WithdrawDelegationRewardsForResponse"); err != nil { //nolint:gosec
-		return err
-	}
-	k.SetZone(ctx, zone)
-	k.Logger(ctx).Info("Received WithdrawDelegationRewardsForResponse acknowledgement", "wg", zone.GetWithdrawalWaitgroup(), "address", delegator)
 
 	return k.SubmitTx(ctx, msgs, zone.DelegationAddress, "", zone.MessagesPerTx)
 }

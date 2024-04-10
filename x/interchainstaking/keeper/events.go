@@ -1,11 +1,13 @@
 package keeper
 
 import (
+	"encoding/json"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	emtypes "github.com/quicksilver-zone/quicksilver/x/eventmanager/types"
+	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 )
 
 // ___________________________________________________________________________________________________
@@ -43,17 +45,52 @@ func (c EventCallbacks) AddCallback(id string, fn interface{}) emtypes.EventCall
 }
 
 func (c EventCallbacks) RegisterCallbacks() emtypes.EventCallbacks {
-	a := c.
-		AddCallback("valset", EventCallback(TestCallback))
-
-	return a.(EventCallbacks)
+	return c.
+		AddCallback(ICQEmitDelegatorDelegations, EventCallback(EmitDelegatorDelegations)).
+		AddCallback(TriggerCalculateRedemptionRate, EventCallback(CalculateRedemptionRate))
 }
+
+const (
+	ICQEmitDelegatorDelegations    = "ICQEmitDelegatorDelegations"
+	TriggerCalculateRedemptionRate = "CalculateRedemptionRate"
+)
 
 // -----------------------------------
 // Callback Handlers
 // -----------------------------------
 
-func TestCallback(k *Keeper, ctx sdk.Context, args []byte) error {
-	k.Logger(ctx).Error("TEST CALLBACK")
+type DelegatorDelegationsParams struct {
+	ChainID      string
+	ConnectionID string
+	Request      []byte
+}
+
+func EmitDelegatorDelegations(k *Keeper, ctx sdk.Context, args []byte) error {
+
+	var params DelegatorDelegationsParams
+	err := json.Unmarshal(args, &params)
+	if err != nil {
+		return err
+	}
+
+	k.ICQKeeper.MakeRequest(
+		ctx,
+		params.ConnectionID,
+		params.ChainID,
+		"cosmos.staking.v1beta1.Query/DelegatorDelegations",
+		params.Request,
+		sdk.NewInt(-1),
+		types.ModuleName,
+		"delegations_epoch",
+		0,
+	)
 	return nil
+}
+
+func CalculateRedemptionRate(k *Keeper, ctx sdk.Context, args []byte) error {
+	zone, found := k.GetZone(ctx, string(args))
+	if !found {
+		return fmt.Errorf("unable to find zone %s", args)
+	}
+	return k.TriggerRedemptionRate(ctx, &zone)
 }
