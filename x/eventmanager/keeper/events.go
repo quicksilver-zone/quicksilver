@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -78,6 +80,7 @@ func (k Keeper) AllEvents(ctx sdk.Context) []types.Event {
 }
 
 func (k Keeper) MarkCompleted(ctx sdk.Context, module string, chainID string, identifier string) {
+	k.Logger(ctx).Info(fmt.Sprintf("marking event %s/%s/%s as complete!", module, chainID, identifier))
 	k.DeleteEvent(ctx, module, chainID, identifier)
 	k.Trigger(ctx, module, chainID)
 }
@@ -90,6 +93,7 @@ func (k Keeper) Trigger(ctx sdk.Context, module string, chainID string) {
 				k.Logger(ctx).Error("unable to determine if event can execute callback", "module", e.Module, "id", e.Identifier, "callback", e.Callback, "error", err)
 			}
 			if res {
+				k.Logger(ctx).Info(fmt.Sprintf("triggered event callback %s for event %s (%s)", e.Callback, e.Identifier, e.ChainId))
 				err := k.Call(ctx, e.Module, e.Callback, e.Payload)
 				if err != nil {
 					k.Logger(ctx).Error("unable to execute callback", "module", e.Module, "id", e.Identifier, "callback", e.Callback, "error", err)
