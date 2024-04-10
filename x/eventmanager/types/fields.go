@@ -104,3 +104,32 @@ func compare(operator FieldOperator, testValue, value string) (bool, error) {
 		return false, fmt.Errorf("unrecognised operator %d", operator)
 	}
 }
+
+func NewFieldValues(fields ...*FieldValue) []*FieldValue {
+	return fields
+}
+
+func FieldEqual(field, value string) *FieldValue {
+	return NewFieldValue(field, value, FieldOperator_EQUAL, false)
+}
+
+func FieldNotEqual(field, value string) *FieldValue {
+	return NewFieldValue(field, value, FieldOperator_EQUAL, true)
+}
+
+func FieldBegins(field, value string) *FieldValue {
+	return NewFieldValue(field, value, FieldOperator_BEGINSWITH, false)
+}
+
+func FieldEnds(field, value string) *FieldValue {
+	return NewFieldValue(field, value, FieldOperator_ENDSWITH, false)
+}
+
+func NewFieldValue(field, value string, operator FieldOperator, negate bool) *FieldValue {
+	return &FieldValue{
+		field,
+		value,
+		operator,
+		negate,
+	}
+}

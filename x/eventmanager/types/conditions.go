@@ -1,8 +1,6 @@
 package types
 
 import (
-	"fmt"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -127,7 +125,6 @@ func NewConditionOr(ctx sdk.Context, condition1, condition2 ConditionI) (*Condit
 
 // CanExecute determines whether a
 func (e *Event) CanExecute(ctx sdk.Context, k EMKeeper) (bool, error) {
-	fmt.Print(e.ExecuteCondition)
 	if e.ExecuteCondition == nil {
 		return true, nil
 	}
@@ -136,7 +133,5 @@ func (e *Event) CanExecute(ctx sdk.Context, k EMKeeper) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	fmt.Print(condition)
-
 	return condition.Resolve(ctx, k)
 }

@@ -10,30 +10,30 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
-	"github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
+	"github.com/quicksilver-zone/quicksilver/x/eventmanager/types"
 )
 
-var _ types.QuerySrvrServer = Keeper{}
+var _ types.QueryServer = Keeper{}
 
-// Queries returns information about registered zones.
-func (k Keeper) Queries(c context.Context, req *types.QueryRequestsRequest) (*types.QueryRequestsResponse, error) {
+// Events returns information about registered zones.
+func (k Keeper) Events(c context.Context, req *types.QueryEventsRequest) (*types.QueryEventsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	var queries []types.Query
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixQuery)
+	var events []types.Event
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixEvent)
 
 	pageRes, err := query.FilteredPaginate(store, req.Pagination, func(_, value []byte, accumulate bool) (bool, error) {
-		var query types.Query
-		if err := k.cdc.Unmarshal(value, &query); err != nil {
+		var event types.Event
+		if err := k.cdc.Unmarshal(value, &event); err != nil {
 			return false, err
 		}
 
-		if query.ChainId == req.ChainId && (query.LastEmission.IsNil() || query.LastEmission.IsZero() || query.LastEmission.GTE(query.LastHeight)) {
-			queries = append(queries, query)
+		if event.ChainId == req.ChainId {
+			events = append(events, event)
 			return true, nil
 		}
 
@@ -43,8 +43,8 @@ func (k Keeper) Queries(c context.Context, req *types.QueryRequestsRequest) (*ty
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &types.QueryRequestsResponse{
-		Queries:    queries,
+	return &types.QueryEventsResponse{
+		Events:     events,
 		Pagination: pageRes,
 	}, nil
 }
