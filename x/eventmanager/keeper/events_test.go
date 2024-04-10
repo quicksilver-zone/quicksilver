@@ -130,7 +130,6 @@ func (suite *KeeperTestSuite) TestEventLifecycleWithCondition() {
 
 	suite.Equal(1, len(events))
 
-	fmt.Println(event)
 	suite.True(found)
 	suite.Equal(12345, GLOBAL_VAR)
 
@@ -186,7 +185,6 @@ func (suite *KeeperTestSuite) TestEventLifecycleWithCondition2() {
 
 	suite.Equal(2, len(events))
 
-	fmt.Println(event)
 	suite.Equal(1, GLOBAL_VAR)
 
 	suite.Equal(event.EventStatus, types.EventStatusActive)

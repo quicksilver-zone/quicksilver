@@ -185,7 +185,6 @@ func (k *Keeper) GetUserChainRequeuedWithdrawalRecord(ctx sdk.Context, chainID s
 
 	k.IterateZoneStatusWithdrawalRecords(ctx, chainID, types.WithdrawStatusQueued, func(_ int64, record types.WithdrawalRecord) (stop bool) {
 		if record.Requeued && record.Delegator == address {
-			fmt.Println("FOUND MATCHING RECORD")
 			toReturn = record
 			return true
 		}

@@ -60,4 +60,5 @@ type EpochsKeeper interface {
 
 type EventManagerKeeper interface {
 	AddEvent(ctx sdk.Context, module, chainID, identifier, callback string, eventType, status int32, condtion emtypes.ConditionI, payload []byte)
+	MarkCompleted(ctx sdk.Context, module string, chainID string, identifier string)
 }

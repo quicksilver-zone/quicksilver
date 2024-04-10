@@ -29,6 +29,7 @@ import (
 	"github.com/quicksilver-zone/quicksilver/utils"
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	cmtypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
+	emtypes "github.com/quicksilver-zone/quicksilver/x/eventmanager/types"
 	querytypes "github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
 	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 	lsmstakingtypes "github.com/quicksilver-zone/quicksilver/x/lsmtypes"
@@ -1388,21 +1389,9 @@ func (k *Keeper) HandleWithdrawRewards(ctx sdk.Context, msg sdk.Msg, connectionI
 	// operates outside the delegator set, its purpose is to track validator
 	// performance only.
 	if withdrawalMsg.DelegatorAddress != zone.PerformanceAddress.Address {
-		if err := zone.DecrementWithdrawalWaitgroup(k.Logger(ctx), 1, "handle withdraw rewards"); err != nil {
-			k.Logger(ctx).Error(err.Error())
-			return nil
-			// return nil here so we don't reject the incoming tx, but log the error and don't trigger RR update for repeated zero.
-		}
-		k.SetZone(ctx, zone)
+		defer k.EventManagerKeeper.MarkCompleted(ctx, types.ModuleName, zone.ChainId, fmt.Sprintf("%s/%s", "withdraw_rewards_epoch", withdrawalMsg.ValidatorAddress))
 	}
-	k.Logger(ctx).Info("Received MsgWithdrawDelegatorReward acknowledgement", "wg", zone.GetWithdrawalWaitgroup(), "delegator", withdrawalMsg.DelegatorAddress)
-	switch zone.GetWithdrawalWaitgroup() == 0 {
-	case true:
-		k.Logger(ctx).Info("triggering redemption rate calc after rewards withdrawal")
-		return k.TriggerRedemptionRate(ctx, zone)
-	default:
-		return nil
-	}
+	return nil
 }
 
 func (k *Keeper) TriggerRedemptionRate(ctx sdk.Context, zone *types.Zone) error {
@@ -1425,10 +1414,24 @@ func (k *Keeper) TriggerRedemptionRate(ctx sdk.Context, zone *types.Zone) error 
 		"distributerewards",
 		0,
 	)
+
+	k.EventManagerKeeper.AddEvent(
+		ctx,
+		types.ModuleName,
+		zone.ChainId,
+		"query_withdrawal_balance",
+		"",
+		emtypes.EventTypeICQAccountBalances,
+		emtypes.EventStatusActive,
+		nil,
+		nil,
+	)
+
 	return nil
 }
 
 func DistributeRewardsFromWithdrawAccount(k *Keeper, ctx sdk.Context, args []byte, query querytypes.Query) error {
+	defer k.EventManagerKeeper.MarkCompleted(ctx, types.ModuleName, query.ChainId, "query_withdrawal_balance")
 	zone, found := k.GetZone(ctx, query.ChainId)
 	if !found {
 		return fmt.Errorf("unable to find zone for %s", query.ChainId)
