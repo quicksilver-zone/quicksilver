@@ -18,8 +18,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
-	"github.com/cosmos/ibc-go/v5/modules/apps/transfer"
-	ibc "github.com/cosmos/ibc-go/v5/modules/core"
+	"github.com/cosmos/ibc-go/v6/modules/apps/transfer"
+	ibc "github.com/cosmos/ibc-go/v6/modules/core"
 	interchainquery "github.com/ingenuity-build/quicksilver/x/interchainquery"
 )
 
