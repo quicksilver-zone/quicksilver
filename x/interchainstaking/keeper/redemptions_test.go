@@ -110,11 +110,11 @@ func TestAllocateWithdrawalsFromValidatorsNonEmptyMaps(t *testing.T) {
 	}
 
 	for hash, dist := range distributions {
-		sum := uint64(0)
-		for _, amount := range dist {
-			sum += amount.Amount
+		sum := sdkmath.ZeroInt()
+		for _, distLine := range dist {
+			sum = sum.Add(distLine.Amount)
 		}
-		require.Equal(t, _amountToWithdrawPerWithdrawal[hash].Amount, sdkmath.NewIntFromUint64(sum))
+		require.Equal(t, _amountToWithdrawPerWithdrawal[hash].Amount, sum)
 	}
 }
 
@@ -134,9 +134,9 @@ func (suite *KeeperTestSuite) TestGetUnlockedTokensForZoneWithRedelegation() {
 	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, zone.ChainId, types.NewDelegation(zone.DelegationAddress.Address, vals[2].ValoperAddress, sdk.NewCoin(zone.BaseDenom, sdk.NewInt(100))))
 	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, zone.ChainId, types.NewDelegation(zone.DelegationAddress.Address, vals[3].ValoperAddress, sdk.NewCoin(zone.BaseDenom, sdk.NewInt(100))))
 
-	quicksilver.InterchainstakingKeeper.SetRedelegationRecord(ctx, types.RedelegationRecord{ChainId: zone.ChainId, EpochNumber: 1, Source: vals[0].ValoperAddress, Destination: vals[2].ValoperAddress, Amount: 5})
-	quicksilver.InterchainstakingKeeper.SetRedelegationRecord(ctx, types.RedelegationRecord{ChainId: zone.ChainId, EpochNumber: 2, Source: vals[0].ValoperAddress, Destination: vals[2].ValoperAddress, Amount: 5})
-	quicksilver.InterchainstakingKeeper.SetRedelegationRecord(ctx, types.RedelegationRecord{ChainId: zone.ChainId, EpochNumber: 2, Source: vals[1].ValoperAddress, Destination: vals[2].ValoperAddress, Amount: 5})
+	quicksilver.InterchainstakingKeeper.SetRedelegationRecord(ctx, types.RedelegationRecord{ChainId: zone.ChainId, EpochNumber: 1, Source: vals[0].ValoperAddress, Destination: vals[2].ValoperAddress, Amount: sdkmath.NewInt(5)})
+	quicksilver.InterchainstakingKeeper.SetRedelegationRecord(ctx, types.RedelegationRecord{ChainId: zone.ChainId, EpochNumber: 2, Source: vals[0].ValoperAddress, Destination: vals[2].ValoperAddress, Amount: sdkmath.NewInt(5)})
+	quicksilver.InterchainstakingKeeper.SetRedelegationRecord(ctx, types.RedelegationRecord{ChainId: zone.ChainId, EpochNumber: 2, Source: vals[1].ValoperAddress, Destination: vals[2].ValoperAddress, Amount: sdkmath.NewInt(5)})
 
 	availPerVal, total, err := quicksilver.InterchainstakingKeeper.GetUnlockedTokensForZone(ctx, &zone)
 	suite.NoError(err)
@@ -299,15 +299,15 @@ func (suite *KeeperTestSuite) TestStargazeHandleQueuedUnbondingsUnderflow() {
 		quicksilver.InterchainstakingKeeper.SetDelegation(ctx, zone.ChainId, delegation)
 	}
 
-	quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(ctx, wr1)
-	quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(ctx, wr2)
-	quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(ctx, wr3)
-	quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(ctx, wr4)
-	quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(ctx, wr5)
-	quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(ctx, wr6)
-	quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(ctx, wr7)
-	quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(ctx, wr8)
-	quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(ctx, wr9)
+	_ = quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(ctx, wr1)
+	_ = quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(ctx, wr2)
+	_ = quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(ctx, wr3)
+	_ = quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(ctx, wr4)
+	_ = quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(ctx, wr5)
+	_ = quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(ctx, wr6)
+	_ = quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(ctx, wr7)
+	_ = quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(ctx, wr8)
+	_ = quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(ctx, wr9)
 
 	ctx = suite.chainA.GetContext()
 	zone, f := quicksilver.InterchainstakingKeeper.GetZone(ctx, "stargaze-1")

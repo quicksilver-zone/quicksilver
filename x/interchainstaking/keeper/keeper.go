@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"slices"
 	"time"
 
 	"github.com/tendermint/tendermint/libs/log"
@@ -561,7 +562,7 @@ func (k *Keeper) EmitPerformanceBalanceQuery(ctx sdk.Context, zone *types.Zone) 
 		zone.ConnectionId,
 		zone.ChainId,
 		types.BankStoreKey,
-		append(data, []byte(zone.BaseDenom)...),
+		append(data, zone.BaseDenom...),
 		sdk.NewInt(-1),
 		types.ModuleName,
 		"perfbalance",
@@ -739,7 +740,7 @@ func (k *Keeper) GetAggregateIntentOrDefault(ctx sdk.Context, zone *types.Zone) 
 	}
 
 	jailedThreshold := k.EpochsKeeper.GetEpochInfo(ctx, "epoch").Duration * 2
-
+	denyList := k.GetZoneValidatorDenyList(ctx, zone.ChainId)
 	// filter intents here...
 	// check validators for tombstoned
 	for _, validatorIntent := range intents {
@@ -764,9 +765,9 @@ func (k *Keeper) GetAggregateIntentOrDefault(ctx sdk.Context, zone *types.Zone) 
 		}
 
 		// we should never let denylist validators into the list, even if they are explicitly selected
-		// if in deny list {
-		// continue
-		// }
+		if slices.Contains(denyList, validator.ValoperAddress) {
+			continue
+		}
 		filteredIntents = append(filteredIntents, validatorIntent)
 	}
 
@@ -796,7 +797,7 @@ func (k *Keeper) Rebalance(ctx sdk.Context, zone *types.Zone, epochNumber int64)
 				EpochNumber: epochNumber,
 				Source:      rebalance.Source,
 				Destination: rebalance.Target,
-				Amount:      rebalance.Amount.Int64(),
+				Amount:      rebalance.Amount,
 			})
 		}
 	}

@@ -15,10 +15,11 @@ import {
 } from '@chakra-ui/react';
 import { coins, StdFee } from '@cosmjs/stargate';
 import { useChain } from '@cosmos-kit/react';
-import { cosmos } from 'quicksilverjs';
+import { cosmos } from 'interchain-query';
 import { useState } from 'react';
 
 import { useTx } from '@/hooks';
+import { useFeeEstimation } from '@/hooks/useFeeEstimation';
 import { getCoin } from '@/utils';
 
 const VoteType = cosmos.gov.v1beta1.VoteOption;
@@ -30,7 +31,7 @@ interface VoteModalProps {
   updateVotes: () => void;
   vote: number | undefined;
   title: string;
-  proposalId: BigInt;
+  proposalId: bigint;
 }
 
 export const VoteModal: React.FC<VoteModalProps> = ({ modalControl, chainName, updateVotes, title, vote, proposalId }) => {
@@ -38,6 +39,7 @@ export const VoteModal: React.FC<VoteModalProps> = ({ modalControl, chainName, u
   const [isLoading, setIsLoading] = useState(false);
 
   const { tx } = useTx(chainName);
+  const { estimateFee } = useFeeEstimation(chainName);
   const { address } = useChain(chainName);
 
   const coin = getCoin(chainName);
@@ -60,10 +62,7 @@ export const VoteModal: React.FC<VoteModalProps> = ({ modalControl, chainName, u
       voter: address,
     });
 
-    const fee: StdFee = {
-      amount: coins('5000', coin.base),
-      gas: '100000',
-    };
+    const fee = await estimateFee(address, [msg]);
 
     await tx([msg], {
       fee,

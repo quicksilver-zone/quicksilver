@@ -11,6 +11,8 @@ import {
   FormLabel,
   Input,
   useDisclosure,
+  Divider,
+  Text,
   Spinner,
 } from '@chakra-ui/react';
 import { StdFee } from '@cosmjs/stargate';
@@ -18,13 +20,13 @@ import { ChainName } from '@cosmos-kit/core';
 import { useChain, useManager } from '@cosmos-kit/react';
 import BigNumber from 'bignumber.js';
 import { assets, chains } from 'chain-registry';
-import { ibc } from 'quicksilverjs';
+import { ibc } from 'interchain-query';
 import { useState, useMemo, useEffect } from 'react';
 
 import { ChooseChain } from '@/components/react/choose-chain';
-import { handleSelectChainDropdown, ChainOption } from '@/components/types';
+import { handleSelectChainDropdown, ChainOption, ChooseChainInfo } from '@/components/types';
 import { useTx } from '@/hooks';
-import { useIbcBalanceQuery } from '@/hooks/useQueries';
+import { useFeeEstimation } from '@/hooks/useFeeEstimation';
 import { getIbcInfo, shiftDigits } from '@/utils';
 
 export function DepositModal() {
@@ -40,7 +42,7 @@ export function DepositModal() {
       .filter((chainRecord) => chainRecord.name === 'osmosis')
       .map((chainRecord) => ({
         chainName: chainRecord?.name,
-        label: chainRecord?.chain.pretty_name,
+        label: chainRecord?.chain?.pretty_name,
         value: chainRecord?.name,
         icon: getChainLogo(chainRecord.name),
       }));
@@ -59,7 +61,7 @@ export function DepositModal() {
     }
   };
 
-  const chooseChain = <ChooseChain chainName={chainName} chainInfos={chainOptions} onChange={onChainChange} />;
+  const chooseChain = <ChooseChain chainName={chainName} chainInfos={chainOptions as ChooseChainInfo[]} onChange={onChainChange} />;
 
   const fromChain = chainName;
   const toChain = 'quicksilver';
@@ -67,31 +69,15 @@ export function DepositModal() {
   const { transfer } = ibc.applications.transfer.v1.MessageComposer.withTypeUrl;
   const { address } = useChain(fromChain ?? '');
   const { address: qAddress } = useChain('quicksilver');
-  const { balance } = useIbcBalanceQuery(fromChain ?? '', address ?? '');
   const { tx } = useTx(fromChain ?? '');
+  const { estimateFee } = useFeeEstimation(fromChain ?? '');
 
   const onSubmitClick = async () => {
     setIsLoading(true);
 
     const transferAmount = new BigNumber(amount).shiftedBy(6).toString();
 
-    const mainTokens = assets.find(({ chain_name }) => chain_name === chainName);
-    const fees = chains.find(({ chain_name }) => chain_name === chainName)?.fees?.fee_tokens;
-    const mainDenom = mainTokens?.assets[0].base ?? '';
-    const fixedMinGasPrice = fees?.find(({ denom }) => denom === mainDenom)?.average_gas_price ?? '';
-    const feeAmount = shiftDigits(fixedMinGasPrice, 6);
-
-    const fee: StdFee = {
-      amount: [
-        {
-          denom: mainDenom,
-          amount: feeAmount.toString(),
-        },
-      ],
-      gas: '500000',
-    };
-
-    const { sourcePort, sourceChannel } = getIbcInfo(fromChain ?? '', toChain ?? '');
+    const { source_port, source_channel } = getIbcInfo(fromChain ?? '', toChain ?? '');
 
     const token = {
       denom: 'ibc/635CB83EF1DFE598B10A3E90485306FD0D47D34217A4BE5FD9977FA010A5367D',
@@ -102,18 +88,16 @@ export function DepositModal() {
     const timeoutInNanos = (stamp + 1.2e6) * 1e6;
 
     const msg = transfer({
-      sourcePort,
-      sourceChannel,
+      sourcePort: source_port,
+      sourceChannel: source_channel,
       sender: address ?? '',
       receiver: qAddress ?? '',
       token,
-       //@ts-ignore
-      timeoutHeight: 0,
+      timeoutHeight: undefined,
       //@ts-ignore
       timeoutTimestamp: timeoutInNanos,
-      memo: '',
     });
-
+    const fee = await estimateFee(address ?? '', [msg]);
     await tx([msg], {
       fee,
       onSuccess: () => {
@@ -146,7 +130,7 @@ export function DepositModal() {
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent bgColor="rgb(32,32,32)">
-          <ModalHeader color="white">Deposit QCK Tokens</ModalHeader>
+          <ModalHeader color="white"><Text>Deposit QCK Tokens</Text>  <Divider mt={3} bgColor={'cyan.500'} /></ModalHeader>
           <ModalCloseButton color={'complimentary.900'} />
           <ModalBody>
             {/* Chain Selection Dropdown */}
@@ -194,6 +178,7 @@ export function DepositModal() {
               mr={3}
               onClick={onSubmitClick}
               disabled={!amount}
+              isDisabled={!amount}
             >
               {isLoading === true && <Spinner size="sm" />}
               {isLoading === false && 'Deposit'}

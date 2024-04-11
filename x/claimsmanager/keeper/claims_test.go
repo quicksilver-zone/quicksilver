@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	"cosmossdk.io/math"
+
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	"github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
 )
@@ -12,7 +14,7 @@ var testClaims = []types.Claim{
 		// ChainID:       suite.chainB.ChainID,
 		Module:        types.ClaimTypeOsmosisPool,
 		SourceChainId: "osmosis-1",
-		Amount:        5000000,
+		Amount:        math.NewInt(5000000),
 	},
 	// test user claim on chainB (liquid)
 	{
@@ -20,7 +22,7 @@ var testClaims = []types.Claim{
 		// ChainID:       suite.chainB.ChainID,
 		Module:        types.ClaimTypeLiquidToken,
 		SourceChainId: "",
-		Amount:        5000000,
+		Amount:        math.NewInt(5000000),
 	},
 	// random user claim on chainB (using osmosis pool)
 	{
@@ -28,7 +30,7 @@ var testClaims = []types.Claim{
 		// ChainID:       suite.chainB.ChainID,
 		Module:        types.ClaimTypeOsmosisPool,
 		SourceChainId: "osmosis-1",
-		Amount:        15000000,
+		Amount:        math.NewInt(15000000),
 	},
 	// zero value claim
 	{
@@ -36,7 +38,7 @@ var testClaims = []types.Claim{
 		// ChainID:       suite.chainB.ChainID,
 		Module:        types.ClaimTypeLiquidToken,
 		SourceChainId: "osmosis-1",
-		Amount:        0,
+		Amount:        math.ZeroInt(),
 	},
 	// test user claim on "cosmoshub-4" (liquid)
 	{
@@ -44,7 +46,7 @@ var testClaims = []types.Claim{
 		ChainId:       "cosmoshub-4",
 		Module:        types.ClaimTypeLiquidToken,
 		SourceChainId: "",
-		Amount:        10000000,
+		Amount:        math.NewInt(10000000),
 	},
 	// random user claim on "cosmoshub-4" (liquid)
 	{
@@ -52,7 +54,7 @@ var testClaims = []types.Claim{
 		ChainId:       "cosmoshub-4",
 		Module:        types.ClaimTypeLiquidToken,
 		SourceChainId: "",
-		Amount:        15000000,
+		Amount:        math.NewInt(15000000),
 	},
 }
 
@@ -62,7 +64,7 @@ func (suite *KeeperTestSuite) TestKeeper_NewClaim() {
 		chainID    string
 		module     types.ClaimType
 		srcChainID string
-		amount     uint64
+		amount     math.Int
 	}
 	tests := []struct {
 		name string
@@ -81,14 +83,14 @@ func (suite *KeeperTestSuite) TestKeeper_NewClaim() {
 				suite.chainB.ChainID,
 				types.ClaimTypeLiquidToken,
 				"",
-				5000000,
+				math.NewInt(5000000),
 			},
 			types.Claim{
 				UserAddress:   testAddress,
 				ChainId:       suite.chainB.ChainID,
 				Module:        types.ClaimTypeLiquidToken,
 				SourceChainId: "",
-				Amount:        5000000,
+				Amount:        math.NewInt(5000000),
 			},
 		},
 	}

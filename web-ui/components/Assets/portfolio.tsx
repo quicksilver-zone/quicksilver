@@ -1,13 +1,13 @@
-import { Progress, Flex, Text, VStack, HStack, Heading, Spinner, Tooltip, Grid, Box } from '@chakra-ui/react';
+import { Flex, Text, VStack, HStack, Heading, Spinner, SimpleGrid, Center, Image, SkeletonText } from '@chakra-ui/react';
+import { Divider } from '@interchain-ui/react';
 
-import { abbreviateNumber, shiftDigits, formatQasset } from '@/utils';
+import { shiftDigits, formatNumber } from '@/utils';
 
 interface PortfolioItemInterface {
   title: string;
-  percentage: string;
-  progressBarColor: string;
   amount: string;
   qTokenPrice: number;
+  chainId: string;
 }
 
 interface MyPortfolioProps {
@@ -46,7 +46,7 @@ const MyPortfolio: React.FC<MyPortfolioProps> = ({
     );
   }
 
-  if (isLoading) {
+  if (isLoading && !portfolioItems.length) {
     return (
       <Flex
         w="100%"
@@ -59,13 +59,13 @@ const MyPortfolio: React.FC<MyPortfolioProps> = ({
         gap={6}
         color="white"
       >
-        <Spinner w={'200px'} h="200px" color="complimentary.900" />
+        <Spinner w={'220px'} h="220px" color="complimentary.900" />
       </Flex>
     );
   }
 
   return (
-    <Flex w="100%" h="100%" p={4} borderRadius="lg" flexDirection="column" justifyContent="center" alignItems="center" gap={6}>
+    <Flex w="100%" h="100%" px={4} mt={5} borderRadius="lg" flexDirection="column" justifyContent="center" alignItems="center" gap={6}>
       <Heading color={'white'} alignSelf="stretch" fontSize="lg" fontWeight="bold" textTransform="uppercase" noOfLines={1}>
         My QUICKSILVER Portfolio
       </Heading>
@@ -80,64 +80,90 @@ const MyPortfolio: React.FC<MyPortfolioProps> = ({
           gap={5}
         >
           <VStack flex="1" pt={1} pb={2.5} justifyContent="center" alignItems="flex-start" gap={2}>
-            <Flex alignSelf="stretch" justifyContent="space-between" alignItems="center">
-              <VStack w="161px" alignItems="flex-start" gap={2}>
-                <Text fontSize="sm" fontWeight="medium" textTransform="uppercase">
-                  TOTAL
-                </Text>
-                <Text textAlign="right" fontSize="2xl" fontWeight="bold">
-                  ${totalValue.toFixed(2)}
-                </Text>
-              </VStack>
-
-              <VStack alignItems="flex-end" gap={3}>
-                <HStack justifyContent="flex-start" alignItems="flex-start" gap={2.5}>
-                  <Text fontSize="md" fontWeight="light">
-                    AVG APY:
+            <SimpleGrid columns={3} spacing={10} w="full">
+              <Center>
+                <VStack spacing={1}>
+                  <Text fontSize="sm" fontWeight="medium" textTransform="uppercase">
+                    TOTAL VALUE
                   </Text>
-                  {Number.isNaN(averageApy) && (
-                    <Text fontSize="md" fontWeight="medium">
-                      0%
-                    </Text>
-                  )}
-                  {Number.isFinite(averageApy) && (
-                    <Text fontSize="md" fontWeight="medium">
-                      {shiftDigits(averageApy.toFixed(2), 2)}%
-                    </Text>
-                  )}
-                </HStack>
-                <Text textAlign="center">
-                  <Text as="span" fontSize="md" fontWeight="light">
-                    Yearly Yield:{' '}
+                  <Text fontSize="2xl" fontWeight="bold">
+                    ${formatNumber(totalValue)}
                   </Text>
-                  <Text as="span" fontSize="md" fontWeight="medium">
-                    ${totalYearlyYield.toFixed(2)}
+                </VStack>
+              </Center>
+              <Center>
+                <VStack spacing={1}>
+                  <Text fontSize="sm" fontWeight="medium" textTransform="uppercase">
+                    AVERAGE APY
                   </Text>
-                </Text>
-              </VStack>
-            </Flex>
+                  <Text fontSize="2xl" fontWeight="bold">
+                    {isNaN(averageApy) ? '0%' : `${shiftDigits(averageApy.toFixed(2), 2)}%`}
+                  </Text>
+                </VStack>
+              </Center>
+              <Center>
+                <VStack spacing={1}>
+                  <Text fontSize="sm" fontWeight="medium" textTransform="uppercase">
+                    Est. Yield
+                  </Text>
+                  <Text fontSize="2xl" fontWeight="bold">
+                    ${formatNumber(totalYearlyYield)}
+                  </Text>
+                </VStack>
+              </Center>
+            </SimpleGrid>
           </VStack>
         </Flex>
+        {isLoading && (
+          <Flex w="100%" justifyContent="center" alignItems="center">
+           <SkeletonText noOfLines={1} h={'20px'} w={'120px'} startColor='compplimentary.900' endColor='complimentary.100'  />
+           <SkeletonText noOfLines={1} h={'20px'} w={'120px'} startColor='rgb(107, 105, 105)' endColor='rgb(168, 168, 168)'  />
+           <SkeletonText noOfLines={1} h={'20px'} w={'120px'} startColor='compplimentary.900' endColor='complimentary.100'  />
+           <SkeletonText noOfLines={1} h={'20px'} w={'120px'} startColor='rgb(107, 105, 105)' endColor='rgb(168, 168, 168)'  />
+          </Flex>
+        )}
         {totalValue === 0 && (
-          <Flex w="100%" mt={-10} justifyContent="center" alignItems="center">
+          <Flex w="100%" justifyContent="center" alignItems="center">
             <Text fontSize="xl" textAlign="center">
               You have no liquid staked assets.
             </Text>
           </Flex>
         )}
-        <Flex justifyContent="flex-start" borderRadius={6} alignItems="flex-start" gap={4}>
-          <VStack alignSelf="stretch" h="158px" overflowY="auto" className="custom-scrollbar" borderRadius={6} alignItems="center" gap={3}>
+        <Flex w="100%" justifyContent="center" borderRadius={6} alignItems="center" gap={4}>
+          <VStack alignSelf="stretch" h="185px" overflowY="auto" className="custom-scrollbar" borderRadius={6} alignItems="center" gap={3}>
+            {totalValue > 0 && (
+              <SimpleGrid position={'sticky'} bgColor={'rgb(26,26,26)'} top={0} minW="100%" columns={3} spacing={4}>
+                <VStack spacing={1}>
+                  <Text fontSize="sm" fontWeight="medium">
+                    ASSET
+                  </Text>
+                  <Divider width="100px" />
+                </VStack>
+                <VStack spacing={1}>
+                  <Text fontSize="sm" fontWeight="medium" textAlign={'center'}>
+                    AMOUNT
+                  </Text>
+                  <Divider width="100px" />
+                </VStack>
+                <VStack spacing={1}>
+                  <Text fontSize="sm" fontWeight="medium" textAlign={'center'}>
+                    VALUE
+                  </Text>
+                  <Divider width="100px" />
+                </VStack>
+              </SimpleGrid>
+            )}
+
             {portfolioItems
               .filter((item) => Number(item.amount) > 0)
               .map((item) => (
                 <PortfolioItem
                   key={item.title}
                   title={item.title}
-                  percentage={Number(item.percentage)}
-                  progressBarColor={item.progressBarColor}
                   amount={item.amount}
                   qTokenPrice={item.qTokenPrice}
                   totalValue={totalValue}
+                  index={portfolioItems.indexOf(item)}
                 />
               ))}
           </VStack>
@@ -149,40 +175,37 @@ const MyPortfolio: React.FC<MyPortfolioProps> = ({
 
 interface PortfolioItemProps {
   title: string;
-  percentage: number;
-  progressBarColor: string;
+
   amount: string;
   qTokenPrice: number;
   totalValue: number;
+  index: number;
 }
 
-const PortfolioItem: React.FC<PortfolioItemProps> = ({ title, percentage, progressBarColor, amount, qTokenPrice, totalValue }) => {
-  const amountLength = amount.toString().length;
-  const amountWidth = Math.min(Math.max(amountLength * 8, 90), 100);
+const PortfolioItem: React.FC<PortfolioItemProps> = ({ title, amount, qTokenPrice, index }) => {
+  const tokenValue = Number(amount) * qTokenPrice;
+
+  const imgType = title === 'qATOM' ? 'svg' : 'png';
 
   return (
-    <Grid templateColumns={`minmax(${amountWidth}px, 1fr) 3fr 1fr`} gap={4} alignItems="center" width="100%">
-      <HStack spacing={-5}>
-        <Tooltip label={`Price: ${qTokenPrice.toFixed(2)}`} placement="top">
-          <Text textAlign="left" minWidth="100px" maxWidth="100px">
-            {abbreviateNumber(Number(amount))}
-          </Text>
-        </Tooltip>
-        <Text textAlign={'left'} fontSize="md" fontWeight="medium">
-          {formatQasset(title)}
-        </Text>
+    <SimpleGrid
+      _even={{ bg: 'rgba(255, 128, 0, 0.1)' }}
+      _odd={{ bg: 'rgba(180, 173, 167, 0.1)' }}
+      key={index}
+      textAlign={'center'}
+      alignItems={'center'}
+      minW="400px"
+      columns={3}
+      spacing={4}
+      py={1}
+    >
+      <HStack gap={3}>
+        <Image alt={`${title}`} ml={2} borderRadius={'full'} src={`/img/networks/${title.toLowerCase()}.${imgType}`} boxSize="33px" />
+        <Text>q{title.toLocaleLowerCase().slice(1).toLocaleUpperCase()}</Text>
       </HStack>
-
-      <Box minW="150px" ml={'80px'}>
-        <Progress borderRadius="full" colorScheme="orange" size="sm" value={percentage * 100} />
-      </Box>
-
-      <Tooltip label={`Value: $${(qTokenPrice * Number(amount)).toFixed(2)}`}>
-        <Text textAlign="right" minWidth="50px">
-          {`${(percentage * 100).toFixed(0)}%`}
-        </Text>
-      </Tooltip>
-    </Grid>
+      <Text> {formatNumber(parseFloat(amount))}</Text>
+      <Text>{tokenValue < 0.01 ? '>$0.01' : '$' + formatNumber(tokenValue)}</Text>
+    </SimpleGrid>
   );
 };
 

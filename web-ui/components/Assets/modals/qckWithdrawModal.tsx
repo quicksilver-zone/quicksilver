@@ -6,6 +6,8 @@ import {
   ModalFooter,
   ModalBody,
   ModalCloseButton,
+  Text,
+  Divider,
   Button,
   FormControl,
   FormLabel,
@@ -17,12 +19,13 @@ import { StdFee, coins } from '@cosmjs/stargate';
 import { ChainName } from '@cosmos-kit/core';
 import { useChain, useManager } from '@cosmos-kit/react';
 import BigNumber from 'bignumber.js';
-import { ibc } from 'quicksilverjs';
+import { ibc } from 'interchain-query';
 import { useState, useMemo, useEffect } from 'react';
 
 import { ChooseChain } from '@/components/react/choose-chain';
-import { handleSelectChainDropdown, ChainOption } from '@/components/types';
+import { handleSelectChainDropdown, ChainOption, ChooseChainInfo } from '@/components/types';
 import { useTx } from '@/hooks';
+import { useFeeEstimation } from '@/hooks/useFeeEstimation';
 import { getCoin, getIbcInfo } from '@/utils';
 
 export function WithdrawModal() {
@@ -38,7 +41,7 @@ export function WithdrawModal() {
       .filter((chainRecord) => chainRecord.name === 'osmosis')
       .map((chainRecord) => ({
         chainName: chainRecord?.name,
-        label: chainRecord?.chain.pretty_name,
+        label: chainRecord?.chain?.pretty_name,
         value: chainRecord?.name,
         icon: getChainLogo(chainRecord.name),
       }));
@@ -57,7 +60,7 @@ export function WithdrawModal() {
     }
   };
 
-  const chooseChain = <ChooseChain chainName={chainName} chainInfos={chainOptions} onChange={onChainChange} />;
+  const chooseChain = <ChooseChain chainName={chainName} chainInfos={chainOptions as ChooseChainInfo[]} onChange={onChainChange} />;
 
   const fromChain = 'quicksilver';
   const toChain = chainName;
@@ -67,19 +70,16 @@ export function WithdrawModal() {
   const { address: qAddress } = useChain('quicksilver');
 
   const { tx } = useTx(fromChain ?? '');
+  const { estimateFee } = useFeeEstimation(fromChain ?? '');
 
   const onSubmitClick = async () => {
     setIsLoading(true);
 
-    const coin = getCoin(fromChain ?? '');
+
     const transferAmount = new BigNumber(amount).shiftedBy(6).toString();
 
-    const fee: StdFee = {
-      amount: coins('1000', coin.base),
-      gas: '300000',
-    };
 
-    const { sourcePort, sourceChannel } = getIbcInfo(fromChain ?? '', toChain ?? '');
+    const { source_port, source_channel } = getIbcInfo(fromChain ?? '', toChain ?? '');
 
     const token = {
       denom: 'uqck',
@@ -90,17 +90,16 @@ export function WithdrawModal() {
     const timeoutInNanos = (stamp + 1.2e6) * 1e6;
 
     const msg = transfer({
-      sourcePort,
-      sourceChannel,
+      sourcePort: source_port,
+      sourceChannel: source_channel,
       sender: qAddress ?? '',
       receiver: address ?? '',
       token,
       timeoutHeight: undefined,
       //@ts-ignore
       timeoutTimestamp: timeoutInNanos,
-      memo: '',
     });
-
+    const fee = await estimateFee(qAddress ?? '', [msg]);
     await tx([msg], {
       fee,
       onSuccess: () => {
@@ -133,7 +132,7 @@ export function WithdrawModal() {
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent bgColor="rgb(32,32,32)">
-          <ModalHeader color="white">Withdraw QCK Tokens</ModalHeader>
+        <ModalHeader color="white"><Text>Withdraw QCK Tokens</Text>  <Divider mt={3} bgColor={'cyan.500'} /></ModalHeader>
           <ModalCloseButton color={'complimentary.900'} />
           <ModalBody>
             {/* Chain Selection Dropdown */}
@@ -180,6 +179,7 @@ export function WithdrawModal() {
               mr={3}
               minW="100px"
               onClick={onSubmitClick}
+              isDisabled={!amount}
               disabled={Number.isNaN(Number(amount))}
             >
               {isLoading === true && <Spinner size="sm" />}

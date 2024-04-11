@@ -15,14 +15,13 @@ import {
   StatNumber,
   Spinner,
 } from '@chakra-ui/react';
-import { coins, StdFee } from '@cosmjs/amino';
+import { coins } from '@cosmjs/amino';
 import styled from '@emotion/styled';
-import chains from 'chain-registry';
-import { assets } from 'chain-registry';
 import { cosmos } from 'quicksilverjs';
 import React, { useEffect, useState } from 'react';
 
 import { useTx } from '@/hooks';
+import { useFeeEstimation } from '@/hooks/useFeeEstimation';
 import { useZoneQuery } from '@/hooks/useQueries';
 import { shiftDigits } from '@/utils';
 
@@ -77,6 +76,7 @@ interface StakingModalProps {
   address: string;
   isTokenized: boolean;
   denom: string;
+  refetch: () => void;
 }
 
 export const TransferProcessModal: React.FC<StakingModalProps> = ({
@@ -87,6 +87,7 @@ export const TransferProcessModal: React.FC<StakingModalProps> = ({
   address,
   isTokenized,
   denom,
+  refetch,
 }) => {
   useEffect(() => {
     if (isTokenized === true) {
@@ -141,33 +142,6 @@ export const TransferProcessModal: React.FC<StakingModalProps> = ({
     tokenizedShareOwner: address,
   });
 
-  const mainTokens = assets.find(({ chain_name }) => chain_name === newChainName);
-  const fees = chains.chains.find(({ chain_name }) => chain_name === newChainName)?.fees?.fee_tokens;
-  const mainDenom = mainTokens?.assets[0].base ?? '';
-  const fixedMinGasPrice = fees?.find(({ denom }) => denom === mainDenom)?.high_gas_price ?? '';
-  const feeAmount = Number(fixedMinGasPrice) * 750000;
-  const sendFeeAmount = Number(fixedMinGasPrice) * 100000;
-
-  const fee: StdFee = {
-    amount: [
-      {
-        denom: mainDenom,
-        amount: feeAmount.toString(),
-      },
-    ],
-    gas: '750000', // test txs were using well in excess of 600k
-  };
-
-  // don't use the same fee for both txs, as a send is piddly!
-  const sendFee: StdFee = {
-    amount: [
-      {
-        denom: mainDenom,
-        amount: sendFeeAmount.toString(),
-      },
-    ],
-    gas: '100000',
-  };
 
   const { tx, responseEvents } = useTx(newChainName ?? '');
   const [combinedDenom, setCombinedDenom] = useState<string>();
@@ -189,12 +163,15 @@ export const TransferProcessModal: React.FC<StakingModalProps> = ({
     }
   }, [responseEvents]);
 
+  const { estimateFee } = useFeeEstimation(newChainName ?? '');
+
   const handleTokenizeShares = async (event: React.MouseEvent) => {
     event.preventDefault();
     setIsSigning(true);
     setTransactionStatus('Pending');
+    const fee = await estimateFee(address, [msg])
     try {
-      const result = await tx([msg], {
+      await tx([msg], {
         fee,
         onSuccess: () => {
           setStep(2);
@@ -227,9 +204,10 @@ export const TransferProcessModal: React.FC<StakingModalProps> = ({
     event.preventDefault();
     setIsSigning(true);
     setTransactionStatus('Pending');
+    const fee = await estimateFee(address, [msgSend])
     try {
-      const result = await tx([msgSend], {
-        fee: sendFee,
+      await tx([msgSend], {
+        fee: fee,
         onSuccess: () => {
           setStep(3);
           setTransactionStatus('Success');
@@ -247,8 +225,8 @@ export const TransferProcessModal: React.FC<StakingModalProps> = ({
   return (
     <Modal isOpen={isOpen} onClose={onClose} size={{ base: '3xl', md: '2xl' }}>
       <ModalOverlay />
-      <ChakraModalContent h={{ md: '48%', base: '80%' }} maxH={'100%'}>
-        <ModalBody borderRadius={4} h="48%" maxH={'100%'}>
+      <ChakraModalContent h={{ md: '44%', base: '80%' }} maxH={'100%'}>
+        <ModalBody borderRadius={4} h="44%" maxH={'100%'}>
           <ModalCloseButton zIndex={1000} color="white" />
           <HStack position={'relative'} h="100%" spacing="48px" align="stretch">
             {/* Left Section */}
@@ -257,7 +235,7 @@ export const TransferProcessModal: React.FC<StakingModalProps> = ({
                 <Stat>
                   <StatLabel color="rgba(255,255,255,0.5)">TRANSFER DELEGATION</StatLabel>
                   <StatNumber color="white">{truncateString(selectedValidator.moniker, 13)}</StatNumber>
-                  <StatNumber color="white">
+                  <StatNumber display={{ base: 'none', md: 'block' }} color="white">
                     {shiftDigits(selectedValidator.tokenAmount, -6)}&nbsp;
                     {selectedOption?.value}
                   </StatNumber>
@@ -322,7 +300,7 @@ export const TransferProcessModal: React.FC<StakingModalProps> = ({
 
                   <Button
                     mt={4}
-                    width="55%"
+                    width={{ base: '80%', md: '55%' }}
                     _active={{
                       transform: 'scale(0.95)',
                       color: 'complimentary.800',

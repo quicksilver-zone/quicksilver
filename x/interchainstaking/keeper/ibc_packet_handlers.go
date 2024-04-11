@@ -10,7 +10,7 @@ import (
 
 	"github.com/golang/protobuf/proto" // nolint:staticcheck
 
-	sdkmath "cosmossdk.io/math"
+	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -28,6 +28,7 @@ import (
 
 	"github.com/quicksilver-zone/quicksilver/utils"
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
+	cmtypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
 	querytypes "github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
 	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 	lsmstakingtypes "github.com/quicksilver-zone/quicksilver/x/lsmtypes"
@@ -301,7 +302,7 @@ func (k *Keeper) HandleMsgTransfer(ctx sdk.Context, msg ibctransfertypes.Fungibl
 		return errors.New("unexpected recipient")
 	}
 
-	receivedAmount, ok := sdkmath.NewIntFromString(msg.Amount)
+	receivedAmount, ok := math.NewIntFromString(msg.Amount)
 	if !ok {
 		return fmt.Errorf("unable to marshal amount into math.Int: %s", msg.Amount)
 	}
@@ -320,16 +321,45 @@ func (k *Keeper) HandleMsgTransfer(ctx sdk.Context, msg ibctransfertypes.Fungibl
 			return err
 		}
 		k.Logger(ctx).Info("distributing collected rewards to users", "amount", rewardCoin)
-		err = k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, zoneAddress, sdk.NewCoins(rewardCoin))
+		remaining, err := k.DistributeToClaimants(ctx, zone, zoneAddress, rewardCoin)
 		if err != nil {
 			return err
 		}
-		receivedCoin = sdk.NewCoin(receivedCoin.Denom, feeAmount)
+		receivedCoin = sdk.NewCoin(receivedCoin.Denom, feeAmount).Add(remaining)
 	}
 
 	balance := sdk.NewCoins(receivedCoin)
 	k.Logger(ctx).Info("distributing collected fees to stakers", "amount", balance)
 	return k.BankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, authtypes.FeeCollectorName, balance)
+}
+
+func (k *Keeper) DistributeToClaimants(ctx sdk.Context, zone *types.Zone, zoneAddress sdk.AccAddress, rewardsCoin sdk.Coin) (sdk.Coin, error) {
+	var err error
+	toDistribute := rewardsCoin.Amount
+	supply := k.BankKeeper.GetSupply(ctx, zone.LocalDenom).Amount
+	claimTotal := math.ZeroInt()
+	k.ClaimsManagerKeeper.IterateLastEpochClaims(ctx, zone.ChainId, func(index int64, data cmtypes.Claim) (stop bool) {
+		claimTotal = claimTotal.Add(data.Amount)
+		return false
+	})
+
+	ratio := math.LegacyOneDec()
+	if claimTotal.GT(supply) {
+		ratio = math.LegacyNewDecFromInt(supply).Quo(math.LegacyNewDecFromInt(claimTotal))
+	}
+
+	k.ClaimsManagerKeeper.IterateLastEpochClaims(ctx, zone.ChainId, func(index int64, data cmtypes.Claim) (stop bool) {
+		claimAmount := math.LegacyNewDecFromInt(data.Amount).Mul(ratio).Quo(math.LegacyNewDecFromInt(supply)).Mul(rewardsCoin.Amount.ToLegacyDec()).TruncateInt()
+		err = k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, addressutils.MustAccAddressFromBech32(data.UserAddress, ""), sdk.NewCoins(sdk.NewCoin(rewardsCoin.Denom, claimAmount)))
+		toDistribute = toDistribute.Sub(claimAmount)
+		return err != nil
+	})
+
+	if toDistribute.IsNegative() {
+		return sdk.Coin{}, fmt.Errorf("unexpected negative value")
+	}
+
+	return sdk.NewCoin(rewardsCoin.Denom, toDistribute), err
 }
 
 func (k *Keeper) HandleCompleteSend(ctx sdk.Context, msg sdk.Msg, memo string, connectionID string) error {
@@ -442,7 +472,7 @@ func (k *Keeper) HandleWithdrawForUser(ctx sdk.Context, zone *types.Zone, msg *b
 
 		dlist := make(map[int]struct{})
 		for i, dist := range withdrawalRecord.Distribution {
-			if msg.Amount[0].Amount.Equal(sdk.NewIntFromUint64(dist.Amount)) { // check valoper here too?
+			if msg.Amount[0].Amount.Equal(dist.Amount) { // check valoper here too?
 				dlist[i] = struct{}{}
 				// matched amount
 				if len(withdrawalRecord.Distribution) == len(dlist) {
@@ -468,13 +498,16 @@ func (k *Keeper) HandleWithdrawForUser(ctx sdk.Context, zone *types.Zone, msg *b
 			}
 			k.Logger(ctx).Info("found matching withdrawal; awaiting additional messages")
 			withdrawalRecord.Distribution = newDist
-			k.SetWithdrawalRecord(ctx, withdrawalRecord)
+			err = k.SetWithdrawalRecord(ctx, withdrawalRecord)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
 	period := int64(k.GetParam(ctx, types.KeyValidatorSetInterval))
 	query := stakingtypes.QueryValidatorsRequest{}
-	return k.EmitValSetQuery(ctx, zone.ConnectionId, zone.ChainId, query, sdkmath.NewInt(period))
+	return k.EmitValSetQuery(ctx, zone.ConnectionId, zone.ChainId, query, math.NewInt(period))
 }
 
 func (k *Keeper) GCCompletedRedelegations(ctx sdk.Context) error {
@@ -504,7 +537,11 @@ func (k *Keeper) HandleMaturedUnbondings(ctx sdk.Context, zone *types.Zone) erro
 
 				// do not update status and increment completion time
 				withdrawal.DelayCompletion(ctx, types.DefaultWithdrawalRequeueDelay)
-				k.SetWithdrawalRecord(ctx, withdrawal)
+				err = k.SetWithdrawalRecord(ctx, withdrawal)
+				if err != nil {
+					k.Logger(ctx).Error("error updating withdrawal record", "error", err)
+				}
+
 			} else {
 				k.Logger(ctx).Info("sending funds", "for", withdrawal.Delegator, "delegate_account", zone.DelegationAddress.GetAddress(), "to", withdrawal.Recipient, "amount", withdrawal.Amount)
 				k.UpdateWithdrawalRecordStatus(ctx, &withdrawal, types.WithdrawStatusSend)
@@ -513,6 +550,18 @@ func (k *Keeper) HandleMaturedUnbondings(ctx sdk.Context, zone *types.Zone) erro
 		return false
 	})
 	return nil
+}
+
+func (k *Keeper) GetInflightUnbondingAmount(ctx sdk.Context, zone *types.Zone) sdk.Coin {
+	outCoin := sdk.NewCoin(zone.BaseDenom, sdk.ZeroInt())
+	k.IterateZoneWithdrawalRecords(ctx, zone.ChainId, func(idx int64, withdrawal types.WithdrawalRecord) bool {
+		if (withdrawal.Status == types.WithdrawStatusUnbond && ctx.BlockTime().After(withdrawal.CompletionTime) && withdrawal.Acknowledged) || // status unbond, completion has pass
+			withdrawal.Status == types.WithdrawStatusSend { // already in state send.
+			outCoin = outCoin.Add(withdrawal.Amount[0])
+		}
+		return false
+	})
+	return outCoin
 }
 
 func (k *Keeper) HandleTokenizedShares(ctx sdk.Context, msg sdk.Msg, sharesAmount sdk.Coin, memo string) error {
@@ -542,7 +591,10 @@ func (k *Keeper) HandleTokenizedShares(ctx sdk.Context, msg sdk.Msg, sharesAmoun
 		}
 	}
 
-	k.SetWithdrawalRecord(ctx, withdrawalRecord)
+	err = k.SetWithdrawalRecord(ctx, withdrawalRecord)
+	if err != nil {
+		return err
+	}
 
 	if len(withdrawalRecord.Distribution) != len(withdrawalRecord.Amount) {
 		k.Logger(ctx).Info(fmt.Sprintf("Found matching withdrawal (%d/%d); awaiting additional messages", len(withdrawalRecord.Amount), len(withdrawalRecord.Distribution)))
@@ -550,7 +602,10 @@ func (k *Keeper) HandleTokenizedShares(ctx sdk.Context, msg sdk.Msg, sharesAmoun
 		k.Logger(ctx).Info("Found matching withdrawal; marking for send")
 		k.DeleteWithdrawalRecord(ctx, zone.ChainId, memo, types.WithdrawStatusTokenize)
 		withdrawalRecord.Status = types.WithdrawStatusSend
-		k.SetWithdrawalRecord(ctx, withdrawalRecord)
+		err = k.SetWithdrawalRecord(ctx, withdrawalRecord)
+		if err != nil {
+			return err
+		}
 		sendMsg := &banktypes.MsgSend{FromAddress: zone.DelegationAddress.Address, ToAddress: withdrawalRecord.Recipient, Amount: withdrawalRecord.Amount}
 		err = k.SubmitTx(ctx, []sdk.Msg{sendMsg}, zone.DelegationAddress, memo, zone.MessagesPerTx)
 	}
@@ -588,7 +643,7 @@ func (k *Keeper) HandleBeginRedelegate(ctx sdk.Context, msg sdk.Msg, completion 
 				EpochNumber:    epochNumber,
 				Source:         redelegateMsg.ValidatorSrcAddress,
 				Destination:    redelegateMsg.ValidatorDstAddress,
-				Amount:         redelegateMsg.Amount.Amount.Int64(),
+				Amount:         redelegateMsg.Amount.Amount,
 				CompletionTime: completion,
 			}
 		}
@@ -863,7 +918,7 @@ func (k *Keeper) HandleFailedUndelegate(ctx sdk.Context, msg sdk.Msg, memo strin
 		// - save old record
 		// - create new record for unhandled burn amount
 		newDistribution := make([]*types.Distribution, 0)
-		relatedAmount := uint64(0)
+		relatedAmount := math.ZeroInt()
 		for _, dist := range wdr.Distribution {
 			if dist.Valoper != ubr.Validator {
 				newDistribution = append(newDistribution, dist)
@@ -874,7 +929,7 @@ func (k *Keeper) HandleFailedUndelegate(ctx sdk.Context, msg sdk.Msg, memo strin
 
 		amount := wdr.Amount.AmountOf(zone.BaseDenom)
 		rr := sdk.NewDecFromInt(wdr.BurnAmount.Amount).Quo(sdk.NewDecFromInt(amount))
-		relatedQAsset := sdk.NewDec(int64(relatedAmount)).Mul(rr).TruncateInt()
+		relatedQAsset := sdk.NewDecFromInt(relatedAmount).Mul(rr).TruncateInt()
 
 		if len(newDistribution) == 0 {
 			// if this was the final record, delete the withdrawal record
@@ -882,9 +937,13 @@ func (k *Keeper) HandleFailedUndelegate(ctx sdk.Context, msg sdk.Msg, memo strin
 		} else {
 			// else update it
 			wdr.Distribution = newDistribution
-			wdr.Amount = wdr.Amount.Sub(sdk.NewCoin(zone.BaseDenom, sdk.NewIntFromUint64(relatedAmount)))
+			wdr.Amount = wdr.Amount.Sub(sdk.NewCoin(zone.BaseDenom, relatedAmount))
 			wdr.BurnAmount = wdr.BurnAmount.SubAmount(relatedQAsset)
-			k.SetWithdrawalRecord(ctx, wdr)
+			err = k.SetWithdrawalRecord(ctx, wdr)
+			if err != nil {
+				return err
+			}
+
 		}
 
 		record := k.GetUserChainRequeuedWithdrawalRecord(ctx, zone.ChainId, wdr.Delegator)
@@ -904,7 +963,10 @@ func (k *Keeper) HandleFailedUndelegate(ctx sdk.Context, msg sdk.Msg, memo strin
 		} else {
 			record.BurnAmount = record.BurnAmount.Add(sdk.NewCoin(zone.LocalDenom, relatedQAsset))
 		}
-		k.SetWithdrawalRecord(ctx, record)
+		err = k.SetWithdrawalRecord(ctx, record)
+		if err != nil {
+			return err
+		}
 	}
 
 	k.DeleteUnbondingRecord(ctx, zone.ChainId, undelegateMsg.ValidatorAddress, epochNumber)
@@ -938,7 +1000,12 @@ func (k *Keeper) HandleRedeemTokens(ctx sdk.Context, msg sdk.Msg, amount sdk.Coi
 		}
 		k.Logger(ctx).Debug("outstanding delegations ack-received")
 		k.SetReceiptsCompleted(ctx, zone.ChainId, time.Unix(exclusionTimestampUnix, 0), ctx.BlockTime(), redeemMsg.Amount.Denom)
-		zone.DelegationAddress.Balance = zone.DelegationAddress.Balance.Sub(redeemMsg.Amount)
+		balance, negative := zone.DelegationAddress.Balance.SafeSub(redeemMsg.Amount)
+		if negative {
+			k.Logger(ctx).Error("unexpected negative balance; likely due to stale ack")
+			return nil
+		}
+		zone.DelegationAddress.Balance = balance
 		k.SetZone(ctx, zone)
 		if zone.GetWithdrawalWaitgroup() == 0 {
 			k.Logger(ctx).Info("Triggering redemption rate calc after delegation flush")
@@ -1025,7 +1092,12 @@ func (k *Keeper) HandleDelegate(ctx sdk.Context, msg sdk.Msg, memo string) error
 		}
 		k.Logger(ctx).Debug("outstanding delegations ack-received")
 		k.SetReceiptsCompleted(ctx, zone.ChainId, time.Unix(exclusionTimestampUnix, 0), ctx.BlockTime(), delegateMsg.Amount.Denom)
-		zone.DelegationAddress.Balance = zone.DelegationAddress.Balance.Sub(delegateMsg.Amount)
+		balance, negative := zone.DelegationAddress.Balance.SafeSub(delegateMsg.Amount)
+		if negative {
+			k.Logger(ctx).Error("unexpected negative balance; likely a stale ack")
+			return nil
+		}
+		zone.DelegationAddress.Balance = balance
 		if err := zone.DecrementWithdrawalWaitgroup(k.Logger(ctx), uint32(1), "batch/reward delegation success ack"); err != nil {
 			k.Logger(ctx).Error(err.Error())
 			return nil
@@ -1270,7 +1342,7 @@ func (k *Keeper) UpdateDelegationRecordForAddress(
 
 	period := int64(k.GetParam(ctx, types.KeyValidatorSetInterval))
 	query := stakingtypes.QueryValidatorsRequest{}
-	err := k.EmitValSetQuery(ctx, zone.ConnectionId, zone.ChainId, query, sdkmath.NewInt(period))
+	err := k.EmitValSetQuery(ctx, zone.ConnectionId, zone.ChainId, query, math.NewInt(period))
 	if err != nil {
 		return err
 	}
@@ -1425,7 +1497,7 @@ func DistributeRewardsFromWithdrawAccount(k *Keeper, ctx sdk.Context, args []byt
 	return k.SubmitTx(ctx, msgs, zone.WithdrawalAddress, "", zone.MessagesPerTx)
 }
 
-func (*Keeper) prepareRewardsDistributionMsgs(zone types.Zone, rewards sdkmath.Int) sdk.Msg {
+func (*Keeper) prepareRewardsDistributionMsgs(zone types.Zone, rewards math.Int) sdk.Msg {
 	return &banktypes.MsgSend{
 		FromAddress: zone.WithdrawalAddress.GetAddress(),
 		ToAddress:   zone.DelegationAddress.GetAddress(),
@@ -1433,9 +1505,22 @@ func (*Keeper) prepareRewardsDistributionMsgs(zone types.Zone, rewards sdkmath.I
 	}
 }
 
-func equalLsmCoin(valoper string, amount uint64, lsmAmount sdk.Coin) bool {
-	if strings.HasPrefix(lsmAmount.Denom, valoper) {
-		return lsmAmount.Amount.Equal(sdk.NewIntFromUint64(amount))
+func isNumericString(in string) bool {
+	// It is okay to use strconv.ParseInt to test if a value is numeric
+	// because the total supply of QCK is:
+	//      400_000_000 (400 million) qck aka 400_000_000_000_000 uqck
+	// and to parse numeric values, say in the smallest unit of uqck
+	//      MaxInt64: (1<<63)-1 = 9_223_372_036_854_775_807 uqck aka
+	//                            9_223_372_036_854.775 (9.223 Trillion) qck
+	// so the function is appropriate as its range won't be exceeded.
+	_, err := strconv.ParseInt(in, 10, 64)
+	return err == nil
+}
+
+func equalLsmCoin(valoper string, amount math.Int, lsmAmount sdk.Coin) bool {
+	parts := strings.Split(lsmAmount.Denom, "/")
+	if len(parts) == 2 && strings.HasPrefix(parts[0], valoper) && isNumericString(parts[1]) {
+		return lsmAmount.Amount.Equal(amount)
 	}
 	return false
 }

@@ -59,6 +59,8 @@ message MsgIncentivePoolSpend {
     (gogoproto.nullable) = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
+  string title = 4;
+  string description = 5;
 }
 
 // MsgIncentivePoolSpendResponse defines the MsgIncentivePoolSpend response type.

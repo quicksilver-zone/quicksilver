@@ -70,8 +70,8 @@ export const getIbcInfo = (fromChainName: string, toChainName: string) => {
   }
 
   const key = flipped ? 'chain_2' : 'chain_1';
-  const sourcePort = ibcInfo.channels[0][key].port_id;
-  const sourceChannel = ibcInfo.channels[0][key].channel_id;
+  const source_port = ibcInfo.channels[0][key].port_id;
+  const source_channel = ibcInfo.channels[0][key].channel_id;
 
-  return { sourcePort, sourceChannel };
+  return { source_port, source_channel };
 };
