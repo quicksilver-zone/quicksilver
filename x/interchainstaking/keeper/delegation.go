@@ -195,8 +195,7 @@ func (*Keeper) PrepareDelegationMessagesForCoins(zone *types.Zone, allocations m
 	var msgs []sdk.Msg
 	for _, valoper := range utils.Keys(allocations) {
 		if allocations[valoper].IsPositive() {
-			if allocations[valoper].GTE(sdk.NewInt(1_000_000)) || isFlush {
-				// don't delegate tiny amounts. TODO: make configurable per zone.
+			if allocations[valoper].GTE(zone.DustThreshold) || isFlush {
 				msgs = append(msgs, &stakingtypes.MsgDelegate{DelegatorAddress: zone.DelegationAddress.Address, ValidatorAddress: valoper, Amount: sdk.NewCoin(zone.BaseDenom, allocations[valoper])})
 			}
 		}

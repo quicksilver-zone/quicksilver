@@ -8,6 +8,8 @@ import (
 	"github.com/stretchr/testify/suite"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 
+	"cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
@@ -70,6 +72,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		UnbondingPeriod:              0,
 		MessagesPerTx:                0,
 		Is_118:                       true,
+		DustThreshold:                math.NewInt(1000000),
 	}
 
 	zone.Validators = append(zone.Validators,
@@ -189,6 +192,7 @@ func (s *IntegrationTestSuite) ZonesEqual(zoneA, zoneB types.Zone) bool {
 	s.Require().Equal(zoneA.LastEpochHeight, zoneB.LastEpochHeight)
 	s.Require().Equal(zoneA.LiquidityModule, zoneB.LiquidityModule)
 	s.Require().Equal(zoneA.LocalDenom, zoneB.LocalDenom)
+	s.Require().Equal(zoneA.DustThreshold, zoneB.DustThreshold)
 	for i := range zoneA.Validators {
 		s.Require().Equal(zoneA.Validators[i], zoneB.Validators[i])
 	}
