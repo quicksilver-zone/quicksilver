@@ -308,7 +308,7 @@ func (suite *KeeperTestSuite) TestRemoveZoneAndAssociatedRecords() {
 		Status:         types.WithdrawStatusUnbond,
 		CompletionTime: time.Now().UTC().Add(time.Hour),
 	}
-	quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(ctx, record)
+	_ = quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(ctx, record)
 
 	// Handle
 	quicksilver.InterchainstakingKeeper.RemoveZoneAndAssociatedRecords(ctx, chainID)
@@ -349,62 +349,65 @@ func (suite *KeeperTestSuite) TestRemoveZoneAndAssociatedRecords() {
 
 // TODO: convert to keeper tests
 
-/* func TestZone_GetBondedValidatorAddressesAsSlice(t *testing.T) {
-	zone := types.Zone{ConnectionId: "connection-0", ChainId: "cosmoshub-4", AccountPrefix: "cosmos", LocalDenom: "uqatom", BaseDenom: "uatom"}
-	zone.Validators = append(zone.Validators, &types.Validator{
-		ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0",
-		CommissionRate: sdk.MustNewDecFromStr("0.2"),
-		VotingPower:    sdk.NewInt(2000),
-		Status:         stakingtypes.BondStatusUnbonded,
-	},
-		&types.Validator{
-			ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf",
+/*
+	 func TestZone_GetBondedValidatorAddressesAsSlice(t *testing.T) {
+		zone := types.Zone{ConnectionId: "connection-0", ChainId: "cosmoshub-4", AccountPrefix: "cosmos", LocalDenom: "uqatom", BaseDenom: "uatom"}
+		zone.Validators = append(zone.Validators, &types.Validator{
+			ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0",
 			CommissionRate: sdk.MustNewDecFromStr("0.2"),
 			VotingPower:    sdk.NewInt(2000),
 			Status:         stakingtypes.BondStatusUnbonded,
 		},
-		&types.Validator{
-			ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy",
-			CommissionRate: sdk.MustNewDecFromStr("0.2"),
-			VotingPower:    sdk.NewInt(2000),
-			Status:         stakingtypes.BondStatusBonded,
-		},
-		&types.Validator{
-			ValoperAddress: "cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll",
-			CommissionRate: sdk.MustNewDecFromStr("0.2"),
-			VotingPower:    sdk.NewInt(2000),
-			Status:         stakingtypes.BondStatusBonded,
-		},
-		&types.Validator{
-			ValoperAddress: "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7",
-			CommissionRate: sdk.MustNewDecFromStr("0.2"),
-			VotingPower:    sdk.NewInt(2000),
-			Status:         stakingtypes.BondStatusBonded,
-		},
-		&types.Validator{
-			ValoperAddress: "cosmosvaloper1qaa9zej9a0ge3ugpx3pxyx602lxh3ztqgfnp42",
-			CommissionRate: sdk.MustNewDecFromStr("0.2"),
-			VotingPower:    sdk.NewInt(2000),
-			Status:         stakingtypes.BondStatusBonded,
-		},
-	)
+			&types.Validator{
+				ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf",
+				CommissionRate: sdk.MustNewDecFromStr("0.2"),
+				VotingPower:    sdk.NewInt(2000),
+				Status:         stakingtypes.BondStatusUnbonded,
+			},
+			&types.Validator{
+				ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy",
+				CommissionRate: sdk.MustNewDecFromStr("0.2"),
+				VotingPower:    sdk.NewInt(2000),
+				Status:         stakingtypes.BondStatusBonded,
+			},
+			&types.Validator{
+				ValoperAddress: "cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll",
+				CommissionRate: sdk.MustNewDecFromStr("0.2"),
+				VotingPower:    sdk.NewInt(2000),
+				Status:         stakingtypes.BondStatusBonded,
+			},
+			&types.Validator{
+				ValoperAddress: "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7",
+				CommissionRate: sdk.MustNewDecFromStr("0.2"),
+				VotingPower:    sdk.NewInt(2000),
+				Status:         stakingtypes.BondStatusBonded,
+			},
+			&types.Validator{
+				ValoperAddress: "cosmosvaloper1qaa9zej9a0ge3ugpx3pxyx602lxh3ztqgfnp42",
+				CommissionRate: sdk.MustNewDecFromStr("0.2"),
+				VotingPower:    sdk.NewInt(2000),
+				Status:         stakingtypes.BondStatusBonded,
+			},
+		)
 
-	// sorted list
-	expected := []string{
-		"cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy",
-		"cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll",
-		"cosmosvaloper1qaa9zej9a0ge3ugpx3pxyx602lxh3ztqgfnp42",
-		"cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7",
+		// sorted list
+		expected := []string{
+			"cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy",
+			"cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll",
+			"cosmosvaloper1qaa9zej9a0ge3ugpx3pxyx602lxh3ztqgfnp42",
+			"cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7",
+		}
+		require.Equal(t, expected, zone.GetBondedValidatorAddressesAsSlice())
 	}
-	require.Equal(t, expected, zone.GetBondedValidatorAddressesAsSlice())
-}
+*/
+func (suite *KeeperTestSuite) TestZone_GetAggregateIntentOrDefault() {
+	suite.SetupTest()
+	suite.setupTestZones()
 
-func TestZone_GetAggregateIntentOrDefault(t *testing.T) {
-	// empty
-	zone := types.Zone{}
-	require.Equal(t, types.ValidatorIntents(nil), zone.GetAggregateIntentOrDefault())
+	icsKeeper := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
+	ctx := suite.chainA.GetContext()
 
-	zone = types.Zone{ConnectionId: "connection-0", ChainId: "cosmoshub-4", AccountPrefix: "cosmos", LocalDenom: "uqatom", BaseDenom: "uatom"}
+	zone := types.Zone{ConnectionId: "connection-0", ChainId: "cosmoshub-4", AccountPrefix: "cosmos", LocalDenom: "uqatom", BaseDenom: "uatom"}
 	zone.Validators = append(zone.Validators, &types.Validator{
 		ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0",
 		CommissionRate: sdk.MustNewDecFromStr("0.2"),
@@ -442,7 +445,12 @@ func TestZone_GetAggregateIntentOrDefault(t *testing.T) {
 			Status:         stakingtypes.BondStatusBonded,
 		},
 	)
-
+	// Need to set validators in the store to calculate the aggregate intent properly
+	for _, val := range zone.Validators {
+		err := icsKeeper.SetValidator(ctx, zone.ChainId, *val)
+		require.NoError(suite.T(), err)
+	}
+	icsKeeper.SetZone(ctx, &zone)
 	expected := types.ValidatorIntents{
 		&types.ValidatorIntent{
 			ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy",
@@ -461,6 +469,8 @@ func TestZone_GetAggregateIntentOrDefault(t *testing.T) {
 			Weight:         sdk.NewDecWithPrec(25, 2),
 		},
 	}
-	actual := zone.GetAggregateIntentOrDefault()
-	require.Equal(t, expected, actual)
-} */
+
+	actual, err := icsKeeper.GetAggregateIntentOrDefault(ctx, &zone)
+	require.NoError(suite.T(), err)
+	require.Equal(suite.T(), expected, actual)
+}

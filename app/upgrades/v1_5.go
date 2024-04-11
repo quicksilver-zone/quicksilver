@@ -66,14 +66,17 @@ func V010500rc1UpgradeHandler(
 // 				return false
 // 			}
 
-// 			newDist := make([]*icstypes.Distribution, 0, len(record.Distribution))
-// 			for _, d := range record.Distribution {
-// 				d.Amount = math.NewIntFromUint64(d.XAmount)
-// 				d.XAmount = 0
-// 				newDist = append(newDist, d)
-// 			}
-// 			record.Distribution = newDist
-// 			appKeepers.InterchainstakingKeeper.SetWithdrawalRecord(ctx, record)
+//			newDist := make([]*icstypes.Distribution, 0, len(record.Distribution))
+//			for _, d := range record.Distribution {
+//				d.Amount = math.NewIntFromUint64(d.XAmount)
+//				d.XAmount = 0
+//				newDist = append(newDist, d)
+//			}
+//			record.Distribution = newDist
+//			err := appKeepers.InterchainstakingKeeper.SetWithdrawalRecord(ctx, record)
+//			if err != nil {
+//				panic(err)
+//			}
 
 // 			return false
 // 		})
@@ -155,14 +158,17 @@ func V010504UpgradeHandler(
 // 				return false
 // 			}
 
-// 			newDist := make([]*icstypes.Distribution, 0, len(record.Distribution))
-// 			for _, d := range record.Distribution {
-// 				d.Amount = math.NewIntFromUint64(d.XAmount)
-// 				d.XAmount = 0
-// 				newDist = append(newDist, d)
-// 			}
-// 			record.Distribution = newDist
-// 			appKeepers.InterchainstakingKeeper.SetWithdrawalRecord(ctx, record)
+//			newDist := make([]*icstypes.Distribution, 0, len(record.Distribution))
+//			for _, d := range record.Distribution {
+//				d.Amount = math.NewIntFromUint64(d.XAmount)
+//				d.XAmount = 0
+//				newDist = append(newDist, d)
+//			}
+//			record.Distribution = newDist
+//			err := appKeepers.InterchainstakingKeeper.SetWithdrawalRecord(ctx, record)
+//			if err != nil {
+//				panic(err)
+//			}
 
 // 			return false
 // 		})
@@ -571,7 +577,7 @@ func reimburseUsersWithdrawnOnLowRR(ctx sdk.Context, appKeepers *keepers.AppKeep
 			return err
 		}
 
-		appKeepers.InterchainstakingKeeper.SetWithdrawalRecord(ctx,
+		_ = appKeepers.InterchainstakingKeeper.SetWithdrawalRecord(ctx,
 			icstypes.WithdrawalRecord{
 				ChainId:      "cosmoshub-4",
 				Delegator:    delegator,
@@ -629,7 +635,7 @@ func collateRequeuedWithdrawals(ctx sdk.Context, appKeepers *keepers.AppKeepers)
 		})
 
 		for _, key := range utils.Keys(newRecords) {
-			appKeepers.InterchainstakingKeeper.SetWithdrawalRecord(ctx, newRecords[key])
+			_ = appKeepers.InterchainstakingKeeper.SetWithdrawalRecord(ctx, newRecords[key])
 		}
 
 		newRecords = map[string]icstypes.WithdrawalRecord{}
@@ -696,7 +702,7 @@ func collateRequeuedWithdrawals(ctx sdk.Context, appKeepers *keepers.AppKeepers)
 		})
 
 		for _, key := range utils.Keys(newRecords) {
-			appKeepers.InterchainstakingKeeper.SetWithdrawalRecord(ctx, newRecords[key])
+			_ = appKeepers.InterchainstakingKeeper.SetWithdrawalRecord(ctx, newRecords[key])
 		}
 
 		return false
