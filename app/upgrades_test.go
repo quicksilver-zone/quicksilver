@@ -1060,5 +1060,4 @@ func (s *AppTestSuite) TestV010600UpgradeHandler() {
 	junoZone, ok := app.InterchainstakingKeeper.GetZone(ctx, "juno-1")
 	s.True(ok)
 	s.Equal(dustThreshold, junoZone.DustThreshold)
-
 }

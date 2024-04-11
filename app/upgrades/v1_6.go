@@ -4,7 +4,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 
 	"github.com/quicksilver-zone/quicksilver/app/keepers"
 	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
