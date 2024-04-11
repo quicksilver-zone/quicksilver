@@ -1,4 +1,6 @@
 import '../styles/globals.css';
+
+import '@interchain-ui/react/styles';
 import { Chain } from '@chain-registry/types';
 import { Box, ChakraProvider, Flex } from '@chakra-ui/react';
 import { Registry } from '@cosmjs/proto-signing';
@@ -8,55 +10,47 @@ import { wallets as cosmostationWallets } from '@cosmos-kit/cosmostation';
 import { wallets as keplrWallets } from '@cosmos-kit/keplr';
 import { wallets as leapWallets } from '@cosmos-kit/leap';
 import { ChainProvider, ThemeCustomizationProps } from '@cosmos-kit/react';
+import { ThemeProvider, useTheme } from '@interchain-ui/react';
 import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 import { chains, assets } from 'chain-registry';
+import { ibcAminoConverters, ibcProtoRegistry } from 'interchain-query';
 import type { AppProps } from 'next/app';
-import {
-  quicksilverProtoRegistry,
-  quicksilverAminoConverters,
-  cosmosAminoConverters,
-  cosmosProtoRegistry,
-  ibcAminoConverters,
-  ibcProtoRegistry,
-} from 'quicksilverjs';
+import { quicksilverProtoRegistry, quicksilverAminoConverters, cosmosAminoConverters, cosmosProtoRegistry } from 'quicksilverjs';
 
 import { DynamicHeaderSection, SideHeader } from '@/components';
 import { defaultTheme } from '@/config';
+import { LiveZonesProvider } from '@/state/LiveZonesContext';
 
-import '@interchain-ui/react/styles';
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 2,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 function QuickApp({ Component, pageProps }: AppProps) {
+  const { themeClass } = useTheme();
   const signerOptions: SignerOptions = {
-    //@ts-ignore
-    signingStargate: (chain: Chain): SigningStargateClientOptions | undefined => {
-      //@ts-ignore
+    signingStargate: (_chain: string | Chain): SigningStargateClientOptions | undefined => {
       const mergedRegistry = new Registry([...quicksilverProtoRegistry, ...ibcProtoRegistry, ...cosmosProtoRegistry]);
-
       const mergedAminoTypes = new AminoTypes({
         ...cosmosAminoConverters,
         ...quicksilverAminoConverters,
         ...ibcAminoConverters,
       });
-
       return {
         aminoTypes: mergedAminoTypes,
-        //@ts-ignore
         registry: mergedRegistry,
       };
     },
   };
 
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: {
-        retry: 2,
-        refetchOnWindowFocus: false,
-      },
-    },
-  });
-
   const env = process.env.NEXT_PUBLIC_CHAIN_ENV;
+  const walletConnectToken = process.env.NEXT_PUBLIC_WALLET_CONNECT_TOKEN;
 
   const rpcEndpoints = {
     quicksilver:
@@ -73,6 +67,7 @@ function QuickApp({ Component, pageProps }: AppProps) {
     osmosis:
       env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_RPC_ENDPOINT_OSMOSIS : process.env.NEXT_PUBLIC_MAINNET_RPC_ENDPOINT_OSMOSIS,
     juno: env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_RPC_ENDPOINT_JUNO : process.env.NEXT_PUBLIC_MAINNET_RPC_ENDPOINT_JUNO,
+    dydx: env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_RPC_ENDPOINT_DYDX : process.env.NEXT_PUBLIC_MAINNET_RPC_ENDPOINT_DYDX,
   };
 
   const lcdEndpoints = {
@@ -90,6 +85,7 @@ function QuickApp({ Component, pageProps }: AppProps) {
     osmosis:
       env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_LCD_ENDPOINT_OSMOSIS : process.env.NEXT_PUBLIC_MAINNET_LCD_ENDPOINT_OSMOSIS,
     juno: env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_LCD_ENDPOINT_JUNO : process.env.NEXT_PUBLIC_MAINNET_LCD_ENDPOINT_JUNO,
+    dydx: env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_LCD_ENDPOINT_DYDX : process.env.NEXT_PUBLIC_MAINNET_LCD_ENDPOINT_DYDX,
   };
 
   const modalThemeOverrides: ThemeCustomizationProps = {
@@ -218,110 +214,96 @@ function QuickApp({ Component, pageProps }: AppProps) {
     },
   };
 
-  function isWalletClientAvailable(walletName: string) {
-    if (typeof window === 'undefined') {
-      return false;
-    }
-
-    switch (walletName) {
-      case 'Keplr':
-        return typeof window.keplr !== 'undefined';
-      case 'Cosmostation':
-        return typeof window.cosmostation !== 'undefined';
-      case 'Leap':
-        return typeof window.leap !== 'undefined';
-      default:
-        return false;
-    }
-  }
-
-  const availableWallets = [];
-
-  if (isWalletClientAvailable('Keplr')) {
-    availableWallets.push(...keplrWallets);
-  }
-  if (isWalletClientAvailable('Cosmostation')) {
-    availableWallets.push(...cosmostationWallets);
-  }
-  if (isWalletClientAvailable('Leap')) {
-    availableWallets.push(...leapWallets);
-  }
-
   return (
-    <ChakraProvider theme={defaultTheme}>
-      <ChainProvider
-        endpointOptions={{
-          isLazy: true,
-          endpoints: {
-            quicksilver: {
-              rpc: [rpcEndpoints.quicksilver ?? ''],
-              rest: [lcdEndpoints.quicksilver ?? ''],
-            },
-            quicksilvertestnet: {
-              rest: ['https://lcd.test.quicksilver.zone/'],
-              rpc: ['https://rpc.test.quicksilver.zone'],
-            },
-            cosmoshub: {
-              rpc: [rpcEndpoints.cosmoshub ?? ''],
-              rest: [lcdEndpoints.cosmoshub ?? ''],
-            },
-            sommelier: {
-              rpc: [rpcEndpoints.sommelier ?? ''],
-              rest: [lcdEndpoints.sommelier ?? ''],
-            },
-            stargaze: {
-              rpc: [rpcEndpoints.stargaze ?? ''],
-              rest: [lcdEndpoints.stargaze ?? ''],
-            },
-            regen: {
-              rpc: [rpcEndpoints.regen ?? ''],
-              rest: [lcdEndpoints.regen ?? ''],
-            },
-            osmosis: {
-              rpc: [rpcEndpoints.osmosis ?? ''],
-              rest: [lcdEndpoints.osmosis ?? ''],
-            },
-            osmosistestnet: {
-              rpc: [rpcEndpoints.osmosis ?? ''],
-              rest: [lcdEndpoints.osmosis ?? ''],
-            },
-            umee: {
-              rpc: ['https://rpc-umee-ia.cosmosia.notional.ventures/'],
-              rest: ['https://api-umee-ia.cosmosia.notional.ventures/'],
-            },
-          },
-        }}
-        modalTheme={modalThemeOverrides}
-        chains={chains}
-        assetLists={assets}
-        wallets={availableWallets}
-        walletConnectOptions={{
-          signClient: {
-            projectId: '41a0749c331d209190beeac1c2530c90',
-            relayUrl: 'wss://relay.walletconnect.org',
-            metadata: {
-              name: 'Quicksilver',
-              description: 'Quicksilver App',
-              url: 'https://apps.qucksilver.zone/',
-              icons: [],
-            },
-          },
-        }}
-        //@ts-ignore
-        signerOptions={signerOptions}
-      >
-        <QueryClientProvider client={queryClient}>
-          <ReactQueryDevtools initialIsOpen={true} />
-          <Box w="100vw" h="100vh" bgSize="fit" bgPosition="right center" bgAttachment="fixed" bgRepeat="no-repeat">
-            <Flex justifyContent={'space-between'} alignItems={'center'}>
-              <DynamicHeaderSection chainName="quicksilver" />
-              <SideHeader />
-            </Flex>
-            <Component {...pageProps} />
-          </Box>
-        </QueryClientProvider>
-      </ChainProvider>
-    </ChakraProvider>
+    <LiveZonesProvider>
+      <ChakraProvider theme={defaultTheme}>
+  
+        <ThemeProvider>
+          <ChainProvider
+            endpointOptions={{
+              isLazy: true,
+              endpoints: {
+                quicksilver: {
+                  rpc: [rpcEndpoints.quicksilver ?? ''],
+                  rest: [lcdEndpoints.quicksilver ?? ''],
+                },
+                quicksilvertestnet: {
+                  rest: ['https://lcd.test.quicksilver.zone/'],
+                  rpc: ['https://rpc.test.quicksilver.zone'],
+                },
+                cosmoshub: {
+                  rpc: [rpcEndpoints.cosmoshub ?? ''],
+                  rest: [lcdEndpoints.cosmoshub ?? ''],
+                },
+                sommelier: {
+                  rpc: [rpcEndpoints.sommelier ?? ''],
+                  rest: [lcdEndpoints.sommelier ?? ''],
+                },
+                stargaze: {
+                  rpc: [rpcEndpoints.stargaze ?? ''],
+                  rest: [lcdEndpoints.stargaze ?? ''],
+                },
+                regen: {
+                  rpc: [rpcEndpoints.regen ?? ''],
+                  rest: [lcdEndpoints.regen ?? ''],
+                },
+                osmosis: {
+                  rpc: [rpcEndpoints.osmosis ?? ''],
+                  rest: [lcdEndpoints.osmosis ?? ''],
+                },
+                osmosistestnet: {
+                  rpc: [rpcEndpoints.osmosis ?? ''],
+                  rest: [lcdEndpoints.osmosis ?? ''],
+                },
+                umee: {
+                  rpc: ['https://rpc-umee-ia.cosmosia.notional.ventures/'],
+                  rest: ['https://api-umee-ia.cosmosia.notional.ventures/'],
+                },
+                dydx: {
+                  rpc: [rpcEndpoints.dydx ?? ''],
+                  rest: [lcdEndpoints.dydx ?? ''],
+                },
+              },
+            }}
+            logLevel="NONE"
+            modalTheme={modalThemeOverrides}
+            chains={chains}
+            assetLists={assets}
+            // @ts-ignore
+            wallets={[...keplrWallets, ...cosmostationWallets, ...leapWallets]}
+            walletConnectOptions={{
+              signClient: {
+                projectId: walletConnectToken ?? '41a0749c331d209190beeac1c2530c90',
+                relayUrl: 'wss://relay.walletconnect.org',
+                metadata: {
+                  name: 'Quicksilver',
+                  description: 'Quicksilver App',
+                  url: 'https://apps.qucksilver.zone/',
+                  icons: [],
+                },
+              },
+            }}
+            //@ts-ignore
+            signerOptions={signerOptions}
+          >
+            <QueryClientProvider client={queryClient}>
+              <ReactQueryDevtools initialIsOpen={true} />
+             
+              <main id="main" className={themeClass}>
+                <Box w="100vw" h="100vh" bgSize="fit" bgPosition="right center" bgAttachment="fixed" bgRepeat="no-repeat">
+                  <Flex justifyContent={'space-between'} alignItems={'center'}>
+                    <DynamicHeaderSection chainName="quicksilver" />
+                    <SideHeader />
+                  </Flex>
+                  <Component {...pageProps} />
+                  <SpeedInsights />
+                </Box>
+              </main>
+            </QueryClientProvider>
+          </ChainProvider>
+        </ThemeProvider>
+      </ChakraProvider>
+    </LiveZonesProvider>
   );
 }
 

@@ -93,7 +93,7 @@ func (k *Keeper) queueRedemption(
 ) error { //nolint:unparam // we know that the error is always nil
 	distributions := make([]*types.Distribution, 0)
 
-	k.AddWithdrawalRecord(
+	_ = k.AddWithdrawalRecord(
 		ctx,
 		zone.ChainId,
 		sender.String(),
@@ -133,11 +133,11 @@ func (k *Keeper) GetUnlockedTokensForZone(ctx sdk.Context, zone *types.Zone) (ma
 	for _, redelegation := range k.ZoneRedelegationRecords(ctx, zone.ChainId) {
 		thisAvailable, found := availablePerValidator[redelegation.Destination]
 		if found {
-			availablePerValidator[redelegation.Destination] = thisAvailable.Sub(sdk.NewInt(redelegation.Amount))
+			availablePerValidator[redelegation.Destination] = thisAvailable.Sub(redelegation.Amount)
 			if availablePerValidator[redelegation.Destination].LT(sdk.ZeroInt()) {
 				return map[string]sdkmath.Int{}, sdk.ZeroInt(), fmt.Errorf("negative available amount [chain: %s, validator: %s, amount: %s]; unable to continue", zone.ChainId, redelegation.Destination, availablePerValidator[redelegation.Destination].String())
 			}
-			total = total.Sub(sdk.NewInt(redelegation.Amount))
+			total = total.Sub(redelegation.Amount)
 		}
 	}
 
@@ -179,7 +179,11 @@ func (k *Keeper) HandleQueuedUnbondings(ctx sdk.Context, zone *types.Zone, epoch
 		}
 
 		withdrawal.Amount = sdk.NewCoins(amount)
-		k.SetWithdrawalRecord(ctx, withdrawal)
+		err = k.SetWithdrawalRecord(ctx, withdrawal)
+		if err != nil {
+			k.Logger(ctx).Error("unable to set withdrawal record", "error", err)
+			return false
+		}
 
 		// check whether the running total of withdrawals can be satisfied by the available unlocked tokens.
 		// if not return true to stop iterating and return all records up until now.
@@ -322,13 +326,8 @@ WITHDRAWAL:
 	for _, hash := range utils.Keys(amountToWithdrawPerWithdrawal) {
 		for {
 			// if amountToWithdrawPerWithdrawal has been satisified, then continue.
-			if amountToWithdrawPerWithdrawal[hash].Amount.IsZero() {
+			if amountToWithdrawPerWithdrawal[hash].IsZero() {
 				continue WITHDRAWAL
-			}
-
-			if !amountToWithdrawPerWithdrawal[hash].Amount.IsUint64() {
-				// should not happen - be defensive.
-				return nil, nil, nil, fmt.Errorf("aborting allocation. reason: amountToWithdrawPerWithdrawal[%s] is non uint64: %v", hash, amountToWithdrawPerWithdrawal[hash])
 			}
 
 			// if current selected validator allocation for withdrawal can satisfy this withdrawal in totality...
@@ -336,7 +335,7 @@ WITHDRAWAL:
 				// sub current withdrawal amount from allocation.
 				tokensAllocatedForWithdrawalPerValidator[v] = tokensAllocatedForWithdrawalPerValidator[v].Sub(amountToWithdrawPerWithdrawal[hash].Amount)
 				// create a distribution from this validator for the withdrawal
-				distributionsPerWithdrawal[hash] = append(distributionsPerWithdrawal[hash], &types.Distribution{Valoper: v, Amount: amountToWithdrawPerWithdrawal[hash].Amount.Uint64()})
+				distributionsPerWithdrawal[hash] = append(distributionsPerWithdrawal[hash], &types.Distribution{Valoper: v, Amount: amountToWithdrawPerWithdrawal[hash].Amount})
 
 				// add the amount and hash to per validator records
 				existing, found := coinsOutPerValidator[v]
@@ -354,13 +353,8 @@ WITHDRAWAL:
 				continue WITHDRAWAL
 			}
 
-			if !amountToWithdrawPerWithdrawal[hash].Amount.IsUint64() {
-				// should not happen - be defensive.
-				return nil, nil, nil, fmt.Errorf("aborting allocation. reason: tokensAllocatedForWithdrawalPerValidator[%s] is non-uint64: %v", v, tokensAllocatedForWithdrawalPerValidator[v])
-			}
-
 			// otherwise (current validator allocation cannot wholly satisfy current record), allocate entire allocation to this withdrawal.
-			distributionsPerWithdrawal[hash] = append(distributionsPerWithdrawal[hash], &types.Distribution{Valoper: v, Amount: tokensAllocatedForWithdrawalPerValidator[v].Uint64()})
+			distributionsPerWithdrawal[hash] = append(distributionsPerWithdrawal[hash], &types.Distribution{Valoper: v, Amount: tokensAllocatedForWithdrawalPerValidator[v]})
 			amountToWithdrawPerWithdrawal[hash] = sdk.NewCoin(amountToWithdrawPerWithdrawal[hash].Denom, amountToWithdrawPerWithdrawal[hash].Amount.Sub(tokensAllocatedForWithdrawalPerValidator[v]))
 			existing, found := coinsOutPerValidator[v]
 			if !found {
@@ -377,7 +371,7 @@ WITHDRAWAL:
 			if len(valopers) > vidx+1 {
 				vidx++
 				v = valopers[vidx]
-			} else if !amountToWithdrawPerWithdrawal[hash].Amount.IsZero() {
+			} else if !amountToWithdrawPerWithdrawal[hash].IsZero() {
 				return nil, nil, nil, fmt.Errorf("unable to satisfy unbonding")
 			}
 		}
@@ -396,11 +390,11 @@ WITHDRAWAL:
 	for hash, tx := range _amountToWithdrawPerWithdrawal {
 		sumIn = sumIn.Add(tx)
 		dist := func(in []*types.Distribution) sdkmath.Int {
-			sum := uint64(0)
+			sum := sdkmath.ZeroInt()
 			for _, dist := range in {
-				sum += dist.Amount
+				sum = sum.Add(dist.Amount)
 			}
-			return sdk.NewIntFromUint64(sum)
+			return sum
 		}(distributionsPerWithdrawal[hash])
 
 		if !tx.Amount.Equal(dist) {

@@ -33,6 +33,8 @@ var (
 	_ legacytx.LegacyMsg = &MsgRequestRedemption{}
 	_ legacytx.LegacyMsg = &MsgCancelQueuedRedemption{}
 	_ legacytx.LegacyMsg = &MsgSignalIntent{}
+	_ sdk.Msg            = &MsgGovAddValidatorDenyList{}
+	_ sdk.Msg            = &MsgGovRemoveValidatorDenyList{}
 )
 
 // NewMsgRequestRedemption - construct a msg to request redemption.
@@ -383,4 +385,59 @@ func (caps LsmCaps) Validate() error {
 	}
 
 	return nil
+}
+
+// MsgGovAddValidatorDenyList
+
+// // ValidateBasic
+func (msg MsgGovAddValidatorDenyList) ValidateBasic() error {
+	_, err := addressutils.AccAddressFromBech32(msg.Authority, "")
+	if err != nil {
+		return err
+	}
+
+	if _, err := addressutils.ValAddressFromBech32(msg.OperatorAddress, ""); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// // GetSignBytes Implements Msg.
+func (msg MsgGovAddValidatorDenyList) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+// // GetSigners Implements Msg.
+func (msg MsgGovAddValidatorDenyList) GetSigners() []sdk.AccAddress {
+	fromAddress, _ := addressutils.AccAddressFromBech32(msg.Authority, "")
+	return []sdk.AccAddress{fromAddress}
+}
+
+// MsgGovRemoveValidatorDenyList
+
+// // ValidateBasic
+
+func (msg MsgGovRemoveValidatorDenyList) ValidateBasic() error {
+	_, err := addressutils.AccAddressFromBech32(msg.Authority, "")
+	if err != nil {
+		return err
+	}
+
+	if _, err := addressutils.ValAddressFromBech32(msg.OperatorAddress, ""); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// // GetSignBytes Implements Msg.
+func (msg MsgGovRemoveValidatorDenyList) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+// // GetSigners Implements Msg.
+func (msg MsgGovRemoveValidatorDenyList) GetSigners() []sdk.AccAddress {
+	fromAddress, _ := addressutils.AccAddressFromBech32(msg.Authority, "")
+	return []sdk.AccAddress{fromAddress}
 }

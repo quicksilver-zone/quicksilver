@@ -1,4 +1,5 @@
 import { Box, Container, Flex, VStack, HStack, Stat, StatLabel, StatNumber, SlideFade, SkeletonCircle, Image } from '@chakra-ui/react';
+import { useChain } from '@cosmos-kit/react-lite';
 import dynamic from 'next/dynamic';
 import Head from 'next/head';
 import { useState } from 'react';
@@ -27,6 +28,8 @@ const networks = process.env.NEXT_PUBLIC_CHAIN_ENV === 'mainnet' ? prodNetworks 
 export default function Staking() {
   const [selectedNetwork, setSelectedNetwork] = useState(networks[0]);
 
+  const {address} = useChain('quicksilver');
+
   let newChainId;
   if (selectedNetwork.chainId === 'provider') {
     newChainId = 'cosmoshub-4';
@@ -54,18 +57,19 @@ export default function Staking() {
 
   const [isStakingModalOpen, setStakingModalOpen] = useState(false);
   const [isTransferModalOpen, setTransferModalOpen] = useState(false);
+  const [isRevertSharesModalOpen, setRevertSharesModalOpen] = useState(false);
 
   return (
     <>
       <Head>
         <title>Staking</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <link rel="icon" href="/img/favicon.png" />
+        <link rel="icon" href="/img/favicon-main.png" />
       </Head>
       <SlideFade offsetY={'200px'} in={true} style={{ width: '100%' }}>
         <Container
           zIndex={2}
-          mt={{ base: '10px', md: '50px' }}
+          mt={{ base: '50px', md: '50px' }}
           position="relative"
           maxW="container.lg"
           height="100vh"
@@ -109,6 +113,8 @@ export default function Staking() {
                 setStakingModalOpen={setStakingModalOpen}
                 isTransferModalOpen={isTransferModalOpen}
                 setTransferModalOpen={setTransferModalOpen}
+                isRevertSharesModalOpen={isRevertSharesModalOpen}
+                setRevertSharesModalOpen={setRevertSharesModalOpen}
                 setBalance={setBalance}
                 setQBalance={setQBalance}
               />
@@ -121,7 +127,7 @@ export default function Staking() {
 
                 <Box h="10px" />
                 {/* Bottom Half (1/3) */}
-                <DynamicAssetBox selectedOption={selectedNetwork} balance={balance} qBalance={qBalance} />
+                <DynamicAssetBox address={address ?? ""} selectedOption={selectedNetwork} balance={balance} qBalance={qBalance} />
               </Flex>
             </Flex>
             <Box>

@@ -1,11 +1,12 @@
 import { Coin, decodeCosmosSdkDecFromProto } from '@cosmjs/stargate';
+import * as bech32 from 'bech32';
 import BigNumber from 'bignumber.js';
+import * as CryptoJS from 'crypto-js';
 import { QueryDelegationTotalRewardsResponse } from 'interchain-query/cosmos/distribution/v1beta1/query';
 import { QueryAnnualProvisionsResponse } from 'interchain-query/cosmos/mint/v1beta1/query';
 import { QueryDelegatorDelegationsResponse, QueryParamsResponse } from 'interchain-query/cosmos/staking/v1beta1/query';
-import { Pool, Validator } from 'interchain-query/cosmos/staking/v1beta1/staking';
-import * as bech32 from 'bech32';
-import * as CryptoJS from 'crypto-js';
+import { Pool } from 'interchain-query/cosmos/staking/v1beta1/staking';
+import { Validator } from 'quicksilverjs/dist/codegen/cosmos/staking/v1beta1/staking';
 
 import { decodeUint8Arr, isGreaterThanZero, shiftDigits, toNumber } from '.';
 
@@ -53,6 +54,7 @@ export const parseValidators = (validators: Validator[]) => {
     const commissionRate = validator.commission?.commission_rates?.rate || ZERO;
     const commissionPercentage = parseFloat(commissionRate) * 100;
 
+    //TODO: Add valconsAddress to query missed blocks
     const valconsPrefix = extractValconsPrefix(validator.operator_address);
     const valconsAddress = getValconsAddress(validator.consensus_pubkey, valconsPrefix);
 
@@ -63,21 +65,21 @@ export const parseValidators = (validators: Validator[]) => {
       name: validator.description?.moniker || '',
       identity: validator.description?.identity || '',
       address: validator.operator_address || '',
-      commission: commissionPercentage.toFixed() + '%',
+      commission: commissionPercentage.toFixed(2) + '%',
       votingPower: toNumber(shiftDigits(validator.tokens, -6, 0), 0),
     };
   });
 };
 
-function getValconsAddress(consensus_pubkey: any, valconsPrefix: string) {
-  if (!consensus_pubkey || typeof consensus_pubkey.key !== 'string') {
+function getValconsAddress(consensusPubkey: any, valconsPrefix: string) {
+  if (!consensusPubkey || typeof consensusPubkey.key !== 'string') {
     console.error('Invalid or missing consensus public key');
     return '';
   }
 
   try {
     // Decode the Base64 key directly to bytes
-    const decoded = Buffer.from(consensus_pubkey.key, 'base64');
+    const decoded = Buffer.from(consensusPubkey.key, 'base64');
     
     // Convert bytes to Bech32 words
     const valconsWords = bech32.bech32.toWords(new Uint8Array(decoded));
