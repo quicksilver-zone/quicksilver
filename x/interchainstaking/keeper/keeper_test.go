@@ -88,6 +88,7 @@ func (suite *KeeperTestSuite) setupTestZones() {
 		DepositsEnabled:  true,
 		Decimals:         6,
 		Is_118:           true,
+		DustThreshold:    1000000,
 	}
 
 	quicksilver := suite.GetQuicksilverApp(suite.chainA)

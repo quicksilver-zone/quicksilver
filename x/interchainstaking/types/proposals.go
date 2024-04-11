@@ -33,6 +33,7 @@ func NewRegisterZoneProposal(
 	decimals int64,
 	messagePerTx int64,
 	is118 bool,
+	dustThreshold int64,
 ) *RegisterZoneProposal {
 	return &RegisterZoneProposal{
 		Title:            title,
@@ -48,6 +49,7 @@ func NewRegisterZoneProposal(
 		Decimals:         decimals,
 		MessagesPerTx:    messagePerTx,
 		Is_118:           is118,
+		DustThreshold:    dustThreshold,
 	}
 }
 
@@ -110,6 +112,7 @@ func (m RegisterZoneProposal) String() string {
   Messages per Tx:                  %d
   Decimals:                         %d
   Is_118:							%t
+  Dust Threshold:					%d
 `,
 		m.Title,
 		m.Description,
@@ -123,6 +126,7 @@ func (m RegisterZoneProposal) String() string {
 		m.MessagesPerTx,
 		m.Decimals,
 		m.Is_118,
+		m.DustThreshold,
 	)
 }
 
@@ -131,12 +135,14 @@ func NewUpdateZoneProposal(
 	description string,
 	chainID string,
 	changes []*UpdateZoneValue,
+	dustThreshold int64,
 ) *UpdateZoneProposal {
 	return &UpdateZoneProposal{
-		Title:       title,
-		Description: description,
-		ChainId:     chainID,
-		Changes:     changes,
+		Title:         title,
+		Description:   description,
+		ChainId:       chainID,
+		Changes:       changes,
+		DustThreshold: dustThreshold,
 	}
 }
 
