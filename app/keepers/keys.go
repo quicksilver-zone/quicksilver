@@ -1,7 +1,6 @@
 package keepers
 
 import (
-	"github.com/CosmWasm/wasmd/x/wasm"
 	packetforwardtypes "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v6/packetforward/types"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -65,7 +64,6 @@ func KVStoreKeys() []string {
 		interchainquerytypes.StoreKey,
 		participationrewardstypes.StoreKey,
 		airdroptypes.StoreKey,
-		wasm.StoreKey,
 		tokenfactorytypes.StoreKey,
 		supplytypes.StoreKey,
 	}
