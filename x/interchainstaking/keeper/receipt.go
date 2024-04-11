@@ -3,6 +3,8 @@ package keeper
 import (
 	"errors"
 	"fmt"
+	transfertypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
+	"github.com/gogo/protobuf/proto"
 	"time"
 
 	transfertypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
