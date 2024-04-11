@@ -28,8 +28,23 @@ func V010600UpgradeHandler(
 		}
 
 		// Update dust threshold configuration for all zones
+		thresholds := map[string]int64{
+			"osmosis-1":   1_000_000,
+			"cosmoshub-4": 1_000_000,
+			"stargaze-1":  5_000_000,
+			"juno-1":      2_000_000,
+			"sommelier-3": 5_000_000,
+			"regen-1":     5_000_000,
+			"umee-1":      1_000_000,
+			"secret-4":    1_000_000,
+		}
 		appKeepers.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zone *icstypes.Zone) (stop bool) {
-			zone.DustThreshold = 1_000_000
+			threshold, ok := thresholds[zone.ChainId]
+			// if threshold not exist => get default value
+			if !ok {
+				threshold = 1_000_000
+			}
+			zone.DustThreshold = threshold
 			appKeepers.InterchainstakingKeeper.SetZone(ctx, zone)
 			return false
 		})
