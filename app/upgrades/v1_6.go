@@ -35,8 +35,7 @@ func V010600UpgradeHandler(
 			"juno-1":      2_000_000,
 			"sommelier-3": 5_000_000,
 			"regen-1":     5_000_000,
-			"umee-1":      1_000_000,
-			"secret-4":    1_000_000,
+			"dydx-mainnet-1":      500_000_000_000_000_000,
 		}
 		appKeepers.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zone *icstypes.Zone) (stop bool) {
 			threshold, ok := thresholds[zone.ChainId]
