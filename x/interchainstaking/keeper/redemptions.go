@@ -93,7 +93,7 @@ func (k *Keeper) queueRedemption(
 ) error { //nolint:unparam // we know that the error is always nil
 	distributions := make([]*types.Distribution, 0)
 
-	k.AddWithdrawalRecord(
+	_ = k.AddWithdrawalRecord(
 		ctx,
 		zone.ChainId,
 		sender.String(),
@@ -179,7 +179,11 @@ func (k *Keeper) HandleQueuedUnbondings(ctx sdk.Context, zone *types.Zone, epoch
 		}
 
 		withdrawal.Amount = sdk.NewCoins(amount)
-		k.SetWithdrawalRecord(ctx, withdrawal)
+		err = k.SetWithdrawalRecord(ctx, withdrawal)
+		if err != nil {
+			k.Logger(ctx).Error("unable to set withdrawal record", "error", err)
+			return false
+		}
 
 		// check whether the running total of withdrawals can be satisfied by the available unlocked tokens.
 		// if not return true to stop iterating and return all records up until now.

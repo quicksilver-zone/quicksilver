@@ -51,10 +51,14 @@ func (k *Keeper) GetNextWithdrawalRecordSequence(ctx sdk.Context) uint64 {
 	return sequence
 }
 
-func (k *Keeper) AddWithdrawalRecord(ctx sdk.Context, chainID, delegator string, distributions []*types.Distribution, recipient string, burnAmount sdk.Coin, hash string, status int32, completionTime time.Time, epochNumber int64) {
+func (k *Keeper) AddWithdrawalRecord(ctx sdk.Context, chainID, delegator string, distributions []*types.Distribution, recipient string, burnAmount sdk.Coin, hash string, status int32, completionTime time.Time, epochNumber int64) error {
 	record := types.WithdrawalRecord{ChainId: chainID, Delegator: delegator, Distribution: distributions, Recipient: recipient, Status: status, BurnAmount: burnAmount, Txhash: hash, CompletionTime: completionTime, EpochNumber: epochNumber}
+	if !record.BurnAmount.IsPositive() {
+		return fmt.Errorf("burnAmount cannot be negative or zero")
+	}
 	k.Logger(ctx).Info("addWithdrawalRecord", "record", record)
-	k.SetWithdrawalRecord(ctx, record)
+	err := k.SetWithdrawalRecord(ctx, record)
+	return err
 }
 
 // ----------------------------------------------------------------
@@ -77,20 +81,30 @@ func (k *Keeper) GetWithdrawalRecord(ctx sdk.Context, chainID, txhash string, st
 }
 
 // SetWithdrawalRecord store the withdrawal record.
-func (k *Keeper) SetWithdrawalRecord(ctx sdk.Context, record types.WithdrawalRecord) {
+func (k *Keeper) SetWithdrawalRecord(ctx sdk.Context, record types.WithdrawalRecord) error {
 	key, err := hex.DecodeString(record.Txhash)
 	if err != nil {
-		panic(err)
+		return err
+	}
+	// check if burnAmount is set
+	if record.BurnAmount.IsNil() {
+		return fmt.Errorf("burnAmount cannot be nil")
+	}
+
+	if !record.BurnAmount.IsPositive() {
+		return fmt.Errorf("burnAmount cannot be negative or zero")
 	}
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.GetWithdrawalKey(record.ChainId, record.Status))
 	bz := k.cdc.MustMarshal(&record)
 	store.Set(key, bz)
+
+	return nil
 }
 
 func (k *Keeper) UpdateWithdrawalRecordStatus(ctx sdk.Context, withdrawal *types.WithdrawalRecord, newStatus int32) {
 	k.DeleteWithdrawalRecord(ctx, withdrawal.ChainId, withdrawal.Txhash, withdrawal.Status)
 	withdrawal.Status = newStatus
-	k.SetWithdrawalRecord(ctx, *withdrawal)
+	_ = k.SetWithdrawalRecord(ctx, *withdrawal)
 }
 
 // DeleteWithdrawalRecord deletes withdrawal record.
@@ -294,8 +308,8 @@ func (k *Keeper) UpdateWithdrawalRecordsForSlash(ctx sdk.Context, zone *types.Zo
 			return true
 		}
 		record.Amount = record.Amount.Sub(subAmount...)
-		k.SetWithdrawalRecord(ctx, record)
-		return false
+		err = k.SetWithdrawalRecord(ctx, record)
+		return err != nil
 	})
 	return err
 }
