@@ -13,9 +13,7 @@ import (
 )
 
 func FuzzCalcUserScores(f *testing.F) {
-	if testing.Short() || true {
-		f.Skip("In -short")
-	}
+	f.Skip("In -short")
 
 	files, err := filepath.Glob(filepath.Join("testdata", "fuzz-corpus-CalcUserValidatorSectionAllocations-*"))
 	if err != nil {
