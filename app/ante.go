@@ -2,7 +2,6 @@ package app
 
 import (
 	sdkioerrors "cosmossdk.io/errors"
-
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
