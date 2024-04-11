@@ -1,13 +1,14 @@
 package cli_test
 
 import (
-	"cosmossdk.io/math"
 	"fmt"
 	"testing"
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
+
+	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
