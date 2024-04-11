@@ -17,7 +17,7 @@ It's a very KISS document -- items will be ~strikethrough~ when completed.
 * QueryManager
 * 1 hour epochs
 * Governance support
-* Elimination of Redemption Rate concept because it is superceded by claims
+* Elimination of Redemption Rate concept because it is superseded by claims
 * 
 
 
