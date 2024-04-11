@@ -1,11 +1,7 @@
 package app
 
 import (
-	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
-	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-
 	sdkioerrors "cosmossdk.io/errors"
-
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -21,7 +17,6 @@ type HandlerOptions struct {
 	ante.HandlerOptions
 
 	TxCounterStoreKey storetypes.StoreKey
-	WasmConfig        wasmtypes.WasmConfig
 
 	IBCKeeper *ibckeeper.Keeper
 }
@@ -44,9 +39,6 @@ func NewAnteHandler(options HandlerOptions) sdk.AnteHandler {
 
 	anteDecorators := []sdk.AnteDecorator{
 		ante.NewSetUpContextDecorator(),
-		wasmkeeper.NewLimitSimulationGasDecorator(options.WasmConfig.SimulationGasLimit),
-		wasmkeeper.NewCountTXDecorator(options.TxCounterStoreKey),
-
 		ante.NewExtensionOptionsDecorator(options.ExtensionOptionChecker),
 		//		ante.NewMempoolFeeDecorator(),
 		ante.NewValidateBasicDecorator(),
