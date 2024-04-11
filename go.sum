@@ -413,6 +413,8 @@ github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v5 v5.2.2 h1:XKq
 github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v5 v5.2.2/go.mod h1:GEoLuegQBnLpeMZmN3qzbyIJ5VZ3bKkB/qZ1m1yOdVs=
 github.com/cosmos/ibc-go/v5 v5.4.0 h1:ZDrqSNfbvk8gsP8yJba3Jjy0JGM68inc4XoTcxaD0/k=
 github.com/cosmos/ibc-go/v5 v5.4.0/go.mod h1:v2iHzokbjDGNWHA80C1TXhAW2ehcAupMtJL0QTZZNN4=
+github.com/cosmos/ibc-go/v6 v6.3.0 h1:2EkkqDEd9hTQvzB/BsPhYZsu7T/dzAVA8+VD2UuJLSQ=
+github.com/cosmos/ibc-go/v6 v6.3.0/go.mod h1:Dm14j9s094bGyCEE8W4fD+2t8IneHv+cz+80Mvwjr1w=
 github.com/cosmos/interchain-accounts v0.3.2 h1:7S5rSndahpjkzUvG00kKZrTZsEuVHuVC9a7p0qDVcF8=
 github.com/cosmos/interchain-accounts v0.3.2/go.mod h1:vNWr9YxBrI5c74jBwk9ooiUCIDvdOJeF8MQEA/z0IEk=
 github.com/cosmos/keyring v1.2.0 h1:8C1lBP9xhImmIabyXW4c3vFjjLiBdGCmfLUfeZlV1Yo=
