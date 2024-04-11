@@ -2,7 +2,7 @@
 
 This document is the official roadmap for the quicksilver project.
 
-It's a very KISS document -- items will be ~strikethrough~ when completed.
+It's a very KISS document -- items will be ~~strikethrough~~ when completed.
 
 
 ## Maintenance
