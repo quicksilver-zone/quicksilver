@@ -1035,10 +1035,11 @@ func (s *AppTestSuite) InitV160TestZones() {
 		},
 	}
 	s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetZone(s.chainA.GetContext(), &zone)
+	addVestingAccount(s.chainA.GetContext(), &s.GetQuicksilverApp(s.chainA).AccountKeeper, "quick1qfyntnmlvznvrkk9xqppmcxqcluv7wd74nmyus", 10, 864000, 5000000000)
 }
 
 func (s *AppTestSuite) TestV010600UpgradeHandler() {
-	s.InitV146TestZones()
+	s.InitV160TestZones()
 	app := s.GetQuicksilverApp(s.chainA)
 
 	handler := upgrades.V010600UpgradeHandler(app.mm,
@@ -1048,16 +1049,15 @@ func (s *AppTestSuite) TestV010600UpgradeHandler() {
 	_, err := handler(ctx, types.Plan{}, app.mm.GetVersionMap())
 	s.NoError(err)
 
-	dustThreshold := int64(1_000_000)
 	osmoZone, ok := app.InterchainstakingKeeper.GetZone(ctx, "osmosis-1")
 	s.True(ok)
-	s.Equal(dustThreshold, osmoZone.DustThreshold)
+	s.Equal(math.NewInt(1_000_000), osmoZone.DustThreshold)
 
 	cosmosZone, ok := app.InterchainstakingKeeper.GetZone(ctx, "cosmoshub-4")
 	s.True(ok)
-	s.Equal(dustThreshold, cosmosZone.DustThreshold)
+	s.Equal(math.NewInt(1_000_000), cosmosZone.DustThreshold)
 
 	junoZone, ok := app.InterchainstakingKeeper.GetZone(ctx, "juno-1")
 	s.True(ok)
-	s.Equal(dustThreshold, junoZone.DustThreshold)
+	s.Equal(math.NewInt(2_000_000), junoZone.DustThreshold)
 }

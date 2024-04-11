@@ -50,7 +50,11 @@ message Zone {
   bool return_to_sender = 27;
   bool is_118 = 28;
   SubzoneInfo subzoneInfo = 29;
-  int64 dust_threshold = 30;
+  string dust_threshold = 30 [
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false
+  ];
 }
 
 message SubzoneInfo {

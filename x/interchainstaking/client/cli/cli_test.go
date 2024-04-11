@@ -1,6 +1,7 @@
 package cli_test
 
 import (
+	"cosmossdk.io/math"
 	"fmt"
 	"testing"
 
@@ -70,7 +71,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		UnbondingPeriod:              0,
 		MessagesPerTx:                0,
 		Is_118:                       true,
-		DustThreshold:                1000000,
+		DustThreshold:                math.NewInt(1000000),
 	}
 
 	zone.Validators = append(zone.Validators,

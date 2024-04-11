@@ -784,7 +784,7 @@ func (k *Keeper) Rebalance(ctx sdk.Context, zone *types.Zone, epochNumber int64)
 	rebalances := types.DetermineAllocationsForRebalancing(currentAllocations, currentLocked, currentSum, lockedSum, targetAllocations, maxCanAllocate, k.Logger(ctx)).RemoveDuplicates()
 	msgs := make([]sdk.Msg, 0)
 	for _, rebalance := range rebalances {
-		if rebalance.Amount.GTE(sdk.NewInt(zone.DustThreshold)) {
+		if rebalance.Amount.GTE(zone.DustThreshold) {
 			if !rebalance.Amount.IsInt64() {
 				k.Logger(ctx).Error("Rebalance amount out of bound Int64", "amount", rebalance.Amount.String())
 				// Ignore this
