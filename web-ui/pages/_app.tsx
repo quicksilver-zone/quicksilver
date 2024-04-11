@@ -13,6 +13,7 @@ import { ChainProvider, ThemeCustomizationProps } from '@cosmos-kit/react';
 import { ThemeProvider, useTheme } from '@interchain-ui/react';
 import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 import { chains, assets } from 'chain-registry';
 import { ibcAminoConverters, ibcProtoRegistry } from 'interchain-query';
 import type { AppProps } from 'next/app';
@@ -216,6 +217,7 @@ function QuickApp({ Component, pageProps }: AppProps) {
   return (
     <LiveZonesProvider>
       <ChakraProvider theme={defaultTheme}>
+  
         <ThemeProvider>
           <ChainProvider
             endpointOptions={{
@@ -286,7 +288,7 @@ function QuickApp({ Component, pageProps }: AppProps) {
           >
             <QueryClientProvider client={queryClient}>
               <ReactQueryDevtools initialIsOpen={true} />
-
+             
               <main id="main" className={themeClass}>
                 <Box w="100vw" h="100vh" bgSize="fit" bgPosition="right center" bgAttachment="fixed" bgRepeat="no-repeat">
                   <Flex justifyContent={'space-between'} alignItems={'center'}>
@@ -294,6 +296,7 @@ function QuickApp({ Component, pageProps }: AppProps) {
                     <SideHeader />
                   </Flex>
                   <Component {...pageProps} />
+                  <SpeedInsights />
                 </Box>
               </main>
             </QueryClientProvider>

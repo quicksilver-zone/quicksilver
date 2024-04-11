@@ -60,13 +60,13 @@ func (suite *KeeperTestSuite) TestHandleMsgTransferGood() {
 		{
 			name:                 "staking denom - 100% to fc",
 			amount:               sdk.NewCoin("uatom", math.NewInt(100)),
-			supply:               sdk.NewCoin("uatom", math.NewInt(1000)),
+			supply:               sdk.NewCoin("uqatom", math.NewInt(1000)),
 			expectedFeeCollector: math.NewInt(100),
 		},
 		{
 			name:                 "non staking denom, no claims - 100% to fc",
 			amount:               sdk.NewCoin("transfer/channel-569/untrn", math.NewInt(100)),
-			supply:               sdk.NewCoin("uatom", math.NewInt(1000)),
+			supply:               sdk.NewCoin("uqatom", math.NewInt(1000)),
 			expectedFeeCollector: math.NewInt(100),
 		},
 		{
@@ -77,7 +77,7 @@ func (suite *KeeperTestSuite) TestHandleMsgTransferGood() {
 				{UserAddress: user1, ChainId: suite.chainB.ChainID, Module: cmtypes.ClaimTypeLiquidToken, SourceChainId: "quicksilver-2", Amount: math.NewInt(1000)},
 				{UserAddress: user1, ChainId: suite.chainB.ChainID, Module: cmtypes.ClaimTypeLiquidToken, SourceChainId: "juno-1", Amount: math.NewInt(2000)},
 			},
-			supply:               sdk.NewCoin("uatom", math.NewInt(4000)),
+			supply:               sdk.NewCoin("uqatom", math.NewInt(4000)),
 			expectedFeeCollector: math.NewInt(3),
 			expectedBalances: map[string]math.Int{
 				user1: math.NewInt(97),
@@ -92,7 +92,7 @@ func (suite *KeeperTestSuite) TestHandleMsgTransferGood() {
 				{UserAddress: user1, ChainId: suite.chainB.ChainID, Module: cmtypes.ClaimTypeLiquidToken, SourceChainId: "juno-1", Amount: math.NewInt(2000)},
 				{UserAddress: user2, ChainId: suite.chainB.ChainID, Module: cmtypes.ClaimTypeLiquidToken, SourceChainId: "juno-1", Amount: math.NewInt(2000)},
 			},
-			supply:               sdk.NewCoin("uatom", math.NewInt(6000)),
+			supply:               sdk.NewCoin("uqatom", math.NewInt(6000)),
 			expectedFeeCollector: math.NewInt(92),
 			expectedBalances: map[string]math.Int{
 				user1: math.NewInt(605),
@@ -110,7 +110,7 @@ func (suite *KeeperTestSuite) TestHandleMsgTransferGood() {
 				{UserAddress: user2, ChainId: suite.chainB.ChainID, Module: cmtypes.ClaimTypeLiquidToken, SourceChainId: "juno-1", Amount: math.NewInt(2000)},
 				{UserAddress: user3, ChainId: suite.chainB.ChainID, Module: cmtypes.ClaimTypeLiquidToken, SourceChainId: "quicksilver-2", Amount: math.NewInt(1000)},
 			},
-			supply:               sdk.NewCoin("uatom", math.NewInt(6000)),
+			supply:               sdk.NewCoin("uqatom", math.NewInt(6000)),
 			expectedFeeCollector: math.NewInt(27),
 			expectedBalances: map[string]math.Int{
 				user1: math.NewInt(556),
@@ -128,7 +128,7 @@ func (suite *KeeperTestSuite) TestHandleMsgTransferGood() {
 				{UserAddress: user2, ChainId: suite.chainB.ChainID, Module: cmtypes.ClaimTypeLiquidToken, SourceChainId: "juno-1", Amount: math.NewInt(1000)},
 				{UserAddress: user3, ChainId: suite.chainB.ChainID, Module: cmtypes.ClaimTypeLiquidToken, SourceChainId: "quicksilver-2", Amount: math.NewInt(1000)},
 			},
-			supply:               sdk.NewCoin("uatom", math.NewInt(6000)),
+			supply:               sdk.NewCoin("uqatom", math.NewInt(6000)),
 			expectedFeeCollector: math.NewInt(190),
 			expectedBalances: map[string]math.Int{
 				user1: math.NewInt(486),
@@ -524,7 +524,8 @@ func (suite *KeeperTestSuite) TestHandleQueuedUnbondings() {
 
 			// set up zones
 			for _, record := range records {
-				quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(ctx, record)
+				err := quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(ctx, record)
+				suite.NoError(err)
 			}
 
 			for _, delegation := range delegations {
@@ -689,8 +690,9 @@ func (suite *KeeperTestSuite) TestHandleWithdrawForUser() {
 
 			// set up zones
 			for _, record := range records {
-				quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(ctx, record)
-				err := quicksilver.BankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(record.BurnAmount))
+				err := quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(ctx, record)
+				suite.NoError(err)
+				err = quicksilver.BankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(record.BurnAmount))
 				suite.NoError(err)
 				err = quicksilver.BankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, types.EscrowModuleAccount, sdk.NewCoins(record.BurnAmount))
 				suite.NoError(err)
@@ -806,8 +808,9 @@ func (suite *KeeperTestSuite) TestHandleWithdrawForUserLSM() {
 			startBalance := quicksilver.BankKeeper.GetAllBalances(ctx, quicksilver.AccountKeeper.GetModuleAddress(types.ModuleName))
 			// set up zones
 			for _, record := range records {
-				quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(ctx, record)
-				err := quicksilver.BankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(record.BurnAmount))
+				err := quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(ctx, record)
+				suite.NoError(err)
+				err = quicksilver.BankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(record.BurnAmount))
 				suite.NoError(err)
 				err = quicksilver.BankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, types.EscrowModuleAccount, sdk.NewCoins(record.BurnAmount))
 				suite.NoError(err)
@@ -1037,7 +1040,7 @@ func (suite *KeeperTestSuite) TestHandleFailedUndelegate() {
 				vals := quicksilver.InterchainstakingKeeper.GetValidatorAddresses(ctx, z.ChainId)
 				suite.True(found)
 
-				quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(
+				_ = quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(
 					ctx, types.WithdrawalRecord{
 						ChainId:   suite.chainB.ChainID,
 						Delegator: user,
@@ -1104,7 +1107,7 @@ func (suite *KeeperTestSuite) TestHandleFailedUndelegate() {
 				vals := quicksilver.InterchainstakingKeeper.GetValidatorAddresses(ctx, z.ChainId)
 				suite.True(found)
 
-				quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(
+				_ = quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(
 					ctx, types.WithdrawalRecord{
 						ChainId:   suite.chainB.ChainID,
 						Delegator: user,
@@ -1122,7 +1125,7 @@ func (suite *KeeperTestSuite) TestHandleFailedUndelegate() {
 						EpochNumber:    1,
 					},
 				)
-				quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(
+				_ = quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(
 					ctx, types.WithdrawalRecord{
 						ChainId:   suite.chainB.ChainID,
 						Delegator: user2,
@@ -1203,7 +1206,7 @@ func (suite *KeeperTestSuite) TestHandleFailedUndelegate() {
 				vals := quicksilver.InterchainstakingKeeper.GetValidatorAddresses(ctx, z.ChainId)
 				suite.True(found)
 
-				quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(
+				_ = quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(
 					ctx, types.WithdrawalRecord{
 						ChainId:   suite.chainB.ChainID,
 						Delegator: user,
@@ -1222,7 +1225,7 @@ func (suite *KeeperTestSuite) TestHandleFailedUndelegate() {
 						EpochNumber:    2,
 					},
 				)
-				quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(
+				_ = quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(
 					ctx, types.WithdrawalRecord{
 						ChainId:   suite.chainB.ChainID,
 						Delegator: user2,
@@ -1320,7 +1323,7 @@ func (suite *KeeperTestSuite) TestHandleFailedUndelegate() {
 				vals := quicksilver.InterchainstakingKeeper.GetValidatorAddresses(ctx, z.ChainId)
 				suite.True(found)
 
-				quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(
+				_ = quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(
 					ctx, types.WithdrawalRecord{
 						ChainId:   suite.chainB.ChainID,
 						Delegator: user,
@@ -1339,7 +1342,7 @@ func (suite *KeeperTestSuite) TestHandleFailedUndelegate() {
 						EpochNumber:    1,
 					},
 				)
-				quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(
+				_ = quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(
 					ctx, types.WithdrawalRecord{
 						ChainId:   suite.chainB.ChainID,
 						Delegator: user2,
@@ -1674,7 +1677,8 @@ func (suite *KeeperTestSuite) TestHandleFailedUnbondSend() {
 			if test.record != nil {
 				// set up zones
 				record = test.record(&zone)
-				quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(ctx, record)
+				err := quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(ctx, record)
+				suite.NoError(err)
 			}
 
 			// set address for zone mapping
@@ -2649,7 +2653,7 @@ func (suite *KeeperTestSuite) TestReceiveAckForBeginUndelegate() {
 			}
 
 			for _, wdr := range test.withdrawalRecords(ctx, quicksilver, zone) {
-				quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(ctx, wdr)
+				_ = quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(ctx, wdr)
 			}
 
 			for _, ubr := range test.unbondingRecords(ctx, quicksilver, zone) {
@@ -3150,7 +3154,7 @@ func (suite *KeeperTestSuite) TestReceiveAckForTokenizedShares() {
 		CompletionTime: ctx.BlockTime().Add(-1 * time.Hour),
 		Acknowledged:   false,
 	}
-	quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(ctx, withdrawalRecord)
+	_ = quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(ctx, withdrawalRecord)
 	_, found = quicksilver.InterchainstakingKeeper.GetWithdrawalRecord(ctx, zone.ChainId, txHash, types.WithdrawStatusTokenize)
 	suite.True(found)
 
@@ -3357,7 +3361,7 @@ func (suite *KeeperTestSuite) TestReceiveAckErrForBankSend() {
 		Txhash:     "7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
 		Status:     types.WithdrawStatusSend,
 	}
-	quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(ctx, withdrawalRecord)
+	_ = quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(ctx, withdrawalRecord)
 	quicksilver.InterchainstakingKeeper.SetAddressZoneMapping(ctx, user, zone.ChainId)
 
 	send := &banktypes.MsgSend{
@@ -3733,7 +3737,7 @@ func (suite *KeeperTestSuite) TestHandleMaturedUbondings() {
 			}
 
 			for _, wdr := range test.withdrawalRecords(ctx, quicksilver, zone) {
-				quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(ctx, wdr)
+				_ = quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(ctx, wdr)
 			}
 
 			err := quicksilver.InterchainstakingKeeper.HandleMaturedUnbondings(ctx, &zone)
@@ -4181,7 +4185,7 @@ func (suite *KeeperTestSuite) TestHandleTokenizedShares() {
 			shareAmount := test.sharesAmount(ctx, quicksilver, zone)
 			wdrs := test.withdrawalRecords(ctx, quicksilver, zone)
 			for _, wdr := range wdrs {
-				quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(ctx, wdr)
+				_ = quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(ctx, wdr)
 			}
 
 			for index, msg := range test.msgs(ctx, quicksilver, zone) {
@@ -4599,7 +4603,8 @@ func (suite *KeeperTestSuite) TestHandleFailedBankSend() {
 			var record types.WithdrawalRecord
 			if test.record != nil {
 				record = test.record(&zone)
-				quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(ctx, record)
+				err := quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(ctx, record)
+				suite.NoError(err)
 			}
 
 			// set address for zone mapping

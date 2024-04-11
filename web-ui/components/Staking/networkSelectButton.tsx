@@ -77,6 +77,13 @@ export const NetworkSelect: React.FC<CustomMenuProps> = ({ buttonTextColor = 'wh
         _hover={{
           bgColor: 'rgba(255,128,0, 0.25)',
         }}
+        _active={{
+          bgColor: 'rgba(255,128,0, 0.25)',
+        }}
+
+        _focus={{
+          bgColor: 'rgba(255,128,0, 0.25)',
+        }}
         px={2}
         color="white"
         as={Button}

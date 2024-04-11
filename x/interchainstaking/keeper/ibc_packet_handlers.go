@@ -336,7 +336,7 @@ func (k *Keeper) HandleMsgTransfer(ctx sdk.Context, msg ibctransfertypes.Fungibl
 func (k *Keeper) DistributeToClaimants(ctx sdk.Context, zone *types.Zone, zoneAddress sdk.AccAddress, rewardsCoin sdk.Coin) (sdk.Coin, error) {
 	var err error
 	toDistribute := rewardsCoin.Amount
-	supply := k.BankKeeper.GetSupply(ctx, zone.BaseDenom).Amount
+	supply := k.BankKeeper.GetSupply(ctx, zone.LocalDenom).Amount
 	claimTotal := math.ZeroInt()
 	k.ClaimsManagerKeeper.IterateLastEpochClaims(ctx, zone.ChainId, func(index int64, data cmtypes.Claim) (stop bool) {
 		claimTotal = claimTotal.Add(data.Amount)
@@ -498,7 +498,10 @@ func (k *Keeper) HandleWithdrawForUser(ctx sdk.Context, zone *types.Zone, msg *b
 			}
 			k.Logger(ctx).Info("found matching withdrawal; awaiting additional messages")
 			withdrawalRecord.Distribution = newDist
-			k.SetWithdrawalRecord(ctx, withdrawalRecord)
+			err = k.SetWithdrawalRecord(ctx, withdrawalRecord)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
@@ -534,7 +537,11 @@ func (k *Keeper) HandleMaturedUnbondings(ctx sdk.Context, zone *types.Zone) erro
 
 				// do not update status and increment completion time
 				withdrawal.DelayCompletion(ctx, types.DefaultWithdrawalRequeueDelay)
-				k.SetWithdrawalRecord(ctx, withdrawal)
+				err = k.SetWithdrawalRecord(ctx, withdrawal)
+				if err != nil {
+					k.Logger(ctx).Error("error updating withdrawal record", "error", err)
+				}
+
 			} else {
 				k.Logger(ctx).Info("sending funds", "for", withdrawal.Delegator, "delegate_account", zone.DelegationAddress.GetAddress(), "to", withdrawal.Recipient, "amount", withdrawal.Amount)
 				k.UpdateWithdrawalRecordStatus(ctx, &withdrawal, types.WithdrawStatusSend)
@@ -584,7 +591,10 @@ func (k *Keeper) HandleTokenizedShares(ctx sdk.Context, msg sdk.Msg, sharesAmoun
 		}
 	}
 
-	k.SetWithdrawalRecord(ctx, withdrawalRecord)
+	err = k.SetWithdrawalRecord(ctx, withdrawalRecord)
+	if err != nil {
+		return err
+	}
 
 	if len(withdrawalRecord.Distribution) != len(withdrawalRecord.Amount) {
 		k.Logger(ctx).Info(fmt.Sprintf("Found matching withdrawal (%d/%d); awaiting additional messages", len(withdrawalRecord.Amount), len(withdrawalRecord.Distribution)))
@@ -592,7 +602,10 @@ func (k *Keeper) HandleTokenizedShares(ctx sdk.Context, msg sdk.Msg, sharesAmoun
 		k.Logger(ctx).Info("Found matching withdrawal; marking for send")
 		k.DeleteWithdrawalRecord(ctx, zone.ChainId, memo, types.WithdrawStatusTokenize)
 		withdrawalRecord.Status = types.WithdrawStatusSend
-		k.SetWithdrawalRecord(ctx, withdrawalRecord)
+		err = k.SetWithdrawalRecord(ctx, withdrawalRecord)
+		if err != nil {
+			return err
+		}
 		sendMsg := &banktypes.MsgSend{FromAddress: zone.DelegationAddress.Address, ToAddress: withdrawalRecord.Recipient, Amount: withdrawalRecord.Amount}
 		err = k.SubmitTx(ctx, []sdk.Msg{sendMsg}, zone.DelegationAddress, memo, zone.MessagesPerTx)
 	}
@@ -926,7 +939,11 @@ func (k *Keeper) HandleFailedUndelegate(ctx sdk.Context, msg sdk.Msg, memo strin
 			wdr.Distribution = newDistribution
 			wdr.Amount = wdr.Amount.Sub(sdk.NewCoin(zone.BaseDenom, relatedAmount))
 			wdr.BurnAmount = wdr.BurnAmount.SubAmount(relatedQAsset)
-			k.SetWithdrawalRecord(ctx, wdr)
+			err = k.SetWithdrawalRecord(ctx, wdr)
+			if err != nil {
+				return err
+			}
+
 		}
 
 		record := k.GetUserChainRequeuedWithdrawalRecord(ctx, zone.ChainId, wdr.Delegator)
@@ -946,7 +963,10 @@ func (k *Keeper) HandleFailedUndelegate(ctx sdk.Context, msg sdk.Msg, memo strin
 		} else {
 			record.BurnAmount = record.BurnAmount.Add(sdk.NewCoin(zone.LocalDenom, relatedQAsset))
 		}
-		k.SetWithdrawalRecord(ctx, record)
+		err = k.SetWithdrawalRecord(ctx, record)
+		if err != nil {
+			return err
+		}
 	}
 
 	k.DeleteUnbondingRecord(ctx, zone.ChainId, undelegateMsg.ValidatorAddress, epochNumber)

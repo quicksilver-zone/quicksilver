@@ -12,6 +12,8 @@ import {
   Spinner,
   Flex,
   Box,
+  Stat,
+  StatHelpText,
 } from '@chakra-ui/react';
 import { StdFee } from '@cosmjs/amino';
 import { useChain } from '@cosmos-kit/react';
@@ -168,14 +170,12 @@ export const AccountControlModal: React.FC<AccountControlModalProps> = ({ isOpen
     try {
       if (incorrectAccount) {
         // Call msgRevokeBad
-        await authTx([msgRevokeBad], {
+        await authTx([msgRevokeBad, revokeGrant], {
           fee,
           onSuccess: () => {},
         });
-      }
-      // Continue with msgGrant
-      if (correctAccount) {
-        // Call msgRevokeBad
+      } else {
+        // Call revokeGrant
         await authTx([revokeGrant], {
           fee,
           onSuccess: () => {},
@@ -259,7 +259,7 @@ export const AccountControlModal: React.FC<AccountControlModalProps> = ({ isOpen
         <ModalContent bg={'#1a1a1a'}>
           <ModalHeader color={'white'}>XCC Authz Controls</ModalHeader>
           <ModalCloseButton color={'white'} />
-          <ModalBody px={4} py={2}>
+          <ModalBody mt={-4} px={6} py={2}>
             <Text color="white" lineHeight="tall">
               Disable or reenable the ability to auto claim your cross chain rewards.
             </Text>
@@ -281,7 +281,7 @@ export const AccountControlModal: React.FC<AccountControlModalProps> = ({ isOpen
                   backdropFilter: 'blur(10px)',
                 }}
                 color="white"
-                variant="ghost"
+                variant="outline"
                 minW={'100px'}
               >
                 Back
@@ -334,7 +334,7 @@ export const AccountControlModal: React.FC<AccountControlModalProps> = ({ isOpen
         <ModalContent bg={'#1a1a1a'}>
           <ModalHeader color={'white'}>Liquid Staking Module Controls</ModalHeader>
           <ModalCloseButton color={'white'} />
-          <ModalBody px={4} py={2}>
+          <ModalBody mt={-4} px={6} py={2}>
             <Text color="white" lineHeight="tall">
               If your wallet is compromised, hackers can easily tokenize your staked assets and steal them. Disabling LSM prevents this from
               happening.
@@ -343,6 +343,11 @@ export const AccountControlModal: React.FC<AccountControlModalProps> = ({ isOpen
             <Text color="white" lineHeight="tall">
               Remember that you will not be able to directly stake your LSM-supported assets, such as Atom, unless you re-enable LSM.
             </Text>
+            <Stat mt={4}>
+              <StatHelpText color="red" fontSize="sm">
+                Once you re enable this feature, you must wait the unbonding period of the chain in order to use the LSM functions again.
+              </StatHelpText>
+            </Stat>
           </ModalBody>
           <ModalFooter>
             <Flex justify="space-between" width="full">
@@ -357,7 +362,7 @@ export const AccountControlModal: React.FC<AccountControlModalProps> = ({ isOpen
                   backdropFilter: 'blur(10px)',
                 }}
                 color="white"
-                variant="ghost"
+                variant="outline"
                 minW={'100px'}
               >
                 Back
