@@ -3,6 +3,8 @@ package keeper
 import (
 	"errors"
 	"fmt"
+	transfertypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
+	"github.com/gogo/protobuf/proto"
 	"time"
 
 	sdkioerrors "cosmossdk.io/errors"
@@ -151,19 +153,20 @@ func (k *Keeper) SendTokenIBC(ctx sdk.Context, senderAccAddress sdk.AccAddress, 
 		return errors.New("unable to find remote transfer connection")
 	}
 
-	return k.TransferKeeper.SendTransfer(
-		ctx,
-		srcPort,
-		srcChannel,
-		coin,
-		senderAccAddress,
-		receiver,
-		clienttypes.Height{
+	_, err := k.TransferKeeper.Transfer(ctx, &transfertypes.MsgTransfer{
+		SourcePort:    srcPort,
+		SourceChannel: srcChannel,
+		Token:         coin,
+		Sender:        senderAccAddress.String(),
+		Receiver:      receiver,
+		TimeoutHeight: clienttypes.Height{
 			RevisionNumber: 0,
 			RevisionHeight: 0,
 		},
-		uint64(ctx.BlockTime().UnixNano()+5*time.Minute.Nanoseconds()),
-	)
+		TimeoutTimestamp: uint64(ctx.BlockTime().UnixNano() + 5*time.Minute.Nanoseconds()),
+		Memo:             "",
+	})
+	return err
 }
 
 // MintAndSendQAsset mints qAssets based on the native asset redemption rate.  Tokens are then transferred to the given user.
@@ -296,8 +299,12 @@ func ProdSubmitTx(ctx sdk.Context, k *Keeper, msgs []sdk.Msg, account *types.ICA
 		msgsChunk := msgs[0:chunkSize]
 		msgs = msgs[chunkSize:]
 
+		protoMsgs := make([]proto.Message, len(msgsChunk))
+		for i, msg := range msgsChunk {
+			protoMsgs[i] = msg.(proto.Message)
+		}
 		// build and submit message for this chunk
-		data, err := icatypes.SerializeCosmosTx(k.cdc, msgsChunk)
+		data, err := icatypes.SerializeCosmosTx(k.cdc, protoMsgs)
 		if err != nil {
 			return err
 		}

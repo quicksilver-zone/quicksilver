@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/gogo/protobuf/proto"
 	"testing"
 	"time"
 
@@ -1544,7 +1545,11 @@ func makeAckForMsgs(ctx sdk.Context, cdc codec.Codec, msgs []sdk.Msg, success bo
 }
 
 func makePacketFromMsgs(cdc codec.Codec, msgs []sdk.Msg, memo string) (channeltypes.Packet, error) {
-	data, err := icatypes.SerializeCosmosTx(cdc, msgs)
+	protoMsgs := make([]proto.Message, len(msgs))
+	for i, msg := range msgs {
+		protoMsgs[i] = msg.(proto.Message)
+	}
+	data, err := icatypes.SerializeCosmosTx(cdc, protoMsgs)
 	if err != nil {
 		return channeltypes.Packet{}, err
 	}
@@ -1730,7 +1735,7 @@ func (suite *KeeperTestSuite) TestReceiveAckErrForBeginRedelegate() {
 	quicksilver.InterchainstakingKeeper.SetRedelegationRecord(ctx, record)
 
 	redelegate := &stakingtypes.MsgBeginRedelegate{DelegatorAddress: zone.DelegationAddress.Address, ValidatorSrcAddress: validators[0].ValoperAddress, ValidatorDstAddress: validators[1].ValoperAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
-	data, err := icatypes.SerializeCosmosTx(quicksilver.InterchainstakingKeeper.GetCodec(), []sdk.Msg{redelegate})
+	data, err := icatypes.SerializeCosmosTx(quicksilver.InterchainstakingKeeper.GetCodec(), []proto.Message{redelegate})
 	suite.NoError(err)
 
 	// validate memo < 256 bytes
@@ -2034,12 +2039,12 @@ func (suite *KeeperTestSuite) TestRebalanceDueToDelegationChange() {
 func (suite *KeeperTestSuite) Test_v045Callback() {
 	tests := []struct {
 		name             string
-		setStatements    func(ctx sdk.Context, quicksilver *app.Quicksilver) ([]sdk.Msg, []byte)
+		setStatements    func(ctx sdk.Context, quicksilver *app.Quicksilver) ([]proto.Message, []byte)
 		assertStatements func(ctx sdk.Context, quicksilver *app.Quicksilver) bool
 	}{
 		{
 			name: "msg response with some data",
-			setStatements: func(ctx sdk.Context, quicksilver *app.Quicksilver) ([]sdk.Msg, []byte) {
+			setStatements: func(ctx sdk.Context, quicksilver *app.Quicksilver) ([]proto.Message, []byte) {
 				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 				if !found {
 					suite.Fail("unable to retrieve zone for test")
@@ -2055,7 +2060,7 @@ func (suite *KeeperTestSuite) Test_v045Callback() {
 				response := stakingtypes.MsgDelegateResponse{}
 
 				respBytes := icatypes.ModuleCdc.MustMarshal(&response)
-				return []sdk.Msg{&sendMsg}, respBytes
+				return []proto.Message{&sendMsg}, respBytes
 			},
 			assertStatements: func(ctx sdk.Context, quicksilver *app.Quicksilver) bool {
 				return true
@@ -2063,7 +2068,7 @@ func (suite *KeeperTestSuite) Test_v045Callback() {
 		},
 		{
 			name: "msg response with nil data",
-			setStatements: func(ctx sdk.Context, quicksilver *app.Quicksilver) ([]sdk.Msg, []byte) {
+			setStatements: func(ctx sdk.Context, quicksilver *app.Quicksilver) ([]proto.Message, []byte) {
 				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 				if !found {
 					suite.Fail("unable to retrieve zone for test")
@@ -2077,7 +2082,7 @@ func (suite *KeeperTestSuite) Test_v045Callback() {
 				response := distrtypes.MsgSetWithdrawAddressResponse{}
 
 				respBytes := icatypes.ModuleCdc.MustMarshal(&response)
-				return []sdk.Msg{&msgSetWithdrawAddress}, respBytes
+				return []proto.Message{&msgSetWithdrawAddress}, respBytes
 			},
 			assertStatements: func(ctx sdk.Context, quicksilver *app.Quicksilver) bool {
 				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
@@ -2143,12 +2148,12 @@ func (suite *KeeperTestSuite) Test_v045Callback() {
 func (suite *KeeperTestSuite) Test_v046Callback() {
 	tests := []struct {
 		name             string
-		setStatements    func(ctx sdk.Context, quicksilver *app.Quicksilver) ([]sdk.Msg, *codectypes.Any)
+		setStatements    func(ctx sdk.Context, quicksilver *app.Quicksilver) ([]proto.Message, *codectypes.Any)
 		assertStatements func(ctx sdk.Context, quicksilver *app.Quicksilver) bool
 	}{
 		{
 			name: "msg response with some data",
-			setStatements: func(ctx sdk.Context, quicksilver *app.Quicksilver) ([]sdk.Msg, *codectypes.Any) {
+			setStatements: func(ctx sdk.Context, quicksilver *app.Quicksilver) ([]proto.Message, *codectypes.Any) {
 				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 				if !found {
 					suite.Fail("unable to retrieve zone for test")
@@ -2165,7 +2170,7 @@ func (suite *KeeperTestSuite) Test_v046Callback() {
 
 				anyResponse, err := codectypes.NewAnyWithValue(&response)
 				suite.NoError(err)
-				return []sdk.Msg{&sendMsg}, anyResponse
+				return []proto.Message{&sendMsg}, anyResponse
 			},
 			assertStatements: func(ctx sdk.Context, quicksilver *app.Quicksilver) bool {
 				return true
@@ -2173,7 +2178,7 @@ func (suite *KeeperTestSuite) Test_v046Callback() {
 		},
 		{
 			name: "msg response with nil data",
-			setStatements: func(ctx sdk.Context, quicksilver *app.Quicksilver) ([]sdk.Msg, *codectypes.Any) {
+			setStatements: func(ctx sdk.Context, quicksilver *app.Quicksilver) ([]proto.Message, *codectypes.Any) {
 				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 				if !found {
 					suite.Fail("unable to retrieve zone for test")
@@ -2188,7 +2193,7 @@ func (suite *KeeperTestSuite) Test_v046Callback() {
 
 				anyResponse, err := codectypes.NewAnyWithValue(&response)
 				suite.NoError(err)
-				return []sdk.Msg{&msgSetWithdrawAddress}, anyResponse
+				return []proto.Message{&msgSetWithdrawAddress}, anyResponse
 			},
 			assertStatements: func(ctx sdk.Context, quicksilver *app.Quicksilver) bool {
 				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
@@ -2262,7 +2267,7 @@ func (suite *KeeperTestSuite) TestReceiveAckForBeginUndelegate() {
 		epoch                     int64
 		withdrawalRecords         func(ctx sdk.Context, qs *app.Quicksilver, zone types.Zone) []types.WithdrawalRecord
 		unbondingRecords          func(ctx sdk.Context, qs *app.Quicksilver, zone types.Zone) []types.UnbondingRecord
-		msgs                      func(ctx sdk.Context, qs *app.Quicksilver, zone types.Zone) []sdk.Msg
+		msgs                      func(ctx sdk.Context, qs *app.Quicksilver, zone types.Zone) []proto.Message
 		completionTime            time.Time
 		expectedWithdrawalRecords func(ctx sdk.Context, qs *app.Quicksilver, zone types.Zone) []types.WithdrawalRecord
 	}{
@@ -2304,9 +2309,9 @@ func (suite *KeeperTestSuite) TestReceiveAckForBeginUndelegate() {
 					},
 				}
 			},
-			msgs: func(ctx sdk.Context, qs *app.Quicksilver, zone types.Zone) []sdk.Msg {
+			msgs: func(ctx sdk.Context, qs *app.Quicksilver, zone types.Zone) []proto.Message {
 				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
-				return []sdk.Msg{
+				return []proto.Message{
 					&stakingtypes.MsgUndelegate{
 						DelegatorAddress: zone.DelegationAddress.Address,
 						ValidatorAddress: vals[0],
@@ -2375,9 +2380,9 @@ func (suite *KeeperTestSuite) TestReceiveAckForBeginUndelegate() {
 					},
 				}
 			},
-			msgs: func(ctx sdk.Context, qs *app.Quicksilver, zone types.Zone) []sdk.Msg {
+			msgs: func(ctx sdk.Context, qs *app.Quicksilver, zone types.Zone) []proto.Message {
 				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
-				return []sdk.Msg{
+				return []proto.Message{
 					&stakingtypes.MsgUndelegate{
 						DelegatorAddress: zone.DelegationAddress.Address,
 						ValidatorAddress: vals[0],
@@ -2484,9 +2489,9 @@ func (suite *KeeperTestSuite) TestReceiveAckForBeginUndelegate() {
 					},
 				}
 			},
-			msgs: func(ctx sdk.Context, qs *app.Quicksilver, zone types.Zone) []sdk.Msg {
+			msgs: func(ctx sdk.Context, qs *app.Quicksilver, zone types.Zone) []proto.Message {
 				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
-				return []sdk.Msg{
+				return []proto.Message{
 					&stakingtypes.MsgUndelegate{
 						DelegatorAddress: zone.DelegationAddress.Address,
 						ValidatorAddress: vals[1],
@@ -2617,9 +2622,9 @@ func (suite *KeeperTestSuite) TestReceiveAckForBeginUndelegate() {
 					},
 				}
 			},
-			msgs: func(ctx sdk.Context, qs *app.Quicksilver, zone types.Zone) []sdk.Msg {
+			msgs: func(ctx sdk.Context, qs *app.Quicksilver, zone types.Zone) []proto.Message {
 				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
-				return []sdk.Msg{
+				return []proto.Message{
 					&stakingtypes.MsgUndelegate{
 						DelegatorAddress: zone.DelegationAddress.Address,
 						ValidatorAddress: vals[0],
@@ -2753,7 +2758,7 @@ func (suite *KeeperTestSuite) TestReceiveAckForBeginRedelegateNonNilCompletion()
 	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, zone.ChainId, beforeSource)
 
 	redelegate := &stakingtypes.MsgBeginRedelegate{DelegatorAddress: zone.DelegationAddress.Address, ValidatorSrcAddress: validators[0].ValoperAddress, ValidatorDstAddress: validators[1].ValoperAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
-	data, err := icatypes.SerializeCosmosTx(quicksilver.InterchainstakingKeeper.GetCodec(), []sdk.Msg{redelegate})
+	data, err := icatypes.SerializeCosmosTx(quicksilver.InterchainstakingKeeper.GetCodec(), []proto.Message{redelegate})
 	suite.NoError(err)
 
 	// validate memo < 256 bytes
@@ -2847,7 +2852,7 @@ func (suite *KeeperTestSuite) TestReceiveAckForBeginRedelegateNilCompletion() {
 	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, zone.ChainId, beforeSource)
 
 	redelegate := &stakingtypes.MsgBeginRedelegate{DelegatorAddress: zone.DelegationAddress.Address, ValidatorSrcAddress: validators[0].ValoperAddress, ValidatorDstAddress: validators[1].ValoperAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
-	data, err := icatypes.SerializeCosmosTx(quicksilver.InterchainstakingKeeper.GetCodec(), []sdk.Msg{redelegate})
+	data, err := icatypes.SerializeCosmosTx(quicksilver.InterchainstakingKeeper.GetCodec(), []proto.Message{redelegate})
 	suite.NoError(err)
 
 	// validate memo < 256 bytes
@@ -2929,7 +2934,7 @@ func (suite *KeeperTestSuite) TestReceiveAckForBeginRedelegateNoExistingRecord()
 	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, zone.ChainId, beforeSource)
 
 	redelegate := &stakingtypes.MsgBeginRedelegate{DelegatorAddress: zone.DelegationAddress.Address, ValidatorSrcAddress: validators[0].ValoperAddress, ValidatorDstAddress: validators[1].ValoperAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
-	data, err := icatypes.SerializeCosmosTx(quicksilver.InterchainstakingKeeper.GetCodec(), []sdk.Msg{redelegate})
+	data, err := icatypes.SerializeCosmosTx(quicksilver.InterchainstakingKeeper.GetCodec(), []proto.Message{redelegate})
 	suite.NoError(err)
 
 	// validate memo < 256 bytes
@@ -3003,7 +3008,7 @@ func (suite *KeeperTestSuite) TestReceiveAckForWithdrawReward() {
 		DelegatorAddress: user,
 		ValidatorAddress: val,
 	}
-	data, err := icatypes.SerializeCosmosTx(quicksilver.InterchainstakingKeeper.GetCodec(), []sdk.Msg{withdrawReward})
+	data, err := icatypes.SerializeCosmosTx(quicksilver.InterchainstakingKeeper.GetCodec(), []proto.Message{withdrawReward})
 	suite.NoError(err)
 
 	// validate memo < 256 bytes
@@ -3083,7 +3088,7 @@ func (suite *KeeperTestSuite) TestReceiveAckForRedeemTokens() {
 		DelegatorAddress: zone.DelegationAddress.Address,
 		Amount:           sdk.NewCoin(vals[0]+"/1", sdk.NewInt(100)),
 	}
-	data, err := icatypes.SerializeCosmosTx(quicksilver.InterchainstakingKeeper.GetCodec(), []sdk.Msg{redeemTokens})
+	data, err := icatypes.SerializeCosmosTx(quicksilver.InterchainstakingKeeper.GetCodec(), []proto.Message{redeemTokens})
 	suite.NoError(err)
 
 	// validate memo < 256 bytes
@@ -3164,7 +3169,7 @@ func (suite *KeeperTestSuite) TestReceiveAckForTokenizedShares() {
 		Amount:              sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000)),
 		TokenizedShareOwner: addressutils.GenerateAddressForTestWithPrefix(zone.GetAccountPrefix()),
 	}
-	data, err := icatypes.SerializeCosmosTx(quicksilver.InterchainstakingKeeper.GetCodec(), []sdk.Msg{tokenizeShares})
+	data, err := icatypes.SerializeCosmosTx(quicksilver.InterchainstakingKeeper.GetCodec(), []proto.Message{tokenizeShares})
 	suite.NoError(err)
 
 	// validate memo < 256 bytes
@@ -3238,7 +3243,7 @@ func (suite *KeeperTestSuite) TestReceiveAckForDelegate() {
 		Amount:           sdk.NewCoin("uatom", sdk.NewInt(1000)),
 	}
 
-	data, err := icatypes.SerializeCosmosTx(quicksilver.InterchainstakingKeeper.GetCodec(), []sdk.Msg{withdrawReward})
+	data, err := icatypes.SerializeCosmosTx(quicksilver.InterchainstakingKeeper.GetCodec(), []proto.Message{withdrawReward})
 	suite.NoError(err)
 
 	// validate memo < 256 bytes
@@ -3302,7 +3307,7 @@ func (suite *KeeperTestSuite) TestReceiveAckForBankSend() {
 		Amount:      sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1_000_000))),
 	}
 
-	data, err := icatypes.SerializeCosmosTx(quicksilver.InterchainstakingKeeper.GetCodec(), []sdk.Msg{withdrawReward})
+	data, err := icatypes.SerializeCosmosTx(quicksilver.InterchainstakingKeeper.GetCodec(), []proto.Message{withdrawReward})
 	suite.NoError(err)
 
 	// validate memo < 256 bytes
@@ -3369,7 +3374,7 @@ func (suite *KeeperTestSuite) TestReceiveAckErrForBankSend() {
 		Amount:      sdk.NewCoins(sdk.NewCoin(v1+"1", sdk.NewInt(1000000))),
 	}
 
-	data, err := icatypes.SerializeCosmosTx(quicksilver.InterchainstakingKeeper.GetCodec(), []sdk.Msg{send})
+	data, err := icatypes.SerializeCosmosTx(quicksilver.InterchainstakingKeeper.GetCodec(), []proto.Message{send})
 	suite.NoError(err)
 
 	// validate memo < 256 bytes
