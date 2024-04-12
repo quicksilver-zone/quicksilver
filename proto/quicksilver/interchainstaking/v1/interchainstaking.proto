@@ -94,12 +94,12 @@ message ICAAccount {
 
 message Distribution {
   string valoper = 1;
+  uint64 XAmount = 2 [deprecated = true];
   string amount = 3 [
     (cosmos_proto.scalar) = "cosmos.Int",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable) = false
   ];
-  reserved 5;
 }
 
 message WithdrawalRecord {
