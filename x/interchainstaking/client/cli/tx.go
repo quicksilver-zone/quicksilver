@@ -140,7 +140,8 @@ Where proposal.json contains:
   "account_prefix": "cosmos",
   "multi_send": true,
   "liquidity_module": false,
-  "deposit": "512000000uqck"
+  "deposit": "512000000uqck",
+  "dust_threshold": "1000000",
 }
 `),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -175,7 +176,7 @@ Where proposal.json contains:
 			from := clientCtx.GetFromAddress()
 
 			content := types.NewRegisterZoneProposal(proposal.Title, proposal.Description, proposal.ConnectionId, proposal.BaseDenom,
-				proposal.LocalDenom, proposal.AccountPrefix, proposal.ReturnToSender, proposal.UnbondingEnabled, proposal.DepositsEnabled, proposal.LiquidityModule, proposal.Decimals, proposal.MessagesPerTx, proposal.Is_118)
+				proposal.LocalDenom, proposal.AccountPrefix, proposal.ReturnToSender, proposal.UnbondingEnabled, proposal.DepositsEnabled, proposal.LiquidityModule, proposal.Decimals, proposal.MessagesPerTx, proposal.Is_118, proposal.DustThreshold)
 
 			msg, err := govv1beta1.NewMsgSubmitProposal(content, deposit, from)
 			if err != nil {
@@ -229,6 +230,7 @@ Where proposal.json contains:
       "value": "true",
   }],
   "deposit": "512000000uqck"
+  "dust_threshold": "1000000"
 }
 `),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -248,7 +250,7 @@ Where proposal.json contains:
 
 			from := clientCtx.GetFromAddress()
 
-			content := types.NewUpdateZoneProposal(proposal.Title, proposal.Description, proposal.ChainId, proposal.Changes)
+			content := types.NewUpdateZoneProposal(proposal.Title, proposal.Description, proposal.ChainId, proposal.Changes, proposal.DustThreshold)
 
 			msg, err := govv1beta1.NewMsgSubmitProposal(content, deposit, from)
 			if err != nil {

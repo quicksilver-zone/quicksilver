@@ -264,63 +264,6 @@ func (suite *KeeperTestSuite) TestUpdateWithdrawalRecordsForSlash() {
 		})
 	}
 }
-
-/*
-func (suite *KeeperTestSuite) TestCRUDWithdrawalRecord() {
-	tcs := []struct {
-		Name            string
-		InitialRecords  func(ctx sdk.Context, keeper *icskeeper.Keeper)
-		ExpectedRecords func(ctx sdk.Context, keeper *icskeeper.Keeper) (out []types.WithdrawalRecord)
-	}{
-		{
-			Name: "single record",
-			InitialRecords: func(ctx sdk.Context, keeper *icskeeper.Keeper) {
-				zone, _ := keeper.GetZone(ctx, suite.chainB.ChainID)
-				validators := keeper.GetValidatorAddresses(ctx, zone.ChainId)
-				withdrawalRecord := types.WithdrawalRecord{
-					ChainId:   zone.ChainId,
-					Delegator: zone.DelegationAddress.Address,
-					Recipient: "cosmos1v4gek4mld0k5yhpe0fsln4takg558cdpyexv2rxr3dh45f2fqrgsw52m97",
-					Distribution: []*types.Distribution{
-						{Amount: math.NewInt(10000), Valoper: validators[0]},
-						{Amount: math.NewInt(10000), Valoper: validators[1]},
-						{Amount: math.NewInt(10000), Valoper: validators[2]},
-						{Amount: math.NewInt(10000), Valoper: validators[3]},
-					},
-					Amount:     sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, math.NewInt(40000))),
-					BurnAmount: sdk.NewCoin(zone.LocalDenom, math.NewInt(32356)),
-					Txhash:     "3BE21C1057ABBFBC44BE8993D2A4701C751507FF9901AA110B5993BA070C176B",
-					Status:     types.WithdrawStatusUnbond,
-				}
-				keeper.SetWithdrawalRecord(ctx, withdrawalRecord)
-			},
-			ExpectedRecords: func(ctx sdk.Context, keeper *icskeeper.Keeper) (out []types.WithdrawalRecord) {
-				zone, _ := keeper.GetZone(ctx, suite.chainB.ChainID)
-				validators := keeper.GetValidatorAddresses(ctx, zone.ChainId)
-				out = []types.WithdrawalRecord{
-					{
-						ChainId:   zone.ChainId,
-						Delegator: zone.DelegationAddress.Address,
-						Recipient: "cosmos1v4gek4mld0k5yhpe0fsln4takg558cdpyexv2rxr3dh45f2fqrgsw52m97",
-						Distribution: []*types.Distribution{
-							{Amount: math.NewInt(10000), Valoper: validators[0]},
-							{Amount: math.NewInt(10000), Valoper: validators[1]},
-							{Amount: math.NewInt(10000), Valoper: validators[2]},
-							{Amount: math.NewInt(10000), Valoper: validators[3]},
-						},
-						Amount:     sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, math.NewInt(40000))),
-						BurnAmount: sdk.NewCoin(zone.LocalDenom, math.NewInt(32356)),
-						Txhash:     "3BE21C1057ABBFBC44BE8993D2A4701C751507FF9901AA110B5993BA070C176B",
-						Status:     types.WithdrawStatusUnbond,
-					},
-				}
-				return out
-			},
-		},
-	}
-}
-*/
-
 func NewMockWithdrawalRecordWithCustomBurnAmount(burnAmount sdk.Coin) types.WithdrawalRecord {
 	return types.WithdrawalRecord{
 		ChainId:   "zone",
