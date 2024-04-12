@@ -33,12 +33,12 @@ message Claim {
   string chain_id = 2;
   ClaimType module = 3;
   string source_chain_id = 4;
+  uint64 XAmount = 5 [deprecated = true];
   string amount = 6 [
     (cosmos_proto.scalar) = "cosmos.Int",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable) = false
   ];
-  reserved 5;
 }
 
 // Proof defines a type used to cryptographically prove a claim.

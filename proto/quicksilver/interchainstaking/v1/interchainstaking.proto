@@ -144,6 +144,7 @@ message RedelegationRecord {
   int64 epoch_number = 2;
   string source = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   string destination = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  int64 XAmount = 5 [deprecated = true];
   google.protobuf.Timestamp completion_time = 6 [
     (gogoproto.nullable) = false,
     (gogoproto.stdtime) = true
@@ -153,7 +154,6 @@ message RedelegationRecord {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable) = false
   ];
-  reserved 5;
 }
 
 message Validator {
