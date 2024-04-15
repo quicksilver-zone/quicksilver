@@ -1,9 +1,8 @@
 package app
 
 import (
-	"github.com/CosmWasm/wasmd/x/wasm"
-	"github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v5/packetforward"
-	packetforwardtypes "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v5/packetforward/types"
+	"github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v6/packetforward"
+	packetforwardtypes "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v6/packetforward/types"
 
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -110,7 +109,6 @@ var (
 		participationrewards.AppModuleBasic{},
 		airdrop.AppModuleBasic{},
 		tokenfactory.AppModuleBasic{},
-		wasm.AppModuleBasic{},
 		supply.AppModuleBasic{},
 	)
 
@@ -131,7 +129,6 @@ var (
 		participationrewardstypes.ModuleName:       nil,
 		airdroptypes.ModuleName:                    nil,
 		packetforwardtypes.ModuleName:              nil,
-		wasm.ModuleName:                            {authtypes.Burner},
 		tokenfactorytypes.ModuleName:               {authtypes.Minter, authtypes.Burner},
 	}
 )
@@ -179,7 +176,6 @@ func appModules(
 		participationrewards.NewAppModule(appCodec, app.ParticipationRewardsKeeper),
 		airdrop.NewAppModule(appCodec, app.AirdropKeeper),
 		tokenfactory.NewAppModule(app.TokenFactoryKeeper, app.AccountKeeper, app.BankKeeper),
-		wasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
 		supply.NewAppModule(appCodec, app.SupplyKeeper),
 	}
 }
@@ -220,7 +216,6 @@ func simulationModules(
 		airdrop.NewAppModule(appCodec, app.AirdropKeeper),
 		tokenfactory.NewAppModule(app.TokenFactoryKeeper, app.AccountKeeper, app.BankKeeper),
 		// supply.NewAppModule(appCodec, app.SupplyKeeper),
-		// wasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
 	}
 }
 
@@ -266,7 +261,6 @@ func orderBeginBlockers() []string {
 		paramstypes.ModuleName,
 		vestingtypes.ModuleName,
 		tokenfactorytypes.ModuleName,
-		wasm.ModuleName,
 		supplytypes.ModuleName,
 	}
 }
@@ -310,7 +304,6 @@ func orderEndBlockers() []string {
 		participationrewardstypes.ModuleName,
 		airdroptypes.ModuleName,
 		tokenfactorytypes.ModuleName,
-		wasm.ModuleName,
 		supplytypes.ModuleName,
 		// currently no-op.
 	}
@@ -355,8 +348,6 @@ func orderInitBlockers() []string {
 		airdroptypes.ModuleName,
 		tokenfactorytypes.ModuleName,
 		supplytypes.ModuleName,
-		// wasmd
-		wasm.ModuleName,
 		// NOTE: crisis module must go at the end to check for invariants on each module
 		crisistypes.ModuleName,
 	}

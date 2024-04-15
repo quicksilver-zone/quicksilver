@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/gogo/protobuf/proto"
+
 	sdkioerrors "cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -13,6 +15,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	icatypes "github.com/cosmos/ibc-go/v6/modules/apps/27-interchain-accounts/types"
+	transfertypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
 	channeltypes "github.com/cosmos/ibc-go/v6/modules/core/04-channel/types"
 	host "github.com/cosmos/ibc-go/v6/modules/core/24-host"
@@ -151,19 +154,20 @@ func (k *Keeper) SendTokenIBC(ctx sdk.Context, senderAccAddress sdk.AccAddress, 
 		return errors.New("unable to find remote transfer connection")
 	}
 
-	return k.TransferKeeper.SendTransfer(
-		ctx,
-		srcPort,
-		srcChannel,
-		coin,
-		senderAccAddress,
-		receiver,
-		clienttypes.Height{
+	_, err := k.TransferKeeper.Transfer(ctx, &transfertypes.MsgTransfer{
+		SourcePort:    srcPort,
+		SourceChannel: srcChannel,
+		Token:         coin,
+		Sender:        senderAccAddress.String(),
+		Receiver:      receiver,
+		TimeoutHeight: clienttypes.Height{
 			RevisionNumber: 0,
 			RevisionHeight: 0,
 		},
-		uint64(ctx.BlockTime().UnixNano()+5*time.Minute.Nanoseconds()),
-	)
+		TimeoutTimestamp: uint64(ctx.BlockTime().UnixNano() + 5*time.Minute.Nanoseconds()),
+		Memo:             "",
+	})
+	return err
 }
 
 // MintAndSendQAsset mints qAssets based on the native asset redemption rate.  Tokens are then transferred to the given user.
@@ -296,8 +300,12 @@ func ProdSubmitTx(ctx sdk.Context, k *Keeper, msgs []sdk.Msg, account *types.ICA
 		msgsChunk := msgs[0:chunkSize]
 		msgs = msgs[chunkSize:]
 
+		protoMsgs := make([]proto.Message, len(msgsChunk))
+		for i, msg := range msgsChunk {
+			protoMsgs[i] = msg.(proto.Message)
+		}
 		// build and submit message for this chunk
-		data, err := icatypes.SerializeCosmosTx(k.cdc, msgsChunk)
+		data, err := icatypes.SerializeCosmosTx(k.cdc, protoMsgs)
 		if err != nil {
 			return err
 		}
@@ -309,7 +317,7 @@ func ProdSubmitTx(ctx sdk.Context, k *Keeper, msgs []sdk.Msg, account *types.ICA
 			Memo: memo,
 		}
 
-		_, err = k.ICAControllerKeeper.SendTx(ctx, chanCap, connectionID, portID, packetData, timeoutTimestamp)
+		_, err = k.ICAControllerKeeper.SendTx(ctx, chanCap, connectionID, portID, packetData, timeoutTimestamp) // nolint:staticcheck
 		if err != nil {
 			return err
 		}

@@ -1,8 +1,6 @@
 package types
 
 import (
-	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -55,15 +53,9 @@ func RegisterDenoms() {
 	}
 }
 
-// SetWasmConfig sets the wasm config .
-func SetWasmConfig(config *sdk.Config) {
-	config.SetAddressVerifier(wasmtypes.VerifyAddressLen())
-}
-
 func SetupConfig() {
 	config := sdk.GetConfig()
 	SetBech32Prefixes(config)
 	SetBip44CoinType(config)
-	SetWasmConfig(config)
 	config.Seal()
 }

@@ -178,6 +178,7 @@ func (suite *KeeperTestSuite) setupTestZones() {
 			PortName:          suite.chainB.ChainID + ".withrawal",
 			WithdrawalAddress: withdrawalAddress1,
 		},
+		DustThreshold: math.NewInt(1000000),
 	}
 	selftestzone := icstypes.Zone{
 		ConnectionId:     suite.path.EndpointB.ConnectionID,
@@ -195,6 +196,7 @@ func (suite *KeeperTestSuite) setupTestZones() {
 			PortName:          suite.chainA.ChainID + ".withrawal",
 			WithdrawalAddress: withdrawalAddress2,
 		},
+		DustThreshold: math.NewInt(1000000),
 	}
 
 	quicksilver.InterchainstakingKeeper.SetZone(suite.chainA.GetContext(), &selftestzone)
@@ -353,7 +355,7 @@ func (suite *KeeperTestSuite) setupChannelForICA(chainID, connectionID, accountS
 	quicksilver.InterchainstakingKeeper.SetConnectionForPort(suite.chainA.GetContext(), connectionID, portID)
 
 	channelID := quicksilver.IBCKeeper.ChannelKeeper.GenerateChannelIdentifier(suite.chainA.GetContext())
-	quicksilver.IBCKeeper.ChannelKeeper.SetChannel(suite.chainA.GetContext(), portID, channelID, channeltypes.Channel{State: channeltypes.OPEN, Ordering: channeltypes.ORDERED, Counterparty: channeltypes.Counterparty{PortId: icatypes.PortID, ChannelId: channelID}, ConnectionHops: []string{connectionID}})
+	quicksilver.IBCKeeper.ChannelKeeper.SetChannel(suite.chainA.GetContext(), portID, channelID, channeltypes.Channel{State: channeltypes.OPEN, Ordering: channeltypes.ORDERED, Counterparty: channeltypes.Counterparty{PortId: icatypes.HostPortID, ChannelId: channelID}, ConnectionHops: []string{connectionID}})
 
 	quicksilver.IBCKeeper.ChannelKeeper.SetNextSequenceSend(suite.chainA.GetContext(), portID, channelID, 1)
 	quicksilver.ICAControllerKeeper.SetActiveChannelID(suite.chainA.GetContext(), connectionID, portID, channelID)
@@ -365,6 +367,15 @@ func (suite *KeeperTestSuite) setupChannelForICA(chainID, connectionID, accountS
 		return err
 	}
 	err = quicksilver.GetScopedIBCKeeper().ClaimCapability(
+		suite.chainA.GetContext(),
+		key,
+		host.ChannelCapabilityPath(portID, channelID),
+	)
+	if err != nil {
+		return err
+	}
+
+	err = quicksilver.GetScopedICAControllerKeeper().ClaimCapability(
 		suite.chainA.GetContext(),
 		key,
 		host.ChannelCapabilityPath(portID, channelID),

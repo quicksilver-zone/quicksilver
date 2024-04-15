@@ -88,6 +88,7 @@ func (suite *KeeperTestSuite) setupTestZones() {
 		DepositsEnabled:  true,
 		Decimals:         6,
 		Is_118:           true,
+		DustThreshold:    "1000000",
 	}
 
 	quicksilver := suite.GetQuicksilverApp(suite.chainA)
@@ -130,7 +131,7 @@ func (suite *KeeperTestSuite) setupChannelForICA(ctx sdk.Context, chainID, conne
 	quicksilver.InterchainstakingKeeper.SetConnectionForPort(ctx, connectionID, portID)
 
 	channelID := quicksilver.IBCKeeper.ChannelKeeper.GenerateChannelIdentifier(ctx)
-	quicksilver.IBCKeeper.ChannelKeeper.SetChannel(ctx, portID, channelID, channeltypes.Channel{State: channeltypes.OPEN, Ordering: channeltypes.ORDERED, Counterparty: channeltypes.Counterparty{PortId: icatypes.PortID, ChannelId: channelID}, ConnectionHops: []string{connectionID}})
+	quicksilver.IBCKeeper.ChannelKeeper.SetChannel(ctx, portID, channelID, channeltypes.Channel{State: channeltypes.OPEN, Ordering: channeltypes.ORDERED, Counterparty: channeltypes.Counterparty{PortId: icatypes.HostPortID, ChannelId: channelID}, ConnectionHops: []string{connectionID}})
 
 	// channel, found := quicksilver.IBCKeeper.ChannelKeeper.GetChannel(ctx, portID, channelID)
 	// suite.True(found)
@@ -138,6 +139,7 @@ func (suite *KeeperTestSuite) setupChannelForICA(ctx sdk.Context, chainID, conne
 
 	quicksilver.IBCKeeper.ChannelKeeper.SetNextSequenceSend(ctx, portID, channelID, 1)
 	quicksilver.ICAControllerKeeper.SetActiveChannelID(ctx, connectionID, portID, channelID)
+
 	key, err := quicksilver.InterchainstakingKeeper.ScopedKeeper().NewCapability(
 		ctx,
 		host.ChannelCapabilityPath(portID, channelID),
@@ -145,8 +147,9 @@ func (suite *KeeperTestSuite) setupChannelForICA(ctx sdk.Context, chainID, conne
 	if err != nil {
 		return err
 	}
-	err = quicksilver.GetScopedIBCKeeper().ClaimCapability(
-		ctx,
+
+	err = quicksilver.GetScopedICAControllerKeeper().ClaimCapability(
+		suite.chainA.GetContext(),
 		key,
 		host.ChannelCapabilityPath(portID, channelID),
 	)
@@ -154,17 +157,10 @@ func (suite *KeeperTestSuite) setupChannelForICA(ctx sdk.Context, chainID, conne
 		return err
 	}
 
-	key, err = quicksilver.InterchainstakingKeeper.ScopedKeeper().NewCapability(
-		ctx,
-		host.PortPath(portID),
-	)
-	if err != nil {
-		return err
-	}
 	err = quicksilver.GetScopedIBCKeeper().ClaimCapability(
-		ctx,
+		suite.chainA.GetContext(),
 		key,
-		host.PortPath(portID),
+		host.ChannelCapabilityPath(portID, channelID),
 	)
 	if err != nil {
 		return err
