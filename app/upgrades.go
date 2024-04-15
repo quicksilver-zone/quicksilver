@@ -2,6 +2,9 @@ package app
 
 import (
 	"fmt"
+	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
+	icacontrollertypes "github.com/cosmos/ibc-go/v6/modules/apps/27-interchain-accounts/controller/types"
+	v6 "github.com/cosmos/ibc-go/v6/testing/simapp/upgrades/v6"
 
 	packetforwardtypes "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v6/packetforward/types"
 
@@ -23,6 +26,19 @@ func (app *Quicksilver) setUpgradeHandlers() {
 			),
 		)
 	}
+
+	kvStoreKeys := app.GetKVStoreKey()
+	app.UpgradeKeeper.SetUpgradeHandler(
+		upgrades.V010600rc1UpgradeName,
+		v6.CreateUpgradeHandler(
+			app.mm,
+			app.configurator,
+			app.appCodec,
+			kvStoreKeys[capabilitytypes.ModuleName],
+			app.CapabilityKeeper,
+			icacontrollertypes.SubModuleName,
+		),
+	)
 }
 
 func (app *Quicksilver) setUpgradeStoreLoaders() {
