@@ -74,10 +74,7 @@ func V010503rc0UpgradeHandler(
 				newDist = append(newDist, d)
 			}
 			record.Distribution = newDist
-			err := appKeepers.InterchainstakingKeeper.SetWithdrawalRecord(ctx, record)
-			if err != nil {
-				panic(err)
-			}
+			appKeepers.InterchainstakingKeeper.SetWithdrawalRecord(ctx, record)
 
 			return false
 		})
@@ -109,6 +106,140 @@ func V010503rc0UpgradeHandler(
 }
 
 // =========== PRODUCTION UPGRADE HANDLER ===========
+
+func V010505UpgradeHandler(
+	mm *module.Manager,
+	configurator module.Configurator,
+	appKeepers *keepers.AppKeepers,
+) upgradetypes.UpgradeHandler {
+	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+
+		appKeepers.BankKeeper.Logger(ctx).Info("migrating killer queen incentives...")
+		// migrate killer queen incentives
+		migrations := map[string]string{
+			"quick1qfyntnmlvznvrkk9xqppmcxqcluv7wd74nmyus": "quick1898x2jpjfelg4jvl4hqm9a9vugyctfdcl9t64x",
+		}
+		err := migrateVestingAccounts(ctx, appKeepers, migrations, migratePeriodicVestingAccount)
+		if err != nil {
+			panic(err)
+		}
+
+		appKeepers.InterchainstakingKeeper.Logger(ctx).Info("setting minimum dust delegations thresholds...")
+
+		// Update dust threshold configuration for all zones
+		thresholds := map[string]math.Int{
+			"osmosis-1":      math.NewInt(1_000_000),
+			"cosmoshub-4":    math.NewInt(500_000),
+			"stargaze-1":     math.NewInt(5_000_000),
+			"juno-1":         math.NewInt(2_000_000),
+			"sommelier-3":    math.NewInt(5_000_000),
+			"regen-1":        math.NewInt(5_000_000),
+			"dydx-mainnet-1": math.NewInt(500_000_000_000_000_000),
+			"ssc-1":          math.NewInt(1_000_000),
+		}
+		appKeepers.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zone *icstypes.Zone) (stop bool) {
+			threshold, ok := thresholds[zone.ChainId]
+			// if threshold not exist => get default value
+			if !ok {
+				threshold = math.NewInt(1_000_000)
+			}
+			zone.DustThreshold = threshold
+			appKeepers.InterchainstakingKeeper.SetZone(ctx, zone)
+			return false
+		})
+
+		// iterate over all withdrawal records with zero BurnAmount and delete them; expecting a single record!
+		appKeepers.InterchainstakingKeeper.Logger(ctx).Info("cleaning up unsatisfiable unbonding records with zero burnAmount...")
+		appKeepers.InterchainstakingKeeper.IterateWithdrawalRecords(ctx, func(_ int64, record icstypes.WithdrawalRecord) (stop bool) {
+			if record.BurnAmount.IsZero() {
+				appKeepers.InterchainstakingKeeper.DeleteWithdrawalRecord(ctx, record.ChainId, record.Txhash, record.Status)
+				appKeepers.InterchainstakingKeeper.Logger(ctx).Info("deleted withdrawal record...", "hash", record.Txhash)
+			}
+			return false
+		})
+
+		appKeepers.InterchainstakingKeeper.Logger(ctx).Info("setting 8 unsent unbondings for epoch 148 to STATUS_UNBONDING to be picked up by the next end blocker...")
+		// remit epoch 148 unbondings
+		hashes_148 := []string{
+			"1a9986d29cdff28014c59cc9ab055f03aebbe65ea5893f88e3582cec08a56a75",
+			"350824b3097b4ab6bc17af19b87f352bcd4c0363f147b291ca7f84330e8b8aa9",
+			"3ae014e377ba3f1955f58327ae9c38b7355d6e8e07e063f867d1c66901462dd5",
+			"4f7884e67bb903fafa13252dcdd0ab358b80967424ccb94e571b70f4cefe4711",
+			"8c61d25230f00c6f83c6e49d7af3f9ab35f3816f3b6740a0f07cf030c1a314d4",
+			"a62019759694e50e16966460e78406111f08c31a673d33911b4617183d79d222",
+			"b02040cca1e9dc7863425466eca4634a00671576889b3d98555404c03c75ab4f",
+			"b8278c2deb36608886e31b02e027b09082f28ea881e185e9b255608fe6ef7399",
+		}
+		for _, hash := range hashes_148 {
+			record, found := appKeepers.InterchainstakingKeeper.GetWithdrawalRecord(ctx, "cosmoshub-4", hash, icstypes.WithdrawStatusSend)
+			if !found {
+				// do not panic, in case records were updated on 15/04 epoch.
+				appKeepers.InterchainstakingKeeper.Logger(ctx).Error(fmt.Sprintf("1: unable to find record for hash %s", hash))
+				continue
+			}
+
+			// update the record so that it will re-trigger the send.
+			appKeepers.InterchainstakingKeeper.UpdateWithdrawalRecordStatus(ctx, &record, icstypes.WithdrawStatusUnbond)
+			appKeepers.InterchainstakingKeeper.Logger(ctx).Info("updated record to STATUS_UNBONDING", "hash", hash)
+		}
+
+		appKeepers.InterchainstakingKeeper.Logger(ctx).Info("setting 2 unsent unbondings from previous epochs to STATUS_QUEUED to be retriggered on the next epoch...")
+
+		// requeue previous unbondings
+		hashes_previous := []string{
+			"05348d2b80b9611e28c2b4782ab497596ed817a7d1e5f62e242ce02d36680604",
+			"e0ee0bee23176ce635cb9412200d6cee3e157a6615fb3d5bddf57cd133592308",
+		}
+
+		for _, hash := range hashes_previous {
+			record, found := appKeepers.InterchainstakingKeeper.GetWithdrawalRecord(ctx, "cosmoshub-4", hash, icstypes.WithdrawStatusSend)
+			if !found {
+				// do not panic, in case records were updated on 15/04 epoch.
+				appKeepers.InterchainstakingKeeper.Logger(ctx).Error(fmt.Sprintf("2: unable to find record for hash %s", hash))
+				continue
+			}
+
+			// update the record to requeue. These records were subject to an
+			record.Amount = nil
+			record.CompletionTime = time.Time{}
+			record.Requeued = true
+			record.Distribution = nil
+
+			appKeepers.InterchainstakingKeeper.UpdateWithdrawalRecordStatus(ctx, &record, icstypes.WithdrawStatusQueued)
+			appKeepers.InterchainstakingKeeper.Logger(ctx).Info("updated record to STATUS_QUEUED", "hash", hash)
+		}
+
+		// add qdydx and qsaga to claims for osmosis.
+		appKeepers.ParticipationRewardsKeeper.Logger(ctx).Info("adding qdydx and qsaga ibc denoms to osmosis claimable tokens")
+		channel, found := appKeepers.IBCKeeper.ChannelKeeper.GetChannel(ctx, "transfer", "channel-2")
+		if !found {
+			panic("unable to find channel osmosis transfer channel")
+		}
+
+		err = addProtocolData(ctx, appKeepers.ParticipationRewardsKeeper, prtypes.ProtocolDataTypeLiquidToken, &prtypes.LiquidAllowedDenomProtocolData{
+			ChainID:               "osmosis-1",
+			RegisteredZoneChainID: "dydx-mainnet-1",
+			QAssetDenom:           "aqdydx",
+			IbcDenom:              utils.DeriveIbcDenom("transfer", "channel-2", "transfer", channel.Counterparty.ChannelId, "aqdydx"),
+		})
+		if err != nil {
+			panic("unable to add aqdydx on osmosis")
+		}
+
+		err = addProtocolData(ctx, appKeepers.ParticipationRewardsKeeper, prtypes.ProtocolDataTypeLiquidToken, &prtypes.LiquidAllowedDenomProtocolData{
+			ChainID:               "osmosis-1",
+			RegisteredZoneChainID: "ssc-1",
+			QAssetDenom:           "uqsaga",
+			IbcDenom:              utils.DeriveIbcDenom("transfer", "channel-2", "transfer", channel.Counterparty.ChannelId, "uqsaga"),
+		})
+		if err != nil {
+			panic("unable to add uqsaga on osmosis")
+		}
+
+		appKeepers.UpgradeKeeper.Logger(ctx).Info("upgrade v1.5.5 completed!")
+		return mm.RunMigrations(ctx, configurator, fromVM)
+	}
+}
 
 func V010504UpgradeHandler(
 	mm *module.Manager,
@@ -166,8 +297,7 @@ func V010503UpgradeHandler(
 				newDist = append(newDist, d)
 			}
 			record.Distribution = newDist
-			err := appKeepers.InterchainstakingKeeper.SetWithdrawalRecord(ctx, record)
-			if err != nil {
+			if err := appKeepers.InterchainstakingKeeper.SetWithdrawalRecord(ctx, record); err != nil {
 				panic(err)
 			}
 
@@ -578,7 +708,7 @@ func reimburseUsersWithdrawnOnLowRR(ctx sdk.Context, appKeepers *keepers.AppKeep
 			return err
 		}
 
-		_ = appKeepers.InterchainstakingKeeper.SetWithdrawalRecord(ctx,
+		if err := appKeepers.InterchainstakingKeeper.SetWithdrawalRecord(ctx,
 			icstypes.WithdrawalRecord{
 				ChainId:      "cosmoshub-4",
 				Delegator:    delegator,
@@ -590,7 +720,9 @@ func reimburseUsersWithdrawnOnLowRR(ctx sdk.Context, appKeepers *keepers.AppKeep
 				Distribution: nil,
 				EpochNumber:  145,
 			},
-		)
+		); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -636,7 +768,9 @@ func collateRequeuedWithdrawals(ctx sdk.Context, appKeepers *keepers.AppKeepers)
 		})
 
 		for _, key := range utils.Keys(newRecords) {
-			_ = appKeepers.InterchainstakingKeeper.SetWithdrawalRecord(ctx, newRecords[key])
+			if err := appKeepers.InterchainstakingKeeper.SetWithdrawalRecord(ctx, newRecords[key]); err != nil {
+				panic(err)
+			}
 		}
 
 		newRecords = map[string]icstypes.WithdrawalRecord{}
@@ -703,7 +837,9 @@ func collateRequeuedWithdrawals(ctx sdk.Context, appKeepers *keepers.AppKeepers)
 		})
 
 		for _, key := range utils.Keys(newRecords) {
-			_ = appKeepers.InterchainstakingKeeper.SetWithdrawalRecord(ctx, newRecords[key])
+			if err := appKeepers.InterchainstakingKeeper.SetWithdrawalRecord(ctx, newRecords[key]); err != nil {
+				panic(err)
+			}
 		}
 
 		return false
