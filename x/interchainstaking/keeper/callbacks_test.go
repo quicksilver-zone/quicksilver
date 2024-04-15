@@ -752,7 +752,6 @@ func (suite *KeeperTestSuite) TestHandleRewardsCallbackNonDelegator() {
 		ctx := suite.chainA.GetContext()
 
 		zone, _ := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
-		suite.NoError(zone.IncrementWithdrawalWaitgroup(quicksilver.Logger(), 1, "test rewards callback handler"))
 		quicksilver.InterchainstakingKeeper.SetZone(ctx, &zone)
 
 		user := addressutils.GenerateAccAddressForTest()
@@ -788,7 +787,6 @@ func (suite *KeeperTestSuite) TestHandleRewardsCallbackEmptyResponse() {
 		ctx := suite.chainA.GetContext()
 
 		zone, _ := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
-		suite.NoError(zone.IncrementWithdrawalWaitgroup(quicksilver.Logger(), 1, "test rewards callback handler"))
 
 		quicksilver.InterchainstakingKeeper.SetZone(ctx, &zone)
 
@@ -818,9 +816,6 @@ func (suite *KeeperTestSuite) TestHandleValideRewardsCallback() {
 		ctx := suite.chainA.GetContext()
 
 		zone, _ := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
-		suite.NoError(zone.IncrementWithdrawalWaitgroup(quicksilver.Logger(), 1, "test rewards callback handler"))
-
-		quicksilver.InterchainstakingKeeper.SetZone(ctx, &zone)
 
 		queryReq := distrtypes.QueryDelegationTotalRewardsRequest{
 			DelegatorAddress: zone.DelegationAddress.Address,
@@ -2561,7 +2556,6 @@ func (suite *KeeperTestSuite) TestDelegationAccountBalancesCallback() {
 			ctx := suite.chainA.GetContext()
 
 			zone, _ := app.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
-			zone.SetWithdrawalWaitgroup(app.Logger(), 1, "init")
 			zone.DelegationAddress.Balance = t.PreviousBalance
 			app.InterchainstakingKeeper.SetZone(ctx, &zone)
 
@@ -2615,7 +2609,6 @@ func (suite *KeeperTestSuite) TestDelegationAccountBalanceCallbackDenomMismatch(
 		ctx := suite.chainA.GetContext()
 
 		zone, _ := app.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
-		zone.SetWithdrawalWaitgroup(app.Logger(), 2, "init")
 		zone.DelegationAddress.Balance = sdk.NewCoins(sdk.NewCoin("uatom", sdkmath.NewInt(500_000_000)))
 		app.InterchainstakingKeeper.SetZone(ctx, &zone)
 
@@ -2689,7 +2682,6 @@ func (suite *KeeperTestSuite) TestDelegationAccountBalanceCallback() {
 		ctx := suite.chainA.GetContext()
 
 		zone, _ := app.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
-		zone.SetWithdrawalWaitgroup(app.Logger(), 2, "init")
 		zone.DelegationAddress.Balance = sdk.NewCoins(sdk.NewCoin("uatom", sdkmath.NewInt(500_000_000)))
 		app.InterchainstakingKeeper.SetZone(ctx, &zone)
 
@@ -2724,7 +2716,6 @@ func (suite *KeeperTestSuite) TestDelegationAccountBalanceCallbackLSM() {
 
 		valOper := app.InterchainstakingKeeper.GetValidatorAddresses(ctx, suite.chainB.ChainID)[0]
 		denom := valOper + "/1"
-		zone.SetWithdrawalWaitgroup(app.Logger(), 2, "init")
 		zone.DelegationAddress.Balance = sdk.NewCoins(sdk.NewCoin("uatom", sdkmath.NewInt(500)))
 		app.InterchainstakingKeeper.SetZone(ctx, &zone)
 
@@ -2763,7 +2754,6 @@ func (suite *KeeperTestSuite) TestDelegationAccountBalanceCallbackLSMBadZone() {
 
 		valOper := addressutils.GenerateAddressForTestWithPrefix("quickvaloper")
 		denom := valOper + "/1"
-		zone.SetWithdrawalWaitgroup(app.Logger(), 2, "init")
 		zone.DelegationAddress.Balance = sdk.NewCoins(sdk.NewCoin("uatom", sdkmath.NewInt(500)))
 		app.InterchainstakingKeeper.SetZone(ctx, &zone)
 

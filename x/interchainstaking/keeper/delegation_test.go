@@ -625,7 +625,7 @@ func (suite *KeeperTestSuite) TestFlushOutstandingDelegations() {
 			if test.mockAck {
 				allocations, err := quicksilver.InterchainstakingKeeper.DeterminePlanForDelegation(ctx, &zone, test.expectedDelegation)
 				suite.NoError(err)
-				msgs = append(msgs, quicksilver.InterchainstakingKeeper.PrepareDelegationMessagesForCoins(&zone, allocations, true)...)
+				msgs = append(msgs, quicksilver.InterchainstakingKeeper.PrepareDelegationMessagesForCoins(ctx, &zone, allocations, true)...)
 			}
 
 			err := quicksilver.InterchainstakingKeeper.FlushOutstandingDelegations(ctx, &zone, test.delAddrBalance)
