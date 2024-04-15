@@ -104,10 +104,6 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNum
 			return false
 		})
 
-		if zone.GetWithdrawalWaitgroup() > 0 {
-			zone.SetWithdrawalWaitgroup(k.Logger(ctx), 0, "epoch waitgroup was unexpected > 0")
-		}
-
 		if err := k.HandleQueuedUnbondings(ctx, zone, epochNumber); err != nil {
 			// we can and need not panic here; logging the error is sufficient.
 			// an error here is not expected, but also not terminal.
@@ -176,7 +172,7 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNum
 				emtypes.FieldEqual(emtypes.FieldChainID, zone.ChainId),
 				emtypes.FieldEqual(emtypes.FieldModule, types.ModuleName),
 				emtypes.FieldEqual(emtypes.FieldEventType, fmt.Sprintf("%d", emtypes.EventTypeICADelegate)),
-				emtypes.FieldBegins(emtypes.FieldIdentifier, fmt.Sprintf("batch/%d", epochNumber)),
+				emtypes.FieldBegins(emtypes.FieldIdentifier, "delegation"), // should this be all delegations, or just from this epoch?
 			),
 			true,
 		)
