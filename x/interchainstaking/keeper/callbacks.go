@@ -672,7 +672,7 @@ func DelegationAccountBalancesCallback(k *Keeper, ctx sdk.Context, args []byte, 
 	result := banktypes.QueryAllBalancesResponse{}
 	k.cdc.MustUnmarshal(args, &result)
 
-	k.EventManagerKeeper.MarkCompleted(ctx, types.ModuleName, query.ChainId, "query_delegationaccountbalances_epoch")
+	defer k.EventManagerKeeper.MarkCompleted(ctx, types.ModuleName, query.ChainId, "query_delegationaccountbalances_epoch")
 
 	addressBytes, err := addressutils.AccAddressFromBech32(zone.DelegationAddress.Address, zone.AccountPrefix)
 	if err != nil {

@@ -22,11 +22,12 @@ const (
 	EventTypeUnspecified         = int32(0x00)
 	EventTypeICQQueryRewards     = int32(0x01)
 	EventTypeICQQueryDelegations = int32(0x02)
-	EventTypeICQAccountBalances  = int32(0x03)
-	EventTypeICQAccountBalance   = int32(0x04)
-	EventTypeICAWithdrawRewards  = int32(0x05)
-	EventTypeICADelegate         = int32(0x06)
-	EventTypeICAUnbond           = int32(0x07)
+	EventTypeICQQueryDelegation  = int32(0x03)
+	EventTypeICQAccountBalances  = int32(0x04)
+	EventTypeICQAccountBalance   = int32(0x05)
+	EventTypeICAWithdrawRewards  = int32(0x06)
+	EventTypeICADelegate         = int32(0x07)
+	EventTypeICAUnbond           = int32(0x08)
 
 	FieldEventType   = "eventtype"
 	FieldModule      = "module"

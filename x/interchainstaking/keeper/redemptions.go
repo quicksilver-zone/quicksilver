@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"crypto/sha256"
 	"errors"
 	"fmt"
 	"sort"
@@ -237,13 +238,14 @@ func (k *Keeper) HandleQueuedUnbondings(ctx sdk.Context, zone *types.Zone, epoch
 	var msgs []sdk.Msg
 	for _, valoper := range utils.Keys(coinsOutPerValidator) {
 		if !coinsOutPerValidator[valoper].Amount.IsZero() {
-			msgs = append(msgs, &stakingtypes.MsgUndelegate{DelegatorAddress: zone.DelegationAddress.Address, ValidatorAddress: valoper, Amount: coinsOutPerValidator[valoper]})
+			msg := &stakingtypes.MsgUndelegate{DelegatorAddress: zone.DelegationAddress.Address, ValidatorAddress: valoper, Amount: coinsOutPerValidator[valoper]}
+			msgs = append(msgs, msg)
 
 			k.EventManagerKeeper.AddEvent(ctx,
 				types.ModuleName,
 				zone.ChainId,
-				fmt.Sprintf("%s/%s", types.EpochWithdrawalMemo(epoch), valoper),
-				"unbondAck",
+				fmt.Sprintf("unbond/%s/%s", valoper, sha256.Sum256(msg.GetSignBytes())),
+				"",
 				emtypes.EventTypeICAUnbond,
 				emtypes.EventStatusActive,
 				nil,
@@ -265,11 +267,6 @@ func (k *Keeper) HandleQueuedUnbondings(ctx sdk.Context, zone *types.Zone, epoch
 			k.SetUnbondingRecord(ctx, types.UnbondingRecord{ChainId: zone.ChainId, EpochNumber: epoch, Validator: valoper, RelatedTxhash: txHashesPerValidator[valoper], Amount: coinsOutPerValidator[valoper]})
 		}
 	}
-
-	// if err = zone.IncrementWithdrawalWaitgroup(k.Logger(ctx), uint32(len(msgs)), "trigger unbonding messages"); err != nil {
-	// 	return err
-	// }
-	//k.SetZone(ctx, zone)
 
 	return nil
 }
