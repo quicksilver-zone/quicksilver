@@ -379,6 +379,11 @@ func (app *Quicksilver) GetScopedIBCKeeper() capabilitykeeper.ScopedKeeper {
 	return app.ScopedIBCKeeper
 }
 
+// GetScopedIBCKeeper implements the TestingApp interface.
+func (app *Quicksilver) GetScopedICAControllerKeeper() capabilitykeeper.ScopedKeeper {
+	return app.ScopedICAControllerKeeper
+}
+
 // GetTxConfig implements the TestingApp interface.
 func (*Quicksilver) GetTxConfig() client.TxConfig {
 	cfg := MakeEncodingConfig()
