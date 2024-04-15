@@ -17,14 +17,11 @@ import {
 } from '@chakra-ui/react';
 import { Key, useCallback, useState } from 'react';
 
-
+import SignalIntentModal from './modals/signalIntentProcess';
 
 import { useIntentQuery, useValidatorLogos, useValidatorsQuery } from '@/hooks/useQueries';
 import { networks as prodNetworks, testNetworks as devNetworks } from '@/state/chains/prod';
 import { truncateString } from '@/utils';
-
-import SignalIntentModal from './modals/signalIntentProcess';
-
 
 export interface StakingIntentProps {
   address: string;
@@ -34,7 +31,7 @@ export interface StakingIntentProps {
 const StakingIntent: React.FC<StakingIntentProps> = ({ address, isWalletConnected }) => {
   const networks = process.env.NEXT_PUBLIC_CHAIN_ENV === 'mainnet' ? prodNetworks : devNetworks;
 
-  const chains = ['Cosmos', 'Osmosis', 'Dydx', 'Stargaze', 'Regen', 'Sommelier', 'Juno'];
+  const chains = ['Cosmos', 'Osmosis', 'Dydx', 'Stargaze', 'Regen', 'Sommelier', 'Juno', 'Saga'];
   const [currentChainIndex, setCurrentChainIndex] = useState(0);
   const [isBottomVisible, setIsBottomVisible] = useState(true);
 
@@ -54,8 +51,6 @@ const StakingIntent: React.FC<StakingIntentProps> = ({ address, isWalletConnecte
   const { data: validatorLogos } = useValidatorLogos(currentNetwork.chainName, validatorsData || []);
 
   const { intent, refetch } = useIntentQuery(currentNetwork.chainName, address ?? '');
-
-
 
   interface ValidatorDetails {
     moniker: string;

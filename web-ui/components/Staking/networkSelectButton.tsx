@@ -80,7 +80,6 @@ export const NetworkSelect: React.FC<CustomMenuProps> = ({ buttonTextColor = 'wh
         _active={{
           bgColor: 'rgba(255,128,0, 0.25)',
         }}
-
         _focus={{
           bgColor: 'rgba(255,128,0, 0.25)',
         }}
