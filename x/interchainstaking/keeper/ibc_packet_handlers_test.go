@@ -893,7 +893,6 @@ func (suite *KeeperTestSuite) TestHandleWithdrawRewards() {
 		{
 			name: "try to decrement when waitgroup = 0",
 			setup: func(ctx sdk.Context, quicksilver *app.Quicksilver, zone *types.Zone) {
-				zone.SetWithdrawalWaitgroup(quicksilver.Logger(), 0, "init")
 				quicksilver.InterchainstakingKeeper.SetZone(ctx, zone)
 			},
 			checks: func(ctx sdk.Context, quicksilver *app.Quicksilver, zone *types.Zone) {},
@@ -909,8 +908,6 @@ func (suite *KeeperTestSuite) TestHandleWithdrawRewards() {
 		{
 			name: "valid case with balances != 0",
 			setup: func(ctx sdk.Context, quicksilver *app.Quicksilver, zone *types.Zone) {
-				zone.SetWithdrawalWaitgroup(quicksilver.Logger(), 1, "init")
-
 				balances := sdk.NewCoins(
 					sdk.NewCoin(
 						zone.BaseDenom,
@@ -933,7 +930,6 @@ func (suite *KeeperTestSuite) TestHandleWithdrawRewards() {
 		{
 			name: "valid case trigger redemption rate and check if delegatorAddress == performanceAddress",
 			setup: func(ctx sdk.Context, quicksilver *app.Quicksilver, zone *types.Zone) {
-				zone.SetWithdrawalWaitgroup(quicksilver.Logger(), 1, "init")
 				quicksilver.InterchainstakingKeeper.SetZone(ctx, zone)
 			},
 			checks: func(ctx sdk.Context, quicksilver *app.Quicksilver, zone *types.Zone) {
@@ -953,8 +949,6 @@ func (suite *KeeperTestSuite) TestHandleWithdrawRewards() {
 		{
 			name: "valid case trigger redemption rate and without checking if delegatorAddress == performanceAddress",
 			setup: func(ctx sdk.Context, quicksilver *app.Quicksilver, zone *types.Zone) {
-				zone.SetWithdrawalWaitgroup(quicksilver.Logger(), 0, "init")
-				quicksilver.InterchainstakingKeeper.SetZone(ctx, zone)
 			},
 			checks: func(ctx sdk.Context, quicksilver *app.Quicksilver, zone *types.Zone) {},
 			msg: func(zone *types.Zone) sdk.Msg {
@@ -3001,7 +2995,6 @@ func (suite *KeeperTestSuite) TestReceiveAckForWithdrawReward() {
 	if !found {
 		suite.Fail("unable to retrieve zone for test")
 	}
-	zone.SetWithdrawalWaitgroup(quicksilver.Logger(), 1, "init")
 	quicksilver.InterchainstakingKeeper.SetZone(ctx, &zone)
 
 	withdrawReward := &distrtypes.MsgWithdrawDelegatorReward{
@@ -4830,9 +4823,6 @@ func (suite *KeeperTestSuite) TestHandleFailedDelegate_Batch_OK() {
 	zone, found := app.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 	suite.True(found)
 
-	zone.SetWithdrawalWaitgroup(app.Logger(), 100, "init")
-	app.InterchainstakingKeeper.SetZone(ctx, &zone)
-
 	vals := app.InterchainstakingKeeper.GetValidatorAddresses(ctx, suite.chainB.ChainID)
 	msg := stakingtypes.MsgDelegate{DelegatorAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[0], Amount: sdk.NewCoin("uatom", sdk.NewInt(100))}
 	var msgMsg sdk.Msg = &msg
@@ -4853,9 +4843,6 @@ func (suite *KeeperTestSuite) TestHandleFailedDelegate_PerfAddress_OK() {
 
 	zone, found := app.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 	suite.True(found)
-
-	zone.SetWithdrawalWaitgroup(app.Logger(), 100, "init")
-	app.InterchainstakingKeeper.SetZone(ctx, &zone)
 
 	vals := app.InterchainstakingKeeper.GetValidatorAddresses(ctx, suite.chainB.ChainID)
 	msg := stakingtypes.MsgDelegate{DelegatorAddress: zone.PerformanceAddress.Address, ValidatorAddress: vals[0], Amount: sdk.NewCoin("uatom", sdk.NewInt(100))}
@@ -4879,9 +4866,6 @@ func (suite *KeeperTestSuite) TestHandleFailedDelegate_NotBatch_OK() {
 	zone, found := app.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 	suite.True(found)
 
-	zone.SetWithdrawalWaitgroup(app.Logger(), 100, "init")
-	app.InterchainstakingKeeper.SetZone(ctx, &zone)
-
 	vals := app.InterchainstakingKeeper.GetValidatorAddresses(ctx, suite.chainB.ChainID)
 	msg := stakingtypes.MsgDelegate{DelegatorAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[0], Amount: sdk.NewCoin("uatom", sdk.NewInt(100))}
 	var msgMsg sdk.Msg = &msg
@@ -4904,8 +4888,6 @@ func (suite *KeeperTestSuite) TestHandleFailedDelegate_BatchTriggerRR_OK() {
 	zone, found := app.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 	suite.True(found)
 
-	zone.SetWithdrawalWaitgroup(app.Logger(), 1, "init")
-	app.InterchainstakingKeeper.SetZone(ctx, &zone)
 	preQueries := app.InterchainQueryKeeper.AllQueries(ctx)
 
 	vals := app.InterchainstakingKeeper.GetValidatorAddresses(ctx, suite.chainB.ChainID)
@@ -4948,12 +4930,6 @@ func (suite *KeeperTestSuite) TestHandleFailedDelegate_BadAddr_Fail() {
 	app := suite.GetQuicksilverApp(suite.chainA)
 	ctx := suite.chainA.GetContext()
 
-	zone, found := app.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
-	suite.True(found)
-
-	zone.SetWithdrawalWaitgroup(app.Logger(), 100, "init")
-	app.InterchainstakingKeeper.SetZone(ctx, &zone)
-
 	vals := app.InterchainstakingKeeper.GetValidatorAddresses(ctx, suite.chainB.ChainID)
 	msg := stakingtypes.MsgDelegate{DelegatorAddress: addressutils.GenerateAddressForTestWithPrefix("cosmos"), ValidatorAddress: vals[0], Amount: sdk.NewCoin("uatom", sdk.NewInt(100))}
 	var msgMsg sdk.Msg = &msg
@@ -4970,9 +4946,6 @@ func (suite *KeeperTestSuite) TestHandleFailedDelegate_BadMsg_Fail() {
 
 	zone, found := app.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 	suite.True(found)
-
-	zone.SetWithdrawalWaitgroup(app.Logger(), 100, "init")
-	app.InterchainstakingKeeper.SetZone(ctx, &zone)
 
 	vals := app.InterchainstakingKeeper.GetValidatorAddresses(ctx, suite.chainB.ChainID)
 	msg := stakingtypes.MsgBeginRedelegate{DelegatorAddress: zone.DelegationAddress.Address, ValidatorSrcAddress: vals[0], ValidatorDstAddress: vals[1], Amount: sdk.NewCoin("uatom", sdk.NewInt(100))}
