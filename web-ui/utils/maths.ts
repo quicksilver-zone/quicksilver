@@ -37,7 +37,7 @@ export const formatNumber = (num: number) => {
     const endIndex = decimalPlaces > 0 ? dotIndex + decimalPlaces + 1 : dotIndex;
     return numStr.substring(0, endIndex);
   };
-
+  
   if (num < 1) {
     return truncate(num, 3);
   }
