@@ -74,7 +74,7 @@ func V010503rc0UpgradeHandler(
 				newDist = append(newDist, d)
 			}
 			record.Distribution = newDist
-			appKeepers.InterchainstakingKeeper.SetWithdrawalRecord(ctx, record)
+			_ = appKeepers.InterchainstakingKeeper.SetWithdrawalRecord(ctx, record)
 
 			return false
 		})
@@ -159,7 +159,7 @@ func V010505UpgradeHandler(
 
 		appKeepers.InterchainstakingKeeper.Logger(ctx).Info("setting 8 unsent unbondings for epoch 148 to STATUS_UNBONDING to be picked up by the next end blocker...")
 		// remit epoch 148 unbondings
-		hashes_148 := []string{
+		hashes148 := []string{
 			"1a9986d29cdff28014c59cc9ab055f03aebbe65ea5893f88e3582cec08a56a75",
 			"350824b3097b4ab6bc17af19b87f352bcd4c0363f147b291ca7f84330e8b8aa9",
 			"3ae014e377ba3f1955f58327ae9c38b7355d6e8e07e063f867d1c66901462dd5",
@@ -169,7 +169,7 @@ func V010505UpgradeHandler(
 			"b02040cca1e9dc7863425466eca4634a00671576889b3d98555404c03c75ab4f",
 			"b8278c2deb36608886e31b02e027b09082f28ea881e185e9b255608fe6ef7399",
 		}
-		for _, hash := range hashes_148 {
+		for _, hash := range hashes148 {
 			record, found := appKeepers.InterchainstakingKeeper.GetWithdrawalRecord(ctx, "cosmoshub-4", hash, icstypes.WithdrawStatusSend)
 			if !found {
 				// do not panic, in case records were updated on 15/04 epoch.
