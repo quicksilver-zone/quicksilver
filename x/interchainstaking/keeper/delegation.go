@@ -1,9 +1,10 @@
 package keeper
 
 import (
+	"crypto/sha256"
 	"errors"
 	"fmt"
-	"math"
+	"strings"
 
 	sdkmath "cosmossdk.io/math"
 
@@ -193,24 +194,49 @@ func (k *Keeper) IterateDelegatorDelegations(ctx sdk.Context, chainID string, de
 	}
 }
 
-func (*Keeper) PrepareDelegationMessagesForCoins(zone *types.Zone, allocations map[string]sdkmath.Int, isFlush bool) []sdk.Msg {
+func (k *Keeper) PrepareDelegationMessagesForCoins(ctx sdk.Context, zone *types.Zone, allocations map[string]sdkmath.Int, isFlush bool) []sdk.Msg {
 	var msgs []sdk.Msg
 	for _, valoper := range utils.Keys(allocations) {
 		if allocations[valoper].IsPositive() {
 			if allocations[valoper].GTE(zone.DustThreshold) || isFlush {
-				msgs = append(msgs, &stakingtypes.MsgDelegate{DelegatorAddress: zone.DelegationAddress.Address, ValidatorAddress: valoper, Amount: sdk.NewCoin(zone.BaseDenom, allocations[valoper])})
+				msg := &stakingtypes.MsgDelegate{DelegatorAddress: zone.DelegationAddress.Address, ValidatorAddress: valoper, Amount: sdk.NewCoin(zone.BaseDenom, allocations[valoper])}
+				k.EventManagerKeeper.AddEvent(
+					ctx,
+					types.ModuleName,
+					zone.ChainId,
+					fmt.Sprintf("delegation/%s/%x", valoper, sha256.Sum256(msg.GetSignBytes())),
+					"",
+					emtypes.EventTypeICADelegate,
+					emtypes.EventStatusActive,
+					nil,
+					nil,
+				)
+				msgs = append(msgs, msg)
 			}
 		}
 	}
 	return msgs
 }
 
-func (*Keeper) PrepareDelegationMessagesForShares(zone *types.Zone, coins sdk.Coins) []sdk.Msg {
+func (k *Keeper) PrepareDelegationMessagesForShares(ctx sdk.Context, zone *types.Zone, coins sdk.Coins) []sdk.Msg {
 	var msgs []sdk.Msg
 	for _, coin := range coins.Sort() {
 		if coin.IsPositive() {
 			// no min amount here.
-			msgs = append(msgs, &lsmstakingtypes.MsgRedeemTokensForShares{DelegatorAddress: zone.DelegationAddress.Address, Amount: coin})
+			valoper := strings.Split(coin.Denom, "/")[0]
+			msg := &lsmstakingtypes.MsgRedeemTokensForShares{DelegatorAddress: zone.DelegationAddress.Address, Amount: coin}
+			msgs = append(msgs, msg)
+			k.EventManagerKeeper.AddEvent(
+				ctx,
+				types.ModuleName,
+				zone.ChainId,
+				fmt.Sprintf("delegation/%s/%x", valoper, sha256.Sum256(msg.GetSignBytes())),
+				"",
+				emtypes.EventTypeICADelegate,
+				emtypes.EventStatusActive,
+				nil,
+				nil,
+			)
 		}
 	}
 	return msgs
@@ -331,13 +357,6 @@ func (k *Keeper) FlushOutstandingDelegations(ctx sdk.Context, zone *types.Zone, 
 	if hasNeg || coinsToFlush.IsZero() {
 		k.Logger(ctx).Info("delegate account balance negative, or nothing to flush, setting outdated receipts")
 		k.SetReceiptsCompleted(ctx, zone.ChainId, exclusionTime, ctx.BlockTime(), delAddrBalance.Denom)
-		if zone.GetWithdrawalWaitgroup() == 0 {
-			// we won't be sending any messages when we exit here; so if WG==0, then trigger RR update
-			k.Logger(ctx).Info("triggering redemption rate calc in lieu of delegation flush (non-positive coins)")
-			if err := k.TriggerRedemptionRate(ctx, zone); err != nil {
-				return err
-			}
-		}
 		return nil
 	}
 
@@ -349,23 +368,9 @@ func (k *Keeper) FlushOutstandingDelegations(ctx sdk.Context, zone *types.Zone, 
 		ToAddress:   "",
 		Amount:      coinsToFlush,
 	}
-	numMsgs, err := k.handleSendToDelegate(ctx, zone, &sendMsg, fmt.Sprintf("batch/%d", exclusionTime.Unix()))
+	err := k.handleSendToDelegate(ctx, zone, &sendMsg, fmt.Sprintf("batch/%d", exclusionTime.Unix()))
 	if err != nil {
 		return err
-	}
-	if numMsgs > math.MaxUint32 {
-		return fmt.Errorf("number of messages exceeds uint32 range: %d", numMsgs)
-	}
-	if err = zone.IncrementWithdrawalWaitgroup(k.Logger(ctx), uint32(numMsgs), "sending flush messages"); err != nil { //nolint:gosec
-		return err
-	}
-
-	// if we didn't send any messages (thus no acks will happen), and WG==0, then trigger RR update
-	if numMsgs == 0 && zone.GetWithdrawalWaitgroup() == 0 {
-		k.Logger(ctx).Info("triggering redemption rate calc in lieu of delegation flush (no messages to send)")
-		if err := k.TriggerRedemptionRate(ctx, zone); err != nil {
-			return err
-		}
 	}
 
 	k.SetZone(ctx, zone)
