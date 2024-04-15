@@ -113,7 +113,6 @@ func V010505UpgradeHandler(
 	appKeepers *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-
 		appKeepers.BankKeeper.Logger(ctx).Info("migrating killer queen incentives...")
 		// migrate killer queen incentives
 		migrations := map[string]string{
