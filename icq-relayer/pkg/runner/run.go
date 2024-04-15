@@ -28,7 +28,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	querytypes "github.com/cosmos/cosmos-sdk/types/query"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
-	qstypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
+	qstypes "github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
 	lensclient "github.com/strangelove-ventures/lens/client"
 	lensquery "github.com/strangelove-ventures/lens/client/query"
 	abcitypes "github.com/tendermint/tendermint/abci/types"
