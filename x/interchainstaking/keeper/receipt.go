@@ -3,9 +3,10 @@ package keeper
 import (
 	"errors"
 	"fmt"
+	"time"
+
 	transfertypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
 	"github.com/gogo/protobuf/proto"
-	"time"
 
 	sdkioerrors "cosmossdk.io/errors"
 
