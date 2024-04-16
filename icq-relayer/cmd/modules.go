@@ -19,6 +19,7 @@ import (
 	"github.com/cosmos/ibc-go/modules/capability"
 	"github.com/cosmos/ibc-go/v8/modules/apps/transfer"
 	ibc "github.com/cosmos/ibc-go/v8/modules/core"
+	tmclient "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint"
 	interchainquery "github.com/quicksilver-zone/quicksilver/v7/x/interchainquery"
 )
 
@@ -46,4 +47,5 @@ var ModuleBasics = []module.AppModuleBasic{
 	transfer.AppModuleBasic{},
 	ibc.AppModuleBasic{},
 	interchainquery.AppModuleBasic{},
+	tmclient.AppModuleBasic{},
 }
