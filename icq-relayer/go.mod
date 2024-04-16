@@ -8,7 +8,7 @@ require (
 	github.com/cometbft/cometbft v0.38.6
 	github.com/cosmos/cosmos-sdk v0.50.5
 	github.com/cosmos/ibc-go/modules/capability v1.0.0
-	github.com/cosmos/ibc-go/v8 v8.1.0
+	github.com/cosmos/ibc-go/v8 v8.2.0
 	github.com/dgraph-io/ristretto v0.1.1
 	github.com/go-kit/log v0.2.1
 	github.com/prometheus/client_golang v1.18.0
