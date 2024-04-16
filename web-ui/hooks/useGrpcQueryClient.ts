@@ -18,6 +18,7 @@ export const useGrpcQueryClient = (chainName: string) => {
     osmosis: env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_LCD_ENDPOINT_OSMOSIS : process.env.NEXT_PUBLIC_MAINNET_LCD_ENDPOINT_OSMOSIS,
     juno: env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_LCD_ENDPOINT_JUNO : process.env.NEXT_PUBLIC_MAINNET_LCD_ENDPOINT_JUNO,
     dydx: env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_LCD_ENDPOINT_DYDX : process.env.NEXT_PUBLIC_MAINNET_LCD_ENDPOINT_DYDX,
+    saga: env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_LCD_ENDPOINT_SAGA : process.env.NEXT_PUBLIC_MAINNET_LCD_ENDPOINT_SAGA,
   };
 
   grpcEndpoint = endpoints[chainName];
@@ -34,5 +35,6 @@ export const useGrpcQueryClient = (chainName: string) => {
 
   return {
     grpcQueryClient: grpcQueryClientQuery.data,
+    grpcQueryClientError: grpcQueryClientQuery.error,
   };
 };

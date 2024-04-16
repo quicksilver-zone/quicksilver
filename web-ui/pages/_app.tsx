@@ -68,6 +68,7 @@ function QuickApp({ Component, pageProps }: AppProps) {
       env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_RPC_ENDPOINT_OSMOSIS : process.env.NEXT_PUBLIC_MAINNET_RPC_ENDPOINT_OSMOSIS,
     juno: env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_RPC_ENDPOINT_JUNO : process.env.NEXT_PUBLIC_MAINNET_RPC_ENDPOINT_JUNO,
     dydx: env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_RPC_ENDPOINT_DYDX : process.env.NEXT_PUBLIC_MAINNET_RPC_ENDPOINT_DYDX,
+    saga: env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_RPC_ENDPOINT_SAGA : process.env.NEXT_PUBLIC_MAINNET_RPC_ENDPOINT_SAGA,
   };
 
   const lcdEndpoints = {
@@ -86,6 +87,7 @@ function QuickApp({ Component, pageProps }: AppProps) {
       env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_LCD_ENDPOINT_OSMOSIS : process.env.NEXT_PUBLIC_MAINNET_LCD_ENDPOINT_OSMOSIS,
     juno: env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_LCD_ENDPOINT_JUNO : process.env.NEXT_PUBLIC_MAINNET_LCD_ENDPOINT_JUNO,
     dydx: env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_LCD_ENDPOINT_DYDX : process.env.NEXT_PUBLIC_MAINNET_LCD_ENDPOINT_DYDX,
+    saga: env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_LCD_ENDPOINT_SAGA : process.env.NEXT_PUBLIC_MAINNET_LCD_ENDPOINT_SAGA,
   };
 
   const modalThemeOverrides: ThemeCustomizationProps = {
@@ -217,7 +219,6 @@ function QuickApp({ Component, pageProps }: AppProps) {
   return (
     <LiveZonesProvider>
       <ChakraProvider theme={defaultTheme}>
-  
         <ThemeProvider>
           <ChainProvider
             endpointOptions={{
@@ -263,6 +264,10 @@ function QuickApp({ Component, pageProps }: AppProps) {
                   rpc: [rpcEndpoints.dydx ?? ''],
                   rest: [lcdEndpoints.dydx ?? ''],
                 },
+                saga: {
+                  rpc: [rpcEndpoints.saga ?? ''],
+                  rest: [lcdEndpoints.saga ?? ''],
+                },
               },
             }}
             logLevel="NONE"
@@ -288,7 +293,7 @@ function QuickApp({ Component, pageProps }: AppProps) {
           >
             <QueryClientProvider client={queryClient}>
               <ReactQueryDevtools initialIsOpen={true} />
-             
+
               <main id="main" className={themeClass}>
                 <Box w="100vw" h="100vh" bgSize="fit" bgPosition="right center" bgAttachment="fixed" bgRepeat="no-repeat">
                   <Flex justifyContent={'space-between'} alignItems={'center'}>

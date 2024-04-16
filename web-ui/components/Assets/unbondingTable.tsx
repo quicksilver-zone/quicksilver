@@ -36,7 +36,7 @@ interface UnbondingAssetsTableProps {
 }
 
 const UnbondingAssetsTable: React.FC<UnbondingAssetsTableProps> = ({ address, isWalletConnected }) => {
-  const chains = ['Cosmos', 'Stargaze', 'Osmosis', 'Regen', 'Sommelier', 'Juno', 'Dydx'];
+  const chains = ['Cosmos', 'Stargaze', 'Osmosis', 'Regen', 'Sommelier', 'Juno', 'Dydx', 'Saga'];
   const [currentChainIndex, setCurrentChainIndex] = useState(0);
 
   // Switcher lets us use a pretty name for the chain in the UI, but query the chain by its actual name.
@@ -56,6 +56,8 @@ const UnbondingAssetsTable: React.FC<UnbondingAssetsTableProps> = ({ address, is
     newChainName = 'juno';
   } else if (currentChainName === 'Dydx') {
     newChainName = 'dydx';
+  } else if (currentChainName === 'Saga') {
+    newChainName = 'saga';
   } else {
     // Default case
     newChainName = currentChainName;
