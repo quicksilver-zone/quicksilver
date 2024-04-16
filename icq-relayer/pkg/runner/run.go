@@ -49,7 +49,7 @@ import (
 
 type Clients []*lensclient.ChainClient
 
-const VERSION = "icq/v0.10.0"
+const VERSION = "icq/v0.11.0-v8"
 
 var (
 	WaitInterval          = time.Second * 6
@@ -467,7 +467,7 @@ func doRequest(query Query, logger log.Logger, metrics prommetrics.Metrics) {
 		request.OrderBy = txtypes.OrderBy_ORDER_BY_DESC
 		request.Limit = 200
 		request.Pagination.Limit = 200
-
+		request.Query = request.Events[0]
 		query.Request, err = client.Codec.Marshaler.Marshal(&request)
 		if err != nil {
 			_ = logger.Log("msg", "Error: Failed in Marshalling Request", "type", query.Type, "id", query.QueryId, "height", query.Height)
