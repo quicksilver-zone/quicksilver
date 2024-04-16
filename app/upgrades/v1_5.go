@@ -185,12 +185,12 @@ func V010505UpgradeHandler(
 		appKeepers.InterchainstakingKeeper.Logger(ctx).Info("setting 2 unsent unbondings from previous epochs to STATUS_QUEUED to be retriggered on the next epoch...")
 
 		// requeue previous unbondings
-		hashes_previous := []string{
+		hashesPrevious := []string{
 			"05348d2b80b9611e28c2b4782ab497596ed817a7d1e5f62e242ce02d36680604",
 			"e0ee0bee23176ce635cb9412200d6cee3e157a6615fb3d5bddf57cd133592308",
 		}
 
-		for _, hash := range hashes_previous {
+		for _, hash := range hashesPrevious {
 			record, found := appKeepers.InterchainstakingKeeper.GetWithdrawalRecord(ctx, "cosmoshub-4", hash, icstypes.WithdrawStatusSend)
 			if !found {
 				// do not panic, in case records were updated on 15/04 epoch.
