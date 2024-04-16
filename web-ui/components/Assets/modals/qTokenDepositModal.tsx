@@ -30,7 +30,7 @@ import { handleSelectChainDropdown, ChainOption, ChooseChainInfo } from '@/compo
 import { useTx } from '@/hooks';
 import { useFeeEstimation } from '@/hooks/useFeeEstimation';
 import { ibcDenomDepositMapping } from '@/state/chains/prod';
-import { getCoin, getIbcInfo } from '@/utils';
+import { getCoin, getExponent, getIbcInfo } from '@/utils';
 
 export interface QDepositModalProps {
   token: string;
@@ -90,8 +90,8 @@ const QDepositModal: React.FC<QDepositModalProps> = ({ token, isOpen, onClose, i
 
   const onSubmitClick = async () => {
     setIsLoading(true);
-
-    const transferAmount = new BigNumber(amount).shiftedBy(6).toString();
+    const exp = token === 'qDYDX' ? 18 : 6;
+    const transferAmount = new BigNumber(amount).shiftedBy(exp).toString();
 
     const { source_port, source_channel } = getIbcInfo(fromChain ?? '', toChain ?? '');
 
@@ -160,7 +160,9 @@ const QDepositModal: React.FC<QDepositModalProps> = ({ token, isOpen, onClose, i
     <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
       <ModalContent bgColor="rgb(32,32,32)">
-      <ModalHeader color="white"><Text>Deposit {token} Tokens</Text>  <Divider mt={3} bgColor={'cyan.500'} /></ModalHeader>
+        <ModalHeader color="white">
+          <Text>Deposit {token} Tokens</Text> <Divider mt={3} bgColor={'cyan.500'} />
+        </ModalHeader>
         <ModalCloseButton color={'complimentary.900'} />
         <ModalBody>
           {/* Chain Selection Dropdown */}
@@ -205,7 +207,13 @@ const QDepositModal: React.FC<QDepositModalProps> = ({ token, isOpen, onClose, i
                     size="xs"
                     _active={{ transform: 'scale(0.95)', color: 'complimentary.800' }}
                     _hover={{ bgColor: 'transparent', color: 'complimentary.400' }}
-                    onClick={() => setAmount(BigNumber(parseFloat(maxAmount) / 2).toFixed(6).toString())}
+                    onClick={() =>
+                      setAmount(
+                        BigNumber(parseFloat(maxAmount) / 2)
+                          .toFixed(6)
+                          .toString(),
+                      )
+                    }
                   >
                     Half
                   </Button>

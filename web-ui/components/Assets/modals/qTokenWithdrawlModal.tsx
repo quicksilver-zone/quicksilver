@@ -31,7 +31,7 @@ import { useTx } from '@/hooks';
 import { useFeeEstimation } from '@/hooks/useFeeEstimation';
 import { useIbcBalanceQuery } from '@/hooks/useQueries';
 import { ibcDenomWithdrawMapping } from '@/state/chains/prod';
-import { getCoin, getIbcInfo } from '@/utils';
+import { getCoin, getExponent, getIbcInfo } from '@/utils';
 
 interface QDepositModalProps {
   max: string;
@@ -88,8 +88,9 @@ const QWithdrawModal: React.FC<QDepositModalProps> = ({ max, token, isOpen, onCl
 
   const onSubmitClick = async () => {
     setIsLoading(true);
+    const exp = token === 'qDYDX' ? 18 : 6;
 
-    const transferAmount = new BigNumber(amount).shiftedBy(6).toString();
+    const transferAmount = new BigNumber(amount).shiftedBy(exp).toString();
 
     const { source_port, source_channel } = getIbcInfo(fromChain ?? '', toChain ?? '');
 
@@ -159,7 +160,9 @@ const QWithdrawModal: React.FC<QDepositModalProps> = ({ max, token, isOpen, onCl
     <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
       <ModalContent bgColor="rgb(32,32,32)">
-      <ModalHeader color="white"><Text>Withdraw {token} Tokens</Text>  <Divider mt={3} bgColor={'cyan.500'} /></ModalHeader>
+        <ModalHeader color="white">
+          <Text>Withdraw {token} Tokens</Text> <Divider mt={3} bgColor={'cyan.500'} />
+        </ModalHeader>
         <ModalCloseButton color={'complimentary.900'} />
         <ModalBody>
           {/* Chain Selection Dropdown */}
@@ -196,7 +199,7 @@ const QWithdrawModal: React.FC<QDepositModalProps> = ({ max, token, isOpen, onCl
                 placeholder="Enter amount"
               />
               <InputRightElement>
-              <HStack mr={14} spacing={1}>
+                <HStack mr={14} spacing={1}>
                   <Button
                     variant={'ghost'}
                     color="complimentary.900"
@@ -204,7 +207,13 @@ const QWithdrawModal: React.FC<QDepositModalProps> = ({ max, token, isOpen, onCl
                     size="xs"
                     _active={{ transform: 'scale(0.95)', color: 'complimentary.800' }}
                     _hover={{ bgColor: 'transparent', color: 'complimentary.400' }}
-                    onClick={() => setAmount(BigNumber(parseFloat(max) / 2).toFixed(6).toString())}
+                    onClick={() =>
+                      setAmount(
+                        BigNumber(parseFloat(max) / 2)
+                          .toFixed(6)
+                          .toString(),
+                      )
+                    }
                   >
                     Half
                   </Button>

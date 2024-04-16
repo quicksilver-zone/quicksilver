@@ -1,3 +1,4 @@
+import { saga } from '@chain-registry/assets';
 import { HttpEndpoint } from '@cosmjs/stargate';
 import { useQuery } from '@tanstack/react-query';
 import { cosmos } from 'interchain-query';
@@ -20,6 +21,7 @@ export const useRpcQueryClient = (chainName: string) => {
     osmosis: env === 'testnet' ? process.env.TESTNET_RPC_ENDPOINT_OSMOSIS : process.env.MAINNET_RPC_ENDPOINT_OSMOSIS,
     juno: env === 'testnet' ? process.env.TESTNET_RPC_ENDPOINT_JUNO : process.env.MAINNET_RPC_ENDPOINT_JUNO,
     dydx: env === 'testnet' ? process.env.TESTNET_RPC_ENDPOINT_DYDX : process.env.MAINNET_RPC_ENDPOINT_DYDX,
+    saga: env === 'testnet' ? process.env.TESTNET_RPC_ENDPOINT_SAGA : process.env.MAINNET_RPC_ENDPOINT_SAGA,
   };
 
   rpcEndpoint = endpoints[chainName];
