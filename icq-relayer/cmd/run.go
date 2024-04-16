@@ -4,8 +4,9 @@ Copyright © 2022 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	"github.com/quicksilver-zone/quicksilver/icq-relayer/v8/pkg/runner"
 	"github.com/spf13/cobra"
+
+	"github.com/quicksilver-zone/quicksilver/icq-relayer/v8/pkg/runner"
 )
 
 // runCmd represents the run command

@@ -3,6 +3,7 @@ package cmd
 import (
 	feegrant "cosmossdk.io/x/feegrant/module"
 	"cosmossdk.io/x/upgrade"
+
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authz "github.com/cosmos/cosmos-sdk/x/authz/module"
@@ -16,10 +17,12 @@ import (
 	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/staking"
+
 	"github.com/cosmos/ibc-go/modules/capability"
 	"github.com/cosmos/ibc-go/v8/modules/apps/transfer"
 	ibc "github.com/cosmos/ibc-go/v8/modules/core"
 	tmclient "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint"
+
 	interchainquery "github.com/quicksilver-zone/quicksilver/v7/x/interchainquery"
 )
 
