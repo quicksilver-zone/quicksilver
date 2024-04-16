@@ -95,7 +95,13 @@ func Run(cfg *config.Config, home string) error {
 
 	http.Handle("/metrics", promHandler)
 	go func() {
-		stdlog.Fatal(http.ListenAndServe(":2112", nil))
+		server := &http.Server{
+			Addr:         ":2112",
+			ReadTimeout:  5 * time.Second,
+			WriteTimeout: 10 * time.Second,
+			IdleTimeout:  15 * time.Second,
+		}
+		stdlog.Fatal(server.ListenAndServe())
 	}()
 
 	defer func() {
@@ -262,9 +268,13 @@ func handleHistoricRequests(queries []qstypes.Query, sourceChainId string, logge
 			}
 			currentheight = block.Block.LastCommit.Height - 1
 			cache.SetWithTTL("currentblock/"+q.ChainId, currentheight, 1, 6*time.Second)
-			logger.Log("msg", "caching currentblock", "height", currentheight)
+			if err := logger.Log("msg", "caching currentblock", "height", currentheight); err != nil {
+				stdlog.Println("Logging error:", err)
+			}
 		} else {
-			logger.Log("msg", "using cached currentblock", "height", currentheight)
+			if err := logger.Log("msg", "using cached currentblock", "height", currentheight); err != nil {
+				stdlog.Println("Logging error:", err)
+			}
 		}
 		q.Height = currentheight.(int64)
 
@@ -498,18 +508,18 @@ func doRequest(query Query, logger log.Logger, metrics prommetrics.Metrics) {
 		protoProof := txRes.ToProto()
 
 		submitQuerier := lensquery.Query{Client: submitClient, Options: lensquery.DefaultOptions()}
-		clientId, found := cache.Get("clientId/" + query.ConnectionId)
+		clientID, found := cache.Get("clientId/" + query.ConnectionId)
 		if !found {
 			connection, err := submitQuerier.Ibc_Connection(query.ConnectionId)
 			if err != nil {
 				_ = logger.Log("msg", fmt.Sprintf("Error: Could not get connection from chain %s", err))
 				return
 			}
-			clientId = connection.Connection.ClientId
-			cache.Set("clientId/"+query.ConnectionId, clientId, 1)
+			clientID = connection.Connection.ClientId
+			cache.Set("clientId/"+query.ConnectionId, clientID, 1)
 		}
 
-		header, err := getHeader(ctx, client, submitClient, clientId.(string), height-1, logger, true, metrics)
+		header, err := getHeader(ctx, client, submitClient, clientID.(string), height-1, logger, true, metrics)
 		if err != nil {
 			_ = logger.Log("msg", fmt.Sprintf("Error: Could not get header %s", err))
 			return
@@ -679,7 +689,7 @@ func getHeader(ctx context.Context, client, submitClient *lensclient.ChainClient
 	}
 
 	_ = logger.Log("msg", "Fetching client update for height", "height", requestHeight+1)
-	newBlock, err := retryLightblock(ctx, client, int64(requestHeight+1), 5, logger, metrics)
+	newBlock, err := retryLightblock(ctx, client, requestHeight+1, 5, logger, metrics)
 	if err != nil {
 		panic(fmt.Sprintf("Error: Could not fetch updated LC from chain - bailing: %v", err))
 	}
@@ -756,25 +766,32 @@ func flush(chainId string, toSend []sdk.Msg, logger log.Logger, metrics prommetr
 					_ = logger.Log("msg", "Failed to submit in time, retrying")
 					resp, err := chainClient.SendMsgs(ctx, msgs, VERSION)
 					if err != nil {
-						switch {
-						case resp != nil && resp.Code == 19 && resp.Codespace == "sdk":
-							_ = logger.Log("msg", "Tx already in mempool")
-						case resp != nil && resp.Code == 12 && resp.Codespace == "sdk":
-							_ = logger.Log("msg", "Not enough gas")
-						case err.Error() == "context deadline exceeded":
-							_ = logger.Log("msg", "Failed to submit in time, bailing")
-						default:
-							_ = logger.Log("msg", "Failed to submit after retry; nevermind, we'll try again!", "err", err)
-							metrics.FailedTxs.WithLabelValues("failed_txs").Inc()
-						}
+						handleResponse(resp, logger, metrics)
+					} else {
+						_ = logger.Log("msg", fmt.Sprintf("Sent batch of %d (deduplicated) messages", len(msgs)))
 					}
-				default:
-					_ = logger.Log("msg", "Failed to submit; nevermind, we'll try again!", "err", err)
-					metrics.FailedTxs.WithLabelValues("failed_txs").Inc()
 				}
 			}
-			_ = logger.Log("msg", fmt.Sprintf("Sent batch of %d (deduplicated) messages", len(msgs)))
 		}
+	}
+}
+
+func handleResponse(resp *sdk.TxResponse, logger log.Logger, metrics prommetrics.Metrics) {
+	if resp == nil {
+		return
+	}
+	switch resp.Code {
+	case 19:
+		if resp.Codespace == "sdk" {
+			_ = logger.Log("msg", "Tx already in mempool")
+		}
+	case 12:
+		if resp.Codespace == "sdk" {
+			_ = logger.Log("msg", "Not enough gas")
+		}
+	default:
+		_ = logger.Log("msg", "Failed to submit; nevermind, we'll try again!", "err", resp.RawLog)
+		metrics.FailedTxs.WithLabelValues("failed_txs").Inc()
 	}
 }
 

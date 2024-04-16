@@ -23,7 +23,7 @@ import (
 	ibc "github.com/cosmos/ibc-go/v8/modules/core"
 	tmclient "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint"
 
-	interchainquery "github.com/quicksilver-zone/quicksilver/v7/x/interchainquery"
+	"github.com/quicksilver-zone/quicksilver/v7/x/interchainquery"
 )
 
 // TODO: Import a bunch of custom modules like cosmwasm and osmosis
