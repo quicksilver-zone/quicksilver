@@ -116,10 +116,10 @@ const MyPortfolio: React.FC<MyPortfolioProps> = ({
         </Flex>
         {isLoading && (
           <Flex w="100%" justifyContent="center" alignItems="center">
-           <SkeletonText noOfLines={1} h={'20px'} w={'120px'} startColor='compplimentary.900' endColor='complimentary.100'  />
-           <SkeletonText noOfLines={1} h={'20px'} w={'120px'} startColor='rgb(107, 105, 105)' endColor='rgb(168, 168, 168)'  />
-           <SkeletonText noOfLines={1} h={'20px'} w={'120px'} startColor='compplimentary.900' endColor='complimentary.100'  />
-           <SkeletonText noOfLines={1} h={'20px'} w={'120px'} startColor='rgb(107, 105, 105)' endColor='rgb(168, 168, 168)'  />
+            <SkeletonText noOfLines={1} h={'20px'} w={'120px'} startColor="compplimentary.900" endColor="complimentary.100" />
+            <SkeletonText noOfLines={1} h={'20px'} w={'120px'} startColor="rgb(107, 105, 105)" endColor="rgb(168, 168, 168)" />
+            <SkeletonText noOfLines={1} h={'20px'} w={'120px'} startColor="compplimentary.900" endColor="complimentary.100" />
+            <SkeletonText noOfLines={1} h={'20px'} w={'120px'} startColor="rgb(107, 105, 105)" endColor="rgb(168, 168, 168)" />
           </Flex>
         )}
         {totalValue === 0 && (
@@ -185,7 +185,7 @@ interface PortfolioItemProps {
 const PortfolioItem: React.FC<PortfolioItemProps> = ({ title, amount, qTokenPrice, index }) => {
   const tokenValue = Number(amount) * qTokenPrice;
 
-  const imgType = title === 'qATOM' ? 'svg' : 'png';
+  const imgType = title === 'qATOM' || title === 'qSAGA' ? 'svg' : 'png';
 
   return (
     <SimpleGrid
