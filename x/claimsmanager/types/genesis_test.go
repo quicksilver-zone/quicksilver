@@ -5,6 +5,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/math"
+
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	"github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
 )
@@ -45,7 +47,7 @@ func TestGenesisState_Validate(t *testing.T) {
 					{
 						UserAddress: addressutils.GenerateAccAddressForTest().String(),
 						ChainId:     "testzone-1",
-						Amount:      0,
+						Amount:      math.ZeroInt(),
 					},
 				},
 			},
@@ -59,7 +61,7 @@ func TestGenesisState_Validate(t *testing.T) {
 					{
 						UserAddress: addressutils.GenerateAccAddressForTest().String(),
 						ChainId:     "testzone-1",
-						Amount:      1000000,
+						Amount:      math.NewInt(1000000),
 					},
 				},
 			},

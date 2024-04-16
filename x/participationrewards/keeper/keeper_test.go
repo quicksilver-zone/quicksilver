@@ -178,6 +178,7 @@ func (suite *KeeperTestSuite) setupTestZones() {
 			PortName:          suite.chainB.ChainID + ".withrawal",
 			WithdrawalAddress: withdrawalAddress1,
 		},
+		DustThreshold: math.NewInt(1000000),
 	}
 	selftestzone := icstypes.Zone{
 		ConnectionId:     suite.path.EndpointB.ConnectionID,
@@ -195,6 +196,7 @@ func (suite *KeeperTestSuite) setupTestZones() {
 			PortName:          suite.chainA.ChainID + ".withrawal",
 			WithdrawalAddress: withdrawalAddress2,
 		},
+		DustThreshold: math.NewInt(1000000),
 	}
 
 	quicksilver.InterchainstakingKeeper.SetZone(suite.chainA.GetContext(), &selftestzone)
@@ -629,7 +631,7 @@ func (suite *KeeperTestSuite) addClaim(address, chainID string, claimType cmtype
 		ChainId:       chainID,
 		Module:        claimType,
 		SourceChainId: sourceChainID,
-		Amount:        amount,
+		Amount:        math.NewIntFromUint64(amount),
 	}
 	suite.GetQuicksilverApp(suite.chainA).ClaimsManagerKeeper.SetClaim(suite.chainA.GetContext(), &claim)
 }

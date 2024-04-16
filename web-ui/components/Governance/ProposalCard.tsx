@@ -73,7 +73,7 @@ export const ProposalCard = ({
       onClick={handleClick}
     >
       <GridItem colSpan={2}>
-        <Center color="white" w="100%" h="100%">
+        <Center display={{ base: 'none', md: 'flex' }} color="white" w="100%" h="100%">
           # {proposal.id ? proposal.id.toString().padStart(6, '0') : ''}
         </Center>
       </GridItem>
@@ -114,7 +114,7 @@ export const ProposalCard = ({
         </Flex>
       </GridItem>
       <GridItem colSpan={2}>
-        <Flex w="100%" h="100%" alignItems="center" px={4} justifyContent="center">
+        <Flex display={{ base: 'none', md: 'flex' }} w="100%" h="100%" alignItems="center" px={4} justifyContent="center">
           <StatusBadge status={proposal.status} />
         </Flex>
       </GridItem>

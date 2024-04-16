@@ -1,6 +1,7 @@
 import { useChain } from '@cosmos-kit/react';
 import { useQueries } from '@tanstack/react-query';
-import { ProposalStatus } from 'interchain-query/cosmos/gov/v1/gov';
+import { ProposalStatus } from 'interchain-query/cosmos/gov/v1beta1/gov';
+import Long from 'long';
 import {
   useEffect,
   useMemo,
@@ -108,8 +109,8 @@ export const useVotingData = (
             if (!grpcQueryClient || !proposalId || !address) {
               throw new Error("Required information for query is missing");
             }
-            return grpcQueryClient.cosmos.gov.v1.vote({
-              proposal_id: proposalId,
+            return grpcQueryClient.cosmos.gov.v1beta1.vote({
+              proposalId: new Long(Number(proposalId)),
               voter: address || '',
             });
           },

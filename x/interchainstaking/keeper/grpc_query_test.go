@@ -775,16 +775,16 @@ func (suite *KeeperTestSuite) TestKeeper_ZoneWithdrawalRecords() {
 				distributions := []*types.Distribution{
 					{
 						Valoper: icsKeeper.GetValidators(ctx, suite.chainB.ChainID)[0].ValoperAddress,
-						Amount:  10000000,
+						Amount:  math.NewInt(10000000),
 					},
 					{
 						Valoper: icsKeeper.GetValidators(ctx, suite.chainB.ChainID)[1].ValoperAddress,
-						Amount:  20000000,
+						Amount:  math.NewInt(20000000),
 					},
 				}
 
 				// set records
-				icsKeeper.AddWithdrawalRecord(
+				err := icsKeeper.AddWithdrawalRecord(
 					ctx,
 					zone.ChainId,
 					delegatorAddress,
@@ -796,6 +796,7 @@ func (suite *KeeperTestSuite) TestKeeper_ZoneWithdrawalRecords() {
 					time.Time{},
 					icsKeeper.EpochsKeeper.GetEpochInfo(ctx, epochstypes.EpochIdentifierEpoch).CurrentEpoch,
 				)
+				suite.NoError(err)
 			},
 			&types.QueryWithdrawalRecordsRequest{
 				ChainId:          suite.chainB.ChainID,
@@ -879,16 +880,16 @@ func (suite *KeeperTestSuite) TestKeeper_UserWithdrawalRecords() {
 				distributions := []*types.Distribution{
 					{
 						Valoper: icsKeeper.GetValidators(ctx, suite.chainB.ChainID)[0].ValoperAddress,
-						Amount:  10000000,
+						Amount:  math.NewInt(10000000),
 					},
 					{
 						Valoper: icsKeeper.GetValidators(ctx, suite.chainB.ChainID)[1].ValoperAddress,
-						Amount:  20000000,
+						Amount:  math.NewInt(20000000),
 					},
 				}
 
 				// set records
-				icsKeeper.AddWithdrawalRecord(
+				err := icsKeeper.AddWithdrawalRecord(
 					ctx,
 					zone.ChainId,
 					delegatorAddress,
@@ -900,6 +901,7 @@ func (suite *KeeperTestSuite) TestKeeper_UserWithdrawalRecords() {
 					time.Time{},
 					icsKeeper.EpochsKeeper.GetEpochInfo(ctx, epochstypes.EpochIdentifierEpoch).CurrentEpoch,
 				)
+				suite.NoError(err)
 			},
 			&types.QueryUserWithdrawalRecordsRequest{
 				UserAddress: delegatorAddress,
@@ -971,16 +973,16 @@ func (suite *KeeperTestSuite) TestKeeper_WithdrawalRecords() {
 				distributions := []*types.Distribution{
 					{
 						Valoper: icsKeeper.GetValidators(ctx, suite.chainB.ChainID)[0].ValoperAddress,
-						Amount:  10000000,
+						Amount:  math.NewInt(10000000),
 					},
 					{
 						Valoper: icsKeeper.GetValidators(ctx, suite.chainB.ChainID)[1].ValoperAddress,
-						Amount:  20000000,
+						Amount:  math.NewInt(20000000),
 					},
 				}
 
 				// set records
-				icsKeeper.AddWithdrawalRecord(
+				err := icsKeeper.AddWithdrawalRecord(
 					ctx,
 					zone.ChainId,
 					delegatorAddress,
@@ -992,6 +994,7 @@ func (suite *KeeperTestSuite) TestKeeper_WithdrawalRecords() {
 					time.Time{},
 					icsKeeper.EpochsKeeper.GetEpochInfo(ctx, epochstypes.EpochIdentifierEpoch).CurrentEpoch,
 				)
+				suite.NoError(err)
 			},
 			&types.QueryWithdrawalRecordsRequest{},
 			false,
@@ -1140,7 +1143,7 @@ func (suite *KeeperTestSuite) TestKeeper_RedelegationRecords() {
 						EpochNumber: 1,
 						Source:      icsKeeper.GetValidators(ctx, suite.chainB.ChainID)[1].ValoperAddress,
 						Destination: icsKeeper.GetValidators(ctx, suite.chainB.ChainID)[0].ValoperAddress,
-						Amount:      10000000,
+						Amount:      math.NewInt(10000000),
 					})
 			},
 			&types.QueryRedelegationRecordsRequest{},
@@ -1336,6 +1339,200 @@ func (suite *KeeperTestSuite) TestKeeper_Zone() {
 			ctx := suite.chainA.GetContext()
 
 			resp, err := icsKeeper.Zone(ctx, tc.req)
+			if tc.wantErr {
+				suite.T().Logf("Error:\n%v\n", err)
+				suite.Error(err)
+			} else {
+				suite.NoError(err)
+				suite.NotNil(resp)
+			}
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestKeeper_ZoneValidatorDenyList() {
+	testCases := []struct {
+		name           string
+		req            *types.QueryDenyListRequest
+		wantErr        bool
+		expectedLength int
+	}{
+		{
+			name:           "empty request",
+			req:            nil,
+			wantErr:        true,
+			expectedLength: 0,
+		},
+		{
+			name:           "zone not found",
+			req:            &types.QueryDenyListRequest{ChainId: "abcd"},
+			wantErr:        false,
+			expectedLength: 0,
+		},
+		{
+			name:           "zone valid request",
+			req:            &types.QueryDenyListRequest{ChainId: suite.chainB.ChainID},
+			wantErr:        false,
+			expectedLength: 2,
+		},
+	}
+	for _, tc := range testCases {
+		suite.Run(tc.name, func() {
+			suite.SetupTest()
+			suite.setupTestZones()
+
+			quicksilver := suite.GetQuicksilverApp(suite.chainA)
+			ctx := suite.chainA.GetContext()
+			icsKeeper := quicksilver.InterchainstakingKeeper
+
+			// Set 2 validators to deny list
+			validator1 := icsKeeper.GetValidators(ctx, suite.chainB.ChainID)[0]
+			valAddr, err := sdk.ValAddressFromBech32(validator1.ValoperAddress)
+			suite.NoError(err)
+			err = icsKeeper.SetZoneValidatorToDenyList(ctx, suite.chainB.ChainID, valAddr)
+			suite.NoError(err)
+
+			validator2 := icsKeeper.GetValidators(ctx, suite.chainB.ChainID)[1]
+			valAddr, err = sdk.ValAddressFromBech32(validator2.ValoperAddress)
+			suite.NoError(err)
+			err = icsKeeper.SetZoneValidatorToDenyList(ctx, suite.chainB.ChainID, valAddr)
+			suite.NoError(err)
+			denyList, err := icsKeeper.ValidatorDenyList(ctx, tc.req)
+			if tc.wantErr {
+				suite.T().Logf("Error:\n%v\n", err)
+				suite.Error(err)
+				suite.Empty(denyList)
+			} else {
+				suite.NotNil(denyList)
+				if tc.expectedLength == 2 {
+					suite.Equal(&types.QueryDenyListResponse{Validators: []string{validator1.ValoperAddress, validator2.ValoperAddress}}, denyList)
+				} else {
+					suite.Empty(denyList.Validators)
+				}
+
+			}
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestKeeper_UserZoneWithdrawalRecords() {
+	icsKeeper := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
+	ctx := suite.chainA.GetContext()
+
+	tests := []struct {
+		name         string
+		malleate     func()
+		req          *types.QueryWithdrawalRecordsRequest
+		wantErr      bool
+		expectLength int
+	}{
+		{
+			"UserZoneWithdrawalRecords_Nil_Request",
+			func() {},
+			nil,
+			true,
+			0,
+		},
+		{
+			"UserZoneWithdrawalRecords_Invalid_Address",
+			func() {
+				// setup zones
+				suite.setupTestZones()
+			},
+			&types.QueryWithdrawalRecordsRequest{
+				ChainId:          "boguschain",
+				DelegatorAddress: "incorrect address",
+			},
+			true,
+			0,
+		},
+		{
+			"UserZoneWithdrawalRecords_No_Withdrawal_Records",
+			func() {
+				zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
+				tempAddr := addressutils.GenerateAccAddressForTest().String()
+				suite.True(found)
+
+				distributions := []*types.Distribution{
+					{
+						Valoper: icsKeeper.GetValidators(ctx, suite.chainB.ChainID)[0].ValoperAddress,
+						Amount:  sdk.NewInt(10000000),
+					},
+					{
+						Valoper: icsKeeper.GetValidators(ctx, suite.chainB.ChainID)[1].ValoperAddress,
+						Amount:  sdk.NewInt(20000000),
+					},
+				}
+
+				// set records
+				err := icsKeeper.AddWithdrawalRecord(
+					ctx,
+					zone.ChainId,
+					delegatorAddress,
+					distributions,
+					tempAddr,
+					sdk.NewCoin(zone.LocalDenom, math.NewInt(15000000)),
+					"ABC012",
+					types.WithdrawStatusQueued,
+					time.Time{},
+					icsKeeper.EpochsKeeper.GetEpochInfo(ctx, epochstypes.EpochIdentifierEpoch).CurrentEpoch,
+				)
+				suite.NoError(err)
+			},
+			&types.QueryWithdrawalRecordsRequest{
+				ChainId:          suite.chainB.ChainID,
+				DelegatorAddress: testAddress,
+			},
+			false,
+			0,
+		},
+		{
+			"UserZoneWithdrawalRecords_Valid_Records",
+			func() {
+				zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
+				suite.True(found)
+
+				distributions := []*types.Distribution{
+					{
+						Valoper: icsKeeper.GetValidators(ctx, suite.chainB.ChainID)[0].ValoperAddress,
+						Amount:  sdk.NewInt(10000000),
+					},
+					{
+						Valoper: icsKeeper.GetValidators(ctx, suite.chainB.ChainID)[1].ValoperAddress,
+						Amount:  sdk.NewInt(20000000),
+					},
+				}
+
+				// set records
+				err := icsKeeper.AddWithdrawalRecord(
+					ctx,
+					zone.ChainId,
+					delegatorAddress,
+					distributions,
+					testAddress,
+					sdk.NewCoin(zone.LocalDenom, math.NewInt(15000000)),
+					"ABC012",
+					types.WithdrawStatusQueued,
+					time.Time{},
+					icsKeeper.EpochsKeeper.GetEpochInfo(ctx, epochstypes.EpochIdentifierEpoch).CurrentEpoch,
+				)
+				suite.NoError(err)
+			},
+			&types.QueryWithdrawalRecordsRequest{
+				ChainId:          suite.chainB.ChainID,
+				DelegatorAddress: testAddress,
+			},
+			false,
+			1,
+		},
+	}
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			tc.malleate()
+			icsKeeper := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
+			ctx := suite.chainA.GetContext()
+
+			resp, err := icsKeeper.UserZoneWithdrawalRecords(ctx, tc.req)
 			if tc.wantErr {
 				suite.T().Logf("Error:\n%v\n", err)
 				suite.Error(err)

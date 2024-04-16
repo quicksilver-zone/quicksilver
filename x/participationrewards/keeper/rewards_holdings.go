@@ -17,7 +17,7 @@ func (k Keeper) AllocateHoldingsRewards(ctx sdk.Context) error {
 	// obtain and iterate all claim records for each zone
 	k.icsKeeper.IterateZones(ctx, func(index int64, zone *icstypes.Zone) (stop bool) {
 		k.Logger(ctx).Info("zones", "zone", zone.ChainId)
-		userAllocations, remaining, icsRewardsAllocations := k.CalcUserHoldingsAllocations(ctx, zone)
+		userAllocations, remaining, _ := k.CalcUserHoldingsAllocations(ctx, zone)
 
 		if err := k.DistributeToUsersFromModule(ctx, userAllocations); err != nil {
 			k.Logger(ctx).Error("failed to distribute to users", "ua", userAllocations, "err", err)
@@ -34,15 +34,6 @@ func (k Keeper) AllocateHoldingsRewards(ctx sdk.Context) error {
 			}
 		}
 
-		if zone.WithdrawalAddress != nil {
-			if err := k.DistributeToUsersFromAddress(ctx, icsRewardsAllocations, zone.WithdrawalAddress.Address); err != nil {
-				k.Logger(ctx).Error("failed to distribute to users", "ua", userAllocations, "err", err)
-				// we might want to do a soft fail here so that all zones are not affected...
-				return false
-			}
-		}
-
-		k.ClaimsManagerKeeper.ArchiveAndGarbageCollectClaims(ctx, zone.ChainId)
 		return false
 	})
 
@@ -69,24 +60,23 @@ func (k Keeper) CalcUserHoldingsAllocations(ctx sdk.Context, zone *icstypes.Zone
 	zoneAmount := math.ZeroInt()
 	userAmountsMap := make(map[string]math.Int)
 
-	k.ClaimsManagerKeeper.IterateClaims(ctx, zone.ChainId, func(_ int64, claim cmtypes.Claim) (stop bool) {
-		amount := math.NewIntFromUint64(claim.Amount)
+	k.ClaimsManagerKeeper.IterateLastEpochClaims(ctx, zone.ChainId, func(_ int64, claim cmtypes.Claim) (stop bool) {
 		k.Logger(ctx).Info(
 			"claim",
 			"type", cmtypes.ClaimType_name[int32(claim.Module)],
 			"user", claim.UserAddress,
 			"zone", claim.ChainId,
-			"amount", amount,
+			"amount", claim.Amount,
 		)
 
 		if _, exists := userAmountsMap[claim.UserAddress]; !exists {
 			userAmountsMap[claim.UserAddress] = math.ZeroInt()
 		}
 
-		userAmountsMap[claim.UserAddress] = userAmountsMap[claim.UserAddress].Add(amount)
+		userAmountsMap[claim.UserAddress] = userAmountsMap[claim.UserAddress].Add(claim.Amount)
 
 		// total zone assets held remotely
-		zoneAmount = zoneAmount.Add(amount)
+		zoneAmount = zoneAmount.Add(claim.Amount)
 
 		return false
 	})

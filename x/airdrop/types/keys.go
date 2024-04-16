@@ -21,13 +21,13 @@ var (
 )
 
 func GetKeyZoneDrop(chainID string) []byte {
-	return append(KeyPrefixZoneDrop, []byte(chainID)...)
+	return append(KeyPrefixZoneDrop, chainID...)
 }
 
 func GetKeyClaimRecord(chainID string, addr sdk.AccAddress) []byte {
-	return append(append(KeyPrefixClaimRecord, []byte(chainID)...), addr...)
+	return append(append(KeyPrefixClaimRecord, chainID...), addr...)
 }
 
 func GetPrefixClaimRecord(chainID string) []byte {
-	return append(KeyPrefixClaimRecord, []byte(chainID)...)
+	return append(KeyPrefixClaimRecord, chainID...)
 }

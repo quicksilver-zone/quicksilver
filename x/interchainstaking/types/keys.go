@@ -63,6 +63,7 @@ var (
 	KeyPrefixRedelegationRecord          = []byte{0x10}
 	KeyPrefixLsmCaps                     = []byte{0x11}
 	KeyPrefixLocalDenomZoneMapping       = []byte{0x12}
+	KeyPrefixDeniedValidator             = []byte{0x13}
 )
 
 // ParseStakingDelegationKey parses the KV store key for a delegation from Cosmos x/staking module,
@@ -93,12 +94,12 @@ func ParseStakingDelegationKey(key []byte) (sdk.AccAddress, sdk.ValAddress, erro
 
 // GetRemoteAddressKey gets the prefix for a remote address mapping.
 func GetRemoteAddressKey(localAddress []byte, chainID string) []byte {
-	return append(append(KeyPrefixRemoteAddress, localAddress...), []byte(chainID)...)
+	return append(append(KeyPrefixRemoteAddress, localAddress...), chainID...)
 }
 
 // GetLocalAddressKey gets the prefix for a local address mapping.
 func GetLocalAddressKey(remoteAddress []byte, chainID string) []byte {
-	return append(append(KeyPrefixLocalAddress, []byte(chainID)...), remoteAddress...)
+	return append(append(KeyPrefixLocalAddress, chainID...), remoteAddress...)
 }
 
 // GetDelegationKey gets the key for delegator bond with validator.
@@ -109,7 +110,7 @@ func GetDelegationKey(chainID string, delAddr sdk.AccAddress, valAddr sdk.ValAdd
 
 // GetDelegationsKey gets the prefix for a delegator for all validators.
 func GetDelegationsKey(chainID string, delAddr sdk.AccAddress) []byte {
-	return append(append(KeyPrefixDelegation, []byte(chainID)...), delAddr.Bytes()...)
+	return append(append(KeyPrefixDelegation, chainID...), delAddr.Bytes()...)
 }
 
 // GetPerformanceDelegationKey gets the key for delegator bond with validator.
@@ -120,7 +121,7 @@ func GetPerformanceDelegationKey(chainID string, delAddr sdk.AccAddress, valAddr
 
 // GetPerformanceDelegationsKey gets the prefix for a delegator for all validators.
 func GetPerformanceDelegationsKey(chainID string, delAddr sdk.AccAddress) []byte {
-	return append(append(KeyPrefixPerformanceDelegation, []byte(chainID)...), delAddr.Bytes()...)
+	return append(append(KeyPrefixPerformanceDelegation, chainID...), delAddr.Bytes()...)
 }
 
 func GetReceiptKey(chainID, txhash string) string {
@@ -132,14 +133,14 @@ func GetReceiptKey(chainID, txhash string) string {
 func GetRedelegationKey(chainID, source, destination string, epochNumber int64) []byte {
 	epochBytes := make([]byte, 8)
 	binary.BigEndian.PutUint64(epochBytes, uint64(epochNumber))
-	return append(KeyPrefixRedelegationRecord, append(append([]byte(chainID), []byte(source+destination)...), epochBytes...)...)
+	return append(append(KeyPrefixRedelegationRecord, chainID+source+destination...), epochBytes...)
 }
 
 func GetWithdrawalKey(chainID string, status int32) []byte {
 	statusBytes := make([]byte, 8)
 	binary.BigEndian.PutUint64(statusBytes, uint64(status))
 	key := KeyPrefixWithdrawalRecord
-	key = append(key, append([]byte(chainID), statusBytes...)...)
+	key = append(append(key, chainID...), statusBytes...)
 	return key
 }
 
@@ -148,12 +149,12 @@ func GetWithdrawalKey(chainID string, status int32) []byte {
 func GetUnbondingKey(chainID, validator string, epochNumber int64) []byte {
 	epochBytes := make([]byte, 8)
 	binary.BigEndian.PutUint64(epochBytes, uint64(epochNumber))
-	return append(KeyPrefixUnbondingRecord, append(append([]byte(chainID), []byte(validator)...), epochBytes...)...)
+	return append(append(KeyPrefixUnbondingRecord, chainID+validator...), epochBytes...)
 }
 
 // GetZoneValidatorsKey gets the validators key prefix for a given chain.
 func GetZoneValidatorsKey(chainID string) []byte {
-	return append(KeyPrefixValidatorsInfo, []byte(chainID)...)
+	return append(KeyPrefixValidatorsInfo, chainID...)
 }
 
 // GetRemoteAddressPrefix gets the prefix for a remote address mapping.
@@ -163,5 +164,15 @@ func GetRemoteAddressPrefix(locaAddress []byte) []byte {
 
 // GetZoneValidatorAddrsByConsAddrKey gets the validatoraddrs key prefix for a given chain.
 func GetZoneValidatorAddrsByConsAddrKey(chainID string) []byte {
-	return append(KeyPrefixValidatorAddrsByConsAddr, []byte(chainID)...)
+	return append(KeyPrefixValidatorAddrsByConsAddr, chainID...)
+}
+
+// GetDeniedValidatorKey gets the validator deny list key prefix for a given chain.
+func GetDeniedValidatorKey(chainID string, validatorAddress sdk.ValAddress) []byte {
+	return append(append(KeyPrefixDeniedValidator, chainID...), validatorAddress.Bytes()...)
+}
+
+// GetZoneValidatorDenyListKey gets the validator deny list key prefix for a given chain.
+func GetZoneDeniedValidatorKey(chainID string) []byte {
+	return append(KeyPrefixDeniedValidator, chainID...)
 }

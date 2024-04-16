@@ -6,6 +6,8 @@ export const ibcDenomWithdrawMapping = {
       qREGEN: 'qregen',
       qSOMM: 'qsomm',
       qJUNO: 'qjuno',
+      qDYDX: 'qdydx',
+      qSAGA: 'qsaga'
     }
   };
 
@@ -16,7 +18,9 @@ export const ibcDenomWithdrawMapping = {
       qSTARS: 'ibc/46C83BB054E12E189882B5284542DB605D94C99827E367C9192CF0579CD5BC83',
       qREGEN: 'ibc/79A676508A2ECA1021EDDC7BB9CF70CEEC9514C478DA526A5A8B3E78506C2206',
       qSOMM: 'ibc/EAF76AD1EEF7B16D167D87711FB26ABE881AC7D9F7E6D0CF313D5FA530417208',
-      qJUNO: 'ibc/B4E18E61E1505C2F371B621E49B09E983F6A138F251A7B5286A6BDF739FD0D54'
+      qJUNO: 'ibc/B4E18E61E1505C2F371B621E49B09E983F6A138F251A7B5286A6BDF739FD0D54',
+      qDYDX: 'ibc/273C593E51ACE56F1F2BDB3E03A5CB81BB208B894BCAA642676A32C3454E8C27',
+      qSAGA: 'ibc/F2D400F2728E9DA06EAE2AFAB289931A69EDDA5A661578C66A3177EDFE3C0D13'
     },
     umee: {
       qATOM: 'ibc/454725EA4029BAA99C293904336DE9A4B84E2BF7D83B9C56EE6B03E8A65FB5A1',
@@ -24,7 +28,9 @@ export const ibcDenomWithdrawMapping = {
       qSTARS: 'ibc/31946162F3E898B9E3A21792DD2AC740F2E82E7B92769BDF239C3DDA1726BB9F',
       qREGEN: 'ibc/16F0C7E49C2FE3A99E92A20DBCF4006B38ABC4E29F7F37829AD40F2C585BE835',
       qSOMM: 'ibc/ACF9DA139FE5BC8F95AC4A12B0B6D7710274DEDAC57284B881BEE1896F40642D',
-      qJUNO: 'ibc/CA0BEF2524A37205009210EFCFB09585FBA9648C5F065FA078944A5C6704E8DC'
+      qJUNO: 'ibc/CA0BEF2524A37205009210EFCFB09585FBA9648C5F065FA078944A5C6704E8DC',
+      qDYDX: 'ibc/41F3C94FAB3FB2D6D2B1F130A78697B07D729D1F50DA132C18F7963413A2DCF6',
+      qSAGA: 'ibc/9B4BDA7382D0CF8C48A9D7496449D626DDF99AF640325978B5BD1AD4A9ED274C'
     },
   };
 
@@ -44,6 +50,14 @@ export const networks = [
       name: 'Osmosis',
       chainName: 'osmosis',
       chainId: 'osmosis-1',
+    },
+    {
+      value: 'DYDX',
+      logo: '/img/networks/dydx.png',
+      qlogo: '/img/networks/qdydx.png',
+      name: 'Dydx',
+      chainName: 'dydx',
+    chainId: 'dydx-mainnet-1',
     },
     {
       value: 'STARS',
@@ -77,6 +91,15 @@ export const networks = [
       chainName: 'juno',
       chainId: 'juno-1',
       },
+    {
+        value: 'SAGA',
+        logo: '/img/networks/saga.svg',
+        qlogo: '/img/networks/qsaga.svg',
+        name: 'Saga',
+        chainName: 'saga',
+        chainId: 'ssc-1',
+    },
+    
   ];
 
   export const testNetworks = [

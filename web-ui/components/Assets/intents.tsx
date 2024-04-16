@@ -13,15 +13,16 @@ import {
   SkeletonCircle,
   SkeletonText,
   Center,
+  Fade,
 } from '@chakra-ui/react';
-import { Key, useState } from 'react';
+import { Key, useCallback, useState } from 'react';
+
 
 import { useIntentQuery, useValidatorLogos, useValidatorsQuery } from '@/hooks/useQueries';
 import { networks as prodNetworks, testNetworks as devNetworks } from '@/state/chains/prod';
 import { truncateString } from '@/utils';
 
 import SignalIntentModal from './modals/signalIntentProcess';
-
 
 export interface StakingIntentProps {
   address: string;
@@ -31,8 +32,15 @@ export interface StakingIntentProps {
 const StakingIntent: React.FC<StakingIntentProps> = ({ address, isWalletConnected }) => {
   const networks = process.env.NEXT_PUBLIC_CHAIN_ENV === 'mainnet' ? prodNetworks : devNetworks;
 
-  const chains = ['Cosmos', 'Osmosis', 'Stargaze', 'Regen', 'Sommelier', 'Juno'];
+  const chains = ['Cosmos', 'Osmosis', 'Dydx', 'Stargaze', 'Regen', 'Sommelier', 'Juno', 'Saga'];
   const [currentChainIndex, setCurrentChainIndex] = useState(0);
+  const [isBottomVisible, setIsBottomVisible] = useState(true);
+
+  const handleScroll = useCallback((event: React.UIEvent<HTMLDivElement>) => {
+    const target = event.currentTarget;
+    const isBottom = target.scrollHeight - target.scrollTop <= target.clientHeight;
+    setIsBottomVisible(!isBottom);
+  }, []);
 
   const [isSignalIntentModalOpen, setIsSignalIntentModalOpen] = useState(false);
   const openSignalIntentModal = () => setIsSignalIntentModalOpen(true);
@@ -64,14 +72,16 @@ const StakingIntent: React.FC<StakingIntentProps> = ({ address, isWalletConnecte
     }, {}) || {};
 
   const validatorsWithDetails =
-    intent?.data?.intent.intents.map((validatorIntent: { valoper_address: string; weight: string }) => {
-      const validatorDetails = validatorsMap[validatorIntent.valoper_address];
-      return {
-        moniker: validatorDetails?.moniker,
-        logoUrl: validatorDetails?.logoUrl,
-        percentage: `${(parseFloat(validatorIntent.weight) * 100).toFixed(2)}%`,
-      };
-    }) || [];
+    intent?.data?.intent.intents
+      .filter((validatorIntent: { valoper_address: string; weight: string }) => parseFloat(validatorIntent.weight) > 0)
+      .map((validatorIntent: { valoper_address: string; weight: string }) => {
+        const validatorDetails = validatorsMap[validatorIntent.valoper_address];
+        return {
+          moniker: validatorDetails?.moniker,
+          logoUrl: validatorDetails?.logoUrl,
+          percentage: `${(parseFloat(validatorIntent.weight) * 100).toFixed(2)}%`,
+        };
+      }) || [];
 
   const handleLeftArrowClick = () => {
     setCurrentChainIndex((prevIndex) => (prevIndex === 0 ? networks.length - 1 : prevIndex - 1));
@@ -136,6 +146,7 @@ const StakingIntent: React.FC<StakingIntentProps> = ({ address, isWalletConnecte
               transform: 'scale(0.75)',
               color: 'complimentary.800',
             }}
+            color="GrayText"
             aria-label="Previous chain"
             icon={<ChevronLeftIcon w={'25px'} h={'25px'} />}
             onClick={handleLeftArrowClick}
@@ -150,6 +161,7 @@ const StakingIntent: React.FC<StakingIntentProps> = ({ address, isWalletConnecte
               transform: 'scale(0.75)',
               color: 'complimentary.800',
             }}
+            color="GrayText"
             _hover={{ bgColor: 'transparent', color: 'complimentary.900' }}
             variant="ghost"
             aria-label="Next chain"
@@ -158,7 +170,16 @@ const StakingIntent: React.FC<StakingIntentProps> = ({ address, isWalletConnecte
           />
         </Flex>
 
-        <VStack pb={4} overflowY="auto" className="custom-scrollbar" gap={4} spacing={2} align="stretch" maxH="250px">
+        <VStack
+          onScroll={handleScroll}
+          pb={4}
+          overflowY="auto"
+          className="custom-scrollbar"
+          gap={4}
+          spacing={2}
+          align="stretch"
+          maxH="210px"
+        >
           {(validatorsWithDetails.length > 0 &&
             validatorsWithDetails.map(
               (validator: { logoUrl: string; moniker: string; percentage: string }, index: Key | null | undefined) => (
@@ -185,7 +206,7 @@ const StakingIntent: React.FC<StakingIntentProps> = ({ address, isWalletConnecte
                       />
                     )}
                     {validator.moniker ? (
-                      <Text fontSize="md">{truncateString(validator.moniker, 20)}</Text>
+                      <Text fontSize="md">{truncateString(validator.moniker, 18)}</Text>
                     ) : (
                       <SkeletonText
                         display="inline-block"
@@ -206,6 +227,21 @@ const StakingIntent: React.FC<StakingIntentProps> = ({ address, isWalletConnecte
             <Center mt={6}>
               <Text fontSize="xl">No intent set</Text>
             </Center>
+          )}
+          {isBottomVisible && validatorsWithDetails.length > 5 && (
+            <Fade in={isBottomVisible}>
+              <Box
+                borderRadius="lg"
+                position="absolute"
+                bottom="0"
+                left="0"
+                right="0"
+                height="110px"
+                bgGradient="linear(to top, #1A1A1A, transparent)"
+                pointerEvents="none"
+                zIndex="10"
+              />
+            </Fade>
           )}
         </VStack>
       </VStack>

@@ -63,7 +63,7 @@ func (k *Keeper) GetPerformanceDelegation(ctx sdk.Context, chainID string, perfo
 func (k *Keeper) IterateAllDelegations(ctx sdk.Context, chainID string, cb func(delegation types.Delegation) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 
-	iterator := sdk.KVStorePrefixIterator(store, append(types.KeyPrefixDelegation, []byte(chainID)...))
+	iterator := sdk.KVStorePrefixIterator(store, append(types.KeyPrefixDelegation, chainID...))
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
@@ -88,7 +88,7 @@ func (k *Keeper) GetAllDelegations(ctx sdk.Context, chainID string) (delegations
 func (k *Keeper) IterateAllPerformanceDelegations(ctx sdk.Context, chainID string, cb func(delegation types.Delegation) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 
-	iterator := sdk.KVStorePrefixIterator(store, append(types.KeyPrefixPerformanceDelegation, []byte(chainID)...))
+	iterator := sdk.KVStorePrefixIterator(store, append(types.KeyPrefixPerformanceDelegation, chainID...))
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
@@ -195,8 +195,7 @@ func (*Keeper) PrepareDelegationMessagesForCoins(zone *types.Zone, allocations m
 	var msgs []sdk.Msg
 	for _, valoper := range utils.Keys(allocations) {
 		if allocations[valoper].IsPositive() {
-			if allocations[valoper].GTE(sdk.NewInt(1_000_000)) || isFlush {
-				// don't delegate tiny amounts. TODO: make configurable per zone.
+			if allocations[valoper].GTE(zone.DustThreshold) || isFlush {
 				msgs = append(msgs, &stakingtypes.MsgDelegate{DelegatorAddress: zone.DelegationAddress.Address, ValidatorAddress: valoper, Amount: sdk.NewCoin(zone.BaseDenom, allocations[valoper])})
 			}
 		}
@@ -323,6 +322,8 @@ func (k *Keeper) FlushOutstandingDelegations(ctx sdk.Context, zone *types.Zone, 
 		}
 		return false
 	})
+
+	pendingAmount = pendingAmount.Add(k.GetInflightUnbondingAmount(ctx, zone))
 
 	coinsToFlush, hasNeg := sdk.NewCoins(delAddrBalance).SafeSub(pendingAmount...)
 	if hasNeg || coinsToFlush.IsZero() {

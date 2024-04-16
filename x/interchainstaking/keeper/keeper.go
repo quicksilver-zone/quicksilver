@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"slices"
 	"time"
 
 	"github.com/tendermint/tendermint/libs/log"
@@ -561,7 +562,7 @@ func (k *Keeper) EmitPerformanceBalanceQuery(ctx sdk.Context, zone *types.Zone) 
 		zone.ConnectionId,
 		zone.ChainId,
 		types.BankStoreKey,
-		append(data, []byte(zone.BaseDenom)...),
+		append(data, zone.BaseDenom...),
 		sdk.NewInt(-1),
 		types.ModuleName,
 		"perfbalance",
@@ -739,7 +740,7 @@ func (k *Keeper) GetAggregateIntentOrDefault(ctx sdk.Context, zone *types.Zone) 
 	}
 
 	jailedThreshold := k.EpochsKeeper.GetEpochInfo(ctx, "epoch").Duration * 2
-
+	denyList := k.GetZoneValidatorDenyList(ctx, zone.ChainId)
 	// filter intents here...
 	// check validators for tombstoned
 	for _, validatorIntent := range intents {
@@ -764,9 +765,9 @@ func (k *Keeper) GetAggregateIntentOrDefault(ctx sdk.Context, zone *types.Zone) 
 		}
 
 		// we should never let denylist validators into the list, even if they are explicitly selected
-		// if in deny list {
-		// continue
-		// }
+		if slices.Contains(denyList, validator.ValoperAddress) {
+			continue
+		}
 		filteredIntents = append(filteredIntents, validatorIntent)
 	}
 
@@ -783,8 +784,7 @@ func (k *Keeper) Rebalance(ctx sdk.Context, zone *types.Zone, epochNumber int64)
 	rebalances := types.DetermineAllocationsForRebalancing(currentAllocations, currentLocked, currentSum, lockedSum, targetAllocations, maxCanAllocate, k.Logger(ctx)).RemoveDuplicates()
 	msgs := make([]sdk.Msg, 0)
 	for _, rebalance := range rebalances {
-		if rebalance.Amount.GTE(sdk.NewInt(1_000_000)) {
-			// don't redelegate dust; TODO: config per zone
+		if rebalance.Amount.GTE(zone.DustThreshold) {
 			if !rebalance.Amount.IsInt64() {
 				k.Logger(ctx).Error("Rebalance amount out of bound Int64", "amount", rebalance.Amount.String())
 				// Ignore this
@@ -796,7 +796,7 @@ func (k *Keeper) Rebalance(ctx sdk.Context, zone *types.Zone, epochNumber int64)
 				EpochNumber: epochNumber,
 				Source:      rebalance.Source,
 				Destination: rebalance.Target,
-				Amount:      rebalance.Amount.Int64(),
+				Amount:      rebalance.Amount,
 			})
 		}
 	}
