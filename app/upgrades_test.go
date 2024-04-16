@@ -1020,7 +1020,6 @@ func (s *AppTestSuite) InitV160TestZones() {
 	s.UncheckedSetWithdrawalRecord(s.chainA.GetContext(), s.GetQuicksilverApp(s.chainA), validWithdrawal)
 
 	s.GetQuicksilverApp(s.chainA).IBCKeeper.ChannelKeeper.SetChannel(s.chainA.GetContext(), "transfer", "channel-2", channeltypes.Channel{Counterparty: channeltypes.NewCounterparty("transfer", "channel-522")})
-
 }
 
 func (s *AppTestSuite) TestV010505UpgradeHandler() {
