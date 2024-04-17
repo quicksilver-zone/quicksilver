@@ -109,7 +109,7 @@ func Run(cfg *config.Config, home string) error {
 	defer func() {
 		err := Close()
 		if err != nil {
-			logger.Log("worker", "error", "error in Closing the routine")
+			logger.Log("worker", "init", "msg", "error in closing the routine")
 		}
 	}()
 	for _, c := range cfg.Chains {
@@ -828,11 +828,5 @@ func unique(msgSlice []sdk.Msg, logger log.Logger) []sdk.Msg {
 func Close() error {
 	query := tmquery.MustParse(fmt.Sprintf("message.module='%s'", "interchainquery"))
 
-	for _, chainClient := range globalCfg.Cl {
-		err := chainClient.RPCClient.Unsubscribe(ctx, chainClient.Config.ChainID+"-icq", query.String())
-		if err != nil {
-			return err
-		}
-	}
-	return nil
+	return globalCfg.Cl[globalCfg.DefaultChain].RPCClient.Unsubscribe(ctx, globalCfg.Cl[globalCfg.DefaultChain].Config.ChainID+"-icq", query.String())
 }
