@@ -17,11 +17,10 @@ import {
 } from '@chakra-ui/react';
 import React, { useEffect, useState } from 'react';
 
-import { shiftDigits, formatQasset, formatNumber } from '@/utils';
-
 import QDepositModal from './modals/qTokenDepositModal';
 import QWithdrawModal from './modals/qTokenWithdrawlModal';
 
+import { shiftDigits, formatQasset, formatNumber } from '@/utils';
 
 interface AssetCardProps {
   address: string;
@@ -199,7 +198,7 @@ const AssetCard: React.FC<AssetCardProps> = ({ address, assetName, balance, apy,
                     Redeem For
                   </StatHelpText>
                   <StatHelpText mt={-2} color={'complimentary.400'} fontSize={'sm'}>
-                    {formatNumber(parseFloat(balance) / Number(redemptionRates))} {assetName.replace('q', '')}
+                    {formatNumber(parseFloat(balance) * Number(redemptionRates))} {assetName.replace('q', '')}
                   </StatHelpText>
                 </>
               )
