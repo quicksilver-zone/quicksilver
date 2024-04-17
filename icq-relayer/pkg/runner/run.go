@@ -28,7 +28,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	querytypes "github.com/cosmos/cosmos-sdk/types/query"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
-	qstypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
+	qstypes "github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
 	lensclient "github.com/strangelove-ventures/lens/client"
 	lensquery "github.com/strangelove-ventures/lens/client/query"
 	abcitypes "github.com/tendermint/tendermint/abci/types"
@@ -48,17 +48,20 @@ import (
 
 type Clients []*lensclient.ChainClient
 
-const VERSION = "icq/v0.10.0"
+const (
+	VERSION = "icq/v0.11.0"
+)
 
 var (
+	MaxTxMsgs             int
 	WaitInterval          = time.Second * 6
 	HistoricQueryInterval = time.Second * 15
-	MaxHistoricQueries    = 12
-	MaxTxMsgs             = 12
+	TxMsgs                = MaxTxMsgs
 	ctx                   = context.Background()
 	sendQueue             = map[string]chan sdk.Msg{}
 	cache                 *ristretto.Cache
 	globalCfg             *config.Config
+	LastReduced           time.Time
 )
 
 func (clients Clients) GetForChainId(chainId string) *lensclient.ChainClient {
@@ -71,6 +74,11 @@ func (clients Clients) GetForChainId(chainId string) *lensclient.ChainClient {
 }
 
 func Run(cfg *config.Config, home string) error {
+	MaxTxMsgs = cfg.MaxMsgsPerTx
+	if MaxTxMsgs == 0 {
+		MaxTxMsgs = 40
+	}
+	TxMsgs = MaxTxMsgs
 	globalCfg = cfg
 	logger := log.NewLogfmtLogger(log.NewSyncWriter(os.Stderr))
 	logger = log.With(logger, "ts", log.DefaultTimestampUTC, "caller", log.DefaultCaller)
@@ -94,7 +102,7 @@ func Run(cfg *config.Config, home string) error {
 
 	http.Handle("/metrics", promHandler)
 	go func() {
-		stdlog.Fatal(http.ListenAndServe(":2112", nil))
+		stdlog.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", cfg.BindPort), nil))
 	}()
 
 	defer func() {
@@ -231,7 +239,7 @@ func handleHistoricRequests(queries []qstypes.Query, sourceChainId string, logge
 		return queries[i].CallbackId == "allbalances" || queries[i].CallbackId == "depositinterval" || queries[i].CallbackId == "deposittx" || queries[i].LastEmission.GT(queries[j].LastEmission)
 	})
 
-	for _, query := range queries[0:int(math.Min(float64(len(queries)), float64(MaxHistoricQueries)))] {
+	for _, query := range queries[0:int(math.Min(float64(len(queries)), float64(TxMsgs)))] {
 		_, ok := globalCfg.Cl[query.ChainId]
 		if !ok {
 			continue
@@ -334,7 +342,6 @@ func handleEvent(event coretypes.ResultEvent, logger log.Logger, metrics prommet
 
 		if _, found := cache.Get("query/" + queryIds[i]); found {
 			// break if this is in the cache
-			fmt.Println("avoiding duplicate")
 			continue
 		}
 
@@ -360,6 +367,7 @@ func handleEvent(event coretypes.ResultEvent, logger log.Logger, metrics prommet
 
 	for _, q := range queries {
 		go doRequestWithMetrics(q, log.With(logger, "src_chain", q.ChainId), metrics)
+		time.Sleep(75 * time.Millisecond) // try to avoid thundering herd.
 	}
 }
 
@@ -396,14 +404,14 @@ func retryLightblock(ctx context.Context, client *lensclient.ChainClient, height
 	var err error
 	if !found {
 		interval := 1
-		_ = logger.Log("msg", "Querying lightblock", "attempt", interval)
+		//_ = logger.Log("msg", "Querying lightblock", "attempt", interval)
 		lightBlock, err = client.LightProvider.LightBlock(ctx, height)
 		metrics.LightBlockRequests.WithLabelValues("lightblock_requests").Inc()
 
 		if err != nil {
 			for {
 				time.Sleep(time.Duration(interval) * time.Second)
-				_ = logger.Log("msg", "Requerying lightblock", "attempt", interval)
+				//_ = logger.Log("msg", "Requerying lightblock", "attempt", interval)
 				lightBlock, err = client.LightProvider.LightBlock(ctx, height)
 				metrics.LightBlockRequests.WithLabelValues("lightblock_requests").Inc()
 				interval = interval + 1
@@ -415,9 +423,9 @@ func retryLightblock(ctx context.Context, client *lensclient.ChainClient, height
 			}
 		}
 		cache.Set("lightblock/"+client.Config.ChainID+"/"+fmt.Sprintf("%d", height), lightBlock, 5)
-	} else {
-		_ = logger.Log("msg", "got lightblock from cache")
-	}
+	} //else {
+	//_ = logger.Log("msg", "got lightblock from cache")
+	//}
 	return lightBlock.(*tmtypes.LightBlock), err
 }
 
@@ -454,7 +462,7 @@ func doRequest(query Query, logger log.Logger, metrics prommetrics.Metrics) {
 	switch query.Type {
 	// until we fix ordering and pagination in the binary, we can override the query here.
 	case "cosmos.tx.v1beta1.Service/GetTxsEvent":
-		request := txtypes.GetTxsEventRequest{}
+		request := qstypes.GetTxsEventRequest{}
 		err = client.Codec.Marshaler.Unmarshal(query.Request, &request)
 		if err != nil {
 			_ = logger.Log("msg", "Error: Failed in Unmarshalling Request", "type", query.Type, "id", query.QueryId, "height", query.Height)
@@ -463,6 +471,7 @@ func doRequest(query Query, logger log.Logger, metrics prommetrics.Metrics) {
 		request.OrderBy = txtypes.OrderBy_ORDER_BY_DESC
 		request.Limit = 200
 		request.Pagination.Limit = 200
+		request.Query = request.Events[0]
 
 		query.Request, err = client.Codec.Marshaler.Marshal(&request)
 		if err != nil {
@@ -636,18 +645,12 @@ func submitClientUpdate(client, submitClient *lensclient.ChainClient, query Quer
 		_ = logger.Log("msg", fmt.Sprintf("Error: Could not get header %s", err))
 		return
 	}
-	anyHeader, err := clienttypes.PackHeader(header)
+
+	msg, err := clienttypes.NewMsgUpdateClient(clientId.(string), header, submitClient.MustEncodeAccAddr(from))
 	if err != nil {
-		_ = logger.Log("msg", fmt.Sprintf("Error: Could not pack header %s", err))
+		_ = logger.Log("msg", fmt.Sprintf("Error: Could not create msg update: %s", err))
 		return
 	}
-
-	msg := &clienttypes.MsgUpdateClient{
-		ClientId: clientId.(string), // needs to be passed in as part of request.
-		Header:   anyHeader,
-		Signer:   submitClient.MustEncodeAccAddr(from),
-	}
-
 	sendQueue[query.SourceChainId] <- msg
 	metrics.SendQueue.WithLabelValues("send-queue").Set(float64(len(sendQueue)))
 }
@@ -710,8 +713,18 @@ func FlushSendQueue(chainId string, logger log.Logger, metrics prommetrics.Metri
 	toSend := []sdk.Msg{}
 	ch := sendQueue[chainId]
 
+	if LastReduced.Add(time.Minute).Before(time.Now()) {
+		if 2*TxMsgs > MaxTxMsgs {
+			TxMsgs = MaxTxMsgs
+		} else {
+			TxMsgs = 2 * TxMsgs
+		}
+		LastReduced = time.Now()
+		_ = logger.Log("msg", "increased batchsize")
+	}
+
 	for {
-		if len(toSend) > MaxTxMsgs {
+		if len(toSend) > TxMsgs {
 			flush(chainId, toSend, logger, metrics)
 			toSend = []sdk.Msg{}
 		}
@@ -747,22 +760,26 @@ func flush(chainId string, toSend []sdk.Msg, logger log.Logger, metrics prommetr
 					_ = logger.Log("msg", "Tx already in mempool")
 				case resp != nil && resp.Code == 12 && resp.Codespace == "sdk":
 					_ = logger.Log("msg", "Not enough gas")
-				case err.Error() == "context deadline exceeded":
-					_ = logger.Log("msg", "Failed to submit in time, retrying")
-					resp, err := chainClient.SendMsgs(ctx, msgs, VERSION)
-					if err != nil {
-						switch {
-						case resp != nil && resp.Code == 19 && resp.Codespace == "sdk":
-							_ = logger.Log("msg", "Tx already in mempool")
-						case resp != nil && resp.Code == 12 && resp.Codespace == "sdk":
-							_ = logger.Log("msg", "Not enough gas")
-						case err.Error() == "context deadline exceeded":
-							_ = logger.Log("msg", "Failed to submit in time, bailing")
-						default:
-							_ = logger.Log("msg", "Failed to submit after retry; nevermind, we'll try again!", "err", err)
-							metrics.FailedTxs.WithLabelValues("failed_txs").Inc()
-						}
-					}
+				case strings.Contains(err.Error(), "request body too large"):
+					TxMsgs = TxMsgs / 2
+					LastReduced = time.Now()
+					_ = logger.Log("msg", "body too large: reduced batchsize", "size", TxMsgs)
+				// case err.Error() == "context deadline exceeded":
+				// 	_ = logger.Log("msg", "Failed to submit in time, retrying")
+				// 	resp, err := chainClient.SendMsgs(ctx, msgs, VERSION)
+				// 	if err != nil {
+				// 		switch {
+				// 		case resp != nil && resp.Code == 19 && resp.Codespace == "sdk":
+				// 			_ = logger.Log("msg", "Tx already in mempool")
+				// 		case resp != nil && resp.Code == 12 && resp.Codespace == "sdk":
+				// 			_ = logger.Log("msg", "Not enough gas")
+				// 		case err.Error() == "context deadline exceeded":
+				// 			_ = logger.Log("msg", "Failed to submit in time, bailing")
+				// 		default:
+				// 			_ = logger.Log("msg", "Failed to submit after retry; nevermind, we'll try again!", "err", err)
+				// 			metrics.FailedTxs.WithLabelValues("failed_txs").Inc()
+				// 		}
+				// 	}
 				default:
 					_ = logger.Log("msg", "Failed to submit; nevermind, we'll try again!", "err", err)
 					metrics.FailedTxs.WithLabelValues("failed_txs").Inc()
