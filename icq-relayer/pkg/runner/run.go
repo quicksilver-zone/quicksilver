@@ -18,6 +18,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/avast/retry-go/v4"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/quicksilver-zone/quicksilver/icq-relayer/pkg/config"
@@ -62,6 +63,12 @@ var (
 	cache                 *ristretto.Cache
 	globalCfg             *config.Config
 	LastReduced           time.Time
+
+	// Variables used for retries
+	RtyAttNum = uint(5)
+	RtyAtt    = retry.Attempts(RtyAttNum)
+	RtyDel    = retry.Delay(time.Millisecond * 400)
+	RtyErr    = retry.LastErrorOnly(true)
 )
 
 func (clients Clients) GetForChainId(chainId string) *lensclient.ChainClient {
@@ -187,16 +194,12 @@ func Run(cfg *config.Config, home string) error {
 
 					bz := defaultClient.Codec.Marshaler.MustMarshal(req)
 					metrics.HistoricQueryRequests.WithLabelValues("historic_requests").Inc()
-					res, err := defaultClient.RPCClient.ABCIQuery(ctx, "/quicksilver.interchainquery.v1.QuerySrvr/Queries", bz)
-					if err != nil {
-						if strings.Contains(err.Error(), "Client.Timeout") {
-							err := logger.Log("error", fmt.Sprintf("timeout: %s", err.Error()))
-							if err != nil {
-								return
-							}
-							continue CNT
-						}
-						panic(fmt.Sprintf("panic(3): %v", err))
+					var res *coretypes.ResultABCIQuery
+					if err = retry.Do(func() error {
+						res, err = defaultClient.RPCClient.ABCIQuery(ctx, "/quicksilver.interchainquery.v1.QuerySrvr/Queries", bz)
+						return err
+					}, RtyAtt, RtyDel, RtyErr); err != nil {
+						continue CNT
 					}
 					out := &qstypes.QueryRequestsResponse{}
 					err = defaultClient.Codec.Marshaler.Unmarshal(res.Response.Value, out)
@@ -265,10 +268,15 @@ func handleHistoricRequests(queries []qstypes.Query, sourceChainId string, logge
 
 		currentheight, found := cache.Get("currentblock/" + q.ChainId)
 		if !found {
-			block, err := globalCfg.Cl[q.ChainId].RPCClient.Block(ctx, nil)
-			if err != nil {
-				panic(fmt.Sprintf("panic(6): %v", err))
+			var err error
+			var block *coretypes.ResultBlock
+			if err = retry.Do(func() error {
+				block, err = globalCfg.Cl[q.ChainId].RPCClient.Block(ctx, nil)
+				return err
+			}, RtyAtt, RtyDel, RtyErr); err != nil {
+				continue
 			}
+
 			currentheight = block.Block.LastCommit.Height - 1
 			cache.SetWithTTL("currentblock/"+q.ChainId, currentheight, 1, 6*time.Second)
 			logger.Log("msg", "caching currentblock", "height", currentheight)
@@ -321,11 +329,13 @@ func handleEvent(event coretypes.ResultEvent, logger log.Logger, metrics prommet
 
 		req, err := hex.DecodeString(request[i])
 		if err != nil {
-			panic(fmt.Sprintf("panic(4): %v", err))
+			_ = logger.Log("worker", "handler", "msg", err.Error())
+			continue
 		}
 		h, err := strconv.ParseInt(height[i], 10, 64)
 		if err != nil {
-			panic(fmt.Sprintf("panic(5): %v", err))
+			_ = logger.Log("worker", "handler", "msg", err.Error())
+			continue
 		}
 
 		handle := false
@@ -341,7 +351,7 @@ func handleEvent(event coretypes.ResultEvent, logger log.Logger, metrics prommet
 		}
 
 		if !handle {
-			_ = logger.Log("msg", "Ignoring current query; not a permitted type", "id", queryIds[i], "type", types[i])
+			_ = logger.Log("worker", "handler", "msg", "Ignoring current query; not a permitted type", "id", queryIds[i], "type", types[i])
 			continue
 		}
 
@@ -353,15 +363,20 @@ func handleEvent(event coretypes.ResultEvent, logger log.Logger, metrics prommet
 		if h == 0 {
 			currentheight, found := cache.Get("currentblock/" + chains[i])
 			if !found {
-				block, err := globalCfg.Cl[chains[i]].RPCClient.Block(ctx, nil)
-				if err != nil {
-					panic(fmt.Sprintf("panic(6): %v", err))
+				var err error
+				var block *coretypes.ResultBlock
+				if err = retry.Do(func() error {
+					block, err = globalCfg.Cl[chains[i]].RPCClient.Block(ctx, nil)
+					return err
+				}, RtyAtt, RtyDel, RtyErr); err != nil {
+					continue
 				}
+
 				currentheight = block.Block.LastCommit.Height - 1
 				cache.SetWithTTL("currentblock/"+chains[i], currentheight, 1, 6*time.Second)
-				logger.Log("msg", "caching currentblock", "height", currentheight)
+				logger.Log("worker", "handler", "msg", "caching currentblock", "height", currentheight)
 			} else {
-				logger.Log("msg", "using cached currentblock", "height", currentheight)
+				logger.Log("worker", "handler", "msg", "using cached currentblock", "height", currentheight)
 			}
 			h = currentheight.(int64)
 		}
@@ -397,10 +412,14 @@ func RunGRPCQuery(ctx context.Context, client *lensclient.ChainClient, method st
 
 	metrics.ABCIRequests.WithLabelValues("abci_requests", method).Inc()
 
-	abciRes, err := client.QueryABCI(ctx, abciReq)
-	if err != nil {
+	var abciRes abcitypes.ResponseQuery
+	if err = retry.Do(func() error {
+		abciRes, err = client.QueryABCI(ctx, abciReq)
+		return err
+	}, RtyAtt, RtyDel, RtyErr); err != nil {
 		return abcitypes.ResponseQuery{}, nil, err
 	}
+
 	return abciRes, md, nil
 }
 
@@ -408,29 +427,17 @@ func retryLightblock(ctx context.Context, client *lensclient.ChainClient, height
 	lightBlock, found := cache.Get("lightblock/" + client.Config.ChainID + "/" + fmt.Sprintf("%d", height))
 	var err error
 	if !found {
-		interval := 1
-		//_ = logger.Log("msg", "Querying lightblock", "attempt", interval)
-		lightBlock, err = client.LightProvider.LightBlock(ctx, height)
-		metrics.LightBlockRequests.WithLabelValues("lightblock_requests").Inc()
-
-		if err != nil {
-			for {
-				time.Sleep(time.Duration(interval) * time.Second)
-				//_ = logger.Log("msg", "Requerying lightblock", "attempt", interval)
-				lightBlock, err = client.LightProvider.LightBlock(ctx, height)
-				metrics.LightBlockRequests.WithLabelValues("lightblock_requests").Inc()
-				interval = interval + 1
-				if err == nil {
-					break
-				} else if interval > maxTime {
-					return nil, fmt.Errorf("unable to query light block, max interval exceeded")
-				}
-			}
+		if err = retry.Do(func() error {
+			lightBlock, err = client.LightProvider.LightBlock(ctx, height)
+			metrics.LightBlockRequests.WithLabelValues("lightblock_requests").Inc()
+			return err
+		}, RtyAtt, retry.Delay(time.Millisecond*800), RtyErr); err != nil {
+			return nil, fmt.Errorf("unable to query light block, max interval exceeded")
 		}
+
 		cache.Set("lightblock/"+client.Config.ChainID+"/"+fmt.Sprintf("%d", height), lightBlock, 5)
-	} //else {
-	//_ = logger.Log("msg", "got lightblock from cache")
-	//}
+
+	}
 	return lightBlock.(*tmtypes.LightBlock), err
 }
 
@@ -458,7 +465,8 @@ func doRequest(query Query, logger log.Logger, metrics prommetrics.Metrics) {
 	}
 	inMd, ok := metadata.FromOutgoingContext(newCtx)
 	if !ok {
-		panic("failed on not ok")
+		_ = logger.Log("msg", "Error: Failed getting context metadata", "type", query.Type, "id", query.QueryId, "height", query.Height)
+		return
 	}
 
 	var res abcitypes.ResponseQuery
@@ -471,7 +479,7 @@ func doRequest(query Query, logger log.Logger, metrics prommetrics.Metrics) {
 		err = client.Codec.Marshaler.Unmarshal(query.Request, &request)
 		if err != nil {
 			_ = logger.Log("msg", "Error: Failed in Unmarshalling Request", "type", query.Type, "id", query.QueryId, "height", query.Height)
-			panic(fmt.Sprintf("panic(7a): %v", err))
+			return
 		}
 		request.OrderBy = txtypes.OrderBy_ORDER_BY_DESC
 		request.Limit = 200
@@ -481,14 +489,14 @@ func doRequest(query Query, logger log.Logger, metrics prommetrics.Metrics) {
 		query.Request, err = client.Codec.Marshaler.Marshal(&request)
 		if err != nil {
 			_ = logger.Log("msg", "Error: Failed in Marshalling Request", "type", query.Type, "id", query.QueryId, "height", query.Height)
-			panic(fmt.Sprintf("panic(7b): %v", err))
+			return
 		}
 
 		_ = logger.Log("msg", "Handling GetTxsEvents", "id", query.QueryId, "height", query.Height)
 		res, _, err = RunGRPCQuery(ctx, client, "/"+query.Type, query.Request, inMd, metrics)
 		if err != nil {
 			_ = logger.Log("msg", "Error: Failed in RunGRPCQuery", "type", query.Type, "id", query.QueryId, "height", query.Height)
-			panic(fmt.Sprintf("panic(7c): %v", err))
+			return
 		}
 
 	case "tendermint.Tx":
@@ -539,7 +547,7 @@ func doRequest(query Query, logger log.Logger, metrics prommetrics.Metrics) {
 		res, _, err = RunGRPCQuery(ctx, client, "/"+query.Type, query.Request, inMd, metrics)
 		if err != nil {
 			_ = logger.Log("msg", "Error: Failed in RunGRPCQuery", "type", query.Type, "id", query.QueryId, "height", query.Height)
-			panic(fmt.Sprintf("panic(7): %v", err))
+			return
 		}
 	}
 
@@ -684,23 +692,24 @@ func getHeader(ctx context.Context, client, submitClient *lensclient.ChainClient
 	_ = logger.Log("msg", "Fetching client update for height", "height", requestHeight+1)
 	newBlock, err := retryLightblock(ctx, client, int64(requestHeight+1), 5, logger, metrics)
 	if err != nil {
-		panic(fmt.Sprintf("Error: Could not fetch updated LC from chain - bailing: %v", err))
+		return nil, fmt.Errorf("error: Could not fetch new light block from chain: %v", err)
 	}
 
 	trustedBlock, err := retryLightblock(ctx, client, int64(clientHeight.RevisionHeight)+1, 5, logger, metrics)
 	if err != nil {
-		panic(fmt.Sprintf("Error: Could not fetch updated LC from chain - bailing (2): %v", err))
+		return nil, fmt.Errorf("error: Could not fetch trusted light block from chain: %v", err)
 	}
 
 	valSet := tmtypes.NewValidatorSet(newBlock.ValidatorSet.Validators)
 	trustedValSet := tmtypes.NewValidatorSet(trustedBlock.ValidatorSet.Validators)
 	protoVal, err := valSet.ToProto()
 	if err != nil {
-		panic(fmt.Sprintf("Error: Could not get valset from chain: %v", err))
+		return nil, fmt.Errorf("error: Could not fetch new valset from chain: %v", err)
 	}
+
 	trustedProtoVal, err := trustedValSet.ToProto()
 	if err != nil {
-		panic(fmt.Sprintf("Error: Could not get trusted valset from chain: %v", err))
+		return nil, fmt.Errorf("error: Could not fetch trusted valset from chain: %v", err)
 	}
 
 	header := &tmclient.Header{
@@ -808,7 +817,7 @@ func unique(msgSlice []sdk.Msg, logger log.Logger) []sdk.Msg {
 			if _, value := clientUpdateHeights[key]; !value {
 				clientUpdateHeights[key] = true
 				list = append(list, entry)
-				_ = logger.Log("msg", "Added ClientUpdate message", "height", key)
+				//_ = logger.Log("msg", "Added ClientUpdate message", "height", key)
 			}
 			continue
 		}
@@ -817,7 +826,7 @@ func unique(msgSlice []sdk.Msg, logger log.Logger) []sdk.Msg {
 			if _, value := keys[msg2.QueryId]; !value {
 				keys[msg2.QueryId] = true
 				list = append(list, entry)
-				_ = logger.Log("msg", "Added SubmitResponse message", "id", msg2.QueryId)
+				//_ = logger.Log("msg", "Added SubmitResponse message", "id", msg2.QueryId)
 			}
 		}
 	}
