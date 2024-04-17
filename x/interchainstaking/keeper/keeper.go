@@ -700,6 +700,7 @@ func (k *Keeper) UpdateRedemptionRate(ctx sdk.Context, zone *types.Zone, epochRe
 	zone.LastRedemptionRate = zone.RedemptionRate
 	zone.RedemptionRate = ratio
 	k.SetZone(ctx, zone)
+	k.EventManagerKeeper.MarkCompleted(ctx, types.ModuleName, zone.ChainId, "trigger_rr")
 }
 
 func (k *Keeper) OverrideRedemptionRateNoCap(ctx sdk.Context, zone *types.Zone) {
