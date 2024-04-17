@@ -80,6 +80,7 @@ func Run(cfg *config.Config, home string) error {
 	}
 	TxMsgs = MaxTxMsgs
 	globalCfg = cfg
+
 	logger := log.NewLogfmtLogger(log.NewSyncWriter(os.Stderr))
 	logger = log.With(logger, "ts", log.DefaultTimestampUTC, "caller", log.DefaultCaller)
 
@@ -108,7 +109,7 @@ func Run(cfg *config.Config, home string) error {
 	defer func() {
 		err := Close()
 		if err != nil {
-			stdlog.Fatal("Error in Closing the routine")
+			logger.Log("worker", "error", "error in Closing the routine")
 		}
 	}()
 	for _, c := range cfg.Chains {
@@ -134,9 +135,13 @@ func Run(cfg *config.Config, home string) error {
 	if !ok {
 		panic("unable to create default chainClient; Client is nil")
 	}
+	if !defaultClient.KeyExists(defaultClient.Config.Key) {
+		return fmt.Errorf("no key called %s exists; please run `icq-relayer keys add` to generate a key, and then fund it on chain", defaultClient.Config.Key)
+	}
 	err = defaultClient.RPCClient.Start()
 	if err != nil {
 		_ = logger.Log("error", err.Error())
+		return err
 	}
 
 	_ = logger.Log("worker", "init", "msg", "configuring subscription on default chainClient", "chain", defaultClient.Config.ChainID)

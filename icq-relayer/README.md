@@ -6,45 +6,17 @@ The Interchain Queries (ICQ) Relayer watches for events emitted by the ICQ modul
 
 The ICQ Relayer configuration is controlled by a single YAML file, the default path of which is $HOME/.icq/config.
 
-```yaml
-default_chain: quicksilver-1
-chains:
-  quicksilver-1:
-    key: default
-    chain-id: quicksilver-1
-    rpc-addr: https://rpc.quicksilver.zone:443
-    grpc-addr: https://grpc.quicksilver.zone:443
-    account-prefix: quick
-    keyring-backend: test
-    gas-adjustment: 1.2
-    gas-prices: 0.01uqck
-    min-gas-amount: 0
-    key-directory: /home/joe/.icq/keys
-    debug: false
-    timeout: 20s
-    block-timeout: 10s
-    output-format: json
-    sign-mode: direct
-  osmosis-1:
-    key: default
-    chain-id: osmosis-1
-    rpc-addr: https://osmosis-1.technofractal.com:443
-    grpc-addr: https://gprc.osmosis-1.technofractal.com:443
-    account-prefix: osmo
-    keyring-backend: test
-    gas-adjustment: 1.2
-    gas-prices: 0.01uosmo
-    min-gas-amount: 0
-    key-directory: /home/joe/.icq/keys
-    debug: false
-    timeout: 20s
-    block-timeout: 10s
-    output-format: json
-    sign-mode: direct
-
-```
+The first run of `icq-relayer` will generate a mainnet compatible config file, if one is not present.
 
 ## Changelog
+
+### v0.11.0
+- Add support for cosmos-sdk v0.50 GetTxsEvents request type
+- Make metrics bind port configurable
+- Set default config file to be mainnet ready
+- Reduce log verbosity
+- Add max_msgs_per_tx congig variable
+- Dynamic MsgPerTx: Make the MsgPerTx value reduce on failed requests, and slowly return to MaxMsgsPerTx over time on success
 
 ### v0.10.0
 - Add CometBFT v0.37 compatibility.
