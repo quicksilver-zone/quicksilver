@@ -16,6 +16,8 @@ import (
 	supplytypes "github.com/quicksilver-zone/quicksilver/x/supply/types"
 )
 
+const wasmModuleName = "wasm"
+
 func (app *Quicksilver) setUpgradeHandlers() {
 	for _, upgrade := range upgrades.Upgrades() {
 		app.UpgradeKeeper.SetUpgradeHandler(
@@ -63,7 +65,10 @@ func (app *Quicksilver) setUpgradeStoreLoaders() {
 		storeUpgrades = &storetypes.StoreUpgrades{
 			Added: []string{packetforwardtypes.ModuleName, supplytypes.ModuleName},
 		}
-
+	case upgrades.V010600rc1UpgradeName:
+		storeUpgrades = &storetypes.StoreUpgrades{
+			Deleted: []string{wasmModuleName},
+		}
 	default:
 		// no-op
 	}
