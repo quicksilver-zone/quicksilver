@@ -7,11 +7,12 @@ import (
 
 func (suite *KeeperTestSuite) TestAfterZoneCreated() {
 	zone := &icstypes.Zone{
-		ChainId:       "testzone-1",
-		ConnectionId:  "connection-0",
-		AccountPrefix: "test",
-		LocalDenom:    "uqtst",
-		BaseDenom:     "utst",
+		ChainId:         "testzone-1",
+		ConnectionId:    "connection-0",
+		AccountPrefix:   "test",
+		LocalDenom:      "uqtst",
+		BaseDenom:       "utst",
+		TransferChannel: "channel-1",
 	}
 	suite.Run("ProtocolData", func() {
 		k := suite.GetQuicksilverApp(suite.chainA).ParticipationRewardsKeeper

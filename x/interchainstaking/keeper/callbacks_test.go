@@ -32,6 +32,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	ibctypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
+	connectiontypes "github.com/cosmos/ibc-go/v5/modules/core/03-connection/types"
 	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
 	lightclienttypes "github.com/cosmos/ibc-go/v5/modules/light-clients/07-tendermint/types"
 
@@ -1008,6 +1009,8 @@ func (suite *KeeperTestSuite) TestHandleDistributeRewardsCallback() {
 			name:      "no connection setup",
 			zoneSetup: func() {},
 			connectionSetup: func() string {
+				// Uninitialize the connection
+				quicksilver.IBCKeeper.ConnectionKeeper.SetConnection(ctxA, suite.path.EndpointA.ConnectionID, connectiontypes.ConnectionEnd{State: connectiontypes.UNINITIALIZED})
 				return ""
 			},
 			responseMsg: func() []byte {

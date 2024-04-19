@@ -12,6 +12,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	icatypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/types"
+	transfertypes "github.com/cosmos/ibc-go/v5/modules/apps/transfer/types"
 	ibcexported "github.com/cosmos/ibc-go/v5/modules/core/exported"
 	tmclienttypes "github.com/cosmos/ibc-go/v5/modules/light-clients/07-tendermint/types"
 
@@ -51,6 +52,11 @@ func (k *Keeper) HandleRegisterZoneProposal(ctx sdk.Context, p *types.RegisterZo
 		return errors.New("client state is not active")
 	}
 
+	_, found = k.IBCKeeper.ChannelKeeper.GetChannel(ctx, transfertypes.PortID, p.TransferChannel)
+	if !found {
+		return errors.New("unable to fetch channel")
+	}
+
 	zone := &types.Zone{
 		ChainId:            chainID,
 		ConnectionId:       p.ConnectionId,
@@ -67,6 +73,7 @@ func (k *Keeper) HandleRegisterZoneProposal(ctx sdk.Context, p *types.RegisterZo
 		UnbondingPeriod:    int64(tmClientState.UnbondingPeriod),
 		MessagesPerTx:      p.MessagesPerTx,
 		Is_118:             p.Is_118,
+		TransferChannel:    p.TransferChannel,
 	}
 	k.SetZone(ctx, zone)
 
@@ -210,7 +217,12 @@ func (k *Keeper) HandleUpdateZoneProposal(ctx sdk.Context, p *types.UpdateZonePr
 				return err
 			}
 			zone.Is_118 = boolValue
-
+		case "transfer_channel":
+			_, found = k.IBCKeeper.ChannelKeeper.GetChannel(ctx, transfertypes.PortID, change.Value)
+			if !found {
+				return errors.New("unable to fetch channel")
+			}
+			zone.TransferChannel = change.Value
 		case "connection_id":
 			if !strings.HasPrefix(change.Value, "connection-") {
 				return errors.New("unexpected connection format")
