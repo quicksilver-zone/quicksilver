@@ -18,6 +18,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/avast/retry-go/v4"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/quicksilver-zone/quicksilver/icq-relayer/pkg/config"
@@ -48,17 +49,26 @@ import (
 
 type Clients []*lensclient.ChainClient
 
-const VERSION = "icq/v0.10.0"
+const (
+	VERSION = "icq/v0.11.0"
+)
 
 var (
+	MaxTxMsgs             int
 	WaitInterval          = time.Second * 6
 	HistoricQueryInterval = time.Second * 15
-	MaxHistoricQueries    = 12
-	MaxTxMsgs             = 12
+	TxMsgs                = MaxTxMsgs
 	ctx                   = context.Background()
 	sendQueue             = map[string]chan sdk.Msg{}
 	cache                 *ristretto.Cache
 	globalCfg             *config.Config
+	LastReduced           time.Time
+
+	// Variables used for retries
+	RtyAttNum = uint(5)
+	RtyAtt    = retry.Attempts(RtyAttNum)
+	RtyDel    = retry.Delay(time.Millisecond * 400)
+	RtyErr    = retry.LastErrorOnly(true)
 )
 
 func (clients Clients) GetForChainId(chainId string) *lensclient.ChainClient {
@@ -71,7 +81,13 @@ func (clients Clients) GetForChainId(chainId string) *lensclient.ChainClient {
 }
 
 func Run(cfg *config.Config, home string) error {
+	MaxTxMsgs = cfg.MaxMsgsPerTx
+	if MaxTxMsgs == 0 {
+		MaxTxMsgs = 40
+	}
+	TxMsgs = MaxTxMsgs
 	globalCfg = cfg
+
 	logger := log.NewLogfmtLogger(log.NewSyncWriter(os.Stderr))
 	logger = log.With(logger, "ts", log.DefaultTimestampUTC, "caller", log.DefaultCaller)
 
@@ -94,13 +110,13 @@ func Run(cfg *config.Config, home string) error {
 
 	http.Handle("/metrics", promHandler)
 	go func() {
-		stdlog.Fatal(http.ListenAndServe(":2112", nil))
+		stdlog.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", cfg.BindPort), nil))
 	}()
 
 	defer func() {
 		err := Close()
 		if err != nil {
-			stdlog.Fatal("Error in Closing the routine")
+			logger.Log("worker", "init", "msg", "error in closing the routine")
 		}
 	}()
 	for _, c := range cfg.Chains {
@@ -126,9 +142,13 @@ func Run(cfg *config.Config, home string) error {
 	if !ok {
 		panic("unable to create default chainClient; Client is nil")
 	}
+	if !defaultClient.KeyExists(defaultClient.Config.Key) {
+		return fmt.Errorf("no key called %s exists; please run `icq-relayer keys add` to generate a key, and then fund it on chain", defaultClient.Config.Key)
+	}
 	err = defaultClient.RPCClient.Start()
 	if err != nil {
 		_ = logger.Log("error", err.Error())
+		return err
 	}
 
 	_ = logger.Log("worker", "init", "msg", "configuring subscription on default chainClient", "chain", defaultClient.Config.ChainID)
@@ -174,16 +194,12 @@ func Run(cfg *config.Config, home string) error {
 
 					bz := defaultClient.Codec.Marshaler.MustMarshal(req)
 					metrics.HistoricQueryRequests.WithLabelValues("historic_requests").Inc()
-					res, err := defaultClient.RPCClient.ABCIQuery(ctx, "/quicksilver.interchainquery.v1.QuerySrvr/Queries", bz)
-					if err != nil {
-						if strings.Contains(err.Error(), "Client.Timeout") {
-							err := logger.Log("error", fmt.Sprintf("timeout: %s", err.Error()))
-							if err != nil {
-								return
-							}
-							continue CNT
-						}
-						panic(fmt.Sprintf("panic(3): %v", err))
+					var res *coretypes.ResultABCIQuery
+					if err = retry.Do(func() error {
+						res, err = defaultClient.RPCClient.ABCIQuery(ctx, "/quicksilver.interchainquery.v1.QuerySrvr/Queries", bz)
+						return err
+					}, RtyAtt, RtyDel, RtyErr); err != nil {
+						continue CNT
 					}
 					out := &qstypes.QueryRequestsResponse{}
 					err = defaultClient.Codec.Marshaler.Unmarshal(res.Response.Value, out)
@@ -231,7 +247,7 @@ func handleHistoricRequests(queries []qstypes.Query, sourceChainId string, logge
 		return queries[i].CallbackId == "allbalances" || queries[i].CallbackId == "depositinterval" || queries[i].CallbackId == "deposittx" || queries[i].LastEmission.GT(queries[j].LastEmission)
 	})
 
-	for _, query := range queries[0:int(math.Min(float64(len(queries)), float64(MaxHistoricQueries)))] {
+	for _, query := range queries[0:int(math.Min(float64(len(queries)), float64(TxMsgs)))] {
 		_, ok := globalCfg.Cl[query.ChainId]
 		if !ok {
 			continue
@@ -252,10 +268,15 @@ func handleHistoricRequests(queries []qstypes.Query, sourceChainId string, logge
 
 		currentheight, found := cache.Get("currentblock/" + q.ChainId)
 		if !found {
-			block, err := globalCfg.Cl[q.ChainId].RPCClient.Block(ctx, nil)
-			if err != nil {
-				panic(fmt.Sprintf("panic(6): %v", err))
+			var err error
+			var block *coretypes.ResultBlock
+			if err = retry.Do(func() error {
+				block, err = globalCfg.Cl[q.ChainId].RPCClient.Block(ctx, nil)
+				return err
+			}, RtyAtt, RtyDel, RtyErr); err != nil {
+				continue
 			}
+
 			currentheight = block.Block.LastCommit.Height - 1
 			cache.SetWithTTL("currentblock/"+q.ChainId, currentheight, 1, 6*time.Second)
 			logger.Log("msg", "caching currentblock", "height", currentheight)
@@ -308,11 +329,13 @@ func handleEvent(event coretypes.ResultEvent, logger log.Logger, metrics prommet
 
 		req, err := hex.DecodeString(request[i])
 		if err != nil {
-			panic(fmt.Sprintf("panic(4): %v", err))
+			_ = logger.Log("worker", "handler", "msg", err.Error())
+			continue
 		}
 		h, err := strconv.ParseInt(height[i], 10, 64)
 		if err != nil {
-			panic(fmt.Sprintf("panic(5): %v", err))
+			_ = logger.Log("worker", "handler", "msg", err.Error())
+			continue
 		}
 
 		handle := false
@@ -328,28 +351,32 @@ func handleEvent(event coretypes.ResultEvent, logger log.Logger, metrics prommet
 		}
 
 		if !handle {
-			_ = logger.Log("msg", "Ignoring current query; not a permitted type", "id", queryIds[i], "type", types[i])
+			_ = logger.Log("worker", "handler", "msg", "Ignoring current query; not a permitted type", "id", queryIds[i], "type", types[i])
 			continue
 		}
 
 		if _, found := cache.Get("query/" + queryIds[i]); found {
 			// break if this is in the cache
-			fmt.Println("avoiding duplicate")
 			continue
 		}
 
 		if h == 0 {
 			currentheight, found := cache.Get("currentblock/" + chains[i])
 			if !found {
-				block, err := globalCfg.Cl[chains[i]].RPCClient.Block(ctx, nil)
-				if err != nil {
-					panic(fmt.Sprintf("panic(6): %v", err))
+				var err error
+				var block *coretypes.ResultBlock
+				if err = retry.Do(func() error {
+					block, err = globalCfg.Cl[chains[i]].RPCClient.Block(ctx, nil)
+					return err
+				}, RtyAtt, RtyDel, RtyErr); err != nil {
+					continue
 				}
+
 				currentheight = block.Block.LastCommit.Height - 1
 				cache.SetWithTTL("currentblock/"+chains[i], currentheight, 1, 6*time.Second)
-				logger.Log("msg", "caching currentblock", "height", currentheight)
+				logger.Log("worker", "handler", "msg", "caching currentblock", "height", currentheight)
 			} else {
-				logger.Log("msg", "using cached currentblock", "height", currentheight)
+				logger.Log("worker", "handler", "msg", "using cached currentblock", "height", currentheight)
 			}
 			h = currentheight.(int64)
 		}
@@ -360,6 +387,7 @@ func handleEvent(event coretypes.ResultEvent, logger log.Logger, metrics prommet
 
 	for _, q := range queries {
 		go doRequestWithMetrics(q, log.With(logger, "src_chain", q.ChainId), metrics)
+		time.Sleep(75 * time.Millisecond) // try to avoid thundering herd.
 	}
 }
 
@@ -384,10 +412,14 @@ func RunGRPCQuery(ctx context.Context, client *lensclient.ChainClient, method st
 
 	metrics.ABCIRequests.WithLabelValues("abci_requests", method).Inc()
 
-	abciRes, err := client.QueryABCI(ctx, abciReq)
-	if err != nil {
+	var abciRes abcitypes.ResponseQuery
+	if err = retry.Do(func() error {
+		abciRes, err = client.QueryABCI(ctx, abciReq)
+		return err
+	}, RtyAtt, RtyDel, RtyErr); err != nil {
 		return abcitypes.ResponseQuery{}, nil, err
 	}
+
 	return abciRes, md, nil
 }
 
@@ -395,28 +427,16 @@ func retryLightblock(ctx context.Context, client *lensclient.ChainClient, height
 	lightBlock, found := cache.Get("lightblock/" + client.Config.ChainID + "/" + fmt.Sprintf("%d", height))
 	var err error
 	if !found {
-		interval := 1
-		_ = logger.Log("msg", "Querying lightblock", "attempt", interval)
-		lightBlock, err = client.LightProvider.LightBlock(ctx, height)
-		metrics.LightBlockRequests.WithLabelValues("lightblock_requests").Inc()
-
-		if err != nil {
-			for {
-				time.Sleep(time.Duration(interval) * time.Second)
-				_ = logger.Log("msg", "Requerying lightblock", "attempt", interval)
-				lightBlock, err = client.LightProvider.LightBlock(ctx, height)
-				metrics.LightBlockRequests.WithLabelValues("lightblock_requests").Inc()
-				interval = interval + 1
-				if err == nil {
-					break
-				} else if interval > maxTime {
-					return nil, fmt.Errorf("unable to query light block, max interval exceeded")
-				}
-			}
+		if err = retry.Do(func() error {
+			lightBlock, err = client.LightProvider.LightBlock(ctx, height)
+			metrics.LightBlockRequests.WithLabelValues("lightblock_requests").Inc()
+			return err
+		}, RtyAtt, retry.Delay(time.Millisecond*800), RtyErr); err != nil {
+			return nil, fmt.Errorf("unable to query light block, max interval exceeded")
 		}
+
 		cache.Set("lightblock/"+client.Config.ChainID+"/"+fmt.Sprintf("%d", height), lightBlock, 5)
-	} else {
-		_ = logger.Log("msg", "got lightblock from cache")
+
 	}
 	return lightBlock.(*tmtypes.LightBlock), err
 }
@@ -445,7 +465,8 @@ func doRequest(query Query, logger log.Logger, metrics prommetrics.Metrics) {
 	}
 	inMd, ok := metadata.FromOutgoingContext(newCtx)
 	if !ok {
-		panic("failed on not ok")
+		_ = logger.Log("msg", "Error: Failed getting context metadata", "type", query.Type, "id", query.QueryId, "height", query.Height)
+		return
 	}
 
 	var res abcitypes.ResponseQuery
@@ -454,27 +475,28 @@ func doRequest(query Query, logger log.Logger, metrics prommetrics.Metrics) {
 	switch query.Type {
 	// until we fix ordering and pagination in the binary, we can override the query here.
 	case "cosmos.tx.v1beta1.Service/GetTxsEvent":
-		request := txtypes.GetTxsEventRequest{}
+		request := qstypes.GetTxsEventRequest{}
 		err = client.Codec.Marshaler.Unmarshal(query.Request, &request)
 		if err != nil {
 			_ = logger.Log("msg", "Error: Failed in Unmarshalling Request", "type", query.Type, "id", query.QueryId, "height", query.Height)
-			panic(fmt.Sprintf("panic(7a): %v", err))
+			return
 		}
 		request.OrderBy = txtypes.OrderBy_ORDER_BY_DESC
 		request.Limit = 200
 		request.Pagination.Limit = 200
+		request.Query = request.Events[0]
 
 		query.Request, err = client.Codec.Marshaler.Marshal(&request)
 		if err != nil {
 			_ = logger.Log("msg", "Error: Failed in Marshalling Request", "type", query.Type, "id", query.QueryId, "height", query.Height)
-			panic(fmt.Sprintf("panic(7b): %v", err))
+			return
 		}
 
 		_ = logger.Log("msg", "Handling GetTxsEvents", "id", query.QueryId, "height", query.Height)
 		res, _, err = RunGRPCQuery(ctx, client, "/"+query.Type, query.Request, inMd, metrics)
 		if err != nil {
 			_ = logger.Log("msg", "Error: Failed in RunGRPCQuery", "type", query.Type, "id", query.QueryId, "height", query.Height)
-			panic(fmt.Sprintf("panic(7c): %v", err))
+			return
 		}
 
 	case "tendermint.Tx":
@@ -525,7 +547,7 @@ func doRequest(query Query, logger log.Logger, metrics prommetrics.Metrics) {
 		res, _, err = RunGRPCQuery(ctx, client, "/"+query.Type, query.Request, inMd, metrics)
 		if err != nil {
 			_ = logger.Log("msg", "Error: Failed in RunGRPCQuery", "type", query.Type, "id", query.QueryId, "height", query.Height)
-			panic(fmt.Sprintf("panic(7): %v", err))
+			return
 		}
 	}
 
@@ -636,18 +658,12 @@ func submitClientUpdate(client, submitClient *lensclient.ChainClient, query Quer
 		_ = logger.Log("msg", fmt.Sprintf("Error: Could not get header %s", err))
 		return
 	}
-	anyHeader, err := clienttypes.PackHeader(header)
+
+	msg, err := clienttypes.NewMsgUpdateClient(clientId.(string), header, submitClient.MustEncodeAccAddr(from))
 	if err != nil {
-		_ = logger.Log("msg", fmt.Sprintf("Error: Could not pack header %s", err))
+		_ = logger.Log("msg", fmt.Sprintf("Error: Could not create msg update: %s", err))
 		return
 	}
-
-	msg := &clienttypes.MsgUpdateClient{
-		ClientId: clientId.(string), // needs to be passed in as part of request.
-		Header:   anyHeader,
-		Signer:   submitClient.MustEncodeAccAddr(from),
-	}
-
 	sendQueue[query.SourceChainId] <- msg
 	metrics.SendQueue.WithLabelValues("send-queue").Set(float64(len(sendQueue)))
 }
@@ -676,23 +692,24 @@ func getHeader(ctx context.Context, client, submitClient *lensclient.ChainClient
 	_ = logger.Log("msg", "Fetching client update for height", "height", requestHeight+1)
 	newBlock, err := retryLightblock(ctx, client, int64(requestHeight+1), 5, logger, metrics)
 	if err != nil {
-		panic(fmt.Sprintf("Error: Could not fetch updated LC from chain - bailing: %v", err))
+		return nil, fmt.Errorf("error: Could not fetch new light block from chain: %v", err)
 	}
 
 	trustedBlock, err := retryLightblock(ctx, client, int64(clientHeight.RevisionHeight)+1, 5, logger, metrics)
 	if err != nil {
-		panic(fmt.Sprintf("Error: Could not fetch updated LC from chain - bailing (2): %v", err))
+		return nil, fmt.Errorf("error: Could not fetch trusted light block from chain: %v", err)
 	}
 
 	valSet := tmtypes.NewValidatorSet(newBlock.ValidatorSet.Validators)
 	trustedValSet := tmtypes.NewValidatorSet(trustedBlock.ValidatorSet.Validators)
 	protoVal, err := valSet.ToProto()
 	if err != nil {
-		panic(fmt.Sprintf("Error: Could not get valset from chain: %v", err))
+		return nil, fmt.Errorf("error: Could not fetch new valset from chain: %v", err)
 	}
+
 	trustedProtoVal, err := trustedValSet.ToProto()
 	if err != nil {
-		panic(fmt.Sprintf("Error: Could not get trusted valset from chain: %v", err))
+		return nil, fmt.Errorf("error: Could not fetch trusted valset from chain: %v", err)
 	}
 
 	header := &tmclient.Header{
@@ -710,8 +727,18 @@ func FlushSendQueue(chainId string, logger log.Logger, metrics prommetrics.Metri
 	toSend := []sdk.Msg{}
 	ch := sendQueue[chainId]
 
+	if LastReduced.Add(time.Minute).Before(time.Now()) {
+		if 2*TxMsgs > MaxTxMsgs {
+			TxMsgs = MaxTxMsgs
+		} else {
+			TxMsgs = 2 * TxMsgs
+		}
+		LastReduced = time.Now()
+		_ = logger.Log("msg", "increased batchsize")
+	}
+
 	for {
-		if len(toSend) > MaxTxMsgs {
+		if len(toSend) > TxMsgs {
 			flush(chainId, toSend, logger, metrics)
 			toSend = []sdk.Msg{}
 		}
@@ -747,22 +774,26 @@ func flush(chainId string, toSend []sdk.Msg, logger log.Logger, metrics prommetr
 					_ = logger.Log("msg", "Tx already in mempool")
 				case resp != nil && resp.Code == 12 && resp.Codespace == "sdk":
 					_ = logger.Log("msg", "Not enough gas")
-				case err.Error() == "context deadline exceeded":
-					_ = logger.Log("msg", "Failed to submit in time, retrying")
-					resp, err := chainClient.SendMsgs(ctx, msgs, VERSION)
-					if err != nil {
-						switch {
-						case resp != nil && resp.Code == 19 && resp.Codespace == "sdk":
-							_ = logger.Log("msg", "Tx already in mempool")
-						case resp != nil && resp.Code == 12 && resp.Codespace == "sdk":
-							_ = logger.Log("msg", "Not enough gas")
-						case err.Error() == "context deadline exceeded":
-							_ = logger.Log("msg", "Failed to submit in time, bailing")
-						default:
-							_ = logger.Log("msg", "Failed to submit after retry; nevermind, we'll try again!", "err", err)
-							metrics.FailedTxs.WithLabelValues("failed_txs").Inc()
-						}
-					}
+				case strings.Contains(err.Error(), "request body too large"):
+					TxMsgs = TxMsgs / 2
+					LastReduced = time.Now()
+					_ = logger.Log("msg", "body too large: reduced batchsize", "size", TxMsgs)
+				// case err.Error() == "context deadline exceeded":
+				// 	_ = logger.Log("msg", "Failed to submit in time, retrying")
+				// 	resp, err := chainClient.SendMsgs(ctx, msgs, VERSION)
+				// 	if err != nil {
+				// 		switch {
+				// 		case resp != nil && resp.Code == 19 && resp.Codespace == "sdk":
+				// 			_ = logger.Log("msg", "Tx already in mempool")
+				// 		case resp != nil && resp.Code == 12 && resp.Codespace == "sdk":
+				// 			_ = logger.Log("msg", "Not enough gas")
+				// 		case err.Error() == "context deadline exceeded":
+				// 			_ = logger.Log("msg", "Failed to submit in time, bailing")
+				// 		default:
+				// 			_ = logger.Log("msg", "Failed to submit after retry; nevermind, we'll try again!", "err", err)
+				// 			metrics.FailedTxs.WithLabelValues("failed_txs").Inc()
+				// 		}
+				// 	}
 				default:
 					_ = logger.Log("msg", "Failed to submit; nevermind, we'll try again!", "err", err)
 					metrics.FailedTxs.WithLabelValues("failed_txs").Inc()
@@ -786,7 +817,7 @@ func unique(msgSlice []sdk.Msg, logger log.Logger) []sdk.Msg {
 			if _, value := clientUpdateHeights[key]; !value {
 				clientUpdateHeights[key] = true
 				list = append(list, entry)
-				_ = logger.Log("msg", "Added ClientUpdate message", "height", key)
+				//_ = logger.Log("msg", "Added ClientUpdate message", "height", key)
 			}
 			continue
 		}
@@ -795,7 +826,7 @@ func unique(msgSlice []sdk.Msg, logger log.Logger) []sdk.Msg {
 			if _, value := keys[msg2.QueryId]; !value {
 				keys[msg2.QueryId] = true
 				list = append(list, entry)
-				_ = logger.Log("msg", "Added SubmitResponse message", "id", msg2.QueryId)
+				//_ = logger.Log("msg", "Added SubmitResponse message", "id", msg2.QueryId)
 			}
 		}
 	}
@@ -806,11 +837,5 @@ func unique(msgSlice []sdk.Msg, logger log.Logger) []sdk.Msg {
 func Close() error {
 	query := tmquery.MustParse(fmt.Sprintf("message.module='%s'", "interchainquery"))
 
-	for _, chainClient := range globalCfg.Cl {
-		err := chainClient.RPCClient.Unsubscribe(ctx, chainClient.Config.ChainID+"-icq", query.String())
-		if err != nil {
-			return err
-		}
-	}
-	return nil
+	return globalCfg.Cl[globalCfg.DefaultChain].RPCClient.Unsubscribe(ctx, globalCfg.Cl[globalCfg.DefaultChain].Config.ChainID+"-icq", query.String())
 }

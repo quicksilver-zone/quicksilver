@@ -12,25 +12,16 @@ import (
 var (
 	homePath       string
 	overridenChain string
-	debug          bool
 	cfg            *config.Config
 	defaultHome    = os.ExpandEnv("$HOME/.icq")
-	appName        = "lens"
+	appName        = "icq-relayer"
 )
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "interchain-queries",
-	Short: "A brief description of your application",
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	// Uncomment the following line if your bare application
-	// has an action associated with it:
-	// Run: func(cmd *cobra.Command, args []string) { },
+	Use:   "icq-relayer",
+	Short: "A relayer for the Quicksilver interchain queries module",
+	Long:  `A relayer for Quicksilver interchain-queries, allowing cryptographically verifiable cross-chain KV lookups.`,
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -67,12 +58,6 @@ func init() {
 	// --home flag
 	rootCmd.PersistentFlags().StringVar(&homePath, flags.FlagHome, defaultHome, "set home directory")
 	if err := viper.BindPFlag(flags.FlagHome, rootCmd.PersistentFlags().Lookup(flags.FlagHome)); err != nil {
-		panic(err)
-	}
-
-	// --debug flag
-	rootCmd.PersistentFlags().BoolVarP(&debug, "debug", "d", false, "debug output")
-	if err := viper.BindPFlag("debug", rootCmd.PersistentFlags().Lookup("debug")); err != nil {
 		panic(err)
 	}
 
