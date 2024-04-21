@@ -865,6 +865,131 @@ func (s *AppTestSuite) InitV160rc0TestZone() {
 		},
 	}
 	s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetZone(s.chainA.GetContext(), &zone)
+}
+
+// UncheckedSetWithdrawalRecord store the withdrawal record without checking the burnAmount.
+// WARNING: This function is intended for testing purposes only and should not be used in production code.
+func (s *AppTestSuite) UncheckedSetWithdrawalRecord(ctx sdk.Context, app *Quicksilver, record icstypes.WithdrawalRecord) {
+	key, err := hex.DecodeString(record.Txhash)
+	if err != nil {
+		panic(err)
+	}
+
+	store := prefix.NewStore(ctx.KVStore(app.GetKey(icstypes.StoreKey)), icstypes.GetWithdrawalKey(record.ChainId, record.Status))
+	bz := app.InterchainstakingKeeper.GetCodec().MustMarshal(&record)
+	store.Set(key, bz)
+}
+
+func (s *AppTestSuite) InitV160TestZones() {
+	cosmosWithdrawal := addressutils.GenerateAddressForTestWithPrefix("cosmos")
+	cosmosPerformance := addressutils.GenerateAddressForTestWithPrefix("cosmos")
+	cosmosDeposit := addressutils.GenerateAddressForTestWithPrefix("cosmos")
+	cosmosDelegate := addressutils.GenerateAddressForTestWithPrefix("cosmos")
+	// cosmos zone
+	zone := icstypes.Zone{
+		ConnectionId:    "connection-77001",
+		ChainId:         "cosmoshub-4",
+		AccountPrefix:   "cosmos",
+		LocalDenom:      "uqatom",
+		BaseDenom:       "uatom",
+		MultiSend:       false,
+		LiquidityModule: false,
+		WithdrawalAddress: &icstypes.ICAAccount{
+			Address:           cosmosWithdrawal,
+			PortName:          "icacontroller-cosmoshub-4.withdrawal",
+			WithdrawalAddress: cosmosWithdrawal,
+		},
+		DelegationAddress: &icstypes.ICAAccount{
+			Address:           cosmosDelegate,
+			PortName:          "icacontroller-cosmoshub-4.delegate",
+			WithdrawalAddress: cosmosWithdrawal,
+		},
+		DepositAddress: &icstypes.ICAAccount{
+			Address:           cosmosDeposit,
+			PortName:          "icacontroller-cosmoshub-4.deposit",
+			WithdrawalAddress: cosmosWithdrawal,
+		},
+		PerformanceAddress: &icstypes.ICAAccount{
+			Address:           cosmosPerformance,
+			PortName:          "icacontroller-cosmoshub-4.performance",
+			WithdrawalAddress: cosmosWithdrawal,
+		},
+	}
+	s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetZone(s.chainA.GetContext(), &zone)
+
+	osmoWithdrawal := addressutils.GenerateAddressForTestWithPrefix("osmo")
+	osmoPerformance := addressutils.GenerateAddressForTestWithPrefix("osmo")
+	osmoDeposit := addressutils.GenerateAddressForTestWithPrefix("osmo")
+	osmoDelegate := addressutils.GenerateAddressForTestWithPrefix("osmo")
+	// osmosis zone
+	zone = icstypes.Zone{
+		ConnectionId:    "connection-77002",
+		ChainId:         "osmosis-1",
+		AccountPrefix:   "osmo",
+		LocalDenom:      "uqosmo",
+		BaseDenom:       "uosmo",
+		MultiSend:       false,
+		LiquidityModule: false,
+		WithdrawalAddress: &icstypes.ICAAccount{
+			Address:           osmoWithdrawal,
+			PortName:          "icacontroller-osmosis-1.withdrawal",
+			WithdrawalAddress: osmoWithdrawal,
+		},
+		DelegationAddress: &icstypes.ICAAccount{
+			Address:           osmoDelegate,
+			PortName:          "icacontroller-osmosis-1.delegate",
+			WithdrawalAddress: osmoWithdrawal,
+		},
+		DepositAddress: &icstypes.ICAAccount{
+			Address:           osmoDeposit,
+			PortName:          "icacontroller-osmosis-1.deposit",
+			WithdrawalAddress: osmoWithdrawal,
+		},
+		PerformanceAddress: &icstypes.ICAAccount{
+			Address:           osmoPerformance,
+			PortName:          "icacontroller-osmosis-1.performance",
+			WithdrawalAddress: osmoWithdrawal,
+		},
+	}
+	s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetZone(s.chainA.GetContext(), &zone)
+	// uni-5 zone
+
+	junoWithdrawal := addressutils.GenerateAddressForTestWithPrefix("juno")
+	junoPerformance := addressutils.GenerateAddressForTestWithPrefix("juno")
+	junoDeposit := addressutils.GenerateAddressForTestWithPrefix("juno")
+	junoDelegate := addressutils.GenerateAddressForTestWithPrefix("juno")
+
+	zone = icstypes.Zone{
+		ConnectionId:    "connection-77003",
+		ChainId:         "juno-1",
+		AccountPrefix:   "juno",
+		LocalDenom:      "uqjuno",
+		BaseDenom:       "ujuno",
+		MultiSend:       false,
+		LiquidityModule: false,
+		WithdrawalAddress: &icstypes.ICAAccount{
+			Address:           junoWithdrawal,
+			PortName:          "icacontroller-juno-1.withdrawal",
+			WithdrawalAddress: junoWithdrawal,
+		},
+		DelegationAddress: &icstypes.ICAAccount{
+			Address:           junoDelegate,
+			PortName:          "icacontroller-juno-1.delegate",
+			WithdrawalAddress: junoWithdrawal,
+		},
+		DepositAddress: &icstypes.ICAAccount{
+			Address:           junoDeposit,
+			PortName:          "icacontroller-juno-1.deposit",
+			WithdrawalAddress: junoWithdrawal,
+		},
+		PerformanceAddress: &icstypes.ICAAccount{
+			Address:           junoPerformance,
+			PortName:          "icacontroller-juno-1.performance",
+			WithdrawalAddress: junoWithdrawal,
+		},
+	}
+	s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetZone(s.chainA.GetContext(), &zone)
+	addVestingAccount(s.chainA.GetContext(), &s.GetQuicksilverApp(s.chainA).AccountKeeper, "quick1qfyntnmlvznvrkk9xqppmcxqcluv7wd74nmyus", 10, 864000, 5000000000)
 
 	// set withdrawal records
 	invalidWithdrawal := icstypes.WithdrawalRecord{
@@ -893,35 +1018,38 @@ func (s *AppTestSuite) InitV160rc0TestZone() {
 		CompletionTime: time.Time{},
 	}
 	s.UncheckedSetWithdrawalRecord(s.chainA.GetContext(), s.GetQuicksilverApp(s.chainA), validWithdrawal)
+
+	s.GetQuicksilverApp(s.chainA).IBCKeeper.ChannelKeeper.SetChannel(s.chainA.GetContext(), "transfer", "channel-2", channeltypes.Channel{Counterparty: channeltypes.NewCounterparty("transfer", "channel-522")})
 }
 
-func (s *AppTestSuite) TestV010600rc0UpgradeHandler() {
-	s.InitV160rc0TestZone()
+func (s *AppTestSuite) TestV010505UpgradeHandler() {
+	s.InitV160TestZones()
 	app := s.GetQuicksilverApp(s.chainA)
+
 	ctx := s.chainA.GetContext()
 
-	handler := upgrades.V010600rc0UpgradeHandler(app.mm,
+	handler := upgrades.V010505UpgradeHandler(app.mm,
 		app.configurator, &app.AppKeepers)
 
 	_, err := handler(ctx, types.Plan{}, app.mm.GetVersionMap())
 	s.NoError(err)
+
+	osmoZone, ok := app.InterchainstakingKeeper.GetZone(ctx, "osmosis-1")
+	s.True(ok)
+	s.Equal(math.NewInt(1_000_000), osmoZone.DustThreshold)
+
+	cosmosZone, ok := app.InterchainstakingKeeper.GetZone(ctx, "cosmoshub-4")
+	s.True(ok)
+	s.Equal(math.NewInt(500_000), cosmosZone.DustThreshold)
+
+	junoZone, ok := app.InterchainstakingKeeper.GetZone(ctx, "juno-1")
+	s.True(ok)
+	s.Equal(math.NewInt(2_000_000), junoZone.DustThreshold)
+
 	// check if the invalid withdrawal record is removed
-	_, found := app.InterchainstakingKeeper.GetWithdrawalRecord(ctx, "cosmoshub-4", fmt.Sprintf("%064d", 1), icstypes.WithdrawStatusQueued)
+	_, found := app.InterchainstakingKeeper.GetWithdrawalRecord(ctx, "juno-1", fmt.Sprintf("%064d", 1), icstypes.WithdrawStatusQueued)
 	s.False(found)
 	// check if the valid withdrawal record is still there
-	_, found = app.InterchainstakingKeeper.GetWithdrawalRecord(ctx, "cosmoshub-4", fmt.Sprintf("%064d", 2), icstypes.WithdrawStatusQueued)
+	_, found = app.InterchainstakingKeeper.GetWithdrawalRecord(ctx, "juno-1", fmt.Sprintf("%064d", 2), icstypes.WithdrawStatusQueued)
 	s.True(found)
-}
-
-// UncheckedSetWithdrawalRecord store the withdrawal record without checking the burnAmount.
-// WARNING: This function is intended for testing purposes only and should not be used in production code.
-func (s *AppTestSuite) UncheckedSetWithdrawalRecord(ctx sdk.Context, app *Quicksilver, record icstypes.WithdrawalRecord) {
-	key, err := hex.DecodeString(record.Txhash)
-	if err != nil {
-		panic(err)
-	}
-
-	store := prefix.NewStore(ctx.KVStore(app.GetKey(icstypes.StoreKey)), icstypes.GetWithdrawalKey(record.ChainId, record.Status))
-	bz := app.InterchainstakingKeeper.GetCodec().MustMarshal(&record)
-	store.Set(key, bz)
 }

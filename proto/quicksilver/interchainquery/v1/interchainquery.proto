@@ -1,8 +1,11 @@
 syntax = "proto3";
 package quicksilver.interchainquery.v1;
 
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "cosmos/tx/v1beta1/service.proto";
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
 
 option go_package = "github.com/quicksilver-zone/quicksilver/x/interchainquery/types";
 
@@ -46,4 +49,30 @@ message DataPoint {
     (gogoproto.nullable) = false
   ];
   bytes value = 4 [(gogoproto.jsontag) = "result,omitempty"];
+}
+
+message GetTxsEventRequest {
+  // events is the list of transaction event type.
+  // Deprecated: post v0.47.x use query instead, which should contain a valid
+  // events query.
+  repeated string events = 1 [deprecated = true];
+
+  // pagination defines a pagination for the request.
+  // Deprecated: post v0.46.x use page and limit instead.
+  cosmos.base.query.v1beta1.PageRequest pagination = 2 [deprecated = true];
+  cosmos.tx.v1beta1.OrderBy order_by = 3;
+
+  // page is the page number to query, starts at 1. If not provided, will
+  // default to first page.
+  uint64 page = 4;
+
+  // limit is the total number of results to be returned in the result page.
+  // If left empty it will default to a value to be set by each app.
+  uint64 limit = 5;
+
+  // query defines the transaction event query that is proxied to Tendermint's
+  // TxSearch RPC method. The query must be valid.
+  //
+  // Since cosmos-sdk 0.50
+  string query = 6;
 }

@@ -1,3 +1,4 @@
+import { saga } from '@chain-registry/assets';
 import { Box, Container, Flex, SlideFade, Spacer, Text, Center } from '@chakra-ui/react';
 import { useChain } from '@cosmos-kit/react';
 import dynamic from 'next/dynamic';
@@ -31,8 +32,8 @@ export interface PortfolioItemInterface {
 
 function Home() {
   const { address } = useChain('quicksilver');
-  const tokens = ['atom', 'osmo', 'stars', 'regen', 'somm', 'juno', 'dydx'];
-  const getExponent = (denom: string) => ['qdydx', 'aqdydx'].includes(denom) ? 18 : 6;
+  const tokens = ['atom', 'osmo', 'stars', 'regen', 'somm', 'juno', 'dydx', 'saga'];
+  const getExponent = (denom: string) => (['qdydx', 'aqdydx'].includes(denom) ? 18 : 6);
 
   const { grpcQueryClient } = useGrpcQueryClient('quicksilver');
 
@@ -43,8 +44,6 @@ function Home() {
   const { APY: quickAPY } = useAPYQuery('quicksilver-2');
   const { liquidRewards, refetch: liquidRefetch } = useLiquidRewardsQuery(address ?? '');
   const { authData, authError, authRefetch } = useAuthChecker(address ?? '');
-
-  
 
   const refetchAll = () => {
     qRefetch();
@@ -60,6 +59,7 @@ function Home() {
   const SOMMELIER_CHAIN_ID = process.env.NEXT_PUBLIC_SOMMELIER_CHAIN_ID;
   const JUNO_CHAIN_ID = process.env.NEXT_PUBLIC_JUNO_CHAIN_ID;
   const DYDX_CHAIN_ID = process.env.NEXT_PUBLIC_DYDX_CHAIN_ID;
+  const SAGA_CHAIN_ID = process.env.NEXT_PUBLIC_SAGA_CHAIN_ID;
 
   const tokenToChainIdMap: { [key: string]: string | undefined } = useMemo(() => {
     return {
@@ -70,43 +70,55 @@ function Home() {
       somm: SOMMELIER_CHAIN_ID,
       juno: JUNO_CHAIN_ID,
       dydx: DYDX_CHAIN_ID,
+      saga: SAGA_CHAIN_ID,
     };
-  }, [COSMOSHUB_CHAIN_ID, OSMOSIS_CHAIN_ID, STARGAZE_CHAIN_ID, REGEN_CHAIN_ID, SOMMELIER_CHAIN_ID, JUNO_CHAIN_ID, DYDX_CHAIN_ID]);
+  }, [
+    COSMOSHUB_CHAIN_ID,
+    OSMOSIS_CHAIN_ID,
+    STARGAZE_CHAIN_ID,
+    REGEN_CHAIN_ID,
+    SOMMELIER_CHAIN_ID,
+    JUNO_CHAIN_ID,
+    DYDX_CHAIN_ID,
+    SAGA_CHAIN_ID,
+  ]);
 
   function getChainIdForToken(tokenToChainIdMap: { [x: string]: any }, baseToken: string) {
     return tokenToChainIdMap[baseToken.toLowerCase()] || null;
   }
-const nonNative  = liquidRewards?.assets;
-const portfolioItems: PortfolioItemInterface[] = useMemo(() => {
-  if (!qbalance || !APYs || !redemptionRates || isLoadingAll || !liquidRewards) return [];
+  const nonNative = liquidRewards?.assets;
+  const portfolioItems: PortfolioItemInterface[] = useMemo(() => {
+    if (!qbalance || !APYs || !redemptionRates || isLoadingAll || !liquidRewards) return [];
 
-  // Flatten nonNative assets into a single array and accumulate amounts for each denom
-  const amountsMap = new Map();
-  Object.values(nonNative || {}).flat().flatMap(reward => reward.Amount).forEach(({ denom, amount }) => {
-    const currentAmount = amountsMap.get(denom) || 0;
-    amountsMap.set(denom, currentAmount + Number(amount));
-  });
+    // Flatten nonNative assets into a single array and accumulate amounts for each denom
+    const amountsMap = new Map();
+    Object.values(nonNative || {})
+      .flat()
+      .flatMap((reward) => reward.Amount)
+      .forEach(({ denom, amount }) => {
+        const currentAmount = amountsMap.get(denom) || 0;
+        amountsMap.set(denom, currentAmount + Number(amount));
+      });
 
-  // Map over the accumulated results to create portfolio items
-  return Array.from(amountsMap.entries()).map(([denom, amount]) => {
-    const normalizedDenom = denom.slice(2); 
-    const chainId = getChainIdForToken(tokenToChainIdMap, normalizedDenom);
-    const tokenPriceInfo = tokenPrices?.find((info) => info.token === normalizedDenom);
-    const redemptionRate = chainId && redemptionRates[chainId] ? redemptionRates[chainId].current : 1;
-    const qTokenPrice = tokenPriceInfo ? tokenPriceInfo.price * redemptionRate : 0;
-    const exp = getExponent(denom);
-    const normalizedAmount = shiftDigits(amount, -exp);
+    // Map over the accumulated results to create portfolio items
+    return Array.from(amountsMap.entries()).map(([denom, amount]) => {
+      const normalizedDenom = denom.slice(2);
+      const chainId = getChainIdForToken(tokenToChainIdMap, normalizedDenom);
+      const tokenPriceInfo = tokenPrices?.find((info) => info.token === normalizedDenom);
+      const redemptionRate = chainId && redemptionRates[chainId] ? redemptionRates[chainId].current : 1;
+      const qTokenPrice = tokenPriceInfo ? tokenPriceInfo.price * redemptionRate : 0;
+      const exp = getExponent(denom);
+      const normalizedAmount = shiftDigits(amount, -exp);
 
-    return {
-      title: 'q' + normalizedDenom.toUpperCase(),
-      amount: normalizedAmount.toString(),
-      qTokenPrice: qTokenPrice,
-      chainId: chainId ?? '',
-    };
-  });
-// eslint-disable-next-line react-hooks/exhaustive-deps
-}, [qbalance, APYs, redemptionRates, isLoadingAll, liquidRewards, nonNative, tokenToChainIdMap, tokenPrices, refetchAll]);
-
+      return {
+        title: 'q' + normalizedDenom.toUpperCase(),
+        amount: normalizedAmount.toString(),
+        qTokenPrice: qTokenPrice,
+        chainId: chainId ?? '',
+      };
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [qbalance, APYs, redemptionRates, isLoadingAll, liquidRewards, nonNative, tokenToChainIdMap, tokenPrices, refetchAll]);
 
   const totalPortfolioValue = useMemo(
     () => portfolioItems.reduce((acc, item) => acc + Number(item.amount) * item.qTokenPrice, 0),
@@ -124,8 +136,6 @@ const portfolioItems: PortfolioItemInterface[] = useMemo(() => {
     () => portfolioItems.reduce((acc, item) => acc + Number(item.amount) * item.qTokenPrice * (APYs[item.chainId] || 0), 0),
     [portfolioItems, APYs],
   );
-
-
 
   const [showRewardsClaim, setShowRewardsClaim] = useState(false);
   const [userClosedRewardsClaim, setUserClosedRewardsClaim] = useState(false);
@@ -146,32 +156,30 @@ const portfolioItems: PortfolioItemInterface[] = useMemo(() => {
   // Data for the assets grid
   // the query return `qbalance` is an array of quicksilver staked assets held by the user
   // assetsData maps over the assets in qbalance and returns the name, balance, apy, native asset denom, and redemption rate.
-  const qtokens = useMemo(() => ['qatom', 'qosmo', 'qstars', 'qregen', 'qsomm', 'qjuno', 'qdydx'], []);
+  const qtokens = useMemo(() => ['qatom', 'qosmo', 'qstars', 'qregen', 'qsomm', 'qjuno', 'qdydx', 'qsaga'], []);
 
-const assetsData = useMemo(() => {
-  return qtokens.map((token) => {
+  const assetsData = useMemo(() => {
+    return qtokens.map((token) => {
+      const baseToken = token.substring(1).toLowerCase();
 
-    const baseToken = token.substring(1).toLowerCase();
+      const asset = qbalance?.find((a) => a.denom.substring(2).toLowerCase() === baseToken);
+      const apyAsset = qtokens.find((a) => a.substring(1).toLowerCase() === baseToken);
+      const chainId = apyAsset ? getChainIdForToken(tokenToChainIdMap, baseToken) : undefined;
 
+      const apy = chainId && chainId !== 'dydx-mainnet-1' && APYs && APYs.hasOwnProperty(chainId) ? APYs[chainId] : 0;
+      const redemptionRate = chainId && redemptionRates && redemptionRates[chainId] ? redemptionRates[chainId].last || 1 : 1;
+      const exp = apyAsset ? getExponent(apyAsset) : 0;
 
-    const asset = qbalance?.find(a => a.denom.substring(2).toLowerCase() === baseToken);
-    const apyAsset = qtokens.find(a => a.substring(1).toLowerCase() === baseToken);
-    const chainId = apyAsset ? getChainIdForToken(tokenToChainIdMap, baseToken) : undefined;
-
-    const apy = (chainId && chainId !== 'dydx-mainnet-1' && APYs && APYs.hasOwnProperty(chainId)) ? APYs[chainId] : 0;
-    const redemptionRate = chainId && redemptionRates && redemptionRates[chainId] ? redemptionRates[chainId].current || 1 : 1;
-    const exp = apyAsset ? getExponent(apyAsset) : 0;
-
-    return {
-      name: token.toUpperCase(),
-      balance: asset ? shiftDigits(Number(asset.amount), -exp).toString() : "0",
-      apy: parseFloat(((apy * 100) / 100).toFixed(4)),
-      native: baseToken.toUpperCase(),
-      redemptionRates: redemptionRate.toString(),
-    };
-  });
-// eslint-disable-next-line react-hooks/exhaustive-deps
-}, [qtokens, qbalance, tokenToChainIdMap, APYs, redemptionRates, refetchAll]);
+      return {
+        name: token.toUpperCase(),
+        balance: asset ? shiftDigits(Number(asset.amount), -exp).toString() : '0',
+        apy: parseFloat(((apy * 100) / 100).toFixed(4)),
+        native: baseToken.toUpperCase(),
+        redemptionRates: redemptionRate.toString(),
+      };
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [qtokens, qbalance, tokenToChainIdMap, APYs, redemptionRates, refetchAll]);
 
   const showAssetsGrid = qbalance && qbalance.length > 0 && !qIsLoading && !qIsError;
 
