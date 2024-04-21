@@ -7,10 +7,7 @@ import (
 	"slices"
 	"time"
 
-	"github.com/tendermint/tendermint/libs/log"
-
 	sdkmath "cosmossdk.io/math"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -27,6 +24,8 @@ import (
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	claimsmanagertypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
+	"github.com/tendermint/tendermint/libs/log"
 
 	icacontrollerkeeper "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/controller/keeper"
 	ibctransferkeeper "github.com/cosmos/ibc-go/v5/modules/apps/transfer/keeper"
@@ -859,4 +858,22 @@ func (k *Keeper) SendToWithdrawal(ctx sdk.Context, zone *types.Zone, sender *typ
 	msgs = append(msgs, &sendMsg)
 
 	return k.SubmitTx(ctx, msgs, sender, "", zone.MessagesPerTx)
+}
+
+// GetClaimedPercentage returns the claimed percentage of the zone.
+func (k *Keeper) GetClaimedPercentage(ctx sdk.Context, zone *types.Zone) (sdk.Dec, error) {
+	claimed := sdk.ZeroDec()
+
+	k.ClaimsManagerKeeper.IterateClaims(ctx, zone.ChainId, func(_ int64, claim claimsmanagertypes.Claim) (stop bool) {
+		claimed = claimed.Add(sdk.NewDecFromInt(claim.Amount))
+		return false
+	})
+	if claimed.IsZero() {
+		return sdk.ZeroDec(), nil
+	}
+	totalSupply := k.BankKeeper.GetSupply(ctx, zone.LocalDenom).Amount
+	if totalSupply.IsZero() {
+		return sdk.ZeroDec(), nil
+	}
+	return claimed.Quo(sdk.NewDecFromInt(totalSupply)), nil
 }

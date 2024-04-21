@@ -51,6 +51,7 @@ type ClaimsManagerKeeper interface {
 	IterateLastEpochUserClaims(ctx sdk.Context, chainID, address string, fn func(index int64, data claimsmanagertypes.Claim) (stop bool))
 	IterateUserClaims(ctx sdk.Context, chainID, address string, fn func(index int64, data claimsmanagertypes.Claim) (stop bool))
 	SetClaim(ctx sdk.Context, claim *claimsmanagertypes.Claim)
+	IterateClaims(ctx sdk.Context, chainID string, fn func(index int64, data claimsmanagertypes.Claim) (stop bool))
 }
 
 type EpochsKeeper interface {
