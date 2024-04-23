@@ -139,6 +139,8 @@ func OsmosisPoolUpdateCallback(ctx sdk.Context, k *Keeper, response []byte, quer
 	}
 
 	poolID := sdk.BigEndianToUint64(query.Request[1:])
+	defer k.EventManagerKeeper.MarkCompleted(ctx, types.ModuleName, "", fmt.Sprintf("submodule/osmosispool/%d", poolID))
+
 	key := fmt.Sprintf("%d", poolID)
 	data, pool, err := GetAndUnmarshalProtocolData[*types.OsmosisPoolProtocolData](ctx, k, key, types.ProtocolDataTypeOsmosisPool)
 	if err != nil {

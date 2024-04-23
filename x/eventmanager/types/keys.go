@@ -28,6 +28,12 @@ const (
 	EventTypeICAWithdrawRewards  = int32(0x06)
 	EventTypeICADelegate         = int32(0x07)
 	EventTypeICAUnbond           = int32(0x08)
+	EventTypeICQGetLatestBlock   = int32(0x09)
+	EventTypeICQOsmosisPool      = int32(0x0a)
+	EventTypeSubmodules          = int32(0x0b)
+	EventTypeCalculateTvls       = int32(0x0c)
+	EventTypeDistributeRewards   = int32(0x0d)
+	
 
 	FieldEventType   = "eventtype"
 	FieldModule      = "module"
@@ -37,6 +43,4 @@ const (
 	FieldCallback    = "callback"
 )
 
-var (
-	KeyPrefixEvent = []byte{0x01}
-)
+var KeyPrefixEvent = []byte{0x01}

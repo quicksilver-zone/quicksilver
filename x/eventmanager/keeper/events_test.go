@@ -9,7 +9,7 @@ import (
 	"github.com/quicksilver-zone/quicksilver/x/eventmanager/types"
 )
 
-var GLOBAL_VAR = 0
+var GlobalVar = 0
 
 // ___________________________________________________________________________________________________
 
@@ -54,12 +54,12 @@ func (c EventCallbacks) RegisterCallbacks() types.EventCallbacks {
 // -----------------------------------
 
 func testCallback(k *keeper.Keeper, ctx sdk.Context, args []byte) error {
-	GLOBAL_VAR = 12345
+	GlobalVar = 12345
 	return nil
 }
 
 func testCallbackWithArgs(k *keeper.Keeper, ctx sdk.Context, args []byte) error {
-	GLOBAL_VAR = int(args[0])
+	GlobalVar = int(args[0])
 	return nil
 }
 
@@ -71,7 +71,7 @@ func (suite *KeeperTestSuite) TestEventLifecycle() {
 
 	callbackHandler := EventCallbacks{&app.EventManagerKeeper, make(map[string]EventCallback, 0)}
 
-	app.EventManagerKeeper.SetCallbackHandler(types.ModuleName, callbackHandler)
+	suite.NoError(app.EventManagerKeeper.SetCallbackHandler(types.ModuleName, callbackHandler))
 
 	app.EventManagerKeeper.AddEvent(ctx, types.ModuleName, suite.chainB.ChainID, "test", "testCallback", types.EventTypeICADelegate, types.EventStatusPending, nil, nil)
 
@@ -79,14 +79,14 @@ func (suite *KeeperTestSuite) TestEventLifecycle() {
 
 	suite.Equal(1, len(events))
 
-	GLOBAL_VAR = 0
+	GlobalVar = 0
 
 	app.EventManagerKeeper.Trigger(ctx, types.ModuleName, suite.chainB.ChainID)
 
 	event, found := app.EventManagerKeeper.GetEvent(ctx, types.ModuleName, suite.chainB.ChainID, "test")
 
 	suite.True(found)
-	suite.Equal(12345, GLOBAL_VAR)
+	suite.Equal(12345, GlobalVar)
 
 	suite.Equal(event.EventStatus, types.EventStatusActive)
 
@@ -103,7 +103,7 @@ func (suite *KeeperTestSuite) TestEventLifecycleWithCondition() {
 
 	callbackHandler := EventCallbacks{&app.EventManagerKeeper, make(map[string]EventCallback, 0)}
 
-	app.EventManagerKeeper.SetCallbackHandler(types.ModuleName, callbackHandler)
+	suite.NoError(app.EventManagerKeeper.SetCallbackHandler(types.ModuleName, callbackHandler))
 
 	condition, err := types.NewConditionAll(ctx, []*types.FieldValue{
 		{Field: types.FieldModule, Value: types.ModuleName, Operator: types.FieldOperator_EQUAL, Negate: false},
@@ -119,7 +119,7 @@ func (suite *KeeperTestSuite) TestEventLifecycleWithCondition() {
 
 	suite.Equal(2, len(events))
 
-	GLOBAL_VAR = 0
+	GlobalVar = 0
 
 	// martCompleted doesn't require an explicit callback
 	app.EventManagerKeeper.MarkCompleted(ctx, types.ModuleName, suite.chainB.ChainID, "test1")
@@ -131,7 +131,7 @@ func (suite *KeeperTestSuite) TestEventLifecycleWithCondition() {
 	suite.Equal(1, len(events))
 
 	suite.True(found)
-	suite.Equal(12345, GLOBAL_VAR)
+	suite.Equal(12345, GlobalVar)
 
 	suite.Equal(event.EventStatus, types.EventStatusActive)
 
@@ -148,7 +148,7 @@ func (suite *KeeperTestSuite) TestEventLifecycleWithCondition2() {
 
 	callbackHandler := EventCallbacks{&app.EventManagerKeeper, make(map[string]EventCallback, 0)}
 
-	app.EventManagerKeeper.SetCallbackHandler(types.ModuleName, callbackHandler)
+	suite.NoError(app.EventManagerKeeper.SetCallbackHandler(types.ModuleName, callbackHandler))
 
 	condition1, err := types.NewConditionAll(ctx, []*types.FieldValue{
 		{Field: types.FieldModule, Value: types.ModuleName, Operator: types.FieldOperator_EQUAL, Negate: false},
@@ -171,9 +171,10 @@ func (suite *KeeperTestSuite) TestEventLifecycleWithCondition2() {
 
 	events := app.EventManagerKeeper.AllEvents(ctx)
 
+	fmt.Println(events)
 	suite.Equal(3, len(events))
 
-	GLOBAL_VAR = 0
+	GlobalVar = 0
 
 	// markCompleted doesn't require an explicit callback
 	app.EventManagerKeeper.MarkCompleted(ctx, types.ModuleName, suite.chainB.ChainID, "test1")
@@ -185,13 +186,13 @@ func (suite *KeeperTestSuite) TestEventLifecycleWithCondition2() {
 
 	suite.Equal(2, len(events))
 
-	suite.Equal(1, GLOBAL_VAR)
+	suite.Equal(1, GlobalVar)
 
 	suite.Equal(event.EventStatus, types.EventStatusActive)
 
 	app.EventManagerKeeper.MarkCompleted(ctx, types.ModuleName, suite.chainB.ChainID, "test")
 
-	suite.Equal(2, GLOBAL_VAR)
+	suite.Equal(2, GlobalVar)
 
 	events = app.EventManagerKeeper.AllEvents(ctx)
 
