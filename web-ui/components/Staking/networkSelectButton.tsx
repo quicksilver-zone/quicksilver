@@ -10,12 +10,10 @@ import {
   Text,
   useDisclosure,
   Input,
-  Box,
   InputGroup,
   InputLeftAddon,
 } from '@chakra-ui/react';
 import axios from 'axios';
-import { debounce } from 'lodash'; // import a debounce utility function
 import React, { useEffect, useState, useCallback } from 'react';
 
 import { networks as prodNetworks, testNetworks as devNetworks } from '@/state/chains/prod';

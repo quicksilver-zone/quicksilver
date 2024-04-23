@@ -1,4 +1,3 @@
-import { agoric, saga } from '@chain-registry/assets';
 import { Box, Container, Flex, SlideFade, Spacer, Text, Center } from '@chakra-ui/react';
 import { useChain } from '@cosmos-kit/react';
 import dynamic from 'next/dynamic';

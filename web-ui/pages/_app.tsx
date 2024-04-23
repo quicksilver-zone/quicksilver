@@ -1,7 +1,7 @@
 import '../styles/globals.css';
 
 import '@interchain-ui/react/styles';
-import { agoric } from '@chain-registry/assets';
+
 import { Chain } from '@chain-registry/types';
 import { Box, ChakraProvider, Flex } from '@chakra-ui/react';
 import { Registry } from '@cosmjs/proto-signing';
