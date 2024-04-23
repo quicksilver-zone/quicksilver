@@ -412,6 +412,7 @@ func (appKeepers *AppKeepers) InitKeepers(
 		&appKeepers.InterchainQueryKeeper,
 		appKeepers.InterchainstakingKeeper,
 		appKeepers.ClaimsManagerKeeper,
+		appKeepers.EventManagerKeeper,
 		authtypes.FeeCollectorName,
 		proofOpsFn,
 		selfProofOpsFn,
@@ -429,6 +430,9 @@ func (appKeepers *AppKeepers) InitKeepers(
 		panic(err)
 	}
 
+	if err := appKeepers.EventManagerKeeper.SetCallbackHandler(participationrewardstypes.ModuleName, appKeepers.ParticipationRewardsKeeper.EventCallbackHandler()); err != nil {
+		panic(err)
+	}
 	// Quicksilver Keepers
 	appKeepers.EpochsKeeper = epochskeeper.NewKeeper(appCodec, appKeepers.keys[epochstypes.StoreKey])
 	appKeepers.ParticipationRewardsKeeper.SetEpochsKeeper(appKeepers.EpochsKeeper)
