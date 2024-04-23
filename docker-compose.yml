@@ -98,7 +98,7 @@ services:
       - osmosisd
       - start
   hermes:
-    image: informalsystems/hermes:v1.8.0
+    image: informalsystems/hermes:v1.8.2
     hostname: hermes
     volumes:
       - ./data/hermes:/home/hermes/.hermes
@@ -121,3 +121,4 @@ services:
       - icq-relayer
       - run
     restart: always
+

@@ -1,7 +1,7 @@
 package types
 
 import (
-	fmt "fmt"
+	"fmt"
 	"strconv"
 	"strings"
 )
@@ -35,7 +35,6 @@ func (e Event) ResolveAnyFieldValues(fvs []*FieldValue) (bool, error) {
 }
 
 func (e Event) resolveFieldValue(fv *FieldValue) (bool, error) {
-
 	switch {
 	case fv.Field == FieldEventType:
 		if fv.Operator != FieldOperator_EQUAL {

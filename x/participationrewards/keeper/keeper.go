@@ -51,6 +51,7 @@ type Keeper struct {
 	icsKeeper           types.InterchainStakingKeeper
 	epochsKeeper        epochskeeper.Keeper
 	ClaimsManagerKeeper types.ClaimsManagerKeeper
+	EventManagerKeeper  types.EventManagerKeeper
 
 	feeCollectorName     string
 	PrSubmodules         map[cmtypes.ClaimType]Submodule
@@ -71,6 +72,7 @@ func NewKeeper(
 	icqk types.InterchainQueryKeeper,
 	icsk types.InterchainStakingKeeper,
 	cmk types.ClaimsManagerKeeper,
+	emk types.EventManagerKeeper,
 	feeCollectorName string,
 	proofValidationFn utils.ProofOpsFn,
 	selfProofValidationFn utils.SelfProofOpsFn,
@@ -95,6 +97,7 @@ func NewKeeper(
 		IcqKeeper:            icqk,
 		icsKeeper:            icsk,
 		ClaimsManagerKeeper:  cmk,
+		EventManagerKeeper:   emk,
 		feeCollectorName:     feeCollectorName,
 		PrSubmodules:         LoadSubmodules(),
 		ValidateProofOps:     proofValidationFn,
@@ -159,14 +162,14 @@ func (k *Keeper) UpdateSelfConnectionData(ctx sdk.Context) error {
 	return nil
 }
 
-func (k *Keeper) GetModuleBalance(ctx sdk.Context) sdkmath.Int {
+func (k *Keeper) GetModuleBalance(ctx sdk.Context) sdk.Coin {
 	denom := k.stakingKeeper.BondDenom(ctx)
 	moduleAddress := k.accountKeeper.GetModuleAddress(types.ModuleName)
 	moduleBalance := k.bankKeeper.GetBalance(ctx, moduleAddress, denom)
 
 	k.Logger(ctx).Info("module account", "address", moduleAddress, "balance", moduleBalance)
 
-	return moduleBalance.Amount
+	return moduleBalance
 }
 
 func LoadSubmodules() map[cmtypes.ClaimType]Submodule {

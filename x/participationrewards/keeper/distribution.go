@@ -191,22 +191,18 @@ func (k *Keeper) CalcTokenValues(ctx sdk.Context) (TokenValues, error) {
 // AllocateZoneRewards executes zone based rewards allocation. This entails
 // rewards that are proportionally distributed to zones based on the tvl for
 // each zone relative to the tvl of the QS protocol.
-func (k *Keeper) AllocateZoneRewards(ctx sdk.Context, tvs TokenValues, allocation types.RewardsAllocation) error {
-	k.Logger(ctx).Info("allocateZoneRewards", "token values", tvs, "allocation", allocation)
+func (k *Keeper) AllocateZoneRewards(ctx sdk.Context, tvs TokenValues) error {
+	// <<--- move to callback
 
-	if err := k.SetZoneAllocations(ctx, tvs, allocation); err != nil {
-		return err
-	}
-
-	k.AllocateValidatorSelectionRewards(ctx)
-
-	return k.AllocateHoldingsRewards(ctx)
+	return k.AllocateHoldingsRewards(ctx) // << -- move to callback
 }
 
 // SetZoneAllocations returns the proportional zone rewards allocations as a
 // map indexed by the zone id.
-func (k *Keeper) SetZoneAllocations(ctx sdk.Context, tvs TokenValues, allocation types.RewardsAllocation) error {
-	k.Logger(ctx).Info("setZoneAllocations", "allocation", allocation)
+func (k *Keeper) SetZoneAllocations(ctx sdk.Context, tvs TokenValues) error {
+	holdingAllocation := k.GetHoldingAllocation(ctx, types.ModuleName)
+	validatorAllocation := k.GetValidatorAllocation(ctx, types.ModuleName)
+	k.Logger(ctx).Info("setZoneAllocations", "holdingAllocation", holdingAllocation, "validatorAllocation", validatorAllocation)
 
 	otvl := sdk.ZeroDec()
 	// pass 1: iterate zones - set tvl & calc overall tvl
@@ -235,15 +231,13 @@ func (k *Keeper) SetZoneAllocations(ctx sdk.Context, tvs TokenValues, allocation
 	// pass 2: iterate zones - calc zone tvl proportion & set allocations
 	k.icsKeeper.IterateZones(ctx, func(index int64, zone *icstypes.Zone) (stop bool) {
 		if zone.Tvl.IsNil() {
-			zone.Tvl = sdk.ZeroDec()
+			return false
 		}
 
 		zp := zone.Tvl.Quo(otvl)
 		k.Logger(ctx).Info("zone proportion", "zone", zone.ChainId, "proportion", zp)
-
-		zone.ValidatorSelectionAllocation = sdk.NewDecFromInt(allocation.ValidatorSelection).Mul(zp).TruncateInt().Uint64()
-		zone.HoldingsAllocation = sdk.NewDecFromInt(allocation.Holdings).Mul(zp).TruncateInt().Uint64()
-		k.icsKeeper.SetZone(ctx, zone)
+		k.SetValidatorAllocation(ctx, zone.ChainId, sdk.NewCoin(validatorAllocation.Denom, sdk.NewDecFromInt(validatorAllocation.Amount).Mul(zp).TruncateInt()))
+		k.SetHoldingAllocation(ctx, zone.ChainId, sdk.NewCoin(holdingAllocation.Denom, sdk.NewDecFromInt(holdingAllocation.Amount).Mul(zp).TruncateInt()))
 		return false
 	})
 
