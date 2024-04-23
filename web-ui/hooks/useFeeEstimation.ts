@@ -21,7 +21,6 @@ export const useFeeEstimation = (chainName: string) => {
     if (!stargateClient) {
       throw new Error('getSigningStargateClient error');
     }
-    console.log(address)
     const gasEstimation = await stargateClient.simulate(
       address,
       messages,
