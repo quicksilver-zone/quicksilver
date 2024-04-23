@@ -1,10 +1,11 @@
 package types
 
 import (
+	"github.com/gogo/protobuf/proto"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/gogo/protobuf/proto"
 )
 
 type EMKeeper interface {

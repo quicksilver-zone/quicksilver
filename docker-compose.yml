@@ -98,7 +98,7 @@ services:
       - osmosisd
       - start
   hermes:
-    image: informalsystems/hermes:v1.8.0
+    image: informalsystems/hermes:v1.8.2
     hostname: hermes
     volumes:
       - ./data/hermes:/home/hermes/.hermes
@@ -121,19 +121,19 @@ services:
       - icq-relayer
       - run
     restart: always
-  relayer:
-    image: quicksilverzone/relayer:v2.3.0
-    build:
-      context: .
-      dockerfile: Dockerfile.relayer
-    volumes:
-      - ./data/rly:/rly/.relayer
-    command:
-      - rly
-      - start
-      - demo
+  #relayer:
+  #  image: quicksilverzone/relayer:v2.3.0
+  #  build:
+  #    context: .
+  #    dockerfile: Dockerfile.relayer
+  #  volumes:
+  #    - ./data/rly:/rly/.relayer
+  #  command:
+  #    - rly
+  #    - start
+  #    - demo
       #- -p
       #- events
       #- -b
       #- "100"
-    restart: always
+  #  restart: always

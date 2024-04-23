@@ -22,7 +22,12 @@ const (
 	ProofTypeLPFarm   = "lpfarm"
 )
 
-var KeyPrefixProtocolData = []byte{0x00}
+var (
+	KeyPrefixProtocolData        = []byte{0x00}
+	KeyPrefixHoldingAllocation   = []byte{0x01}
+	KeyPrefixValidatorAllocation = []byte{0x02}
+	KeyPrefixValues              = []byte{0x03}
+)
 
 func GetProtocolDataKey(pdType ProtocolDataType, key []byte) []byte {
 	return append(sdk.Uint64ToBigEndian(uint64(pdType)), key...)

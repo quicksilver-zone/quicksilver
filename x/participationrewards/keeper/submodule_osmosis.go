@@ -17,6 +17,7 @@ import (
 
 	osmosistypes "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types"
 	osmolockup "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/lockup"
+	emtypes "github.com/quicksilver-zone/quicksilver/x/eventmanager/types"
 	"github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 )
 
@@ -69,6 +70,19 @@ func (m *OsmosisModule) Hooks(ctx sdk.Context, k *Keeper) {
 			OsmosisPoolUpdateCallbackID,
 			0,
 		) // query pool data
+
+		k.EventManagerKeeper.AddEvent(
+			ctx,
+			types.ModuleName,
+			"",
+			fmt.Sprintf("submodule/osmosispool/%d", pool.PoolID),
+			"",
+			emtypes.EventTypeICQOsmosisPool,
+			emtypes.EventStatusActive,
+			nil,
+			nil,
+		)
+
 		return false
 	})
 }

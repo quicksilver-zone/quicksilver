@@ -21,7 +21,6 @@ type Keeper struct {
 
 // NewKeeper returns a new instance of zones Keeper.
 func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey) Keeper {
-
 	return Keeper{
 		cdc:       cdc,
 		storeKey:  storeKey,
@@ -48,7 +47,6 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 }
 
 func (k Keeper) Call(ctx sdk.Context, moduleName string, callbackID string, payload []byte) error {
-
 	module, found := k.callbacks[moduleName]
 	if !found {
 		return fmt.Errorf("bad module %s", moduleName)

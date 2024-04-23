@@ -18,8 +18,7 @@ type LiquidTokensModule struct{}
 
 var _ Submodule = &LiquidTokensModule{}
 
-func (*LiquidTokensModule) Hooks(_ sdk.Context, _ *Keeper) {
-}
+func (*LiquidTokensModule) Hooks(_ sdk.Context, _ *Keeper) {}
 
 func (*LiquidTokensModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.MsgSubmitClaim) (math.Int, error) {
 	// message
