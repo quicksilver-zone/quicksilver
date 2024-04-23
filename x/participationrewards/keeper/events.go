@@ -1,13 +1,12 @@
 package keeper
 
 import (
-	"encoding/json"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	emtypes "github.com/quicksilver-zone/quicksilver/x/eventmanager/types"
-	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
+	"github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 )
 
 // ___________________________________________________________________________________________________
@@ -46,50 +45,49 @@ func (c EventCallbacks) AddCallback(id string, fn interface{}) emtypes.EventCall
 
 func (c EventCallbacks) RegisterCallbacks() emtypes.EventCallbacks {
 	return c.
-		AddCallback(ICQEmitDelegatorDelegations, EventCallback(EmitDelegatorDelegations)).
-		AddCallback(TriggerCalculateRedemptionRate, EventCallback(CalculateRedemptionRate))
+		AddCallback(CalculateValues, EventCallback(CalculateTokenValues)).
+		AddCallback(Submodules, EventCallback(SubmoduleHooks)).
+		AddCallback(DistributeRewards, EventCallback(DistributeParticipationRewards))
 }
 
 const (
-	ICQEmitDelegatorDelegations    = "ICQEmitDelegatorDelegations"
-	TriggerCalculateRedemptionRate = "CalculateRedemptionRate"
+	CalculateValues   = "CalculateValues"
+	Submodules        = "Submodules"
+	DistributeRewards = "DistributeRewards"
 )
 
 // -----------------------------------
 // Callback Handlers
 // -----------------------------------
 
-type DelegatorDelegationsParams struct {
-	ChainID      string
-	ConnectionID string
-	Request      []byte
-}
+func CalculateTokenValues(k *Keeper, ctx sdk.Context, args []byte) error {
+	defer k.EventManagerKeeper.MarkCompleted(ctx, types.ModuleName, "", "calc_tokens")
 
-func EmitDelegatorDelegations(k *Keeper, ctx sdk.Context, args []byte) error {
-	var params DelegatorDelegationsParams
-	err := json.Unmarshal(args, &params)
+	tvs, err := k.CalcTokenValues(ctx)
 	if err != nil {
 		return err
 	}
 
-	k.ICQKeeper.MakeRequest(
-		ctx,
-		params.ConnectionID,
-		params.ChainID,
-		"cosmos.staking.v1beta1.Query/DelegatorDelegations",
-		params.Request,
-		sdk.NewInt(-1),
-		types.ModuleName,
-		"delegations_epoch",
-		0,
-	)
+	err = k.SetZoneAllocations(ctx, tvs)
+	if err != nil {
+		return err
+	}
+
+	k.QueryValidatorDelegationPerformance(ctx)
+
 	return nil
 }
 
-func CalculateRedemptionRate(k *Keeper, ctx sdk.Context, args []byte) error {
-	zone, found := k.GetZone(ctx, string(args))
-	if !found {
-		return fmt.Errorf("unable to find zone %s", args)
+func SubmoduleHooks(k *Keeper, ctx sdk.Context, args []byte) error {
+	for _, sub := range k.prSubmodules {
+		sub.Hooks(ctx, k)
+		
 	}
-	return k.TriggerRedemptionRate(ctx, &zone)
+	return nil
+}
+
+func DistributeParticipationRewards(k *Keeper, ctx sdk.Context, args []byte) error {
+	// calculate, based on latest token values
+	// allocation based on calculations
+	return nil
 }

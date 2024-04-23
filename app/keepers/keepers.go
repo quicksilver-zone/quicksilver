@@ -431,6 +431,7 @@ func (appKeepers *AppKeepers) InitKeepers(
 		&appKeepers.InterchainQueryKeeper,
 		appKeepers.InterchainstakingKeeper,
 		appKeepers.ClaimsManagerKeeper,
+		appKeepers.EventManagerKeeper,
 		authtypes.FeeCollectorName,
 		proofOpsFn,
 		selfProofOpsFn,
@@ -445,6 +446,10 @@ func (appKeepers *AppKeepers) InitKeepers(
 	}
 
 	if err := appKeepers.InterchainQueryKeeper.SetCallbackHandler(participationrewardstypes.ModuleName, appKeepers.ParticipationRewardsKeeper.CallbackHandler()); err != nil {
+		panic(err)
+	}
+
+	if err := appKeepers.EventManagerKeeper.SetCallbackHandler(participationrewardstypes.ModuleName, appKeepers.ParticipationRewardsKeeper.EventCallbackHandler()); err != nil {
 		panic(err)
 	}
 

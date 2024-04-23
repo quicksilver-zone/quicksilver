@@ -12,15 +12,15 @@ import (
 
 // ----------------------------------------------------------------
 
-func GenerateEventKey(module, chainId, id string) []byte {
-	return []byte(module + chainId + id)
+func GenerateEventKey(module, chainID, id string) []byte {
+	return []byte(module + chainID + id)
 }
 
 // GetEvent returns event.
-func (k Keeper) GetEvent(ctx sdk.Context, module, chainId, id string) (types.Event, bool) {
+func (k Keeper) GetEvent(ctx sdk.Context, module, chainID, id string) (types.Event, bool) {
 	event := types.Event{}
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixEvent)
-	bz := store.Get(GenerateEventKey(module, chainId, id))
+	bz := store.Get(GenerateEventKey(module, chainID, id))
 	if len(bz) == 0 {
 		return event, false
 	}
@@ -37,9 +37,9 @@ func (k Keeper) SetEvent(ctx sdk.Context, event types.Event) {
 }
 
 // DeleteEvent delete event.
-func (k Keeper) DeleteEvent(ctx sdk.Context, module, chainId, id string) {
+func (k Keeper) DeleteEvent(ctx sdk.Context, module, chainID, id string) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixEvent)
-	store.Delete(GenerateEventKey(module, chainId, id))
+	store.Delete(GenerateEventKey(module, chainID, id))
 }
 
 // IterateEvents iterate through queries.
@@ -65,8 +65,8 @@ func (k Keeper) IterateModuleEvents(ctx sdk.Context, module string, fn func(inde
 	k.IteratePrefixedEvents(ctx, []byte(module), fn)
 }
 
-func (k Keeper) IterateModuleChainEvents(ctx sdk.Context, module string, chainId string, fn func(index int64, event types.Event) (stop bool)) {
-	k.IteratePrefixedEvents(ctx, []byte(module+chainId), fn)
+func (k Keeper) IterateModuleChainEvents(ctx sdk.Context, module string, chainID string, fn func(index int64, event types.Event) (stop bool)) {
+	k.IteratePrefixedEvents(ctx, []byte(module+chainID), fn)
 }
 
 // AllEvents returns every eventInfo in the store.
@@ -112,7 +112,6 @@ func (k Keeper) AddEvent(ctx sdk.Context,
 	condition types.ConditionI,
 	payload []byte,
 ) {
-
 	var err error
 	var conditionAny *codectypes.Any
 	if condition != nil {

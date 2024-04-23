@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	epochstypes "github.com/quicksilver-zone/quicksilver/x/epochs/types"
+	emtypes "github.com/quicksilver-zone/quicksilver/x/eventmanager/types"
 	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 	"github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 )
@@ -44,29 +45,44 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, _ int64)
 			SetEpochBlockCallbackID,
 			0,
 		)
+
+		k.EventManagerKeeper.AddEvent(ctx, types.ModuleName, connectionData.ChainID, "get_epoch_height", "", emtypes.EventTypeICQGetLatestBlock, emtypes.EventStatusActive, nil, nil)
 		return false
 	})
 
-	k.Logger(ctx).Info("setting self connection data...")
-	err := k.UpdateSelfConnectionData(ctx)
+	condition, err := emtypes.NewConditionAll(ctx, emtypes.NewFieldValues(emtypes.NewFieldValue(emtypes.FieldIdentifier, "get_epoch_height", emtypes.FieldOperator_EQUAL, true)), false)
 	if err != nil {
 		panic(err)
 	}
 
-	k.Logger(ctx).Info("distribute participation rewards...")
+	// add event to ensure submodule hooks are called when the get_epoch_height calls have returned.
+	k.EventManagerKeeper.AddEvent(ctx, types.ModuleName, "", "submodules", Submodules, emtypes.EventTypeSubmodules, emtypes.EventStatusPending, condition, nil)
 
-	allocation, err := types.GetRewardsAllocations(
-		k.GetModuleBalance(ctx),
-		k.GetParams(ctx).DistributionProportions,
-	)
+	k.Logger(ctx).Info("setting self connection data...")
+	err = k.UpdateSelfConnectionData(ctx)
 	if err != nil {
-		k.Logger(ctx).Error(err.Error())
+		panic(err)
 	}
 
-	k.Logger(ctx).Info("Triggering submodule hooks")
-	for _, sub := range k.prSubmodules {
-		sub.Hooks(ctx, k)
+	condition2, err := emtypes.NewConditionAll(ctx, emtypes.NewFieldValues(emtypes.NewFieldValue(emtypes.FieldIdentifier, "submodule", emtypes.FieldOperator_BEGINSWITH, true)), false)
+	if err != nil {
+		panic(err)
 	}
+	conditionAnd, err := emtypes.NewConditionAnd(ctx, condition, condition2)
+	if err != nil {
+		panic(err)
+	}
+	k.EventManagerKeeper.AddEvent(ctx, types.ModuleName, "", "calc_tokens", CalculateValues, emtypes.EventTypeCalculateTvls, emtypes.EventStatusPending, conditionAnd, nil)
+
+	condition3, err := emtypes.NewConditionAll(ctx, emtypes.NewFieldValues(emtypes.NewFieldValue(emtypes.FieldIdentifier, "calc_tokens", emtypes.FieldOperator_EQUAL, true)), false)
+	if err != nil {
+		panic(err)
+	}
+	conditionAnd2, err := emtypes.NewConditionAnd(ctx, conditionAnd, condition3)
+	if err != nil {
+		panic(err)
+	}
+	k.EventManagerKeeper.AddEvent(ctx, types.ModuleName, "", "distribute_rewards", DistributeRewards, emtypes.EventTypeDistributeRewards, emtypes.EventStatusPending, conditionAnd2, nil)
 
 	// ensure we archive claims before we return!
 	k.icsKeeper.IterateZones(ctx, func(index int64, zone *icstypes.Zone) (stop bool) {
@@ -74,22 +90,35 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, _ int64)
 		return false
 	})
 
-	tvs, err := k.CalcTokenValues(ctx)
+	// ascertain validator scores...
+
+	// tvs, err := k.CalcTokenValues(ctx)
+	// if err != nil {
+	// 	k.Logger(ctx).Error("unable to calculate token values", "error", err.Error())
+	// 	return nil
+	// }
+
+	// if allocation == nil {
+	// 	// if allocation is unset, then return early to avoid panic
+	// 	k.Logger(ctx).Error("nil allocation")
+	// 	return nil
+	// }
+
+	k.Logger(ctx).Info("distribute participation rewards...")
+
+	err = k.DetermineAllocations(
+		ctx,
+		k.GetModuleBalance(ctx),
+		k.GetParams(ctx).DistributionProportions,
+	)
 	if err != nil {
-		k.Logger(ctx).Error("unable to calculate token values", "error", err.Error())
-		return nil
+		k.Logger(ctx).Error(err.Error())
 	}
 
-	if allocation == nil {
-		// if allocation is unset, then return early to avoid panic
-		k.Logger(ctx).Error("nil allocation")
-		return nil
-	}
-
-	if err := k.AllocateZoneRewards(ctx, tvs, *allocation); err != nil {
-		k.Logger(ctx).Error("unable to allocate: tvl is zero", "error", err.Error())
-		return nil
-	}
+	// if err := k.AllocateZoneRewards(ctx, tvs, *allocation); err != nil { // split into calculate a
+	// 	k.Logger(ctx).Error("unable to allocate: tvl is zero", "error", err.Error())
+	// 	return nil
+	// }
 
 	// TODO: remove 'lockup' allocation logic.
 	// if !allocation.Lockup.IsZero() {

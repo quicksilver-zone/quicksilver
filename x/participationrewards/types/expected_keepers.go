@@ -9,6 +9,7 @@ import (
 	ibctmtypes "github.com/cosmos/ibc-go/v5/modules/light-clients/07-tendermint/types"
 
 	claimsmanagertypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
+	emtypes "github.com/quicksilver-zone/quicksilver/x/eventmanager/types"
 	interchainquerytypes "github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
 	interchainstakingtypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 )
@@ -75,5 +76,12 @@ type InterchainStakingKeeper interface {
 	GetDelegationsInProcess(ctx sdk.Context, chainID string) sdkmath.Int
 	IterateDelegatorIntents(ctx sdk.Context, zone *interchainstakingtypes.Zone, snapshot bool, fn func(index int64, intent interchainstakingtypes.DelegatorIntent) (stop bool))
 	GetValidators(ctx sdk.Context, chainID string) []interchainstakingtypes.Validator
+	GetValidatorsAsMap(ctx sdk.Context, chainID string) map[string]interchainstakingtypes.Validator
 	SetValidator(ctx sdk.Context, chainID string, val interchainstakingtypes.Validator) error
+	GetValidator(ctx sdk.Context, chainID string, address []byte) (interchainstakingtypes.Validator, bool)
+}
+
+type EventManagerKeeper interface {
+	AddEvent(ctx sdk.Context, module, chainID, identifier, callback string, eventType, status int32, condtion emtypes.ConditionI, payload []byte)
+	MarkCompleted(ctx sdk.Context, module string, chainID string, identifier string)
 }
