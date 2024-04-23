@@ -85,6 +85,7 @@ const AssetCard: React.FC<AssetCardProps> = ({ address, assetName, balance, apy,
     'juno-1': 'juno',
     'dydx-mainnet-1': 'dydx',
     'ssc-1': 'saga',
+    'agoric-3': 'agoric',
   };
 
   const getChainName = (chainId: string) => {

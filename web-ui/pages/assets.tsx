@@ -1,4 +1,4 @@
-import { saga } from '@chain-registry/assets';
+import { agoric, saga } from '@chain-registry/assets';
 import { Box, Container, Flex, SlideFade, Spacer, Text, Center } from '@chakra-ui/react';
 import { useChain } from '@cosmos-kit/react';
 import dynamic from 'next/dynamic';
@@ -32,7 +32,7 @@ export interface PortfolioItemInterface {
 
 function Home() {
   const { address } = useChain('quicksilver');
-  const tokens = ['atom', 'osmo', 'stars', 'regen', 'somm', 'juno', 'dydx', 'saga'];
+  const tokens = ['atom', 'osmo', 'stars', 'regen', 'somm', 'juno', 'dydx', 'saga', 'agoric'];
   const getExponent = (denom: string) => (['qdydx', 'aqdydx'].includes(denom) ? 18 : 6);
 
   const { grpcQueryClient } = useGrpcQueryClient('quicksilver');
@@ -60,6 +60,7 @@ function Home() {
   const JUNO_CHAIN_ID = process.env.NEXT_PUBLIC_JUNO_CHAIN_ID;
   const DYDX_CHAIN_ID = process.env.NEXT_PUBLIC_DYDX_CHAIN_ID;
   const SAGA_CHAIN_ID = process.env.NEXT_PUBLIC_SAGA_CHAIN_ID;
+  const AGORIC_CHAIN_ID = process.env.NEXT_PUBLIC_AGORIC_CHAIN_ID;
 
   const tokenToChainIdMap: { [key: string]: string | undefined } = useMemo(() => {
     return {
@@ -71,6 +72,7 @@ function Home() {
       juno: JUNO_CHAIN_ID,
       dydx: DYDX_CHAIN_ID,
       saga: SAGA_CHAIN_ID,
+      agoric: AGORIC_CHAIN_ID,
     };
   }, [
     COSMOSHUB_CHAIN_ID,
@@ -81,6 +83,7 @@ function Home() {
     JUNO_CHAIN_ID,
     DYDX_CHAIN_ID,
     SAGA_CHAIN_ID,
+    AGORIC_CHAIN_ID,
   ]);
 
   function getChainIdForToken(tokenToChainIdMap: { [x: string]: any }, baseToken: string) {
@@ -156,7 +159,7 @@ function Home() {
   // Data for the assets grid
   // the query return `qbalance` is an array of quicksilver staked assets held by the user
   // assetsData maps over the assets in qbalance and returns the name, balance, apy, native asset denom, and redemption rate.
-  const qtokens = useMemo(() => ['qatom', 'qosmo', 'qstars', 'qregen', 'qsomm', 'qjuno', 'qdydx', 'qsaga'], []);
+  const qtokens = useMemo(() => ['qatom', 'qosmo', 'qstars', 'qregen', 'qsomm', 'qjuno', 'qdydx', 'qsaga', 'qbld'], []);
 
   const assetsData = useMemo(() => {
     return qtokens.map((token) => {

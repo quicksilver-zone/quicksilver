@@ -1,6 +1,7 @@
 import '../styles/globals.css';
 
 import '@interchain-ui/react/styles';
+import { agoric } from '@chain-registry/assets';
 import { Chain } from '@chain-registry/types';
 import { Box, ChakraProvider, Flex } from '@chakra-ui/react';
 import { Registry } from '@cosmjs/proto-signing';
@@ -69,6 +70,7 @@ function QuickApp({ Component, pageProps }: AppProps) {
     juno: env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_RPC_ENDPOINT_JUNO : process.env.NEXT_PUBLIC_MAINNET_RPC_ENDPOINT_JUNO,
     dydx: env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_RPC_ENDPOINT_DYDX : process.env.NEXT_PUBLIC_MAINNET_RPC_ENDPOINT_DYDX,
     saga: env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_RPC_ENDPOINT_SAGA : process.env.NEXT_PUBLIC_MAINNET_RPC_ENDPOINT_SAGA,
+    agoric: env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_RPC_ENDPOINT_AGORIC : process.env.NEXT_PUBLIC_MAINNET_RPC_ENDPOINT_AGORIC,
   };
 
   const lcdEndpoints = {
@@ -88,6 +90,7 @@ function QuickApp({ Component, pageProps }: AppProps) {
     juno: env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_LCD_ENDPOINT_JUNO : process.env.NEXT_PUBLIC_MAINNET_LCD_ENDPOINT_JUNO,
     dydx: env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_LCD_ENDPOINT_DYDX : process.env.NEXT_PUBLIC_MAINNET_LCD_ENDPOINT_DYDX,
     saga: env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_LCD_ENDPOINT_SAGA : process.env.NEXT_PUBLIC_MAINNET_LCD_ENDPOINT_SAGA,
+    agoric: env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_LCD_ENDPOINT_AGORIC : process.env.NEXT_PUBLIC_MAINNET_LCD_ENDPOINT_AGORIC,
   };
 
   const modalThemeOverrides: ThemeCustomizationProps = {
@@ -267,6 +270,10 @@ function QuickApp({ Component, pageProps }: AppProps) {
                 saga: {
                   rpc: [rpcEndpoints.saga ?? ''],
                   rest: [lcdEndpoints.saga ?? ''],
+                },
+                agoric: {
+                  rpc: [rpcEndpoints.agoric ?? ''],
+                  rest: [lcdEndpoints.agoric ?? ''],
                 },
               },
             }}

@@ -1,9 +1,22 @@
-// CustomMenu.tsx
-
-import { ChevronDownIcon } from '@chakra-ui/icons';
-import { Menu, MenuButton, MenuList, MenuItem, Button, Flex, Image, Text, useDisclosure } from '@chakra-ui/react';
+import { ChevronDownIcon, SearchIcon } from '@chakra-ui/icons';
+import {
+  Menu,
+  MenuButton,
+  MenuList,
+  MenuItem,
+  Button,
+  Flex,
+  Image,
+  Text,
+  useDisclosure,
+  Input,
+  Box,
+  InputGroup,
+  InputLeftAddon,
+} from '@chakra-ui/react';
 import axios from 'axios';
-import React, { useEffect, useState } from 'react';
+import { debounce } from 'lodash'; // import a debounce utility function
+import React, { useEffect, useState, useCallback } from 'react';
 
 import { networks as prodNetworks, testNetworks as devNetworks } from '@/state/chains/prod';
 
@@ -25,25 +38,11 @@ type Network = {
 };
 
 export const NetworkSelect: React.FC<CustomMenuProps> = ({ buttonTextColor = 'white', selectedOption, setSelectedNetwork }) => {
-  const handleOptionClick = (network: (typeof networks)[0]) => {
-    setSelectedNetwork(network);
-  };
-
-  function RotateIcon({ isOpen }: { isOpen: boolean }) {
-    return (
-      <ChevronDownIcon
-        color="complimentary.900"
-        transform={isOpen ? 'rotate(180deg)' : 'none'}
-        transition="transform 0.2s"
-        h="25px"
-        w="25px"
-      />
-    );
-  }
-
+  const [searchTerm, setSearchTerm] = useState('');
+  const [liveNetworks, setLiveNetworks] = useState<Network[]>([]);
   const { isOpen } = useDisclosure();
 
-  const fetchLiveZones = async () => {
+  const fetchLiveZones = useCallback(async () => {
     try {
       const response = await axios.get(`${process.env.NEXT_PUBLIC_QUICKSILVER_API}/quicksilver/interchainstaking/v1/zones`);
       const liveZones = response.data.zones.map((zone: { chain_id: any }) => zone.chain_id);
@@ -52,19 +51,31 @@ export const NetworkSelect: React.FC<CustomMenuProps> = ({ buttonTextColor = 'wh
       console.error('Failed to fetch live zones:', error);
       return [];
     }
-  };
+  }, []);
 
-  const [liveNetworks, setLiveNetworks] = useState<Network[]>([]);
+  const getLiveNetworks = useCallback(async () => {
+    const liveZones = await fetchLiveZones();
+    const filteredNetworks = networks.filter((network) => liveZones.includes(network.chainId));
+    setLiveNetworks(filteredNetworks);
+  }, [fetchLiveZones]);
 
   useEffect(() => {
-    const getLiveZones = async () => {
-      const liveZones = await fetchLiveZones();
-      const filteredNetworks = networks.filter((network) => liveZones.includes(network.chainId));
-      setLiveNetworks(filteredNetworks);
-    };
+    getLiveNetworks();
+  }, [getLiveNetworks]);
 
-    getLiveZones();
-  }, []);
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value.toLowerCase());
+  };
+
+  const [filteredNetworks, setFilteredNetworks] = useState<Network[]>([]);
+
+  useEffect(() => {
+    setFilteredNetworks(liveNetworks.filter((network) => network.name.toLowerCase().includes(searchTerm)));
+  }, [searchTerm, liveNetworks]);
+
+  const handleOptionClick = (network: (typeof networks)[0]) => {
+    setSelectedNetwork(network);
+  };
 
   return (
     <Menu>
@@ -87,12 +98,22 @@ export const NetworkSelect: React.FC<CustomMenuProps> = ({ buttonTextColor = 'wh
         color="white"
         as={Button}
         variant="outline"
-        rightIcon={<RotateIcon isOpen={isOpen} />}
+        rightIcon={<ChevronDownIcon transform={isOpen ? 'rotate(180deg)' : 'none'} transition="transform 0.2s" />}
       >
         {selectedOption.value.toUpperCase()}
       </MenuButton>
       <MenuList borderColor="rgba(35,35,35,1)" mt={1} bgColor="rgba(35,35,35,1)">
-        {liveNetworks.map((network) => (
+        <Flex alignItems="center" borderBottom="1px solid rgba(255,128,0, 0.25)" p={2}>
+          <InputGroup>
+            <InputLeftAddon borderColor={'transparent'} bg="transparent">
+              <SearchIcon color="complimentary.900" />
+            </InputLeftAddon>
+
+            <Input placeholder="Search network..." value={searchTerm} color={'white'} variant="unstyled" onChange={handleSearch} />
+          </InputGroup>
+        </Flex>
+
+        {filteredNetworks.map((network) => (
           <MenuItem
             key={network.value}
             py={4}

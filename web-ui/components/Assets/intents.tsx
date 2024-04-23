@@ -32,7 +32,7 @@ export interface StakingIntentProps {
 const StakingIntent: React.FC<StakingIntentProps> = ({ address, isWalletConnected }) => {
   const networks = process.env.NEXT_PUBLIC_CHAIN_ENV === 'mainnet' ? prodNetworks : devNetworks;
 
-  const chains = ['Cosmos', 'Osmosis', 'Dydx', 'Stargaze', 'Regen', 'Sommelier', 'Juno', 'Saga'];
+  const chains = ['Cosmos', 'Osmosis', 'Dydx', 'Stargaze', 'Regen', 'Sommelier', 'Juno', 'Saga', 'Agoric'];
   const [currentChainIndex, setCurrentChainIndex] = useState(0);
   const [isBottomVisible, setIsBottomVisible] = useState(true);
 

@@ -22,6 +22,7 @@ export const useRpcQueryClient = (chainName: string) => {
     juno: env === 'testnet' ? process.env.TESTNET_RPC_ENDPOINT_JUNO : process.env.MAINNET_RPC_ENDPOINT_JUNO,
     dydx: env === 'testnet' ? process.env.TESTNET_RPC_ENDPOINT_DYDX : process.env.MAINNET_RPC_ENDPOINT_DYDX,
     saga: env === 'testnet' ? process.env.TESTNET_RPC_ENDPOINT_SAGA : process.env.MAINNET_RPC_ENDPOINT_SAGA,
+    agoric: env === 'testnet' ? process.env.TESTNET_RPC_ENDPOINT_AGORIC : process.env.MAINNET_RPC_ENDPOINT_AGORIC,
   };
 
   rpcEndpoint = endpoints[chainName];

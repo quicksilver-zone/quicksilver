@@ -123,7 +123,8 @@ const BigNumber = require('bignumber.js');
 const Long = require('long');
 
 export const useBalanceQuery = (chainName: string, address: string) => {
-  const { grpcQueryClient } = useGrpcQueryClient(chainName);
+  const { grpcQueryClient, grpcQueryClientError } = useGrpcQueryClient(chainName);
+  console.log(grpcQueryClientError)
   const coin = getCoin(chainName);
   const balanceQuery = useQuery(
     ['balance', address],
