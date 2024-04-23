@@ -31,7 +31,7 @@ export interface PortfolioItemInterface {
 
 function Home() {
   const { address } = useChain('quicksilver');
-  const tokens = ['atom', 'osmo', 'stars', 'regen', 'somm', 'juno', 'dydx', 'saga', 'agoric'];
+  const tokens = ['atom', 'osmo', 'stars', 'regen', 'somm', 'juno', 'dydx', 'saga', 'bld'];
   const getExponent = (denom: string) => (['qdydx', 'aqdydx'].includes(denom) ? 18 : 6);
 
   const { grpcQueryClient } = useGrpcQueryClient('quicksilver');
