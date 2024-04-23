@@ -53,8 +53,18 @@ func (k *Keeper) HandleRegisterZoneProposal(ctx sdk.Context, p *types.RegisterZo
 	}
 
 	_, found = k.IBCKeeper.ChannelKeeper.GetChannel(ctx, transfertypes.PortID, p.TransferChannel)
+
 	if !found {
 		return errors.New("unable to fetch channel")
+	}
+	// get connection associated with channel
+	channelConnection, _, err := k.IBCKeeper.ChannelKeeper.GetChannelConnection(ctx, transfertypes.PortID, p.TransferChannel)
+	if err != nil {
+		return err
+	}
+	// Check if the proposed channel is associated with the proposed connection
+	if channelConnection != p.ConnectionId {
+		return errors.New("channel is not associated with the proposed connection")
 	}
 
 	zone := &types.Zone{
