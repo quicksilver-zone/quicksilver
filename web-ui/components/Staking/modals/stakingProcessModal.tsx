@@ -27,18 +27,12 @@ import { cosmos } from 'quicksilverjs';
 import React, { useEffect, useState } from 'react';
 
 
-
-
-
 import { useTx } from '@/hooks';
 import { useFeeEstimation } from '@/hooks/useFeeEstimation';
 import { useZoneQuery } from '@/hooks/useQueries';
 import { shiftDigits } from '@/utils';
 
 import { MultiModal } from './validatorSelectionModal';
-
-
-
 
 const ChakraModalContent = styled(ModalContent)`
   position: relative;
@@ -209,33 +203,58 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
   const { data: zone, isLoading: isZoneLoading } = useZoneQuery(selectedOption?.chainId ?? '');
 
   const valToByte = (val: number) => {
-    if (val > 1) {
-      val = 1;
-    }
-    if (val < 0) {
-      val = 0;
-    }
+    if (val > 1) val = 1;
+    if (val < 0) val = 0;
     return Math.abs(val * 200);
   };
 
+  // Function to add validator to memo
   const addValidator = (valAddr: string, weight: number) => {
-    let { words } = bech32.decode(valAddr);
-    let wordsUint8Array = new Uint8Array(bech32.fromWords(words));
-    let weightByte = valToByte(weight);
+    const { words } = bech32.decode(valAddr);
+    const wordsUint8Array = new Uint8Array(bech32.fromWords(words));
+    const weightByte = valToByte(weight);
+
     return Buffer.concat([Buffer.from([weightByte]), wordsUint8Array]);
   };
 
+  // Function to add mapped address to memo
+  const addMappedAccount = (mappedAddr: string) => {
+    if (!mappedAddr) {
+      return Buffer.alloc(0);
+    }
+    const { words } = bech32.decode(mappedAddr);
+    const wordsUint8Array = new Uint8Array(bech32.fromWords(words));
+
+    // Ensure the address is 20 bytes long (which is what 0x14 means)
+    if (wordsUint8Array.length !== 20) {
+      throw new Error('Mapped address must be 20 bytes long');
+    }
+
+    // 0x00 for field type, 0x14 for length, then the address bytes
+    return Buffer.concat([Buffer.from([0x00, 0x14]), wordsUint8Array]);
+  };
+
+  // Create the memo
   let memoBuffer = Buffer.alloc(0);
 
+  // Example address and intents
+
+  // Add mapped account to memo
+  memoBuffer = Buffer.concat([memoBuffer, addMappedAccount(address ?? 'quick1uwqjtgjhjctjc45ugy7ev5prprhehc7wje9uwh')]);
+
+  // Add validator details to memo
   if (intents.length > 0) {
     intents.forEach((val) => {
       memoBuffer = Buffer.concat([memoBuffer, addValidator(val.address, val.intent)]);
     });
+
+    // Add header with the memo buffer length
     memoBuffer = Buffer.concat([Buffer.from([0x02, memoBuffer.length]), memoBuffer]);
   }
 
-  let memo = memoBuffer.length > 0 && selectedValidators.length > 0 ? memoBuffer.toString('base64') : '';
-
+  // Convert memo to base64 for encoding
+  const memo = memoBuffer.length > 0 ? memoBuffer.toString('base64') : '';
+  console.log(memo);
   let numericAmount = Number(tokenAmount);
 
   if (isNaN(numericAmount) || numericAmount <= 0) {
@@ -274,7 +293,6 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
   const { tx } = useTx(newChainName ?? '');
 
   const { estimateFee } = useFeeEstimation(newChainName ?? '');
-
 
   const handleLiquidStake = async (event: React.MouseEvent) => {
     event.preventDefault();
