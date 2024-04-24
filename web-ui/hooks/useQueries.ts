@@ -792,7 +792,7 @@ export const useZoneQuery = (chainId: string, liveNetworks?: string[]) => {
     returnToSender: apiZone.return_to_sender,
     unbondingEnabled: apiZone.unbonding_enabled,
     depositsEnabled: apiZone.deposits_enabled,
-    is118: apiZone.is118,
+    is118: apiZone.is_118,
     subzoneInfo: apiZone.subzoneInfo,
       };
 

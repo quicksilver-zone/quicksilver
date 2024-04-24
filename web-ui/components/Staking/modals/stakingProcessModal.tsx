@@ -225,7 +225,6 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
     const { words } = bech32.decode(mappedAddr);
     const wordsUint8Array = new Uint8Array(bech32.fromWords(words));
 
-    // Ensure the address is 20 bytes long (which is what 0x14 means)
     if (wordsUint8Array.length !== 20) {
       throw new Error('Mapped address must be 20 bytes long');
     }
@@ -237,24 +236,22 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
   // Create the memo
   let memoBuffer = Buffer.alloc(0);
 
-  // Example address and intents
-
-  // Add mapped account to memo
-  memoBuffer = Buffer.concat([memoBuffer, addMappedAccount(address ?? 'quick1uwqjtgjhjctjc45ugy7ev5prprhehc7wje9uwh')]);
-
   // Add validator details to memo
   if (intents.length > 0) {
     intents.forEach((val) => {
       memoBuffer = Buffer.concat([memoBuffer, addValidator(val.address, val.intent)]);
     });
-
+    // Add mapped account to memo
+    if (zone?.chainId === 'agoric-3' && address) {
+      memoBuffer = Buffer.concat([memoBuffer, addMappedAccount(address)]);
+    }
     // Add header with the memo buffer length
     memoBuffer = Buffer.concat([Buffer.from([0x02, memoBuffer.length]), memoBuffer]);
   }
 
   // Convert memo to base64 for encoding
   const memo = memoBuffer.length > 0 ? memoBuffer.toString('base64') : '';
-  console.log(memo);
+
   let numericAmount = Number(tokenAmount);
 
   if (isNaN(numericAmount) || numericAmount <= 0) {
