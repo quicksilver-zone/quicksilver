@@ -78,8 +78,6 @@ import (
 	participationrewardskeeper "github.com/quicksilver-zone/quicksilver/x/participationrewards/keeper"
 	participationrewardstypes "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 	supplykeeper "github.com/quicksilver-zone/quicksilver/x/supply/keeper"
-	tokenfactorykeeper "github.com/quicksilver-zone/quicksilver/x/tokenfactory/keeper"
-	tokenfactorytypes "github.com/quicksilver-zone/quicksilver/x/tokenfactory/types"
 )
 
 type AppKeepers struct {
@@ -114,7 +112,6 @@ type AppKeepers struct {
 	InterchainQueryKeeper      interchainquerykeeper.Keeper
 	ParticipationRewardsKeeper *participationrewardskeeper.Keeper
 	AirdropKeeper              *airdropkeeper.Keeper
-	TokenFactoryKeeper         tokenfactorykeeper.Keeper
 	SupplyKeeper               supplykeeper.Keeper
 
 	// 		IBC keepers
@@ -426,14 +423,6 @@ func (appKeepers *AppKeepers) InitKeepers(
 		panic(err)
 	}
 
-	appKeepers.TokenFactoryKeeper = tokenfactorykeeper.NewKeeper(
-		appKeepers.keys[tokenfactorytypes.StoreKey],
-		appKeepers.GetSubspace(tokenfactorytypes.ModuleName),
-		appKeepers.AccountKeeper,
-		appKeepers.BankKeeper.WithMintCoinsRestriction(tokenfactorytypes.NewTokenFactoryDenomMintCoinsRestriction()),
-		appKeepers.DistrKeeper,
-	)
-
 	// Quicksilver Keepers
 	appKeepers.EpochsKeeper = epochskeeper.NewKeeper(appCodec, appKeepers.keys[epochstypes.StoreKey])
 	appKeepers.ParticipationRewardsKeeper.SetEpochsKeeper(appKeepers.EpochsKeeper)
@@ -547,7 +536,6 @@ func (*AppKeepers) initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *cod
 	paramsKeeper.Subspace(interchainquerytypes.ModuleName)
 	paramsKeeper.Subspace(participationrewardstypes.ModuleName)
 	paramsKeeper.Subspace(airdroptypes.ModuleName)
-	paramsKeeper.Subspace(tokenfactorytypes.ModuleName)
 
 	return paramsKeeper
 }
@@ -577,7 +565,7 @@ func (appKeepers *AppKeepers) SetupHooks() {
 
 	appKeepers.GovKeeper.SetHooks(
 		govtypes.NewMultiGovHooks(
-		// insert governance hooks receivers here
+			// insert governance hooks receivers here
 		),
 	)
 
