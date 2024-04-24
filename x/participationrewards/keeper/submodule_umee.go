@@ -16,6 +16,7 @@ import (
 	leveragetypes "github.com/quicksilver-zone/quicksilver/third-party-chains/umee-types/leverage/types"
 	"github.com/quicksilver-zone/quicksilver/utils"
 	cmtypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
+	emtypes "github.com/quicksilver-zone/quicksilver/x/eventmanager/types"
 	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 	"github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 )
@@ -70,8 +71,21 @@ func (UmeeModule) Hooks(ctx sdk.Context, k *Keeper) {
 			UmeeReservesUpdateCallbackID,
 			0,
 		) // query reserve data
+
+		k.EventManagerKeeper.AddEvent(
+			ctx,
+			types.ModuleName,
+			"",
+			fmt.Sprintf("submodule/umeereserves/%s", reserves.Denom),
+			"",
+			emtypes.EventTypeICQUmeeReserves,
+			emtypes.EventStatusActive,
+			nil,
+			nil,
+		)
 		return false
 	})
+
 	// umee-types interest scalar update
 	k.IteratePrefixedProtocolDatas(ctx, types.GetPrefixProtocolDataKey(types.ProtocolDataTypeUmeeInterestScalar), func(idx int64, _ []byte, data types.ProtocolData) bool {
 		iinterest, err := types.UnmarshalProtocolData(types.ProtocolDataTypeUmeeInterestScalar, data.Data)
@@ -92,7 +106,17 @@ func (UmeeModule) Hooks(ctx sdk.Context, k *Keeper) {
 			UmeeInterestScalarUpdateCallbackID,
 			0,
 		) // query interest data
-
+		k.EventManagerKeeper.AddEvent(
+			ctx,
+			types.ModuleName,
+			"",
+			fmt.Sprintf("submodule/umeeinterestscalar/%s", interest.Denom),
+			"",
+			emtypes.EventTypeICQUmeeInterestScalar,
+			emtypes.EventStatusActive,
+			nil,
+			nil,
+		)
 		return false
 	})
 	// umee-types utoken supply update
@@ -115,6 +139,17 @@ func (UmeeModule) Hooks(ctx sdk.Context, k *Keeper) {
 			UmeeUTokenSupplyUpdateCallbackID,
 			0,
 		) // query utoken supply
+		k.EventManagerKeeper.AddEvent(
+			ctx,
+			types.ModuleName,
+			"",
+			fmt.Sprintf("submodule/umeeutokensupply/%s", supply.Denom),
+			"",
+			emtypes.EventTypeICQUmeeUTokenSupply,
+			emtypes.EventStatusActive,
+			nil,
+			nil,
+		)
 
 		return false
 	})
@@ -141,6 +176,18 @@ func (UmeeModule) Hooks(ctx sdk.Context, k *Keeper) {
 			0,
 		) // query leverage module balance
 
+		k.EventManagerKeeper.AddEvent(
+			ctx,
+			types.ModuleName,
+			"",
+			fmt.Sprintf("submodule/umeeleveragebalance/%s", balance.Denom),
+			"",
+			emtypes.EventTypeICQUmeeLeverageBalance,
+			emtypes.EventStatusActive,
+			nil,
+			nil,
+		)
+
 		return false
 	})
 	// umee-types total borrowed update
@@ -163,7 +210,17 @@ func (UmeeModule) Hooks(ctx sdk.Context, k *Keeper) {
 			UmeeTotalBorrowsUpdateCallbackID,
 			0,
 		) // query leverage module balance
-
+		k.EventManagerKeeper.AddEvent(
+			ctx,
+			types.ModuleName,
+			"",
+			fmt.Sprintf("submodule/umeetotalborrows/%s", borrows.Denom),
+			"",
+			emtypes.EventTypeICQUmeeTotalBorrows,
+			emtypes.EventStatusActive,
+			nil,
+			nil,
+		)
 		return false
 	})
 }

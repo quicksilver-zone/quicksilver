@@ -228,6 +228,8 @@ func UmeeReservesUpdateCallback(ctx sdk.Context, k *Keeper, response []byte, que
 	if !ok {
 		return fmt.Errorf("unable to find protocol data for umeereserves/%s", denom)
 	}
+	defer k.EventManagerKeeper.MarkCompleted(ctx, types.ModuleName, "", fmt.Sprintf("submodule/umeereserves/%s", denom))
+
 	ireserves, err := types.UnmarshalProtocolData(types.ProtocolDataTypeUmeeReserves, data.Data)
 	if err != nil {
 		return err
@@ -261,6 +263,8 @@ func UmeeTotalBorrowsUpdateCallback(ctx sdk.Context, k *Keeper, response []byte,
 	}
 
 	denom := umeetypes.DenomFromKey(query.Request, umeetypes.KeyPrefixAdjustedTotalBorrow)
+
+	defer k.EventManagerKeeper.MarkCompleted(ctx, types.ModuleName, "", fmt.Sprintf("submodule/umeetotalborrows/%s", denom))
 	data, ok := k.GetProtocolData(ctx, types.ProtocolDataTypeUmeeTotalBorrows, denom)
 	if !ok {
 		return fmt.Errorf("unable to find protocol data for umee-types total borrows/%s", denom)
@@ -298,6 +302,7 @@ func UmeeInterestScalarUpdateCallback(ctx sdk.Context, k *Keeper, response []byt
 	}
 
 	denom := umeetypes.DenomFromKey(query.Request, umeetypes.KeyPrefixInterestScalar)
+	defer k.EventManagerKeeper.MarkCompleted(ctx, types.ModuleName, "", fmt.Sprintf("submodule/umeeinterestscalar/%s", denom))
 	data, ok := k.GetProtocolData(ctx, types.ProtocolDataTypeUmeeInterestScalar, denom)
 	if !ok {
 		return fmt.Errorf("unable to find protocol data for interestscalar/%s", denom)
@@ -335,6 +340,7 @@ func UmeeUTokenSupplyUpdateCallback(ctx sdk.Context, k *Keeper, response []byte,
 	}
 
 	denom := umeetypes.DenomFromKey(query.Request, umeetypes.KeyPrefixUtokenSupply)
+	defer k.EventManagerKeeper.MarkCompleted(ctx, types.ModuleName, "", fmt.Sprintf("submodule/umeeutokensupply/%s", denom))
 	data, ok := k.GetProtocolData(ctx, types.ProtocolDataTypeUmeeUTokenSupply, denom)
 	if !ok {
 		return fmt.Errorf("unable to find protocol data for umee-types utoken supply/%s", denom)
@@ -373,6 +379,8 @@ func UmeeLeverageModuleBalanceUpdateCallback(ctx sdk.Context, k *Keeper, respons
 		return err
 	}
 
+	defer k.EventManagerKeeper.MarkCompleted(ctx, types.ModuleName, "", fmt.Sprintf("submodule/umeeleveragebalance/%s", denom))
+
 	balanceCoin, err := bankkeeper.UnmarshalBalanceCompat(k.cdc, response, denom)
 	if err != nil {
 		return err
@@ -407,6 +415,7 @@ func UmeeLeverageModuleBalanceUpdateCallback(ctx sdk.Context, k *Keeper, respons
 
 // SetEpochBlockCallback records the block height of the registered zone at the epoch boundary.
 func SetEpochBlockCallback(ctx sdk.Context, k *Keeper, args []byte, query icqtypes.Query) error {
+	defer k.EventManagerKeeper.MarkCompleted(ctx, types.ModuleName, query.ChainId, "get_epoch_height")
 	data, ok := k.GetProtocolData(ctx, types.ProtocolDataTypeConnection, query.ChainId)
 	if !ok {
 		return fmt.Errorf("unable to find protocol data for connection/%s", query.ChainId)
