@@ -4,6 +4,7 @@ import (
 	"strings"
 	"testing"
 
+	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
 	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
@@ -24,7 +25,7 @@ func TestRegisterZoneProposal_ValidateBasic(t *testing.T) {
 		Decimals         int64
 		MessagesPerTx    int64
 		Is118            bool
-		DustThreshold    string
+		DustThreshold    math.Int
 	}
 	tests := []struct {
 		name    string
@@ -47,7 +48,7 @@ func TestRegisterZoneProposal_ValidateBasic(t *testing.T) {
 				Decimals:         6,
 				MessagesPerTx:    5,
 				Is118:            true,
-				DustThreshold:    "1000000",
+				DustThreshold:    math.NewInt(1000000),
 			},
 			wantErr: false,
 		},
@@ -67,7 +68,7 @@ func TestRegisterZoneProposal_ValidateBasic(t *testing.T) {
 				Decimals:         6,
 				MessagesPerTx:    5,
 				Is118:            true,
-				DustThreshold:    "1000000",
+				DustThreshold:    math.NewInt(1000000),
 			},
 			wantErr: true,
 		},
@@ -87,7 +88,7 @@ func TestRegisterZoneProposal_ValidateBasic(t *testing.T) {
 				Decimals:         6,
 				MessagesPerTx:    5,
 				Is118:            true,
-				DustThreshold:    "1000000",
+				DustThreshold:    math.NewInt(1000000),
 			},
 			wantErr: true,
 		},
@@ -107,7 +108,7 @@ func TestRegisterZoneProposal_ValidateBasic(t *testing.T) {
 				Decimals:         6,
 				MessagesPerTx:    5,
 				Is118:            true,
-				DustThreshold:    "1000000",
+				DustThreshold:    math.NewInt(1000000),
 			},
 			wantErr: true,
 		},
@@ -127,7 +128,7 @@ func TestRegisterZoneProposal_ValidateBasic(t *testing.T) {
 				Decimals:         6,
 				MessagesPerTx:    5,
 				Is118:            true,
-				DustThreshold:    "1000000",
+				DustThreshold:    math.NewInt(1000000),
 			},
 			wantErr: true,
 		},
@@ -147,7 +148,7 @@ func TestRegisterZoneProposal_ValidateBasic(t *testing.T) {
 				Decimals:         6,
 				MessagesPerTx:    5,
 				Is118:            true,
-				DustThreshold:    "1000000",
+				DustThreshold:    math.NewInt(1000000),
 			},
 			wantErr: true,
 		},
@@ -167,7 +168,7 @@ func TestRegisterZoneProposal_ValidateBasic(t *testing.T) {
 				Decimals:         0,
 				MessagesPerTx:    5,
 				Is118:            true,
-				DustThreshold:    "1000000",
+				DustThreshold:    math.NewInt(1000000),
 			},
 			wantErr: true,
 		},
@@ -187,7 +188,7 @@ func TestRegisterZoneProposal_ValidateBasic(t *testing.T) {
 				Decimals:         0,
 				MessagesPerTx:    0,
 				Is118:            true,
-				DustThreshold:    "1000000",
+				DustThreshold:    math.NewInt(1000000),
 			},
 			wantErr: true,
 		},
@@ -207,7 +208,7 @@ func TestRegisterZoneProposal_ValidateBasic(t *testing.T) {
 				Decimals:         0,
 				MessagesPerTx:    -1,
 				Is118:            true,
-				DustThreshold:    "1000000",
+				DustThreshold:    math.NewInt(1000000),
 			},
 			wantErr: true,
 		},

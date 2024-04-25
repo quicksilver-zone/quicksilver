@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
@@ -33,7 +34,7 @@ func NewRegisterZoneProposal(
 	decimals int64,
 	messagePerTx int64,
 	is118 bool,
-	dustThreshold string,
+	dustThreshold math.Int,
 ) *RegisterZoneProposal {
 	return &RegisterZoneProposal{
 		Title:            title,
@@ -90,8 +91,12 @@ func (m RegisterZoneProposal) ValidateBasic() error {
 		return errors.New("messages_per_tx must be a positive non-zero integer")
 	}
 
-	if m.Decimals == 0 {
-		return errors.New("decimals field is mandatory")
+	if m.Decimals < 1 {
+		return errors.New("decimals must be a positive non-zero integer")
+	}
+
+	if !m.DustThreshold.IsPositive() {
+		return errors.New("dust_threshold must be a positive non-zero integer")
 	}
 
 	return nil
@@ -135,14 +140,12 @@ func NewUpdateZoneProposal(
 	description string,
 	chainID string,
 	changes []*UpdateZoneValue,
-	dustThreshold string,
 ) *UpdateZoneProposal {
 	return &UpdateZoneProposal{
-		Title:         title,
-		Description:   description,
-		ChainId:       chainID,
-		Changes:       changes,
-		DustThreshold: dustThreshold,
+		Title:       title,
+		Description: description,
+		ChainId:     chainID,
+		Changes:     changes,
 	}
 }
 
