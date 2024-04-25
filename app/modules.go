@@ -67,8 +67,6 @@ import (
 	participationrewardstypes "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 	"github.com/quicksilver-zone/quicksilver/x/supply"
 	supplytypes "github.com/quicksilver-zone/quicksilver/x/supply/types"
-	"github.com/quicksilver-zone/quicksilver/x/tokenfactory"
-	tokenfactorytypes "github.com/quicksilver-zone/quicksilver/x/tokenfactory/types"
 )
 
 var (
@@ -108,7 +106,6 @@ var (
 		interchainquery.AppModuleBasic{},
 		participationrewards.AppModuleBasic{},
 		airdrop.AppModuleBasic{},
-		tokenfactory.AppModuleBasic{},
 		supply.AppModuleBasic{},
 	)
 
@@ -129,7 +126,6 @@ var (
 		participationrewardstypes.ModuleName:       nil,
 		airdroptypes.ModuleName:                    nil,
 		packetforwardtypes.ModuleName:              nil,
-		tokenfactorytypes.ModuleName:               {authtypes.Minter, authtypes.Burner},
 	}
 )
 
@@ -175,7 +171,6 @@ func appModules(
 		interchainquery.NewAppModule(appCodec, app.InterchainQueryKeeper),
 		participationrewards.NewAppModule(appCodec, app.ParticipationRewardsKeeper),
 		airdrop.NewAppModule(appCodec, app.AirdropKeeper),
-		tokenfactory.NewAppModule(app.TokenFactoryKeeper, app.AccountKeeper, app.BankKeeper),
 		supply.NewAppModule(appCodec, app.SupplyKeeper),
 	}
 }
@@ -214,7 +209,6 @@ func simulationModules(
 		interchainquery.NewAppModule(appCodec, app.InterchainQueryKeeper),
 		participationrewards.NewAppModule(appCodec, app.ParticipationRewardsKeeper),
 		airdrop.NewAppModule(appCodec, app.AirdropKeeper),
-		tokenfactory.NewAppModule(app.TokenFactoryKeeper, app.AccountKeeper, app.BankKeeper),
 		// supply.NewAppModule(appCodec, app.SupplyKeeper),
 	}
 }
@@ -260,7 +254,6 @@ func orderBeginBlockers() []string {
 		feegrant.ModuleName,
 		paramstypes.ModuleName,
 		vestingtypes.ModuleName,
-		tokenfactorytypes.ModuleName,
 		supplytypes.ModuleName,
 	}
 }
@@ -303,7 +296,6 @@ func orderEndBlockers() []string {
 		interchainstakingtypes.ModuleName,
 		participationrewardstypes.ModuleName,
 		airdroptypes.ModuleName,
-		tokenfactorytypes.ModuleName,
 		supplytypes.ModuleName,
 		// currently no-op.
 	}
@@ -346,7 +338,6 @@ func orderInitBlockers() []string {
 		interchainquerytypes.ModuleName,
 		participationrewardstypes.ModuleName,
 		airdroptypes.ModuleName,
-		tokenfactorytypes.ModuleName,
 		supplytypes.ModuleName,
 		// NOTE: crisis module must go at the end to check for invariants on each module
 		crisistypes.ModuleName,

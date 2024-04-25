@@ -31,7 +31,6 @@ import (
 	minttypes "github.com/quicksilver-zone/quicksilver/x/mint/types"
 	participationrewardstypes "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 	supplytypes "github.com/quicksilver-zone/quicksilver/x/supply/types"
-	tokenfactorytypes "github.com/quicksilver-zone/quicksilver/x/tokenfactory/types"
 )
 
 // TODO: We need to automate this, by bundling with a module struct...
@@ -64,7 +63,6 @@ func KVStoreKeys() []string {
 		interchainquerytypes.StoreKey,
 		participationrewardstypes.StoreKey,
 		airdroptypes.StoreKey,
-		tokenfactorytypes.StoreKey,
 		supplytypes.StoreKey,
 	}
 }
