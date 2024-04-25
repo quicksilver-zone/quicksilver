@@ -7,7 +7,6 @@ import (
 	"os"
 	"testing"
 
-	"github.com/CosmWasm/wasmd/x/wasm"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
@@ -56,9 +55,7 @@ func BenchmarkSimulation(b *testing.B) {
 		app.DefaultNodeHome,
 		simulation.FlagPeriodValue,
 		app.MakeEncodingConfig(),
-		wasm.EnableAllProposals,
 		app.EmptyAppOptions{},
-		app.GetWasmOpts(app.EmptyAppOptions{}),
 		false,
 		false,
 	)
@@ -117,9 +114,7 @@ func TestAppStateDeterminism(t *testing.T) {
 				app.DefaultNodeHome,
 				simulation.FlagPeriodValue,
 				app.MakeEncodingConfig(),
-				wasm.EnableAllProposals,
 				app.EmptyAppOptions{},
-				app.GetWasmOpts(app.EmptyAppOptions{}),
 				false,
 				false,
 				interBlockCacheOpt(),

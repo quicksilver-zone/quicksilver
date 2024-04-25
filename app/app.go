@@ -7,11 +7,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"strings"
 
-	"github.com/CosmWasm/wasmd/x/wasm"
-	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
-	"github.com/prometheus/client_golang/prometheus"
 	"github.com/spf13/cast"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
@@ -38,8 +34,8 @@ import (
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
-	ibckeeper "github.com/cosmos/ibc-go/v5/modules/core/keeper"
-	ibctestingtypes "github.com/cosmos/ibc-go/v5/testing/types"
+	ibckeeper "github.com/cosmos/ibc-go/v6/modules/core/keeper"
+	ibctestingtypes "github.com/cosmos/ibc-go/v6/testing/types"
 
 	"github.com/quicksilver-zone/quicksilver/app/keepers"
 	"github.com/quicksilver-zone/quicksilver/docs"
@@ -111,9 +107,7 @@ func NewQuicksilver(
 	homePath string,
 	invCheckPeriod uint,
 	encodingConfig EncodingConfig,
-	enabledProposals []wasm.ProposalType,
 	appOpts servertypes.AppOptions,
-	wasmOpts []wasm.Option,
 	mock bool,
 	enableSupplyEndpoint bool,
 	baseAppOptions ...func(*baseapp.BaseApp),
@@ -142,12 +136,6 @@ func NewQuicksilver(
 		invCheckPeriod:    invCheckPeriod,
 	}
 
-	wasmDir := filepath.Join(homePath, "data")
-	wasmConfig, err := wasm.ReadWasmConfig(appOpts)
-	if err != nil {
-		panic("error while reading wasm config: " + err.Error())
-	}
-
 	app.AppKeepers = keepers.NewAppKeepers(
 		appCodec,
 		bApp,
@@ -159,10 +147,6 @@ func NewQuicksilver(
 		homePath,
 		invCheckPeriod,
 		appOpts,
-		wasmDir,
-		wasmConfig,
-		enabledProposals,
-		wasmOpts,
 		enableSupplyEndpoint,
 	)
 
@@ -206,9 +190,7 @@ func NewQuicksilver(
 			SignModeHandler: encodingConfig.TxConfig.SignModeHandler(),
 			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
 		},
-		WasmConfig:        wasmConfig,
-		TxCounterStoreKey: app.GetKey(wasm.StoreKey),
-		IBCKeeper:         app.IBCKeeper,
+		IBCKeeper: app.IBCKeeper,
 	}
 
 	app.SetInitChainer(app.InitChainer)
@@ -398,6 +380,11 @@ func (app *Quicksilver) GetScopedIBCKeeper() capabilitykeeper.ScopedKeeper {
 	return app.ScopedIBCKeeper
 }
 
+// GetScopedIBCKeeper implements the TestingApp interface.
+func (app *Quicksilver) GetScopedICAControllerKeeper() capabilitykeeper.ScopedKeeper {
+	return app.ScopedICAControllerKeeper
+}
+
 // GetTxConfig implements the TestingApp interface.
 func (*Quicksilver) GetTxConfig() client.TxConfig {
 	cfg := MakeEncodingConfig()
@@ -412,42 +399,4 @@ func GetMaccPerms() map[string][]string {
 	}
 
 	return dupMaccPerms
-}
-
-func GetWasmOpts(appOpts servertypes.AppOptions) []wasm.Option {
-	var wasmOpts []wasm.Option
-	if cast.ToBool(appOpts.Get("telemetry.enabled")) {
-		wasmOpts = append(wasmOpts, wasmkeeper.WithVMCacheMetrics(prometheus.DefaultRegisterer))
-	}
-
-	wasmOpts = append(wasmOpts, wasmkeeper.WithGasRegister(NewWasmGasRegister()))
-
-	return wasmOpts
-}
-
-// PROPOSALS
-
-const (
-	ProposalsEnabled = "true"
-	// If set to non-empty string it must be comma-separated list of values that are all a subset
-	// of "EnableAllProposals" (takes precedence over ProposalsEnabled)
-	// https://github.com/CosmWasm/wasmd/blob/02a54d33ff2c064f3539ae12d75d027d9c665f05/x/wasm/internal/types/proposal.go#L28-L34
-	EnableSpecificProposals = ""
-)
-
-// GetEnabledProposals parses the ProposalsEnabled / EnableSpecificProposals values to
-// produce a list of enabled proposals to pass into wasmd app.
-func GetEnabledProposals() []wasm.ProposalType {
-	if EnableSpecificProposals == "" {
-		if ProposalsEnabled == "true" {
-			return wasm.EnableAllProposals
-		}
-		return wasm.DisableAllProposals
-	}
-	chunks := strings.Split(EnableSpecificProposals, ",")
-	proposals, err := wasm.ConvertToProposals(chunks)
-	if err != nil {
-		panic(err)
-	}
-	return proposals
 }
