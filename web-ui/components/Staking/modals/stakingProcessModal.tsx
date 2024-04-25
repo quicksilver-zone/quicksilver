@@ -241,13 +241,15 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
     intents.forEach((val) => {
       memoBuffer = Buffer.concat([memoBuffer, addValidator(val.address, val.intent)]);
     });
-    // Add mapped account to memo
-    if (zone?.chainId === 'agoric-3' && address) {
-      memoBuffer = Buffer.concat([memoBuffer, addMappedAccount(address)]);
-    }
+
     // Add header with the memo buffer length
     memoBuffer = Buffer.concat([Buffer.from([0x02, memoBuffer.length]), memoBuffer]);
   }
+
+      // Add mapped account to memo
+      if (zone?.chainId === 'agoric-3' && address) {
+        memoBuffer = Buffer.concat([memoBuffer, addMappedAccount(address)]);
+      }
 
   // Convert memo to base64 for encoding
   const memo = memoBuffer.length > 0 ? memoBuffer.toString('base64') : '';
