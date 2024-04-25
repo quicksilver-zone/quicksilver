@@ -10,7 +10,7 @@ import (
 	query "github.com/cosmos/cosmos-sdk/types/query"
 	tx "github.com/cosmos/cosmos-sdk/types/tx"
 	_ "github.com/cosmos/gogoproto/gogoproto"
-	types2 "github.com/cosmos/ibc-go/v6/modules/light-clients/07-tendermint/types"
+	_07_tendermint "github.com/cosmos/ibc-go/v6/modules/light-clients/07-tendermint"
 	grpc1 "github.com/gogo/protobuf/grpc"
 	proto "github.com/gogo/protobuf/proto"
 	types1 "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -150,7 +150,7 @@ type GetTxWithProofResponse struct {
 	// proof is the tmproto.TxProof for the queried tx
 	Proof *types1.TxProof `protobuf:"bytes,3,opt,name=proof,proto3" json:"proof,omitempty"`
 	// ibc-go header to validate txs
-	Header *types2.Header `protobuf:"bytes,4,opt,name=header,proto3" json:"header,omitempty"`
+	Header *_07_tendermint.Header `protobuf:"bytes,4,opt,name=header,proto3" json:"header,omitempty"`
 	// tx_bytes is the byte representation of the queried tx
 	TxBytes []byte `protobuf:"bytes,5,opt,name=tx_bytes,json=txBytes,proto3" json:"tx_bytes,omitempty"`
 }
@@ -209,7 +209,7 @@ func (m *GetTxWithProofResponse) GetProof() *types1.TxProof {
 	return nil
 }
 
-func (m *GetTxWithProofResponse) GetHeader() *types2.Header {
+func (m *GetTxWithProofResponse) GetHeader() *_07_tendermint.Header {
 	if m != nil {
 		return m.Header
 	}
@@ -1012,7 +1012,7 @@ func (m *GetTxWithProofResponse) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.Header == nil {
-				m.Header = &types2.Header{}
+				m.Header = &_07_tendermint.Header{}
 			}
 			if err := m.Header.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err

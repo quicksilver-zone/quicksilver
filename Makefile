@@ -505,10 +505,10 @@ proto-breaking-check:
 		bufbuild/buf:$(BUF_VERSION) breaking --against '.git#branch=develop'
 	@echo "✅ Completed protobuf breaking check!"
 
-# proto-setup:
-#	@echo "🤖 Setting up protobuf environment..."
-#	@$(DOCKER) build --rm --tag quicksilver-proto:latest --file proto/Dockerfile .
-#	@echo "✅ Setup protobuf environment!"
+proto-setup:
+	@echo "🤖 Setting up protobuf environment..."
+	@$(DOCKER) build --rm --tag quicksilver-proto:latest --file proto/Dockerfile .
+	@echo "✅ Setup protobuf environment!"
 
 ### Other tools
 .PHONY: hermes-build
