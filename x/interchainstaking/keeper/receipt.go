@@ -7,8 +7,6 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 
-	sdkioerrors "cosmossdk.io/errors"
-
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"
@@ -18,7 +16,6 @@ import (
 	transfertypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
 	channeltypes "github.com/cosmos/ibc-go/v6/modules/core/04-channel/types"
-	host "github.com/cosmos/ibc-go/v6/modules/core/24-host"
 
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
@@ -268,15 +265,6 @@ func ProdSubmitTx(ctx sdk.Context, k *Keeper, msgs []sdk.Msg, account *types.ICA
 	if err != nil {
 		return err
 	}
-	channelID, found := k.ICAControllerKeeper.GetActiveChannelID(ctx, connectionID, portID)
-	if !found {
-		return sdkioerrors.Wrapf(icatypes.ErrActiveChannelNotFound, "failed to retrieve active channel for port %s in submittx", portID)
-	}
-
-	chanCap, found := k.scopedKeeper.GetCapability(ctx, host.ChannelCapabilityPath(portID, channelID))
-	if !found {
-		return sdkioerrors.Wrap(channeltypes.ErrChannelCapabilityNotFound, "module does not own channel capability")
-	}
 
 	chunkSize := int(messagesPerTx)
 	if chunkSize < 1 {
@@ -317,7 +305,7 @@ func ProdSubmitTx(ctx sdk.Context, k *Keeper, msgs []sdk.Msg, account *types.ICA
 			Memo: memo,
 		}
 
-		_, err = k.ICAControllerKeeper.SendTx(ctx, chanCap, connectionID, portID, packetData, timeoutTimestamp) // nolint:staticcheck
+		_, err = k.ICAControllerKeeper.SendTx(ctx, nil, connectionID, portID, packetData, timeoutTimestamp) // nolint:staticcheck
 		if err != nil {
 			return err
 		}
