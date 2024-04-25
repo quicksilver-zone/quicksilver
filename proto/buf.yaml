@@ -2,7 +2,7 @@ version: v1
 name: buf.build/ingenuity-build/quicksilver
 deps:
   - buf.build/cosmos/cosmos-sdk:8cb30a2c4de74dc9bd8d260b1e75e176
-  - buf.build/cosmos/ibc:9851f8a91ac6423f91cc2433bfda9495
+  - buf.build/joe-bowman/ibc:ff2eeb6090f54629bf6dbfe192bf4053 ## v6.3.1
   - buf.build/cosmos/cosmos-proto
   - buf.build/cosmos/gogo-proto
   - buf.build/googleapis/googleapis
