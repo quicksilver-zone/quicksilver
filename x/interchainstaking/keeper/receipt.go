@@ -141,8 +141,8 @@ func (k *Keeper) SendTokenIBC(ctx sdk.Context, senderAccAddress sdk.AccAddress, 
 
 	k.IBCKeeper.ChannelKeeper.IterateChannels(ctx, func(channel channeltypes.IdentifiedChannel) bool {
 		if channel.ConnectionHops[0] == zone.ConnectionId && channel.PortId == types.TransferPort && channel.State == channeltypes.OPEN {
-			srcChannel = channel.Counterparty.ChannelId
-			srcPort = channel.Counterparty.PortId
+			srcChannel = channel.ChannelId
+			srcPort = channel.PortId
 			return true
 		}
 		return false
