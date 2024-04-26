@@ -19,6 +19,7 @@ func V010600beta0UpgradeHandler(
 		if isTestnet(ctx) {
 			appKeepers.InterchainstakingKeeper.RemoveZoneAndAssociatedRecords(ctx, "agoric-3")
 			appKeepers.InterchainstakingKeeper.RemoveZoneAndAssociatedRecords(ctx, "archway-1")
+			appKeepers.InterchainQueryKeeper.SetLatestHeight(ctx, "provider", 6209948)
 		}
 		return mm.RunMigrations(ctx, configurator, fromVM)
 	}
