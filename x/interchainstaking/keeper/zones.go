@@ -468,7 +468,6 @@ func (k *Keeper) CollectStatsForZone(ctx sdk.Context, zone *types.Zone) (*types.
 }
 
 func (k *Keeper) RemoveZoneAndAssociatedRecords(ctx sdk.Context, chainID string) {
-
 	// remove zone and related records
 	zone, ok := k.GetZone(ctx, chainID)
 	if !ok {
