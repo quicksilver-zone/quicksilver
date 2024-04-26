@@ -6,7 +6,7 @@ import (
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-	v6 "github.com/cosmos/ibc-go/v6/modules/apps/27-interchain-accounts/controller/migrations/v6"
+	v6migration "github.com/cosmos/ibc-go/v6/modules/apps/27-interchain-accounts/controller/migrations/v6"
 
 	"github.com/quicksilver-zone/quicksilver/app/keepers"
 	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
@@ -22,7 +22,7 @@ func V010600beta0UpgradeHandler(
 	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 		if isTestnet(ctx) {
 			appKeepers.UpgradeKeeper.Logger(ctx).Info("migrating capabilities")
-			err := v6.MigrateICS27ChannelCapability(
+			err := v6migration.MigrateICS27ChannelCapability(
 				ctx,
 				appKeepers.IBCKeeper.Codec(),
 				appKeepers.GetKey(capabilitytypes.StoreKey),
