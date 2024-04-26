@@ -16,7 +16,10 @@ import (
 	supplytypes "github.com/quicksilver-zone/quicksilver/x/supply/types"
 )
 
-const wasmModuleName = "wasm"
+const (
+	wasmModuleName = "wasm"
+	tfModuleName   = "tokenfactory"
+)
 
 func (app *Quicksilver) setUpgradeHandlers() {
 	for _, upgrade := range upgrades.Upgrades() {
@@ -65,9 +68,13 @@ func (app *Quicksilver) setUpgradeStoreLoaders() {
 		storeUpgrades = &storetypes.StoreUpgrades{
 			Added: []string{packetforwardtypes.ModuleName, supplytypes.ModuleName},
 		}
-	case upgrades.V010600rc1UpgradeName:
+	case upgrades.V010600beta0UpgradeName:
 		storeUpgrades = &storetypes.StoreUpgrades{
-			Deleted: []string{wasmModuleName},
+			Deleted: []string{wasmModuleName, tfModuleName},
+		}
+	case upgrades.V010600UpgradeName:
+		storeUpgrades = &storetypes.StoreUpgrades{
+			Deleted: []string{wasmModuleName, tfModuleName},
 		}
 	default:
 		// no-op
