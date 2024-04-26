@@ -84,7 +84,9 @@ func (k msgServer) SubmitQueryResponse(goCtx context.Context, msg *types.MsgSubm
 		}
 	}
 
-	k.SetLatestHeight(ctx, msg.ChainId, uint64(msg.Height))
+	if pathParts[len(pathParts)-1] == "key" {
+		k.SetLatestHeight(ctx, msg.ChainId, uint64(msg.Height))
+	}
 
 	if !callbackExecuted && q.CallbackId != "" {
 		k.Logger(ctx).Error("callback expected but not found", "callbackId", q.CallbackId, "msg", msg.QueryId, "type", q.QueryType)

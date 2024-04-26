@@ -240,7 +240,7 @@ func (z *Zone) validatorIntentsFromBytes(coins sdk.Coins, weightBytes []byte) (v
 }
 
 func ParseMemoFields(fieldBytes []byte) (MemoFields, error) {
-	if len(fieldBytes) < 3 {
+	if len(fieldBytes) < 2 {
 		return MemoFields{}, errors.New("invalid field bytes format")
 	}
 
