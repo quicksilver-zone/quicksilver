@@ -15,7 +15,6 @@ import (
 	transfertypes "github.com/cosmos/ibc-go/v5/modules/apps/transfer/types"
 	ibcexported "github.com/cosmos/ibc-go/v5/modules/core/exported"
 	tmclienttypes "github.com/cosmos/ibc-go/v5/modules/light-clients/07-tendermint/types"
-	"github.com/quicksilver-zone/quicksilver/utils"
 	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 )
 
@@ -232,17 +231,17 @@ func (k *Keeper) HandleUpdateZoneProposal(ctx sdk.Context, p *types.UpdateZonePr
 			if !found {
 				return errors.New("unable to fetch channel")
 			}
-			currentChannel, found := k.IBCKeeper.ChannelKeeper.GetChannel(ctx, transfertypes.PortID, zone.TransferChannel)
+			_, found = k.IBCKeeper.ChannelKeeper.GetChannel(ctx, transfertypes.PortID, zone.TransferChannel)
 			if !found {
 				return errors.New("unable to fetch channel")
 			}
 
-			// check if escrow account has balance of the denom belong to current channel
-			ibcDenom := utils.DeriveIbcDenom("transfer", zone.TransferChannel, "transfer", currentChannel.Counterparty.ChannelId, zone.BaseDenom)
+			// check if any supply for the qasset
+			localDenom := zone.LocalDenom
 			escrowAccount := k.AccountKeeper.GetModuleAddress(types.EscrowModuleAccount)
-			escrowBalance := k.BankKeeper.GetBalance(ctx, escrowAccount, ibcDenom)
+			escrowBalance := k.BankKeeper.GetBalance(ctx, escrowAccount, localDenom)
 			if escrowBalance.IsPositive() {
-				return errors.New("escrow account has balance, cannot update transfer_channel")
+				return errors.New("escrow account has qasset balance associated to the current transfer channel, cannot update transfer_channel")
 			}
 
 			zone.TransferChannel = change.Value
