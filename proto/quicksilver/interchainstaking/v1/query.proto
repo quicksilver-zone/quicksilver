@@ -62,6 +62,11 @@ service Query {
 
   // WithdrawalRecords provides data on the active withdrawals.
   rpc ZoneWithdrawalRecords(QueryWithdrawalRecordsRequest) returns (QueryWithdrawalRecordsResponse) {
+    option (google.api.http).get = "/quicksilver/interchainstaking/v1/zones/{chain_id}/withdrawal_records";
+  }
+
+  // WithdrawalRecords provides data on the active withdrawals.
+  rpc UserZoneWithdrawalRecords(QueryWithdrawalRecordsRequest) returns (QueryWithdrawalRecordsResponse) {
     option (google.api.http).get =
       "/quicksilver/interchainstaking/v1/zones/{chain_id}/withdrawal_records/"
       "{delegator_address}";
@@ -69,12 +74,14 @@ service Query {
 
   // WithdrawalRecords provides data on the active withdrawals.
   rpc WithdrawalRecords(QueryWithdrawalRecordsRequest) returns (QueryWithdrawalRecordsResponse) {
-    option (google.api.http).get = "/quicksilver/interchainstaking/v1/zones/{chain_id}/withdrawal_records";
+    option (google.api.http).get = "/quicksilver/interchainstaking/v1/zones/withdrawal_records";
   }
 
   // WithdrawalRecords provides data on the active withdrawals.
   rpc UserWithdrawalRecords(QueryUserWithdrawalRecordsRequest) returns (QueryWithdrawalRecordsResponse) {
-    option (google.api.http).get = "/quicksilver/interchainstaking/v1/users/{user_address}/withdrawal_records";
+    option (google.api.http).get =
+      "/quicksilver/interchainstaking/v1/users/"
+      "{user_address}/withdrawal_records";
   }
 
   // UnbondingRecords provides data on the active unbondings.
@@ -89,7 +96,8 @@ service Query {
       "{chain_id}/redelegation_records";
   }
 
-  // MappedAccounts provides data on the mapped accounts for a given user over different host chains.
+  // MappedAccounts provides data on the mapped accounts for a given user over
+  // different host chains.
   rpc MappedAccounts(QueryMappedAccountsRequest) returns (QueryMappedAccountsResponse) {
     option (google.api.http).get = "/quicksilver/interchainstaking/v1/mapped_addresses/{address}";
   }
