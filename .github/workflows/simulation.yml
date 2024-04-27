@@ -19,7 +19,7 @@ jobs:
             ${{ runner.os }}-go-
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.21"
+          go-version: "1.22"
 
       - name: Run simulation tests
         run: make test-sim-non-determinism

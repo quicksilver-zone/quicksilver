@@ -103,8 +103,8 @@ endif
 BUILD_TARGETS := build install
 
 check_version:
-ifneq ($(GO_MINOR_VERSION),21)
-	@echo "ERROR: Go version 1.21 is required for building Quicksilver. Detected version: $(GO_MAJOR_VERSION).$(GO_MINOR_VERSION). There are consensus breaking changes between binaries compiled with different Go versions."
+ifneq ($(GO_MINOR_VERSION),22)
+	@echo "ERROR: Go version 1.22 is required for building Quicksilver. Detected version: $(GO_MAJOR_VERSION).$(GO_MINOR_VERSION). There are consensus breaking changes between binaries compiled with different Go versions."
 	exit 1
 endif
 
@@ -477,7 +477,7 @@ mdlint-fix:
 ###                                Protobuf                                 ###
 ###############################################################################
 
-BUF_VERSION=1.21.0
+BUF_VERSION=1.31.0
 
 proto-all: proto-gen
 
@@ -505,10 +505,10 @@ proto-breaking-check:
 		bufbuild/buf:$(BUF_VERSION) breaking --against '.git#branch=develop'
 	@echo "✅ Completed protobuf breaking check!"
 
-proto-setup:
-	@echo "🤖 Setting up protobuf environment..."
-	@$(DOCKER) build --rm --tag quicksilver-proto:latest --file proto/Dockerfile .
-	@echo "✅ Setup protobuf environment!"
+# proto-setup:
+#	@echo "🤖 Setting up protobuf environment..."
+#	@$(DOCKER) build --rm --tag quicksilver-proto:latest --file proto/Dockerfile .
+#	@echo "✅ Setup protobuf environment!"
 
 ### Other tools
 .PHONY: hermes-build

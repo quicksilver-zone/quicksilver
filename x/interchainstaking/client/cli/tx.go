@@ -228,9 +228,8 @@ Where proposal.json contains:
   "changes": [{
       "key": "liquidity_module",
       "value": "true",
-  }],
+    }],
   "deposit": "512000000uqck"
-  "dust_threshold": "1000000"
 }
 `),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -250,7 +249,7 @@ Where proposal.json contains:
 
 			from := clientCtx.GetFromAddress()
 
-			content := types.NewUpdateZoneProposal(proposal.Title, proposal.Description, proposal.ChainId, proposal.Changes, proposal.DustThreshold)
+			content := types.NewUpdateZoneProposal(proposal.Title, proposal.Description, proposal.ChainId, proposal.Changes)
 
 			msg, err := govv1beta1.NewMsgSubmitProposal(content, deposit, from)
 			if err != nil {

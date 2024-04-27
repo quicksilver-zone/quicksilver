@@ -12,7 +12,7 @@ import (
 )
 
 // createConfig idempotently creates the config.
-func CreateConfig(home string, debug bool) error {
+func CreateConfig(home string) error {
 	cfgPath := path.Join(home, "config.yaml")
 
 	// If the config doesn't exist...
@@ -35,7 +35,7 @@ func CreateConfig(home string, debug bool) error {
 	defer f.Close()
 
 	// And write the default config to that location...
-	if _, err = f.Write(defaultConfig(path.Join(home, "keys"), debug)); err != nil {
+	if _, err = f.Write(defaultConfig(path.Join(home, "keys"))); err != nil {
 		return err
 	}
 	return nil
@@ -59,6 +59,8 @@ func OverwriteConfig(cfg *Config) error {
 
 // Config represents the config file for the relayer
 type Config struct {
+	BindPort       int                                  `yaml:"bind_port" json:"bind_port"`
+	MaxMsgsPerTx   int                                  `yaml:"max_msgs_per_tx" json:"max_msgs_per_tx"`
 	DefaultChain   string                               `yaml:"default_chain" json:"default_chain"`
 	AllowedQueries []string                             `yaml:"allowed_queries" json:"allowed_queries"`
 	SkipEpoch      bool                                 `yaml:"skip_epoch" json:"skip_epoch"`
@@ -99,29 +101,38 @@ func (c Config) MustYAML() []byte {
 	return out
 }
 
-func defaultConfig(keyHome string, debug bool) []byte {
+func defaultConfig(keyHome string) []byte {
 	return Config{
-		DefaultChain: "quicksilver-1",
+		BindPort:     2112,
+		MaxMsgsPerTx: 40,
+		DefaultChain: "quicksilver-2",
 		Chains: map[string]*client.ChainClientConfig{
-			"quicksilver-1": GetQuicksilverConfig(keyHome, debug),
-			"osmosis-1":     GetOsmosisConfig(keyHome, debug),
+			"quicksilver-2":  GetQuicksilverConfig(keyHome),
+			"osmosis-1":      GetOtherConfig(keyHome, "osmosis-1", "osmo"),
+			"cosmoshub-4":    GetOtherConfig(keyHome, "cosmoshub-4", "cosmos"),
+			"regen-1":        GetOtherConfig(keyHome, "regen-1", "regen"),
+			"stargaze-1":     GetOtherConfig(keyHome, "stargaze-1", "stars"),
+			"juno-1":         GetOtherConfig(keyHome, "juno-1", "juno"),
+			"sommelier-3":    GetOtherConfig(keyHome, "sommelier-3", "somm"),
+			"ssc-1":          GetOtherConfig(keyHome, "ssc-1", "saga"),
+			"dydx-mainnet-1": GetOtherConfig(keyHome, "dydx-mainnet-1", "dydx"),
 		},
 	}.MustYAML()
 }
 
-func GetQuicksilverConfig(keyHome string, debug bool) *client.ChainClientConfig {
+func GetQuicksilverConfig(keyHome string) *client.ChainClientConfig {
 	return &client.ChainClientConfig{
 		Key:            "default",
-		ChainID:        "quicksilver-1",
+		ChainID:        "quicksilver-2",
 		RPCAddr:        "https://rpc.quicksilver.zone:443",
 		GRPCAddr:       "https://grpc.quicksilver.zone:443",
 		AccountPrefix:  "quick",
 		KeyringBackend: "test",
-		GasAdjustment:  1.2,
-		GasPrices:      "0.01uqck",
+		GasAdjustment:  1.3,
+		GasPrices:      "0.0001uqck",
 		MinGasAmount:   0,
 		KeyDirectory:   keyHome,
-		Debug:          debug,
+		Debug:          false,
 		Timeout:        "20s",
 		BlockTimeout:   "10s",
 		OutputFormat:   "json",
@@ -129,19 +140,19 @@ func GetQuicksilverConfig(keyHome string, debug bool) *client.ChainClientConfig 
 	}
 }
 
-func GetOsmosisConfig(keyHome string, debug bool) *client.ChainClientConfig {
+func GetOtherConfig(keyHome string, chainId string, prefix string) *client.ChainClientConfig {
 	return &client.ChainClientConfig{
 		Key:            "default",
-		ChainID:        "osmosis-1",
-		RPCAddr:        "https://osmosis-1.technofractal.com:443",
-		GRPCAddr:       "https://gprc.osmosis-1.technofractal.com:443",
-		AccountPrefix:  "osmo",
+		ChainID:        chainId,
+		RPCAddr:        fmt.Sprintf("https://rpc.%s.quicksilver.zone:443", chainId),
+		GRPCAddr:       fmt.Sprintf("https://grpc.%s.quicksilver.zone:443", chainId),
+		AccountPrefix:  prefix,
 		KeyringBackend: "test",
 		GasAdjustment:  1.2,
-		GasPrices:      "0.01uosmo",
+		GasPrices:      "",
 		MinGasAmount:   0,
 		KeyDirectory:   keyHome,
-		Debug:          debug,
+		Debug:          false,
 		Timeout:        "20s",
 		BlockTimeout:   "10s",
 		OutputFormat:   "json",
