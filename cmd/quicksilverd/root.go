@@ -44,6 +44,7 @@ import (
 const (
 	EnvPrefix         = "QUICK"
 	FlagSupplyEnabled = "supply.enabled"
+	chainID           = "quicksilver-1"
 )
 
 type appCreator struct {

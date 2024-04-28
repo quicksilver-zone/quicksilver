@@ -248,7 +248,6 @@ func SetupWithChainID(t *testing.T, isCheckTx bool, chainID string) *Quicksilver
 		5,
 		MakeEncodingConfig(),
 		EmptyAppOptions{},
-		GetWasmOpts(EmptyAppOptions{}),
 		false,
 		false,
 		baseapp.SetChainID(chainID),
