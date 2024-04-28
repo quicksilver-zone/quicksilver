@@ -26,12 +26,13 @@ import chains from 'chain-registry';
 import { cosmos } from 'quicksilverjs';
 import React, { useEffect, useState } from 'react';
 
-import { MultiModal } from './validatorSelectionModal';
 
 import { useTx } from '@/hooks';
 import { useFeeEstimation } from '@/hooks/useFeeEstimation';
 import { useZoneQuery } from '@/hooks/useQueries';
 import { shiftDigits } from '@/utils';
+
+import { MultiModal } from './validatorSelectionModal';
 
 const ChakraModalContent = styled(ModalContent)`
   position: relative;
@@ -262,7 +263,6 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
 
   const { estimateFee } = useFeeEstimation(newChainName ?? '');
 
-  console.log('msgSend', msgSend);
   const handleLiquidStake = async (event: React.MouseEvent) => {
     event.preventDefault();
     setIsSigning(true);
