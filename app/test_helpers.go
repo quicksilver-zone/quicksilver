@@ -91,7 +91,6 @@ func Setup(t *testing.T, isCheckTx bool) *Quicksilver {
 		5,
 		MakeEncodingConfig(),
 		EmptyAppOptions{},
-		GetWasmOpts(EmptyAppOptions{}),
 		false,
 		false,
 		baseapp.SetChainID("mercury-1"),
@@ -141,7 +140,6 @@ func SetupTestingApp() (testApp ibctesting.TestingApp, genesisState map[string]j
 		5,
 		MakeEncodingConfig(),
 		EmptyAppOptions{},
-		GetWasmOpts(EmptyAppOptions{}),
 		true, // set mock state to true
 		false,
 	)
@@ -149,7 +147,8 @@ func SetupTestingApp() (testApp ibctesting.TestingApp, genesisState map[string]j
 }
 
 // GenesisStateWithValSet creates a quicksilver genesis state with the given validator set.
-func GenesisStateWithValSet(t *testing.T,
+func GenesisStateWithValSet(
+	t *testing.T,
 	app *Quicksilver, genesisState GenesisState,
 	valSet *tmtypes.ValidatorSet, genAccs []authtypes.GenesisAccount,
 	balances ...banktypes.Balance,

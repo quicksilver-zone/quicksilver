@@ -1,9 +1,6 @@
 package keepers
 
 import (
-	"github.com/CosmWasm/wasmd/x/wasm"
-	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
-	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	"github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7/packetforward"
 	packetforwardkeeper "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7/packetforward/keeper"
 	packetforwardtypes "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7/packetforward/types"
@@ -64,7 +61,6 @@ import (
 
 	appconfig "github.com/quicksilver-zone/quicksilver/cmd/config"
 	"github.com/quicksilver-zone/quicksilver/utils"
-	"github.com/quicksilver-zone/quicksilver/wasmbinding"
 	airdropkeeper "github.com/quicksilver-zone/quicksilver/x/airdrop/keeper"
 	airdroptypes "github.com/quicksilver-zone/quicksilver/x/airdrop/types"
 	claimsmanagerkeeper "github.com/quicksilver-zone/quicksilver/x/claimsmanager/keeper"
@@ -82,8 +78,6 @@ import (
 	participationrewardskeeper "github.com/quicksilver-zone/quicksilver/x/participationrewards/keeper"
 	participationrewardstypes "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 	supplykeeper "github.com/quicksilver-zone/quicksilver/x/supply/keeper"
-	tokenfactorykeeper "github.com/quicksilver-zone/quicksilver/x/tokenfactory/keeper"
-	tokenfactorytypes "github.com/quicksilver-zone/quicksilver/x/tokenfactory/types"
 )
 
 const (
@@ -97,25 +91,22 @@ type AppKeepers struct {
 	ScopedICAControllerKeeper            capabilitykeeper.ScopedKeeper
 	ScopedICAHostKeeper                  capabilitykeeper.ScopedKeeper
 	ScopedInterchainStakingAccountKeeper capabilitykeeper.ScopedKeeper
-	scopedWasmKeeper                     capabilitykeeper.ScopedKeeper // TODO: we can use this for testing
 
 	// "Normal" keepers
 	// 		SDK
-	AccountKeeper         authkeeper.AccountKeeper
-	BankKeeper            bankkeeper.BaseKeeper
-	DistrKeeper           distrkeeper.Keeper
-	StakingKeeper         *stakingkeeper.Keeper
-	SlashingKeeper        slashingkeeper.Keeper
-	EvidenceKeeper        evidencekeeper.Keeper
-	GovKeeper             *govkeeper.Keeper
-	WasmKeeper            wasmkeeper.Keeper
-	FeeGrantKeeper        feegrantkeeper.Keeper
-	AuthzKeeper           authzkeeper.Keeper
-	ParamsKeeper          paramskeeper.Keeper
-	CapabilityKeeper      *capabilitykeeper.Keeper
-	CrisisKeeper          *crisiskeeper.Keeper
-	UpgradeKeeper         *upgradekeeper.Keeper
-	ConsensusParamsKeeper *consensusparamkeeper.Keeper
+	AccountKeeper    authkeeper.AccountKeeper
+	BankKeeper       bankkeeper.BaseKeeper
+	DistrKeeper      distrkeeper.Keeper
+	StakingKeeper    *stakingkeeper.Keeper
+	SlashingKeeper   slashingkeeper.Keeper
+	EvidenceKeeper   evidencekeeper.Keeper
+	GovKeeper        govkeeper.Keeper
+	FeeGrantKeeper   feegrantkeeper.Keeper
+	AuthzKeeper      authzkeeper.Keeper
+	ParamsKeeper     paramskeeper.Keeper
+	CapabilityKeeper *capabilitykeeper.Keeper
+	CrisisKeeper     crisiskeeper.Keeper
+	UpgradeKeeper    upgradekeeper.Keeper
 
 	// 		Quicksilver keepers
 	EpochsKeeper               epochskeeper.Keeper
@@ -125,7 +116,6 @@ type AppKeepers struct {
 	InterchainQueryKeeper      interchainquerykeeper.Keeper
 	ParticipationRewardsKeeper *participationrewardskeeper.Keeper
 	AirdropKeeper              *airdropkeeper.Keeper
-	TokenFactoryKeeper         tokenfactorykeeper.Keeper
 	SupplyKeeper               supplykeeper.Keeper
 
 	// 		IBC keepers
@@ -157,9 +147,6 @@ func NewAppKeepers(
 	homePath string,
 	invCheckPeriod uint,
 	appOpts servertypes.AppOptions,
-	wasmDir string,
-	wasmConfig wasmtypes.WasmConfig,
-	wasmOpts []wasmkeeper.Option,
 	supplyEndpointEnabled bool,
 ) AppKeepers {
 	appKeepers := AppKeepers{}
@@ -186,9 +173,6 @@ func NewAppKeepers(
 		homePath,
 		invCheckPeriod,
 		appOpts,
-		wasmDir,
-		wasmConfig,
-		wasmOpts,
 		supplyEndpointEnabled,
 	)
 
@@ -209,9 +193,6 @@ func (appKeepers *AppKeepers) InitKeepers(
 	homePath string,
 	invCheckPeriod uint,
 	_ servertypes.AppOptions,
-	wasmDir string,
-	wasmConfig wasmtypes.WasmConfig,
-	wasmOpts []wasmkeeper.Option,
 	supplyEndpointEnabled bool,
 ) {
 	// Add 'normal' keepers
@@ -240,7 +221,6 @@ func (appKeepers *AppKeepers) InitKeepers(
 	scopedICAControllerKeeper := appKeepers.CapabilityKeeper.ScopeToModule(icacontrollertypes.SubModuleName)
 	scopedICAHostKeeper := appKeepers.CapabilityKeeper.ScopeToModule(icahosttypes.SubModuleName)
 	scopedInterchainStakingKeeper := appKeepers.CapabilityKeeper.ScopeToModule(interchainstakingtypes.ModuleName)
-	scopedWasmKeeper := appKeepers.CapabilityKeeper.ScopeToModule(wasmtypes.ModuleName)
 
 	appKeepers.CapabilityKeeper.Seal()
 
@@ -454,14 +434,6 @@ func (appKeepers *AppKeepers) InitKeepers(
 		panic(err)
 	}
 
-	appKeepers.TokenFactoryKeeper = tokenfactorykeeper.NewKeeper(
-		appKeepers.keys[tokenfactorytypes.StoreKey],
-		appKeepers.GetSubspace(tokenfactorytypes.ModuleName),
-		appKeepers.AccountKeeper,
-		appKeepers.BankKeeper.WithMintCoinsRestriction(tokenfactorytypes.NewTokenFactoryDenomMintCoinsRestriction()),
-		appKeepers.DistrKeeper,
-	)
-
 	// Quicksilver Keepers
 	appKeepers.EpochsKeeper = epochskeeper.NewKeeper(appCodec, appKeepers.keys[epochstypes.StoreKey])
 	appKeepers.ParticipationRewardsKeeper.SetEpochsKeeper(appKeepers.EpochsKeeper)
@@ -469,31 +441,6 @@ func (appKeepers *AppKeepers) InitKeepers(
 
 	// The last arguments can contain custom message handlers, and custom query handlers,
 	// if we want to allow any custom callbacks
-	supportedFeatures := "iterator,staking,stargate,osmosis"
-	wasmOpts = append(wasmbinding.RegisterCustomPlugins(&appKeepers.BankKeeper, &appKeepers.TokenFactoryKeeper), wasmOpts...)
-	wasmOpts = append(wasmbinding.RegisterStargateQueries(*bApp.GRPCQueryRouter(), appCodec), wasmOpts...)
-
-	appKeepers.WasmKeeper = wasmkeeper.NewKeeper(
-		appCodec,
-		appKeepers.keys[wasmtypes.StoreKey],
-		appKeepers.AccountKeeper,
-		appKeepers.BankKeeper,
-		appKeepers.StakingKeeper,
-		distrkeeper.NewQuerier(appKeepers.DistrKeeper),
-		// TODO: check if passing appKeepers.IBCKeeper.ChannelKeeper as ICS4Wrapper is correct
-		appKeepers.IBCKeeper.ChannelKeeper,
-		appKeepers.IBCKeeper.ChannelKeeper,
-		&appKeepers.IBCKeeper.PortKeeper,
-		scopedWasmKeeper,
-		appKeepers.TransferKeeper,
-		bApp.MsgServiceRouter(),
-		bApp.GRPCQueryRouter(),
-		wasmDir,
-		wasmConfig,
-		supportedFeatures,
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-		wasmOpts...,
-	)
 
 	icaControllerIBCModule := icacontroller.NewIBCMiddleware(interchainstakingIBCModule, appKeepers.ICAControllerKeeper)
 
@@ -512,7 +459,6 @@ func (appKeepers *AppKeepers) InitKeepers(
 	ibcRouter := porttypes.NewRouter()
 	ibcRouter.
 		AddRoute(ibctransfertypes.ModuleName, ibcStack).
-		AddRoute(wasmtypes.ModuleName, wasm.NewIBCHandler(appKeepers.WasmKeeper, appKeepers.IBCKeeper.ChannelKeeper, appKeepers.IBCKeeper.ChannelKeeper)).
 		AddRoute(icacontrollertypes.SubModuleName, icaControllerIBCModule).
 		AddRoute(icahosttypes.SubModuleName, icaHostIBCModule).
 		AddRoute(interchainstakingtypes.ModuleName, interchainstakingIBCModule)
@@ -573,7 +519,6 @@ func (appKeepers *AppKeepers) InitKeepers(
 	appKeepers.ScopedICAControllerKeeper = scopedICAControllerKeeper
 	appKeepers.ScopedInterchainStakingAccountKeeper = scopedInterchainStakingKeeper
 	appKeepers.ScopedICAHostKeeper = scopedICAHostKeeper
-	appKeepers.scopedWasmKeeper = scopedWasmKeeper
 }
 
 // initParamsKeeper init params keeper and its subspaces.
@@ -601,9 +546,6 @@ func (*AppKeepers) initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *cod
 	paramsKeeper.Subspace(interchainquerytypes.ModuleName)
 	paramsKeeper.Subspace(participationrewardstypes.ModuleName)
 	paramsKeeper.Subspace(airdroptypes.ModuleName)
-	paramsKeeper.Subspace(tokenfactorytypes.ModuleName)
-	// wasm subspace
-	paramsKeeper.Subspace(wasmtypes.ModuleName)
 
 	return paramsKeeper
 }

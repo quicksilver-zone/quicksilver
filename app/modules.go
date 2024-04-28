@@ -1,8 +1,6 @@
 package app
 
 import (
-	"github.com/CosmWasm/wasmd/x/wasm"
-	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	"github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7/packetforward"
 	packetforwardtypes "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7/packetforward/types"
 
@@ -69,8 +67,6 @@ import (
 	participationrewardstypes "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 	"github.com/quicksilver-zone/quicksilver/x/supply"
 	supplytypes "github.com/quicksilver-zone/quicksilver/x/supply/types"
-	"github.com/quicksilver-zone/quicksilver/x/tokenfactory"
-	tokenfactorytypes "github.com/quicksilver-zone/quicksilver/x/tokenfactory/types"
 )
 
 var (
@@ -112,8 +108,6 @@ var (
 		interchainquery.AppModuleBasic{},
 		participationrewards.AppModuleBasic{},
 		airdrop.AppModuleBasic{},
-		tokenfactory.AppModuleBasic{},
-		wasm.AppModuleBasic{},
 		supply.AppModuleBasic{},
 	)
 
@@ -134,8 +128,6 @@ var (
 		participationrewardstypes.ModuleName:       nil,
 		airdroptypes.ModuleName:                    nil,
 		packetforwardtypes.ModuleName:              nil,
-		wasmtypes.ModuleName:                       {authtypes.Burner},
-		tokenfactorytypes.ModuleName:               {authtypes.Minter, authtypes.Burner},
 	}
 )
 
@@ -181,8 +173,6 @@ func appModules(
 		interchainquery.NewAppModule(appCodec, app.InterchainQueryKeeper),
 		participationrewards.NewAppModule(appCodec, app.ParticipationRewardsKeeper),
 		airdrop.NewAppModule(appCodec, app.AirdropKeeper),
-		tokenfactory.NewAppModule(app.TokenFactoryKeeper, app.AccountKeeper, app.BankKeeper),
-		wasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.BaseApp.MsgServiceRouter(), app.GetSubspace(wasmtypes.ModuleName)),
 		supply.NewAppModule(appCodec, app.SupplyKeeper),
 	}
 }
@@ -223,8 +213,6 @@ func simulationModules(
 		interchainquery.NewAppModule(appCodec, app.InterchainQueryKeeper),
 		participationrewards.NewAppModule(appCodec, app.ParticipationRewardsKeeper),
 		airdrop.NewAppModule(appCodec, app.AirdropKeeper),
-		tokenfactory.NewAppModule(app.TokenFactoryKeeper, app.AccountKeeper, app.BankKeeper),
-		// wasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.BaseApp.MsgServiceRouter(), app.GetSubspace(wasmtypes.ModuleName)),
 		// supply.NewAppModule(appCodec, app.SupplyKeeper),
 	}
 }
@@ -270,8 +258,6 @@ func orderBeginBlockers() []string {
 		feegrant.ModuleName,
 		paramstypes.ModuleName,
 		vestingtypes.ModuleName,
-		tokenfactorytypes.ModuleName,
-		wasmtypes.ModuleName,
 		supplytypes.ModuleName,
 	}
 }
@@ -314,8 +300,6 @@ func orderEndBlockers() []string {
 		interchainstakingtypes.ModuleName,
 		participationrewardstypes.ModuleName,
 		airdroptypes.ModuleName,
-		tokenfactorytypes.ModuleName,
-		wasmtypes.ModuleName,
 		supplytypes.ModuleName,
 		// currently no-op.
 	}
@@ -358,10 +342,7 @@ func orderInitBlockers() []string {
 		interchainquerytypes.ModuleName,
 		participationrewardstypes.ModuleName,
 		airdroptypes.ModuleName,
-		tokenfactorytypes.ModuleName,
 		supplytypes.ModuleName,
-		// wasmd
-		wasmtypes.ModuleName,
 		// NOTE: crisis module must go at the end to check for invariants on each module
 		crisistypes.ModuleName,
 	}

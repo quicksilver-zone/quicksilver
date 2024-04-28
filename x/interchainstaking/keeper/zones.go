@@ -14,6 +14,7 @@ import (
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
+	claimsmanagertypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
 	icqtypes "github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
 	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 )
@@ -481,6 +482,12 @@ func (k *Keeper) CollectStatsForZone(ctx sdk.Context, zone *types.Zone) (*types.
 }
 
 func (k *Keeper) RemoveZoneAndAssociatedRecords(ctx sdk.Context, chainID string) {
+	// remove zone and related records
+	zone, ok := k.GetZone(ctx, chainID)
+	if !ok {
+		panic("cannot find zone for deletion")
+	}
+
 	// clear unbondings
 	k.IteratePrefixedUnbondingRecords(ctx, []byte(chainID), func(_ int64, record types.UnbondingRecord) (stop bool) {
 		k.DeleteUnbondingRecord(ctx, record.ChainId, record.Validator, record.EpochNumber)
@@ -493,69 +500,73 @@ func (k *Keeper) RemoveZoneAndAssociatedRecords(ctx sdk.Context, chainID string)
 		return false
 	})
 
-	// remove zone and related records
-	k.IterateZones(ctx, func(index int64, zone *types.Zone) (stop bool) {
-		if zone.ChainId == chainID {
-			// remove uni-5 delegation records
-			k.IterateAllDelegations(ctx, chainID, func(delegation types.Delegation) (stop bool) {
-				err := k.RemoveDelegation(ctx, chainID, delegation)
-				if err != nil {
-					panic(err)
-				}
-				return false
-			})
-
-			// remove performance delegation records
-			k.IterateAllPerformanceDelegations(ctx, chainID, func(delegation types.Delegation) (stop bool) {
-				err := k.RemovePerformanceDelegation(ctx, chainID, delegation)
-				if err != nil {
-					panic(err)
-				}
-				return false
-			})
-
-			// remove receipts
-			k.IterateZoneReceipts(ctx, chainID, func(index int64, receiptInfo types.Receipt) (stop bool) {
-				k.DeleteReceipt(ctx, receiptInfo.ChainId, receiptInfo.Txhash)
-				return false
-			})
-
-			// remove withdrawal records
-			k.IterateZoneWithdrawalRecords(ctx, chainID, func(index int64, record types.WithdrawalRecord) (stop bool) {
-				k.DeleteWithdrawalRecord(ctx, zone.ChainId, record.Txhash, record.Status)
-				return false
-			})
-
-			// remove validators
-			k.IterateValidators(ctx, zone.ChainId, func(index int64, validator types.Validator) (stop bool) {
-				valAddr, err := validator.GetAddressBytes()
-				if err != nil {
-					panic(err)
-				}
-				k.DeleteValidator(ctx, chainID, valAddr)
-				return false
-			})
-
-			k.IteratePortConnections(ctx, func(pc types.PortConnectionTuple) (stop bool) {
-				if pc.ConnectionId == zone.ConnectionId {
-					k.DeleteConnectionForPort(ctx, pc.PortId)
-				}
-				return false
-			})
-
-			k.DeleteDenomZoneMapping(ctx, zone.LocalDenom)
-
-			k.DeleteZone(ctx, zone.ChainId)
-
+	// remove delegation records
+	k.IterateAllDelegations(ctx, chainID, func(delegation types.Delegation) (stop bool) {
+		err := k.RemoveDelegation(ctx, chainID, delegation)
+		if err != nil {
+			panic(err)
 		}
 		return false
 	})
+
+	// remove performance delegation records
+	k.IterateAllPerformanceDelegations(ctx, chainID, func(delegation types.Delegation) (stop bool) {
+		err := k.RemovePerformanceDelegation(ctx, chainID, delegation)
+		if err != nil {
+			panic(err)
+		}
+		return false
+	})
+
+	// remove receipts
+	k.IterateZoneReceipts(ctx, chainID, func(index int64, receiptInfo types.Receipt) (stop bool) {
+		k.DeleteReceipt(ctx, chainID, receiptInfo.Txhash)
+		return false
+	})
+
+	// remove withdrawal records
+	k.IterateZoneWithdrawalRecords(ctx, chainID, func(index int64, record types.WithdrawalRecord) (stop bool) {
+		k.DeleteWithdrawalRecord(ctx, chainID, record.Txhash, record.Status)
+		return false
+	})
+
+	// remove validators
+	k.IterateValidators(ctx, chainID, func(index int64, validator types.Validator) (stop bool) {
+		valAddr, err := validator.GetAddressBytes()
+		if err != nil {
+			panic(err)
+		}
+		k.DeleteValidator(ctx, chainID, valAddr)
+		return false
+	})
+
+	k.IteratePortConnections(ctx, func(pc types.PortConnectionTuple) (stop bool) {
+		if pc.ConnectionId == zone.ConnectionId {
+			k.DeleteConnectionForPort(ctx, pc.PortId)
+		}
+		return false
+	})
+
+	k.DeleteDenomZoneMapping(ctx, zone.LocalDenom)
+
+	k.DeleteZone(ctx, zone.ChainId)
 
 	// remove queries in state
 	k.ICQKeeper.IterateQueries(ctx, func(_ int64, queryInfo icqtypes.Query) (stop bool) {
 		if queryInfo.ChainId == chainID {
 			k.ICQKeeper.DeleteQuery(ctx, queryInfo.Id)
 		}
+		return false
+	})
+
+	// remove claims
+	k.ClaimsManagerKeeper.IterateClaims(ctx, chainID, func(index int64, data claimsmanagertypes.Claim) (stop bool) {
+		k.ClaimsManagerKeeper.DeleteClaim(ctx, &data)
+		return false
+	})
+
+	k.ClaimsManagerKeeper.IterateLastEpochClaims(ctx, chainID, func(index int64, data claimsmanagertypes.Claim) (stop bool) {
+		k.ClaimsManagerKeeper.DeleteClaim(ctx, &data)
 		return false
 	})
 }

@@ -1,7 +1,6 @@
 package keepers
 
 import (
-	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	packetforwardtypes "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7/packetforward/types"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -34,7 +33,6 @@ import (
 	minttypes "github.com/quicksilver-zone/quicksilver/x/mint/types"
 	participationrewardstypes "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 	supplytypes "github.com/quicksilver-zone/quicksilver/x/supply/types"
-	tokenfactorytypes "github.com/quicksilver-zone/quicksilver/x/tokenfactory/types"
 )
 
 // TODO: We need to automate this, by bundling with a module struct...
@@ -69,8 +67,6 @@ func KVStoreKeys() []string {
 		interchainquerytypes.StoreKey,
 		participationrewardstypes.StoreKey,
 		airdroptypes.StoreKey,
-		wasmtypes.StoreKey,
-		tokenfactorytypes.StoreKey,
 		supplytypes.StoreKey,
 	}
 }

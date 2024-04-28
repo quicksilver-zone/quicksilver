@@ -57,7 +57,6 @@ func BenchmarkSimulation(b *testing.B) {
 		simulation.FlagPeriodValue,
 		app.MakeEncodingConfig(),
 		app.EmptyAppOptions{},
-		app.GetWasmOpts(app.EmptyAppOptions{}),
 		false,
 		false,
 	)
@@ -117,7 +116,6 @@ func TestAppStateDeterminism(t *testing.T) {
 				simulation.FlagPeriodValue,
 				app.MakeEncodingConfig(),
 				app.EmptyAppOptions{},
-				app.GetWasmOpts(app.EmptyAppOptions{}),
 				false,
 				false,
 				interBlockCacheOpt(),

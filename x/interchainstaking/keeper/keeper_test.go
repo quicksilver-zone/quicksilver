@@ -88,7 +88,7 @@ func (suite *KeeperTestSuite) setupTestZones() {
 		DepositsEnabled:  true,
 		Decimals:         6,
 		Is_118:           true,
-		DustThreshold:    "1000000",
+		DustThreshold:    math.NewInt(1000000),
 	}
 
 	quicksilver := suite.GetQuicksilverApp(suite.chainA)
@@ -143,8 +143,9 @@ func (suite *KeeperTestSuite) setupChannelForICA(ctx sdk.Context, chainID, conne
 	if err != nil {
 		return err
 	}
-	err = quicksilver.GetScopedIBCKeeper().ClaimCapability(
-		ctx,
+
+	err = quicksilver.GetScopedICAControllerKeeper().ClaimCapability(
+		suite.chainA.GetContext(),
 		key,
 		host.ChannelCapabilityPath(portID, channelID),
 	)
@@ -152,17 +153,10 @@ func (suite *KeeperTestSuite) setupChannelForICA(ctx sdk.Context, chainID, conne
 		return err
 	}
 
-	key, err = quicksilver.InterchainstakingKeeper.ScopedKeeper().NewCapability(
-		ctx,
-		host.PortPath(portID),
-	)
-	if err != nil {
-		return err
-	}
 	err = quicksilver.GetScopedIBCKeeper().ClaimCapability(
-		ctx,
+		suite.chainA.GetContext(),
 		key,
-		host.PortPath(portID),
+		host.ChannelCapabilityPath(portID, channelID),
 	)
 	if err != nil {
 		return err

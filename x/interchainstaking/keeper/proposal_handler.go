@@ -67,6 +67,7 @@ func (k *Keeper) HandleRegisterZoneProposal(ctx sdk.Context, p *types.RegisterZo
 		UnbondingPeriod:    int64(tmClientState.UnbondingPeriod),
 		MessagesPerTx:      p.MessagesPerTx,
 		Is_118:             p.Is_118,
+		DustThreshold:      p.DustThreshold,
 	}
 	k.SetZone(ctx, zone)
 
@@ -210,6 +211,13 @@ func (k *Keeper) HandleUpdateZoneProposal(ctx sdk.Context, p *types.UpdateZonePr
 				return err
 			}
 			zone.Is_118 = boolValue
+
+		case "dust_threshold":
+			intVal, ok := sdk.NewIntFromString(change.Value)
+			if !ok {
+				return fmt.Errorf("unable to parse %s as a math.Int value", change.Value)
+			}
+			zone.DustThreshold = intVal
 
 		case "connection_id":
 			if !strings.HasPrefix(change.Value, "connection-") {

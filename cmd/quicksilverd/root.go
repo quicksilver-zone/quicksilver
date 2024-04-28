@@ -7,9 +7,6 @@ import (
 	"os"
 	"path/filepath"
 
-	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
-	tmtypes "github.com/cometbft/cometbft/types"
-	"github.com/prometheus/client_golang/prometheus"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 
@@ -259,27 +256,12 @@ func (ac appCreator) newApp(
 		cast.ToUint32(appOpts.Get(server.FlagStateSyncSnapshotKeepRecent)),
 	)
 
-	var wasmOpts []wasmkeeper.Option
-	if cast.ToBool(appOpts.Get("telemetry.enabled")) {
-		wasmOpts = append(wasmOpts, wasmkeeper.WithVMCacheMetrics(prometheus.DefaultRegisterer))
-	}
-
-	chainID := cast.ToString(appOpts.Get(flags.FlagChainID))
-	if chainID == "" {
-		appGenesis, err := tmtypes.GenesisDocFromFile(filepath.Join(cast.ToString(appOpts.Get(flags.FlagHome)), "config", "genesis.json"))
-		if err != nil {
-			panic(err)
-		}
-		chainID = appGenesis.ChainID
-	}
-
 	return app.NewQuicksilver(
 		logger, db, traceStore, true, skipUpgradeHeights,
 		cast.ToString(appOpts.Get(flags.FlagHome)),
 		cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)),
 		ac.encCfg,
 		appOpts,
-		wasmOpts,
 		false,
 		cast.ToBool(appOpts.Get(FlagSupplyEnabled)),
 		baseapp.SetPruning(pruningOpts),
@@ -318,7 +300,6 @@ func (ac appCreator) appExport(
 	if height == -1 {
 		loadLatest = true
 	}
-	var emptyWasmOpts []wasmkeeper.Option
 
 	qsApp := app.NewQuicksilver(
 		logger,
@@ -330,7 +311,6 @@ func (ac appCreator) appExport(
 		cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)),
 		ac.encCfg,
 		appOpts,
-		emptyWasmOpts,
 		false,
 		false,
 	)

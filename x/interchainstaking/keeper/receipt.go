@@ -7,8 +7,6 @@ import (
 
 	"github.com/cosmos/gogoproto/proto"
 
-	sdkioerrors "cosmossdk.io/errors"
-
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"
@@ -18,7 +16,6 @@ import (
 	transfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
 	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
-	host "github.com/cosmos/ibc-go/v7/modules/core/24-host"
 
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
@@ -144,8 +141,8 @@ func (k *Keeper) SendTokenIBC(ctx sdk.Context, senderAccAddress sdk.AccAddress, 
 
 	k.IBCKeeper.ChannelKeeper.IterateChannels(ctx, func(channel channeltypes.IdentifiedChannel) bool {
 		if channel.ConnectionHops[0] == zone.ConnectionId && channel.PortId == types.TransferPort && channel.State == channeltypes.OPEN {
-			srcChannel = channel.Counterparty.ChannelId
-			srcPort = channel.Counterparty.PortId
+			srcChannel = channel.ChannelId
+			srcPort = channel.PortId
 			return true
 		}
 		return false
@@ -275,15 +272,6 @@ func ProdSubmitTx(ctx sdk.Context, k *Keeper, msgs []sdk.Msg, account *types.ICA
 	connectionID, err := k.GetConnectionForPort(ctx, portID)
 	if err != nil {
 		return err
-	}
-	channelID, found := k.ICAControllerKeeper.GetActiveChannelID(ctx, connectionID, portID)
-	if !found {
-		return sdkioerrors.Wrapf(icatypes.ErrActiveChannelNotFound, "failed to retrieve active channel for port %s in submittx", portID)
-	}
-
-	chanCap, found := k.scopedKeeper.GetCapability(ctx, host.ChannelCapabilityPath(portID, channelID))
-	if !found {
-		return sdkioerrors.Wrap(channeltypes.ErrChannelCapabilityNotFound, "module does not own channel capability")
 	}
 
 	chunkSize := int(messagesPerTx)

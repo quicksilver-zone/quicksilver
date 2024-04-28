@@ -58,7 +58,6 @@ func NewAppConstructor(encCfg EncodingConfig) network.AppConstructor {
 			0,
 			encCfg,
 			EmptyAppOptions{},
-			GetWasmOpts(EmptyAppOptions{}),
 			false,
 			false,
 			baseapp.SetPruning(purningtypes.NewPruningOptionsFromString(appConfig.Pruning)),

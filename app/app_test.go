@@ -54,7 +54,6 @@ func TestQuicksilverExport(t *testing.T) {
 		0,
 		app.MakeEncodingConfig(),
 		app.EmptyAppOptions{},
-		app.GetWasmOpts(app.EmptyAppOptions{}),
 		false,
 		false,
 		baseapp.SetChainID("quicksilver-1"),
@@ -86,7 +85,6 @@ func TestQuicksilverExport(t *testing.T) {
 		0,
 		app.MakeEncodingConfig(),
 		app.EmptyAppOptions{},
-		app.GetWasmOpts(app.EmptyAppOptions{}),
 		false,
 		false,
 	)

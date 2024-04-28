@@ -8,10 +8,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/CosmWasm/wasmd/x/wasm"
-	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
-	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	"github.com/prometheus/client_golang/prometheus"
 	"github.com/spf13/cast"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -114,7 +110,6 @@ func NewQuicksilver(
 	invCheckPeriod uint,
 	encodingConfig EncodingConfig,
 	appOpts servertypes.AppOptions,
-	wasmOpts []wasmkeeper.Option,
 	mock bool,
 	enableSupplyEndpoint bool,
 	baseAppOptions ...func(*baseapp.BaseApp),
@@ -143,12 +138,6 @@ func NewQuicksilver(
 		invCheckPeriod:    invCheckPeriod,
 	}
 
-	wasmDir := filepath.Join(homePath, "data")
-	wasmConfig, err := wasm.ReadWasmConfig(appOpts)
-	if err != nil {
-		panic("error while reading wasm config: " + err.Error())
-	}
-
 	app.AppKeepers = keepers.NewAppKeepers(
 		appCodec,
 		bApp,
@@ -160,9 +149,6 @@ func NewQuicksilver(
 		homePath,
 		invCheckPeriod,
 		appOpts,
-		wasmDir,
-		wasmConfig,
-		wasmOpts,
 		enableSupplyEndpoint,
 	)
 
@@ -205,9 +191,7 @@ func NewQuicksilver(
 			SignModeHandler: encodingConfig.TxConfig.SignModeHandler(),
 			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
 		},
-		WasmConfig:        wasmConfig,
-		TxCounterStoreKey: app.GetKey(wasmtypes.StoreKey),
-		IBCKeeper:         app.IBCKeeper,
+		IBCKeeper: app.IBCKeeper,
 	}
 
 	app.SetInitChainer(app.InitChainer)
@@ -402,7 +386,7 @@ func (app *Quicksilver) GetScopedIBCKeeper() capabilitykeeper.ScopedKeeper {
 	return app.ScopedIBCKeeper
 }
 
-// GetScopedICAControllerKeeper
+// GetScopedIBCKeeper implements the TestingApp interface.
 func (app *Quicksilver) GetScopedICAControllerKeeper() capabilitykeeper.ScopedKeeper {
 	return app.ScopedICAControllerKeeper
 }
@@ -422,24 +406,3 @@ func GetMaccPerms() map[string][]string {
 
 	return dupMaccPerms
 }
-
-func GetWasmOpts(appOpts servertypes.AppOptions) []wasmkeeper.Option {
-	var wasmOpts []wasmkeeper.Option
-	if cast.ToBool(appOpts.Get("telemetry.enabled")) {
-		wasmOpts = append(wasmOpts, wasmkeeper.WithVMCacheMetrics(prometheus.DefaultRegisterer))
-	}
-
-	wasmOpts = append(wasmOpts, wasmkeeper.WithGasRegister(NewWasmGasRegister()))
-
-	return wasmOpts
-}
-
-// PROPOSALS
-
-const (
-	ProposalsEnabled = "true"
-	// If set to non-empty string it must be comma-separated list of values that are all a subset
-	// of "EnableAllProposals" (takes precedence over ProposalsEnabled)
-	// https://github.com/CosmWasm/wasmd/blob/02a54d33ff2c064f3539ae12d75d027d9c665f05/x/wasm/internal/types/proposal.go#L28-L34
-	EnableSpecificProposals = ""
-)

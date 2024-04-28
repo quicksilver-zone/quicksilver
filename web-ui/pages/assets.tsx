@@ -167,7 +167,7 @@ function Home() {
       const chainId = apyAsset ? getChainIdForToken(tokenToChainIdMap, baseToken) : undefined;
 
       const apy = chainId && chainId !== 'dydx-mainnet-1' && APYs && APYs.hasOwnProperty(chainId) ? APYs[chainId] : 0;
-      const redemptionRate = chainId && redemptionRates && redemptionRates[chainId] ? redemptionRates[chainId].current || 1 : 1;
+      const redemptionRate = chainId && redemptionRates && redemptionRates[chainId] ? redemptionRates[chainId].last || 1 : 1;
       const exp = apyAsset ? getExponent(apyAsset) : 0;
 
       return {
