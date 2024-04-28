@@ -26,13 +26,12 @@ import chains from 'chain-registry';
 import { cosmos } from 'quicksilverjs';
 import React, { useEffect, useState } from 'react';
 
+import { MultiModal } from './validatorSelectionModal';
 
 import { useTx } from '@/hooks';
 import { useFeeEstimation } from '@/hooks/useFeeEstimation';
 import { useZoneQuery } from '@/hooks/useQueries';
 import { shiftDigits } from '@/utils';
-
-import { MultiModal } from './validatorSelectionModal';
 
 const ChakraModalContent = styled(ModalContent)`
   position: relative;
@@ -232,7 +231,7 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
 
   const parsedAmount = parseFloat(tokenAmount ?? '0');
 
-  let numericAmount = BigInt(Math.trunc(parsedAmount * Math.pow(10, Number(zone?.decimals ?? '6'))));
+  let numericAmount = BigInt(Math.floor(parsedAmount * Math.pow(10, Number(zone?.decimals ?? '6'))));
 
   if (numericAmount <= 0) {
     numericAmount = BigInt(0);

@@ -33,6 +33,9 @@ import { quicksilver } from 'quicksilverjs';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { FaStar } from 'react-icons/fa';
 
+import RevertSharesProcessModal from './modals/revertSharesProcessModal';
+import StakingProcessModal from './modals/stakingProcessModal';
+import TransferProcessModal from './modals/transferProcessModal';
 
 import { useTx } from '@/hooks';
 import { useFeeEstimation } from '@/hooks/useFeeEstimation';
@@ -46,10 +49,6 @@ import {
   useZoneQuery,
 } from '@/hooks/useQueries';
 import { getExponent, shiftDigits } from '@/utils';
-
-import RevertSharesProcessModal from './modals/revertSharesProcessModal';
-import StakingProcessModal from './modals/stakingProcessModal';
-import TransferProcessModal from './modals/transferProcessModal';
 
 type StakingBoxProps = {
   selectedOption: {
@@ -155,7 +154,7 @@ export const StakingBox = ({
   const { requestRedemption } = quicksilver.interchainstaking.v1.MessageComposer.withTypeUrl;
   const parsedAmount = parseFloat(tokenAmount ?? '0');
 
-  let numericAmount = BigInt(Math.trunc(parsedAmount * Math.pow(10, Number(zone?.decimals ?? '6'))));
+  let numericAmount = BigInt(Math.floor(parsedAmount * Math.pow(10, Number(zone?.decimals ?? '6'))));
 
   if (numericAmount <= 0) {
     numericAmount = BigInt(0);
