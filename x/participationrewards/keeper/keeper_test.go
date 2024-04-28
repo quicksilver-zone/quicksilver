@@ -360,7 +360,6 @@ func (suite *KeeperTestSuite) setupChannelForICA(chainID, connectionID, accountS
 	quicksilver.IBCKeeper.ChannelKeeper.SetNextSequenceSend(suite.chainA.GetContext(), portID, channelID, 1)
 	quicksilver.ICAControllerKeeper.SetActiveChannelID(suite.chainA.GetContext(), connectionID, portID, channelID)
 	chanPath := host.ChannelCapabilityPath(portID, channelID)
-	portPath := host.PortPath(portID)
 	key, err := quicksilver.InterchainstakingKeeper.ScopedKeeper().NewCapability(
 		suite.chainA.GetContext(),
 		chanPath,
@@ -382,31 +381,6 @@ func (suite *KeeperTestSuite) setupChannelForICA(chainID, connectionID, accountS
 		suite.chainA.GetContext(),
 		key,
 		chanPath,
-	)
-	if err != nil {
-		return err
-	}
-
-	err = quicksilver.GetScopedICAControllerKeeper().ClaimCapability(
-		suite.chainA.GetContext(),
-		key,
-		host.ChannelCapabilityPath(portID, channelID),
-	)
-	if err != nil {
-		return err
-	}
-
-	key, err = quicksilver.InterchainstakingKeeper.ScopedKeeper().NewCapability(
-		suite.chainA.GetContext(),
-		portPath,
-	)
-	if err != nil {
-		return err
-	}
-	err = quicksilver.GetScopedIBCKeeper().ClaimCapability(
-		suite.chainA.GetContext(),
-		key,
-		portPath,
 	)
 	if err != nil {
 		return err
