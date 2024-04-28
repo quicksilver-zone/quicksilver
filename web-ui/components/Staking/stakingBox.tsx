@@ -33,6 +33,9 @@ import { quicksilver } from 'quicksilverjs';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { FaStar } from 'react-icons/fa';
 
+import RevertSharesProcessModal from './modals/revertSharesProcessModal';
+import StakingProcessModal from './modals/stakingProcessModal';
+import TransferProcessModal from './modals/transferProcessModal';
 
 import { useTx } from '@/hooks';
 import { useFeeEstimation } from '@/hooks/useFeeEstimation';
@@ -46,10 +49,6 @@ import {
   useZoneQuery,
 } from '@/hooks/useQueries';
 import { getExponent, shiftDigits } from '@/utils';
-
-import RevertSharesProcessModal from './modals/revertSharesProcessModal';
-import StakingProcessModal from './modals/stakingProcessModal';
-import TransferProcessModal from './modals/transferProcessModal';
 
 type StakingBoxProps = {
   selectedOption: {
@@ -444,12 +443,12 @@ export const StakingBox = ({
                           // Check if the input is a lone period or incomplete number format
                           if (tokenAmount === '.') {
                             setInputError(true);
-                            setTokenAmount('');
+                            setTokenAmount('0');
                           } else {
                             let inputValue = parseFloat(tokenAmount);
                             if (isNaN(inputValue) || inputValue <= 0) {
                               setInputError(true);
-                              setTokenAmount('');
+                              setTokenAmount('0');
                             } else if (inputValue > maxStakingAmount) {
                               setInputError(false);
                               setTokenAmount(maxStakingAmount.toString());
@@ -768,7 +767,7 @@ export const StakingBox = ({
                       if (isNaN(inputValue) || inputValue <= 0) {
                         // Set error for invalid or non-positive numbers
                         setInputError(true);
-                        setTokenAmount('');
+                        setTokenAmount('0');
                       } else if (inputValue > maxUnstakingAmount) {
                         // Limit the input to the max staking amount
                         setInputError(false);
