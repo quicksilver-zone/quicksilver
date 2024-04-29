@@ -359,6 +359,7 @@ func (suite *KeeperTestSuite) TestSendTokenIBC() {
 
 		portID := types.TransferPort
 		channelID := suite.path.EndpointA.ChannelID
+
 		ibcAmount := transfertypes.GetTransferCoin(portID, channelID, sdk.DefaultBondDenom, sdk.NewInt(100))
 
 		err = quicksilver.BankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(ibcAmount))
