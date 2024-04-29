@@ -325,8 +325,11 @@ func (suite *KeeperTestSuite) TestSendTokenIBC() {
 		// setup transfer channel
 		suite.path.EndpointA.ChannelConfig.Version = transfertypes.Version
 		suite.path.EndpointB.ChannelConfig.Version = transfertypes.Version
-		suite.coordinator.CreateTransferChannels(suite.path)
 
+		// set the counter party channel sequence to a different channel to prevent regression
+		suite.GetQuicksilverApp(suite.chainB).IBCKeeper.ChannelKeeper.SetNextChannelSequence(suite.chainB.GetContext(), 10)
+
+		suite.coordinator.CreateTransferChannels(suite.path)
 		suite.setupTestZones()
 
 		quicksilver := suite.GetQuicksilverApp(suite.chainA)
@@ -356,7 +359,6 @@ func (suite *KeeperTestSuite) TestSendTokenIBC() {
 
 		portID := types.TransferPort
 		channelID := suite.path.EndpointA.ChannelID
-
 		ibcAmount := transfertypes.GetTransferCoin(portID, channelID, sdk.DefaultBondDenom, sdk.NewInt(100))
 
 		err = quicksilver.BankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(ibcAmount))
