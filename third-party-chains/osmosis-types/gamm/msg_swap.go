@@ -1,11 +1,9 @@
 package gamm
 
+import poolmanagertypes "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/poolmanager"
+
 // SwapMsg defines a simple interface for getting the token denoms on a swap message route.
-type SwapMsgRoute interface {
-	TokenInDenom() string
-	TokenOutDenom() string
-	TokenDenomsOnPath() []string
-}
+type SwapMsgRoute = poolmanagertypes.SwapMsgRoute
 
 var (
 	_ SwapMsgRoute = MsgSwapExactAmountOut{}
