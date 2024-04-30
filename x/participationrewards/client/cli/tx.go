@@ -91,7 +91,6 @@ func GetSubmitClaimsTxCmd() *cobra.Command {
 			}
 
 			fileName := args[0]
-
 			contents, err := os.ReadFile(fileName)
 			if err != nil {
 				return err
