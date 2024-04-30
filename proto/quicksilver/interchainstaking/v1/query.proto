@@ -102,6 +102,16 @@ service Query {
   rpc MappedAccounts(QueryMappedAccountsRequest) returns (QueryMappedAccountsResponse) {
     option (google.api.http).get = "/quicksilver/interchainstaking/v1/mapped_addresses/{address}";
   }
+
+  // CLaimedPercentage provides data on the claimed percentage for a given zone
+  rpc ClaimedPercentage(QueryClaimedPercentageRequest) returns (QueryClaimedPercentageResponse) {
+    option (google.api.http).get = "/quicksilver/interchainstaking/v1/claimed_percentage/{chain_id}";
+  }
+
+  // ClaimedPercentageByClaimType provides data on the claimed percentage of a given claim type in a given zone
+  rpc ClaimedPercentageByClaimType(QueryClaimedPercentageRequest) returns (QueryClaimedPercentageResponse) {
+    option (google.api.http).get = "/quicksilver/interchainstaking/v1/claimed_percentage/{chain_id}/{claim_type}";
+  }
 }
 
 message Statistics {

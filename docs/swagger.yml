@@ -2573,6 +2573,116 @@ paths:
                 type: string
       tags:
         - Msg
+  /quicksilver/interchainstaking/v1/claimed_percentage/{chain_id}:
+    get:
+      summary: >-
+        CLaimedPercentage provides data on the claimed percentage for a given
+        zone
+      operationId: ClaimedPercentage
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              percentage:
+                type: string
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: chain_id
+          in: path
+          required: true
+          type: string
+        - name: claim_type
+          description: ' - ClaimTypeUndefined: Undefined action (per protobuf spec)'
+          in: query
+          required: false
+          type: string
+          enum:
+            - ClaimTypeUndefined
+            - ClaimTypeLiquidToken
+            - ClaimTypeOsmosisPool
+            - ClaimTypeCrescentPool
+            - ClaimTypeSifchainPool
+            - ClaimTypeUmeeToken
+          default: ClaimTypeUndefined
+      tags:
+        - QueryInterchainStaking
+  /quicksilver/interchainstaking/v1/claimed_percentage/{chain_id}/{claim_type}:
+    get:
+      summary: >-
+        ClaimedPercentageByClaimType provides data on the claimed percentage of
+        a given claim type in a given zone
+      operationId: ClaimedPercentageByClaimType
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              percentage:
+                type: string
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: chain_id
+          in: path
+          required: true
+          type: string
+        - name: claim_type
+          in: path
+          required: true
+          type: string
+          enum:
+            - ClaimTypeUndefined
+            - ClaimTypeLiquidToken
+            - ClaimTypeOsmosisPool
+            - ClaimTypeCrescentPool
+            - ClaimTypeSifchainPool
+            - ClaimTypeUmeeToken
+      tags:
+        - QueryInterchainStaking
   /quicksilver/interchainstaking/v1/delegator_intents/{delegator_address}:
     get:
       summary: >-
