@@ -11,7 +11,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
-	concentrated_liquidity "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/concentrated-liquidity"
+	concentratedliquidity "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/concentrated-liquidity"
 	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/gamm"
 	umeetypes "github.com/quicksilver-zone/quicksilver/third-party-chains/umee-types/leverage/types"
 	icqtypes "github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
@@ -165,7 +165,7 @@ func OsmosisPoolUpdateCallback(ctx sdk.Context, k *Keeper, response []byte, quer
 }
 
 func OsmosisClPoolUpdateCallback(ctx sdk.Context, k *Keeper, response []byte, query icqtypes.Query) error {
-	var pd concentrated_liquidity.ConcentratedPoolExtension
+	var pd concentratedliquidity.ConcentratedPoolExtension
 	if err := k.cdc.UnmarshalInterface(response, &pd); err != nil {
 		return err
 	}

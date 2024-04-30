@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 
@@ -100,6 +101,6 @@ func (*OsmosisClModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.Msg
 	return claimAmount, nil
 }
 
-func (*OsmosisClModule) KeyPool(poolId uint64) []byte {
-	return osmocl.KeyPool(poolId)
+func (*OsmosisClModule) KeyPool(poolID uint64) []byte {
+	return osmocl.KeyPool(poolID)
 }

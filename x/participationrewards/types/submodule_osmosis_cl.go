@@ -39,7 +39,6 @@ func (opd *OsmosisClPoolProtocolData) GetPool() (cl.ConcentratedPoolExtension, e
 		}
 	}
 	return &poolData, nil
-
 }
 
 // ValidateBasic satisfies ProtocolDataI and validates basic stateless data.
