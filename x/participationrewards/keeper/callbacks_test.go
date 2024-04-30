@@ -37,7 +37,7 @@ func (suite *KeeperTestSuite) executeOsmosisPoolUpdateCallback() {
 	// suite.NoError(err)
 
 	// setup for expected
-	var pdi gamm.PoolI
+	var pdi gamm.CFMMPoolI
 	err = prk.GetCodec().UnmarshalInterface(resp, &pdi)
 	suite.NoError(err)
 	expectedData, err := json.Marshal(pdi)
