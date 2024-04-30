@@ -7,6 +7,7 @@ import (
 	"sort"
 	"strings"
 
+	"golang.org/x/exp/maps"
 	"golang.org/x/term"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -194,8 +195,12 @@ $ %s k l ibc-1`, appName, appName)),
 				return err
 			}
 
-			for key, val := range info {
-				fmt.Printf("key(%s) -> %s\n", key, val)
+			// Ensure that the keys are printed in a deterministic order.
+			// Please see https://github.com/quicksilver-zone/quicksilver/issues/1522
+			keys := maps.Keys(info)
+			sort.Strings(keys)
+			for _, key := range keys {
+				fmt.Printf("key(%s) -> %s\n", key, info[key])
 			}
 
 			return nil
