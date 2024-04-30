@@ -7,9 +7,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/CosmWasm/wasmd/x/wasm"
-	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
-	"github.com/prometheus/client_golang/prometheus"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 	tmcfg "github.com/tendermint/tendermint/config"
@@ -252,19 +249,12 @@ func (ac appCreator) newApp(
 		cast.ToUint32(appOpts.Get(server.FlagStateSyncSnapshotKeepRecent)),
 	)
 
-	var wasmOpts []wasm.Option
-	if cast.ToBool(appOpts.Get("telemetry.enabled")) {
-		wasmOpts = append(wasmOpts, wasmkeeper.WithVMCacheMetrics(prometheus.DefaultRegisterer))
-	}
-
 	return app.NewQuicksilver(
 		logger, db, traceStore, true, skipUpgradeHeights,
 		cast.ToString(appOpts.Get(flags.FlagHome)),
 		cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)),
 		ac.encCfg,
-		wasm.EnableAllProposals,
 		appOpts,
-		wasmOpts,
 		false,
 		cast.ToBool(appOpts.Get(FlagSupplyEnabled)),
 		baseapp.SetPruning(pruningOpts),
@@ -302,7 +292,6 @@ func (ac appCreator) appExport(
 	if height == -1 {
 		loadLatest = true
 	}
-	var emptyWasmOpts []wasm.Option
 
 	qsApp := app.NewQuicksilver(
 		logger,
@@ -313,9 +302,7 @@ func (ac appCreator) appExport(
 		homePath,
 		cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)),
 		ac.encCfg,
-		wasm.EnableAllProposals,
 		appOpts,
-		emptyWasmOpts,
 		false,
 		false,
 	)

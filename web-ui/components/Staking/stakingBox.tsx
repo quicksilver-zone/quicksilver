@@ -34,9 +34,6 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { FaStar } from 'react-icons/fa';
 
 
-
-
-
 import { useTx } from '@/hooks';
 import { useFeeEstimation } from '@/hooks/useFeeEstimation';
 import {
@@ -53,9 +50,6 @@ import { getExponent, shiftDigits } from '@/utils';
 import RevertSharesProcessModal from './modals/revertSharesProcessModal';
 import StakingProcessModal from './modals/stakingProcessModal';
 import TransferProcessModal from './modals/transferProcessModal';
-
-
-
 
 type StakingBoxProps = {
   selectedOption: {
@@ -159,9 +153,14 @@ export const StakingBox = ({
   const quicksilverChainName = env === 'testnet' ? 'quicksilvertestnet' : 'quicksilver';
 
   const { requestRedemption } = quicksilver.interchainstaking.v1.MessageComposer.withTypeUrl;
-  const numericAmount = Number(tokenAmount);
-  const smallestUnitAmount = numericAmount * Math.pow(10, 6);
-  const value: Coin = { amount: smallestUnitAmount.toFixed(0), denom: zone?.localDenom ?? '' };
+  const parsedAmount = parseFloat(tokenAmount ?? '0');
+
+  let numericAmount = BigInt(Math.floor(parsedAmount * Math.pow(10, Number(zone?.decimals ?? '6'))));
+
+  if (numericAmount <= 0) {
+    numericAmount = BigInt(0);
+  }
+  const value: Coin = { amount: numericAmount.toString(), denom: zone?.localDenom ?? '' };
   const msgRequestRedemption = requestRedemption({
     value: value,
     fromAddress: qAddress ?? '',
@@ -197,7 +196,7 @@ export const StakingBox = ({
 
   const handleTabsChange = (index: number) => {
     setActiveTabIndex(index);
-    setTokenAmount('');
+    setTokenAmount('0');
     // You can use this Toast Msg to show there is an issue with unbonding
     // if (index === 1) {
     //   toaster.toast({
@@ -208,7 +207,10 @@ export const StakingBox = ({
     // }
   };
 
-  const { delegations, delegationsIsError, delegationsIsLoading, refetchDelegations } = useNativeStakeQuery(selectedOption.chainName, address ?? '');
+  const { delegations, delegationsIsError, delegationsIsLoading, refetchDelegations } = useNativeStakeQuery(
+    selectedOption.chainName,
+    address ?? '',
+  );
 
   const delegationsResponse = delegations?.delegation_responses;
 
@@ -442,12 +444,12 @@ export const StakingBox = ({
                           // Check if the input is a lone period or incomplete number format
                           if (tokenAmount === '.') {
                             setInputError(true);
-                            setTokenAmount('');
+                            setTokenAmount('0');
                           } else {
                             let inputValue = parseFloat(tokenAmount);
                             if (isNaN(inputValue) || inputValue <= 0) {
                               setInputError(true);
-                              setTokenAmount('');
+                              setTokenAmount('0');
                             } else if (inputValue > maxStakingAmount) {
                               setInputError(false);
                               setTokenAmount(maxStakingAmount.toString());
@@ -766,7 +768,7 @@ export const StakingBox = ({
                       if (isNaN(inputValue) || inputValue <= 0) {
                         // Set error for invalid or non-positive numbers
                         setInputError(true);
-                        setTokenAmount('');
+                        setTokenAmount('0');
                       } else if (inputValue > maxUnstakingAmount) {
                         // Limit the input to the max staking amount
                         setInputError(false);

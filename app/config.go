@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/CosmWasm/wasmd/x/wasm"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -55,9 +54,7 @@ func NewAppConstructor(encCfg EncodingConfig) network.AppConstructor {
 			DefaultNodeHome,
 			0,
 			encCfg,
-			wasm.EnableAllProposals,
 			EmptyAppOptions{},
-			GetWasmOpts(EmptyAppOptions{}),
 			false,
 			false,
 			baseapp.SetPruning(purningtypes.NewPruningOptionsFromString(val.AppConfig.Pruning)),

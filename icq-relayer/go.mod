@@ -1,17 +1,18 @@
 module github.com/quicksilver-zone/quicksilver/icq-relayer
 
-go 1.21
+go 1.22.2
 
 require (
+	github.com/avast/retry-go/v4 v4.3.2
 	github.com/cosmos/cosmos-sdk v0.46.16
-	github.com/cosmos/ibc-go/v5 v5.4.0
+	github.com/cosmos/ibc-go/v6 v6.3.1
 	github.com/dgraph-io/ristretto v0.1.1
 	github.com/go-kit/log v0.2.1
 	github.com/prometheus/client_golang v1.18.0
 	github.com/quicksilver-zone/quicksilver v1.5.5
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/viper v1.18.2
-	github.com/strangelove-ventures/lens v0.5.2-0.20220907143146-cc0bde60edd0
+	github.com/strangelove-ventures/lens v0.5.2-0.20230109191452-7105fca04458
 	github.com/tendermint/tendermint v0.34.32
 	golang.org/x/term v0.19.0
 	google.golang.org/grpc v1.63.2
@@ -30,17 +31,17 @@ require (
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.2 // indirect
 	github.com/ChainSafe/go-schnorrkel v1.1.0 // indirect
+	github.com/InjectiveLabs/sdk-go v1.42.4-lens // indirect
 	github.com/armon/go-metrics v0.4.1 // indirect
-	github.com/avast/retry-go/v4 v4.1.0 // indirect
 	github.com/aws/aws-sdk-go v1.44.324 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d // indirect
-	github.com/bgentry/speakeasy v0.1.0 // indirect
+	github.com/bgentry/speakeasy v0.1.1-0.20220910012023-760eaf8b6816 // indirect
 	github.com/bits-and-blooms/bitset v1.7.0 // indirect
-	github.com/btcsuite/btcd v0.22.1 // indirect
+	github.com/btcsuite/btcd v0.23.4 // indirect
 	github.com/btcsuite/btcd/btcec/v2 v2.3.3 // indirect
+	github.com/btcsuite/btcd/btcutil v1.1.3 // indirect
 	github.com/btcsuite/btcd/chaincfg/chainhash v1.0.1 // indirect
-	github.com/btcsuite/btcutil v1.0.3-0.20201208143702-a53e38424cce // indirect
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e // indirect
@@ -48,7 +49,7 @@ require (
 	github.com/consensys/bavard v0.1.13 // indirect
 	github.com/consensys/gnark-crypto v0.12.1 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
-	github.com/cosmos/cosmos-proto v1.0.0-beta.4 // indirect
+	github.com/cosmos/cosmos-proto v1.0.0-beta.5 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/gogoproto v1.4.12 // indirect
 	github.com/cosmos/gorocksdb v1.2.0 // indirect
@@ -138,11 +139,15 @@ require (
 	github.com/tendermint/go-amino v0.16.0 // indirect
 	github.com/tendermint/tm-db v0.6.8-0.20220506192307-f628bb5dc95b // indirect
 	github.com/tidwall/btree v1.5.0 // indirect
+	github.com/tidwall/gjson v1.14.4 // indirect
+	github.com/tidwall/match v1.1.1 // indirect
+	github.com/tidwall/pretty v1.2.0 // indirect
+	github.com/tidwall/sjson v1.2.5 // indirect
 	github.com/tyler-smith/go-bip39 v1.1.0 // indirect
 	github.com/ulikunitz/xz v0.5.11 // indirect
 	github.com/zondax/hid v0.9.2 // indirect
 	github.com/zondax/ledger-go v0.14.3 // indirect
-	go.etcd.io/bbolt v1.3.8 // indirect
+	go.etcd.io/bbolt v1.4.0-alpha.0.0.20240404170359-43604f3112c5 // indirect
 	go.opencensus.io v0.24.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.47.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.47.0 // indirect
@@ -173,7 +178,9 @@ require (
 
 replace (
 	github.com/CosmWasm/wasmd => github.com/notional-labs/wasmd v0.29.0-sdk46.0.20221114145317-d6e67fd50956
+	github.com/evmos/ethermint => github.com/evmos/ethermint v0.22.0
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	github.com/quicksilver-zone/quicksilver => ../
 	github.com/tendermint/tendermint => github.com/cometbft/cometbft v0.34.32
+
 )

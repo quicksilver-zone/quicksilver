@@ -27,10 +27,10 @@ import (
 	claimsmanagertypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
 	"github.com/tendermint/tendermint/libs/log"
 
-	icacontrollerkeeper "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/controller/keeper"
-	ibctransferkeeper "github.com/cosmos/ibc-go/v5/modules/apps/transfer/keeper"
-	ibckeeper "github.com/cosmos/ibc-go/v5/modules/core/keeper"
-	ibctmtypes "github.com/cosmos/ibc-go/v5/modules/light-clients/07-tendermint/types"
+	icacontrollerkeeper "github.com/cosmos/ibc-go/v6/modules/apps/27-interchain-accounts/controller/keeper"
+	ibctransferkeeper "github.com/cosmos/ibc-go/v6/modules/apps/transfer/keeper"
+	ibckeeper "github.com/cosmos/ibc-go/v6/modules/core/keeper"
+	ibctmtypes "github.com/cosmos/ibc-go/v6/modules/light-clients/07-tendermint/types"
 
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	epochskeeper "github.com/quicksilver-zone/quicksilver/x/epochs/keeper"

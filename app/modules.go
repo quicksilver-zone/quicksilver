@@ -1,9 +1,8 @@
 package app
 
 import (
-	"github.com/CosmWasm/wasmd/x/wasm"
-	"github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v5/packetforward"
-	packetforwardtypes "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v5/packetforward/types"
+	"github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v6/packetforward"
+	packetforwardtypes "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v6/packetforward/types"
 
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -42,13 +41,13 @@ import (
 	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-	ica "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts"
-	icatypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/types"
-	"github.com/cosmos/ibc-go/v5/modules/apps/transfer"
-	ibctransfertypes "github.com/cosmos/ibc-go/v5/modules/apps/transfer/types"
-	ibc "github.com/cosmos/ibc-go/v5/modules/core"
-	ibcclientclient "github.com/cosmos/ibc-go/v5/modules/core/02-client/client"
-	ibchost "github.com/cosmos/ibc-go/v5/modules/core/24-host"
+	ica "github.com/cosmos/ibc-go/v6/modules/apps/27-interchain-accounts"
+	icatypes "github.com/cosmos/ibc-go/v6/modules/apps/27-interchain-accounts/types"
+	"github.com/cosmos/ibc-go/v6/modules/apps/transfer"
+	ibctransfertypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
+	ibc "github.com/cosmos/ibc-go/v6/modules/core"
+	ibcclientclient "github.com/cosmos/ibc-go/v6/modules/core/02-client/client"
+	ibchost "github.com/cosmos/ibc-go/v6/modules/core/24-host"
 
 	"github.com/quicksilver-zone/quicksilver/x/airdrop"
 	airdroptypes "github.com/quicksilver-zone/quicksilver/x/airdrop/types"
@@ -68,8 +67,6 @@ import (
 	participationrewardstypes "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 	"github.com/quicksilver-zone/quicksilver/x/supply"
 	supplytypes "github.com/quicksilver-zone/quicksilver/x/supply/types"
-	"github.com/quicksilver-zone/quicksilver/x/tokenfactory"
-	tokenfactorytypes "github.com/quicksilver-zone/quicksilver/x/tokenfactory/types"
 )
 
 var (
@@ -109,8 +106,6 @@ var (
 		interchainquery.AppModuleBasic{},
 		participationrewards.AppModuleBasic{},
 		airdrop.AppModuleBasic{},
-		tokenfactory.AppModuleBasic{},
-		wasm.AppModuleBasic{},
 		supply.AppModuleBasic{},
 	)
 
@@ -131,8 +126,6 @@ var (
 		participationrewardstypes.ModuleName:       nil,
 		airdroptypes.ModuleName:                    nil,
 		packetforwardtypes.ModuleName:              nil,
-		wasm.ModuleName:                            {authtypes.Burner},
-		tokenfactorytypes.ModuleName:               {authtypes.Minter, authtypes.Burner},
 	}
 )
 
@@ -178,8 +171,6 @@ func appModules(
 		interchainquery.NewAppModule(appCodec, app.InterchainQueryKeeper),
 		participationrewards.NewAppModule(appCodec, app.ParticipationRewardsKeeper),
 		airdrop.NewAppModule(appCodec, app.AirdropKeeper),
-		tokenfactory.NewAppModule(app.TokenFactoryKeeper, app.AccountKeeper, app.BankKeeper),
-		wasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
 		supply.NewAppModule(appCodec, app.SupplyKeeper),
 	}
 }
@@ -218,9 +209,7 @@ func simulationModules(
 		interchainquery.NewAppModule(appCodec, app.InterchainQueryKeeper),
 		participationrewards.NewAppModule(appCodec, app.ParticipationRewardsKeeper),
 		airdrop.NewAppModule(appCodec, app.AirdropKeeper),
-		tokenfactory.NewAppModule(app.TokenFactoryKeeper, app.AccountKeeper, app.BankKeeper),
 		// supply.NewAppModule(appCodec, app.SupplyKeeper),
-		// wasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
 	}
 }
 
@@ -265,8 +254,6 @@ func orderBeginBlockers() []string {
 		feegrant.ModuleName,
 		paramstypes.ModuleName,
 		vestingtypes.ModuleName,
-		tokenfactorytypes.ModuleName,
-		wasm.ModuleName,
 		supplytypes.ModuleName,
 	}
 }
@@ -309,8 +296,6 @@ func orderEndBlockers() []string {
 		interchainstakingtypes.ModuleName,
 		participationrewardstypes.ModuleName,
 		airdroptypes.ModuleName,
-		tokenfactorytypes.ModuleName,
-		wasm.ModuleName,
 		supplytypes.ModuleName,
 		// currently no-op.
 	}
@@ -353,10 +338,7 @@ func orderInitBlockers() []string {
 		interchainquerytypes.ModuleName,
 		participationrewardstypes.ModuleName,
 		airdroptypes.ModuleName,
-		tokenfactorytypes.ModuleName,
 		supplytypes.ModuleName,
-		// wasmd
-		wasm.ModuleName,
 		// NOTE: crisis module must go at the end to check for invariants on each module
 		crisistypes.ModuleName,
 	}

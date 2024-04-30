@@ -7,7 +7,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/CosmWasm/wasmd/x/wasm"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
@@ -25,7 +24,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	ibctesting "github.com/cosmos/ibc-go/v5/testing"
+	ibctesting "github.com/cosmos/ibc-go/v6/testing"
 )
 
 // EmptyAppOptions is a stub implementing AppOptions.
@@ -89,9 +88,7 @@ func Setup(t *testing.T, isCheckTx bool) *Quicksilver {
 		DefaultNodeHome,
 		5,
 		MakeEncodingConfig(),
-		wasm.EnableAllProposals,
 		EmptyAppOptions{},
-		GetWasmOpts(EmptyAppOptions{}),
 		false,
 		false,
 	)
@@ -139,9 +136,7 @@ func SetupTestingApp() (testApp ibctesting.TestingApp, genesisState map[string]j
 		DefaultNodeHome,
 		5,
 		MakeEncodingConfig(),
-		wasm.EnableAllProposals,
 		EmptyAppOptions{},
-		GetWasmOpts(EmptyAppOptions{}),
 		true, // set mock state to true
 		false,
 	)
@@ -149,7 +144,8 @@ func SetupTestingApp() (testApp ibctesting.TestingApp, genesisState map[string]j
 }
 
 // GenesisStateWithValSet creates a quicksilver genesis state with the given validator set.
-func GenesisStateWithValSet(t *testing.T,
+func GenesisStateWithValSet(
+	t *testing.T,
 	app *Quicksilver, genesisState GenesisState,
 	valSet *tmtypes.ValidatorSet, genAccs []authtypes.GenesisAccount,
 	balances ...banktypes.Balance,

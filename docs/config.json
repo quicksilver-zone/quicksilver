@@ -101,22 +101,6 @@
           "Query": "QueryParticipationRewards"
         }
       }
-    },
-    {
-      "url": "./tmp-swagger-gen/quicksilver/tokenfactory/v1beta1/tx.swagger.json"
-    },
-    {
-      "url": "./tmp-swagger-gen/quicksilver/tokenfactory/v1beta1/query.swagger.json",
-      "operationIds": {
-        "rename": {
-          "Params": "TokenFactoryParams"
-        }
-      },
-      "tags": {
-        "rename": {
-          "Query": "QueryTokenFactory"
-        }
-      }
     }
   ]
 }
