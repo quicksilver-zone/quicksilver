@@ -60,15 +60,16 @@ enum ProtocolDataType {
   ProtocolDataTypeOsmosisParams = 2;
   ProtocolDataTypeLiquidToken = 3;
   ProtocolDataTypeOsmosisPool = 4;
-  ProtocolDataTypeCrescentPool = 5;
-  ProtocolDataTypeSifchainPool = 6;
+  ProtocolDataTypeCrescentPool = 5 [deprecated = true];
+  ProtocolDataTypeSifchainPool = 6 [deprecated = true];
   ProtocolDataTypeUmeeParams = 7;
   ProtocolDataTypeUmeeReserves = 8;
   ProtocolDataTypeUmeeInterestScalar = 9;
   ProtocolDataTypeUmeeTotalBorrows = 10;
   ProtocolDataTypeUmeeUTokenSupply = 11;
   ProtocolDataTypeUmeeLeverageModuleBalance = 12;
-  ProtocolDataTypeCrescentParams = 13;
-  ProtocolDataTypeCrescentReserveAddressBalance = 14;
-  ProtocolDataTypeCrescentPoolCoinSupply = 15;
+  ProtocolDataTypeCrescentParams = 13 [deprecated = true];
+  ProtocolDataTypeCrescentReserveAddressBalance = 14 [deprecated = true];
+  ProtocolDataTypeCrescentPoolCoinSupply = 15 [deprecated = true];
+  ProtocolDataTypeOsmosisCLPool = 16;
 }

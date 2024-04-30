@@ -3,14 +3,13 @@ package balancer
 import (
 	"errors"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/gamm"
+	types "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/gamm"
+	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/osmomath"
 )
 
-func NewPoolParams(swapFee, exitFee sdk.Dec, params *SmoothWeightChangeParams) PoolParams {
+func NewPoolParams(spreadFactor, exitFee osmomath.Dec, params *SmoothWeightChangeParams) PoolParams {
 	return PoolParams{
-		SwapFee:                  swapFee,
+		SwapFee:                  spreadFactor,
 		ExitFee:                  exitFee,
 		SmoothWeightChangeParams: params,
 	}
@@ -18,26 +17,26 @@ func NewPoolParams(swapFee, exitFee sdk.Dec, params *SmoothWeightChangeParams) P
 
 func (params PoolParams) Validate(poolWeights []PoolAsset) error {
 	if params.ExitFee.IsNegative() {
-		return gamm.ErrNegativeExitFee
+		return types.ErrNegativeExitFee
 	}
 
-	if params.ExitFee.GTE(sdk.OneDec()) {
-		return gamm.ErrTooMuchExitFee
+	if params.ExitFee.GTE(osmomath.OneDec()) {
+		return types.ErrTooMuchExitFee
 	}
 
 	if params.SwapFee.IsNegative() {
-		return gamm.ErrNegativeSwapFee
+		return types.ErrNegativeSpreadFactor
 	}
 
-	if params.SwapFee.GTE(sdk.OneDec()) {
-		return gamm.ErrTooMuchSwapFee
+	if params.SwapFee.GTE(osmomath.OneDec()) {
+		return types.ErrTooMuchSpreadFactor
 	}
 
 	if params.SmoothWeightChangeParams != nil {
 		targetWeights := params.SmoothWeightChangeParams.TargetPoolWeights
 		// Ensure it has the right number of weights
 		if len(targetWeights) != len(poolWeights) {
-			return gamm.ErrPoolParamsInvalidNumDenoms
+			return types.ErrPoolParamsInvalidNumDenoms
 		}
 		// Validate all user specified weights
 		for _, v := range targetWeights {
@@ -51,7 +50,7 @@ func (params PoolParams) Validate(poolWeights []PoolAsset) error {
 		sortedPoolWeights := sortPoolAssetsOutOfPlaceByDenom(poolWeights)
 		for i, v := range sortedPoolWeights {
 			if sortedTargetPoolWeights[i].Token.Denom != v.Token.Denom {
-				return gamm.ErrPoolParamsInvalidDenom
+				return types.ErrPoolParamsInvalidDenom
 			}
 		}
 
@@ -69,10 +68,10 @@ func (params PoolParams) Validate(poolWeights []PoolAsset) error {
 	return nil
 }
 
-func (params PoolParams) GetPoolSwapFee() sdk.Dec {
+func (params PoolParams) GetPoolSpreadFactor() osmomath.Dec {
 	return params.SwapFee
 }
 
-func (params PoolParams) GetPoolExitFee() sdk.Dec {
+func (params PoolParams) GetPoolExitFee() osmomath.Dec {
 	return params.ExitFee
 }
