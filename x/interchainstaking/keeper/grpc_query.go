@@ -362,3 +362,17 @@ func (k *Keeper) ValidatorDenyList(c context.Context, req *types.QueryDenyListRe
 
 	return &types.QueryDenyListResponse{Validators: validators}, nil
 }
+
+// func (k *Keeper) ClaimedPercentage(c context.Context, req *types.QueryClaimedPercentageRequest) (*types.QueryClaimedPercentageResponse, error) {
+// 	if req == nil {
+// 		return nil, status.Error(codes.InvalidArgument, "empty request")
+// 	}
+// 	ctx := sdk.UnwrapSDKContext(c)
+
+// 	percentage, err := k.GetClaimedPercentage(ctx, req.ChainId)
+// 	if err != nil {
+// 		return nil, status.Error(codes.Internal, err.Error())
+// 	}
+
+// 	return &types.QueryClaimedPercentageResponse{Percentage: percentage}, nil
+// }
