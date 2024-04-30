@@ -31,6 +31,7 @@ func GetTxCmd() *cobra.Command {
 	}
 
 	txCmd.AddCommand(GetSubmitClaimTxCmd())
+	txCmd.AddCommand(GetSubmitClaimsTxCmd())
 
 	return txCmd
 }
@@ -70,6 +71,45 @@ func GetSubmitClaimTxCmd() *cobra.Command {
 			msg := types.NewMsgSubmitClaim(clientCtx.GetFromAddress(), zone, srcZone, cmtypes.ClaimType(claimType), proofs)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func GetSubmitClaimsTxCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "claims [payload-file].json",
+		Short: `Submit proof of assets held`,
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			fileName := args[0]
+
+			contents, err := os.ReadFile(fileName)
+			if err != nil {
+				return err
+			}
+
+			var msgs []*types.MsgSubmitClaim
+
+			if err := json.Unmarshal(contents, &msgs); err != nil {
+				return err
+			}
+
+			var sdkMsgs []sdk.Msg
+
+			for _, m := range msgs {
+				sdkMsgs = append(sdkMsgs, m)
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), sdkMsgs...)
 		},
 	}
 
