@@ -5,15 +5,15 @@ import (
 	"strconv"
 	"strings"
 
-	sdkmath "cosmossdk.io/math"
-
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/osmomath"
 )
 
 func DefaultFeeString(cfg network.Config) string {
-	feeCoins := sdk.NewCoins(sdk.NewCoin(cfg.BondDenom, sdk.NewInt(10)))
+	feeCoins := sdk.NewCoins(sdk.NewCoin(cfg.BondDenom, osmomath.NewInt(10)))
 	return fmt.Sprintf("--%s=%s", flags.FlagFees, feeCoins.String())
 }
 
@@ -36,8 +36,8 @@ func ParseUint64SliceFromString(s string, separator string) ([]uint64, error) {
 	return parsedInts, nil
 }
 
-func ParseSdkIntFromString(s string, separator string) ([]sdkmath.Int, error) {
-	var parsedInts []sdkmath.Int
+func ParseSdkIntFromString(s string, separator string) ([]osmomath.Int, error) {
+	var parsedInts []osmomath.Int
 	for _, weightStr := range strings.Split(s, separator) {
 		weightStr = strings.TrimSpace(weightStr)
 
@@ -45,7 +45,22 @@ func ParseSdkIntFromString(s string, separator string) ([]sdkmath.Int, error) {
 		if err != nil {
 			return parsedInts, err
 		}
-		parsedInts = append(parsedInts, sdk.NewIntFromUint64(parsed))
+		parsedInts = append(parsedInts, osmomath.NewIntFromUint64(parsed))
 	}
 	return parsedInts, nil
+}
+
+func ParseSdkDecFromString(s string, separator string) ([]osmomath.Dec, error) {
+	var parsedDec []osmomath.Dec
+	for _, weightStr := range strings.Split(s, separator) {
+		weightStr = strings.TrimSpace(weightStr)
+
+		parsed, err := osmomath.NewDecFromStr(weightStr)
+		if err != nil {
+			return parsedDec, err
+		}
+
+		parsedDec = append(parsedDec, parsed)
+	}
+	return parsedDec, nil
 }

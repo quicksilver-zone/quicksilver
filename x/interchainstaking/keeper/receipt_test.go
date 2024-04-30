@@ -12,7 +12,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	transfertypes "github.com/cosmos/ibc-go/v5/modules/apps/transfer/types"
+	transfertypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
 
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	"github.com/quicksilver-zone/quicksilver/utils/randomutils"
@@ -325,8 +325,11 @@ func (suite *KeeperTestSuite) TestSendTokenIBC() {
 		// setup transfer channel
 		suite.path.EndpointA.ChannelConfig.Version = transfertypes.Version
 		suite.path.EndpointB.ChannelConfig.Version = transfertypes.Version
-		suite.coordinator.CreateTransferChannels(suite.path)
 
+		// set the counter party channel sequence to a different channel to prevent regression
+		suite.GetQuicksilverApp(suite.chainB).IBCKeeper.ChannelKeeper.SetNextChannelSequence(suite.chainB.GetContext(), 10)
+
+		suite.coordinator.CreateTransferChannels(suite.path)
 		suite.setupTestZones()
 
 		quicksilver := suite.GetQuicksilverApp(suite.chainA)

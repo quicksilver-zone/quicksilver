@@ -251,7 +251,7 @@ const AssetCard: React.FC<AssetCardProps> = ({ address, assetName, balance, apy,
                     Redeem For
                   </StatHelpText>
                   <StatHelpText mt={-2} color={'complimentary.400'} fontSize={'sm'}>
-                    {formatNumber(parseFloat(interchainBalance) / Number(redemptionRates))} {assetName.replace('q', '')}
+                    {formatNumber(parseFloat(interchainBalance) * Number(redemptionRates))} {assetName.replace('q', '')}
                   </StatHelpText>
                 </>
               )
