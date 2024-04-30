@@ -886,3 +886,77 @@ func (suite *KeeperTestSuite) TestGetClaimedPercentage() {
 		})
 	}
 }
+
+func (suite *KeeperTestSuite) TestGetClaimedPercentageByClaimType() {
+	addr1, addr2, addr3 := addressutils.GenerateAccAddressForTest(), addressutils.GenerateAccAddressForTest(), addressutils.GenerateAccAddressForTest()
+
+	tc := []struct {
+		name          string
+		claims        func(zone icstypes.Zone) []claimsmanagertypes.Claim
+		totalSupply   math.Int
+		expPercentage map[claimsmanagertypes.ClaimType]sdk.Dec
+	}{
+		{
+			name: "no claims",
+			claims: func(zone icstypes.Zone) []claimsmanagertypes.Claim {
+				out := make([]claimsmanagertypes.Claim, 0)
+				return out
+			},
+			totalSupply:   sdk.NewInt(10000),
+			expPercentage: nil,
+		},
+		{
+			name: "one claim",
+			claims: func(zone icstypes.Zone) []claimsmanagertypes.Claim {
+				out := make([]claimsmanagertypes.Claim, 0)
+				out = append(out, claimsmanagertypes.NewClaim(addr1.String(), zone.ChainId, claimsmanagertypes.ClaimTypeOsmosisPool, "", math.NewInt(1000)))
+				return out
+			},
+			totalSupply:   sdk.NewInt(10000),
+			expPercentage: map[claimsmanagertypes.ClaimType]sdk.Dec{claimsmanagertypes.ClaimTypeOsmosisPool: sdk.MustNewDecFromStr("0.1")},
+		},
+		{
+			name: "multi claims",
+			claims: func(zone icstypes.Zone) []claimsmanagertypes.Claim {
+				out := make([]claimsmanagertypes.Claim, 0)
+				out = append(out, claimsmanagertypes.NewClaim(addr1.String(), zone.ChainId, claimsmanagertypes.ClaimTypeOsmosisPool, "", math.NewInt(1000)))
+				out = append(out, claimsmanagertypes.NewClaim(addr2.String(), zone.ChainId, claimsmanagertypes.ClaimTypeLiquidToken, "", math.NewInt(2000)))
+				out = append(out, claimsmanagertypes.NewClaim(addr3.String(), zone.ChainId, claimsmanagertypes.ClaimTypeLiquidToken, "", math.NewInt(3000)))
+				return out
+			},
+			totalSupply:   sdk.NewInt(10000),
+			expPercentage: map[claimsmanagertypes.ClaimType]sdk.Dec{claimsmanagertypes.ClaimTypeOsmosisPool: sdk.MustNewDecFromStr("0.1"), claimsmanagertypes.ClaimTypeLiquidToken: sdk.MustNewDecFromStr("0.5")},
+		},
+	}
+	for _, tt := range tc {
+		suite.Run(tt.name, func() {
+			suite.SetupTest()
+			suite.setupTestZones()
+
+			quicksilver := suite.GetQuicksilverApp(suite.chainA)
+			ctx := suite.chainA.GetContext()
+			icsKeeper := quicksilver.InterchainstakingKeeper
+			zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
+			suite.True(found)
+
+			for _, record := range tt.claims(zone) {
+				icsKeeper.ClaimsManagerKeeper.SetClaim(ctx, &record)
+				// suite.NoError(err)
+			}
+
+			totalClaimed := math.ZeroInt()
+			for _, record := range tt.claims(zone) {
+				totalClaimed = totalClaimed.Add(record.Amount)
+			}
+
+			err := quicksilver.MintKeeper.MintCoins(ctx, sdk.NewCoins(sdk.NewCoin(zone.LocalDenom, tt.totalSupply)))
+			suite.NoError(err)
+
+			for claimType, expPercentage := range tt.expPercentage {
+				actualPercentage, err := icsKeeper.GetClaimedPercentageByClaimType(ctx, &zone, claimType)
+				suite.NoError(err)
+				suite.Equal(expPercentage, actualPercentage)
+			}
+		})
+	}
+}

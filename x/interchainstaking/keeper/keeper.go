@@ -877,3 +877,22 @@ func (k *Keeper) GetClaimedPercentage(ctx sdk.Context, zone *types.Zone) (sdk.De
 	}
 	return claimed.Quo(sdk.NewDecFromInt(totalSupply)), nil
 }
+
+func (k *Keeper) GetClaimedPercentageByClaimType(ctx sdk.Context, zone *types.Zone, claimType claimsmanagertypes.ClaimType) (sdk.Dec, error) {
+	claimed := sdk.ZeroDec()
+
+	k.ClaimsManagerKeeper.IterateClaims(ctx, zone.ChainId, func(_ int64, claim claimsmanagertypes.Claim) (stop bool) {
+		if claim.Module == claimType {
+			claimed = claimed.Add(sdk.NewDecFromInt(claim.Amount))
+		}
+		return false
+	})
+	if claimed.IsZero() {
+		return sdk.ZeroDec(), nil
+	}
+	totalSupply := k.BankKeeper.GetSupply(ctx, zone.LocalDenom).Amount
+	if totalSupply.IsZero() {
+		return sdk.ZeroDec(), nil
+	}
+	return claimed.Quo(sdk.NewDecFromInt(totalSupply)), nil
+}
