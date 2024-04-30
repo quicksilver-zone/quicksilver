@@ -289,12 +289,12 @@ message QueryDenyListResponse {
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
-message QueryClaimedPercentage {
+message QueryClaimedPercentageRequest {
   string chain_id = 1;
   quicksilver.claimsmanager.v1.ClaimType claim_type = 2;
 }
 
-message QueryClaimedResponse {
+message QueryClaimedPercentageResponse {
   string percentage = 1 [
     (cosmos_proto.scalar) = "cosmos.Dec",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",

@@ -940,7 +940,7 @@ func (suite *KeeperTestSuite) TestGetClaimedPercentageByClaimType() {
 			suite.True(found)
 
 			for _, record := range tt.claims(zone) {
-				icsKeeper.ClaimsManagerKeeper.SetClaim(ctx, &record)
+				icsKeeper.ClaimsManagerKeeper.SetClaim(ctx, &record) // #nosec G601
 				// suite.NoError(err)
 			}
 
