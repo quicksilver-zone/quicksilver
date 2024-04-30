@@ -6,19 +6,28 @@ import (
 	"runtime"
 	"runtime/debug"
 
+	"github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// This function lets you run the function f, but if theres an error or panic
+// This function lets you run the function f, but if there's an error or panic
 // drop the state machine change and log the error.
 // If there is no error, proceeds as normal (but with some slowdown due to SDK store weirdness)
 // Try to avoid usage of iterators in f.
+//
+// If its an out of gas panic, this function will also panic like in normal tx execution flow.
+// This is still safe for beginblock / endblock code though, as they do not have out of gas panics.
 func ApplyFuncIfNoError(ctx sdk.Context, f func(ctx sdk.Context) error) (err error) {
 	// Add a panic safeguard
 	defer func() {
 		if recoveryError := recover(); recoveryError != nil {
-			PrintPanicRecoveryError(ctx, recoveryError)
-			err = errors.New("panic occurred during execution")
+			if isErr, _ := IsOutOfGasError(recoveryError); isErr {
+				// We panic with the same error, to replicate the normal tx execution flow.
+				panic(recoveryError)
+			} else {
+				PrintPanicRecoveryError(ctx, recoveryError)
+				err = errors.New("panic occurred during execution")
+			}
 		}
 	}()
 	// makes a new cache context, which all state changes get wrapped inside of.
@@ -29,10 +38,21 @@ func ApplyFuncIfNoError(ctx sdk.Context, f func(ctx sdk.Context) error) (err err
 	} else {
 		// no error, write the output of f
 		write()
-		// Temporary, should be removed once: https://github.com/cosmos/cosmos-sdk/issues/12912
-		ctx.EventManager().EmitEvents(cacheCtx.EventManager().Events())
 	}
 	return err
+}
+
+// Frustratingly, this has to return the error descriptor, not an actual error itself
+// because the SDK errors here are not actually errors. (They don't implement error interface)
+func IsOutOfGasError(err any) (bool, string) {
+	switch e := err.(type) {
+	case types.ErrorOutOfGas:
+		return true, e.Descriptor
+	case types.ErrorGasOverflow:
+		return true, e.Descriptor
+	default:
+		return false, ""
+	}
 }
 
 // PrintPanicRecoveryError error logs the recoveryError, along with the stacktrace, if it can be parsed.
@@ -40,6 +60,9 @@ func ApplyFuncIfNoError(ctx sdk.Context, f func(ctx sdk.Context) error) (err err
 func PrintPanicRecoveryError(ctx sdk.Context, recoveryError interface{}) {
 	errStackTrace := string(debug.Stack())
 	switch e := recoveryError.(type) {
+	case types.ErrorOutOfGas:
+		ctx.Logger().Debug("out of gas error inside panic recovery block: " + e.Descriptor)
+		return
 	case string:
 		ctx.Logger().Error("Recovering from (string) panic: " + e)
 	case runtime.Error:
