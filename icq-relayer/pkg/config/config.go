@@ -15,8 +15,17 @@ import (
 func CreateConfig(home string) error {
 	cfgPath := path.Join(home, "config.yaml")
 
-	// If the config doesn't exist...
-	if _, err := os.Stat(cfgPath); os.IsNotExist(err) {
+	_, err := os.Stat(cfgPath)
+
+	switch {
+	case err == nil:
+		// Clear to go on.
+		break
+
+	case !os.IsNotExist(err):
+		return err
+
+	default: // The config does not exist, so create it.
 		// And the config folder doesn't exist...
 		// And the home folder doesn't exist
 		if _, err := os.Stat(home); os.IsNotExist(err) {
@@ -24,6 +33,8 @@ func CreateConfig(home string) error {
 			if err = os.Mkdir(home, os.ModePerm); err != nil {
 				return err
 			}
+		} else if err != nil { // All other errors should be returned immediately.
+			return err
 		}
 	}
 

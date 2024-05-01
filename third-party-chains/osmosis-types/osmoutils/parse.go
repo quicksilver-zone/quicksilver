@@ -5,9 +5,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/spf13/pflag"
-
 	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
+	"github.com/spf13/pflag"
 )
 
 type Proposal struct {
@@ -17,8 +16,8 @@ type Proposal struct {
 }
 
 var ProposalFlags = []string{
-	cli.FlagTitle,       // nolint:staticcheck // using this to support govv1beta1
-	cli.FlagDescription, // nolint:staticcheck // using this to support govv1beta1
+	cli.FlagTitle,
+	cli.FlagDescription, //nolint:staticcheck
 	cli.FlagDeposit,
 }
 
@@ -35,11 +34,11 @@ func (p Proposal) validate() error {
 
 func ParseProposalFlags(fs *pflag.FlagSet) (*Proposal, error) {
 	proposal := &Proposal{}
-	proposalFile, _ := fs.GetString(cli.FlagProposal) // nolint:staticcheck // using this to support govv1beta1
+	proposalFile, _ := fs.GetString(cli.FlagProposal)
 
 	if proposalFile == "" {
-		proposal.Title, _ = fs.GetString(cli.FlagTitle)             // nolint:staticcheck // using this to support govv1beta1
-		proposal.Description, _ = fs.GetString(cli.FlagDescription) // nolint:staticcheck // using this to support govv1beta1
+		proposal.Title, _ = fs.GetString(cli.FlagTitle)
+		proposal.Description, _ = fs.GetString(cli.FlagDescription) //nolint:staticcheck
 		proposal.Deposit, _ = fs.GetString(cli.FlagDeposit)
 		if err := proposal.validate(); err != nil {
 			return nil, err

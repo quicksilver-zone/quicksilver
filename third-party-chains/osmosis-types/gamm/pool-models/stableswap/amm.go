@@ -1,145 +1,162 @@
 package stableswap
 
 import (
-	"errors"
-
-	sdkmath "cosmossdk.io/math"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/gamm"
+	types "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/gamm"
 	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/gamm/pool-models/internal/cfmm_common"
+	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/osmomath"
 )
 
-var (
-	cubeRootTwo, _   = sdk.NewDec(2).ApproxRoot(3)
-	threeCubeRootTwo = cubeRootTwo.MulInt64(3)
-)
+// Simplified multi-asset CFMM is xy(x^2 + y^2 + w) = k,
+// where w is the sum of the squares of the
+// reserve assets (e.g. w = m^2 + n^2).
+// When w = 0, this is equivalent to solidly's CFMM
+// We use this version for calculations since the u
+// term in the full CFMM is constant.
+func cfmmConstantMultiNoV(xReserve, yReserve, wSumSquares osmomath.BigDec) osmomath.BigDec {
+	return cfmmConstantMultiNoVY(xReserve, yReserve, wSumSquares).Mul(yReserve)
+}
 
-// solidly CFMM is xy(x^2 + y^2) = k
-// So we want to solve for a given addition of `b` units of y into the pool,
-// how many units `a` of x do we get out.
-// So we solve the following expression for `a`
-// xy(x^2 + y^2) = (x - a)(y + b)((x - a)^2 + (y + b)^2)
-func solveCfmm(xReserve, yReserve, yIn sdk.Dec) sdk.Dec {
-	if !yReserve.Add(yIn).IsPositive() {
-		panic("invalid yReserve, yIn combo")
+// returns x(x^2 + y^2 + w) = k
+// For use in comparing values with the same y
+func cfmmConstantMultiNoVY(xReserve, yReserve, wSumSquares osmomath.BigDec) osmomath.BigDec {
+	if !xReserve.IsPositive() || !yReserve.IsPositive() || wSumSquares.IsNegative() {
+		panic("invalid input: reserves must be positive")
 	}
 
-	// use the following wolfram alpha link to solve the equation
-	// https://www.wolframalpha.com/input?i=solve+for+a%2C+xy%28x%5E2+%2B+y%5E2%29+%3D+%28x+-+a%29%28y+%2B+b%29%28%28x+-+a%29%5E2+%2B+%28y+%2Bb%29%5E2%29+
-	// This returns (copied from wolfram):
-	// assuming (correctly) that b + y!=0
-	// a = (-27 b^2 x^3 y - 27 b^2 x y^3 + sqrt((-27 b^2 x^3 y - 27 b^2 x y^3 - 54 b x^3 y^2 - 54 b x y^4 - 27 x^3 y^3 - 27 x y^5)^2 + 4 (3 b^4 + 12 b^3 y + 18 b^2 y^2 + 12 b y^3 + 3 y^4)^3) - 54 b x^3 y^2 - 54 b x y^4 - 27 x^3 y^3 - 27 x y^5)^(1/3)/(3 2^(1/3) (b + y)) - (2^(1/3) (3 b^4 + 12 b^3 y + 18 b^2 y^2 + 12 b y^3 + 3 y^4))/(3 (b + y) (-27 b^2 x^3 y - 27 b^2 x y^3 + sqrt((-27 b^2 x^3 y - 27 b^2 x y^3 - 54 b x^3 y^2 - 54 b x y^4 - 27 x^3 y^3 - 27 x y^5)^2 + 4 (3 b^4 + 12 b^3 y + 18 b^2 y^2 + 12 b y^3 + 3 y^4)^3) - 54 b x^3 y^2 - 54 b x y^4 - 27 x^3 y^3 - 27 x y^5)^(1/3)) + (b x + x y)/(b + y) and b + y!=0
-	// We simplify and separate out terms to get that its the following:
-	// The key substitutions are that 3(b+y)^4 = 3 b^4 + 12 b^3 y + 18 b^2 y^2 + 12 b y^3 + 3 y^4
-	// and -27 x y (b + y)^2 (x^2 + y^2) = -27 b^2 x^3 y - 27 b^2 x y^3 - 54 b x^3 y^2 - 54 b x y^4 - 27 x^3 y^3 - 27 x y^5
-	// I added {} myself, making better distinctions between entirely distinct terms.
-	// a = {(-27 x y (b + y)^2 (x^2 + y^2)
-	//			+ sqrt(
-	//				(-27 x y (b + y)^2 (x^2 + y^2))^2
-	//				+ 108 ((b+y)^4)^3
-	// 			)^(1/3)
-	// 		  / (3 2^(1/3) (b + y))}
-	//		- {(2^(1/3) (3 (b + y)^4))
-	//		  /(3 (b + y)
-	// 			(-27 x y (b + y)^2 (x^2 + y^2)
-	// 				+ sqrt(
-	//					(-27 x y (b + y)^2 (x^2 + y^2))^2
-	//					+ 108 ((b+y)^4)^3)
-	// 			)^(1/3))}
-	//      + {(b x + x y)/(b + y)}
-	// we further simplify, and call:
-	// foo = (-27 x y (b + y)^2 (x^2 + y^2)
-	// 			+ sqrt(
-	//				(-27 x y (b + y)^2 (x^2 + y^2))^2
-	//				+ 108 ((b+y)^4)^3)
-	//		 )^(1/3)
-	// Thus, a is then:
-	// a = {foo / (3 2^(1/3) (b + y))}
-	//		- {(3 * 2^(1/3) (b+y)^4)
-	//		  /(3 (b + y) foo)}
-	//      + {(b x + x y)/(b + y)}
-	// Let:
-	// term1 = {foo / (3 2^(1/3) (b + y))}
-	// term2 = {(3 * 2^(1/3) (b+y)^4) /(3 (b + y) foo)} =  2^(1/3) (b+y)^3 / foo
-	// term3 = {(b x + x y)/(b + y)}
+	x2 := xReserve.Mul(xReserve)
+	y2 := yReserve.Mul(yReserve)
+	return xReserve.Mul(x2.Add(y2).Add(wSumSquares))
+}
 
-	// prelude, compute all the xy cross terms. Consider keeping these precomputed in the struct,
-	// and maybe in state.
-	x := xReserve
-	y := yReserve
-	x2py2 := x.Mul(x).AddMut(y.Mul(y))
+// Solidly's CFMM is xy(x^2 + y^2) = k, and our multi-asset CFMM is xyz(x^2 + y^2 + w) = k
+// So we want to solve for a given addition of `b` units of y into the pool,
+// how many units `a` of x do we get out.
+// So we solve the following expression for `a`:
+// xy(x^2 + y^2 + w) = (x - a)(y + b)((x - a)^2 + (y + b)^2 + w)
+// with w set to 0 for 2 asset pools
+func solveCfmm(xReserve, yReserve osmomath.BigDec, remReserves []osmomath.BigDec, yIn osmomath.BigDec) osmomath.BigDec {
+	wSumSquares := osmomath.ZeroBigDec()
+	for _, assetReserve := range remReserves {
+		wSumSquares = wSumSquares.Add(assetReserve.Mul(assetReserve))
+	}
+	return solveCFMMBinarySearchMulti(xReserve, yReserve, wSumSquares, yIn)
+}
 
-	xy := x.Mul(y)
+// $$k_{target} = \frac{x_0 y_0 (x_0^2 + y_0^2 + w)}{y_f} - (x_0 (y_f^2 + w) + x_0^3)$$
+func targetKCalculator(x0, y0, w, yf osmomath.BigDec) osmomath.BigDec {
+	// cfmmNoV(x0, y0, w) = x_0 y_0 (x_0^2 + y_0^2 + w)
+	startK := cfmmConstantMultiNoV(x0, y0, w)
+	// remove extra yf term
+	yfRemoved := startK.Quo(yf)
+	// removed constant term from expression
+	// namely - (x_0 (y_f^2 + w) + x_0^3) = x_0(y_f^2 + w + x_0^2)
+	// innerTerm = y_f^2 + w + x_0^2
+	innerTerm := yf.Mul(yf).Add(w).Add((x0.Mul(x0)))
+	constantTerm := innerTerm.Mul(x0)
+	return yfRemoved.Sub(constantTerm)
+}
 
-	b := yIn
+// $$k_{iter}(x_f) = -x_{out}^3 + 3 x_0 x_{out}^2 - (y_f^2 + w + 3x_0^2)x_{out}$$
+// where x_out = x_0 - x_f
+func iterKCalculator(x0, w, yf osmomath.BigDec) func(osmomath.BigDec) osmomath.BigDec {
+	// compute coefficients first. Notice that the leading coefficient is -1, we will use this to compute faster.
+	// cubicCoeff := -1
+	quadraticCoeff := x0.MulInt64(3)
+	linearCoeff := quadraticCoeff.Mul(x0).Add(w).Add(yf.Mul(yf)).NegMut()
+	return func(xf osmomath.BigDec) osmomath.BigDec {
+		xOut := x0.Sub(xf)
+		// horners method
+		// ax^3 + bx^2 + cx = x(c + x(b + ax))
+		// a = -1
+		res := xOut.Neg()
+		res = res.AddMut(quadraticCoeff).MulMut(xOut)
+		res = res.AddMut(linearCoeff).MulMut(xOut)
+		return res
+	}
+}
 
-	bpy := b.Add(y)
-	bpy2 := bpy.Mul(bpy)
-	bpy3 := bpy2.Mul(bpy)
-	bpy4 := bpy2.Mul(bpy2)
+var (
+	zero = osmomath.ZeroBigDec()
+	one  = osmomath.OneBigDec()
+)
 
-	// TODO: Come back and optimize alot of the calculations
+func deriveUpperLowerXFinalReserveBounds(xReserve, yReserve, wSumSquares, yFinal osmomath.BigDec) (
+	xFinalLowerbound, xFinalUpperbound osmomath.BigDec,
+) {
+	xFinalLowerbound, xFinalUpperbound = xReserve, xReserve
 
-	// Now we compute foo
-	// foo = (-27 x y (b + y)^2 (x^2 + y^2)
-	// 			+ sqrt(
-	//				(-27 x y (b + y)^2 (x^2 + y^2))^2
-	//				+ 108 ((b+y)^4)^3)
-	//		 )^(1/3)
-	// This has a y^12 term in it, which is unappealing, so we spend some energy reducing this max bitlen.
-	// foo = (-27 x y (b + y)^2 (x^2 + y^2)
-	// 			+ (b + y)^2 sqrt(
-	//				729 (x y (x^2 + y^2))^2
-	//				+ 108 (b+y)^8)
-	//		 )^(1/3)
-	// let e = x y (x^2 + y^2))
-	// foo = (-27 (b + y)^2 e
-	// 			+ (b + y)^2 sqrt(
-	//				729 e^2 + 108 (b+y)^8)
-	//		 )^(1/3)
+	k0 := cfmmConstantMultiNoV(xReserve, yFinal, wSumSquares)
+	k := cfmmConstantMultiNoV(xReserve, yReserve, wSumSquares)
+	// fmt.Println(k0, k)
+	if k0.Equal(zero) || k.Equal(zero) {
+		panic("k should never be zero")
+	}
+	kRatio := k0.Quo(k)
+	if kRatio.LT(one) {
+		// k_0 < k. Need to find an upperbound. Worst case assume a linear relationship, gives an upperbound
+		// TODO: In the future, we can derive better bounds via reasoning about coefficients in the cubic
+		// These are quite close when we are in the "stable" part of the curve though.
+		xFinalUpperbound = xReserve.Quo(kRatio).Ceil()
+	} else if kRatio.GT(one) {
+		// need to find a lowerbound. We could use a cubic relation, but for now we just set it to 0.
+		xFinalLowerbound = osmomath.ZeroBigDec()
+	}
+	// else
+	// k remains unchanged.
+	// So we keep bounds equal to each other
+	return xFinalLowerbound, xFinalUpperbound
+}
 
-	e := xy.Mul(x2py2) // xy(x^2 + y^2)
+// solveCFMMBinarySearch searches the correct dx using binary search over constant K.
+func solveCFMMBinarySearchMulti(xReserve, yReserve, wSumSquares, yIn osmomath.BigDec) osmomath.BigDec {
+	if !xReserve.IsPositive() || !yReserve.IsPositive() || wSumSquares.IsNegative() {
+		panic("invalid input: reserves and input must be positive")
+	} else if yIn.Abs().GTE(yReserve) {
+		panic("cannot input more than pool reserves")
+	}
+	// fmt.Printf("solve cfmm xreserve %v, yreserve %v, w %v, yin %v\n", xReserve, yReserve, wSumSquares, yIn)
+	yFinal := yReserve.Add(yIn)
+	xLowEst, xHighEst := deriveUpperLowerXFinalReserveBounds(xReserve, yReserve, wSumSquares, yFinal)
+	targetK := targetKCalculator(xReserve, yReserve, wSumSquares, yFinal)
+	iterKCalc := iterKCalculator(xReserve, wSumSquares, yFinal)
+	maxIterations := 256
 
-	// t1 = -27 (b + y)^2 e
-	t1 := e.Mul(bpy2).MulInt64Mut(-27)
+	// we use a geometric error tolerance that guarantees approximately 10^-12 precision on outputs
+	errTolerance := osmomath.ErrTolerance{AdditiveTolerance: osmomath.Dec{}, MultiplicativeTolerance: osmomath.NewDecWithPrec(1, 12)}
 
-	// compute d = (b + y)^2 sqrt(729 e^2 + 108 (b+y)^8)
-	bpy8 := bpy4.Mul(bpy4)
-	sqrt_inner := e.MulMut(e).MulInt64Mut(729).AddMut(bpy8.MulInt64Mut(108)) // 729 e^2 + 108 (b+y)^8
-	sqrt, err := sqrt_inner.ApproxSqrt()
+	// if yIn is positive, we want to under-estimate the amount of xOut.
+	// This means, we want x_out to be rounded down, as x_out = x_init - x_final, for x_init > x_final.
+	// Thus we round-up x_final, to make it greater (and therefore ) x_out smaller.
+	// If yIn is negative, the amount of xOut will also be negative (representing that we must add tokens into the pool)
+	// this means x_out = x_init - x_final, for x_init < x_final.
+	// we want to over_estimate |x_out|, which means rounding x_out down as its a negative quantity.
+	// This means rounding x_final up, to give us a larger negative.
+	// Therefore we always round up.
+	roundingDirection := osmomath.RoundUp
+	errTolerance.RoundingDir = roundingDirection
+
+	xEst, err := osmomath.BinarySearchBigDec(iterKCalc, xLowEst, xHighEst, targetK, errTolerance, maxIterations)
 	if err != nil {
 		panic(err)
 	}
-	d := sqrt.MulMut(bpy2)
 
-	// foo = (t1 + d)^(1/3)
-	foo3 := t1.AddMut(d)
-	foo, _ := foo3.ApproxRoot(3)
+	xOut := xReserve.Sub(xEst)
+	// fmt.Printf("xOut %v\n", xOut)
 
-	// a = {foo / (3 2^(1/3) (b + y))}
-	//		- {(2^(1/3) banana) / (3 (b + y) foo}
-	//      + {(b x + x y)/(b + y)}
-
-	// term1 := {foo / (3 2^(1/3) (b + y))}
-	term1Denominator := threeCubeRootTwo.Mul(bpy)
-	term1 := foo.Quo(term1Denominator)
-	// term2 := {(2^(1/3) (b+y)^3) / (foo}
-	term2 := cubeRootTwo.Mul(bpy3)
-	term2 = term2.Quo(foo)
-	// term3 := {(b x + x y)/(b + y)}
-	term3Numerator := b.Mul(x).Add(xy)
-	term3 := term3Numerator.Quo(bpy)
-
-	a := term1.Sub(term2).Add(term3)
-	return a
+	// We check the absolute value of the output against the xReserve amount to ensure that:
+	// 1. Swaps cannot more than double the input token's pool supply
+	// 2. Swaps cannot output more than the output token's pool supply
+	if xOut.Abs().GTE(xReserve) {
+		panic("invalid output: greater than full pool reserves")
+	}
+	return xOut
 }
 
-func spotPrice(baseReserve, quoteReserve sdk.Dec) sdk.Dec {
-	// y = baseAsset, x = quoteAsset
+func (p Pool) spotPrice(quoteDenom, baseDenom string) (spotPrice osmomath.Dec, err error) {
 	// Define f_{y -> x}(a) as the function that outputs the amount of tokens X you'd get by
-	// trading "a" units of Y against the pool, assuming 0 swap fee, at the current liquidity.
+	// trading "a" units of Y against the pool, assuming 0 spread factor, at the current liquidity.
 	// The spot price of the pool is then lim a -> 0, f_{y -> x}(a) / a
 	// For uniswap f_{y -> x}(a) = x - xy/(y + a),
 	// The spot price equation of y in terms of x is X_SUPPLY/Y_SUPPLY.
@@ -151,76 +168,113 @@ func spotPrice(baseReserve, quoteReserve sdk.Dec) sdk.Dec {
 
 	// We arbitrarily choose a = 1, and anticipate that this is a small value at the scale of
 	// xReserve & yReserve.
-	a := sdk.OneDec()
-	// no need to divide by a, since a = 1.
-	return solveCfmm(baseReserve, quoteReserve, a)
+	a := osmomath.OneInt()
+
+	res, err := p.calcOutAmtGivenIn(sdk.NewCoin(baseDenom, a), quoteDenom, osmomath.ZeroDec())
+	// fmt.Println("spot price res", res)
+	return res, err
 }
 
-// returns outAmt as a decimal
-func (p *Pool) calcOutAmtGivenIn(tokenIn sdk.Coin, tokenOutDenom string, swapFee sdk.Dec) (sdk.Dec, error) {
-	reserves, err := p.getScaledPoolAmts(tokenIn.Denom, tokenOutDenom)
+func oneMinus(spreadFactor osmomath.Dec) osmomath.BigDec {
+	return osmomath.BigDecFromDec(osmomath.OneDec().Sub(spreadFactor))
+}
+
+// calcOutAmtGivenIn calculate amount of specified denom to output from a pool in osmomath.Dec given the input `tokenIn`
+func (p Pool) calcOutAmtGivenIn(tokenIn sdk.Coin, tokenOutDenom string, spreadFactor osmomath.Dec) (osmomath.Dec, error) {
+	// round liquidity down, and round token in down
+	reserves, err := p.scaledSortedPoolReserves(tokenIn.Denom, tokenOutDenom, osmomath.RoundDown)
 	if err != nil {
-		return sdk.Dec{}, err
+		return osmomath.Dec{}, err
 	}
-	tokenInSupply, tokenOutSupply := reserves[0], reserves[1]
+	tokenInSupply, tokenOutSupply, remReserves := reserves[0], reserves[1], reserves[2:]
+	tokenInDec, err := p.scaleCoin(tokenIn, osmomath.RoundDown)
+	if err != nil {
+		return osmomath.Dec{}, err
+	}
+
+	// amm input = tokenIn * (1 - spread factor)
+	ammIn := tokenInDec.Mul(oneMinus(spreadFactor))
 	// We are solving for the amount of token out, hence x = tokenOutSupply, y = tokenInSupply
-	cfmmOut := solveCfmm(tokenOutSupply, tokenInSupply, sdk.NewDecFromInt(tokenIn.Amount))
+	// fmt.Printf("outSupply %s, inSupply %s, remReservs %s, ammIn %s\n ", tokenOutSupply, tokenInSupply, remReserves, ammIn)
+	cfmmOut := solveCfmm(tokenOutSupply, tokenInSupply, remReserves, ammIn)
+	// fmt.Println("cfmmout ", cfmmOut)
 	outAmt := p.getDescaledPoolAmt(tokenOutDenom, cfmmOut)
 	return outAmt, nil
 }
 
-// returns inAmt as a decimal
-func (p *Pool) calcInAmtGivenOut(tokenOut sdk.Coin, tokenInDenom string, swapFee sdk.Dec) (sdk.Dec, error) {
-	reserves, err := p.getScaledPoolAmts(tokenInDenom, tokenOut.Denom)
+// calcInAmtGivenOut calculates exact input amount given the desired output and return as a decimal
+func (p *Pool) calcInAmtGivenOut(tokenOut sdk.Coin, tokenInDenom string, spreadFactor osmomath.Dec) (osmomath.Dec, error) {
+	// round liquidity down, and round token out up
+	reserves, err := p.scaledSortedPoolReserves(tokenInDenom, tokenOut.Denom, osmomath.RoundDown)
 	if err != nil {
-		return sdk.Dec{}, err
+		return osmomath.Dec{}, err
 	}
-	tokenInSupply, tokenOutSupply := reserves[0], reserves[1]
+	tokenInSupply, tokenOutSupply, remReserves := reserves[0], reserves[1], reserves[2:]
+	tokenOutAmount, err := p.scaleCoin(tokenOut, osmomath.RoundUp)
+	if err != nil {
+		return osmomath.Dec{}, err
+	}
+
 	// We are solving for the amount of token in, cfmm(x,y) = cfmm(x + x_in, y - y_out)
 	// x = tokenInSupply, y = tokenOutSupply, yIn = -tokenOutAmount
-	cfmmIn := solveCfmm(tokenInSupply, tokenOutSupply, sdk.NewDecFromInt(tokenOut.Amount).Neg())
-	inAmt := p.getDescaledPoolAmt(tokenInDenom, cfmmIn.NegMut())
-	return inAmt, nil
+	cfmmIn := solveCfmm(tokenInSupply, tokenOutSupply, remReserves, tokenOutAmount.Neg())
+	// returned cfmmIn is negative, representing we need to add this many tokens to pool.
+	// We invert that negative here.
+	cfmmIn = cfmmIn.Neg()
+	// divide by (1 - spread factor) to force a corresponding increase in input asset
+	inAmt := cfmmIn.QuoRoundUpMut(oneMinus(spreadFactor))
+	inCoinAmt := p.getDescaledPoolAmt(tokenInDenom, inAmt)
+	return inCoinAmt, nil
 }
 
-func (p *Pool) calcSingleAssetJoinShares(tokenIn sdk.Coin, swapFee sdk.Dec) (sdkmath.Int, error) {
-	poolWithAddedLiquidityAndShares := func(newLiquidity sdk.Coin, newShares sdkmath.Int) gamm.PoolI {
+// calcSingleAssetJoinShares calculates the number of LP shares that
+// should be granted given the passed in single-token input (non-mutative)
+func (p *Pool) calcSingleAssetJoinShares(tokenIn sdk.Coin, spreadFactor osmomath.Dec) (osmomath.Int, error) {
+	poolWithAddedLiquidityAndShares := func(newLiquidity sdk.Coin, newShares osmomath.Int) types.CFMMPoolI {
 		paCopy := p.Copy()
-		paCopy.updatePoolForJoin(sdk.NewCoins(tokenIn), newShares)
+		paCopy.updatePoolForJoin(sdk.NewCoins(newLiquidity), newShares)
 		return &paCopy
 	}
-	// TODO: Correctly handle swap fee
-	return cfmm_common.BinarySearchSingleAssetJoin(p, tokenIn, poolWithAddedLiquidityAndShares)
+
+	// We apply the spread factor by multiplying by:
+	// 1) getting what % of the input the spread factor should apply to
+	// 2) multiplying that by spread factor
+	// 3) oneMinusSpreadFactor := (1 - spread_factor * spread_factor_applicable_percent)
+	// 4) Multiplying token in by one minus spread factor.
+	spreadFactorApplicableRatio, err := p.singleAssetJoinSpreadFactorRatio(tokenIn.Denom)
+	if err != nil {
+		return osmomath.Int{}, err
+	}
+	oneMinusSpreadFactor := osmomath.OneDec().Sub(spreadFactor.Mul(spreadFactorApplicableRatio))
+	tokenInAmtAfterFee := tokenIn.Amount.ToLegacyDec().Mul(oneMinusSpreadFactor).TruncateInt()
+
+	return cfmm_common.BinarySearchSingleAssetJoin(p, sdk.NewCoin(tokenIn.Denom, tokenInAmtAfterFee), poolWithAddedLiquidityAndShares)
 }
 
-// We can mutate pa here
-// TODO: some day switch this to a COW wrapped pa, for better perf
-func (p *Pool) joinPoolSharesInternal(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdkmath.Int, newLiquidity sdk.Coins, err error) {
-	if len(tokensIn) == 1 {
-		numShares, err = p.calcSingleAssetJoinShares(tokensIn[0], swapFee)
-		newLiquidity = tokensIn
-		return numShares, newLiquidity, err
-	} else if len(tokensIn) != p.NumAssets() || !tokensIn.DenomsSubsetOf(p.GetTotalPoolLiquidity(ctx)) {
-		return sdk.ZeroInt(), sdk.NewCoins(), errors.New(
-			"stableswap pool only supports LP'ing with one asset, or all assets in pool")
+// returns the ratio of input asset liquidity, to total liquidity in pool, post-scaling.
+// We use this as the portion of input liquidity to apply a spread factor too, for single asset joins.
+// So if a pool is currently comprised of 80% of asset A, and 20% of asset B (post-scaling),
+// and we input asset A, this function will return 20%.
+// Note that this will over-estimate spread factor for single asset joins slightly,
+// as in the swapping process into the pool, the A to B ratio would decrease the relative supply of B.
+func (p *Pool) singleAssetJoinSpreadFactorRatio(tokenInDenom string) (osmomath.Dec, error) {
+	// get a second denom in pool
+	tokenOut := p.PoolLiquidity[0]
+	if tokenOut.Denom == tokenInDenom {
+		tokenOut = p.PoolLiquidity[1]
 	}
-
-	// Add all exact coins we can (no swap). ctx arg doesn't matter for Stableswap
-	numShares, remCoins, err := cfmm_common.MaximalExactRatioJoin(p, sdk.Context{}, tokensIn)
+	// We round bankers scaled liquidity, since we care about the ratio of liquidity.
+	scaledLiquidity, err := p.scaledSortedPoolReserves(tokenInDenom, tokenOut.Denom, osmomath.RoundDown)
 	if err != nil {
-		return sdk.ZeroInt(), sdk.NewCoins(), err
-	}
-	p.updatePoolForJoin(tokensIn.Sub(remCoins...), numShares)
-
-	for _, coin := range remCoins {
-		// TODO: Perhaps add a method to skip if this is too small.
-		newShare, err := p.calcSingleAssetJoinShares(coin, swapFee)
-		if err != nil {
-			return sdk.ZeroInt(), sdk.NewCoins(), err
-		}
-		p.updatePoolForJoin(sdk.NewCoins(coin), newShare)
-		numShares = numShares.Add(newShare)
+		return osmomath.Dec{}, err
 	}
 
-	return numShares, tokensIn, nil
+	totalLiquidityDenominator := osmomath.ZeroBigDec()
+	for _, amount := range scaledLiquidity {
+		totalLiquidityDenominator = totalLiquidityDenominator.Add(amount)
+	}
+	ratioOfInputAssetLiquidityToTotalLiquidity := scaledLiquidity[0].Quo(totalLiquidityDenominator)
+	// Dec() rounds down (as it truncates), therefore 1 - term is rounded up, as desired.
+	nonInternalAssetRatio := osmomath.OneDec().Sub(ratioOfInputAssetLiquidityToTotalLiquidity.Dec())
+	return nonInternalAssetRatio, nil
 }

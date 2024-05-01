@@ -18,7 +18,7 @@ const networks = [
   },
   {
     value: 'OSMO',
-    logo: '/img/networks/osmosis.svg',
+    logo: '/img/networks/osmo.svg',
     qlogo: '/img/networks/qosmo.svg',
     name: 'Osmosis',
     chainName: 'osmosis',
