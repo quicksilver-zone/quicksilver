@@ -1,0 +1,2 @@
+go test fuzz v1
+[]byte("{\"tArg_AlloCs\":[{\"weight\":\"0\"}],\"Amount\":[{\"Amount\":\"1\"}]}")
