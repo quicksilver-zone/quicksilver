@@ -73,11 +73,13 @@ func (suite *KeeperTestSuite) TestEventLifecycle() {
 
 	suite.NoError(app.EventManagerKeeper.SetCallbackHandler(types.ModuleName, callbackHandler))
 
+	preEvents := len(app.EventManagerKeeper.AllEvents(ctx))
+
 	app.EventManagerKeeper.AddEvent(ctx, types.ModuleName, suite.chainB.ChainID, "test", "testCallback", types.EventTypeICADelegate, types.EventStatusPending, nil, nil)
 
 	events := app.EventManagerKeeper.AllEvents(ctx)
 
-	suite.Equal(1, len(events))
+	suite.Equal(preEvents+1, len(events))
 
 	GlobalVar = 0
 
@@ -94,7 +96,7 @@ func (suite *KeeperTestSuite) TestEventLifecycle() {
 
 	events = app.EventManagerKeeper.AllEvents(ctx)
 
-	suite.Equal(0, len(events))
+	suite.Equal(preEvents, len(events))
 }
 
 func (suite *KeeperTestSuite) TestEventLifecycleWithCondition() {
@@ -104,6 +106,8 @@ func (suite *KeeperTestSuite) TestEventLifecycleWithCondition() {
 	callbackHandler := EventCallbacks{&app.EventManagerKeeper, make(map[string]EventCallback, 0)}
 
 	suite.NoError(app.EventManagerKeeper.SetCallbackHandler(types.ModuleName, callbackHandler))
+
+	preEvents := len(app.EventManagerKeeper.AllEvents(ctx))
 
 	condition, err := types.NewConditionAll(ctx, []*types.FieldValue{
 		{Field: types.FieldModule, Value: types.ModuleName, Operator: types.FieldOperator_EQUAL, Negate: false},
@@ -117,18 +121,18 @@ func (suite *KeeperTestSuite) TestEventLifecycleWithCondition() {
 
 	events := app.EventManagerKeeper.AllEvents(ctx)
 
-	suite.Equal(2, len(events))
+	suite.Equal(preEvents+2, len(events))
 
 	GlobalVar = 0
 
-	// martCompleted doesn't require an explicit callback
+	// markCompleted doesn't require an explicit callback
 	app.EventManagerKeeper.MarkCompleted(ctx, types.ModuleName, suite.chainB.ChainID, "test1")
 
 	event, found := app.EventManagerKeeper.GetEvent(ctx, types.ModuleName, suite.chainB.ChainID, "test")
 
 	events = app.EventManagerKeeper.AllEvents(ctx)
 
-	suite.Equal(1, len(events))
+	suite.Equal(preEvents+1, len(events))
 
 	suite.True(found)
 	suite.Equal(12345, GlobalVar)
@@ -139,7 +143,7 @@ func (suite *KeeperTestSuite) TestEventLifecycleWithCondition() {
 
 	events = app.EventManagerKeeper.AllEvents(ctx)
 
-	suite.Equal(0, len(events))
+	suite.Equal(preEvents, len(events))
 }
 
 func (suite *KeeperTestSuite) TestEventLifecycleWithCondition2() {
@@ -149,6 +153,8 @@ func (suite *KeeperTestSuite) TestEventLifecycleWithCondition2() {
 	callbackHandler := EventCallbacks{&app.EventManagerKeeper, make(map[string]EventCallback, 0)}
 
 	suite.NoError(app.EventManagerKeeper.SetCallbackHandler(types.ModuleName, callbackHandler))
+
+	preEvents := len(app.EventManagerKeeper.AllEvents(ctx))
 
 	condition1, err := types.NewConditionAll(ctx, []*types.FieldValue{
 		{Field: types.FieldModule, Value: types.ModuleName, Operator: types.FieldOperator_EQUAL, Negate: false},
@@ -172,7 +178,7 @@ func (suite *KeeperTestSuite) TestEventLifecycleWithCondition2() {
 	events := app.EventManagerKeeper.AllEvents(ctx)
 
 	fmt.Println(events)
-	suite.Equal(3, len(events))
+	suite.Equal(preEvents+3, len(events))
 
 	GlobalVar = 0
 
@@ -184,7 +190,7 @@ func (suite *KeeperTestSuite) TestEventLifecycleWithCondition2() {
 
 	events = app.EventManagerKeeper.AllEvents(ctx)
 
-	suite.Equal(2, len(events))
+	suite.Equal(preEvents+2, len(events))
 
 	suite.Equal(1, GlobalVar)
 
@@ -196,11 +202,11 @@ func (suite *KeeperTestSuite) TestEventLifecycleWithCondition2() {
 
 	events = app.EventManagerKeeper.AllEvents(ctx)
 
-	suite.Equal(1, len(events))
+	suite.Equal(preEvents+1, len(events))
 
 	app.EventManagerKeeper.MarkCompleted(ctx, types.ModuleName, suite.chainB.ChainID, "test2")
 
 	events = app.EventManagerKeeper.AllEvents(ctx)
 
-	suite.Equal(0, len(events))
+	suite.Equal(preEvents, len(events))
 }
