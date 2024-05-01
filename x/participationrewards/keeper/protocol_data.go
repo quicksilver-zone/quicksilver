@@ -80,7 +80,7 @@ func (k *Keeper) IterateAllProtocolDatas(ctx sdk.Context, fn func(index int64, k
 	}
 }
 
-// AllKeyedProtocolDatas returns a slice containing all protocol datas and their keys from the store.
+// AllKeyedProtocolDatas returns a slice containing all protocol data and their keys from the store.
 func (k *Keeper) AllKeyedProtocolDatas(ctx sdk.Context) []*types.KeyedProtocolData {
 	out := make([]*types.KeyedProtocolData, 0)
 	k.IterateAllProtocolDatas(ctx, func(_ int64, key string, data types.ProtocolData) (stop bool) {

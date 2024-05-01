@@ -305,7 +305,7 @@ type Delegation struct {
 - **DelegationAddress** - the delegator address on the remote zone;
 - **ValidatorAddress** - the validator address on the remote zone;
 - **Amount** - the amount delegated;
-- **Height** - the block height at which the delegation occured;
+- **Height** - the block height at which the delegation occurred;
 - **RedelegationEnd** - ;
 
 ### PortConnectionTuple
@@ -400,7 +400,7 @@ type MsgSignalIntent struct {
 
 ### signal-intent
 
-Signal validator delegation intent by providing a comma seperated string
+Signal validator delegation intent by providing a comma separated string
 containing a decimal weight and the bech32 validator address.
 
 `quicksilverd signal-intent [chain_id] [delegation_intent]`
@@ -830,7 +830,7 @@ See [WithdrawalAddress Balances](#withdrawaladdress-balances).
 
 ### Queries, Requests & Callbacks
 
-This module registeres the following queries, requests and callbacks.
+This module registers the following queries, requests and callbacks.
 
 #### DepositAddress Balances
 
@@ -890,7 +890,7 @@ See [x/participationrewards/spec](../../participationrewards/spec/README.md).
 
 #### Validator Set Query
 
-An essential query to ensure that the registred zone state accurately reflects
+An essential query to ensure that the registered zone state accurately reflects
 the validator set of the remote zone for bonded, unbonded and unbonding
 validators.
 
