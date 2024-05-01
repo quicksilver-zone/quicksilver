@@ -224,7 +224,7 @@ func (k *Keeper) HandleUpdateZoneProposal(ctx sdk.Context, p *types.UpdateZonePr
 				return errors.New("unexpected connection format")
 			}
 			if zone.DepositAddress != nil || zone.DelegationAddress != nil || zone.PerformanceAddress != nil || zone.WithdrawalAddress != nil {
-				return errors.New("zone already intialised, cannot update connection_id")
+				return errors.New("zone already initialised, cannot update connection_id")
 			}
 			if k.BankKeeper.GetSupply(ctx, zone.LocalDenom).Amount.IsPositive() {
 				return errors.New("zone has assets minted, cannot update connection_id without potentially losing assets")
