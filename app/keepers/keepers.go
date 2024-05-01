@@ -433,6 +433,7 @@ func (appKeepers *AppKeepers) InitKeepers(
 	if err := appKeepers.EventManagerKeeper.SetCallbackHandler(participationrewardstypes.ModuleName, appKeepers.ParticipationRewardsKeeper.EventCallbackHandler()); err != nil {
 		panic(err)
 	}
+
 	// Quicksilver Keepers
 	appKeepers.EpochsKeeper = epochskeeper.NewKeeper(appCodec, appKeepers.keys[epochstypes.StoreKey])
 	appKeepers.ParticipationRewardsKeeper.SetEpochsKeeper(appKeepers.EpochsKeeper)
