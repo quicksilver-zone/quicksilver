@@ -7,6 +7,7 @@ import (
 	testsuite "github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 
@@ -821,7 +822,7 @@ func (suite *KeeperTestSuite) TestGetClaimedPercentage() {
 	tc := []struct {
 		name          string
 		claims        func(zone icstypes.Zone) []claimsmanagertypes.Claim
-		totalSupply   sdk.Int
+		totalSupply   math.Int
 		expPercentage sdk.Dec
 	}{
 		{
@@ -868,7 +869,7 @@ func (suite *KeeperTestSuite) TestGetClaimedPercentage() {
 			suite.True(found)
 
 			for _, record := range tt.claims(zone) {
-				icsKeeper.ClaimsManagerKeeper.SetClaim(ctx, &record)
+				icsKeeper.ClaimsManagerKeeper.SetClaim(ctx, &record) // #nosec G601
 				// suite.NoError(err)
 			}
 
