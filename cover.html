@@ -1,0 +1,545 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>keeper: Go Coverage Report</title>
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">github.com/quicksilver-zone/quicksilver/x/interchainquery/keeper/abci.go (38.5%)</option>
+				
+				<option value="file1">github.com/quicksilver-zone/quicksilver/x/interchainquery/keeper/grpc_query.go (75.0%)</option>
+				
+				<option value="file2">github.com/quicksilver-zone/quicksilver/x/interchainquery/keeper/keeper.go (80.6%)</option>
+				
+				<option value="file3">github.com/quicksilver-zone/quicksilver/x/interchainquery/keeper/msg_server.go (58.1%)</option>
+				
+				<option value="file4">github.com/quicksilver-zone/quicksilver/x/interchainquery/keeper/queries.go (96.7%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">not covered</span>
+				<span class="cov8">covered</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package keeper
+
+import (
+        "encoding/hex"
+        "time"
+
+        "github.com/cosmos/cosmos-sdk/telemetry"
+        sdk "github.com/cosmos/cosmos-sdk/types"
+
+        "github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
+)
+
+const (
+        RetryInterval = 25
+)
+
+// EndBlocker of interchainquery module.
+func (k Keeper) EndBlocker(ctx sdk.Context) <span class="cov8" title="1">{
+        defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
+        _ = k.Logger(ctx)
+        events := sdk.Events{}
+        // emit events for periodic queries
+        k.IterateQueries(ctx, func(_ int64, queryInfo types.Query) (stop bool) </span><span class="cov0" title="0">{
+                if queryInfo.LastEmission.IsNil() || queryInfo.LastEmission.IsZero() || queryInfo.LastEmission.Add(queryInfo.Period).Equal(sdk.NewInt(ctx.BlockHeight())) </span><span class="cov0" title="0">{
+                        k.Logger(ctx).Debug("Interchainquery event emitted", "id", queryInfo.Id)
+                        event := sdk.NewEvent(
+                                sdk.EventTypeMessage,
+                                sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+                                sdk.NewAttribute(sdk.AttributeKeyAction, types.AttributeValueQuery),
+                                sdk.NewAttribute(types.AttributeKeyQueryID, queryInfo.Id),
+                                sdk.NewAttribute(types.AttributeKeyChainID, queryInfo.ChainId),
+                                sdk.NewAttribute(types.AttributeKeyConnectionID, queryInfo.ConnectionId),
+                                sdk.NewAttribute(types.AttributeKeyType, queryInfo.QueryType),
+                                // TODO: add height to request type
+                                sdk.NewAttribute(types.AttributeKeyHeight, "0"),
+                                sdk.NewAttribute(types.AttributeKeyRequest, hex.EncodeToString(queryInfo.Request)),
+                        )
+
+                        events = append(events, event)
+                        queryInfo.LastEmission = sdk.NewInt(ctx.BlockHeight())
+                        k.SetQuery(ctx, queryInfo)
+
+                }</span>
+                <span class="cov0" title="0">return false</span>
+        })
+
+        <span class="cov8" title="1">if len(events) &gt; 0 </span><span class="cov0" title="0">{
+                ctx.EventManager().EmitEvents(events)
+        }</span>
+}
+</pre>
+		
+		<pre class="file" id="file1" style="display: none">package keeper
+
+import (
+        "context"
+
+        "google.golang.org/grpc/codes"
+        "google.golang.org/grpc/status"
+
+        "github.com/cosmos/cosmos-sdk/store/prefix"
+        sdk "github.com/cosmos/cosmos-sdk/types"
+        "github.com/cosmos/cosmos-sdk/types/query"
+
+        "github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
+)
+
+var _ types.QuerySrvrServer = Keeper{}
+
+// Queries returns information about registered zones.
+func (k Keeper) Queries(c context.Context, req *types.QueryRequestsRequest) (*types.QueryRequestsResponse, error) <span class="cov8" title="1">{
+        if req == nil </span><span class="cov0" title="0">{
+                return nil, status.Error(codes.InvalidArgument, "empty request")
+        }</span>
+
+        <span class="cov8" title="1">ctx := sdk.UnwrapSDKContext(c)
+
+        var queries []types.Query
+        store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixQuery)
+
+        pageRes, err := query.FilteredPaginate(store, req.Pagination, func(_, value []byte, accumulate bool) (bool, error) </span><span class="cov8" title="1">{
+                var query types.Query
+                if err := k.cdc.Unmarshal(value, &amp;query); err != nil </span><span class="cov0" title="0">{
+                        return false, err
+                }</span>
+
+                <span class="cov8" title="1">if query.ChainId == req.ChainId &amp;&amp; (query.LastEmission.IsNil() || query.LastEmission.IsZero() || query.LastEmission.GTE(query.LastHeight)) </span><span class="cov8" title="1">{
+                        queries = append(queries, query)
+                        return true, nil
+                }</span>
+
+                <span class="cov0" title="0">return false, nil</span>
+        })
+        <span class="cov8" title="1">if err != nil </span><span class="cov0" title="0">{
+                return nil, status.Error(codes.Internal, err.Error())
+        }</span>
+
+        <span class="cov8" title="1">return &amp;types.QueryRequestsResponse{
+                Queries:    queries,
+                Pagination: pageRes,
+        }, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file2" style="display: none">package keeper
+
+import (
+        "fmt"
+
+        "github.com/tendermint/tendermint/libs/log"
+
+        "cosmossdk.io/math"
+
+        "github.com/cosmos/cosmos-sdk/codec"
+        "github.com/cosmos/cosmos-sdk/store/prefix"
+        storetypes "github.com/cosmos/cosmos-sdk/store/types"
+        sdk "github.com/cosmos/cosmos-sdk/types"
+
+        ibckeeper "github.com/cosmos/ibc-go/v6/modules/core/keeper"
+
+        "github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
+)
+
+// Keeper of this module maintains collections of registered zones.
+type Keeper struct {
+        cdc       codec.Codec
+        storeKey  storetypes.StoreKey
+        callbacks map[string]types.QueryCallbacks
+        IBCKeeper *ibckeeper.Keeper
+}
+
+// NewKeeper returns a new instance of zones Keeper.
+func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey, ibcKeeper *ibckeeper.Keeper) Keeper <span class="cov8" title="1">{
+        if ibcKeeper == nil </span><span class="cov0" title="0">{
+                panic("ibcKeeper is nil")</span>
+        }
+
+        <span class="cov8" title="1">return Keeper{
+                cdc:       cdc,
+                storeKey:  storeKey,
+                callbacks: make(map[string]types.QueryCallbacks),
+                IBCKeeper: ibcKeeper,
+        }</span>
+}
+
+func (k *Keeper) SetCallbackHandler(module string, handler types.QueryCallbacks) error <span class="cov8" title="1">{
+        _, found := k.callbacks[module]
+        if found </span><span class="cov0" title="0">{
+                return fmt.Errorf("callback handler already set for %s", module)
+        }</span>
+        <span class="cov8" title="1">k.callbacks[module] = handler.RegisterCallbacks()
+        return nil</span>
+}
+
+// Logger returns a module-specific logger.
+func (k Keeper) Logger(ctx sdk.Context) log.Logger <span class="cov8" title="1">{
+        return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
+}</span>
+
+func (k *Keeper) MakeRequest(
+        ctx sdk.Context,
+        connectionID,
+        chainID,
+        queryType string,
+        request []byte,
+        period math.Int,
+        module string,
+        callbackID string,
+        ttl uint64,
+) <span class="cov8" title="1">{
+        k.Logger(ctx).Debug(
+                "MakeRequest",
+                "connection_id", connectionID,
+                "chain_id", chainID,
+                "query_type", queryType,
+                "request", request,
+                "period", period,
+                "module", module,
+                "callback", callbackID,
+                "ttl", ttl,
+        )
+        key := GenerateQueryHash(connectionID, chainID, queryType, request, module, callbackID)
+        existingQuery, found := k.GetQuery(ctx, key)
+        if !found </span><span class="cov8" title="1">{
+                if module != "" &amp;&amp; callbackID != "" </span><span class="cov8" title="1">{
+                        if _, exists := k.callbacks[module]; !exists </span><span class="cov8" title="1">{
+                                err := fmt.Errorf("no callback handler registered for module %s", module)
+                                k.Logger(ctx).Error(err.Error())
+                                panic(err)</span>
+                        }
+                        <span class="cov0" title="0">if exists := k.callbacks[module].Has(callbackID); !exists </span><span class="cov0" title="0">{
+                                err := fmt.Errorf("no callback %s registered for module %s", callbackID, module)
+                                k.Logger(ctx).Error(err.Error())
+                                panic(err)</span>
+                        }
+                }
+                <span class="cov8" title="1">newQuery := k.NewQuery(module, connectionID, chainID, queryType, request, period, callbackID, ttl)
+                k.SetQuery(ctx, *newQuery)</span>
+        } else<span class="cov8" title="1"> {
+                // a re-request of an existing query triggers resetting of height to trigger immediately.
+                k.Logger(ctx).Debug("re-request", "LastHeight", existingQuery.LastHeight)
+                existingQuery.LastHeight = sdk.ZeroInt()
+                k.SetQuery(ctx, existingQuery)
+        }</span>
+}
+
+// Heights
+
+func (k *Keeper) SetLatestHeight(ctx sdk.Context, chainID string, height uint64) <span class="cov8" title="1">{
+        store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixLatestHeight)
+        store.Set([]byte(chainID), sdk.Uint64ToBigEndian(height))
+}</span>
+
+func (k *Keeper) GetLatestHeight(ctx sdk.Context, chainID string) uint64 <span class="cov8" title="1">{
+        store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixLatestHeight)
+        return sdk.BigEndianToUint64(store.Get([]byte(chainID)))
+}</span>
+</pre>
+		
+		<pre class="file" id="file3" style="display: none">package keeper
+
+import (
+        "context"
+        "errors"
+        "fmt"
+        "strings"
+
+        sdk "github.com/cosmos/cosmos-sdk/types"
+
+        "github.com/quicksilver-zone/quicksilver/utils"
+        "github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
+)
+
+type msgServer struct {
+        *Keeper
+}
+
+// NewMsgServerImpl returns an implementation of the bank MsgServer interface
+// for the provided Keeper.
+func NewMsgServerImpl(keeper Keeper) types.MsgServer <span class="cov8" title="1">{
+        return &amp;msgServer{Keeper: &amp;keeper}
+}</span>
+
+var _ types.MsgServer = msgServer{}
+
+func (k msgServer) SubmitQueryResponse(goCtx context.Context, msg *types.MsgSubmitQueryResponse) (*types.MsgSubmitQueryResponseResponse, error) <span class="cov8" title="1">{
+        ctx := sdk.UnwrapSDKContext(goCtx)
+        q, found := k.GetQuery(ctx, msg.QueryId)
+
+        if !found </span><span class="cov8" title="1">{
+                k.Logger(ctx).Debug("query not found", "QueryID", msg.QueryId)
+
+                return &amp;types.MsgSubmitQueryResponseResponse{}, nil
+        }</span>
+
+        <span class="cov8" title="1">latest := k.GetLatestHeight(ctx, msg.ChainId)
+        if latest &gt; uint64(msg.Height) &amp;&amp; q.QueryType != "tendermint.Tx" &amp;&amp; q.QueryType != "ibc.ClientUpdate" </span><span class="cov0" title="0">{
+                k.Logger(ctx).Error("ignoring stale query result", "id", q.Id, "type", q.QueryType, "latestHeight", latest, "msgHeight", msg.Height)
+                // technically this is an error, but will cause the entire tx to fail
+                // if we have one 'bad' message, so we can just no-op here.
+                return &amp;types.MsgSubmitQueryResponseResponse{}, nil
+        }</span>
+
+        // check if query was previously processed
+        // - indicated by query.LastHeight matching current Block Height;
+        <span class="cov8" title="1">if q.LastHeight.Int64() == ctx.BlockHeader().Height </span><span class="cov0" title="0">{
+                k.Logger(ctx).Debug("ignoring duplicate query", "id", q.Id, "type", q.QueryType)
+                // technically this is an error, but will cause the entire tx to fail
+                // if we have one 'bad' message, so we can just no-op here.
+                return &amp;types.MsgSubmitQueryResponseResponse{}, nil
+        }</span>
+
+        <span class="cov8" title="1">pathParts := strings.Split(q.QueryType, "/")
+        if pathParts[len(pathParts)-1] == "key" </span><span class="cov0" title="0">{
+                if err := utils.ValidateProofOps(ctx, k.IBCKeeper, q.ConnectionId, q.ChainId, msg.Height, pathParts[1], q.Request, msg.Result, msg.ProofOps); err != nil </span><span class="cov0" title="0">{
+                        k.Logger(ctx).Error("failed to validate proofops", "id", q.Id, "type", q.QueryType)
+                        return nil, err
+                }</span>
+        }
+
+        <span class="cov8" title="1">noDelete := false
+        // execute registered callbacks.
+
+        callbackExecuted := false
+
+        for _, key := range utils.Keys[types.QueryCallbacks](k.callbacks) </span><span class="cov8" title="1">{
+                module := k.callbacks[key]
+                if module.Has(q.CallbackId) </span><span class="cov0" title="0">{
+                        err := module.Call(ctx, q.CallbackId, msg.Result, q)
+                        callbackExecuted = true
+                        if err != nil </span><span class="cov0" title="0">{
+                                // not edge case: proceed with regular error handling!
+                                if !errors.Is(err, types.ErrSucceededNoDelete) </span><span class="cov0" title="0">{
+                                        k.Logger(ctx).Error("error in callback", "error", err, "msg", msg.QueryId, "result", msg.Result, "type", q.QueryType, "params", q.Request)
+                                        return nil, err
+                                }</span>
+                                // edge case: the callback has resent the same query (re-query)!
+                                // action:    set noDelete to true and continue (short circuit error handling)!
+                                <span class="cov0" title="0">noDelete = true</span>
+                        }
+                        // we have executed a callback; only a single callback is expected per request, so break here.
+                        <span class="cov0" title="0">break</span>
+                }
+        }
+
+        <span class="cov8" title="1">if pathParts[len(pathParts)-1] == "key" </span><span class="cov0" title="0">{
+                k.SetLatestHeight(ctx, msg.ChainId, uint64(msg.Height))
+        }</span>
+
+        <span class="cov8" title="1">if !callbackExecuted &amp;&amp; q.CallbackId != "" </span><span class="cov0" title="0">{
+                k.Logger(ctx).Error("callback expected but not found", "callbackId", q.CallbackId, "msg", msg.QueryId, "type", q.QueryType)
+                return nil, fmt.Errorf("expected callback %s, but did not find it", q.CallbackId)
+        }</span>
+
+        // check for and delete non-repeating queries, update any other
+        // - Period.IsNegative() indicates a single query;
+        // - noDelete indicates a response that triggered a re-query;
+        <span class="cov8" title="1">if q.Period.IsNegative() </span><span class="cov8" title="1">{
+                if !noDelete </span><span class="cov8" title="1">{
+                        k.DeleteQuery(ctx, msg.QueryId)
+                }</span>
+        } else<span class="cov8" title="1"> {
+                q.LastHeight = sdk.NewInt(ctx.BlockHeight())
+                k.SetQuery(ctx, q)
+        }</span>
+
+        <span class="cov8" title="1">ctx.EventManager().EmitEvents(sdk.Events{
+                sdk.NewEvent(
+                        sdk.EventTypeMessage,
+                        sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+                ),
+        })
+
+        return &amp;types.MsgSubmitQueryResponseResponse{}, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file4" style="display: none">package keeper
+
+import (
+        "fmt"
+
+        "github.com/tendermint/tendermint/crypto"
+
+        "cosmossdk.io/math"
+
+        "github.com/cosmos/cosmos-sdk/store/prefix"
+        sdk "github.com/cosmos/cosmos-sdk/types"
+
+        "github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
+)
+
+func GenerateQueryHash(connectionID, chainID, queryType string, request []byte, module string, callbackID string) string <span class="cov8" title="1">{
+        return fmt.Sprintf("%x", crypto.Sha256(append([]byte(module+connectionID+chainID+queryType+callbackID), request...)))
+}</span>
+
+// ----------------------------------------------------------------
+
+func (k Keeper) NewQuery(
+        module,
+        connectionID,
+        chainID,
+        queryType string,
+        request []byte,
+        period math.Int,
+        callbackID string,
+        ttl uint64,
+) *types.Query <span class="cov8" title="1">{
+        return &amp;types.Query{
+                Id:           GenerateQueryHash(connectionID, chainID, queryType, request, module, callbackID),
+                ConnectionId: connectionID,
+                ChainId:      chainID,
+                QueryType:    queryType,
+                Request:      request,
+                Period:       period,
+                LastHeight:   sdk.ZeroInt(),
+                CallbackId:   callbackID,
+                Ttl:          ttl,
+        }
+}</span>
+
+// GetQuery returns query.
+func (k Keeper) GetQuery(ctx sdk.Context, id string) (types.Query, bool) <span class="cov8" title="1">{
+        query := types.Query{}
+        store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixQuery)
+        bz := store.Get([]byte(id))
+        if len(bz) == 0 </span><span class="cov8" title="1">{
+                return query, false
+        }</span>
+        <span class="cov8" title="1">k.cdc.MustUnmarshal(bz, &amp;query)
+        return query, true</span>
+}
+
+// SetQuery set query info.
+func (k Keeper) SetQuery(ctx sdk.Context, query types.Query) <span class="cov8" title="1">{
+        store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixQuery)
+        bz := k.cdc.MustMarshal(&amp;query)
+        store.Set([]byte(query.Id), bz)
+}</span>
+
+// DeleteQuery delete query info.
+func (k Keeper) DeleteQuery(ctx sdk.Context, id string) <span class="cov8" title="1">{
+        store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixQuery)
+        store.Delete([]byte(id))
+}</span>
+
+// IterateQueries iterate through queries.
+func (k Keeper) IterateQueries(ctx sdk.Context, fn func(index int64, queryInfo types.Query) (stop bool)) <span class="cov8" title="1">{
+        store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixQuery)
+        iterator := sdk.KVStorePrefixIterator(store, nil)
+        defer iterator.Close()
+
+        i := int64(0)
+        for ; iterator.Valid(); iterator.Next() </span><span class="cov8" title="1">{
+                query := types.Query{}
+                k.cdc.MustUnmarshal(iterator.Value(), &amp;query)
+                stop := fn(i, query)
+
+                if stop </span><span class="cov0" title="0">{
+                        break</span>
+                }
+                <span class="cov8" title="1">i++</span>
+        }
+}
+
+// AllQueries returns every queryInfo in the store.
+func (k Keeper) AllQueries(ctx sdk.Context) []types.Query <span class="cov8" title="1">{
+        queries := []types.Query{}
+        k.IterateQueries(ctx, func(_ int64, queryInfo types.Query) (stop bool) </span><span class="cov8" title="1">{
+                queries = append(queries, queryInfo)
+                return false
+        }</span>)
+        <span class="cov8" title="1">return queries</span>
+}
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>
