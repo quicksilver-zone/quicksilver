@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"encoding/json"
+	"strings"
 	"time"
 
 	"cosmossdk.io/math"
@@ -1553,14 +1554,14 @@ func (suite *KeeperTestSuite) TestKeeper_ClaimedPercentage() {
 		name     string
 		malleate func()
 		req      *types.QueryClaimedPercentageRequest
-		wantErr  bool
+		wantErr  string
 		resp     *types.QueryClaimedPercentageResponse
 	}{
 		{
 			"ClaimedPercentage_Nil_Request",
 			func() {},
 			nil,
-			true,
+			"empty request",
 			nil,
 		},
 		{
@@ -1572,7 +1573,7 @@ func (suite *KeeperTestSuite) TestKeeper_ClaimedPercentage() {
 			&types.QueryClaimedPercentageRequest{
 				ChainId: "boguschain",
 			},
-			true,
+			"no zone found",
 			nil,
 		},
 		{
@@ -1594,7 +1595,7 @@ func (suite *KeeperTestSuite) TestKeeper_ClaimedPercentage() {
 			&types.QueryClaimedPercentageRequest{
 				ChainId: suite.chainB.ChainID,
 			},
-			false,
+			"",
 			&types.QueryClaimedPercentageResponse{
 				Percentage: sdk.NewDec(1),
 			},
@@ -1609,9 +1610,11 @@ func (suite *KeeperTestSuite) TestKeeper_ClaimedPercentage() {
 				ctx,
 				tt.req,
 			)
-			if tt.wantErr {
-				suite.T().Logf("Error:\n%v\n", err)
+			if tt.wantErr != "" {
 				suite.Error(err)
+				if g, w := err.Error(), tt.wantErr; !strings.Contains(g, w) {
+					suite.T().Fatalf("Error mismatch:\n\t%q\n\tdoes not contain\n\t%q", g, w)
+				}
 				return
 			}
 			suite.NoError(err)
@@ -1628,14 +1631,14 @@ func (suite *KeeperTestSuite) TestKeeper_ClaimedPercentageByClaimType() {
 		name     string
 		malleate func()
 		req      *types.QueryClaimedPercentageRequest
-		wantErr  bool
+		wantErr  string
 		resp     *types.QueryClaimedPercentageResponse
 	}{
 		{
 			"ClaimedPercentage_Nil_Request",
 			func() {},
 			nil,
-			true,
+			"empty request",
 			nil,
 		},
 		{
@@ -1647,7 +1650,7 @@ func (suite *KeeperTestSuite) TestKeeper_ClaimedPercentageByClaimType() {
 			&types.QueryClaimedPercentageRequest{
 				ChainId: "boguschain",
 			},
-			true,
+			"no zone found",
 			nil,
 		},
 		{
@@ -1655,10 +1658,10 @@ func (suite *KeeperTestSuite) TestKeeper_ClaimedPercentageByClaimType() {
 			func() {
 			},
 			&types.QueryClaimedPercentageRequest{
-				ChainId:   "boguschain",
+				ChainId:   suite.chainB.ChainID,
 				ClaimType: 10000,
 			},
-			true,
+			"claim type must be a valid number",
 			nil,
 		},
 		{
@@ -1668,7 +1671,7 @@ func (suite *KeeperTestSuite) TestKeeper_ClaimedPercentageByClaimType() {
 				ChainId:   suite.chainB.ChainID,
 				ClaimType: claimsmanagertypes.ClaimTypeOsmosisPool,
 			},
-			false,
+			"",
 			&types.QueryClaimedPercentageResponse{
 				Percentage: sdk.ZeroDec(),
 			},
@@ -1693,7 +1696,7 @@ func (suite *KeeperTestSuite) TestKeeper_ClaimedPercentageByClaimType() {
 				ChainId:   suite.chainB.ChainID,
 				ClaimType: claimsmanagertypes.ClaimTypeOsmosisPool,
 			},
-			false,
+			"",
 			&types.QueryClaimedPercentageResponse{
 				Percentage: sdk.MustNewDecFromStr("0.9"),
 			},
@@ -1718,7 +1721,7 @@ func (suite *KeeperTestSuite) TestKeeper_ClaimedPercentageByClaimType() {
 				ChainId:   suite.chainB.ChainID,
 				ClaimType: claimsmanagertypes.ClaimTypeLiquidToken,
 			},
-			false,
+			"",
 			&types.QueryClaimedPercentageResponse{
 				Percentage: sdk.MustNewDecFromStr("0.1"),
 			},
@@ -1733,9 +1736,11 @@ func (suite *KeeperTestSuite) TestKeeper_ClaimedPercentageByClaimType() {
 				ctx,
 				tt.req,
 			)
-			if tt.wantErr {
-				suite.T().Logf("Error:\n%v\n", err)
+			if tt.wantErr != "" {
 				suite.Error(err)
+				if g, w := err.Error(), tt.wantErr; !strings.Contains(g, w) {
+					suite.T().Fatalf("Error mismatch:\n\t%q\n\tdoes not contain\n\t%q", g, w)
+				}
 				return
 			}
 			suite.NoError(err)

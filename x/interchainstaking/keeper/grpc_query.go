@@ -12,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
+	claimsmanagertypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
 	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 )
 
@@ -372,6 +373,7 @@ func (k *Keeper) ClaimedPercentage(c context.Context, req *types.QueryClaimedPer
 	if !found {
 		return nil, status.Error(codes.NotFound, fmt.Sprintf("no zone found matching %s", req.GetChainId()))
 	}
+
 	percentage, err := k.GetClaimedPercentage(ctx, &zone)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
@@ -391,6 +393,12 @@ func (k *Keeper) ClaimedPercentageByClaimType(c context.Context, req *types.Quer
 	zone, found := k.GetZone(ctx, req.ChainId)
 	if !found {
 		return nil, status.Error(codes.NotFound, fmt.Sprintf("no zone found matching %s", req.GetChainId()))
+	}
+
+	claimTypeInt := int(req.ClaimType)
+
+	if claimTypeInt < 1 || claimTypeInt > len(claimsmanagertypes.ClaimType_value) {
+		return nil, status.Error(codes.InvalidArgument, "claim type must be a valid number")
 	}
 
 	percentage, err := k.GetClaimedPercentageByClaimType(ctx, &zone, req.ClaimType)
