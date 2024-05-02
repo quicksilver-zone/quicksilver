@@ -7,7 +7,7 @@ import { useState } from 'react';
 
 export const useFeeEstimation = (chainName: string) => {
   const { getSigningStargateClient, chain } = useChain(chainName);
-  const [error, setError] = useState<string | undefined>(undefined)
+  const [error, setError] = useState<string | null>(null)
 
   const gasPrice = chain.fees?.fee_tokens[0].average_gas_price || 0.025;
 

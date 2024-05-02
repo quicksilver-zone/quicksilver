@@ -960,7 +960,7 @@ export const useGovernanceQuery = (chainName: string) => {
         voter: '',
         depositor: '',
       });
-
+      
       return governance;
     },
     {

@@ -104,18 +104,21 @@ export const ProposalModal = ({
 
   const uint8ArrayValue = proposal.messages[0].value;
   const propinfo = decodeUint8Arr(uint8ArrayValue);
+  console.log('propinfo',propinfo)
 
   const getTitleFromDecoded = (decodedStr: string) => {
     return decodedStr.slice(0, 250).match(/[A-Z][A-Za-z].*(?=\u0012)/)?.[0];
   };
 
   const getDescriptionFromProposal = (decodedData: string): string => {
+    console.log('decodedData',decodedData)
     const lines = decodedData.split('\n');
     return lines.slice(4).join('\n') || '';
   };
 
   const title = getTitleFromDecoded(propinfo);
   const description = getDescriptionFromProposal(propinfo);
+  console.log('description',description)
 
   const descriptionRenderer = () => {
     if (!description) return '';
