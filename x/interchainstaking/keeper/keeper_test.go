@@ -100,7 +100,12 @@ func (suite *KeeperTestSuite) setupTestZones() {
 	ctx := suite.chainA.GetContext()
 
 	// create a transfer channel and set it in the proposal
-	quicksilver.IBCKeeper.ChannelKeeper.SetChannel(ctx, transfertypes.PortID, testTransferChannel, channeltypes.Channel{State: channeltypes.OPEN, Ordering: channeltypes.ORDERED, Counterparty: channeltypes.Counterparty{PortId: transfertypes.PortID, ChannelId: testTransferChannel}, ConnectionHops: []string{suite.path.EndpointA.ConnectionID}})
+	quicksilver.IBCKeeper.ChannelKeeper.SetChannel(ctx, transfertypes.PortID, testTransferChannel,
+		channeltypes.Channel{
+			State: channeltypes.OPEN, Ordering: channeltypes.ORDERED,
+			Counterparty:   channeltypes.Counterparty{PortId: transfertypes.PortID, ChannelId: testTransferChannel},
+			ConnectionHops: []string{suite.path.EndpointA.ConnectionID},
+		})
 	proposal.TransferChannel = testTransferChannel
 
 	err := quicksilver.InterchainstakingKeeper.HandleRegisterZoneProposal(ctx, proposal)
