@@ -121,7 +121,6 @@ func (suite *KeeperTestSuite) TestMakeRequest() {
 			0,
 		)
 	})
-
 }
 
 func (suite *KeeperTestSuite) TestSubmitQueryResponse() {
