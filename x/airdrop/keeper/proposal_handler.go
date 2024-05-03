@@ -51,7 +51,7 @@ func HandleRegisterZoneDropProposal(ctx sdk.Context, k *Keeper, p *types.Registe
 		}
 
 		if cr.ChainId != p.ZoneDrop.ChainId {
-			return fmt.Errorf("invalid zonedrop proposal claim record [%d]: chainID missmatch, expected %q got %q", i, p.ZoneDrop.ChainId, cr.ChainId)
+			return fmt.Errorf("invalid zonedrop proposal claim record [%d]: chainID mismatch, expected %q got %q", i, p.ZoneDrop.ChainId, cr.ChainId)
 		}
 
 		sumMax += cr.MaxAllocation

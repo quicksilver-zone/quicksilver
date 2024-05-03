@@ -175,7 +175,7 @@ func (suite *KeeperTestSuite) setupTestZones() {
 		Is_118:           true,
 		WithdrawalAddress: &icstypes.ICAAccount{
 			Address:           withdrawalAddress1,
-			PortName:          suite.chainB.ChainID + ".withrawal",
+			PortName:          suite.chainB.ChainID + ".withdrawal",
 			WithdrawalAddress: withdrawalAddress1,
 		},
 		DustThreshold: math.NewInt(1000000),
@@ -193,7 +193,7 @@ func (suite *KeeperTestSuite) setupTestZones() {
 		Is_118:           true,
 		WithdrawalAddress: &icstypes.ICAAccount{
 			Address:           withdrawalAddress2,
-			PortName:          suite.chainA.ChainID + ".withrawal",
+			PortName:          suite.chainA.ChainID + ".withdrawal",
 			WithdrawalAddress: withdrawalAddress2,
 		},
 		DustThreshold: math.NewInt(1000000),
@@ -334,7 +334,7 @@ func (suite *KeeperTestSuite) setupTestZones() {
 		},
 		WithdrawalAddress: &icstypes.ICAAccount{
 			Address:           withdrawalAddress,
-			PortName:          "osmosis-1.withrawal",
+			PortName:          "osmosis-1.withdrawal",
 			WithdrawalAddress: withdrawalAddress,
 		},
 		Is_118: true,
