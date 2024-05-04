@@ -231,7 +231,7 @@ func (k *Keeper) HandleUpdateZoneProposal(ctx sdk.Context, p *types.UpdateZonePr
 		case "transfer_channel":
 			_, found := k.IBCKeeper.ChannelKeeper.GetChannel(ctx, transfertypes.PortID, change.Value)
 			if !found {
-				errors.New("unable to fetch transfer channel for the change")
+				return errors.New("unable to fetch transfer channel for the change")
 			}
 			_, found = k.IBCKeeper.ChannelKeeper.GetChannel(ctx, transfertypes.PortID, zone.TransferChannel)
 			if !found {
