@@ -12,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
+	claimsmanagertypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
 	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 )
 
@@ -361,4 +362,49 @@ func (k *Keeper) ValidatorDenyList(c context.Context, req *types.QueryDenyListRe
 	validators := k.GetZoneValidatorDenyList(ctx, req.ChainId)
 
 	return &types.QueryDenyListResponse{Validators: validators}, nil
+}
+
+func (k *Keeper) ClaimedPercentage(c context.Context, req *types.QueryClaimedPercentageRequest) (*types.QueryClaimedPercentageResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(c)
+	zone, found := k.GetZone(ctx, req.ChainId)
+	if !found {
+		return nil, status.Error(codes.NotFound, fmt.Sprintf("no zone found matching %s", req.GetChainId()))
+	}
+
+	percentage, err := k.GetClaimedPercentage(ctx, &zone)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &types.QueryClaimedPercentageResponse{Percentage: percentage}, nil
+}
+
+func (k *Keeper) ClaimedPercentageByClaimType(c context.Context, req *types.QueryClaimedPercentageRequest) (*types.QueryClaimedPercentageResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	if req.ChainId == "" {
+		return nil, status.Error(codes.InvalidArgument, "chain id and claim type cannot be empty")
+	}
+	ctx := sdk.UnwrapSDKContext(c)
+	zone, found := k.GetZone(ctx, req.ChainId)
+	if !found {
+		return nil, status.Error(codes.NotFound, fmt.Sprintf("no zone found matching %s", req.GetChainId()))
+	}
+
+	claimTypeInt := int(req.ClaimType)
+
+	if claimTypeInt < 1 || claimTypeInt > len(claimsmanagertypes.ClaimType_value) {
+		return nil, status.Error(codes.InvalidArgument, "claim type must be a valid number")
+	}
+
+	percentage, err := k.GetClaimedPercentageByClaimType(ctx, &zone, req.ClaimType)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &types.QueryClaimedPercentageResponse{Percentage: percentage}, nil
 }
