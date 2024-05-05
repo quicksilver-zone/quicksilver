@@ -12,7 +12,7 @@ import "osmosis/lockup/params.proto";
 option go_package = "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/lockup";
 
 // Query defines the gRPC querier service.
-service Query {
+service QueryService {
   // Return full balance of the module
   rpc ModuleBalance(ModuleBalanceRequest) returns (ModuleBalanceResponse) {
     option (google.api.http).get = "/osmosis/lockup/v1beta1/module_balance";
@@ -62,7 +62,7 @@ service Query {
   }
 
   // Returns lock record by id
-  rpc LockedByID(LockedRequest) returns (LockedResponse) {
+  rpc LockedByID(LockedByIDRequest) returns (LockedByIDResponse) {
     option (google.api.http).get = "/osmosis/lockup/v1beta1/locked_by_id/{lock_id}";
   }
 
@@ -110,7 +110,7 @@ service Query {
     option (google.api.http).get = "/osmosis/lockup/v1beta1/account_locked_longer_duration_denom/{owner}";
   }
   // Params returns lockup params.
-  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+  rpc Params(ParamsRequest) returns (ParamsResponse) {
     option (google.api.http).get = "/osmosis/lockup/v1beta1/params";
   }
 }
@@ -226,10 +226,10 @@ message LockedDenomResponse {
   ];
 }
 
-message LockedRequest {
+message LockedByIDRequest {
   uint64 lock_id = 1;
 }
-message LockedResponse {
+message LockedByIDResponse {
   PeriodLock lock = 1;
 }
 
@@ -310,7 +310,7 @@ message AccountLockedLongerDurationDenomResponse {
   repeated PeriodLock locks = 1 [(gogoproto.nullable) = false];
 }
 
-message QueryParamsRequest {}
-message QueryParamsResponse {
+message ParamsRequest {}
+message ParamsResponse {
   Params params = 1 [(gogoproto.nullable) = false];
 }

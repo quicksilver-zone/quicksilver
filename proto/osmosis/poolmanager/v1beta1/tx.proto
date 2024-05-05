@@ -7,16 +7,16 @@ import "osmosis/poolmanager/v1beta1/swap_route.proto";
 
 option go_package = "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/poolmanager";
 
-service Msg {
-  rpc SwapExactAmountIn(MsgSwapExactAmountIn) returns (MsgSwapExactAmountInResponse);
-  rpc SwapExactAmountOut(MsgSwapExactAmountOut) returns (MsgSwapExactAmountOutResponse);
-  rpc SplitRouteSwapExactAmountIn(MsgSplitRouteSwapExactAmountIn) returns (MsgSplitRouteSwapExactAmountInResponse);
-  rpc SplitRouteSwapExactAmountOut(MsgSplitRouteSwapExactAmountOut) returns (MsgSplitRouteSwapExactAmountOutResponse);
-  rpc SetDenomPairTakerFee(MsgSetDenomPairTakerFee) returns (MsgSetDenomPairTakerFeeResponse);
+service MsgService {
+  rpc SwapExactAmountIn(SwapExactAmountInRequest) returns (SwapExactAmountInResponse);
+  rpc SwapExactAmountOut(SwapExactAmountOutRequest) returns (SwapExactAmountOutResponse);
+  rpc SplitRouteSwapExactAmountIn(SplitRouteSwapExactAmountInRequest) returns (SplitRouteSwapExactAmountInResponse);
+  rpc SplitRouteSwapExactAmountOut(SplitRouteSwapExactAmountOutRequest) returns (SplitRouteSwapExactAmountOutResponse);
+  rpc SetDenomPairTakerFee(SetDenomPairTakerFeeRequest) returns (SetDenomPairTakerFeeResponse);
 }
 
-// ===================== MsgSwapExactAmountIn
-message MsgSwapExactAmountIn {
+// ===================== SwapExactAmountIn
+message SwapExactAmountInRequest {
   string sender = 1 [(gogoproto.moretags) = "yaml:\"sender\""];
   repeated SwapAmountInRoute routes = 2 [(gogoproto.nullable) = false];
   cosmos.base.v1beta1.Coin token_in = 3 [
@@ -30,7 +30,7 @@ message MsgSwapExactAmountIn {
   ];
 }
 
-message MsgSwapExactAmountInResponse {
+message SwapExactAmountInResponse {
   string token_out_amount = 1 [
     (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.moretags) = "yaml:\"token_out_amount\"",
@@ -38,8 +38,8 @@ message MsgSwapExactAmountInResponse {
   ];
 }
 
-// ===================== MsgSplitRouteSwapExactAmountIn
-message MsgSplitRouteSwapExactAmountIn {
+// ===================== SplitRouteSwapExactAmountIn
+message SplitRouteSwapExactAmountInRequest {
   string sender = 1 [(gogoproto.moretags) = "yaml:\"sender\""];
   repeated SwapAmountInSplitRoute routes = 2 [(gogoproto.nullable) = false];
   string token_in_denom = 3 [(gogoproto.moretags) = "yaml:\"token_in_denom\""];
@@ -50,7 +50,7 @@ message MsgSplitRouteSwapExactAmountIn {
   ];
 }
 
-message MsgSplitRouteSwapExactAmountInResponse {
+message SplitRouteSwapExactAmountInResponse {
   string token_out_amount = 1 [
     (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.moretags) = "yaml:\"token_out_amount\"",
@@ -58,8 +58,8 @@ message MsgSplitRouteSwapExactAmountInResponse {
   ];
 }
 
-// ===================== MsgSwapExactAmountOut
-message MsgSwapExactAmountOut {
+// ===================== SwapExactAmountOut
+message SwapExactAmountOutRequest {
   string sender = 1 [(gogoproto.moretags) = "yaml:\"sender\""];
   repeated SwapAmountOutRoute routes = 2 [(gogoproto.nullable) = false];
   string token_in_max_amount = 3 [
@@ -73,7 +73,7 @@ message MsgSwapExactAmountOut {
   ];
 }
 
-message MsgSwapExactAmountOutResponse {
+message SwapExactAmountOutResponse {
   string token_in_amount = 1 [
     (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.moretags) = "yaml:\"token_in_amount\"",
@@ -81,8 +81,8 @@ message MsgSwapExactAmountOutResponse {
   ];
 }
 
-// ===================== MsgSplitRouteSwapExactAmountOut
-message MsgSplitRouteSwapExactAmountOut {
+// ===================== SplitRouteSwapExactAmountOut
+message SplitRouteSwapExactAmountOutRequest {
   string sender = 1 [(gogoproto.moretags) = "yaml:\"sender\""];
   repeated SwapAmountOutSplitRoute routes = 2 [(gogoproto.nullable) = false];
   string token_out_denom = 3 [(gogoproto.moretags) = "yaml:\"token_out_denom\""];
@@ -93,7 +93,7 @@ message MsgSplitRouteSwapExactAmountOut {
   ];
 }
 
-message MsgSplitRouteSwapExactAmountOutResponse {
+message SplitRouteSwapExactAmountOutResponse {
   string token_in_amount = 1 [
     (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.moretags) = "yaml:\"token_in_amount\"",
@@ -101,8 +101,8 @@ message MsgSplitRouteSwapExactAmountOutResponse {
   ];
 }
 
-// ===================== MsgSetDenomPairTakerFee
-message MsgSetDenomPairTakerFee {
+// ===================== SetDenomPairTakerFee
+message SetDenomPairTakerFeeRequest {
   string sender = 1 [(gogoproto.moretags) = "yaml:\"sender\""];
   repeated DenomPairTakerFee denom_pair_taker_fee = 2 [
     (gogoproto.moretags) = "yaml:\"denom_pair_taker_fee\"",
@@ -110,7 +110,7 @@ message MsgSetDenomPairTakerFee {
   ];
 }
 
-message MsgSetDenomPairTakerFeeResponse {
+message SetDenomPairTakerFeeResponse {
   bool success = 1;
 }
 

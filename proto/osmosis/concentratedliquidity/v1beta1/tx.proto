@@ -3,29 +3,27 @@ package osmosis.concentratedliquidity.v1beta1;
 
 import "cosmos/base/v1beta1/coin.proto";
 import "gogoproto/gogo.proto";
-import "google/protobuf/duration.proto";
-import "google/protobuf/timestamp.proto";
 
 option go_package = "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/concentrated-liquidity";
 
-service Msg {
-  rpc CreatePosition(MsgCreatePosition) returns (MsgCreatePositionResponse);
-  rpc WithdrawPosition(MsgWithdrawPosition) returns (MsgWithdrawPositionResponse);
+service MsgService {
+  rpc CreatePosition(CreatePositionRequest) returns (CreatePositionResponse);
+  rpc WithdrawPosition(WithdrawPositionRequest) returns (WithdrawPositionResponse);
   // AddToPosition attempts to add amount0 and amount1 to a position
   // with the given position id.
   // To maintain backwards-compatibility with future implementations of
   // charging, this function deletes the old position and creates a new one with
   // the resulting amount after addition.
-  rpc AddToPosition(MsgAddToPosition) returns (MsgAddToPositionResponse);
-  rpc CollectSpreadRewards(MsgCollectSpreadRewards) returns (MsgCollectSpreadRewardsResponse);
-  rpc CollectIncentives(MsgCollectIncentives) returns (MsgCollectIncentivesResponse);
+  rpc AddToPosition(AddToPositionRequest) returns (AddToPositionResponse);
+  rpc CollectSpreadRewards(CollectSpreadRewardsRequest) returns (CollectSpreadRewardsResponse);
+  rpc CollectIncentives(CollectIncentivesRequest) returns (CollectIncentivesResponse);
   // TransferPositions transfers ownership of a set of one or more positions
   // from a sender to a recipient.
-  rpc TransferPositions(MsgTransferPositions) returns (MsgTransferPositionsResponse);
+  rpc TransferPositions(TransferPositionsRequest) returns (TransferPositionsResponse);
 }
 
 // ===================== MsgCreatePosition
-message MsgCreatePosition {
+message CreatePositionRequest {
   uint64 pool_id = 1 [(gogoproto.moretags) = "yaml:\"pool_id\""];
   string sender = 2 [(gogoproto.moretags) = "yaml:\"sender\""];
   int64 lower_tick = 3 [(gogoproto.moretags) = "yaml:\"lower_tick\""];
@@ -50,7 +48,7 @@ message MsgCreatePosition {
   ];
 }
 
-message MsgCreatePositionResponse {
+message CreatePositionResponse {
   uint64 position_id = 1 [(gogoproto.moretags) = "yaml:\"position_id\""];
   string amount0 = 2 [
     (gogoproto.customtype) = "cosmossdk.io/math.Int",
@@ -75,8 +73,8 @@ message MsgCreatePositionResponse {
   int64 upper_tick = 7 [(gogoproto.moretags) = "yaml:\"upper_tick\""];
 }
 
-// ===================== MsgAddToPosition
-message MsgAddToPosition {
+// ===================== AddToPosition
+message AddToPositionRequest {
   uint64 position_id = 1 [(gogoproto.moretags) = "yaml:\"position_id\""];
   string sender = 2 [(gogoproto.moretags) = "yaml:\"sender\""];
   // amount0 represents the amount of token0 willing to put in.
@@ -111,7 +109,7 @@ message MsgAddToPosition {
   ];
 }
 
-message MsgAddToPositionResponse {
+message AddToPositionResponse {
   uint64 position_id = 1 [(gogoproto.moretags) = "yaml:\"position_id\""];
   string amount0 = 2 [
     (gogoproto.customtype) = "cosmossdk.io/math.Int",
@@ -126,7 +124,7 @@ message MsgAddToPositionResponse {
 }
 
 // ===================== MsgWithdrawPosition
-message MsgWithdrawPosition {
+message WithdrawPositionRequest {
   uint64 position_id = 1 [(gogoproto.moretags) = "yaml:\"position_id\""];
   string sender = 2 [(gogoproto.moretags) = "yaml:\"sender\""];
   string liquidity_amount = 3 [
@@ -136,7 +134,7 @@ message MsgWithdrawPosition {
   ];
 }
 
-message MsgWithdrawPositionResponse {
+message WithdrawPositionResponse {
   string amount0 = 1 [
     (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.moretags) = "yaml:\"amount0\"",
@@ -149,13 +147,13 @@ message MsgWithdrawPositionResponse {
   ];
 }
 
-// ===================== MsgCollectSpreadRewards
-message MsgCollectSpreadRewards {
+// ===================== CollectSpreadRewards
+message CollectSpreadRewardsRequest {
   repeated uint64 position_ids = 1 [(gogoproto.moretags) = "yaml:\"position_ids\""];
   string sender = 2 [(gogoproto.moretags) = "yaml:\"sender\""];
 }
 
-message MsgCollectSpreadRewardsResponse {
+message CollectSpreadRewardsResponse {
   repeated cosmos.base.v1beta1.Coin collected_spread_rewards = 1 [
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
     (gogoproto.moretags) = "yaml:\"collected_spread_rewards\"",
@@ -163,13 +161,13 @@ message MsgCollectSpreadRewardsResponse {
   ];
 }
 
-// ===================== MsgCollectIncentives
-message MsgCollectIncentives {
+// ===================== CollectIncentives
+message CollectIncentivesRequest {
   repeated uint64 position_ids = 1 [(gogoproto.moretags) = "yaml:\"position_ids\""];
   string sender = 2 [(gogoproto.moretags) = "yaml:\"sender\""];
 }
 
-message MsgCollectIncentivesResponse {
+message CollectIncentivesResponse {
   repeated cosmos.base.v1beta1.Coin collected_incentives = 1 [
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
     (gogoproto.moretags) = "yaml:\"collected_incentives\"",
@@ -183,20 +181,20 @@ message MsgCollectIncentivesResponse {
 }
 
 // ===================== MsgFungifyChargedPositions
-message MsgFungifyChargedPositions {
+message FungifyChargedPositionsRequest {
   repeated uint64 position_ids = 1 [(gogoproto.moretags) = "yaml:\"position_ids\""];
   string sender = 2 [(gogoproto.moretags) = "yaml:\"sender\""];
 }
 
-message MsgFungifyChargedPositionsResponse {
+message FungifyChargedPositionsResponse {
   uint64 new_position_id = 1 [(gogoproto.moretags) = "yaml:\"new_position_id\""];
 }
 
-// ===================== MsgTransferPositions
-message MsgTransferPositions {
+// ===================== TransferPositions
+message TransferPositionsRequest {
   repeated uint64 position_ids = 1 [(gogoproto.moretags) = "yaml:\"position_ids\""];
   string sender = 2 [(gogoproto.moretags) = "yaml:\"sender\""];
   string new_owner = 3 [(gogoproto.moretags) = "yaml:\"new_owner\""];
 }
 
-message MsgTransferPositionsResponse {}
+message TransferPositionsResponse {}

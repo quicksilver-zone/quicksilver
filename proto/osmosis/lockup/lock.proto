@@ -17,7 +17,7 @@ message PeriodLock {
   // ID is the unique id of the lock.
   // The ID of the lock is decided upon lock creation, incrementing by 1 for
   // every lock.
-  uint64 ID = 1;
+  uint64 id = 1;
   // Owner is the account address of the lock owner.
   // Only the owner can modify the state of the lock.
   string owner = 2 [(gogoproto.moretags) = "yaml:\"owner\""];
