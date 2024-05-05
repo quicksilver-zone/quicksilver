@@ -5,7 +5,6 @@ import "cosmos/base/query/v1beta1/pagination.proto";
 import "cosmos/tx/v1beta1/service.proto";
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
-import "google/api/annotations.proto";
 
 option go_package = "github.com/quicksilver-zone/quicksilver/x/interchainquery/types";
 

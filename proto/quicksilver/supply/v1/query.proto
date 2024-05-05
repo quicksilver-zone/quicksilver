@@ -6,15 +6,15 @@ import "google/api/annotations.proto";
 option go_package = "github.com/quicksilver-zone/quicksilver/x/supply/types";
 
 // Query defines the gRPC querier service.
-service Query {
+service QueryService {
   // Supply provide running epochInfos
-  rpc Supply(QuerySupplyRequest) returns (QuerySupplyResponse) {
+  rpc Supply(SupplyRequest) returns (SupplyResponse) {
     option (google.api.http).get = "/quicksilver/supply/v1/supply";
   }
 }
 
-message QuerySupplyRequest {}
-message QuerySupplyResponse {
+message SupplyRequest {}
+message SupplyResponse {
   uint64 supply = 1;
   uint64 circulating_supply = 2;
 }
