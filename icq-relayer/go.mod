@@ -9,7 +9,7 @@ require (
 	github.com/dgraph-io/ristretto v0.1.1
 	github.com/go-kit/log v0.2.1
 	github.com/prometheus/client_golang v1.18.0
-	github.com/quicksilver-zone/quicksilver v1.5.5
+	github.com/quicksilver-zone/quicksilver v1.6.0-beta1
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/viper v1.18.2
 	github.com/strangelove-ventures/lens v0.5.2-0.20230109191452-7105fca04458
@@ -180,7 +180,6 @@ replace (
 	github.com/CosmWasm/wasmd => github.com/notional-labs/wasmd v0.29.0-sdk46.0.20221114145317-d6e67fd50956
 	github.com/evmos/ethermint => github.com/evmos/ethermint v0.22.0
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
-	github.com/quicksilver-zone/quicksilver => ../
 	github.com/tendermint/tendermint => github.com/cometbft/cometbft v0.34.32
 
 )
