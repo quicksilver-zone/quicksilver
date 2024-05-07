@@ -20,13 +20,13 @@ service QueryService {
   }
 }
 
-// QueryParamsRequest is the request type for the Query/Params RPC method.
+// QueriesRequest is the request type for the Query/Params RPC method.
 message QueriesRequest {
   cosmos.base.query.v1beta1.PageRequest pagination = 1;
   string chain_id = 2;
 }
 
-// QueryParamsResponse is the response type for the Query/Params RPC method.
+// QueriesResponse is the response type for the Query/Params RPC method.
 message QueriesResponse {
   // params defines the parameters of the module.
   repeated quicksilver.interchainquery.v1.Query queries = 1 [(gogoproto.nullable) = false];
