@@ -409,7 +409,7 @@ func (suite *KeeperTestSuite) setupTestProtocolData() {
 	// connection type for ibc testsuite chainB
 	suite.addProtocolData(
 		types.ProtocolDataTypeConnection,
-		[]byte(fmt.Sprintf("{\"connectionid\": %q,\"chainid\": %q,\"lastepoch\": %d}", suite.path.EndpointB.ConnectionID, suite.chainB.ChainID, 0)),
+		[]byte(fmt.Sprintf("{\"connectionid\": %q,\"chainid\": %q,\"lastepoch\": %d,\"transferchannel\": %q}", suite.path.EndpointB.ConnectionID, suite.chainB.ChainID, 0, "channel-1")),
 	)
 	// umee-types params
 	suite.addProtocolData(
