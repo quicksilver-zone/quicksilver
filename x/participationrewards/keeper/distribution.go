@@ -4,8 +4,9 @@ import (
 	"errors"
 	"fmt"
 
-	"cosmossdk.io/math"
 	"github.com/ingenuity-build/multierror"
+
+	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -17,16 +18,18 @@ import (
 
 type TokenValues map[string]sdk.Dec
 
-type AssetGraph map[string]map[string]sdk.Dec
-type AssetGraphSlice map[string]map[string][]sdk.Dec
+type (
+	AssetGraph      map[string]map[string]sdk.Dec
+	AssetGraphSlice map[string]map[string][]sdk.Dec
+)
 
 func DepthFirstSearch(graph AssetGraph, visited map[string]struct{}, asset string, price sdk.Dec, result TokenValues) {
 	visited[asset] = struct{}{}
 	result[asset] = price
 
-	for neighbour, neighbour_price := range graph[asset] {
+	for neighbour, neighbourPrice := range graph[asset] {
 		if _, ok := visited[neighbour]; !ok {
-			DepthFirstSearch(graph, visited, neighbour, neighbour_price.Mul(price), result)
+			DepthFirstSearch(graph, visited, neighbour, neighbourPrice.Mul(price), result)
 		}
 	}
 }
@@ -87,7 +90,6 @@ func (k *Keeper) CalcTokenValues(ctx sdk.Context) (TokenValues, error) {
 			if _, ok := graph[pool.Denoms[ibcDenom].Denom]; !ok {
 				graph[pool.Denoms[ibcDenom].Denom] = make(map[string][]sdk.Dec)
 			}
-
 		}
 
 		value, err := gammPool.SpotPrice(ctx, denoms[0], denoms[1])
@@ -136,7 +138,6 @@ func (k *Keeper) CalcTokenValues(ctx sdk.Context) (TokenValues, error) {
 			if _, ok := graph[pool.Denoms[ibcDenom].Denom]; !ok {
 				graph[pool.Denoms[ibcDenom].Denom] = make(map[string][]sdk.Dec)
 			}
-
 		}
 
 		value, err := clPool.SpotPrice(ctx, denoms[0], denoms[1])
