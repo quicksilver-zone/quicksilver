@@ -332,7 +332,7 @@ func GetUnbondingRecordsCmd() *cobra.Command {
 
 func GetReceiptsCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "recepts [chain-id]",
+		Use:   "receipts [chain-id]",
 		Short: "Query all receipts",
 		Example: strings.TrimSpace(
 			fmt.Sprintf(`$ %s query interchainstaking receipts`,
