@@ -91,6 +91,36 @@ func (suite *KeeperTestSuite) TestMakeRequest() {
 		"",
 		0,
 	)
+
+	suite.Panics(func() {
+		// module does not exist
+		suite.GetSimApp(suite.chainA).InterchainQueryKeeper.MakeRequest(
+			suite.chainA.GetContext(),
+			suite.path.EndpointB.ConnectionID,
+			suite.chainB.ChainID,
+			"cosmos.staking.v1beta1.Query/Validators",
+			bz,
+			sdk.NewInt(200),
+			"staking",
+			"callback",
+			0,
+		)
+	})
+
+	suite.Panics(func() {
+		// callback does not exist
+		suite.GetSimApp(suite.chainA).InterchainQueryKeeper.MakeRequest(
+			suite.chainA.GetContext(),
+			suite.path.EndpointB.ConnectionID,
+			suite.chainB.ChainID,
+			"cosmos.staking.v1beta1.Query/Validators",
+			bz,
+			sdk.NewInt(200),
+			"interchainstaking",
+			"callback",
+			0,
+		)
+	})
 }
 
 func (suite *KeeperTestSuite) TestSubmitQueryResponse() {
