@@ -12,6 +12,7 @@ import (
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 
 	icatypes "github.com/cosmos/ibc-go/v6/modules/apps/27-interchain-accounts/types"
+	transfertypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
 	connectiontypes "github.com/cosmos/ibc-go/v6/modules/core/03-connection/types"
 	channeltypes "github.com/cosmos/ibc-go/v6/modules/core/04-channel/types"
@@ -27,7 +28,10 @@ import (
 	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 )
 
-var testAddress = addressutils.GenerateAccAddressForTest().String()
+var (
+	testAddress         = addressutils.GenerateAccAddressForTest().String()
+	testTransferChannel = "channel-100"
+)
 
 func init() {
 	ibctesting.DefaultTestingAppInit = app.SetupTestingApp
@@ -95,6 +99,15 @@ func (suite *KeeperTestSuite) setupTestZones() {
 	quicksilver := suite.GetQuicksilverApp(suite.chainA)
 	ctx := suite.chainA.GetContext()
 
+	// create a transfer channel and set it in the proposal
+	quicksilver.IBCKeeper.ChannelKeeper.SetChannel(ctx, transfertypes.PortID, testTransferChannel,
+		channeltypes.Channel{
+			State: channeltypes.OPEN, Ordering: channeltypes.ORDERED,
+			Counterparty:   channeltypes.Counterparty{PortId: transfertypes.PortID, ChannelId: testTransferChannel},
+			ConnectionHops: []string{suite.path.EndpointA.ConnectionID},
+		})
+	proposal.TransferChannel = testTransferChannel
+
 	err := quicksilver.InterchainstakingKeeper.HandleRegisterZoneProposal(ctx, proposal)
 	suite.NoError(err)
 
@@ -108,6 +121,7 @@ func (suite *KeeperTestSuite) setupTestZones() {
 	suite.NoError(suite.setupChannelForICA(ctx, suite.chainB.ChainID, suite.path.EndpointA.ConnectionID, "withdrawal", zone.AccountPrefix))
 	suite.NoError(suite.setupChannelForICA(ctx, suite.chainB.ChainID, suite.path.EndpointA.ConnectionID, "performance", zone.AccountPrefix))
 	suite.NoError(suite.setupChannelForICA(ctx, suite.chainB.ChainID, suite.path.EndpointA.ConnectionID, "delegate", zone.AccountPrefix))
+
 	zone, found = quicksilver.InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
 	suite.True(found)
 
