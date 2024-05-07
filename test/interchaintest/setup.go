@@ -1,7 +1,10 @@
 package interchaintest
 
 import (
-	"github.com/strangelove-ventures/interchaintest/v5/ibc"
+	"cosmossdk.io/math"
+	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
+	"github.com/quicksilver-zone/quicksilver/app"
+	"github.com/strangelove-ventures/interchaintest/v6/ibc"
 )
 
 var (
@@ -29,10 +32,11 @@ var (
 	}
 
 	pathQuicksilverJuno = "quicksilver-juno"
-	genesisWalletAmount = int64(10_000_000)
+	genesisWalletAmount = math.NewInt(10_000_000)
 )
 
 func createConfig() (ibc.ChainConfig, error) {
+	encodingConfig := app.MakeEncodingConfig()
 	return ibc.ChainConfig{
 			Type:                "cosmos",
 			Name:                "quicksilver",
@@ -47,25 +51,30 @@ func createConfig() (ibc.ChainConfig, error) {
 			NoHostMount:         false,
 			ModifyGenesis:       nil,
 			ConfigFileOverrides: nil,
-			EncodingConfig:      nil,
-			SidecarConfigs: []ibc.SidecarConfig{
-				{
-					ProcessName:      "icq",
-					Image:            ICQImage,
-					Ports:            []string{"2112"},
-					StartCmd:         []string{"interchain-queries", "run", "--home", "/var/sidecar-processes/icq"},
-					PreStart:         true,
-					ValidatorProcess: false,
-				},
-				{
-					ProcessName:      "xcc",
-					Image:            XccLookupImage,
-					Ports:            []string{"3033"},
-					StartCmd:         []string{"/xcc", "-a", "serve", "-f", "/var/sidecar/processes/xcc/config.yaml"},
-					PreStart:         true,
-					ValidatorProcess: false,
-				},
+			EncodingConfig: &simappparams.EncodingConfig{
+				InterfaceRegistry: encodingConfig.InterfaceRegistry,
+				Codec:             encodingConfig.Marshaler,
+				TxConfig:          encodingConfig.TxConfig,
+				Amino:             encodingConfig.Amino,
 			},
+			// SidecarConfigs: []ibc.SidecarConfig{
+			// 	{
+			// 		ProcessName:      "icq",
+			// 		Image:            ICQImage,
+			// 		Ports:            []string{"2112"},
+			// 		StartCmd:         []string{"interchain-queries", "run", "--home", "/var/sidecar-processes/icq"},
+			// 		PreStart:         true,
+			// 		ValidatorProcess: false,
+			// 	},
+			// 	{
+			// 		ProcessName:      "xcc",
+			// 		Image:            XccLookupImage,
+			// 		Ports:            []string{"3033"},
+			// 		StartCmd:         []string{"/xcc", "-a", "serve", "-f", "/var/sidecar/processes/xcc/config.yaml"},
+			// 		PreStart:         true,
+			// 		ValidatorProcess: false,
+			// 	},
+			// },
 		},
 		nil
 }

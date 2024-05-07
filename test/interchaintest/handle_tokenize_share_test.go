@@ -3,22 +3,28 @@ package interchaintest
 import (
 	"context"
 	"fmt"
+	_ "path"
 	"testing"
+	"time"
 
 	"cosmossdk.io/math"
+	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
+	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	transfertypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
+	utils "github.com/quicksilver-zone/quicksilver/test/interchaintest/utils"
+	istypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 	"github.com/strangelove-ventures/interchaintest/v6"
 	"github.com/strangelove-ventures/interchaintest/v6/chain/cosmos"
 	"github.com/strangelove-ventures/interchaintest/v6/ibc"
 	"github.com/strangelove-ventures/interchaintest/v6/testreporter"
 	"github.com/strangelove-ventures/interchaintest/v6/testutil"
 	"github.com/stretchr/testify/require"
+	_ "go.uber.org/zap"
 	"go.uber.org/zap/zaptest"
 )
 
-// TestQuicksilverJunoIBCTransfer spins up a Quicksilver and Juno network, initializes an IBC connection between them,
-// and sends an ICS20 token transfer from Quicksilver->Juno and then back from Juno->Quicksilver.
-func TestQuicksilverJunoIBCTransfer(t *testing.T) {
+// TestHandleTokenizedShares
+func TestHandleTokenizedShares(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
@@ -32,6 +38,22 @@ func TestQuicksilverJunoIBCTransfer(t *testing.T) {
 	config, err := createConfig()
 	require.NoError(t, err)
 
+	modifyGenesis := []cosmos.GenesisKV{
+		{
+			Key:   "app_state.gov.voting_params.voting_period",
+			Value: "20s",
+		},
+		{
+			Key:   "app_state.staking.params.unbonding_time",
+			Value: "60s",
+		},
+		{
+			Key:   "app_state.interchainstaking.params.unbonding_enabled",
+			Value: true,
+		},
+	}
+	config.ModifyGenesis = cosmos.ModifyGenesis(modifyGenesis)
+
 	cf := interchaintest.NewBuiltinChainFactory(zaptest.NewLogger(t), []*interchaintest.ChainSpec{
 		{
 			Name:          "quicksilver",
@@ -44,6 +66,14 @@ func TestQuicksilverJunoIBCTransfer(t *testing.T) {
 			Version:       "v14.1.0",
 			NumValidators: &numVals,
 			NumFullNodes:  &numFullNodes,
+			ChainConfig: ibc.ChainConfig{
+				ModifyGenesis: cosmos.ModifyGenesis([]cosmos.GenesisKV{
+					{
+						Key:   "app_state.staking.params.unbonding_time",
+						Value: "60s",
+					},
+				}),
+			},
 			//ChainConfig: ibc.ChainConfig{
 			//	GasPrices: "0.0uatom",
 			//},
@@ -160,6 +190,17 @@ func TestQuicksilverJunoIBCTransfer(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, transferAmount, junoUpdateBal)
 
+	// Create new clients
+	err = r.CreateClients(ctx, eRep, pathQuicksilverJuno, ibc.CreateClientOptions{TrustingPeriod: "330h"})
+	require.NoError(t, err)
+
+	// Create a new connection
+	err = r.CreateConnections(ctx, eRep, pathQuicksilverJuno)
+	require.NoError(t, err)
+
+	connections, err := r.GetConnections(ctx, eRep, quicksilver.Config().ChainID)
+	require.NoError(t, err)
+
 	// Compose an IBC transfer and send from Quicksilver -> Juno
 	transfer = ibc.WalletAmount{
 		Address: quickUserAddr,
@@ -185,4 +226,126 @@ func TestQuicksilverJunoIBCTransfer(t *testing.T) {
 	junoUpdateBal, err = juno.GetBalance(ctx, junoUserAddr, quicksilverIBCDenom)
 	require.NoError(t, err)
 	require.Equal(t, int64(0), junoUpdateBal)
+
+	registerProposal := istypes.RegisterZoneProposal{
+		Title:            "Register zone",
+		Description:      "Register zone",
+		ConnectionId:     "connection-0",
+		BaseDenom:        quicksilver.Config().Denom,
+		LocalDenom:       quicksilver.Config().Denom,
+		AccountPrefix:    "quick",
+		DepositsEnabled:  true,
+		UnbondingEnabled: true,
+		LiquidityModule:  false,
+		ReturnToSender:   true,
+		Decimals:         6,
+	}
+
+	check, err := cdctypes.NewAnyWithValue(&registerProposal)
+
+	message := govv1.MsgExecLegacyContent{
+		Content:   check,
+		Authority: "quick10d07y265gmmuvt4z0w9aw880jnsr700j3xrh0p",
+	}
+	msg, err := quicksilver.Config().EncodingConfig.Codec.MarshalInterfaceJSON(&message)
+	fmt.Println("Msg: ", string(msg))
+	require.NoError(t, err)
+
+	proposal := utils.TxProposalv1{
+		Metadata: "none",
+		Deposit:  "500000000" + quicksilver.Config().Denom,
+		Title:    "title",
+		Summary:  "register lstest-1 zone with multisend and lsm enabled",
+	}
+
+	//Appending proposal data in messages
+	proposal.Messages = append(proposal.Messages, msg)
+
+	require.NoError(t, err)
+
+	//Submitting a proposal on Quicksilver
+	proposalID, err := utils.SubmitProposal(ctx, quicksilver, quickUserAddr, proposal)
+
+	require.NoError(t, err)
+
+	//Voting on the proposal
+	err = quicksilver.VoteOnProposalAllValidators(ctx, proposalID, cosmos.ProposalVoteYes)
+	require.NoError(t, err, "Failed to submit votes")
+
+	heightAfterVote, err := quicksilver.Height(ctx)
+	require.NoError(t, err, "error fetching height before vote")
+
+	//Checking the proposal with matching ID and status.
+	_, err = cosmos.PollForProposalStatus(ctx, quicksilver, heightAfterVote, heightAfterVote+20, proposalID, cosmos.ProposalStatusPassed)
+	require.NoError(t, err, "Proposal status did not change to passed in expected number of blocks")
+	time.Sleep(10 * time.Second)
+	zone, err := utils.QueryZones(ctx, quicksilver)
+	require.NoError(t, err)
+
+	//Deposit Address Check
+	depositAddress := zone[0].DepositAddress.Address
+	icaAddr, err := utils.QueryZoneICAAddress(ctx, quicksilver, depositAddress, connections[0].ID)
+	require.NoError(t, err)
+	require.NotEmpty(t, icaAddr)
+
+	//Withdrawl Address Check
+	withdralAddress := zone[0].WithdrawalAddress.Address
+	icaAddr, err = utils.QueryZoneICAAddress(ctx, quicksilver, withdralAddress, connections[0].ID)
+	require.NoError(t, err)
+	require.NotEmpty(t, icaAddr)
+
+	//Delegation Address Check
+	delegationAddress := zone[0].DelegationAddress.Address
+	icaAddr, err = utils.QueryZoneICAAddress(ctx, quicksilver, delegationAddress, connections[0].ID)
+	require.NoError(t, err)
+	require.NotEmpty(t, icaAddr)
+
+	//Performance Address Check
+	performanceAddress := zone[0].DelegationAddress.Address
+	icaAddr, err = utils.QueryZoneICAAddress(ctx, quicksilver, performanceAddress, connections[0].ID)
+	require.NoError(t, err)
+	require.NotEmpty(t, icaAddr)
+
+	var updateZoneValue []*istypes.UpdateZoneValue
+	updateZoneValue = append(updateZoneValue, &istypes.UpdateZoneValue{
+		Key:   "",
+		Value: "",
+	})
+
+	validators, err := utils.QueryStakingValidators(ctx, quicksilver)
+	fmt.Println(validators)
+	require.NoError(t, err)
+
+	delegateTx, err := utils.RequestStakingDelegate(
+		ctx,
+		quicksilver,
+		validators[0].OperatorAddress,
+		quickUserAddr,
+		"1000"+quicksilver.Config().Denom,
+	)
+	fmt.Println(delegateTx)
+	require.NoError(t, err)
+
+	delegation, err := utils.QueryStakingDelegation(ctx, quicksilver, validators[0].OperatorAddress, quickUserAddr)
+	fmt.Println(delegation)
+	require.NoError(t, err)
+
+	unbondTx, err := utils.RequestStakingUnbond(
+		ctx,
+		quicksilver,
+		validators[0].OperatorAddress,
+		quickUserAddr,
+		"1000"+quicksilver.Config().Denom,
+	)
+	fmt.Println(unbondTx)
+	require.NoError(t, err)
+
+	response, err := utils.RequestICSRedeem(
+		ctx,
+		quicksilver,
+		quickUserAddr,
+		"1000"+quicksilver.Config().Denom,
+	)
+	fmt.Println(response)
+	require.NoError(t, err)
 }
