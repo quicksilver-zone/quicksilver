@@ -9,6 +9,8 @@ on:
       - "develop"
     paths-ignore:
       - "webui/**"
+  pull_request:
+    branches: ["main"]
 
 env:
   REGISTRY: quicksilverzone
@@ -98,5 +100,21 @@ jobs:
         uses: actions/checkout@v4
 
       - run: make ictest-interchainstaking
+        env:
+          BRANCH_CI: "latest"
+  test-quicksilver-tokenize:
+    runs-on: ubuntu-latest
+    needs: build-and-push-image
+    steps:
+      - name: Set up go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+        id: go
+
+      - name: checkout chain
+        uses: actions/checkout@v4
+
+      - run: make ictest-tokenize
         env:
           BRANCH_CI: "latest"
