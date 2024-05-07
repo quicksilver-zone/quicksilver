@@ -22,7 +22,7 @@ func TestInterchainStaking(t *testing.T) {
 
 	t.Parallel()
 
-	// Create chain factory with Quicksilver and Juno
+	// Create chain factory with Quicksilver and gaia
 	numVals := 3
 	numFullNodes := 3
 
@@ -37,7 +37,7 @@ func TestInterchainStaking(t *testing.T) {
 			NumFullNodes:  &numFullNodes,
 		},
 		{
-			Name:          "juno",
+			Name:          "gaia",
 			Version:       "v14.1.0",
 			NumValidators: &numVals,
 			NumFullNodes:  &numFullNodes,
@@ -51,7 +51,7 @@ func TestInterchainStaking(t *testing.T) {
 	chains, err := cf.Chains(t.Name())
 	require.NoError(t, err)
 
-	quicksilver, juno := chains[0].(*cosmos.CosmosChain), chains[1].(*cosmos.CosmosChain)
+	quicksilver, gaia := chains[0].(*cosmos.CosmosChain), chains[1].(*cosmos.CosmosChain)
 
 	// Create relayer factory to utilize the go-relayer
 	client, network := interchaintest.DockerSetup(t)
@@ -61,13 +61,13 @@ func TestInterchainStaking(t *testing.T) {
 	// Create a new Interchain object which describes the chains, relayers, and IBC connections we want to use
 	ic := interchaintest.NewInterchain().
 		AddChain(quicksilver).
-		AddChain(juno).
+		AddChain(gaia).
 		AddRelayer(r, "rly").
 		AddLink(interchaintest.InterchainLink{
 			Chain1:  quicksilver,
-			Chain2:  juno,
+			Chain2:  gaia,
 			Relayer: r,
-			Path:    pathQuicksilverJuno,
+			Path:    pathQuicksilverGaia,
 		})
 
 	rep := testreporter.NewNopReporter()
@@ -91,7 +91,7 @@ func TestInterchainStaking(t *testing.T) {
 	})
 
 	// Start the relayer
-	require.NoError(t, r.StartRelayer(ctx, eRep, pathQuicksilverJuno))
+	require.NoError(t, r.StartRelayer(ctx, eRep, pathQuicksilverGaia))
 	t.Cleanup(
 		func() {
 			err := r.StopRelayer(ctx, eRep)
@@ -102,31 +102,31 @@ func TestInterchainStaking(t *testing.T) {
 	)
 
 	// Create some user accounts on both chains
-	users := interchaintest.GetAndFundTestUsers(t, ctx, t.Name(), genesisWalletAmount, quicksilver, juno)
+	users := interchaintest.GetAndFundTestUsers(t, ctx, t.Name(), genesisWalletAmount, quicksilver, gaia)
 
 	// Wait a few blocks for relayer to start and for user accounts to be created
-	err = testutil.WaitForBlocks(ctx, 5, quicksilver, juno)
+	err = testutil.WaitForBlocks(ctx, 5, quicksilver, gaia)
 	require.NoError(t, err)
 
 	// Get our Bech32 encoded user addresses
-	quickUser, junoUser := users[0], users[1]
+	quickUser, gaiaUser := users[0], users[1]
 
 	quickUserAddr := quickUser.FormattedAddress()
-	junoUserAddr := junoUser.FormattedAddress()
+	gaiaUserAddr := gaiaUser.FormattedAddress()
 	_ = quickUserAddr
-	_ = junoUserAddr
+	_ = gaiaUserAddr
 
-	runSidecars(t, ctx, quicksilver, juno)
+	runSidecars(t, ctx, quicksilver, gaia)
 }
 
-func runSidecars(t *testing.T, ctx context.Context, quicksilver, juno *cosmos.CosmosChain) {
+func runSidecars(t *testing.T, ctx context.Context, quicksilver, gaia *cosmos.CosmosChain) {
 	t.Helper()
 
-	runICQ(t, ctx, quicksilver, juno)
-	// runXCC(t, ctx, quicksilver, juno)
+	runICQ(t, ctx, quicksilver, gaia)
+	// runXCC(t, ctx, quicksilver, gaia)
 }
 
-func runICQ(t *testing.T, ctx context.Context, quicksilver, juno *cosmos.CosmosChain) {
+func runICQ(t *testing.T, ctx context.Context, quicksilver, gaia *cosmos.CosmosChain) {
 	// 	t.Helper()
 
 	// 	var icq *cosmos.SidecarProcess
@@ -148,7 +148,7 @@ func runICQ(t *testing.T, ctx context.Context, quicksilver, juno *cosmos.CosmosC
 	//     grpc-addr: '%s'
 	//     account-prefix: quick
 	//     keyring-backend: test
-	//     gas-adjustment: 1.2
+	//     gas-adjustment: 1.2me
 	//     gas-prices: 0.01uqck
 	//     min-gas-amount: 0
 	//     key-directory: %s/.icq/keys
@@ -180,10 +180,10 @@ func runICQ(t *testing.T, ctx context.Context, quicksilver, juno *cosmos.CosmosC
 	// 		quicksilver.GetRPCAddress(),
 	// 		quicksilver.GetGRPCAddress(),
 	// 		icq.HomeDir(),
-	// 		juno.Config().ChainID,
-	// 		juno.Config().ChainID,
-	// 		juno.GetRPCAddress(),
-	// 		juno.GetGRPCAddress(),
+	// 		gaia.Config().ChainID,
+	// 		gaia.Config().ChainID,
+	// 		gaia.GetRPCAddress(),
+	// 		gaia.GetGRPCAddress(),
 	// 		icq.HomeDir(),
 	// 	)
 
@@ -199,7 +199,7 @@ func runICQ(t *testing.T, ctx context.Context, quicksilver, juno *cosmos.CosmosC
 	// require.NoError(t, err)
 }
 
-func runXCC(t *testing.T, ctx context.Context, quicksilver, juno *cosmos.CosmosChain) {
+func runXCC(t *testing.T, ctx context.Context, quicksilver, gaia *cosmos.CosmosChain) {
 	// 	t.Helper()
 
 	// 	var xcc *cosmos.SidecarProcess
@@ -215,11 +215,11 @@ func runXCC(t *testing.T, ctx context.Context, quicksilver, juno *cosmos.CosmosC
 	// 	file := fmt.Sprintf(`source_chain: '%s'
 	// chains:
 	//   quick-1: '%s'
-	//   juno-1: '%s'
+	//   gaia-1: '%s'
 	// `,
 	// 		quicksilver.Config().ChainID,
 	// 		quicksilver.GetRPCAddress(),
-	// 		juno.GetRPCAddress(),
+	// 		gaia.GetRPCAddress(),
 	// 	)
 
 	// 	err := xcc.WriteFile(ctx, []byte(file), containerCfg)

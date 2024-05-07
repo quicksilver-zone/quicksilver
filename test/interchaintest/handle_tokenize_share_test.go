@@ -23,6 +23,8 @@ import (
 	"go.uber.org/zap/zaptest"
 )
 
+var GaiaImageVersion = "v14.1.0"
+
 // TestHandleTokenizedShares
 func TestHandleTokenizedShares(t *testing.T) {
 	if testing.Short() {
@@ -31,7 +33,7 @@ func TestHandleTokenizedShares(t *testing.T) {
 
 	t.Parallel()
 
-	// Create chain factory with Quicksilver and Juno
+	// Create chain factory with Quicksilver and gaia
 	numVals := 3
 	numFullNodes := 3
 
@@ -62,21 +64,13 @@ func TestHandleTokenizedShares(t *testing.T) {
 			NumFullNodes:  &numFullNodes,
 		},
 		{
-			Name:          "juno",
-			Version:       "v14.1.0",
+			Name:    "gaia",
+			Version: GaiaImageVersion,
+			ChainConfig: ibc.ChainConfig{
+				GasPrices: "0.0uatom",
+			},
 			NumValidators: &numVals,
 			NumFullNodes:  &numFullNodes,
-			ChainConfig: ibc.ChainConfig{
-				ModifyGenesis: cosmos.ModifyGenesis([]cosmos.GenesisKV{
-					{
-						Key:   "app_state.staking.params.unbonding_time",
-						Value: "60s",
-					},
-				}),
-			},
-			//ChainConfig: ibc.ChainConfig{
-			//	GasPrices: "0.0uatom",
-			//},
 		},
 	})
 
@@ -84,7 +78,7 @@ func TestHandleTokenizedShares(t *testing.T) {
 	chains, err := cf.Chains(t.Name())
 	require.NoError(t, err)
 
-	quicksilver, juno := chains[0].(*cosmos.CosmosChain), chains[1].(*cosmos.CosmosChain)
+	quicksilver, gaia := chains[0].(*cosmos.CosmosChain), chains[1].(*cosmos.CosmosChain)
 
 	// Create relayer factory to utilize the go-relayer
 	client, network := interchaintest.DockerSetup(t)
@@ -94,13 +88,13 @@ func TestHandleTokenizedShares(t *testing.T) {
 	// Create a new Interchain object which describes the chains, relayers, and IBC connections we want to use
 	ic := interchaintest.NewInterchain().
 		AddChain(quicksilver).
-		AddChain(juno).
+		AddChain(gaia).
 		AddRelayer(r, "rly").
 		AddLink(interchaintest.InterchainLink{
 			Chain1:  quicksilver,
-			Chain2:  juno,
+			Chain2:  gaia,
 			Relayer: r,
-			Path:    pathQuicksilverJuno,
+			Path:    pathQuicksilverGaia,
 		})
 
 	rep := testreporter.NewNopReporter()
@@ -124,7 +118,7 @@ func TestHandleTokenizedShares(t *testing.T) {
 	})
 
 	// Start the relayer
-	require.NoError(t, r.StartRelayer(ctx, eRep, pathQuicksilverJuno))
+	require.NoError(t, r.StartRelayer(ctx, eRep, pathQuicksilverGaia))
 	t.Cleanup(
 		func() {
 			err := r.StopRelayer(ctx, eRep)
@@ -135,31 +129,31 @@ func TestHandleTokenizedShares(t *testing.T) {
 	)
 
 	// Create some user accounts on both chains
-	users := interchaintest.GetAndFundTestUsers(t, ctx, t.Name(), genesisWalletAmount, quicksilver, juno)
+	users := interchaintest.GetAndFundTestUsers(t, ctx, t.Name(), genesisWalletAmount, quicksilver, gaia)
 
 	// Wait a few blocks for relayer to start and for user accounts to be created
-	err = testutil.WaitForBlocks(ctx, 5, quicksilver, juno)
+	err = testutil.WaitForBlocks(ctx, 5, quicksilver, gaia)
 	require.NoError(t, err)
 
 	// Get our Bech32 encoded user addresses
-	quickUser, junoUser := users[0], users[1]
+	quickUser, gaiaUser := users[0], users[1]
 
 	quickUserAddr := quickUser.FormattedAddress()
-	junoUserAddr := junoUser.FormattedAddress()
+	gaiaUserAddr := gaiaUser.FormattedAddress()
 
 	// Get original account balances
 	quicksilverOrigBal, err := quicksilver.GetBalance(ctx, quickUserAddr, quicksilver.Config().Denom)
 	require.NoError(t, err)
 	require.Equal(t, genesisWalletAmount, quicksilverOrigBal)
 
-	junoOrigBal, err := juno.GetBalance(ctx, junoUserAddr, juno.Config().Denom)
+	gaiaOrigBal, err := gaia.GetBalance(ctx, gaiaUserAddr, gaia.Config().Denom)
 	require.NoError(t, err)
-	require.Equal(t, genesisWalletAmount, junoOrigBal)
+	require.Equal(t, genesisWalletAmount, gaiaOrigBal)
 
-	// Compose an IBC transfer and send from Quicksilver -> Juno
+	// Compose an IBC transfer and send from Quicksilver -> gaia
 	transferAmount := math.NewInt(1000)
 	transfer := ibc.WalletAmount{
-		Address: junoUserAddr,
+		Address: gaiaUserAddr,
 		Denom:   quicksilver.Config().Denom,
 		Amount:  transferAmount,
 	}
@@ -177,62 +171,62 @@ func TestHandleTokenizedShares(t *testing.T) {
 	_, err = testutil.PollForAck(ctx, quicksilver, quicksilverHeight, quicksilverHeight+10, transferTx.Packet)
 	require.NoError(t, err)
 
-	// Get the IBC denom for uqck on Juno
+	// Get the IBC denom for uqck on gaia
 	quicksilverTokenDenom := transfertypes.GetPrefixedDenom(quickChannels[0].Counterparty.PortID, quickChannels[0].Counterparty.ChannelID, quicksilver.Config().Denom)
 	quicksilverIBCDenom := transfertypes.ParseDenomTrace(quicksilverTokenDenom).IBCDenom()
 
-	// Assert that the funds are no longer present in user acc on Juno and are in the user acc on Juno
+	// Assert that the funds are no longer present in user acc on gaia and are in the user acc on gaia
 	quicksilverUpdateBal, err := quicksilver.GetBalance(ctx, quickUserAddr, quicksilver.Config().Denom)
 	require.NoError(t, err)
 	require.Equal(t, quicksilverOrigBal.Sub(transferAmount), quicksilverUpdateBal)
 
-	junoUpdateBal, err := juno.GetBalance(ctx, junoUserAddr, quicksilverIBCDenom)
+	gaiaUpdateBal, err := gaia.GetBalance(ctx, gaiaUserAddr, quicksilverIBCDenom)
 	require.NoError(t, err)
-	require.Equal(t, transferAmount, junoUpdateBal)
+	require.Equal(t, transferAmount, gaiaUpdateBal)
 
 	// Create new clients
-	err = r.CreateClients(ctx, eRep, pathQuicksilverJuno, ibc.CreateClientOptions{TrustingPeriod: "330h"})
+	err = r.CreateClients(ctx, eRep, pathQuicksilverGaia, ibc.CreateClientOptions{TrustingPeriod: "330h"})
 	require.NoError(t, err)
 
 	// Create a new connection
-	err = r.CreateConnections(ctx, eRep, pathQuicksilverJuno)
+	err = r.CreateConnections(ctx, eRep, pathQuicksilverGaia)
 	require.NoError(t, err)
 
 	connections, err := r.GetConnections(ctx, eRep, quicksilver.Config().ChainID)
 	require.NoError(t, err)
 
-	// Compose an IBC transfer and send from Quicksilver -> Juno
+	// Compose an IBC transfer and send from Quicksilver -> gaia
 	transfer = ibc.WalletAmount{
 		Address: quickUserAddr,
 		Denom:   quicksilverIBCDenom,
 		Amount:  transferAmount,
 	}
 
-	transferTx, err = juno.SendIBCTransfer(ctx, quickChannels[0].Counterparty.ChannelID, junoUserAddr, transfer, ibc.TransferOptions{})
+	transferTx, err = gaia.SendIBCTransfer(ctx, quickChannels[0].Counterparty.ChannelID, gaiaUserAddr, transfer, ibc.TransferOptions{})
 	require.NoError(t, err)
 
-	junoHeight, err := juno.Height(ctx)
+	gaiaHeight, err := gaia.Height(ctx)
 	require.NoError(t, err)
 
 	// Poll for the ack to know the transfer was successful
-	_, err = testutil.PollForAck(ctx, juno, junoHeight, junoHeight+10, transferTx.Packet)
+	_, err = testutil.PollForAck(ctx, gaia, gaiaHeight, gaiaHeight+10, transferTx.Packet)
 	require.NoError(t, err)
 
-	// Assert that the funds are now back on Juno and not on Juno
+	// Assert that the funds are now back on gaia and not on gaia
 	quicksilverUpdateBal, err = quicksilver.GetBalance(ctx, quickUserAddr, quicksilver.Config().Denom)
 	require.NoError(t, err)
 	require.Equal(t, quicksilverOrigBal, quicksilverUpdateBal)
 
-	junoUpdateBal, err = juno.GetBalance(ctx, junoUserAddr, quicksilverIBCDenom)
+	gaiaUpdateBal, err = gaia.GetBalance(ctx, gaiaUserAddr, quicksilverIBCDenom)
 	require.NoError(t, err)
-	require.Equal(t, int64(0), junoUpdateBal)
+	require.Equal(t, int64(0), gaiaUpdateBal)
 
 	registerProposal := istypes.RegisterZoneProposal{
 		Title:            "Register zone",
 		Description:      "Register zone",
 		ConnectionId:     "connection-0",
-		BaseDenom:        quicksilver.Config().Denom,
-		LocalDenom:       quicksilver.Config().Denom,
+		BaseDenom:        "uatom",
+		LocalDenom:       "qatom",
 		AccountPrefix:    "quick",
 		DepositsEnabled:  true,
 		UnbondingEnabled: true,
@@ -242,6 +236,7 @@ func TestHandleTokenizedShares(t *testing.T) {
 	}
 
 	check, err := cdctypes.NewAnyWithValue(&registerProposal)
+	require.NoError(t, err)
 
 	message := govv1.MsgExecLegacyContent{
 		Content:   check,
@@ -258,49 +253,49 @@ func TestHandleTokenizedShares(t *testing.T) {
 		Summary:  "register lstest-1 zone with multisend and lsm enabled",
 	}
 
-	//Appending proposal data in messages
+	// Appending proposal data in messages
 	proposal.Messages = append(proposal.Messages, msg)
 
 	require.NoError(t, err)
 
-	//Submitting a proposal on Quicksilver
+	// Submitting a proposal on Quicksilver
 	proposalID, err := utils.SubmitProposal(ctx, quicksilver, quickUserAddr, proposal)
 
 	require.NoError(t, err)
 
-	//Voting on the proposal
+	// Voting on the proposal
 	err = quicksilver.VoteOnProposalAllValidators(ctx, proposalID, cosmos.ProposalVoteYes)
 	require.NoError(t, err, "Failed to submit votes")
 
 	heightAfterVote, err := quicksilver.Height(ctx)
 	require.NoError(t, err, "error fetching height before vote")
 
-	//Checking the proposal with matching ID and status.
+	// Checking the proposal with matching ID and status.
 	_, err = cosmos.PollForProposalStatus(ctx, quicksilver, heightAfterVote, heightAfterVote+20, proposalID, cosmos.ProposalStatusPassed)
 	require.NoError(t, err, "Proposal status did not change to passed in expected number of blocks")
 	time.Sleep(10 * time.Second)
 	zone, err := utils.QueryZones(ctx, quicksilver)
 	require.NoError(t, err)
 
-	//Deposit Address Check
+	// Deposit Address Check
 	depositAddress := zone[0].DepositAddress.Address
 	icaAddr, err := utils.QueryZoneICAAddress(ctx, quicksilver, depositAddress, connections[0].ID)
 	require.NoError(t, err)
 	require.NotEmpty(t, icaAddr)
 
-	//Withdrawl Address Check
+	// Withdrawl Address Check
 	withdralAddress := zone[0].WithdrawalAddress.Address
 	icaAddr, err = utils.QueryZoneICAAddress(ctx, quicksilver, withdralAddress, connections[0].ID)
 	require.NoError(t, err)
 	require.NotEmpty(t, icaAddr)
 
-	//Delegation Address Check
+	// Delegation Address Check
 	delegationAddress := zone[0].DelegationAddress.Address
 	icaAddr, err = utils.QueryZoneICAAddress(ctx, quicksilver, delegationAddress, connections[0].ID)
 	require.NoError(t, err)
 	require.NotEmpty(t, icaAddr)
 
-	//Performance Address Check
+	// Performance Address Check
 	performanceAddress := zone[0].DelegationAddress.Address
 	icaAddr, err = utils.QueryZoneICAAddress(ctx, quicksilver, performanceAddress, connections[0].ID)
 	require.NoError(t, err)

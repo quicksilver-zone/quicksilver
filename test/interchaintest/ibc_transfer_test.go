@@ -16,16 +16,16 @@ import (
 	"go.uber.org/zap/zaptest"
 )
 
-// TestQuicksilverJunoIBCTransfer spins up a Quicksilver and Juno network, initializes an IBC connection between them,
-// and sends an ICS20 token transfer from Quicksilver->Juno and then back from Juno->Quicksilver.
-func TestQuicksilverJunoIBCTransfer(t *testing.T) {
+// TestQuicksilvergaiaIBCTransfer spins up a Quicksilver and gaia network, initializes an IBC connection between them,
+// and sends an ICS20 token transfer from Quicksilver->gaia and then back from gaia->Quicksilver.
+func TestQuicksilvergaiaIBCTransfer(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
 
 	t.Parallel()
 
-	// Create chain factory with Quicksilver and Juno
+	// Create chain factory with Quicksilver and gaia
 	numVals := 3
 	numFullNodes := 3
 
@@ -40,13 +40,13 @@ func TestQuicksilverJunoIBCTransfer(t *testing.T) {
 			NumFullNodes:  &numFullNodes,
 		},
 		{
-			Name:          "juno",
+			Name:          "gaia",
 			Version:       "v14.1.0",
 			NumValidators: &numVals,
 			NumFullNodes:  &numFullNodes,
-			//ChainConfig: ibc.ChainConfig{
-			//	GasPrices: "0.0uatom",
-			//},
+			ChainConfig: ibc.ChainConfig{
+				GasPrices: "0.0uatom",
+			},
 		},
 	})
 
@@ -54,7 +54,7 @@ func TestQuicksilverJunoIBCTransfer(t *testing.T) {
 	chains, err := cf.Chains(t.Name())
 	require.NoError(t, err)
 
-	quicksilver, juno := chains[0].(*cosmos.CosmosChain), chains[1].(*cosmos.CosmosChain)
+	quicksilver, gaia := chains[0].(*cosmos.CosmosChain), chains[1].(*cosmos.CosmosChain)
 
 	// Create relayer factory to utilize the go-relayer
 	client, network := interchaintest.DockerSetup(t)
@@ -64,13 +64,13 @@ func TestQuicksilverJunoIBCTransfer(t *testing.T) {
 	// Create a new Interchain object which describes the chains, relayers, and IBC connections we want to use
 	ic := interchaintest.NewInterchain().
 		AddChain(quicksilver).
-		AddChain(juno).
+		AddChain(gaia).
 		AddRelayer(r, "rly").
 		AddLink(interchaintest.InterchainLink{
 			Chain1:  quicksilver,
-			Chain2:  juno,
+			Chain2:  gaia,
 			Relayer: r,
-			Path:    pathQuicksilverJuno,
+			Path:    pathQuicksilverGaia,
 		})
 
 	rep := testreporter.NewNopReporter()
@@ -94,7 +94,7 @@ func TestQuicksilverJunoIBCTransfer(t *testing.T) {
 	})
 
 	// Start the relayer
-	require.NoError(t, r.StartRelayer(ctx, eRep, pathQuicksilverJuno))
+	require.NoError(t, r.StartRelayer(ctx, eRep, pathQuicksilverGaia))
 	t.Cleanup(
 		func() {
 			err := r.StopRelayer(ctx, eRep)
@@ -105,31 +105,31 @@ func TestQuicksilverJunoIBCTransfer(t *testing.T) {
 	)
 
 	// Create some user accounts on both chains
-	users := interchaintest.GetAndFundTestUsers(t, ctx, t.Name(), genesisWalletAmount, quicksilver, juno)
+	users := interchaintest.GetAndFundTestUsers(t, ctx, t.Name(), genesisWalletAmount, quicksilver, gaia)
 
 	// Wait a few blocks for relayer to start and for user accounts to be created
-	err = testutil.WaitForBlocks(ctx, 5, quicksilver, juno)
+	err = testutil.WaitForBlocks(ctx, 5, quicksilver, gaia)
 	require.NoError(t, err)
 
 	// Get our Bech32 encoded user addresses
-	quickUser, junoUser := users[0], users[1]
+	quickUser, gaiaUser := users[0], users[1]
 
 	quickUserAddr := quickUser.FormattedAddress()
-	junoUserAddr := junoUser.FormattedAddress()
+	gaiaUserAddr := gaiaUser.FormattedAddress()
 
 	// Get original account balances
 	quicksilverOrigBal, err := quicksilver.GetBalance(ctx, quickUserAddr, quicksilver.Config().Denom)
 	require.NoError(t, err)
 	require.Equal(t, genesisWalletAmount, quicksilverOrigBal)
 
-	junoOrigBal, err := juno.GetBalance(ctx, junoUserAddr, juno.Config().Denom)
+	gaiaOrigBal, err := gaia.GetBalance(ctx, gaiaUserAddr, gaia.Config().Denom)
 	require.NoError(t, err)
-	require.Equal(t, genesisWalletAmount, junoOrigBal)
+	require.Equal(t, genesisWalletAmount, gaiaOrigBal)
 
-	// Compose an IBC transfer and send from Quicksilver -> Juno
+	// Compose an IBC transfer and send from Quicksilver -> gaia
 	transferAmount := math.NewInt(1000)
 	transfer := ibc.WalletAmount{
-		Address: junoUserAddr,
+		Address: gaiaUserAddr,
 		Denom:   quicksilver.Config().Denom,
 		Amount:  transferAmount,
 	}
@@ -147,42 +147,42 @@ func TestQuicksilverJunoIBCTransfer(t *testing.T) {
 	_, err = testutil.PollForAck(ctx, quicksilver, quicksilverHeight, quicksilverHeight+10, transferTx.Packet)
 	require.NoError(t, err)
 
-	// Get the IBC denom for uqck on Juno
+	// Get the IBC denom for uqck on gaia
 	quicksilverTokenDenom := transfertypes.GetPrefixedDenom(quickChannels[0].Counterparty.PortID, quickChannels[0].Counterparty.ChannelID, quicksilver.Config().Denom)
 	quicksilverIBCDenom := transfertypes.ParseDenomTrace(quicksilverTokenDenom).IBCDenom()
 
-	// Assert that the funds are no longer present in user acc on Juno and are in the user acc on Juno
+	// Assert that the funds are no longer present in user acc on gaia and are in the user acc on gaia
 	quicksilverUpdateBal, err := quicksilver.GetBalance(ctx, quickUserAddr, quicksilver.Config().Denom)
 	require.NoError(t, err)
 	require.Equal(t, quicksilverOrigBal.Sub(transferAmount), quicksilverUpdateBal)
 
-	junoUpdateBal, err := juno.GetBalance(ctx, junoUserAddr, quicksilverIBCDenom)
+	gaiaUpdateBal, err := gaia.GetBalance(ctx, gaiaUserAddr, quicksilverIBCDenom)
 	require.NoError(t, err)
-	require.Equal(t, transferAmount, junoUpdateBal)
+	require.Equal(t, transferAmount, gaiaUpdateBal)
 
-	// Compose an IBC transfer and send from Quicksilver -> Juno
+	// Compose an IBC transfer and send from Quicksilver -> gaia
 	transfer = ibc.WalletAmount{
 		Address: quickUserAddr,
 		Denom:   quicksilverIBCDenom,
 		Amount:  transferAmount,
 	}
 
-	transferTx, err = juno.SendIBCTransfer(ctx, quickChannels[0].Counterparty.ChannelID, junoUserAddr, transfer, ibc.TransferOptions{})
+	transferTx, err = gaia.SendIBCTransfer(ctx, quickChannels[0].Counterparty.ChannelID, gaiaUserAddr, transfer, ibc.TransferOptions{})
 	require.NoError(t, err)
 
-	junoHeight, err := juno.Height(ctx)
+	gaiaHeight, err := gaia.Height(ctx)
 	require.NoError(t, err)
 
 	// Poll for the ack to know the transfer was successful
-	_, err = testutil.PollForAck(ctx, juno, junoHeight, junoHeight+10, transferTx.Packet)
+	_, err = testutil.PollForAck(ctx, gaia, gaiaHeight, gaiaHeight+10, transferTx.Packet)
 	require.NoError(t, err)
 
-	// Assert that the funds are now back on Juno and not on Juno
+	// Assert that the funds are now back on gaia and not on gaia
 	quicksilverUpdateBal, err = quicksilver.GetBalance(ctx, quickUserAddr, quicksilver.Config().Denom)
 	require.NoError(t, err)
 	require.Equal(t, quicksilverOrigBal, quicksilverUpdateBal)
 
-	junoUpdateBal, err = juno.GetBalance(ctx, junoUserAddr, quicksilverIBCDenom)
+	gaiaUpdateBal, err = gaia.GetBalance(ctx, gaiaUserAddr, quicksilverIBCDenom)
 	require.NoError(t, err)
-	require.Equal(t, int64(0), junoUpdateBal)
+	require.Equal(t, int64(0), gaiaUpdateBal)
 }

@@ -5,7 +5,7 @@ COSMOS_BUILD_OPTIONS ?= ""
 PACKAGES_NOSIMULATION=$(shell go list ./... | grep -v '/simulation')
 PACKAGES_SIM=github.com/quicksilver-zone/quicksilver/test/simulation
 PACKAGES_E2E=$(shell go list ./... | grep '/e2e')
-VERSION=$(shell git describe --tags | head -n1)
+VERSION=v1.5.5
 DOCKER_VERSION ?= $(VERSION)
 TMVERSION := $(shell go list -m github.com/tendermint/tendermint | sed 's:.* ::')
 COMMIT := $(shell git log -1 --format='%H')
@@ -338,6 +338,10 @@ ictest-upgrade-local: local-image ictest-deps ictest-upgrade
 # Executes IBC Transfer tests via interchaintest
 ictest-ibc: ictest-deps
 	@cd test/interchaintest && go test -v -run TestQuicksilverJunoIBCTransfer .
+
+# Executes Handle tokenize tests via interchaintest
+ictest-tokenize: ictest-deps
+	@cd test/interchaintest && go test -v -run TestHandleTokenize .
 
 # Executes TestInterchainStaking tests via interchaintest
 ictest-interchainstaking: ictest-deps

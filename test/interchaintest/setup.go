@@ -31,7 +31,7 @@ var (
 		UidGid:     "1027:1027",
 	}
 
-	pathQuicksilverJuno = "quicksilver-juno"
+	pathQuicksilverGaia = "quicksilver-gaia"
 	genesisWalletAmount = math.NewInt(10_000_000)
 )
 
