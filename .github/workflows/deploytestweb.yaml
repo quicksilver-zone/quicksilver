@@ -5,8 +5,12 @@ env:
 on:
   push:
     branches: [main]
+    paths:
+    - web-ui/**
   pull_request:
     types: [opened, synchronize, reopened]
+    paths:
+    - web-ui/**
 
 jobs:
   Deploy-Dev:
