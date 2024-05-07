@@ -17,15 +17,18 @@ const (
 	TestChainID       = "testnet1"
 
 	// testnet upgrades
-	V010405rc6UpgradeName = "v1.4.5-rc6"
-	V010405rc7UpgradeName = "v1.4.5-rc7"
-	V010407rc0UpgradeName = "v1.4.7-rc0"
-	V010407rc1UpgradeName = "v1.4.7-rc1"
-	V010407rc2UpgradeName = "v1.4.7-rc2"
-	V010500rc0UpgradeName = "v1.5.0-rc0"
-	V010500rc1UpgradeName = "v1.5.0-rc1"
-	V010503rc0UpgradeName = "v1.5.3-rc0"
-	V010600rc0UpgradeName = "v1.6.0-rc0"
+	V010405rc6UpgradeName   = "v1.4.5-rc6"
+	V010405rc7UpgradeName   = "v1.4.5-rc7"
+	V010407rc0UpgradeName   = "v1.4.7-rc0"
+	V010407rc1UpgradeName   = "v1.4.7-rc1"
+	V010407rc2UpgradeName   = "v1.4.7-rc2"
+	V010500rc0UpgradeName   = "v1.5.0-rc0"
+	V010500rc1UpgradeName   = "v1.5.0-rc1"
+	V010503rc0UpgradeName   = "v1.5.3-rc0"
+	V010600beta0UpgradeName = "v1.6.0-beta0"
+	V010600beta1UpgradeName = "v1.6.0-beta1"
+	V010600rc0UpgradeName   = "v1.6.0-rc0"
+	V010600rc1UpgradeName   = "v1.6.0-rc1"
 
 	// mainnet upgrades
 	V010217UpgradeName = "v1.2.17"

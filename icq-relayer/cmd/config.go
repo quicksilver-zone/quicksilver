@@ -20,21 +20,19 @@ func initConfig(cmd *cobra.Command) error {
 	if err != nil {
 		return err
 	}
-
-	debug, err := cmd.Flags().GetBool("debug")
-	if err != nil {
-		return err
-	}
-
 	cfg = &config.Config{}
 	cfgPath := path.Join(home, "config.yaml")
 	_, err = os.Stat(cfgPath)
 	if err != nil {
-		err = config.CreateConfig(home, debug)
-		if err != nil {
+		if !os.IsNotExist(err) { // Return immediately
+			return err
+		}
+
+		if err := config.CreateConfig(home); err != nil {
 			return err
 		}
 	}
+
 	viper.SetConfigFile(cfgPath)
 	err = viper.ReadInConfig()
 	if err != nil {

@@ -11,17 +11,18 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 
-	icatypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/types"
-	clienttypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
-	connectiontypes "github.com/cosmos/ibc-go/v5/modules/core/03-connection/types"
-	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
-	host "github.com/cosmos/ibc-go/v5/modules/core/24-host"
-	tmclienttypes "github.com/cosmos/ibc-go/v5/modules/light-clients/07-tendermint/types"
-	ibctesting "github.com/cosmos/ibc-go/v5/testing"
+	icatypes "github.com/cosmos/ibc-go/v6/modules/apps/27-interchain-accounts/types"
+	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
+	connectiontypes "github.com/cosmos/ibc-go/v6/modules/core/03-connection/types"
+	channeltypes "github.com/cosmos/ibc-go/v6/modules/core/04-channel/types"
+	host "github.com/cosmos/ibc-go/v6/modules/core/24-host"
+	tmclienttypes "github.com/cosmos/ibc-go/v6/modules/light-clients/07-tendermint/types"
+	ibctesting "github.com/cosmos/ibc-go/v6/testing"
 
 	"github.com/quicksilver-zone/quicksilver/app"
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	"github.com/quicksilver-zone/quicksilver/utils/randomutils"
+	claimsmanagertypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
 	ics "github.com/quicksilver-zone/quicksilver/x/interchainstaking"
 	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 )
@@ -88,7 +89,7 @@ func (suite *KeeperTestSuite) setupTestZones() {
 		DepositsEnabled:  true,
 		Decimals:         6,
 		Is_118:           true,
-		DustThreshold:    "1000000",
+		DustThreshold:    math.NewInt(1000000),
 	}
 
 	quicksilver := suite.GetQuicksilverApp(suite.chainA)
@@ -131,7 +132,7 @@ func (suite *KeeperTestSuite) setupChannelForICA(ctx sdk.Context, chainID, conne
 	quicksilver.InterchainstakingKeeper.SetConnectionForPort(ctx, connectionID, portID)
 
 	channelID := quicksilver.IBCKeeper.ChannelKeeper.GenerateChannelIdentifier(ctx)
-	quicksilver.IBCKeeper.ChannelKeeper.SetChannel(ctx, portID, channelID, channeltypes.Channel{State: channeltypes.OPEN, Ordering: channeltypes.ORDERED, Counterparty: channeltypes.Counterparty{PortId: icatypes.PortID, ChannelId: channelID}, ConnectionHops: []string{connectionID}})
+	quicksilver.IBCKeeper.ChannelKeeper.SetChannel(ctx, portID, channelID, channeltypes.Channel{State: channeltypes.OPEN, Ordering: channeltypes.ORDERED, Counterparty: channeltypes.Counterparty{PortId: icatypes.HostPortID, ChannelId: channelID}, ConnectionHops: []string{connectionID}})
 
 	// channel, found := quicksilver.IBCKeeper.ChannelKeeper.GetChannel(ctx, portID, channelID)
 	// suite.True(found)
@@ -139,6 +140,7 @@ func (suite *KeeperTestSuite) setupChannelForICA(ctx sdk.Context, chainID, conne
 
 	quicksilver.IBCKeeper.ChannelKeeper.SetNextSequenceSend(ctx, portID, channelID, 1)
 	quicksilver.ICAControllerKeeper.SetActiveChannelID(ctx, connectionID, portID, channelID)
+
 	key, err := quicksilver.InterchainstakingKeeper.ScopedKeeper().NewCapability(
 		ctx,
 		host.ChannelCapabilityPath(portID, channelID),
@@ -146,8 +148,9 @@ func (suite *KeeperTestSuite) setupChannelForICA(ctx sdk.Context, chainID, conne
 	if err != nil {
 		return err
 	}
-	err = quicksilver.GetScopedIBCKeeper().ClaimCapability(
-		ctx,
+
+	err = quicksilver.GetScopedICAControllerKeeper().ClaimCapability(
+		suite.chainA.GetContext(),
 		key,
 		host.ChannelCapabilityPath(portID, channelID),
 	)
@@ -155,17 +158,10 @@ func (suite *KeeperTestSuite) setupChannelForICA(ctx sdk.Context, chainID, conne
 		return err
 	}
 
-	key, err = quicksilver.InterchainstakingKeeper.ScopedKeeper().NewCapability(
-		ctx,
-		host.PortPath(portID),
-	)
-	if err != nil {
-		return err
-	}
 	err = quicksilver.GetScopedIBCKeeper().ClaimCapability(
-		ctx,
+		suite.chainA.GetContext(),
 		key,
-		host.PortPath(portID),
+		host.ChannelCapabilityPath(portID, channelID),
 	)
 	if err != nil {
 		return err
@@ -816,6 +812,152 @@ func (suite *KeeperTestSuite) TestGetQueuedTokensAndCount() {
 			suite.Equal(tt.expectedAmount, actualAmount.Amount)
 			suite.Equal(zone.LocalDenom, actualAmount.Denom)
 			suite.Equal(tt.expectedCount, actualCount)
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestGetClaimedPercentage() {
+	addr1, addr2, addr3 := addressutils.GenerateAccAddressForTest(), addressutils.GenerateAccAddressForTest(), addressutils.GenerateAccAddressForTest()
+
+	tc := []struct {
+		name          string
+		claims        func(zone icstypes.Zone) []claimsmanagertypes.Claim
+		totalSupply   math.Int
+		expPercentage sdk.Dec
+	}{
+		{
+			name: "no claims",
+			claims: func(zone icstypes.Zone) []claimsmanagertypes.Claim {
+				out := make([]claimsmanagertypes.Claim, 0)
+				return out
+			},
+			totalSupply:   sdk.NewInt(10000),
+			expPercentage: sdk.ZeroDec(),
+		},
+		{
+			name: "one claim",
+			claims: func(zone icstypes.Zone) []claimsmanagertypes.Claim {
+				out := make([]claimsmanagertypes.Claim, 0)
+				out = append(out, claimsmanagertypes.NewClaim(addr1.String(), zone.ChainId, claimsmanagertypes.ClaimTypeOsmosisPool, "", math.NewInt(1000)))
+				return out
+			},
+			totalSupply:   sdk.NewInt(10000),
+			expPercentage: sdk.MustNewDecFromStr("0.1"),
+		},
+		{
+			name: "multi claims",
+			claims: func(zone icstypes.Zone) []claimsmanagertypes.Claim {
+				out := make([]claimsmanagertypes.Claim, 0)
+				out = append(out, claimsmanagertypes.NewClaim(addr1.String(), zone.ChainId, claimsmanagertypes.ClaimTypeOsmosisPool, "", math.NewInt(1000)))
+				out = append(out, claimsmanagertypes.NewClaim(addr2.String(), zone.ChainId, claimsmanagertypes.ClaimTypeOsmosisPool, "", math.NewInt(2000)))
+				out = append(out, claimsmanagertypes.NewClaim(addr3.String(), zone.ChainId, claimsmanagertypes.ClaimTypeOsmosisPool, "", math.NewInt(3000)))
+				return out
+			},
+			totalSupply:   sdk.NewInt(10000),
+			expPercentage: sdk.MustNewDecFromStr("0.6"),
+		},
+	}
+	for _, tt := range tc {
+		suite.Run(tt.name, func() {
+			suite.SetupTest()
+			suite.setupTestZones()
+
+			quicksilver := suite.GetQuicksilverApp(suite.chainA)
+			ctx := suite.chainA.GetContext()
+			icsKeeper := quicksilver.InterchainstakingKeeper
+			zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
+			suite.True(found)
+
+			for _, record := range tt.claims(zone) {
+				icsKeeper.ClaimsManagerKeeper.SetClaim(ctx, &record) // #nosec G601
+				// suite.NoError(err)
+			}
+
+			totalClaimed := math.ZeroInt()
+			for _, record := range tt.claims(zone) {
+				totalClaimed = totalClaimed.Add(record.Amount)
+			}
+
+			err := quicksilver.MintKeeper.MintCoins(ctx, sdk.NewCoins(sdk.NewCoin(zone.LocalDenom, tt.totalSupply)))
+			suite.NoError(err)
+
+			actualPercentage, err := icsKeeper.GetClaimedPercentage(ctx, &zone)
+			suite.NoError(err)
+			suite.Equal(tt.expPercentage, actualPercentage)
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestGetClaimedPercentageByClaimType() {
+	addr1, addr2, addr3 := addressutils.GenerateAccAddressForTest(), addressutils.GenerateAccAddressForTest(), addressutils.GenerateAccAddressForTest()
+
+	tc := []struct {
+		name          string
+		claims        func(zone icstypes.Zone) []claimsmanagertypes.Claim
+		totalSupply   math.Int
+		expPercentage map[claimsmanagertypes.ClaimType]sdk.Dec
+	}{
+		{
+			name: "no claims",
+			claims: func(zone icstypes.Zone) []claimsmanagertypes.Claim {
+				out := make([]claimsmanagertypes.Claim, 0)
+				return out
+			},
+			totalSupply:   sdk.NewInt(10000),
+			expPercentage: nil,
+		},
+		{
+			name: "one claim",
+			claims: func(zone icstypes.Zone) []claimsmanagertypes.Claim {
+				out := make([]claimsmanagertypes.Claim, 0)
+				out = append(out, claimsmanagertypes.NewClaim(addr1.String(), zone.ChainId, claimsmanagertypes.ClaimTypeOsmosisPool, "", math.NewInt(1000)))
+				return out
+			},
+			totalSupply:   sdk.NewInt(10000),
+			expPercentage: map[claimsmanagertypes.ClaimType]sdk.Dec{claimsmanagertypes.ClaimTypeOsmosisPool: sdk.MustNewDecFromStr("0.1")},
+		},
+		{
+			name: "multi claims",
+			claims: func(zone icstypes.Zone) []claimsmanagertypes.Claim {
+				out := make([]claimsmanagertypes.Claim, 0)
+				out = append(out, claimsmanagertypes.NewClaim(addr1.String(), zone.ChainId, claimsmanagertypes.ClaimTypeOsmosisPool, "", math.NewInt(1000)))
+				out = append(out, claimsmanagertypes.NewClaim(addr2.String(), zone.ChainId, claimsmanagertypes.ClaimTypeLiquidToken, "", math.NewInt(2000)))
+				out = append(out, claimsmanagertypes.NewClaim(addr3.String(), zone.ChainId, claimsmanagertypes.ClaimTypeLiquidToken, "", math.NewInt(3000)))
+				return out
+			},
+			totalSupply:   sdk.NewInt(10000),
+			expPercentage: map[claimsmanagertypes.ClaimType]sdk.Dec{claimsmanagertypes.ClaimTypeOsmosisPool: sdk.MustNewDecFromStr("0.1"), claimsmanagertypes.ClaimTypeLiquidToken: sdk.MustNewDecFromStr("0.5")},
+		},
+	}
+	for _, tt := range tc {
+		suite.Run(tt.name, func() {
+			suite.SetupTest()
+			suite.setupTestZones()
+
+			quicksilver := suite.GetQuicksilverApp(suite.chainA)
+			ctx := suite.chainA.GetContext()
+			icsKeeper := quicksilver.InterchainstakingKeeper
+			zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
+			suite.True(found)
+
+			for _, record := range tt.claims(zone) {
+				icsKeeper.ClaimsManagerKeeper.SetClaim(ctx, &record) // #nosec G601
+				// suite.NoError(err)
+			}
+
+			totalClaimed := math.ZeroInt()
+			for _, record := range tt.claims(zone) {
+				totalClaimed = totalClaimed.Add(record.Amount)
+			}
+
+			err := quicksilver.MintKeeper.MintCoins(ctx, sdk.NewCoins(sdk.NewCoin(zone.LocalDenom, tt.totalSupply)))
+			suite.NoError(err)
+
+			for claimType, expPercentage := range tt.expPercentage {
+				actualPercentage, err := icsKeeper.GetClaimedPercentageByClaimType(ctx, &zone, claimType)
+				suite.NoError(err)
+				suite.Equal(expPercentage, actualPercentage)
+			}
 		})
 	}
 }

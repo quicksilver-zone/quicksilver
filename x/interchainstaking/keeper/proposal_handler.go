@@ -11,9 +11,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	icatypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/types"
-	ibcexported "github.com/cosmos/ibc-go/v5/modules/core/exported"
-	tmclienttypes "github.com/cosmos/ibc-go/v5/modules/light-clients/07-tendermint/types"
+	icatypes "github.com/cosmos/ibc-go/v6/modules/apps/27-interchain-accounts/types"
+	ibcexported "github.com/cosmos/ibc-go/v6/modules/core/exported"
+	tmclienttypes "github.com/cosmos/ibc-go/v6/modules/light-clients/07-tendermint/types"
 
 	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 )
@@ -67,6 +67,7 @@ func (k *Keeper) HandleRegisterZoneProposal(ctx sdk.Context, p *types.RegisterZo
 		UnbondingPeriod:    int64(tmClientState.UnbondingPeriod),
 		MessagesPerTx:      p.MessagesPerTx,
 		Is_118:             p.Is_118,
+		DustThreshold:      p.DustThreshold,
 	}
 	k.SetZone(ctx, zone)
 
@@ -211,12 +212,19 @@ func (k *Keeper) HandleUpdateZoneProposal(ctx sdk.Context, p *types.UpdateZonePr
 			}
 			zone.Is_118 = boolValue
 
+		case "dust_threshold":
+			intVal, ok := sdk.NewIntFromString(change.Value)
+			if !ok {
+				return fmt.Errorf("unable to parse %s as a math.Int value", change.Value)
+			}
+			zone.DustThreshold = intVal
+
 		case "connection_id":
 			if !strings.HasPrefix(change.Value, "connection-") {
 				return errors.New("unexpected connection format")
 			}
 			if zone.DepositAddress != nil || zone.DelegationAddress != nil || zone.PerformanceAddress != nil || zone.WithdrawalAddress != nil {
-				return errors.New("zone already intialised, cannot update connection_id")
+				return errors.New("zone already initialised, cannot update connection_id")
 			}
 			if k.BankKeeper.GetSupply(ctx, zone.LocalDenom).Amount.IsPositive() {
 				return errors.New("zone has assets minted, cannot update connection_id without potentially losing assets")

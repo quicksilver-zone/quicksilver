@@ -7,9 +7,9 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	clienttypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
-	connectiontypes "github.com/cosmos/ibc-go/v5/modules/core/03-connection/types"
-	tmclienttypes "github.com/cosmos/ibc-go/v5/modules/light-clients/07-tendermint/types"
+	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
+	connectiontypes "github.com/cosmos/ibc-go/v6/modules/core/03-connection/types"
+	tmclienttypes "github.com/cosmos/ibc-go/v6/modules/light-clients/07-tendermint/types"
 
 	"github.com/quicksilver-zone/quicksilver/app"
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
@@ -351,7 +351,7 @@ func (suite *KeeperTestSuite) TestHandleUpdateZoneProposal() {
 			},
 		},
 		{
-			name: "invalid - zone intialised",
+			name: "invalid - zone initialised",
 			setup: func(ctx sdk.Context, quicksilver *app.Quicksilver) {
 				proposal := &icstypes.RegisterZoneProposal{
 					Title:            "register zone A",
@@ -379,7 +379,7 @@ func (suite *KeeperTestSuite) TestHandleUpdateZoneProposal() {
 				quicksilver.IBCKeeper.ConnectionKeeper.SetConnection(ctx, suite.path.EndpointA.ConnectionID, connectiontypes.ConnectionEnd{ClientId: "07-tendermint-0"})
 				suite.NoError(suite.setupChannelForICA(ctx, suite.chainB.ChainID, suite.path.EndpointA.ConnectionID, "deposit", zone.AccountPrefix))
 			},
-			expectErr: "zone already intialised, cannot update connection_id",
+			expectErr: "zone already initialised, cannot update connection_id",
 			proposals: func(zone icstypes.Zone) []icstypes.UpdateZoneProposal {
 				return []icstypes.UpdateZoneProposal{
 					{

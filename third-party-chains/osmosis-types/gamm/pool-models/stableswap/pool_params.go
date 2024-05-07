@@ -1,26 +1,25 @@
 package stableswap
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/gamm"
+	types "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/gamm"
+	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/osmomath"
 )
 
 func (params PoolParams) Validate() error {
 	if params.ExitFee.IsNegative() {
-		return gamm.ErrNegativeExitFee
+		return types.ErrNegativeExitFee
 	}
 
-	if params.ExitFee.GTE(sdk.OneDec()) {
-		return gamm.ErrTooMuchExitFee
+	if params.ExitFee.GTE(osmomath.OneDec()) {
+		return types.ErrTooMuchExitFee
 	}
 
 	if params.SwapFee.IsNegative() {
-		return gamm.ErrNegativeSwapFee
+		return types.ErrNegativeSpreadFactor
 	}
 
-	if params.SwapFee.GTE(sdk.OneDec()) {
-		return gamm.ErrTooMuchSwapFee
+	if params.SwapFee.GTE(osmomath.OneDec()) {
+		return types.ErrTooMuchSpreadFactor
 	}
 	return nil
 }

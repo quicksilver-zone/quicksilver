@@ -10,7 +10,7 @@ import (
 	query "github.com/cosmos/cosmos-sdk/types/query"
 	tx "github.com/cosmos/cosmos-sdk/types/tx"
 	_ "github.com/cosmos/gogoproto/gogoproto"
-	types2 "github.com/cosmos/ibc-go/v5/modules/light-clients/07-tendermint/types"
+	types2 "github.com/cosmos/ibc-go/v6/modules/light-clients/07-tendermint/types"
 	grpc1 "github.com/gogo/protobuf/grpc"
 	proto "github.com/gogo/protobuf/proto"
 	types1 "github.com/tendermint/tendermint/proto/tendermint/types"

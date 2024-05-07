@@ -325,7 +325,7 @@ func AllocateWithdrawalsFromValidators(
 WITHDRAWAL:
 	for _, hash := range utils.Keys(amountToWithdrawPerWithdrawal) {
 		for {
-			// if amountToWithdrawPerWithdrawal has been satisified, then continue.
+			// if amountToWithdrawPerWithdrawal has been satisfied, then continue.
 			if amountToWithdrawPerWithdrawal[hash].IsZero() {
 				continue WITHDRAWAL
 			}
