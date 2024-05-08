@@ -37,7 +37,7 @@
     "@types/crypto-js": "^4.2.1",
     "@vercel/speed-insights": "^1.0.10",
     "bech32": "^2.0.0",
-    "chain-registry": "1.41.0",
+    "chain-registry": "1.47.0",
     "chakra-react-select": "^4.7.6",
     "cosmjs-types": "0.5.0",
     "crypto-js": "^4.2.0",
