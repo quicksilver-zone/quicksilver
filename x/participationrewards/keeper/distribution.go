@@ -154,12 +154,13 @@ func (k *Keeper) CalcTokenValues(ctx sdk.Context) (TokenValues, error) {
 		return false
 	})
 
-	for denom0, v := range graph {
+	for _, denom0 := range utils.Keys(graph) {
 		graph2[denom0] = make(map[string]sdk.Dec)
-		for denom1, weightedAssets := range v {
+		values := graph[denom0]
+		for _, denom1 := range utils.Keys(values) {
 			value := sdk.ZeroDec()
 			count := math.ZeroInt()
-			for _, asset := range weightedAssets {
+			for _, asset := range values[denom1] {
 				value = value.Add(asset)
 				count = count.Add(math.OneInt())
 			}
