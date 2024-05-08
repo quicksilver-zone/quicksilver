@@ -18,10 +18,11 @@ func TestUnmarshalProtocolDataRejectsZeroLengthJson(t *testing.T) {
 
 func TestConnectionProtocolData_ValidateBasic(t *testing.T) {
 	type fields struct {
-		ConnectionID string
-		ChainID      string
-		LastEpoch    int64
-		Prefix       string
+		ConnectionID    string
+		ChainID         string
+		LastEpoch       int64
+		Prefix          string
+		TransferChannel string
 	}
 	tests := []struct {
 		name    string
@@ -36,10 +37,11 @@ func TestConnectionProtocolData_ValidateBasic(t *testing.T) {
 		{
 			"valid",
 			fields{
-				ConnectionID: "connection-0",
-				ChainID:      "testchain-1",
-				LastEpoch:    30000,
-				Prefix:       "cosmos",
+				ConnectionID:    "connection-0",
+				ChainID:         "testchain-1",
+				LastEpoch:       30000,
+				Prefix:          "cosmos",
+				TransferChannel: "channel-0",
 			},
 			false,
 		},
@@ -47,10 +49,11 @@ func TestConnectionProtocolData_ValidateBasic(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			cpd := types.ConnectionProtocolData{
-				ConnectionID: tt.fields.ConnectionID,
-				ChainID:      tt.fields.ChainID,
-				LastEpoch:    tt.fields.LastEpoch,
-				Prefix:       tt.fields.Prefix,
+				ConnectionID:    tt.fields.ConnectionID,
+				ChainID:         tt.fields.ChainID,
+				LastEpoch:       tt.fields.LastEpoch,
+				Prefix:          tt.fields.Prefix,
+				TransferChannel: tt.fields.TransferChannel,
 			}
 			err := cpd.ValidateBasic()
 			if tt.wantErr {
