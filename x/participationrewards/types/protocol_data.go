@@ -37,6 +37,8 @@ func UnmarshalProtocolData(datatype ProtocolDataType, data json.RawMessage) (Pro
 		return unmarshalProtocolData[*LiquidAllowedDenomProtocolData](data)
 	case ProtocolDataTypeOsmosisPool:
 		return unmarshalProtocolData[*OsmosisPoolProtocolData](data)
+	case ProtocolDataTypeOsmosisCLPool:
+		return unmarshalProtocolData[*OsmosisClPoolProtocolData](data)
 	case ProtocolDataTypeUmeeParams:
 		return unmarshalProtocolData[*UmeeParamsProtocolData](data)
 	case ProtocolDataTypeUmeeReserves:
