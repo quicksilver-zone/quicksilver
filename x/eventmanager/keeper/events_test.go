@@ -177,7 +177,6 @@ func (suite *KeeperTestSuite) TestEventLifecycleWithCondition2() {
 
 	events := app.EventManagerKeeper.AllEvents(ctx)
 
-	fmt.Println(events)
 	suite.Equal(preEvents+3, len(events))
 
 	GlobalVar = 0
