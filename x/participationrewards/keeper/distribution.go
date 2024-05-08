@@ -6,6 +6,8 @@ import (
 
 	"github.com/ingenuity-build/multierror"
 
+	"cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/quicksilver-zone/quicksilver/utils"
@@ -15,6 +17,22 @@ import (
 )
 
 type TokenValues map[string]sdk.Dec
+
+type (
+	AssetGraph      map[string]map[string]sdk.Dec
+	AssetGraphSlice map[string]map[string][]sdk.Dec
+)
+
+func DepthFirstSearch(graph AssetGraph, visited map[string]struct{}, asset string, price sdk.Dec, result TokenValues) {
+	visited[asset] = struct{}{}
+	result[asset] = price
+
+	for neighbour, neighbourPrice := range graph[asset] {
+		if _, ok := visited[neighbour]; !ok {
+			DepthFirstSearch(graph, visited, neighbour, neighbourPrice.Mul(price), result)
+		}
+	}
+}
 
 func (k *Keeper) CalcTokenValues(ctx sdk.Context) (TokenValues, error) {
 	k.Logger(ctx).Info("calcTokenValues")
@@ -29,14 +47,15 @@ func (k *Keeper) CalcTokenValues(ctx sdk.Context) (TokenValues, error) {
 	}
 
 	baseDenom := osmoParams.(*types.OsmosisParamsProtocolData).BaseDenom
-	baseChain := osmoParams.(*types.OsmosisParamsProtocolData).BaseChain
 
-	tvs := make(map[string]sdk.Dec)
+	tvs := make(TokenValues)
+	graph := make(AssetGraphSlice)
+	graph2 := make(AssetGraph)
 
 	// add base value
 	tvs[baseDenom] = sdk.OneDec()
 
-	// capture errors from iteratora
+	// capture errors from iterator
 	errs := make(map[string]error)
 	k.IteratePrefixedProtocolDatas(ctx, types.GetPrefixProtocolDataKey(types.ProtocolDataTypeOsmosisPool), func(idx int64, _ []byte, data types.ProtocolData) bool {
 		idxLabel := fmt.Sprintf("index[%d]", idx)
@@ -49,59 +68,107 @@ func (k *Keeper) CalcTokenValues(ctx sdk.Context) (TokenValues, error) {
 
 		// pool must be a base pair
 		if len(pool.Denoms) != 2 {
-			// not a pair: skip
 			return false
 		}
 
-		// values to be captured and used
-		//  - baseIBCDenom -> the cosmos IBC denom in this pair
-		//  - queryIBCDenom -> the target IBC denom in this pair
-		//  - valueDenom -> the target zone.BaseDenom
-		var baseIBCDenom, queryIBCDenom, valueDenom string
-		isBasePair := false
+		if pool.PoolData == nil {
+			errs[idxLabel] = fmt.Errorf("pool data is nil, awaiting OsmosisPoolUpdateCallback")
+			return true
+		}
+		gammPool, err := pool.GetPool()
+		if err != nil {
+			errs[idxLabel] = err
+			return true
+		}
+
+		denoms := utils.Keys(pool.Denoms)
+
+		prettyDenom0 := pool.Denoms[denoms[0]].Denom
+		prettyDenom1 := pool.Denoms[denoms[1]].Denom
 
 		for _, ibcDenom := range utils.Keys(pool.Denoms) {
-			if pool.Denoms[ibcDenom].ChainID == baseChain && pool.Denoms[ibcDenom].Denom == baseDenom {
-				isBasePair = true
-				baseIBCDenom = ibcDenom
-			} else {
-				zone, ok := k.icsKeeper.GetZone(ctx, pool.Denoms[ibcDenom].ChainID)
-				if !ok {
-					return false
-				}
-
-				if pool.Denoms[ibcDenom].Denom == zone.BaseDenom {
-					queryIBCDenom = ibcDenom
-					valueDenom = zone.BaseDenom
-				} else {
-					return false
-				}
+			if _, ok := graph[pool.Denoms[ibcDenom].Denom]; !ok {
+				graph[pool.Denoms[ibcDenom].Denom] = make(map[string][]sdk.Dec)
 			}
 		}
 
-		if isBasePair {
-			if pool.PoolData == nil {
-				errs[idxLabel] = fmt.Errorf("pool data is nil, awaiting OsmosisPoolUpdateCallback")
-				return true
-			}
-			gammPool, err := pool.GetPool()
-			if err != nil {
-				errs[idxLabel] = err
-				return true
-			}
-
-			value, err := gammPool.SpotPrice(ctx, baseIBCDenom, queryIBCDenom)
-			if err != nil {
-				errs[idxLabel] = err
-				return true
-			}
-
-			tvs[valueDenom] = sdk.NewDecFromBigIntWithPrec(value.Dec().BigInt(), 18) // is there a better way to convert these?
-
+		value, err := gammPool.SpotPrice(ctx, denoms[0], denoms[1])
+		if err != nil {
+			errs[idxLabel] = err
+			return true
 		}
+
+		decVal := sdk.NewDecFromBigIntWithPrec(value.Dec().BigInt(), 18)
+
+		graph[prettyDenom0][prettyDenom1] = append(graph[prettyDenom0][prettyDenom1], decVal)
+		graph[prettyDenom1][prettyDenom0] = append(graph[prettyDenom1][prettyDenom0], sdk.OneDec().Quo(decVal))
 
 		return false
 	})
+
+	k.IteratePrefixedProtocolDatas(ctx, types.GetPrefixProtocolDataKey(types.ProtocolDataTypeOsmosisCLPool), func(idx int64, _ []byte, data types.ProtocolData) bool {
+		idxLabel := fmt.Sprintf("index[%d]", idx)
+		ipool, err := types.UnmarshalProtocolData(types.ProtocolDataTypeOsmosisCLPool, data.Data)
+		if err != nil {
+			errs[idxLabel] = err
+			return true
+		}
+		pool, _ := ipool.(*types.OsmosisClPoolProtocolData)
+
+		// pool must be a base pair
+		if len(pool.Denoms) != 2 {
+			return false
+		}
+
+		if pool.PoolData == nil {
+			errs[idxLabel] = fmt.Errorf("pool data is nil, awaiting OsmosisClPoolUpdateCallback")
+			return true
+		}
+		clPool, err := pool.GetPool()
+		if err != nil {
+			errs[idxLabel] = err
+			return true
+		}
+
+		denoms := utils.Keys(pool.Denoms)
+		prettyDenom0 := pool.Denoms[denoms[0]].Denom
+		prettyDenom1 := pool.Denoms[denoms[1]].Denom
+
+		for _, ibcDenom := range utils.Keys(pool.Denoms) {
+			if _, ok := graph[pool.Denoms[ibcDenom].Denom]; !ok {
+				graph[pool.Denoms[ibcDenom].Denom] = make(map[string][]sdk.Dec)
+			}
+		}
+
+		value, err := clPool.SpotPrice(ctx, denoms[0], denoms[1])
+		if err != nil {
+			errs[idxLabel] = err
+			return true
+		}
+
+		decVal := sdk.NewDecFromBigIntWithPrec(value.Dec().BigInt(), 18)
+
+		graph[prettyDenom0][prettyDenom1] = append(graph[prettyDenom0][prettyDenom1], decVal)
+		graph[prettyDenom1][prettyDenom0] = append(graph[prettyDenom1][prettyDenom0], sdk.OneDec().Quo(decVal))
+
+		return false
+	})
+
+	for denom0, v := range graph {
+		graph2[denom0] = make(map[string]sdk.Dec)
+		for denom1, weightedAssets := range v {
+			value := sdk.ZeroDec()
+			count := math.ZeroInt()
+			for _, asset := range weightedAssets {
+				value = value.Add(asset)
+				count = count.Add(math.OneInt())
+			}
+			graph2[denom0][denom1] = value.QuoInt(count)
+		}
+	}
+
+	visited := make(map[string]struct{})
+	DepthFirstSearch(graph2, visited, baseDenom, sdk.OneDec(), tvs)
 
 	if len(errs) > 0 {
 		return nil, multierror.New(errs)
