@@ -27,9 +27,9 @@ func DepthFirstSearch(graph AssetGraph, visited map[string]struct{}, asset strin
 	visited[asset] = struct{}{}
 	result[asset] = price
 
-	for neighbour, neighbourPrice := range graph[asset] {
+	for _, neighbour := range utils.Keys(graph[asset]) {
 		if _, ok := visited[neighbour]; !ok {
-			DepthFirstSearch(graph, visited, neighbour, neighbourPrice.Mul(price), result)
+			DepthFirstSearch(graph, visited, neighbour, graph[asset][neighbour].Mul(price), result)
 		}
 	}
 }
