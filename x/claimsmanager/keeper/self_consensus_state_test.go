@@ -17,4 +17,10 @@ func (suite *KeeperTestSuite) TestGetSetDelete() {
 
 	_, found = k.GetSelfConsensusState(ctx, "test")
 	suite.Require().False(found)
+
+	err = k.StoreSelfConsensusState(ctx, "test-1")
+	suite.Require().NoError(err)
+
+	_, found = k.GetSelfConsensusState(ctx, "test-1")
+	suite.Require().True(found)
 }

@@ -3318,6 +3318,8 @@ paths:
                         type: string
                   dust_threshold:
                     type: string
+                  transfer_channel:
+                    type: string
               stats:
                 type: object
                 properties:
@@ -3656,6 +3658,8 @@ paths:
                         base_chainID:
                           type: string
                     dust_threshold:
+                      type: string
+                    transfer_channel:
                       type: string
               stats:
                 type: array
