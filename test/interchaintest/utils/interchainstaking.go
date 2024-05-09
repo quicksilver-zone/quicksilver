@@ -94,21 +94,5 @@ func QueryStakingDelegation(ctx context.Context, c *cosmos.CosmosChain, validato
 	if err != nil {
 		return nil, err
 	}
-	if err != nil {
-		return nil, fmt.Errorf("failed to get staking validators: %w", err)
-	}
 	return &delegation.Delegation, nil
-}
-
-func QueryStakingValidators(ctx context.Context, c *cosmos.CosmosChain) (cdsTypes.Validators, error) {
-	stdout, _, err := c.Validators[0].ExecQuery(ctx, "staking", "validators")
-	if err != nil {
-		return nil, fmt.Errorf("failed to query staking validators: %w", err)
-	}
-	var validators cdsTypes.QueryValidatorsResponse
-	err = c.Config().EncodingConfig.Codec.UnmarshalJSON(stdout, &validators)
-	if err != nil {
-		return nil, err
-	}
-	return validators.Validators, nil
 }

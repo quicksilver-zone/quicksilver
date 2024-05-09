@@ -32,7 +32,7 @@ var (
 	}
 
 	pathQuicksilverGaia = "quicksilver-gaia"
-	genesisWalletAmount = math.NewInt(10_000_000)
+	genesisWalletAmount = math.NewInt(10_000_000_000)
 )
 
 func createConfig() (ibc.ChainConfig, error) {
@@ -40,7 +40,7 @@ func createConfig() (ibc.ChainConfig, error) {
 	return ibc.ChainConfig{
 			Type:                "cosmos",
 			Name:                "quicksilver",
-			ChainID:             "quicksilver-2",
+			ChainID:             "quicksilver-1",
 			Images:              []ibc.DockerImage{QuicksilverImage},
 			Bin:                 "quicksilverd",
 			Bech32Prefix:        "quick",
@@ -77,4 +77,15 @@ func createConfig() (ibc.ChainConfig, error) {
 			// },
 		},
 		nil
+}
+
+func gaiaEncoding() *simappparams.EncodingConfig {
+	encodingConfig := app.MakeEncodingConfig()
+
+	return &simappparams.EncodingConfig{
+		InterfaceRegistry: encodingConfig.InterfaceRegistry,
+		Codec:             encodingConfig.Marshaler,
+		TxConfig:          encodingConfig.TxConfig,
+		Amino:             encodingConfig.Amino,
+	}
 }

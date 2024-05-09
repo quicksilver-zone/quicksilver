@@ -41,9 +41,10 @@ func TestInterchainStaking(t *testing.T) {
 			Version:       "v14.1.0",
 			NumValidators: &numVals,
 			NumFullNodes:  &numFullNodes,
-			//ChainConfig: ibc.ChainConfig{
-			//	GasPrices: "0.0uatom",
-			//},
+			ChainConfig: ibc.ChainConfig{
+				GasPrices:      "0.0uatom",
+				EncodingConfig: gaiaEncoding(),
+			},
 		},
 	})
 

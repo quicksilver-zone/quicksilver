@@ -10,8 +10,9 @@ import (
 	"cosmossdk.io/math"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	transfertypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
-	utils "github.com/quicksilver-zone/quicksilver/test/interchaintest/utils"
+	"github.com/quicksilver-zone/quicksilver/test/interchaintest/utils"
 	istypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 	"github.com/strangelove-ventures/interchaintest/v6"
 	"github.com/strangelove-ventures/interchaintest/v6/chain/cosmos"
@@ -219,7 +220,7 @@ func TestHandleTokenizedShares(t *testing.T) {
 
 	gaiaUpdateBal, err = gaia.GetBalance(ctx, gaiaUserAddr, quicksilverIBCDenom)
 	require.NoError(t, err)
-	require.Equal(t, int64(0), gaiaUpdateBal)
+	require.Equal(t, math.ZeroInt(), gaiaUpdateBal)
 
 	registerProposal := istypes.RegisterZoneProposal{
 		Title:            "Register zone",
@@ -307,7 +308,7 @@ func TestHandleTokenizedShares(t *testing.T) {
 		Value: "",
 	})
 
-	validators, err := utils.QueryStakingValidators(ctx, quicksilver)
+	validators, err := utils.QueryStakingValidators(ctx, quicksilver, stakingtypes.Bonded.String())
 	fmt.Println(validators)
 	require.NoError(t, err)
 
@@ -343,4 +344,33 @@ func TestHandleTokenizedShares(t *testing.T) {
 	)
 	fmt.Println(response)
 	require.NoError(t, err)
+
+	// Stake process
+
+	//// const msgSend = send({
+	// 	fromAddress: address ?? '',
+	// 	toAddress: zone?.depositAddress?.address ?? '',
+	// 	amount: [{ denom: zone?.baseDenom ?? '', amount: numericAmount.toString() }],
+	//   });
+
+	gaiaValidators, err := utils.QueryStakingValidators(ctx, gaia, stakingtypes.BondStatusBonded)
+	require.NoError(t, err)
+	require.Len(t, gaiaValidators, 3)
+
+	// do stake on gaia
+	delegateAmount := ibc.WalletAmount{
+		Address: depositAddress,
+		Denom:   gaia.Config().Denom,
+		Amount:  math.NewInt(100000),
+	}
+
+	// send to deposit account
+	err = gaia.SendFunds(ctx, gaiaUser.KeyName(), delegateAmount)
+	require.NoError(t, err)
+
+	// get the balance of the deposit account
+	depositBalance, err := gaia.GetBalance(ctx, depositAddress, gaia.Config().Denom)
+	require.NoError(t, err)
+	require.Equal(t, delegateAmount.Amount, depositBalance)
+
 }
