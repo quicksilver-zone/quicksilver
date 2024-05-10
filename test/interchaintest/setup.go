@@ -65,6 +65,7 @@ func createConfig() (ibc.ChainConfig, error) {
 					StartCmd:         []string{"interchain-queries", "run", "--home", "/var/sidecar-processes/icq"},
 					PreStart:         true,
 					ValidatorProcess: false,
+					HomeDir:          "/var/sidecar-processes/icq",
 				},
 			},
 			// 	{

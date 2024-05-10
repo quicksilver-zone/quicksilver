@@ -149,7 +149,7 @@ func runICQ(ctx context.Context, t *testing.T, quicksilver, gaia *cosmos.CosmosC
 	    grpc-addr: '%s'
 	    account-prefix: quick
 	    keyring-backend: test
-	    gas-adjustment: 1.2me
+	    gas-adjustment: 1.2
 	    gas-prices: 0.01uqck
 	    min-gas-amount: 0
 	    key-directory: %s/.icq/keys
@@ -163,10 +163,10 @@ func runICQ(ctx context.Context, t *testing.T, quicksilver, gaia *cosmos.CosmosC
 	    chain-id: '%s'
 	    rpc-addr: '%s'
 	    grpc-addr: '%s'
-	    account-prefix: osmo
+	    account-prefix: cosmos
 	    keyring-backend: test
 	    gas-adjustment: 1.2
-	    gas-prices: 0.01uosmo
+	    gas-prices: 0.00uatom
 	    min-gas-amount: 0
 	    key-directory: %s/.icq/keys
 	    debug: false

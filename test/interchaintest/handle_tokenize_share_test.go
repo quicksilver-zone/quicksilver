@@ -10,10 +10,13 @@ import (
 	"testing"
 	"time"
 
+	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	paramsutils "github.com/cosmos/cosmos-sdk/x/params/client/utils"
+	transfertypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
 
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/quicksilver-zone/quicksilver/test/interchaintest/utils"
 	istypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
@@ -169,48 +172,48 @@ func TestHandleTokenizedShares(t *testing.T) {
 	quickUserAddr := quickUser.FormattedAddress()
 	gaiaUserAddr := gaiaUser.FormattedAddress()
 
-	// // Get original account balances
-	// quicksilverOrigBal, err := quicksilver.GetBalance(ctx, quickUserAddr, quicksilver.Config().Denom)
-	// require.NoError(t, err)
-	// require.Equal(t, genesisWalletAmount, quicksilverOrigBal)
+	// Get original account balances
+	quicksilverOrigBal, err := quicksilver.GetBalance(ctx, quickUserAddr, quicksilver.Config().Denom)
+	require.NoError(t, err)
+	require.Equal(t, genesisWalletAmount, quicksilverOrigBal)
 
-	// gaiaOrigBal, err := gaia.GetBalance(ctx, gaiaUserAddr, gaia.Config().Denom)
-	// require.NoError(t, err)
-	// require.Equal(t, genesisWalletAmount, gaiaOrigBal)
+	gaiaOrigBal, err := gaia.GetBalance(ctx, gaiaUserAddr, gaia.Config().Denom)
+	require.NoError(t, err)
+	require.Equal(t, genesisWalletAmount, gaiaOrigBal)
 
-	// // Compose an IBC transfer and send from Quicksilver -> gaia
-	// transferAmount := math.NewInt(1000)
-	// transfer := ibc.WalletAmount{
-	// 	Address: gaiaUserAddr,
-	// 	Denom:   quicksilver.Config().Denom,
-	// 	Amount:  transferAmount,
-	// }
+	// Compose an IBC transfer and send from Quicksilver -> gaia
+	transferAmount := math.NewInt(1000)
+	transfer := ibc.WalletAmount{
+		Address: gaiaUserAddr,
+		Denom:   quicksilver.Config().Denom,
+		Amount:  transferAmount,
+	}
 
-	// quickChannels, err := r.GetChannels(ctx, eRep, quicksilver.Config().ChainID)
-	// require.NoError(t, err)
+	quickChannels, err := r.GetChannels(ctx, eRep, quicksilver.Config().ChainID)
+	require.NoError(t, err)
 
-	// transferTx, err := quicksilver.SendIBCTransfer(ctx, quickChannels[0].ChannelID, quickUserAddr, transfer, ibc.TransferOptions{})
-	// require.NoError(t, err)
+	transferTx, err := quicksilver.SendIBCTransfer(ctx, quickChannels[0].ChannelID, quickUserAddr, transfer, ibc.TransferOptions{})
+	require.NoError(t, err)
 
-	// quicksilverHeight, err := quicksilver.Height(ctx)
-	// require.NoError(t, err)
+	quicksilverHeight, err := quicksilver.Height(ctx)
+	require.NoError(t, err)
 
-	// // Poll for the ack to know the transfer was successful
-	// _, err = testutil.PollForAck(ctx, quicksilver, quicksilverHeight, quicksilverHeight+10, transferTx.Packet)
-	// require.NoError(t, err)
+	// Poll for the ack to know the transfer was successful
+	_, err = testutil.PollForAck(ctx, quicksilver, quicksilverHeight, quicksilverHeight+10, transferTx.Packet)
+	require.NoError(t, err)
 
-	// // Get the IBC denom for uqck on gaia
-	// quicksilverTokenDenom := transfertypes.GetPrefixedDenom(quickChannels[0].Counterparty.PortID, quickChannels[0].Counterparty.ChannelID, quicksilver.Config().Denom)
-	// quicksilverIBCDenom := transfertypes.ParseDenomTrace(quicksilverTokenDenom).IBCDenom()
+	// Get the IBC denom for uqck on gaia
+	quicksilverTokenDenom := transfertypes.GetPrefixedDenom(quickChannels[0].Counterparty.PortID, quickChannels[0].Counterparty.ChannelID, quicksilver.Config().Denom)
+	quicksilverIBCDenom := transfertypes.ParseDenomTrace(quicksilverTokenDenom).IBCDenom()
 
-	// // Assert that the funds are no longer present in user acc on gaia and are in the user acc on gaia
-	// quicksilverUpdateBal, err := quicksilver.GetBalance(ctx, quickUserAddr, quicksilver.Config().Denom)
-	// require.NoError(t, err)
-	// require.Equal(t, quicksilverOrigBal.Sub(transferAmount), quicksilverUpdateBal)
+	// Assert that the funds are no longer present in user acc on gaia and are in the user acc on gaia
+	quicksilverUpdateBal, err := quicksilver.GetBalance(ctx, quickUserAddr, quicksilver.Config().Denom)
+	require.NoError(t, err)
+	require.Equal(t, quicksilverOrigBal.Sub(transferAmount), quicksilverUpdateBal)
 
-	// gaiaUpdateBal, err := gaia.GetBalance(ctx, gaiaUserAddr, quicksilverIBCDenom)
-	// require.NoError(t, err)
-	// require.Equal(t, transferAmount, gaiaUpdateBal)
+	gaiaUpdateBal, err := gaia.GetBalance(ctx, gaiaUserAddr, quicksilverIBCDenom)
+	require.NoError(t, err)
+	require.Equal(t, transferAmount, gaiaUpdateBal)
 
 	// Create new clients
 	err = r.CreateClients(ctx, eRep, pathQuicksilverGaia, ibc.CreateClientOptions{TrustingPeriod: "330h"})
@@ -220,116 +223,116 @@ func TestHandleTokenizedShares(t *testing.T) {
 	err = r.CreateConnections(ctx, eRep, pathQuicksilverGaia)
 	require.NoError(t, err)
 
-	_, err = r.GetConnections(ctx, eRep, quicksilver.Config().ChainID)
+	connections, err := r.GetConnections(ctx, eRep, quicksilver.Config().ChainID)
 	require.NoError(t, err)
 
-	// // Compose an IBC transfer and send from Quicksilver -> gaia
-	// transfer = ibc.WalletAmount{
-	// 	Address: quickUserAddr,
-	// 	Denom:   quicksilverIBCDenom,
-	// 	Amount:  transferAmount,
-	// }
+	// Compose an IBC transfer and send from Quicksilver -> gaia
+	transfer = ibc.WalletAmount{
+		Address: quickUserAddr,
+		Denom:   quicksilverIBCDenom,
+		Amount:  transferAmount,
+	}
 
-	// transferTx, err = gaia.SendIBCTransfer(ctx, quickChannels[0].Counterparty.ChannelID, gaiaUserAddr, transfer, ibc.TransferOptions{})
-	// require.NoError(t, err)
+	transferTx, err = gaia.SendIBCTransfer(ctx, quickChannels[0].Counterparty.ChannelID, gaiaUserAddr, transfer, ibc.TransferOptions{})
+	require.NoError(t, err)
 
-	// gaiaHeight, err := gaia.Height(ctx)
-	// require.NoError(t, err)
+	gaiaHeight, err := gaia.Height(ctx)
+	require.NoError(t, err)
 
-	// // Poll for the ack to know the transfer was successful
-	// _, err = testutil.PollForAck(ctx, gaia, gaiaHeight, gaiaHeight+10, transferTx.Packet)
-	// require.NoError(t, err)
+	// Poll for the ack to know the transfer was successful
+	_, err = testutil.PollForAck(ctx, gaia, gaiaHeight, gaiaHeight+10, transferTx.Packet)
+	require.NoError(t, err)
 
-	// // Assert that the funds are now back on gaia and not on gaia
-	// quicksilverUpdateBal, err = quicksilver.GetBalance(ctx, quickUserAddr, quicksilver.Config().Denom)
-	// require.NoError(t, err)
-	// require.Equal(t, quicksilverOrigBal, quicksilverUpdateBal)
+	// Assert that the funds are now back on gaia and not on gaia
+	quicksilverUpdateBal, err = quicksilver.GetBalance(ctx, quickUserAddr, quicksilver.Config().Denom)
+	require.NoError(t, err)
+	require.Equal(t, quicksilverOrigBal, quicksilverUpdateBal)
 
-	// gaiaUpdateBal, err = gaia.GetBalance(ctx, gaiaUserAddr, quicksilverIBCDenom)
-	// require.NoError(t, err)
-	// require.Equal(t, math.ZeroInt(), gaiaUpdateBal)
+	gaiaUpdateBal, err = gaia.GetBalance(ctx, gaiaUserAddr, quicksilverIBCDenom)
+	require.NoError(t, err)
+	require.Equal(t, math.ZeroInt(), gaiaUpdateBal)
 
-	// registerProposal := istypes.RegisterZoneProposal{
-	// 	Title:            "Register zone",
-	// 	Description:      "Register zone",
-	// 	ConnectionId:     "connection-0",
-	// 	BaseDenom:        "uatom",
-	// 	LocalDenom:       "qatom",
-	// 	AccountPrefix:    "quick",
-	// 	DepositsEnabled:  true,
-	// 	UnbondingEnabled: true,
-	// 	LiquidityModule:  false,
-	// 	ReturnToSender:   true,
-	// 	Decimals:         6,
-	// 	TransferChannel:  quickChannels[0].Counterparty.ChannelID,
-	// 	DustThreshold:    math.NewInt(10),
-	// }
+	registerProposal := istypes.RegisterZoneProposal{
+		Title:            "Register zone",
+		Description:      "Register zone",
+		ConnectionId:     "connection-0",
+		BaseDenom:        "uatom",
+		LocalDenom:       "qatom",
+		AccountPrefix:    "quick",
+		DepositsEnabled:  true,
+		UnbondingEnabled: true,
+		LiquidityModule:  false,
+		ReturnToSender:   true,
+		Decimals:         6,
+		TransferChannel:  quickChannels[0].Counterparty.ChannelID,
+		DustThreshold:    math.NewInt(10),
+	}
 
-	// check, err := cdctypes.NewAnyWithValue(&registerProposal)
-	// require.NoError(t, err)
+	check, err := cdctypes.NewAnyWithValue(&registerProposal)
+	require.NoError(t, err)
 
-	// message := govv1.MsgExecLegacyContent{
-	// 	Content:   check,
-	// 	Authority: "quick10d07y265gmmuvt4z0w9aw880jnsr700j3xrh0p",
-	// }
-	// msg, err := quicksilver.Config().EncodingConfig.Codec.MarshalInterfaceJSON(&message)
-	// fmt.Println("Msg: ", string(msg))
-	// require.NoError(t, err)
+	message := govv1.MsgExecLegacyContent{
+		Content:   check,
+		Authority: "quick10d07y265gmmuvt4z0w9aw880jnsr700j3xrh0p",
+	}
+	msg, err := quicksilver.Config().EncodingConfig.Codec.MarshalInterfaceJSON(&message)
+	fmt.Println("Msg: ", string(msg))
+	require.NoError(t, err)
 
-	// proposal := utils.TxProposalv1{
-	// 	Metadata: "none",
-	// 	Deposit:  "500000000" + quicksilver.Config().Denom,
-	// 	Title:    "title",
-	// 	Summary:  "register lstest-1 zone with multisend and lsm enabled",
-	// }
+	proposal := utils.TxProposalv1{
+		Metadata: "none",
+		Deposit:  "500000000" + quicksilver.Config().Denom,
+		Title:    "title",
+		Summary:  "register lstest-1 zone with multisend and lsm enabled",
+	}
 
-	// // Appending proposal data in messages
-	// proposal.Messages = append(proposal.Messages, msg)
+	// Appending proposal data in messages
+	proposal.Messages = append(proposal.Messages, msg)
 
-	// require.NoError(t, err)
+	require.NoError(t, err)
 
-	// // Submitting a proposal on Quicksilver
-	// proposalID, err := utils.SubmitProposal(ctx, quicksilver, quickUserAddr, proposal)
+	// Submitting a proposal on Quicksilver
+	proposalID, err := utils.SubmitProposal(ctx, quicksilver, quickUserAddr, proposal)
 
-	// require.NoError(t, err)
+	require.NoError(t, err)
 
-	// // Voting on the proposal
-	// err = quicksilver.VoteOnProposalAllValidators(ctx, proposalID, cosmos.ProposalVoteYes)
-	// require.NoError(t, err, "Failed to submit votes")
+	// Voting on the proposal
+	err = quicksilver.VoteOnProposalAllValidators(ctx, proposalID, cosmos.ProposalVoteYes)
+	require.NoError(t, err, "Failed to submit votes")
 
-	// heightAfterVote, err := quicksilver.Height(ctx)
-	// require.NoError(t, err, "error fetching height before vote")
+	heightAfterVote, err := quicksilver.Height(ctx)
+	require.NoError(t, err, "error fetching height before vote")
 
-	// // Checking the proposal with matching ID and status.
-	// _, err = cosmos.PollForProposalStatus(ctx, quicksilver, heightAfterVote, heightAfterVote+20, proposalID, cosmos.ProposalStatusPassed)
-	// require.NoError(t, err, "Proposal status did not change to passed in expected number of blocks")
-	// time.Sleep(15 * time.Second)
-	// zone, err := utils.QueryZones(ctx, quicksilver)
-	// require.NoError(t, err)
+	// Checking the proposal with matching ID and status.
+	_, err = cosmos.PollForProposalStatus(ctx, quicksilver, heightAfterVote, heightAfterVote+20, proposalID, cosmos.ProposalStatusPassed)
+	require.NoError(t, err, "Proposal status did not change to passed in expected number of blocks")
+	time.Sleep(15 * time.Second)
+	zone, err := utils.QueryZones(ctx, quicksilver)
+	require.NoError(t, err)
 
-	// // Deposit Address Check
-	// depositAddress := zone[0].DepositAddress.Address
-	// icaAddr, err := utils.QueryZoneICAAddress(ctx, quicksilver, depositAddress, connections[0].ID)
-	// require.NoError(t, err)
-	// require.NotEmpty(t, icaAddr)
+	// Deposit Address Check
+	depositAddress := zone[0].DepositAddress.Address
+	icaAddr, err := utils.QueryZoneICAAddress(ctx, quicksilver, depositAddress, connections[0].ID)
+	require.NoError(t, err)
+	require.NotEmpty(t, icaAddr)
 
-	// // Withdrawl Address Check
-	// withdralAddress := zone[0].WithdrawalAddress.Address
-	// icaAddr, err = utils.QueryZoneICAAddress(ctx, quicksilver, withdralAddress, connections[0].ID)
-	// require.NoError(t, err)
-	// require.NotEmpty(t, icaAddr)
+	// Withdrawl Address Check
+	withdralAddress := zone[0].WithdrawalAddress.Address
+	icaAddr, err = utils.QueryZoneICAAddress(ctx, quicksilver, withdralAddress, connections[0].ID)
+	require.NoError(t, err)
+	require.NotEmpty(t, icaAddr)
 
-	// // Delegation Address Check
-	// delegationAddress := zone[0].DelegationAddress.Address
-	// icaAddr, err = utils.QueryZoneICAAddress(ctx, quicksilver, delegationAddress, connections[0].ID)
-	// require.NoError(t, err)
-	// require.NotEmpty(t, icaAddr)
+	// Delegation Address Check
+	delegationAddress := zone[0].DelegationAddress.Address
+	icaAddr, err = utils.QueryZoneICAAddress(ctx, quicksilver, delegationAddress, connections[0].ID)
+	require.NoError(t, err)
+	require.NotEmpty(t, icaAddr)
 
-	// // Performance Address Check
-	// performanceAddress := zone[0].DelegationAddress.Address
-	// icaAddr, err = utils.QueryZoneICAAddress(ctx, quicksilver, performanceAddress, connections[0].ID)
-	// require.NoError(t, err)
-	// require.NotEmpty(t, icaAddr)
+	// Performance Address Check
+	performanceAddress := zone[0].DelegationAddress.Address
+	icaAddr, err = utils.QueryZoneICAAddress(ctx, quicksilver, performanceAddress, connections[0].ID)
+	require.NoError(t, err)
+	require.NotEmpty(t, icaAddr)
 
 	var updateZoneValue []*istypes.UpdateZoneValue
 	updateZoneValue = append(updateZoneValue, &istypes.UpdateZoneValue{
@@ -381,18 +384,6 @@ func TestHandleTokenizedShares(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, gaiaValidators, 3)
 
-	// // send to deposit account
-	// err = gaia.SendFunds(ctx, gaiaUser.KeyName(), delegateAmount)
-	// require.NoError(t, err)
-
-	// // Wait a few blocks for relayer to start and for user accounts to be created
-	// err = testutil.WaitForBlocks(ctx, 5, quicksilver, gaia)
-	// require.NoError(t, err)
-	// // get the balance of the deposit account
-	// depositBalance, err := gaia.GetBalance(ctx, depositAddress, gaia.Config().Denom)
-	// require.NoError(t, err)
-	// require.Equal(t, delegateAmount.Amount, depositBalance)
-
 	// Staking params gaia
 	gaiaStakingParams, err := utils.QueryStakingParamsGRPC(ctx, gaia)
 
@@ -438,7 +429,7 @@ func TestHandleTokenizedShares(t *testing.T) {
 	err = gaia.VoteOnProposalAllValidators(ctx, paramTx.ProposalID, cosmos.ProposalVoteYes)
 	require.NoError(t, err, "Failed to submit votes")
 
-	heightAfterVote, err := gaia.Height(ctx)
+	heightAfterVote, err = gaia.Height(ctx)
 	require.NoError(t, err, "error fetching height before vote")
 
 	// Checking the proposal with matching ID and status.
@@ -516,5 +507,29 @@ func TestHandleTokenizedShares(t *testing.T) {
 	require.NoError(t, err)
 	fmt.Println("All balances: ", balances)
 	require.Equal(t, tokenizeShareAmount.Amount, shareBalance)
+
+	// Attempt to transfer tokenized shares to deposit account
+	tokenizeShare := ibc.WalletAmount{
+		Address: depositAddress,
+		Denom:   shareDenom,
+		Amount:  tokenizeShareAmount.Amount,
+	}
+	err = gaia.SendFunds(ctx, gaiaUser.KeyName(), tokenizeShare)
+	require.NoError(t, err)
+
+	// Wait a few blocks for relayer to start and for user accounts to be created
+	err = testutil.WaitForBlocks(ctx, 5, quicksilver, gaia)
+	require.NoError(t, err)
+	// get the balance of the deposit account
+	depositBalance, err := gaia.GetBalance(ctx, depositAddress, tokenizeShare.Denom)
+	require.NoError(t, err)
+	require.Equal(t, tokenizeShare.Amount, depositBalance)
+
+	err = testutil.WaitForBlocks(ctx, 10, quicksilver, gaia)
+	require.NoError(t, err)
+
+	delegationBalance, err := gaia.GetBalance(ctx, delegationAddress, tokenizeShare.Denom)
+	require.NoError(t, err)
+	require.Equal(t, tokenizeShare.Amount, delegationBalance)
 
 }
