@@ -57,15 +57,16 @@ func createConfig() (ibc.ChainConfig, error) {
 				TxConfig:          encodingConfig.TxConfig,
 				Amino:             encodingConfig.Amino,
 			},
-			// SidecarConfigs: []ibc.SidecarConfig{
-			// 	{
-			// 		ProcessName:      "icq",
-			// 		Image:            ICQImage,
-			// 		Ports:            []string{"2112"},
-			// 		StartCmd:         []string{"interchain-queries", "run", "--home", "/var/sidecar-processes/icq"},
-			// 		PreStart:         true,
-			// 		ValidatorProcess: false,
-			// 	},
+			SidecarConfigs: []ibc.SidecarConfig{
+				{
+					ProcessName:      "icq",
+					Image:            ICQImage,
+					Ports:            []string{"2112"},
+					StartCmd:         []string{"interchain-queries", "run", "--home", "/var/sidecar-processes/icq"},
+					PreStart:         true,
+					ValidatorProcess: false,
+				},
+			},
 			// 	{
 			// 		ProcessName:      "xcc",
 			// 		Image:            XccLookupImage,

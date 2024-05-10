@@ -117,87 +117,85 @@ func TestInterchainStaking(t *testing.T) {
 	_ = quickUserAddr
 	_ = gaiaUserAddr
 
-	runSidecars(t, ctx, quicksilver, gaia)
+	runSidecars(ctx, t, quicksilver, gaia)
 }
 
-func runSidecars(t *testing.T, ctx context.Context, quicksilver, gaia *cosmos.CosmosChain) {
+func runSidecars(ctx context.Context, t *testing.T, quicksilver, gaia *cosmos.CosmosChain) {
 	t.Helper()
 
-	runICQ(t, ctx, quicksilver, gaia)
+	runICQ(ctx, t, quicksilver, gaia)
 	// runXCC(t, ctx, quicksilver, gaia)
 }
 
-func runICQ(t *testing.T, ctx context.Context, quicksilver, gaia *cosmos.CosmosChain) {
-	// 	t.Helper()
+func runICQ(ctx context.Context, t *testing.T, quicksilver, gaia *cosmos.CosmosChain) {
+	t.Helper()
 
-	// 	var icq *cosmos.SidecarProcess
-	// 	for _, sidecar := range quicksilver.Sidecars {
-	// 		if sidecar.ProcessName == "icq" {
-	// 			icq = sidecar
-	// 		}
-	// 	}
-	// 	require.NotNil(t, icq)
+	var icq *cosmos.SidecarProcess
+	for _, sidecar := range quicksilver.Sidecars {
+		if sidecar.ProcessName == "icq" {
+			icq = sidecar
+		}
+	}
+	require.NotNil(t, icq)
 
-	// 	containerCfg := "config.yaml"
+	containerCfg := "config.yaml"
 
-	// 	file := fmt.Sprintf(`default_chain: '%s'
-	// chains:
-	//   '%s':
-	//     key: default
-	//     chain-id: '%s'
-	//     rpc-addr: '%s'
-	//     grpc-addr: '%s'
-	//     account-prefix: quick
-	//     keyring-backend: test
-	//     gas-adjustment: 1.2me
-	//     gas-prices: 0.01uqck
-	//     min-gas-amount: 0
-	//     key-directory: %s/.icq/keys
-	//     debug: false
-	//     timeout: 20s
-	//     block-timeout: 10s
-	//     output-format: json
-	//     sign-mode: direct
-	//   '%s':
-	//     key: default
-	//     chain-id: '%s'
-	//     rpc-addr: '%s'
-	//     grpc-addr: '%s'
-	//     account-prefix: osmo
-	//     keyring-backend: test
-	//     gas-adjustment: 1.2
-	//     gas-prices: 0.01uosmo
-	//     min-gas-amount: 0
-	//     key-directory: %s/.icq/keys
-	//     debug: false
-	//     timeout: 20s
-	//     block-timeout: 10s
-	//     output-format: json
-	//     sign-mode: direct
-	// `,
-	// 		quicksilver.Config().ChainID,
-	// 		quicksilver.Config().ChainID,
-	// 		quicksilver.Config().ChainID,
-	// 		quicksilver.GetRPCAddress(),
-	// 		quicksilver.GetGRPCAddress(),
-	// 		icq.HomeDir(),
-	// 		gaia.Config().ChainID,
-	// 		gaia.Config().ChainID,
-	// 		gaia.GetRPCAddress(),
-	// 		gaia.GetGRPCAddress(),
-	// 		icq.HomeDir(),
-	// 	)
+	file := fmt.Sprintf(`default_chain: '%s'
+	chains:
+	  '%s':
+	    key: default
+	    chain-id: '%s'
+	    rpc-addr: '%s'
+	    grpc-addr: '%s'
+	    account-prefix: quick
+	    keyring-backend: test
+	    gas-adjustment: 1.2me
+	    gas-prices: 0.01uqck
+	    min-gas-amount: 0
+	    key-directory: %s/.icq/keys
+	    debug: false
+	    timeout: 20s
+	    block-timeout: 10s
+	    output-format: json
+	    sign-mode: direct
+	  '%s':
+	    key: default
+	    chain-id: '%s'
+	    rpc-addr: '%s'
+	    grpc-addr: '%s'
+	    account-prefix: osmo
+	    keyring-backend: test
+	    gas-adjustment: 1.2
+	    gas-prices: 0.01uosmo
+	    min-gas-amount: 0
+	    key-directory: %s/.icq/keys
+	    debug: false
+	    timeout: 20s
+	    block-timeout: 10s
+	    output-format: json
+	    sign-mode: direct
+	`,
+		quicksilver.Config().ChainID,
+		quicksilver.Config().ChainID,
+		quicksilver.Config().ChainID,
+		quicksilver.GetRPCAddress(),
+		quicksilver.GetGRPCAddress(),
+		icq.HomeDir(),
+		gaia.Config().ChainID,
+		gaia.Config().ChainID,
+		gaia.GetRPCAddress(),
+		gaia.GetGRPCAddress(),
+		icq.HomeDir(),
+	)
 
-	// 	err := icq.WriteFile(ctx, []byte(file), containerCfg)
-	// 	require.NoError(t, err)
-	// 	_, err = icq.ReadFile(ctx, containerCfg)
-	// 	require.NoError(t, err)
+	err := icq.WriteFile(ctx, []byte(file), containerCfg)
+	require.NoError(t, err)
+	_, err = icq.ReadFile(ctx, containerCfg)
+	require.NoError(t, err)
 
-	// 	err = icq.StartContainer(ctx)
-	// 	require.NoError(t, err)
+	err = icq.StartContainer(ctx)
+	require.NoError(t, err)
 
-	// err = icq.Running(ctx)
-	// require.NoError(t, err)
 }
 
 func runXCC(t *testing.T, ctx context.Context, quicksilver, gaia *cosmos.CosmosChain) {
