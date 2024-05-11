@@ -16,7 +16,7 @@ require (
 	github.com/cosmos/ibc-go/v6 v6.3.1
 	github.com/gogo/protobuf v1.3.3
 	github.com/golang/protobuf v1.5.4
-	github.com/golangci/golangci-lint v1.58.0
+	github.com/golangci/golangci-lint v1.58.1
 	github.com/gorilla/mux v1.8.1
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	github.com/ingenuity-build/multierror v0.1.0
@@ -50,7 +50,7 @@ require (
 	cloud.google.com/go/iam v1.1.8 // indirect
 	cloud.google.com/go/storage v1.40.0 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
-	github.com/4meepo/tagalign v1.3.3 // indirect
+	github.com/4meepo/tagalign v1.3.4 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.2 // indirect
 	github.com/Abirdcfly/dupword v0.0.14 // indirect
@@ -130,7 +130,7 @@ require (
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/fzipp/gocyclo v0.6.0 // indirect
 	github.com/getsentry/sentry-go v0.27.0 // indirect
-	github.com/ghostiam/protogetter v0.3.5 // indirect
+	github.com/ghostiam/protogetter v0.3.6 // indirect
 	github.com/go-critic/go-critic v0.11.3 // indirect
 	github.com/go-kit/kit v0.13.0 // indirect
 	github.com/go-kit/log v0.2.1 // indirect
