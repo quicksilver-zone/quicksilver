@@ -4,9 +4,9 @@ import (
 	"context"
 	"testing"
 
-	"github.com/strangelove-ventures/interchaintest/v5"
-	"github.com/strangelove-ventures/interchaintest/v5/chain/cosmos"
-	"github.com/strangelove-ventures/interchaintest/v5/testreporter"
+	"github.com/strangelove-ventures/interchaintest/v6"
+	"github.com/strangelove-ventures/interchaintest/v6/chain/cosmos"
+	"github.com/strangelove-ventures/interchaintest/v6/testreporter"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
 )
@@ -62,10 +62,11 @@ func TestBasicQuicksilverStart(t *testing.T) {
 	require.NoError(t, err)
 
 	// verify sidecars are running
-	//require.Equal(t, 1, len(quicksilver.Sidecars))
-	//for _, sidecar := range quicksilver.Sidecars {
+	require.Equal(t, 1, len(quicksilver.Sidecars))
+
+	// for _, sidecar := range quicksilver.Sidecars {
 	//	require.NoError(t, sidecar.Running(ctx))
-	//}
+	// }
 
 	t.Cleanup(func() {
 		_ = ic.Close()
