@@ -165,9 +165,22 @@ func TestHandleTokenizedShares(t *testing.T) {
 	// Wait a few blocks for relayer to start and for user accounts to be created
 	err = testutil.WaitForBlocks(ctx, 5, quicksilver, gaia)
 	require.NoError(t, err)
-
 	// Get our Bech32 encoded user addresses
 	quickUser, gaiaUser, gaiaUser2 := users[0], users[1], users2[1]
+
+	err = quicksilver.CreateKey(ctx, "default")
+	require.NoError(t, err)
+	defaultAddr, err := quicksilver.FullNodes[0].AccountKeyBech32(ctx, "default")
+	require.NoError(t, err)
+
+	_ = runICQ(ctx, t, quicksilver, gaia)
+	fmt.Println("Default Address: ", defaultAddr)
+	err = quicksilver.SendFunds(ctx, quickUser.KeyName(), ibc.WalletAmount{
+		Denom:   quicksilver.Config().Denom,
+		Amount:  math.NewInt(100_000),
+		Address: string(defaultAddr),
+	})
+	require.NoError(t, err)
 
 	quickUserAddr := quickUser.FormattedAddress()
 	gaiaUserAddr := gaiaUser.FormattedAddress()
@@ -175,7 +188,7 @@ func TestHandleTokenizedShares(t *testing.T) {
 	// Get original account balances
 	quicksilverOrigBal, err := quicksilver.GetBalance(ctx, quickUserAddr, quicksilver.Config().Denom)
 	require.NoError(t, err)
-	require.Equal(t, genesisWalletAmount, quicksilverOrigBal)
+	require.Equal(t, genesisWalletAmount.Sub(math.NewInt(100_000)), quicksilverOrigBal)
 
 	gaiaOrigBal, err := gaia.GetBalance(ctx, gaiaUserAddr, gaia.Config().Denom)
 	require.NoError(t, err)
@@ -378,8 +391,6 @@ func TestHandleTokenizedShares(t *testing.T) {
 	require.NoError(t, err)
 
 	// Stake process
-	runSidecars(ctx, t, quicksilver, gaia)
-
 	gaiaValidators, err := utils.QueryStakingValidators(ctx, gaia, stakingtypes.BondStatusBonded)
 	require.NoError(t, err)
 	require.Len(t, gaiaValidators, 3)
@@ -532,4 +543,9 @@ func TestHandleTokenizedShares(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, tokenizeShare.Amount, delegationBalance)
 
+}
+
+type IcqKey struct {
+	Mnemonic string `json:"mnemonic"`
+	Address  string `json:"address"`
 }

@@ -13,6 +13,7 @@ require (
 	github.com/tendermint/tendermint v0.34.32
 	go.uber.org/zap v1.25.0
 	google.golang.org/grpc v1.63.2
+	gopkg.in/yaml.v2 v2.4.0
 )
 
 require (
@@ -226,7 +227,6 @@ require (
 	google.golang.org/protobuf v1.34.1 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/natefinch/npipe.v2 v2.0.0-20160621034901-c1b8fa8bdcce // indirect
-	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	lukechampine.com/blake3 v1.1.7 // indirect
 	lukechampine.com/uint128 v1.2.0 // indirect
@@ -251,4 +251,5 @@ replace (
 	github.com/quicksilver-zone/quicksilver => ../../
 	github.com/tendermint/tendermint => github.com/cometbft/cometbft v0.34.27
 	github.com/vedhavyas/go-subkey => github.com/strangelove-ventures/go-subkey v1.0.7
+
 )
