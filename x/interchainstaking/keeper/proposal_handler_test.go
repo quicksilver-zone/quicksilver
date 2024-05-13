@@ -7,8 +7,10 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	transfertypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
 	connectiontypes "github.com/cosmos/ibc-go/v6/modules/core/03-connection/types"
+	channeltypes "github.com/cosmos/ibc-go/v6/modules/core/04-channel/types"
 	tmclienttypes "github.com/cosmos/ibc-go/v6/modules/light-clients/07-tendermint/types"
 
 	"github.com/quicksilver-zone/quicksilver/app"
@@ -32,6 +34,10 @@ func (suite *KeeperTestSuite) TestHandleUpdateZoneProposal() {
 			expectErr: "",
 			setup: func(ctx sdk.Context, quicksilver *app.Quicksilver) {
 				suite.setupTestZones()
+
+				// Setup a new channel for updating the zone
+				transferChannel := "channel-101"
+				quicksilver.IBCKeeper.ChannelKeeper.SetChannel(ctx, transfertypes.PortID, transferChannel, channeltypes.Channel{State: channeltypes.OPEN, Ordering: channeltypes.ORDERED, Counterparty: channeltypes.Counterparty{PortId: transfertypes.PortID, ChannelId: transferChannel}, ConnectionHops: []string{suite.path.EndpointA.ConnectionID}})
 			},
 			proposals: func(zone icstypes.Zone) []icstypes.UpdateZoneProposal {
 				return []icstypes.UpdateZoneProposal{
@@ -62,6 +68,10 @@ func (suite *KeeperTestSuite) TestHandleUpdateZoneProposal() {
 								Key:   "account_prefix",
 								Value: "osmo",
 							},
+							{
+								Key:   "transfer_channel",
+								Value: "channel-101",
+							},
 						},
 					},
 				}
@@ -82,6 +92,8 @@ func (suite *KeeperTestSuite) TestHandleUpdateZoneProposal() {
 			name:      "valid - connection",
 			expectErr: "",
 			setup: func(ctx sdk.Context, quicksilver *app.Quicksilver) {
+				quicksilver.IBCKeeper.ChannelKeeper.SetChannel(ctx, transfertypes.PortID, testTransferChannel, channeltypes.Channel{State: channeltypes.OPEN, Ordering: channeltypes.ORDERED, Counterparty: channeltypes.Counterparty{PortId: transfertypes.PortID, ChannelId: testTransferChannel}, ConnectionHops: []string{suite.path.EndpointA.ConnectionID}})
+
 				proposal := &icstypes.RegisterZoneProposal{
 					Title:            "register zone A",
 					Description:      "register zone A",
@@ -95,6 +107,7 @@ func (suite *KeeperTestSuite) TestHandleUpdateZoneProposal() {
 					DepositsEnabled:  true,
 					Decimals:         6,
 					Is_118:           true,
+					TransferChannel:  testTransferChannel,
 				}
 
 				err := quicksilver.InterchainstakingKeeper.HandleRegisterZoneProposal(ctx, proposal)
@@ -206,6 +219,8 @@ func (suite *KeeperTestSuite) TestHandleUpdateZoneProposal() {
 			name:      "invalid - zone has assets minted",
 			expectErr: "zone has assets minted",
 			setup: func(ctx sdk.Context, quicksilver *app.Quicksilver) {
+				quicksilver.IBCKeeper.ChannelKeeper.SetChannel(ctx, transfertypes.PortID, testTransferChannel, channeltypes.Channel{State: channeltypes.OPEN, Ordering: channeltypes.ORDERED, Counterparty: channeltypes.Counterparty{PortId: transfertypes.PortID, ChannelId: testTransferChannel}, ConnectionHops: []string{suite.path.EndpointA.ConnectionID}})
+
 				proposal := &icstypes.RegisterZoneProposal{
 					Title:            "register zone A",
 					Description:      "register zone A",
@@ -219,6 +234,7 @@ func (suite *KeeperTestSuite) TestHandleUpdateZoneProposal() {
 					DepositsEnabled:  true,
 					Decimals:         6,
 					Is_118:           true,
+					TransferChannel:  testTransferChannel,
 				}
 
 				err := quicksilver.InterchainstakingKeeper.HandleRegisterZoneProposal(ctx, proposal)
@@ -351,8 +367,10 @@ func (suite *KeeperTestSuite) TestHandleUpdateZoneProposal() {
 			},
 		},
 		{
-			name: "invalid - zone intialised",
+			name: "invalid - zone initialised",
 			setup: func(ctx sdk.Context, quicksilver *app.Quicksilver) {
+				quicksilver.IBCKeeper.ChannelKeeper.SetChannel(ctx, transfertypes.PortID, testTransferChannel, channeltypes.Channel{State: channeltypes.OPEN, Ordering: channeltypes.ORDERED, Counterparty: channeltypes.Counterparty{PortId: transfertypes.PortID, ChannelId: testTransferChannel}, ConnectionHops: []string{suite.path.EndpointA.ConnectionID}})
+
 				proposal := &icstypes.RegisterZoneProposal{
 					Title:            "register zone A",
 					Description:      "register zone A",
@@ -366,6 +384,7 @@ func (suite *KeeperTestSuite) TestHandleUpdateZoneProposal() {
 					DepositsEnabled:  true,
 					Decimals:         6,
 					Is_118:           true,
+					TransferChannel:  testTransferChannel,
 				}
 
 				err := quicksilver.InterchainstakingKeeper.HandleRegisterZoneProposal(ctx, proposal)
@@ -379,7 +398,7 @@ func (suite *KeeperTestSuite) TestHandleUpdateZoneProposal() {
 				quicksilver.IBCKeeper.ConnectionKeeper.SetConnection(ctx, suite.path.EndpointA.ConnectionID, connectiontypes.ConnectionEnd{ClientId: "07-tendermint-0"})
 				suite.NoError(suite.setupChannelForICA(ctx, suite.chainB.ChainID, suite.path.EndpointA.ConnectionID, "deposit", zone.AccountPrefix))
 			},
-			expectErr: "zone already intialised, cannot update connection_id",
+			expectErr: "zone already initialised, cannot update connection_id",
 			proposals: func(zone icstypes.Zone) []icstypes.UpdateZoneProposal {
 				return []icstypes.UpdateZoneProposal{
 					{
@@ -398,6 +417,8 @@ func (suite *KeeperTestSuite) TestHandleUpdateZoneProposal() {
 			name:      "invalid - unable to fetch",
 			expectErr: "unable to fetch",
 			setup: func(ctx sdk.Context, quicksilver *app.Quicksilver) {
+				quicksilver.IBCKeeper.ChannelKeeper.SetChannel(ctx, transfertypes.PortID, testTransferChannel, channeltypes.Channel{State: channeltypes.OPEN, Ordering: channeltypes.ORDERED, Counterparty: channeltypes.Counterparty{PortId: transfertypes.PortID, ChannelId: testTransferChannel}, ConnectionHops: []string{suite.path.EndpointA.ConnectionID}})
+
 				proposal := &icstypes.RegisterZoneProposal{
 					Title:            "register zone A",
 					Description:      "register zone A",
@@ -411,6 +432,7 @@ func (suite *KeeperTestSuite) TestHandleUpdateZoneProposal() {
 					DepositsEnabled:  true,
 					Decimals:         6,
 					Is_118:           true,
+					TransferChannel:  testTransferChannel,
 				}
 
 				err := quicksilver.InterchainstakingKeeper.HandleRegisterZoneProposal(ctx, proposal)

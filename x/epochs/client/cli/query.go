@@ -76,7 +76,7 @@ func GetCmdEpochsInfos() *cobra.Command {
 // GetCmdCurrentEpoch provides current epoch by specified identifier.
 func GetCmdCurrentEpoch() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "current-epoch",
+		Use:   "current-epoch [identifier]",
 		Short: "Query current epoch by specified identifier",
 		Example: strings.TrimSpace(
 			fmt.Sprintf(`$ %s query epochs current-epoch week`,

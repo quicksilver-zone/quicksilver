@@ -6,6 +6,7 @@ import "cosmos/base/v1beta1/coin.proto";
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
+import "quicksilver/claimsmanager/v1/claimsmanager.proto";
 import "quicksilver/interchainstaking/v1/interchainstaking.proto";
 
 option go_package = "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types";
@@ -100,6 +101,16 @@ service Query {
   // different host chains.
   rpc MappedAccounts(QueryMappedAccountsRequest) returns (QueryMappedAccountsResponse) {
     option (google.api.http).get = "/quicksilver/interchainstaking/v1/mapped_addresses/{address}";
+  }
+
+  // CLaimedPercentage provides data on the claimed percentage for a given zone
+  rpc ClaimedPercentage(QueryClaimedPercentageRequest) returns (QueryClaimedPercentageResponse) {
+    option (google.api.http).get = "/quicksilver/interchainstaking/v1/claimed_percentage/{chain_id}";
+  }
+
+  // ClaimedPercentageByClaimType provides data on the claimed percentage of a given claim type in a given zone
+  rpc ClaimedPercentageByClaimType(QueryClaimedPercentageRequest) returns (QueryClaimedPercentageResponse) {
+    option (google.api.http).get = "/quicksilver/interchainstaking/v1/claimed_percentage/{chain_id}/{claim_type}";
   }
 }
 
@@ -286,4 +297,17 @@ message QueryDenyListRequest {
 message QueryDenyListResponse {
   repeated string validators = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryClaimedPercentageRequest {
+  string chain_id = 1;
+  quicksilver.claimsmanager.v1.ClaimType claim_type = 2;
+}
+
+message QueryClaimedPercentageResponse {
+  string percentage = 1 [
+    (cosmos_proto.scalar) = "cosmos.Dec",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
 }

@@ -37,6 +37,8 @@ func UnmarshalProtocolData(datatype ProtocolDataType, data json.RawMessage) (Pro
 		return unmarshalProtocolData[*LiquidAllowedDenomProtocolData](data)
 	case ProtocolDataTypeOsmosisPool:
 		return unmarshalProtocolData[*OsmosisPoolProtocolData](data)
+	case ProtocolDataTypeOsmosisCLPool:
+		return unmarshalProtocolData[*OsmosisClPoolProtocolData](data)
 	case ProtocolDataTypeUmeeParams:
 		return unmarshalProtocolData[*UmeeParamsProtocolData](data)
 	case ProtocolDataTypeUmeeReserves:
@@ -61,10 +63,11 @@ type ProtocolDataI interface {
 
 // ConnectionProtocolData defines state for connection tracking.
 type ConnectionProtocolData struct {
-	ConnectionID string
-	ChainID      string
-	LastEpoch    int64
-	Prefix       string
+	ConnectionID    string
+	ChainID         string
+	LastEpoch       int64
+	Prefix          string
+	TransferChannel string
 }
 
 // ValidateBasic satisfies ProtocolDataI and validates basic stateless data.
@@ -81,6 +84,9 @@ func (cpd *ConnectionProtocolData) ValidateBasic() error {
 
 	if cpd.Prefix == "" {
 		errs["Prefix"] = ErrUndefinedAttribute
+	}
+	if cpd.TransferChannel == "" {
+		errs["TransferChannel"] = ErrUndefinedAttribute
 	}
 
 	if len(errs) > 0 {

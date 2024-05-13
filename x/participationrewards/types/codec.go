@@ -7,10 +7,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-
-	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/gamm"
-	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/gamm/pool-models/balancer"
-	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/gamm/pool-models/stableswap"
 )
 
 var (
@@ -24,10 +20,6 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 }
 
 func RegisterInterfaces(registry types.InterfaceRegistry) {
-	gamm.RegisterInterfaces(registry)
-	balancer.RegisterInterfaces(registry)
-	stableswap.RegisterInterfaces(registry)
-
 	// cosmos.base.v1beta1.Msg
 	registry.RegisterImplementations(
 		(*sdk.Msg)(nil),
