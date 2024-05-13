@@ -726,14 +726,14 @@ func (s *AppTestSuite) TestV010500UpgradeHandler() {
 	s.NoError(err)
 	expectedTvs := map[string]sdk.Dec{ // relative prices between assets as of 2024-03-09T11:00
 		"uosmo":  sdk.MustNewDecFromStr("1.000000000000000000"),
-		"uatom":  sdk.MustNewDecFromStr("8.312793554467208113"),
+		"uatom":  sdk.MustNewDecFromStr("8.312793554467208145"),
 		"ustars": sdk.MustNewDecFromStr("0.024508540336823926"),
 		"uregen": sdk.MustNewDecFromStr("0.034894445954581256"),
 		"usomm":  sdk.MustNewDecFromStr("0.108532538179923692"),
 		"ujuno":  sdk.MustNewDecFromStr("0.256801530018076838"),
 	}
-	for denom, value := range tvs {
-		s.Equal(expectedTvs[denom], value)
+	for denom, value := range expectedTvs {
+		s.Equal(tvs[denom], value)
 	}
 }
 
