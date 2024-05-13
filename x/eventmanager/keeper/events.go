@@ -28,6 +28,17 @@ func (k Keeper) GetEvent(ctx sdk.Context, module, chainID, id string) (types.Eve
 	return event, true
 }
 
+func (k Keeper) GetEvents(ctx sdk.Context, module, chainID, prefix string) ([]types.Event, int) {
+	events := make([]types.Event, 0)
+
+	k.IteratePrefixedEvents(ctx, []byte(module+chainID+prefix), func(index int64, event types.Event) (stop bool) {
+		events = append(events, event)
+		return false
+	})
+
+	return events, len(events)
+}
+
 // SetEvent set event.
 func (k Keeper) SetEvent(ctx sdk.Context, event types.Event) {
 	key := GenerateEventKey(event.Module, event.ChainId, event.Identifier)
@@ -71,12 +82,12 @@ func (k Keeper) IterateModuleChainEvents(ctx sdk.Context, module string, chainID
 
 // AllEvents returns every eventInfo in the store.
 func (k Keeper) AllEvents(ctx sdk.Context) []types.Event {
-	queries := []types.Event{}
+	events := []types.Event{}
 	k.IteratePrefixedEvents(ctx, nil, func(_ int64, eventInfo types.Event) (stop bool) {
-		queries = append(queries, eventInfo)
+		events = append(events, eventInfo)
 		return false
 	})
-	return queries
+	return events
 }
 
 func (k Keeper) MarkCompleted(ctx sdk.Context, module string, chainID string, identifier string) {
