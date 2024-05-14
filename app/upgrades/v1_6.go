@@ -3,13 +3,14 @@ package upgrades
 import (
 	"fmt"
 
+	abci "github.com/tendermint/tendermint/abci/types"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	abci "github.com/tendermint/tendermint/abci/types"
 
 	v6migration "github.com/cosmos/ibc-go/v6/modules/apps/27-interchain-accounts/controller/migrations/v6"
 	icahosttypes "github.com/cosmos/ibc-go/v6/modules/apps/27-interchain-accounts/host/types"
