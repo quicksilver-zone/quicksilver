@@ -5,18 +5,25 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"sync"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/expfmt"
 	"github.com/tendermint/tendermint/abci/types"
+
+	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-var nodeID = ""
+var (
+	nodeID      string
+	nodeIDMutex sync.Mutex
+)
 
 func (app *Quicksilver) InitNodeID() (string, error) {
+	nodeIDMutex.Lock()
+	defer nodeIDMutex.Unlock()
 	if nodeID == "" {
 		query := tmservice.GetNodeInfoRequest{}
 		queryRes := app.Query(types.RequestQuery{Data: app.appCodec.MustMarshal(&query), Path: "/cosmos.base.tendermint.v1beta1.Service/GetNodeInfo", Height: 0, Prove: false})
