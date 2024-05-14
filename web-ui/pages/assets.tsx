@@ -187,7 +187,7 @@ function Home() {
     return (
       <SlideFade offsetY={'200px'} in={true} style={{ width: '100%' }}>
         <Center>
-          <Flex height="100vh" mt={{ base: '-20px' }} alignItems="center" justifyContent="center">
+          <Flex height="auto" alignItems="center" justifyContent="center">
             <Container
               p={4}
               m={0}
@@ -196,7 +196,6 @@ function Home() {
               position="relative"
               justifyContent="flex-start"
               alignItems="flex-start"
-              maxW="5xl"
             >
               <Head>
                 <title>Assets</title>

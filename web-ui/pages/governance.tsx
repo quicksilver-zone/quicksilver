@@ -27,7 +27,6 @@ export default function Home() {
             justifyContent="flex-start"
             alignItems="flex-start"
             h={'auto'}
-            maxW="5xl"
           >
             <Head>
               <title>Governance</title>
@@ -43,7 +42,6 @@ export default function Home() {
                 bgColor="rgba(255,255,255,0.1)"
                 borderRadius="10px"
                 p={12}
-                maxW="5xl"
                 h="md"
                 justifyContent="center"
                 alignItems="center"
