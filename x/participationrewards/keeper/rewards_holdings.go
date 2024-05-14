@@ -6,7 +6,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/quicksilver-zone/quicksilver/utils"
-	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	airdroptypes "github.com/quicksilver-zone/quicksilver/x/airdrop/types"
 	cmtypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
 	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
@@ -17,7 +16,7 @@ func (k Keeper) AllocateHoldingsRewards(ctx sdk.Context) error {
 	// obtain and iterate all claim records for each zone
 	k.icsKeeper.IterateZones(ctx, func(index int64, zone *icstypes.Zone) (stop bool) {
 		k.Logger(ctx).Info("zones", "zone", zone.ChainId)
-		userAllocations, remaining, _ := k.CalcUserHoldingsAllocations(ctx, zone)
+		userAllocations, remaining := k.CalcUserHoldingsAllocations(ctx, zone)
 
 		if err := k.DistributeToUsersFromModule(ctx, userAllocations); err != nil {
 			k.Logger(ctx).Error("failed to distribute to users", "ua", userAllocations, "err", err)
@@ -41,19 +40,16 @@ func (k Keeper) AllocateHoldingsRewards(ctx sdk.Context) error {
 }
 
 // CalcUserHoldingsAllocations calculates allocations per user for a given zone, based upon claims submitted and zone.
-func (k Keeper) CalcUserHoldingsAllocations(ctx sdk.Context, zone *icstypes.Zone) ([]types.UserAllocation, math.Int, []types.UserAllocation) {
+func (k Keeper) CalcUserHoldingsAllocations(ctx sdk.Context, zone *icstypes.Zone) ([]types.UserAllocation, math.Int) {
 	k.Logger(ctx).Info("CalcUserHoldingsAllocations", "zone", zone.ChainId, "allocations", zone.HoldingsAllocation)
 
 	userAllocations := make([]types.UserAllocation, 0)
-	icsRewardsAllocations := make([]types.UserAllocation, 0)
-	icsRewardsBalance := sdk.NewCoins()
-	icsRewardsPerAsset := make(map[string]sdk.Dec, 0)
 
 	supply := k.bankKeeper.GetSupply(ctx, zone.LocalDenom)
 
 	if zone.HoldingsAllocation == 0 || !supply.Amount.IsPositive() {
 		k.Logger(ctx).Info("holdings allocation is zero, nothing to allocate")
-		return userAllocations, math.NewIntFromUint64(zone.HoldingsAllocation), icsRewardsAllocations
+		return userAllocations, math.NewIntFromUint64(zone.HoldingsAllocation)
 	}
 
 	// calculate user totals and zone total (held assets)
@@ -83,26 +79,12 @@ func (k Keeper) CalcUserHoldingsAllocations(ctx sdk.Context, zone *icstypes.Zone
 
 	if !zoneAmount.IsPositive() {
 		k.Logger(ctx).Info("zero claims for zone", "zone", zone.ChainId)
-		return userAllocations, math.NewIntFromUint64(zone.HoldingsAllocation), icsRewardsAllocations
+		return userAllocations, math.NewIntFromUint64(zone.HoldingsAllocation)
 	}
 
 	zoneAllocation := math.NewIntFromUint64(zone.HoldingsAllocation)
 	tokensPerAsset := sdk.NewDecFromInt(zoneAllocation).Quo(sdk.NewDecFromInt(supply.Amount))
 
-	if zone.WithdrawalAddress != nil {
-		// determine ics rewards to be distributed per token.
-		icsRewardsAddr, err := addressutils.AddressFromBech32(zone.WithdrawalAddress.Address, zone.AccountPrefix)
-		if err != nil {
-			panic("unable to unmarshal withdrawal address")
-		}
-		icsRewardsBalance = k.bankKeeper.GetAllBalances(ctx, icsRewardsAddr)
-		icsRewardsPerAsset = make(map[string]sdk.Dec, len(icsRewardsBalance))
-		for _, rewardsAsset := range icsRewardsBalance {
-			icsRewardsPerAsset[rewardsAsset.Denom] = sdk.NewDecFromInt(rewardsAsset.Amount).Quo(sdk.NewDecFromInt(supply.Amount))
-		}
-
-		k.Logger(ctx).Info("ics rewards per asset", "zone", zone.ChainId, "icsrpa", icsRewardsPerAsset)
-	}
 	k.Logger(ctx).Info("tokens per asset", "zone", zone.ChainId, "tpa", tokensPerAsset)
 
 	for _, address := range utils.Keys(userAmountsMap) {
@@ -118,16 +100,7 @@ func (k Keeper) CalcUserHoldingsAllocations(ctx sdk.Context, zone *icstypes.Zone
 			panic("user allocation overflow")
 		}
 
-		// allocate ics rewards
-		for _, rewardsAsset := range icsRewardsBalance {
-			icsRewardsAllocation := types.UserAllocation{
-				Address: address,
-				Amount:  sdk.NewCoin(rewardsAsset.Denom, sdk.NewDecFromInt(amount).Mul(icsRewardsPerAsset[rewardsAsset.Denom]).TruncateInt()),
-			}
-			icsRewardsAllocations = append(icsRewardsAllocations, icsRewardsAllocation)
-		}
-
 	}
 
-	return userAllocations, zoneAllocation, icsRewardsAllocations
+	return userAllocations, zoneAllocation
 }
