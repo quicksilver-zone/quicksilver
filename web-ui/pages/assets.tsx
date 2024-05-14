@@ -230,92 +230,93 @@ function Home() {
   return (
     <>
       <SlideFade offsetY={'200px'} in={true} style={{ width: '100%' }}>
-        <Container
-          flexDir={'column'}
-          top={20}
-          mt={{ base: '-30px', md: 10 }}
-          zIndex={2}
-          position="relative"
-          justifyContent="center"
-          alignItems="center"
-          maxW="6xl"
-        >
-          <Head>
-            <title>Assets</title>
-            <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-            <link rel="icon" href="/img/favicon-main.png" />
-          </Head>
-          <Text pb={2} color="white" fontSize="24px">
-            Assets
-          </Text>
+        <Center h={'100vh'}>
+          <Container
+            flexDir={'column'}
+            height={'100vh'}
+            my={'auto'}
+            zIndex={2}
+            position="relative"
+            justifyContent="center"
+            alignItems="center"
+            maxW="6xl"
+          >
+            <Head>
+              <title>Assets</title>
+              <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+              <link rel="icon" href="/img/favicon-main.png" />
+            </Head>
+            <Text mb={-2} color="white" fontSize="24px">
+              Assets
+            </Text>
 
-          <Flex flexDir={{ base: 'column', md: 'row' }} py={6} alignItems="center" justifyContent={'space-between'} gap="4">
-            <Flex
-              position="relative"
-              backdropFilter="blur(50px)"
-              bgColor="rgba(255,255,255,0.1)"
-              borderRadius="10px"
-              w={{ base: 'full', md: 'md' }}
-              h="sm"
-              flexDir="column"
-              justifyContent="space-around"
-              alignItems="center"
-            >
-              <QuickBox stakingApy={quickAPY} />
+            <Flex flexDir={{ base: 'column', md: 'row' }} py={6} alignItems="center" justifyContent={'space-between'} gap="4">
+              <Flex
+                position="relative"
+                backdropFilter="blur(50px)"
+                bgColor="rgba(255,255,255,0.1)"
+                borderRadius="10px"
+                w={{ base: 'full', md: 'md' }}
+                h="sm"
+                flexDir="column"
+                justifyContent="space-around"
+                alignItems="center"
+              >
+                <QuickBox stakingApy={quickAPY} />
+              </Flex>
+
+              <Flex
+                alignContent={'center'}
+                position="relative"
+                backdropFilter="blur(50px)"
+                bgColor="rgba(255,255,255,0.1)"
+                borderRadius="10px"
+                px={5}
+                w={{ base: 'full', md: '2xl' }}
+                h="sm"
+              >
+                <MyPortfolio
+                  isLoading={isLoadingAll}
+                  portfolioItems={portfolioItems}
+                  isWalletConnected={address !== undefined}
+                  totalValue={totalPortfolioValue}
+                  averageApy={averageApy}
+                  totalYearlyYield={totalYearlyYield}
+                />
+              </Flex>
+              <Flex
+                alignContent={'center'}
+                position="relative"
+                backdropFilter="blur(50px)"
+                bgColor="rgba(255,255,255,0.1)"
+                borderRadius="10px"
+                p={5}
+                w={{ base: 'full', md: 'lg' }}
+                h="sm"
+              >
+                <StakingIntent isWalletConnected={address !== undefined} address={address ?? ''} />
+              </Flex>
             </Flex>
 
-            <Flex
-              alignContent={'center'}
-              position="relative"
-              backdropFilter="blur(50px)"
-              bgColor="rgba(255,255,255,0.1)"
-              borderRadius="10px"
-              px={5}
-              w={{ base: 'full', md: '2xl' }}
-              h="sm"
-            >
-              <MyPortfolio
-                isLoading={isLoadingAll}
-                portfolioItems={portfolioItems}
+            <Spacer />
+            {/* Assets Grid */}
+            {showAssetsGrid && (
+              <AssetsGrid
+                refetch={refetchAll}
+                liquidRewards={liquidRewards}
+                address={address}
+                nonNative={liquidRewards}
                 isWalletConnected={address !== undefined}
-                totalValue={totalPortfolioValue}
-                averageApy={averageApy}
-                totalYearlyYield={totalYearlyYield}
+                assets={assetsData}
               />
-            </Flex>
-            <Flex
-              alignContent={'center'}
-              position="relative"
-              backdropFilter="blur(50px)"
-              bgColor="rgba(255,255,255,0.1)"
-              borderRadius="10px"
-              p={5}
-              w={{ base: 'full', md: 'lg' }}
-              h="sm"
-            >
-              <StakingIntent isWalletConnected={address !== undefined} address={address ?? ''} />
-            </Flex>
-          </Flex>
+            )}
 
-          <Spacer />
-          {/* Assets Grid */}
-          {showAssetsGrid && (
-            <AssetsGrid
-              refetch={refetchAll}
-              liquidRewards={liquidRewards}
-              address={address}
-              nonNative={liquidRewards}
-              isWalletConnected={address !== undefined}
-              assets={assetsData}
-            />
-          )}
-
-          <Spacer />
-          {/* Unbonding Table */}
-          <Box h="full" w="full" mt="20px">
-            <UnbondingAssetsTable isWalletConnected={address !== undefined} address={address ?? ''} />
-          </Box>
-          {/* <Box>
+            <Spacer />
+            {/* Unbonding Table */}
+            <Box h="full" w="full" mt="20px">
+              <UnbondingAssetsTable isWalletConnected={address !== undefined} address={address ?? ''} />
+            </Box>
+            {/* <Box>
             <Image
               display={{ base: 'none', lg: 'block', md: 'none' }}
               src="/img/quicksilverWord.png"
@@ -327,8 +328,9 @@ function Home() {
               transform="rotate(90deg)"
             />
           </Box> */}
-          <Box h="40px"></Box>
-        </Container>
+            <Box h="40px"></Box>
+          </Container>
+        </Center>
         {showRewardsClaim && (
           <SlideFade in={showRewardsClaim} offsetY="20px" style={{ position: 'fixed', right: '20px', bottom: '20px', zIndex: 10 }}>
             <RewardsClaim refetch={authRefetch} address={address ?? ''} onClose={closeRewardsClaim} />
