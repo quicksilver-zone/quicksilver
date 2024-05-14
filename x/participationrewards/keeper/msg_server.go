@@ -126,7 +126,7 @@ func (k msgServer) GovRemoveProtocolData(goCtx context.Context, msg *types.MsgGo
 
 	key, err := base64.StdEncoding.DecodeString(msg.Key)
 	if err != nil {
-		return nil, fmt.Errorf("error base64 decoding key, got %s", err)
+		return nil, fmt.Errorf("error base64 decoding key, got %w", err)
 	}
 	k.Keeper.DeleteProtocolData(ctx, key)
 
