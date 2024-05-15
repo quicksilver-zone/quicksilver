@@ -9,7 +9,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
-	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	v6migration "github.com/cosmos/ibc-go/v6/modules/apps/27-interchain-accounts/controller/migrations/v6"
@@ -82,14 +81,15 @@ func V010601rc0UpgradeHandler(
 	appKeepers *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-		ctx.Logger().Info("updating setting block params")
-		appKeepers.ParamsKeeper.
-			Subspace(baseapp.Paramspace).
-			WithKeyTable(paramstypes.ConsensusParamsKeyTable()).
-			Set(ctx, baseapp.ParamStoreKeyBlockParams, abci.BlockParams{
-				MaxBytes: 2072576,
-				MaxGas:   150000000,
-			})
+		ctx.Logger().Info("Updating setting block params; 2MB max_bytes, 150M max_gas")
+                ss, found := appKeepers.ParamsKeeper.GetSubspace(baseapp.Paramspace)
+                if !found {
+                        panic("params subspace not found")
+                }
+                ss.Set(ctx, baseapp.ParamStoreKeyBlockParams, abci.BlockParams{
+                        MaxBytes: 2072576,
+                        MaxGas:   150000000,
+                })
 
 		ctx.Logger().Info("Enabling ICAHost")
 		appKeepers.ICAHostKeeper.SetParams(ctx, icahosttypes.Params{
