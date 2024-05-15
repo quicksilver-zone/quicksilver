@@ -815,19 +815,6 @@ func (s *AppTestSuite) InitV160TestZones() {
 	}
 	s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetZone(s.chainA.GetContext(), &zone)
 
-	// agoric-3 zone
-	zone = icstypes.Zone{
-		ConnectionId:    "connection-12312",
-		ChainId:         "agoric-3",
-		AccountPrefix:   "agoric",
-		LocalDenom:      "uqagoric",
-		BaseDenom:       "uagoric",
-		MultiSend:       false,
-		LiquidityModule: false,
-		Is_118:          true,
-	}
-	s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetZone(s.chainA.GetContext(), &zone)
-
 	addVestingAccount(s.chainA.GetContext(), &s.GetQuicksilverApp(s.chainA).AccountKeeper, "quick1qfyntnmlvznvrkk9xqppmcxqcluv7wd74nmyus", 10, 864000, 5000000000)
 
 	// set withdrawal records
@@ -859,6 +846,19 @@ func (s *AppTestSuite) InitV160TestZones() {
 	s.UncheckedSetWithdrawalRecord(s.chainA.GetContext(), s.GetQuicksilverApp(s.chainA), validWithdrawal)
 
 	s.GetQuicksilverApp(s.chainA).IBCKeeper.ChannelKeeper.SetChannel(s.chainA.GetContext(), "transfer", "channel-2", channeltypes.Channel{Counterparty: channeltypes.NewCounterparty("transfer", "channel-522")})
+
+	// agoric-3 zone
+	zone = icstypes.Zone{
+		ConnectionId:    "connection-12312",
+		ChainId:         "agoric-3",
+		AccountPrefix:   "agoric",
+		LocalDenom:      "uqbld",
+		BaseDenom:       "ubld",
+		MultiSend:       false,
+		LiquidityModule: false,
+		Is_118:          true,
+	}
+	s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetZone(s.chainA.GetContext(), &zone)
 }
 
 func (s *AppTestSuite) TestV010505UpgradeHandler() {
