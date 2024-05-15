@@ -158,13 +158,14 @@ func V010601UpgradeHandler(
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 		ctx.Logger().Info("Updating setting block params; 2MB max_bytes, 150M max_gas")
-		appKeepers.ParamsKeeper.
-			Subspace(baseapp.Paramspace).
-			WithKeyTable(paramstypes.ConsensusParamsKeyTable()).
-			Set(ctx, baseapp.ParamStoreKeyBlockParams, abci.BlockParams{
-				MaxBytes: 2072576,
-				MaxGas:   150000000,
-			})
+		ss, found := appKeepers.ParamsKeeper.GetSubspace(baseapp.Paramspace)
+		if !found {
+			panic("params subspace not found")
+		}
+		ss.Set(ctx, baseapp.ParamStoreKeyBlockParams, abci.BlockParams{
+			MaxBytes: 2072576,
+			MaxGas:   150000000,
+		})
 
 		ctx.Logger().Info("Updating agoric-3 zone to set is_118 = false")
 		agoricZone, _ := appKeepers.InterchainstakingKeeper.GetZone(ctx, "agoric-3")
