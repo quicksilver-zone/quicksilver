@@ -41,6 +41,7 @@ import (
 const (
 	EnvPrefix         = "QUICK"
 	FlagSupplyEnabled = "supply.enabled"
+	FlagMetricsURL    = "metrics.url"
 )
 
 type appCreator struct {
@@ -257,6 +258,7 @@ func (ac appCreator) newApp(
 		appOpts,
 		false,
 		cast.ToBool(appOpts.Get(FlagSupplyEnabled)),
+		cast.ToString(appOpts.Get(FlagMetricsURL)),
 		baseapp.SetPruning(pruningOpts),
 		baseapp.SetMinGasPrices(cast.ToString(appOpts.Get(server.FlagMinGasPrices))),
 		baseapp.SetHaltHeight(cast.ToUint64(appOpts.Get(server.FlagHaltHeight))),
@@ -272,6 +274,7 @@ func (ac appCreator) newApp(
 func addModuleInitFlags(startCmd *cobra.Command) {
 	crisis.AddModuleInitFlags(startCmd)
 	startCmd.Flags().Bool(FlagSupplyEnabled, false, "Enable supply module endpoint")
+	startCmd.Flags().Bool(FlagMetricsURL, false, "Enable supply module endpoint")
 }
 
 func (ac appCreator) appExport(
@@ -305,6 +308,7 @@ func (ac appCreator) appExport(
 		appOpts,
 		false,
 		false,
+		"",
 	)
 
 	if height != -1 {
