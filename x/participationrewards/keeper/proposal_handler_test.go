@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 
@@ -143,7 +144,7 @@ func (suite *KeeperTestSuite) TestHandleRemoveProtocolDataProposal() {
 	proposalMsg := types.MsgGovRemoveProtocolData{
 		Title:       "remove chain B connection string",
 		Description: "remove the protocol data",
-		Key:         string(pd.GenerateKey()),
+		Key:         base64.StdEncoding.EncodeToString(pd.GenerateKey()),
 		Authority:   k.GetGovAuthority(ctx),
 	}
 
