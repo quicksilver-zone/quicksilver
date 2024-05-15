@@ -814,6 +814,20 @@ func (s *AppTestSuite) InitV160TestZones() {
 		},
 	}
 	s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetZone(s.chainA.GetContext(), &zone)
+
+	// agoric-3 zone
+	zone = icstypes.Zone{
+		ConnectionId:    "connection-12312",
+		ChainId:         "agoric-3",
+		AccountPrefix:   "agoric",
+		LocalDenom:      "uqagoric",
+		BaseDenom:       "uagoric",
+		MultiSend:       false,
+		LiquidityModule: false,
+		Is_118:          true,
+	}
+	s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetZone(s.chainA.GetContext(), &zone)
+
 	addVestingAccount(s.chainA.GetContext(), &s.GetQuicksilverApp(s.chainA).AccountKeeper, "quick1qfyntnmlvznvrkk9xqppmcxqcluv7wd74nmyus", 10, 864000, 5000000000)
 
 	// set withdrawal records
@@ -877,4 +891,38 @@ func (s *AppTestSuite) TestV010505UpgradeHandler() {
 	// check if the valid withdrawal record is still there
 	_, found = app.InterchainstakingKeeper.GetWithdrawalRecord(ctx, "juno-1", fmt.Sprintf("%064d", 2), icstypes.WithdrawStatusQueued)
 	s.True(found)
+}
+
+func (s *AppTestSuite) TestV010601UpgradeHandler() {
+	s.InitV160TestZones()
+	app := s.GetQuicksilverApp(s.chainA)
+
+	ctx := s.chainA.GetContext()
+
+	handler := upgrades.V010601UpgradeHandler(app.mm,
+		app.configurator, &app.AppKeepers)
+
+	_, err := handler(ctx, types.Plan{}, app.mm.GetVersionMap())
+	s.NoError(err)
+
+	junoZone, found := app.InterchainstakingKeeper.GetZone(ctx, "juno-1")
+	s.True(found)
+	s.Equal("juno-1", junoZone.ChainId)
+	s.Equal("channel-86", junoZone.TransferChannel)
+
+	atomZone, found := app.InterchainstakingKeeper.GetZone(ctx, "cosmoshub-4")
+	s.True(found)
+	s.Equal("cosmoshub-4", atomZone.ChainId)
+	s.Equal("channel-1", atomZone.TransferChannel)
+
+	osmoZone, found := app.InterchainstakingKeeper.GetZone(ctx, "osmosis-1")
+	s.True(found)
+	s.Equal("osmosis-1", osmoZone.ChainId)
+	s.Equal("channel-2", osmoZone.TransferChannel)
+
+	agoricZone, found := app.InterchainstakingKeeper.GetZone(ctx, "agoric-3")
+	s.True(found)
+	s.Equal("agoric-3", agoricZone.ChainId)
+	s.Equal("channel-125", agoricZone.TransferChannel)
+	s.False(agoricZone.Is_118)
 }
