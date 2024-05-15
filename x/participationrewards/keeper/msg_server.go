@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"encoding/base64"
 	"errors"
 	"fmt"
 
@@ -123,7 +124,11 @@ func (k msgServer) GovRemoveProtocolData(goCtx context.Context, msg *types.MsgGo
 			)
 	}
 
-	k.Keeper.DeleteProtocolData(ctx, []byte(msg.Key))
+	key, err := base64.StdEncoding.DecodeString(msg.Key)
+	if err != nil {
+		return nil, fmt.Errorf("error base64 decoding key, got %w", err)
+	}
+	k.Keeper.DeleteProtocolData(ctx, key)
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
