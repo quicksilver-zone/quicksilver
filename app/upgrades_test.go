@@ -925,4 +925,10 @@ func (s *AppTestSuite) TestV010601UpgradeHandler() {
 	s.Equal("agoric-3", agoricZone.ChainId)
 	s.Equal("channel-125", agoricZone.TransferChannel)
 	s.False(agoricZone.Is_118)
+
+	// check block params
+	consensusParams := app.GetConsensusParams(ctx)
+	s.Equal(int64(2072576), consensusParams.Block.MaxBytes)
+	s.Equal(int64(150000000), consensusParams.Block.MaxGas)
+
 }
