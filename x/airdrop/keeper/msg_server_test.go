@@ -465,6 +465,21 @@ func (suite *KeeperTestSuite) Test_msgServer_Claim() {
 			nil,
 			true,
 		},
+		{
+			"Undefined action",
+			func() {
+				// use existing state (from prev test)
+
+				msg = types.MsgClaim{
+					ChainId: suite.chainB.ChainID,
+					Action:  999,
+					Address: userAddress,
+					Proofs:  nil,
+				}
+			},
+			nil,
+			true,
+		},
 	}
 	for _, tt := range tests {
 		tt := tt

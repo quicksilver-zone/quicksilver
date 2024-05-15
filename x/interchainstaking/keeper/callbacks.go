@@ -99,7 +99,7 @@ func ValsetCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Quer
 }
 
 func ValidatorCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
-	zone, found := k.GetZone(ctx, query.GetChainId()) // cant we get rid of this check?
+	zone, found := k.GetZone(ctx, query.GetChainId()) // can't we get rid of this check?
 	if !found {
 		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
 	}

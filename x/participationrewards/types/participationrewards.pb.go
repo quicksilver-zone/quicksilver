@@ -35,17 +35,18 @@ const (
 	ProtocolDataTypeOsmosisParams                 ProtocolDataType = 2
 	ProtocolDataTypeLiquidToken                   ProtocolDataType = 3
 	ProtocolDataTypeOsmosisPool                   ProtocolDataType = 4
-	ProtocolDataTypeCrescentPool                  ProtocolDataType = 5
-	ProtocolDataTypeSifchainPool                  ProtocolDataType = 6
+	ProtocolDataTypeCrescentPool                  ProtocolDataType = 5 // Deprecated: Do not use.
+	ProtocolDataTypeSifchainPool                  ProtocolDataType = 6 // Deprecated: Do not use.
 	ProtocolDataTypeUmeeParams                    ProtocolDataType = 7
 	ProtocolDataTypeUmeeReserves                  ProtocolDataType = 8
 	ProtocolDataTypeUmeeInterestScalar            ProtocolDataType = 9
 	ProtocolDataTypeUmeeTotalBorrows              ProtocolDataType = 10
 	ProtocolDataTypeUmeeUTokenSupply              ProtocolDataType = 11
 	ProtocolDataTypeUmeeLeverageModuleBalance     ProtocolDataType = 12
-	ProtocolDataTypeCrescentParams                ProtocolDataType = 13
-	ProtocolDataTypeCrescentReserveAddressBalance ProtocolDataType = 14
-	ProtocolDataTypeCrescentPoolCoinSupply        ProtocolDataType = 15
+	ProtocolDataTypeCrescentParams                ProtocolDataType = 13 // Deprecated: Do not use.
+	ProtocolDataTypeCrescentReserveAddressBalance ProtocolDataType = 14 // Deprecated: Do not use.
+	ProtocolDataTypeCrescentPoolCoinSupply        ProtocolDataType = 15 // Deprecated: Do not use.
+	ProtocolDataTypeOsmosisCLPool                 ProtocolDataType = 16
 )
 
 var ProtocolDataType_name = map[int32]string{
@@ -65,6 +66,7 @@ var ProtocolDataType_name = map[int32]string{
 	13: "ProtocolDataTypeCrescentParams",
 	14: "ProtocolDataTypeCrescentReserveAddressBalance",
 	15: "ProtocolDataTypeCrescentPoolCoinSupply",
+	16: "ProtocolDataTypeOsmosisCLPool",
 }
 
 var ProtocolDataType_value = map[string]int32{
@@ -84,6 +86,7 @@ var ProtocolDataType_value = map[string]int32{
 	"ProtocolDataTypeCrescentParams":                13,
 	"ProtocolDataTypeCrescentReserveAddressBalance": 14,
 	"ProtocolDataTypeCrescentPoolCoinSupply":        15,
+	"ProtocolDataTypeOsmosisCLPool":                 16,
 }
 
 func (x ProtocolDataType) String() string {

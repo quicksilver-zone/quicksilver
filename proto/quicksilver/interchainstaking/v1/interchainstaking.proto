@@ -55,6 +55,7 @@ message Zone {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable) = false
   ];
+  string transfer_channel = 31;
 }
 
 message SubzoneInfo {

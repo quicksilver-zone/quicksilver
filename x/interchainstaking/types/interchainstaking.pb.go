@@ -62,6 +62,7 @@ type Zone struct {
 	Is_118                       bool                                   `protobuf:"varint,28,opt,name=is_118,json=is118,proto3" json:"is_118,omitempty"`
 	SubzoneInfo                  *SubzoneInfo                           `protobuf:"bytes,29,opt,name=subzoneInfo,proto3" json:"subzoneInfo,omitempty"`
 	DustThreshold                github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,30,opt,name=dust_threshold,json=dustThreshold,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"dust_threshold"`
+	TransferChannel              string                                 `protobuf:"bytes,31,opt,name=transfer_channel,json=transferChannel,proto3" json:"transfer_channel,omitempty"`
 }
 
 func (m *Zone) Reset()         { *m = Zone{} }
@@ -277,6 +278,13 @@ func (m *Zone) GetSubzoneInfo() *SubzoneInfo {
 		return m.SubzoneInfo
 	}
 	return nil
+}
+
+func (m *Zone) GetTransferChannel() string {
+	if m != nil {
+		return m.TransferChannel
+	}
+	return ""
 }
 
 type SubzoneInfo struct {
@@ -1344,6 +1352,15 @@ func (m *Zone) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if len(m.TransferChannel) > 0 {
+		i -= len(m.TransferChannel)
+		copy(dAtA[i:], m.TransferChannel)
+		i = encodeVarintInterchainstaking(dAtA, i, uint64(len(m.TransferChannel)))
+		i--
+		dAtA[i] = 0x1
+		i--
+		dAtA[i] = 0xfa
+	}
 	{
 		size := m.DustThreshold.Size()
 		i -= size
@@ -2601,6 +2618,10 @@ func (m *Zone) Size() (n int) {
 	}
 	l = m.DustThreshold.Size()
 	n += 2 + l + sovInterchainstaking(uint64(l))
+	l = len(m.TransferChannel)
+	if l > 0 {
+		n += 2 + l + sovInterchainstaking(uint64(l))
+	}
 	return n
 }
 
@@ -3809,6 +3830,38 @@ func (m *Zone) Unmarshal(dAtA []byte) error {
 			if err := m.DustThreshold.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
+			iNdEx = postIndex
+		case 31:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TransferChannel", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInterchainstaking
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthInterchainstaking
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthInterchainstaking
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.TransferChannel = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

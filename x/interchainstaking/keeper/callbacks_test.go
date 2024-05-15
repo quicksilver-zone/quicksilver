@@ -1009,6 +1009,8 @@ func (suite *KeeperTestSuite) TestHandleDistributeRewardsCallback() {
 			name:      "no connection setup",
 			zoneSetup: func() {},
 			connectionSetup: func() string {
+				// Uninitialize the connection
+				quicksilver.IBCKeeper.ConnectionKeeper.SetConnection(ctxA, suite.path.EndpointA.ConnectionID, connectiontypes.ConnectionEnd{State: connectiontypes.UNINITIALIZED})
 				return ""
 			},
 			responseMsg: func() []byte {

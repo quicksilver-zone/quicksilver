@@ -197,6 +197,85 @@ func (suite *KeeperTestSuite) TestKeeper_ClaimStore() {
 	suite.Require().Equal(0, len(claims))
 }
 
+func (suite *KeeperTestSuite) TestIterateUserClaims() {
+	k := suite.GetQuicksilverApp(suite.chainA).ClaimsManagerKeeper
+
+	testClaims[0].ChainId = suite.chainB.ChainID
+	testClaims[1].ChainId = suite.chainB.ChainID
+	testClaims[2].ChainId = suite.chainB.ChainID
+	testClaims[3].ChainId = suite.chainB.ChainID
+
+	k.SetClaim(suite.chainA.GetContext(), &testClaims[0])
+	k.SetClaim(suite.chainA.GetContext(), &testClaims[1])
+	k.SetClaim(suite.chainA.GetContext(), &testClaims[2])
+	k.SetClaim(suite.chainA.GetContext(), &testClaims[3])
+	k.SetClaim(suite.chainA.GetContext(), &testClaims[4])
+	k.SetClaim(suite.chainA.GetContext(), &testClaims[5])
+
+	type args struct {
+		chainID string
+		address string
+		fn      func(index int64, data types.Claim) (stop bool)
+	}
+
+	tests := []struct {
+		name        string
+		args        args
+		expectedLen int
+	}{
+		{
+			"blank",
+			args{},
+			0,
+		},
+		{
+			"valid",
+			args{
+				chainID: suite.chainB.ChainID,
+				address: testAddress,
+			},
+			2,
+		},
+		{
+			"bad_chain_id",
+			args{
+				chainID: "badchain",
+				address: testAddress,
+			},
+			0,
+		},
+	}
+	for _, tt := range tests {
+		suite.Run(tt.name, func() {
+			var output []types.Claim
+			fn := func(idx int64, data types.Claim) (stop bool) {
+				output = append(output, data)
+				return false
+			}
+
+			tt.args.fn = fn
+
+			k.IterateUserClaims(suite.chainA.GetContext(), tt.args.chainID, tt.args.address, tt.args.fn)
+			suite.Require().Equal(tt.expectedLen, len(output))
+			output = nil
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestAllZoneUserClaims() {
+	k := suite.GetQuicksilverApp(suite.chainA).ClaimsManagerKeeper
+
+	testClaims[0].ChainId = suite.chainB.ChainID
+	testClaims[1].ChainId = suite.chainB.ChainID
+
+	k.SetClaim(suite.chainA.GetContext(), &testClaims[0])
+	k.SetClaim(suite.chainA.GetContext(), &testClaims[1])
+	k.SetClaim(suite.chainA.GetContext(), &testClaims[2])
+
+	allClaims := k.AllZoneUserClaims(suite.chainA.GetContext(), suite.chainB.ChainID, testAddress)
+	suite.Require().Equal(2, len(allClaims))
+}
+
 // func (suite *KeeperTestSuite) TestKeeper_IterateLastEpochUserClaims() {
 // 	k := suite.GetQuicksilverApp(suite.chainA).ClaimsManagerKeeper
 

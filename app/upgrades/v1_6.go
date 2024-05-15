@@ -14,6 +14,20 @@ import (
 
 // ============ TESTNET UPGRADE HANDLERS ============
 
+func V010600beta1UpgradeHandler(
+	mm *module.Manager,
+	configurator module.Configurator,
+	appKeepers *keepers.AppKeepers,
+) upgradetypes.UpgradeHandler {
+	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		if isTestnet(ctx) {
+			appKeepers.UpgradeKeeper.Logger(ctx).Info("removing defunct zones")
+			appKeepers.InterchainstakingKeeper.RemoveZoneAndAssociatedRecords(ctx, "elgafar-1")
+		}
+		return mm.RunMigrations(ctx, configurator, fromVM)
+	}
+}
+
 func V010600beta0UpgradeHandler(
 	mm *module.Manager,
 	configurator module.Configurator,

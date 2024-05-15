@@ -226,7 +226,7 @@ func (k *Keeper) MintAndSendQAsset(ctx sdk.Context, sender sdk.AccAddress, sende
 		err = k.SendTokenIBC(ctx, k.AccountKeeper.GetModuleAddress(types.ModuleName), senderAddress, zone, qAssets[0])
 		k.Logger(ctx).Info("Transferred qAssets via rts", "address", senderAddress, "assets", qAssets)
 
-	case mappedAddress != nil && !zone.Is_118:
+	case mappedAddress != nil:
 		// set mapped account
 		if setMappedAddress {
 			k.SetAddressMapPair(ctx, sender, mappedAddress, zone.ChainId)

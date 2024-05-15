@@ -293,7 +293,7 @@ func GetZoneWithdrawalRecordsCmd() *cobra.Command {
 
 func GetUnbondingRecordsCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "unbonding-records",
+		Use:   "unbonding-records [chain-id]",
 		Short: "Query all unbonding records",
 		Example: strings.TrimSpace(
 			fmt.Sprintf(`$ %s query interchainstaking unbonding-records`,
@@ -332,7 +332,7 @@ func GetUnbondingRecordsCmd() *cobra.Command {
 
 func GetReceiptsCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "recepts",
+		Use:   "receipts [chain-id]",
 		Short: "Query all receipts",
 		Example: strings.TrimSpace(
 			fmt.Sprintf(`$ %s query interchainstaking receipts`,
@@ -402,7 +402,7 @@ func GetTxStatusCmd() *cobra.Command {
 
 func GetZoneRedelegationRecordsCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "zone-redelegation-records",
+		Use:   "zone-redelegation-records [chain-id]",
 		Short: "Query re-delegation records for a given zone.",
 		Example: strings.TrimSpace(
 			fmt.Sprintf(`$ %s query interchainstaking zone-redelegation-records`,
@@ -436,7 +436,7 @@ func GetZoneRedelegationRecordsCmd() *cobra.Command {
 // GetZoneValidatorCmd returns the validators for the given zone.
 func GetZoneValidatorsCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "zone-validators",
+		Use:   "zone-validators [chain-id]",
 		Short: "Query validators for a given zone.",
 		Example: strings.TrimSpace(
 			fmt.Sprintf(`$ %s query interchainstaking zone-validators [zone-id]`,
