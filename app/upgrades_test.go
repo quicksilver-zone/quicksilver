@@ -930,5 +930,4 @@ func (s *AppTestSuite) TestV010601UpgradeHandler() {
 	consensusParams := app.GetConsensusParams(ctx)
 	s.Equal(int64(2072576), consensusParams.Block.MaxBytes)
 	s.Equal(int64(150000000), consensusParams.Block.MaxGas)
-
 }
