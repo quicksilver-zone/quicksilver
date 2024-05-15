@@ -58,6 +58,7 @@ func BenchmarkSimulation(b *testing.B) {
 		app.EmptyAppOptions{},
 		false,
 		false,
+		"",
 	)
 
 	// Run randomized simulations
@@ -117,6 +118,7 @@ func TestAppStateDeterminism(t *testing.T) {
 				app.EmptyAppOptions{},
 				false,
 				false,
+				"",
 				interBlockCacheOpt(),
 			)
 
