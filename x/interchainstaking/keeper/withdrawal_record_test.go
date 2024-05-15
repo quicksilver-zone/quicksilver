@@ -264,6 +264,7 @@ func (suite *KeeperTestSuite) TestUpdateWithdrawalRecordsForSlash() {
 		})
 	}
 }
+
 func NewMockWithdrawalRecordWithCustomBurnAmount(burnAmount sdk.Coin) types.WithdrawalRecord {
 	return types.WithdrawalRecord{
 		ChainId:   "zone",

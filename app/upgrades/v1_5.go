@@ -6,15 +6,16 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	cmtypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
 
 	"github.com/quicksilver-zone/quicksilver/app/keepers"
 	"github.com/quicksilver-zone/quicksilver/utils"
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
+	cmtypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
 	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 	prkeeper "github.com/quicksilver-zone/quicksilver/x/participationrewards/keeper"
 	prtypes "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
@@ -52,6 +53,7 @@ func V010500rc1UpgradeHandler(
 		return mm.RunMigrations(ctx, configurator, fromVM)
 	}
 }
+
 func V010503rc0UpgradeHandler(
 	mm *module.Manager,
 	configurator module.Configurator,

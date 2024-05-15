@@ -8,7 +8,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/osmomath"
 )
 

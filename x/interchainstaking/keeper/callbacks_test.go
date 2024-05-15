@@ -33,6 +33,7 @@ import (
 	"github.com/cometbft/cometbft/proto/tendermint/types"
 
 	ibctypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
+	connectiontypes "github.com/cosmos/ibc-go/v7/modules/core/03-connection/types"
 	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
 	lightclienttypes "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
 
