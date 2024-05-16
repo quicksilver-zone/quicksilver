@@ -274,7 +274,7 @@ func (ac appCreator) newApp(
 func addModuleInitFlags(startCmd *cobra.Command) {
 	crisis.AddModuleInitFlags(startCmd)
 	startCmd.Flags().Bool(FlagSupplyEnabled, false, "Enable supply module endpoint")
-	startCmd.Flags().Bool(FlagMetricsURL, false, "Enable supply module endpoint")
+	startCmd.Flags().String(FlagMetricsURL, "", "Enable metrics sender")
 }
 
 func (ac appCreator) appExport(
