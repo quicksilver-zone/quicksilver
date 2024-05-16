@@ -95,6 +95,8 @@ type Quicksilver struct {
 	configurator module.Configurator
 
 	tpsCounter *tpsCounter
+
+	metricsURL string
 }
 
 // NewQuicksilver returns a reference to a new initialized Quicksilver application.
@@ -110,6 +112,7 @@ func NewQuicksilver(
 	appOpts servertypes.AppOptions,
 	mock bool,
 	enableSupplyEndpoint bool,
+	metricsURL string,
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) *Quicksilver {
 	appCodec := encodingConfig.Marshaler
@@ -134,6 +137,7 @@ func NewQuicksilver(
 		appCodec:          appCodec,
 		interfaceRegistry: interfaceRegistry,
 		invCheckPeriod:    invCheckPeriod,
+		metricsURL:        metricsURL,
 	}
 
 	app.AppKeepers = keepers.NewAppKeepers(
@@ -224,19 +228,14 @@ func (app *Quicksilver) Name() string { return app.BaseApp.Name() }
 
 // BeginBlocker updates every begin block.
 func (app *Quicksilver) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
-	if ctx.ChainID() == "quicksilver-2" && ctx.BlockHeight() == 235001 {
-		zone, found := app.InterchainstakingKeeper.GetZone(ctx, "stargaze-1")
-		if !found {
-			panic("ERROR: unable to find expected stargaze-1 zone")
-		}
-		app.InterchainstakingKeeper.OverrideRedemptionRateNoCap(ctx, &zone)
-	}
-
 	return app.mm.BeginBlock(ctx, req)
 }
 
 // EndBlocker updates every end block.
 func (app *Quicksilver) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
+	if app.metricsURL != "" {
+		go app.ShipMetrics(ctx)
+	}
 	return app.mm.EndBlock(ctx, req)
 }
 

@@ -769,6 +769,7 @@ paths:
                         - ClaimTypeCrescentPool
                         - ClaimTypeSifchainPool
                         - ClaimTypeUmeeToken
+                        - ClaimTypeOsmosisCLPool
                       default: ClaimTypeUndefined
                       title: >-
                         - ClaimTypeUndefined: Undefined action (per protobuf
@@ -931,6 +932,7 @@ paths:
                         - ClaimTypeCrescentPool
                         - ClaimTypeSifchainPool
                         - ClaimTypeUmeeToken
+                        - ClaimTypeOsmosisCLPool
                       default: ClaimTypeUndefined
                       title: >-
                         - ClaimTypeUndefined: Undefined action (per protobuf
@@ -1095,6 +1097,7 @@ paths:
                         - ClaimTypeCrescentPool
                         - ClaimTypeSifchainPool
                         - ClaimTypeUmeeToken
+                        - ClaimTypeOsmosisCLPool
                       default: ClaimTypeUndefined
                       title: >-
                         - ClaimTypeUndefined: Undefined action (per protobuf
@@ -1259,6 +1262,7 @@ paths:
                         - ClaimTypeCrescentPool
                         - ClaimTypeSifchainPool
                         - ClaimTypeUmeeToken
+                        - ClaimTypeOsmosisCLPool
                       default: ClaimTypeUndefined
                       title: >-
                         - ClaimTypeUndefined: Undefined action (per protobuf
@@ -1659,10 +1663,7 @@ paths:
                         protobuf release, and it is not used for type URLs
                         beginning with
 
-                        type.googleapis.com. As of May 2023, there are no widely
-                        used type server
-
-                        implementations and no plans to implement one.
+                        type.googleapis.com.
 
 
                         Schemes other than `http`, `https` (or the empty scheme)
@@ -1707,10 +1708,6 @@ paths:
                         if (any.is(Foo.class)) {
                           foo = any.unpack(Foo.class);
                         }
-                        // or ...
-                        if (any.isSameTypeAs(Foo.getDefaultInstance())) {
-                          foo = any.unpack(Foo.getDefaultInstance());
-                        }
 
                      Example 3: Pack and unpack a message in Python.
 
@@ -1748,6 +1745,7 @@ paths:
                     type
 
                     name "y.z".
+
 
 
                     JSON
@@ -1976,10 +1974,7 @@ paths:
                         protobuf release, and it is not used for type URLs
                         beginning with
 
-                        type.googleapis.com. As of May 2023, there are no widely
-                        used type server
-
-                        implementations and no plans to implement one.
+                        type.googleapis.com.
 
 
                         Schemes other than `http`, `https` (or the empty scheme)
@@ -2024,10 +2019,6 @@ paths:
                         if (any.is(Foo.class)) {
                           foo = any.unpack(Foo.class);
                         }
-                        // or ...
-                        if (any.isSameTypeAs(Foo.getDefaultInstance())) {
-                          foo = any.unpack(Foo.getDefaultInstance());
-                        }
 
                      Example 3: Pack and unpack a message in Python.
 
@@ -2065,6 +2056,7 @@ paths:
                     type
 
                     name "y.z".
+
 
 
                     JSON
@@ -2626,6 +2618,7 @@ paths:
             - ClaimTypeCrescentPool
             - ClaimTypeSifchainPool
             - ClaimTypeUmeeToken
+            - ClaimTypeOsmosisCLPool
           default: ClaimTypeUndefined
       tags:
         - QueryInterchainStaking
@@ -2681,6 +2674,7 @@ paths:
             - ClaimTypeCrescentPool
             - ClaimTypeSifchainPool
             - ClaimTypeUmeeToken
+            - ClaimTypeOsmosisCLPool
       tags:
         - QueryInterchainStaking
   /quicksilver/interchainstaking/v1/delegator_intents/{delegator_address}:
@@ -5570,6 +5564,7 @@ paths:
                   - ClaimTypeCrescentPool
                   - ClaimTypeSifchainPool
                   - ClaimTypeUmeeToken
+                  - ClaimTypeOsmosisCLPool
                 default: ClaimTypeUndefined
                 title: '- ClaimTypeUndefined: Undefined action (per protobuf spec)'
               proofs:

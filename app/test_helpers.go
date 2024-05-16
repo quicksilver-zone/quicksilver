@@ -91,6 +91,7 @@ func Setup(t *testing.T, isCheckTx bool) *Quicksilver {
 		EmptyAppOptions{},
 		false,
 		false,
+		"",
 	)
 
 	genesisState := NewDefaultGenesisState()
@@ -139,6 +140,7 @@ func SetupTestingApp() (testApp ibctesting.TestingApp, genesisState map[string]j
 		EmptyAppOptions{},
 		true, // set mock state to true
 		false,
+		"",
 	)
 	return app, NewDefaultGenesisState()
 }
