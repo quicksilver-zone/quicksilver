@@ -98,7 +98,7 @@ func (k msgServer) SubmitClaim(goCtx context.Context, msg *types.MsgSubmitClaim)
 	}
 
 	// if we get here all data was validated; verifyClaim will write the claim to the correct store.
-	if mod, ok := k.prSubmodules[msg.ClaimType]; ok {
+	if mod, ok := k.PrSubmodules[msg.ClaimType]; ok {
 		// vertifyClaim needs to return the amount!
 		amount, err := mod.ValidateClaim(ctx, k.Keeper, msg)
 		if err != nil {

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strconv"
 
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -11,7 +12,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
-	concentratedliquidity "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/concentrated-liquidity"
+	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/concentrated-liquidity/model"
 	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/gamm"
 	umeetypes "github.com/quicksilver-zone/quicksilver/third-party-chains/umee-types/leverage/types"
 	icqtypes "github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
@@ -165,13 +166,13 @@ func OsmosisPoolUpdateCallback(ctx sdk.Context, k *Keeper, response []byte, quer
 }
 
 func OsmosisClPoolUpdateCallback(ctx sdk.Context, k *Keeper, response []byte, query icqtypes.Query) error {
-	var pd concentratedliquidity.ConcentratedPoolExtension
-	if err := k.cdc.UnmarshalInterface(response, &pd); err != nil {
+	var pd model.Pool
+	if err := k.cdc.Unmarshal(response, &pd); err != nil {
 		return err
 	}
 
 	// check query.Request is at least 9 bytes in length. (0x02 + 8 bytes for uint64)
-	if len(query.Request) < 9 {
+	if len(query.Request) < 5 {
 		return errors.New("query request not sufficient length")
 	}
 	// assert first character is 0x03 as expected (cl pool prefix)
@@ -179,7 +180,11 @@ func OsmosisClPoolUpdateCallback(ctx sdk.Context, k *Keeper, response []byte, qu
 		return errors.New("query request has unexpected prefix")
 	}
 
-	poolID := sdk.BigEndianToUint64(query.Request[1:])
+	poolID, err := strconv.ParseInt(string(query.Request[1:]), 10, 64)
+	if err != nil {
+		return err
+	}
+
 	data, ok := k.GetProtocolData(ctx, types.ProtocolDataTypeOsmosisCLPool, fmt.Sprintf("%d", poolID))
 	if !ok {
 		return fmt.Errorf("unable to find protocol data for osmosisclpools/%d", poolID)
