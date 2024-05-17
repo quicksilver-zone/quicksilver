@@ -25,7 +25,7 @@ Chain restart is due at 1700 UTC on Tuesday 3rd January 2023. We will use `quick
 
 ## Software requirements
 
-Current version: v1.2.0
+Current version: v1.5.5
 
 ### Install Quicksilver
 
