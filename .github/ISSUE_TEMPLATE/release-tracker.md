@@ -22,7 +22,7 @@ v                     without deliberation
 <!-- List of tests that need be performed with previous
 versions of quicksilver to guarantee that no regression is introduced -->
 
-- [ ] [Simulation tests](https://github.com/quicksilver-zone/quicksilver/tree/main/test/simulation) pass for the release branch.
+- [ ] [Simulation tests](https://github.com/quicksilver-zone/quicksilver/tree/main/test/simulation) pass on the release branch.
 - [ ] [Upgrade tests](https://github.com/quicksilver-zone/quicksilver/tree/main/app) pass for the release branch.
 - [ ] Testnet deployment testing.
 
