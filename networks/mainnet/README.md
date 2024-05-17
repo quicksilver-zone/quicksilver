@@ -34,7 +34,7 @@ Requires [Go version v1.19+](https://golang.org/doc/install).
 ```sh
 > git clone https://github.com/ingenuity-build/quicksilver && cd quicksilver
 > git fetch origin --tags
-> git checkout v1.2.0
+> git checkout v1.5.5
 > make install
 or
 > make build
