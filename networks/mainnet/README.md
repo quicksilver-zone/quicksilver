@@ -63,7 +63,7 @@ build_tags: netgo,ledger
 go: go version go1.19.2 linux/amd64
 ```
 
-**Ensure go version is 1.19+; using 1.18 will cause non-deterministic behaviour.**
+**Ensure go version is 1.22; using any other version will cause non-deterministic behaviour.**
 
 ## Create a validator
 
