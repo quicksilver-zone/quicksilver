@@ -29,7 +29,7 @@ Current version: v1.2.0
 
 ### Install Quicksilver
 
-Requires [Go version v1.19+](https://golang.org/doc/install).
+Requires [Go version v1.22](https://golang.org/doc/install).
 
 ```sh
 > git clone https://github.com/ingenuity-build/quicksilver && cd quicksilver
