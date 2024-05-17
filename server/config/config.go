@@ -139,6 +139,9 @@ func GetConfig(v *viper.Viper) Config {
 		Supply: SupplyConfig{
 			Enabled: v.GetBool("supply.enabled"),
 		},
+		Metrics: MetricsConfig{
+			URL: v.GetString("metrics.url"),
+		},
 	}
 }
 
