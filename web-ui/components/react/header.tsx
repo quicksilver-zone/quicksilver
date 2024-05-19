@@ -14,12 +14,16 @@ import {
   HStack,
   Link,
   Text,
+  IconButton,
 } from '@chakra-ui/react';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/router';
+import { useState } from 'react';
 import { FaGithub, FaDiscord } from 'react-icons/fa';
-import { FaXTwitter } from 'react-icons/fa6';
+import { FaXTwitter, FaMoneyBill } from 'react-icons/fa6';
 
+import KadoIconContent from './kadoIcon';
+import KadoModal from './kadoModal';
 import { WalletButton } from '../wallet-button';
 
 const shadowKeyframes = keyframes`
@@ -49,7 +53,7 @@ const Header: React.FC<{ chainName: string }> = ({ chainName }) => {
   const handleLogoClick = () => {
     DrawerOnOpen();
   };
-
+  const [isKadoModalOpen, setKadoModalOpen] = useState(false);
   return (
     <Flex alignItems="center" zIndex={50} justifyContent="space-between" position={'relative'} p={4}>
       <Spacer display={{ base: 'none', menu: 'block' }} />
@@ -71,8 +75,49 @@ const Header: React.FC<{ chainName: string }> = ({ chainName }) => {
           }}
         />
       </Box>
-
-      <WalletButton />
+      <Flex alignItems="center" flexDirection={'row'} gap={6} justifyContent={'space-between'}>
+        <IconButton
+          p={3}
+          variant="solid"
+          minW="fit-content"
+          bgColor="complimentary.900"
+          sx={{
+            position: 'relative',
+            boxShadow: '0 6px 8px rgba(0, 0, 0, 0.3)',
+            borderRadius: 100,
+            _hover: {
+              boxShadow: '0 0 10px #FF9933, 0 0 15px #FFB266',
+              transform: 'scale(1.1)',
+              '&::before': {
+                content: '""',
+                position: 'absolute',
+                top: '-2px',
+                right: '-2px',
+                bottom: '-2px',
+                left: '-2px',
+                zIndex: -1,
+                borderRadius: 'inherit',
+                background: 'linear-gradient(60deg, #FF8000, #FF9933, #FFB266, #FFD9B3, #FFE6CC)',
+                backgroundSize: '350% 350%',
+                animation: 'animatedgradient 12s linear infinite',
+              },
+            },
+            _active: {
+              transform: 'translateY(4px)',
+            },
+            '@keyframes animatedgradient': {
+              '0%': { backgroundPosition: '0% 50%' },
+              '50%': { backgroundPosition: '100% 50%' },
+              '100%': { backgroundPosition: '0% 50%' },
+            },
+          }}
+          aria-label="Kado-Money"
+          onClick={() => setKadoModalOpen(true)}
+          icon={<KadoIconContent width={'2em'} height={'2em'} />}
+        />
+        <WalletButton />
+      </Flex>
+      <KadoModal isOpen={isKadoModalOpen} onClose={() => setKadoModalOpen(false)} />
       <Drawer isOpen={DrawerIsOpen} placement="left" onClose={DrawerOnClose}>
         <DrawerOverlay />
         <DrawerContent bgColor="rgba(32,32,32,1)">
@@ -118,6 +163,7 @@ const Header: React.FC<{ chainName: string }> = ({ chainName }) => {
             <HStack mt={'50px'} alignContent={'center'} justifyContent={'space-around'}>
               <Link href="https://github.com/quicksilver-zone/quicksilver" isExternal>
                 <Box
+                  borderRadius={'full'}
                   _hover={{
                     cursor: 'pointer',
                     boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`,
@@ -128,6 +174,7 @@ const Header: React.FC<{ chainName: string }> = ({ chainName }) => {
               </Link>
               <Link href="https://discord.com/invite/xrSmYMDVrQ" isExternal>
                 <Box
+                  borderRadius={'full'}
                   _hover={{
                     cursor: 'pointer',
                     boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`,
@@ -139,6 +186,7 @@ const Header: React.FC<{ chainName: string }> = ({ chainName }) => {
               </Link>
               <Link href="https://twitter.com/quicksilverzone" isExternal>
                 <Box
+                  borderRadius={'full'}
                   _hover={{
                     cursor: 'pointer',
                     boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`,
