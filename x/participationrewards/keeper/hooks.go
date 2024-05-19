@@ -6,6 +6,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	transfertypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
+	"github.com/quicksilver-zone/quicksilver/utils"
 	epochstypes "github.com/quicksilver-zone/quicksilver/x/epochs/types"
 	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 	"github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
@@ -146,6 +148,105 @@ func (k *Keeper) AfterZoneCreated(ctx sdk.Context, zone *icstypes.Zone) error {
 		Data: localDenomBytes,
 	})
 
+	// Create LiquidAllowedDenomProtocolData for the host zone
+	hostZoneDenom := types.LiquidAllowedDenomProtocolData{
+		ChainID:               zone.ChainId,
+		RegisteredZoneChainID: zone.ChainId,
+		IbcDenom:              zone.BaseDenom,
+		QAssetDenom:           zone.LocalDenom,
+	}
+	if err := hostZoneDenom.ValidateBasic(); err != nil {
+		return err
+	}
+	hostZoneDenomBytes, err := json.Marshal(hostZoneDenom)
+	if err != nil {
+		return err
+	}
+	k.SetProtocolData(ctx, hostZoneDenom.GenerateKey(), &types.ProtocolData{
+		Type: types.ProtocolDataType_name[int32(types.ProtocolDataTypeLiquidToken)],
+		Data: hostZoneDenomBytes,
+	})
+
+	// Fetch OsmosisParamsProtocolData and create LiquidAllowedDenomProtocolData for Osmosis
+	k.IteratePrefixedProtocolDatas(ctx, types.GetPrefixProtocolDataKey(types.ProtocolDataTypeOsmosisParams), func(index int64, _ []byte, data types.ProtocolData) (stop bool) {
+		osmosisParams, err := types.UnmarshalProtocolData(types.ProtocolDataTypeOsmosisParams, data.Data)
+		if err != nil {
+			return false
+		}
+		osmosisParamsData, ok := osmosisParams.(*types.OsmosisParamsProtocolData)
+		if !ok {
+			return false
+		}
+		osmosisConnectionData, found := k.GetProtocolData(ctx, types.ProtocolDataTypeConnection, osmosisParamsData.ChainID)
+		if !found {
+			return false
+		}
+		connectionData, err := types.UnmarshalProtocolData(types.ProtocolDataTypeConnection, osmosisConnectionData.Data)
+		if err != nil {
+			return false
+		}
+		osmosisChannel := connectionData.(*types.ConnectionProtocolData).TransferChannel
+
+		osmosisDenom := types.LiquidAllowedDenomProtocolData{
+			ChainID:               osmosisParamsData.ChainID,
+			RegisteredZoneChainID: zone.ChainId,
+			IbcDenom:              utils.DeriveIbcDenom(transfertypes.PortID, osmosisChannel, "", "", zone.LocalDenom),
+			QAssetDenom:           zone.LocalDenom,
+		}
+		if err := osmosisDenom.ValidateBasic(); err != nil {
+			return false
+		}
+		osmosisDenomBytes, err := json.Marshal(osmosisDenom)
+		if err != nil {
+			return false
+		}
+		k.SetProtocolData(ctx, osmosisDenom.GenerateKey(), &types.ProtocolData{
+			Type: types.ProtocolDataType_name[int32(types.ProtocolDataTypeLiquidToken)],
+			Data: osmosisDenomBytes,
+		})
+		return true
+	})
+
+	// Fetch UmeeParamsProtocolData and create LiquidAllowedDenomProtocolData for Umee
+	k.IteratePrefixedProtocolDatas(ctx, types.GetPrefixProtocolDataKey(types.ProtocolDataTypeUmeeParams), func(index int64, _ []byte, data types.ProtocolData) (stop bool) {
+		umeeParams, err := types.UnmarshalProtocolData(types.ProtocolDataTypeUmeeParams, data.Data)
+		if err != nil {
+			return false
+		}
+		umeeParamsData, ok := umeeParams.(*types.UmeeParamsProtocolData)
+		if !ok {
+			return false
+		}
+		umeeConnectionData, found := k.GetProtocolData(ctx, types.ProtocolDataTypeConnection, umeeParamsData.ChainID)
+		if !found {
+			return false
+		}
+		connectionData, err := types.UnmarshalProtocolData(types.ProtocolDataTypeConnection, umeeConnectionData.Data)
+		if err != nil {
+			return false
+		}
+
+		umeeChannel := connectionData.(*types.ConnectionProtocolData).TransferChannel
+
+		umeeDenom := types.LiquidAllowedDenomProtocolData{
+			ChainID:               umeeParamsData.ChainID,
+			RegisteredZoneChainID: zone.ChainId,
+			IbcDenom:              utils.DeriveIbcDenom(transfertypes.PortID, umeeChannel, "", "", zone.LocalDenom),
+			QAssetDenom:           zone.LocalDenom,
+		}
+		if err := umeeDenom.ValidateBasic(); err != nil {
+			return false
+		}
+		umeeDenomBytes, err := json.Marshal(umeeDenom)
+		if err != nil {
+			return false
+		}
+		k.SetProtocolData(ctx, umeeDenom.GenerateKey(), &types.ProtocolData{
+			Type: types.ProtocolDataType_name[int32(types.ProtocolDataTypeLiquidToken)],
+			Data: umeeDenomBytes,
+		})
+		return true
+	})
 	return nil
 }
 
