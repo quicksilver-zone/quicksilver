@@ -104,10 +104,11 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, _ int64)
 
 func (k *Keeper) AfterZoneCreated(ctx sdk.Context, zone *icstypes.Zone) error {
 	connectionPd := types.ConnectionProtocolData{
-		ConnectionID: zone.ConnectionId,
-		ChainID:      zone.ChainId,
-		LastEpoch:    0,
-		Prefix:       zone.AccountPrefix,
+		ConnectionID:    zone.ConnectionId,
+		ChainID:         zone.ChainId,
+		LastEpoch:       0,
+		Prefix:          zone.AccountPrefix,
+		TransferChannel: zone.TransferChannel,
 	}
 
 	if err := connectionPd.ValidateBasic(); err != nil {

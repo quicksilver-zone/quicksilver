@@ -2,8 +2,6 @@ run:
   tests: true
   #   # timeout for analysis, e.g. 30s, 5m, default is 1m
   timeout: 10m
-  skip-dirs:
-    - third-party-chains
 
 linters:
   disable-all: true
@@ -43,6 +41,8 @@ issues:
 
   max-issues-per-linter: 10000
   max-same-issues: 10000
+  exclude-dirs:
+    - third-party-chains
 
 linters-settings:
   gci:

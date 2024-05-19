@@ -383,7 +383,7 @@ The following is performed at the end of every epoch:
   5. Distribute validator selection rewards;
 * Calculate qAsset holdings:
   1. Obtain qAssets held by account (locally and off-chain via claims / Poof of
-     Posession);
+     Possession);
   2. Calculate user proportion (cap at 2%);
   3. Normalize and distribute allocation;
 * Allocate lockup rewards by sending portion to `feeCollector` for distribution
@@ -397,7 +397,7 @@ The following is performed at the end of every epoch:
 
 ### Queries, Requests & Callbacks
 
-This module registeres the following queries, requests and callbacks.
+This module registers the following queries, requests and callbacks.
 
 #### Performance Delegation Rewards
 

@@ -27,18 +27,12 @@ import { cosmos } from 'quicksilverjs';
 import React, { useEffect, useState } from 'react';
 
 
-
-
-
 import { useTx } from '@/hooks';
 import { useFeeEstimation } from '@/hooks/useFeeEstimation';
 import { useZoneQuery } from '@/hooks/useQueries';
 import { shiftDigits } from '@/utils';
 
 import { MultiModal } from './validatorSelectionModal';
-
-
-
 
 const ChakraModalContent = styled(ModalContent)`
   position: relative;
@@ -236,18 +230,12 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
 
   let memo = memoBuffer.length > 0 && selectedValidators.length > 0 ? memoBuffer.toString('base64') : '';
 
-  let numericAmount = Number(tokenAmount);
+  const parsedAmount = parseFloat(tokenAmount ?? '0');
 
-  if (isNaN(numericAmount) || numericAmount <= 0) {
-    numericAmount = 0;
-  }
+  let numericAmount = BigInt(Math.floor(parsedAmount * Math.pow(10, Number(zone?.decimals ?? '6'))));
 
-  let smallestUnitAmount: number;
-
-  if (zone?.chainId === 'dydx-mainnet-1') {
-    smallestUnitAmount = numericAmount * Math.pow(10, 18);
-  } else {
-    smallestUnitAmount = numericAmount * Math.pow(10, 6);
+  if (numericAmount <= 0) {
+    numericAmount = BigInt(0);
   }
 
   const { send } = cosmos.bank.v1beta1.MessageComposer.withTypeUrl;
@@ -255,7 +243,7 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
   const msgSend = send({
     fromAddress: address ?? '',
     toAddress: zone?.depositAddress?.address ?? '',
-    amount: coins(smallestUnitAmount.toFixed(0), zone?.baseDenom ?? ''),
+    amount: [{ denom: zone?.baseDenom ?? '', amount: numericAmount.toString() }],
   });
 
   const mainTokens = assets.find(({ chain_name }) => chain_name === newChainName);
@@ -274,7 +262,6 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
   const { tx } = useTx(newChainName ?? '');
 
   const { estimateFee } = useFeeEstimation(newChainName ?? '');
-
 
   const handleLiquidStake = async (event: React.MouseEvent) => {
     event.preventDefault();

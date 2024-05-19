@@ -26,8 +26,10 @@ const (
 	V010500rc1UpgradeName   = "v1.5.0-rc1"
 	V010503rc0UpgradeName   = "v1.5.3-rc0"
 	V010600beta0UpgradeName = "v1.6.0-beta0"
+	V010600beta1UpgradeName = "v1.6.0-beta1"
 	V010600rc0UpgradeName   = "v1.6.0-rc0"
 	V010600rc1UpgradeName   = "v1.6.0-rc1"
+	V010601rc0UpgradeName   = "v1.6.1-rc0"
 
 	// mainnet upgrades
 	V010217UpgradeName = "v1.2.17"
@@ -39,7 +41,7 @@ const (
 	V010503UpgradeName = "v1.5.3"
 	V010504UpgradeName = "v1.5.4"
 	V010505UpgradeName = "v1.5.5"
-	V010600UpgradeName = "v1.6.0"
+	V010601UpgradeName = "v1.6.1"
 )
 
 // Upgrade defines a struct containing necessary fields that a SoftwareUpgradeProposal

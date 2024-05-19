@@ -12,6 +12,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	icatypes "github.com/cosmos/ibc-go/v6/modules/apps/27-interchain-accounts/types"
+	transfertypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
 	ibcexported "github.com/cosmos/ibc-go/v6/modules/core/exported"
 	tmclienttypes "github.com/cosmos/ibc-go/v6/modules/light-clients/07-tendermint/types"
 
@@ -51,6 +52,21 @@ func (k *Keeper) HandleRegisterZoneProposal(ctx sdk.Context, p *types.RegisterZo
 		return errors.New("client state is not active")
 	}
 
+	_, found = k.IBCKeeper.ChannelKeeper.GetChannel(ctx, transfertypes.PortID, p.TransferChannel)
+
+	if !found {
+		return errors.New("unable to fetch channel")
+	}
+	// get connection associated with channel
+	channelConnection, _, err := k.IBCKeeper.ChannelKeeper.GetChannelConnection(ctx, transfertypes.PortID, p.TransferChannel)
+	if err != nil {
+		return err
+	}
+	// Check if the proposed channel is associated with the proposed connection
+	if channelConnection != p.ConnectionId {
+		return errors.New("channel is not associated with the proposed connection")
+	}
+
 	zone := &types.Zone{
 		ChainId:            chainID,
 		ConnectionId:       p.ConnectionId,
@@ -67,6 +83,7 @@ func (k *Keeper) HandleRegisterZoneProposal(ctx sdk.Context, p *types.RegisterZo
 		UnbondingPeriod:    int64(tmClientState.UnbondingPeriod),
 		MessagesPerTx:      p.MessagesPerTx,
 		Is_118:             p.Is_118,
+		TransferChannel:    p.TransferChannel,
 		DustThreshold:      p.DustThreshold,
 	}
 	k.SetZone(ctx, zone)
@@ -211,7 +228,24 @@ func (k *Keeper) HandleUpdateZoneProposal(ctx sdk.Context, p *types.UpdateZonePr
 				return err
 			}
 			zone.Is_118 = boolValue
+		case "transfer_channel":
+			_, found := k.IBCKeeper.ChannelKeeper.GetChannel(ctx, transfertypes.PortID, change.Value)
+			if !found {
+				return errors.New("unable to fetch transfer channel for the change")
+			}
+			_, found = k.IBCKeeper.ChannelKeeper.GetChannel(ctx, transfertypes.PortID, zone.TransferChannel)
+			if !found {
+				return errors.New("unable to fetch transfer channel for the zone")
+			}
 
+			// check if any supply for the qasset
+			localDenom := zone.LocalDenom
+			escrowAccount := k.AccountKeeper.GetModuleAddress(types.EscrowModuleAccount)
+			escrowBalance := k.BankKeeper.GetBalance(ctx, escrowAccount, localDenom)
+			if escrowBalance.IsPositive() {
+				return errors.New("escrow account has qasset balance associated to the current transfer channel, cannot update transfer_channel")
+			}
+			zone.TransferChannel = change.Value
 		case "dust_threshold":
 			intVal, ok := sdk.NewIntFromString(change.Value)
 			if !ok {
@@ -224,7 +258,7 @@ func (k *Keeper) HandleUpdateZoneProposal(ctx sdk.Context, p *types.UpdateZonePr
 				return errors.New("unexpected connection format")
 			}
 			if zone.DepositAddress != nil || zone.DelegationAddress != nil || zone.PerformanceAddress != nil || zone.WithdrawalAddress != nil {
-				return errors.New("zone already intialised, cannot update connection_id")
+				return errors.New("zone already initialised, cannot update connection_id")
 			}
 			if k.BankKeeper.GetSupply(ctx, zone.LocalDenom).Amount.IsPositive() {
 				return errors.New("zone has assets minted, cannot update connection_id without potentially losing assets")

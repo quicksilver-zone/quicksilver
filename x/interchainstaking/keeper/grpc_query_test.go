@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"encoding/json"
+	"strings"
 	"time"
 
 	"cosmossdk.io/math"
@@ -10,6 +11,7 @@ import (
 
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	"github.com/quicksilver-zone/quicksilver/utils/randomutils"
+	claimsmanagertypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
 	epochstypes "github.com/quicksilver-zone/quicksilver/x/epochs/types"
 	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 )
@@ -1540,6 +1542,210 @@ func (suite *KeeperTestSuite) TestKeeper_UserZoneWithdrawalRecords() {
 				suite.NoError(err)
 				suite.NotNil(resp)
 			}
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestKeeper_ClaimedPercentage() {
+	icsKeeper := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
+	ctx := suite.chainA.GetContext()
+
+	tests := []struct {
+		name     string
+		malleate func()
+		req      *types.QueryClaimedPercentageRequest
+		wantErr  string
+		resp     *types.QueryClaimedPercentageResponse
+	}{
+		{
+			"ClaimedPercentage_Nil_Request",
+			func() {},
+			nil,
+			"empty request",
+			nil,
+		},
+		{
+			"ClaimedPercentage_Invalid_Zone",
+			func() {
+				// setup zones
+				suite.setupTestZones()
+			},
+			&types.QueryClaimedPercentageRequest{
+				ChainId: "boguschain",
+			},
+			"no zone found",
+			nil,
+		},
+		{
+			"ClaimedPercentage_Valid_Claims",
+			func() {
+				addr1, addr2, addr3 := addressutils.GenerateAccAddressForTest().String(), addressutils.GenerateAccAddressForTest().String(), addressutils.GenerateAccAddressForTest().String()
+				zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
+				suite.True(found)
+				claims := []claimsmanagertypes.Claim{}
+				claims = append(claims, claimsmanagertypes.NewClaim(addr1, zone.ChainId, claimsmanagertypes.ClaimTypeOsmosisPool, "", math.NewInt(1000)))
+				claims = append(claims, claimsmanagertypes.NewClaim(addr2, zone.ChainId, claimsmanagertypes.ClaimTypeOsmosisPool, "", math.NewInt(2000)))
+				claims = append(claims, claimsmanagertypes.NewClaim(addr3, zone.ChainId, claimsmanagertypes.ClaimTypeOsmosisPool, "", math.NewInt(3000)))
+				for _, claim := range claims {
+					icsKeeper.ClaimsManagerKeeper.SetClaim(ctx, &claim) // #nosec G601
+					err := suite.GetQuicksilverApp(suite.chainA).MintKeeper.MintCoins(ctx, sdk.NewCoins(sdk.NewCoin(zone.LocalDenom, claim.Amount)))
+					suite.NoError(err)
+				}
+			},
+			&types.QueryClaimedPercentageRequest{
+				ChainId: suite.chainB.ChainID,
+			},
+			"",
+			&types.QueryClaimedPercentageResponse{
+				Percentage: sdk.NewDec(1),
+			},
+		},
+	}
+
+	// run tests:
+	for _, tt := range tests {
+		suite.Run(tt.name, func() {
+			tt.malleate()
+			resp, err := icsKeeper.ClaimedPercentage(
+				ctx,
+				tt.req,
+			)
+			if tt.wantErr != "" {
+				suite.Error(err)
+				if g, w := err.Error(), tt.wantErr; !strings.Contains(g, w) {
+					suite.T().Fatalf("Error mismatch:\n\t%q\n\tdoes not contain\n\t%q", g, w)
+				}
+				return
+			}
+			suite.NoError(err)
+			suite.Equal(tt.resp, resp)
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestKeeper_ClaimedPercentageByClaimType() {
+	icsKeeper := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
+	ctx := suite.chainA.GetContext()
+
+	tests := []struct {
+		name     string
+		malleate func()
+		req      *types.QueryClaimedPercentageRequest
+		wantErr  string
+		resp     *types.QueryClaimedPercentageResponse
+	}{
+		{
+			"ClaimedPercentage_Nil_Request",
+			func() {},
+			nil,
+			"empty request",
+			nil,
+		},
+		{
+			"ClaimedPercentage_Invalid_Zone",
+			func() {
+				// setup zones
+				suite.setupTestZones()
+			},
+			&types.QueryClaimedPercentageRequest{
+				ChainId: "boguschain",
+			},
+			"no zone found",
+			nil,
+		},
+		{
+			"ClaimedPercentage_Invalid_ClaimType",
+			func() {
+			},
+			&types.QueryClaimedPercentageRequest{
+				ChainId:   suite.chainB.ChainID,
+				ClaimType: 10000,
+			},
+			"claim type must be a valid number",
+			nil,
+		},
+		{
+			"ClaimedPercentage_No_Zone_Records",
+			func() {},
+			&types.QueryClaimedPercentageRequest{
+				ChainId:   suite.chainB.ChainID,
+				ClaimType: claimsmanagertypes.ClaimTypeOsmosisPool,
+			},
+			"",
+			&types.QueryClaimedPercentageResponse{
+				Percentage: sdk.ZeroDec(),
+			},
+		},
+		{
+			"ClaimedPercentage_Valid_Claims_ClaimTypeOsmosisPool",
+			func() {
+				addr1, addr2, addr3 := addressutils.GenerateAccAddressForTest().String(), addressutils.GenerateAccAddressForTest().String(), addressutils.GenerateAccAddressForTest().String()
+				zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
+				suite.True(found)
+				claims := []claimsmanagertypes.Claim{}
+				claims = append(claims, claimsmanagertypes.NewClaim(addr1, zone.ChainId, claimsmanagertypes.ClaimTypeLiquidToken, "", math.NewInt(1000)))
+				claims = append(claims, claimsmanagertypes.NewClaim(addr2, zone.ChainId, claimsmanagertypes.ClaimTypeOsmosisPool, "", math.NewInt(3000)))
+				claims = append(claims, claimsmanagertypes.NewClaim(addr3, zone.ChainId, claimsmanagertypes.ClaimTypeOsmosisPool, "", math.NewInt(6000)))
+				for _, claim := range claims {
+					icsKeeper.ClaimsManagerKeeper.SetClaim(ctx, &claim) // #nosec G601
+					err := suite.GetQuicksilverApp(suite.chainA).MintKeeper.MintCoins(ctx, sdk.NewCoins(sdk.NewCoin(zone.LocalDenom, claim.Amount)))
+					suite.NoError(err)
+				}
+			},
+			&types.QueryClaimedPercentageRequest{
+				ChainId:   suite.chainB.ChainID,
+				ClaimType: claimsmanagertypes.ClaimTypeOsmosisPool,
+			},
+			"",
+			&types.QueryClaimedPercentageResponse{
+				Percentage: sdk.MustNewDecFromStr("0.9"),
+			},
+		},
+		{
+			"ClaimedPercentage_Valid_Claims_ClaimTypeLiquid",
+			func() {
+				addr1, addr2, addr3 := addressutils.GenerateAccAddressForTest().String(), addressutils.GenerateAccAddressForTest().String(), addressutils.GenerateAccAddressForTest().String()
+				zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
+				suite.True(found)
+				claims := []claimsmanagertypes.Claim{}
+				claims = append(claims, claimsmanagertypes.NewClaim(addr1, zone.ChainId, claimsmanagertypes.ClaimTypeLiquidToken, "", math.NewInt(1000)))
+				claims = append(claims, claimsmanagertypes.NewClaim(addr2, zone.ChainId, claimsmanagertypes.ClaimTypeOsmosisPool, "", math.NewInt(3000)))
+				claims = append(claims, claimsmanagertypes.NewClaim(addr3, zone.ChainId, claimsmanagertypes.ClaimTypeOsmosisPool, "", math.NewInt(6000)))
+				for _, claim := range claims {
+					icsKeeper.ClaimsManagerKeeper.SetClaim(ctx, &claim) // #nosec G601
+					err := suite.GetQuicksilverApp(suite.chainA).MintKeeper.MintCoins(ctx, sdk.NewCoins(sdk.NewCoin(zone.LocalDenom, claim.Amount)))
+					suite.NoError(err)
+				}
+			},
+			&types.QueryClaimedPercentageRequest{
+				ChainId:   suite.chainB.ChainID,
+				ClaimType: claimsmanagertypes.ClaimTypeLiquidToken,
+			},
+			"",
+			&types.QueryClaimedPercentageResponse{
+				Percentage: sdk.MustNewDecFromStr("0.1"),
+			},
+		},
+	}
+
+	// run tests:
+	for _, tt := range tests {
+		suite.Run(tt.name, func() {
+			tt.malleate()
+			resp, err := icsKeeper.ClaimedPercentageByClaimType(
+				ctx,
+				tt.req,
+			)
+			if tt.wantErr != "" {
+				suite.Error(err)
+				if g, w := err.Error(), tt.wantErr; !strings.Contains(g, w) {
+					suite.T().Fatalf("Error mismatch:\n\t%q\n\tdoes not contain\n\t%q", g, w)
+				}
+				return
+			}
+			suite.NoError(err)
+			suite.NotNil(resp)
+			suite.Equal(tt.resp, resp)
 		})
 	}
 }

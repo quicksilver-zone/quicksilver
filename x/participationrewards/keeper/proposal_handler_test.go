@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 
@@ -64,7 +65,7 @@ func (suite *KeeperTestSuite) TestHandleAddProtocolDataProposal() {
 		{
 			"invalid_prop_data",
 			func() {
-				connpdstr := fmt.Sprintf("{\"connectionid\": %q,\"chainid\": %q,\"lastepoch\": %d}", "", "", 100)
+				connpdstr := fmt.Sprintf("{\"connectionid\": %q,\"chainid\": %q,\"lastepoch\": %d,}", "", "", 100)
 
 				prop = types.AddProtocolDataProposal{
 					Title:       "Add connection protocol for test chain B",
@@ -79,7 +80,7 @@ func (suite *KeeperTestSuite) TestHandleAddProtocolDataProposal() {
 		{
 			"valid_prop",
 			func() {
-				connpdstr := fmt.Sprintf("{\"connectionid\": %q,\"chainid\": %q,\"lastepoch\": %d, \"prefix\": \"cosmos\"}", suite.path.EndpointB.ConnectionID, suite.chainB.ChainID, 0)
+				connpdstr := fmt.Sprintf("{\"connectionid\": %q,\"chainid\": %q,\"lastepoch\": %d, \"prefix\": \"cosmos\", \"transferchannel\": %q}", suite.path.EndpointB.ConnectionID, suite.chainB.ChainID, 0, "channel-1")
 
 				prop = types.AddProtocolDataProposal{
 					Title:       "Add connection protocol for test chain B",
@@ -143,7 +144,7 @@ func (suite *KeeperTestSuite) TestHandleRemoveProtocolDataProposal() {
 	proposalMsg := types.MsgGovRemoveProtocolData{
 		Title:       "remove chain B connection string",
 		Description: "remove the protocol data",
-		Key:         string(pd.GenerateKey()),
+		Key:         base64.StdEncoding.EncodeToString(pd.GenerateKey()),
 		Authority:   k.GetGovAuthority(ctx),
 	}
 

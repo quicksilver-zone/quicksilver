@@ -1,0 +1,65 @@
+# Note that any updates to this files will not be applied in CI
+# until this file is merged into main. This is due to oddities of the labeler Github Action.
+"x/airdrop":
+  - changed-files:
+    - any-glob-to-any-file:
+        - "x/airdrop/**"
+
+"x/claimsmanager":
+  - changed-files:
+    - any-glob-to-any-file:
+        - "x/claimsmanager/**"
+
+"x/epochs":
+  - changed-files:
+    - any-glob-to-any-file:
+        - "x/epochs/**"
+
+"x/interchainquery":
+  - changed-files:
+    - any-glob-to-any-file:
+        - "x/interchainquery/**"
+
+"x/interchainstaking":
+  - changed-files:
+    - any-glob-to-any-file:
+        - "x/interchainregistry/**"
+
+"x/lsmtypes":
+  - changed-files:
+    - any-glob-to-any-file:
+        - "x/lsmtypes/**"
+
+"x/mint":
+  - changed-files:
+    - any-glob-to-any-file:
+        - "x/mint/**"
+
+"x/module":
+  - changed-files:
+    - any-glob-to-any-file:
+        - "x/module/**"
+
+"x/participationrewards":
+  - changed-files:
+    - any-glob-to-any-file:
+        - "x/participationrewards/**" 
+
+"x/supply":
+  - changed-files:
+    - any-glob-to-any-file:
+        - "x/supply/**"
+
+"CLI":
+  - changed-files:
+    - any-glob-to-any-file:
+      - client/**
+      - x/*/client/**
+      
+"docs":
+  - changed-files:
+    - any-glob-to-any-file:
+      - README.md
+      - x/**/*.md
+      - x/**/*/*.md
+
