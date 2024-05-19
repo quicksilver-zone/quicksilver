@@ -1,4 +1,4 @@
-import { Container, Text, SlideFade, Box, Image, Flex, Center } from '@chakra-ui/react';
+import { Container, Text, SlideFade, Center } from '@chakra-ui/react';
 import Head from 'next/head';
 
 import DefiTable from '@/components/Defi/defiBox';

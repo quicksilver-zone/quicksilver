@@ -1,17 +1,4 @@
-import {
-  Box,
-  Container,
-  Flex,
-  VStack,
-  HStack,
-  Stat,
-  StatLabel,
-  StatNumber,
-  SlideFade,
-  SkeletonCircle,
-  Image,
-  Center,
-} from '@chakra-ui/react';
+import { Box, Container, Flex, VStack, HStack, Stat, StatLabel, StatNumber, SlideFade, SkeletonCircle } from '@chakra-ui/react';
 import { useChain } from '@cosmos-kit/react-lite';
 import dynamic from 'next/dynamic';
 import Head from 'next/head';

@@ -2,7 +2,7 @@ import '../styles/globals.css';
 
 import '@interchain-ui/react/styles';
 import { Chain } from '@chain-registry/types';
-import { Box, Center, ChakraProvider, Flex, Image } from '@chakra-ui/react';
+import { Box, Center, ChakraProvider, Image } from '@chakra-ui/react';
 import { Registry } from '@cosmjs/proto-signing';
 import { SigningStargateClientOptions, AminoTypes } from '@cosmjs/stargate';
 import { SignerOptions } from '@cosmos-kit/core';
