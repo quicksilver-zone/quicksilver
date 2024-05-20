@@ -62,7 +62,7 @@ func (app *Quicksilver) ShipMetrics(ctx sdk.Context) {
 	}
 	c, cancel := context.WithTimeout(ctx.Context(), time.Second*10)
 	defer cancel()
-	req, err := http.NewRequestWithContext(c, "POST", fmt.Sprintf("%s/chain_id/%s/node_id/%s", app.metricsURL, ctx.ChainID(), nodeID), bytes.NewReader(buf.Bytes()))
+	req, err := http.NewRequestWithContext(c, "POST", fmt.Sprintf("%s/job/%s/instance/%s", app.metricsURL, ctx.ChainID(), nodeID), bytes.NewReader(buf.Bytes()))
 	if err != nil {
 		ctx.Logger().Error("Error creating metrics request", "error", err)
 		return
