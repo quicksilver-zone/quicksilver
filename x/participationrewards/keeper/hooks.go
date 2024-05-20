@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -149,11 +150,17 @@ func (k *Keeper) AfterZoneCreated(ctx sdk.Context, zone *icstypes.Zone) error {
 		Data: localDenomBytes,
 	})
 
+	// channel for the host chain
+	channel, found := k.IBCKeeper.ChannelKeeper.GetChannel(ctx, "transfer", zone.TransferChannel)
+	if !found {
+		return fmt.Errorf("channel not found: %s", zone.TransferChannel)
+	}
+
 	// Create LiquidAllowedDenomProtocolData for the host zone
 	hostZoneDenom := types.LiquidAllowedDenomProtocolData{
 		ChainID:               zone.ChainId,
 		RegisteredZoneChainID: zone.ChainId,
-		IbcDenom:              zone.BaseDenom,
+		IbcDenom:              utils.DeriveIbcDenom(transfertypes.PortID, channel.Counterparty.ChannelId, transfertypes.PortID, zone.TransferChannel, zone.LocalDenom),
 		QAssetDenom:           zone.LocalDenom,
 	}
 	if err := hostZoneDenom.ValidateBasic(); err != nil {
@@ -188,10 +195,15 @@ func (k *Keeper) AfterZoneCreated(ctx sdk.Context, zone *icstypes.Zone) error {
 		}
 		osmosisChannel := connectionData.(*types.ConnectionProtocolData).TransferChannel
 
+		// channel for the osmosis chain
+		channel, found := k.IBCKeeper.ChannelKeeper.GetChannel(ctx, "transfer", osmosisChannel)
+		if !found {
+			return false
+		}
 		osmosisDenom := types.LiquidAllowedDenomProtocolData{
 			ChainID:               osmosisParamsData.ChainID,
 			RegisteredZoneChainID: zone.ChainId,
-			IbcDenom:              utils.DeriveIbcDenom(transfertypes.PortID, osmosisChannel, "", "", zone.LocalDenom),
+			IbcDenom:              utils.DeriveIbcDenom(transfertypes.PortID, channel.Counterparty.ChannelId, transfertypes.PortID, osmosisChannel, zone.LocalDenom),
 			QAssetDenom:           zone.LocalDenom,
 		}
 		if err := osmosisDenom.ValidateBasic(); err != nil {
@@ -228,11 +240,12 @@ func (k *Keeper) AfterZoneCreated(ctx sdk.Context, zone *icstypes.Zone) error {
 		}
 
 		umeeChannel := connectionData.(*types.ConnectionProtocolData).TransferChannel
-
+		// channel for the umee chain
+		channel, found := k.IBCKeeper.ChannelKeeper.GetChannel(ctx, "transfer", umeeChannel)
 		umeeDenom := types.LiquidAllowedDenomProtocolData{
 			ChainID:               umeeParamsData.ChainID,
 			RegisteredZoneChainID: zone.ChainId,
-			IbcDenom:              utils.DeriveIbcDenom(transfertypes.PortID, umeeChannel, "", "", zone.LocalDenom),
+			IbcDenom:              utils.DeriveIbcDenom(transfertypes.PortID, channel.Counterparty.ChannelId, transfertypes.PortID, umeeChannel, zone.LocalDenom),
 			QAssetDenom:           zone.LocalDenom,
 		}
 		if err := umeeDenom.ValidateBasic(); err != nil {
