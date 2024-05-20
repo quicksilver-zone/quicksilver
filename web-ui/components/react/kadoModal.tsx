@@ -40,7 +40,7 @@ export const KadoModal: React.FC<KadoModalProps> = ({ isOpen, onClose, denom, zo
     `JUNO:${chains.juno.address}`,
   ];
   const offFromAddress = addresses.find((address) => address.startsWith(network));
-  console.log(offFromAddress);
+
   return (
     <Modal closeOnOverlayClick={false} isOpen={isOpen} onClose={onClose} size={{ base: 'sm', sm: 'sm', md: 'xl' }}>
       <ModalOverlay />
