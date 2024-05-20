@@ -1,11 +1,17 @@
 package keeper_test
 
 import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/quicksilver-zone/quicksilver/utils/randomutils"
 )
 
 const (
 	testChainID = "test-1"
+)
+
+var (
+	localAddress  = sdk.AccAddress(randomutils.GenerateRandomBytes(20))
+	remoteAddress = sdk.AccAddress(randomutils.GenerateRandomBytes(32))
 )
 
 func (suite *KeeperTestSuite) TestKeeper_RemoteAddressStore() {
@@ -14,9 +20,6 @@ func (suite *KeeperTestSuite) TestKeeper_RemoteAddressStore() {
 
 	icsKeeper := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
 	ctx := suite.chainA.GetContext()
-
-	localAddress := randomutils.GenerateRandomBytes(28)
-	remoteAddress := randomutils.GenerateRandomBytes(40)
 
 	suite.Run("not found", func() {
 		_, found := icsKeeper.GetRemoteAddressMap(ctx, localAddress, testChainID)
@@ -41,9 +44,6 @@ func (suite *KeeperTestSuite) TestKeeper_LocalAddressStore() {
 	icsKeeper := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
 	ctx := suite.chainA.GetContext()
 
-	localAddress := randomutils.GenerateRandomBytes(28)
-	remoteAddress := randomutils.GenerateRandomBytes(40)
-
 	suite.Run("not found", func() {
 		_, found := icsKeeper.GetLocalAddressMap(ctx, remoteAddress, testChainID)
 		suite.False(found)
@@ -66,9 +66,6 @@ func (suite *KeeperTestSuite) TestKeeper_AddressMapPair() {
 
 	icsKeeper := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
 	ctx := suite.chainA.GetContext()
-
-	localAddress := randomutils.GenerateRandomBytes(28)
-	remoteAddress := randomutils.GenerateRandomBytes(40)
 
 	suite.Run("not found", func() {
 		_, found := icsKeeper.GetLocalAddressMap(ctx, remoteAddress, testChainID)
