@@ -242,6 +242,9 @@ func (k *Keeper) AfterZoneCreated(ctx sdk.Context, zone *icstypes.Zone) error {
 		umeeChannel := connectionData.(*types.ConnectionProtocolData).TransferChannel
 		// channel for the umee chain
 		channel, found := k.IBCKeeper.ChannelKeeper.GetChannel(ctx, "transfer", umeeChannel)
+		if !found {
+			return false
+		}
 		umeeDenom := types.LiquidAllowedDenomProtocolData{
 			ChainID:               umeeParamsData.ChainID,
 			RegisteredZoneChainID: zone.ChainId,
