@@ -1,6 +1,7 @@
 package upgrades
 
 import (
+	"encoding/json"
 	"fmt"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -75,36 +76,110 @@ func V010600rc0UpgradeHandler(
 	}
 }
 
+// update block params to 2MB and 150m gas.
+func updateBlockParams(ctx sdk.Context, appKeepers *keepers.AppKeepers) {
+	ctx.Logger().Info("Updating setting block params; 2MB max_bytes, 150M max_gas")
+	ss, found := appKeepers.ParamsKeeper.GetSubspace(baseapp.Paramspace)
+	if !found {
+		panic("params subspace not found")
+	}
+	ss.Set(ctx, baseapp.ParamStoreKeyBlockParams, abci.BlockParams{
+		MaxBytes: 2072576,
+		MaxGas:   150000000,
+	})
+}
+
+func enableIcaHost(ctx sdk.Context, appKeepers *keepers.AppKeepers) {
+	ctx.Logger().Info("Enabling ICAHost")
+	appKeepers.ICAHostKeeper.SetParams(ctx, icahosttypes.Params{
+		HostEnabled: true,
+		AllowMessages: []string{
+			"/cosmos.bank.v1beta1.MsgSend",
+			"/cosmos.bank.v1beta1.MsgMultiSend",
+			"/quicksilver.interchainstaking.v1.MsgSignalIntent",
+			"/quicksilver.interchainstaking.v1.MsgRequestRedemption",
+			"/quicksilver.participationrewards.v1.MsgSubmitClaim",
+			"/cosmos.authz.v1beta1.MsgGrant",
+			"/cosmos.authz.v1beta1.MsgRevoke",
+			"/ibc.applications.transfer.v1.MsgTransfer",
+		},
+	})
+}
+
+func setTransferChannels(ctx sdk.Context, appKeepers *keepers.AppKeepers, channels map[string]string) {
+	ctx.Logger().Info("Set TransferChannel field for zones")
+	appKeepers.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zone *icstypes.Zone) (stop bool) {
+		zone.TransferChannel = channels[zone.ChainId]
+		appKeepers.InterchainstakingKeeper.SetZone(ctx, zone)
+		return false
+	})
+
+	appKeepers.ParticipationRewardsKeeper.IteratePrefixedProtocolDatas(ctx, types.GetPrefixProtocolDataKey(types.ProtocolDataTypeConnection), func(idx int64, _ []byte, data types.ProtocolData) bool {
+		pd, err := types.UnmarshalProtocolData(types.ProtocolDataTypeConnection, data.Data)
+		if err != nil {
+			panic(err)
+		}
+		pdc, ok := pd.(*types.ConnectionProtocolData)
+		if ok {
+			tc, ok := channels[pdc.ChainID]
+			if ok {
+				pdc.TransferChannel = tc
+
+				pdcBlob, err := json.Marshal(pdc)
+				if err != nil {
+					appKeepers.ParticipationRewardsKeeper.Logger(ctx).Info("Error Marshalling self connection Data")
+					panic(err)
+				}
+
+				data := types.ProtocolData{
+					Type: types.ProtocolDataType_name[int32(types.ProtocolDataTypeConnection)],
+					Data: pdcBlob,
+				}
+
+				appKeepers.ParticipationRewardsKeeper.SetProtocolData(ctx, pdc.GenerateKey(), &data)
+			}
+		}
+		return false
+	})
+}
+
+func removeIncorrectLiquidTokenProtocolDatas(ctx sdk.Context, appKeepers *keepers.AppKeepers, channels map[string]string) {
+	ctx.Logger().Info("Removing incorrect IBC denom for LiquidAllowedDenomProtocolData")
+	appKeepers.ParticipationRewardsKeeper.IteratePrefixedProtocolDatas(ctx, types.GetPrefixProtocolDataKey(types.ProtocolDataTypeLiquidToken), func(idx int64, _ []byte, data types.ProtocolData) bool {
+		pd, err := types.UnmarshalProtocolData(types.ProtocolDataTypeLiquidToken, data.Data)
+		if err != nil {
+			return false
+		}
+		token, _ := pd.(*types.LiquidAllowedDenomProtocolData)
+
+		if token.ChainID == ctx.ChainID() {
+			return false
+		}
+
+		channel, found := appKeepers.IBCKeeper.ChannelKeeper.GetChannel(ctx, "transfer", channels[token.ChainID])
+		if !found {
+			panic(fmt.Errorf("unable to find channel %s", channels[token.ChainID]))
+		}
+
+		// derive the correct ibc denom; if it does not match then remmove it.
+		correctIbc := utils.DeriveIbcDenom("transfer", channel.Counterparty.ChannelId, "transfer", channels[token.ChainID], token.QAssetDenom)
+		if token.IbcDenom != correctIbc {
+			ctx.Logger().Info(fmt.Sprintf("incorrect IBC denom %s for LiquidAllowedDenomProtocolData %s, expected %s. removing", token.IbcDenom, token.QAssetDenom, correctIbc))
+			appKeepers.ParticipationRewardsKeeper.DeleteProtocolData(ctx, types.GetProtocolDataKey(types.ProtocolDataTypeLiquidToken, pd.GenerateKey()))
+		}
+		return false
+	})
+}
+
 func V010601rc0UpgradeHandler(
 	mm *module.Manager,
 	configurator module.Configurator,
 	appKeepers *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-		ctx.Logger().Info("Updating setting block params; 2MB max_bytes, 150M max_gas")
-		ss, found := appKeepers.ParamsKeeper.GetSubspace(baseapp.Paramspace)
-		if !found {
-			panic("params subspace not found")
-		}
-		ss.Set(ctx, baseapp.ParamStoreKeyBlockParams, abci.BlockParams{
-			MaxBytes: 2072576,
-			MaxGas:   150000000,
-		})
+		updateBlockParams(ctx, appKeepers)
 
-		ctx.Logger().Info("Enabling ICAHost")
-		appKeepers.ICAHostKeeper.SetParams(ctx, icahosttypes.Params{
-			HostEnabled: true,
-			AllowMessages: []string{
-				"/cosmos.bank.v1beta1.MsgSend",
-				"/cosmos.bank.v1beta1.MsgMultiSend",
-				"/quicksilver.interchainstaking.v1.MsgSignalIntent",
-				"/quicksilver.interchainstaking.v1.MsgRequestRedemption",
-				"/quicksilver.participationrewards.v1.MsgSubmitClaim",
-				"/cosmos.authz.v1beta1.MsgGrant",
-				"/cosmos.authz.v1beta1.MsgRevoke",
-				"/ibc.applications.transfer.v1.MsgTransfer",
-			},
-		})
+		enableIcaHost(ctx, appKeepers)
 
 		channels := map[string]string{
 			"osmo-test-5":     "channel-39",
@@ -113,38 +188,10 @@ func V010601rc0UpgradeHandler(
 			"regen-redwood-1": "channel-2",
 		}
 
-		ctx.Logger().Info("Set TransferChannel field for zones")
-		appKeepers.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zone *icstypes.Zone) (stop bool) {
-			zone.TransferChannel = channels[zone.ChainId]
-			appKeepers.InterchainstakingKeeper.SetZone(ctx, zone)
-			return false
-		})
+		setTransferChannels(ctx, appKeepers, channels)
 
-		ctx.Logger().Info("Removing incorrect IBC denom for LiquidAllowedDenomProtocolData")
-		appKeepers.ParticipationRewardsKeeper.IteratePrefixedProtocolDatas(ctx, types.GetPrefixProtocolDataKey(types.ProtocolDataTypeLiquidToken), func(idx int64, _ []byte, data types.ProtocolData) bool {
-			pd, err := types.UnmarshalProtocolData(types.ProtocolDataTypeLiquidToken, data.Data)
-			if err != nil {
-				return false
-			}
-			token, _ := pd.(*types.LiquidAllowedDenomProtocolData)
+		removeIncorrectLiquidTokenProtocolDatas(ctx, appKeepers, channels)
 
-			if token.ChainID == ctx.ChainID() {
-				return false
-			}
-
-			channel, found := appKeepers.IBCKeeper.ChannelKeeper.GetChannel(ctx, "transfer", channels[token.ChainID])
-			if !found {
-				panic(fmt.Errorf("unable to find channel %s", channels[token.ChainID]))
-			}
-
-			// derive the correct ibc denom; if it does not match then remmove it.
-			correctIbc := utils.DeriveIbcDenom("transfer", channel.Counterparty.ChannelId, "transfer", channels[token.ChainID], token.QAssetDenom)
-			if token.IbcDenom != correctIbc {
-				ctx.Logger().Info(fmt.Sprintf("incorrect IBC denom %s for LiquidAllowedDenomProtocolData %s, expected %s. removing", token.IbcDenom, token.QAssetDenom, correctIbc))
-				appKeepers.ParticipationRewardsKeeper.DeleteProtocolData(ctx, pd.GenerateKey())
-			}
-			return false
-		})
 		return mm.RunMigrations(ctx, configurator, fromVM)
 	}
 }
@@ -157,35 +204,14 @@ func V010601UpgradeHandler(
 	appKeepers *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-		ctx.Logger().Info("Updating setting block params; 2MB max_bytes, 150M max_gas")
-		ss, found := appKeepers.ParamsKeeper.GetSubspace(baseapp.Paramspace)
-		if !found {
-			panic("params subspace not found")
-		}
-		ss.Set(ctx, baseapp.ParamStoreKeyBlockParams, abci.BlockParams{
-			MaxBytes: 2072576,
-			MaxGas:   150000000,
-		})
+		updateBlockParams(ctx, appKeepers)
 
 		ctx.Logger().Info("Updating agoric-3 zone to set is_118 = false")
 		agoricZone, _ := appKeepers.InterchainstakingKeeper.GetZone(ctx, "agoric-3")
 		agoricZone.Is_118 = false
 		appKeepers.InterchainstakingKeeper.SetZone(ctx, &agoricZone)
 
-		ctx.Logger().Info("Enabling ICAHost")
-		appKeepers.ICAHostKeeper.SetParams(ctx, icahosttypes.Params{
-			HostEnabled: true,
-			AllowMessages: []string{
-				"/cosmos.bank.v1beta1.MsgSend",
-				"/cosmos.bank.v1beta1.MsgMultiSend",
-				"/quicksilver.interchainstaking.v1.MsgSignalIntent",
-				"/quicksilver.interchainstaking.v1.MsgRequestRedemption",
-				"/quicksilver.participationrewards.v1.MsgSubmitClaim",
-				"/cosmos.authz.v1beta1.MsgGrant",
-				"/cosmos.authz.v1beta1.MsgRevoke",
-				"/ibc.applications.transfer.v1.MsgTransfer",
-			},
-		})
+		enableIcaHost(ctx, appKeepers)
 
 		channels := map[string]string{
 			"osmosis-1":      "channel-2",
@@ -201,38 +227,9 @@ func V010601UpgradeHandler(
 			"ssc-1":          "channel-170",
 		}
 
-		ctx.Logger().Info("Set TransferChannel field for zones")
-		appKeepers.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zone *icstypes.Zone) (stop bool) {
-			zone.TransferChannel = channels[zone.ChainId]
-			appKeepers.InterchainstakingKeeper.SetZone(ctx, zone)
-			return false
-		})
+		setTransferChannels(ctx, appKeepers, channels)
 
-		ctx.Logger().Info("Removing incorrect IBC denom for LiquidAllowedDenomProtocolData")
-		appKeepers.ParticipationRewardsKeeper.IteratePrefixedProtocolDatas(ctx, types.GetPrefixProtocolDataKey(types.ProtocolDataTypeLiquidToken), func(idx int64, _ []byte, data types.ProtocolData) bool {
-			pd, err := types.UnmarshalProtocolData(types.ProtocolDataTypeLiquidToken, data.Data)
-			if err != nil {
-				return false
-			}
-			token, _ := pd.(*types.LiquidAllowedDenomProtocolData)
-
-			if token.ChainID == ctx.ChainID() {
-				return false
-			}
-
-			channel, found := appKeepers.IBCKeeper.ChannelKeeper.GetChannel(ctx, "transfer", channels[token.ChainID])
-			if !found {
-				panic(fmt.Errorf("unable to find channel %s", channels[token.ChainID]))
-			}
-
-			// derive the correct ibc denom; if it does not match then remove it.
-			correctIbc := utils.DeriveIbcDenom("transfer", channel.Counterparty.ChannelId, "transfer", channels[token.ChainID], token.QAssetDenom)
-			if token.IbcDenom != correctIbc {
-				ctx.Logger().Info(fmt.Sprintf("incorrect IBC denom %s for LiquidAllowedDenomProtocolData %s, expected %s. removing", token.IbcDenom, token.QAssetDenom, correctIbc))
-				appKeepers.ParticipationRewardsKeeper.DeleteProtocolData(ctx, pd.GenerateKey())
-			}
-			return false
-		})
+		removeIncorrectLiquidTokenProtocolDatas(ctx, appKeepers, channels)
 
 		return mm.RunMigrations(ctx, configurator, fromVM)
 	}
