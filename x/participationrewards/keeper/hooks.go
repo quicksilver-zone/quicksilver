@@ -68,7 +68,7 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, _ int64)
 	}
 
 	k.Logger(ctx).Info("Triggering submodule hooks")
-	for _, sub := range k.prSubmodules {
+	for _, sub := range k.PrSubmodules {
 		sub.Hooks(ctx, k)
 	}
 
