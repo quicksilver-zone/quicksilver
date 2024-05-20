@@ -304,7 +304,7 @@ function QuickApp({ Component, pageProps }: AppProps) {
                     <Component {...pageProps} />
                   </Center>
                   <Image
-                    zIndex={10}
+                    zIndex={5}
                     alt="quick logo"
                     w={'230px'}
                     position={'fixed'}

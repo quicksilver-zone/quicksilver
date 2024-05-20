@@ -33,7 +33,6 @@ import { quicksilver } from 'quicksilverjs';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { FaStar } from 'react-icons/fa';
 
-
 import { useTx } from '@/hooks';
 import { useFeeEstimation } from '@/hooks/useFeeEstimation';
 import {
@@ -50,6 +49,8 @@ import { getExponent, shiftDigits } from '@/utils';
 import RevertSharesProcessModal from './modals/revertSharesProcessModal';
 import StakingProcessModal from './modals/stakingProcessModal';
 import TransferProcessModal from './modals/transferProcessModal';
+import BuyTokensModal from '../react/buyTokensModal';
+
 
 type StakingBoxProps = {
   selectedOption: {
@@ -301,6 +302,8 @@ export const StakingBox = ({
       }),
   );
 
+  const [isTokensModalOpen, setIsTokensModalOpen] = useState(false);
+
   return (
     <Box position="relative" backdropFilter="blur(50px)" bgColor="rgba(255,255,255,0.1)" flex="1" borderRadius="10px" p={5}>
       <Tabs isFitted variant="enclosed" onChange={handleTabsChange}>
@@ -477,9 +480,15 @@ export const StakingBox = ({
                                   {balance?.balance?.amount && Number(balance.balance.amount) > 0 ? (
                                     `${truncatedBalance} ${selectedOption.value.toUpperCase()}`
                                   ) : (
-                                    <Link href={`https://app.osmosis.zone/?from=USDC&to=${selectedOption.value.toUpperCase()}`} isExternal>
-                                      Get {selectedOption.value.toUpperCase()} tokens here
-                                    </Link>
+                                    <Text
+                                      cursor={'pointer'}
+                                      color="complimentary.900"
+                                      fontWeight="light"
+                                      _hover={{ color: 'complimentary.400' }}
+                                      onClick={() => setIsTokensModalOpen(true)}
+                                    >
+                                      Buy&nbsp;{selectedOption.value.toUpperCase()}
+                                    </Text>
                                   )}
                                 </Text>
                               )}
@@ -490,6 +499,12 @@ export const StakingBox = ({
                             </Text>
                           )}
                         </Flex>
+                        <BuyTokensModal
+                          denom={selectedOption.value}
+                          isOpen={isTokensModalOpen}
+                          onClose={() => setIsTokensModalOpen(false)}
+                          zone={selectedOption.name}
+                        />
                         <HStack mb={-4} spacing={2}>
                           <Button
                             _hover={{

@@ -7,12 +7,7 @@ import { FaXTwitter } from 'react-icons/fa6';
 import { IoIosDocument } from 'react-icons/io';
 import { MdPrivacyTip } from 'react-icons/md';
 
-import { DrawerControlProvider } from '@/state/chains/drawerControlProvider';
-
 import { AccountControlModal } from './accountControlModal';
-import KadoIconContent from './kadoIcon';
-import KadoModal from './kadoModal';
-
 
 export const SideHeader = () => {
   const router = useRouter();
@@ -41,7 +36,6 @@ export const SideHeader = () => {
   const toggleSocialLinks = () => setShowSocialLinks(!showSocialLinks);
 
   const transitionStyle = 'all 0.3s ease';
-  const [isKadoModalOpen, setKadoModalOpen] = useState(false);
 
   return (
     <Box
@@ -300,19 +294,6 @@ export const SideHeader = () => {
                     </Box>
                   </Link>
                 </Tooltip>
-                <Tooltip borderLeft="4px solid rgba(255, 128, 0, 0.9)" label="Kado" placement="right">
-                  <Box
-                    borderRadius={'full'}
-                    _hover={{
-                      cursor: 'pointer',
-                      boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`,
-                      transition: transitionStyle,
-                    }}
-                  >
-                    <KadoIconContent onClick={() => setKadoModalOpen(true)} width={'2em'} height={'2em'} orange />
-                  </Box>
-                </Tooltip>
-                <KadoModal isOpen={isKadoModalOpen} onClose={() => setKadoModalOpen(false)} />
               </VStack>
             )}
           </ScaleFade>

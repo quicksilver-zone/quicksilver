@@ -13,9 +13,13 @@ import {
   DrawerOverlay,
   HStack,
   Link,
+  Button,
   Text,
   IconButton,
+  Tooltip,
+  useBreakpointValue,
 } from '@chakra-ui/react';
+import { useChain } from '@cosmos-kit/react';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/router';
 import { useState } from 'react';
@@ -53,7 +57,9 @@ const Header: React.FC<{ chainName: string }> = ({ chainName }) => {
   const handleLogoClick = () => {
     DrawerOnOpen();
   };
+  const isMobile = useBreakpointValue({ base: true, sm: true, md: false, lg: false, xl: false });
   const [isKadoModalOpen, setKadoModalOpen] = useState(false);
+  const { isWalletConnected } = useChain(chainName);
   return (
     <Flex alignItems="center" zIndex={50} justifyContent="space-between" position={'relative'} p={4}>
       <Spacer display={{ base: 'none', menu: 'block' }} />
@@ -76,45 +82,92 @@ const Header: React.FC<{ chainName: string }> = ({ chainName }) => {
         />
       </Box>
       <Flex alignItems="center" flexDirection={'row'} gap={6} justifyContent={'space-between'}>
-        <IconButton
-          p={3}
-          variant="solid"
-          minW="fit-content"
-          bgColor="complimentary.900"
-          sx={{
-            position: 'relative',
-            boxShadow: '0 6px 8px rgba(0, 0, 0, 0.3)',
-            borderRadius: 100,
-            _hover: {
-              boxShadow: '0 0 10px #FF9933, 0 0 15px #FFB266',
-              transform: 'scale(1.1)',
-              '&::before': {
-                content: '""',
-                position: 'absolute',
-                top: '-2px',
-                right: '-2px',
-                bottom: '-2px',
-                left: '-2px',
-                zIndex: -1,
-                borderRadius: 'inherit',
-                background: 'linear-gradient(60deg, #FF8000, #FF9933, #FFB266, #FFD9B3, #FFE6CC)',
-                backgroundSize: '350% 350%',
-                animation: 'animatedgradient 12s linear infinite',
+        {isMobile ? (
+          <IconButton
+            p={3}
+            variant="solid"
+            minW="fit-content"
+            bgColor="complimentary.900"
+            icon={<KadoIconContent width={'1.8em'} height={'1.8em'} />}
+            sx={{
+              position: 'relative',
+              boxShadow: '0 6px 8px rgba(0, 0, 0, 0.3)',
+              borderRadius: 100,
+              _hover: {
+                boxShadow: '0 0 10px #FF9933, 0 0 15px #FFB266',
+                transform: 'scale(1.1)',
+                '&::before': {
+                  content: '""',
+                  position: 'absolute',
+                  top: '-2px',
+                  right: '-2px',
+                  bottom: '-2px',
+                  left: '-2px',
+                  zIndex: -1,
+                  borderRadius: 'inherit',
+                  background: 'linear-gradient(60deg, #FF8000, #FF9933, #FFB266, #FFD9B3, #FFE6CC)',
+                  backgroundSize: '350% 350%',
+                  animation: 'animatedgradient 12s linear infinite',
+                },
               },
-            },
-            _active: {
-              transform: 'translateY(4px)',
-            },
-            '@keyframes animatedgradient': {
-              '0%': { backgroundPosition: '0% 50%' },
-              '50%': { backgroundPosition: '100% 50%' },
-              '100%': { backgroundPosition: '0% 50%' },
-            },
-          }}
-          aria-label="Kado-Money"
-          onClick={() => setKadoModalOpen(true)}
-          icon={<KadoIconContent width={'2em'} height={'2em'} />}
-        />
+              _active: {
+                transform: 'translateY(4px)',
+              },
+              '@keyframes animatedgradient': {
+                '0%': { backgroundPosition: '0% 50%' },
+                '50%': { backgroundPosition: '100% 50%' },
+                '100%': { backgroundPosition: '0% 50%' },
+              },
+            }}
+            aria-label="Kado-Money"
+            isDisabled={!isWalletConnected}
+            onClick={() => setKadoModalOpen(true)}
+          ></IconButton>
+        ) : (
+          <Button
+            variant="solid"
+            minW="fit-content"
+            bgColor="complimentary.900"
+            leftIcon={<KadoIconContent width={'1.8em'} height={'1.8em'} />}
+            isDisabled={!isWalletConnected}
+            sx={{
+              position: 'relative',
+              boxShadow: '0 6px 8px rgba(0, 0, 0, 0.3)',
+              borderRadius: 100,
+              _hover: {
+                boxShadow: '0 0 10px #FF9933, 0 0 15px #FFB266',
+                transform: 'scale(1.1)',
+                '&::before': {
+                  content: '""',
+                  position: 'absolute',
+                  top: '-2px',
+                  right: '-2px',
+                  bottom: '-2px',
+                  left: '-2px',
+                  zIndex: -1,
+                  borderRadius: 'inherit',
+                  background: 'linear-gradient(60deg, #FF8000, #FF9933, #FFB266, #FFD9B3, #FFE6CC)',
+                  backgroundSize: '350% 350%',
+                  animation: 'animatedgradient 12s linear infinite',
+                },
+              },
+
+              _active: {
+                transform: 'translateY(4px)',
+              },
+              '@keyframes animatedgradient': {
+                '0%': { backgroundPosition: '0% 50%' },
+                '50%': { backgroundPosition: '100% 50%' },
+                '100%': { backgroundPosition: '0% 50%' },
+              },
+            }}
+            aria-label="Kado-Money"
+            onClick={() => setKadoModalOpen(true)}
+          >
+            Buy QCK
+          </Button>
+        )}
+
         <WalletButton />
       </Flex>
       <KadoModal isOpen={isKadoModalOpen} onClose={() => setKadoModalOpen(false)} />
