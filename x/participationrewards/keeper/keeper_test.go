@@ -39,6 +39,12 @@ var (
 	osmosisIBCDenom = "ibc/15E9C5CF5969080539DB395FA7D9C0868265217EFC528433671AAF9B1912D159"
 )
 
+var (
+	counterpartyUmeeChannel     = "channel-2000"
+	counterpartyOsmosisChannel  = "channel-1000"
+	counterpartyTestzoneChannel = "channel-500"
+)
+
 func init() {
 	ibctesting.DefaultTestingAppInit = app.SetupTestingApp
 }
@@ -106,7 +112,7 @@ func (suite *KeeperTestSuite) coreTest() {
 
 	akpd = quicksilver.ParticipationRewardsKeeper.AllKeyedProtocolDatas(suite.chainA.GetContext())
 	// added 19 in setupTestProtocolData
-	suite.Equal(14, len(akpd))
+	suite.Equal(15, len(akpd))
 
 	// advance the chains
 	suite.coordinator.CommitNBlocks(suite.chainA, 1)
@@ -405,7 +411,28 @@ func (suite *KeeperTestSuite) setupChannelForICA(chainID, connectionID, accountS
 	return ibcModule.OnChanOpenAck(suite.chainA.GetContext(), portID, channelID, "", "")
 }
 
+func (suite *KeeperTestSuite) setupChannelForHookTest() {
+	quicksilver := suite.GetQuicksilverApp(suite.chainA)
+
+	// create a channel for the host chain, channel-1 <-> channel-500
+	quicksilver.IBCKeeper.ChannelKeeper.SetChannel(suite.chainA.GetContext(), ibctesting.TransferPort, "channel-1", channeltypes.Channel{State: channeltypes.OPEN, Ordering: channeltypes.ORDERED, Counterparty: channeltypes.Counterparty{PortId: ibctesting.TransferPort, ChannelId: counterpartyTestzoneChannel}, ConnectionHops: []string{suite.path.EndpointA.ConnectionID}})
+
+	// create a channel for the osmosis chain, channel-2 <-> channel-1000
+	quicksilver.IBCKeeper.ChannelKeeper.SetChannel(suite.chainA.GetContext(), ibctesting.TransferPort, "channel-2", channeltypes.Channel{State: channeltypes.OPEN, Ordering: channeltypes.ORDERED, Counterparty: channeltypes.Counterparty{PortId: ibctesting.TransferPort, ChannelId: counterpartyOsmosisChannel}, ConnectionHops: []string{suite.path.EndpointA.ConnectionID}})
+
+	// create a channel channel-3 <-> channel-1500
+	quicksilver.IBCKeeper.ChannelKeeper.SetChannel(suite.chainA.GetContext(), ibctesting.TransferPort, "channel-3", channeltypes.Channel{State: channeltypes.OPEN, Ordering: channeltypes.ORDERED, Counterparty: channeltypes.Counterparty{PortId: ibctesting.TransferPort, ChannelId: "channel-1500"}, ConnectionHops: []string{suite.path.EndpointA.ConnectionID}})
+
+	// create a channel for the umee-types chain, channel-5 <-> channel-2000
+	quicksilver.IBCKeeper.ChannelKeeper.SetChannel(suite.chainA.GetContext(), ibctesting.TransferPort, "channel-5", channeltypes.Channel{State: channeltypes.OPEN, Ordering: channeltypes.ORDERED, Counterparty: channeltypes.Counterparty{PortId: ibctesting.TransferPort, ChannelId: counterpartyUmeeChannel}, ConnectionHops: []string{suite.path.EndpointA.ConnectionID}})
+}
+
 func (suite *KeeperTestSuite) setupTestProtocolData() {
+	// // connection type for ibc testsuite chainB
+	suite.addProtocolData(
+		types.ProtocolDataTypeConnection,
+		[]byte(fmt.Sprintf("{\"connectionid\": %q,\"chainid\": %q,\"lastepoch\": %d,\"transferchannel\": %q}", suite.path.EndpointB.ConnectionID, "testzone-1", 0, "channel-3")),
+	)
 	// connection type for ibc testsuite chainB
 	suite.addProtocolData(
 		types.ProtocolDataTypeConnection,
@@ -419,7 +446,7 @@ func (suite *KeeperTestSuite) setupTestProtocolData() {
 	// umee-types test chain
 	suite.addProtocolData(
 		types.ProtocolDataTypeConnection,
-		[]byte(fmt.Sprintf("{\"connectionid\": %q,\"chainid\": %q,\"lastepoch\": %d}", umeeTestConnection, umeeTestChain, 0)),
+		[]byte(fmt.Sprintf("{\"connectionid\": %q,\"chainid\": %q,\"lastepoch\": %d,\"transferchannel\": %q}", umeeTestConnection, umeeTestChain, 0, "channel-5")),
 	)
 	// umee-types test reserves
 	upd, _ := json.Marshal(types.UmeeReservesProtocolData{UmeeProtocolData: types.UmeeProtocolData{Denom: umeeBaseDenom}})
@@ -459,7 +486,7 @@ func (suite *KeeperTestSuite) setupTestProtocolData() {
 	// osmosis test chain
 	suite.addProtocolData(
 		types.ProtocolDataTypeConnection,
-		[]byte(fmt.Sprintf("{\"connectionid\": %q,\"chainid\": %q,\"lastepoch\": %d}", "connection-77002", "osmosis-1", 0)),
+		[]byte(fmt.Sprintf("{\"connectionid\": %q,\"chainid\": %q,\"lastepoch\": %d,\"transferchannel\": %q}", "connection-77002", "osmosis-1", 0, "channel-2")),
 	)
 	// osmosis test pool
 	suite.addProtocolData(
