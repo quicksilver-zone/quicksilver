@@ -27,13 +27,16 @@ type TokenTuple struct {
 	chain string
 }
 
-func GetTokenMap(in []prewards.LiquidAllowedDenomProtocolData, zones []icstypes.Zone, chain, keyPrefix string) map[string]TokenTuple {
+func GetTokenMap(in []prewards.LiquidAllowedDenomProtocolData, zones []icstypes.Zone, chain, keyPrefix string, ignores types.Ignores) map[string]TokenTuple {
 	out := make(map[string]TokenTuple)
 	for _, i := range in {
+		if ignores.Contains(i.QAssetDenom) {
+			continue
+		}
 		if i.ChainID == chain && ZoneOnboarded(zones, i) {
 			out[keyPrefix+i.IbcDenom] = TokenTuple{denom: i.QAssetDenom, chain: i.RegisteredZoneChainID}
-		} else {
-			fmt.Printf("Zone not found: %s for LiquidToken: %s\n", i.RegisteredZoneChainID, i.IbcDenom)
+			// } else {
+			// 	fmt.Printf("Zone not found: %s for LiquidToken: %s\n", i.RegisteredZoneChainID, i.IbcDenom)
 		}
 	}
 	return out
@@ -51,9 +54,7 @@ func ZoneOnboarded(zones []icstypes.Zone, token prewards.LiquidAllowedDenomProto
 func LiquidClaim(
 	ctx context.Context,
 	cfg types.Config,
-	// poolsManager *types.CacheManager[prewards.OsmosisPoolProtocolData],
-	tokensManager *types.CacheManager[prewards.LiquidAllowedDenomProtocolData],
-	zonesManager *types.CacheManager[icstypes.Zone],
+	cacheMgr *types.CacheManager,
 	address string,
 	connection prewards.ConnectionProtocolData,
 	height int64,
@@ -65,7 +66,7 @@ func LiquidClaim(
 		fmt.Println("liquid sim failures")
 		failures = LiquidClaimFailures
 	}
-	fmt.Println("simulate failures:", failures)
+	//fmt.Println("simulate failures:", failures)
 
 	chain := connection.ChainID
 	prefix := connection.Prefix
@@ -135,8 +136,10 @@ func LiquidClaim(
 		return nil, nil, err
 	}
 
+	ignores := cfg.Ignore.GetIgnoresForType(types.IgnoreTypeLiquid)
+
 	// add GetFiltered to CacheManager, to allow filtered lookups on a single field == value
-	tokens := GetTokenMap(tokensManager.Get(ctx), zonesManager.Get(ctx), chain, "")
+	tokens := GetTokenMap(types.GetCache[prewards.LiquidAllowedDenomProtocolData](ctx, cacheMgr), types.GetCache[icstypes.Zone](ctx, cacheMgr), chain, "", ignores)
 
 	msg := map[string]prewards.MsgSubmitClaim{}
 	assets := map[string]sdk.Coins{}
@@ -144,7 +147,7 @@ func LiquidClaim(
 	for _, coin := range queryResponse.Balances {
 		tuple, ok := tokens[coin.Denom]
 		if !ok {
-			fmt.Println("not dealing with token for chain", chain, coin.Denom)
+			//fmt.Println("not dealing with token for chain", chain, coin.Denom)
 			continue
 		}
 
@@ -166,7 +169,7 @@ func LiquidClaim(
 			lookupKey,
 			rpcclient.ABCIQueryOptions{Height: abciquery.Response.Height, Prove: true},
 		)
-		fmt.Println("Querying for value", "prefix", accountPrefix, "denom", tuple.denom) // debug?
+		fmt.Println("Querying for value (liquid tokens)", "chain", chain, "prefix", accountPrefix, "denom", tuple.denom) // debug?
 		// 7:
 		err = failsim.FailureHook(failures, 7, err, fmt.Sprintf("unable to query for value of denom %q on %q", tuple.denom, chain))
 		if err != nil {

@@ -12,23 +12,26 @@ import (
 )
 
 type CacheOutput struct {
-	Connections   []prewards.ConnectionProtocolData
-	OsmosisPools  []prewards.OsmosisPoolProtocolData
-	OsmosisParams []prewards.OsmosisParamsProtocolData
-	Tokens        []prewards.LiquidAllowedDenomProtocolData
+	Connections    []prewards.ConnectionProtocolData
+	OsmosisPools   []prewards.OsmosisPoolProtocolData
+	OsmosisClPools []prewards.OsmosisClPoolProtocolData
+	OsmosisParams  []prewards.OsmosisParamsProtocolData
+	Tokens         []prewards.LiquidAllowedDenomProtocolData
 }
 
 func GetCacheHandler(
 	ctx context.Context,
 	_ types.Config,
-	connectionManager *types.CacheManager[prewards.ConnectionProtocolData],
-	poolsManager *types.CacheManager[prewards.OsmosisPoolProtocolData],
-	osmosisParamsManager *types.CacheManager[prewards.OsmosisParamsProtocolData],
-	tokensManager *types.CacheManager[prewards.LiquidAllowedDenomProtocolData],
+	cacheMgr *types.CacheManager,
 ) func(http.ResponseWriter, *http.Request) {
-	return func(w http.ResponseWriter, req *http.Request) {
-		out := CacheOutput{Connections: connectionManager.Get(ctx), OsmosisPools: poolsManager.Get(ctx), OsmosisParams: osmosisParamsManager.Get(ctx), Tokens: tokensManager.Get(ctx)}
 
+	return func(w http.ResponseWriter, req *http.Request) {
+		out := CacheOutput{
+			Connections:   types.GetCache[prewards.ConnectionProtocolData](ctx, cacheMgr),
+			OsmosisPools:  types.GetCache[prewards.OsmosisPoolProtocolData](ctx, cacheMgr),
+			OsmosisParams: types.GetCache[prewards.OsmosisParamsProtocolData](ctx, cacheMgr),
+			Tokens:        types.GetCache[prewards.LiquidAllowedDenomProtocolData](ctx, cacheMgr),
+		}
 		jsonOut, err := json.Marshal(out)
 		if err != nil {
 			fmt.Fprintf(w, "Error: %s", err)

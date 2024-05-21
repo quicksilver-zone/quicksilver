@@ -11,7 +11,6 @@ import (
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	leverage "github.com/quicksilver-zone/quicksilver/third-party-chains/umee-types/leverage"
 	leveragetypes "github.com/quicksilver-zone/quicksilver/third-party-chains/umee-types/leverage/types"
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
@@ -26,8 +25,7 @@ import (
 func UmeeClaim(
 	ctx context.Context,
 	cfg types.Config,
-	tokensManager *types.CacheManager[prewards.LiquidAllowedDenomProtocolData],
-	zonesManager *types.CacheManager[icstypes.Zone],
+	cacheMgr *types.CacheManager,
 	address string,
 	chain string,
 	height int64,
@@ -39,7 +37,7 @@ func UmeeClaim(
 		fmt.Println("liquid sim failures")
 		failures = UmeeClaimFailures
 	}
-	fmt.Println("simulate failures:", failures)
+	//fmt.Println("simulate failures:", failures)
 
 	addrBytes, err := addressutils.AccAddressFromBech32(address, "")
 	// 0:
@@ -79,33 +77,11 @@ func UmeeClaim(
 	}
 	// fetch timestamp of block
 	interfaceRegistry := cdctypes.NewInterfaceRegistry()
-	banktypes.RegisterInterfaces(interfaceRegistry)
+	//banktypes.RegisterInterfaces(interfaceRegistry)
 	marshaler := codec.NewProtoCodec(interfaceRegistry)
 
-	// we need the prefix
-	bankquery := banktypes.QueryAllBalancesRequest{Address: umeeAddress}
-	bytes := marshaler.MustMarshal(&bankquery)
-
-	// query for AllBalances; then iterate, match against accepted balances and requery with proof.
-	abciquery, err := client.ABCIQueryWithOptions(
-		ctx,
-		"/cosmos.bank.v1beta1.Query/AllBalances",
-		bytes,
-		rpcclient.ABCIQueryOptions{Height: height},
-	)
-	// 4:
-	err = failsim.FailureHook(failures, 5, err, "ABCIQuery: AllBalances")
-	if err != nil {
-		return nil, nil, err
-	}
-	bankQueryResponse := banktypes.QueryAllBalancesResponse{}
-	err = marshaler.Unmarshal(abciquery.Response.Value, &bankQueryResponse)
-	if err != nil {
-		return nil, nil, err
-	}
-
 	leveragequery := leverage.QueryAccountBalances{Address: umeeAddress}
-	bytes = marshaler.MustMarshal(&leveragequery)
+	bytes := marshaler.MustMarshal(&leveragequery)
 	// query for AllBalances; then iterate, match against accepted balances and requery with proof.
 	leverageaccountbalancesquery, err := client.ABCIQueryWithOptions(
 		ctx,
@@ -124,76 +100,13 @@ func UmeeClaim(
 		return nil, nil, err
 	}
 
+	ignores := cfg.Ignore.GetIgnoresForType(types.IgnoreTypeLiquid)
+
 	// add GetFiltered to CacheManager, to allow filtered lookups on a single field == value
-	tokens := GetTokenMap(tokensManager.Get(ctx), zonesManager.Get(ctx), chain, leveragetypes.UTokenPrefix)
+	tokens := GetTokenMap(types.GetCache[prewards.LiquidAllowedDenomProtocolData](ctx, cacheMgr), types.GetCache[icstypes.Zone](ctx, cacheMgr), chain, leveragetypes.UTokenPrefix, ignores)
 
 	msg := map[string]prewards.MsgSubmitClaim{}
 	assets := map[string]sdk.Coins{}
-
-	// bank balance
-	for _, coin := range bankQueryResponse.Balances {
-		if len(coin.GetDenom()) < 2 || coin.GetDenom()[0:2] != leveragetypes.UTokenPrefix {
-			continue
-		}
-		tuple, ok := tokens[coin.GetDenom()]
-		if !ok {
-			fmt.Println("not dealing with token for chain", chain, coin.GetDenom())
-			// token is not present in list of allowed tokens, ignore.
-			continue
-		}
-
-		if _, ok := msg[tuple.chain]; !ok {
-			msg[tuple.chain] = prewards.MsgSubmitClaim{
-				UserAddress: address,
-				Zone:        tuple.chain,
-				SrcZone:     chain,
-				ClaimType:   cmtypes.ClaimTypeUmeeToken,
-				Proofs:      make([]*cmtypes.Proof, 0),
-			}
-		}
-
-		accountPrefix := banktypes.CreateAccountBalancesPrefix(addrBytes)
-		lookupKey := append(accountPrefix, []byte(coin.GetDenom())...)
-		bankquery, err := client.ABCIQueryWithOptions(
-			ctx,
-			"/store/bank/key",
-			lookupKey,
-			rpcclient.ABCIQueryOptions{Height: abciquery.Response.Height, Prove: true},
-		)
-		fmt.Println("Querying for value", "prefix", accountPrefix, "denom", tuple.denom) // debug?
-		// 7:
-		err = failsim.FailureHook(failures, 7, err, fmt.Sprintf("unable to query for value of denom %q on %q", tuple.denom, chain))
-		if err != nil {
-			return nil, nil, err
-		}
-
-		amount, err := bankkeeper.UnmarshalBalanceCompat(marshaler, bankquery.Response.Value, tuple.denom)
-		if err != nil {
-			return nil, nil, err
-		}
-		// 8:
-		err = failsim.FailureHook(failures, 8, err, fmt.Sprintf("ABCIQuery: value of denom %q on chain %q", tuple.denom, chain))
-		if err != nil {
-			return nil, nil, err
-		}
-		amount.Denom = tuple.denom
-
-		assets[chain] = assets[chain].Add(amount)
-
-		chainMsg := msg[tuple.chain]
-
-		proof := cmtypes.Proof{
-			Data:      bankquery.Response.Value,
-			Key:       bankquery.Response.Key,
-			ProofOps:  bankquery.Response.ProofOps,
-			Height:    bankquery.Response.Height,
-			ProofType: prewards.ProofTypeBank, // module name of proof.
-		}
-
-		chainMsg.Proofs = append(chainMsg.Proofs, &proof)
-
-		msg[tuple.chain] = chainMsg
-	}
 
 	// leverage account balance
 	for _, coin := range leverageQueryResponse.Collateral {
@@ -202,7 +115,7 @@ func UmeeClaim(
 		}
 		tuple, ok := tokens[coin.GetDenom()]
 		if !ok {
-			fmt.Println("not dealing with token for chain", chain, coin.GetDenom())
+			//fmt.Println("not dealing with token for chain", chain, coin.GetDenom())
 			// token is not present in list of allowed tokens, ignore.
 			continue
 		}
@@ -224,7 +137,7 @@ func UmeeClaim(
 			lookupKey,
 			rpcclient.ABCIQueryOptions{Height: leverageaccountbalancesquery.Response.Height, Prove: true},
 		)
-		fmt.Println("Querying for value", "prefix", lookupKey) // debug?
+		fmt.Println("Querying for value (umee - leverage)", "prefix", lookupKey) // debug?
 		// 7:
 		err = failsim.FailureHook(failures, 7, err, fmt.Sprintf("unable to query for value of denom %q on %q", tuple.denom, chain))
 		if err != nil {

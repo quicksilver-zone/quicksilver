@@ -6,9 +6,8 @@ import (
 	"strconv"
 	"time"
 
-	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
+	"cosmossdk.io/math"
 
-	"github.com/cosmos/btcutil/bech32"
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -16,9 +15,12 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/ingenuity-build/multierror"
+	osmocl "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/concentrated-liquidity"
 	osmogamm "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/gamm"
 	osmolockup "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/lockup"
+	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	cmtypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
+	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 	prewards "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 
@@ -26,14 +28,13 @@ import (
 	"github.com/ingenuity-build/xcclookup/pkgs/types"
 )
 
-type poolMap map[string][]osmogamm.PoolI
+type poolMap map[string][]osmogamm.CFMMPoolI
+type clPoolMap map[string][]osmocl.ConcentratedPoolExtension
 
 func OsmosisClaim(
 	ctx context.Context,
 	cfg types.Config,
-	poolsManager *types.CacheManager[prewards.OsmosisPoolProtocolData],
-	tokensManager *types.CacheManager[prewards.LiquidAllowedDenomProtocolData],
-	zonesManager *types.CacheManager[icstypes.Zone],
+	cacheMgr *types.CacheManager,
 	address string,
 	chain string,
 	height int64,
@@ -45,17 +46,17 @@ func OsmosisClaim(
 		fmt.Println("osmosis sim failures")
 		failures = OsmosisClaimFailures
 	}
-	fmt.Println("simulate failures:", failures)
+	//fmt.Println("simulate failures:", failures)
 
 	var err error
 
-	_, addrBytes, err := bech32.DecodeNoLimit(address)
+	addrBytes := addressutils.MustAccAddressFromBech32(address, "")
 	// 0:
 	err = failsim.FailureHook(failures, 0, err, "failure decosing bech32 address")
 	if err != nil {
 		return nil, nil, err
 	}
-	osmoAddress, err := bech32.Encode("osmo", addrBytes)
+	osmoAddress, err := addressutils.EncodeAddressToBech32("osmo", addrBytes)
 	// 1:
 	err = failsim.FailureHook(failures, 1, err, "failure encoding osmo address")
 	if err != nil {
@@ -190,23 +191,52 @@ func OsmosisClaim(
 	}
 	fmt.Println("unmarshalled query response...")
 
+	ignores := cfg.Ignore.GetIgnoresForType(types.IgnoreTypeLiquid)
 	// add GetFiltered to CacheManager, to allow filtered lookups on a single field == value
-	tokens := GetTokenMap(tokensManager.Get(ctx), zonesManager.Get(ctx), chain, "")
+	tokens := GetTokenMap(types.GetCache[prewards.LiquidAllowedDenomProtocolData](ctx, cacheMgr), types.GetCache[icstypes.Zone](ctx, cacheMgr), chain, "", ignores)
 
 	fmt.Println("got relevant tokens...")
 
 	pools := poolMap{}
+	clpools := clPoolMap{}
 
-	for _, pool := range poolsManager.Get(ctx) {
-		for _, denom := range pool.Denoms {
-			if _, ok := pools[denom.ChainID]; !ok {
-				pools[denom.ChainID] = make([]osmogamm.PoolI, 0)
+	ignores = cfg.Ignore.GetIgnoresForType(types.IgnoreTypeOsmosisPool)
+
+	for _, pool := range types.GetCache[prewards.OsmosisPoolProtocolData](ctx, cacheMgr) {
+		if ignores.Contains(strconv.Itoa(int(pool.PoolID))) {
+			continue
+		}
+		if pool.IsIncentivized {
+			for _, denom := range pool.Denoms {
+				if _, ok := pools[denom.ChainID]; !ok {
+					pools[denom.ChainID] = make([]osmogamm.CFMMPoolI, 0)
+				}
+				poolData, err := pool.GetPool()
+				if err != nil {
+					return nil, nil, err
+				}
+				pools[denom.ChainID] = append(pools[denom.ChainID], poolData)
 			}
-			poolData, err := pool.GetPool()
-			if err != nil {
-				return nil, nil, err
+		}
+	}
+
+	ignores = cfg.Ignore.GetIgnoresForType(types.IgnoreTypeOsmosisCLPool)
+
+	for _, clpool := range types.GetCache[prewards.OsmosisClPoolProtocolData](ctx, cacheMgr) {
+		if ignores.Contains(strconv.Itoa(int(clpool.PoolID))) {
+			continue
+		}
+		if clpool.IsIncentivized {
+			for _, denom := range clpool.Denoms {
+				if _, ok := pools[denom.ChainID]; !ok {
+					clpools[denom.ChainID] = make([]osmocl.ConcentratedPoolExtension, 0)
+				}
+				poolData, err := clpool.GetPool()
+				if err != nil {
+					return nil, nil, err
+				}
+				clpools[denom.ChainID] = append(clpools[denom.ChainID], poolData)
 			}
-			pools[denom.ChainID] = append(pools[denom.ChainID], poolData)
 		}
 	}
 
@@ -220,6 +250,7 @@ func OsmosisClaim(
 	for chainID, chainPools := range pools { // iterate over chains - are we doing all chains?
 		for _, p := range chainPools { // iterate over the pools for this chain
 			// fetching unbonded gamm tokens from account
+
 			poolCoinDenom = fmt.Sprintf("gamm/pool/%d", p.GetId())
 
 			accountPrefix := banktypes.CreateAccountBalancesPrefix(addrBytes)
@@ -230,7 +261,7 @@ func OsmosisClaim(
 				lookupKey,
 				rpcclient.ABCIQueryOptions{Height: abciquery.Response.Height, Prove: true},
 			)
-			fmt.Println("Querying for value", "prefix", accountPrefix, "denom", poolCoinDenom) // debug?
+			fmt.Println("Querying for value (liquid gamm)", "prefix", accountPrefix, "denom", poolCoinDenom) // debug?
 			// 7:
 			err = failsim.FailureHook(failures, 7, err, fmt.Sprintf("unable to query for value of denom %q on %q", poolCoinDenom, chain))
 			if err != nil {
@@ -247,9 +278,7 @@ func OsmosisClaim(
 				return nil, nil, err
 			}
 
-			if amount.IsZero() {
-				fmt.Println("no unbonded tokens found for denom: " + poolCoinDenom)
-			} else {
+			if !amount.IsZero() {
 				fmt.Printf("found assets in bank account for zone %q...\n", chainID)
 				if _, ok := msg[chainID]; !ok {
 					msg[chainID] = prewards.MsgSubmitClaim{
@@ -265,7 +294,22 @@ func OsmosisClaim(
 					assets[chain] = sdk.Coins{}
 				}
 
-				assets[chain] = assets[chain].Add(amount)
+				exitedCoins, err := p.CalcExitPoolCoinsFromShares(sdk.Context{}, amount.Amount, math.LegacyZeroDec())
+				if err != nil {
+					if errors == nil {
+						errors = make(map[string]error)
+					}
+					errors[chain] = fmt.Errorf("unable to account for assets on zone %q: %w", chain, err)
+					continue
+				}
+
+				for _, exitToken := range exitedCoins {
+					tuple, ok := tokens[exitToken.Denom]
+					if ok {
+						exitToken.Denom = tuple.denom
+						assets[chain] = assets[chain].Add(exitToken)
+					}
+				}
 
 				chainMsg := msg[chainID]
 
@@ -334,7 +378,7 @@ func OsmosisClaim(
 					gammCoins := lockupResponse.Coins
 					gammShares := gammCoins.AmountOf("gamm/pool/" + strconv.Itoa(int(p.GetId())))
 
-					exitedCoins, err := p.CalcExitPoolCoinsFromShares(sdk.Context{}, gammShares, sdk.ZeroDec())
+					exitedCoins, err := p.CalcExitPoolCoinsFromShares(sdk.Context{}, gammShares, math.LegacyZeroDec())
 					// 11:
 					err = failsim.FailureHook(failures, 11, err, "CalcExitPoolCoinsFromShares")
 					if err != nil {

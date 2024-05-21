@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"net/http"
 
-	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
-
 	"github.com/gorilla/mux"
 	prewards "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 
@@ -18,19 +16,21 @@ import (
 func GetCurrentHandler(
 	ctx context.Context,
 	cfg types.Config,
-	connectionManager *types.CacheManager[prewards.ConnectionProtocolData],
-	osmosisPoolsManager *types.CacheManager[prewards.OsmosisPoolProtocolData],
-	osmosisParamsManager *types.CacheManager[prewards.OsmosisParamsProtocolData],
-	umeeParamsManager *types.CacheManager[prewards.UmeeParamsProtocolData],
-	tokensManager *types.CacheManager[prewards.LiquidAllowedDenomProtocolData],
-	zonesManager *types.CacheManager[icstypes.Zone],
+	cacheMgr *types.CacheManager,
+	// connectionManager *types.Cache[prewards.ConnectionProtocolData],
+	// osmosisPoolsManager *types.Cache[prewards.OsmosisPoolProtocolData],
+	// osmosisClPoolsManager *types.Cache[prewards.OsmosisClPoolProtocolData],
+	// osmosisParamsManager *types.Cache[prewards.OsmosisParamsProtocolData],
+	// umeeParamsManager *types.Cache[prewards.UmeeParamsProtocolData],
+	// tokensManager *types.Cache[prewards.LiquidAllowedDenomProtocolData],
+	// zonesManager *types.Cache[icstypes.Zone],
 ) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, req *http.Request) {
 		vars := mux.Vars(req)
 		var err error
 		response := types.Response{Messages: make([]prewards.MsgSubmitClaim, 0), Assets: make(map[string][]types.Asset)}
-		if len(osmosisParamsManager.Get(ctx)) > 0 {
-			chain := osmosisParamsManager.Get(ctx)[0].ChainID
+		if len(types.GetCache[prewards.OsmosisParamsProtocolData](ctx, cacheMgr)) > 0 {
+			chain := types.GetCache[prewards.OsmosisParamsProtocolData](ctx, cacheMgr)[0].ChainID
 
 			// osmosis
 
@@ -42,9 +42,7 @@ func GetCurrentHandler(
 			_, assets, err := claims.OsmosisClaim(
 				ctx,
 				cfg,
-				osmosisPoolsManager,
-				tokensManager,
-				zonesManager,
+				cacheMgr,
 				vars["address"],
 				chain,
 				0,
@@ -59,14 +57,13 @@ func GetCurrentHandler(
 			}
 		}
 
-		if len(umeeParamsManager.Get(ctx)) > 0 {
+		if len(types.GetCache[prewards.UmeeParamsProtocolData](ctx, cacheMgr)) > 0 {
 			_, assets, err := claims.UmeeClaim(
 				ctx,
 				cfg,
-				tokensManager,
-				zonesManager,
+				cacheMgr,
 				vars["address"],
-				umeeParamsManager.Get(ctx)[0].ChainID,
+				types.GetCache[prewards.UmeeParamsProtocolData](ctx, cacheMgr)[0].ChainID,
 				0,
 			)
 			if err != nil {
@@ -79,14 +76,13 @@ func GetCurrentHandler(
 			}
 		}
 
-		connections := connectionManager.Get(ctx)
+		connections := types.GetCache[prewards.ConnectionProtocolData](ctx, cacheMgr)
 		// liquid for all zones; config should hold osmosis chainid.
 		for _, con := range connections {
 			_, assets, err := claims.LiquidClaim(
 				ctx,
 				cfg,
-				tokensManager,
-				zonesManager,
+				cacheMgr,
 				vars["address"],
 				con,
 				0,

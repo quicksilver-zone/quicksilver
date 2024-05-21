@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"net/http"
 
-	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/gorilla/mux"
@@ -22,12 +20,13 @@ import (
 func GetEpochHandler(
 	ctx context.Context,
 	cfg types.Config,
-	connectionManager *types.CacheManager[prewards.ConnectionProtocolData],
-	osmosisPoolsManager *types.CacheManager[prewards.OsmosisPoolProtocolData],
-	osmosisParamsManager *types.CacheManager[prewards.OsmosisParamsProtocolData],
-	umeeParamsManager *types.CacheManager[prewards.UmeeParamsProtocolData],
-	tokensManager *types.CacheManager[prewards.LiquidAllowedDenomProtocolData],
-	zonesManager *types.CacheManager[icstypes.Zone],
+	cacheMgr *types.CacheManager,
+	// osmosisPoolsManager *types.Cache[prewards.OsmosisPoolProtocolData],
+	// osmosisClPoolsManager *types.Cache[prewards.OsmosisClPoolProtocolData],
+	// osmosisParamsManager *types.Cache[prewards.OsmosisParamsProtocolData],
+	// umeeParamsManager *types.Cache[prewards.UmeeParamsProtocolData],
+	// tokensManager *types.Cache[prewards.LiquidAllowedDenomProtocolData],
+	// zonesManager *types.Cache[icstypes.Zone],
 ) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, req *http.Request) {
 		// simFailure hooks: 0-1
@@ -64,14 +63,14 @@ func GetEpochHandler(
 				fmt.Println(response.Errors)
 			}
 
-			fmt.Println("prepare JSON...")
+			//fmt.Println("prepare JSON...")
 			jsonOut, err := json.Marshal(response)
 			if err != nil {
 				fmt.Println("Error:", err)
 				fmt.Fprintf(w, "Error: %s", err)
 				return
 			}
-			fmt.Printf("%s\n", jsonOut)
+			//fmt.Printf("%s\n", jsonOut)
 			fmt.Fprint(w, string(jsonOut))
 		}()
 
@@ -82,7 +81,7 @@ func GetEpochHandler(
 		var height int64
 		var chain string
 
-		unfilteredConnections := connectionManager.Get(ctx)
+		unfilteredConnections := types.GetCache[prewards.ConnectionProtocolData](ctx, cacheMgr)
 		for _, ufc := range unfilteredConnections {
 			if ufc.LastEpoch > 0 {
 				connections = append(connections, ufc)
@@ -90,10 +89,10 @@ func GetEpochHandler(
 		}
 
 		fmt.Println("check config for osmosis chain id...")
-		if len(osmosisParamsManager.Get(ctx)) == 0 {
+		if len(types.GetCache[prewards.OsmosisParamsProtocolData](ctx, cacheMgr)) == 0 {
 			errors["OsmosisConfig"] = fmt.Errorf("osmosis params not set")
 		} else {
-			chain = osmosisParamsManager.Get(ctx)[0].ChainID
+			chain = types.GetCache[prewards.OsmosisParamsProtocolData](ctx, cacheMgr)[0].ChainID
 			if err = ValidateChainConfig("Osmosis", chain, failAt); err != nil {
 				errors["OsmosisConfig"] = err
 			} else {
@@ -102,7 +101,7 @@ func GetEpochHandler(
 					errors["OsmosisHeight"] = err
 				} else {
 					fmt.Println("fetch osmosis claim...")
-					messages, assets, err = claims.OsmosisClaim(ctx, cfg, osmosisPoolsManager, tokensManager, zonesManager, vars["address"], chain, height)
+					messages, assets, err = claims.OsmosisClaim(ctx, cfg, cacheMgr, vars["address"], chain, height)
 					if err != nil {
 						errors["OsmosisClaim"] = err
 					}
@@ -113,10 +112,10 @@ func GetEpochHandler(
 
 		// umee claim
 		fmt.Println("check config for umee chain id...")
-		if len(umeeParamsManager.Get(ctx)) == 0 {
+		if len(types.GetCache[prewards.UmeeParamsProtocolData](ctx, cacheMgr)) == 0 {
 			errors["UmeeConfig"] = fmt.Errorf("umee params not set")
 		} else {
-			chain = umeeParamsManager.Get(ctx)[0].ChainID
+			chain = types.GetCache[prewards.UmeeParamsProtocolData](ctx, cacheMgr)[0].ChainID
 			if err = ValidateChainConfig("Umee", chain, failAt); err != nil {
 				errors["UmeeConfig"] = err
 			} else {
@@ -125,7 +124,7 @@ func GetEpochHandler(
 					errors["UmeeHeight"] = err
 				} else {
 					fmt.Println("fetch umee claim...")
-					messages, assets, err = claims.UmeeClaim(ctx, cfg, tokensManager, zonesManager, vars["address"], chain, height)
+					messages, assets, err = claims.UmeeClaim(ctx, cfg, cacheMgr, vars["address"], chain, height)
 					if err != nil {
 						errors["UmeeClaim"] = err
 					}
@@ -137,7 +136,7 @@ func GetEpochHandler(
 		// liquid for all zones; config should hold osmosis chainid.
 		fmt.Println("fetch liquid claims...")
 		for _, con := range connections {
-			liquidMessages, assets, err := claims.LiquidClaim(ctx, cfg, tokensManager, zonesManager, vars["address"], con, con.LastEpoch)
+			liquidMessages, assets, err := claims.LiquidClaim(ctx, cfg, cacheMgr, vars["address"], con, con.LastEpoch)
 			if err != nil {
 				errors[fmt.Sprintf("LiquidClaim:%s", con.ChainID)] = err
 				continue
