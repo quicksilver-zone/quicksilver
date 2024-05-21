@@ -1,4 +1,4 @@
-import { Box, Container, Flex, VStack, HStack, Stat, StatLabel, StatNumber, SlideFade, SkeletonCircle, Image } from '@chakra-ui/react';
+import { Box, Container, Flex, VStack, HStack, Stat, StatLabel, StatNumber, SlideFade, SkeletonCircle } from '@chakra-ui/react';
 import { useChain } from '@cosmos-kit/react-lite';
 import dynamic from 'next/dynamic';
 import Head from 'next/head';
@@ -28,7 +28,7 @@ const networks = process.env.NEXT_PUBLIC_CHAIN_ENV === 'mainnet' ? prodNetworks 
 export default function Staking() {
   const [selectedNetwork, setSelectedNetwork] = useState(networks[0]);
 
-  const {address} = useChain('quicksilver');
+  const { address } = useChain('quicksilver');
 
   let newChainId;
   if (selectedNetwork.chainId === 'provider') {
@@ -66,21 +66,22 @@ export default function Staking() {
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <link rel="icon" href="/img/favicon-main.png" />
       </Head>
+
       <SlideFade offsetY={'200px'} in={true} style={{ width: '100%' }}>
         <Container
           zIndex={2}
-          mt={{ base: '50px', md: '50px' }}
           position="relative"
           maxW="container.lg"
-          height="100vh"
+          height="auto"
           display="flex"
           flexDirection="column"
           justifyContent="center"
           alignItems="center"
+          mt={6}
         >
           <Flex justifyContent={'center'} zIndex={3} direction="column" h="100%">
             {/* Dropdown and Statistic */}
-            <Box w="50%">
+            <Box w={{ base: '100%', lg: '50%' }}>
               <HStack justifyContent="space-between" w="100%">
                 <NetworkSelect selectedOption={selectedNetwork} setSelectedNetwork={setSelectedNetwork} />
                 <VStack p={1} borderRadius="10px" alignItems="flex-end">
@@ -105,7 +106,7 @@ export default function Staking() {
             </Box>
 
             {/* Content Boxes */}
-            <Flex h="100%" maxH={'2xl'} flexDir={{ base: 'column', md: 'row' }} gap={{ base: '2', md: '0' }}>
+            <Flex h="100%" maxH={'2xl'} flexDir={{ base: 'column', lg: 'row' }} gap={{ base: '2', lg: '0' }}>
               {/* Staking Box*/}
               <DynamicStakingBox
                 selectedOption={selectedNetwork}
@@ -118,7 +119,7 @@ export default function Staking() {
                 setBalance={setBalance}
                 setQBalance={setQBalance}
               />
-              <Box w="10px" display={{ base: 'none', md: 'block' }} />
+              <Box w="10px" display={{ base: 'none', lg: 'block' }} />
 
               {/* Right Box */}
               <Flex flex="1" direction="column">
@@ -127,22 +128,9 @@ export default function Staking() {
 
                 <Box h="10px" />
                 {/* Bottom Half (1/3) */}
-                <DynamicAssetBox address={address ?? ""} selectedOption={selectedNetwork} balance={balance} qBalance={qBalance} />
+                <DynamicAssetBox address={address ?? ''} selectedOption={selectedNetwork} balance={balance} qBalance={qBalance} />
               </Flex>
             </Flex>
-            <Box>
-              <Image
-                display={{ base: 'none', lg: 'block', md: 'none' }}
-                position="relative"
-                left="885px"
-                bottom="205px"
-                zIndex={10}
-                src="/img/quicksilverWord.png"
-                alt="Quicksilver"
-                h="100px"
-                transform="rotate(90deg)"
-              />
-            </Box>
           </Flex>
         </Container>
       </SlideFade>

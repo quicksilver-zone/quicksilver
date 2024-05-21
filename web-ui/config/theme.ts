@@ -35,6 +35,14 @@ const defaultThemeObject = {
       },
     }),
   },
+  breakpoints: {
+    sm: "30em",
+    md: "48em",
+    lg: "62em",
+    xl: "80em",
+    "menu": "1395px",
+
+  },
   colors: {
     primary: {
       dark: '#333333',
