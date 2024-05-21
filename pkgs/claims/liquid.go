@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 
 	"github.com/cosmos/btcutil/bech32"
@@ -71,7 +72,7 @@ func LiquidClaim(
 	chain := connection.ChainID
 	prefix := connection.Prefix
 
-	_, addrBytes, err := bech32.Decode(address, 51)
+	addrBytes, err := addressutils.AddressFromBech32(address, "quick")
 	// 0:
 	err = failsim.FailureHook(failures, 0, err, "failure decoding bech32 address")
 	if err != nil {
