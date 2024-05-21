@@ -25,7 +25,6 @@ import { useRouter } from 'next/router';
 import { useState } from 'react';
 import { FaGithub, FaDiscord } from 'react-icons/fa';
 import { FaXTwitter, FaMoneyBill } from 'react-icons/fa6';
-
 import KadoIconContent from './kadoIcon';
 import KadoModal from './kadoModal';
 import { WalletButton } from '../wallet-button';
@@ -57,9 +56,11 @@ const Header: React.FC<{ chainName: string }> = ({ chainName }) => {
   const handleLogoClick = () => {
     DrawerOnOpen();
   };
+
   const isMobile = useBreakpointValue({ base: true, sm: true, md: false, lg: false, xl: false });
   const [isKadoModalOpen, setKadoModalOpen] = useState(false);
   const { isWalletConnected } = useChain(chainName);
+
   return (
     <Flex alignItems="center" zIndex={50} justifyContent="space-between" position={'relative'} p={4}>
       <Spacer display={{ base: 'none', menu: 'block' }} />
@@ -171,6 +172,7 @@ const Header: React.FC<{ chainName: string }> = ({ chainName }) => {
         <WalletButton />
       </Flex>
       <KadoModal isOpen={isKadoModalOpen} onClose={() => setKadoModalOpen(false)} />
+
       <Drawer isOpen={DrawerIsOpen} placement="left" onClose={DrawerOnClose}>
         <DrawerOverlay />
         <DrawerContent bgColor="rgba(32,32,32,1)">

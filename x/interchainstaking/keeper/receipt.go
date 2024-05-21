@@ -179,7 +179,7 @@ func (k *Keeper) SendTokenIBC(ctx sdk.Context, senderAccAddress sdk.AccAddress, 
 //     - Mint QAssets, set new mapping for the mapped account in the keeper, and send to corresponding mapped account.
 //  5. If the zone is 118 and no other flags are set:
 //     - Mint QAssets and transfer to send to msg creator.
-func (k *Keeper) MintAndSendQAsset(ctx sdk.Context, sender sdk.AccAddress, senderAddress string, zone *types.Zone, assets sdk.Coins, memoRTS bool, mappedAddress []byte) error {
+func (k *Keeper) MintAndSendQAsset(ctx sdk.Context, sender sdk.AccAddress, senderAddress string, zone *types.Zone, assets sdk.Coins, memoRTS bool, mappedAddress sdk.AccAddress) error {
 	if zone.RedemptionRate.IsZero() {
 		return errors.New("zero redemption rate")
 	}
@@ -218,7 +218,7 @@ func (k *Keeper) MintAndSendQAsset(ctx sdk.Context, sender sdk.AccAddress, sende
 	case mappedAddress != nil:
 		// set mapped account
 		if setMappedAddress {
-			k.SetAddressMapPair(ctx, sender, mappedAddress, zone.ChainId)
+			k.SetAddressMapPair(ctx, mappedAddress, sender, zone.ChainId)
 		}
 
 		// set send to mapped account

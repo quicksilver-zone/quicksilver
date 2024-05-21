@@ -345,7 +345,7 @@ func (k *Keeper) MappedAccounts(c context.Context, req *types.QueryMappedAccount
 		return nil, status.Error(codes.InvalidArgument, "Invalid Address")
 	}
 
-	k.IterateUserMappedAccounts(ctx, addrBytes, func(index int64, chainID string, remoteAddressBytes []byte) (stop bool) {
+	k.IterateUserMappedAccounts(ctx, addrBytes, func(index int64, chainID string, remoteAddressBytes sdk.AccAddress) (stop bool) {
 		remoteAddressMap[chainID] = remoteAddressBytes
 		return false
 	})
