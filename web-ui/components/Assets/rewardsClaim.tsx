@@ -64,8 +64,8 @@ export const RewardsClaim: React.FC<RewardsClaimInterface> = ({ address, onClose
         },
       ],
       gas: '2000000',
-    }
-    
+    };
+
     const feeSingle = await estimateFee(address, [msgGrant]);
     try {
       if (authData) {
@@ -111,7 +111,7 @@ export const RewardsClaim: React.FC<RewardsClaimInterface> = ({ address, onClose
       proofType: proof.proof_type,
     }));
   }
-  
+
   const handleClaimRewards = async (event: React.MouseEvent) => {
     event.preventDefault();
     setIsSigning(true);

@@ -1,24 +1,5 @@
 import { HamburgerIcon, ArrowBackIcon } from '@chakra-ui/icons';
-import {
-  Flex,
-  Box,
-  Image,
-  Spacer,
-  VStack,
-  IconButton,
-  Tooltip,
-  ScaleFade,
-  useDisclosure,
-  Drawer,
-  DrawerBody,
-  DrawerCloseButton,
-  DrawerContent,
-  DrawerHeader,
-  DrawerOverlay,
-  Link,
-  HStack,
-} from '@chakra-ui/react';
-import { keyframes } from '@emotion/react';
+import { Flex, Box, Image, Spacer, VStack, IconButton, Tooltip, ScaleFade, useDisclosure, Link } from '@chakra-ui/react';
 import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
 import { FaDiscord, FaGithub, FaInfo } from 'react-icons/fa';
@@ -26,10 +7,7 @@ import { FaXTwitter } from 'react-icons/fa6';
 import { IoIosDocument } from 'react-icons/io';
 import { MdPrivacyTip } from 'react-icons/md';
 
-import { DrawerControlProvider } from '@/state/chains/drawerControlProvider';
-
 import { AccountControlModal } from './accountControlModal';
-
 
 export const SideHeader = () => {
   const router = useRouter();
@@ -235,6 +213,7 @@ export const SideHeader = () => {
                 <Link href="https://quicksilver.zone/" isExternal>
                   <Tooltip borderLeft="4px solid rgba(255, 128, 0, 0.9)" label="About" placement="right">
                     <Box
+                      borderRadius={'full'}
                       _hover={{
                         cursor: 'pointer',
                         boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`,
@@ -248,6 +227,7 @@ export const SideHeader = () => {
                 <Link href="https://docs.quicksilver.zone/" isExternal>
                   <Tooltip borderLeft="4px solid rgba(255, 128, 0, 0.9)" label="Docs" placement="right">
                     <Box
+                      borderRadius={'full'}
                       _hover={{
                         cursor: 'pointer',
                         boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`,
@@ -260,6 +240,7 @@ export const SideHeader = () => {
                 </Link>
                 <Tooltip borderLeft="4px solid rgba(255, 128, 0, 0.9)" label="Account Controls" placement="right">
                   <Box
+                    borderRadius={'full'}
                     onClick={onOpen}
                     _hover={{
                       cursor: 'pointer',
@@ -274,6 +255,7 @@ export const SideHeader = () => {
                 <Tooltip borderLeft="4px solid rgba(255, 128, 0, 0.9)" label="Discord" placement="right">
                   <Link href="https://discord.com/invite/xrSmYMDVrQ" isExternal>
                     <Box
+                      borderRadius={'full'}
                       _hover={{
                         cursor: 'pointer',
                         boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`,
@@ -287,6 +269,7 @@ export const SideHeader = () => {
                 <Tooltip borderLeft="4px solid rgba(255, 128, 0, 0.9)" label="Github" placement="right">
                   <Link href="https://github.com/quicksilver-zone/quicksilver" isExternal>
                     <Box
+                      borderRadius={'full'}
                       _hover={{
                         cursor: 'pointer',
                         boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`,
@@ -300,6 +283,7 @@ export const SideHeader = () => {
                 <Tooltip borderLeft="4px solid rgba(255, 128, 0, 0.9)" label="Twitter" placement="right">
                   <Link href="https://twitter.com/quicksilverzone" isExternal>
                     <Box
+                      borderRadius={'full'}
                       _hover={{
                         cursor: 'pointer',
                         boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`,
