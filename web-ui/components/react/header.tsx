@@ -25,6 +25,7 @@ import { useRouter } from 'next/router';
 import { useState } from 'react';
 import { FaGithub, FaDiscord } from 'react-icons/fa';
 import { FaXTwitter, FaMoneyBill } from 'react-icons/fa6';
+
 import KadoIconContent from './kadoIcon';
 import KadoModal from './kadoModal';
 import { WalletButton } from '../wallet-button';
