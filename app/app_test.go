@@ -87,6 +87,7 @@ func TestQuicksilverExport(t *testing.T) {
 		app.EmptyAppOptions{},
 		false,
 		false,
+		"",
 	)
 	_, err = app2.ExportAppStateAndValidators(false, []string{}, []string{})
 	require.NoError(t, err, "ExportAppStateAndValidators should not have an error")

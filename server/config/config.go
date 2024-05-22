@@ -21,8 +21,9 @@ const (
 // from the SDK as well as the TLS configuration.
 type Config struct {
 	config.Config
-	TLS    TLSConfig    `mapstructure:"tls"`
-	Supply SupplyConfig `mapstructure:"supply"`
+	TLS     TLSConfig     `mapstructure:"tls"`
+	Supply  SupplyConfig  `mapstructure:"supply"`
+	Metrics MetricsConfig `mapstructure:"metrics"`
 }
 
 // TLSConfig defines the certificate and matching private key for the server.
@@ -36,6 +37,10 @@ type TLSConfig struct {
 type SupplyConfig struct {
 	// Enabled determines whether we expose the supply endpoint.
 	Enabled bool `mapstructure:"enabled"`
+}
+
+type MetricsConfig struct {
+	URL string `mapstructure:"url"`
 }
 
 // AppConfig helps to override default appConfig template and configs.
@@ -62,9 +67,10 @@ func AppConfig(denom string) (customAppTemplate string, customAppConfig interfac
 	}
 
 	customAppConfig = Config{
-		Config: *srvCfg,
-		TLS:    *DefaultTLSConfig(),
-		Supply: *DefaultSupplyConfig(),
+		Config:  *srvCfg,
+		TLS:     *DefaultTLSConfig(),
+		Supply:  *DefaultSupplyConfig(),
+		Metrics: *DefaultMetricsConfig(),
 	}
 
 	customAppTemplate = config.DefaultConfigTemplate + DefaultConfigTemplate
@@ -75,9 +81,10 @@ func AppConfig(denom string) (customAppTemplate string, customAppConfig interfac
 // DefaultConfig returns server's default configuration.
 func DefaultConfig() *Config {
 	return &Config{
-		Config: *config.DefaultConfig(),
-		TLS:    *DefaultTLSConfig(),
-		Supply: *DefaultSupplyConfig(),
+		Config:  *config.DefaultConfig(),
+		TLS:     *DefaultTLSConfig(),
+		Supply:  *DefaultSupplyConfig(),
+		Metrics: *DefaultMetricsConfig(),
 	}
 }
 
@@ -85,6 +92,12 @@ func DefaultConfig() *Config {
 func DefaultSupplyConfig() *SupplyConfig {
 	return &SupplyConfig{
 		Enabled: false,
+	}
+}
+
+func DefaultMetricsConfig() *MetricsConfig {
+	return &MetricsConfig{
+		URL: "",
 	}
 }
 
@@ -125,6 +138,9 @@ func GetConfig(v *viper.Viper) Config {
 		},
 		Supply: SupplyConfig{
 			Enabled: v.GetBool("supply.enabled"),
+		},
+		Metrics: MetricsConfig{
+			URL: v.GetString("metrics.url"),
 		},
 	}
 }

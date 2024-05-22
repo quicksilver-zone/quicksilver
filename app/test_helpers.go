@@ -142,6 +142,7 @@ func SetupTestingApp() (testApp ibctesting.TestingApp, genesisState map[string]j
 		EmptyAppOptions{},
 		true, // set mock state to true
 		false,
+		"",
 	)
 	return app, NewDefaultGenesisState()
 }

@@ -14,9 +14,10 @@ enum ClaimType {
   ClaimTypeUndefined = 0;
   ClaimTypeLiquidToken = 1;
   ClaimTypeOsmosisPool = 2;
-  ClaimTypeCrescentPool = 3;
-  ClaimTypeSifchainPool = 4;
+  ClaimTypeCrescentPool = 3 [deprecated = true];
+  ClaimTypeSifchainPool = 4 [deprecated = true];
   ClaimTypeUmeeToken = 5;
+  ClaimTypeOsmosisCLPool = 6;
 }
 
 // Params holds parameters for the claimsmanager module.

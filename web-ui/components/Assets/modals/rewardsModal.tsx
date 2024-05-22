@@ -42,7 +42,7 @@ import { useSkipExecute } from '@/hooks/useSkipExecute';
 import { shiftDigits } from '@/utils';
 
 const RewardsModal = ({ address, isOpen, onClose }: { address: string; isOpen: boolean; onClose: () => void }) => {
-  const chains = useChains(['cosmoshub', 'osmosis', 'stargaze', 'juno', 'sommelier', 'regen', 'dydx']);
+  const chains = useChains(['cosmoshub', 'osmosis', 'stargaze', 'juno', 'sommelier', 'regen', 'dydx', 'saga']);
 
   const { wallet } = useChain('quicksilver');
 

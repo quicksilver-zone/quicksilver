@@ -384,7 +384,7 @@ const AssetsGrid: React.FC<AssetGridProps> = ({ address, assets, isWalletConnect
           </Text>
         </Flex>
       ) : (
-        <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={8} w="full" py={4} ref={scrollRef}>
+        <SimpleGrid columns={{ base: 1, md: 1, lg: 2, xl: 3 }} spacing={8} w="full" py={4} ref={scrollRef}>
           {assets?.map((asset, index) => (
             <Box
               key={index}

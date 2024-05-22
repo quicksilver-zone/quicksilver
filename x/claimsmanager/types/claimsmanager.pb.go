@@ -30,12 +30,13 @@ type ClaimType int32
 
 const (
 	// Undefined action (per protobuf spec)
-	ClaimTypeUndefined    ClaimType = 0
-	ClaimTypeLiquidToken  ClaimType = 1
-	ClaimTypeOsmosisPool  ClaimType = 2
-	ClaimTypeCrescentPool ClaimType = 3
-	ClaimTypeSifchainPool ClaimType = 4
-	ClaimTypeUmeeToken    ClaimType = 5
+	ClaimTypeUndefined     ClaimType = 0
+	ClaimTypeLiquidToken   ClaimType = 1
+	ClaimTypeOsmosisPool   ClaimType = 2
+	ClaimTypeCrescentPool  ClaimType = 3 // Deprecated: Do not use.
+	ClaimTypeSifchainPool  ClaimType = 4 // Deprecated: Do not use.
+	ClaimTypeUmeeToken     ClaimType = 5
+	ClaimTypeOsmosisCLPool ClaimType = 6
 )
 
 var ClaimType_name = map[int32]string{
@@ -45,15 +46,17 @@ var ClaimType_name = map[int32]string{
 	3: "ClaimTypeCrescentPool",
 	4: "ClaimTypeSifchainPool",
 	5: "ClaimTypeUmeeToken",
+	6: "ClaimTypeOsmosisCLPool",
 }
 
 var ClaimType_value = map[string]int32{
-	"ClaimTypeUndefined":    0,
-	"ClaimTypeLiquidToken":  1,
-	"ClaimTypeOsmosisPool":  2,
-	"ClaimTypeCrescentPool": 3,
-	"ClaimTypeSifchainPool": 4,
-	"ClaimTypeUmeeToken":    5,
+	"ClaimTypeUndefined":     0,
+	"ClaimTypeLiquidToken":   1,
+	"ClaimTypeOsmosisPool":   2,
+	"ClaimTypeCrescentPool":  3,
+	"ClaimTypeSifchainPool":  4,
+	"ClaimTypeUmeeToken":     5,
+	"ClaimTypeOsmosisCLPool": 6,
 }
 
 func (x ClaimType) String() string {
@@ -234,7 +237,8 @@ var fileDescriptor_086999747d797382 = []byte{
 	0x66, 0xaa, 0x57, 0x33, 0x53, 0xfd, 0x35, 0x33, 0xd5, 0x4f, 0x73, 0x53, 0xb9, 0x9a, 0x9b, 0xca,
 	0x8f, 0xb9, 0xa9, 0xbc, 0x7f, 0xb9, 0x14, 0xdc, 0xd2, 0x1f, 0xd5, 0xf8, 0x48, 0x09, 0x5a, 0x06,
 	0xec, 0x0f, 0xff, 0xbc, 0x45, 0x99, 0xe9, 0xa9, 0x2e, 0xdf, 0xc4, 0xd3, 0x3f, 0x01, 0x00, 0x00,
-	0xff, 0xff, 0xd8, 0xfe, 0x86, 0x4a, 0xb5, 0x03, 0x00, 0x00,
+	0xff, 0xff, 0xd8, 0xfe, 0x86, 0x4a, 0xb5, 0x03, 0x00, 0x00,=======
+	
 }
 
 func (m *Params) Marshal() (dAtA []byte, err error) {

@@ -11,29 +11,22 @@ import (
 func Upgrades() []Upgrade {
 	return []Upgrade{
 		// testnet upgrades
-		{UpgradeName: V010405rc6UpgradeName, CreateUpgradeHandler: NoOpHandler},
-		{UpgradeName: V010405rc7UpgradeName, CreateUpgradeHandler: NoOpHandler},
-		{UpgradeName: V010407rc0UpgradeName, CreateUpgradeHandler: NoOpHandler},
-		{UpgradeName: V010407rc1UpgradeName, CreateUpgradeHandler: V010407rc1UpgradeHandler},
-		{UpgradeName: V010407rc2UpgradeName, CreateUpgradeHandler: V010407rc2UpgradeHandler},
 		{UpgradeName: V010500rc0UpgradeName, CreateUpgradeHandler: NoOpHandler},
 		{UpgradeName: V010500rc1UpgradeName, CreateUpgradeHandler: V010500rc1UpgradeHandler},
 		{UpgradeName: V010503rc0UpgradeName, CreateUpgradeHandler: V010503rc0UpgradeHandler},
 		{UpgradeName: V010600beta0UpgradeName, CreateUpgradeHandler: V010600beta0UpgradeHandler},
 		{UpgradeName: V010600beta1UpgradeName, CreateUpgradeHandler: V010600beta1UpgradeHandler},
 		{UpgradeName: V010600rc0UpgradeName, CreateUpgradeHandler: V010600rc0UpgradeHandler},
+		{UpgradeName: V010601rc0UpgradeName, CreateUpgradeHandler: V010601rc0UpgradeHandler},
+		{UpgradeName: V010601rc2UpgradeName, CreateUpgradeHandler: V010601rc0UpgradeHandler}, // this name mismatch is intentional, as we want to rerun the upgrade after resolving some issues.
 
-		// v1.2: this needs to be present to support upgrade on mainnet
-		{UpgradeName: V010217UpgradeName, CreateUpgradeHandler: NoOpHandler},
-		{UpgradeName: V010405UpgradeName, CreateUpgradeHandler: NoOpHandler},
-		{UpgradeName: V010406UpgradeName, CreateUpgradeHandler: V010406UpgradeHandler},
-		{UpgradeName: V010407UpgradeName, CreateUpgradeHandler: V010407UpgradeHandler},
+		// v1.5: this needs to be present to support upgrade on mainnet
 		{UpgradeName: V010500UpgradeName, CreateUpgradeHandler: V010500UpgradeHandler},
 		{UpgradeName: V010501UpgradeName, CreateUpgradeHandler: V010501UpgradeHandler},
 		// {UpgradeName: V010503UpgradeName, CreateUpgradeHandler: V010503UpgradeHandler},
 		{UpgradeName: V010504UpgradeName, CreateUpgradeHandler: V010504UpgradeHandler},
 		{UpgradeName: V010505UpgradeName, CreateUpgradeHandler: V010505UpgradeHandler},
-		{UpgradeName: V010600UpgradeName, CreateUpgradeHandler: V010600UpgradeHandler},
+		{UpgradeName: V010601UpgradeName, CreateUpgradeHandler: V010601UpgradeHandler},
 	}
 }
 
