@@ -73,21 +73,17 @@ func CalculateTokenValues(k *Keeper, ctx sdk.Context, args []byte) error {
 		return err
 	}
 
-	k.QueryValidatorDelegationPerformance(ctx)
-
 	return nil
 }
 
 func SubmoduleHooks(k *Keeper, ctx sdk.Context, args []byte) error {
 	for _, sub := range k.PrSubmodules {
 		sub.Hooks(ctx, k)
-
 	}
 	return nil
 }
 
 func DistributeParticipationRewards(k *Keeper, ctx sdk.Context, args []byte) error {
-	// calculate, based on latest token values
-	// allocation based on calculations
+	k.AllocateHoldingsRewards(ctx)
 	return nil
 }

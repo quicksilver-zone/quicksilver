@@ -28,6 +28,7 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, _ int64)
 		iConnectionData, err := types.UnmarshalProtocolData(types.ProtocolDataTypeConnection, data.Data)
 		if err != nil {
 			k.Logger(ctx).Error("Error unmarshalling protocol data")
+			return false
 		}
 		connectionData, _ := iConnectionData.(*types.ConnectionProtocolData)
 		if connectionData.ChainID == ctx.ChainID() {
@@ -50,63 +51,23 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, _ int64)
 		return false
 	})
 
-	condition, err := emtypes.NewConditionAll(ctx, emtypes.NewFieldValues(emtypes.NewFieldValue(emtypes.FieldIdentifier, "get_epoch_height", emtypes.FieldOperator_EQUAL, true)), false)
-	if err != nil {
-		panic(err)
-	}
-
-	// add event to ensure submodule hooks are called when the get_epoch_height calls have returned.
-	k.EventManagerKeeper.AddEvent(ctx, types.ModuleName, "", "submodules", Submodules, emtypes.EventTypeSubmodules, emtypes.EventStatusPending, condition, nil)
-
-	k.Logger(ctx).Info("setting self connection data...")
-	err = k.UpdateSelfConnectionData(ctx)
-	if err != nil {
-		panic(err)
-	}
-
-	condition2, err := emtypes.NewConditionAll(ctx, emtypes.NewFieldValues(emtypes.NewFieldValue(emtypes.FieldIdentifier, "submodule", emtypes.FieldOperator_BEGINSWITH, true)), false)
-	if err != nil {
-		panic(err)
-	}
-
-	conditionAnd, err := emtypes.NewConditionAnd(ctx, condition, condition2)
-	if err != nil {
-		panic(err)
-	}
-	k.EventManagerKeeper.AddEvent(ctx, types.ModuleName, "", "calc_tokens", CalculateValues, emtypes.EventTypeCalculateTvls, emtypes.EventStatusPending, conditionAnd, nil)
-
-	condition3, err := emtypes.NewConditionAll(ctx, emtypes.NewFieldValues(emtypes.NewFieldValue(emtypes.FieldIdentifier, "calc_tokens", emtypes.FieldOperator_EQUAL, true)), false)
-	if err != nil {
-		panic(err)
-	}
-	conditionAnd2, err := emtypes.NewConditionAnd(ctx, conditionAnd, condition3)
-	if err != nil {
-		panic(err)
-	}
-	k.EventManagerKeeper.AddEvent(ctx, types.ModuleName, "", "distribute_rewards", DistributeRewards, emtypes.EventTypeDistributeRewards, emtypes.EventStatusPending, conditionAnd2, nil)
-
-	// ensure we archive claims before we return!
 	k.icsKeeper.IterateZones(ctx, func(index int64, zone *icstypes.Zone) (stop bool) {
+		// ensure we archive claims before we return!
 		k.ClaimsManagerKeeper.ArchiveAndGarbageCollectClaims(ctx, zone.ChainId)
+		// send validator performance query
+		k.QueryValidatorDelegationPerformance(ctx, zone)
 		return false
 	})
 
-	// ascertain validator scores...
+	k.Logger(ctx).Info("setting self connection data...")
+	err := k.UpdateSelfConnectionData(ctx)
+	if err != nil {
+		panic(err)
+	}
 
-	// tvs, err := k.CalcTokenValues(ctx)
-	// if err != nil {
-	// 	k.Logger(ctx).Error("unable to calculate token values", "error", err.Error())
-	// 	return nil
-	// }
+	k.Logger(ctx).Info("allocate participation rewards...")
 
-	// if allocation == nil {
-	// 	// if allocation is unset, then return early to avoid panic
-	// 	k.Logger(ctx).Error("nil allocation")
-	// 	return nil
-	// }
-
-	k.Logger(ctx).Info("distribute participation rewards...")
-
+	// determine allocations splits the balance of the module between holding/usage and validatorSelection rewards.
 	err = k.DetermineAllocations(
 		ctx,
 		k.GetModuleBalance(ctx),
@@ -116,19 +77,48 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, _ int64)
 		k.Logger(ctx).Error(err.Error())
 	}
 
-	// if err := k.AllocateZoneRewards(ctx, tvs, *allocation); err != nil { // split into calculate a
-	// 	k.Logger(ctx).Error("unable to allocate: tvl is zero", "error", err.Error())
-	// 	return nil
-	// }
+	conditionGetEpochHeight, err := emtypes.NewConditionAll(ctx, emtypes.NewFieldValues(emtypes.NewFieldValue(emtypes.FieldIdentifier, "get_epoch_height", emtypes.FieldOperator_EQUAL, true)), false)
+	if err != nil {
+		panic(err)
+	}
 
-	// TODO: remove 'lockup' allocation logic.
-	// if !allocation.Lockup.IsZero() {
-	// 	// at genesis lockup will be disabled, and enabled when ICS is used.
-	// 	if err := k.AllocateLockupRewards(ctx, allocation.Lockup); err != nil {
-	// 		k.Logger(ctx).Error(err.Error())
-	// 		return err
-	// 	}
-	// }
+	conditionValidatorPerformance, err := emtypes.NewConditionAll(ctx, emtypes.NewFieldValues(emtypes.NewFieldValue(emtypes.FieldIdentifier, "validator_performance", emtypes.FieldOperator_EQUAL, true)), false)
+	if err != nil {
+		panic(err)
+	}
+
+	conditionSubmodulePre, err := emtypes.NewConditionAnd(ctx, conditionGetEpochHeight, conditionValidatorPerformance)
+	if err != nil {
+		panic(err)
+	}
+
+	// add event to ensure submodule hooks are called when the validator_performance and get_epoch_height calls have returned.
+	k.EventManagerKeeper.AddEvent(ctx, types.ModuleName, "", "submodules", Submodules, emtypes.EventTypeSubmodules, emtypes.EventStatusPending, conditionSubmodulePre, nil)
+
+	conditionSubmoduleComplete, err := emtypes.NewConditionAll(ctx, emtypes.NewFieldValues(emtypes.NewFieldValue(emtypes.FieldIdentifier, "submodule", emtypes.FieldOperator_BEGINSWITH, true)), false)
+	if err != nil {
+		panic(err)
+	}
+
+	conditionCalcTokensPre, err := emtypes.NewConditionAnd(ctx, conditionSubmodulePre, conditionSubmoduleComplete)
+	if err != nil {
+		panic(err)
+	}
+	// add calc_tokens event to be triggered on satisfaction of all submodule*, validator_performance, and get_epoch_height calls events.
+	k.EventManagerKeeper.AddEvent(ctx, types.ModuleName, "", "calc_tokens", CalculateValues, emtypes.EventTypeCalculateTvls, emtypes.EventStatusPending, conditionCalcTokensPre, nil)
+
+	conditionCalcTokensComplete, err := emtypes.NewConditionAll(ctx, emtypes.NewFieldValues(emtypes.NewFieldValue(emtypes.FieldIdentifier, "calc_tokens", emtypes.FieldOperator_EQUAL, true)), false)
+	if err != nil {
+		panic(err)
+	}
+	conditionDistributeRewardsPre, err := emtypes.NewConditionAnd(ctx, conditionCalcTokensPre, conditionCalcTokensComplete)
+	if err != nil {
+		panic(err)
+	}
+
+	// add distribute_rewards event to trigger on completion of get_epoch_height, validator_performance, submodule* and calc_token events.
+	k.EventManagerKeeper.AddEvent(ctx, types.ModuleName, "", "distribute_rewards", DistributeRewards, emtypes.EventTypeDistributeRewards, emtypes.EventStatusPending, conditionDistributeRewardsPre, nil)
+
 	return nil
 }
 
