@@ -56,6 +56,7 @@ func TestQuicksilverExport(t *testing.T) {
 		app.EmptyAppOptions{},
 		false,
 		false,
+		"",
 		baseapp.SetChainID("quicksilver-1"),
 	)
 

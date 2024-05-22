@@ -93,6 +93,7 @@ func Setup(t *testing.T, isCheckTx bool) *Quicksilver {
 		EmptyAppOptions{},
 		false,
 		false,
+		"",
 		baseapp.SetChainID("mercury-1"),
 	)
 
@@ -251,6 +252,7 @@ func SetupWithChainID(t *testing.T, isCheckTx bool, chainID string) *Quicksilver
 		EmptyAppOptions{},
 		false,
 		false,
+		"",
 		baseapp.SetChainID(chainID),
 	)
 
