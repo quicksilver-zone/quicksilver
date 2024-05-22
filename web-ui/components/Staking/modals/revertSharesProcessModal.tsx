@@ -143,13 +143,12 @@ export const RevertSharesProcessModal: React.FC<StakingModalProps> = ({
       amount: selectedValidator.tokenAmount.toString(),
     },
   });
-  
 
   const handleRevertShares = async (event: React.MouseEvent) => {
     event.preventDefault();
     setIsSigning(true);
 
-    const fee = await estimateFee(address, [msg])
+    const fee = await estimateFee(address, [msg]);
 
     try {
       await tx([msg], {
