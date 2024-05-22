@@ -188,15 +188,6 @@ func (k *Keeper) CalcTokenValues(ctx sdk.Context) (TokenValues, error) {
 	return tvs, nil
 }
 
-// AllocateZoneRewards executes zone based rewards allocation. This entails
-// rewards that are proportionally distributed to zones based on the tvl for
-// each zone relative to the tvl of the QS protocol.
-func (k *Keeper) AllocateZoneRewards(ctx sdk.Context, tvs TokenValues) error {
-	// <<--- move to callback
-
-	return k.AllocateHoldingsRewards(ctx) // << -- move to callback
-}
-
 // SetZoneAllocations returns the proportional zone rewards allocations as a
 // map indexed by the zone id.
 func (k *Keeper) SetZoneAllocations(ctx sdk.Context, tvs TokenValues) error {
