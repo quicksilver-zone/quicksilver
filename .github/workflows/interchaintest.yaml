@@ -9,6 +9,14 @@ on:
       - "develop"
     paths-ignore:
       - "webui/**"
+  pull_request:
+    tags:
+      - "**"
+    branches:
+      - "main"
+      - "develop"
+    paths-ignore:
+      - "webui/**"
 
 env:
   REGISTRY: quicksilverzone
