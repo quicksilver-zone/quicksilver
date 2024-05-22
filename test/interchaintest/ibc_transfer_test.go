@@ -5,12 +5,13 @@ import (
 	"fmt"
 	"testing"
 
+	"cosmossdk.io/math"
 	transfertypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
-	"github.com/strangelove-ventures/interchaintest/v5"
-	"github.com/strangelove-ventures/interchaintest/v5/chain/cosmos"
-	"github.com/strangelove-ventures/interchaintest/v5/ibc"
-	"github.com/strangelove-ventures/interchaintest/v5/testreporter"
-	"github.com/strangelove-ventures/interchaintest/v5/testutil"
+	"github.com/strangelove-ventures/interchaintest/v6"
+	"github.com/strangelove-ventures/interchaintest/v6/chain/cosmos"
+	"github.com/strangelove-ventures/interchaintest/v6/ibc"
+	"github.com/strangelove-ventures/interchaintest/v6/testreporter"
+	"github.com/strangelove-ventures/interchaintest/v6/testutil"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
 )
@@ -126,7 +127,7 @@ func TestQuicksilverJunoIBCTransfer(t *testing.T) {
 	require.Equal(t, genesisWalletAmount, junoOrigBal)
 
 	// Compose an IBC transfer and send from Quicksilver -> Juno
-	const transferAmount = int64(1_000)
+	var transferAmount = math.NewInt(1_000)
 	transfer := ibc.WalletAmount{
 		Address: junoUserAddr,
 		Denom:   quicksilver.Config().Denom,
@@ -153,7 +154,7 @@ func TestQuicksilverJunoIBCTransfer(t *testing.T) {
 	// Assert that the funds are no longer present in user acc on Juno and are in the user acc on Juno
 	quicksilverUpdateBal, err := quicksilver.GetBalance(ctx, quickUserAddr, quicksilver.Config().Denom)
 	require.NoError(t, err)
-	require.Equal(t, quicksilverOrigBal-transferAmount, quicksilverUpdateBal)
+	require.Equal(t, quicksilverOrigBal.Sub(transferAmount), quicksilverUpdateBal)
 
 	junoUpdateBal, err := juno.GetBalance(ctx, junoUserAddr, quicksilverIBCDenom)
 	require.NoError(t, err)

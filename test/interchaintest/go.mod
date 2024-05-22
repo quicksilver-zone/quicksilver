@@ -4,7 +4,7 @@ go 1.22.2
 
 require (
 	github.com/cosmos/ibc-go/v6 v6.3.1
-	github.com/strangelove-ventures/interchaintest/v5 v5.0.0-20220926164354-b3185ba0ead3
+	github.com/strangelove-ventures/interchaintest/v6 v6.0.0
 	github.com/stretchr/testify v1.9.0
 	go.uber.org/zap v1.25.0
 )
@@ -231,8 +231,7 @@ replace (
 	github.com/ChainSafe/go-schnorrkel/1 => github.com/ChainSafe/go-schnorrkel v1.0.0
 	github.com/CosmWasm/wasmd => github.com/notional-labs/wasmd v0.29.0-sdk46.0.20221114145317-d6e67fd50956
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
-	github.com/ingenuity-build => ../../
-	github.com/strangelove-ventures/interchaintest/v5 => github.com/aljo242/interchaintest/v5 v5.0.0-20230619200058-1d4823df8b75
+	github.com/quicksilver-zone/quicksilver => ../../
 	github.com/tendermint/tendermint => github.com/cometbft/cometbft v0.34.32
 	github.com/vedhavyas/go-subkey => github.com/strangelove-ventures/go-subkey v1.0.7
 )

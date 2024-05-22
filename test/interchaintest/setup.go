@@ -1,7 +1,8 @@
 package interchaintest
 
 import (
-	"github.com/strangelove-ventures/interchaintest/v5/ibc"
+	"cosmossdk.io/math"
+	"github.com/strangelove-ventures/interchaintest/v6/ibc"
 )
 
 var (
@@ -29,7 +30,7 @@ var (
 	}
 
 	pathQuicksilverJuno = "quicksilver-juno"
-	genesisWalletAmount = int64(10_000_000)
+	genesisWalletAmount = math.NewInt(10_000_000)
 )
 
 func createConfig() (ibc.ChainConfig, error) {
