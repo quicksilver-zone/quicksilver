@@ -29,6 +29,7 @@ linters:
     - unparam # Prefer unparam over revive's unused param. It is more thorough in its checking.
     - unused
     - misspell
+    - gocyclo
 
 issues:
   exclude-rules:
