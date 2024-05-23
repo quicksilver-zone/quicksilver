@@ -4,7 +4,6 @@ import (
 	"os"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/quicksilver-zone/quicksilver/icq-relayer/pkg/config"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -12,7 +11,6 @@ import (
 var (
 	homePath       string
 	overridenChain string
-	cfg            *config.Config
 	defaultHome    = os.ExpandEnv("$HOME/.icq")
 	appName        = "icq-relayer"
 )
@@ -47,13 +45,13 @@ func init() {
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-	rootCmd.PersistentPreRunE = func(cmd *cobra.Command, _ []string) error {
-		// reads `homeDir/config.yaml` into `var config *Config` before each command
-		if err := initConfig(rootCmd); err != nil {
-			return err
-		}
-		return nil
-	}
+	// rootCmd.PersistentPreRunE = func(cmd *cobra.Command, _ []string) error {
+	// 	// reads `homeDir/config.yaml` into `var config *Config` before each command
+	// 	if err := initConfig(rootCmd); err != nil {
+	// 		return err
+	// 	}
+	// 	return nil
+	// }
 
 	// --home flag
 	rootCmd.PersistentFlags().StringVar(&homePath, flags.FlagHome, defaultHome, "set home directory")
@@ -71,5 +69,5 @@ func init() {
 		panic(err)
 	}
 
-	rootCmd.AddCommand(keysCmd())
+	//rootCmd.AddCommand(keysCmd())
 }
