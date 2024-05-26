@@ -185,15 +185,13 @@ func (k *Keeper) AfterZoneCreated(ctx sdk.Context, zone *icstypes.Zone) error {
 		if !ok {
 			return false
 		}
-		osmosisConnectionData, found := k.GetProtocolData(ctx, types.ProtocolDataTypeConnection, osmosisParamsData.ChainID)
-		if !found {
-			return false
-		}
-		connectionData, err := types.UnmarshalProtocolData(types.ProtocolDataTypeConnection, osmosisConnectionData.Data)
+
+		osmosisConnectionData, err := GetAndUnmarshalProtocolData[*types.ConnectionProtocolData](ctx, k, types.ProtocolDataTypeConnection, osmosisParamsData.ChainID)
 		if err != nil {
+			k.Logger(ctx).Error("Error unmarshalling protocol data for osmosis chain")
 			return false
 		}
-		osmosisChannel := connectionData.(*types.ConnectionProtocolData).TransferChannel
+		osmosisChannel := osmosisConnectionData.TransferChannel
 
 		// channel for the osmosis chain
 		channel, found := k.IBCKeeper.ChannelKeeper.GetChannel(ctx, "transfer", osmosisChannel)
@@ -228,18 +226,13 @@ func (k *Keeper) AfterZoneCreated(ctx sdk.Context, zone *icstypes.Zone) error {
 		}
 		umeeParamsData, ok := umeeParams.(*types.UmeeParamsProtocolData)
 		if !ok {
-			return false
-		}
-		umeeConnectionData, found := k.GetProtocolData(ctx, types.ProtocolDataTypeConnection, umeeParamsData.ChainID)
-		if !found {
-			return false
-		}
-		connectionData, err := types.UnmarshalProtocolData(types.ProtocolDataTypeConnection, umeeConnectionData.Data)
-		if err != nil {
+			k.Logger(ctx).Error("Error unmarshalling protocol data for umee chain")
 			return false
 		}
 
-		umeeChannel := connectionData.(*types.ConnectionProtocolData).TransferChannel
+		umeeConnectionData, err := GetAndUnmarshalProtocolData[*types.ConnectionProtocolData](ctx, k, types.ProtocolDataTypeConnection, umeeParamsData.ChainID)
+		umeeChannel := umeeConnectionData.TransferChannel
+
 		// channel for the umee chain
 		channel, found := k.IBCKeeper.ChannelKeeper.GetChannel(ctx, "transfer", umeeChannel)
 		if !found {

@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -88,4 +90,24 @@ func (k *Keeper) AllKeyedProtocolDatas(ctx sdk.Context) []*types.KeyedProtocolDa
 		return false
 	})
 	return out
+}
+
+func GetAndUnmarshalProtocolData[V types.ProtocolDataI](ctx sdk.Context, k *Keeper, datatype types.ProtocolDataType, key string) (V, error) {
+	var cpd V
+
+	data, found := k.GetProtocolData(ctx, datatype, key)
+	if !found {
+		return cpd, fmt.Errorf("protocol data not found for %s", key)
+	}
+
+	pd, err := types.UnmarshalProtocolData(datatype, data.Data)
+	if err != nil {
+		return cpd, err
+	}
+	v, ok := pd.(V)
+	if !ok {
+		return cpd, fmt.Errorf("unexpected type %T", pd)
+	}
+
+	return v, nil
 }
