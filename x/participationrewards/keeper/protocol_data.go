@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -110,4 +111,14 @@ func GetAndUnmarshalProtocolData[V types.ProtocolDataI](ctx sdk.Context, k *Keep
 	}
 
 	return v, nil
+}
+
+func MarshalAndSetProtocolData(ctx sdk.Context, k *Keeper, datatype types.ProtocolDataType, pd types.ProtocolDataI) {
+	pdString, err := json.Marshal(pd)
+	if err != nil {
+		k.Logger(ctx).Error("Error marshalling protocol data", "error", err)
+		panic(err)
+	}
+	storedProtocolData := types.NewProtocolData(datatype.String(), pdString)
+	k.SetProtocolData(ctx, pd.GenerateKey(), storedProtocolData)
 }
