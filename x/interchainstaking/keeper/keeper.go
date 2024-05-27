@@ -324,6 +324,7 @@ func (k *Keeper) SetValidatorsForZone(ctx sdk.Context, data []byte, icqQuery icq
 	return nil
 }
 
+// nolint:gocyclo
 func (k *Keeper) SetValidatorForZone(ctx sdk.Context, zone *types.Zone, data []byte) error {
 	if data == nil {
 		k.Logger(ctx).Error("expected validator state, got nil")

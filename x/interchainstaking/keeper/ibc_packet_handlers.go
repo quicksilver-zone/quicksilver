@@ -62,6 +62,7 @@ func DeserializeCosmosTxTyped(cdc codec.BinaryCodec, data []byte) ([]TypedMsg, e
 	return msgs, nil
 }
 
+//nolint:gocyclo
 func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Packet, acknowledgement []byte, connectionID string) error {
 	var (
 		ack        channeltypes.Acknowledgement

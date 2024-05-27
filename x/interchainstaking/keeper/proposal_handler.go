@@ -154,6 +154,7 @@ func (k *Keeper) registerInterchainAccount(ctx sdk.Context, connectionID, portOw
 }
 
 // HandleUpdateZoneProposal is a handler for executing a passed community spend proposal.
+// nolint:gocyclo
 func (k *Keeper) HandleUpdateZoneProposal(ctx sdk.Context, p *types.UpdateZoneProposal) error {
 	zone, found := k.GetZone(ctx, p.ChainId)
 	if !found {

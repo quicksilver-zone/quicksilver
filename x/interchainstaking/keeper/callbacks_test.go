@@ -85,6 +85,7 @@ func (suite *KeeperTestSuite) setupIbc() (*app.Quicksilver, sdk.Context) {
 	return quicksilver, ctx
 }
 
+//nolint:gocyclo
 func (suite *KeeperTestSuite) TestHandleValsetCallback() {
 	newVal := addressutils.GenerateValAddressForTest()
 
