@@ -228,12 +228,12 @@ func handleHistoricRequests(cfg *types.Config, queryClient *types.ReadOnlyChainC
 		q.Type = query.QueryType
 
 		if _, found := cache.Get("query/" + q.QueryId); found {
-			// break if this is in the cache
+			logger.Log("msg", "Query already in cache", "id", q.QueryId)
 			continue
 		}
 
 		if _, found := cache.Get("ignore/" + q.QueryId); found {
-			// break if this is in the cache
+			logger.Log("msg", "Query already in ignore cache", "id", q.QueryId)
 			continue
 		}
 

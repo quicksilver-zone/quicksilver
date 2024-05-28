@@ -1,0 +1,8 @@
+TODO:
+  - key management
+  - logging
+  - metrics
+  - error handling
+  - testing
+  - documentation
+  - add max tx size limit

@@ -18,6 +18,9 @@ FROM alpine:3.19
 RUN apk add --no-cache ca-certificates
 
 COPY --from=build /src/app/icq-relayer /usr/local/bin/icq-relayer
+COPY ./entrypoint.sh /usr/local/bin/entrypoint.sh
+
+RUN chmod +x /usr/local/bin/entrypoint.sh
 
 RUN adduser -S -h /icq -D icq -u 1000
 
