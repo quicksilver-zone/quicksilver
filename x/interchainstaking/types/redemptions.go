@@ -57,16 +57,19 @@ func DetermineAllocationsForUndelegation(currentAllocations map[string]math.Int,
 			// use Amount+1 in the line below to avoid 1 remaining where truncation leaves 1 remaining - e.g. 1000 => 333/333/333 + 1.
 			outWeights[overAllocated[idx].ValoperAddress] = sdk.NewDecFromInt(overAllocated[idx].Amount).Quo(sdk.NewDecFromInt(sum)).Mul(sdk.NewDecFromInt(overAllocationSplit)).TruncateInt()
 			overAlloc := availablePerValidator[overAllocated[idx].ValoperAddress]
-			if overAlloc.IsNil() {
+			switch {
+			case overAlloc.IsNil():
 				availablePerValidator[overAllocated[idx].ValoperAddress] = sdk.ZeroInt()
-			} else if outWeights[overAllocated[idx].ValoperAddress].GT(overAlloc) {
+			case outWeights[overAllocated[idx].ValoperAddress].GT(overAlloc):
 				// use up all of overAllocated[idx] and set available to zero.
 				outWeights[overAllocated[idx].ValoperAddress] = availablePerValidator[overAllocated[idx].ValoperAddress]
 				availablePerValidator[overAllocated[idx].ValoperAddress] = sdk.ZeroInt()
-			} else {
+			default:
 				// or don't, and reduce available as appropriate.
 				availablePerValidator[overAllocated[idx].ValoperAddress] = availablePerValidator[overAllocated[idx].ValoperAddress].Sub(outWeights[overAllocated[idx].ValoperAddress])
+
 			}
+
 			overAllocated[idx].Amount = overAllocated[idx].Amount.Sub(outWeights[overAllocated[idx].ValoperAddress])
 			outSum = outSum.Add(outWeights[overAllocated[idx].ValoperAddress])
 		}
