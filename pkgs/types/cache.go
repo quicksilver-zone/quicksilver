@@ -65,8 +65,10 @@ type CacheI[T any] interface {
 	Get(ctx context.Context) []T
 }
 
-var _ CacheI[any] = &Cache[any]{}
-var _ CacheManagerElementI = &Cache[any]{}
+var (
+	_ CacheI[any]          = &Cache[any]{}
+	_ CacheManagerElementI = &Cache[any]{}
+)
 
 type Cache[T any] struct {
 	dataType    int

@@ -5,13 +5,12 @@ go 1.22.3
 require (
 	cosmossdk.io/math v1.3.0
 	github.com/client9/misspell v0.3.4
-	github.com/cosmos/btcutil v1.0.5
 	github.com/cosmos/cosmos-sdk v0.46.16
 	github.com/golangci/golangci-lint v1.58.2
 	github.com/gorilla/mux v1.8.1
 	github.com/ingenuity-build/multierror v0.1.0
 	github.com/quicksilver-zone/quicksilver v1.6.1-rc2
-	github.com/tendermint/tendermint v0.34.32
+	github.com/tendermint/tendermint v0.34.33
 	golang.org/x/tools v0.21.0
 	gopkg.in/yaml.v3 v3.0.1
 	mvdan.cc/gofumpt v0.6.0
@@ -82,6 +81,7 @@ require (
 	github.com/coinbase/rosetta-sdk-go/types v1.0.0 // indirect
 	github.com/cometbft/cometbft-db v0.12.0 // indirect
 	github.com/confio/ics23/go v0.9.1 // indirect
+	github.com/cosmos/btcutil v1.0.5 // indirect
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/gogoproto v1.4.12 // indirect
@@ -328,5 +328,5 @@ require (
 
 replace (
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
-	github.com/tendermint/tendermint => github.com/cometbft/cometbft v0.34.32
+	github.com/tendermint/tendermint => github.com/cometbft/cometbft v0.34.33
 )

@@ -2,8 +2,6 @@ run:
   tests: true
   # timeout for analysis, e.g. 30s, 5m, default is 1m
   timeout: 10m
-  skip-dirs:
-    - osmosis-types/*
 
 linters:
   disable-all: true
@@ -110,7 +108,7 @@ linters-settings:
       - hugeParam
       - rangeExprCopy
       - rangeValCopy
-      - timeCmpSimplify
+      #- timeCmpSimplify
       - unlabelStmt
       - unnamedResult
       - tooManyResultsChecker

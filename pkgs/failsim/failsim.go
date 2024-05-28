@@ -27,7 +27,7 @@ func FailuresFromContext(ctx context.Context) map[uint8]map[uint8]struct{} {
 			fmt.Println("error building failures")
 		}
 	}
-	//fmt.Printf("FailuresFromContext: %v\n", failures)
+	// fmt.Printf("FailuresFromContext: %v\n", failures)
 	return failures
 }
 

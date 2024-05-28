@@ -384,8 +384,8 @@ github.com/coinbase/rosetta-sdk-go v0.8.3 h1:IYqd+Ser5NVh0s7p8p2Ir82iCvi75E1l0NH
 github.com/coinbase/rosetta-sdk-go v0.8.3/go.mod h1:ChOHc+BNq7zqJDDkui0DA124GOvlAiRbdgAc1U9GMDQ=
 github.com/coinbase/rosetta-sdk-go/types v1.0.0 h1:jpVIwLcPoOeCR6o1tU+Xv7r5bMONNbHU7MuEHboiFuA=
 github.com/coinbase/rosetta-sdk-go/types v1.0.0/go.mod h1:eq7W2TMRH22GTW0N0beDnN931DW0/WOI1R2sdHNHG4c=
-github.com/cometbft/cometbft v0.34.32 h1:yh/BnL38fGJ448xeKuolOLe971NBRZ0go8JO+MC53eY=
-github.com/cometbft/cometbft v0.34.32/go.mod h1:25SXMPtyfSWIh172/UGa08/Kra7yrhK2Hm4IKs5X4AQ=
+github.com/cometbft/cometbft v0.34.33 h1:2nnMU8smD1fpkY4JP6GWSaWmxE4BhqL60LG+Sr+Ijzo=
+github.com/cometbft/cometbft v0.34.33/go.mod h1:S1rXDQyGEJQVle3vneIHV570I1ulneWgF1ScGvUO+bI=
 github.com/cometbft/cometbft-db v0.12.0 h1:v77/z0VyfSU7k682IzZeZPFZrQAKiQwkqGN0QzAjMi0=
 github.com/cometbft/cometbft-db v0.12.0/go.mod h1:aX2NbCrjNVd2ZajYxt1BsiFf/Z+TQ2MN0VxdicheYuw=
 github.com/confio/ics23/go v0.9.1 h1:3MV46eeWwO3xCauKyAtuAdJYMyPnnchW4iLr2bTw6/U=

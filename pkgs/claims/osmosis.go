@@ -24,41 +24,31 @@ import (
 	prewards "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 
-	"github.com/ingenuity-build/xcclookup/pkgs/failsim"
 	"github.com/ingenuity-build/xcclookup/pkgs/types"
 )
 
-type poolMap map[string][]osmogamm.CFMMPoolI
-type clPoolMap map[string][]osmocl.ConcentratedPoolExtension
+type (
+	poolMap   map[string][]osmogamm.CFMMPoolI
+	clPoolMap map[string][]osmocl.ConcentratedPoolExtension
+)
 
 func OsmosisClaim(
 	ctx context.Context,
 	cfg types.Config,
 	cacheMgr *types.CacheManager,
 	address string,
+	submitAddress string,
 	chain string,
 	height int64,
 ) (map[string]prewards.MsgSubmitClaim, map[string]sdk.Coins, error) {
-	// simFailure hooks: 0-11
-	simFailures := failsim.FailuresFromContext(ctx)
-	failures := make(map[uint8]struct{})
-	if OsmosisClaimFailures, ok := simFailures[1]; ok {
-		fmt.Println("osmosis sim failures")
-		failures = OsmosisClaimFailures
-	}
-	//fmt.Println("simulate failures:", failures)
-
 	var err error
 
-	addrBytes := addressutils.MustAccAddressFromBech32(address, "")
-	// 0:
-	err = failsim.FailureHook(failures, 0, err, "failure decosing bech32 address")
+	addrBytes, err := addressutils.AccAddressFromBech32(address, "")
 	if err != nil {
 		return nil, nil, err
 	}
+
 	osmoAddress, err := addressutils.EncodeAddressToBech32("osmo", addrBytes)
-	// 1:
-	err = failsim.FailureHook(failures, 1, err, "failure encoding osmo address")
 	if err != nil {
 		return nil, nil, err
 	}
@@ -67,17 +57,12 @@ func OsmosisClaim(
 	host, ok := cfg.Chains[chain]
 	if !ok {
 		err = fmt.Errorf("no endpoint in config for %s", chain)
-	}
-	// 2:
-	err = failsim.FailureHook(failures, 2, err, fmt.Sprintf("no endpoint in config for %s", chain))
-	if err != nil {
 		return nil, nil, err
 	}
+
 	fmt.Printf("found %q in config for %q...\n", host, chain)
 
 	client, err := types.NewRPCClient(host, 30*time.Second)
-	// 3:
-	err = failsim.FailureHook(failures, 3, err, fmt.Sprintf("failure connecting to host %q", host))
 	if err != nil {
 		return nil, nil, err
 	}
@@ -96,7 +81,6 @@ func OsmosisClaim(
 			bytes,
 		)
 		// 4:
-		err = failsim.FailureHook(failures, 4, err, "ABCIQuery: GetLatestBlock")
 		if err != nil {
 			return nil, nil, err
 		}
@@ -104,20 +88,18 @@ func OsmosisClaim(
 
 		blockQueryResponse := tmservice.GetLatestBlockResponse{}
 		err = marshaler.Unmarshal(abciquery.Response.Value, &blockQueryResponse)
-		// 5:
-		err = failsim.FailureHook(failures, 5, err, "ABCIQuery: GetLatestBlockResponse")
 		if err != nil {
 			return nil, nil, err
 		}
+
 		emptyBlockResponse := tmservice.GetLatestBlockResponse{}
 		if blockQueryResponse == emptyBlockResponse {
 			err = fmt.Errorf("unable to query height from Osmosis chain")
 		}
-		// 6:
-		err = failsim.FailureHook(failures, 6, err, "unable to query height from Osmosis chain")
 		if err != nil {
 			return nil, nil, err
 		}
+
 		//nolint:staticcheck // SA1019 ignore this!
 		if blockQueryResponse.Block != nil {
 			timestamp = blockQueryResponse.Block.Header.Time
@@ -134,8 +116,6 @@ func OsmosisClaim(
 			"/cosmos.base.tendermint.v1beta1.Service/GetBlockByHeight",
 			bytes,
 		)
-		// 4: (hook numbering reset as this is a different execution path)
-		err = failsim.FailureHook(failures, 4, err, "ABCIQuery: GetBlockByHeight")
 		if err != nil {
 			return nil, nil, err
 		}
@@ -143,17 +123,14 @@ func OsmosisClaim(
 
 		blockQueryResponse := tmservice.GetBlockByHeightResponse{}
 		err = marshaler.Unmarshal(abciquery.Response.Value, &blockQueryResponse)
-		// 5:
-		err = failsim.FailureHook(failures, 5, err, "ABCIQuery: GetBlockByHeightResponse")
 		if err != nil {
 			return nil, nil, err
 		}
+
 		emptyBlockResponse := tmservice.GetBlockByHeightResponse{}
-		// 6:
 		if blockQueryResponse == emptyBlockResponse {
 			err = fmt.Errorf("unable to query height from Osmosis chain")
 		}
-		err = failsim.FailureHook(failures, 6, err, "unable to query height from Osmosis chain")
 		if err != nil {
 			return nil, nil, err
 		}
@@ -163,7 +140,7 @@ func OsmosisClaim(
 			timestamp = blockQueryResponse.SdkBlock.Header.Time
 		}
 	}
-	fmt.Println("got block timestamp...")
+	fmt.Println("got block timestamp...", timestamp)
 
 	query := osmolockup.AccountLockedPastTimeRequest{Owner: osmoAddress, Timestamp: timestamp}
 	bytes := marshaler.MustMarshal(&query)
@@ -175,27 +152,19 @@ func OsmosisClaim(
 		bytes,
 		rpcclient.ABCIQueryOptions{Height: height},
 	)
-	// 7:
-	err = failsim.FailureHook(failures, 6, err, "ABCIQuery: AccountLockedPastTime")
 	if err != nil {
 		return nil, nil, err
 	}
-	fmt.Println("executed abci query...")
 
 	queryResponse := osmolockup.AccountLockedPastTimeResponse{}
 	err = marshaler.Unmarshal(abciquery.Response.Value, &queryResponse)
-	// 8:
-	err = failsim.FailureHook(failures, 6, err, "ABCIQuery: AccountLockedPastTimeResponse")
 	if err != nil {
 		return nil, nil, err
 	}
-	fmt.Println("unmarshalled query response...")
 
 	ignores := cfg.Ignore.GetIgnoresForType(types.IgnoreTypeLiquid)
 	// add GetFiltered to CacheManager, to allow filtered lookups on a single field == value
 	tokens := GetTokenMap(types.GetCache[prewards.LiquidAllowedDenomProtocolData](ctx, cacheMgr), types.GetCache[icstypes.Zone](ctx, cacheMgr), chain, "", ignores)
-
-	fmt.Println("got relevant tokens...")
 
 	pools := poolMap{}
 	clpools := clPoolMap{}
@@ -256,14 +225,12 @@ func OsmosisClaim(
 			accountPrefix := banktypes.CreateAccountBalancesPrefix(addrBytes)
 			lookupKey := append(accountPrefix, []byte(poolCoinDenom)...)
 
+			fmt.Println("Querying for value (liquid gamm)", "prefix", accountPrefix, "denom", poolCoinDenom) // debug?
 			bankQuery, err := client.ABCIQueryWithOptions(
 				ctx, "/store/bank/key",
 				lookupKey,
 				rpcclient.ABCIQueryOptions{Height: abciquery.Response.Height, Prove: true},
 			)
-			fmt.Println("Querying for value (liquid gamm)", "prefix", accountPrefix, "denom", poolCoinDenom) // debug?
-			// 7:
-			err = failsim.FailureHook(failures, 7, err, fmt.Sprintf("unable to query for value of denom %q on %q", poolCoinDenom, chain))
 			if err != nil {
 				return nil, nil, err
 			}
@@ -272,29 +239,20 @@ func OsmosisClaim(
 			if err != nil {
 				return nil, nil, err
 			}
-			// 8:
-			err = failsim.FailureHook(failures, 8, err, fmt.Sprintf("ABCIQuery: value of denom %q on chain %q", poolCoinDenom, chain))
-			if err != nil {
-				return nil, nil, err
-			}
 
 			if !amount.IsZero() {
-				fmt.Printf("found assets in bank account for zone %q...\n", chainID)
-				if _, ok := msg[chainID]; !ok {
-					msg[chainID] = prewards.MsgSubmitClaim{
-						UserAddress: address,
-						Zone:        chainID,
-						SrcZone:     chain,
-						ClaimType:   cmtypes.ClaimTypeOsmosisPool,
-						Proofs:      make([]*cmtypes.Proof, 0),
-					}
-				}
 
 				if _, ok := assets[chain]; !ok {
 					assets[chain] = sdk.Coins{}
 				}
 
-				exitedCoins, err := p.CalcExitPoolCoinsFromShares(sdk.Context{}, amount.Amount, math.LegacyZeroDec())
+				var exitedCoins sdk.Coins
+				// if this user is the sole position in the pool, sub one share to avoid CalcExitPoolCoinsFromShares erroring.
+				if amount.Amount.Equal(p.GetTotalShares()) {
+					exitedCoins, err = p.CalcExitPoolCoinsFromShares(sdk.Context{}, amount.Amount.Sub(math.OneInt()), math.LegacyZeroDec())
+				} else {
+					exitedCoins, err = p.CalcExitPoolCoinsFromShares(sdk.Context{}, amount.Amount, math.LegacyZeroDec())
+				}
 				if err != nil {
 					if errors == nil {
 						errors = make(map[string]error)
@@ -303,11 +261,25 @@ func OsmosisClaim(
 					continue
 				}
 
+				fmt.Println("exitedCoins: ", exitedCoins)
+				fmt.Println("tokens: ", tokens)
+
 				for _, exitToken := range exitedCoins {
 					tuple, ok := tokens[exitToken.Denom]
 					if ok {
 						exitToken.Denom = tuple.denom
 						assets[chain] = assets[chain].Add(exitToken)
+
+						fmt.Printf("gamm tokens %s -> token %s (%s), on %s...\n", amount, exitToken, chainID, chain)
+						if _, ok := msg[chainID]; !ok {
+							msg[chainID] = prewards.MsgSubmitClaim{
+								UserAddress: submitAddress,
+								Zone:        chainID,
+								SrcZone:     chain,
+								ClaimType:   cmtypes.ClaimTypeOsmosisPool,
+								Proofs:      make([]*cmtypes.Proof, 0),
+							}
+						}
 					}
 				}
 
@@ -333,7 +305,7 @@ func OsmosisClaim(
 					fmt.Printf("found assets for zone %q...\n", chainID)
 					if _, ok := msg[chainID]; !ok {
 						msg[chainID] = prewards.MsgSubmitClaim{
-							UserAddress: address,
+							UserAddress: submitAddress,
 							Zone:        chainID,
 							SrcZone:     chain,
 							ClaimType:   cmtypes.ClaimTypeOsmosisPool,
@@ -353,8 +325,6 @@ func OsmosisClaim(
 						lockupKey,
 						rpcclient.ABCIQueryOptions{Height: abciquery.Response.Height, Prove: true},
 					)
-					// 9:
-					err = failsim.FailureHook(failures, 9, err, "ABCIQuery: lockup")
 					if err != nil {
 						if errors == nil {
 							errors = make(map[string]error)
@@ -362,11 +332,11 @@ func OsmosisClaim(
 						errors[chain] = fmt.Errorf("unable to account for assets on zone %q: %w", chain, err)
 						continue
 					}
+
 					fmt.Println("prepared query for locked assets...")
 					lockupResponse := osmolockup.PeriodLock{}
 					err = marshaler.Unmarshal(abciquery.Response.Value, &lockupResponse)
 					// 10:
-					err = failsim.FailureHook(failures, 10, err, "ABCIQuery: lockupResponse")
 					if err != nil {
 						if errors == nil {
 							errors = make(map[string]error)
@@ -374,13 +344,13 @@ func OsmosisClaim(
 						errors[chain] = fmt.Errorf("unable to account for assets on zone %q: %w", chain, err)
 						continue
 					}
+
 					fmt.Println("got lockup response...")
 					gammCoins := lockupResponse.Coins
 					gammShares := gammCoins.AmountOf("gamm/pool/" + strconv.Itoa(int(p.GetId())))
 
 					exitedCoins, err := p.CalcExitPoolCoinsFromShares(sdk.Context{}, gammShares, math.LegacyZeroDec())
 					// 11:
-					err = failsim.FailureHook(failures, 11, err, "CalcExitPoolCoinsFromShares")
 					if err != nil {
 						if errors == nil {
 							errors = make(map[string]error)
@@ -422,7 +392,7 @@ func OsmosisClaim(
 		return msg, assets, multierror.New(errors)
 	}
 
-	// fmt.Printf("Msg: %+v\n", msg)
-	// fmt.Printf("Lockup Assets: %+v\n", assets)
+	fmt.Printf("Msg: %+v\n", msg)
+	fmt.Printf("Lockup Assets: %+v\n", assets)
 	return msg, assets, nil
 }

@@ -24,7 +24,6 @@ func GetCacheHandler(
 	_ types.Config,
 	cacheMgr *types.CacheManager,
 ) func(http.ResponseWriter, *http.Request) {
-
 	return func(w http.ResponseWriter, req *http.Request) {
 		out := CacheOutput{
 			Connections:   types.GetCache[prewards.ConnectionProtocolData](ctx, cacheMgr),

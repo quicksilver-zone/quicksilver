@@ -8,7 +8,6 @@ import (
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 
-	"github.com/cosmos/btcutil/bech32"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -19,7 +18,6 @@ import (
 	prewards "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 
-	"github.com/ingenuity-build/xcclookup/pkgs/failsim"
 	"github.com/ingenuity-build/xcclookup/pkgs/types"
 )
 
@@ -36,8 +34,6 @@ func GetTokenMap(in []prewards.LiquidAllowedDenomProtocolData, zones []icstypes.
 		}
 		if i.ChainID == chain && ZoneOnboarded(zones, i) {
 			out[keyPrefix+i.IbcDenom] = TokenTuple{denom: i.QAssetDenom, chain: i.RegisteredZoneChainID}
-			// } else {
-			// 	fmt.Printf("Zone not found: %s for LiquidToken: %s\n", i.RegisteredZoneChainID, i.IbcDenom)
 		}
 	}
 	return out
@@ -57,56 +53,35 @@ func LiquidClaim(
 	cfg types.Config,
 	cacheMgr *types.CacheManager,
 	address string,
+	submitAddress string,
 	connection prewards.ConnectionProtocolData,
 	height int64,
 ) (map[string]prewards.MsgSubmitClaim, map[string]sdk.Coins, error) {
-	// simFailure hooks: 0-8
-	simFailures := failsim.FailuresFromContext(ctx)
-	failures := make(map[uint8]struct{})
-	if LiquidClaimFailures, ok := simFailures[2]; ok {
-		fmt.Println("liquid sim failures")
-		failures = LiquidClaimFailures
-	}
-	//fmt.Println("simulate failures:", failures)
-
 	chain := connection.ChainID
 	prefix := connection.Prefix
 
-	addrBytes, err := addressutils.AddressFromBech32(address, "quick")
-	// 0:
-	err = failsim.FailureHook(failures, 0, err, "failure decoding bech32 address")
+	// explitly don't use quick prefix here, as mapped accounts may have a different prefix
+	addrBytes, err := addressutils.AccAddressFromBech32(address, "")
 	if err != nil {
-		return nil, nil, err
-	}
-	sdkAddr, err := bech32.ConvertBits(addrBytes, 5, 8, true)
-	// 1:
-	err = failsim.FailureHook(failures, 1, err, "failure converting sdk address")
-	if err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("%w [addressutils.AddressFromBech32]", err)
 	}
 
-	chainAddress, err := bech32.Encode(prefix, addrBytes)
-	// 2:
-	err = failsim.FailureHook(failures, 2, err, "failure encoding chain address")
+	chainAddress, err := addressutils.EncodeAddressToBech32(prefix, addrBytes)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("%w [bech32.Encode]", err)
 	}
 
 	host, ok := cfg.Chains[chain]
 	if !ok {
 		err = fmt.Errorf("unable to find endpoint for %s", chain)
+		return nil, nil, nil
 	}
-	// 3:
-	err = failsim.FailureHook(failures, 3, err, fmt.Sprintf("no endpoint in config for %s", chain))
-	if err != nil {
-		return map[string]prewards.MsgSubmitClaim{}, map[string]sdk.Coins{}, nil
-	}
+
 	client, err := types.NewRPCClient(host, 30*time.Second)
-	// 4:
-	err = failsim.FailureHook(failures, 4, err, fmt.Sprintf("failure connecting to host %q", host))
 	if err != nil {
-		return map[string]prewards.MsgSubmitClaim{}, map[string]sdk.Coins{}, nil
+		return nil, nil, fmt.Errorf("%w [NewRPCClient]", err)
 	}
+
 	// fetch timestamp of block
 	interfaceRegistry := cdctypes.NewInterfaceRegistry()
 	banktypes.RegisterInterfaces(interfaceRegistry)
@@ -124,17 +99,14 @@ func LiquidClaim(
 		bytes,
 		rpcclient.ABCIQueryOptions{Height: height},
 	)
-	// 5:
-	err = failsim.FailureHook(failures, 5, err, "ABCIQuery: AllBalances")
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("%w [ABCIQueryWithOptions/AllBalances]", err)
 	}
+
 	queryResponse := banktypes.QueryAllBalancesResponse{}
 	err = marshaler.Unmarshal(abciquery.Response.Value, &queryResponse)
-	// 6:
-	err = failsim.FailureHook(failures, 6, err, "ABCIQuery: QueryAllBalancesResponse")
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("%w [unmarshalling query response]", err)
 	}
 
 	ignores := cfg.Ignore.GetIgnoresForType(types.IgnoreTypeLiquid)
@@ -148,13 +120,12 @@ func LiquidClaim(
 	for _, coin := range queryResponse.Balances {
 		tuple, ok := tokens[coin.Denom]
 		if !ok {
-			//fmt.Println("not dealing with token for chain", chain, coin.Denom)
 			continue
 		}
 
 		if _, ok := msg[tuple.chain]; !ok {
 			msg[tuple.chain] = prewards.MsgSubmitClaim{
-				UserAddress: address,
+				UserAddress: submitAddress,
 				Zone:        tuple.chain,
 				SrcZone:     chain,
 				ClaimType:   cmtypes.ClaimTypeLiquidToken,
@@ -162,7 +133,7 @@ func LiquidClaim(
 			}
 		}
 
-		accountPrefix := banktypes.CreateAccountBalancesPrefix(sdkAddr)
+		accountPrefix := banktypes.CreateAccountBalancesPrefix(addrBytes)
 		lookupKey := append(accountPrefix, []byte(coin.Denom)...)
 		abciquery, err := client.ABCIQueryWithOptions(
 			ctx,
@@ -172,20 +143,15 @@ func LiquidClaim(
 		)
 		fmt.Println("Querying for value (liquid tokens)", "chain", chain, "prefix", accountPrefix, "denom", tuple.denom) // debug?
 		// 7:
-		err = failsim.FailureHook(failures, 7, err, fmt.Sprintf("unable to query for value of denom %q on %q", tuple.denom, chain))
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, fmt.Errorf("%w [ABCIQueryWithOptions/gamm_tokens]", err)
 		}
 
 		amount, err := bankkeeper.UnmarshalBalanceCompat(marshaler, abciquery.Response.Value, tuple.denom)
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, fmt.Errorf("%w [UnmarshalBalanceCompat]", err)
 		}
-		// 8:
-		err = failsim.FailureHook(failures, 8, err, fmt.Sprintf("ABCIQuery: value of denom %q on chain %q", tuple.denom, chain))
-		if err != nil {
-			return nil, nil, err
-		}
+
 		amount.Denom = tuple.denom
 
 		assets[chain] = assets[chain].Add(amount)
@@ -201,8 +167,6 @@ func LiquidClaim(
 		}
 
 		chainMsg.Proofs = append(chainMsg.Proofs, &proof)
-
-		// fmt.Printf("Liquid Assets: %+v\n", assets)
 
 		msg[tuple.chain] = chainMsg
 	}

@@ -18,7 +18,6 @@ import (
 	prewards "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 
-	"github.com/ingenuity-build/xcclookup/pkgs/failsim"
 	"github.com/ingenuity-build/xcclookup/pkgs/types"
 )
 
@@ -27,21 +26,11 @@ func UmeeClaim(
 	cfg types.Config,
 	cacheMgr *types.CacheManager,
 	address string,
+	submitAddress string,
 	chain string,
 	height int64,
 ) (map[string]prewards.MsgSubmitClaim, map[string]sdk.Coins, error) {
-	// simFailure hooks: 0-8
-	simFailures := failsim.FailuresFromContext(ctx)
-	failures := make(map[uint8]struct{})
-	if UmeeClaimFailures, ok := simFailures[2]; ok {
-		fmt.Println("liquid sim failures")
-		failures = UmeeClaimFailures
-	}
-	//fmt.Println("simulate failures:", failures)
-
 	addrBytes, err := addressutils.AccAddressFromBech32(address, "")
-	// 0:
-	err = failsim.FailureHook(failures, 0, err, "failure decoding bech32 address")
 	if err != nil {
 		return nil, nil, err
 	}
@@ -50,8 +39,6 @@ func UmeeClaim(
 		return nil, nil, err
 	}
 
-	// 1:
-	err = failsim.FailureHook(failures, 1, err, "failure encoding umee address")
 	if err != nil {
 		return nil, nil, err
 	}
@@ -61,23 +48,18 @@ func UmeeClaim(
 	if !ok {
 		err = fmt.Errorf("no endpoint in config for %s", chain)
 	}
-	// 2:
-	err = failsim.FailureHook(failures, 2, err, fmt.Sprintf("no endpoint in config for %s", chain))
 	if err != nil {
 		return nil, nil, err
 	}
 	fmt.Printf("found %q in config for %q...\n", host, chain)
 
 	client, err := types.NewRPCClient(host, 30*time.Second)
-	// 3:
-
-	err = failsim.FailureHook(failures, 4, err, fmt.Sprintf("failure connecting to host %q", host))
 	if err != nil {
 		return nil, nil, err
 	}
 	// fetch timestamp of block
 	interfaceRegistry := cdctypes.NewInterfaceRegistry()
-	//banktypes.RegisterInterfaces(interfaceRegistry)
+	// banktypes.RegisterInterfaces(interfaceRegistry)
 	marshaler := codec.NewProtoCodec(interfaceRegistry)
 
 	leveragequery := leverage.QueryAccountBalances{Address: umeeAddress}
@@ -89,8 +71,6 @@ func UmeeClaim(
 		bytes,
 		rpcclient.ABCIQueryOptions{Height: height},
 	)
-	// 5:
-	err = failsim.FailureHook(failures, 6, err, "ABCIQuery: QueryAccountBalancesRequest")
 	if err != nil {
 		return nil, nil, err
 	}
@@ -115,14 +95,12 @@ func UmeeClaim(
 		}
 		tuple, ok := tokens[coin.GetDenom()]
 		if !ok {
-			//fmt.Println("not dealing with token for chain", chain, coin.GetDenom())
-			// token is not present in list of allowed tokens, ignore.
 			continue
 		}
 
 		if _, ok := msg[tuple.chain]; !ok {
 			msg[tuple.chain] = prewards.MsgSubmitClaim{
-				UserAddress: address,
+				UserAddress: submitAddress,
 				Zone:        tuple.chain,
 				SrcZone:     chain,
 				ClaimType:   cmtypes.ClaimTypeUmeeToken,
@@ -138,8 +116,6 @@ func UmeeClaim(
 			rpcclient.ABCIQueryOptions{Height: leverageaccountbalancesquery.Response.Height, Prove: true},
 		)
 		fmt.Println("Querying for value (umee - leverage)", "prefix", lookupKey) // debug?
-		// 7:
-		err = failsim.FailureHook(failures, 7, err, fmt.Sprintf("unable to query for value of denom %q on %q", tuple.denom, chain))
 		if err != nil {
 			return nil, nil, err
 		}
@@ -148,8 +124,6 @@ func UmeeClaim(
 		if err != nil {
 			return nil, nil, err
 		}
-		// 8:
-		err = failsim.FailureHook(failures, 8, err, fmt.Sprintf("ABCIQuery: value of denom %q on chain %q", tuple.denom, chain))
 		if err != nil {
 			return nil, nil, err
 		}
