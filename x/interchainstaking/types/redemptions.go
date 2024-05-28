@@ -27,7 +27,11 @@ func DetermineAllocationsForUndelegation(currentAllocations map[string]math.Int,
 		return outWeights, fmt.Errorf("amount was invalid, expected sdk.Coins of length 1, got length %d", len(amount))
 	}
 
-	if !amount[0].Amount.IsPositive() {
+	if availablePerValidator == nil {
+		availablePerValidator = make(map[string]math.Int)
+	}
+
+	if amount[0].Amount.IsNil() || !amount[0].Amount.IsPositive() {
 		return outWeights, fmt.Errorf("amount was invalid, expected positive value, got %s", amount[0].Amount.String())
 	}
 	input := amount[0].Amount
@@ -52,14 +56,20 @@ func DetermineAllocationsForUndelegation(currentAllocations map[string]math.Int,
 		for idx := range overAllocated {
 			// use Amount+1 in the line below to avoid 1 remaining where truncation leaves 1 remaining - e.g. 1000 => 333/333/333 + 1.
 			outWeights[overAllocated[idx].ValoperAddress] = sdk.NewDecFromInt(overAllocated[idx].Amount).Quo(sdk.NewDecFromInt(sum)).Mul(sdk.NewDecFromInt(overAllocationSplit)).TruncateInt()
-			if outWeights[overAllocated[idx].ValoperAddress].GT(availablePerValidator[overAllocated[idx].ValoperAddress]) {
+			overAlloc := availablePerValidator[overAllocated[idx].ValoperAddress]
+			switch {
+			case overAlloc.IsNil():
+				availablePerValidator[overAllocated[idx].ValoperAddress] = sdk.ZeroInt()
+			case outWeights[overAllocated[idx].ValoperAddress].GT(overAlloc):
 				// use up all of overAllocated[idx] and set available to zero.
 				outWeights[overAllocated[idx].ValoperAddress] = availablePerValidator[overAllocated[idx].ValoperAddress]
 				availablePerValidator[overAllocated[idx].ValoperAddress] = sdk.ZeroInt()
-			} else {
+			default:
 				// or don't, and reduce available as appropriate.
 				availablePerValidator[overAllocated[idx].ValoperAddress] = availablePerValidator[overAllocated[idx].ValoperAddress].Sub(outWeights[overAllocated[idx].ValoperAddress])
+
 			}
+
 			overAllocated[idx].Amount = overAllocated[idx].Amount.Sub(outWeights[overAllocated[idx].ValoperAddress])
 			outSum = outSum.Add(outWeights[overAllocated[idx].ValoperAddress])
 		}
@@ -132,7 +142,12 @@ func DetermineAllocationsForUndelegation(currentAllocations map[string]math.Int,
 		// remove validators with no remaining balance from intents, and split remaining amount proportionally.
 		newTargetAllocations := make(ValidatorIntents, 0, len(targetAllocations))
 		for idx := range targetAllocations.Sort() {
-			if !availablePerValidator[targetAllocations[idx].ValoperAddress].IsZero() {
+			targetAlloc := availablePerValidator[targetAllocations[idx].ValoperAddress]
+			if targetAlloc.IsNil() {
+				continue
+			}
+
+			if !targetAlloc.IsZero() {
 				newTargetAllocations = append(newTargetAllocations, targetAllocations[idx])
 			}
 		}
@@ -170,10 +185,19 @@ func DetermineAllocationsForUndelegation(currentAllocations map[string]math.Int,
 	// the delta calculations on the next run.
 	dust := amount[0].Amount.Sub(outSum)
 	for idx := 0; idx <= len(deltas)-1; idx++ {
-		if dust.LTE(availablePerValidator[deltas[idx].ValoperAddress]) {
-			outWeights[deltas[idx].ValoperAddress] = outWeights[deltas[idx].ValoperAddress].Add(dust)
-			break
+		gotForValoper := availablePerValidator[deltas[idx].ValoperAddress]
+		if gotForValoper.IsNil() || dust.GT(gotForValoper) {
+			continue
 		}
+
+		// dust <= gotForValoper.
+		outWeight := outWeights[deltas[idx].ValoperAddress]
+		if outWeight.IsNil() {
+			outWeight = sdk.ZeroInt()
+		}
+
+		outWeights[deltas[idx].ValoperAddress] = outWeight.Add(dust)
+		break
 	}
 
 	return filter(outWeights), nil
