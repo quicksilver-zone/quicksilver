@@ -1,2 +1,0 @@
-go test fuzz v1
-[]byte("{\"UnloCked\":{\"\":\"1\"},\"tArg_AlloCs\":[{\"weight\":\"0\"}],\"Amount\":[{\"Amount\":\"1\"}]}")
