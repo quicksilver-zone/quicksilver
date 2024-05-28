@@ -171,8 +171,8 @@ func OsmosisClPoolUpdateCallback(ctx sdk.Context, k *Keeper, response []byte, qu
 		return err
 	}
 
-	// check query.Request is at least 9 bytes in length. (0x02 + 8 bytes for uint64)
-	if len(query.Request) < 5 {
+	// check query.Request is at least 2 bytes - 0x03 + poolID
+	if len(query.Request) < 2 {
 		return errors.New("query request not sufficient length")
 	}
 	// assert first character is 0x03 as expected (cl pool prefix)
