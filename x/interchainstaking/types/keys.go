@@ -93,12 +93,12 @@ func ParseStakingDelegationKey(key []byte) (sdk.AccAddress, sdk.ValAddress, erro
 }
 
 // GetRemoteAddressKey gets the prefix for a remote address mapping.
-func GetRemoteAddressKey(localAddress []byte, chainID string) []byte {
+func GetRemoteAddressKey(localAddress sdk.AccAddress, chainID string) sdk.AccAddress {
 	return append(append(KeyPrefixRemoteAddress, localAddress...), chainID...)
 }
 
 // GetLocalAddressKey gets the prefix for a local address mapping.
-func GetLocalAddressKey(remoteAddress []byte, chainID string) []byte {
+func GetLocalAddressKey(remoteAddress sdk.AccAddress, chainID string) sdk.AccAddress {
 	return append(append(KeyPrefixLocalAddress, chainID...), remoteAddress...)
 }
 
@@ -158,7 +158,7 @@ func GetZoneValidatorsKey(chainID string) []byte {
 }
 
 // GetRemoteAddressPrefix gets the prefix for a remote address mapping.
-func GetRemoteAddressPrefix(locaAddress []byte) []byte {
+func GetRemoteAddressPrefix(locaAddress sdk.AccAddress) []byte {
 	return append(KeyPrefixRemoteAddress, locaAddress...)
 }
 

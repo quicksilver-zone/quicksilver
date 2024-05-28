@@ -14,6 +14,7 @@ import (
 	ibctesting "github.com/cosmos/ibc-go/v6/testing"
 
 	"github.com/quicksilver-zone/quicksilver/app"
+	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	"github.com/quicksilver-zone/quicksilver/x/airdrop/types"
 	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 	minttypes "github.com/quicksilver-zone/quicksilver/x/mint/types"
@@ -75,6 +76,177 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.coordinator.CommitNBlocks(suite.chainB, 10)
 }
 
+func (suite *KeeperTestSuite) TestDeleteClaimRecord() {
+	suite.initTestZoneDrop()
+
+	address := addressutils.GenerateAccAddressForTest().String()
+
+	cr := types.ClaimRecord{
+		ChainId:   suite.chainA.ChainID,
+		Address:   address,
+		BaseValue: 100,
+	}
+	suite.setClaimRecord(cr)
+
+	// delete claim record
+	err := suite.GetQuicksilverApp(suite.chainA).AirdropKeeper.DeleteClaimRecord(suite.chainA.GetContext(), cr.ChainId, cr.Address)
+	suite.Require().NoError(err)
+
+	// check if claim record is deleted
+	_, err = suite.GetQuicksilverApp(suite.chainA).AirdropKeeper.GetClaimRecord(suite.chainA.GetContext(), cr.ChainId, cr.Address)
+	suite.Require().Error(err)
+}
+
+func (suite *KeeperTestSuite) TestIterateClaimRecords() {
+	suite.initTestZoneDrop()
+
+	addresses := []string{
+		addressutils.GenerateAccAddressForTest().String(),
+		addressutils.GenerateAccAddressForTest().String(),
+		addressutils.GenerateAccAddressForTest().String(),
+	}
+
+	suite.setDefaultClaimRecords(addresses)
+
+	// iterate claim records
+	var count int
+	suite.GetQuicksilverApp(suite.chainA).AirdropKeeper.IterateClaimRecords(suite.chainA.GetContext(), suite.chainA.ChainID, func(_ int64, cr types.ClaimRecord) (stop bool) {
+		count++
+		return false
+	})
+	suite.Require().Equal(len(addresses), count)
+}
+
+func (suite *KeeperTestSuite) TestAllZoneClaimRecords() {
+	suite.initTestZoneDrop()
+
+	addresses := []string{
+		addressutils.GenerateAccAddressForTest().String(),
+		addressutils.GenerateAccAddressForTest().String(),
+		addressutils.GenerateAccAddressForTest().String(),
+	}
+
+	suite.setDefaultClaimRecords(addresses)
+
+	// get all claim records
+	allCRs := suite.GetQuicksilverApp(suite.chainA).AirdropKeeper.AllClaimRecords(suite.chainA.GetContext())
+	suite.Require().Equal(len(addresses), len(allCRs))
+}
+
+func (suite *KeeperTestSuite) TestClearClaimRecords() {
+	suite.initTestZoneDrop()
+
+	addresses := []string{
+		addressutils.GenerateAccAddressForTest().String(),
+		addressutils.GenerateAccAddressForTest().String(),
+		addressutils.GenerateAccAddressForTest().String(),
+	}
+
+	suite.setDefaultClaimRecords(addresses)
+
+	// clear all claim records
+	suite.GetQuicksilverApp(suite.chainA).AirdropKeeper.ClearClaimRecords(suite.chainA.GetContext(), suite.chainA.ChainID)
+
+	// get all claim records
+	allCRs := suite.GetQuicksilverApp(suite.chainA).AirdropKeeper.AllClaimRecords(suite.chainA.GetContext())
+	suite.Require().Equal(0, len(allCRs))
+}
+
+func (suite *KeeperTestSuite) TestZoneDrop() {
+	suite.initTestZoneDrop()
+
+	req := types.QueryZoneDropRequest{
+		ChainId: suite.chainB.ChainID,
+	}
+
+	res, err := suite.GetQuicksilverApp(suite.chainA).AirdropKeeper.ZoneDrop(suite.chainA.GetContext(), &req)
+	suite.Require().NoError(err)
+
+	zoneDrop := res.ZoneDrop
+	suite.Require().Equal(suite.chainB.ChainID, zoneDrop.ChainId)
+	suite.Require().EqualValues(1000000000, zoneDrop.Allocation)
+}
+
+func (suite *KeeperTestSuite) TestZoneDrops() {
+	suite.initTestZoneDrop()
+
+	req := types.QueryZoneDropsRequest{Status: types.StatusActive}
+
+	res, err := suite.GetQuicksilverApp(suite.chainA).AirdropKeeper.ZoneDrops(suite.chainA.GetContext(), &req)
+	suite.Require().NoError(err)
+
+	zoneDrops := res.ZoneDrops
+	suite.Require().Len(zoneDrops, 1)
+	suite.Require().Equal(suite.chainB.ChainID, zoneDrops[0].ChainId)
+	suite.Require().EqualValues(1000000000, zoneDrops[0].Allocation)
+
+	// empty status request
+	req.Status = types.StatusFuture
+
+	res, err = suite.GetQuicksilverApp(suite.chainA).AirdropKeeper.ZoneDrops(suite.chainA.GetContext(), &req)
+	suite.Require().NoError(err)
+	suite.Require().Len(res.ZoneDrops, 0)
+}
+
+func (suite *KeeperTestSuite) TestClaimRecord() {
+	suite.initTestZoneDrop()
+
+	address := addressutils.GenerateAccAddressForTest().String()
+
+	cr := types.ClaimRecord{
+		ChainId:   suite.chainA.ChainID,
+		Address:   address,
+		BaseValue: 100,
+	}
+	suite.setClaimRecord(cr)
+
+	req := types.QueryClaimRecordRequest{
+		ChainId: cr.ChainId,
+		Address: cr.Address,
+	}
+
+	res, err := suite.GetQuicksilverApp(suite.chainA).AirdropKeeper.ClaimRecord(suite.chainA.GetContext(), &req)
+	suite.Require().NoError(err)
+
+	claimRecord := res.ClaimRecord
+	suite.Require().Equal(cr.ChainId, claimRecord.ChainId)
+	suite.Require().Equal(cr.Address, claimRecord.Address)
+	suite.Require().Equal(cr.BaseValue, claimRecord.BaseValue)
+
+	// invalid address
+	req.Address = "invalid"
+	_, err = suite.GetQuicksilverApp(suite.chainA).AirdropKeeper.ClaimRecord(suite.chainA.GetContext(), &req)
+	suite.Require().Error(err)
+
+	// invalid chain id
+	req.ChainId = "invalid"
+	req.Address = cr.Address
+	_, err = suite.GetQuicksilverApp(suite.chainA).AirdropKeeper.ClaimRecord(suite.chainA.GetContext(), &req)
+	suite.Require().Error(err)
+}
+
+func (suite *KeeperTestSuite) TestClaimRecords() {
+	suite.initTestZoneDrop()
+
+	addresses := []string{
+		addressutils.GenerateAccAddressForTest().String(),
+		addressutils.GenerateAccAddressForTest().String(),
+		addressutils.GenerateAccAddressForTest().String(),
+	}
+
+	suite.setDefaultClaimRecords(addresses)
+
+	req := types.QueryClaimRecordsRequest{
+		ChainId: suite.chainA.ChainID,
+	}
+
+	res, err := suite.GetQuicksilverApp(suite.chainA).AirdropKeeper.ClaimRecords(suite.chainA.GetContext(), &req)
+	suite.Require().NoError(err)
+
+	claimRecords := res.ClaimRecords
+	suite.Require().Len(claimRecords, len(addresses))
+}
+
 func (suite *KeeperTestSuite) initTestZone() {
 	// test zone
 	zone := icstypes.Zone{
@@ -87,6 +259,17 @@ func (suite *KeeperTestSuite) initTestZone() {
 	}
 
 	suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetZone(suite.chainA.GetContext(), &zone)
+}
+
+func (suite *KeeperTestSuite) setDefaultClaimRecords(addresses []string) {
+	for _, address := range addresses {
+		cr := types.ClaimRecord{
+			ChainId:   suite.chainA.ChainID,
+			Address:   address,
+			BaseValue: 100,
+		}
+		suite.setClaimRecord(cr)
+	}
 }
 
 func (suite *KeeperTestSuite) getZoneDrop() types.ZoneDrop {

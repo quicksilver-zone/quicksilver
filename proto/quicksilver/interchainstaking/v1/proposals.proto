@@ -32,6 +32,7 @@ message RegisterZoneProposal {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable) = false
   ];
+  string transfer_channel = 16;
 }
 
 message RegisterZoneProposalWithDeposit {
@@ -58,6 +59,7 @@ message RegisterZoneProposalWithDeposit {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable) = false
   ];
+  string transfer_channel = 17;
 }
 
 message UpdateZoneProposal {
@@ -70,6 +72,7 @@ message UpdateZoneProposal {
   string chain_id = 3;
 
   repeated UpdateZoneValue changes = 4 [(gogoproto.moretags) = "yaml:\"changes\""];
+  string transfer_channel = 5;
 }
 
 message UpdateZoneProposalWithDeposit {
@@ -79,7 +82,6 @@ message UpdateZoneProposalWithDeposit {
   string title = 1;
   string description = 2;
   string chain_id = 3;
-
   repeated UpdateZoneValue changes = 4;
   string deposit = 5;
 }

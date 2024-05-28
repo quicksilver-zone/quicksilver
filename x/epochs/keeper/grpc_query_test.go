@@ -38,3 +38,22 @@ func (suite *KeeperTestSuite) TestQueryEpochInfos() {
 	suite.Require().Equal(epochInfosResponse.Epochs[2].CurrentEpochStartTime, chainStartTime)
 	suite.Require().Equal(epochInfosResponse.Epochs[2].EpochCountingStarted, false)
 }
+
+func (suite *KeeperTestSuite) TestCurrentEpoch() {
+	suite.SetupTest()
+	k := suite.app.EpochsKeeper
+	context := suite.ctx
+
+	weekIdentifier := "week"
+
+	currentEpochResponse, err := k.CurrentEpoch(context, &types.QueryCurrentEpochRequest{
+		Identifier: weekIdentifier,
+	})
+	suite.Require().NoError(err)
+	suite.Require().Equal(currentEpochResponse.CurrentEpoch, int64(0))
+
+	// Nil
+	currentEpochResponse, err = k.CurrentEpoch(context, nil)
+	suite.Require().Error(err)
+	suite.Require().Nil(currentEpochResponse)
+}

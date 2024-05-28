@@ -24,7 +24,7 @@ func (k *Keeper) InitWithdrawalRecordSequence(ctx sdk.Context) {
 	store.Set(types.KeyPrefixRequeuedWithdrawalRecordSeq, bz)
 }
 
-// GetNextWithdrawalRecordSequence returns and increments the global withdrawal record seqeuence.
+// GetNextWithdrawalRecordSequence returns and increments the global withdrawal record sequence.
 func (k *Keeper) GetNextWithdrawalRecordSequence(ctx sdk.Context) uint64 {
 	var sequence uint64
 	store := ctx.KVStore(k.storeKey)
@@ -185,7 +185,6 @@ func (k *Keeper) GetUserChainRequeuedWithdrawalRecord(ctx sdk.Context, chainID s
 
 	k.IterateZoneStatusWithdrawalRecords(ctx, chainID, types.WithdrawStatusQueued, func(_ int64, record types.WithdrawalRecord) (stop bool) {
 		if record.Requeued && record.Delegator == address {
-			fmt.Println("FOUND MATCHING RECORD")
 			toReturn = record
 			return true
 		}

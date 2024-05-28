@@ -14,4 +14,7 @@ key-path = "{{ .TLS.KeyPath }}"
 [supply]
 # The supply module endpoint is resource intensive, and should never be opened publicly.
 enabled = "{{ .Supply.Enabled }}"
+
+[metrics]
+url = "{{ .Metrics.URL }}"
 `
