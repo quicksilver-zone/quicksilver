@@ -2,7 +2,7 @@ import '../styles/globals.css';
 
 import '@interchain-ui/react/styles';
 import { Chain } from '@chain-registry/types';
-import { Box, ChakraProvider, Flex } from '@chakra-ui/react';
+import { Box, Center, ChakraProvider, Image } from '@chakra-ui/react';
 import { Registry } from '@cosmjs/proto-signing';
 import { SigningStargateClientOptions, AminoTypes } from '@cosmjs/stargate';
 import { SignerOptions } from '@cosmos-kit/core';
@@ -295,12 +295,25 @@ function QuickApp({ Component, pageProps }: AppProps) {
               <ReactQueryDevtools initialIsOpen={true} />
 
               <main id="main" className={themeClass}>
-                <Box w="100vw" h="100vh" bgSize="fit" bgPosition="right center" bgAttachment="fixed" bgRepeat="no-repeat">
-                  <Flex justifyContent={'space-between'} alignItems={'center'}>
-                    <DynamicHeaderSection chainName="quicksilver" />
-                    <SideHeader />
-                  </Flex>
-                  <Component {...pageProps} />
+                <DynamicHeaderSection chainName="quicksilver" />
+                <Box display={{ base: 'none', menu: 'block' }}>
+                  <SideHeader />
+                </Box>
+                <Box w="100vw" h="100vh">
+                  <Center>
+                    <Component {...pageProps} />
+                  </Center>
+                  <Image
+                    zIndex={5}
+                    alt="quick logo"
+                    w={'230px'}
+                    position={'fixed'}
+                    bottom={1}
+                    right={4}
+                    display={{ base: 'none', xl: 'block' }}
+                    src="/img/quicksilverWord.png"
+                  />
+
                   <SpeedInsights />
                 </Box>
               </main>

@@ -117,7 +117,7 @@ export const VotingSection = ({ chainName }: { chainName: ChainName }) => {
 
   return (
     <>
-      <Box mb={16}>
+      <Box>
         <Flex mb={4} alignContent="center" alignItems="center" justifyContent={'space-between'} w="100%" flexDirection={'row'}>
           <Text display={{ base: 'flex', md: 'none' }} pb={2} color="white" fontSize="24px">
             Proposals
@@ -224,6 +224,7 @@ export const VotingSection = ({ chainName }: { chainName: ChainName }) => {
               {({ isOpen }) => (
                 <>
                   <MenuButton
+                    display={{ base: 'none', md: 'flex' }}
                     _hover={{
                       bgColor: 'rgba(255,128,0, 0.25)',
                     }}
@@ -269,7 +270,7 @@ export const VotingSection = ({ chainName }: { chainName: ChainName }) => {
         <Box
           pr={2}
           maxHeight="2xl"
-          minH={"2xl"}
+          minH={'2xl'}
           overflowY="scroll"
           sx={{
             '&::-webkit-scrollbar': {
@@ -287,21 +288,6 @@ export const VotingSection = ({ chainName }: { chainName: ChainName }) => {
         >
           {isLoading ? <Loader /> : content}
         </Box>
-        {address && (
-          <Box>
-            <Image
-              display={{ base: 'none', lg: 'block', md: 'none' }}
-              src="/img/quicksilverWord.png"
-              alt="Quicksilver"
-              position="relative"
-              bottom="100"
-              left="660"
-              h={'100px'}
-              transform="rotate(90deg)"
-              transformOrigin="bottom right"
-            />
-          </Box>
-        )}
       </Box>
 
       {selectedProposal && (

@@ -4,7 +4,7 @@ go 1.22.2
 
 require (
 	github.com/cosmos/ibc-go/v6 v6.3.1
-	github.com/strangelove-ventures/interchaintest/v5 v5.0.0-20220926164354-b3185ba0ead3
+	github.com/strangelove-ventures/interchaintest/v6 v6.0.0
 	github.com/stretchr/testify v1.9.0
 	go.uber.org/zap v1.25.0
 )
@@ -91,6 +91,7 @@ require (
 	github.com/google/btree v1.1.2 // indirect
 	github.com/google/flatbuffers v23.5.26+incompatible // indirect
 	github.com/google/martian/v3 v3.3.3 // indirect
+	github.com/google/pprof v0.0.0-20240424215950-a892ee059fd6 // indirect
 	github.com/google/s2a-go v0.1.7 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.2 // indirect
@@ -142,7 +143,7 @@ require (
 	github.com/multiformats/go-multicodec v0.8.1 // indirect
 	github.com/multiformats/go-multihash v0.2.1 // indirect
 	github.com/multiformats/go-varint v0.0.7 // indirect
-	github.com/onsi/gomega v1.31.1 // indirect
+	github.com/onsi/gomega v1.33.1 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.0-rc2 // indirect
 	github.com/pelletier/go-toml v1.9.5 // indirect
@@ -206,7 +207,7 @@ require (
 	google.golang.org/genproto v0.0.0-20240506185236-b8a5c65736ae // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20240506185236-b8a5c65736ae // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240506185236-b8a5c65736ae // indirect
-	google.golang.org/grpc v1.63.2 // indirect
+	google.golang.org/grpc v1.64.0 // indirect
 	google.golang.org/protobuf v1.34.1 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/natefinch/npipe.v2 v2.0.0-20160621034901-c1b8fa8bdcce // indirect
@@ -230,8 +231,7 @@ replace (
 	github.com/ChainSafe/go-schnorrkel/1 => github.com/ChainSafe/go-schnorrkel v1.0.0
 	github.com/CosmWasm/wasmd => github.com/notional-labs/wasmd v0.29.0-sdk46.0.20221114145317-d6e67fd50956
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
-	github.com/ingenuity-build => ../../
-	github.com/strangelove-ventures/interchaintest/v5 => github.com/aljo242/interchaintest/v5 v5.0.0-20230619200058-1d4823df8b75
+	github.com/quicksilver-zone/quicksilver => ../../
 	github.com/tendermint/tendermint => github.com/cometbft/cometbft v0.34.32
 	github.com/vedhavyas/go-subkey => github.com/strangelove-ventures/go-subkey v1.0.7
 )
