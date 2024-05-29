@@ -167,10 +167,10 @@ func IntentsFromString(input string) ([]*ValidatorIntent, error) {
 		return nil, errors.New("invalid intents string")
 	}
 
-	out := []*ValidatorIntent{}
+	istrs := strings.Split(input, ",")
+	out := make([]*ValidatorIntent, 0, len(istrs))
 
 	wsum := sdk.ZeroDec()
-	istrs := strings.Split(input, ",")
 	for i, istr := range istrs {
 		wstr := iexpr.ReplaceAllString(istr, "$1")
 		weight, err := sdk.NewDecFromStr(wstr)
@@ -191,12 +191,14 @@ func IntentsFromString(input string) ([]*ValidatorIntent, error) {
 		out = append(out, v)
 	}
 
-	if !wsum.Equal(sdk.OneDec()) {
+	if !wsum.Equal(oneDec) {
 		return nil, errors.New("combined weight must be 1.0")
 	}
 
 	return out, nil
 }
+
+var oneDec = sdk.OneDec()
 
 // NewMsgSignalIntent - construct a msg to update signalled intent.
 func NewMsgSignalIntent(chainID, intents string, fromAddress sdk.Address) *MsgSignalIntent {
