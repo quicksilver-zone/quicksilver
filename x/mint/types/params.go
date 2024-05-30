@@ -108,7 +108,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 func validateMintDenom(i interface{}) error {
 	v, ok := i.(string)
 	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
+		return ErrInvalidParameter{Type: i}
 	}
 
 	if strings.TrimSpace(v) == "" {
@@ -120,7 +120,7 @@ func validateMintDenom(i interface{}) error {
 func validateGenesisEpochProvisions(i interface{}) error {
 	v, ok := i.(sdk.Dec)
 	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
+		return ErrInvalidParameter{Type: i}
 	}
 
 	if v.LT(sdk.ZeroDec()) {
@@ -133,7 +133,7 @@ func validateGenesisEpochProvisions(i interface{}) error {
 func validateReductionPeriodInEpochs(i interface{}) error {
 	v, ok := i.(int64)
 	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
+		return ErrInvalidParameter{Type: i}
 	}
 
 	if v <= 0 {
@@ -146,7 +146,7 @@ func validateReductionPeriodInEpochs(i interface{}) error {
 func validateReductionFactor(i interface{}) error {
 	v, ok := i.(sdk.Dec)
 	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
+		return ErrInvalidParameter{Type: i}
 	}
 
 	if v.GT(sdk.OneDec()) {
@@ -163,7 +163,7 @@ func validateReductionFactor(i interface{}) error {
 func validateDistributionProportions(i interface{}) error {
 	v, ok := i.(DistributionProportions)
 	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
+		return ErrInvalidParameter{Type: i}
 	}
 
 	if v.Staking.IsNegative() {
@@ -193,7 +193,7 @@ func validateDistributionProportions(i interface{}) error {
 func validateMintingRewardsDistributionStartEpoch(i interface{}) error {
 	v, ok := i.(int64)
 	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
+		return ErrInvalidParameter{Type: i}
 	}
 
 	if v < 0 {
