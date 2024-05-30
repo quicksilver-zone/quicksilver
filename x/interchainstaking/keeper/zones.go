@@ -153,7 +153,7 @@ func (k *Keeper) GetZoneFromConnectionID(ctx sdk.Context, connectionID string) (
 	}
 	zone, found := k.GetZone(ctx, chainID)
 	if !found {
-		err := fmt.Errorf("unable to fetch zone from connection id: not found for chainID %s", chainID)
+		err := types.ErrNoRegisteredZoneForChainId{Id: chainID}
 		k.Logger(ctx).Error(err.Error())
 		return nil, err
 	}
@@ -471,7 +471,7 @@ func (k *Keeper) RemoveZoneAndAssociatedRecords(ctx sdk.Context, chainID string)
 	// remove zone and related records
 	zone, ok := k.GetZone(ctx, chainID)
 	if !ok {
-		panic("cannot find zone for deletion")
+		panic(types.ErrNoRegisteredZoneForChainId{Id: chainID})
 	}
 
 	// clear unbondings

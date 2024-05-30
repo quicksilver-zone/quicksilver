@@ -100,7 +100,7 @@ func ValsetCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Quer
 func ValidatorCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
 	zone, found := k.GetZone(ctx, query.GetChainId()) // can't we get rid of this check?
 	if !found {
-		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
+		return types.ErrNoRegisteredZoneForChainId{Id: query.GetChainId()}
 	}
 	return k.SetValidatorForZone(ctx, &zone, args)
 }
@@ -108,7 +108,7 @@ func ValidatorCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Q
 func RewardsCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
 	zone, found := k.GetZone(ctx, query.GetChainId())
 	if !found {
-		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
+		return types.ErrNoRegisteredZoneForChainId{Id: query.GetChainId()}
 	}
 
 	k.Logger(ctx).Debug("rewards callback", "zone", query.ChainId)
@@ -147,7 +147,7 @@ func DelegationsCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes
 func delegationsCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Query, isEpoch bool) error {
 	zone, found := k.GetZone(ctx, query.GetChainId())
 	if !found {
-		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
+		return types.ErrNoRegisteredZoneForChainId{Id: query.GetChainId()}
 	}
 
 	if len(query.Request) == 0 {
@@ -176,7 +176,7 @@ func DelegationCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.
 func delegationCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Query, isEpoch bool) error {
 	zone, found := k.GetZone(ctx, query.GetChainId())
 	if !found {
-		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
+		return types.ErrNoRegisteredZoneForChainId{Id: query.GetChainId()}
 	}
 
 	delegation := stakingtypes.Delegation{}
@@ -233,7 +233,7 @@ func PerfBalanceCallback(k *Keeper, ctx sdk.Context, response []byte, query icqt
 
 	zone, found := k.GetZone(ctx, query.GetChainId())
 	if !found {
-		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
+		return types.ErrNoRegisteredZoneForChainId{Id: query.GetChainId()}
 	}
 
 	// initialize performance delegations
@@ -248,7 +248,7 @@ func PerfBalanceCallback(k *Keeper, ctx sdk.Context, response []byte, query icqt
 func DepositIntervalCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
 	zone, found := k.GetZone(ctx, query.GetChainId())
 	if !found {
-		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
+		return types.ErrNoRegisteredZoneForChainId{Id: query.GetChainId()}
 	}
 
 	if !zone.DepositsEnabled {
@@ -285,7 +285,7 @@ func DepositIntervalCallback(k *Keeper, ctx sdk.Context, args []byte, query icqt
 func SigningInfoCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
 	zone, found := k.GetZone(ctx, query.GetChainId())
 	if !found {
-		return fmt.Errorf("no registered zone for chain id: %s", zone.ChainId)
+		return types.ErrNoRegisteredZoneForChainId{Id: query.GetChainId()}
 	}
 
 	k.Logger(ctx).Debug("Validator signing info callback", "zone", zone.ChainId)
@@ -498,7 +498,7 @@ func DepositTxCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Q
 
 	zone, found := k.GetZone(ctx, query.GetChainId())
 	if !found {
-		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
+		return types.ErrNoRegisteredZoneForChainId{Id: query.GetChainId()}
 	}
 
 	if !zone.DepositsEnabled {
@@ -556,7 +556,7 @@ func DepositTxCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Q
 func AccountBalanceCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
 	zone, found := k.GetZone(ctx, query.GetChainId())
 	if !found {
-		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
+		return types.ErrNoRegisteredZoneForChainId{Id: query.GetChainId()}
 	}
 	// strip the BalancesPrefix from the request key, as AddressFromBalancesStore expects this to be removed
 	// by the prefixIterator. query.Request is a value that Quicksilver always sets, and is not user generated,
@@ -599,7 +599,7 @@ func AccountBalanceCallback(k *Keeper, ctx sdk.Context, args []byte, query icqty
 func DelegationAccountBalanceCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
 	zone, found := k.GetZone(ctx, query.GetChainId())
 	if !found {
-		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
+		return types.ErrNoRegisteredZoneForChainId{Id: query.GetChainId()}
 	}
 	// strip the BalancesPrefix from the request key, as AddressFromBalancesStore expects this to be removed
 	// by the prefixIterator. query.Request is a value that Quicksilver always sets, and is not user generated,
@@ -678,7 +678,7 @@ func DelegationAccountBalanceCallback(k *Keeper, ctx sdk.Context, args []byte, q
 func DelegationAccountBalancesCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
 	zone, found := k.GetZone(ctx, query.GetChainId())
 	if !found {
-		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
+		return types.ErrNoRegisteredZoneForChainId{Id: query.GetChainId()}
 	}
 	result := banktypes.QueryAllBalancesResponse{}
 	k.cdc.MustUnmarshal(args, &result)
@@ -734,7 +734,7 @@ func AllBalancesCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes
 
 	zone, found := k.GetZone(ctx, query.GetChainId())
 	if !found {
-		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
+		return types.ErrNoRegisteredZoneForChainId{Id: query.GetChainId()}
 	}
 
 	k.Logger(ctx).Debug("AllBalances callback", "chain", zone.ChainId)

@@ -64,7 +64,7 @@ func (k *Keeper) Zone(c context.Context, req *types.QueryZoneRequest) (*types.Qu
 
 	zone, found := k.GetZone(ctx, req.ChainId)
 	if !found {
-		return nil, fmt.Errorf("no zone found for chain id %s", req.ChainId)
+		return nil, types.ErrNoRegisteredZoneForChainId{Id: req.ChainId}
 	}
 
 	zoneStats, err := k.CollectStatsForZone(ctx, &zone)
@@ -116,7 +116,7 @@ func (k *Keeper) DepositAccount(c context.Context, req *types.QueryDepositAccoun
 
 	zone, found := k.GetZone(ctx, req.GetChainId())
 	if !found {
-		return nil, status.Error(codes.NotFound, fmt.Sprintf("no zone found matching %s", req.GetChainId()))
+		return nil, types.ErrNoRegisteredZoneForChainId{Id: req.GetChainId()}
 	}
 
 	if zone.DepositAddress == nil {
@@ -138,7 +138,7 @@ func (k *Keeper) DelegatorIntent(c context.Context, req *types.QueryDelegatorInt
 
 	zone, found := k.GetZone(ctx, req.GetChainId())
 	if !found {
-		return nil, status.Error(codes.NotFound, fmt.Sprintf("no zone found matching %s", req.GetChainId()))
+		return nil, types.ErrNoRegisteredZoneForChainId{Id: req.GetChainId()}
 	}
 
 	// we can ignore bool (found) as it always returns true
@@ -178,7 +178,7 @@ func (k *Keeper) Delegations(c context.Context, req *types.QueryDelegationsReque
 
 	zone, found := k.GetZone(ctx, req.GetChainId())
 	if !found {
-		return nil, status.Error(codes.NotFound, fmt.Sprintf("no zone found matching %s", req.GetChainId()))
+		return nil, types.ErrNoRegisteredZoneForChainId{Id: req.GetChainId()}
 	}
 
 	delegations := make([]types.Delegation, 0)
@@ -203,7 +203,7 @@ func (k *Keeper) Receipts(c context.Context, req *types.QueryReceiptsRequest) (*
 
 	zone, found := k.GetZone(ctx, req.GetChainId())
 	if !found {
-		return nil, status.Error(codes.NotFound, fmt.Sprintf("no zone found matching %s", req.GetChainId()))
+		return nil, types.ErrNoRegisteredZoneForChainId{Id: req.GetChainId()}
 	}
 
 	receipts := make([]types.Receipt, 0)
@@ -244,7 +244,7 @@ func (k *Keeper) ZoneWithdrawalRecords(c context.Context, req *types.QueryWithdr
 	ctx := sdk.UnwrapSDKContext(c)
 	_, found := k.GetZone(ctx, req.ChainId)
 	if !found {
-		return nil, status.Error(codes.NotFound, fmt.Sprintf("no zone found matching %s", req.GetChainId()))
+		return nil, types.ErrNoRegisteredZoneForChainId{Id: req.GetChainId()}
 	}
 
 	withdrawalrecords := k.AllZoneWithdrawalRecords(ctx, req.ChainId)
@@ -275,7 +275,7 @@ func (k *Keeper) UserZoneWithdrawalRecords(c context.Context, req *types.QueryWi
 
 	zone, found := k.GetZone(ctx, req.GetChainId())
 	if !found {
-		return nil, status.Error(codes.NotFound, fmt.Sprintf("no zone found matching %s", req.GetChainId()))
+		return nil, types.ErrNoRegisteredZoneForChainId{Id: req.GetChainId()}
 	}
 
 	withdrawalrecords := make([]types.WithdrawalRecord, 0)

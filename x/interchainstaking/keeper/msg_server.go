@@ -136,7 +136,7 @@ func (k msgServer) SignalIntent(goCtx context.Context, msg *types.MsgSignalInten
 	// get zone
 	zone, ok := k.GetZone(ctx, msg.ChainId)
 	if !ok {
-		return nil, fmt.Errorf("invalid chain id \"%s\"", msg.ChainId)
+		return nil, types.ErrNoRegisteredZoneForChainId{Id: msg.ChainId}
 	}
 
 	// validate intents (aggregated errors)
@@ -194,7 +194,7 @@ func (k msgServer) GovReopenChannel(goCtx context.Context, msg *types.MsgGovReop
 	}
 
 	if _, found := k.GetZone(ctx, chainID); !found {
-		return nil, errors.New("invalid port format; zone not found")
+		return nil, types.ErrNoRegisteredZoneForChainId{Id: chainID}
 	}
 
 	if err := k.Keeper.registerInterchainAccount(ctx, msg.ConnectionId, portID); err != nil {
