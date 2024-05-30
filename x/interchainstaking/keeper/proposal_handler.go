@@ -157,7 +157,7 @@ func (k *Keeper) registerInterchainAccount(ctx sdk.Context, connectionID, portOw
 func (k *Keeper) HandleUpdateZoneProposal(ctx sdk.Context, p *types.UpdateZoneProposal) error {
 	zone, found := k.GetZone(ctx, p.ChainId)
 	if !found {
-		err := fmt.Errorf("unable to get registered zone for chain id: %s", p.ChainId)
+		err := types.ErrNoRegisteredZoneForChainId{Id: p.ChainId}
 		return err
 	}
 
