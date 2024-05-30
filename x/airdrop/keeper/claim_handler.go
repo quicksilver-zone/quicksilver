@@ -27,7 +27,7 @@ var (
 func (k *Keeper) HandleClaim(ctx sdk.Context, cr types.ClaimRecord, action types.Action, proofs []*cmtypes.Proof) (uint64, error) {
 	// action already completed, nothing to claim
 	if _, exists := cr.ActionsCompleted[int32(action)]; exists {
-		return 0, fmt.Errorf("%s already completed", types.Action_name[int32(action)])
+		return 0, k.logAndReturn(ctx, fmt.Sprintf("%s already completed", types.Action_name[int32(action)]))
 	}
 
 	switch action {
@@ -54,10 +54,10 @@ func (k *Keeper) HandleClaim(ctx sdk.Context, cr types.ClaimRecord, action types
 	case types.ActionOsmosis:
 		return k.handleOsmosisLP(ctx, &cr, action, proofs)
 	default:
-		return 0, fmt.Errorf("undefined action [%d]", action)
+		return 0, k.logAndReturn(ctx, fmt.Sprintf("undefined action [%d]", action))
 	}
 
-	return 0, fmt.Errorf("handler not implemented for [%d] %s", action, types.Action_name[int32(action)])
+	return 0, k.logAndReturn(ctx, fmt.Sprintf("handler not implemented for [%d] %s", action, types.Action_name[int32(action)]))
 }
 
 // ------------
@@ -72,7 +72,7 @@ func (k *Keeper) handleInitial(ctx sdk.Context, cr *types.ClaimRecord, action ty
 // handleDeposit.
 func (k *Keeper) handleDeposit(ctx sdk.Context, cr *types.ClaimRecord, action types.Action, threshold sdk.Dec) (uint64, error) {
 	if err := k.verifyDeposit(ctx, *cr, threshold); err != nil {
-		return 0, err
+		return 0, k.logAndReturn(ctx, err.Error())
 	}
 
 	return k.completeClaim(ctx, cr, action)
@@ -81,7 +81,7 @@ func (k *Keeper) handleDeposit(ctx sdk.Context, cr *types.ClaimRecord, action ty
 // handleBondedDelegation.
 func (k *Keeper) handleBondedDelegation(ctx sdk.Context, cr *types.ClaimRecord, action types.Action) (uint64, error) {
 	if err := k.verifyBondedDelegation(ctx, cr.Address); err != nil {
-		return 0, err
+		return 0, k.logAndReturn(ctx, err.Error())
 	}
 
 	return k.completeClaim(ctx, cr, action)
@@ -90,7 +90,7 @@ func (k *Keeper) handleBondedDelegation(ctx sdk.Context, cr *types.ClaimRecord, 
 // handleZoneIntent.
 func (k *Keeper) handleZoneIntent(ctx sdk.Context, cr *types.ClaimRecord, action types.Action) (uint64, error) {
 	if err := k.verifyZoneIntent(ctx, cr.ChainId, cr.Address); err != nil {
-		return 0, err
+		return 0, k.logAndReturn(ctx, err.Error())
 	}
 
 	return k.completeClaim(ctx, cr, action)
@@ -99,7 +99,7 @@ func (k *Keeper) handleZoneIntent(ctx sdk.Context, cr *types.ClaimRecord, action
 // handleZoneIntent.
 func (k *Keeper) handleGovernanceParticipation(ctx sdk.Context, cr *types.ClaimRecord, action types.Action) (uint64, error) {
 	if err := k.verifyGovernanceParticipation(ctx, cr.Address); err != nil {
-		return 0, err
+		return 0, k.logAndReturn(ctx, err.Error())
 	}
 
 	return k.completeClaim(ctx, cr, action)
@@ -108,10 +108,10 @@ func (k *Keeper) handleGovernanceParticipation(ctx sdk.Context, cr *types.ClaimR
 // handleOsmosisLP.
 func (k *Keeper) handleOsmosisLP(ctx sdk.Context, cr *types.ClaimRecord, action types.Action, proofs []*cmtypes.Proof) (uint64, error) {
 	if len(proofs) == 0 {
-		return 0, errors.New("expects at least one LP proof")
+		return 0, k.logAndReturn(ctx, "expects at least one LP proof")
 	}
 	if err := k.verifyOsmosisLP(ctx, proofs, *cr); err != nil {
-		return 0, err
+		return 0, k.logAndReturn(ctx, err.Error())
 	}
 
 	return k.completeClaim(ctx, cr, action)
@@ -130,13 +130,13 @@ func (k *Keeper) verifyDeposit(ctx sdk.Context, cr types.ClaimRecord, threshold 
 
 	zone, ok := k.icsKeeper.GetZone(ctx, cr.ChainId)
 	if !ok {
-		return fmt.Errorf("zone not found for %s", cr.ChainId)
+		return k.logAndReturn(ctx, fmt.Sprintf("zone not found for %s", cr.ChainId))
 	}
 
 	// obtain all deposit receipts for this user on this zone
 	receipts, err := k.icsKeeper.UserZoneReceipts(ctx, &zone, addr)
 	if err != nil {
-		return fmt.Errorf("unable to obtain zone receipts for %s on zone %s: %w", cr.Address, cr.ChainId, err)
+		return k.logAndReturn(ctx, fmt.Sprintf("unable to obtain zone receipts for %s on zone %s", cr.Address, cr.ChainId))
 	}
 
 	// sum gross deposits amount
@@ -149,7 +149,7 @@ func (k *Keeper) verifyDeposit(ctx sdk.Context, cr types.ClaimRecord, threshold 
 	tAmount := threshold.MulInt64(int64(cr.BaseValue)).TruncateInt()
 
 	if gdAmount.LT(tAmount) {
-		return fmt.Errorf("insufficient deposit amount, expects %v got %v", tAmount, gdAmount)
+		return k.logAndReturn(ctx, fmt.Sprintf("insufficient deposit amount, expects %v got %v", tAmount, gdAmount))
 	}
 
 	return nil
@@ -165,7 +165,7 @@ func (k *Keeper) verifyBondedDelegation(ctx sdk.Context, address string) error {
 
 	amount := k.stakingKeeper.GetDelegatorBonded(ctx, addr)
 	if !amount.IsPositive() {
-		return fmt.Errorf("no bonded delegation for %s", addr)
+		return k.logAndReturn(ctx, fmt.Sprintf("no bonded delegation for %s", addr))
 	}
 	return nil
 }
@@ -180,12 +180,12 @@ func (k *Keeper) verifyZoneIntent(ctx sdk.Context, chainID, address string) erro
 
 	zone, ok := k.icsKeeper.GetZone(ctx, chainID)
 	if !ok {
-		return fmt.Errorf("zone %s not found", chainID)
+		return k.logAndReturn(ctx, fmt.Sprintf("zone not found for %s", chainID))
 	}
 
 	intent, ok := k.icsKeeper.GetDelegatorIntent(ctx, &zone, addr.String(), false)
 	if !ok || len(intent.Intents) == 0 {
-		return fmt.Errorf("intent not found or no intents set for %s", addr)
+		return k.logAndReturn(ctx, fmt.Sprintf("intent not found or no intents set for %s", addr))
 	}
 
 	return nil
@@ -210,7 +210,7 @@ func (k *Keeper) verifyGovernanceParticipation(ctx sdk.Context, address string) 
 	})
 
 	if !voted {
-		return fmt.Errorf("no governance votes by %s", addr)
+		return k.logAndReturn(ctx, fmt.Sprintf("no governance votes by %s", addr))
 	}
 
 	return nil
@@ -244,7 +244,7 @@ func (k *Keeper) verifyOsmosisLP(ctx sdk.Context, proofs []*cmtypes.Proof, cr ty
 
 		// check for duplicate proof submission
 		if _, exists := dupCheck[string(proof.Key)]; exists {
-			return fmt.Errorf("duplicate proof submitted, %s", proof.Key)
+			return k.logAndReturn(ctx, fmt.Sprintf("duplicate proof submitted, %s", proof.Key))
 		}
 		dupCheck[string(proof.Key)] = struct{}{}
 
@@ -260,18 +260,18 @@ func (k *Keeper) verifyOsmosisLP(ctx sdk.Context, proofs []*cmtypes.Proof, cr ty
 			proof.Data,
 			proof.ProofOps,
 		); err != nil {
-			return fmt.Errorf("proofs [%d]: %w", i, err)
+			return k.logAndReturn(ctx, fmt.Sprintf("proofs [%d]: %w", i, err))
 		}
 
 		var lock osmosislockuptypes.PeriodLock
 		err := k.cdc.Unmarshal(proof.Data, &lock)
 		if err != nil {
-			return fmt.Errorf("unable to unmarshal locked response: %w", err)
+			return k.logAndReturn(ctx, fmt.Sprintf("unable to unmarshal locked response: %w", err))
 		}
 
 		// verify proof lock owner address is claim record address
 		if lock.Owner != cr.Address {
-			return fmt.Errorf("invalid lock owner, expected %s got %s", cr.Address, lock.Owner)
+			return k.logAndReturn(ctx, fmt.Sprintf("invalid lock owner, expected %s got %s", cr.Address, lock.Owner))
 		}
 
 		// verify pool is for the relevant zone
@@ -286,13 +286,13 @@ func (k *Keeper) verifyOsmosisLP(ctx sdk.Context, proofs []*cmtypes.Proof, cr ty
 	// calculate target amount
 	dThreshold := sdk.MustNewDecFromStr(tier4)
 	if err := k.verifyDeposit(ctx, cr, dThreshold); err != nil {
-		return fmt.Errorf("%w, must reach at least %s of %d", err, tier4, cr.BaseValue)
+		return k.logAndReturn(ctx, fmt.Sprintf("%w, must reach at least %s of %d", err, tier4, cr.BaseValue))
 	}
 	tAmount := dThreshold.MulInt64(int64(cr.BaseValue / 2)).TruncateInt()
 
 	// check liquidity threshold
 	if uAmount.LT(tAmount) {
-		return fmt.Errorf("insufficient liquidity, expects at least %s, got %s", tAmount, uAmount)
+		return k.logAndReturn(ctx, fmt.Sprintf("insufficient liquidity, expects at least %s, got %s", tAmount, uAmount))
 	}
 
 	return nil
@@ -419,4 +419,9 @@ func (k *Keeper) sendCoins(ctx sdk.Context, cr types.ClaimRecord, amount uint64)
 	}
 
 	return coins, nil
+}
+
+func (k *Keeper) logAndReturn(ctx sdk.Context, errorMsg string) error {
+	k.Logger(ctx).Error(errorMsg)
+	return fmt.Errorf(errorMsg)
 }
