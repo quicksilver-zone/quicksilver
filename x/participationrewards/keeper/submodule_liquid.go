@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"cosmossdk.io/math"
@@ -46,7 +47,16 @@ func (*LiquidTokensModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.
 		// or if the denom found is not valid.
 		denom, err := utils.DenomFromRequestKey(proof.Key, addr)
 		if err != nil {
-			return sdk.ZeroInt(), err
+			// check for mapped address for this user from SrcZone.
+			mappedAddr, found := k.icsKeeper.GetLocalAddressMap(ctx, addr, msg.SrcZone)
+			if found {
+				denom, err = utils.DenomFromRequestKey(proof.Key, mappedAddr)
+				if err != nil {
+					return sdk.ZeroInt(), errors.New("not a valid proof for submitting user or mapped account")
+				}
+			} else {
+				return sdk.ZeroInt(), errors.New("not a valid proof for submitting user")
+			}
 		}
 
 		data, found := k.GetProtocolData(ctx, types.ProtocolDataTypeLiquidToken, fmt.Sprintf("%s_%s", msg.SrcZone, denom))
