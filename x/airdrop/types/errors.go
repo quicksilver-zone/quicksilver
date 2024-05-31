@@ -8,7 +8,7 @@ import (
 
 type (
 	ErrZoneNotFound struct {
-		Id string
+		ID string
 	}
 
 	ErrDurationDecayNonZero struct {
@@ -17,11 +17,11 @@ type (
 )
 
 func (e ErrZoneNotFound) Error() string {
-	return fmt.Sprintf("zone not found for %s", e.Id)
+	return fmt.Sprintf("zone not found for %s", e.ID)
 }
 
 func (e ErrDurationDecayNonZero) Error() string {
-	return fmt.Sprintf("%w, sum of Duration and Decay must not be zero", e.Err)
+	return fmt.Sprintf("%s, sum of Duration and Decay must not be zero", e.Err.Error())
 }
 
 func (e ErrDurationDecayNonZero) Unwrap() error {
