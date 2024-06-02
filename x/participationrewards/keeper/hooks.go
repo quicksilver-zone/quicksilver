@@ -231,6 +231,10 @@ func (k *Keeper) AfterZoneCreated(ctx sdk.Context, zone *icstypes.Zone) error {
 		}
 
 		umeeConnectionData, err := GetAndUnmarshalProtocolData[*types.ConnectionProtocolData](ctx, k, types.ProtocolDataTypeConnection, umeeParamsData.ChainID)
+		if err != nil {
+			k.Logger(ctx).Error("Error getting and unmarshalling protocol data for umee chain")
+			return false
+		}
 		umeeChannel := umeeConnectionData.TransferChannel
 
 		// channel for the umee chain
