@@ -120,7 +120,8 @@ func (suite *KeeperTestSuite) TestHandleRemoveProtocolDataProposal() {
 		LastEpoch:    0,
 		Prefix:       "cosmos",
 	}
-	keeper.MarshalAndSetProtocolData(ctx, k, types.ProtocolDataTypeConnection, &pd)
+	err := keeper.MarshalAndSetProtocolData(ctx, k, types.ProtocolDataTypeConnection, &pd)
+	suite.NoError(err)
 
 	// check if the protocol data is set
 	_, found := k.GetProtocolData(ctx, types.ProtocolDataTypeConnection, string(pd.GenerateKey()))
@@ -136,7 +137,7 @@ func (suite *KeeperTestSuite) TestHandleRemoveProtocolDataProposal() {
 		Authority:   k.GetGovAuthority(ctx),
 	}
 
-	_, err := msgServer.GovRemoveProtocolData(ctx, &proposalMsg)
+	_, err = msgServer.GovRemoveProtocolData(ctx, &proposalMsg)
 
 	suite.NoError(err)
 
