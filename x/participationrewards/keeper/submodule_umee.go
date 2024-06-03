@@ -2,12 +2,12 @@ package keeper
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/bech32"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -15,6 +15,7 @@ import (
 	umee "github.com/quicksilver-zone/quicksilver/third-party-chains/umee-types"
 	leveragetypes "github.com/quicksilver-zone/quicksilver/third-party-chains/umee-types/leverage/types"
 	"github.com/quicksilver-zone/quicksilver/utils"
+	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	cmtypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
 	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 	"github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
@@ -185,7 +186,10 @@ func (UmeeModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.MsgSubmit
 		return sdk.ZeroInt(), fmt.Errorf("unable to find registered zone for chain id: %s", msg.Zone)
 	}
 
-	_, addr, err := bech32.DecodeAndConvert(msg.UserAddress)
+	addr, err := addressutils.AccAddressFromBech32(msg.UserAddress, "")
+	if err != nil {
+		return sdk.ZeroInt(), err
+	}
 
 	amount := sdk.ZeroInt()
 	for _, proof := range msg.Proofs {
@@ -196,7 +200,15 @@ func (UmeeModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.MsgSubmit
 
 		udenom, err := getDenomFromProof(proof, addr)
 		if err != nil {
-			return sdk.ZeroInt(), err
+			mappedAddr, found := k.icsKeeper.GetLocalAddressMap(ctx, addr, msg.SrcZone)
+			if found {
+				udenom, err = getDenomFromProof(proof, mappedAddr)
+				if err != nil {
+					return sdk.ZeroInt(), errors.New("not a valid proof for submitting user or mapped account")
+				}
+			} else {
+				return sdk.ZeroInt(), errors.New("not a valid proof for submitting user")
+			}
 		}
 
 		denom := leveragetypes.ToTokenDenom(udenom)
