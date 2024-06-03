@@ -125,12 +125,21 @@ func (vi ValidatorIntents) MustGetForValoper(valoper string) *ValidatorIntent {
 func (vi ValidatorIntents) Normalize() ValidatorIntents {
 	total := sdk.ZeroDec()
 	for _, i := range vi {
-		total = total.AddMut(i.Weight)
+		if !i.Weight.IsNil() {
+			total = total.AddMut(i.Weight)
+		}
 	}
 
 	out := make(ValidatorIntents, 0)
+
+	if total.IsZero() {
+		return out
+	}
+
 	for _, i := range vi {
-		out = append(out, &ValidatorIntent{ValoperAddress: i.ValoperAddress, Weight: i.Weight.Quo(total)})
+		if !i.Weight.IsNil() {
+			out = append(out, &ValidatorIntent{ValoperAddress: i.ValoperAddress, Weight: i.Weight.Quo(total)})
+		}
 	}
 	return out.Sort()
 }
