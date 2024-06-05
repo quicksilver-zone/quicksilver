@@ -97,6 +97,8 @@ func ValidatorSelectionRewardsCallback(ctx sdk.Context, k *Keeper, response []by
 		return err
 	}
 
+	defer k.EventManagerKeeper.MarkCompleted(ctx, types.ModuleName, query.ChainId, "validator_performance")
+
 	k.Logger(ctx).Info(
 		"callback zone score",
 		"zone", zs.ZoneID,
