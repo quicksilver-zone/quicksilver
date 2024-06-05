@@ -199,7 +199,10 @@ message LiquidityNetInDirectionResponse {
     (gogoproto.nullable) = false
   ];
   string current_sqrt_price = 4 [
-    (gogoproto.customtype) = "github.com/osmosis-labs/osmosis/osmomath.BigDec",
+    (gogoproto.customtype) =
+      "github.com/quicksilver-zone/quicksilver/"
+      "third-party-chains/osmosis-types/osmomath.BigDec"
+,
     (gogoproto.moretags) = "yaml:\"current_sqrt_price\"",
     (gogoproto.nullable) = false
   ];
