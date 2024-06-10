@@ -198,9 +198,50 @@ function Home() {
               alignItems="flex-start"
             >
               <Head>
-                <title>Assets</title>
+                <title>Assets - Quicksilver Zone</title>
                 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+                <meta name="description" content="Interhcain liquid staking hub. Secure your stake with the user focused liquid staking." />
+                <meta name="keywords" content="staking, Quicksilver Protocol, crypto staking, earn rewards, DeFi, blockchain" />
+                <meta name="author" content="Quicksilver Zone" />
                 <link rel="icon" href="/img/favicon-main.png" />
+
+                <meta property="og:title" content="Assets - Quicksilver Zone" />
+                <meta
+                  property="og:description"
+                  content="Interhcain liquid staking hub. Secure your stake with the user focused liquid staking."
+                />
+                <meta property="og:url" content="https://app.quicksilver.zone/assets" />
+                <meta property="og:image" content="https://app.quicksilver.zone/img/staking-banner.png" />
+                <meta property="og:type" content="website" />
+                <meta property="og:site_name" content="Quicksilver Protocol" />
+
+                <meta name="twitter:card" content="summary_large_image" />
+                <meta name="twitter:title" content="Assets - Quicksilver Zone" />
+                <meta
+                  name="twitter:description"
+                  content="Interhcain liquid staking hub. Secure your stake with the user focused liquid staking."
+                />
+                <meta name="twitter:image" content="https://app.quicksilver.zone/img/staking-banner.png" />
+                <meta name="twitter:site" content="@QuicksilverProtocol" />
+
+                <script type="application/ld+json">
+                  {JSON.stringify({
+                    '@context': 'https://schema.org',
+                    '@type': 'WebPage',
+                    name: 'Assets - Quicksilver Zone',
+                    description: 'Interhcain liquid staking hub. Secure your stake with the user focused liquid staking.',
+                    url: 'https://app.quicksilver.zone/assets',
+                    image: 'https://app.quicksilver.zone/img/staking-banner.png',
+                    publisher: {
+                      '@type': 'Organization',
+                      name: 'Quicksilver Protocol',
+                      logo: {
+                        '@type': 'ImageObject',
+                        url: 'https://app.quicksilver.zone/img/logo.png',
+                      },
+                    },
+                  })}
+                </script>
               </Head>
               <Text pb={2} color="white" fontSize="24px">
                 Assets

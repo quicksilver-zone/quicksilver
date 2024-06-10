@@ -1,5 +1,5 @@
 import { ToastId } from '@chakra-ui/react';
-import {SkipRouter, TxStatusResponse} from '@skip-router/core';
+import {RouteResponse, SkipRouter, TxStatusResponse} from '@skip-router/core';
 import { useCallback } from 'react';
 
 import { useToaster, ToastType } from './useToaster';
@@ -79,7 +79,7 @@ export function useSkipMessages(skipClient: SkipRouter) {
     if (!skipClient) {
         throw new Error('SkipRouter is not initialized');
     }
-  const skipMessages = useCallback(async (route: any) => {
+  const skipMessages = useCallback(async (route: RouteResponse, addressList: string[]) => {
     return await skipClient.messages({
         sourceAssetDenom: route.sourceAssetDenom,
         sourceAssetChainID: route.sourceAssetChainID,
@@ -87,7 +87,7 @@ export function useSkipMessages(skipClient: SkipRouter) {
         destAssetChainID: route.destAssetChainID,
         amountIn: route.amountIn,
         amountOut: route.amountOut,
-        addressList: route.addressList,
+        addressList: addressList,
         operations: route.operations,
     });
   }, []);
