@@ -381,9 +381,11 @@ const RewardsModal = ({ address, isOpen, onClose }: { address: string; isOpen: b
                             </HStack>
                           </Td>
                           <Td fontSize={'large'} color="white" isNumeric>
-                            {Number(shiftDigits(detail?.amount ?? '', -Number(detail?.decimals)))
-                              .toFixed(2)
-                              .toString()}
+                            {Number(Number(shiftDigits(detail?.amount ?? '', -Number(detail?.decimals))).toFixed(2)) <= 0.01
+                              ? '< 0.01'
+                              : Number(shiftDigits(detail?.amount ?? '', -Number(detail?.decimals)))
+                                  .toFixed(2)
+                                  .toString()}
                           </Td>
                         </Tr>
                       ))}
