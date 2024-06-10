@@ -158,6 +158,19 @@ const RewardsModal = ({ address, isOpen, onClose }: { address: string; isOpen: b
     });
   };
 
+  // Helper function to format the token name
+  const formatTokenName = (originDenom: string) => {
+    if (originDenom.toLowerCase().startsWith('st')) {
+      if (originDenom.toLowerCase() === 'stinj') {
+        return `st${originDenom.slice(2).toUpperCase()}`;
+      }
+      return `st${originDenom.slice(3).toUpperCase()}`;
+    }
+    return originDenom.toLowerCase().startsWith('factory/')
+      ? originDenom.split('/').pop()?.replace(/^u/, '').toUpperCase()
+      : originDenom.slice(1).toUpperCase();
+  };
+
   // uses all the data gathered to create the ibc transactions for sending assets to osmosis.
   const handleExecuteRoute = async () => {
     setIsSigning(true);
@@ -323,16 +336,7 @@ const RewardsModal = ({ address, isOpen, onClose }: { address: string; isOpen: b
                           <Td color="white">
                             <HStack>
                               <Image w="32px" h="32px" alt={detail?.originDenom} src={detail?.logoURI} />
-                              <Text fontSize={'large'}>
-                                {detail?.originDenom
-                                  ? detail.originDenom.toLowerCase().startsWith('factory/')
-                                    ? (() => {
-                                        const lastSegment = detail.originDenom.split('/').pop() || '';
-                                        return lastSegment.startsWith('u') ? lastSegment.slice(1).toUpperCase() : lastSegment.toUpperCase();
-                                      })()
-                                    : detail.originDenom.slice(1).toUpperCase()
-                                  : ''}
-                              </Text>
+                              <Text fontSize={'large'}>{formatTokenName(detail?.originDenom ?? '')}</Text>
                             </HStack>
                           </Td>
                           <Td fontSize={'large'} color="white" isNumeric>
