@@ -28,6 +28,7 @@ import {
   MenuItem,
   MenuList,
   Box,
+  Checkbox,
 } from '@chakra-ui/react';
 import { useChain, useChains } from '@cosmos-kit/react';
 import { SkipRouter, SKIP_API_URL, UserAddress } from '@skip-router/core';
@@ -77,12 +78,29 @@ const RewardsModal = ({ address, isOpen, onClose }: { address: string; isOpen: b
   const { balance, refetch } = useAllBalancesQuery('quicksilver', address);
   const [isSigning, setIsSigning] = useState<boolean>(false);
   const [isBottomVisible, setIsBottomVisible] = useState(true);
+  const [selectedAssets, setSelectedAssets] = useState<string[]>([]);
+  const [selectAll, setSelectAll] = useState<boolean>(false);
 
   const handleScroll = useCallback((event: React.UIEvent<HTMLDivElement>) => {
     const target = event.currentTarget;
     const isBottom = target.scrollHeight - target.scrollTop <= target.clientHeight;
     setIsBottomVisible(!isBottom);
   }, []);
+
+  const handleCheckboxChange = (denom: string) => {
+    setSelectedAssets((prevSelectedAssets) =>
+      prevSelectedAssets.includes(denom) ? prevSelectedAssets.filter((item) => item !== denom) : [...prevSelectedAssets, denom],
+    );
+  };
+
+  const handleSelectAllChange = () => {
+    if (selectAll) {
+      setSelectedAssets([]);
+    } else {
+      setSelectedAssets(tokenDetails.map((detail) => detail?.denom ?? ''));
+    }
+    setSelectAll(!selectAll);
+  };
 
   const { assets: skipAssets } = useSkipAssets('quicksilver-2');
   const balanceData = balance?.balances || [];
@@ -197,8 +215,11 @@ const RewardsModal = ({ address, isOpen, onClose }: { address: string; isOpen: b
       return;
     }
 
+    // Filter routesData to only include selected assets
+    const filteredRoutesData = routesData.filter((route) => selectedAssets.includes(route?.sourceAssetDenom ?? ''));
+
     // Execute each route in sequence with ordered addresses
-    for (const route of routesData) {
+    for (const route of filteredRoutesData) {
       const orderedAddresses = getOrderedAddresses(route?.requiredChainAddresses ?? ([] as string[]), allAddresses);
       try {
         await executeRoute(route, orderedAddresses, refetch);
@@ -225,6 +246,10 @@ const RewardsModal = ({ address, isOpen, onClose }: { address: string; isOpen: b
       if (!tokenDetails) {
         setIsSigning(false);
         return;
+      }
+
+      if (!selectedAssets.includes(tokenDetail?.denom ?? '')) {
+        continue;
       }
 
       const [_, channel] = tokenDetail?.trace.split('/') ?? '';
@@ -324,6 +349,14 @@ const RewardsModal = ({ address, isOpen, onClose }: { address: string; isOpen: b
                   <Table variant="simple" colorScheme="whiteAlpha" size="sm">
                     <Thead position="sticky" top={0} bg="rgb(32,32,32)" zIndex={1}>
                       <Tr>
+                        <Th color="complimentary.900">
+                          <Checkbox
+                            isChecked={selectAll}
+                            onChange={handleSelectAllChange}
+                            colorScheme="complimentary"
+                            borderColor="complimentary.900"
+                          />
+                        </Th>
                         <Th color="complimentary.900">Token</Th>
                         <Th color="complimentary.900" isNumeric>
                           Amount
@@ -333,6 +366,14 @@ const RewardsModal = ({ address, isOpen, onClose }: { address: string; isOpen: b
                     <Tbody overflowY={'auto'} maxH="250px">
                       {tokenDetails.map((detail, index) => (
                         <Tr key={index}>
+                          <Td color="white">
+                            <Checkbox
+                              isChecked={selectedAssets.includes(detail?.denom ?? '')}
+                              onChange={() => handleCheckboxChange(detail?.denom ?? '')}
+                              colorScheme="complimentary"
+                              borderColor="complimentary.900"
+                            />
+                          </Td>
                           <Td color="white">
                             <HStack>
                               <Image w="32px" h="32px" alt={detail?.originDenom} src={detail?.logoURI} />
