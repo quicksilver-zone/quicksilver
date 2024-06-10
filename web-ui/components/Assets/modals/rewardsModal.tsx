@@ -51,6 +51,8 @@ const RewardsModal = ({ address, isOpen, onClose }: { address: string; isOpen: b
     'sommelier',
     'regen',
     'dydx',
+    'agoric',
+    'axelar',
     'saga',
     'stride',
     'noble',
@@ -205,6 +207,8 @@ const RewardsModal = ({ address, isOpen, onClose }: { address: string; isOpen: b
       { chainID: 'stride-1', address: chains.stride.address ?? '' },
       { chainID: 'noble-1', address: chains.noble.address ?? '' },
       { chainID: 'neutron-1', address: chains.neutron.address ?? '' },
+      { chainID: 'axelar-dojo-1', address: chains.axelar.address ?? '' },
+      { chainID: 'agoric-3', address: chains.agoric.address ?? '' },
     ];
 
     // Check if any address is undefined
@@ -276,6 +280,8 @@ const RewardsModal = ({ address, isOpen, onClose }: { address: string; isOpen: b
         'stride-1': 'stride',
         'noble-1': 'noble',
         'neutron-1': 'neutron',
+        'axelar-dojo-1': 'axelar',
+        'agoric-3': 'agoric',
       };
 
       const getChainName = (chainId: string) => {
