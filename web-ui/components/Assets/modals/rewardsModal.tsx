@@ -30,7 +30,7 @@ import {
   Box,
 } from '@chakra-ui/react';
 import { useChain, useChains } from '@cosmos-kit/react';
-import { SkipRouter, SKIP_API_URL } from '@skip-router/core';
+import { SkipRouter, SKIP_API_URL, UserAddress } from '@skip-router/core';
 import { ibc } from 'interchain-query';
 import { useCallback, useState } from 'react';
 import { FaInfoCircle } from 'react-icons/fa';
@@ -42,7 +42,19 @@ import { useSkipExecute } from '@/hooks/useSkipExecute';
 import { shiftDigits } from '@/utils';
 
 const RewardsModal = ({ address, isOpen, onClose }: { address: string; isOpen: boolean; onClose: () => void }) => {
-  const chains = useChains(['cosmoshub', 'osmosis', 'stargaze', 'juno', 'sommelier', 'regen', 'dydx', 'saga']);
+  const chains = useChains([
+    'cosmoshub',
+    'osmosis',
+    'stargaze',
+    'juno',
+    'sommelier',
+    'regen',
+    'dydx',
+    'saga',
+    'stride',
+    'noble',
+    'neutron',
+  ]);
 
   const { wallet } = useChain('quicksilver');
 
@@ -81,6 +93,7 @@ const RewardsModal = ({ address, isOpen, onClose }: { address: string; isOpen: b
 
     return balanceData
       .map((balanceItem) => {
+        // filter out native quick tokens
         if (balanceItem.denom.startsWith('q') || balanceItem.denom.startsWith('aq') || balanceItem.denom.startsWith('uq')) {
           return null;
         }
@@ -133,25 +146,49 @@ const RewardsModal = ({ address, isOpen, onClose }: { address: string; isOpen: b
   const { routesData } = useSkipRoutesData(osmosisRoutesDataObjects);
 
   const executeRoute = useSkipExecute(skipClient);
+
+  // Helper function to get ordered addresses based on requiredChainAddresses
+  const getOrderedAddresses = (requiredChainAddresses: string[], allAddresses: UserAddress[]): UserAddress[] => {
+    return requiredChainAddresses.map((chainID) => {
+      const addressObj = allAddresses.find((addr) => addr.chainID === chainID);
+      if (!addressObj) {
+        throw new Error(`Address for chainID ${chainID} not found`);
+      }
+      return addressObj;
+    });
+  };
+
   // uses all the data gathered to create the ibc transactions for sending assets to osmosis.
   const handleExecuteRoute = async () => {
     setIsSigning(true);
 
-    const addresses = {
-      'quicksilver-2': address,
-      'osmosis-1': chains.osmosis.address,
-      'cosmoshub-4': chains.cosmoshub.address,
-      'stargaze-1': chains.stargaze.address,
-      'sommelier-3': chains.sommelier.address,
-      'regen-1': chains.regen.address,
-      'juno-1': chains.juno.address,
-      'dydx-mainnet-1': chains.dydx.address,
-    };
+    const allAddresses: UserAddress[] = [
+      { chainID: 'quicksilver-2', address },
+      { chainID: 'osmosis-1', address: chains.osmosis.address ?? '' },
+      { chainID: 'cosmoshub-4', address: chains.cosmoshub.address ?? '' },
+      { chainID: 'stargaze-1', address: chains.stargaze.address ?? '' },
+      { chainID: 'sommelier-3', address: chains.sommelier.address ?? '' },
+      { chainID: 'regen-1', address: chains.regen.address ?? '' },
+      { chainID: 'juno-1', address: chains.juno.address ?? '' },
+      { chainID: 'dydx-mainnet-1', address: chains.dydx.address ?? '' },
+      { chainID: 'stride-1', address: chains.stride.address ?? '' },
+      { chainID: 'noble-1', address: chains.noble.address ?? '' },
+      { chainID: 'neutron-1', address: chains.neutron.address ?? '' },
+    ];
 
-    // Execute each route in sequence
+    // Check if any address is undefined
+    const undefinedAddresses = allAddresses.filter((addr) => !addr.address);
+    if (undefinedAddresses.length > 0) {
+      console.error('Some addresses are undefined:', undefinedAddresses);
+      setIsSigning(false);
+      return;
+    }
+
+    // Execute each route in sequence with ordered addresses
     for (const route of routesData) {
+      const orderedAddresses = getOrderedAddresses(route?.requiredChainAddresses ?? ([] as string[]), allAddresses);
       try {
-        await executeRoute(route, addresses, refetch);
+        await executeRoute(route, orderedAddresses, refetch);
       } catch (error) {
         console.error('Error executing route:', error);
         setIsSigning(false);
@@ -198,6 +235,9 @@ const RewardsModal = ({ address, isOpen, onClose }: { address: string; isOpen: b
         'regen-1': 'regen',
         'juno-1': 'juno',
         'dydx-mainnet-1': 'dydx',
+        'stride-1': 'stride',
+        'noble-1': 'noble',
+        'neutron-1': 'neutron',
       };
 
       const getChainName = (chainId: string) => {

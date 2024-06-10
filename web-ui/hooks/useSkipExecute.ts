@@ -4,6 +4,11 @@ import { useCallback } from 'react';
 
 import { useToaster, ToastType } from './useToaster';
 
+interface UserAddress {
+    chainID: string;
+    address: string;
+}
+
 export function useSkipExecute(skipClient: SkipRouter) {
     if (!skipClient) {
         throw new Error('SkipRouter is not initialized');
@@ -11,7 +16,7 @@ export function useSkipExecute(skipClient: SkipRouter) {
 
     const toaster = useToaster();
 
-    const executeRoute = useCallback(async (route: any, userAddresses: any, refetch: () => void) => {
+    const executeRoute = useCallback(async (route: any, userAddresses: UserAddress[], refetch: () => void) => {
         // Initialize with null and allow for the type to be null or ToastId
         let broadcastToastId: ToastId | null = null;
 
