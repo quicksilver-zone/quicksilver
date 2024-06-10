@@ -76,4 +76,5 @@ type InterchainStakingKeeper interface {
 	IterateDelegatorIntents(ctx sdk.Context, zone *interchainstakingtypes.Zone, snapshot bool, fn func(index int64, intent interchainstakingtypes.DelegatorIntent) (stop bool))
 	GetValidators(ctx sdk.Context, chainID string) []interchainstakingtypes.Validator
 	SetValidator(ctx sdk.Context, chainID string, val interchainstakingtypes.Validator) error
+	GetLocalAddressMap(ctx sdk.Context, remoteAddress sdk.AccAddress, chainID string) (sdk.AccAddress, bool)
 }

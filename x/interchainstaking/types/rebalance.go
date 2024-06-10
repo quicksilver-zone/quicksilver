@@ -50,6 +50,9 @@ func CalculateAllocationDeltas(
 		if !ok {
 			target = &ValidatorIntent{ValoperAddress: valoper, Weight: sdk.ZeroDec()}
 		}
+		if target.Weight.IsNil() {
+			continue
+		}
 		targetAmount := target.Weight.MulInt(currentSum).TruncateInt()
 
 		// diff between target and current allocations

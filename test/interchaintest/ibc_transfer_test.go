@@ -184,5 +184,5 @@ func TestQuicksilverJunoIBCTransfer(t *testing.T) {
 
 	junoUpdateBal, err = juno.GetBalance(ctx, junoUserAddr, quicksilverIBCDenom)
 	require.NoError(t, err)
-	require.Equal(t, int64(0), junoUpdateBal)
+	require.Equal(t, int64(0), junoUpdateBal.Int64())
 }

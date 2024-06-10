@@ -29,14 +29,14 @@ var (
 	}
 
 	pathQuicksilverJuno = "quicksilver-juno"
-	genesisWalletAmount = int64(10_000_000)
+	genesisWalletAmount = math.NewInt(10_000_000)
 )
 
 func createConfig() (ibc.ChainConfig, error) {
 	return ibc.ChainConfig{
 			Type:                "cosmos",
 			Name:                "quicksilver",
-			ChainID:             "quicksilver-2",
+			ChainID:             "quicksilver-1",
 			Images:              []ibc.DockerImage{QuicksilverImage},
 			Bin:                 "quicksilverd",
 			Bech32Prefix:        "quick",
@@ -48,24 +48,24 @@ func createConfig() (ibc.ChainConfig, error) {
 			ModifyGenesis:       nil,
 			ConfigFileOverrides: nil,
 			EncodingConfig:      nil,
-			SidecarConfigs: []ibc.SidecarConfig{
-				{
-					ProcessName:      "icq",
-					Image:            ICQImage,
-					Ports:            []string{"2112"},
-					StartCmd:         []string{"interchain-queries", "run", "--home", "/var/sidecar-processes/icq"},
-					PreStart:         true,
-					ValidatorProcess: false,
-				},
-				{
-					ProcessName:      "xcc",
-					Image:            XccLookupImage,
-					Ports:            []string{"3033"},
-					StartCmd:         []string{"/xcc", "-a", "serve", "-f", "/var/sidecar/processes/xcc/config.yaml"},
-					PreStart:         true,
-					ValidatorProcess: false,
-				},
-			},
+			// SidecarConfigs: []ibc.SidecarConfig{
+			// 	{
+			// 		ProcessName:      "icq",
+			// 		Image:            ICQImage,
+			// 		Ports:            []string{"2112"},
+			// 		StartCmd:         []string{"interchain-queries", "run", "--home", "/var/sidecar-processes/icq"},
+			// 		PreStart:         true,
+			// 		ValidatorProcess: false,
+			// 	},
+			// 	{
+			// 		ProcessName:      "xcc",
+			// 		Image:            XccLookupImage,
+			// 		Ports:            []string{"3033"},
+			// 		StartCmd:         []string{"/xcc", "-a", "serve", "-f", "/var/sidecar/processes/xcc/config.yaml"},
+			// 		PreStart:         true,
+			// 		ValidatorProcess: false,
+			// 	},
+			// },
 		},
 		nil
 }

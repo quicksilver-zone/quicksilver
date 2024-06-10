@@ -5,7 +5,7 @@ COSMOS_BUILD_OPTIONS ?= ""
 PACKAGES_NOSIMULATION=$(shell go list ./... | grep -v '/simulation')
 PACKAGES_SIM=github.com/quicksilver-zone/quicksilver/test/simulation
 PACKAGES_E2E=$(shell go list ./... | grep '/e2e')
-VERSION=$(shell git describe --tags | head -n1)
+VERSION=$(shell git describe --tags | head -n1 | sed 's/.*\///')
 DOCKER_VERSION ?= $(VERSION)
 TMVERSION := $(shell go list -m github.com/cometbft/cometbft | sed 's:.* ::')
 COMMIT := $(shell git log -1 --format='%H')
@@ -353,7 +353,7 @@ ictest-build: get-heighliner local-image
 ictest-deps:
 	# install other docker images
 	@$(DOCKER) image pull quicksilverzone/xcclookup:v0.4.3
-	@$(DOCKER) image pull quicksilverzone/interchain-queries:e2e
+	@$(DOCKER) image pull quicksilverzone/interchain-queries:latest
 
 ictest-build-push: ictest-setup
 	@$(DOCKER) tag quicksilver:local  quicksilverzone/quicksilver-e2e:latest
@@ -367,7 +367,7 @@ ictest-build-push: ictest-setup
 get-heighliner:
 	@rm -rf heighliner
 	@git clone https://github.com/strangelove-ventures/heighliner.git
-	@cd heighliner && go build
+	@cd heighliner &&GOWORK=off  go build
 
 local-image:
 	@heighliner/heighliner build -c quicksilver --local --build-env BUILD_TAGS=muslc
