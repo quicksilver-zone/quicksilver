@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -13,10 +14,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	osmosistypes "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types"
 	osmolockup "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/lockup"
+	"github.com/quicksilver-zone/quicksilver/utils"
+	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	"github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 )
 
@@ -76,12 +78,28 @@ func (m *OsmosisModule) Hooks(ctx sdk.Context, k *Keeper) {
 func (*OsmosisModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.MsgSubmitClaim) (math.Int, error) {
 	amount := sdk.ZeroInt()
 	var lock osmolockup.PeriodLock
+
+	addr, err := addressutils.AccAddressFromBech32(msg.UserAddress, "")
+	if err != nil {
+		return sdk.ZeroInt(), err
+	}
+
 	for _, proof := range msg.Proofs {
 		if proof.ProofType == types.ProofTypeBank {
-			addr, poolDenom, err := banktypes.AddressAndDenomFromBalancesStore(proof.Key[1:])
+			poolDenom, err := utils.DenomFromRequestKey(proof.Key, addr)
 			if err != nil {
-				return sdk.ZeroInt(), err
+				// check for mapped address for this user from SrcZone.
+				mappedAddr, found := k.icsKeeper.GetLocalAddressMap(ctx, addr, msg.SrcZone)
+				if found {
+					poolDenom, err = utils.DenomFromRequestKey(proof.Key, mappedAddr)
+					if err != nil {
+						return sdk.ZeroInt(), errors.New("not a valid proof for submitting user or mapped account")
+					}
+				} else {
+					return sdk.ZeroInt(), errors.New("not a valid proof for submitting user")
+				}
 			}
+
 			coin, err := keeper.UnmarshalBalanceCompat(k.cdc, proof.Data, poolDenom)
 			if err != nil {
 				return sdk.ZeroInt(), err
@@ -103,8 +121,11 @@ func (*OsmosisModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.MsgSu
 				return sdk.ZeroInt(), err
 			}
 
-			if sdk.AccAddress(lockupOwner).String() != msg.UserAddress {
-				return sdk.ZeroInt(), errors.New("not a valid proof for submitting user")
+			if !bytes.Equal(lockupOwner, addr) {
+				mappedAddr, found := k.icsKeeper.GetLocalAddressMap(ctx, addr, msg.SrcZone)
+				if !found || !bytes.Equal(lockupOwner, mappedAddr) {
+					return sdk.ZeroInt(), errors.New("not a valid proof for submitting user or mapped account")
+				}
 			}
 		}
 		sdkAmount, err := osmosistypes.DetermineApplicableTokensInPool(ctx, k, lock, msg.Zone)
