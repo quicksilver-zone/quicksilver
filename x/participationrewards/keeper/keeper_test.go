@@ -12,12 +12,12 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	icatypes "github.com/cosmos/ibc-go/v6/modules/apps/27-interchain-accounts/types"
-	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
-	channeltypes "github.com/cosmos/ibc-go/v6/modules/core/04-channel/types"
-	host "github.com/cosmos/ibc-go/v6/modules/core/24-host"
-	tmclienttypes "github.com/cosmos/ibc-go/v6/modules/light-clients/07-tendermint/types"
-	ibctesting "github.com/cosmos/ibc-go/v6/testing"
+	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
+	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
+	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
+	host "github.com/cosmos/ibc-go/v7/modules/core/24-host"
+	tmclienttypes "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
+	ibctesting "github.com/cosmos/ibc-go/v7/testing"
 
 	"github.com/quicksilver-zone/quicksilver/app"
 	umeetypes "github.com/quicksilver-zone/quicksilver/third-party-chains/umee-types/leverage/types"
@@ -359,17 +359,19 @@ func (suite *KeeperTestSuite) setupChannelForICA(chainID, connectionID, accountS
 
 	quicksilver.IBCKeeper.ChannelKeeper.SetNextSequenceSend(suite.chainA.GetContext(), portID, channelID, 1)
 	quicksilver.ICAControllerKeeper.SetActiveChannelID(suite.chainA.GetContext(), connectionID, portID, channelID)
+	chanPath := host.ChannelCapabilityPath(portID, channelID)
 	key, err := quicksilver.InterchainstakingKeeper.ScopedKeeper().NewCapability(
 		suite.chainA.GetContext(),
-		host.ChannelCapabilityPath(portID, channelID),
+		chanPath,
 	)
 	if err != nil {
 		return err
 	}
+
 	err = quicksilver.GetScopedIBCKeeper().ClaimCapability(
 		suite.chainA.GetContext(),
 		key,
-		host.ChannelCapabilityPath(portID, channelID),
+		chanPath,
 	)
 	if err != nil {
 		return err
@@ -378,23 +380,7 @@ func (suite *KeeperTestSuite) setupChannelForICA(chainID, connectionID, accountS
 	err = quicksilver.GetScopedICAControllerKeeper().ClaimCapability(
 		suite.chainA.GetContext(),
 		key,
-		host.ChannelCapabilityPath(portID, channelID),
-	)
-	if err != nil {
-		return err
-	}
-
-	key, err = quicksilver.InterchainstakingKeeper.ScopedKeeper().NewCapability(
-		suite.chainA.GetContext(),
-		host.PortPath(portID),
-	)
-	if err != nil {
-		return err
-	}
-	err = quicksilver.GetScopedIBCKeeper().ClaimCapability(
-		suite.chainA.GetContext(),
-		key,
-		host.PortPath(portID),
+		chanPath,
 	)
 	if err != nil {
 		return err

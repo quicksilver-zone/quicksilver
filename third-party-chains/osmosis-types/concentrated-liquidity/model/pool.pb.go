@@ -13,7 +13,7 @@ import (
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
 	_ "github.com/cosmos/gogoproto/gogoproto"
-	proto "github.com/gogo/protobuf/proto"
+		proto "github.com/cosmos/gogoproto/proto"
 	github_com_gogo_protobuf_types "github.com/gogo/protobuf/types"
 	github_com_quicksilver_zone_quicksilver_third_party_chains_osmosis_types_osmomath "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/osmomath"
 	_ "google.golang.org/protobuf/types/known/timestamppb"

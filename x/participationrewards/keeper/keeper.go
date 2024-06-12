@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/tendermint/tendermint/libs/log"
-
 	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -14,7 +12,9 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
-	ibckeeper "github.com/cosmos/ibc-go/v6/modules/core/keeper"
+	"github.com/cometbft/cometbft/libs/log"
+
+	ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
 
 	config "github.com/quicksilver-zone/quicksilver/cmd/config" //nolint:revive
 	osmosistypes "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types"

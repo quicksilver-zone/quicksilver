@@ -5,17 +5,20 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/gogo/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
+
+	sdkioerrors "cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	icatypes "github.com/cosmos/ibc-go/v6/modules/apps/27-interchain-accounts/types"
-	transfertypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
-	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
-	channeltypes "github.com/cosmos/ibc-go/v6/modules/core/04-channel/types"
+	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
+	transfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
+	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
+	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
+	host "github.com/cosmos/ibc-go/v7/modules/core/24-host"
 
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
@@ -151,7 +154,7 @@ func (k *Keeper) SendTokenIBC(ctx sdk.Context, senderAccAddress sdk.AccAddress, 
 		return errors.New("unable to find remote transfer connection")
 	}
 
-	_, err := k.TransferKeeper.Transfer(ctx, &transfertypes.MsgTransfer{
+	msgTransfer := &transfertypes.MsgTransfer{
 		SourcePort:    srcPort,
 		SourceChannel: srcChannel,
 		Token:         coin,
@@ -162,9 +165,17 @@ func (k *Keeper) SendTokenIBC(ctx sdk.Context, senderAccAddress sdk.AccAddress, 
 			RevisionHeight: 0,
 		},
 		TimeoutTimestamp: uint64(ctx.BlockTime().UnixNano() + 5*time.Minute.Nanoseconds()),
-		Memo:             "",
-	})
-	return err
+	}
+
+	_, err := k.TransferKeeper.Transfer(
+		ctx,
+		msgTransfer,
+	)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // MintAndSendQAsset mints qAssets based on the native asset redemption rate.  Tokens are then transferred to the given user.
@@ -265,6 +276,15 @@ func ProdSubmitTx(ctx sdk.Context, k *Keeper, msgs []sdk.Msg, account *types.ICA
 	if err != nil {
 		return err
 	}
+	channelID, found := k.ICAControllerKeeper.GetActiveChannelID(ctx, connectionID, portID)
+	if !found {
+		return sdkioerrors.Wrapf(icatypes.ErrActiveChannelNotFound, "failed to retrieve active channel for port %s in submittx", portID)
+	}
+
+	chanCap, found := k.scopedKeeper.GetCapability(ctx, host.ChannelCapabilityPath(portID, channelID))
+	if !found {
+		return sdkioerrors.Wrap(channeltypes.ErrChannelCapabilityNotFound, "module does not own channel capability")
+	}
 
 	chunkSize := int(messagesPerTx)
 	if chunkSize < 1 {
@@ -272,7 +292,7 @@ func ProdSubmitTx(ctx sdk.Context, k *Keeper, msgs []sdk.Msg, account *types.ICA
 	}
 
 	timeoutTimestamp := uint64(ctx.BlockTime().Add(ICATimeout).UnixNano())
-
+	timeoutHeight := clienttypes.ZeroHeight()
 	for {
 		// if no messages, no chunks!
 		if len(msgs) == 0 {
@@ -288,12 +308,18 @@ func ProdSubmitTx(ctx sdk.Context, k *Keeper, msgs []sdk.Msg, account *types.ICA
 		msgsChunk := msgs[0:chunkSize]
 		msgs = msgs[chunkSize:]
 
-		protoMsgs := make([]proto.Message, len(msgsChunk))
-		for i, msg := range msgsChunk {
-			protoMsgs[i] = msg.(proto.Message)
+		// TODO: refactor this: https://github.com/cosmos/ibc-go/pull/2607
+		chunkProtoMsgs := []proto.Message{}
+		for _, msg := range msgsChunk {
+			protoMsg, ok := msg.(proto.Message)
+			if !ok {
+				return fmt.Errorf("unable to proto marshal message: %T", msg)
+			}
+			chunkProtoMsgs = append(chunkProtoMsgs, protoMsg)
 		}
+
 		// build and submit message for this chunk
-		data, err := icatypes.SerializeCosmosTx(k.cdc, protoMsgs)
+		data, err := icatypes.SerializeCosmosTx(k.cdc, chunkProtoMsgs)
 		if err != nil {
 			return err
 		}
@@ -305,7 +331,7 @@ func ProdSubmitTx(ctx sdk.Context, k *Keeper, msgs []sdk.Msg, account *types.ICA
 			Memo: memo,
 		}
 
-		_, err = k.ICAControllerKeeper.SendTx(ctx, nil, connectionID, portID, packetData, timeoutTimestamp) // nolint:staticcheck
+		_, err = k.IBCKeeper.ChannelKeeper.SendPacket(ctx, chanCap, portID, channelID, timeoutHeight, timeoutTimestamp, packetData.GetBytes())
 		if err != nil {
 			return err
 		}

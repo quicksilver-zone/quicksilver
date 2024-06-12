@@ -11,10 +11,10 @@ import (
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
-	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
-	connectiontypes "github.com/cosmos/ibc-go/v6/modules/core/03-connection/types"
-	channeltypes "github.com/cosmos/ibc-go/v6/modules/core/04-channel/types"
-	tmclienttypes "github.com/cosmos/ibc-go/v6/modules/light-clients/07-tendermint/types"
+	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
+	connectiontypes "github.com/cosmos/ibc-go/v7/modules/core/03-connection/types"
+	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
+	tmclienttypes "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
 
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	"github.com/quicksilver-zone/quicksilver/utils/randomutils"
@@ -615,7 +615,7 @@ func (suite *KeeperTestSuite) TestGovReopenChannel() {
 					Authority:    "",
 				}
 			},
-			expecErr: fmt.Errorf("chainID / connectionID mismatch. Connection: %s, Port: %s", "testchain2", ""),
+			expecErr: fmt.Errorf("chainID / connectionID mismatch. Connection: %s, Port: %s", "testchain2-1", ""),
 		},
 		{
 			name: "existing active channel",
@@ -629,7 +629,7 @@ func (suite *KeeperTestSuite) TestGovReopenChannel() {
 					Authority:    sdk.MustBech32ifyAddressBytes(sdk.GetConfig().GetBech32AccountAddrPrefix(), k.AccountKeeper.GetModuleAddress(govtypes.ModuleName)),
 				}
 			},
-			expecErr: errors.New("existing active channel channel-7 for portID icacontroller-testchain2.delegate on connection connection-0: active channel already set for this owner"),
+			expecErr: errors.New("existing active channel channel-7 for portID icacontroller-testchain2-1.delegate on connection connection-0: active channel already set for this owner"),
 		},
 		{
 			name: "pass",
@@ -637,7 +637,7 @@ func (suite *KeeperTestSuite) TestGovReopenChannel() {
 				quicksilver := suite.GetQuicksilverApp(suite.chainA)
 				ctx := suite.chainA.GetContext()
 				connectionID := "connection-1"
-				portID := "icacontroller-testchain2.delegate"
+				portID := "icacontroller-testchain2-1.delegate"
 				channelID := "channel-9"
 
 				version := []*connectiontypes.Version{
@@ -657,8 +657,10 @@ func (suite *KeeperTestSuite) TestGovReopenChannel() {
 				}
 				quicksilver.IBCKeeper.ChannelKeeper.SetChannel(ctx, portID, channelID, channelSet)
 
-				quicksilver.IBCKeeper.ClientKeeper.SetClientState(ctx, connectionEnd.ClientId, &tmclienttypes.ClientState{ChainId: suite.chainB.ChainID, TrustingPeriod: time.Hour, LatestHeight: clienttypes.Height{RevisionNumber: 1, RevisionHeight: 100}})
-
+				quicksilver.IBCKeeper.ClientKeeper.SetClientState(ctx, connectionEnd.ClientId, &tmclienttypes.ClientState{ChainId: suite.chainB.ChainID, TrustingPeriod: time.Hour, LatestHeight: clienttypes.Height{RevisionNumber: 1, RevisionHeight: uint64(ctx.BlockHeight())}})
+				quicksilver.IBCKeeper.ClientKeeper.SetClientConsensusState(ctx, connectionEnd.ClientId, clienttypes.Height{RevisionNumber: 1, RevisionHeight: uint64(ctx.BlockHeight())}, &tmclienttypes.ConsensusState{
+					Timestamp: ctx.BlockHeader().Time,
+				})
 				return &icstypes.MsgGovReopenChannel{
 					ConnectionId: connectionID,
 					PortId:       portID,

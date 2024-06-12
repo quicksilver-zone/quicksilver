@@ -1,8 +1,7 @@
 package interchaintest
 
 import (
-	"cosmossdk.io/math"
-	"github.com/strangelove-ventures/interchaintest/v6/ibc"
+	"github.com/strangelove-ventures/interchaintest/v7/ibc"
 )
 
 var (

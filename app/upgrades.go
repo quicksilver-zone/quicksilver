@@ -3,14 +3,14 @@ package app
 import (
 	"fmt"
 
-	packetforwardtypes "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v6/packetforward/types"
+	packetforwardtypes "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7/packetforward/types"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-	icacontrollertypes "github.com/cosmos/ibc-go/v6/modules/apps/27-interchain-accounts/controller/types"
-	v6 "github.com/cosmos/ibc-go/v6/testing/simapp/upgrades/v6" // nolint:revive
+	icacontrollertypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/types"
+	ibcv7upgrade "github.com/cosmos/ibc-go/v7/testing/simapp/upgrades" // nolint:revive
 
 	"github.com/quicksilver-zone/quicksilver/app/upgrades"
 	supplytypes "github.com/quicksilver-zone/quicksilver/x/supply/types"
@@ -23,7 +23,7 @@ const (
 
 func (app *Quicksilver) setUpgradeHandlers() {
 	for _, upgrade := range upgrades.Upgrades() {
-		app.UpgradeKeeper.SetUpgradeHandler(
+		app.AppKeepers.UpgradeKeeper.SetUpgradeHandler(
 			upgrade.UpgradeName,
 			upgrade.CreateUpgradeHandler(
 				app.mm,
@@ -36,7 +36,7 @@ func (app *Quicksilver) setUpgradeHandlers() {
 	kvStoreKeys := app.GetKVStoreKey()
 	app.UpgradeKeeper.SetUpgradeHandler(
 		upgrades.V010600rc1UpgradeName,
-		v6.CreateUpgradeHandler(
+		ibcv7upgrade.CreateV6UpgradeHandler(
 			app.mm,
 			app.configurator,
 			app.appCodec,
@@ -51,12 +51,12 @@ func (app *Quicksilver) setUpgradeStoreLoaders() {
 	// When a planned update height is reached, the old binary will panic
 	// writing on disk the height and name of the update that triggered it
 	// This will read that value, and execute the preparations for the upgrade.
-	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
+	upgradeInfo, err := app.AppKeepers.UpgradeKeeper.ReadUpgradeInfoFromDisk()
 	if err != nil {
 		panic(fmt.Errorf("failed to read upgrade info from disk: %w", err))
 	}
 
-	if app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
+	if app.AppKeepers.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
 		return
 	}
 

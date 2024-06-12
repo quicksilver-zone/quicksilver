@@ -776,7 +776,7 @@ paths:
                         spec)
                     source_chain_id:
                       type: string
-                    _amount:
+                    XAmount:
                       type: string
                       format: uint64
                     amount:
@@ -939,7 +939,7 @@ paths:
                         spec)
                     source_chain_id:
                       type: string
-                    _amount:
+                    XAmount:
                       type: string
                       format: uint64
                     amount:
@@ -1104,7 +1104,7 @@ paths:
                         spec)
                     source_chain_id:
                       type: string
-                    _amount:
+                    XAmount:
                       type: string
                       format: uint64
                     amount:
@@ -1269,7 +1269,7 @@ paths:
                         spec)
                     source_chain_id:
                       type: string
-                    _amount:
+                    XAmount:
                       type: string
                       format: uint64
                     amount:
@@ -1709,7 +1709,7 @@ paths:
                           foo = any.unpack(Foo.class);
                         }
 
-                     Example 3: Pack and unpack a message in Python.
+                    Example 3: Pack and unpack a message in Python.
 
                         foo = Foo(...)
                         any = Any()
@@ -1719,7 +1719,7 @@ paths:
                           any.Unpack(foo)
                           ...
 
-                     Example 4: Pack and unpack a message in Go
+                    Example 4: Pack and unpack a message in Go
 
                          foo := &pb.Foo{...}
                          any, err := anypb.New(foo)
@@ -1750,7 +1750,6 @@ paths:
 
                     JSON
 
-                    ====
 
                     The JSON representation of an `Any` value uses the regular
 
@@ -2020,7 +2019,7 @@ paths:
                           foo = any.unpack(Foo.class);
                         }
 
-                     Example 3: Pack and unpack a message in Python.
+                    Example 3: Pack and unpack a message in Python.
 
                         foo = Foo(...)
                         any = Any()
@@ -2030,7 +2029,7 @@ paths:
                           any.Unpack(foo)
                           ...
 
-                     Example 4: Pack and unpack a message in Go
+                    Example 4: Pack and unpack a message in Go
 
                          foo := &pb.Foo{...}
                          any, err := anypb.New(foo)
@@ -2061,7 +2060,6 @@ paths:
 
                     JSON
 
-                    ====
 
                     The JSON representation of an `Any` value uses the regular
 
@@ -2897,7 +2895,7 @@ paths:
                         properties:
                           valoper:
                             type: string
-                          _amount:
+                          XAmount:
                             type: string
                             format: uint64
                           amount:
@@ -4543,7 +4541,7 @@ paths:
                       type: string
                     destination:
                       type: string
-                    _amount:
+                    XAmount:
                       type: string
                       format: int64
                     completion_time:
@@ -5002,7 +5000,7 @@ paths:
                         properties:
                           valoper:
                             type: string
-                          _amount:
+                          XAmount:
                             type: string
                             format: uint64
                           amount:
@@ -5200,7 +5198,7 @@ paths:
                         properties:
                           valoper:
                             type: string
-                          _amount:
+                          XAmount:
                             type: string
                             format: uint64
                           amount:

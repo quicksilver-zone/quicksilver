@@ -20,12 +20,12 @@ message Zone {
   string base_denom = 9;
   string redemption_rate = 10 [
     (cosmos_proto.scalar) = "cosmos.Dec",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable) = false
   ];
   string last_redemption_rate = 11 [
     (cosmos_proto.scalar) = "cosmos.Dec",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable) = false
   ];
   repeated Validator validators = 12;
@@ -39,7 +39,7 @@ message Zone {
   int64 last_epoch_height = 20 [(gogoproto.jsontag) = "last_epoch_height,string,omitempty"]; // deprecated
   string tvl = 21 [
     (cosmos_proto.scalar) = "cosmos.Dec",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable) = false
   ];
   int64 unbonding_period = 22 [(gogoproto.jsontag) = "unbonding_period,string,omitempty"];
@@ -66,17 +66,17 @@ message SubzoneInfo {
 message LsmCaps {
   string validator_cap = 1 [
     (cosmos_proto.scalar) = "cosmos.Dec",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable) = false
   ];
   string validator_bond_cap = 2 [
     (cosmos_proto.scalar) = "cosmos.Dec",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable) = false
   ];
   string global_cap = 3 [
     (cosmos_proto.scalar) = "cosmos.Dec",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable) = false
   ];
 }
@@ -95,7 +95,7 @@ message ICAAccount {
 
 message Distribution {
   string valoper = 1;
-  uint64 _amount = 2 [deprecated = true];
+  uint64 XAmount = 2 [deprecated = true];
   string amount = 3 [
     (cosmos_proto.scalar) = "cosmos.Int",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
@@ -145,7 +145,7 @@ message RedelegationRecord {
   int64 epoch_number = 2;
   string source = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   string destination = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  int64 _amount = 5 [deprecated = true];
+  int64 XAmount = 5 [deprecated = true];
   google.protobuf.Timestamp completion_time = 6 [
     (gogoproto.nullable) = false,
     (gogoproto.stdtime) = true
@@ -161,12 +161,12 @@ message Validator {
   string valoper_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   string commission_rate = 2 [
     (cosmos_proto.scalar) = "cosmos.Dec",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable) = false
   ];
   string delegator_shares = 3 [
     (cosmos_proto.scalar) = "cosmos.Dec",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable) = false
   ];
   string voting_power = 4 [
@@ -176,7 +176,7 @@ message Validator {
   ];
   string score = 5 [
     (cosmos_proto.scalar) = "cosmos.Dec",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable) = false
   ];
   string status = 6;
@@ -189,13 +189,13 @@ message Validator {
   // Number of shares self bonded from the validator
   string validator_bond_shares = 10 [
     (gogoproto.moretags) = "yaml:\"validator_bond_shares\"",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable) = false
   ];
   // Number of shares either tokenized or owned by a liquid staking provider
   string liquid_shares = 11 [
     (gogoproto.moretags) = "yaml:\"liquid_shares\"",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable) = false
   ];
 }
@@ -213,7 +213,7 @@ message ValidatorIntent {
   string weight = 2 [
     (gogoproto.moretags) = "yaml:\"weight\"",
     (cosmos_proto.scalar) = "cosmos.Dec",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable) = false
   ];
 }

@@ -8,15 +8,16 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/libs/log"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	dbm "github.com/tendermint/tm-db"
 	"golang.org/x/exp/maps"
 
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
+	dbm "github.com/cometbft/cometbft-db"
+	"github.com/cometbft/cometbft/libs/log"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	"github.com/quicksilver-zone/quicksilver/app"
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
@@ -52,7 +53,7 @@ func TestKeeperWithZonesRoundTrip(t *testing.T) {
 	// 1. Check for a zone without having stored anything.
 	zone, ok := kpr.GetZone(ctx, chainID)
 	require.False(t, ok, "No zone stored in the keeper")
-	require.Equal(t, types.Zone{}, zone, "Expecting the blank zone")
+	require.Equal(t, kpr.EmptyZone(), zone, "Expecting the blank zone")
 
 	// 2. Now set a zone and ensure it is retrieved.
 	zone = types.Zone{
@@ -60,6 +61,15 @@ func TestKeeperWithZonesRoundTrip(t *testing.T) {
 		ChainId:      chainID,
 		LocalDenom:   "uqck",
 		BaseDenom:    "qck",
+		// Prevent nil big int field:
+		// -  i: (*big.Int)(<nil>)
+		// +  i: (*big.Int)({
+		// 	+   neg: (bool) false,
+		// 	+   abs: (big.nat) <nil>
+		// 	+  })
+		RedemptionRate:     sdk.NewDec(0),
+		LastRedemptionRate: sdk.NewDec(0),
+		Tvl:                sdk.NewDec(0),
 	}
 	kpr.SetZone(ctx, &zone)
 	gotZone, ok := kpr.GetZone(ctx, chainID)
@@ -71,7 +81,7 @@ func TestKeeperWithZonesRoundTrip(t *testing.T) {
 	kpr.DeleteZone(ctx, chainID)
 	zone, ok = kpr.GetZone(ctx, chainID)
 	require.False(t, ok, "No zone stored anymore in the keeper")
-	require.Equal(t, types.Zone{}, zone, "Expecting the blank zone")
+	require.Equal(t, kpr.EmptyZone(), zone, "Expecting the blank zone")
 
 	// 4. Store many zones in the keeper, then retrieve them by chainID.
 	nzones := 10
@@ -92,7 +102,10 @@ func TestKeeperWithZonesRoundTrip(t *testing.T) {
 					sdk.NewCoin("uqck", sdk.NewInt(700000)),
 				),
 			},
-			Is_118: true,
+			Is_118:             true,
+			LastRedemptionRate: sdk.NewDec(0),
+			RedemptionRate:     sdk.NewDec(0),
+			Tvl:                sdk.NewDec(0),
 		}
 		kpr.SetAddressZoneMapping(ctx, delegationAddr, zone.ChainId)
 		kpr.SetZone(ctx, &zone)
@@ -331,7 +344,7 @@ func (suite *KeeperTestSuite) TestRemoveZoneAndAssociatedRecords() {
 	// check zone
 	zone, found = quicksilver.InterchainstakingKeeper.GetZone(ctx, chainID)
 	suite.False(found, "No zone stored in the keeper")
-	suite.Equal(types.Zone{}, zone, "Expecting the blank zone")
+	suite.Equal(quicksilver.InterchainstakingKeeper.EmptyZone(), zone, "Expecting the blank zone")
 }
 
 // TODO: convert to keeper tests

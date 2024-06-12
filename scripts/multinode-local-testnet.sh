@@ -21,7 +21,8 @@ quicksilverd keys add validator2 --keyring-backend=test --home=$HOME/.quicksilve
 quicksilverd keys add validator3 --keyring-backend=test --home=$HOME/.quicksilverd/validator3
 
 # create validator node with tokens to transfer to the three other nodes
-quicksilverd add-genesis-account $(quicksilverd keys show validator1 -a --keyring-backend=test --home=$HOME/.quicksilverd/validator1) 100000000000stake --home=$HOME/.quicksilverd/validator1
+VAL1_ADDR=$(quicksilverd keys show validator1 -a --keyring-backend=test --home=$HOME/.quicksilverd/validator1 | tail -n1)
+quicksilverd add-genesis-account $VAL1_ADDR 100000000000stake --home=$HOME/.quicksilverd/validator1
 quicksilverd gentx validator1 500000000stake --keyring-backend=test --home=$HOME/.quicksilverd/validator1 --chain-id=testing
 quicksilverd collect-gentxs --home=$HOME/.quicksilverd/validator1
 
@@ -65,8 +66,8 @@ cp $HOME/.quicksilverd/validator1/config/genesis.json $HOME/.quicksilverd/valida
 cp $HOME/.quicksilverd/validator1/config/genesis.json $HOME/.quicksilverd/validator3/config/genesis.json
 
 # copy tendermint node id of validator1 to persistent peers of validator2-3
-sed -i -E "s|persistent_peers = \"\"|persistent_peers = \"$(quicksilverd tendermint show-node-id --home=$HOME/.quicksilverd/validator1)@localhost:26656\"|g" $HOME/.quicksilverd/validator2/config/config.toml
-sed -i -E "s|persistent_peers = \"\"|persistent_peers = \"$(quicksilverd tendermint show-node-id --home=$HOME/.quicksilverd/validator1)@localhost:26656\"|g" $HOME/.quicksilverd/validator3/config/config.toml
+sed -i -E "s|persistent_peers = \"\"|persistent_peers = \"$(quicksilverd tendermint show-node-id --home=$HOME/.quicksilverd/validator1 | tail -n1)@localhost:26656\"|g" $HOME/.quicksilverd/validator2/config/config.toml
+sed -i -E "s|persistent_peers = \"\"|persistent_peers = \"$(quicksilverd tendermint show-node-id --home=$HOME/.quicksilverd/validator1 | tail -n1)@localhost:26656\"|g" $HOME/.quicksilverd/validator3/config/config.toml
 
 
 # start all three validators

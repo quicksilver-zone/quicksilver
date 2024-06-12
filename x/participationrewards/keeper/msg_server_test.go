@@ -4,14 +4,14 @@ import (
 	"encoding/json"
 	"time"
 
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/proto/tendermint/crypto"
-
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+
+	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cometbft/cometbft/proto/tendermint/crypto"
 
 	"github.com/quicksilver-zone/quicksilver/app" //nolint:revive
 	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/lockup"
@@ -159,7 +159,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 				msg = types.MsgSubmitClaim{
 					UserAddress: address.String(),
 					Zone:        "cosmoshub-4",
-					SrcZone:     "testchain1",
+					SrcZone:     "testchain1-1",
 					ClaimType:   cmtypes.ClaimTypeUmeeToken,
 					Proofs: []*cmtypes.Proof{
 						{
@@ -291,7 +291,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 				msg = types.MsgSubmitClaim{
 					UserAddress: address.String(),
 					Zone:        "cosmoshub-4",
-					SrcZone:     "testchain1",
+					SrcZone:     "testchain1-1",
 					ClaimType:   cmtypes.ClaimTypeLiquidToken,
 					Proofs: []*cmtypes.Proof{
 						{
@@ -325,7 +325,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 				msg = types.MsgSubmitClaim{
 					UserAddress: userAddress,
 					Zone:        "cosmoshub-4",
-					SrcZone:     "testchain1",
+					SrcZone:     "testchain1-1",
 					ClaimType:   cmtypes.ClaimTypeUmeeToken,
 					Proofs: []*cmtypes.Proof{
 						{

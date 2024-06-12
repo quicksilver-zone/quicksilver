@@ -5,15 +5,15 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/tendermint/tendermint/libs/log"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	ibcclienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
-	ibckeeper "github.com/cosmos/ibc-go/v6/modules/core/keeper"
-	ibctmtypes "github.com/cosmos/ibc-go/v6/modules/light-clients/07-tendermint/types"
+	"github.com/cometbft/cometbft/libs/log"
+
+	ibcclienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
+	ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
+	ibctmtypes "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
 
 	"github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
 )
@@ -74,7 +74,11 @@ func (k Keeper) StoreSelfConsensusState(ctx sdk.Context, key string) error {
 		return err
 	}
 
-	state, _ := selfConsState.(*ibctmtypes.ConsensusState)
+	state, ok := selfConsState.(*ibctmtypes.ConsensusState)
+	if !ok {
+		k.Logger(ctx).Error("Error casting self consensus state")
+		return fmt.Errorf("error casting self consensus state")
+	}
 	k.SetSelfConsensusState(ctx, key, state)
 
 	return nil

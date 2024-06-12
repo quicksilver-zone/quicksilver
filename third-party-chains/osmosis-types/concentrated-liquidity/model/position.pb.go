@@ -14,7 +14,7 @@ import (
 	_ "github.com/cosmos/cosmos-proto"
 	types "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/cosmos/gogoproto/gogoproto"
-	proto "github.com/gogo/protobuf/proto"
+		proto "github.com/cosmos/gogoproto/proto"
 	github_com_gogo_protobuf_types "github.com/gogo/protobuf/types"
 	lockup "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/lockup"
 	_ "google.golang.org/protobuf/types/known/durationpb"

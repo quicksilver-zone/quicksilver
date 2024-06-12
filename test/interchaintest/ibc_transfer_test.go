@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"testing"
 
-	"cosmossdk.io/math"
-	transfertypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
-	"github.com/strangelove-ventures/interchaintest/v6"
-	"github.com/strangelove-ventures/interchaintest/v6/chain/cosmos"
-	"github.com/strangelove-ventures/interchaintest/v6/ibc"
-	"github.com/strangelove-ventures/interchaintest/v6/testreporter"
-	"github.com/strangelove-ventures/interchaintest/v6/testutil"
+	math "cosmossdk.io/math"
+	transfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
+	"github.com/strangelove-ventures/interchaintest/v7"
+	"github.com/strangelove-ventures/interchaintest/v7/chain/cosmos"
+	"github.com/strangelove-ventures/interchaintest/v7/ibc"
+	"github.com/strangelove-ventures/interchaintest/v7/testreporter"
+	"github.com/strangelove-ventures/interchaintest/v7/testutil"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
 )
@@ -127,7 +127,7 @@ func TestQuicksilverJunoIBCTransfer(t *testing.T) {
 	require.Equal(t, genesisWalletAmount, junoOrigBal)
 
 	// Compose an IBC transfer and send from Quicksilver -> Juno
-	var transferAmount = math.NewInt(1_000)
+	var transferAmount = math.NewInt(1000)
 	transfer := ibc.WalletAmount{
 		Address: junoUserAddr,
 		Denom:   quicksilver.Config().Denom,
