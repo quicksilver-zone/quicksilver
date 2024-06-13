@@ -55,7 +55,7 @@ type ReadOnlyChainConfig struct {
 	QueryTimeoutSeconds         int
 	QueryRetries                int
 	QueryRetryDelayMilliseconds int
-	Client                      *rpchttp.HTTP     `toml:"-"`
+	Client                      RPCClientI        `toml:"-"`
 	LightProvider               prov.Provider     `toml:"-"`
 	Codec                       *codec.ProtoCodec `toml:"-"`
 	Cache                       *ristretto.Cache  `toml:"-"`
@@ -72,16 +72,43 @@ type ChainConfig struct {
 	AddressBytes           sdktypes.AccAddress `toml:"-"`
 }
 
-func (r *ReadOnlyChainConfig) Init(codec *codec.ProtoCodec, cache *ristretto.Cache) error {
+func (r *ChainConfig) GetClient() *rpchttp.HTTP {
+	return r.Client.(*rpchttp.HTTP)
+}
+
+func (r *ChainConfig) Init(codec *codec.ProtoCodec, cache *ristretto.Cache) error {
 	var err error
 	r.Client, err = rpchttp.NewWithTimeout(r.RpcUrl, "/websocket", uint(r.ConnectTimeoutSeconds))
 	if err != nil {
 		return err
 	}
-	err = r.Client.Start()
+
+	err = r.GetClient().Start()
 	if err != nil {
 		return err
 	}
+
+	r.LightProvider, err = lighthttp.New(r.ChainID, r.RpcUrl)
+	if err != nil {
+		return err
+	}
+
+	r.Codec = codec
+	r.Cache = cache
+
+	return nil
+}
+
+func (r *ReadOnlyChainConfig) Init(codec *codec.ProtoCodec, cache *ristretto.Cache) error {
+	var err error
+	r.Client, err = NewWithTimeout(r.RpcUrl, uint(r.ConnectTimeoutSeconds))
+	if err != nil {
+		return err
+	}
+	// err = r.Client.Start()
+	// if err != nil {
+	// 	return err
+	// }
 
 	r.LightProvider, err = lighthttp.New(r.ChainID, r.RpcUrl)
 	if err != nil {

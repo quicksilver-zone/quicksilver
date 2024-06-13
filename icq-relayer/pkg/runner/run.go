@@ -109,6 +109,7 @@ func Run(ctx context.Context, cfg *types.Config, errHandler func(error)) error {
 	}()
 
 	if err := cfg.DefaultChain.Init(cfg.ProtoCodec, cache); err != nil {
+		fmt.Println(err)
 		return err
 	}
 
@@ -127,7 +128,7 @@ func Run(ctx context.Context, cfg *types.Config, errHandler func(error)) error {
 
 	_ = logger.Log("worker", "init", "msg", "configuring subscription on default chainClient", "chain", cfg.DefaultChain.ChainID)
 
-	ch, err := cfg.DefaultChain.Client.Subscribe(ctx, cfg.DefaultChain.ChainID+"-icq", query.String())
+	ch, err := cfg.DefaultChain.GetClient().Subscribe(ctx, cfg.DefaultChain.ChainID+"-icq", query.String())
 	if err != nil {
 		_ = logger.Log("error", err.Error())
 		return err
@@ -320,6 +321,7 @@ func handleEvent(cfg *types.Config, event coretypes.ResultEvent, logger log.Logg
 		}
 
 		if _, found := cache.Get("ignore/" + queryIds[i]); found {
+			logger.Log("msg", "Query already in ignore cache", "id", queryIds[i])
 			// break if this is in the cache
 			continue
 		}
@@ -546,7 +548,7 @@ func getHeader(ctx context.Context, cfg *types.Config, client *types.ReadOnlyCha
 
 	if !historicOk && clientHeight.RevisionHeight >= uint64(requestHeight+1) {
 		//return nil, fmt.Errorf("trusted height >= request height")
-		oldHeights, err := cfg.DefaultChain.GetClientStateHeights(ctx, clientId, client.ChainID, uint64(requestHeight-200), logger, metrics)
+		oldHeights, err := cfg.DefaultChain.GetClientStateHeights(ctx, clientId, client.ChainID, uint64(requestHeight-400), logger, metrics)
 		if err != nil {
 			return nil, fmt.Errorf("error: Could not get old heights: %w", err)
 		}
@@ -645,15 +647,16 @@ func flush(cfg *types.Config, toSend []Message, logger log.Logger, metrics promm
 			case code == 19:
 				_ = logger.Log("msg", "Tx already in mempool")
 			case strings.Contains(err.Error(), "request body too large"):
-				TxMsgs = TxMsgs / 2
+				TxMsgs = TxMsgs / 4 * 3
+				LastReduced = time.Now()
 				_ = logger.Log("msg", "body too large: reduced batchsize", "size", TxMsgs)
 			case strings.Contains(err.Error(), "failed to execute message"):
 				regex := regexp.MustCompile(`failed to execute message; message index: (\d+)`)
 				match := regex.FindStringSubmatch(err.Error())
 				idx, _ := strconv.Atoi(match[1])
 				badMsg := msgs[idx].(*qstypes.MsgSubmitQueryResponse)
-				cache.SetWithTTL("ignore/"+badMsg.QueryId, true, 1, time.Minute*2)
-				_ = logger.Log("msg", "Failed to execute message", "index", match[1], "err", err.Error())
+				cache.SetWithTTL("ignore/"+badMsg.QueryId, true, 1, time.Minute*5)
+				_ = logger.Log("msg", "Failed to execute message; ignoring for five minutes", "index", match[1], "err", err.Error())
 			case code == 65536:
 				_ = logger.Log("msg", "error in tx", "err", err.Error())
 			default:
@@ -690,6 +693,7 @@ func prepareMessages(msgSlice []Message, logger log.Logger) []sdk.Msg {
 		}
 
 		if _, ok := cache.Get("ignore/" + msg.QueryId); ok {
+			logger.Log("msg", "Query already in ignore cache", "id", msg.QueryId)
 			continue
 		}
 
@@ -729,6 +733,10 @@ func prepareMessages(msgSlice []Message, logger log.Logger) []sdk.Msg {
 func Close(cfg *types.Config) error {
 	query := tmquery.MustParse(fmt.Sprintf("message.module='%s'", "interchainquery"))
 
-	cfg.DefaultChain.Client.Stop()
-	return cfg.DefaultChain.Client.Unsubscribe(ctx, cfg.DefaultChain.ChainID+"-icq", query.String())
+	err := cfg.DefaultChain.GetClient().Unsubscribe(ctx, cfg.DefaultChain.ChainID+"-icq", query.String())
+	if err != nil {
+		return err
+	}
+
+	return cfg.DefaultChain.GetClient().Stop()
 }
