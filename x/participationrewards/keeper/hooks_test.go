@@ -47,7 +47,7 @@ func (suite *KeeperTestSuite) TestAfterZoneCreated() {
 
 		// check osmosis
 		osmosisIBCDenom := utils.DeriveIbcDenom("transfer", counterpartyOsmosisChannel, "", "", "uqtst")
-		pd, found = k.GetProtocolData(ctx, types.ProtocolDataTypeLiquidToken, "osmosis-1_"+osmosisIBCDenom)
+		pd, found = k.GetProtocolData(ctx, types.ProtocolDataTypeLiquidToken, osmosisTestChain+"_"+osmosisIBCDenom)
 		suite.True(found)
 		upd, err = types.UnmarshalProtocolData(types.ProtocolDataTypeLiquidToken, pd.Data)
 		suite.NoError(err)
@@ -58,7 +58,7 @@ func (suite *KeeperTestSuite) TestAfterZoneCreated() {
 
 		// check umee
 		umeeIBCDenom := utils.DeriveIbcDenom("transfer", counterpartyUmeeChannel, "", "", "uqtst")
-		pd, found = k.GetProtocolData(ctx, types.ProtocolDataTypeLiquidToken, "umee-types-1_"+umeeIBCDenom)
+		pd, found = k.GetProtocolData(ctx, types.ProtocolDataTypeLiquidToken, umeeTestChain+"_"+umeeIBCDenom)
 		suite.True(found)
 		upd, err = types.UnmarshalProtocolData(types.ProtocolDataTypeLiquidToken, pd.Data)
 		suite.NoError(err)
