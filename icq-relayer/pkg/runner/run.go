@@ -548,7 +548,7 @@ func getHeader(ctx context.Context, cfg *types.Config, client *types.ReadOnlyCha
 
 	if !historicOk && clientHeight.RevisionHeight >= uint64(requestHeight+1) {
 		//return nil, fmt.Errorf("trusted height >= request height")
-		oldHeights, err := cfg.DefaultChain.GetClientStateHeights(ctx, clientId, client.ChainID, uint64(requestHeight-400), logger, metrics)
+		oldHeights, err := cfg.DefaultChain.GetClientStateHeights(ctx, clientId, client.ChainID, uint64(requestHeight-200), logger, metrics, 0)
 		if err != nil {
 			return nil, fmt.Errorf("error: Could not get old heights: %w", err)
 		}

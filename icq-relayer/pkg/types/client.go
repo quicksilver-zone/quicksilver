@@ -151,7 +151,11 @@ func (r *ReadOnlyChainConfig) GetClientState(ctx context.Context, clientId strin
 	return &clientStateResponse, nil
 }
 
-func (r *ReadOnlyChainConfig) GetClientStateHeights(ctx context.Context, clientId string, chainId string, height uint64, logger log2.Logger, metrics prommetrics.Metrics) ([]clienttypes.Height, error) {
+func (r *ReadOnlyChainConfig) GetClientStateHeights(ctx context.Context, clientId string, chainId string, height uint64, logger log2.Logger, metrics prommetrics.Metrics, depth int) ([]clienttypes.Height, error) {
+
+	if depth > 10 {
+		return nil, fmt.Errorf("reached max depth")
+	}
 	chainParts := strings.Split(chainId, "-")
 	key := fmt.Sprintf("%s-%d", chainParts[len(chainParts)-1], height)
 
@@ -166,6 +170,10 @@ func (r *ReadOnlyChainConfig) GetClientStateHeights(ctx context.Context, clientI
 	err = r.Codec.Unmarshal(res.Response.Value, &resp)
 	if err != nil {
 		return nil, err
+	}
+
+	if len(resp.ConsensusStateHeights) == 0 {
+		return r.GetClientStateHeights(ctx, clientId, chainId, height-200, logger, metrics, depth+1)
 	}
 
 	return resp.ConsensusStateHeights, nil
@@ -275,7 +283,7 @@ type TxResultMinimal struct {
 type QueryClient interface {
 	Init(codec *codec.ProtoCodec, cache *ristretto.Cache) error
 	GetClientState(ctx context.Context, clientId string, logger log2.Logger, metrics prommetrics.Metrics) (*clienttypes.QueryClientStateResponse, error)
-	GetClientStateHeights(ctx context.Context, clientId string, chainId string, height uint64, logger log2.Logger, metrics prommetrics.Metrics) ([]clienttypes.Height, error)
+	GetClientStateHeights(ctx context.Context, clientId string, chainId string, height uint64, logger log2.Logger, metrics prommetrics.Metrics, depth int) ([]clienttypes.Height, error)
 	GetClientId(ctx context.Context, connectionId string, logger log2.Logger, metrics prommetrics.Metrics) (string, error)
 }
 
