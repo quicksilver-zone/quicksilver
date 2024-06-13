@@ -94,7 +94,9 @@ const RewardsModal = ({ address, isOpen, onClose }: { address: string; isOpen: b
       prevSelectedAssets.includes(denom) ? prevSelectedAssets.filter((item) => item !== denom) : [...prevSelectedAssets, denom],
     );
   };
-
+  // Toggle selection of all assets
+  // If currently all are selected, deselect all
+  // Otherwise, select all available assets
   const handleSelectAllChange = () => {
     if (selectAll) {
       setSelectedAssets([]);
@@ -172,7 +174,8 @@ const RewardsModal = ({ address, isOpen, onClose }: { address: string; isOpen: b
     return requiredChainAddresses.map((chainID) => {
       const addressObj = allAddresses.find((addr) => addr.chainID === chainID);
       if (!addressObj) {
-        throw new Error(`Address for chainID ${chainID} not found`);
+        console.error(`Address for chainID ${chainID} not found`);
+        return {} as UserAddress;
       }
       return addressObj;
     });
@@ -371,7 +374,7 @@ const RewardsModal = ({ address, isOpen, onClose }: { address: string; isOpen: b
                     </Thead>
                     <Tbody overflowY={'auto'} maxH="250px">
                       {tokenDetails.map((detail, index) => (
-                        <Tr key={index}>
+                        <Tr key={detail?.denom ?? index}>
                           <Td color="white">
                             <Checkbox
                               isChecked={selectedAssets.includes(detail?.denom ?? '')}
@@ -422,6 +425,7 @@ const RewardsModal = ({ address, isOpen, onClose }: { address: string; isOpen: b
                   size="sm"
                   w="160px"
                   variant="outline"
+                  isDisabled={selectedAssets.length === 0}
                   onClick={() => (destination === 'osmosis' ? handleExecuteRoute() : onSubmitClick())}
                 >
                   {isSigning === true && <Spinner size="sm" />}

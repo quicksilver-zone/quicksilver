@@ -27,6 +27,8 @@ export const WalletButton: React.FC = () => {
     'dydx',
     'stride',
     'noble',
+    'axelar',
+    'saga',
     'neutron',
   ]);
 

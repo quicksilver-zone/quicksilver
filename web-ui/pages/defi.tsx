@@ -9,7 +9,7 @@ export default function Home() {
       <Head>
         <title>Defi - Quicksilver Zone</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <meta name="description" content="Interhcain liquid staking hub. Secure your stake with the user focused liquid staking." />
+        <meta name="description" content="Interchain liquid staking hub. Secure your stake with the user-focused liquid staking." />
         <meta name="keywords" content="staking, Quicksilver Protocol, crypto staking, earn rewards, DeFi, blockchain" />
         <meta name="author" content="Quicksilver Zone" />
         <link rel="icon" href="/img/favicon-main.png" />

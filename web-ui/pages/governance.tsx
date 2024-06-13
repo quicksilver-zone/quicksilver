@@ -60,7 +60,7 @@ export default function Home() {
                   '@context': 'https://schema.org',
                   '@type': 'WebPage',
                   name: 'Governance - Quicksilver Zone',
-                  description: 'Interhcain liquid staking hub. Secure your stake with the user focused liquid staking.',
+                  description: 'Interchain liquid staking hub. Secure your stake with the user focused liquid staking.',
                   url: 'https://app.quicksilver.zone/governance',
                   image: 'https://app.quicksilver.zone/img/staking-banner.png',
                   publisher: {

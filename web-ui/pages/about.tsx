@@ -17,7 +17,7 @@ const AboutPage = () => {
         <Head>
           <title>About - Quicksilver Zone</title>
           <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-          <meta name="description" content="Interhcain liquid staking hub. Secure your stake with the user focused liquid staking." />
+          <meta name="description" content="Interchain liquid staking hub. Secure your stake with the user-focused liquid staking." />
           <meta name="keywords" content="staking, Quicksilver Protocol, crypto staking, earn rewards, DeFi, blockchain" />
           <meta name="author" content="Quicksilver Zone" />
           <link rel="icon" href="/img/favicon-main.png" />
@@ -25,7 +25,7 @@ const AboutPage = () => {
           <meta property="og:title" content="About - Quicksilver Zone" />
           <meta
             property="og:description"
-            content="Interhcain liquid staking hub. Secure your stake with the user focused liquid staking."
+            content="Interchain liquid staking hub. Secure your stake with the user-focused liquid staking."
           />
           <meta property="og:url" content="https://app.quicksilver.zone/about" />
           <meta property="og:image" content="https://app.quicksilver.zone/img/staking-banner.png" />
@@ -36,7 +36,7 @@ const AboutPage = () => {
           <meta name="twitter:title" content="About - Quicksilver Zone" />
           <meta
             name="twitter:description"
-            content="Interhcain liquid staking hub. Secure your stake with the user focused liquid staking."
+            content="Interchain liquid staking hub. Secure your stake with the user-focused liquid staking."
           />
           <meta name="twitter:image" content="https://app.quicksilver.zone/img/staking-banner.png" />
           <meta name="twitter:site" content="@QuicksilverProtocol" />
@@ -46,7 +46,7 @@ const AboutPage = () => {
               '@context': 'https://schema.org',
               '@type': 'WebPage',
               name: 'About - Quicksilver Zone',
-              description: 'Interhcain liquid staking hub. Secure your stake with the user focused liquid staking.',
+              description: 'Interchain liquid staking hub. Secure your stake with the user focused liquid staking.',
               url: 'https://app.quicksilver.zone/aho8t',
               image: 'https://app.quicksilver.zone/img/staking-banner.png',
               publisher: {
