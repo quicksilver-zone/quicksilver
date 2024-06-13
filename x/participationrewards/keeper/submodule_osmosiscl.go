@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -13,6 +14,7 @@ import (
 	osmosistypes "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types"
 	osmocl "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/concentrated-liquidity"
 	osmoclmodel "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/concentrated-liquidity/model"
+	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	"github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 )
 
@@ -72,6 +74,12 @@ func (m *OsmosisClModule) Hooks(ctx sdk.Context, k *Keeper) {
 func (*OsmosisClModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.MsgSubmitClaim) (math.Int, error) {
 	claimAmount := math.ZeroInt()
 	var position osmoclmodel.Position
+
+	addr, err := addressutils.AccAddressFromBech32(msg.UserAddress, "")
+	if err != nil {
+		return math.ZeroInt(), err
+	}
+
 	for _, proof := range msg.Proofs {
 		position = osmoclmodel.Position{}
 		err := k.cdc.Unmarshal(proof.Data, &position)
@@ -84,8 +92,11 @@ func (*OsmosisClModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.Msg
 			return math.ZeroInt(), err
 		}
 
-		if sdk.AccAddress(lockupOwner).String() != msg.UserAddress {
-			return math.ZeroInt(), errors.New("not a valid proof for submitting user")
+		if !bytes.Equal(lockupOwner, addr) {
+			mappedAddr, found := k.icsKeeper.GetLocalAddressMap(ctx, addr, msg.SrcZone)
+			if !found || !bytes.Equal(lockupOwner, mappedAddr) {
+				return math.ZeroInt(), errors.New("not a valid proof for submitting user or mapped account")
+			}
 		}
 
 		sdkAmount, err := osmosistypes.DetermineApplicableTokensInClPool(ctx, k, position, msg.Zone)
