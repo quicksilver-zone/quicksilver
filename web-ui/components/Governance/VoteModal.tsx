@@ -13,7 +13,7 @@ import {
   RadioGroup,
   UseDisclosureReturn,
 } from '@chakra-ui/react';
-import { coins, StdFee } from '@cosmjs/stargate';
+import { StdFee } from '@cosmjs/stargate';
 import { useChain } from '@cosmos-kit/react';
 import { cosmos } from 'interchain-query';
 import { useState } from 'react';
@@ -39,10 +39,9 @@ export const VoteModal: React.FC<VoteModalProps> = ({ modalControl, chainName, u
   const [isLoading, setIsLoading] = useState(false);
 
   const { tx } = useTx(chainName);
-  const { estimateFee } = useFeeEstimation(chainName);
+
   const { address } = useChain(chainName);
 
-  const coin = getCoin(chainName);
   const { isOpen, onClose } = modalControl;
 
   const checkIfDisable = (option: number) => option === vote;
@@ -53,7 +52,7 @@ export const VoteModal: React.FC<VoteModalProps> = ({ modalControl, chainName, u
   };
 
   const handleConfirmClick = async () => {
-    if (!address || !option) return;
+    if (!address || option === undefined) return;
     setIsLoading(true);
 
     const msg = composeVoteMessage({
@@ -62,86 +61,96 @@ export const VoteModal: React.FC<VoteModalProps> = ({ modalControl, chainName, u
       voter: address,
     });
 
-    const fee = await estimateFee(address, [msg]);
+    try {
+      const fee: StdFee = {
+        amount: [
+          {
+            denom: 'uqck',
+            amount: '9000',
+          },
+        ],
+        gas: '90000',
+      };
 
-    await tx([msg], {
-      fee,
-      onSuccess: () => {
-        updateVotes();
-        closeModal();
-      },
-    });
-
-    setIsLoading(false);
+      await tx([msg], {
+        fee,
+        onSuccess: () => {
+          updateVotes();
+          closeModal();
+        },
+      });
+    } catch (error) {
+      console.error('Transaction Error:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <Modal isOpen={isOpen} onClose={closeModal} isCentered>
       <ModalOverlay />
-      <>
-        <ModalContent bgColor="#1A1A1A">
-          <ModalHeader color="white" mr={4}>
-            {title}
-          </ModalHeader>
-          <ModalCloseButton color="white" />
-          <ModalBody>
-            <RadioGroup onChange={(e) => setOption(Number(e))}>
-              <Stack>
-                <Radio
-                  colorScheme="green"
-                  size="lg"
-                  value={VoteType.VOTE_OPTION_YES.toString()}
-                  isDisabled={checkIfDisable(VoteType.VOTE_OPTION_YES)}
-                >
-                  <Text>Yes</Text>
-                </Radio>
-                <Radio
-                  colorScheme="red"
-                  size="lg"
-                  value={VoteType.VOTE_OPTION_NO.toString()}
-                  isDisabled={checkIfDisable(VoteType.VOTE_OPTION_NO)}
-                >
-                  <Text>No</Text>
-                </Radio>
-                <Radio
-                  colorScheme="red"
-                  size="lg"
-                  value={VoteType.VOTE_OPTION_NO_WITH_VETO.toString()}
-                  isDisabled={checkIfDisable(VoteType.VOTE_OPTION_NO_WITH_VETO)}
-                >
-                  <Text>No With Veto</Text>
-                </Radio>
-                <Radio
-                  colorScheme="gray"
-                  size="lg"
-                  value={VoteType.VOTE_OPTION_ABSTAIN.toString()}
-                  isDisabled={checkIfDisable(VoteType.VOTE_OPTION_ABSTAIN)}
-                >
-                  <Text>Abstain</Text>
-                </Radio>
-              </Stack>
-            </RadioGroup>
-          </ModalBody>
+      <ModalContent bgColor="#1A1A1A">
+        <ModalHeader color="white" mr={4}>
+          {title}
+        </ModalHeader>
+        <ModalCloseButton color="white" />
+        <ModalBody>
+          <RadioGroup onChange={(e) => setOption(Number(e))}>
+            <Stack>
+              <Radio
+                colorScheme="green"
+                size="lg"
+                value={VoteType.VOTE_OPTION_YES.toString()}
+                isDisabled={checkIfDisable(VoteType.VOTE_OPTION_YES)}
+              >
+                <Text>Yes</Text>
+              </Radio>
+              <Radio
+                colorScheme="red"
+                size="lg"
+                value={VoteType.VOTE_OPTION_NO.toString()}
+                isDisabled={checkIfDisable(VoteType.VOTE_OPTION_NO)}
+              >
+                <Text>No</Text>
+              </Radio>
+              <Radio
+                colorScheme="red"
+                size="lg"
+                value={VoteType.VOTE_OPTION_NO_WITH_VETO.toString()}
+                isDisabled={checkIfDisable(VoteType.VOTE_OPTION_NO_WITH_VETO)}
+              >
+                <Text>No With Veto</Text>
+              </Radio>
+              <Radio
+                colorScheme="gray"
+                size="lg"
+                value={VoteType.VOTE_OPTION_ABSTAIN.toString()}
+                isDisabled={checkIfDisable(VoteType.VOTE_OPTION_ABSTAIN)}
+              >
+                <Text>Abstain</Text>
+              </Radio>
+            </Stack>
+          </RadioGroup>
+        </ModalBody>
 
-          <ModalFooter>
-            <Button
-              _active={{
-                transform: 'scale(0.95)',
-                color: 'complimentary.800',
-              }}
-              _hover={{
-                bgColor: 'rgba(255,128,0, 0.25)',
-                color: 'complimentary.300',
-              }}
-              onClick={handleConfirmClick}
-              isDisabled={!option || isLoading}
-              isLoading={isLoading}
-            >
-              Confirm
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </>
+        <ModalFooter>
+          <Button
+            _active={{
+              transform: 'scale(0.95)',
+              color: 'complimentary.800',
+            }}
+            _hover={{
+              bgColor: 'rgba(255,128,0, 0.25)',
+              color: 'complimentary.300',
+            }}
+            onClick={handleConfirmClick}
+            isDisabled={!option || isLoading}
+            isLoading={isLoading}
+          >
+            Confirm
+          </Button>
+        </ModalFooter>
+      </ModalContent>
     </Modal>
   );
 };

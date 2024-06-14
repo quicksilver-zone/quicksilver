@@ -44,6 +44,7 @@ import { shiftDigits } from '@/utils';
 
 const RewardsModal = ({ address, isOpen, onClose }: { address: string; isOpen: boolean; onClose: () => void }) => {
   const chains = useChains([
+    'quicksilver',
     'cosmoshub',
     'osmosis',
     'stargaze',
@@ -317,6 +318,7 @@ const RewardsModal = ({ address, isOpen, onClose }: { address: string; isOpen: b
         fee,
         onSuccess: () => {
           setIsSigning(false);
+          refetch();
         },
       });
       setIsSigning(false);
@@ -326,6 +328,33 @@ const RewardsModal = ({ address, isOpen, onClose }: { address: string; isOpen: b
   };
 
   const [destination, setDestination] = useState('');
+
+  // Helper function to count occurrences
+  const countOccurrences = (arr: any[]) => {
+    return arr.reduce((prev, curr) => {
+      prev[curr] = (prev[curr] || 0) + 1;
+      return prev;
+    }, {});
+  };
+
+  // Get the counts
+  const tokenCounts = countOccurrences(tokenDetails.map((detail) => detail?.originDenom));
+
+  const chainIdToTicker: { [key: string]: string } = {
+    'osmosis-1': 'osmosis',
+    'cosmoshub-4': 'cosmos',
+    'stargaze-1': 'stars',
+    'sommelier-3': 'somm',
+    'regen-1': 'regen',
+    'juno-1': 'juno',
+    'dydx-mainnet-1': 'dydx',
+    'ssc-1': 'saga',
+    'stride-1': 'stride',
+    'noble-1': 'noble',
+    'neutron-1': 'neutron',
+    'axelar-dojo-1': 'axl',
+    'agoric-3': 'bld',
+  };
 
   return (
     <Modal size={'sm'} isOpen={isOpen} onClose={onClose}>
@@ -356,7 +385,7 @@ const RewardsModal = ({ address, isOpen, onClose }: { address: string; isOpen: b
           {tokenDetails.length >= 1 && (
             <>
               <Box position="relative">
-                <TableContainer className="custom-scrollbar" maxH="260px" overflowY="auto" onScroll={handleScroll} position="relative">
+                <TableContainer className="custom-scrollbar" maxH="500px" overflowY="auto" onScroll={handleScroll} position="relative">
                   <Table variant="simple" colorScheme="whiteAlpha" size="sm">
                     <Thead position="sticky" top={0} bg="rgb(32,32,32)" zIndex={1}>
                       <Tr>
@@ -374,7 +403,7 @@ const RewardsModal = ({ address, isOpen, onClose }: { address: string; isOpen: b
                         </Th>
                       </Tr>
                     </Thead>
-                    <Tbody overflowY={'auto'} maxH="250px">
+                    <Tbody overflowY={'auto'} maxH="500px">
                       {tokenDetails.map((detail, index) => (
                         <Tr key={detail?.denom ?? index}>
                           <Td color="white">
@@ -388,7 +417,10 @@ const RewardsModal = ({ address, isOpen, onClose }: { address: string; isOpen: b
                           <Td color="white">
                             <HStack>
                               <Image w="32px" h="32px" alt={detail?.originDenom} src={detail?.logoURI} />
-                              <Text fontSize={'large'}>{formatTokenName(detail?.originDenom ?? '')}</Text>
+                              <Text fontSize={'large'}>
+                                {formatTokenName(detail?.originDenom ?? '')}
+                                {tokenCounts[detail?.originDenom ?? ''] > 1 ? `.${chainIdToTicker[detail?.originChainId ?? '']}` : ''}
+                              </Text>
                             </HStack>
                           </Td>
                           <Td fontSize={'large'} color="white" isNumeric>
