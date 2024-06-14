@@ -10,12 +10,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"
+	"github.com/cosmos/cosmos-sdk/x/authz"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-
 	icatypes "github.com/cosmos/ibc-go/v6/modules/apps/27-interchain-accounts/types"
 	transfertypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
 	channeltypes "github.com/cosmos/ibc-go/v6/modules/core/04-channel/types"
+	prtypes "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
@@ -23,9 +24,10 @@ import (
 )
 
 const (
-	Unset           = "unset"
-	ICAMsgChunkSize = 5
-	ICATimeout      = time.Hour * 6
+	Unset                 = "unset"
+	ICAMsgChunkSize       = 5
+	ICATimeout            = time.Hour * 6
+	AuthzAutoClaimAddress = "quick1psevptdp90jad76zt9y9x2nga686hutgmasmwd"
 )
 
 func (k *Keeper) HandleReceiptTransaction(ctx sdk.Context, txn *tx.Tx, hash string, zone types.Zone) error {
@@ -128,7 +130,7 @@ func (k *Keeper) HandleReceiptTransaction(ctx sdk.Context, txn *tx.Tx, hash stri
 		return fmt.Errorf("unable to transfer to delegate. Ignoring. senderAddress=%q zone=%q err: %w", senderAddress, zone.ChainId, err)
 	}
 	if memoAutoClaim {
-		if err := k.HandleAutoClaim(ctx); err != nil {
+		if err := k.HandleAutoClaim(ctx, senderAccAddress); err != nil {
 			k.Logger(ctx).Error("unable to handle auto claim. Ignoring.", "senderAddress", senderAddress, "zone", zone.ChainId, "err", err)
 			return fmt.Errorf("unable to handle auto claim. Ignoring. senderAddress=%q zone=%q err: %w", senderAddress, zone.ChainId, err)
 		}
@@ -175,9 +177,26 @@ func (k *Keeper) SendTokenIBC(ctx sdk.Context, senderAccAddress sdk.AccAddress, 
 	return err
 }
 
-// TODO: Implement this function
-func (k *Keeper) HandleAutoClaim(ctx sdk.Context) error {
-	return nil
+//	const msgGrant = grant({
+//	    granter: address,
+//	    grantee: 'quick1psevptdp90jad76zt9y9x2nga686hutgmasmwd',
+//	    grant: {
+//	      authorization: {
+//	        typeUrl: cosmos.authz.v1beta1.GenericAuthorization.typeUrl,
+//	        value: utf8Msg,
+//	      },
+//	    },
+//	  });
+func (k *Keeper) HandleAutoClaim(ctx sdk.Context, senderAddress sdk.AccAddress) error {
+	msgGrant, err := authz.NewMsgGrant(senderAddress, addressutils.MustAccAddressFromBech32(AuthzAutoClaimAddress, "quick"), &authz.GenericAuthorization{
+		Msg: prtypes.MsgSubmitClaim{}.Type(),
+	}, nil)
+	if err != nil {
+		return err
+	}
+	_, err = k.AuthzKeeper.Grant(ctx, msgGrant)
+	return err
+
 }
 
 // MintAndSendQAsset mints qAssets based on the native asset redemption rate.  Tokens are then transferred to the given user.

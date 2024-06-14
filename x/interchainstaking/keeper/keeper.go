@@ -52,6 +52,7 @@ type Keeper struct {
 	ICAControllerKeeper icacontrollerkeeper.Keeper
 	ICQKeeper           interchainquerykeeper.Keeper
 	AccountKeeper       types.AccountKeeper
+	AuthzKeeper         types.AuthzKeeper
 	BankKeeper          types.BankKeeper
 	IBCKeeper           *ibckeeper.Keeper
 	TransferKeeper      ibctransferkeeper.Keeper
@@ -69,6 +70,7 @@ func NewKeeper(
 	cdc codec.Codec,
 	storeKey storetypes.StoreKey,
 	accountKeeper types.AccountKeeper,
+	authzKeeper types.AuthzKeeper,
 	bankKeeper types.BankKeeper,
 	icaControllerKeeper icacontrollerkeeper.Keeper,
 	scopedKeeper *capabilitykeeper.ScopedKeeper,
