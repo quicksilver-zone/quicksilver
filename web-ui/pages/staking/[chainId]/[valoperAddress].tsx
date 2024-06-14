@@ -48,6 +48,32 @@ export default function Home() {
   const selectedNetwork = pageInfo.selectedNetwork;
   const valoperAddress = pageInfo.valoperAddress;
 
+  const chainIdToChainName = (chainId: string) => {
+    switch (chainId) {
+      case 'cosmoshub-4':
+        return 'cosmos';
+      case 'stargaze-1':
+        return 'stargaze';
+      case 'osmosis-1':
+        return 'osmosis';
+      case 'regen-1':
+        return 'regen';
+      case 'sommelier-1':
+        return 'sommelier';
+      case 'juno-1':
+        return 'juno';
+      case 'saga-1':
+        return 'saga';
+      case 'dydx-1':
+        return 'dydx';
+      default:
+        return '';
+    }
+  };
+  let chainId = selectedNetwork?.chainId;
+
+  let chainName = chainIdToChainName(chainId ?? '');
+
   const isValidValoperAddress = () => {
     if (typeof valoperAddress === 'string') {
       try {
@@ -66,7 +92,7 @@ export default function Home() {
     <>
       <SlideFade offsetY={'200px'} in={true} style={{ width: '100%' }}>
         <Container
-          mt={12}
+          mt={-12}
           flexDir={'column'}
           top={20}
           zIndex={2}
@@ -76,40 +102,34 @@ export default function Home() {
           maxW="5xl"
         >
           <Head>
-            <title>Staking - {selectedNetwork?.name}</title>
+            <title>{chainName.charAt(0).toUpperCase() + chainName.slice(1)} Liquid Staking</title>
             <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-            <meta name="description" content="Interhcain liquid staking hub. Secure your stake with the user focused liquid staking." />
-            <meta name="keywords" content="staking, Quicksilver Protocol, crypto staking, earn rewards, DeFi, blockchain" />
+            <meta name="description" content="STAKING SIMPLIFIED | LQUIDITY AMPLIFIED" />
+            <meta name="keywords" content={`liquid staking on ${chainName}, ${chainName}, Quicksilver`} />
             <meta name="author" content="Quicksilver Zone" />
             <link rel="icon" href="/img/favicon-main.png" />
 
-            <meta property="og:title" content={`Staking - ${selectedNetwork?.name}`} />
-            <meta
-              property="og:description"
-              content="Interhcain liquid staking hub. Secure your stake with the user focused liquid staking."
-            />
-            <meta property="og:url" content="https://app.quicksilver.zone/staking" />
-            <meta property="og:image" content="https://app.quicksilver.zone/img/staking-banner.png" />
+            <meta property="og:title" content="Staking - Quicksilver Zone" />
+            <meta property="og:description" content="STAKING SIMPLIFIED | LQUIDITY AMPLIFIED" />
+            <meta property="og:url" content={`https://app.quicksilver.zone/${selectedNetwork}/${valoperAddress}`} />
+            <meta property="og:image" content="https://app.quicksilver.zone/img/banner.png" />
             <meta property="og:type" content="website" />
-            <meta property="og:site_name" content="Quicksilver Zone" />
+            <meta property="og:site_name" content="Quicksilver Protocol" />
 
             <meta name="twitter:card" content="summary_large_image" />
             <meta name="twitter:title" content="Staking - Quicksilver Zone" />
-            <meta
-              name="twitter:description"
-              content="Interhcain liquid staking hub. Secure your stake with the user focused liquid staking."
-            />
-            <meta name="twitter:image" content="https://app.quicksilver.zone/img/staking-banner.png" />
-            <meta name="twitter:site" content="@QuicksilverProtocol" />
+            <meta name="twitter:description" content="STAKING SIMPLIFIED | LQUIDITY AMPLIFIED" />
+            <meta name="twitter:image" content="https://app.quicksilver.zone/img/banner.png" />
+            <meta name="twitter:site" content="@quicksilverzone" />
 
             <script type="application/ld+json">
               {JSON.stringify({
                 '@context': 'https://schema.org',
                 '@type': 'WebPage',
-                name: `Staking - ${selectedNetwork?.name}`,
-                description: 'Interhcain liquid staking hub. Secure your stake with the user focused liquid staking.',
-                url: 'https://app.quicksilver.zone/staking',
-                image: 'https://app.quicksilver.zone/img/staking-banner.png',
+                name: 'Staking - Quicksilver Zone',
+                description: 'STAKING SIMPLIFIED | LQUIDITY AMPLIFIED',
+                url: `https://app.quicksilver.zone/${selectedNetwork}/${valoperAddress}`,
+                image: 'https://app.quicksilver.zone/img/banner.png',
                 publisher: {
                   '@type': 'Organization',
                   name: 'Quicksilver Protocol',
