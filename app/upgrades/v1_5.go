@@ -107,6 +107,38 @@ func V010503rc0UpgradeHandler(
 
 // =========== PRODUCTION UPGRADE HANDLER ===========
 
+func V010506UpgradeHandler(
+	mm *module.Manager,
+	configurator module.Configurator,
+	appKeepers *keepers.AppKeepers,
+) upgradetypes.UpgradeHandler {
+	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+
+		appKeepers.InterchainstakingKeeper.Logger(ctx).Info("setting 4 unsent unbondings for epoch 167/168 to STATUS_UNBONDING to be picked up by the next end blocker...")
+		// remit epoch 167/168 unbondings that did not send due to channel timeout closure.
+		hashes := []string{
+			"0000000000000000000000000000000000000000000000000000000000000558", // 2544.457893
+			"87b0bdf81cc5c9a7e105b8a0d872e796c5484b7d55175ba7166ad86a664b2570", // 12.386644
+			"8f6e192cb8f4261677acfdfd303451fe96e46883bbeac3d1cc9900c1ddd52c9f", // 1720.763992
+			"99708983d11527b0a84cbecaa603772f48a9f8a0e6e3978408855576289d4673", // 10.033181
+		}
+		for _, hash := range hashes {
+			record, found := appKeepers.InterchainstakingKeeper.GetWithdrawalRecord(ctx, "cosmoshub-4", hash, icstypes.WithdrawStatusSend)
+			if !found {
+				// do not panic, in case records were updated on 15/04 epoch.
+				appKeepers.InterchainstakingKeeper.Logger(ctx).Error(fmt.Sprintf("1: unable to find record for hash %s", hash))
+				continue
+			}
+
+			// update the record so that it will re-trigger the send.
+			appKeepers.InterchainstakingKeeper.UpdateWithdrawalRecordStatus(ctx, &record, icstypes.WithdrawStatusUnbond)
+			appKeepers.InterchainstakingKeeper.Logger(ctx).Info("updated record to STATUS_UNBONDING", "hash", hash)
+		}
+
+		return mm.RunMigrations(ctx, configurator, fromVM)
+	}
+}
+
 func V010505UpgradeHandler(
 	mm *module.Manager,
 	configurator module.Configurator,
