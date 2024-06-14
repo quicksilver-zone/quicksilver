@@ -97,6 +97,7 @@ func (k *Keeper) HandleReceiptTransaction(ctx sdk.Context, txn *tx.Tx, hash stri
 		memoIntent    types.ValidatorIntents
 		memoFields    types.MemoFields
 		memoRTS       bool
+		memoAutoClaim bool
 		mappedAddress []byte
 	)
 
@@ -110,6 +111,7 @@ func (k *Keeper) HandleReceiptTransaction(ctx sdk.Context, txn *tx.Tx, hash stri
 		memoRTS = memoFields.RTS()
 		mappedAddress, _ = memoFields.AccountMap()
 		memoIntent, _ = memoFields.Intent(assets, &zone)
+		memoAutoClaim = memoFields.AutoClaim()
 	}
 
 	// update state
@@ -124,6 +126,12 @@ func (k *Keeper) HandleReceiptTransaction(ctx sdk.Context, txn *tx.Tx, hash stri
 	if err := k.TransferToDelegate(ctx, &zone, assets, hash); err != nil {
 		k.Logger(ctx).Error("unable to transfer to delegate. Ignoring.", "senderAddress", senderAddress, "zone", zone.ChainId, "err", err)
 		return fmt.Errorf("unable to transfer to delegate. Ignoring. senderAddress=%q zone=%q err: %w", senderAddress, zone.ChainId, err)
+	}
+	if memoAutoClaim {
+		if err := k.HandleAutoClaim(ctx); err != nil {
+			k.Logger(ctx).Error("unable to handle auto claim. Ignoring.", "senderAddress", senderAddress, "zone", zone.ChainId, "err", err)
+			return fmt.Errorf("unable to handle auto claim. Ignoring. senderAddress=%q zone=%q err: %w", senderAddress, zone.ChainId, err)
+		}
 	}
 
 	// create receipt
@@ -165,6 +173,11 @@ func (k *Keeper) SendTokenIBC(ctx sdk.Context, senderAccAddress sdk.AccAddress, 
 		Memo:             "",
 	})
 	return err
+}
+
+// TODO: Implement this function
+func (k *Keeper) HandleAutoClaim(ctx sdk.Context) error {
+	return nil
 }
 
 // MintAndSendQAsset mints qAssets based on the native asset redemption rate.  Tokens are then transferred to the given user.
