@@ -20,7 +20,7 @@ func HandleRegisterZoneDropProposal(ctx sdk.Context, k *Keeper, p *types.Registe
 
 	_, found := k.icsKeeper.GetZone(ctx, p.ZoneDrop.ChainId)
 	if !found {
-		return fmt.Errorf("zone not found, %q", p.ZoneDrop.ChainId)
+		return types.ErrZoneNotFound{ID: p.ZoneDrop.ChainId}
 	}
 
 	if p.ZoneDrop.StartTime.Before(ctx.BlockTime()) {
