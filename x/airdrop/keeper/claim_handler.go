@@ -130,7 +130,7 @@ func (k *Keeper) verifyDeposit(ctx sdk.Context, cr types.ClaimRecord, threshold 
 
 	zone, ok := k.icsKeeper.GetZone(ctx, cr.ChainId)
 	if !ok {
-		return fmt.Errorf("zone not found for %s", cr.ChainId)
+		return types.ErrZoneNotFound{ID: cr.ChainId}
 	}
 
 	// obtain all deposit receipts for this user on this zone
@@ -180,7 +180,7 @@ func (k *Keeper) verifyZoneIntent(ctx sdk.Context, chainID, address string) erro
 
 	zone, ok := k.icsKeeper.GetZone(ctx, chainID)
 	if !ok {
-		return fmt.Errorf("zone %s not found", chainID)
+		return types.ErrZoneNotFound{ID: chainID}
 	}
 
 	intent, ok := k.icsKeeper.GetDelegatorIntent(ctx, &zone, addr.String(), false)

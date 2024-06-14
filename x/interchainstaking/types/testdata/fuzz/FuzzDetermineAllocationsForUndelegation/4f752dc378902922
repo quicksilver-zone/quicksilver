@@ -1,0 +1,2 @@
+go test fuzz v1
+[]byte("{\"Cur_AlloCs\":{\"\":\"0\"},\"Amount\":[{\"Amount\":\"1\"}]}")
