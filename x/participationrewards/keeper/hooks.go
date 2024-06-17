@@ -77,12 +77,12 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, _ int64)
 		k.Logger(ctx).Error(err.Error())
 	}
 
-	conditionGetEpochHeight, err := emtypes.NewConditionAll(ctx, emtypes.NewFieldValues(emtypes.NewFieldValue(emtypes.FieldIdentifier, "get_epoch_height", emtypes.FieldOperator_EQUAL, true)), false)
+	conditionGetEpochHeight, err := emtypes.NewConditionAll(ctx, emtypes.NewFieldValues(emtypes.NewFieldValue(emtypes.FieldIdentifier, "get_epoch_height", emtypes.FIELD_OPERATOR_EQUAL, true)), false)
 	if err != nil {
 		panic(err)
 	}
 
-	conditionValidatorPerformance, err := emtypes.NewConditionAll(ctx, emtypes.NewFieldValues(emtypes.NewFieldValue(emtypes.FieldIdentifier, "validator_performance", emtypes.FieldOperator_EQUAL, true)), false)
+	conditionValidatorPerformance, err := emtypes.NewConditionAll(ctx, emtypes.NewFieldValues(emtypes.NewFieldValue(emtypes.FieldIdentifier, "validator_performance", emtypes.FIELD_OPERATOR_EQUAL, true)), false)
 	if err != nil {
 		panic(err)
 	}
@@ -95,7 +95,7 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, _ int64)
 	// add event to ensure submodule hooks are called when the validator_performance and get_epoch_height calls have returned.
 	k.EventManagerKeeper.AddEvent(ctx, types.ModuleName, "", "submodules", Submodules, emtypes.EventTypeSubmodules, emtypes.EventStatusPending, conditionSubmodulePre, nil)
 
-	conditionSubmoduleComplete, err := emtypes.NewConditionAll(ctx, emtypes.NewFieldValues(emtypes.NewFieldValue(emtypes.FieldIdentifier, "submodule", emtypes.FieldOperator_BEGINSWITH, true)), false)
+	conditionSubmoduleComplete, err := emtypes.NewConditionAll(ctx, emtypes.NewFieldValues(emtypes.NewFieldValue(emtypes.FieldIdentifier, "submodule", emtypes.FIELD_OPERATOR_BEGINSWITH, true)), false)
 	if err != nil {
 		panic(err)
 	}
@@ -107,7 +107,7 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, _ int64)
 	// add calc_tokens event to be triggered on satisfaction of all submodule*, validator_performance, and get_epoch_height calls events.
 	k.EventManagerKeeper.AddEvent(ctx, types.ModuleName, "", "calc_tokens", CalculateValues, emtypes.EventTypeCalculateTvls, emtypes.EventStatusPending, conditionCalcTokensPre, nil)
 
-	conditionCalcTokensComplete, err := emtypes.NewConditionAll(ctx, emtypes.NewFieldValues(emtypes.NewFieldValue(emtypes.FieldIdentifier, "calc_tokens", emtypes.FieldOperator_EQUAL, true)), false)
+	conditionCalcTokensComplete, err := emtypes.NewConditionAll(ctx, emtypes.NewFieldValues(emtypes.NewFieldValue(emtypes.FieldIdentifier, "calc_tokens", emtypes.FIELD_OPERATOR_EQUAL, true)), false)
 	if err != nil {
 		panic(err)
 	}

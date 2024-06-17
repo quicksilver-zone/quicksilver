@@ -2,6 +2,8 @@ package keeper
 
 import (
 	"crypto/sha256"
+	"encoding/binary"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"sort"
@@ -146,10 +148,34 @@ func (k *Keeper) GetUnlockedTokensForZone(ctx sdk.Context, zone *types.Zone) (ma
 	return availablePerValidator, total, nil
 }
 
+func (k *Keeper) ScheduleQueuedUnbondings(ctx sdk.Context, zone *types.Zone, epoch int64) error {
+	cond, err := emtypes.NewConditionAll(ctx, emtypes.NewFieldValues(emtypes.FieldEqual(emtypes.FieldIdentifier, fmt.Sprintf("distribute_unbonding/%d", epoch))), true)
+	if err != nil {
+		return err
+	}
+
+	// can we exec this now if condition is satisfied?
+
+	params := UnbondingsParams{Epoch: uint64(epoch), Zone: zone.ChainId, Rate: sdk.MinDec(zone.RedemptionRate, zone.LastRedemptionRate)}
+	paramsBytes, err := json.Marshal(params)
+	if err != nil {
+		return err
+	}
+	k.EventManagerKeeper.AddEvent(ctx, types.ModuleName, zone.ChainId, "schedule_queued_unbondings", ExecuteQueuedUnbondingsCb, emtypes.EventTypeUnbond, emtypes.EventStatusPending, cond,
+		paramsBytes,
+	)
+	return nil
+}
+
 // HandleQueuedUnbondings is called once per epoch to aggregate all queued unbondings into
 // a single unbond transaction per delegation.
-func (k *Keeper) HandleQueuedUnbondings(ctx sdk.Context, zone *types.Zone, epoch int64) error {
+func (k *Keeper) HandleQueuedUnbondings(ctx sdk.Context, chainId string, epoch int64, rate sdk.Dec) error {
+	zone, found := k.GetZone(ctx, chainId)
+	if !found {
+		return fmt.Errorf("unable to find zone %s", chainId)
+	}
 	// total amount coins to withdraw
+
 	totalToWithdraw := sdk.NewCoin(zone.BaseDenom, sdk.ZeroInt())
 
 	// map of distributions per withdrawal
@@ -159,13 +185,13 @@ func (k *Keeper) HandleQueuedUnbondings(ctx sdk.Context, zone *types.Zone, epoch
 	amountToWithdrawPerWithdrawal := make(map[string]sdk.Coin, 0)
 
 	// find total number of unlockedTokens (not locked by previous redelegations) for the given zone
-	_, totalAvailable, err := k.GetUnlockedTokensForZone(ctx, zone)
+	_, totalAvailable, err := k.GetUnlockedTokensForZone(ctx, &zone)
 	if err != nil {
 		return err
 	}
 
 	// get min of LastRedemptionRate (N-1) and RedemptionRate (N)
-	rate := sdk.MinDec(zone.LastRedemptionRate, zone.RedemptionRate)
+	//rate := sdk.MinDec(zone.LastRedemptionRate, zone.RedemptionRate)
 
 	// iterate all withdrawal records for the zone in the QUEUED state.
 	k.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, types.WithdrawStatusQueued, func(idx int64, withdrawal types.WithdrawalRecord) bool {
@@ -211,7 +237,7 @@ func (k *Keeper) HandleQueuedUnbondings(ctx sdk.Context, zone *types.Zone, epoch
 		return nil
 	}
 
-	tokensAllocatedForWithdrawalPerValidator, err := k.DeterminePlanForUndelegation(ctx, zone, sdk.NewCoins(totalToWithdraw))
+	tokensAllocatedForWithdrawalPerValidator, err := k.DeterminePlanForUndelegation(ctx, &zone, sdk.NewCoins(totalToWithdraw))
 	if err != nil {
 		return err
 	}
@@ -244,7 +270,7 @@ func (k *Keeper) HandleQueuedUnbondings(ctx sdk.Context, zone *types.Zone, epoch
 			k.EventManagerKeeper.AddEvent(ctx,
 				types.ModuleName,
 				zone.ChainId,
-				fmt.Sprintf("unbond/%s/%s", valoper, sha256.Sum256(msg.GetSignBytes())),
+				fmt.Sprintf("unbond/%d/%s/%s", epoch, valoper, sha256.Sum256(msg.GetSignBytes())),
 				"",
 				emtypes.EventTypeICAUnbond,
 				emtypes.EventStatusActive,
@@ -253,6 +279,25 @@ func (k *Keeper) HandleQueuedUnbondings(ctx sdk.Context, zone *types.Zone, epoch
 			)
 		}
 	}
+
+	newCondition, err := emtypes.NewConditionAll(ctx, emtypes.NewFieldValues(emtypes.FieldBegins(emtypes.FieldIdentifier, fmt.Sprintf("unbond/%d", epoch))), true)
+	if err != nil {
+		return err
+	}
+
+	epochByte := make([]byte, 8)
+	binary.BigEndian.PutUint64(epochByte, uint64(epoch))
+
+	k.EventManagerKeeper.AddEvent(ctx,
+		types.ModuleName,
+		zone.ChainId,
+		fmt.Sprintf("distribute_unbonding/%d", epoch),
+		"",
+		emtypes.EventTypeUnbond,
+		emtypes.EventStatusPending,
+		newCondition,
+		epochByte,
+	)
 
 	k.Logger(ctx).Info("unbonding messages to send", "msg", msgs)
 

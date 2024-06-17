@@ -47,12 +47,16 @@ func (c EventCallbacks) AddCallback(id string, fn interface{}) emtypes.EventCall
 func (c EventCallbacks) RegisterCallbacks() emtypes.EventCallbacks {
 	return c.
 		AddCallback(ICQEmitDelegatorDelegations, EventCallback(EmitDelegatorDelegations)).
-		AddCallback(TriggerCalculateRedemptionRate, EventCallback(CalculateRedemptionRate))
+		AddCallback(TriggerCalculateRedemptionRate, EventCallback(CalculateRedemptionRate)).
+		AddCallback(ExecuteQueuedUnbondingsCb, EventCallback(ExecuteQueuedUnbondings)).
+		AddCallback(DistributeUnbondingsCb, EventCallback(DistributeUnbondings))
 }
 
 const (
 	ICQEmitDelegatorDelegations    = "ICQEmitDelegatorDelegations"
 	TriggerCalculateRedemptionRate = "CalculateRedemptionRate"
+	ExecuteQueuedUnbondingsCb      = "ExecuteQueuedUnbondings"
+	DistributeUnbondingsCb         = "DistributeUnbondings"
 )
 
 // -----------------------------------
@@ -92,4 +96,30 @@ func CalculateRedemptionRate(k *Keeper, ctx sdk.Context, args []byte) error {
 		return fmt.Errorf("unable to find zone %s", args)
 	}
 	return k.TriggerRedemptionRate(ctx, &zone)
+}
+
+type UnbondingsParams struct {
+	Epoch uint64
+	Zone  string
+	Rate  sdk.Dec
+}
+
+func ExecuteQueuedUnbondings(k *Keeper, ctx sdk.Context, args []byte) error {
+	var params UnbondingsParams
+	err := json.Unmarshal(args, &params)
+	if err != nil {
+		return err
+	}
+	k.HandleQueuedUnbondings(ctx, params.Zone, int64(params.Epoch), params.Rate)
+	return nil
+}
+
+func DistributeUnbondings(k *Keeper, ctx sdk.Context, args []byte) error {
+	var params UnbondingsParams
+	err := json.Unmarshal(args, &params)
+	if err != nil {
+		return err
+	}
+	k.PayoutUnbondings(ctx, params.Epoch, params.Zone)
+	return nil
 }
