@@ -107,7 +107,7 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNum
 			return false
 		})
 
-		if err := k.HandleQueuedUnbondings(ctx, zone, epochNumber); err != nil {
+		if err := k.ScheduleQueuedUnbondings(ctx, zone, epochNumber); err != nil {
 			// we can and need not panic here; logging the error is sufficient.
 			// an error here is not expected, but also not terminal.
 			// we don't return on failure here as we still want to attempt

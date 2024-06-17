@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"time"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -96,8 +97,8 @@ func (k Keeper) MarkCompleted(ctx sdk.Context, module string, chainID string, id
 	k.Trigger(ctx, module, chainID)
 }
 
-func (k Keeper) Trigger(ctx sdk.Context, module string, chainID string) {
-	k.IterateModuleChainEvents(ctx, module, chainID, func(_ int64, e types.Event) (stop bool) {
+func (k Keeper) GetTriggerFn(ctx sdk.Context) func(_ int64, e types.Event) (stop bool) {
+	return func(_ int64, e types.Event) (stop bool) {
 		if e.EventStatus == types.EventStatusPending {
 			res, err := e.CanExecute(ctx, &k)
 			if err != nil {
@@ -114,7 +115,33 @@ func (k Keeper) Trigger(ctx sdk.Context, module string, chainID string) {
 			}
 		}
 		return false
-	})
+	}
+}
+
+func (k Keeper) Trigger(ctx sdk.Context, module string, chainID string) {
+	k.IterateModuleChainEvents(ctx, module, chainID, k.GetTriggerFn(ctx))
+}
+
+func (k Keeper) TriggerAll(ctx sdk.Context) {
+	k.IteratePrefixedEvents(ctx, nil, k.GetTriggerFn(ctx))
+}
+
+func (k Keeper) AddEventWithExpiry(ctx sdk.Context, module, chainID, identifier string, eventType, status int32, expiry time.Time) {
+	// expiring events cannot have callbacks
+	event := types.Event{
+		ChainId:          chainID,
+		Module:           module,
+		Identifier:       identifier,
+		EventType:        eventType,
+		Callback:         "",
+		Payload:          nil,
+		EventStatus:      status,
+		ExecuteCondition: nil,
+		EmittedHeight:    ctx.BlockHeight(),
+		ExpiryTime:       &expiry,
+	}
+
+	k.SetEvent(ctx, event)
 }
 
 func (k Keeper) AddEvent(ctx sdk.Context,

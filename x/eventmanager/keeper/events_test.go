@@ -110,8 +110,8 @@ func (suite *KeeperTestSuite) TestEventLifecycleWithCondition() {
 	preEvents := len(app.EventManagerKeeper.AllEvents(ctx))
 
 	condition, err := types.NewConditionAll(ctx, []*types.FieldValue{
-		{Field: types.FieldModule, Value: types.ModuleName, Operator: types.FieldOperator_EQUAL, Negate: false},
-		{Field: types.FieldEventStatus, Value: fmt.Sprintf("%d", types.EventStatusActive), Operator: types.FieldOperator_EQUAL, Negate: false},
+		{Field: types.FieldModule, Value: types.ModuleName, Operator: types.FIELD_OPERATOR_EQUAL, Negate: false},
+		{Field: types.FieldEventStatus, Value: fmt.Sprintf("%d", types.EventStatusActive), Operator: types.FIELD_OPERATOR_EQUAL, Negate: false},
 	}, true)
 
 	suite.NoError(err)
@@ -157,14 +157,14 @@ func (suite *KeeperTestSuite) TestEventLifecycleWithCondition2() {
 	preEvents := len(app.EventManagerKeeper.AllEvents(ctx))
 
 	condition1, err := types.NewConditionAll(ctx, []*types.FieldValue{
-		{Field: types.FieldModule, Value: types.ModuleName, Operator: types.FieldOperator_EQUAL, Negate: false},
-		{Field: types.FieldEventType, Value: fmt.Sprintf("%d", types.EventTypeICAUnbond), Operator: types.FieldOperator_EQUAL, Negate: false},
+		{Field: types.FieldModule, Value: types.ModuleName, Operator: types.FIELD_OPERATOR_EQUAL, Negate: false},
+		{Field: types.FieldEventType, Value: fmt.Sprintf("%d", types.EventTypeICAUnbond), Operator: types.FIELD_OPERATOR_EQUAL, Negate: false},
 	}, true)
 	suite.NoError(err)
 
 	condition2, err := types.NewConditionAll(ctx, []*types.FieldValue{
-		{Field: types.FieldModule, Value: types.ModuleName, Operator: types.FieldOperator_EQUAL, Negate: false},
-		{Field: types.FieldEventType, Value: fmt.Sprintf("%d", types.EventTypeICADelegate), Operator: types.FieldOperator_EQUAL, Negate: false},
+		{Field: types.FieldModule, Value: types.ModuleName, Operator: types.FIELD_OPERATOR_EQUAL, Negate: false},
+		{Field: types.FieldEventType, Value: fmt.Sprintf("%d", types.EventTypeICADelegate), Operator: types.FIELD_OPERATOR_EQUAL, Negate: false},
 	}, true)
 	suite.NoError(err)
 

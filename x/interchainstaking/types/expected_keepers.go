@@ -2,6 +2,7 @@ package types
 
 import (
 	"context"
+	time "time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
@@ -71,5 +72,6 @@ type AuthzKeeper interface {
 
 type EventManagerKeeper interface {
 	AddEvent(ctx sdk.Context, module, chainID, identifier, callback string, eventType, status int32, condtion emtypes.ConditionI, payload []byte)
+	AddEventWithExpiry(ctx sdk.Context, module, chainID, identifier, eventType, status int32, expiry time.Time)
 	MarkCompleted(ctx sdk.Context, module string, chainID string, identifier string)
 }

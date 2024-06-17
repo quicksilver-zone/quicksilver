@@ -18,6 +18,19 @@ type ConditionI interface {
 	Resolve(ctx sdk.Context, k EMKeeper) (bool, error)
 }
 
+// CanExecute determines whether a
+func (e *Event) CanExecute(ctx sdk.Context, k EMKeeper) (bool, error) {
+	if e.ExecuteCondition == nil {
+		return true, nil
+	}
+	var condition ConditionI
+	err := k.GetCodec().UnpackAny(e.ExecuteCondition, &condition)
+	if err != nil {
+		return false, err
+	}
+	return condition.Resolve(ctx, k)
+}
+
 // type ConditionExistsAny struct {
 // 	Fields []types.KV
 // 	negate bool
@@ -124,15 +137,37 @@ func NewConditionOr(ctx sdk.Context, condition1, condition2 ConditionI) (*Condit
 	return &ConditionOr{anyc1, anyc2}, nil
 }
 
-// CanExecute determines whether a
-func (e *Event) CanExecute(ctx sdk.Context, k EMKeeper) (bool, error) {
-	if e.ExecuteCondition == nil {
-		return true, nil
+func NewConditionCount(ctx sdk.Context, fields []*FieldValue, comparator Comparator, count int64, negate bool) (*ConditionCount, error) {
+	return &ConditionCount{fields, comparator, count, negate}, nil
+}
+
+func (c ConditionCount) Resolve(ctx sdk.Context, k EMKeeper) (bool, error) {
+	count := 0
+	var err error
+	k.IteratePrefixedEvents(ctx, nil, func(index int64, event Event) (stop bool) {
+		res, err := event.ResolveAllFieldValues(c.Fields)
+		if err != nil {
+			return true
+		}
+		if res {
+			count++
+		}
+		return false
+	})
+
+	out := false
+	switch c.Comparator {
+	case COMPARATOR_EQUAL:
+		out = count == int(c.Value)
+	case COMPARATOR_GREATER_THAN:
+		out = count > int(c.Value)
+	case COMPARATOR_LESS_THAN:
+		out = count < int(c.Value)
+	case COMPARATOR_GREATER_THAN_OR_EQUAL:
+		out = count >= int(c.Value)
+	case COMPARATOR_LESS_THAN_OR_EQUAL:
+		out = count <= int(c.Value)
 	}
-	var condition ConditionI
-	err := k.GetCodec().UnpackAny(e.ExecuteCondition, &condition)
-	if err != nil {
-		return false, err
-	}
-	return condition.Resolve(ctx, k)
+
+	return c.Negate != out, err
 }

@@ -17,7 +17,7 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 
 func RegisterInterfaces(registry types.InterfaceRegistry) {
 	registry.RegisterInterface("quicksilver.eventmanager.v1.ConditionI", (*ConditionI)(nil))
-	registry.RegisterImplementations((*ConditionI)(nil), &ConditionAll{}, &ConditionAnd{}, &ConditionOr{})
+	registry.RegisterImplementations((*ConditionI)(nil), &ConditionAll{}, &ConditionAnd{}, &ConditionOr{}, &ConditionCount{})
 }
 
 func init() {
