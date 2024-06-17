@@ -514,6 +514,12 @@ func (k *Keeper) GetCommissionRate(ctx sdk.Context) sdk.Dec {
 	return out
 }
 
+func (k *Keeper) GetAuthzAutoClaimAddress(ctx sdk.Context) string {
+	var out string
+	k.paramStore.Get(ctx, types.KeyAuthzAutoClaimAddress, &out)
+	return out
+}
+
 // MigrateParams fetches params, adds ClaimsEnabled field and re-sets params.
 func (k *Keeper) MigrateParams(ctx sdk.Context) {
 	params := types.Params{}
@@ -530,7 +536,7 @@ func (k *Keeper) GetParams(clientCtx sdk.Context) (params types.Params) {
 	return params
 }
 
-// SetParams sets the distribution parameters to the param space.
+// SetParams sets the interchainstaking parameters to the param space.
 func (k *Keeper) SetParams(ctx sdk.Context, params types.Params) {
 	k.paramStore.SetParamSet(ctx, &params)
 }

@@ -188,6 +188,11 @@ func (k *Keeper) SendTokenIBC(ctx sdk.Context, senderAccAddress sdk.AccAddress, 
 //	    },
 //	  });
 func (k *Keeper) HandleAutoClaim(ctx sdk.Context, senderAddress sdk.AccAddress) error {
+	authzAutoClaimAddress := k.GetAuthzAutoClaimAddress(ctx)
+	if authzAutoClaimAddress == "" {
+		return errors.New("no auto claim address set")
+	}
+
 	msgGrant, err := authz.NewMsgGrant(senderAddress, addressutils.MustAccAddressFromBech32(AuthzAutoClaimAddress, "quick"), &authz.GenericAuthorization{
 		Msg: prtypes.MsgSubmitClaim{}.Type(),
 	}, nil)

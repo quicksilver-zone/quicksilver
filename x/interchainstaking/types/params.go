@@ -9,14 +9,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 )
 
 // Default ics params.
 var (
-	DefaultDepositInterval      uint64  = 20
-	DefaultValidatorSetInterval uint64  = 200
-	DefaultCommissionRate       sdk.Dec = sdk.MustNewDecFromStr("0.025")
-	DefaultUnbondingEnabled             = false
+	DefaultDepositInterval       uint64  = 20
+	DefaultValidatorSetInterval  uint64  = 200
+	DefaultCommissionRate        sdk.Dec = sdk.MustNewDecFromStr("0.025")
+	DefaultUnbondingEnabled              = false
+	DefaultAuthzAutoClaimAddress         = "quick1psevptdp90jad76zt9y9x2nga686hutgmasmwd"
 
 	// KeyDepositInterval is store's key for the DepositInterval option.
 	KeyDepositInterval = []byte("DepositInterval")
@@ -26,6 +28,8 @@ var (
 	KeyCommissionRate = []byte("CommissionRate")
 	// KeyUnbondingEnabled is a global flag to indicated whether unbonding txs are permitted.
 	KeyUnbondingEnabled = []byte("UnbondingEnabled")
+	// KeyAuthzAutoClaimAddress is store's key for the address for auto-claiming authorization.
+	KeyAuthzAutoClaimAddress = []byte("AuthzAutoClaimAddress")
 )
 
 var _ paramtypes.ParamSet = (*Params)(nil)
@@ -55,12 +59,14 @@ func NewParams(
 	valsetInterval uint64,
 	commissionRate sdk.Dec,
 	unbondingEnabled bool,
+	authzAutoClaimAddress string,
 ) Params {
 	return Params{
-		DepositInterval:      depositInterval,
-		ValidatorsetInterval: valsetInterval,
-		CommissionRate:       commissionRate,
-		UnbondingEnabled:     unbondingEnabled,
+		DepositInterval:       depositInterval,
+		ValidatorsetInterval:  valsetInterval,
+		CommissionRate:        commissionRate,
+		UnbondingEnabled:      unbondingEnabled,
+		AuthzAutoClaimAddress: authzAutoClaimAddress,
 	}
 }
 
@@ -71,6 +77,7 @@ func DefaultParams() Params {
 		DefaultValidatorSetInterval,
 		DefaultCommissionRate,
 		DefaultUnbondingEnabled,
+		DefaultAuthzAutoClaimAddress,
 	)
 }
 
@@ -86,6 +93,12 @@ func (p Params) Validate() error {
 
 	if err := validateNonNegativeDec(p.CommissionRate); err != nil {
 		return fmt.Errorf("invalid commission rate: %w", err)
+	}
+	if err := validateBoolean(p.UnbondingEnabled); err != nil {
+		return fmt.Errorf("invalid unbonding enabled: %w", err)
+	}
+	if err := validateAddress(p.AuthzAutoClaimAddress); err != nil {
+		return fmt.Errorf("invalid authz auto claim address: %w", err)
 	}
 
 	return nil
@@ -103,6 +116,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 		paramtypes.NewParamSetPair(KeyValidatorSetInterval, &p.ValidatorsetInterval, validatePositiveInt),
 		paramtypes.NewParamSetPair(KeyCommissionRate, &p.CommissionRate, validateNonNegativeDec),
 		paramtypes.NewParamSetPair(KeyUnbondingEnabled, &p.UnbondingEnabled, validateBoolean),
+		paramtypes.NewParamSetPair(KeyAuthzAutoClaimAddress, &p.AuthzAutoClaimAddress, validateAddress),
 	}
 }
 
@@ -159,5 +173,19 @@ func validateNonNegativeDec(i interface{}) error {
 	if dec.IsNegative() {
 		return fmt.Errorf("invalid (negative) parameter value: %s", dec.String())
 	}
+	return nil
+}
+
+// validateAddress validates a string address
+func validateAddress(i interface{}) error {
+	addr, ok := i.(string)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if _, err := addressutils.AccAddressFromBech32(addr, "quick"); err != nil {
+		return fmt.Errorf("invalid address: %s", addr)
+	}
+
 	return nil
 }
