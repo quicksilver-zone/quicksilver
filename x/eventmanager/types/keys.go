@@ -38,6 +38,7 @@ const (
 	EventTypeICQUmeeLeverageBalance = int32(0x10)
 	EventTypeICQUmeeReserves        = int32(0x11)
 	EventTypeICQUmeeTotalBorrows    = int32(0x12)
+	EventTypeUnbond                 = int32(0x13)
 
 	FieldEventType   = "eventtype"
 	FieldModule      = "module"

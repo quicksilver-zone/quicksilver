@@ -37,7 +37,7 @@ func (e Event) ResolveAnyFieldValues(fvs []*FieldValue) (bool, error) {
 func (e Event) resolveFieldValue(fv *FieldValue) (bool, error) {
 	switch {
 	case fv.Field == FieldEventType:
-		if fv.Operator != FieldOperator_EQUAL {
+		if fv.Operator != FIELD_OPERATOR_EQUAL {
 			return false, fmt.Errorf("bad operator %d for field %s", fv.Operator, fv.Field)
 		}
 		v, err := strconv.ParseInt(fv.Value, 10, 32)
@@ -49,7 +49,7 @@ func (e Event) resolveFieldValue(fv *FieldValue) (bool, error) {
 		}
 		return fv.Negate, nil
 	case fv.Field == FieldEventStatus:
-		if fv.Operator != FieldOperator_EQUAL {
+		if fv.Operator != FIELD_OPERATOR_EQUAL {
 			return false, fmt.Errorf("bad operator %d for field %s", fv.Operator, fv.Field)
 		}
 		v, err := strconv.ParseInt(fv.Value, 10, 32)
@@ -91,13 +91,13 @@ func (e Event) resolveFieldValue(fv *FieldValue) (bool, error) {
 
 func compare(operator FieldOperator, testValue, value string) (bool, error) {
 	switch operator {
-	case FieldOperator_EQUAL:
+	case FIELD_OPERATOR_EQUAL:
 		return testValue == value, nil
-	case FieldOperator_CONTAINS:
+	case FIELD_OPERATOR_CONTAINS:
 		return strings.Contains(value, testValue), nil
-	case FieldOperator_BEGINSWITH:
+	case FIELD_OPERATOR_BEGINSWITH:
 		return strings.HasPrefix(value, testValue), nil
-	case FieldOperator_ENDSWITH:
+	case FIELD_OPERATOR_ENDSWITH:
 		return strings.HasSuffix(value, testValue), nil
 	default:
 		return false, fmt.Errorf("unrecognised operator %d", operator)
@@ -109,19 +109,19 @@ func NewFieldValues(fields ...*FieldValue) []*FieldValue {
 }
 
 func FieldEqual(field, value string) *FieldValue {
-	return NewFieldValue(field, value, FieldOperator_EQUAL, false)
+	return NewFieldValue(field, value, FIELD_OPERATOR_EQUAL, false)
 }
 
 func FieldNotEqual(field, value string) *FieldValue {
-	return NewFieldValue(field, value, FieldOperator_EQUAL, true)
+	return NewFieldValue(field, value, FIELD_OPERATOR_EQUAL, true)
 }
 
 func FieldBegins(field, value string) *FieldValue {
-	return NewFieldValue(field, value, FieldOperator_BEGINSWITH, false)
+	return NewFieldValue(field, value, FIELD_OPERATOR_BEGINSWITH, false)
 }
 
 func FieldEnds(field, value string) *FieldValue {
-	return NewFieldValue(field, value, FieldOperator_ENDSWITH, false)
+	return NewFieldValue(field, value, FIELD_OPERATOR_ENDSWITH, false)
 }
 
 func NewFieldValue(field, value string, operator FieldOperator, negate bool) *FieldValue {
