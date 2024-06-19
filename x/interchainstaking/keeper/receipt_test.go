@@ -5,12 +5,12 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
+
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	interchainstakingtypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 
 	transfertypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
 
@@ -538,7 +538,7 @@ func (suite *KeeperTestSuite) TestHandleAutoClaim() {
 	normalUserAddr := addressutils.GenerateAddressForTestWithPrefix("quick")
 
 	// test if the address is authorized to claim
-	defaultParams := interchainstakingtypes.DefaultParams()
+	defaultParams := types.DefaultParams()
 	defaultParams.AuthzAutoClaimAddress = autoClaimAddr
 	quicksilver.InterchainstakingKeeper.SetParams(ctx, defaultParams)
 	err := quicksilver.InterchainstakingKeeper.HandleAutoClaim(ctx, addressutils.MustAccAddressFromBech32(normalUserAddr, ""))
@@ -548,5 +548,4 @@ func (suite *KeeperTestSuite) TestHandleAutoClaim() {
 	grant, err := quicksilver.InterchainstakingKeeper.AuthzKeeper.GetAuthorizations(ctx, addressutils.MustAccAddressFromBech32(autoClaimAddr, ""), addressutils.MustAccAddressFromBech32(normalUserAddr, ""))
 	suite.NoError(err)
 	suite.Equal(1, len(grant))
-
 }

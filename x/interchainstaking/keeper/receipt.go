@@ -21,7 +21,6 @@ import (
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 	minttypes "github.com/quicksilver-zone/quicksilver/x/mint/types"
-
 	prtypes "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 )
 
