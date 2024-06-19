@@ -12,15 +12,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+
 	icatypes "github.com/cosmos/ibc-go/v6/modules/apps/27-interchain-accounts/types"
 	transfertypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
 	channeltypes "github.com/cosmos/ibc-go/v6/modules/core/04-channel/types"
-	prtypes "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 	minttypes "github.com/quicksilver-zone/quicksilver/x/mint/types"
+	prtypes "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 )
 
 const (
@@ -201,7 +202,6 @@ func (k *Keeper) HandleAutoClaim(ctx sdk.Context, senderAddress sdk.AccAddress) 
 	}
 	_, err = k.AuthzKeeper.Grant(ctx, msgGrant)
 	return err
-
 }
 
 // MintAndSendQAsset mints qAssets based on the native asset redemption rate.  Tokens are then transferred to the given user.
