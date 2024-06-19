@@ -110,6 +110,7 @@ func NewKeeper(
 		hooks:               nil,
 		txSubmit:            ProdSubmitTx,
 		paramStore:          ps,
+		AuthzKeeper:         authzKeeper,
 	}
 }
 
@@ -527,6 +528,7 @@ func (k *Keeper) MigrateParams(ctx sdk.Context) {
 	params.CommissionRate = k.GetCommissionRate(ctx)
 	params.ValidatorsetInterval = k.GetParam(ctx, types.KeyValidatorSetInterval)
 	params.UnbondingEnabled = false
+	params.AuthzAutoClaimAddress = k.GetAuthzAutoClaimAddress(ctx)
 
 	k.paramStore.SetParamSet(ctx, &params)
 }

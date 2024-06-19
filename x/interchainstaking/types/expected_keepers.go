@@ -65,4 +65,5 @@ type EpochsKeeper interface {
 
 type AuthzKeeper interface {
 	Grant(goCtx context.Context, msg *authz.MsgGrant) (*authz.MsgGrantResponse, error)
+	GetAuthorizations(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress) ([]authz.Authorization, error)
 }

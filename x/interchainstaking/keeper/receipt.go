@@ -21,14 +21,15 @@ import (
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 	minttypes "github.com/quicksilver-zone/quicksilver/x/mint/types"
+
 	prtypes "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 )
 
 const (
-	Unset                 = "unset"
-	ICAMsgChunkSize       = 5
-	ICATimeout            = time.Hour * 6
-	AuthzAutoClaimAddress = "quick1psevptdp90jad76zt9y9x2nga686hutgmasmwd"
+	Unset           = "unset"
+	ICAMsgChunkSize = 5
+	ICATimeout      = time.Hour * 6
+	// AuthzAutoClaimAddress = "quick1psevptdp90jad76zt9y9x2nga686hutgmasmwd"
 )
 
 func (k *Keeper) HandleReceiptTransaction(ctx sdk.Context, txn *tx.Tx, hash string, zone types.Zone) error {
@@ -194,8 +195,8 @@ func (k *Keeper) HandleAutoClaim(ctx sdk.Context, senderAddress sdk.AccAddress) 
 		return errors.New("no auto claim address set")
 	}
 
-	msgGrant, err := authz.NewMsgGrant(senderAddress, addressutils.MustAccAddressFromBech32(AuthzAutoClaimAddress, "quick"), &authz.GenericAuthorization{
-		Msg: prtypes.MsgSubmitClaim{}.Type(),
+	msgGrant, err := authz.NewMsgGrant(senderAddress, addressutils.MustAccAddressFromBech32(authzAutoClaimAddress, "quick"), &authz.GenericAuthorization{
+		Msg: sdk.MsgTypeURL(&prtypes.MsgSubmitClaim{}),
 	}, nil)
 	if err != nil {
 		return err
