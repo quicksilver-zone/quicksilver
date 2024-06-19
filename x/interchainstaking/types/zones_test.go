@@ -627,9 +627,9 @@ func TestParseMemoFields(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "invalid field id 3",
+			name: "invalid field id 4",
 			fieldBytes: []byte{
-				3, 2, 1, 1,
+				4, 2, 1, 1,
 				byte(types.FieldTypeReturnToSender), 0,
 			},
 			wantErr: true,
@@ -650,6 +650,7 @@ func TestParseMemoFields(t *testing.T) {
 			fieldBytes: []byte{
 				byte(types.FieldTypeAccountMap), 2, 1, 1,
 				byte(types.FieldTypeReturnToSender), 0,
+				byte(types.FieldTypeAutoClaim), 0,
 			},
 			expectedMemoFields: types.MemoFields{
 				types.FieldTypeAccountMap: {
@@ -658,6 +659,10 @@ func TestParseMemoFields(t *testing.T) {
 				},
 				types.FieldTypeReturnToSender: {
 					ID:   types.FieldTypeReturnToSender,
+					Data: nil,
+				},
+				types.FieldTypeAutoClaim: {
+					ID:   types.FieldTypeAutoClaim,
 					Data: nil,
 				},
 			},
