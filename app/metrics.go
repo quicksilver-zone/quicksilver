@@ -33,6 +33,9 @@ func (app *Quicksilver) InitNodeID() (string, error) {
 		if err != nil {
 			return "", err
 		}
+		if result.DefaultNodeInfo == nil {
+			return "", fmt.Errorf("node info is nil")
+		}
 		nodeID = result.DefaultNodeInfo.DefaultNodeID
 	}
 	return nodeID, nil
