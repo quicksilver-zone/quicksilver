@@ -255,7 +255,7 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
     feeAmount = '10000';
   } else {
     // Default case
-    const fixedMinGasPrice = fees?.find(({ denom }) => denom === mainDenom)?.average_gas_price ?? '';
+    const fixedMinGasPrice = fees?.find(({ denom }: { denom: string }) => denom === mainDenom)?.average_gas_price ?? '';
     feeAmount = shiftDigits(fixedMinGasPrice, 6).toString();
   }
 
