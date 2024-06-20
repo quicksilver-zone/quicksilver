@@ -178,16 +178,6 @@ func (k *Keeper) SendTokenIBC(ctx sdk.Context, senderAccAddress sdk.AccAddress, 
 	return err
 }
 
-//	const msgGrant = grant({
-//	    granter: address,
-//	    grantee: 'quick1psevptdp90jad76zt9y9x2nga686hutgmasmwd',
-//	    grant: {
-//	      authorization: {
-//	        typeUrl: cosmos.authz.v1beta1.GenericAuthorization.typeUrl,
-//	        value: utf8Msg,
-//	      },
-//	    },
-//	  });
 func (k *Keeper) HandleAutoClaim(ctx sdk.Context, senderAddress sdk.AccAddress) error {
 	authzAutoClaimAddress := k.GetAuthzAutoClaimAddress(ctx)
 	if authzAutoClaimAddress == "" {
