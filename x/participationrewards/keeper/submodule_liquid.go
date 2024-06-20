@@ -36,8 +36,15 @@ func (*LiquidTokensModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.
 	}
 
 	amount := sdk.ZeroInt()
+
+	keyCache := make(map[string]bool)
+
 	for _, proof := range msg.Proofs {
-		// determine denoms from key
+		if _, found := keyCache[string(proof.Key)]; found {
+			continue
+		}
+		keyCache[string(proof.Key)] = true
+
 		if proof.Data == nil {
 			continue
 		}
