@@ -188,8 +188,14 @@ func (UmeeModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.MsgSubmit
 	_, addr, err := bech32.DecodeAndConvert(msg.UserAddress)
 
 	amount := sdk.ZeroInt()
+	keyCache := make(map[string]bool)
+
 	for _, proof := range msg.Proofs {
-		// determine denoms from keys
+		if _, found := keyCache[string(proof.Key)]; found {
+			continue
+		}
+		keyCache[string(proof.Key)] = true
+
 		if proof.Data == nil {
 			continue
 		}

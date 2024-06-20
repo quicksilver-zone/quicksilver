@@ -76,7 +76,17 @@ func (m *OsmosisModule) Hooks(ctx sdk.Context, k *Keeper) {
 func (*OsmosisModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.MsgSubmitClaim) (math.Int, error) {
 	amount := sdk.ZeroInt()
 	var lock osmolockup.PeriodLock
+	keyCache := make(map[string]bool)
+
 	for _, proof := range msg.Proofs {
+		if _, found := keyCache[string(proof.Key)]; found {
+			continue
+		}
+		keyCache[string(proof.Key)] = true
+
+		if proof.Data == nil {
+			continue
+		}
 		if proof.ProofType == types.ProofTypeBank {
 			addr, poolDenom, err := banktypes.AddressAndDenomFromBalancesStore(proof.Key[1:])
 			if err != nil {
