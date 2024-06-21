@@ -60,7 +60,7 @@ func InitConfigCommand() *cobra.Command {
 			if err := encoder.Encode(config); err != nil {
 				return fmt.Errorf("failed to encode config to TOML: %w", err)
 			}
-			fmt.Printf("Config file created at %s\n", configFilePath)
+			log.Info().Msgf("Config file created at %s\n", configFilePath)
 			return nil
 		},
 	}
@@ -73,7 +73,7 @@ func VersionCommand() *cobra.Command {
 		Short: "Print the version number of icq-relayer",
 		Long:  `Print the version number of icq-relayer`,
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println(runner.VERSION)
+			log.Info().Msg(runner.VERSION)
 		},
 	}
 	return versionCommand
@@ -114,7 +114,7 @@ func StartCommand() *cobra.Command {
 			config.ClientContext = &clientContext
 			config.ProtoCodec = codec.NewProtoCodec(clientContext.InterfaceRegistry)
 			ctx := context.Background()
-			log.Print("starting the server and listening for epochs")
+			log.Info().Msg("starting the server and listening for epochs")
 
 			c := make(chan os.Signal, 1)
 			signal.Notify(c, os.Interrupt, syscall.SIGTERM, syscall.SIGABRT)
@@ -122,7 +122,7 @@ func StartCommand() *cobra.Command {
 			go runner.Run(ctx, &config, CreateErrHandler(c))
 
 			for sig := range c {
-				log.Printf("Signal Received (%s) - gracefully shutting down", sig.String())
+				log.Info().Msgf("Signal Received (%s) - gracefully shutting down", sig.String())
 				break
 			}
 			return nil
