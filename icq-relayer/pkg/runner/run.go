@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
-	stdlog "log"
 	"math"
 	"math/rand"
 	"net/http"
@@ -113,7 +112,8 @@ func Run(ctx context.Context, cfg *types.Config, errHandler func(error)) error {
 
 	http.Handle("/metrics", promHandler)
 	go func() {
-		stdlog.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", cfg.BindPort), nil))
+		err := http.ListenAndServe(fmt.Sprintf(":%d", cfg.BindPort), nil)
+		logger.Fatal().Err(err).Msg("HTTP metrics failed to start")
 	}()
 
 	defer func() {
