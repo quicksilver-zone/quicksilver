@@ -10,6 +10,7 @@ import (
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/quicksilver-zone/quicksilver/app"
+	cmdcfg "github.com/quicksilver-zone/quicksilver/cmd/config"
 	"github.com/spf13/viper"
 	tmcfg "github.com/tendermint/tendermint/config"
 	"os"
@@ -20,13 +21,14 @@ import (
 var (
 	homePath       string
 	overridenChain string
-	defaultHome    = os.ExpandEnv("$HOME/.icq")
+	defaultHome    = os.ExpandEnv("$HOME/.icq-relayer")
 	appName        = "icq-relayer"
 )
 
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
+	cmdcfg.SetupConfig()
 	cobra.EnableCommandSorting = false
 	encodingConfig := app.MakeEncodingConfig()
 	initClientCtx := client.Context{}.
@@ -70,6 +72,11 @@ func Execute() {
 		},
 	}
 
+	rootCmd.AddCommand(StartCommand())
+	rootCmd.AddCommand(VersionCommand())
+	rootCmd.AddCommand(InitConfigCommand())
+	rootCmd.AddCommand(keys.Commands(defaultHome))
+
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
@@ -88,11 +95,6 @@ func Execute() {
 	if err := viper.BindPFlag("chain", rootCmd.PersistentFlags().Lookup("chain")); err != nil {
 		panic(err)
 	}
-
-	rootCmd.AddCommand(StartCommand())
-	rootCmd.AddCommand(VersionCommand())
-	rootCmd.AddCommand(InitConfigCommand())
-	rootCmd.AddCommand(keys.Commands(defaultHome))
 
 	rootCmd.SilenceUsage = true
 	rootCmd.CompletionOptions.DisableDefaultCmd = true

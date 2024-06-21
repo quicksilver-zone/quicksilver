@@ -5,6 +5,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	quicksilverconfig "github.com/quicksilver-zone/quicksilver/cmd/config"
 	servercfg "github.com/quicksilver-zone/quicksilver/server/config"
 	"path/filepath"
@@ -93,11 +94,15 @@ func VersionCommand() *cobra.Command {
 
 func StartCommand() *cobra.Command {
 	startCommand := &cobra.Command{
-		Use:   "start",
-		Short: "Start the server",
-		Long:  `Start the server`,
+		Use:     "start",
+		Short:   "Start the server [from_relayer_key_or_address]",
+		Long:    `Start the server [from_relayer_key_or_address]`,
+		Example: fmt.Sprintf("%s start icq1 -y", appName),
+		Args:    cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			cmd.Flags().Set(flags.FlagFrom, args[0])
 			homepath, err := cmd.Flags().GetString(FlagHomePath)
+			fmt.Println(cmd.Flags())
 			if err != nil {
 				return err
 			}
@@ -130,8 +135,7 @@ func StartCommand() *cobra.Command {
 
 			c := make(chan os.Signal, 1)
 			signal.Notify(c, os.Interrupt, syscall.SIGTERM, syscall.SIGABRT)
-
-			go runner.Run(ctx, &config, CreateErrHandler(c))
+			go runner.Run(ctx, &config, CreateErrHandler(c), cmd)
 
 			for sig := range c {
 				log.Printf("Signal Received (%s) - gracefully shutting down", sig.String())

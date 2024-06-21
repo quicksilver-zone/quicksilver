@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+	"github.com/spf13/cobra"
 	stdlog "log"
 	"math"
 	"math/rand"
@@ -68,8 +69,7 @@ var (
 	RtyErr    = retry.LastErrorOnly(true)
 )
 
-func Run(ctx context.Context, cfg *types.Config, errHandler func(error)) error {
-
+func Run(ctx context.Context, cfg *types.Config, errHandler func(error), cmd *cobra.Command) error {
 	MaxTxMsgs = cfg.MaxMsgsPerTx
 	if MaxTxMsgs == 0 {
 		MaxTxMsgs = 40
@@ -147,7 +147,7 @@ func Run(ctx context.Context, cfg *types.Config, errHandler func(error)) error {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		err := FlushSendQueue(cfg, log.With(logger, "worker", "flusher", "chain", cfg.DefaultChain.ChainID), metrics)
+		err := FlushSendQueue(cfg, log.With(logger, "worker", "flusher", "chain", cfg.DefaultChain.ChainID), metrics, cmd)
 		if err != nil {
 			_ = logger.Log("Flush Go-routine Bailing")
 			panic(err)
@@ -587,7 +587,7 @@ func getHeader(ctx context.Context, cfg *types.Config, client *types.ReadOnlyCha
 	return header, nil
 }
 
-func FlushSendQueue(cfg *types.Config, logger log.Logger, metrics prommetrics.Metrics) error {
+func FlushSendQueue(cfg *types.Config, logger log.Logger, metrics prommetrics.Metrics, cmd *cobra.Command) error {
 	time.Sleep(WaitInterval)
 	toSend := []Message{}
 	ch := sendQueue
@@ -604,7 +604,7 @@ func FlushSendQueue(cfg *types.Config, logger log.Logger, metrics prommetrics.Me
 		}
 
 		if len(toSend) > 5*TxMsgs {
-			flush(cfg, toSend, logger, metrics)
+			flush(cfg, toSend, logger, metrics, cmd)
 			toSend = []Message{}
 		}
 		select {
@@ -621,7 +621,7 @@ func FlushSendQueue(cfg *types.Config, logger log.Logger, metrics prommetrics.Me
 			}
 
 		case <-time.After(WaitInterval):
-			flush(cfg, toSend, logger, metrics)
+			flush(cfg, toSend, logger, metrics, cmd)
 			metrics.SendQueue.WithLabelValues("send-queue").Set(float64(len(sendQueue)))
 			toSend = []Message{}
 		}
@@ -629,7 +629,7 @@ func FlushSendQueue(cfg *types.Config, logger log.Logger, metrics prommetrics.Me
 }
 
 // TODO: refactor me!
-func flush(cfg *types.Config, toSend []Message, logger log.Logger, metrics prommetrics.Metrics) {
+func flush(cfg *types.Config, toSend []Message, logger log.Logger, metrics prommetrics.Metrics, cmd *cobra.Command) {
 	fmt.Println("flush messages", len(toSend))
 	if len(toSend) > 0 {
 		_ = logger.Log("msg", fmt.Sprintf("Sending batch of %d messages", len(toSend)))
@@ -637,11 +637,11 @@ func flush(cfg *types.Config, toSend []Message, logger log.Logger, metrics promm
 		if len(msgs) > 0 {
 			ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)
 			defer cancel()
-			hash, code, err := cfg.DefaultChain.SignAndBroadcastMsg(ctx, cfg.ClientContext, msgs, VERSION)
+			code, err := cfg.DefaultChain.SignAndBroadcastMsgWithKey(ctx, cfg.ClientContext, msgs, VERSION, cmd)
 
 			switch {
 			case err == nil:
-				_ = logger.Log("msg", fmt.Sprintf("Sent batch of %d (deduplicated) messages [hash: %s]", len(msgs), hash))
+				_ = logger.Log("msg", fmt.Sprintf("Sent batch of %d", len(msgs)))
 			case code == 12:
 				_ = logger.Log("msg", "Not enough gas")
 			case code == 19:
