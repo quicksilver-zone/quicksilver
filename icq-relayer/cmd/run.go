@@ -5,6 +5,8 @@ package cmd
 
 import (
 	"fmt"
+	quicksilverconfig "github.com/quicksilver-zone/quicksilver/cmd/config"
+	servercfg "github.com/quicksilver-zone/quicksilver/server/config"
 	"path/filepath"
 
 	"github.com/spf13/cobra"
@@ -29,10 +31,20 @@ const (
 	FlagHomePath = "home"
 )
 
-func init() {
-	rootCmd.AddCommand(StartCommand())
-	rootCmd.AddCommand(VersionCommand())
-	rootCmd.AddCommand(InitConfigCommand())
+// initAppConfig helps to override default appConfig template and configs.
+// return "", nil if no custom configuration is required for the application.
+func initAppConfig() (string, interface{}) {
+	customAppTemplate, customAppConfig := servercfg.AppConfig(quicksilverconfig.BaseDenom)
+
+	srvCfg, ok := customAppConfig.(servercfg.Config)
+	if !ok {
+		panic(fmt.Errorf("unknown app config type %T", customAppConfig))
+	}
+
+	srvCfg.StateSync.SnapshotInterval = 1500
+	srvCfg.StateSync.SnapshotKeepRecent = 2
+
+	return customAppTemplate, srvCfg
 }
 
 func InitConfigCommand() *cobra.Command {
