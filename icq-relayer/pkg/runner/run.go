@@ -514,7 +514,7 @@ func asyncCacheClientUpdate(ctx context.Context, cfg *types.Config, client *type
 
 	_, ok := cache.Get("cu/" + cacheKey)
 	if ok {
-		log.Info().Msgf("cache found for ", cacheKey)
+		log.Info().Msgf("cache found for %s", cacheKey)
 		return nil
 	} else {
 		_, ok := cache.Get(queryKey) // lock on querying the same block
