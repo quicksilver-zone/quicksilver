@@ -23,7 +23,7 @@ type Config struct {
 	HomePath       string            `toml:"-"`
 }
 
-var DefaultHomePath = "~/.icq-relayer"
+var DefaultHomePath = "~/.icq"
 
 func InitializeConfigFromToml(homepath string) Config {
 	config := NewConfig()

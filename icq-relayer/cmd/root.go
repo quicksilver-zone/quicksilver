@@ -21,7 +21,7 @@ import (
 var (
 	homePath       string
 	overridenChain string
-	defaultHome    = os.ExpandEnv("$HOME/.icq-relayer")
+	defaultHome    = os.ExpandEnv("$HOME/.icq")
 	appName        = "icq-relayer"
 )
 
