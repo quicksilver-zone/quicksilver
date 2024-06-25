@@ -46,7 +46,6 @@ func NewConfig() Config {
 		DefaultChain: &ChainConfig{
 			ReadOnlyChainConfig: DefaultReadOnlyChainConfig("quicksilver-2", "https://rpc.quicksilver.zone:443"),
 			Prefix:              "quick",
-			MnemonicPath:        "./seed",
 			GasLimit:            150000000,
 			GasPrice:            "0.00025uqck",
 			GasMultiplier:       1.25,

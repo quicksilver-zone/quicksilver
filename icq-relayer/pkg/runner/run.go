@@ -18,6 +18,7 @@ import (
 	"time"
 
 	"github.com/avast/retry-go/v4"
+	sdkClient "github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	querytypes "github.com/cosmos/cosmos-sdk/types/query"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
@@ -140,7 +141,8 @@ func Run(ctx context.Context, cfg *types.Config, errHandler func(error), cmd *co
 			v.Events["source"] = []string{chainId}
 			// why does this always trigger twice? messages are deduped later, but this causes 2x queries to trigger.
 			time.Sleep(75 * time.Millisecond) // try to avoid thundering herd.
-			go handleEvent(cfg, v, log.With(logger, "worker", "chainClient", "chain", cfg.DefaultChain.ChainID), metrics)
+			go handleEvent(cfg, v, log.With(logger, "worker", "chainClient",
+				"chain", cfg.DefaultChain.ChainID), metrics, cmd)
 		}
 	}(cfg.DefaultChain.ChainID, ch)
 
@@ -187,7 +189,14 @@ func Run(ctx context.Context, cfg *types.Config, errHandler func(error), cmd *co
 				_ = logger.Log("worker", "chainClient", "msg", "fetched historic queries for chain", "count", len(out.Queries))
 
 				if len(out.Queries) > 0 {
-					go handleHistoricRequests(cfg, srcClient, out.Queries, cfg.DefaultChain.ChainID, log.With(logger, "worker", "historic"), metrics)
+					go handleHistoricRequests(
+						cfg,
+						srcClient,
+						out.Queries,
+						cfg.DefaultChain.ChainID,
+						log.With(logger, "worker", "historic"),
+						metrics,
+						cmd)
 				}
 			}
 		}(cfg.DefaultChain, chainCfg, log.With(logger, "chain", cfg.DefaultChain.ChainID, "src_chain", chainCfg.ChainID))
@@ -206,7 +215,14 @@ type Query struct {
 	Request       []byte
 }
 
-func handleHistoricRequests(cfg *types.Config, queryClient *types.ReadOnlyChainConfig, queries []qstypes.Query, sourceChainId string, logger log.Logger, metrics prommetrics.Metrics) {
+func handleHistoricRequests(
+	cfg *types.Config,
+	queryClient *types.ReadOnlyChainConfig,
+	queries []qstypes.Query,
+	sourceChainId string,
+	logger log.Logger,
+	metrics prommetrics.Metrics,
+	cmd *cobra.Command) {
 	metrics.HistoricQueries.WithLabelValues("historic-queries").Set(float64(len(queries)))
 
 	if len(queries) == 0 {
@@ -267,11 +283,12 @@ func handleHistoricRequests(cfg *types.Config, queryClient *types.ReadOnlyChainC
 
 		cache.Set("query/"+q.QueryId, true, 0)
 
-		go doRequestWithMetrics(cfg, q, logger, metrics)
+		go doRequestWithMetrics(cfg, q, logger, metrics, cmd)
 	}
 }
 
-func handleEvent(cfg *types.Config, event coretypes.ResultEvent, logger log.Logger, metrics prommetrics.Metrics) {
+func handleEvent(cfg *types.Config, event coretypes.ResultEvent,
+	logger log.Logger, metrics prommetrics.Metrics, cmd *cobra.Command) {
 	queries := []Query{}
 	source := event.Events["source"]
 	connections := event.Events["message.connection_id"]
@@ -338,7 +355,8 @@ func handleEvent(cfg *types.Config, event coretypes.ResultEvent, logger log.Logg
 	}
 
 	for _, q := range queries {
-		go doRequestWithMetrics(cfg, q, log.With(logger, "src_chain", q.ChainId), metrics)
+		go doRequestWithMetrics(cfg, q, log.With(logger, "src_chain", q.ChainId),
+			metrics, cmd)
 		time.Sleep(75 * time.Millisecond) // try to avoid thundering herd.
 	}
 }
@@ -377,15 +395,17 @@ func retryLightblock(ctx context.Context, chain *types.ReadOnlyChainConfig, heig
 	return lightBlock.(*tmtypes.LightBlock), err
 }
 
-func doRequestWithMetrics(cfg *types.Config, query Query, logger log.Logger, metrics prommetrics.Metrics) {
+func doRequestWithMetrics(cfg *types.Config, query Query, logger log.Logger,
+	metrics prommetrics.Metrics, cmd *cobra.Command) {
 	startTime := time.Now()
 	metrics.Requests.WithLabelValues("requests", query.Type).Inc()
-	doRequest(cfg, query, logger, metrics)
+	doRequest(cfg, query, logger, metrics, cmd)
 	endTime := time.Now()
 	metrics.RequestsLatency.WithLabelValues("request-latency", query.Type).Observe(endTime.Sub(startTime).Seconds())
 }
 
-func doRequest(cfg *types.Config, query Query, logger log.Logger, metrics prommetrics.Metrics) {
+func doRequest(cfg *types.Config, query Query, logger log.Logger,
+	metrics prommetrics.Metrics, cmd *cobra.Command) {
 	var err error
 	client, ok := cfg.Chains[query.ChainId]
 	if !ok {
@@ -398,6 +418,11 @@ func doRequest(cfg *types.Config, query Query, logger log.Logger, metrics promme
 	prove := pathParts[len(pathParts)-1] == "key" // fetch proof if the query is 'key'
 
 	var res abcitypes.ResponseQuery
+	clientCtx, err := sdkClient.GetClientTxContext(cmd)
+	if err != nil {
+		return
+	}
+	fromAddr := clientCtx.GetFromAddress()
 
 	switch query.Type {
 	// until we fix ordering and pagination in the binary, we can override the query here.
@@ -460,7 +485,14 @@ func doRequest(cfg *types.Config, query Query, logger log.Logger, metrics promme
 
 	case "ibc.ClientUpdate":
 		// return a dummy message to settle the query.
-		msg := &qstypes.MsgSubmitQueryResponse{ChainId: query.ChainId, QueryId: query.QueryId, Result: []byte{}, Height: int64(sdk.BigEndianToUint64(query.Request)), ProofOps: &crypto.ProofOps{}, FromAddress: cfg.DefaultChain.GetAddress()}
+		msg := &qstypes.MsgSubmitQueryResponse{
+			ChainId:     query.ChainId,
+			QueryId:     query.QueryId,
+			Result:      []byte{},
+			Height:      int64(sdk.BigEndianToUint64(query.Request)),
+			ProofOps:    &crypto.ProofOps{},
+			FromAddress: fromAddr.String(),
+		}
 		sendQueue <- Message{Msg: msg, ClientUpdate: &ClientUpdateRequirement{ConnectionId: query.ConnectionId, ChainId: query.ChainId, Height: int64(sdk.BigEndianToUint64(query.Request))}}
 		return
 	default:
@@ -471,7 +503,13 @@ func doRequest(cfg *types.Config, query Query, logger log.Logger, metrics promme
 		}
 	}
 
-	msg := &qstypes.MsgSubmitQueryResponse{ChainId: query.ChainId, QueryId: query.QueryId, Result: res.Value, Height: res.Height, ProofOps: res.ProofOps, FromAddress: cfg.DefaultChain.GetAddress()}
+	msg := &qstypes.MsgSubmitQueryResponse{
+		ChainId:     query.ChainId,
+		QueryId:     query.QueryId,
+		Result:      res.Value,
+		Height:      res.Height,
+		ProofOps:    res.ProofOps,
+		FromAddress: fromAddr.String()}
 	var clientUpdate *ClientUpdateRequirement
 
 	if prove {
@@ -481,9 +519,23 @@ func doRequest(cfg *types.Config, query Query, logger log.Logger, metrics promme
 	sendQueue <- Message{Msg: msg, ClientUpdate: clientUpdate}
 }
 
-func asyncCacheClientUpdate(ctx context.Context, cfg *types.Config, client *types.ReadOnlyChainConfig, query Query, height int64, logger log.Logger, metrics prommetrics.Metrics) error {
+func asyncCacheClientUpdate(
+	ctx context.Context,
+	cfg *types.Config,
+	client *types.ReadOnlyChainConfig,
+	query Query,
+	height int64,
+	logger log.Logger,
+	metrics prommetrics.Metrics,
+	cmd *cobra.Command) error {
 	cacheKey := fmt.Sprintf("cu/%s-%d", query.ConnectionId, height)
 	queryKey := fmt.Sprintf("cuquery/%s-%d", query.ConnectionId, height)
+
+	clientCtx, err := sdkClient.GetClientTxContext(cmd)
+	if err != nil {
+		return err
+	}
+	fromAddr := clientCtx.GetFromAddress()
 
 	_, ok := cache.Get("cu/" + cacheKey)
 	if ok {
@@ -509,7 +561,7 @@ func asyncCacheClientUpdate(ctx context.Context, cfg *types.Config, client *type
 			return err
 		}
 
-		msg, err := clienttypes.NewMsgUpdateClient(clientId, header, cfg.DefaultChain.GetAddress())
+		msg, err := clienttypes.NewMsgUpdateClient(clientId, header, fromAddr.String())
 		if err != nil {
 			_ = logger.Log("msg", fmt.Sprintf("Error: Could not create msg update: %s", err))
 			return err
@@ -613,7 +665,11 @@ func FlushSendQueue(cfg *types.Config, logger log.Logger, metrics prommetrics.Me
 			metrics.SendQueue.WithLabelValues("send-queue").Set(float64(len(sendQueue)))
 			if msg.ClientUpdate != nil {
 				go func() {
-					err := asyncCacheClientUpdate(ctx, cfg, cfg.Chains[msg.ClientUpdate.ChainId], Query{ConnectionId: msg.ClientUpdate.ConnectionId, Height: msg.ClientUpdate.Height}, msg.ClientUpdate.Height, logger, metrics)
+					err := asyncCacheClientUpdate(ctx, cfg,
+						cfg.Chains[msg.ClientUpdate.ChainId],
+						Query{ConnectionId: msg.ClientUpdate.ConnectionId,
+							Height: msg.ClientUpdate.Height},
+						msg.ClientUpdate.Height, logger, metrics, cmd)
 					if err != nil {
 						_ = logger.Log("msg", fmt.Sprintf("Error: Could not submit client update %s", err))
 					}
