@@ -102,7 +102,6 @@ func StartCommand() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cmd.Flags().Set(flags.FlagFrom, args[0])
 			homepath, err := cmd.Flags().GetString(FlagHomePath)
-			fmt.Println(cmd.Flags())
 			if err != nil {
 				return err
 			}
@@ -146,6 +145,7 @@ func StartCommand() *cobra.Command {
 	}
 
 	startCommand.Flags().String(FlagHomePath, types.DefaultHomePath, "homedir")
+	flags.AddTxFlagsToCmd(startCommand)
 	return startCommand
 }
 
