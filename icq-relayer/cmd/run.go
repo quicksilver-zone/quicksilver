@@ -4,27 +4,25 @@ Copyright © 2022 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	"fmt"
-	"github.com/cosmos/cosmos-sdk/client/flags"
-	quicksilverconfig "github.com/quicksilver-zone/quicksilver/cmd/config"
-	servercfg "github.com/quicksilver-zone/quicksilver/server/config"
-	"path/filepath"
-
-	"github.com/spf13/cobra"
-
 	"context"
+	"fmt"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
 
 	"github.com/BurntSushi/toml"
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/quicksilver-zone/quicksilver/app"
+	quicksilverconfig "github.com/quicksilver-zone/quicksilver/cmd/config"
 	"github.com/quicksilver-zone/quicksilver/icq-relayer/pkg/runner"
 	"github.com/quicksilver-zone/quicksilver/icq-relayer/pkg/types"
+	servercfg "github.com/quicksilver-zone/quicksilver/server/config"
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/cobra"
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 )
 

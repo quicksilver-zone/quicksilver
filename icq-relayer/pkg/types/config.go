@@ -4,10 +4,9 @@ import (
 	"fmt"
 	"path/filepath"
 
+	"github.com/BurntSushi/toml"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
-
-	"github.com/BurntSushi/toml"
 )
 
 // Config represents the config file for the relayer

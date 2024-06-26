@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"errors"
+	"os"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/config"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -11,11 +13,9 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/quicksilver-zone/quicksilver/app"
 	cmdcfg "github.com/quicksilver-zone/quicksilver/cmd/config"
+	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	tmcfg "github.com/tendermint/tendermint/config"
-	"os"
-
-	"github.com/spf13/cobra"
 )
 
 var (
