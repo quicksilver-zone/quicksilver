@@ -72,10 +72,10 @@ func (app *Quicksilver) setUpgradeStoreLoaders() {
 		storeUpgrades = &storetypes.StoreUpgrades{
 			Deleted: []string{wasmModuleName, tfModuleName},
 		}
-	case upgrades.V010601UpgradeName:
+	/*case upgrades.V010601UpgradeName:
 		storeUpgrades = &storetypes.StoreUpgrades{
 			Deleted: []string{wasmModuleName, tfModuleName},
-		}
+		}*/
 	default:
 		// no-op
 	}
