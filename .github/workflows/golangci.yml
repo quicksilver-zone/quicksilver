@@ -6,13 +6,14 @@ on:
     branches:
       - main
   pull_request:
-    paths-ignore:
-      - web-ui
     branches:
       - develop
       - main
+    paths-ignore:
+      - 'web-ui/**'
+  pull_request:
     paths:
-      - "icq-relayer/**"
+      - 'icq-relayer/**'
 
 permissions:
   contents: read
