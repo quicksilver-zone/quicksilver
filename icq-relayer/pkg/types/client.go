@@ -27,6 +27,7 @@ import (
 	"github.com/spf13/cobra"
 	abcitypes "github.com/tendermint/tendermint/abci/types"
 	cmtjson "github.com/tendermint/tendermint/libs/json"
+	home "github.com/mitchellh/go-homedir"
 	prov "github.com/tendermint/tendermint/light/provider"
 	lighthttp "github.com/tendermint/tendermint/light/provider/http"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
@@ -115,31 +116,31 @@ func (r *ReadOnlyChainConfig) LightBlock(ctx context.Context, height int64) (*tm
 	defer cancel()
 	lightBlock, err := r.LightProvider.LightBlock(ctx, height)
 	if err != nil {
-		fmt.Println("error getting light block", err)
+		log.Error().Err(err).Msg("Error getting light block")
 		return nil, err
 	}
 	return lightBlock, nil
 }
 
-func (r *ReadOnlyChainConfig) GetClientState(ctx context.Context, clientId string, logger log2.Logger, metrics prommetrics.Metrics) (*clienttypes.QueryClientStateResponse, error) {
+func (r *ReadOnlyChainConfig) GetClientState(ctx context.Context, clientId string, logger zerolog.Logger, metrics prommetrics.Metrics) (*clienttypes.QueryClientStateResponse, error) {
 	clientStateQuery := clienttypes.QueryClientStateRequest{ClientId: clientId}
 	bz := r.Codec.MustMarshal(&clientStateQuery)
 	res, err := r.Client.ABCIQuery(ctx, "/ibc.core.client.v1.Query/ClientState", bz)
 	if err != nil {
-		_ = logger.Log("msg", fmt.Sprintf("Error: Could not get client state from client %s", err))
+		logger.Error().Err(err).Str("clientId", clientId).Msg("Could not get client state from client")
 		return nil, err
 	}
 	clientStateResponse := clienttypes.QueryClientStateResponse{}
 	err = r.Codec.Unmarshal(res.Response.Value, &clientStateResponse)
 	if err != nil {
-		_ = logger.Log("msg", fmt.Sprintf("Error: Could not unmarshal connection %s", err))
+		logger.Error().Err(err).Str("clientId", clientId).Msg("Could not unmarshal connection")
 		return nil, err
 	}
 
 	return &clientStateResponse, nil
 }
 
-func (r *ReadOnlyChainConfig) GetClientStateHeights(ctx context.Context, clientId string, chainId string, height uint64, logger log2.Logger, metrics prommetrics.Metrics, depth int) ([]clienttypes.Height, error) {
+func (r *ReadOnlyChainConfig) GetClientStateHeights(ctx context.Context, clientId string, chainId string, height uint64, logger zerolog.Logger, metrics prommetrics.Metrics, depth int) ([]clienttypes.Height, error) {
 
 	if depth > 10 {
 		return nil, fmt.Errorf("reached max depth")
@@ -151,8 +152,8 @@ func (r *ReadOnlyChainConfig) GetClientStateHeights(ctx context.Context, clientI
 	bz := r.Codec.MustMarshal(&req)
 	res, err := r.Client.ABCIQuery(ctx, "/ibc.core.client.v1.Query/ConsensusStateHeights", bz)
 	if err != nil {
-		_ = logger.Log("msg", fmt.Sprintf("Error: Could not get consensus state heights from client %s", err))
-		return nil, err
+		logger.Error().Err(err).Msg("Could not get consensus state heights from client")
+    	return nil, err
 	}
 	resp := clienttypes.QueryConsensusStateHeightsResponse{}
 	err = r.Codec.Unmarshal(res.Response.Value, &resp)
@@ -167,20 +168,20 @@ func (r *ReadOnlyChainConfig) GetClientStateHeights(ctx context.Context, clientI
 	return resp.ConsensusStateHeights, nil
 }
 
-func (r *ReadOnlyChainConfig) GetClientId(ctx context.Context, connectionId string, logger log2.Logger, metrics prommetrics.Metrics) (string, error) {
+func (r *ReadOnlyChainConfig) GetClientId(ctx context.Context, connectionId string, logger zerolog.Logger, metrics prommetrics.Metrics) (string, error) {
 	clientId, found := r.Cache.Get("clientId/" + connectionId)
 	if !found {
 		connectionQuery := connectiontypes.QueryConnectionRequest{ConnectionId: connectionId}
 		bz := r.Codec.MustMarshal(&connectionQuery)
 		res, err := r.Client.ABCIQuery(ctx, "/ibc.core.connection.v1.Query/Connection", bz)
 		if err != nil {
-			_ = logger.Log("msg", fmt.Sprintf("Error: Could not get connection from chain %s", err))
-			return "", err
+			logger.Error().Err(err).Msg("Could not get connection from chain")
+    		return "", err
 		}
 		connectionResponse := connectiontypes.QueryConnectionResponse{}
 		err = r.Codec.Unmarshal(res.Response.Value, &connectionResponse)
 		if err != nil {
-			_ = logger.Log("msg", fmt.Sprintf("Error: Could not unmarshal connection %s", err))
+			logger.Error().Err(err).Msg("Could not unmarshal connection")
 			return "", err
 		}
 
@@ -270,9 +271,9 @@ type TxResultMinimal struct {
 
 type QueryClient interface {
 	Init(codec *codec.ProtoCodec, cache *ristretto.Cache) error
-	GetClientState(ctx context.Context, clientId string, logger log2.Logger, metrics prommetrics.Metrics) (*clienttypes.QueryClientStateResponse, error)
-	GetClientStateHeights(ctx context.Context, clientId string, chainId string, height uint64, logger log2.Logger, metrics prommetrics.Metrics, depth int) ([]clienttypes.Height, error)
-	GetClientId(ctx context.Context, connectionId string, logger log2.Logger, metrics prommetrics.Metrics) (string, error)
+	GetClientState(ctx context.Context, clientId string, logger zerolog.Logger, metrics prommetrics.Metrics) (*clienttypes.QueryClientStateResponse, error)
+	GetClientStateHeights(ctx context.Context, clientId string, chainId string, height uint64, logger zerolog.Logger, metrics prommetrics.Metrics, depth int) ([]clienttypes.Height, error)
+	GetClientId(ctx context.Context, connectionId string, logger zerolog.Logger, metrics prommetrics.Metrics) (string, error)
 }
 
 type TxClient interface {
@@ -328,7 +329,7 @@ func (r *ReadOnlyChainConfig) RunABCIQuery(ctx context.Context, method string, r
 	return abciRes, nil
 }
 
-func (r *ReadOnlyChainConfig) GetCurrentHeight(ctx context.Context, cache *ristretto.Cache, logger log2.Logger) (int64, error) {
+func (r *ReadOnlyChainConfig) GetCurrentHeight(ctx context.Context, cache *ristretto.Cache, logger zerolog.Logger) (int64, error) {
 	currentheight, found := cache.Get("currentblock/" + r.ChainID)
 	if !found {
 		var err error
