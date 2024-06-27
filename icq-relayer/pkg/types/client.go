@@ -22,12 +22,12 @@ import (
 	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
 	connectiontypes "github.com/cosmos/ibc-go/v6/modules/core/03-connection/types"
 	"github.com/dgraph-io/ristretto"
-	log2 "github.com/go-kit/log"
 	"github.com/quicksilver-zone/quicksilver/icq-relayer/prommetrics"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	abcitypes "github.com/tendermint/tendermint/abci/types"
 	cmtjson "github.com/tendermint/tendermint/libs/json"
-	home "github.com/mitchellh/go-homedir"
 	prov "github.com/tendermint/tendermint/light/provider"
 	lighthttp "github.com/tendermint/tendermint/light/provider/http"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
@@ -153,7 +153,7 @@ func (r *ReadOnlyChainConfig) GetClientStateHeights(ctx context.Context, clientI
 	res, err := r.Client.ABCIQuery(ctx, "/ibc.core.client.v1.Query/ConsensusStateHeights", bz)
 	if err != nil {
 		logger.Error().Err(err).Msg("Could not get consensus state heights from client")
-    	return nil, err
+		return nil, err
 	}
 	resp := clienttypes.QueryConsensusStateHeightsResponse{}
 	err = r.Codec.Unmarshal(res.Response.Value, &resp)
@@ -176,7 +176,7 @@ func (r *ReadOnlyChainConfig) GetClientId(ctx context.Context, connectionId stri
 		res, err := r.Client.ABCIQuery(ctx, "/ibc.core.connection.v1.Query/Connection", bz)
 		if err != nil {
 			logger.Error().Err(err).Msg("Could not get connection from chain")
-    		return "", err
+			return "", err
 		}
 		connectionResponse := connectiontypes.QueryConnectionResponse{}
 		err = r.Codec.Unmarshal(res.Response.Value, &connectionResponse)

@@ -3,12 +3,12 @@ module github.com/quicksilver-zone/quicksilver/icq-relayer
 go 1.22.2
 
 require (
-	cosmossdk.io/math v1.3.0
 	github.com/BurntSushi/toml v1.3.2
 	github.com/avast/retry-go/v4 v4.3.3
 	github.com/cosmos/cosmos-sdk v0.46.16
 	github.com/cosmos/ibc-go/v6 v6.3.1
 	github.com/dgraph-io/ristretto v0.1.1
+	github.com/go-kit/log v0.2.1
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/prometheus/client_golang v1.18.0
 	github.com/quicksilver-zone/quicksilver v1.6.1-rc2
@@ -26,6 +26,7 @@ require (
 	cloud.google.com/go/iam v1.1.8 // indirect
 	cloud.google.com/go/storage v1.40.0 // indirect
 	cosmossdk.io/errors v1.0.1 // indirect
+	cosmossdk.io/math v1.3.0 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.2 // indirect
@@ -73,7 +74,6 @@ require (
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/getsentry/sentry-go v0.27.0 // indirect
 	github.com/go-kit/kit v0.13.0 // indirect
-	github.com/go-kit/log v0.2.1 // indirect
 	github.com/go-logfmt/logfmt v0.6.0 // indirect
 	github.com/go-logr/logr v1.4.1 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect

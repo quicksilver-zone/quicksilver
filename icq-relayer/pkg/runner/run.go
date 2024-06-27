@@ -28,9 +28,9 @@ import (
 	"github.com/quicksilver-zone/quicksilver/icq-relayer/pkg/types"
 	"github.com/quicksilver-zone/quicksilver/icq-relayer/prommetrics"
 	qstypes "github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
-	"github.com/spf13/cobra"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/cobra"
 	abcitypes "github.com/tendermint/tendermint/abci/types"
 	tmquery "github.com/tendermint/tendermint/libs/pubsub/query"
 	"github.com/tendermint/tendermint/proto/tendermint/crypto"
@@ -171,8 +171,7 @@ func Run(ctx context.Context, cfg *types.Config, errHandler func(error), cmd *co
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		err := FlushSendQueue(cfg, logger.With().Str("worker",
-			"flusher").Str("chain", cfg.DefaultChain.ChainID).Logger(), metrics, cmd)
+		err := FlushSendQueue(cfg, logger.With().Str("worker", "flusher").Str("chain", cfg.DefaultChain.ChainID).Logger(), metrics, cmd)
 		if err != nil {
 			logger.Error().Msg("Flush Go-routine Bailing")
 			panic(err)
@@ -222,7 +221,7 @@ func Run(ctx context.Context, cfg *types.Config, errHandler func(error), cmd *co
 				}
 			}
 		}(cfg.DefaultChain, chainCfg, logger.With().Str("chain",
-			cfg.DefaultChain.ChainID).Str("src_chain", chainCfg.ChainID).Logger(), )
+			cfg.DefaultChain.ChainID).Str("src_chain", chainCfg.ChainID).Logger())
 	}
 
 	return nil
@@ -309,8 +308,7 @@ func handleHistoricRequests(cfg *types.Config,
 }
 
 func handleEvent(cfg *types.Config, event coretypes.ResultEvent,
-	logger log.Logger, metrics prommetrics.Metrics, cmd *cobra.Command) {
-func handleEvent(cfg *types.Config, event coretypes.ResultEvent, logger zerolog.Logger, metrics prommetrics.Metrics) {
+	logger zerolog.Logger, metrics prommetrics.Metrics, cmd *cobra.Command) {
 	queries := []Query{}
 	source := event.Events["source"]
 	connections := event.Events["message.connection_id"]
@@ -377,7 +375,8 @@ func handleEvent(cfg *types.Config, event coretypes.ResultEvent, logger zerolog.
 	}
 
 	for _, q := range queries {
-		go doRequestWithMetrics(cfg, q, logger.With().Str("src_chain", q.ChainId).Logger(), metrics)
+		go doRequestWithMetrics(cfg, q, logger.With().Str("src_chain",
+			q.ChainId).Logger(), metrics, cmd)
 		time.Sleep(75 * time.Millisecond) // try to avoid thundering herd.
 	}
 }
@@ -416,8 +415,7 @@ func retryLightblock(ctx context.Context, chain *types.ReadOnlyChainConfig, heig
 	return lightBlock.(*tmtypes.LightBlock), err
 }
 
-func doRequestWithMetrics(cfg *types.Config, query Query, logger zerolog.Logger, metrics prommetrics.Metrics) {
-func doRequestWithMetrics(cfg *types.Config, query Query, logger log.Logger,
+func doRequestWithMetrics(cfg *types.Config, query Query, logger zerolog.Logger,
 	metrics prommetrics.Metrics, cmd *cobra.Command) {
 	startTime := time.Now()
 	metrics.Requests.WithLabelValues("requests", query.Type).Inc()
@@ -426,9 +424,8 @@ func doRequestWithMetrics(cfg *types.Config, query Query, logger log.Logger,
 	metrics.RequestsLatency.WithLabelValues("request-latency", query.Type).Observe(endTime.Sub(startTime).Seconds())
 }
 
-func doRequest(cfg *types.Config, query Query, logger log.Logger,
+func doRequest(cfg *types.Config, query Query, logger zerolog.Logger,
 	metrics prommetrics.Metrics, cmd *cobra.Command) {
-func doRequest(cfg *types.Config, query Query, logger zerolog.Logger, metrics prommetrics.Metrics) {
 	var err error
 	client, ok := cfg.Chains[query.ChainId]
 	if !ok {
@@ -542,10 +539,21 @@ func doRequest(cfg *types.Config, query Query, logger zerolog.Logger, metrics pr
 	sendQueue <- Message{Msg: msg, ClientUpdate: clientUpdate}
 }
 
-func asyncCacheClientUpdate(ctx context.Context, cfg *types.Config, client *types.ReadOnlyChainConfig, query Query, height int64, logger zerolog.Logger, metrics prommetrics.Metrics) error {
+func asyncCacheClientUpdate(
+	ctx context.Context,
+	cfg *types.Config,
+	client *types.ReadOnlyChainConfig,
+	query Query, height int64,
+	logger zerolog.Logger,
+	metrics prommetrics.Metrics,
+	cmd *cobra.Command) error {
 	cacheKey := fmt.Sprintf("cu/%s-%d", query.ConnectionId, height)
 	queryKey := fmt.Sprintf("cuquery/%s-%d", query.ConnectionId, height)
-
+	clientCtx, err := sdkClient.GetClientTxContext(cmd)
+	if err != nil {
+		return err
+	}
+	fromAddr := clientCtx.GetFromAddress()
 	_, ok := cache.Get("cu/" + cacheKey)
 	if ok {
 		log.Info().Msgf("cache found for %s", cacheKey)
@@ -648,7 +656,8 @@ func getHeader(ctx context.Context, cfg *types.Config, client *types.ReadOnlyCha
 	return header, nil
 }
 
-func FlushSendQueue(cfg *types.Config, logger zerolog.Logger, metrics prommetrics.Metrics) error {
+func FlushSendQueue(cfg *types.Config, logger zerolog.Logger,
+	metrics prommetrics.Metrics, cmd *cobra.Command) error {
 	time.Sleep(WaitInterval)
 	toSend := []Message{}
 	ch := sendQueue
@@ -707,7 +716,7 @@ func flush(cfg *types.Config, toSend []Message, logger zerolog.Logger,
 
 			switch {
 			case err == nil:
-				logger.Info().Msgf("Sent batch of %d (deduplicated) messages [hash: %s]", len(msgs), hash)
+				logger.Info().Msgf("Sent batch of %d", len(msgs))
 			case code == 12:
 				logger.Warn().Msg("Not enough gas")
 			case code == 19:
