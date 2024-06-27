@@ -383,6 +383,7 @@ func (appKeepers *AppKeepers) InitKeepers(
 		appCodec,
 		appKeepers.keys[interchainstakingtypes.StoreKey],
 		appKeepers.AccountKeeper,
+		appKeepers.AuthzKeeper,
 		appKeepers.BankKeeper,
 		appKeepers.ICAControllerKeeper,
 		&scopedInterchainStakingKeeper,

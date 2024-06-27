@@ -386,6 +386,43 @@ func TestUpdateIntentWithMemoBad(t *testing.T) {
 	}
 }
 
+func TestDecodeAutoClaimMemo(t *testing.T) {
+	zone := types.Zone{ConnectionId: "connection-0", ChainId: "cosmoshub-4", AccountPrefix: "cosmos", LocalDenom: "uqatom", BaseDenom: "uatom", Is_118: true}
+
+	testcases := []struct {
+		name     string
+		memo     string
+		expected bool
+	}{
+		{
+			name: "contains autoclaim field in memo",
+			// fieldBytes: []byte{
+			//     byte(types.FieldTypeAccountMap), 2, 1, 1,
+			//     byte(types.FieldTypeReturnToSender), 0,
+			//    byte(types.FieldTypeAutoClaim), 3, 0,
+			// },
+			memo:     "AAIBAQEAAwA=",
+			expected: true,
+		},
+		{
+			name: "no autoclaim field in memo",
+			// fieldBytes: []byte{
+			//     byte(types.FieldTypeAccountMap), 2, 1, 1,
+			//     byte(types.FieldTypeReturnToSender), 0,
+			memo:     "AAIBAQEA",
+			expected: false,
+		},
+	}
+
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			memo, err := zone.DecodeMemo(tc.memo)
+			require.NoError(t, err)
+			require.Equal(t, tc.expected, memo.AutoClaim())
+		})
+	}
+}
+
 func TestUpdateIntentWithCoins(t *testing.T) {
 	zone := types.Zone{ConnectionId: "connection-0", ChainId: "cosmoshub-4", AccountPrefix: "cosmos", LocalDenom: "uqatom", BaseDenom: "uatom", Is_118: true}
 	zone.Validators = append(zone.Validators,
@@ -627,9 +664,9 @@ func TestParseMemoFields(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "invalid field id 3",
+			name: "invalid field id 4",
 			fieldBytes: []byte{
-				3, 2, 1, 1,
+				4, 2, 1, 1,
 				byte(types.FieldTypeReturnToSender), 0,
 			},
 			wantErr: true,
@@ -650,6 +687,7 @@ func TestParseMemoFields(t *testing.T) {
 			fieldBytes: []byte{
 				byte(types.FieldTypeAccountMap), 2, 1, 1,
 				byte(types.FieldTypeReturnToSender), 0,
+				byte(types.FieldTypeAutoClaim), 0,
 			},
 			expectedMemoFields: types.MemoFields{
 				types.FieldTypeAccountMap: {
@@ -658,6 +696,10 @@ func TestParseMemoFields(t *testing.T) {
 				},
 				types.FieldTypeReturnToSender: {
 					ID:   types.FieldTypeReturnToSender,
+					Data: nil,
+				},
+				types.FieldTypeAutoClaim: {
+					ID:   types.FieldTypeAutoClaim,
 					Data: nil,
 				},
 			},
