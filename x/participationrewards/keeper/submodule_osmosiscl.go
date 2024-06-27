@@ -80,7 +80,18 @@ func (*OsmosisClModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.Msg
 		return math.ZeroInt(), err
 	}
 
+	keyCache := make(map[string]bool)
+
 	for _, proof := range msg.Proofs {
+		if _, found := keyCache[string(proof.Key)]; found {
+			continue
+		}
+		keyCache[string(proof.Key)] = true
+
+		if proof.Data == nil {
+			continue
+		}
+
 		position = osmoclmodel.Position{}
 		err := k.cdc.Unmarshal(proof.Data, &position)
 		if err != nil {
