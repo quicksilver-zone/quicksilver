@@ -204,7 +204,6 @@ func V010601UpgradeHandler(
 	appKeepers *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-
 		if isMainnet(ctx) {
 			updateBlockParams(ctx, appKeepers)
 
