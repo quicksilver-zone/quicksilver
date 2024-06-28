@@ -6,6 +6,28 @@ import (
 	sdkioerrors "cosmossdk.io/errors"
 )
 
+type (
+	ErrZoneNotFound struct {
+		ID string
+	}
+
+	ErrDurationDecayNonZero struct {
+		Err error
+	}
+)
+
+func (e ErrZoneNotFound) Error() string {
+	return fmt.Sprintf("zone not found for %s", e.ID)
+}
+
+func (e ErrDurationDecayNonZero) Error() string {
+	return fmt.Sprintf("%s, sum of Duration and Decay must not be zero", e.Err.Error())
+}
+
+func (e ErrDurationDecayNonZero) Unwrap() error {
+	return e.Err
+}
+
 // x/airdrop module sentinel errors.
 var (
 	ErrZoneDropNotFound     = sdkioerrors.Register(ModuleName, 1, "zone airdrop not found")

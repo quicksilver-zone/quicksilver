@@ -43,10 +43,10 @@ func (zd *ZoneDrop) ValidateBasic() error {
 	// immediate expiry of the zone airdrop
 	if zd.Duration.Microseconds()+zd.Decay.Microseconds() == 0 {
 		if _, exists := errs["Duration"]; !exists {
-			errs["Duration"] = fmt.Errorf("%w, sum of Duration and Decay must not be zero", ErrInvalidDuration)
+			errs["Duration"] = ErrDurationDecayNonZero{Err: ErrInvalidDuration}
 		}
 		if _, exists := errs["Decay"]; !exists {
-			errs["Decay"] = fmt.Errorf("%w, sum of Duration and Decay must not be zero", ErrInvalidDuration)
+			errs["Decay"] = ErrDurationDecayNonZero{Err: ErrInvalidDuration}
 		}
 	}
 

@@ -84,7 +84,18 @@ func (*OsmosisModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.MsgSu
 		return sdk.ZeroInt(), err
 	}
 
+	keyCache := make(map[string]bool)
+
 	for _, proof := range msg.Proofs {
+		if _, found := keyCache[string(proof.Key)]; found {
+			continue
+		}
+		keyCache[string(proof.Key)] = true
+
+		if proof.Data == nil {
+			continue
+		}
+
 		if proof.ProofType == types.ProofTypeBank {
 			poolDenom, err := utils.DenomFromRequestKey(proof.Key, addr)
 			if err != nil {

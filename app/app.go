@@ -306,6 +306,10 @@ func (app *Quicksilver) AppCodec() codec.Codec {
 	return app.appCodec
 }
 
+func (app *Quicksilver) GetModuleManager() *module.Manager {
+	return app.mm
+}
+
 // InterfaceRegistry returns Quicksilver's InterfaceRegistry.
 func (app *Quicksilver) InterfaceRegistry() types.InterfaceRegistry {
 	return app.interfaceRegistry

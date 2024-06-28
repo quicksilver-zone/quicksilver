@@ -93,7 +93,7 @@ func CalculateUnderlyingAssetsFromPosition(ctx sdk.Context, position clmodel.Pos
 
 func DetermineApplicableTokensInClPool(ctx sdk.Context, prKeeper ParticipationRewardsKeeper, position clmodel.Position, chainID string) (math.Int, error) {
 	poolID := position.PoolId
-	pd, ok := prKeeper.GetProtocolData(ctx, participationrewardstypes.ProtocolDataTypeOsmosisPool, fmt.Sprintf("%d", poolID))
+	pd, ok := prKeeper.GetProtocolData(ctx, participationrewardstypes.ProtocolDataTypeOsmosisCLPool, fmt.Sprintf("%d", poolID))
 	if !ok {
 		return sdk.ZeroInt(), fmt.Errorf("unable to obtain protocol data for poolID=%d", poolID)
 	}

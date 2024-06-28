@@ -32,6 +32,7 @@ message Params {
     (gogoproto.nullable) = false
   ];
   bool unbonding_enabled = 4;
+  string authz_auto_claim_address = 5 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
 message DelegationsForZone {

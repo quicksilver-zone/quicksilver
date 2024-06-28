@@ -204,32 +204,56 @@ func V010601UpgradeHandler(
 	appKeepers *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-		updateBlockParams(ctx, appKeepers)
+		if isMainnet(ctx) {
+			updateBlockParams(ctx, appKeepers)
 
-		ctx.Logger().Info("Updating agoric-3 zone to set is_118 = false")
-		agoricZone, _ := appKeepers.InterchainstakingKeeper.GetZone(ctx, "agoric-3")
-		agoricZone.Is_118 = false
-		appKeepers.InterchainstakingKeeper.SetZone(ctx, &agoricZone)
+			ctx.Logger().Info("Updating agoric-3 zone to set is_118 = false")
+			agoricZone, _ := appKeepers.InterchainstakingKeeper.GetZone(ctx, "agoric-3")
+			agoricZone.Is_118 = false
+			appKeepers.InterchainstakingKeeper.SetZone(ctx, &agoricZone)
 
-		enableIcaHost(ctx, appKeepers)
+			enableIcaHost(ctx, appKeepers)
 
-		channels := map[string]string{
-			"osmosis-1":      "channel-2",
-			"cosmoshub-4":    "channel-1",
-			"stargaze-1":     "channel-0",
-			"juno-1":         "channel-86",
-			"sommelier-3":    "channel-101",
-			"regen-1":        "channel-17",
-			"umee-1":         "channel-49",
-			"secret-4":       "channel-52",
-			"dydx-mainnet-1": "channel-164",
-			"agoric-3":       "channel-125",
-			"ssc-1":          "channel-170",
+			channels := map[string]string{
+				"osmosis-1":      "channel-2",
+				"cosmoshub-4":    "channel-1",
+				"stargaze-1":     "channel-0",
+				"juno-1":         "channel-86",
+				"sommelier-3":    "channel-101",
+				"regen-1":        "channel-17",
+				"umee-1":         "channel-49",
+				"secret-4":       "channel-52",
+				"dydx-mainnet-1": "channel-164",
+				"agoric-3":       "channel-125",
+				"ssc-1":          "channel-170",
+			}
+
+			setTransferChannels(ctx, appKeepers, channels)
+
+			removeIncorrectLiquidTokenProtocolDatas(ctx, appKeepers, channels)
+
+			appKeepers.InterchainstakingKeeper.Logger(ctx).Info("setting 5 unsent unbondings for epoch 172 to STATUS_UNBONDING to be picked up by the next end blocker...")
+			// remit epoch 172 unbondings that did not send due to channel timeout closure.
+			hashes := []string{
+				"0000000000000000000000000000000000000000000000000000000000000560", // 1137.426431
+				"068d2733ac95552fa0adc35cb1ae48dfaafa49ecb86a2fab0240f2fb600ff96e", // 0.186384
+				"0c23dddc51cf16671c0b95bd206980825d115baa2efa985184f543e708171f67", // 25.919839
+				"727428acc32d07e2754a2af6eafc949bea6c85de95cba9909e457d271d5dbb83", // 5.043558
+				"8c4d9e582303597968111fe06b4acd5fb8dc5ebbeaa1b0a0fc7fa7fd482b1a85", // 303.404702
+			}
+			for _, hash := range hashes {
+				record, found := appKeepers.InterchainstakingKeeper.GetWithdrawalRecord(ctx, "cosmoshub-4", hash, icstypes.WithdrawStatusSend)
+				if !found {
+					// do not panic, in case records were updated on previous epoch.
+					appKeepers.InterchainstakingKeeper.Logger(ctx).Error(fmt.Sprintf("1: unable to find record for hash %s", hash))
+					continue
+				}
+
+				// update the record so that it will re-trigger the send.
+				appKeepers.InterchainstakingKeeper.UpdateWithdrawalRecordStatus(ctx, &record, icstypes.WithdrawStatusUnbond)
+				appKeepers.InterchainstakingKeeper.Logger(ctx).Info("updated record to STATUS_UNBONDING", "hash", hash)
+			}
 		}
-
-		setTransferChannels(ctx, appKeepers, channels)
-
-		removeIncorrectLiquidTokenProtocolDatas(ctx, appKeepers, channels)
 
 		return mm.RunMigrations(ctx, configurator, fromVM)
 	}
