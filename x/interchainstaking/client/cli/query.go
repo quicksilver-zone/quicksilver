@@ -452,7 +452,7 @@ func GetZoneValidatorsCmd() *cobra.Command {
 
 			chainID := args[0]
 			if chainID == "" {
-				return fmt.Errorf("chain-id cannot be empty")
+				return types.ErrEmptyChainID
 			}
 			req := &types.QueryZoneValidatorsRequest{
 				ChainId: chainID,

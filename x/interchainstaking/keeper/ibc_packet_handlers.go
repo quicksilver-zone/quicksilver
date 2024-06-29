@@ -356,7 +356,7 @@ func (k *Keeper) DistributeToClaimants(ctx sdk.Context, zone *types.Zone, zoneAd
 	})
 
 	if toDistribute.IsNegative() {
-		return sdk.Coin{}, fmt.Errorf("unexpected negative value")
+		return sdk.Coin{}, types.ErrUnexpectedNegative
 	}
 
 	return sdk.NewCoin(rewardsCoin.Denom, toDistribute), err
@@ -1431,7 +1431,7 @@ func (k *Keeper) TriggerRedemptionRate(ctx sdk.Context, zone *types.Zone) error 
 func DistributeRewardsFromWithdrawAccount(k *Keeper, ctx sdk.Context, args []byte, query querytypes.Query) error {
 	zone, found := k.GetZone(ctx, query.ChainId)
 	if !found {
-		return fmt.Errorf("unable to find zone for %s", query.ChainId)
+		return types.ErrNoRegisteredZoneForChainId{Id: query.ChainId}
 	}
 
 	// query all balances as chains can accumulate fees in different denoms.
