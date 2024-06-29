@@ -4,24 +4,25 @@ Copyright © 2022 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	"fmt"
-	"path/filepath"
-
-	"github.com/spf13/cobra"
-
 	"context"
+	"fmt"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
 
 	"github.com/BurntSushi/toml"
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/quicksilver-zone/quicksilver/app"
+	quicksilverconfig "github.com/quicksilver-zone/quicksilver/cmd/config"
 	"github.com/quicksilver-zone/quicksilver/icq-relayer/pkg/runner"
 	"github.com/quicksilver-zone/quicksilver/icq-relayer/pkg/types"
+	servercfg "github.com/quicksilver-zone/quicksilver/server/config"
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/cobra"
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 )
 
@@ -29,10 +30,20 @@ const (
 	FlagHomePath = "home"
 )
 
-func init() {
-	rootCmd.AddCommand(StartCommand())
-	rootCmd.AddCommand(VersionCommand())
-	rootCmd.AddCommand(InitConfigCommand())
+// initAppConfig helps to override default appConfig template and configs.
+// return "", nil if no custom configuration is required for the application.
+func initAppConfig() (string, interface{}) {
+	customAppTemplate, customAppConfig := servercfg.AppConfig(quicksilverconfig.BaseDenom)
+
+	srvCfg, ok := customAppConfig.(servercfg.Config)
+	if !ok {
+		panic(fmt.Errorf("unknown app config type %T", customAppConfig))
+	}
+
+	srvCfg.StateSync.SnapshotInterval = 1500
+	srvCfg.StateSync.SnapshotKeepRecent = 2
+
+	return customAppTemplate, srvCfg
 }
 
 func InitConfigCommand() *cobra.Command {
@@ -81,10 +92,13 @@ func VersionCommand() *cobra.Command {
 
 func StartCommand() *cobra.Command {
 	startCommand := &cobra.Command{
-		Use:   "start",
-		Short: "Start the server",
-		Long:  `Start the server`,
+		Use:     "start",
+		Short:   "Start the server [from_relayer_key_or_address]",
+		Long:    `Start the server [from_relayer_key_or_address]`,
+		Example: fmt.Sprintf("%s start icq1 -y", appName),
+		Args:    cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			cmd.Flags().Set(flags.FlagFrom, args[0])
 			homepath, err := cmd.Flags().GetString(FlagHomePath)
 			if err != nil {
 				return err
@@ -118,8 +132,7 @@ func StartCommand() *cobra.Command {
 
 			c := make(chan os.Signal, 1)
 			signal.Notify(c, os.Interrupt, syscall.SIGTERM, syscall.SIGABRT)
-
-			go runner.Run(ctx, &config, CreateErrHandler(c))
+			go runner.Run(ctx, &config, CreateErrHandler(c), cmd)
 
 			for sig := range c {
 				log.Info().Msgf("Signal Received (%s) - gracefully shutting down", sig.String())
@@ -130,6 +143,7 @@ func StartCommand() *cobra.Command {
 	}
 
 	startCommand.Flags().String(FlagHomePath, types.DefaultHomePath, "homedir")
+	flags.AddTxFlagsToCmd(startCommand)
 	return startCommand
 }
 

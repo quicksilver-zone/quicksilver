@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/avast/retry-go/v4"
+	sdkClient "github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	querytypes "github.com/cosmos/cosmos-sdk/types/query"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
@@ -29,6 +30,7 @@ import (
 	qstypes "github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/cobra"
 	abcitypes "github.com/tendermint/tendermint/abci/types"
 	tmquery "github.com/tendermint/tendermint/libs/pubsub/query"
 	"github.com/tendermint/tendermint/proto/tendermint/crypto"
@@ -68,8 +70,7 @@ var (
 	RtyErr    = retry.LastErrorOnly(true)
 )
 
-func Run(ctx context.Context, cfg *types.Config, errHandler func(error)) error {
-
+func Run(ctx context.Context, cfg *types.Config, errHandler func(error), cmd *cobra.Command) error {
 	MaxTxMsgs = cfg.MaxMsgsPerTx
 	if MaxTxMsgs == 0 {
 		MaxTxMsgs = 40
@@ -89,12 +90,12 @@ func Run(ctx context.Context, cfg *types.Config, errHandler func(error)) error {
 		Str("msg", "starting icq relayer").
 		Str("version", VERSION).
 		Msg("")
-	
+
 	logger.Info().
 		Str("worker", "init").
 		Str("msg", "permitted queries").
 		Str("queries", strings.Join(cfg.AllowedQueries, ",")).
-		Msg("")	
+		Msg("")
 
 	reg := prometheus.NewRegistry()
 	metrics := *prommetrics.NewMetrics(reg)
@@ -163,14 +164,14 @@ func Run(ctx context.Context, cfg *types.Config, errHandler func(error)) error {
 			v.Events["source"] = []string{chainId}
 			// why does this always trigger twice? messages are deduped later, but this causes 2x queries to trigger.
 			time.Sleep(75 * time.Millisecond) // try to avoid thundering herd.
-			go handleEvent(cfg, v, logger.With().Str("worker", "chainClient").Str("chain", cfg.DefaultChain.ChainID).Logger(), metrics)
+			go handleEvent(cfg, v, logger.With().Str("worker", "chainClient").Str("chain", cfg.DefaultChain.ChainID).Logger(), metrics, cmd)
 		}
 	}(cfg.DefaultChain.ChainID, ch)
 
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		err := FlushSendQueue(cfg, logger.With().Str("worker", "flusher").Str("chain", cfg.DefaultChain.ChainID).Logger(), metrics)
+		err := FlushSendQueue(cfg, logger.With().Str("worker", "flusher").Str("chain", cfg.DefaultChain.ChainID).Logger(), metrics, cmd)
 		if err != nil {
 			logger.Error().Msg("Flush Go-routine Bailing")
 			panic(err)
@@ -214,10 +215,13 @@ func Run(ctx context.Context, cfg *types.Config, errHandler func(error)) error {
 					Msg("")
 
 				if len(out.Queries) > 0 {
-					go handleHistoricRequests(cfg, srcClient, out.Queries, cfg.DefaultChain.ChainID, logger.With().Str("worker", "historic").Logger(), metrics)
+					go handleHistoricRequests(cfg, srcClient, out.Queries,
+						cfg.DefaultChain.ChainID, logger.With().Str("worker",
+							"historic").Logger(), metrics, cmd)
 				}
 			}
-		}(cfg.DefaultChain, chainCfg, logger.With().Str("chain", cfg.DefaultChain.ChainID).Str("src_chain", chainCfg.ChainID).Logger())
+		}(cfg.DefaultChain, chainCfg, logger.With().Str("chain",
+			cfg.DefaultChain.ChainID).Str("src_chain", chainCfg.ChainID).Logger())
 	}
 
 	return nil
@@ -233,7 +237,12 @@ type Query struct {
 	Request       []byte
 }
 
-func handleHistoricRequests(cfg *types.Config, queryClient *types.ReadOnlyChainConfig, queries []qstypes.Query, sourceChainId string, logger zerolog.Logger, metrics prommetrics.Metrics) {
+func handleHistoricRequests(cfg *types.Config,
+	queryClient *types.ReadOnlyChainConfig, queries []qstypes.Query,
+	sourceChainId string,
+	logger zerolog.Logger,
+	metrics prommetrics.Metrics,
+	cmd *cobra.Command) {
 	metrics.HistoricQueries.WithLabelValues("historic-queries").Set(float64(len(queries)))
 
 	if len(queries) == 0 {
@@ -294,11 +303,12 @@ func handleHistoricRequests(cfg *types.Config, queryClient *types.ReadOnlyChainC
 
 		cache.Set("query/"+q.QueryId, true, 0)
 
-		go doRequestWithMetrics(cfg, q, logger, metrics)
+		go doRequestWithMetrics(cfg, q, logger, metrics, cmd)
 	}
 }
 
-func handleEvent(cfg *types.Config, event coretypes.ResultEvent, logger zerolog.Logger, metrics prommetrics.Metrics) {
+func handleEvent(cfg *types.Config, event coretypes.ResultEvent,
+	logger zerolog.Logger, metrics prommetrics.Metrics, cmd *cobra.Command) {
 	queries := []Query{}
 	source := event.Events["source"]
 	connections := event.Events["message.connection_id"]
@@ -365,7 +375,8 @@ func handleEvent(cfg *types.Config, event coretypes.ResultEvent, logger zerolog.
 	}
 
 	for _, q := range queries {
-		go doRequestWithMetrics(cfg, q, logger.With().Str("src_chain", q.ChainId).Logger(), metrics)
+		go doRequestWithMetrics(cfg, q, logger.With().Str("src_chain",
+			q.ChainId).Logger(), metrics, cmd)
 		time.Sleep(75 * time.Millisecond) // try to avoid thundering herd.
 	}
 }
@@ -404,15 +415,17 @@ func retryLightblock(ctx context.Context, chain *types.ReadOnlyChainConfig, heig
 	return lightBlock.(*tmtypes.LightBlock), err
 }
 
-func doRequestWithMetrics(cfg *types.Config, query Query, logger zerolog.Logger, metrics prommetrics.Metrics) {
+func doRequestWithMetrics(cfg *types.Config, query Query, logger zerolog.Logger,
+	metrics prommetrics.Metrics, cmd *cobra.Command) {
 	startTime := time.Now()
 	metrics.Requests.WithLabelValues("requests", query.Type).Inc()
-	doRequest(cfg, query, logger, metrics)
+	doRequest(cfg, query, logger, metrics, cmd)
 	endTime := time.Now()
 	metrics.RequestsLatency.WithLabelValues("request-latency", query.Type).Observe(endTime.Sub(startTime).Seconds())
 }
 
-func doRequest(cfg *types.Config, query Query, logger zerolog.Logger, metrics prommetrics.Metrics) {
+func doRequest(cfg *types.Config, query Query, logger zerolog.Logger,
+	metrics prommetrics.Metrics, cmd *cobra.Command) {
 	var err error
 	client, ok := cfg.Chains[query.ChainId]
 	if !ok {
@@ -425,6 +438,11 @@ func doRequest(cfg *types.Config, query Query, logger zerolog.Logger, metrics pr
 	prove := pathParts[len(pathParts)-1] == "key" // fetch proof if the query is 'key'
 
 	var res abcitypes.ResponseQuery
+	clientCtx, err := sdkClient.GetClientTxContext(cmd)
+	if err != nil {
+		return
+	}
+	fromAddr := clientCtx.GetFromAddress()
 
 	switch query.Type {
 	// until we fix ordering and pagination in the binary, we can override the query here.
@@ -487,7 +505,14 @@ func doRequest(cfg *types.Config, query Query, logger zerolog.Logger, metrics pr
 
 	case "ibc.ClientUpdate":
 		// return a dummy message to settle the query.
-		msg := &qstypes.MsgSubmitQueryResponse{ChainId: query.ChainId, QueryId: query.QueryId, Result: []byte{}, Height: int64(sdk.BigEndianToUint64(query.Request)), ProofOps: &crypto.ProofOps{}, FromAddress: cfg.DefaultChain.GetAddress()}
+		msg := &qstypes.MsgSubmitQueryResponse{
+			ChainId:     query.ChainId,
+			QueryId:     query.QueryId,
+			Result:      []byte{},
+			Height:      int64(sdk.BigEndianToUint64(query.Request)),
+			ProofOps:    &crypto.ProofOps{},
+			FromAddress: fromAddr.String(),
+		}
 		sendQueue <- Message{Msg: msg, ClientUpdate: &ClientUpdateRequirement{ConnectionId: query.ConnectionId, ChainId: query.ChainId, Height: int64(sdk.BigEndianToUint64(query.Request))}}
 		return
 	default:
@@ -498,7 +523,13 @@ func doRequest(cfg *types.Config, query Query, logger zerolog.Logger, metrics pr
 		}
 	}
 
-	msg := &qstypes.MsgSubmitQueryResponse{ChainId: query.ChainId, QueryId: query.QueryId, Result: res.Value, Height: res.Height, ProofOps: res.ProofOps, FromAddress: cfg.DefaultChain.GetAddress()}
+	msg := &qstypes.MsgSubmitQueryResponse{
+		ChainId:     query.ChainId,
+		QueryId:     query.QueryId,
+		Result:      res.Value,
+		Height:      res.Height,
+		ProofOps:    res.ProofOps,
+		FromAddress: fromAddr.String()}
 	var clientUpdate *ClientUpdateRequirement
 
 	if prove {
@@ -508,10 +539,21 @@ func doRequest(cfg *types.Config, query Query, logger zerolog.Logger, metrics pr
 	sendQueue <- Message{Msg: msg, ClientUpdate: clientUpdate}
 }
 
-func asyncCacheClientUpdate(ctx context.Context, cfg *types.Config, client *types.ReadOnlyChainConfig, query Query, height int64, logger zerolog.Logger, metrics prommetrics.Metrics) error {
+func asyncCacheClientUpdate(
+	ctx context.Context,
+	cfg *types.Config,
+	client *types.ReadOnlyChainConfig,
+	query Query, height int64,
+	logger zerolog.Logger,
+	metrics prommetrics.Metrics,
+	cmd *cobra.Command) error {
 	cacheKey := fmt.Sprintf("cu/%s-%d", query.ConnectionId, height)
 	queryKey := fmt.Sprintf("cuquery/%s-%d", query.ConnectionId, height)
-
+	clientCtx, err := sdkClient.GetClientTxContext(cmd)
+	if err != nil {
+		return err
+	}
+	fromAddr := clientCtx.GetFromAddress()
 	_, ok := cache.Get("cu/" + cacheKey)
 	if ok {
 		log.Info().Msgf("cache found for %s", cacheKey)
@@ -536,7 +578,7 @@ func asyncCacheClientUpdate(ctx context.Context, cfg *types.Config, client *type
 			return err
 		}
 
-		msg, err := clienttypes.NewMsgUpdateClient(clientId, header, cfg.DefaultChain.GetAddress())
+		msg, err := clienttypes.NewMsgUpdateClient(clientId, header, fromAddr.String())
 		if err != nil {
 			logger.Error().Str("msg", "Error: Could not create msg update").Err(err).Msg("")
 			return err
@@ -614,7 +656,8 @@ func getHeader(ctx context.Context, cfg *types.Config, client *types.ReadOnlyCha
 	return header, nil
 }
 
-func FlushSendQueue(cfg *types.Config, logger zerolog.Logger, metrics prommetrics.Metrics) error {
+func FlushSendQueue(cfg *types.Config, logger zerolog.Logger,
+	metrics prommetrics.Metrics, cmd *cobra.Command) error {
 	time.Sleep(WaitInterval)
 	toSend := []Message{}
 	ch := sendQueue
@@ -631,7 +674,7 @@ func FlushSendQueue(cfg *types.Config, logger zerolog.Logger, metrics prommetric
 		}
 
 		if len(toSend) > 5*TxMsgs {
-			flush(cfg, toSend, logger, metrics)
+			flush(cfg, toSend, logger, metrics, cmd)
 			toSend = []Message{}
 		}
 		select {
@@ -640,7 +683,11 @@ func FlushSendQueue(cfg *types.Config, logger zerolog.Logger, metrics prommetric
 			metrics.SendQueue.WithLabelValues("send-queue").Set(float64(len(sendQueue)))
 			if msg.ClientUpdate != nil {
 				go func() {
-					err := asyncCacheClientUpdate(ctx, cfg, cfg.Chains[msg.ClientUpdate.ChainId], Query{ConnectionId: msg.ClientUpdate.ConnectionId, Height: msg.ClientUpdate.Height}, msg.ClientUpdate.Height, logger, metrics)
+					err := asyncCacheClientUpdate(ctx, cfg,
+						cfg.Chains[msg.ClientUpdate.ChainId],
+						Query{ConnectionId: msg.ClientUpdate.ConnectionId,
+							Height: msg.ClientUpdate.Height},
+						msg.ClientUpdate.Height, logger, metrics, cmd)
 					if err != nil {
 						logger.Error().Str("msg", "Error: Could not submit client update").Err(err).Msg("")
 					}
@@ -648,7 +695,7 @@ func FlushSendQueue(cfg *types.Config, logger zerolog.Logger, metrics prommetric
 			}
 
 		case <-time.After(WaitInterval):
-			flush(cfg, toSend, logger, metrics)
+			flush(cfg, toSend, logger, metrics, cmd)
 			metrics.SendQueue.WithLabelValues("send-queue").Set(float64(len(sendQueue)))
 			toSend = []Message{}
 		}
@@ -656,7 +703,8 @@ func FlushSendQueue(cfg *types.Config, logger zerolog.Logger, metrics prommetric
 }
 
 // TODO: refactor me!
-func flush(cfg *types.Config, toSend []Message, logger zerolog.Logger, metrics prommetrics.Metrics) {
+func flush(cfg *types.Config, toSend []Message, logger zerolog.Logger,
+	metrics prommetrics.Metrics, cmd *cobra.Command) {
 	logger.Info().Msgf("Flush messages: %d", len(toSend))
 	if len(toSend) > 0 {
 		logger.Info().Msgf("Sending batch of %d messages", len(toSend))
@@ -664,11 +712,11 @@ func flush(cfg *types.Config, toSend []Message, logger zerolog.Logger, metrics p
 		if len(msgs) > 0 {
 			ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)
 			defer cancel()
-			hash, code, err := cfg.DefaultChain.SignAndBroadcastMsg(ctx, cfg.ClientContext, msgs, VERSION)
+			code, err := cfg.DefaultChain.SignAndBroadcastMsgWithKey(ctx, cfg.ClientContext, msgs, VERSION, cmd)
 
 			switch {
 			case err == nil:
-				logger.Info().Msgf("Sent batch of %d (deduplicated) messages [hash: %s]", len(msgs), hash)
+				logger.Info().Msgf("Sent batch of %d", len(msgs))
 			case code == 12:
 				logger.Warn().Msg("Not enough gas")
 			case code == 19:

@@ -4,9 +4,37 @@ The Interchain Queries (ICQ) Relayer watches for events emitted by the ICQ modul
 
 ## Configuration
 
-The ICQ Relayer configuration is controlled by a single YAML file, the default path of which is $HOME/.icq/config.
+The ICQ Relayer configuration is controlled by a single YAML file, the default 
+path of which is `$HOME/.icq/config.toml`.
 
+### Key management
+The ICQ Relayer uses a keyring similar to the [cosmos-sdk keyring](https://docs.cosmos.network/v0.46/run-node/keyring.html).
+
+To see all key management commands, run:
+
+    ./icq-relayer keys -h
+
+#### Add keys to the keyring
+To add a key to the keyring, use:
+    ./icq-relayer keys add my_relayer --keyring-backend test
+
+#### Show all keys
+To list all keys in the keyring, use:
+
+    ./icq-relayer keys list
+
+## Start icq-relayer
 The first run of `icq-relayer` will generate a mainnet compatible config file, if one is not present.
+
+### Init config
+To initialize the configuration, run:
+    
+    ./icq-relayer init
+
+### Start relayer
+To start the relayer, use:
+
+    ./icq-relayer start my_relayer --keyring-backend test
 
 ## Changelog
 

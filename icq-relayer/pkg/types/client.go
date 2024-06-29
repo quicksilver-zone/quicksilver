@@ -1,51 +1,41 @@
 package types
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
-	"os"
-	"strings"
-	"time"
-
-	"bytes"
-	"encoding/json"
 	"io"
 	"net/http"
 	"strconv"
-
-	"cosmossdk.io/math"
+	"strings"
+	"time"
 
 	"github.com/avast/retry-go/v4"
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/tx"
+	"github.com/cosmos/cosmos-sdk/codec"
+	sdktypes "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/bech32"
 	querytypes "github.com/cosmos/cosmos-sdk/types/query"
-	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
+	connectiontypes "github.com/cosmos/ibc-go/v6/modules/core/03-connection/types"
 	"github.com/dgraph-io/ristretto"
 	"github.com/quicksilver-zone/quicksilver/icq-relayer/prommetrics"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/cobra"
 	abcitypes "github.com/tendermint/tendermint/abci/types"
 	cmtjson "github.com/tendermint/tendermint/libs/json"
-	coretypes "github.com/tendermint/tendermint/rpc/core/types"
-	jsonrpcclient "github.com/tendermint/tendermint/rpc/jsonrpc/client"
-	jsonrpctypes "github.com/tendermint/tendermint/rpc/jsonrpc/types"
-	tmtypes "github.com/tendermint/tendermint/types"
-
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/tx"
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/crypto/hd"
-	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	sdkcryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	sdktypes "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/bech32"
-	xauthsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
-	connectiontypes "github.com/cosmos/ibc-go/v6/modules/core/03-connection/types"
-	home "github.com/mitchellh/go-homedir"
 	prov "github.com/tendermint/tendermint/light/provider"
 	lighthttp "github.com/tendermint/tendermint/light/provider/http"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
+	coretypes "github.com/tendermint/tendermint/rpc/core/types"
+	jsonrpcclient "github.com/tendermint/tendermint/rpc/jsonrpc/client"
+	jsonrpctypes "github.com/tendermint/tendermint/rpc/jsonrpc/types"
+	tmtypes "github.com/tendermint/tendermint/types"
 )
 
 type ReadOnlyChainConfig struct {
@@ -63,7 +53,6 @@ type ReadOnlyChainConfig struct {
 
 type ChainConfig struct {
 	*ReadOnlyChainConfig
-	MnemonicPath           string
 	Prefix                 string
 	TxSubmitTimeoutSeconds int
 	GasLimit               int
@@ -164,7 +153,7 @@ func (r *ReadOnlyChainConfig) GetClientStateHeights(ctx context.Context, clientI
 	res, err := r.Client.ABCIQuery(ctx, "/ibc.core.client.v1.Query/ConsensusStateHeights", bz)
 	if err != nil {
 		logger.Error().Err(err).Msg("Could not get consensus state heights from client")
-    	return nil, err
+		return nil, err
 	}
 	resp := clienttypes.QueryConsensusStateHeightsResponse{}
 	err = r.Codec.Unmarshal(res.Response.Value, &resp)
@@ -187,7 +176,7 @@ func (r *ReadOnlyChainConfig) GetClientId(ctx context.Context, connectionId stri
 		res, err := r.Client.ABCIQuery(ctx, "/ibc.core.connection.v1.Query/Connection", bz)
 		if err != nil {
 			logger.Error().Err(err).Msg("Could not get connection from chain")
-    		return "", err
+			return "", err
 		}
 		connectionResponse := connectiontypes.QueryConnectionResponse{}
 		err = r.Codec.Unmarshal(res.Response.Value, &connectionResponse)
@@ -289,7 +278,8 @@ type QueryClient interface {
 
 type TxClient interface {
 	QueryClient
-	SignAndBroadcastMsg(ctx context.Context, cliContext *client.Context, exec []sdktypes.Msg, memo string) (string, uint32, error)
+	SignAndBroadcastMsgWithKey(ctx context.Context, cliContext *client.Context,
+		exec []sdktypes.Msg, memo string, cmd *cobra.Command) (uint32, error)
 }
 
 var _ TxClient = &ChainConfig{}
@@ -300,58 +290,6 @@ func SetSDKConfigPrefix(prefix string) {
 	configuration.SetBech32PrefixForAccount(prefix, prefix+sdktypes.PrefixPublic)
 	configuration.SetBech32PrefixForValidator(prefix, prefix+sdktypes.PrefixValidator+sdktypes.PrefixOperator)
 	configuration.SetBech32PrefixForConsensusNode(prefix+sdktypes.PrefixValidator+sdktypes.PrefixConsensus, prefix+sdktypes.PrefixValidator+sdktypes.PrefixConsensus+sdktypes.PrefixPublic)
-}
-
-func (c *ChainConfig) GetAddress() string {
-	addrString, err := Bech32ifyAddressBytes(c.Prefix, c.GetAddressBytes())
-	if err != nil {
-		panic(err)
-	}
-	return addrString
-}
-
-func (c *ChainConfig) GetAddressBytes() sdktypes.AccAddress {
-	if c.AddressBytes == nil {
-		_, addrBytes := c.GetPrivKeyAddress()
-		c.AddressBytes = addrBytes
-	}
-	return c.AddressBytes
-}
-
-func (c *ChainConfig) GetPrivKeyAddress() (sdkcryptotypes.PrivKey, sdktypes.AccAddress) {
-	kb, err := keyring.New("icq-relayer", keyring.BackendMemory, "", nil, c.Codec)
-	if err != nil {
-		log.Fatal().Err(err).Msg("Failed to create keyring")
-	}
-
-	path, err := home.Expand(c.MnemonicPath)
-	if err != nil {
-		log.Fatal().Err(err).Msg("Failed to expand mnemonic path")
-	}
-	mnemonicBytes, err := os.ReadFile(path)
-	if err != nil {
-		log.Fatal().Err(err).Msg("Failed to read mnemonic file")
-	}
-	mnemonic := strings.Trim(string(mnemonicBytes), "\n")
-
-	keyringAlgos, _ := kb.SupportedAlgorithms()
-
-	algo, err := keyring.NewSigningAlgoFromString(string(hd.Secp256k1Type), keyringAlgos)
-	if err != nil {
-		log.Fatal().Err(err).Msg("Failed to create signing algorithm")
-	}
-
-	hdPath := hd.CreateHDPath(118, 0, 0)
-
-	derivedPriv, err := algo.Derive()(mnemonic, "", hdPath.String())
-	if err != nil {
-		log.Fatal().Err(err).Msg("Failed to derive private key")
-	}
-
-	privKey := algo.Generate()(derivedPriv)
-
-	addrBytes := sdktypes.AccAddress(privKey.PubKey().Address())
-	return privKey, addrBytes
 }
 
 func Bech32ifyAddressBytes(prefix string, address sdktypes.AccAddress) (string, error) {
@@ -412,91 +350,11 @@ func (r *ReadOnlyChainConfig) GetCurrentHeight(ctx context.Context, cache *ristr
 	return currentheight.(int64), nil
 }
 
-func (c *ChainConfig) prepareBytes(txBuilder client.TxBuilder, cliContext client.Context, signerData xauthsigning.SignerData, gas uint64, codec *codec.ProtoCodec, memo string) ([]byte, error) {
-	txBuilder.SetGasLimit(gas)
-	fee, err := sdktypes.ParseDecCoin(c.GasPrice)
-	if err != nil {
-		return []byte{}, err
-	}
-	fee.Amount = fee.Amount.MulInt(math.NewIntFromUint64(gas))
-	feeCoin := sdktypes.NewCoin(fee.Denom, fee.Amount.TruncateInt())
-	txBuilder.SetFeeAmount(sdktypes.NewCoins(feeCoin))
-	txBuilder.SetMemo(memo)
-
-	privKey, _ := c.GetPrivKeyAddress()
-	sigv2, err := tx.SignWithPrivKey(
-		cliContext.TxConfig.SignModeHandler().DefaultMode(), signerData, txBuilder, privKey, cliContext.TxConfig, signerData.Sequence)
-	if err != nil {
-		return []byte{}, err
-	}
-
-	err = txBuilder.SetSignatures(sigv2)
-	if err != nil {
-		return []byte{}, err
-	}
-	return cliContext.TxConfig.TxEncoder()(txBuilder.GetTx())
-}
-
-func (c *ChainConfig) SignAndBroadcastMsg(ctx context.Context, cliContext *client.Context, exec []sdktypes.Msg, version string) (string, uint32, error) {
-	// Build the factory CLI
-	// Create a new TxBuilder.
-	txBuilder := cliContext.TxConfig.NewTxBuilder()
-
-	err := txBuilder.SetMsgs(exec...)
-	if err != nil {
-		return "", 65536, err
-	}
-
-	SetSDKConfigPrefix(c.Prefix)
-	ac, seq, err := cliContext.AccountRetriever.GetAccountNumberSequence(*cliContext, c.GetAddressBytes())
-	if err != nil {
-		return "", 65536, err
-	}
-
-	signerData := xauthsigning.SignerData{
-		ChainID:       c.ChainID,
-		AccountNumber: ac,
-		Sequence:      seq,
-	}
-
-	txBytes, err := c.prepareBytes(txBuilder, *cliContext, signerData, 1000000, c.Codec, version)
-	if err != nil {
-		return "", 65536, err
-	}
-
-	ctx, cancel := context.WithTimeout(ctx, time.Duration(c.TxSubmitTimeoutSeconds)*time.Second)
-	defer cancel()
-
-	serviceClient := txtypes.NewServiceClient(cliContext)
-
-	simRes, err := serviceClient.Simulate(ctx, &txtypes.SimulateRequest{
-		TxBytes: txBytes,
-	})
-	if err != nil {
-		return "", 65536, err
-	}
-
-	gas := uint64(float64(simRes.GasInfo.GasUsed) * c.GasMultiplier)
-
-	txBytes, err = c.prepareBytes(txBuilder, *cliContext, signerData, gas, c.Codec, version)
-	if err != nil {
-		return "", 65536, err
-	}
-
-	res, err := serviceClient.BroadcastTx(ctx, &txtypes.BroadcastTxRequest{
-		TxBytes: txBytes,
-		Mode:    txtypes.BroadcastMode_BROADCAST_MODE_BLOCK,
-	})
-
-	switch {
-	case err != nil:
-		//log.Err(err).Msg("Transaction error")
-		return "", 65536, err
-	case res.TxResponse.Code > 0:
-		//log.Error().Msgf("Transaction failed: %v", res.TxResponse)
-		return "err", res.TxResponse.Code, fmt.Errorf("transaction failed: %v", res.TxResponse)
-	default:
-		//log.Info().Msgf("Transaction broadcast successfully: %s", res.TxResponse.TxHash)
-		return res.TxResponse.TxHash, res.TxResponse.Code, nil
-	}
+func (c *ChainConfig) SignAndBroadcastMsgWithKey(ctx context.Context,
+	cliContext *client.Context,
+	exec []sdktypes.Msg,
+	version string, cmd *cobra.Command) (uint32, error) {
+	clientCtx, _ := client.GetClientTxContext(cmd)
+	err := tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), exec...)
+	return 0, err
 }
