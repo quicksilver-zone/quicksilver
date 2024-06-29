@@ -22,11 +22,11 @@ The evaluation of a change is the sole discretion of the Quicksilver maintainers
 ## Getting started
 
 Please use these steps as a guide to get you started:
-- [ ] Read through [CONTRIBUTING.md](./blob/main/CONTRIBUTING.md)
-- [ ] Read and understand our [CODE OF CONDUCT](./blob/main/CODE_OF_CONDUCT.md)
+- [ ] Read through [CONTRIBUTING.md](./CONTRIBUTING.md)
+- [ ] Read and understand our [CODE OF CONDUCT](./CODE_OF_CONDUCT.md)
 - [ ] Accept our Contributor License Agreement and agree to bring in only original changes that you have the correct rights to, please do not bring in contributions that contravene our license nor intellectual property not owned by you
-- [ ] Read through [ROADMAP.md](./blob/main/ROADMAP.md)
-- [ ] Read through the [Google Go style guide](https://google.github.io/styleguide/go/guide/)
+- [ ] Read through [ROADMAP.md](./ROADMAP.md)
+- [ ] Read through the [Google Go style guide](https://google.github.io/styleguide/go/guide)
 - [ ] Read through the open issues
 - [ ] Watch out for issues & pull requests that may be labelled "Eligible for Bounty"
 - [ ] Read through open pull requests
