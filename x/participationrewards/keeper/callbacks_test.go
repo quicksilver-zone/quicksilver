@@ -73,14 +73,8 @@ func (suite *KeeperTestSuite) TestOsmosisPoolUpdateCallback() {
 
 	suite.NoError(err)
 
-	pd, found := prk.GetProtocolData(ctx, types.ProtocolDataTypeOsmosisPool, "944")
-	suite.True(found)
-
-	data, err := types.UnmarshalProtocolData(types.ProtocolDataTypeOsmosisPool, pd.GetData())
+	_, pooldata, err := keeper.GetAndUnmarshalProtocolData[*types.OsmosisPoolProtocolData](ctx, prk, "944", types.ProtocolDataTypeOsmosisPool)
 	suite.NoError(err)
-
-	pooldata, ok := data.(*types.OsmosisPoolProtocolData)
-	suite.True(ok)
 
 	pool, err := pooldata.GetPool()
 	suite.NoError(err)
@@ -137,14 +131,8 @@ func (suite *KeeperTestSuite) TestOsmosisClPoolUpdateCallback() {
 
 	suite.NoError(err)
 
-	pd, found := prk.GetProtocolData(ctx, types.ProtocolDataTypeOsmosisCLPool, "1089")
-	suite.True(found)
-
-	data, err := types.UnmarshalProtocolData(types.ProtocolDataTypeOsmosisCLPool, pd.GetData())
+	_, pooldata, err := keeper.GetAndUnmarshalProtocolData[*types.OsmosisClPoolProtocolData](ctx, prk, "1089", types.ProtocolDataTypeOsmosisCLPool)
 	suite.NoError(err)
-
-	pooldata, ok := data.(*types.OsmosisClPoolProtocolData)
-	suite.True(ok)
 
 	pool, err := pooldata.GetPool()
 	suite.NoError(err)
@@ -198,12 +186,8 @@ func (suite *KeeperTestSuite) executeOsmosisPoolUpdateCallback() {
 		},
 	}
 
-	pd, found := prk.GetProtocolData(ctx, types.ProtocolDataTypeOsmosisPool, "1")
-	suite.True(found)
-
-	ioppd, err := types.UnmarshalProtocolData(types.ProtocolDataTypeOsmosisPool, pd.Data)
+	_, oppd, err := keeper.GetAndUnmarshalProtocolData[*types.OsmosisPoolProtocolData](ctx, prk, "1", types.ProtocolDataTypeOsmosisPool)
 	suite.NoError(err)
-	oppd := ioppd.(*types.OsmosisPoolProtocolData)
 	suite.Equal(want, oppd)
 }
 
@@ -321,12 +305,8 @@ func (suite *KeeperTestSuite) executeUmeeReservesUpdateCallback() {
 		},
 	}
 
-	pd, found := prk.GetProtocolData(ctx, types.ProtocolDataTypeUmeeReserves, umeeBaseDenom)
-	suite.True(found)
-
-	value, err := types.UnmarshalProtocolData(types.ProtocolDataTypeUmeeReserves, pd.Data)
+	_, result, err := keeper.GetAndUnmarshalProtocolData[*types.UmeeReservesProtocolData](ctx, prk, umeeBaseDenom, types.ProtocolDataTypeUmeeReserves)
 	suite.NoError(err)
-	result := value.(*types.UmeeReservesProtocolData)
 	suite.Equal(want, result)
 }
 
@@ -365,12 +345,8 @@ func (suite *KeeperTestSuite) executeUmeeLeverageModuleBalanceUpdateCallback() {
 		},
 	}
 
-	pd, found := prk.GetProtocolData(ctx, types.ProtocolDataTypeUmeeLeverageModuleBalance, umeeBaseDenom)
-	suite.True(found)
-
-	value, err := types.UnmarshalProtocolData(types.ProtocolDataTypeUmeeLeverageModuleBalance, pd.Data)
+	_, result, err := keeper.GetAndUnmarshalProtocolData[*types.UmeeLeverageModuleBalanceProtocolData](ctx, prk, umeeBaseDenom, types.ProtocolDataTypeUmeeLeverageModuleBalance)
 	suite.NoError(err)
-	result := value.(*types.UmeeLeverageModuleBalanceProtocolData)
 	suite.Equal(want, result)
 }
 
@@ -407,12 +383,8 @@ func (suite *KeeperTestSuite) executeUmeeUTokenSupplyUpdateCallback() {
 		},
 	}
 
-	pd, found := prk.GetProtocolData(ctx, types.ProtocolDataTypeUmeeUTokenSupply, leveragetypes.UTokenPrefix+umeeBaseDenom)
-	suite.True(found)
-
-	value, err := types.UnmarshalProtocolData(types.ProtocolDataTypeUmeeUTokenSupply, pd.Data)
+	_, result, err := keeper.GetAndUnmarshalProtocolData[*types.UmeeUTokenSupplyProtocolData](ctx, prk, leveragetypes.UTokenPrefix+umeeBaseDenom, types.ProtocolDataTypeUmeeUTokenSupply)
 	suite.NoError(err)
-	result := value.(*types.UmeeUTokenSupplyProtocolData)
 	suite.Equal(want, result)
 }
 
@@ -449,12 +421,8 @@ func (suite *KeeperTestSuite) executeUmeeTotalBorrowsUpdateCallback() {
 		},
 	}
 
-	pd, found := prk.GetProtocolData(ctx, types.ProtocolDataTypeUmeeTotalBorrows, umeeBaseDenom)
-	suite.True(found)
-
-	value, err := types.UnmarshalProtocolData(types.ProtocolDataTypeUmeeTotalBorrows, pd.Data)
+	_, result, err := keeper.GetAndUnmarshalProtocolData[*types.UmeeTotalBorrowsProtocolData](ctx, prk, umeeBaseDenom, types.ProtocolDataTypeUmeeTotalBorrows)
 	suite.NoError(err)
-	result := value.(*types.UmeeTotalBorrowsProtocolData)
 	suite.Equal(want, result)
 }
 
@@ -491,11 +459,7 @@ func (suite *KeeperTestSuite) executeUmeeInterestScalarUpdateCallback() {
 		},
 	}
 
-	pd, found := prk.GetProtocolData(ctx, types.ProtocolDataTypeUmeeInterestScalar, umeeBaseDenom)
-	suite.True(found)
-
-	value, err := types.UnmarshalProtocolData(types.ProtocolDataTypeUmeeInterestScalar, pd.Data)
+	_, result, err := keeper.GetAndUnmarshalProtocolData[*types.UmeeInterestScalarProtocolData](ctx, prk, umeeBaseDenom, types.ProtocolDataTypeUmeeInterestScalar)
 	suite.NoError(err)
-	result := value.(*types.UmeeInterestScalarProtocolData)
 	suite.Equal(want, result)
 }
