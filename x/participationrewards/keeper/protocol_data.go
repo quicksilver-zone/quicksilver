@@ -1,6 +1,9 @@
 package keeper
 
 import (
+	"encoding/json"
+	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -88,4 +91,38 @@ func (k *Keeper) AllKeyedProtocolDatas(ctx sdk.Context) []*types.KeyedProtocolDa
 		return false
 	})
 	return out
+}
+
+// GetAndUnmarshalProtocolData gets protocol data and unmarshals it into the provided type.
+func GetAndUnmarshalProtocolData[V types.ProtocolDataI](ctx sdk.Context, k *Keeper, datatype types.ProtocolDataType, key string) (V, error) {
+	var cpd V
+
+	data, found := k.GetProtocolData(ctx, datatype, key)
+	if !found {
+		return cpd, fmt.Errorf("protocol data not found for %s", key)
+	}
+
+	pd, err := types.UnmarshalProtocolData(datatype, data.Data)
+	if err != nil {
+		return cpd, err
+	}
+	v, ok := pd.(V)
+	if !ok {
+		return cpd, fmt.Errorf("unexpected type %T", pd)
+	}
+
+	return v, nil
+}
+
+// MarshalAndSetProtocolData marshals and sets protocol data given a protocol data type and protocol data.
+// It returns an error if the protocol data cannot be marshalled, and panic if can not set the protocol data.
+func MarshalAndSetProtocolData(ctx sdk.Context, k *Keeper, datatype types.ProtocolDataType, pd types.ProtocolDataI) error {
+	pdString, err := json.Marshal(pd)
+	if err != nil {
+		k.Logger(ctx).Error("Error marshalling protocol data", "error", err)
+		return err
+	}
+	storedProtocolData := types.NewProtocolData(datatype.String(), pdString)
+	k.SetProtocolData(ctx, pd.GenerateKey(), storedProtocolData)
+	return nil
 }
