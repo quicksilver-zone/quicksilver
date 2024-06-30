@@ -896,9 +896,9 @@ func (s *AppTestSuite) TestV010505UpgradeHandler() {
 func (s *AppTestSuite) TestV010601UpgradeHandler() {
 	s.InitV160TestZones()
 	app := s.GetQuicksilverApp(s.chainA)
-
 	ctx := s.chainA.GetContext()
-
+	// upgrade only run on production chain
+	ctx = ctx.WithChainID(upgrades.ProductionChainID)
 	handler := upgrades.V010601UpgradeHandler(app.mm,
 		app.configurator, &app.AppKeepers)
 
