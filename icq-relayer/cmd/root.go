@@ -3,6 +3,7 @@ package cmd
 import (
 	"errors"
 	"os"
+	"path/filepath"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/config"
@@ -21,13 +22,17 @@ import (
 var (
 	homePath       string
 	overridenChain string
-	defaultHome    = os.ExpandEnv("$HOME/.icq")
 	appName        = "icq-relayer"
 )
 
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
+	userHomeDir, err := os.UserHomeDir()
+	if err != nil {
+		panic(err)
+	}
+	defaultHome := filepath.Join(userHomeDir, ".icq")
 	cmdcfg.SetupConfig()
 	cobra.EnableCommandSorting = false
 	encodingConfig := app.MakeEncodingConfig()
