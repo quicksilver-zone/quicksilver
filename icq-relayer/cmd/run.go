@@ -142,12 +142,7 @@ func StartCommand() *cobra.Command {
 		},
 	}
 
-	userHomeDir, err := os.UserHomeDir()
-	if err != nil {
-		panic(err)
-	}
-	defaultHome := filepath.Join(userHomeDir, ".icq")
-	startCommand.Flags().String(FlagHomePath, defaultHome, "homedir")
+	startCommand.Flags().String(FlagHomePath, getDefaultHomeDir(), "homedir")
 	flags.AddTxFlagsToCmd(startCommand)
 	return startCommand
 }

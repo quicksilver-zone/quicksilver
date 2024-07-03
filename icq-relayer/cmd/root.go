@@ -2,9 +2,6 @@ package cmd
 
 import (
 	"errors"
-	"os"
-	"path/filepath"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/config"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -17,6 +14,8 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	tmcfg "github.com/tendermint/tendermint/config"
+	"os"
+	"path/filepath"
 )
 
 var (
@@ -25,14 +24,18 @@ var (
 	appName        = "icq-relayer"
 )
 
-// Execute adds all child commands to the root command and sets flags appropriately.
-// This is called by main.main(). It only needs to happen once to the rootCmd.
-func Execute() {
+func getDefaultHomeDir() string {
 	userHomeDir, err := os.UserHomeDir()
 	if err != nil {
 		panic(err)
 	}
-	defaultHome := filepath.Join(userHomeDir, ".icq")
+	return filepath.Join(userHomeDir, ".icq")
+}
+
+// Execute adds all child commands to the root command and sets flags appropriately.
+// This is called by main.main(). It only needs to happen once to the rootCmd.
+func Execute() {
+	defaultHome := getDefaultHomeDir()
 	cmdcfg.SetupConfig()
 	cobra.EnableCommandSorting = false
 	encodingConfig := app.MakeEncodingConfig()
