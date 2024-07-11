@@ -204,7 +204,7 @@ func V010601UpgradeHandler(
 	appKeepers *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-		if isMainnet(ctx) {
+		if isMainnet(ctx) || isTest(ctx) {
 			appKeepers.UpgradeKeeper.Logger(ctx).Info("migrating capabilities")
 			err := v6migration.MigrateICS27ChannelCapability(
 				ctx,
