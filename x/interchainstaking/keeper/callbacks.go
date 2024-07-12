@@ -258,7 +258,9 @@ func DepositIntervalCallback(k *Keeper, ctx sdk.Context, args []byte, query icqt
 	k.Logger(ctx).Debug("Deposit interval callback", "zone", zone.ChainId)
 
 	if len(args) == 0 {
-		return errors.New("attempted to unmarshal zero length byte slice (4)")
+		// this is a no-op, but we still want to return success to avoid blocking icq submissions. Query will be re-raised if balance does not drop.
+		k.Logger(ctx).Info("response was nil. balance suggests deposit, but corresponding tx not found by icq. check rpc node history.")
+		return nil
 	}
 
 	txs := tx.GetTxsEventResponse{}
