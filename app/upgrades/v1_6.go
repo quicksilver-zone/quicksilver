@@ -204,7 +204,19 @@ func V010601UpgradeHandler(
 	appKeepers *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-		if isMainnet(ctx) {
+		if isMainnet(ctx) || isTest(ctx) {
+			appKeepers.UpgradeKeeper.Logger(ctx).Info("migrating capabilities")
+			err := v6migration.MigrateICS27ChannelCapability(
+				ctx,
+				appKeepers.IBCKeeper.Codec(),
+				appKeepers.GetKey(capabilitytypes.StoreKey),
+				appKeepers.CapabilityKeeper,
+				icstypes.ModuleName,
+			)
+			if err != nil {
+				panic(err)
+			}
+
 			updateBlockParams(ctx, appKeepers)
 
 			ctx.Logger().Info("Updating agoric-3 zone to set is_118 = false")

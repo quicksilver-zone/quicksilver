@@ -94,6 +94,10 @@ func (im TransferMiddleware) OnRecvPacket(
 	}
 
 	ack := im.app.OnRecvPacket(ctx, packet, relayer)
+	if ack == nil {
+		// transfer middleware can return nil
+		return nil
+	}
 	if ack.Success() {
 		_, found := im.keeper.GetZoneForWithdrawalAccount(ctx, data.Sender)
 		if found {
