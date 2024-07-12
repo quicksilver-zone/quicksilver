@@ -689,7 +689,8 @@ func (k *Keeper) HandleBeginRedelegate(ctx sdk.Context, msg sdk.Msg, completion 
 	srcDelegation, found := k.GetDelegation(ctx, zone.ChainId, redelegateMsg.DelegatorAddress, redelegateMsg.ValidatorSrcAddress)
 	if !found {
 		k.Logger(ctx).Error("unable to find delegation record", "chain", zone.ChainId, "source", redelegateMsg.ValidatorSrcAddress, "dst", redelegateMsg.ValidatorDstAddress, "epoch_number", epochNumber)
-		return fmt.Errorf("unable to find delegation record for chain %s, src: %s, dst: %s, at epoch %d", zone.ChainId, redelegateMsg.ValidatorSrcAddress, redelegateMsg.ValidatorDstAddress, epochNumber)
+		// due to a race condition between IBC and ICQ, this might be nil.
+		return nil
 	}
 	srcDelegation.Amount, err = srcDelegation.Amount.SafeSub(redelegateMsg.Amount)
 	if err != nil {
