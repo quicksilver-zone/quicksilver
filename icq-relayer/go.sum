@@ -200,7 +200,6 @@ github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4/go.mod h1:hN
 github.com/99designs/keyring v1.2.2 h1:pZd3neh/EmUzWONb35LxQfvuY7kiSXAq3HQd97+XBn0=
 github.com/99designs/keyring v1.2.2/go.mod h1:wes/FrByc8j7lFOAGLGSNEg8f/PaI3cgTBqhFkHUrPk=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
-github.com/BurntSushi/toml v1.4.0 h1:kuoIxZQy2WRRk1pttg9asf+WVv6tWQuBNVmK8+nqPr0=
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
 github.com/ChainSafe/go-schnorrkel v1.1.0 h1:rZ6EU+CZFCjB4sHUE1jIu8VDoB/wRKZxoe1tkcO71Wk=
 github.com/ChainSafe/go-schnorrkel v1.1.0/go.mod h1:ABkENxiP+cvjFiByMIZ9LYbRoNNLeBLiakC1XeTFxfE=

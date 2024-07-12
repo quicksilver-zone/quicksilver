@@ -3,7 +3,6 @@ module github.com/quicksilver-zone/quicksilver/icq-relayer
 go 1.22.2
 
 require (
-	github.com/BurntSushi/toml v1.4.0
 	github.com/avast/retry-go/v4 v4.6.0
 	github.com/cosmos/cosmos-sdk v0.46.16
 	github.com/cosmos/ibc-go/v6 v6.3.1
