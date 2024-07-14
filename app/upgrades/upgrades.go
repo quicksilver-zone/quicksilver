@@ -19,6 +19,8 @@ func Upgrades() []Upgrade {
 		{UpgradeName: V010600rc0UpgradeName, CreateUpgradeHandler: V010600rc0UpgradeHandler},
 		{UpgradeName: V010601rc0UpgradeName, CreateUpgradeHandler: V010601rc0UpgradeHandler},
 		{UpgradeName: V010601rc2UpgradeName, CreateUpgradeHandler: V010601rc0UpgradeHandler}, // this name mismatch is intentional, as we want to rerun the upgrade after resolving some issues.
+		{UpgradeName: V010601rc3UpgradeName, CreateUpgradeHandler: NoOpHandler},
+		{UpgradeName: V010601rc4UpgradeName, CreateUpgradeHandler: NoOpHandler},
 
 		// v1.5: this needs to be present to support upgrade on mainnet
 		{UpgradeName: V010500UpgradeName, CreateUpgradeHandler: V010500UpgradeHandler},
@@ -27,6 +29,7 @@ func Upgrades() []Upgrade {
 		{UpgradeName: V010504UpgradeName, CreateUpgradeHandler: V010504UpgradeHandler},
 		{UpgradeName: V010505UpgradeName, CreateUpgradeHandler: V010505UpgradeHandler},
 		{UpgradeName: V010601UpgradeName, CreateUpgradeHandler: V010601UpgradeHandler},
+		{UpgradeName: V010602UpgradeName, CreateUpgradeHandler: NoOpHandler},
 	}
 }
 

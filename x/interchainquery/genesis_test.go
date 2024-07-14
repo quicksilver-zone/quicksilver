@@ -81,6 +81,11 @@ func (s *InterChainQueryTestSuite) TestInitGenesis() {
 	s.Equal("", queryResponse.CallbackId)
 }
 
+func (s *InterChainQueryTestSuite) TestInitGenesisDefault() {
+	app := s.GetSimApp(s.chainA)
+	app.GetModuleManager().Modules[types.ModuleName].InitGenesis(s.chainA.GetContext(), app.AppCodec(), app.GetModuleManager().Modules[types.ModuleName].DefaultGenesis(app.AppCodec()))
+}
+
 func newSimAppPath(chainA, chainB *ibctesting.TestChain) *ibctesting.Path {
 	path := ibctesting.NewPath(chainA, chainB)
 	path.EndpointA.ChannelConfig.PortID = ibctesting.TransferPort
