@@ -138,6 +138,7 @@ const (
 	FieldTypeAccountMap     int = 0x00
 	FieldTypeReturnToSender int = 0x01
 	FieldTypeIntent         int = 0x02
+	FieldTypeAutoClaim      int = 0x03
 )
 
 type MemoField struct {
@@ -170,6 +171,11 @@ func (m MemoFields) Intent(coins sdk.Coins, zone *Zone) (ValidatorIntents, bool)
 	return validatorIntents, true
 }
 
+func (m MemoFields) AutoClaim() bool {
+	_, found := m[FieldTypeAutoClaim]
+	return found
+}
+
 func (m *MemoField) Validate() error {
 	switch m.ID {
 	case FieldTypeAccountMap:
@@ -183,6 +189,8 @@ func (m *MemoField) Validate() error {
 		}
 	case FieldTypeReturnToSender:
 		// do nothing - we ignore data if RTS
+	case FieldTypeAutoClaim:
+		// do nothing - we ignore data if AutoClaim
 	case FieldTypeIntent:
 		if len(m.Data)%21 != 0 { // memo must be one byte (1-200) weight then 20 byte valoperAddress
 			return fmt.Errorf("invalid length for validator intent memo field %d", len(m.Data))

@@ -14,7 +14,7 @@ const (
 	ProductionChainID = "quicksilver-2"
 	RhyeChainID       = "rhye-2"
 	DevnetChainID     = "magic-2"
-	TestChainID       = "testnet1"
+	TestChainID       = "testchain1"
 
 	// testnet upgrades
 	V010405rc6UpgradeName   = "v1.4.5-rc6"
@@ -45,6 +45,7 @@ const (
 	V010504UpgradeName = "v1.5.4"
 	V010505UpgradeName = "v1.5.5"
 	V010601UpgradeName = "v1.6.1"
+	V010602UpgradeName = "v1.6.2"
 )
 
 // Upgrade defines a struct containing necessary fields that a SoftwareUpgradeProposal

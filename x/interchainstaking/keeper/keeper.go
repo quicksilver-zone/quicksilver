@@ -52,6 +52,7 @@ type Keeper struct {
 	ICAControllerKeeper icacontrollerkeeper.Keeper
 	ICQKeeper           interchainquerykeeper.Keeper
 	AccountKeeper       types.AccountKeeper
+	AuthzKeeper         types.AuthzKeeper
 	BankKeeper          types.BankKeeper
 	IBCKeeper           *ibckeeper.Keeper
 	TransferKeeper      ibctransferkeeper.Keeper
@@ -69,6 +70,7 @@ func NewKeeper(
 	cdc codec.Codec,
 	storeKey storetypes.StoreKey,
 	accountKeeper types.AccountKeeper,
+	authzKeeper types.AuthzKeeper,
 	bankKeeper types.BankKeeper,
 	icaControllerKeeper icacontrollerkeeper.Keeper,
 	scopedKeeper *capabilitykeeper.ScopedKeeper,
@@ -108,6 +110,7 @@ func NewKeeper(
 		hooks:               nil,
 		txSubmit:            ProdSubmitTx,
 		paramStore:          ps,
+		AuthzKeeper:         authzKeeper,
 	}
 }
 
@@ -512,6 +515,12 @@ func (k *Keeper) GetCommissionRate(ctx sdk.Context) sdk.Dec {
 	return out
 }
 
+func (k *Keeper) GetAuthzAutoClaimAddress(ctx sdk.Context) string {
+	var out string
+	k.paramStore.Get(ctx, types.KeyAuthzAutoClaimAddress, &out)
+	return out
+}
+
 // MigrateParams fetches params, adds ClaimsEnabled field and re-sets params.
 func (k *Keeper) MigrateParams(ctx sdk.Context) {
 	params := types.Params{}
@@ -519,6 +528,7 @@ func (k *Keeper) MigrateParams(ctx sdk.Context) {
 	params.CommissionRate = k.GetCommissionRate(ctx)
 	params.ValidatorsetInterval = k.GetParam(ctx, types.KeyValidatorSetInterval)
 	params.UnbondingEnabled = false
+	params.AuthzAutoClaimAddress = k.GetAuthzAutoClaimAddress(ctx)
 
 	k.paramStore.SetParamSet(ctx, &params)
 }
@@ -528,7 +538,7 @@ func (k *Keeper) GetParams(clientCtx sdk.Context) (params types.Params) {
 	return params
 }
 
-// SetParams sets the distribution parameters to the param space.
+// SetParams sets the interchainstaking parameters to the param space.
 func (k *Keeper) SetParams(ctx sdk.Context, params types.Params) {
 	k.paramStore.SetParamSet(ctx, &params)
 }
