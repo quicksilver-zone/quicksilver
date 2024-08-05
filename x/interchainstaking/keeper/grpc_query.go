@@ -64,7 +64,7 @@ func (k *Keeper) Zone(c context.Context, req *types.QueryZoneRequest) (*types.Qu
 
 	zone, found := k.GetZone(ctx, req.ChainId)
 	if !found {
-		return nil, fmt.Errorf("no zone found for chain id %s", req.ChainId)
+		return nil, types.ErrNoRegisteredZoneForChainId{Id: req.ChainId}
 	}
 
 	zoneStats, err := k.CollectStatsForZone(ctx, &zone)
