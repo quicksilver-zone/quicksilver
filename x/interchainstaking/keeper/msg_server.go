@@ -100,7 +100,7 @@ func (k msgServer) CancelRedemption(goCtx context.Context, msg *types.MsgCancelR
 			return nil, fmt.Errorf("no queued record with hash \"%s\" found", msg.Hash)
 		}
 		if record.SendErrors == 0 {
-			return nil, fmt.Errorf("cannot cancel unbond with no errors")
+			return nil, fmt.Errorf("cannot cancel unbond \"%s\" with no errors", msg.Hash)
 		}
 	}
 
@@ -146,14 +146,14 @@ func (k msgServer) RequeueRedemption(goCtx context.Context, msg *types.MsgRequeu
 		return nil, fmt.Errorf("no unbonding record with hash \"%s\" found", msg.Hash)
 	}
 	if record.SendErrors == 0 {
-		return nil, fmt.Errorf("cannot requeue unbond with no errors")
+		return nil, fmt.Errorf("cannot requeue unbond \"%s\" with no errors", msg.Hash)
 	}
 
 	if record.Delegator != msg.FromAddress && k.Keeper.GetGovAuthority(ctx) != msg.FromAddress {
 		return nil, fmt.Errorf("incorrect user for record with hash \"%s\"", msg.Hash)
 	}
 
-	// all good. delete!
+	// all good. update!
 	k.UpdateWithdrawalRecordStatus(ctx, &record, types.WithdrawStatusQueued)
 
 	ctx.EventManager().EmitEvents(sdk.Events{
