@@ -19,7 +19,8 @@ var (
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgSignalIntent{}, "quicksilver/MsgSignalIntent", nil)
 	cdc.RegisterConcrete(&MsgRequestRedemption{}, "quicksilver/MsgRequestRedemption", nil)
-	cdc.RegisterConcrete(&MsgCancelQueuedRedemption{}, "quicksilver/MsgCancelQueuedRedemption", nil)
+	cdc.RegisterConcrete(&MsgCancelRedemption{}, "quicksilver/MsgCancelRedemption", nil)
+	cdc.RegisterConcrete(&MsgRequeueRedemption{}, "quicksilver/MsgRequeueRedemption", nil)
 	cdc.RegisterConcrete(&RegisterZoneProposal{}, "quicksilver/RegisterZoneProposal", nil)
 	cdc.RegisterConcrete(&UpdateZoneProposal{}, "quicksilver/UpdateZoneProposal", nil)
 	lsmstakingtypes.RegisterLegacyAminoCodec(cdc)
@@ -31,7 +32,8 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		(*sdk.Msg)(nil),
 		&MsgSignalIntent{},
 		&MsgRequestRedemption{},
-		&MsgCancelQueuedRedemption{},
+		&MsgCancelRedemption{},
+		&MsgRequeueRedemption{},
 		&MsgGovCloseChannel{},
 		&MsgGovReopenChannel{},
 		&MsgGovSetLsmCaps{},

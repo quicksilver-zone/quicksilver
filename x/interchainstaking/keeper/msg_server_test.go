@@ -805,13 +805,13 @@ func (suite *KeeperTestSuite) TestMsgCancelQueuedRedemeption() {
 	hash := randomutils.GenerateRandomHashAsHex(64)
 	tests := []struct {
 		name      string
-		malleate  func(s *KeeperTestSuite) *icstypes.MsgCancelQueuedRedemption
+		malleate  func(s *KeeperTestSuite) *icstypes.MsgCancelRedemption
 		expectErr string
 	}{
 		{
 			"no zone exists",
-			func(s *KeeperTestSuite) *icstypes.MsgCancelQueuedRedemption {
-				return &icstypes.MsgCancelQueuedRedemption{
+			func(s *KeeperTestSuite) *icstypes.MsgCancelRedemption {
+				return &icstypes.MsgCancelRedemption{
 					ChainId:     "bob",
 					Hash:        hash,
 					FromAddress: addressutils.GenerateAddressForTestWithPrefix("quick"),
@@ -821,8 +821,8 @@ func (suite *KeeperTestSuite) TestMsgCancelQueuedRedemeption() {
 		},
 		{
 			"no hash exists",
-			func(s *KeeperTestSuite) *icstypes.MsgCancelQueuedRedemption {
-				return &icstypes.MsgCancelQueuedRedemption{
+			func(s *KeeperTestSuite) *icstypes.MsgCancelRedemption {
+				return &icstypes.MsgCancelRedemption{
 					ChainId:     s.chainB.ChainID,
 					Hash:        hash,
 					FromAddress: addressutils.GenerateAddressForTestWithPrefix("quick"),
@@ -832,7 +832,7 @@ func (suite *KeeperTestSuite) TestMsgCancelQueuedRedemeption() {
 		},
 		{
 			"hash exists but not in correct status",
-			func(s *KeeperTestSuite) *icstypes.MsgCancelQueuedRedemption {
+			func(s *KeeperTestSuite) *icstypes.MsgCancelRedemption {
 				ctx := s.chainA.GetContext()
 				k := s.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
 				address := addressutils.GenerateAddressForTestWithPrefix("quick")
@@ -845,7 +845,7 @@ func (suite *KeeperTestSuite) TestMsgCancelQueuedRedemeption() {
 					Txhash:         hash,
 				})
 
-				return &icstypes.MsgCancelQueuedRedemption{
+				return &icstypes.MsgCancelRedemption{
 					ChainId:     s.chainB.ChainID,
 					Hash:        hash,
 					FromAddress: address,
@@ -855,7 +855,7 @@ func (suite *KeeperTestSuite) TestMsgCancelQueuedRedemeption() {
 		},
 		{
 			"hash exists in correct status but different user",
-			func(s *KeeperTestSuite) *icstypes.MsgCancelQueuedRedemption {
+			func(s *KeeperTestSuite) *icstypes.MsgCancelRedemption {
 				ctx := s.chainA.GetContext()
 				k := s.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
 				// generate two addresses, one for the withdrawal record we are looking up; one for the tx.
@@ -870,7 +870,7 @@ func (suite *KeeperTestSuite) TestMsgCancelQueuedRedemeption() {
 					Txhash:         hash,
 				})
 
-				return &icstypes.MsgCancelQueuedRedemption{
+				return &icstypes.MsgCancelRedemption{
 					ChainId:     s.chainB.ChainID,
 					Hash:        hash,
 					FromAddress: address,
@@ -880,7 +880,7 @@ func (suite *KeeperTestSuite) TestMsgCancelQueuedRedemeption() {
 		},
 		{
 			"valid",
-			func(s *KeeperTestSuite) *icstypes.MsgCancelQueuedRedemption {
+			func(s *KeeperTestSuite) *icstypes.MsgCancelRedemption {
 				ctx := s.chainA.GetContext()
 				k := s.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
 				address := addressutils.GenerateAddressForTestWithPrefix("quick")
@@ -896,7 +896,7 @@ func (suite *KeeperTestSuite) TestMsgCancelQueuedRedemeption() {
 				suite.NoError(k.BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(sdk.NewCoin("uqatom", math.NewInt(500)))))
 				suite.NoError(k.BankKeeper.SendCoinsFromModuleToModule(ctx, icstypes.ModuleName, icstypes.EscrowModuleAccount, sdk.NewCoins(sdk.NewCoin("uqatom", math.NewInt(500)))))
 
-				return &icstypes.MsgCancelQueuedRedemption{
+				return &icstypes.MsgCancelRedemption{
 					ChainId:     s.chainB.ChainID,
 					Hash:        hash,
 					FromAddress: address,
