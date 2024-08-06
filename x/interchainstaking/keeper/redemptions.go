@@ -12,6 +12,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/quicksilver-zone/quicksilver/utils"
@@ -461,4 +462,41 @@ WITHDRAWAL:
 	}
 
 	return coinsOutPerValidator, txHashesPerValidator, distributionsPerWithdrawal, nil
+}
+
+func (k *Keeper) PayoutUnbondings(ctx sdk.Context, epoch int64, chainId string) error {
+	zone, ok := k.GetZone(ctx, chainId)
+	if !ok {
+		return fmt.Errorf("zone not found")
+	}
+	k.IterateZoneStatusWithdrawalRecords(ctx, chainId, types.WithdrawStatusUnbond, func(idx int64, withdrawal types.WithdrawalRecord) bool {
+		if ctx.BlockTime().After(withdrawal.CompletionTime) && withdrawal.Acknowledged { // completion date has passed.
+			k.Logger(ctx).Info("found completed unbonding")
+			sendMsg := &banktypes.MsgSend{FromAddress: zone.DelegationAddress.GetAddress(), ToAddress: withdrawal.Recipient, Amount: sdk.Coins{withdrawal.Amount[0]}}
+			err := k.SubmitTx(ctx, []sdk.Msg{sendMsg}, zone.DelegationAddress, types.TxUnbondSendMemo(withdrawal.Txhash), zone.MessagesPerTx)
+
+			if err != nil {
+				k.Logger(ctx).Error("error submitting transaction - requeue withdrawal", "error", err)
+
+				// do not update status and increment completion time
+				withdrawal.DelayCompletion(ctx, types.DefaultWithdrawalRequeueDelay)
+				err = k.SetWithdrawalRecord(ctx, withdrawal)
+				if err != nil {
+					k.Logger(ctx).Error("error updating withdrawal record", "error", err)
+				}
+
+			} else {
+				k.Logger(ctx).Info("sending funds", "for", withdrawal.Delegator, "delegate_account", zone.DelegationAddress.GetAddress(), "to", withdrawal.Recipient, "amount", withdrawal.Amount)
+				k.UpdateWithdrawalRecordStatus(ctx, &withdrawal, types.WithdrawStatusSend)
+			}
+		}
+		return false
+	})
+
+	return nil
+}
+
+func (k *Keeper) HandleMaturedUnbondings(ctx sdk.Context, zone *types.Zone) error {
+
+	return nil
 }

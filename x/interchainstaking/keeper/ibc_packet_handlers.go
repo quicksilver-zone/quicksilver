@@ -525,33 +525,6 @@ func (k *Keeper) GCCompletedRedelegations(ctx sdk.Context) error {
 	return err
 }
 
-func (k *Keeper) HandleMaturedUnbondings(ctx sdk.Context, zone *types.Zone) error {
-	k.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, types.WithdrawStatusUnbond, func(idx int64, withdrawal types.WithdrawalRecord) bool {
-		if ctx.BlockTime().After(withdrawal.CompletionTime) && withdrawal.Acknowledged { // completion date has passed.
-			k.Logger(ctx).Info("found completed unbonding")
-			sendMsg := &banktypes.MsgSend{FromAddress: zone.DelegationAddress.GetAddress(), ToAddress: withdrawal.Recipient, Amount: sdk.Coins{withdrawal.Amount[0]}}
-			err := k.SubmitTx(ctx, []sdk.Msg{sendMsg}, zone.DelegationAddress, types.TxUnbondSendMemo(withdrawal.Txhash), zone.MessagesPerTx)
-
-			if err != nil {
-				k.Logger(ctx).Error("error submitting transaction - requeue withdrawal", "error", err)
-
-				// do not update status and increment completion time
-				withdrawal.DelayCompletion(ctx, types.DefaultWithdrawalRequeueDelay)
-				err = k.SetWithdrawalRecord(ctx, withdrawal)
-				if err != nil {
-					k.Logger(ctx).Error("error updating withdrawal record", "error", err)
-				}
-
-			} else {
-				k.Logger(ctx).Info("sending funds", "for", withdrawal.Delegator, "delegate_account", zone.DelegationAddress.GetAddress(), "to", withdrawal.Recipient, "amount", withdrawal.Amount)
-				k.UpdateWithdrawalRecordStatus(ctx, &withdrawal, types.WithdrawStatusSend)
-			}
-		}
-		return false
-	})
-	return nil
-}
-
 func (k *Keeper) GetInflightUnbondingAmount(ctx sdk.Context, zone *types.Zone) sdk.Coin {
 	outCoin := sdk.NewCoin(zone.BaseDenom, sdk.ZeroInt())
 	k.IterateZoneWithdrawalRecords(ctx, zone.ChainId, func(idx int64, withdrawal types.WithdrawalRecord) bool {

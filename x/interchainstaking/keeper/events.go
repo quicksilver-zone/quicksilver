@@ -110,8 +110,7 @@ func ExecuteQueuedUnbondings(k *Keeper, ctx sdk.Context, args []byte) error {
 	if err != nil {
 		return err
 	}
-	k.HandleQueuedUnbondings(ctx, params.Zone, int64(params.Epoch), params.Rate)
-	return nil
+	return k.HandleQueuedUnbondings(ctx, params.Zone, int64(params.Epoch), params.Rate)
 }
 
 func DistributeUnbondings(k *Keeper, ctx sdk.Context, args []byte) error {
@@ -120,6 +119,5 @@ func DistributeUnbondings(k *Keeper, ctx sdk.Context, args []byte) error {
 	if err != nil {
 		return err
 	}
-	k.PayoutUnbondings(ctx, params.Epoch, params.Zone)
-	return nil
+	return k.PayoutUnbondings(ctx, int64(params.Epoch), params.Zone)
 }
