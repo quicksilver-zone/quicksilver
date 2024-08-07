@@ -11,9 +11,6 @@ on:
       - main
     paths-ignore:
       - 'web-ui/**'
-  pull_request:
-    paths:
-      - 'icq-relayer/**'
 
 permissions:
   contents: read

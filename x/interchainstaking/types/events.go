@@ -4,6 +4,7 @@ const (
 	EventTypeRegisterZone            = "register_zone"
 	EventTypeRedemptionRequest       = "request_redemption"
 	EventTypeRedemptionCancellation  = "cancel_redemption"
+	EventTypeRedemptionRequeue       = "requeue_redemption"
 	EventTypeSetIntent               = "set_intent"
 	EventTypeCloseICA                = "close_ica_channel"
 	EventTypeReopenICA               = "reopen_ica_channel"

@@ -126,6 +126,7 @@ message WithdrawalRecord {
   bool requeued = 10;
   bool acknowledged = 11;
   int64 epoch_number = 12;
+  int64 send_errors = 13;
 }
 
 message UnbondingRecord {

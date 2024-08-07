@@ -879,6 +879,8 @@ func (k *Keeper) HandleFailedUnbondSend(ctx sdk.Context, sendMsg *banktypes.MsgS
 
 	// update delayed record with status
 	wdr.DelayCompletion(ctx, types.DefaultWithdrawalRequeueDelay)
+	// incremement send errors
+	wdr.SendErrors++
 	k.UpdateWithdrawalRecordStatus(ctx, &wdr, types.WithdrawStatusUnbond)
 
 	return nil
