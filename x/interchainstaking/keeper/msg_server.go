@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -158,6 +159,7 @@ func (k msgServer) RequeueRedemption(goCtx context.Context, msg *types.MsgRequeu
 	record.SendErrors = 0
 	record.Amount = nil
 	record.Distribution = nil
+	record.CompletionTime = time.Time{}
 	k.UpdateWithdrawalRecordStatus(ctx, &record, types.WithdrawStatusQueued)
 
 	ctx.EventManager().EmitEvents(sdk.Events{
@@ -214,6 +216,7 @@ func (k msgServer) UpdateRedemption(goCtx context.Context, msg *types.MsgUpdateR
 		r.SendErrors = 0
 		r.Amount = nil
 		r.Distribution = nil
+		r.CompletionTime = time.Time{}
 	}
 
 	k.UpdateWithdrawalRecordStatus(ctx, r, msg.NewStatus)
