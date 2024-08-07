@@ -2214,7 +2214,9 @@ paths:
     post:
       summary: >-
         CancelRedemption defines a method for cancelling a redemption request
-        and returning the escrowed assets.
+        and
+
+        returning the escrowed assets.
       operationId: CancelRedemption
       responses:
         '200':
@@ -2613,6 +2615,61 @@ paths:
               from_address:
                 type: string
             description: MsgRequeueRedemption represents a message type to requeue.
+      tags:
+        - Msg
+  /quicksilver/tx/v1/interchainstaking/update_redemption:
+    post:
+      summary: UpdateRedemption defines a method for updating a redemption.
+      operationId: UpdateRedemption
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            description: >-
+              MsgUpdateRedemptionResponse defines the MsgUpdateRedemption
+              response type.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            properties:
+              chain_id:
+                type: string
+              hash:
+                type: string
+              new_status:
+                type: integer
+                format: int32
+              from_address:
+                type: string
+            description: >-
+              MsgUpdateRedemption represents a message type to update a
+              redemption.
       tags:
         - Msg
   /quicksilver/interchainstaking/v1/claimed_percentage/{chain_id}:

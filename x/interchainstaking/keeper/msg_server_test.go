@@ -1141,6 +1141,246 @@ func (suite *KeeperTestSuite) TestMsgRequeueRedemeption() {
 	}
 }
 
+func (suite *KeeperTestSuite) TestMsgUpdateRedemption() {
+	hash := randomutils.GenerateRandomHashAsHex(32)
+	tests := []struct {
+		name      string
+		malleate  func(s *KeeperTestSuite) *icstypes.MsgUpdateRedemption
+		expectErr string
+		assert    func(s *KeeperTestSuite) bool
+	}{
+		{
+			"no zone exists",
+			func(s *KeeperTestSuite) *icstypes.MsgUpdateRedemption {
+				k := s.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
+				ctx := s.chainA.GetContext()
+				return &icstypes.MsgUpdateRedemption{
+					ChainId:     "bob",
+					Hash:        hash,
+					NewStatus:   icstypes.WithdrawStatusUnbond,
+					FromAddress: k.GetGovAuthority(ctx),
+				}
+			},
+			fmt.Sprintf("no unbonding record with hash \"%s\" found", hash),
+			nil,
+		},
+		{
+			"no hash exists",
+			func(s *KeeperTestSuite) *icstypes.MsgUpdateRedemption {
+				k := s.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
+				ctx := s.chainA.GetContext()
+				return &icstypes.MsgUpdateRedemption{
+					ChainId:     s.chainB.ChainID,
+					Hash:        hash,
+					NewStatus:   icstypes.WithdrawStatusUnbond,
+					FromAddress: k.GetGovAuthority(ctx),
+				}
+			},
+			fmt.Sprintf("no unbonding record with hash \"%s\" found", hash),
+			nil,
+		},
+		{
+			"invalid - cannot transition to send",
+			func(s *KeeperTestSuite) *icstypes.MsgUpdateRedemption {
+				ctx := s.chainA.GetContext()
+				k := s.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
+				address := addressutils.GenerateAddressForTestWithPrefix("quick")
+				_ = k.SetWithdrawalRecord(ctx, icstypes.WithdrawalRecord{
+					ChainId:        s.chainB.ChainID,
+					Delegator:      address,
+					BurnAmount:     sdk.NewCoin("uqatom", math.NewInt(500)),
+					Status:         icstypes.WithdrawStatusQueued,
+					CompletionTime: ctx.BlockHeader().Time.Add(time.Hour * 72),
+					Txhash:         hash,
+					SendErrors:     1,
+				})
+
+				return &icstypes.MsgUpdateRedemption{
+					ChainId:     s.chainB.ChainID,
+					Hash:        hash,
+					NewStatus:   icstypes.WithdrawStatusSend,
+					FromAddress: k.GetGovAuthority(ctx),
+				}
+			},
+			"new status WithdrawStatusSend not supported",
+			nil,
+		},
+		{
+			"invalid - cannot transition to tokenize",
+			func(s *KeeperTestSuite) *icstypes.MsgUpdateRedemption {
+				ctx := s.chainA.GetContext()
+				k := s.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
+				address := addressutils.GenerateAddressForTestWithPrefix("quick")
+				_ = k.SetWithdrawalRecord(ctx, icstypes.WithdrawalRecord{
+					ChainId:        s.chainB.ChainID,
+					Delegator:      address,
+					BurnAmount:     sdk.NewCoin("uqatom", math.NewInt(500)),
+					Status:         icstypes.WithdrawStatusQueued,
+					CompletionTime: ctx.BlockHeader().Time.Add(time.Hour * 72),
+					Txhash:         hash,
+					SendErrors:     1,
+				})
+
+				return &icstypes.MsgUpdateRedemption{
+					ChainId:     s.chainB.ChainID,
+					Hash:        hash,
+					NewStatus:   icstypes.WithdrawStatusTokenize,
+					FromAddress: k.GetGovAuthority(ctx),
+				}
+			},
+			"new status WithdrawStatusTokenize not supported",
+			nil,
+		},
+		{
+			"invalid - cannot transition to send",
+			func(s *KeeperTestSuite) *icstypes.MsgUpdateRedemption {
+				ctx := s.chainA.GetContext()
+				k := s.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
+				address := addressutils.GenerateAddressForTestWithPrefix("quick")
+				_ = k.SetWithdrawalRecord(ctx, icstypes.WithdrawalRecord{
+					ChainId:        s.chainB.ChainID,
+					Delegator:      address,
+					BurnAmount:     sdk.NewCoin("uqatom", math.NewInt(500)),
+					Status:         icstypes.WithdrawStatusQueued,
+					CompletionTime: ctx.BlockHeader().Time.Add(time.Hour * 72),
+					Txhash:         hash,
+					SendErrors:     1,
+				})
+
+				return &icstypes.MsgUpdateRedemption{
+					ChainId:     s.chainB.ChainID,
+					Hash:        hash,
+					NewStatus:   0,
+					FromAddress: k.GetGovAuthority(ctx),
+				}
+			},
+			"new status not provided or invalid",
+			nil,
+		},
+		{
+			"valid - target complete",
+			func(s *KeeperTestSuite) *icstypes.MsgUpdateRedemption {
+				ctx := s.chainA.GetContext()
+				k := s.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
+				address := addressutils.GenerateAddressForTestWithPrefix("quick")
+				_ = k.SetWithdrawalRecord(ctx, icstypes.WithdrawalRecord{
+					ChainId:        s.chainB.ChainID,
+					Delegator:      address,
+					BurnAmount:     sdk.NewCoin("uqatom", math.NewInt(500)),
+					Status:         icstypes.WithdrawStatusUnbond,
+					CompletionTime: ctx.BlockHeader().Time.Add(time.Hour * 72),
+					Txhash:         hash,
+					SendErrors:     1,
+				})
+
+				return &icstypes.MsgUpdateRedemption{
+					ChainId:     s.chainB.ChainID,
+					Hash:        hash,
+					NewStatus:   icstypes.WithdrawStatusCompleted,
+					FromAddress: k.GetGovAuthority(ctx),
+				}
+			},
+			"",
+			func(s *KeeperTestSuite) bool {
+				qapp := suite.GetQuicksilverApp(suite.chainA)
+				icsKeeper := qapp.InterchainstakingKeeper
+				_, found := icsKeeper.GetWithdrawalRecord(suite.chainA.GetContext(), s.chainB.ChainID, hash, icstypes.WithdrawStatusCompleted)
+				return found
+			},
+		},
+		{
+			"valid - target unbonding",
+			func(s *KeeperTestSuite) *icstypes.MsgUpdateRedemption {
+				ctx := s.chainA.GetContext()
+				k := s.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
+				address := addressutils.GenerateAddressForTestWithPrefix("quick")
+				_ = k.SetWithdrawalRecord(ctx, icstypes.WithdrawalRecord{
+					ChainId:        s.chainB.ChainID,
+					Delegator:      address,
+					BurnAmount:     sdk.NewCoin("uqatom", math.NewInt(500)),
+					Status:         icstypes.WithdrawStatusSend,
+					CompletionTime: ctx.BlockHeader().Time.Add(time.Hour * 72),
+					Txhash:         hash,
+					SendErrors:     1,
+				})
+
+				return &icstypes.MsgUpdateRedemption{
+					ChainId:     s.chainB.ChainID,
+					Hash:        hash,
+					NewStatus:   icstypes.WithdrawStatusUnbond,
+					FromAddress: k.GetGovAuthority(ctx),
+				}
+			},
+			"",
+			func(s *KeeperTestSuite) bool {
+				qapp := suite.GetQuicksilverApp(suite.chainA)
+				icsKeeper := qapp.InterchainstakingKeeper
+				_, found := icsKeeper.GetWithdrawalRecord(suite.chainA.GetContext(), s.chainB.ChainID, hash, icstypes.WithdrawStatusUnbond)
+				return found
+			},
+		},
+		{
+			"valid - target queued",
+			func(s *KeeperTestSuite) *icstypes.MsgUpdateRedemption {
+				ctx := s.chainA.GetContext()
+				k := s.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
+				address := addressutils.GenerateAddressForTestWithPrefix("quick")
+				_ = k.SetWithdrawalRecord(ctx, icstypes.WithdrawalRecord{
+					ChainId:        s.chainB.ChainID,
+					Delegator:      address,
+					BurnAmount:     sdk.NewCoin("uqatom", math.NewInt(500)),
+					Status:         icstypes.WithdrawStatusUnbond,
+					CompletionTime: ctx.BlockHeader().Time.Add(time.Hour * 72),
+					Txhash:         hash,
+					SendErrors:     1,
+				})
+
+				return &icstypes.MsgUpdateRedemption{
+					ChainId:     s.chainB.ChainID,
+					Hash:        hash,
+					NewStatus:   icstypes.WithdrawStatusQueued,
+					FromAddress: k.GetGovAuthority(ctx),
+				}
+			},
+			"",
+			func(s *KeeperTestSuite) bool {
+				qapp := suite.GetQuicksilverApp(suite.chainA)
+				icsKeeper := qapp.InterchainstakingKeeper
+				record, found := icsKeeper.GetWithdrawalRecord(suite.chainA.GetContext(), s.chainB.ChainID, hash, icstypes.WithdrawStatusQueued)
+
+				return found && record.Distribution == nil && record.Amount == nil && record.SendErrors == 0
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+
+		suite.Run(tt.name, func() {
+			suite.SetupTest()
+			suite.setupTestZones()
+
+			msg := tt.malleate(suite)
+
+			msgSrv := icskeeper.NewMsgServerImpl(suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper)
+			res, err := msgSrv.UpdateRedemption(sdk.WrapSDKContext(suite.chainA.GetContext()), msg)
+			if len(tt.expectErr) != 0 {
+				suite.ErrorContains(err, tt.expectErr)
+				suite.Nil(res)
+			} else {
+				suite.NoError(err)
+				suite.NotNil(res)
+				suite.True(tt.assert(suite))
+			}
+
+			qapp := suite.GetQuicksilverApp(suite.chainA)
+			icsKeeper := qapp.InterchainstakingKeeper
+			_, found := icsKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
+			suite.True(found)
+		})
+	}
+}
+
 func (suite *KeeperTestSuite) TestMsgGovAddValidatorToDenyList() {
 	dummyChainID := "dummychain"
 	testValAddr, _ := sdk.ValAddressFromHex(suite.chainB.Vals.Validators[0].Address.String())
