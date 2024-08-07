@@ -153,8 +153,10 @@ func (k msgServer) RequeueRedemption(goCtx context.Context, msg *types.MsgRequeu
 		return nil, fmt.Errorf("incorrect user for record with hash \"%s\"", msg.Hash)
 	}
 
-	// all good. update sendErrors to zero, and update the state to queued.
+	// all good. update sendErrors to zero, nil the distributions and amount (as this we be recalculated when processed), and update the state to queued.
 	record.SendErrors = 0
+	record.Amount = nil
+	record.Distribution = nil
 	k.UpdateWithdrawalRecordStatus(ctx, &record, types.WithdrawStatusQueued)
 
 	ctx.EventManager().EmitEvents(sdk.Events{
