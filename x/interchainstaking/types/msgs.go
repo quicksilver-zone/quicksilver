@@ -21,6 +21,7 @@ const (
 	TypeMsgRequestRedemption = "requestredemption"
 	TypeMsgCancelRedemption  = "cancelredemption"
 	TypeMsgRequeueRedemption = "requeueredemption"
+	TypeMsgUpdateRedemption  = "updateredemption"
 	TypeMsgSignalIntent      = "signalintent"
 )
 
@@ -192,6 +193,66 @@ func (msg MsgRequeueRedemption) GetSignBytes() []byte {
 
 // GetSigners Implements Msg.
 func (msg MsgRequeueRedemption) GetSigners() []sdk.AccAddress {
+	fromAddress, _ := sdk.AccAddressFromBech32(msg.FromAddress)
+	return []sdk.AccAddress{fromAddress}
+}
+
+// ---------------------------------------------------------------
+
+func NewMsgUpdateRedemption(chainID string, hash string, newStatus int32, fromAddress sdk.Address) *MsgUpdateRedemption {
+	return &MsgUpdateRedemption{ChainId: chainID, Hash: hash, NewStatus: newStatus, FromAddress: fromAddress.String()}
+}
+
+// Route Implements Msg.
+func (MsgUpdateRedemption) Route() string { return RouterKey }
+
+// Type Implements Msg.
+func (MsgUpdateRedemption) Type() string { return TypeMsgUpdateRedemption }
+
+// ValidateBasic Implements Msg.
+func (msg MsgUpdateRedemption) ValidateBasic() error {
+	errs := make(map[string]error)
+
+	// check from address
+	_, err := addressutils.AccAddressFromBech32(msg.FromAddress, "")
+	if err != nil {
+		errs["FromAddress"] = err
+	}
+
+	// check hash
+	if !hexpr.MatchString(msg.Hash) {
+		errs["Hash"] = fmt.Errorf("invalid sha256 hash - expecting 64 character hex string, got %s (%d)", msg.Hash, len(msg.Hash))
+	}
+
+	// validate recipient address
+	if msg.ChainId == "" {
+		errs["ChainId"] = errors.New("chainId not provided")
+	}
+
+	switch msg.NewStatus {
+	//case int32(WithdrawStatusTokenize): // intentionally removed as not currently supported, but included here for completeness.
+	case int32(WithdrawStatusQueued):
+	case int32(WithdrawStatusUnbond):
+	case int32(WithdrawStatusSend):
+	case int32(WithdrawStatusCompleted):
+	default:
+		errs["NewStatus"] = errors.New("new status not provided")
+	}
+
+	if len(errs) > 0 {
+		return multierror.New(errs)
+	}
+
+	return nil
+}
+
+// GetSignBytes Implements Msg.
+func (msg MsgUpdateRedemption) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+// GetSigners Implements Msg.
+func (msg MsgUpdateRedemption) GetSigners() []sdk.AccAddress {
 	fromAddress, _ := sdk.AccAddressFromBech32(msg.FromAddress)
 	return []sdk.AccAddress{fromAddress}
 }
