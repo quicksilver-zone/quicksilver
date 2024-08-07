@@ -2214,7 +2214,9 @@ paths:
     post:
       summary: >-
         CancelRedemption defines a method for cancelling a redemption request
-        and returning the escrowed assets.
+        and
+
+        returning the escrowed assets.
       operationId: CancelRedemption
       responses:
         '200':
