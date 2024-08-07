@@ -45,6 +45,14 @@ service Msg {
     };
   }
 
+  // UpdateRedemption defines a method for updating a redemption.
+  rpc UpdateRedemption(MsgUpdateRedemption) returns (MsgUpdateRedemptionResponse) {
+    option (google.api.http) = {
+      post: "/quicksilver/tx/v1/interchainstaking/update_redemption"
+      body: "*"
+    };
+  }
+
   // SignalIntent defines a method for signalling voting intent for one or more
   // validators.
   rpc GovCloseChannel(MsgGovCloseChannel) returns (MsgGovCloseChannelResponse) {

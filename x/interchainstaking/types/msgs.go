@@ -230,13 +230,15 @@ func (msg MsgUpdateRedemption) ValidateBasic() error {
 	}
 
 	switch msg.NewStatus {
-	//case int32(WithdrawStatusTokenize): // intentionally removed as not currently supported, but included here for completeness.
-	case int32(WithdrawStatusQueued):
-	case int32(WithdrawStatusUnbond):
-	case int32(WithdrawStatusSend):
-	case int32(WithdrawStatusCompleted):
+	case WithdrawStatusTokenize: // intentionally removed as not currently supported, but included here for completeness.
+		errs["NewStatus"] = errors.New("new status WithdrawStatusTokenize not supported")
+	case WithdrawStatusQueued:
+	case WithdrawStatusUnbond:
+	case WithdrawStatusSend: // send is not a valid state for recovery, included here for completeness.
+		errs["NewStatus"] = errors.New("new status WithdrawStatusSend not supported")
+	case WithdrawStatusCompleted:
 	default:
-		errs["NewStatus"] = errors.New("new status not provided")
+		errs["NewStatus"] = errors.New("new status not provided or invalid")
 	}
 
 	if len(errs) > 0 {

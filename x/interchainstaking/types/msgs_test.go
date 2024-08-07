@@ -320,7 +320,7 @@ func TestMsgUpdateRedemption_ValidateBasic(t *testing.T) {
 			fields{
 				ChainID:     "cosmoshub-4",
 				Hash:        randomutils.GenerateRandomHashAsHex(32),
-				NewStatus:   int32(types.WithdrawStatusQueued),
+				NewStatus:   types.WithdrawStatusQueued,
 				FromAddress: "raa",
 			},
 			true,
@@ -330,7 +330,7 @@ func TestMsgUpdateRedemption_ValidateBasic(t *testing.T) {
 			fields{
 				ChainID:     "cosmoshub-4",
 				Hash:        randomutils.GenerateRandomHashAsHex(31),
-				NewStatus:   int32(types.WithdrawStatusQueued),
+				NewStatus:   types.WithdrawStatusQueued,
 				FromAddress: addressutils.GenerateAddressForTestWithPrefix("quick"),
 			},
 			true,
@@ -340,7 +340,7 @@ func TestMsgUpdateRedemption_ValidateBasic(t *testing.T) {
 			fields{
 				ChainID:     "cosmoshub-4",
 				Hash:        randomutils.GenerateRandomHashAsHex(33),
-				NewStatus:   int32(types.WithdrawStatusQueued),
+				NewStatus:   types.WithdrawStatusQueued,
 				FromAddress: addressutils.GenerateAddressForTestWithPrefix("quick"),
 			},
 			true,
@@ -350,7 +350,7 @@ func TestMsgUpdateRedemption_ValidateBasic(t *testing.T) {
 			fields{
 				ChainID:     "cosmoshub-4",
 				Hash:        "zzzzzzz",
-				NewStatus:   int32(types.WithdrawStatusQueued),
+				NewStatus:   types.WithdrawStatusQueued,
 				FromAddress: addressutils.GenerateAddressForTestWithPrefix("quick"),
 			},
 			true,
@@ -360,7 +360,7 @@ func TestMsgUpdateRedemption_ValidateBasic(t *testing.T) {
 			fields{
 				ChainID:     "",
 				Hash:        randomutils.GenerateRandomHashAsHex(32),
-				NewStatus:   int32(types.WithdrawStatusQueued),
+				NewStatus:   types.WithdrawStatusQueued,
 				FromAddress: addressutils.GenerateAddressForTestWithPrefix("quick"),
 			},
 			true,
@@ -376,11 +376,31 @@ func TestMsgUpdateRedemption_ValidateBasic(t *testing.T) {
 			true,
 		},
 		{
+			"invalid status - send",
+			fields{
+				ChainID:     "cosmoshub-4",
+				Hash:        randomutils.GenerateRandomHashAsHex(32),
+				NewStatus:   types.WithdrawStatusSend,
+				FromAddress: addressutils.GenerateAddressForTestWithPrefix("quick"),
+			},
+			true,
+		},
+		{
+			"invalid status - tokenize",
+			fields{
+				ChainID:     "cosmoshub-4",
+				Hash:        randomutils.GenerateRandomHashAsHex(32),
+				NewStatus:   types.WithdrawStatusTokenize,
+				FromAddress: addressutils.GenerateAddressForTestWithPrefix("quick"),
+			},
+			true,
+		},
+		{
 			"valid",
 			fields{
 				ChainID:     "cosmoshub-4",
 				Hash:        randomutils.GenerateRandomHashAsHex(32),
-				NewStatus:   int32(types.WithdrawStatusQueued),
+				NewStatus:   types.WithdrawStatusQueued,
 				FromAddress: addressutils.GenerateAddressForTestWithPrefix("quick"),
 			},
 			false,
@@ -496,7 +516,7 @@ func TestMsgRequeueRedemption_ValidateBasic(t *testing.T) {
 
 func TestMsgUpdateRedemption(t *testing.T) {
 	fromAddr := addressutils.GenerateAccAddressForTest()
-	msg := types.NewMsgUpdateRedemption("cosmoshub-4", randomutils.GenerateRandomHashAsHex(32), int32(types.WithdrawStatusQueued), fromAddr)
+	msg := types.NewMsgUpdateRedemption("cosmoshub-4", randomutils.GenerateRandomHashAsHex(32), types.WithdrawStatusQueued, fromAddr)
 
 	// Check the router key.
 	gotRoute := msg.Route()

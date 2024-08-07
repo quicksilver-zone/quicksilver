@@ -5,6 +5,7 @@ const (
 	EventTypeRedemptionRequest       = "request_redemption"
 	EventTypeRedemptionCancellation  = "cancel_redemption"
 	EventTypeRedemptionRequeue       = "requeue_redemption"
+	EventTypeUpdateRedemption        = "update_redemption"
 	EventTypeSetIntent               = "set_intent"
 	EventTypeCloseICA                = "close_ica_channel"
 	EventTypeReopenICA               = "reopen_ica_channel"
@@ -22,6 +23,8 @@ const (
 	AttributeKeyChannelID        = "channel_id"
 	AttributeKeyPortID           = "port_name"
 	AttributeKeyUser             = "user_address"
+	AttributeKeyHash             = "hash"
+	AttributeKeyNewStatus        = "new_status"
 
 	AttributeLsmValidatorCap     = "lsm_validator_cap"
 	AttributeLsmValidatorBondCap = "lsm_validator_bond_cap"

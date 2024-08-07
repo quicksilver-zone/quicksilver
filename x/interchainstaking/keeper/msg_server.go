@@ -130,6 +130,7 @@ func (k msgServer) CancelRedemption(goCtx context.Context, msg *types.MsgCancelR
 			types.EventTypeRedemptionCancellation,
 			sdk.NewAttribute(types.AttributeKeyReturnedAmount, record.BurnAmount.String()),
 			sdk.NewAttribute(types.AttributeKeyUser, record.Delegator),
+			sdk.NewAttribute(types.AttributeKeyHash, msg.Hash),
 			sdk.NewAttribute(types.AttributeKeyChainID, msg.ChainId),
 		),
 	})
@@ -167,11 +168,71 @@ func (k msgServer) RequeueRedemption(goCtx context.Context, msg *types.MsgRequeu
 		sdk.NewEvent(
 			types.EventTypeRedemptionRequeue,
 			sdk.NewAttribute(types.AttributeKeyUser, record.Delegator),
+			sdk.NewAttribute(types.AttributeKeyHash, msg.Hash),
 			sdk.NewAttribute(types.AttributeKeyChainID, msg.ChainId),
 		),
 	})
 
 	return &types.MsgRequeueRedemptionResponse{}, nil
+}
+
+func (k msgServer) UpdateRedemption(goCtx context.Context, msg *types.MsgUpdateRedemption) (*types.MsgUpdateRedemptionResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	if k.Keeper.GetGovAuthority(ctx) != msg.FromAddress {
+		return nil, fmt.Errorf("MsgUpdateRedemption may only be executed by the gov authority")
+	}
+
+	switch msg.NewStatus {
+	case types.WithdrawStatusTokenize: // intentionally removed as not currently supported, but included here for completeness.
+		return nil, fmt.Errorf("new status WithdrawStatusTokenize not supported")
+	case types.WithdrawStatusQueued:
+	case types.WithdrawStatusUnbond:
+	case types.WithdrawStatusSend: // send is not a valid state for recovery, included here for completeness.
+		return nil, fmt.Errorf("new status WithdrawStatusSend not supported")
+	case types.WithdrawStatusCompleted:
+	default:
+		return nil, fmt.Errorf("new status not provided or invalid")
+	}
+
+	var r *types.WithdrawalRecord
+
+	k.IteratePrefixedWithdrawalRecords(ctx, []byte(msg.ChainId), func(index int64, record types.WithdrawalRecord) (stop bool) {
+		if record.Txhash == msg.Hash {
+			r = &record
+			return true
+		}
+		return false
+	})
+
+	if r == nil {
+		return nil, fmt.Errorf("no unbonding record with hash \"%s\" found", msg.Hash)
+	}
+
+	if msg.NewStatus == types.WithdrawStatusQueued {
+		// update sendErrors to zero, nil the distributions and amount (as this we be recalculated when processed), and update the state to queued.
+		r.SendErrors = 0
+		r.Amount = nil
+		r.Distribution = nil
+	}
+
+	k.UpdateWithdrawalRecordStatus(ctx, r, msg.NewStatus)
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+		),
+		sdk.NewEvent(
+			types.EventTypeRedemptionRequeue,
+			sdk.NewAttribute(types.AttributeKeyUser, r.Delegator),
+			sdk.NewAttribute(types.AttributeKeyHash, msg.Hash),
+			sdk.NewAttribute(types.AttributeKeyNewStatus, string(msg.NewStatus)),
+			sdk.NewAttribute(types.AttributeKeyChainID, msg.ChainId),
+		),
+	})
+
+	return &types.MsgUpdateRedemptionResponse{}, nil
 }
 
 func (k msgServer) SignalIntent(goCtx context.Context, msg *types.MsgSignalIntent) (*types.MsgSignalIntentResponse, error) {
