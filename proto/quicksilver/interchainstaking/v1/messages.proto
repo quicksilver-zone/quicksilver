@@ -28,11 +28,27 @@ service Msg {
     };
   }
 
-  // CancelRedemption defines a method for cancelling a redemption request in
-  // the queued state.
-  rpc CancelRedemption(MsgCancelQueuedRedemption) returns (MsgCancelQueuedRedemptionResponse) {
+  // CancelRedemption defines a method for cancelling a redemption request and
+  // returning the escrowed assets.
+  rpc CancelRedemption(MsgCancelRedemption) returns (MsgCancelRedemptionResponse) {
     option (google.api.http) = {
       post: "/quicksilver/tx/v1/interchainstaking/cancel_redemption"
+      body: "*"
+    };
+  }
+
+  // RequeueRedemption defines a method for requeuing a failed redemption.
+  rpc RequeueRedemption(MsgRequeueRedemption) returns (MsgRequeueRedemptionResponse) {
+    option (google.api.http) = {
+      post: "/quicksilver/tx/v1/interchainstaking/requeue_redemption"
+      body: "*"
+    };
+  }
+
+  // UpdateRedemption defines a method for updating a redemption.
+  rpc UpdateRedemption(MsgUpdateRedemption) returns (MsgUpdateRedemptionResponse) {
+    option (google.api.http) = {
+      post: "/quicksilver/tx/v1/interchainstaking/update_redemption"
       body: "*"
     };
   }
@@ -92,8 +108,8 @@ message MsgRequestRedemption {
 // MsgRequestRedemptionResponse defines the MsgRequestRedemption response type.
 message MsgRequestRedemptionResponse {}
 
-// MsgCancelQueuedRedemption represents a message type to cancel .
-message MsgCancelQueuedRedemption {
+// MsgCancelRedemption represents a message type to cancel .
+message MsgCancelRedemption {
   option (gogoproto.equal) = false;
   option (gogoproto.goproto_getters) = false;
 
@@ -102,13 +118,40 @@ message MsgCancelQueuedRedemption {
   string from_address = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
-// MsgRequestRedemptionResponse defines the MsgRequestRedemption response type.
-message MsgCancelQueuedRedemptionResponse {
+// MsgCancelRedemptionResponse defines the MsgCancelRedemption response type.
+message MsgCancelRedemptionResponse {
   cosmos.base.v1beta1.Coin returned = 1 [
     (gogoproto.nullable) = false,
     (gogoproto.moretags) = "yaml:\"coin\""
   ];
 }
+
+// MsgUpdateRedemption represents a message type to update a redemption.
+message MsgUpdateRedemption {
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string chain_id = 1;
+  string hash = 2;
+  int32 new_status = 3;
+  string from_address = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// MsgUpdateRedemptionResponse defines the MsgUpdateRedemption response type.
+message MsgUpdateRedemptionResponse {}
+
+// MsgRequeueRedemption represents a message type to requeue.
+message MsgRequeueRedemption {
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string chain_id = 1;
+  string hash = 2;
+  string from_address = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// MsgRequeueRedemptionResponse defines the MsgRequeueRedemption response type.
+message MsgRequeueRedemptionResponse {}
 
 // MsgSignalIntent represents a message type for signalling voting intent for
 // one or more validators.

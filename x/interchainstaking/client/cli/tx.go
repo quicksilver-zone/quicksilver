@@ -33,6 +33,8 @@ func GetTxCmd() *cobra.Command {
 	txCmd.AddCommand(GetSignalIntentTxCmd())
 	txCmd.AddCommand(GetRequestRedemptionTxCmd())
 	txCmd.AddCommand(GetReopenChannelTxCmd())
+	txCmd.AddCommand(GetCancelUnbondingTxCmd())
+	txCmd.AddCommand(GetRequeueUnbondingTxCmd())
 
 	return txCmd
 }
@@ -57,6 +59,58 @@ e.g. "0.3cosmosvaloper1xxxxxxxxx,0.3cosmosvaloper1yyyyyyyyy,0.4cosmosvaloper1zzz
 			chainID := args[0]
 
 			msg := types.NewMsgSignalIntent(chainID, args[1], clientCtx.GetFromAddress())
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// GetCancelUnbondingTxCmd returns a CLI command handler for cancelling a queued or failed withdrawal.
+func GetCancelUnbondingTxCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "cancel-redemption [chainID] [hash]",
+		Short:   `Cancel queued or failed withdrawal.`,
+		Long:    `Cancel queued or failed withdrawal and return qAssets to the originating user"`,
+		Example: `cancel-redemption [chainID] [hash]`,
+		Args:    cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			chainID := args[0]
+
+			msg := types.NewMsgCancelRedemption(chainID, args[1], clientCtx.GetFromAddress())
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// GetRequeueUnbondingTxCmd returns a CLI command handler for requeuing a failed withdrawal.
+func GetRequeueUnbondingTxCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "requeue-redemption [chainID] [hash]",
+		Short:   `Requeue a failed withdrawal.`,
+		Long:    `Requeue a failed withdrawal"`,
+		Example: `requeue-redemption [chainID] [hash]`,
+		Args:    cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			chainID := args[0]
+
+			msg := types.NewMsgRequeueRedemption(chainID, args[1], clientCtx.GetFromAddress())
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
