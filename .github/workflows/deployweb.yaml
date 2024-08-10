@@ -17,7 +17,7 @@ jobs:
         run: npm install --global vercel@^33.2.0 # Replace with the current major version
 
       - name: Setup Bun
-        uses: oven-sh/setup-bun@v1
+        uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest # or specify a version
 
