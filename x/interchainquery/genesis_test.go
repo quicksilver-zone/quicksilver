@@ -93,3 +93,13 @@ func newSimAppPath(chainA, chainB *ibctesting.TestChain) *ibctesting.Path {
 
 	return path
 }
+
+// Assert to ensure that there is no panic on directly invoking .DefaultGenesis on AppModuleBasic
+// as previously reported in https://github.com/quicksilver-zone/quicksilver/issues/1666
+func (s *InterChainQueryTestSuite) TestAssertAppModuleBasicMarshalNonNilJSON() {
+	app := s.GetSimApp(s.chainA)
+	mod := new(interchainquery.AppModuleBasic)
+	blob := mod.DefaultGenesis(app.AppCodec())
+	s.True(blob != nil, "the JSON cannot be nil")
+	s.True(len(blob) > 1, "the length must be non-empty")
+}
