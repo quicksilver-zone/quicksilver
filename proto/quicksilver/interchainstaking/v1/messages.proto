@@ -28,7 +28,8 @@ service Msg {
     };
   }
 
-  // CancelRedemption defines a method for cancelling a redemption request and returning the escrowed assets.
+  // CancelRedemption defines a method for cancelling a redemption request and
+  // returning the escrowed assets.
   rpc CancelRedemption(MsgCancelRedemption) returns (MsgCancelRedemptionResponse) {
     option (google.api.http) = {
       post: "/quicksilver/tx/v1/interchainstaking/cancel_redemption"
@@ -40,6 +41,14 @@ service Msg {
   rpc RequeueRedemption(MsgRequeueRedemption) returns (MsgRequeueRedemptionResponse) {
     option (google.api.http) = {
       post: "/quicksilver/tx/v1/interchainstaking/requeue_redemption"
+      body: "*"
+    };
+  }
+
+  // UpdateRedemption defines a method for updating a redemption.
+  rpc UpdateRedemption(MsgUpdateRedemption) returns (MsgUpdateRedemptionResponse) {
+    option (google.api.http) = {
+      post: "/quicksilver/tx/v1/interchainstaking/update_redemption"
       body: "*"
     };
   }
@@ -116,6 +125,20 @@ message MsgCancelRedemptionResponse {
     (gogoproto.moretags) = "yaml:\"coin\""
   ];
 }
+
+// MsgUpdateRedemption represents a message type to update a redemption.
+message MsgUpdateRedemption {
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string chain_id = 1;
+  string hash = 2;
+  int32 new_status = 3;
+  string from_address = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// MsgUpdateRedemptionResponse defines the MsgUpdateRedemption response type.
+message MsgUpdateRedemptionResponse {}
 
 // MsgRequeueRedemption represents a message type to requeue.
 message MsgRequeueRedemption {
