@@ -118,7 +118,7 @@ message WithdrawalRecord {
     (gogoproto.nullable) = false
   ];
   string txhash = 7;
-  int32 status = 8;
+  int32 status = 8; // should be an enum!
   google.protobuf.Timestamp completion_time = 9 [
     (gogoproto.nullable) = false,
     (gogoproto.stdtime) = true
@@ -126,6 +126,7 @@ message WithdrawalRecord {
   bool requeued = 10;
   bool acknowledged = 11;
   int64 epoch_number = 12;
+  int64 send_errors = 13;
 }
 
 message UnbondingRecord {

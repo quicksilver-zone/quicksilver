@@ -52,7 +52,7 @@ func GetAndUnmarshalProtocolData[T any](ctx sdk.Context, k *Keeper, key string, 
 	}
 	asType, ok := pd.(T)
 	if !ok {
-                return dt, tt, fmt.Errorf("could not retrieve type of %T, actual type: %T", (*T)(nil), pd)
+		return dt, tt, fmt.Errorf("could not retrieve type of %T, actual type: %T", (*T)(nil), pd)
 	}
 	return data, asType, nil
 }

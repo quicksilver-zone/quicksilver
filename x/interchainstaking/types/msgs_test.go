@@ -209,7 +209,7 @@ func TestMsgSignalIntent_ValidateBasic(t *testing.T) {
 	}
 }
 
-func TestMsgCancelQueuedRedemption_ValidateBasic(t *testing.T) {
+func TestMsgCancelRedemption_ValidateBasic(t *testing.T) {
 	type fields struct {
 		ChainID     string
 		Hash        string
@@ -229,31 +229,31 @@ func TestMsgCancelQueuedRedemption_ValidateBasic(t *testing.T) {
 			"invalid address",
 			fields{
 				ChainID:     "cosmoshub-4",
-				Hash:        randomutils.GenerateRandomHashAsHex(64),
+				Hash:        randomutils.GenerateRandomHashAsHex(32),
 				FromAddress: "raa",
 			},
 			true,
 		},
 		{
-			"invalid intent - too short",
+			"invalid hash - too short",
 			fields{
 				ChainID:     "cosmoshub-4",
-				Hash:        randomutils.GenerateRandomHashAsHex(63),
+				Hash:        randomutils.GenerateRandomHashAsHex(31),
 				FromAddress: addressutils.GenerateAddressForTestWithPrefix("quick"),
 			},
 			true,
 		},
 		{
-			"invalid intent - too long",
+			"invalid hash - too long",
 			fields{
 				ChainID:     "cosmoshub-4",
-				Hash:        randomutils.GenerateRandomHashAsHex(65),
+				Hash:        randomutils.GenerateRandomHashAsHex(33),
 				FromAddress: addressutils.GenerateAddressForTestWithPrefix("quick"),
 			},
 			true,
 		},
 		{
-			"invalid intent - bad chars",
+			"invalid hash - bad chars",
 			fields{
 				ChainID:     "cosmoshub-4",
 				Hash:        "zzzzzzz",
@@ -265,7 +265,7 @@ func TestMsgCancelQueuedRedemption_ValidateBasic(t *testing.T) {
 			"invalid chainId",
 			fields{
 				ChainID:     "",
-				Hash:        randomutils.GenerateRandomHashAsHex(64),
+				Hash:        randomutils.GenerateRandomHashAsHex(32),
 				FromAddress: addressutils.GenerateAddressForTestWithPrefix("quick"),
 			},
 			true,
@@ -274,15 +274,15 @@ func TestMsgCancelQueuedRedemption_ValidateBasic(t *testing.T) {
 			"valid",
 			fields{
 				ChainID:     "cosmoshub-4",
-				Hash:        randomutils.GenerateRandomHashAsHex(64),
+				Hash:        randomutils.GenerateRandomHashAsHex(32),
 				FromAddress: addressutils.GenerateAddressForTestWithPrefix("quick"),
 			},
-			true,
+			false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			msg := types.MsgCancelQueuedRedemption{
+			msg := types.MsgCancelRedemption{
 				ChainId:     tt.fields.ChainID,
 				Hash:        tt.fields.Hash,
 				FromAddress: tt.fields.FromAddress,
@@ -298,9 +298,225 @@ func TestMsgCancelQueuedRedemption_ValidateBasic(t *testing.T) {
 	}
 }
 
-func TestMsgCancelQueuedRedemption(t *testing.T) {
+func TestMsgUpdateRedemption_ValidateBasic(t *testing.T) {
+	type fields struct {
+		ChainID     string
+		Hash        string
+		NewStatus   int32
+		FromAddress string
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		wantErr bool
+	}{
+		{
+			"blank",
+			fields{},
+			true,
+		},
+		{
+			"invalid address",
+			fields{
+				ChainID:     "cosmoshub-4",
+				Hash:        randomutils.GenerateRandomHashAsHex(32),
+				NewStatus:   types.WithdrawStatusQueued,
+				FromAddress: "raa",
+			},
+			true,
+		},
+		{
+			"invalid hash - too short",
+			fields{
+				ChainID:     "cosmoshub-4",
+				Hash:        randomutils.GenerateRandomHashAsHex(31),
+				NewStatus:   types.WithdrawStatusQueued,
+				FromAddress: addressutils.GenerateAddressForTestWithPrefix("quick"),
+			},
+			true,
+		},
+		{
+			"invalid hash - too long",
+			fields{
+				ChainID:     "cosmoshub-4",
+				Hash:        randomutils.GenerateRandomHashAsHex(33),
+				NewStatus:   types.WithdrawStatusQueued,
+				FromAddress: addressutils.GenerateAddressForTestWithPrefix("quick"),
+			},
+			true,
+		},
+		{
+			"invalid hash - bad chars",
+			fields{
+				ChainID:     "cosmoshub-4",
+				Hash:        "zzzzzzz",
+				NewStatus:   types.WithdrawStatusQueued,
+				FromAddress: addressutils.GenerateAddressForTestWithPrefix("quick"),
+			},
+			true,
+		},
+		{
+			"invalid chainId",
+			fields{
+				ChainID:     "",
+				Hash:        randomutils.GenerateRandomHashAsHex(32),
+				NewStatus:   types.WithdrawStatusQueued,
+				FromAddress: addressutils.GenerateAddressForTestWithPrefix("quick"),
+			},
+			true,
+		},
+		{
+			"invalid status",
+			fields{
+				ChainID:     "cosmoshub-4",
+				Hash:        randomutils.GenerateRandomHashAsHex(32),
+				NewStatus:   0,
+				FromAddress: addressutils.GenerateAddressForTestWithPrefix("quick"),
+			},
+			true,
+		},
+		{
+			"invalid status - send",
+			fields{
+				ChainID:     "cosmoshub-4",
+				Hash:        randomutils.GenerateRandomHashAsHex(32),
+				NewStatus:   types.WithdrawStatusSend,
+				FromAddress: addressutils.GenerateAddressForTestWithPrefix("quick"),
+			},
+			true,
+		},
+		{
+			"invalid status - tokenize",
+			fields{
+				ChainID:     "cosmoshub-4",
+				Hash:        randomutils.GenerateRandomHashAsHex(32),
+				NewStatus:   types.WithdrawStatusTokenize,
+				FromAddress: addressutils.GenerateAddressForTestWithPrefix("quick"),
+			},
+			true,
+		},
+		{
+			"valid",
+			fields{
+				ChainID:     "cosmoshub-4",
+				Hash:        randomutils.GenerateRandomHashAsHex(32),
+				NewStatus:   types.WithdrawStatusQueued,
+				FromAddress: addressutils.GenerateAddressForTestWithPrefix("quick"),
+			},
+			false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			msg := types.MsgUpdateRedemption{
+				ChainId:     tt.fields.ChainID,
+				Hash:        tt.fields.Hash,
+				NewStatus:   tt.fields.NewStatus,
+				FromAddress: tt.fields.FromAddress,
+			}
+			err := msg.ValidateBasic()
+			if tt.wantErr {
+				t.Logf("Error:\n%v\n", err)
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestMsgRequeueRedemption_ValidateBasic(t *testing.T) {
+	type fields struct {
+		ChainID     string
+		Hash        string
+		FromAddress string
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		wantErr bool
+	}{
+		{
+			"blank",
+			fields{},
+			true,
+		},
+		{
+			"invalid address",
+			fields{
+				ChainID:     "cosmoshub-4",
+				Hash:        randomutils.GenerateRandomHashAsHex(32),
+				FromAddress: "raa",
+			},
+			true,
+		},
+		{
+			"invalid hash - too short",
+			fields{
+				ChainID:     "cosmoshub-4",
+				Hash:        randomutils.GenerateRandomHashAsHex(31),
+				FromAddress: addressutils.GenerateAddressForTestWithPrefix("quick"),
+			},
+			true,
+		},
+		{
+			"invalid hash - too long",
+			fields{
+				ChainID:     "cosmoshub-4",
+				Hash:        randomutils.GenerateRandomHashAsHex(33),
+				FromAddress: addressutils.GenerateAddressForTestWithPrefix("quick"),
+			},
+			true,
+		},
+		{
+			"invalid hash - bad chars",
+			fields{
+				ChainID:     "cosmoshub-4",
+				Hash:        "zzzzzzz",
+				FromAddress: addressutils.GenerateAddressForTestWithPrefix("quick"),
+			},
+			true,
+		},
+		{
+			"invalid chainId",
+			fields{
+				ChainID:     "",
+				Hash:        randomutils.GenerateRandomHashAsHex(32),
+				FromAddress: addressutils.GenerateAddressForTestWithPrefix("quick"),
+			},
+			true,
+		},
+		{
+			"valid",
+			fields{
+				ChainID:     "cosmoshub-4",
+				Hash:        randomutils.GenerateRandomHashAsHex(32),
+				FromAddress: addressutils.GenerateAddressForTestWithPrefix("quick"),
+			},
+			false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			msg := types.MsgRequeueRedemption{
+				ChainId:     tt.fields.ChainID,
+				Hash:        tt.fields.Hash,
+				FromAddress: tt.fields.FromAddress,
+			}
+			err := msg.ValidateBasic()
+			if tt.wantErr {
+				t.Logf("Error:\n%v\n", err)
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestMsgUpdateRedemption(t *testing.T) {
 	fromAddr := addressutils.GenerateAccAddressForTest()
-	msg := types.NewMsgCancelQueuedRedemption("cosmoshub-4", randomutils.GenerateRandomHashAsHex(64), fromAddr)
+	msg := types.NewMsgUpdateRedemption("cosmoshub-4", randomutils.GenerateRandomHashAsHex(32), types.WithdrawStatusQueued, fromAddr)
 
 	// Check the router key.
 	gotRoute := msg.Route()
@@ -309,7 +525,55 @@ func TestMsgCancelQueuedRedemption(t *testing.T) {
 
 	// Check the type.
 	gotType := msg.Type()
-	wantType := types.TypeMsgCancelQueuedRedemption
+	wantType := types.TypeMsgUpdateRedemption
+	require.Equal(t, wantType, gotType, "mismatch in type")
+
+	// Check the signBytes.
+	signBytes := msg.GetSignBytes()
+	require.True(t, len(signBytes) != 0, "expecting signBytes to be produced")
+
+	// Signers should return the from address.
+	gotSigners := msg.GetSigners()
+	wantSigners := []sdk.AccAddress{fromAddr}
+	require.Equal(t, wantSigners, gotSigners, "mismatch in signers")
+}
+
+func TestMsgRequeueRedemption(t *testing.T) {
+	fromAddr := addressutils.GenerateAccAddressForTest()
+	msg := types.NewMsgRequeueRedemption("cosmoshub-4", randomutils.GenerateRandomHashAsHex(32), fromAddr)
+
+	// Check the router key.
+	gotRoute := msg.Route()
+	wantRoute := types.ModuleName
+	require.Equal(t, wantRoute, gotRoute, "mismatch in route")
+
+	// Check the type.
+	gotType := msg.Type()
+	wantType := types.TypeMsgRequeueRedemption
+	require.Equal(t, wantType, gotType, "mismatch in type")
+
+	// Check the signBytes.
+	signBytes := msg.GetSignBytes()
+	require.True(t, len(signBytes) != 0, "expecting signBytes to be produced")
+
+	// Signers should return the from address.
+	gotSigners := msg.GetSigners()
+	wantSigners := []sdk.AccAddress{fromAddr}
+	require.Equal(t, wantSigners, gotSigners, "mismatch in signers")
+}
+
+func TestMsgCancelRedemption(t *testing.T) {
+	fromAddr := addressutils.GenerateAccAddressForTest()
+	msg := types.NewMsgCancelRedemption("cosmoshub-4", randomutils.GenerateRandomHashAsHex(32), fromAddr)
+
+	// Check the router key.
+	gotRoute := msg.Route()
+	wantRoute := types.ModuleName
+	require.Equal(t, wantRoute, gotRoute, "mismatch in route")
+
+	// Check the type.
+	gotType := msg.Type()
+	wantType := types.TypeMsgCancelRedemption
 	require.Equal(t, wantType, gotType, "mismatch in type")
 
 	// Check the signBytes.
