@@ -1663,10 +1663,7 @@ paths:
                         protobuf release, and it is not used for type URLs
                         beginning with
 
-                        type.googleapis.com. As of May 2023, there are no widely
-                        used type server
-
-                        implementations and no plans to implement one.
+                        type.googleapis.com.
 
 
                         Schemes other than `http`, `https` (or the empty scheme)
@@ -1711,10 +1708,6 @@ paths:
                         if (any.is(Foo.class)) {
                           foo = any.unpack(Foo.class);
                         }
-                        // or ...
-                        if (any.isSameTypeAs(Foo.getDefaultInstance())) {
-                          foo = any.unpack(Foo.getDefaultInstance());
-                        }
 
                      Example 3: Pack and unpack a message in Python.
 
@@ -1752,6 +1745,7 @@ paths:
                     type
 
                     name "y.z".
+
 
 
                     JSON
@@ -1980,10 +1974,7 @@ paths:
                         protobuf release, and it is not used for type URLs
                         beginning with
 
-                        type.googleapis.com. As of May 2023, there are no widely
-                        used type server
-
-                        implementations and no plans to implement one.
+                        type.googleapis.com.
 
 
                         Schemes other than `http`, `https` (or the empty scheme)
@@ -2028,10 +2019,6 @@ paths:
                         if (any.is(Foo.class)) {
                           foo = any.unpack(Foo.class);
                         }
-                        // or ...
-                        if (any.isSameTypeAs(Foo.getDefaultInstance())) {
-                          foo = any.unpack(Foo.getDefaultInstance());
-                        }
 
                      Example 3: Pack and unpack a message in Python.
 
@@ -2069,6 +2056,7 @@ paths:
                     type
 
                     name "y.z".
+
 
 
                     JSON
@@ -2224,9 +2212,11 @@ paths:
         - Msg
   /quicksilver/tx/v1/interchainstaking/cancel_redemption:
     post:
-      summary: |-
-        CancelRedemption defines a method for cancelling a redemption request in
-        the queued state.
+      summary: >-
+        CancelRedemption defines a method for cancelling a redemption request
+        and
+
+        returning the escrowed assets.
       operationId: CancelRedemption
       responses:
         '200':
@@ -2250,7 +2240,7 @@ paths:
 
                   signatures required by gogoproto.
             description: >-
-              MsgRequestRedemptionResponse defines the MsgRequestRedemption
+              MsgCancelRedemptionResponse defines the MsgCancelRedemption
               response type.
         default:
           description: An unexpected error response.
@@ -2287,7 +2277,7 @@ paths:
                 type: string
               from_address:
                 type: string
-            description: MsgCancelQueuedRedemption represents a message type to cancel .
+            description: MsgCancelRedemption represents a message type to cancel .
       tags:
         - Msg
   /quicksilver/tx/v1/interchainstaking/close_channel:
@@ -2575,6 +2565,111 @@ paths:
                     type: string
               authority:
                 type: string
+      tags:
+        - Msg
+  /quicksilver/tx/v1/interchainstaking/requeue_redemption:
+    post:
+      summary: RequeueRedemption defines a method for requeuing a failed redemption.
+      operationId: RequeueRedemption
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            description: >-
+              MsgRequeueRedemptionResponse defines the MsgRequeueRedemption
+              response type.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            properties:
+              chain_id:
+                type: string
+              hash:
+                type: string
+              from_address:
+                type: string
+            description: MsgRequeueRedemption represents a message type to requeue.
+      tags:
+        - Msg
+  /quicksilver/tx/v1/interchainstaking/update_redemption:
+    post:
+      summary: UpdateRedemption defines a method for updating a redemption.
+      operationId: UpdateRedemption
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            description: >-
+              MsgUpdateRedemptionResponse defines the MsgUpdateRedemption
+              response type.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            properties:
+              chain_id:
+                type: string
+              hash:
+                type: string
+              new_status:
+                type: integer
+                format: int32
+              from_address:
+                type: string
+            description: >-
+              MsgUpdateRedemption represents a message type to update a
+              redemption.
       tags:
         - Msg
   /quicksilver/interchainstaking/v1/claimed_percentage/{chain_id}:
@@ -2962,6 +3057,9 @@ paths:
                     acknowledged:
                       type: boolean
                     epoch_number:
+                      type: string
+                      format: int64
+                    send_errors:
                       type: string
                       format: int64
               pagination:
@@ -3918,6 +4016,9 @@ paths:
                     acknowledged:
                       type: boolean
                     epoch_number:
+                      type: string
+                      format: int64
+                    send_errors:
                       type: string
                       format: int64
               pagination:
@@ -5069,6 +5170,9 @@ paths:
                     epoch_number:
                       type: string
                       format: int64
+                    send_errors:
+                      type: string
+                      format: int64
               pagination:
                 type: object
                 properties:
@@ -5265,6 +5369,9 @@ paths:
                     acknowledged:
                       type: boolean
                     epoch_number:
+                      type: string
+                      format: int64
+                    send_errors:
                       type: string
                       format: int64
               pagination:
