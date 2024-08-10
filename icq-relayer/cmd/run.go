@@ -142,7 +142,7 @@ func StartCommand() *cobra.Command {
 		},
 	}
 
-	startCommand.Flags().String(FlagHomePath, types.DefaultHomePath, "homedir")
+	startCommand.Flags().String(FlagHomePath, getDefaultHomeDir(), "homedir")
 	flags.AddTxFlagsToCmd(startCommand)
 	return startCommand
 }
