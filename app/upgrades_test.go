@@ -418,5 +418,4 @@ func (s *AppTestSuite) TestV010603UpgradeHandler() {
 	postBalance := app.BankKeeper.GetBalance(ctx, addressutils.MustAccAddressFromBech32(record.Delegator, ""), "uqatom")
 
 	s.Equal(postBalance.Amount.Int64(), preBalance.Add(record.BurnAmount).Amount.Int64())
-
 }
