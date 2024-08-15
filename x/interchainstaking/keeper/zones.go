@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"errors"
 	"fmt"
 	"math"
 
@@ -310,6 +309,25 @@ func (k *Keeper) SetAccountBalanceForDenom(ctx sdk.Context, zone *types.Zone, ad
 	return nil
 }
 
+func (k *Keeper) GetICAAccount(ctx sdk.Context, zone *types.Zone, address string) (*types.ICAAccount, error) {
+	var icaAccount *types.ICAAccount
+
+	switch {
+	case zone.DepositAddress != nil && address == zone.DepositAddress.Address:
+		icaAccount = zone.DepositAddress
+	case zone.WithdrawalAddress != nil && address == zone.WithdrawalAddress.Address:
+		icaAccount = zone.WithdrawalAddress
+	case zone.DelegationAddress != nil && address == zone.DelegationAddress.Address:
+		icaAccount = zone.DelegationAddress
+	case zone.PerformanceAddress != nil && address == zone.PerformanceAddress.Address:
+		icaAccount = zone.PerformanceAddress
+	default:
+		return nil, fmt.Errorf("unable to determine account for address %s", address)
+	}
+
+	return icaAccount, nil
+}
+
 // SetAccountBalance triggers provable KV queries to prove an AllBalances query.
 func (k *Keeper) SetAccountBalance(ctx sdk.Context, zone types.Zone, address string, queryResult []byte) error {
 	queryRes := banktypes.QueryAllBalancesResponse{}
@@ -324,24 +342,7 @@ func (k *Keeper) SetAccountBalance(ctx sdk.Context, zone types.Zone, address str
 	}
 	data := banktypes.CreateAccountBalancesPrefix(addr)
 
-	var icaAccount *types.ICAAccount
-
-	switch {
-	case zone.DepositAddress != nil && address == zone.DepositAddress.Address:
-		icaAccount = zone.DepositAddress
-	case zone.WithdrawalAddress != nil && address == zone.WithdrawalAddress.Address:
-		icaAccount = zone.WithdrawalAddress
-	case zone.DelegationAddress != nil && address == zone.DelegationAddress.Address:
-		icaAccount = zone.DelegationAddress
-	case zone.PerformanceAddress != nil && address == zone.PerformanceAddress.Address:
-		icaAccount = zone.PerformanceAddress
-	default:
-		return errors.New("unexpected address")
-	}
-
-	if icaAccount == nil {
-		return fmt.Errorf("unable to determine account for address %s", address)
-	}
+	icaAccount, err := k.GetICAAccount(ctx, &zone, address)
 
 	for _, coin := range icaAccount.Balance {
 		if queryRes.Balances.AmountOf(coin.Denom).Equal(sdk.ZeroInt()) {
