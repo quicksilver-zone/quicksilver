@@ -17,6 +17,7 @@ import (
 
 	"github.com/quicksilver-zone/quicksilver/app/keepers"
 	"github.com/quicksilver-zone/quicksilver/utils"
+	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 	"github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 )
@@ -264,6 +265,42 @@ func V010601UpgradeHandler(
 				// update the record so that it will re-trigger the send.
 				appKeepers.InterchainstakingKeeper.UpdateWithdrawalRecordStatus(ctx, &record, icstypes.WithdrawStatusUnbond)
 				appKeepers.InterchainstakingKeeper.Logger(ctx).Info("updated record to STATUS_UNBONDING", "hash", hash)
+			}
+		}
+
+		return mm.RunMigrations(ctx, configurator, fromVM)
+	}
+}
+
+func V010603UpgradeHandler(
+	mm *module.Manager,
+	configurator module.Configurator,
+	appKeepers *keepers.AppKeepers,
+) upgradetypes.UpgradeHandler {
+	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		if isMainnet(ctx) || isTest(ctx) {
+			appKeepers.InterchainstakingKeeper.Logger(ctx).Info("returning escrowed funds for 1 unbonding that failed to send to original user...")
+
+			hashes := []string{
+				"ea0d86a3fb4b25fcb13a587e72542f99ebf8c7c3aa255a0922dfa7002a8ee861",
+			}
+			for _, hash := range hashes {
+				record, found := appKeepers.InterchainstakingKeeper.GetWithdrawalRecord(ctx, "cosmoshub-4", hash, icstypes.WithdrawStatusUnbond)
+				if !found {
+					panic(fmt.Sprintf("unable to find record for hash %s", hash))
+				}
+
+				// move funds from escrowed funds to the original user's account.
+				err := appKeepers.BankKeeper.SendCoinsFromModuleToAccount(ctx, icstypes.ModuleName, addressutils.MustAccAddressFromBech32(record.Delegator, "quick"), sdk.NewCoins(record.BurnAmount))
+				if err != nil {
+					panic(fmt.Sprintf("unable to send coins from module to account for record %s", hash))
+				}
+
+				appKeepers.InterchainstakingKeeper.Logger(ctx).Info("sent funds to original user", "user", record.Delegator, "amount", record.BurnAmount)
+
+				// delete the record so that it won't re-trigger.
+				appKeepers.InterchainstakingKeeper.DeleteWithdrawalRecord(ctx, "cosmoshub-4", hash, icstypes.WithdrawStatusUnbond)
+				appKeepers.InterchainstakingKeeper.Logger(ctx).Info("deleted record", "hash", hash)
 			}
 		}
 
