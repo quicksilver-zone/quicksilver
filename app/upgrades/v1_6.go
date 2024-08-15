@@ -291,7 +291,7 @@ func V010603UpgradeHandler(
 				}
 
 				// move funds from escrowed funds to the original user's account.
-				err := appKeepers.BankKeeper.SendCoinsFromModuleToAccount(ctx, icstypes.ModuleName, addressutils.MustAccAddressFromBech32(record.Delegator, "quick"), sdk.NewCoins(record.BurnAmount))
+				err := appKeepers.BankKeeper.SendCoinsFromModuleToAccount(ctx, icstypes.EscrowModuleAccount, addressutils.MustAccAddressFromBech32(record.Delegator, "quick"), sdk.NewCoins(record.BurnAmount))
 				if err != nil {
 					panic(fmt.Sprintf("unable to send coins from module to account for record %s", hash))
 				}
