@@ -11,9 +11,6 @@ import (
 func Upgrades() []Upgrade {
 	return []Upgrade{
 		// testnet upgrades
-		{UpgradeName: V010500rc0UpgradeName, CreateUpgradeHandler: NoOpHandler},
-		{UpgradeName: V010500rc1UpgradeName, CreateUpgradeHandler: V010500rc1UpgradeHandler},
-		{UpgradeName: V010503rc0UpgradeName, CreateUpgradeHandler: V010503rc0UpgradeHandler},
 		{UpgradeName: V010600beta0UpgradeName, CreateUpgradeHandler: V010600beta0UpgradeHandler},
 		{UpgradeName: V010600beta1UpgradeName, CreateUpgradeHandler: V010600beta1UpgradeHandler},
 		{UpgradeName: V010600rc0UpgradeName, CreateUpgradeHandler: V010600rc0UpgradeHandler},
@@ -23,13 +20,9 @@ func Upgrades() []Upgrade {
 		{UpgradeName: V010601rc4UpgradeName, CreateUpgradeHandler: NoOpHandler},
 
 		// v1.5: this needs to be present to support upgrade on mainnet
-		{UpgradeName: V010500UpgradeName, CreateUpgradeHandler: V010500UpgradeHandler},
-		{UpgradeName: V010501UpgradeName, CreateUpgradeHandler: V010501UpgradeHandler},
-		{UpgradeName: V010503UpgradeName, CreateUpgradeHandler: V010503UpgradeHandler},
-		{UpgradeName: V010504UpgradeName, CreateUpgradeHandler: V010504UpgradeHandler},
-		{UpgradeName: V010505UpgradeName, CreateUpgradeHandler: V010505UpgradeHandler},
 		{UpgradeName: V010601UpgradeName, CreateUpgradeHandler: V010601UpgradeHandler},
 		{UpgradeName: V010602UpgradeName, CreateUpgradeHandler: NoOpHandler},
+		{UpgradeName: V010603UpgradeName, CreateUpgradeHandler: V010603UpgradeHandler},
 	}
 }
 
