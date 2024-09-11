@@ -30,14 +30,17 @@ export const useToaster = () => {
     let description;
 
     if (type === ToastType.Success && txHash) {
-      const mintscanUrl = `https://www.mintscan.io/${convertChainName(chainName ?? '')}/txs/${txHash}`;
+      let mintscanUrl = `https://www.mintscan.io/${convertChainName(chainName ?? '')}/txs/${txHash}`;
+      if (chainName === 'quicksilver') {
+        mintscanUrl = `https://explorer.quicksilver.zone/transactions/${txHash}`;
+      }
       description = (
         <Box pr="20px">
           <Text fontSize="sm" color="white">
             {message}
           </Text>
           <Link href={mintscanUrl} isExternal color="white">
-            View on Mintscan
+            View in Explorer
           </Link>
         </Box>
       );
