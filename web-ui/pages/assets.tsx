@@ -1,4 +1,3 @@
-import { saga } from '@chain-registry/assets';
 import { Box, Container, Flex, SlideFade, Spacer, Text, Center } from '@chakra-ui/react';
 import { useChain } from '@cosmos-kit/react';
 import dynamic from 'next/dynamic';
@@ -22,6 +21,7 @@ import {
   useRedemptionRatesQuery,
 } from '@/hooks/useQueries';
 import { shiftDigits } from '@/utils';
+import { Chain, chains, env } from '@/config';
 
 export interface PortfolioItemInterface {
   title: string;
@@ -52,36 +52,12 @@ function Home() {
 
   const isLoadingAll = qIsLoading || APYsLoading || redemptionLoading || isLoadingPrices;
 
-  const COSMOSHUB_CHAIN_ID = process.env.NEXT_PUBLIC_COSMOSHUB_CHAIN_ID;
-  const OSMOSIS_CHAIN_ID = process.env.NEXT_PUBLIC_OSMOSIS_CHAIN_ID;
-  const STARGAZE_CHAIN_ID = process.env.NEXT_PUBLIC_STARGAZE_CHAIN_ID;
-  const REGEN_CHAIN_ID = process.env.NEXT_PUBLIC_REGEN_CHAIN_ID;
-  const SOMMELIER_CHAIN_ID = process.env.NEXT_PUBLIC_SOMMELIER_CHAIN_ID;
-  const JUNO_CHAIN_ID = process.env.NEXT_PUBLIC_JUNO_CHAIN_ID;
-  const DYDX_CHAIN_ID = process.env.NEXT_PUBLIC_DYDX_CHAIN_ID;
-  const SAGA_CHAIN_ID = process.env.NEXT_PUBLIC_SAGA_CHAIN_ID;
-
   const tokenToChainIdMap: { [key: string]: string | undefined } = useMemo(() => {
-    return {
-      atom: COSMOSHUB_CHAIN_ID,
-      osmo: OSMOSIS_CHAIN_ID,
-      stars: STARGAZE_CHAIN_ID,
-      regen: REGEN_CHAIN_ID,
-      somm: SOMMELIER_CHAIN_ID,
-      juno: JUNO_CHAIN_ID,
-      dydx: DYDX_CHAIN_ID,
-      saga: SAGA_CHAIN_ID,
-    };
-  }, [
-    COSMOSHUB_CHAIN_ID,
-    OSMOSIS_CHAIN_ID,
-    STARGAZE_CHAIN_ID,
-    REGEN_CHAIN_ID,
-    SOMMELIER_CHAIN_ID,
-    JUNO_CHAIN_ID,
-    DYDX_CHAIN_ID,
-    SAGA_CHAIN_ID,
-  ]);
+    return Array.from(chains.get(env)?.values() || []).reduce((acc, chain: Chain) => ({
+      ...acc,
+      [chain.big_denom]: chain.chain_id,
+    }), {});
+  }, [chains]); // Depend directly on the chains map
 
   function getChainIdForToken(tokenToChainIdMap: { [x: string]: any }, baseToken: string) {
     return tokenToChainIdMap[baseToken.toLowerCase()] || null;

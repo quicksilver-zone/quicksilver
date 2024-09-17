@@ -2,6 +2,8 @@ import { ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons';
 import { Table, Thead, Tbody, Tr, Th, Td, TableContainer, Text, Box, Flex, IconButton, Spinner } from '@chakra-ui/react';
 import { useState } from 'react';
 
+import { Chain, chains, env } from '@/config';
+
 import { useUnbondingQuery } from '@/hooks/useQueries';
 import { shiftDigits, formatQasset } from '@/utils';
 
@@ -36,42 +38,32 @@ interface UnbondingAssetsTableProps {
 }
 
 const UnbondingAssetsTable: React.FC<UnbondingAssetsTableProps> = ({ address, isWalletConnected }) => {
-  const chains = ['Cosmos', 'Stargaze', 'Osmosis', 'Regen', 'Sommelier', 'Juno', 'Dydx', 'Saga'];
-  const [currentChainIndex, setCurrentChainIndex] = useState(0);
 
-  // Switcher lets us use a pretty name for the chain in the UI, but query the chain by its actual name.
-  const currentChainName = chains[currentChainIndex];
-  let newChainName: string | undefined;
-  if (currentChainName === 'Cosmos') {
-    newChainName = 'cosmoshub';
-  } else if (currentChainName === 'Osmosis') {
-    newChainName = 'osmosis';
-  } else if (currentChainName === 'Stargaze') {
-    newChainName = 'stargaze';
-  } else if (currentChainName === 'Regen') {
-    newChainName = 'regen';
-  } else if (currentChainName === 'Sommelier') {
-    newChainName = 'sommelier';
-  } else if (currentChainName === 'Juno') {
-    newChainName = 'juno';
-  } else if (currentChainName === 'Dydx') {
-    newChainName = 'dydx';
-  } else if (currentChainName === 'Saga') {
-    newChainName = 'saga';
-  } else {
-    // Default case
-    newChainName = currentChainName;
+  const networks: Map<string, Chain> = chains.get(env) ?? new Map();
+  const chain_list = Array.from(networks).filter(([_, network]) => network.show).map(([key, _]) => key);
+
+  const [currentChainName, setCurrentChainName] = useState(chain_list[0]);
+  const currentNetwork = networks?.get(currentChainName)
+
+  const prev = () => {
+    const index = chain_list?.indexOf(currentChainName) - 1
+    return index < 0 ? chain_list.length - 1 : index
   }
 
-  const { unbondingData, isLoading } = useUnbondingQuery(newChainName, address);
+  const next = () => {
+    const index = chain_list?.indexOf(currentChainName) + 1
+    return index > chain_list.length - 1 ? 0 : index
+  }
+
+  const { unbondingData, isLoading } = useUnbondingQuery(currentChainName, address);
 
   // Handlers for chain slider
   const handleLeftArrowClick = () => {
-    setCurrentChainIndex((prevIndex: number) => (prevIndex === 0 ? chains.length - 1 : prevIndex - 1));
+    setCurrentChainName(chain_list[prev()]);
   };
 
   const handleRightArrowClick = () => {
-    setCurrentChainIndex((prevIndex: number) => (prevIndex === chains.length - 1 ? 0 : prevIndex + 1));
+    setCurrentChainName(chain_list[next()]);
   };
 
   const hideOnMobile = {
@@ -101,7 +93,7 @@ const UnbondingAssetsTable: React.FC<UnbondingAssetsTableProps> = ({ address, is
               color="white"
             />
             <Box minWidth="100px" textAlign="center">
-              <Text>{chains[currentChainIndex]}</Text>
+              <Text>{currentNetwork?.pretty_name}</Text>
             </Box>
             <IconButton
               icon={<ChevronRightIcon />}
@@ -160,7 +152,7 @@ const UnbondingAssetsTable: React.FC<UnbondingAssetsTableProps> = ({ address, is
               color="white"
             />
             <Box minWidth="100px" textAlign="center">
-              <Text>{chains[currentChainIndex]}</Text>
+              <Text>{currentNetwork?.pretty_name}</Text>
             </Box>
             <IconButton
               icon={<ChevronRightIcon />}
@@ -217,7 +209,7 @@ const UnbondingAssetsTable: React.FC<UnbondingAssetsTableProps> = ({ address, is
             color="white"
           />
           <Box minWidth="100px" textAlign="center">
-            <Text>{chains[currentChainIndex]}</Text>
+            <Text>{currentNetwork?.pretty_name}</Text>
           </Box>
           <IconButton
             icon={<ChevronRightIcon />}

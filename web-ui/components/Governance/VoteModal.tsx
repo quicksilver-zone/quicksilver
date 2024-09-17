@@ -13,7 +13,6 @@ import {
   RadioGroup,
   UseDisclosureReturn,
 } from '@chakra-ui/react';
-import { coins, StdFee } from '@cosmjs/stargate';
 import { useChain } from '@cosmos-kit/react';
 import { cosmos } from 'interchain-query';
 import { useState } from 'react';

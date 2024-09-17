@@ -25,6 +25,7 @@ import React, { useEffect, useState } from 'react';
 import { useTx } from '@/hooks';
 import { useFeeEstimation } from '@/hooks/useFeeEstimation';
 import { shiftDigits } from '@/utils';
+import { Chain } from '@/config';
 
 const ChakraModalContent = styled(ModalContent)`
   position: relative;
@@ -67,13 +68,7 @@ interface StakingModalProps {
   onClose: () => void;
   children?: React.ReactNode;
   selectedValidator: SelectedValidator;
-  selectedOption?: {
-    name: string;
-    value: string;
-    logo: string;
-    chainName: string;
-    chainId: string;
-  };
+  selectedOption?: Chain;
   address: string;
   isTokenized: boolean;
   denom: string;
@@ -98,18 +93,8 @@ export const RevertSharesProcessModal: React.FC<StakingModalProps> = ({
   const [isSigning, setIsSigning] = useState<boolean>(false);
   const [isError, setIsError] = useState<boolean>(false);
 
-  let newChainName: string | undefined;
-  if (selectedOption?.chainId === 'provider') {
-    newChainName = 'rsprovidertestnet';
-  } else if (selectedOption?.chainId === 'elgafar-1') {
-    newChainName = 'stargazetestnet';
-  } else if (selectedOption?.chainId === 'osmo-test-5') {
-    newChainName = 'osmosistestnet';
-  } else if (selectedOption?.chainId === 'regen-redwood-1') {
-    newChainName = 'regen';
-  } else {
-    newChainName = selectedOption?.chainName;
-  }
+  const newChainName = selectedOption?.chain_name;
+
 
   const labels = ['Revert Shares', `Receive Tokens`];
 
@@ -182,7 +167,7 @@ export const RevertSharesProcessModal: React.FC<StakingModalProps> = ({
 
                   <StatNumber display={{ base: 'none', md: 'block' }} color="white">
                     {shiftDigits(selectedValidator.tokenAmount, -6)}&nbsp;
-                    {selectedOption?.value}
+                    {selectedOption?.big_denom}
                   </StatNumber>
                 </Stat>
                 {[1, 2].map((circleStep, index) => (
@@ -239,7 +224,7 @@ export const RevertSharesProcessModal: React.FC<StakingModalProps> = ({
                       You are about to revert your shares back to tokens.
                     </Text>
                     <Text mt={2} textAlign={'left'} fontWeight={'light'} fontSize="lg" color="white">
-                      Reverting&nbsp;&nbsp;{shiftDigits(selectedValidator.tokenAmount, -6)}&nbsp; {selectedOption?.value}
+                      Reverting&nbsp;&nbsp;{shiftDigits(selectedValidator.tokenAmount, -(selectedOption?.exponent ?? 6))}&nbsp; {selectedOption?.big_denom}
                     </Text>
                   </Flex>
 

@@ -2,18 +2,12 @@ import { Box, Image, Text, Accordion, AccordionItem, Flex, AccordionButton, Skel
 import React, { useEffect, useState } from 'react';
 
 import { useLiquidRewardsQuery } from '@/hooks/useQueries';
-import { shiftDigits } from '@/utils';
+import { Chain } from '@/config';
 
 const BigNumber = require('bignumber.js');
 
 type AssetsAccordianProps = {
-  selectedOption: {
-    name: string;
-    value: string;
-    logo: string;
-    qlogo: string;
-    chainName: string;
-  };
+  selectedOption: Chain;
   balance: string;
   qBalance: string;
   address: string;
@@ -27,7 +21,8 @@ export const AssetsAccordian: React.FC<AssetsAccordianProps> = ({ selectedOption
   useEffect(() => {
     const calculateLiquidRewards = () => {
       let totalAmount = new BigNumber(0);
-      const denomToFind = selectedOption.value === 'DYDX' ? `aq${selectedOption.value.toLowerCase()}` : `uq${selectedOption.value.toLowerCase()}`;
+      // TODO: remove shitty harcoding
+      const denomToFind = selectedOption.big_denom === 'DYDX' ? `aq${selectedOption.big_denom.toLowerCase()}` : `uq${selectedOption.big_denom.toLowerCase()}`;
 
       for (const chain in liquidRewards?.assets) {
         const chainAssets = liquidRewards?.assets[chain];
@@ -42,8 +37,7 @@ export const AssetsAccordian: React.FC<AssetsAccordianProps> = ({ selectedOption
         });
       }
 
-      const exponent = selectedOption.value === 'DYDX' ? 18 : 6;
-      return totalAmount.shiftedBy(-exponent).toString();
+      return totalAmount.shiftedBy(-selectedOption.exponent).toString();
     };
 
     setUpdatedQBalance(calculateLiquidRewards());
@@ -94,14 +88,14 @@ export const AssetsAccordian: React.FC<AssetsAccordianProps> = ({ selectedOption
           <h2>
             <AccordionButton _hover={{ cursor: 'default' }} borderRadius={'10px'} borderTopColor={'transparent'}>
               <Flex p={1} flexDirection="row" flex="1" alignItems="center">
-                <Image alt="atom" src={selectedOption.logo} borderRadius={'full'} boxSize="35px" mr={2} />
+                <Image alt={selectedOption.pretty_name} src={selectedOption.logo} borderRadius={'full'} boxSize="35px" mr={2} />
                 <Text fontSize="16px" color={'white'}>
                   Available to stake
                 </Text>
               </Flex>
               {renderAssets()}
               <Text pr={2} color="complimentary.900">
-                {selectedOption.value.toUpperCase()}
+                {selectedOption.big_denom.toUpperCase()}
               </Text>
             </AccordionButton>
           </h2>
@@ -119,7 +113,7 @@ export const AssetsAccordian: React.FC<AssetsAccordianProps> = ({ selectedOption
 
               {renderQAssets()}
               <Text pr={2} color="complimentary.900">
-                q{selectedOption.value.toUpperCase()}
+                q{selectedOption.big_denom.toUpperCase()}
               </Text>
             </AccordionButton>
           </h2>

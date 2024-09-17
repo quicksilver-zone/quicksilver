@@ -10,7 +10,7 @@ export const getChainAssets = (
   chainName: string = defaultChainName,
 ) => {
   return assets.find(
-    (chain) => chain.chain_name === chainName,
+    (chain) => chain.chain_name === chainName
   ) as AssetList;
 };
 

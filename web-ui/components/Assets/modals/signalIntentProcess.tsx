@@ -28,6 +28,7 @@ import { useTx } from '@/hooks';
 import { useFeeEstimation } from '@/hooks/useFeeEstimation';
 
 import { IntentMultiModal } from './intentMultiModal';
+import { Chain } from '@/config';
 
 
 const ChakraModalContent = styled(ModalContent)`
@@ -65,13 +66,7 @@ interface StakingModalProps {
   onClose: () => void;
   children?: React.ReactNode;
   refetch: () => void;
-  selectedOption?: {
-    name: string;
-    value: string;
-    logo: string;
-    chainName: string;
-    chainId: string;
-  };
+  selectedOption?: Chain;
 }
 
 interface Intent {
@@ -91,7 +86,7 @@ export const SignalIntentModal: React.FC<StakingModalProps> = ({ isOpen, onClose
 
   const { address } = useChain('quicksilver' || '');
 
-  const labels = ['Choose validators', `Set weights`, `Sign & Submit`, `Receive q${selectedOption?.value}`];
+  const labels = ['Choose validators', `Set weights`, `Sign & Submit`, `Receive q${selectedOption?.big_denom}`];
   const [isModalOpen, setModalOpen] = useState(false);
 
   const [selectedValidators, setSelectedValidators] = React.useState<{ name: string; operatorAddress: string }[]>([]);
@@ -174,7 +169,7 @@ export const SignalIntentModal: React.FC<StakingModalProps> = ({ isOpen, onClose
 
   const { signalIntent } = quicksilver.interchainstaking.v1.MessageComposer.withTypeUrl;
   const msgSignalIntent = signalIntent({
-    chainId: selectedOption?.chainId ?? '',
+    chainId: selectedOption?.chain_id ?? '',
     intents: formattedIntentsString,
     fromAddress: address ?? '',
   });
@@ -210,7 +205,7 @@ export const SignalIntentModal: React.FC<StakingModalProps> = ({ isOpen, onClose
     setStep(1);
     setIsError(false);
     setIsSigning(false);
-  }, [selectedOption?.chainName]);
+  }, [selectedOption?.chain_name]);
 
   const [isCustomWeight, setIsCustomWeight] = useState(false);
 
@@ -348,9 +343,9 @@ export const SignalIntentModal: React.FC<StakingModalProps> = ({ isOpen, onClose
                   <IntentMultiModal
                     isOpen={isModalOpen}
                     onClose={() => setModalOpen(false)}
-                    selectedChainName={selectedOption?.chainName || ''}
+                    selectedChainName={selectedOption?.chain_name || ''}
                     selectedValidators={selectedValidators}
-                    selectedChainId={selectedOption?.chainId || ''}
+                    selectedChainId={selectedOption?.chain_id || ''}
                     setSelectedValidators={setSelectedValidators}
                   />
                 </>

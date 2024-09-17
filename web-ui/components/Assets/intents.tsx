@@ -16,10 +16,10 @@ import {
   Fade,
 } from '@chakra-ui/react';
 import { Key, useCallback, useState } from 'react';
+import { chains, env, Chain } from '@/config';
 
 
 import { useIntentQuery, useValidatorLogos, useValidatorsQuery } from '@/hooks/useQueries';
-import { networks as prodNetworks, testNetworks as devNetworks } from '@/state/chains/prod';
 import { truncateString } from '@/utils';
 
 import SignalIntentModal from './modals/signalIntentProcess';
@@ -30,10 +30,10 @@ export interface StakingIntentProps {
 }
 
 const StakingIntent: React.FC<StakingIntentProps> = ({ address, isWalletConnected }) => {
-  const networks = process.env.NEXT_PUBLIC_CHAIN_ENV === 'mainnet' ? prodNetworks : devNetworks;
+  const networks: Map<string, Chain> = chains.get(env) ?? new Map();
+  const chain_list = Array.from(networks).filter(([_, network]) => network.show).map(([key, _]) => key);
 
-  const chains = ['Cosmos', 'Osmosis', 'Dydx', 'Stargaze', 'Regen', 'Sommelier', 'Juno', 'Saga'];
-  const [currentChainIndex, setCurrentChainIndex] = useState(0);
+  //const chains = ['Cosmos', 'Osmosis', 'Dydx', 'Stargaze', 'Regen', 'Sommelier', 'Juno', 'Saga'];
   const [isBottomVisible, setIsBottomVisible] = useState(true);
 
   const handleScroll = useCallback((event: React.UIEvent<HTMLDivElement>) => {
@@ -46,12 +46,25 @@ const StakingIntent: React.FC<StakingIntentProps> = ({ address, isWalletConnecte
   const openSignalIntentModal = () => setIsSignalIntentModalOpen(true);
   const closeSignalIntentModal = () => setIsSignalIntentModalOpen(false);
 
-  const currentNetwork = networks[currentChainIndex];
+  const [currentChainName, setCurrentChainIndex] = useState(chain_list[0]);
 
-  const { validatorsData } = useValidatorsQuery(currentNetwork.chainName);
-  const { data: validatorLogos } = useValidatorLogos(currentNetwork.chainName, validatorsData || []);
 
-  const { intent, refetch } = useIntentQuery(currentNetwork.chainName, address ?? '');
+
+  const currentNetwork = networks?.get(currentChainName)
+  const prev = () => {
+    const index = chain_list?.indexOf(currentChainName) - 1
+    return index < 0 ? chain_list.length - 1 : index
+  }
+
+  const next = () => {
+    const index = chain_list?.indexOf(currentChainName) + 1
+    return index > chain_list.length - 1 ? 0 : index
+  }
+
+  const { validatorsData } = useValidatorsQuery(currentChainName);
+  const { data: validatorLogos } = useValidatorLogos(currentChainName, validatorsData || []);
+
+  const { intent, refetch } = useIntentQuery(currentChainName, address ?? '');
 
   interface ValidatorDetails {
     moniker: string;
@@ -84,11 +97,11 @@ const StakingIntent: React.FC<StakingIntentProps> = ({ address, isWalletConnecte
       }) || [];
 
   const handleLeftArrowClick = () => {
-    setCurrentChainIndex((prevIndex) => (prevIndex === 0 ? networks.length - 1 : prevIndex - 1));
+    setCurrentChainIndex(chain_list[prev()]);
   };
 
   const handleRightArrowClick = () => {
-    setCurrentChainIndex((prevIndex) => (prevIndex === networks.length - 1 ? 0 : prevIndex + 1));
+    setCurrentChainIndex(chain_list[next()]);
   };
 
   if (!isWalletConnected) {
@@ -151,9 +164,9 @@ const StakingIntent: React.FC<StakingIntentProps> = ({ address, isWalletConnecte
             icon={<ChevronLeftIcon w={'25px'} h={'25px'} />}
             onClick={handleLeftArrowClick}
           />
-          <SlideFade in={true} key={currentChainIndex}>
+          <SlideFade in={true} key={currentChainName}>
             <Text fontSize="lg" fontWeight="semibold">
-              {chains[currentChainIndex]}
+              {chains.get(env)?.get(currentChainName)?.pretty_name}
             </Text>
           </SlideFade>
           <IconButton

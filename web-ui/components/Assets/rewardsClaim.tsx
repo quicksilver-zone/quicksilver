@@ -1,7 +1,6 @@
 import { CloseIcon } from '@chakra-ui/icons';
 import { Box, Flex, Text, VStack, Button, HStack, Spinner, Checkbox } from '@chakra-ui/react';
 import { StdFee } from '@cosmjs/amino';
-import { assets } from 'chain-registry';
 import { GenericAuthorization } from 'interchain-query/cosmos/authz/v1beta1/authz';
 import { quicksilver, cosmos } from 'quicksilverjs';
 import React, { useState } from 'react';

@@ -20,7 +20,7 @@ import type { AppProps } from 'next/app';
 import { quicksilverProtoRegistry, quicksilverAminoConverters, cosmosAminoConverters, cosmosProtoRegistry } from 'quicksilverjs';
 
 import { DynamicHeaderSection, SideHeader } from '@/components';
-import { defaultTheme } from '@/config';
+import { defaultTheme, Chain as configChain, chains as configChains, env } from '@/config';
 import { LiveZonesProvider } from '@/state/LiveZonesContext';
 
 const queryClient = new QueryClient({
@@ -49,46 +49,7 @@ function QuickApp({ Component, pageProps }: AppProps) {
     },
   };
 
-  const env = process.env.NEXT_PUBLIC_CHAIN_ENV;
   const walletConnectToken = process.env.NEXT_PUBLIC_WALLET_CONNECT_TOKEN;
-
-  const rpcEndpoints = {
-    quicksilver:
-      env === 'testnet'
-        ? process.env.NEXT_PUBLIC_TESTNET_RPC_ENDPOINT_QUICKSILVER
-        : process.env.NEXT_PUBLIC_MAINNET_RPC_ENDPOINT_QUICKSILVER,
-    cosmoshub:
-      env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_RPC_ENDPOINT_COSMOSHUB : process.env.NEXT_PUBLIC_MAINNET_RPC_ENDPOINT_COSMOSHUB,
-    sommelier:
-      env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_RPC_ENDPOINT_SOMMELIER : process.env.NEXT_PUBLIC_MAINNET_RPC_ENDPOINT_SOMMELIER,
-    stargaze:
-      env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_RPC_ENDPOINT_STARGAZE : process.env.NEXT_PUBLIC_MAINNET_RPC_ENDPOINT_STARGAZE,
-    regen: env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_RPC_ENDPOINT_REGEN : process.env.NEXT_PUBLIC_MAINNET_RPC_ENDPOINT_REGEN,
-    osmosis:
-      env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_RPC_ENDPOINT_OSMOSIS : process.env.NEXT_PUBLIC_MAINNET_RPC_ENDPOINT_OSMOSIS,
-    juno: env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_RPC_ENDPOINT_JUNO : process.env.NEXT_PUBLIC_MAINNET_RPC_ENDPOINT_JUNO,
-    dydx: env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_RPC_ENDPOINT_DYDX : process.env.NEXT_PUBLIC_MAINNET_RPC_ENDPOINT_DYDX,
-    saga: env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_RPC_ENDPOINT_SAGA : process.env.NEXT_PUBLIC_MAINNET_RPC_ENDPOINT_SAGA,
-  };
-
-  const lcdEndpoints = {
-    quicksilver:
-      env === 'testnet'
-        ? process.env.NEXT_PUBLIC_TESTNET_LCD_ENDPOINT_QUICKSILVER
-        : process.env.NEXT_PUBLIC_MAINNET_LCD_ENDPOINT_QUICKSILVER,
-    cosmoshub:
-      env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_LCD_ENDPOINT_COSMOSHUB : process.env.NEXT_PUBLIC_MAINNET_LCD_ENDPOINT_COSMOSHUB,
-    sommelier:
-      env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_LCD_ENDPOINT_SOMMELIER : process.env.NEXT_PUBLIC_MAINNET_LCD_ENDPOINT_SOMMELIER,
-    stargaze:
-      env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_LCD_ENDPOINT_STARGAZE : process.env.NEXT_PUBLIC_MAINNET_LCD_ENDPOINT_STARGAZE,
-    regen: env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_LCD_ENDPOINT_REGEN : process.env.NEXT_PUBLIC_MAINNET_LCD_ENDPOINT_REGEN,
-    osmosis:
-      env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_LCD_ENDPOINT_OSMOSIS : process.env.NEXT_PUBLIC_MAINNET_LCD_ENDPOINT_OSMOSIS,
-    juno: env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_LCD_ENDPOINT_JUNO : process.env.NEXT_PUBLIC_MAINNET_LCD_ENDPOINT_JUNO,
-    dydx: env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_LCD_ENDPOINT_DYDX : process.env.NEXT_PUBLIC_MAINNET_LCD_ENDPOINT_DYDX,
-    saga: env === 'testnet' ? process.env.NEXT_PUBLIC_TESTNET_LCD_ENDPOINT_SAGA : process.env.NEXT_PUBLIC_MAINNET_LCD_ENDPOINT_SAGA,
-  };
 
   const modalThemeOverrides: ThemeCustomizationProps = {
     modalContentStyles: {
@@ -223,52 +184,13 @@ function QuickApp({ Component, pageProps }: AppProps) {
           <ChainProvider
             endpointOptions={{
               isLazy: true,
-              endpoints: {
-                quicksilver: {
-                  rpc: [rpcEndpoints.quicksilver ?? ''],
-                  rest: [lcdEndpoints.quicksilver ?? ''],
+              endpoints: Array.from(configChains.get(env)?.entries() ?? []).reduce((acc, [chainname, chain]: [string, configChain]) => ({
+                ...acc,
+                [chainname]: {
+                  rpc: chain.rpc,
+                  rest: chain.rest,
                 },
-                quicksilvertestnet: {
-                  rest: ['https://lcd.test.quicksilver.zone/'],
-                  rpc: ['https://rpc.test.quicksilver.zone'],
-                },
-                cosmoshub: {
-                  rpc: [rpcEndpoints.cosmoshub ?? ''],
-                  rest: [lcdEndpoints.cosmoshub ?? ''],
-                },
-                sommelier: {
-                  rpc: [rpcEndpoints.sommelier ?? ''],
-                  rest: [lcdEndpoints.sommelier ?? ''],
-                },
-                stargaze: {
-                  rpc: [rpcEndpoints.stargaze ?? ''],
-                  rest: [lcdEndpoints.stargaze ?? ''],
-                },
-                regen: {
-                  rpc: [rpcEndpoints.regen ?? ''],
-                  rest: [lcdEndpoints.regen ?? ''],
-                },
-                osmosis: {
-                  rpc: [rpcEndpoints.osmosis ?? ''],
-                  rest: [lcdEndpoints.osmosis ?? ''],
-                },
-                osmosistestnet: {
-                  rpc: [rpcEndpoints.osmosis ?? ''],
-                  rest: [lcdEndpoints.osmosis ?? ''],
-                },
-                umee: {
-                  rpc: ['https://rpc-umee-ia.cosmosia.notional.ventures/'],
-                  rest: ['https://api-umee-ia.cosmosia.notional.ventures/'],
-                },
-                dydx: {
-                  rpc: [rpcEndpoints.dydx ?? ''],
-                  rest: [lcdEndpoints.dydx ?? ''],
-                },
-                saga: {
-                  rpc: [rpcEndpoints.saga ?? ''],
-                  rest: [lcdEndpoints.saga ?? ''],
-                },
-              },
+              }), {}),
             }}
             logLevel="NONE"
             modalTheme={modalThemeOverrides}
@@ -283,7 +205,7 @@ function QuickApp({ Component, pageProps }: AppProps) {
                 metadata: {
                   name: 'Quicksilver',
                   description: 'Quicksilver App',
-                  url: 'https://apps.qucksilver.zone/',
+                  url: 'https://app.qucksilver.zone/',
                   icons: [],
                 },
               },

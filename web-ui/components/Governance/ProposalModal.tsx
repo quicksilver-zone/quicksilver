@@ -21,7 +21,8 @@ import React, { useMemo, useState } from 'react';
 import { PieChart } from 'react-minimal-pie-chart';
 
 import { Votes } from '@/hooks';
-import { decodeUint8Arr, exponentiate, formatDate, getCoin, getExponent, getPercentage } from '@/utils';
+import { decodeUint8Arr, exponentiate, formatDate, getCoin, getPercentage } from '@/utils';
+import { chains, env } from '@/config';
 
 import { VoteResult, TimeDisplay, VoteRatio, NewLineText, StatusBadge, VoteOption } from './common';
 import { VoteColor } from './ProposalCard';
@@ -53,7 +54,7 @@ export const ProposalModal = ({
   const voteModalControl = useDisclosure();
 
   const coin = getCoin(chainName);
-  const exponent = getExponent(chainName);
+  const exponent = chains.get(env)?.get(chainName)?.exponent ?? 6;
 
   const chartData = [
     {

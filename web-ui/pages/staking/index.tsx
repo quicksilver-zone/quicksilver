@@ -9,7 +9,7 @@ import { StakingBox } from '@/components';
 import { InfoBox } from '@/components';
 import { AssetsAccordian } from '@/components';
 import { useAPYQuery } from '@/hooks/useQueries';
-import { networks as prodNetworks, testNetworks as devNetworks } from '@/state/chains/prod';
+import { Chain, chains, env } from '@/config';
 
 const DynamicStakingBox = dynamic(() => Promise.resolve(StakingBox), {
   ssr: false,
@@ -23,28 +23,17 @@ const DynamicAssetBox = dynamic(() => Promise.resolve(AssetsAccordian), {
   ssr: false,
 });
 
-const networks = process.env.NEXT_PUBLIC_CHAIN_ENV === 'mainnet' ? prodNetworks : devNetworks;
+const networks: Map<string, Chain> = chains.get(env) ?? new Map();
+const chain_list = Array.from(networks).filter(([_, network]) => network.show).map(([key, _]) => key);
 
 export default function Staking() {
-  const [selectedNetwork, setSelectedNetwork] = useState(networks[0]);
-
+  if (networks.size === 0) {
+    return "No networks available";
+  }
+  const [selectedNetwork, setSelectedNetwork] = useState(networks.get(chain_list[0])); 
   const { address } = useChain('quicksilver');
 
-  let newChainId;
-  if (selectedNetwork.chainId === 'provider') {
-    newChainId = 'cosmoshub-4';
-  } else if (selectedNetwork.chainId === 'elgafar-1') {
-    newChainId = 'stargaze-1';
-  } else if (selectedNetwork.chainId === 'osmo-test-5') {
-    newChainId = 'osmosis-1';
-  } else if (selectedNetwork.chainId === 'regen-redwood-1') {
-    newChainId = 'regen-1';
-  } else {
-    // Default case
-    newChainId = selectedNetwork.chainId;
-  }
-
-  const { APY, isLoading, isError } = useAPYQuery(newChainId);
+  const { APY, isLoading, isError } = useAPYQuery(selectedNetwork?.chain_id); // handle testnets (chain.testnet_for)
   const [balance, setBalance] = useState('');
   const [qBalance, setQBalance] = useState('');
 
@@ -146,8 +135,9 @@ export default function Staking() {
             {/* Content Boxes */}
             <Flex h="100%" maxH={'2xl'} flexDir={{ base: 'column', lg: 'row' }} gap={{ base: '2', lg: '0' }}>
               {/* Staking Box*/}
-              <DynamicStakingBox
-                selectedOption={selectedNetwork}
+              {selectedNetwork && (
+                <DynamicStakingBox
+                  selectedOption={selectedNetwork}
                 isStakingModalOpen={isStakingModalOpen}
                 setStakingModalOpen={setStakingModalOpen}
                 isTransferModalOpen={isTransferModalOpen}
@@ -155,8 +145,9 @@ export default function Staking() {
                 isRevertSharesModalOpen={isRevertSharesModalOpen}
                 setRevertSharesModalOpen={setRevertSharesModalOpen}
                 setBalance={setBalance}
-                setQBalance={setQBalance}
-              />
+                  setQBalance={setQBalance}
+                />
+              )}
               <Box w="10px" display={{ base: 'none', lg: 'block' }} />
 
               {/* Right Box */}
@@ -166,7 +157,9 @@ export default function Staking() {
 
                 <Box h="10px" />
                 {/* Bottom Half (1/3) */}
-                <DynamicAssetBox address={address ?? ''} selectedOption={selectedNetwork} balance={balance} qBalance={qBalance} />
+                {selectedNetwork && (
+                  <DynamicAssetBox address={address ?? ''} selectedOption={selectedNetwork} balance={balance} qBalance={qBalance} />
+                )}
               </Flex>
             </Flex>
           </Flex>
