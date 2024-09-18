@@ -150,7 +150,7 @@ func (k *Keeper) GetUnlockedTokensForZone(ctx sdk.Context, zone *types.Zone) (ma
 }
 
 func (k *Keeper) ScheduleQueuedUnbondings(ctx sdk.Context, zone *types.Zone, epoch int64) error {
-	cond, err := emtypes.NewConditionAll(ctx, emtypes.NewFieldValues(emtypes.FieldEqual(emtypes.FieldIdentifier, fmt.Sprintf("distribute_unbonding/%d", epoch))), true)
+	cond, err := emtypes.NewConditionAll(ctx, emtypes.NewFieldValues(emtypes.FieldEqual(emtypes.FieldIdentifier, fmt.Sprintf("distribute_unbonding/%d", epoch-7))), true)
 	if err != nil {
 		return err
 	}

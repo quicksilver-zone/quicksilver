@@ -56,7 +56,7 @@ func (e Event) resolveFieldValue(fv *FieldValue) (bool, error) {
 		if err != nil {
 			return fv.Negate, err
 		}
-		if v == int64(e.EventType) {
+		if v == int64(e.EventStatus) {
 			return !fv.Negate, nil
 		}
 		return fv.Negate, nil

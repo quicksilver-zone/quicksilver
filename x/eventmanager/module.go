@@ -17,6 +17,7 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
 	"github.com/quicksilver-zone/quicksilver/x/eventmanager/keeper"
+	cli "github.com/quicksilver-zone/quicksilver/x/eventmanager/keeper/client/cli"
 	"github.com/quicksilver-zone/quicksilver/x/eventmanager/types"
 )
 
@@ -80,7 +81,7 @@ func (AppModuleBasic) GetTxCmd() *cobra.Command {
 
 // GetQueryCmd returns the capability module's root query command.
 func (AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return nil
+	return cli.GetQueryCmd()
 }
 
 // ----------------------------------------------------------------------------

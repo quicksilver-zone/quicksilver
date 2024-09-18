@@ -546,7 +546,7 @@ func (suite *KeeperTestSuite) TestHandleQueuedUnbondings() {
 			quicksilver.InterchainstakingKeeper.SetZone(ctx, &zone)
 
 			// trigger handler
-			err := quicksilver.InterchainstakingKeeper.HandleQueuedUnbondings(ctx, &zone, 1)
+			err := quicksilver.InterchainstakingKeeper.HandleQueuedUnbondings(ctx, zone.ChainId, 1, zone.LastRedemptionRate)
 			if test.expectError {
 				suite.Error(err)
 			} else {
