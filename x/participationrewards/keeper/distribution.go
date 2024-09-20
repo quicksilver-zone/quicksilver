@@ -10,6 +10,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/gamm/pool-models/stableswap"
+	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/poolmanager"
 	"github.com/quicksilver-zone/quicksilver/utils"
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
@@ -69,12 +71,12 @@ func (k *Keeper) CalcTokenValues(ctx sdk.Context) (TokenValues, error) {
 
 		if pool.PoolData == nil {
 			errs[idxLabel] = fmt.Errorf("pool data is nil, awaiting OsmosisPoolUpdateCallback")
-			return true
+			return false
 		}
 		gammPool, err := pool.GetPool()
 		if err != nil {
 			errs[idxLabel] = err
-			return true
+			return false
 		}
 
 		denoms := utils.Keys(pool.Denoms)
@@ -88,10 +90,22 @@ func (k *Keeper) CalcTokenValues(ctx sdk.Context) (TokenValues, error) {
 			}
 		}
 
+		if gammPool.GetType() == poolmanager.Stableswap {
+			// be defensive. if scaling_factors are missing, avoid panic.
+			ss, ok := gammPool.(*stableswap.Pool)
+			if !ok {
+				errs[idxLabel] = fmt.Errorf("gammPool %d cannot be cast to StableswapPool", pool.PoolID)
+				return false
+			}
+			if len(ss.GetScalingFactors()) != 2 {
+				errs[idxLabel] = fmt.Errorf("gammPool %d is missing scaling factors", pool.PoolID)
+				return false
+			}
+		}
 		value, err := gammPool.SpotPrice(ctx, denoms[0], denoms[1])
 		if err != nil {
 			errs[idxLabel] = err
-			return true
+			return false
 		}
 
 		decVal := sdk.NewDecFromBigIntWithPrec(value.Dec().BigInt(), 18)
@@ -107,7 +121,7 @@ func (k *Keeper) CalcTokenValues(ctx sdk.Context) (TokenValues, error) {
 		ipool, err := types.UnmarshalProtocolData(types.ProtocolDataTypeOsmosisCLPool, data.Data)
 		if err != nil {
 			errs[idxLabel] = err
-			return true
+			return false
 		}
 		pool, _ := ipool.(*types.OsmosisClPoolProtocolData)
 
@@ -118,12 +132,12 @@ func (k *Keeper) CalcTokenValues(ctx sdk.Context) (TokenValues, error) {
 
 		if pool.PoolData == nil {
 			errs[idxLabel] = fmt.Errorf("pool data is nil, awaiting OsmosisClPoolUpdateCallback")
-			return true
+			return false
 		}
 		clPool, err := pool.GetPool()
 		if err != nil {
 			errs[idxLabel] = err
-			return true
+			return false
 		}
 
 		denoms := utils.Keys(pool.Denoms)
@@ -139,7 +153,7 @@ func (k *Keeper) CalcTokenValues(ctx sdk.Context) (TokenValues, error) {
 		value, err := clPool.SpotPrice(ctx, denoms[0], denoms[1])
 		if err != nil {
 			errs[idxLabel] = err
-			return true
+			return false
 		}
 
 		decVal := sdk.NewDecFromBigIntWithPrec(value.Dec().BigInt(), 18)
