@@ -16,19 +16,16 @@ import {
   Input,
   Grid,
 } from '@chakra-ui/react';
-import { StdFee } from '@cosmjs/amino';
 import { useChain } from '@cosmos-kit/react';
 import styled from '@emotion/styled';
-import { assets } from 'chain-registry';
 import { quicksilver } from 'quicksilverjs';
 import React, { useEffect, useState } from 'react';
 
-
+import { Chain } from '@/config';
 import { useTx } from '@/hooks';
 import { useFeeEstimation } from '@/hooks/useFeeEstimation';
 
 import { IntentMultiModal } from './intentMultiModal';
-import { Chain } from '@/config';
 
 
 const ChakraModalContent = styled(ModalContent)`
@@ -86,7 +83,7 @@ export const SignalIntentModal: React.FC<StakingModalProps> = ({ isOpen, onClose
 
   const { address } = useChain('quicksilver' || '');
 
-  const labels = ['Choose validators', `Set weights`, `Sign & Submit`, `Receive q${selectedOption?.big_denom}`];
+  const labels = ['Choose validators', `Set weights`, `Sign & Submit`, `Receive q${selectedOption?.major_denom}`];
   const [isModalOpen, setModalOpen] = useState(false);
 
   const [selectedValidators, setSelectedValidators] = React.useState<{ name: string; operatorAddress: string }[]>([]);

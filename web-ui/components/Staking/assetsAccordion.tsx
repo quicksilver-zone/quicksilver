@@ -1,8 +1,8 @@
 import { Box, Image, Text, Accordion, AccordionItem, Flex, AccordionButton, SkeletonCircle } from '@chakra-ui/react';
 import React, { useEffect, useState } from 'react';
 
-import { useLiquidRewardsQuery } from '@/hooks/useQueries';
 import { Chain } from '@/config';
+import { useCurrentInterchainAssetsQuery } from '@/hooks/useQueries';
 
 const BigNumber = require('bignumber.js');
 
@@ -15,14 +15,14 @@ type AssetsAccordianProps = {
 
 export const AssetsAccordian: React.FC<AssetsAccordianProps> = ({ selectedOption, balance, qBalance, address }) => {
 
-  const { liquidRewards } = useLiquidRewardsQuery(address);
+  const { assets: liquidRewards } = useCurrentInterchainAssetsQuery(address);
   const [updatedQBalance, setUpdatedQBalance] = useState(qBalance);
 
   useEffect(() => {
     const calculateLiquidRewards = () => {
       let totalAmount = new BigNumber(0);
       // TODO: remove shitty harcoding
-      const denomToFind = selectedOption.big_denom === 'DYDX' ? `aq${selectedOption.big_denom.toLowerCase()}` : `uq${selectedOption.big_denom.toLowerCase()}`;
+      const denomToFind = selectedOption.major_denom === 'DYDX' ? `aq${selectedOption.major_denom.toLowerCase()}` : `uq${selectedOption.major_denom.toLowerCase()}`;
 
       for (const chain in liquidRewards?.assets) {
         const chainAssets = liquidRewards?.assets[chain];
@@ -95,7 +95,7 @@ export const AssetsAccordian: React.FC<AssetsAccordianProps> = ({ selectedOption
               </Flex>
               {renderAssets()}
               <Text pr={2} color="complimentary.900">
-                {selectedOption.big_denom.toUpperCase()}
+                {selectedOption.major_denom.toUpperCase()}
               </Text>
             </AccordionButton>
           </h2>
@@ -113,7 +113,7 @@ export const AssetsAccordian: React.FC<AssetsAccordianProps> = ({ selectedOption
 
               {renderQAssets()}
               <Text pr={2} color="complimentary.900">
-                q{selectedOption.big_denom.toUpperCase()}
+                q{selectedOption.major_denom.toUpperCase()}
               </Text>
             </AccordionButton>
           </h2>

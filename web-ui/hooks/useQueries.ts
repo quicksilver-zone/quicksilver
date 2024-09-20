@@ -33,39 +33,33 @@ type WithdrawalsResponse = {
 };
 
 
-type Amount = {
+export type Amount = {
   denom: string;
   amount: string;
 };
 
 
-interface Asset {
+export type Asset = {
   Type: string;
-  Amount: AssetAmount[];
+  Amount: Amount[];
 }
 
 
-type Errors = {
+export type Errors = {
   Errors: any; 
 };
 
 
-type LiquidRewardsData = {
-  messages: any[]; 
+export type InterchainAssetsData = {
+  messages: Message[]; 
   assets: {
-    [key: string]: [
-      {
-        Type: string;
-        Amount: Amount[];
-      }
-    ];
+    [key: string]: Asset[];
   };
   errors: Errors;
 };
 
-
-type UseLiquidRewardsQueryReturnType = {
-  liquidRewards: LiquidRewardsData | undefined;
+type UseInterchainAssetsQueryReturnType = {
+  assets: InterchainAssetsData | undefined;
   isLoading: boolean;
   isError: boolean;
   refetch: () => void;
@@ -96,25 +90,6 @@ interface Message {
   proofs: Proof[];
  
 }
-
-interface AssetAmount {
-  denom: string;
-  amount: string;
-}
-
-interface LiquidEpochData {
-  messages: Message[];
-  assets: { [key: string]: Asset[] };
-  errors: Record<string, unknown>; 
-}
-
-
-interface UseLiquidEpochQueryReturnType {
-  liquidEpoch: LiquidEpochData | undefined;
-  isLoading: boolean;
-  isError: boolean;
-}
-
 const skipClient = new SkipRouter({
   apiURL: SKIP_API_URL,
 });
@@ -449,15 +424,15 @@ export const useIntentQuery = (chainName: string, address: string) => {
   };
 };
 
-export const useLiquidRewardsQuery = (address: string): UseLiquidRewardsQueryReturnType => {
-  const liquidRewardsQuery = useQuery(
-    ['liquidRewards', address],
+export const useCurrentInterchainAssetsQuery = (address: string): UseInterchainAssetsQueryReturnType => {
+  const currentICAssetsQuery = useQuery(
+    ['currentICAssets', address],
     async () => {
       if (!address) {
         throw new Error('Address is not avaialble');
       }
 
-      const response = await axios.get<LiquidRewardsData>(`https://claim.quicksilver.zone/${address}/current`);
+      const response = await axios.get<InterchainAssetsData>(`https://claim.quicksilver.zone/${address}/current`);
       return response.data;
     },
     {
@@ -467,23 +442,23 @@ export const useLiquidRewardsQuery = (address: string): UseLiquidRewardsQueryRet
   );
 
   return {
-    liquidRewards: liquidRewardsQuery.data,
-    isLoading: liquidRewardsQuery.isLoading,
-    isError: liquidRewardsQuery.isError,
-    refetch: liquidRewardsQuery.refetch,
+    assets: currentICAssetsQuery.data,
+    isLoading: currentICAssetsQuery.isLoading,
+    isError: currentICAssetsQuery.isError,
+    refetch: currentICAssetsQuery.refetch,
   };
 
 }
 
-export const useLiquidEpochQuery = (address: string): UseLiquidEpochQueryReturnType => {
-  const liquidEpochQuery = useQuery(
-    ['liquidEpoch', address],
+export const useEpochInterchainAssetsQuery = (address: string): UseInterchainAssetsQueryReturnType => {
+  const epochICAssetsQuery = useQuery(
+    ['epochICAssets', address],
     async () => {
       if (!address) {
         throw new Error('Address is not available');
       }
 
-      const response = await axios.get<LiquidEpochData>(`https://claim.quicksilver.zone/${address}/epoch`);
+      const response = await axios.get<InterchainAssetsData>(`https://claim.quicksilver.zone/${address}/epoch`);
 
 
       if (response.data.messages.length === 0) {
@@ -499,9 +474,10 @@ export const useLiquidEpochQuery = (address: string): UseLiquidEpochQueryReturnT
   );
 
   return {
-    liquidEpoch: liquidEpochQuery.data,
-    isLoading: liquidEpochQuery.isLoading,
-    isError: liquidEpochQuery.isError,
+    assets: epochICAssetsQuery.data,
+    isLoading: epochICAssetsQuery.isLoading,
+    isError: epochICAssetsQuery.isError,
+    refetch: () => {},
   };
 };
 

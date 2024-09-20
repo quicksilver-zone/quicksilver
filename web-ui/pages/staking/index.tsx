@@ -8,8 +8,8 @@ import { NetworkSelect } from '@/components';
 import { StakingBox } from '@/components';
 import { InfoBox } from '@/components';
 import { AssetsAccordian } from '@/components';
-import { useAPYQuery } from '@/hooks/useQueries';
 import { Chain, chains, env } from '@/config';
+import { useAPYQuery } from '@/hooks/useQueries';
 
 const DynamicStakingBox = dynamic(() => Promise.resolve(StakingBox), {
   ssr: false,
@@ -27,9 +27,6 @@ const networks: Map<string, Chain> = chains.get(env) ?? new Map();
 const chain_list = Array.from(networks).filter(([_, network]) => network.show).map(([key, _]) => key);
 
 export default function Staking() {
-  if (networks.size === 0) {
-    return "No networks available";
-  }
   const [selectedNetwork, setSelectedNetwork] = useState(networks.get(chain_list[0])); 
   const { address } = useChain('quicksilver');
 

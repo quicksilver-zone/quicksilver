@@ -3,9 +3,8 @@ import React from 'react';
 import { BsTrophy, BsCoin, BsClock } from 'react-icons/bs';
 import { RiStockLine } from 'react-icons/ri';
 
-import { useZoneQuery } from '@/hooks/useQueries';
-
 import { Chain } from '@/config';
+import { useZoneQuery } from '@/hooks/useQueries';
 
 type AssetsAccordianProps = {
   displayApr: string;
@@ -19,7 +18,7 @@ export const InfoBox: React.FC<AssetsAccordianProps> = ({ selectedOption, displa
     if (!isZoneLoading && zone) {
       return (
         <Text color={'complimentary.900'}>
-          1 q{selectedOption?.big_denom.toUpperCase()} = {Number(zone.redemptionRate).toFixed(2)} {selectedOption?.big_denom.toUpperCase()}
+          1 q{selectedOption?.major_denom.toUpperCase()} = {Number(zone.redemptionRate).toFixed(2)} {selectedOption?.major_denom.toUpperCase()}
         </Text>
       );
     } else {
@@ -72,7 +71,7 @@ export const InfoBox: React.FC<AssetsAccordianProps> = ({ selectedOption, displa
         transform="rotate(25deg)"
       /> */}
       <Text fontSize="20px" color="white">
-        {selectedOption?.big_denom.toUpperCase()}&nbsp;on Quicksilver
+        {selectedOption?.major_denom.toUpperCase()}&nbsp;on Quicksilver
       </Text>
       <Accordion mt={6} allowToggle>
         <AccordionItem pt={2} mb={2} borderTop={'none'}>
@@ -127,12 +126,12 @@ export const InfoBox: React.FC<AssetsAccordianProps> = ({ selectedOption, displa
           <AccordionPanel alignItems="center" justifyItems="center" color="white" pb={4}>
             <VStack spacing={2} width="100%">
               <HStack justifyContent="space-between" width="100%">
-                <Text color="white">on {selectedOption?.big_denom.toUpperCase()}</Text>
-                <Text color="complimentary.900">0 {selectedOption?.big_denom.toUpperCase()}</Text>
+                <Text color="white">on {selectedOption?.major_denom.toUpperCase()}</Text>
+                <Text color="complimentary.900">0 {selectedOption?.major_denom.toUpperCase()}</Text>
               </HStack>
               <HStack justifyContent="space-between" width="100%">
                 <Text color="white">on Quicksilver</Text>
-                <Text color="complimentary.900">0 {selectedOption?.big_denom.toUpperCase()}</Text>
+                <Text color="complimentary.900">0 {selectedOption?.major_denom.toUpperCase()}</Text>
               </HStack>
             </VStack>
           </AccordionPanel>
@@ -146,7 +145,7 @@ export const InfoBox: React.FC<AssetsAccordianProps> = ({ selectedOption, displa
                 <RiStockLine color="#FF8000" size="24px" />
               </Box>
               <Text fontSize="16px" color={'white'}>
-                Value of 1 q{selectedOption?.big_denom.toUpperCase()}
+                Value of 1 q{selectedOption?.major_denom.toUpperCase()}
               </Text>
             </Flex>
 

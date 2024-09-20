@@ -20,11 +20,11 @@ import styled from '@emotion/styled';
 import { cosmos } from 'quicksilverjs';
 import React, { useEffect, useState } from 'react';
 
+import { Chain } from '@/config';
 import { useTx } from '@/hooks';
 import { useFeeEstimation } from '@/hooks/useFeeEstimation';
 import { useZoneQuery } from '@/hooks/useQueries';
 import { shiftDigits } from '@/utils';
-import { Chain } from '@/config';
 
 const ChakraModalContent = styled(ModalContent)`
   position: relative;
@@ -104,7 +104,7 @@ export const TransferProcessModal: React.FC<StakingModalProps> = ({
   const newChainName = selectedOption?.chain_name;
 
   const { data: zone } = useZoneQuery(selectedOption?.chain_id ?? '');
-  const labels = ['Tokenize Shares', `Transfer`, `Receive q${selectedOption?.big_denom}`];
+  const labels = ['Tokenize Shares', `Transfer`, `Receive q${selectedOption?.major_denom}`];
   const [transactionStatus, setTransactionStatus] = useState('Pending');
   function truncateString(str: string, num: number) {
     if (str.length > num) {
@@ -120,7 +120,7 @@ export const TransferProcessModal: React.FC<StakingModalProps> = ({
     delegatorAddress: address,
     validatorAddress: selectedValidator.operatorAddress,
     amount: {
-      denom: 'u' + selectedOption?.big_denom.toLowerCase(), // TODO: remove hardcoded u
+      denom: 'u' + selectedOption?.major_denom.toLowerCase(), // TODO: remove hardcoded u
       amount: selectedValidator.tokenAmount.toString(),
     },
     tokenizedShareOwner: address,
@@ -221,7 +221,7 @@ export const TransferProcessModal: React.FC<StakingModalProps> = ({
                   <StatNumber color="white">{truncateString(selectedValidator.moniker, 13)}</StatNumber>
                   <StatNumber display={{ base: 'none', md: 'block' }} color="white">
                     {shiftDigits(selectedValidator.tokenAmount, -6)}&nbsp;
-                    {selectedOption?.big_denom}
+                    {selectedOption?.major_denom}
                   </StatNumber>
                 </Stat>
                 {[1, 2, 3].map((circleStep, index) => (
@@ -330,7 +330,7 @@ export const TransferProcessModal: React.FC<StakingModalProps> = ({
                         Transaction {transactionStatus}
                       </Text>
                       <Text mt={2} textAlign={'center'} fontWeight={'light'} fontSize="lg" color="white">
-                        Your q{selectedOption?.big_denom} will arrive to your wallet in a few minutes.
+                        Your q{selectedOption?.major_denom} will arrive to your wallet in a few minutes.
                       </Text>
                     </Flex>
                   </Box>

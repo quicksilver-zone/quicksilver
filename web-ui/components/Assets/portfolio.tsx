@@ -185,7 +185,7 @@ interface PortfolioItemProps {
 const PortfolioItem: React.FC<PortfolioItemProps> = ({ title, amount, qTokenPrice, index }) => {
   const tokenValue = Number(amount) * qTokenPrice;
 
-  const imgType = title === 'qATOM' || title === 'qSAGA' ? 'svg' : 'png';
+  const imgType = title === 'qATOM' || title === 'qSAGA' ? 'svg' : 'png'; // TODO: why?!
 
   return (
     <SimpleGrid

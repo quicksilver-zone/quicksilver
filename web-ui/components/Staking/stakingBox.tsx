@@ -32,6 +32,7 @@ import { quicksilver } from 'quicksilverjs';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { FaStar } from 'react-icons/fa';
 
+import { env, Chain, local_chain } from '@/config';
 import { useTx } from '@/hooks';
 import { useFeeEstimation } from '@/hooks/useFeeEstimation';
 import {
@@ -50,7 +51,6 @@ import StakingProcessModal from './modals/stakingProcessModal';
 import TransferProcessModal from './modals/transferProcessModal';
 import BuyTokensModal from '../react/buyTokensModal';
 
-import { env, Chain, local_chain } from '@/config';
 
 type StakingBoxProps = {
   selectedOption: Chain;
@@ -95,7 +95,7 @@ export const StakingBox = ({
 
   const { balance: allBalances, refetch: allRefetch } = useAllBalancesQuery(selectedOption.chain_name, address ?? '');
 
-  const { balance: qBalance, refetch: qRefetch } = useQBalanceQuery('quicksilver', qAddress ?? '', selectedOption.big_denom.toLowerCase());
+  const { balance: qBalance, refetch: qRefetch } = useQBalanceQuery('quicksilver', qAddress ?? '', selectedOption.major_denom.toLowerCase());
 
   const allRefetchBalances = () => {
     allRefetch();
@@ -344,7 +344,7 @@ export const StakingBox = ({
             <TabPanel>
               <VStack spacing={8} align="center">
                 <Text fontWeight="light" textAlign="center" color="white">
-                  Stake your {selectedOption.big_denom.toUpperCase()} tokens in exchange for q{selectedOption.big_denom.toUpperCase()} which you can
+                  Stake your {selectedOption.major_denom.toUpperCase()} tokens in exchange for q{selectedOption.major_denom.toUpperCase()} which you can
                   deploy around the ecosystem. You can liquid stake half of your balance, if you&apos;re going to LP.
                 </Text>
                 {selectedOption.chain_name === 'Cosmos Hub' && (
@@ -358,7 +358,7 @@ export const StakingBox = ({
                               ? "You don't have any native staked tokens or tokenized shares."
                               : nativeStakedAmount ?? 0 > 0
                                 ? `You currently have ${shiftDigits(nativeStakedAmount ?? '', -6)} ${
-                                    selectedOption.big_denom
+                                    selectedOption.major_denom
                                   } natively staked to ${delegationsResponse?.length} validators.`
                                 : hasTokenized
                                   ? 'You have tokenized shares available for transfer.'
@@ -372,7 +372,7 @@ export const StakingBox = ({
                             color={!nativeStakedAmount && !hasTokenized ? 'whiteAlpha.800' : 'white'}
                           >
                             Use staked&nbsp;
-                            <span style={{ color: '#FF8000' }}>{selectedOption.big_denom}</span>?
+                            <span style={{ color: '#FF8000' }}>{selectedOption.major_denom}</span>?
                           </Text>
                           {delegationsIsLoading && <SkeletonCircle size="4" startColor="complimentary.900" endColor="complimentary.400" />}
                           {!delegationsIsLoading && !delegationsIsError && (
@@ -408,7 +408,7 @@ export const StakingBox = ({
                     <Flex flexDirection="column" w="100%">
                       <Stat py={4} textAlign="left" color="white">
                         <StatLabel>Amount to stake:</StatLabel>
-                        <StatNumber>{selectedOption.big_denom.toUpperCase()} </StatNumber>
+                        <StatNumber>{selectedOption.major_denom.toUpperCase()} </StatNumber>
                       </Stat>
                       <Input
                         _active={{
@@ -473,7 +473,7 @@ export const StakingBox = ({
                               ) : (
                                 <Text color="complimentary.900" fontWeight="light">
                                   {balance?.balance?.amount && Number(balance.balance.amount) > 0 ? (
-                                    `${truncatedBalance} ${selectedOption.big_denom.toUpperCase()}`
+                                    `${truncatedBalance} ${selectedOption.major_denom.toUpperCase()}`
                                   ) : (
                                     <Text
                                       cursor={'pointer'}
@@ -482,7 +482,7 @@ export const StakingBox = ({
                                       _hover={{ color: 'complimentary.400' }}
                                       onClick={() => setIsTokensModalOpen(true)}
                                     >
-                                      Buy&nbsp;{selectedOption.big_denom.toUpperCase()}
+                                      Buy&nbsp;{selectedOption.major_denom.toUpperCase()}
                                     </Text>
                                   )}
                                 </Text>
@@ -495,7 +495,7 @@ export const StakingBox = ({
                           )}
                         </Flex>
                         <BuyTokensModal
-                          denom={selectedOption.big_denom}
+                          denom={selectedOption.major_denom}
                           isOpen={isTokensModalOpen}
                           onClose={() => setIsTokensModalOpen(false)}
                           zone={selectedOption.chain_name}
@@ -544,7 +544,7 @@ export const StakingBox = ({
                     <HStack pt={2} justifyContent="space-between" alignItems="left" w="100%" mt={-8}>
                       <Stat textAlign="left" color="white">
                         <StatLabel>What you&apos;ll get</StatLabel>
-                        <StatNumber>q{selectedOption.big_denom.toUpperCase()}:</StatNumber>
+                        <StatNumber>q{selectedOption.major_denom.toUpperCase()}:</StatNumber>
                       </Stat>
                       <Spacer /> {/* This pushes the next Stat component to the right */}
                       <Stat py={4} textAlign="right" color="white">
@@ -654,7 +654,7 @@ export const StakingBox = ({
                                           )}
                                         </HStack>
                                         <Text color={'complimentary.900'} fontSize="md">
-                                          {shiftDigits(delegation.balance.amount, -selectedOption.exponent)} {selectedOption.big_denom}
+                                          {shiftDigits(delegation.balance.amount, -selectedOption.exponent)} {selectedOption.major_denom}
                                         </Text>
                                       </VStack>
                                     </HStack>
@@ -737,12 +737,12 @@ export const StakingBox = ({
             <TabPanel>
               <VStack spacing={8} align="center">
                 <Text fontWeight="light" textAlign="center" color="white">
-                  Unstake your q{selectedOption.big_denom.toUpperCase()} tokens in exchange for {selectedOption.big_denom.toUpperCase()}.
+                  Unstake your q{selectedOption.major_denom.toUpperCase()} tokens in exchange for {selectedOption.major_denom.toUpperCase()}.
                 </Text>
                 <Flex flexDirection="column" w="100%">
                   <Stat py={4} textAlign="left" color="white">
                     <StatLabel>Amount to unstake:</StatLabel>
-                    <StatNumber>q{selectedOption.big_denom.toUpperCase()} </StatNumber>
+                    <StatNumber>q{selectedOption.major_denom.toUpperCase()} </StatNumber>
                   </Stat>
                   <Input
                     _active={{
@@ -804,8 +804,8 @@ export const StakingBox = ({
                           <Text color="complimentary.900" fontWeight="light">
                             {address
                               ? qAssets && Number(qAssets) !== 0
-                                ? `${qAssetsDisplay} q${selectedOption.big_denom.toUpperCase()}`
-                                : `No q${selectedOption.big_denom.toUpperCase()}`
+                                ? `${qAssetsDisplay} q${selectedOption.major_denom.toUpperCase()}`
+                                : `No q${selectedOption.major_denom.toUpperCase()}`
                               : '0'}
                           </Text>
                         )}
@@ -860,7 +860,7 @@ export const StakingBox = ({
                 <HStack pt={2} justifyContent="space-between" alignItems="left" w="100%" mt={-8}>
                   <Stat textAlign="left" color="white">
                     <StatLabel>What you&apos;ll get</StatLabel>
-                    <StatNumber>{selectedOption.big_denom.toUpperCase()}:</StatNumber>
+                    <StatNumber>{selectedOption.major_denom.toUpperCase()}:</StatNumber>
                   </Stat>
                   <Spacer /> {/* This pushes the next Stat component to the right */}
                   <Stat py={4} textAlign="right" color="white">

@@ -20,9 +20,9 @@ import { Proposal } from 'interchain-query/cosmos/gov/v1/gov';
 import React, { useMemo, useState } from 'react';
 import { PieChart } from 'react-minimal-pie-chart';
 
+import { chains, env } from '@/config';
 import { Votes } from '@/hooks';
 import { decodeUint8Arr, exponentiate, formatDate, getCoin, getPercentage } from '@/utils';
-import { chains, env } from '@/config';
 
 import { VoteResult, TimeDisplay, VoteRatio, NewLineText, StatusBadge, VoteOption } from './common';
 import { VoteColor } from './ProposalCard';

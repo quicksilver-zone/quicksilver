@@ -16,9 +16,8 @@ import {
   Fade,
 } from '@chakra-ui/react';
 import { Key, useCallback, useState } from 'react';
+
 import { chains, env, Chain } from '@/config';
-
-
 import { useIntentQuery, useValidatorLogos, useValidatorsQuery } from '@/hooks/useQueries';
 import { truncateString } from '@/utils';
 
@@ -33,7 +32,7 @@ const StakingIntent: React.FC<StakingIntentProps> = ({ address, isWalletConnecte
   const networks: Map<string, Chain> = chains.get(env) ?? new Map();
   const chain_list = Array.from(networks).filter(([_, network]) => network.show).map(([key, _]) => key);
 
-  //const chains = ['Cosmos', 'Osmosis', 'Dydx', 'Stargaze', 'Regen', 'Sommelier', 'Juno', 'Saga'];
+
   const [isBottomVisible, setIsBottomVisible] = useState(true);
 
   const handleScroll = useCallback((event: React.UIEvent<HTMLDivElement>) => {
@@ -46,7 +45,7 @@ const StakingIntent: React.FC<StakingIntentProps> = ({ address, isWalletConnecte
   const openSignalIntentModal = () => setIsSignalIntentModalOpen(true);
   const closeSignalIntentModal = () => setIsSignalIntentModalOpen(false);
 
-  const [currentChainName, setCurrentChainIndex] = useState(chain_list[0]);
+  const [currentChainName, setCurrentChainName] = useState(chain_list[0]);
 
 
 
@@ -97,11 +96,11 @@ const StakingIntent: React.FC<StakingIntentProps> = ({ address, isWalletConnecte
       }) || [];
 
   const handleLeftArrowClick = () => {
-    setCurrentChainIndex(chain_list[prev()]);
+    setCurrentChainName(chain_list[prev()]);
   };
 
   const handleRightArrowClick = () => {
-    setCurrentChainIndex(chain_list[next()]);
+    setCurrentChainName(chain_list[next()]);
   };
 
   if (!isWalletConnected) {

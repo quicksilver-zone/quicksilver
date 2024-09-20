@@ -7,7 +7,7 @@ import React, { useState } from 'react';
 
 import { useTx } from '@/hooks';
 import { useFeeEstimation } from '@/hooks/useFeeEstimation';
-import { useIncorrectAuthChecker, useLiquidEpochQuery } from '@/hooks/useQueries';
+import { useIncorrectAuthChecker, useEpochInterchainAssetsQuery } from '@/hooks/useQueries';
 
 interface RewardsClaimInterface {
   address: string;
@@ -22,7 +22,7 @@ export const RewardsClaim: React.FC<RewardsClaimInterface> = ({ address, onClose
   const [isSigning, setIsSigning] = useState<boolean>(false);
   const [isError, setIsError] = useState<boolean>(false);
 
-  const { liquidEpoch } = useLiquidEpochQuery(address);
+  const { assets: interchainAssetsEpoch } = useEpochInterchainAssetsQuery(address);
 
   const { submitClaim } = quicksilver.participationrewards.v1.MessageComposer.withTypeUrl;
 
@@ -115,14 +115,14 @@ export const RewardsClaim: React.FC<RewardsClaimInterface> = ({ address, onClose
     event.preventDefault();
     setIsSigning(true);
 
-    if (!liquidEpoch || liquidEpoch.messages.length === 0) {
+    if (!interchainAssetsEpoch || interchainAssetsEpoch.messages.length === 0) {
       console.error('No epoch data available or no messages to claim');
       setIsSigning(false);
       return;
     }
 
     try {
-      const msgSubmitClaims = liquidEpoch.messages.map((message) => {
+      const msgSubmitClaims = interchainAssetsEpoch.messages.map((message: any) => {
         const transformedProofs = transformProofs(message.proofs);
         return submitClaim({
           userAddress: message.user_address,

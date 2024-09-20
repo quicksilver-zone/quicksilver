@@ -15,17 +15,14 @@ import {
   StatNumber,
   Spinner,
 } from '@chakra-ui/react';
-import { StdFee } from '@cosmjs/amino';
 import styled from '@emotion/styled';
-import chains from 'chain-registry';
-import { assets } from 'chain-registry';
 import { cosmos } from 'quicksilverjs';
 import React, { useEffect, useState } from 'react';
 
+import { Chain } from '@/config';
 import { useTx } from '@/hooks';
 import { useFeeEstimation } from '@/hooks/useFeeEstimation';
 import { shiftDigits } from '@/utils';
-import { Chain } from '@/config';
 
 const ChakraModalContent = styled(ModalContent)`
   position: relative;
@@ -167,7 +164,7 @@ export const RevertSharesProcessModal: React.FC<StakingModalProps> = ({
 
                   <StatNumber display={{ base: 'none', md: 'block' }} color="white">
                     {shiftDigits(selectedValidator.tokenAmount, -6)}&nbsp;
-                    {selectedOption?.big_denom}
+                    {selectedOption?.major_denom}
                   </StatNumber>
                 </Stat>
                 {[1, 2].map((circleStep, index) => (
@@ -224,7 +221,7 @@ export const RevertSharesProcessModal: React.FC<StakingModalProps> = ({
                       You are about to revert your shares back to tokens.
                     </Text>
                     <Text mt={2} textAlign={'left'} fontWeight={'light'} fontSize="lg" color="white">
-                      Reverting&nbsp;&nbsp;{shiftDigits(selectedValidator.tokenAmount, -(selectedOption?.exponent ?? 6))}&nbsp; {selectedOption?.big_denom}
+                      Reverting&nbsp;&nbsp;{shiftDigits(selectedValidator.tokenAmount, -(selectedOption?.exponent ?? 6))}&nbsp; {selectedOption?.major_denom}
                     </Text>
                   </Flex>
 

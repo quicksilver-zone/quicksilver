@@ -25,7 +25,7 @@ import chains from 'chain-registry';
 import { cosmos } from 'quicksilverjs';
 import React, { useEffect, useState } from 'react';
 
-
+import { Chain } from '@/config';
 import { useTx } from '@/hooks';
 import { useFeeEstimation } from '@/hooks/useFeeEstimation';
 import { useZoneQuery } from '@/hooks/useQueries';
@@ -33,7 +33,6 @@ import { shiftDigits } from '@/utils';
 
 import { MultiModal } from './validatorSelectionModal';
 
-import { Chain } from '@/config';
 
 const ChakraModalContent = styled(ModalContent)`
   position: relative;
@@ -87,7 +86,7 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
   const newChainName = selectedOption?.chain_name;
   
 
-  const labels = ['Choose validators', `Set weights`, `Sign & Submit`, `Receive q${selectedOption?.big_denom}`];
+  const labels = ['Choose validators', `Set weights`, `Sign & Submit`, `Receive q${selectedOption?.major_denom}`];
   const [isModalOpen, setModalOpen] = useState(false);
 
   const [selectedValidators, setSelectedValidators] = useState<{ name: string; operatorAddress: string }[]>([]);
@@ -344,7 +343,7 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
                 <Stat>
                   <StatLabel color="rgba(255,255,255,0.5)">LIQUID STAKING</StatLabel>
                   <StatNumber color="white">
-                    {tokenAmount} {selectedOption?.big_denom}
+                    {tokenAmount} {selectedOption?.major_denom}
                   </StatNumber>
                 </Stat>
                 {[1, 2, 3, 4].map((circleStep, index) => (
@@ -619,7 +618,7 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
                       textAlign={'left'}
                       color="white"
                     >
-                      You’re going to liquid stake {tokenAmount} {selectedOption?.big_denom} on Quicksilver
+                      You’re going to liquid stake {tokenAmount} {selectedOption?.major_denom} on Quicksilver
                     </Text>
                     <Text
                       display={{ base: 'block', md: 'none' }}
@@ -629,7 +628,7 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
                       textAlign={'left'}
                       color="white"
                     >
-                      Liquid staking {tokenAmount} {selectedOption?.big_denom}
+                      Liquid staking {tokenAmount} {selectedOption?.major_denom}
                     </Text>
                     {selectedValidators.length > 0 && (
                       <Flex mt={2} textAlign={'left'} alignItems="baseline" gap="2">
@@ -645,7 +644,7 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
                       <Text fontWeight={'bold'}>Receiving:</Text>
                       <Text color="complimentary.900">
                         {!isZoneLoading ? (
-                          `${(Number(tokenAmount) / Number(zone?.redemptionRate || 1)).toFixed(2)} q${selectedOption?.big_denom}`
+                          `${(Number(tokenAmount) / Number(zone?.redemptionRate || 1)).toFixed(2)} q${selectedOption?.major_denom}`
                         ) : (
                           <Spinner thickness="2px" speed="0.65s" emptyColor="gray.200" color="complimentary.900" size="sm" />
                         )}
@@ -699,7 +698,7 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
                         Transaction {transactionStatus}
                       </Text>
                       <Text mt={2} textAlign={'center'} fontWeight={'light'} fontSize="lg" color="white">
-                        Your q{selectedOption?.big_denom} will arrive to your wallet in a few minutes.
+                        Your q{selectedOption?.major_denom} will arrive to your wallet in a few minutes.
                       </Text>
                       <Button
                         w="55%"

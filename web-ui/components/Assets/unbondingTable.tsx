@@ -3,7 +3,6 @@ import { Table, Thead, Tbody, Tr, Th, Td, TableContainer, Text, Box, Flex, IconB
 import { useState } from 'react';
 
 import { Chain, chains, env } from '@/config';
-
 import { useUnbondingQuery } from '@/hooks/useQueries';
 import { shiftDigits, formatQasset } from '@/utils';
 

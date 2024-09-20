@@ -10,18 +10,18 @@ import MyPortfolio from '@/components/Assets/portfolio';
 import QuickBox from '@/components/Assets/quickbox';
 import RewardsClaim from '@/components/Assets/rewardsClaim';
 import UnbondingAssetsTable from '@/components/Assets/unbondingTable';
+import { Chain, chains, env } from '@/config';
 import { useGrpcQueryClient } from '@/hooks/useGrpcQueryClient';
 import {
   useAPYQuery,
   useAPYsQuery,
   useAuthChecker,
-  useLiquidRewardsQuery,
+  useCurrentInterchainAssetsQuery,
   useQBalancesQuery,
   useTokenPrices,
   useRedemptionRatesQuery,
 } from '@/hooks/useQueries';
 import { shiftDigits } from '@/utils';
-import { Chain, chains, env } from '@/config';
 
 export interface PortfolioItemInterface {
   title: string;
@@ -33,7 +33,6 @@ export interface PortfolioItemInterface {
 function Home() {
   const { address } = useChain('quicksilver');
   const tokens = ['atom', 'osmo', 'stars', 'regen', 'somm', 'juno', 'dydx', 'saga'];
-  const getExponent = (denom: string) => (['qdydx', 'aqdydx'].includes(denom) ? 18 : 6);
 
   const { grpcQueryClient } = useGrpcQueryClient('quicksilver');
 
@@ -42,29 +41,39 @@ function Home() {
   const { APYs, APYsLoading } = useAPYsQuery();
   const { redemptionRates, redemptionLoading } = useRedemptionRatesQuery();
   const { APY: quickAPY } = useAPYQuery('quicksilver-2');
-  const { liquidRewards, refetch: liquidRefetch } = useLiquidRewardsQuery(address ?? '');
+  const { assets, refetch: interchainAssetsRefetch } = useCurrentInterchainAssetsQuery(address ?? '');
   const { authData, authError, authRefetch } = useAuthChecker(address ?? '');
 
   const refetchAll = () => {
     qRefetch();
-    liquidRefetch();
+    interchainAssetsRefetch();
   };
 
   const isLoadingAll = qIsLoading || APYsLoading || redemptionLoading || isLoadingPrices;
 
-  const tokenToChainIdMap: { [key: string]: string | undefined } = useMemo(() => {
+  const tokenToChainNameMap: { [key: string]: string } = useMemo(() => {
+    return Array.from(chains.get(env)?.values() || []).reduce((acc, chain: Chain) => ({
+      ...acc,
+      [chain.big_denom]: chain.chain_name,
+    }), {});
+  }, []);
+
+  const tokenToChainIdMap: { [key: string]: string } = useMemo(() => {
     return Array.from(chains.get(env)?.values() || []).reduce((acc, chain: Chain) => ({
       ...acc,
       [chain.big_denom]: chain.chain_id,
     }), {});
-  }, [chains]); // Depend directly on the chains map
+  }, []);
 
-  function getChainIdForToken(tokenToChainIdMap: { [x: string]: any }, baseToken: string) {
+  const getExponent = (denom: string) => { const c = getChainForToken(tokenToChainNameMap, denom); if (c != null) { return chains.get(env)?.get(c)?.exponent } else { console.log("returning 6 for denom: ", denom); return 6}};
+
+  const getChainForToken = (tokenToChainIdMap: { [x: string]: string }, baseToken: string) => {
     return tokenToChainIdMap[baseToken.toLowerCase()] || null;
   }
-  const nonNative = liquidRewards?.assets;
+
+  const nonNative = assets?.assets;
   const portfolioItems: PortfolioItemInterface[] = useMemo(() => {
-    if (!qbalance || !APYs || !redemptionRates || isLoadingAll || !liquidRewards) return [];
+    if (!qbalance || !APYs || !redemptionRates || isLoadingAll || !assets) return [];
 
     // Flatten nonNative assets into a single array and accumulate amounts for each denom
     const amountsMap = new Map();
@@ -79,7 +88,7 @@ function Home() {
     // Map over the accumulated results to create portfolio items
     return Array.from(amountsMap.entries()).map(([denom, amount]) => {
       const normalizedDenom = denom.slice(2);
-      const chainId = getChainIdForToken(tokenToChainIdMap, normalizedDenom);
+      const chainId = getChainForToken(tokenToChainIdMap, normalizedDenom);
       const tokenPriceInfo = tokenPrices?.find((info) => info.token === normalizedDenom);
       const redemptionRate = chainId && redemptionRates[chainId] ? redemptionRates[chainId].current : 1;
       const qTokenPrice = tokenPriceInfo ? tokenPriceInfo.price * redemptionRate : 0;
@@ -94,7 +103,7 @@ function Home() {
       };
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [qbalance, APYs, redemptionRates, isLoadingAll, liquidRewards, nonNative, tokenToChainIdMap, tokenPrices, refetchAll]);
+  }, [qbalance, APYs, redemptionRates, isLoadingAll, assets, tokenToChainIdMap, tokenPrices, refetchAll]);
 
   const totalPortfolioValue = useMemo(
     () => portfolioItems.reduce((acc, item) => acc + Number(item.amount) * item.qTokenPrice, 0),
@@ -140,7 +149,7 @@ function Home() {
 
       const asset = qbalance?.find((a) => a.denom.substring(2).toLowerCase() === baseToken);
       const apyAsset = qtokens.find((a) => a.substring(1).toLowerCase() === baseToken);
-      const chainId = apyAsset ? getChainIdForToken(tokenToChainIdMap, baseToken) : undefined;
+      const chainId = apyAsset ? getChainForToken(tokenToChainIdMap, baseToken) : undefined;
 
       const apy = chainId && chainId !== 'dydx-mainnet-1' && APYs && APYs.hasOwnProperty(chainId) ? APYs[chainId] : 0;
       const redemptionRate = chainId && redemptionRates && redemptionRates[chainId] ? redemptionRates[chainId].last || 1 : 1;
@@ -316,9 +325,8 @@ function Home() {
             {showAssetsGrid && (
               <AssetsGrid
                 refetch={refetchAll}
-                liquidRewards={liquidRewards}
+                interchainAssets={assets}
                 address={address}
-                nonNative={liquidRewards}
                 isWalletConnected={address !== undefined}
                 assets={assetsData}
               />

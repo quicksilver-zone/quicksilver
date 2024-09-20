@@ -13,7 +13,7 @@
     "update-deps": "bunx npm-check-updates --root --format group -i"
   },
   "dependencies": {
-    "@chain-registry/assets": "^1.64.92",
+    "@chain-registry/assets": "^1.64.93",
     "@chakra-ui/icons": "^2.1.1",
     "@chakra-ui/react": "2.8.2",
     "@chakra-ui/system": "^2.6.2",
@@ -55,8 +55,7 @@
     "react-markdown": "^9.0.1",
     "react-minimal-pie-chart": "^8.4.0",
     "remixicon": "^4.3.0",
-    "simplex-noise": "^4.0.3",
-    "stridejs": "^0.8.0-alpha.5"
+    "simplex-noise": "^4.0.3"
   },
   "devDependencies": {
     "@testing-library/react": "^14.3.1",

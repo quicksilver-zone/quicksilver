@@ -29,10 +29,10 @@ import { useRouter } from 'next/router';
 import { cosmos, quicksilver } from 'quicksilverjs';
 import React, { useEffect, useState } from 'react';
 
+import { Chain, chains as configChains, env } from '@/config';
 import { useTx } from '@/hooks';
 import { useBalanceQuery, useQBalanceQuery, useValidatorLogos, useValidatorsQuery, useZoneQuery } from '@/hooks/useQueries';
 import { shiftDigits } from '@/utils';
-import { Chain, chains as configChains, env } from '@/config';
 
 function StakingWithValidator() {
   const router = useRouter();
@@ -194,7 +194,7 @@ export const StakingBox = ({ selectedOption, valoperAddress }: StakingBoxProps) 
   const { address: qAddress } = useChain('quicksilver');
   const { balance, isLoading } = useBalanceQuery(selectedOption.chain_name, address ?? '');
 
-  const { balance: qBalance } = useQBalanceQuery('quicksilver', qAddress ?? '', selectedOption.big_denom.toLowerCase());
+  const { balance: qBalance } = useQBalanceQuery('quicksilver', qAddress ?? '', selectedOption.major_denom.toLowerCase());
 
   const qAssets = qBalance?.balance.amount || '';
 
@@ -418,7 +418,7 @@ export const StakingBox = ({ selectedOption, valoperAddress }: StakingBoxProps) 
             <TabPanel>
               <VStack spacing={8} align="center">
                 <Text fontWeight="light" textAlign="center" color="white">
-                  Stake your {selectedOption.big_denom.toUpperCase()} tokens in exchange for q{selectedOption.big_denom.toUpperCase()}
+                  Stake your {selectedOption.major_denom.toUpperCase()} tokens in exchange for q{selectedOption.major_denom.toUpperCase()}
                 </Text>
                 <Stat py={4} textAlign="left" color="white">
                   <StatLabel fontSize={'lg'} py={1}>
@@ -461,7 +461,7 @@ export const StakingBox = ({ selectedOption, valoperAddress }: StakingBoxProps) 
                   <Flex flexDirection="column" w="100%">
                     <Stat py={4} textAlign="left" color="white">
                       <StatLabel>Amount to stake:</StatLabel>
-                      <StatNumber>{selectedOption.big_denom.toUpperCase()} </StatNumber>
+                      <StatNumber>{selectedOption.major_denom.toUpperCase()} </StatNumber>
                     </Stat>
                     <Input
                       _active={{
@@ -528,10 +528,10 @@ export const StakingBox = ({ selectedOption, valoperAddress }: StakingBoxProps) 
                               <Text color="complimentary.900" fontWeight="light">
                                 {address ? (
                                   balance?.balance?.amount && Number(balance?.balance?.amount) !== 0 ? (
-                                    `${truncatedBalance} ${selectedOption.big_denom.toUpperCase()}`
+                                    `${truncatedBalance} ${selectedOption.major_denom.toUpperCase()}`
                                   ) : (
-                                    <Link href={`https://app.osmosis.zone/?from=USDC&to=${selectedOption.big_denom.toUpperCase()}`} isExternal>
-                                      Get {selectedOption.big_denom.toUpperCase()} tokens here
+                                    <Link href={`https://app.osmosis.zone/?from=USDC&to=${selectedOption.major_denom.toUpperCase()}`} isExternal>
+                                      Get {selectedOption.major_denom.toUpperCase()} tokens here
                                     </Link>
                                   )
                                 ) : (
@@ -590,7 +590,7 @@ export const StakingBox = ({ selectedOption, valoperAddress }: StakingBoxProps) 
                   <HStack pt={2} justifyContent="space-between" alignItems="left" w="100%" mt={-8}>
                     <Stat textAlign="left" color="white">
                       <StatLabel>What you&apos;ll get</StatLabel>
-                      <StatNumber>q{selectedOption.big_denom.toUpperCase()}:</StatNumber>
+                      <StatNumber>q{selectedOption.major_denom.toUpperCase()}:</StatNumber>
                     </Stat>
                     <Spacer /> {/* This pushes the next Stat component to the right */}
                     <Stat py={4} textAlign="right" color="white">
@@ -627,12 +627,12 @@ export const StakingBox = ({ selectedOption, valoperAddress }: StakingBoxProps) 
             <TabPanel>
               <VStack spacing={8} align="center">
                 <Text fontWeight="light" textAlign="center" color="white">
-                  Unstake your q{selectedOption.big_denom.toUpperCase()} tokens in exchange for {selectedOption.big_denom.toUpperCase()}.
+                  Unstake your q{selectedOption.major_denom.toUpperCase()} tokens in exchange for {selectedOption.major_denom.toUpperCase()}.
                 </Text>
                 <Flex flexDirection="column" w="100%">
                   <Stat py={4} textAlign="left" color="white">
                     <StatLabel>Amount to unstake:</StatLabel>
-                    <StatNumber>q{selectedOption.big_denom.toUpperCase()} </StatNumber>
+                    <StatNumber>q{selectedOption.major_denom.toUpperCase()} </StatNumber>
                   </Stat>
                   <Input
                     _active={{
@@ -694,8 +694,8 @@ export const StakingBox = ({ selectedOption, valoperAddress }: StakingBoxProps) 
                           <Text color="complimentary.900" fontWeight="light">
                             {address
                               ? qAssets && Number(qAssets) !== 0
-                                ? `${qAssetsDisplay} ${selectedOption.big_denom.toUpperCase()}`
-                                : `No q${selectedOption.big_denom.toUpperCase()}`
+                                ? `${qAssetsDisplay} ${selectedOption.major_denom.toUpperCase()}`
+                                : `No q${selectedOption.major_denom.toUpperCase()}`
                               : '0'}
                           </Text>
                         )}
@@ -750,7 +750,7 @@ export const StakingBox = ({ selectedOption, valoperAddress }: StakingBoxProps) 
                 <HStack pt={2} justifyContent="space-between" alignItems="left" w="100%" mt={-8}>
                   <Stat textAlign="left" color="white">
                     <StatLabel>What you&apos;ll get</StatLabel>
-                    <StatNumber>{selectedOption.big_denom.toUpperCase()}:</StatNumber>
+                    <StatNumber>{selectedOption.major_denom.toUpperCase()}:</StatNumber>
                   </Stat>
                   <Spacer /> {/* This pushes the next Stat component to the right */}
                   <Stat py={4} textAlign="right" color="white">
