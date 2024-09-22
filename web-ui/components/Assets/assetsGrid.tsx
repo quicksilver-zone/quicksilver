@@ -62,6 +62,7 @@ const AssetCard: React.FC<AssetCardProps> = ({ address, assetName, balance, apy,
     'juno-1': 'juno',
     'dydx-mainnet-1': 'dydx',
     'ssc-1': 'saga',
+    'agoric-3': 'agoric',
   };
 
   const getChainName = (chainId: string) => {
@@ -366,8 +367,8 @@ const AssetsGrid: React.FC<AssetGridProps> = ({ address, assets, isWalletConnect
             <Box
               key={index}
               minW="350px"
-              transform={focusedIndex === index ? 'translateY(-10px)' : 'none'}
-              transition="transform 0.1s"
+              transform={focusedIndex === index ? 'translateY(-4px)' : 'none'}
+              transition="transform 0.25s"
               onMouseEnter={() => handleMouseEnter(index)}
             >
               <AssetCard

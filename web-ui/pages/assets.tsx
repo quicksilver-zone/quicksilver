@@ -54,18 +54,20 @@ function Home() {
   const tokenToChainNameMap: { [key: string]: string } = useMemo(() => {
     return Array.from(chains.get(env)?.values() || []).reduce((acc, chain: Chain) => ({
       ...acc,
-      [chain.big_denom]: chain.chain_name,
+      [chain.major_denom]: chain.chain_name,
     }), {});
   }, []);
 
   const tokenToChainIdMap: { [key: string]: string } = useMemo(() => {
     return Array.from(chains.get(env)?.values() || []).reduce((acc, chain: Chain) => ({
       ...acc,
-      [chain.big_denom]: chain.chain_id,
+      [chain.major_denom]: chain.chain_id,
     }), {});
   }, []);
 
-  const getExponent = (denom: string) => { const c = getChainForToken(tokenToChainNameMap, denom); if (c != null) { return chains.get(env)?.get(c)?.exponent } else { console.log("returning 6 for denom: ", denom); return 6}};
+  console.log(tokenToChainNameMap)
+
+  const getExponent = (denom: string) => { const c = getChainForToken(tokenToChainNameMap, denom); console.log(c); if (c != null) { return chains.get(env)?.get(c)?.exponent } else { console.log("returning 6 for denom: ", denom); return 6}};
 
   const getChainForToken = (tokenToChainIdMap: { [x: string]: string }, baseToken: string) => {
     return tokenToChainIdMap[baseToken.toLowerCase()] || null;
@@ -77,6 +79,7 @@ function Home() {
 
     // Flatten nonNative assets into a single array and accumulate amounts for each denom
     const amountsMap = new Map();
+    console.log(amountsMap)
     Object.values(nonNative || {})
       .flat()
       .flatMap((reward) => reward.Amount)
@@ -92,8 +95,8 @@ function Home() {
       const tokenPriceInfo = tokenPrices?.find((info) => info.token === normalizedDenom);
       const redemptionRate = chainId && redemptionRates[chainId] ? redemptionRates[chainId].current : 1;
       const qTokenPrice = tokenPriceInfo ? tokenPriceInfo.price * redemptionRate : 0;
-      const exp = getExponent(denom);
-      const normalizedAmount = shiftDigits(amount, -exp);
+      const exp = getExponent(normalizedDenom);
+      const normalizedAmount = shiftDigits(amount, -(exp ?? 6));
 
       return {
         title: 'q' + normalizedDenom.toUpperCase(),
@@ -141,7 +144,7 @@ function Home() {
   // Data for the assets grid
   // the query return `qbalance` is an array of quicksilver staked assets held by the user
   // assetsData maps over the assets in qbalance and returns the name, balance, apy, native asset denom, and redemption rate.
-  const qtokens = useMemo(() => ['qatom', 'qosmo', 'qstars', 'qregen', 'qsomm', 'qjuno', 'qdydx', 'qsaga'], []);
+  const qtokens = useMemo(() => ['qatom', 'qosmo', 'qstars', 'qregen', 'qsomm', 'qjuno', 'qdydx', 'qsaga', 'qbld'], []);
 
   const assetsData = useMemo(() => {
     return qtokens.map((token) => {
@@ -149,15 +152,16 @@ function Home() {
 
       const asset = qbalance?.find((a) => a.denom.substring(2).toLowerCase() === baseToken);
       const apyAsset = qtokens.find((a) => a.substring(1).toLowerCase() === baseToken);
-      const chainId = apyAsset ? getChainForToken(tokenToChainIdMap, baseToken) : undefined;
 
+      const chainId = apyAsset ? getChainForToken(tokenToChainIdMap, baseToken) : undefined;
       const apy = chainId && chainId !== 'dydx-mainnet-1' && APYs && APYs.hasOwnProperty(chainId) ? APYs[chainId] : 0;
+
       const redemptionRate = chainId && redemptionRates && redemptionRates[chainId] ? redemptionRates[chainId].last || 1 : 1;
       const exp = apyAsset ? getExponent(apyAsset) : 0;
 
       return {
         name: token.toUpperCase(),
-        balance: asset ? shiftDigits(Number(asset.amount), -exp).toString() : '0',
+        balance: asset ? shiftDigits(Number(asset.amount), -(exp ?? 6)).toString() : '0',
         apy: parseFloat(((apy * 100) / 100).toFixed(4)),
         native: baseToken.toUpperCase(),
         redemptionRates: redemptionRate.toString(),

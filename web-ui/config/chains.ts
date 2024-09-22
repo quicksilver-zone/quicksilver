@@ -19,6 +19,7 @@ export type Chain = {
     exponent: number;
     logo: string;
     qlogo: string;
+    is_118: boolean;
 }
 
 const quicksilver_mainnet: Chain = {
@@ -32,11 +33,12 @@ const quicksilver_mainnet: Chain = {
     enable_deposits: true,
     enable_withdrawals: true,
     lsm_enabled: false,
-    major_denom: "QCK",
+    major_denom: "qck",
     minor_denom: "uqck",
     exponent: 6,
     logo: '/img/networks/qck.svg',
     qlogo: '/img/networks/qck.svg',
+    is_118: true,
 }
 
 const quicksilver_testnet: Chain = {
@@ -50,11 +52,12 @@ const quicksilver_testnet: Chain = {
     enable_deposits: true,
     enable_withdrawals: true,
     lsm_enabled: false,
-    major_denom: "QCK",
+    major_denom: "qck",
     minor_denom: "uqck",
     exponent: 6,
     logo: '/img/networks/qck.svg',
     qlogo: '/img/networks/qck.svg',
+    is_118: true,
 }
 
 export const local_chain = new Map<string, Chain>([
@@ -75,11 +78,12 @@ const test_chains = new Map<string, Chain>([
         enable_deposits: true,
         enable_withdrawals: true,
         lsm_enabled: true,
-        major_denom: "Atom",
+        major_denom: "atom",
         minor_denom: "uatom",
         exponent: 6,
         logo: '/img/networks/atom.svg',
         qlogo: '/img/networks/qatom.svg',
+        is_118: true,
     }]
 ])
 
@@ -96,11 +100,12 @@ const prod_chains = new Map<string, Chain>([
         enable_deposits: true,
         enable_withdrawals: true,
         lsm_enabled: true,
-        major_denom: "Atom",
+        major_denom: "atom",
         minor_denom: "uatom",
         exponent: 6,
         logo: '/img/networks/atom.svg',
-      qlogo: '/img/networks/qatom.svg',
+        qlogo: '/img/networks/qatom.svg',
+        is_118: true,
     }],[
     "osmosis", {
         chain_id: "osmosis-1",
@@ -113,11 +118,12 @@ const prod_chains = new Map<string, Chain>([
         enable_deposits: true,
         enable_withdrawals: true,
         lsm_enabled: false,
-        major_denom: "Osmo",
+        major_denom: "osmo",
         minor_denom: "uosmo",
         exponent: 6,
         logo: '/img/networks/osmo.svg',
         qlogo: '/img/networks/qosmo.svg',
+        is_118: true,
     }],[
     "stargaze", {
         chain_id: "stargaze-1",
@@ -130,11 +136,12 @@ const prod_chains = new Map<string, Chain>([
         enable_deposits: true,
         enable_withdrawals: true,
         lsm_enabled: false,
-        major_denom: "Stars",
+        major_denom: "stars",
         minor_denom: "ustars",
         exponent: 6,
         logo: '/img/networks/stargaze.svg',
         qlogo: '/img/networks/qstars.svg',
+        is_118: true,
     }],
     ["juno", {
         chain_id: "juno-1",
@@ -147,11 +154,12 @@ const prod_chains = new Map<string, Chain>([
         enable_deposits: true,
         enable_withdrawals: true,
         lsm_enabled: false,
-        major_denom: "Juno",
+        major_denom: "juno",
         minor_denom: "ujuno",
         exponent: 6,
         logo: '/img/networks/juno.svg',
         qlogo: '/img/networks/qjuno.svg',
+        is_118: true,
     }],
     ["regen", {
         chain_id: "regen-1",
@@ -164,11 +172,12 @@ const prod_chains = new Map<string, Chain>([
         enable_deposits: true,
         enable_withdrawals: true,
         lsm_enabled: false,
-        major_denom: "Regen",
+        major_denom: "regen",
         minor_denom: "uregen",
         exponent: 6,
         logo: '/img/networks/regen.svg',
         qlogo: '/img/networks/qregen.svg',
+        is_118: true,
     }],
     // ["terra", {
     //     chain_id: "terra-2",
@@ -191,11 +200,12 @@ const prod_chains = new Map<string, Chain>([
         enable_deposits: true,
         enable_withdrawals: true,
         lsm_enabled: false,
-        major_denom: "Saga",
+        major_denom: "saga",
         minor_denom: "usaga",
         exponent: 6,
         logo: '/img/networks/saga.svg',
         qlogo: '/img/networks/qsaga.svg',
+        is_118: true,
     }],
     ["celestia", {
         chain_id: "celestia",
@@ -208,11 +218,12 @@ const prod_chains = new Map<string, Chain>([
         enable_deposits: true,
         enable_withdrawals: true,
         lsm_enabled: false,
-        major_denom: "TIA",
+        major_denom: "tia",
         minor_denom: "utia",
         exponent: 6,
         logo: '/img/networks/tia.svg',
         qlogo: '/img/networks/qtia.svg',
+        is_118: true,
     }],
     ["dydx", {
         chain_id: "dydx-mainnet-1",
@@ -225,11 +236,12 @@ const prod_chains = new Map<string, Chain>([
         enable_deposits: true,
         enable_withdrawals: true,
         lsm_enabled: false,
-        major_denom: "DYDX",
+        major_denom: "dydx",
         minor_denom: "adydx",
         exponent: 18,
         logo: '/img/networks/dydx.svg',
         qlogo: '/img/networks/qdydx.svg',
+        is_118: true,
     }],
     ["sommelier", {
         chain_id: "sommelier-3",
@@ -242,11 +254,12 @@ const prod_chains = new Map<string, Chain>([
         enable_deposits: true,
         enable_withdrawals: true,
         lsm_enabled: false,
-        major_denom: "Somm",
+        major_denom: "somm",
         minor_denom: "usomm",
         exponent: 6,
         logo: '/img/networks/somm.svg',
         qlogo: '/img/networks/qsomm.svg',
+        is_118: true,
     }],
     ["umee", {
         chain_id: "umee-1",
@@ -259,11 +272,12 @@ const prod_chains = new Map<string, Chain>([
         enable_deposits: false,
         enable_withdrawals: false,
         lsm_enabled: false,
-        major_denom: "Umee",
+        major_denom: "umee",
         minor_denom: "uumee",
         exponent: 6,
         logo: '/img/networks/umee.svg',
         qlogo: '/img/networks/qumee.svg',
+        is_118: true,
     }],
     ["agoric", {
         chain_id: "agoric-3",
@@ -276,11 +290,12 @@ const prod_chains = new Map<string, Chain>([
         enable_deposits: true,
         enable_withdrawals: true,
         lsm_enabled: false,
-        major_denom: "BLD",
+        major_denom: "bld",
         minor_denom: "ubld",
         exponent: 6,
         logo: '/img/networks/bld.svg',
         qlogo: '/img/networks/qbld.svg',
+        is_118: false,
     }]
 
 ]);

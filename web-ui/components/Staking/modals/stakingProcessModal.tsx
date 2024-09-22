@@ -24,8 +24,9 @@ import { assets } from 'chain-registry';
 import chains from 'chain-registry';
 import { cosmos } from 'quicksilverjs';
 import React, { useEffect, useState } from 'react';
+import { useChain } from '@cosmos-kit/react';
 
-import { Chain } from '@/config';
+import { Chain, defaultChainName, env, chains as configChains } from '@/config';
 import { useTx } from '@/hooks';
 import { useFeeEstimation } from '@/hooks/useFeeEstimation';
 import { useZoneQuery } from '@/hooks/useQueries';
@@ -182,7 +183,7 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
   });
 
   const { data: zone, isLoading: isZoneLoading } = useZoneQuery(selectedOption?.chain_id ?? '');
-
+  const chain = configChains.get(env)?.get(selectedOption?.chain_name ?? '');
   const valToByte = (val: number) => {
     if (val > 1) {
       val = 1;
@@ -208,8 +209,19 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
     });
     memoBuffer = Buffer.concat([Buffer.from([0x02, memoBuffer.length]), memoBuffer]);
   }
+  const { address: qsAddress } = useChain(defaultChainName);
 
-  let memo = memoBuffer.length > 0 && selectedValidators.length > 0 ? memoBuffer.toString('base64') : '';
+  if (chain?.is_118 == false && qsAddress) {
+
+    console.log("118:", qsAddress, "zone:", zone?.chainId);
+
+    let { words } = bech32.decode(qsAddress ?? '');
+    let wordsUint8Array = new Uint8Array(bech32.fromWords(words));
+    
+    memoBuffer = Buffer.concat([memoBuffer, Buffer.concat([Buffer.from([0x00, wordsUint8Array.length]), wordsUint8Array])]);
+  }
+
+  let memo = memoBuffer.length > 0 ? memoBuffer.toString('base64') : '';
 
   const parsedAmount = parseFloat(tokenAmount ?? '0');
 
@@ -242,7 +254,7 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
   }
 
   const { tx } = useTx(newChainName ?? '');
-
+  
   const { estimateFee } = useFeeEstimation(newChainName ?? '');
 
   const handleLiquidStake = async (event: React.MouseEvent) => {
