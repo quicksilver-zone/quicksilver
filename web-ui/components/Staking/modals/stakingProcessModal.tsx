@@ -18,13 +18,13 @@ import {
   Grid,
   Checkbox,
 } from '@chakra-ui/react';
+import { useChain } from '@cosmos-kit/react';
 import styled from '@emotion/styled';
 import { bech32 } from 'bech32';
 import { assets } from 'chain-registry';
 import chains from 'chain-registry';
 import { cosmos } from 'quicksilverjs';
 import React, { useEffect, useState } from 'react';
-import { useChain } from '@cosmos-kit/react';
 
 import { Chain, defaultChainName, env, chains as configChains } from '@/config';
 import { useTx } from '@/hooks';
