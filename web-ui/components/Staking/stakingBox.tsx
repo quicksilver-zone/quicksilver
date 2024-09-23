@@ -147,7 +147,7 @@ export const StakingBox = ({
 
   const { requestRedemption } = quicksilver.interchainstaking.v1.MessageComposer.withTypeUrl;
   let parsedAmount = parseFloat(tokenAmount ?? '0');
-  if (isNaN(parsedAmount)) {
+  if (Number.isNaN(parsedAmount)) {
     parsedAmount = 0;
   }
 
