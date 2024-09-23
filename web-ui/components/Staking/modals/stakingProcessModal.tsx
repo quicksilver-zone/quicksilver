@@ -87,7 +87,7 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
   const newChainName = selectedOption?.chain_name;
   
 
-  const labels = ['Choose validators', `Set weights`, `Sign & Submit`, `Receive q${selectedOption?.major_denom}`];
+  const labels = ['Choose validators', `Set weights`, `Sign & Submit`, `Receive q${selectedOption?.major_denom.toUpperCase()}`];
   const [isModalOpen, setModalOpen] = useState(false);
 
   const [selectedValidators, setSelectedValidators] = useState<{ name: string; operatorAddress: string }[]>([]);
@@ -196,9 +196,9 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
 
   const addValidator = (valAddr: string, weight: number) => {
     let { words } = bech32.decode(valAddr);
-    let wordsUint8Array = new Uint8Array(bech32.fromWords(words));
-    let weightByte = valToByte(weight);
-    return Buffer.concat([Buffer.from([weightByte]), wordsUint8Array]);
+    let wordsBuffer = new Uint8Array(bech32.fromWords(words));
+    let weightByteBuffer = new Uint8Array([valToByte(weight)]);
+    return Buffer.concat([weightByteBuffer, wordsBuffer]);
   };
 
   let memoBuffer = Buffer.alloc(0);
@@ -212,20 +212,19 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
   const { address: qsAddress } = useChain(defaultChainName);
 
   if (chain?.is_118 == false && qsAddress) {
-
-    console.log("118:", qsAddress, "zone:", zone?.chainId);
-
     let { words } = bech32.decode(qsAddress ?? '');
-    let wordsUint8Array = new Uint8Array(bech32.fromWords(words));
+    let wordsBuffer = Buffer.from(new Uint8Array(bech32.fromWords(words)));
     
-    memoBuffer = Buffer.concat([memoBuffer, Buffer.concat([Buffer.from([0x00, wordsUint8Array.length]), wordsUint8Array])]);
+    memoBuffer = Buffer.concat([memoBuffer, Buffer.from([0x00, wordsBuffer.length]), wordsBuffer]);
   }
 
   let memo = memoBuffer.length > 0 ? memoBuffer.toString('base64') : '';
 
   const parsedAmount = parseFloat(tokenAmount ?? '0');
-
-  let numericAmount = BigInt(Math.floor(parsedAmount * Math.pow(10, Number(zone?.decimals ?? '6'))));
+  let numericAmount = BigInt(0);
+  if (!isNaN(parsedAmount)) {
+    numericAmount = BigInt(Math.floor(parsedAmount * Math.pow(10, Number(zone?.decimals ?? '6'))));
+  }
 
   if (numericAmount <= 0) {
     numericAmount = BigInt(0);
@@ -355,7 +354,7 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
                 <Stat>
                   <StatLabel color="rgba(255,255,255,0.5)">LIQUID STAKING</StatLabel>
                   <StatNumber color="white">
-                    {tokenAmount} {selectedOption?.major_denom}
+                    {tokenAmount} {selectedOption?.major_denom.toUpperCase()}
                   </StatNumber>
                 </Stat>
                 {[1, 2, 3, 4].map((circleStep, index) => (

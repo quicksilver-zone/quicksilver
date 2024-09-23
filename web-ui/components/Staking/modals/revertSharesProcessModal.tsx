@@ -164,7 +164,7 @@ export const RevertSharesProcessModal: React.FC<StakingModalProps> = ({
 
                   <StatNumber display={{ base: 'none', md: 'block' }} color="white">
                     {shiftDigits(selectedValidator.tokenAmount, -6)}&nbsp;
-                    {selectedOption?.major_denom}
+                    {selectedOption?.major_denom.toUpperCase()}
                   </StatNumber>
                 </Stat>
                 {[1, 2].map((circleStep, index) => (
@@ -221,7 +221,7 @@ export const RevertSharesProcessModal: React.FC<StakingModalProps> = ({
                       You are about to revert your shares back to tokens.
                     </Text>
                     <Text mt={2} textAlign={'left'} fontWeight={'light'} fontSize="lg" color="white">
-                      Reverting&nbsp;&nbsp;{shiftDigits(selectedValidator.tokenAmount, -(selectedOption?.exponent ?? 6))}&nbsp; {selectedOption?.major_denom}
+                      Reverting&nbsp;&nbsp;{shiftDigits(selectedValidator.tokenAmount, -(selectedOption?.exponent ?? 6))}&nbsp; {selectedOption?.major_denom.toUpperCase()}
                     </Text>
                   </Flex>
 

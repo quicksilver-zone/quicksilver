@@ -15,7 +15,7 @@ interface RewardsClaimInterface {
   refetch: () => void;
 }
 export const RewardsClaim: React.FC<RewardsClaimInterface> = ({ address, onClose, refetch }) => {
-  const { tx } = useTx('quicksilver' ?? '');
+  const { tx } = useTx('quicksilver');
   const { estimateFee } = useFeeEstimation('quicksilver');
   const { authData } = useIncorrectAuthChecker(address);
 

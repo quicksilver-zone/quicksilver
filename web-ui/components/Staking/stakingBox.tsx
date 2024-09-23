@@ -358,7 +358,7 @@ export const StakingBox = ({
                               ? "You don't have any native staked tokens or tokenized shares."
                               : nativeStakedAmount ?? 0 > 0
                                 ? `You currently have ${shiftDigits(nativeStakedAmount ?? '', -6)} ${
-                                    selectedOption.major_denom
+                                    selectedOption.major_denom.toUpperCase()
                                   } natively staked to ${delegationsResponse?.length} validators.`
                                 : hasTokenized
                                   ? 'You have tokenized shares available for transfer.'
@@ -372,7 +372,7 @@ export const StakingBox = ({
                             color={!nativeStakedAmount && !hasTokenized ? 'whiteAlpha.800' : 'white'}
                           >
                             Use staked&nbsp;
-                            <span style={{ color: '#FF8000' }}>{selectedOption.major_denom}</span>?
+                            <span style={{ color: '#FF8000' }}>{selectedOption.major_denom.toUpperCase()}</span>?
                           </Text>
                           {delegationsIsLoading && <SkeletonCircle size="4" startColor="complimentary.900" endColor="complimentary.400" />}
                           {!delegationsIsLoading && !delegationsIsError && (
@@ -654,7 +654,7 @@ export const StakingBox = ({
                                           )}
                                         </HStack>
                                         <Text color={'complimentary.900'} fontSize="md">
-                                          {shiftDigits(delegation.balance.amount, -selectedOption.exponent)} {selectedOption.major_denom}
+                                          {shiftDigits(delegation.balance.amount, -selectedOption.exponent)} {selectedOption.major_denom.toUpperCase()}
                                         </Text>
                                       </VStack>
                                     </HStack>

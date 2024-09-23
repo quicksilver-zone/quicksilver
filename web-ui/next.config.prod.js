@@ -7,6 +7,7 @@ module.exports = withBundleAnalyzer({
   reactStrictMode: true,
   swcMinify: true,
   transpilePackages: ['interchain-query'],
+  output: 'standalone',
   async redirects() {
     return [
       {

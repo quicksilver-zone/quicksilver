@@ -32,7 +32,7 @@ export interface PortfolioItemInterface {
 
 function Home() {
   const { address } = useChain('quicksilver');
-  const tokens = ['atom', 'osmo', 'stars', 'regen', 'somm', 'juno', 'dydx', 'saga'];
+  const tokens = ['atom', 'osmo', 'stars', 'regen', 'somm', 'juno', 'dydx', 'saga', 'bld'];
 
   const { grpcQueryClient } = useGrpcQueryClient('quicksilver');
 

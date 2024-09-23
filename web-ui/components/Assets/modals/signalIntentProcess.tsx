@@ -81,9 +81,9 @@ export const SignalIntentModal: React.FC<StakingModalProps> = ({ isOpen, onClose
   const [isSigning, setIsSigning] = useState<boolean>(false);
   const [isError, setIsError] = useState<boolean>(false);
 
-  const { address } = useChain('quicksilver' || '');
+  const { address } = useChain('quicksilver');
 
-  const labels = ['Choose validators', `Set weights`, `Sign & Submit`, `Receive q${selectedOption?.major_denom}`];
+  const labels = ['Choose validators', `Set weights`, `Sign & Submit`, `Receive q${selectedOption?.major_denom.toUpperCase()}`];
   const [isModalOpen, setModalOpen] = useState(false);
 
   const [selectedValidators, setSelectedValidators] = React.useState<{ name: string; operatorAddress: string }[]>([]);
@@ -171,8 +171,8 @@ export const SignalIntentModal: React.FC<StakingModalProps> = ({ isOpen, onClose
     fromAddress: address ?? '',
   });
 
-  const { tx } = useTx('quicksilver' ?? '');
-  const { estimateFee } = useFeeEstimation('quicksilver' ?? '');
+  const { tx } = useTx('quicksilver');
+  const { estimateFee } = useFeeEstimation('quicksilver');
 
   const handleSignalIntent = async (event: React.MouseEvent) => {
     event.preventDefault();
