@@ -151,7 +151,7 @@ export const StakingBox = ({
     parsedAmount = 0;
   }
 
-  let numericAmount = BigInt(Math.floor(parsedAmount * Math.pow(10, Number(zone?.decimals ?? '6'))));
+  let numericAmount = BigInt(Math.floor(parsedAmount * Math.pow(10, Number(zone?.decimals || 6))));
 
   if (numericAmount <= 0) {
     numericAmount = BigInt(0);
