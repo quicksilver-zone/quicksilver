@@ -269,17 +269,18 @@ const UnbondingAssetsTable: React.FC<UnbondingAssetsTableProps> = ({ address, is
                 </Thead>
                 <Tbody>
                   {unbondingData?.withdrawals.map((withdrawal, index) => {
-                    const shiftAmount = formatDenom(withdrawal.burn_amount.denom) === 'qDYDX' ? -18 : -6;
+                    
+                    const exp = chains.get(env)?.get(currentChainName)?.exponent ?? 6
                     return (
                       <Tr _even={{ bg: 'rgba(255, 128, 0, 0.1)' }} key={index}>
                         <Td textAlign="center" borderBottomColor={'transparent'}>
-                          {Number(shiftDigits(withdrawal.burn_amount.amount, shiftAmount))} {formatDenom(withdrawal.burn_amount.denom)}
+                          {Number(shiftDigits(withdrawal.burn_amount.amount, -exp))} {formatDenom(withdrawal.burn_amount.denom)}
                         </Td>
                         <Td textAlign="center" borderBottomColor={'transparent'} display={hideOnMobile}>
                           {statusCodes.get(withdrawal.status)}
                         </Td>
                         <Td textAlign="center" borderBottomColor={'transparent'}>
-                          {withdrawal.amount.map((amt) => `${shiftDigits(amt.amount, shiftAmount)} ${formatDenom(amt.denom)}`).join(', ')}
+                          {withdrawal.amount.map((amt) => `${shiftDigits(amt.amount, -exp)} ${formatDenom(amt.denom)}`).join(', ')}
                         </Td>
                         <Td textAlign="center" borderBottomColor={'transparent'} display={hideOnMobile}>
                           {withdrawal.epoch_number}

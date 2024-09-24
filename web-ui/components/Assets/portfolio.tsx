@@ -185,8 +185,6 @@ interface PortfolioItemProps {
 const PortfolioItem: React.FC<PortfolioItemProps> = ({ title, amount, qTokenPrice, index }) => {
   const tokenValue = Number(amount) * qTokenPrice;
 
-  const imgType = title === 'qATOM' || title === 'qSAGA' ? 'svg' : 'png'; // TODO: why?!
-
   return (
     <SimpleGrid
       _even={{ bg: 'rgba(255, 128, 0, 0.1)' }}
@@ -200,7 +198,7 @@ const PortfolioItem: React.FC<PortfolioItemProps> = ({ title, amount, qTokenPric
       py={1}
     >
       <HStack gap={3}>
-        <Image alt={`${title}`} ml={2} borderRadius={'full'} src={`/img/networks/${title.toLowerCase()}.${imgType}`} boxSize="33px" />
+        <Image alt={`${title}`} ml={2} borderRadius={'full'} src={`/img/networks/${title.toLowerCase()}.svg`} boxSize="33px" />
         <Text>q{title.toLocaleLowerCase().slice(1).toLocaleUpperCase()}</Text>
       </HStack>
       <Text> {formatNumber(parseFloat(amount))}</Text>

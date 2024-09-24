@@ -1,7 +1,7 @@
 import { Box, Image, Text, Accordion, AccordionItem, Flex, AccordionButton, SkeletonCircle } from '@chakra-ui/react';
 import React, { useEffect, useState } from 'react';
 
-import { Chain } from '@/config';
+import { Chain, env, getQMinorAsset } from '@/config';
 import { useCurrentInterchainAssetsQuery } from '@/hooks/useQueries';
 
 const BigNumber = require('bignumber.js');
@@ -21,8 +21,8 @@ export const AssetsAccordian: React.FC<AssetsAccordianProps> = ({ selectedOption
   useEffect(() => {
     const calculateLiquidRewards = () => {
       let totalAmount = new BigNumber(0);
-      // TODO: remove shitty harcoding
-      const denomToFind = selectedOption.major_denom === 'DYDX' ? `aq${selectedOption.major_denom.toLowerCase()}` : `uq${selectedOption.major_denom.toLowerCase()}`;
+      
+      const denomToFind = getQMinorAsset(env, selectedOption.chain_id);
 
       for (const chain in liquidRewards?.assets) {
         const chainAssets = liquidRewards?.assets[chain];
@@ -105,7 +105,7 @@ export const AssetsAccordian: React.FC<AssetsAccordianProps> = ({ selectedOption
           <h2>
             <AccordionButton _hover={{ cursor: 'default' }} borderRadius={'10px'} borderTopColor={'transparent'}>
               <Flex p={1} flexDirection="row" flex="1" alignItems="center">
-                <Image alt="qAtom" borderRadius={'full'} src={selectedOption.qlogo} boxSize="35px" mr={2} />
+                <Image alt={`q${selectedOption.major_denom.toUpperCase()}`} borderRadius={'full'} src={selectedOption.qlogo} boxSize="35px" mr={2} />
                 <Text fontSize="16px" color={'white'}>
                   Liquid Staked
                 </Text>

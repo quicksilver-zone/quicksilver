@@ -12,7 +12,7 @@ type AssetsAccordianProps = {
 };
 
 export const InfoBox: React.FC<AssetsAccordianProps> = ({ selectedOption, displayApr }) => {
-  const { data: zone, isLoading: isZoneLoading, isError: isZoneError } = useZoneQuery(selectedOption?.chain_id ?? '');
+  const { data: zone, isLoading: isZoneLoading } = useZoneQuery(selectedOption?.chain_id ?? '');
 
   const renderRedemptionRate = () => {
     if (!isZoneLoading && zone) {

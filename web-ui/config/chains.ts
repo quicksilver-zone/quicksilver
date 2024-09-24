@@ -20,6 +20,7 @@ export type Chain = {
     logo: string;
     qlogo: string;
     is_118: boolean;
+   
 }
 
 const quicksilver_mainnet: Chain = {
@@ -317,4 +318,47 @@ export const getEndpoints = (env: string) => {
     )
 }
 
+export const getChainLogo = (env: string, chain: string) => {
+    return chains.get(env)?.get(chain)?.logo;
+}
+
+export const getChainQLogo = (env: string, chain: string) => {
+    return chains.get(env)?.get(chain)?.qlogo;
+}
+
+export const getChainExplorer = (env: string, chain: string) => {
+    return chains.get(env)?.get(chain)?.explorer;
+}
+
+export const getQMinorAsset = (env: string, chain: string) => {
+    let minor_denom = chains.get(env)?.get(chain)?.minor_denom;
+    return minor_denom?.substring(0, 1).toUpperCase() + "q" + minor_denom?.substring(1);
+}
+
+export const getQMajorAsset = (env: string, chain: string) => {
+    let major_denom = chains.get(env)?.get(chain)?.major_denom;
+    return "q" + major_denom;
+}
+ 
+export const tokenToChainNameMap = (env: string) => {
+    const map: { [key: string]: string } = {};
+  for (const chain of chains.get(env)?.values() || []) {
+    map[chain.major_denom] = chain.chain_name;
+  }
+  return map;
+}
+
+export const tokenToChainIdMap = (env: string) => {
+    const map: { [key: string]: string } = {};
+    for (const chain of chains.get(env)?.values() || []) {
+      map[chain.major_denom] = chain.chain_id;
+    }
+    return map;
+}
+
+export const getExponent = (env: string, denom: string) => { const c = getChainForToken(tokenToChainNameMap(env), denom); if (c != null) { return chains.get(env)?.get(c)?.exponent } else { return 6}};
+
+export const getChainForToken = (tokenToChainIdMap: { [x: string]: string }, baseToken: string) => {
+    return tokenToChainIdMap[baseToken.toLowerCase()] || null;
+}
 

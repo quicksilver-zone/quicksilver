@@ -21,16 +21,13 @@ import {
 import { useChain } from '@cosmos-kit/react';
 import styled from '@emotion/styled';
 import { bech32 } from 'bech32';
-import { assets } from 'chain-registry';
-import chains from 'chain-registry';
 import { cosmos } from 'quicksilverjs';
 import React, { useEffect, useState } from 'react';
 
-import { Chain, defaultChainName, env, chains as configChains } from '@/config';
+import { Chain, env, chains as configChains, local_chain } from '@/config';
 import { useTx } from '@/hooks';
 import { useFeeEstimation } from '@/hooks/useFeeEstimation';
 import { useZoneQuery } from '@/hooks/useQueries';
-import { shiftDigits } from '@/utils';
 
 import { MultiModal } from './validatorSelectionModal';
 
@@ -209,7 +206,7 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
     });
     memoBuffer = Buffer.concat([Buffer.from([0x02, memoBuffer.length]), memoBuffer]);
   }
-  const { address: qsAddress } = useChain(defaultChainName);
+  const { address: qsAddress } = useChain(local_chain.get(env)?.chain_name ?? '');
 
   if (chain?.is_118 == false && qsAddress) {
     let { words } = bech32.decode(qsAddress ?? '');
@@ -237,20 +234,6 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
     toAddress: zone?.depositAddress?.address ?? '',
     amount: [{ denom: zone?.baseDenom ?? '', amount: numericAmount.toString() }],
   });
-
-  const mainTokens = assets.find(({ chain_name }) => chain_name === newChainName);
-  const fees = chains.chains.find(({ chain_name }) => chain_name === newChainName)?.fees?.fee_tokens;
-  const mainDenom = mainTokens?.assets[0].base ?? '';
-  let feeAmount;
-  // TODO: hardcoding stuff is shit.
-  if (selectedOption?.chain_name === 'sommelier') {
-    // Hardcoded value for sommelier-3
-    feeAmount = '10000';
-  } else {
-    // Default case
-    const fixedMinGasPrice = fees?.find(({ denom }: { denom: string }) => denom === mainDenom)?.average_gas_price ?? '';
-    feeAmount = shiftDigits(fixedMinGasPrice, 6).toString();
-  }
 
   const { tx } = useTx(newChainName ?? '');
   
@@ -709,7 +692,7 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
                         Transaction {transactionStatus}
                       </Text>
                       <Text mt={2} textAlign={'center'} fontWeight={'light'} fontSize="lg" color="white">
-                        Your q{selectedOption?.major_denom} will arrive to your wallet in a few minutes.
+                        Your q{selectedOption?.major_denom.toUpperCase()} will arrive to your wallet in a few minutes.
                       </Text>
                       <Button
                         w="55%"

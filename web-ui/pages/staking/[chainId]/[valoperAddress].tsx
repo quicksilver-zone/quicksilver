@@ -200,7 +200,7 @@ export const StakingBox = ({ selectedOption, valoperAddress }: StakingBoxProps) 
 
   const baseBalance = shiftDigits(balance?.balance?.amount || '0', -selectedOption.exponent);
 
-  const { data: zone, isLoading: isZoneLoading, isError: isZoneError } = useZoneQuery(selectedOption.chain_id);
+  const { data: zone, isLoading: isZoneLoading } = useZoneQuery(selectedOption.chain_id);
 
   useEffect(() => {
     setTokenAmount('0');
@@ -275,7 +275,7 @@ export const StakingBox = ({ selectedOption, valoperAddress }: StakingBoxProps) 
     setTokenAmount('');
   };
 
-  const { validatorsData, isLoading: validatorsDataLoading, isError: validatorsDataError } = useValidatorsQuery(selectedOption.chain_name);
+  const { validatorsData } = useValidatorsQuery(selectedOption.chain_name);
 
   const moniker = validatorsData?.find((validator) => validator.address === valoperAddress)?.name ?? '';
 
@@ -363,7 +363,7 @@ export const StakingBox = ({ selectedOption, valoperAddress }: StakingBoxProps) 
   } else if (Number(tokenAmount) < 0.1) {
     liquidStakeTooltip = 'Minimum amount to stake is 0.1';
   }
-  const { data: logos, isLoading: isFetchingLogos } = useValidatorLogos(selectedOption?.chain_name ?? '', validatorsData || []);
+  const { data: logos } = useValidatorLogos(selectedOption?.chain_name ?? '', validatorsData || []);
   const validatorLogo = logos ? logos[valoperAddress] : undefined;
   return (
     <Box

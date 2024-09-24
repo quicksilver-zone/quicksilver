@@ -120,7 +120,7 @@ export const TransferProcessModal: React.FC<StakingModalProps> = ({
     delegatorAddress: address,
     validatorAddress: selectedValidator.operatorAddress,
     amount: {
-      denom: 'u' + selectedOption?.major_denom.toLowerCase(), // TODO: remove hardcoded u
+      denom: selectedOption?.minor_denom.toLowerCase() + "",
       amount: selectedValidator.tokenAmount.toString(),
     },
     tokenizedShareOwner: address,
@@ -330,7 +330,7 @@ export const TransferProcessModal: React.FC<StakingModalProps> = ({
                         Transaction {transactionStatus}
                       </Text>
                       <Text mt={2} textAlign={'center'} fontWeight={'light'} fontSize="lg" color="white">
-                        Your q{selectedOption?.major_denom} will arrive to your wallet in a few minutes.
+                        Your q{selectedOption?.major_denom.toUpperCase()} will arrive to your wallet in a few minutes.
                       </Text>
                     </Flex>
                   </Box>

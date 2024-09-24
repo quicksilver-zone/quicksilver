@@ -198,10 +198,10 @@ const RewardsModal = ({ address, isOpen, onClose }: { address: string; isOpen: b
   const handleExecuteRoute = async () => {
     setIsSigning(true);
 
-    // TODO: moar hardcoding ;'()
     const allAddresses: UserAddress[] = [
+  
       { chainID: 'quicksilver-2', address },
-      { chainID: 'osmosis-1', address: chains.osmosis.address ?? '' },
+      { chainID: 'osmosis-1', address: chains.osmosis.address ?? ''},
       { chainID: 'cosmoshub-4', address: chains.cosmoshub.address ?? '' },
       { chainID: 'stargaze-1', address: chains.stargaze.address ?? '' },
       { chainID: 'sommelier-3', address: chains.sommelier.address ?? '' },

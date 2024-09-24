@@ -10,7 +10,7 @@ import MyPortfolio from '@/components/Assets/portfolio';
 import QuickBox from '@/components/Assets/quickbox';
 import RewardsClaim from '@/components/Assets/rewardsClaim';
 import UnbondingAssetsTable from '@/components/Assets/unbondingTable';
-import { Chain, chains, env } from '@/config';
+import { chains, getExponent, env, getChainForToken, tokenToChainIdMap } from '@/config';
 import { useGrpcQueryClient } from '@/hooks/useGrpcQueryClient';
 import {
   useAPYQuery,
@@ -32,7 +32,8 @@ export interface PortfolioItemInterface {
 
 function Home() {
   const { address } = useChain('quicksilver');
-  const tokens = ['atom', 'osmo', 'stars', 'regen', 'somm', 'juno', 'dydx', 'saga', 'bld'];
+  const tokens = Array.from(chains.get(env)?.values() || []).map((chain) => chain.major_denom.toLowerCase());
+  //const tokens = ['atom', 'osmo', 'stars', 'regen', 'somm', 'juno', 'dydx', 'saga', 'bld'];
 
   const { grpcQueryClient } = useGrpcQueryClient('quicksilver');
 
@@ -44,34 +45,13 @@ function Home() {
   const { assets, refetch: interchainAssetsRefetch } = useCurrentInterchainAssetsQuery(address ?? '');
   const { authData, authError, authRefetch } = useAuthChecker(address ?? '');
 
+
   const refetchAll = () => {
     qRefetch();
     interchainAssetsRefetch();
   };
 
   const isLoadingAll = qIsLoading || APYsLoading || redemptionLoading || isLoadingPrices;
-
-  const tokenToChainNameMap: { [key: string]: string } = useMemo(() => {
-    return Array.from(chains.get(env)?.values() || []).reduce((acc, chain: Chain) => ({
-      ...acc,
-      [chain.major_denom]: chain.chain_name,
-    }), {});
-  }, []);
-
-  const tokenToChainIdMap: { [key: string]: string } = useMemo(() => {
-    return Array.from(chains.get(env)?.values() || []).reduce((acc, chain: Chain) => ({
-      ...acc,
-      [chain.major_denom]: chain.chain_id,
-    }), {});
-  }, []);
-
-  console.log(tokenToChainNameMap)
-
-  const getExponent = (denom: string) => { const c = getChainForToken(tokenToChainNameMap, denom); console.log(c); if (c != null) { return chains.get(env)?.get(c)?.exponent } else { console.log("returning 6 for denom: ", denom); return 6}};
-
-  const getChainForToken = (tokenToChainIdMap: { [x: string]: string }, baseToken: string) => {
-    return tokenToChainIdMap[baseToken.toLowerCase()] || null;
-  }
 
   const nonNative = assets?.assets;
   const portfolioItems: PortfolioItemInterface[] = useMemo(() => {
@@ -91,11 +71,11 @@ function Home() {
     // Map over the accumulated results to create portfolio items
     return Array.from(amountsMap.entries()).map(([denom, amount]) => {
       const normalizedDenom = denom.slice(2);
-      const chainId = getChainForToken(tokenToChainIdMap, normalizedDenom);
+      const chainId = getChainForToken(tokenToChainIdMap(env), normalizedDenom);
       const tokenPriceInfo = tokenPrices?.find((info) => info.token === normalizedDenom);
       const redemptionRate = chainId && redemptionRates[chainId] ? redemptionRates[chainId].current : 1;
       const qTokenPrice = tokenPriceInfo ? tokenPriceInfo.price * redemptionRate : 0;
-      const exp = getExponent(normalizedDenom);
+      const exp = getExponent(env, normalizedDenom);
       const normalizedAmount = shiftDigits(amount, -(exp ?? 6));
 
       return {
@@ -144,24 +124,21 @@ function Home() {
   // Data for the assets grid
   // the query return `qbalance` is an array of quicksilver staked assets held by the user
   // assetsData maps over the assets in qbalance and returns the name, balance, apy, native asset denom, and redemption rate.
-  const qtokens = useMemo(() => ['qatom', 'qosmo', 'qstars', 'qregen', 'qsomm', 'qjuno', 'qdydx', 'qsaga', 'qbld'], []);
+  const qtokens = Array.from(chains.get(env)?.values() || []).filter(chain => chain.show).map((chain) => "q" + chain.major_denom.toLowerCase());
 
   const assetsData = useMemo(() => {
     return qtokens.map((token) => {
       const baseToken = token.substring(1).toLowerCase();
 
       const asset = qbalance?.find((a) => a.denom.substring(2).toLowerCase() === baseToken);
-      const apyAsset = qtokens.find((a) => a.substring(1).toLowerCase() === baseToken);
-
-      const chainId = apyAsset ? getChainForToken(tokenToChainIdMap, baseToken) : undefined;
-      const apy = chainId && chainId !== 'dydx-mainnet-1' && APYs && APYs.hasOwnProperty(chainId) ? APYs[chainId] : 0;
+      const chainId = getChainForToken(tokenToChainIdMap(env), baseToken);
+      const apy = chainId && APYs && APYs[chainId] ? APYs[chainId] : 0;
 
       const redemptionRate = chainId && redemptionRates && redemptionRates[chainId] ? redemptionRates[chainId].last || 1 : 1;
-      const exp = apyAsset ? getExponent(apyAsset) : 0;
-
+      const exp = getExponent(env, baseToken);
       return {
         name: token.toUpperCase(),
-        balance: asset ? shiftDigits(Number(asset.amount), -(exp ?? 6)).toString() : '0',
+        balance: asset ? shiftDigits(Number(asset.amount), -(exp || 6)).toString() : '0',
         apy: parseFloat(((apy * 100) / 100).toFixed(4)),
         native: baseToken.toUpperCase(),
         redemptionRates: redemptionRate.toString(),
