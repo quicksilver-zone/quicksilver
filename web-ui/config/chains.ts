@@ -314,7 +314,8 @@ export const getEndpoints = (env: string) => {
           rpc: chain.rpc,
           rest: chain.rest,
         },
-      })
+      }),
+      {} // Providing an initial empty object for the accumulator
     )
 }
 
