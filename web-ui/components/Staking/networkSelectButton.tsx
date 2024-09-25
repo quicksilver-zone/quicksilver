@@ -5,27 +5,16 @@ import { Menu, MenuButton, MenuList, MenuItem, Button, Flex, Image, Text, useDis
 import axios from 'axios';
 import React, { useEffect, useState } from 'react';
 
-import { networks as prodNetworks, testNetworks as devNetworks } from '@/state/chains/prod';
-
-const networks = process.env.NEXT_PUBLIC_CHAIN_ENV === 'mainnet' ? prodNetworks : devNetworks;
+import { Chain, local_chain, env, chains} from '@/config';
 
 interface CustomMenuProps {
   buttonTextColor?: string;
-  selectedOption: (typeof networks)[0];
-  setSelectedNetwork: (network: (typeof networks)[0]) => void;
+  selectedOption: Chain|undefined;
+  setSelectedNetwork: (network: Chain) => void;
 }
 
-type Network = {
-  value: string;
-  logo: string;
-  qlogo: string;
-  name: string;
-  chainName: string;
-  chainId: string;
-};
-
 export const NetworkSelect: React.FC<CustomMenuProps> = ({ buttonTextColor = 'white', selectedOption, setSelectedNetwork }) => {
-  const handleOptionClick = (network: (typeof networks)[0]) => {
+  const handleOptionClick = (network: Chain) => {
     setSelectedNetwork(network);
   };
 
@@ -45,7 +34,7 @@ export const NetworkSelect: React.FC<CustomMenuProps> = ({ buttonTextColor = 'wh
 
   const fetchLiveZones = async () => {
     try {
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_QUICKSILVER_API}/quicksilver/interchainstaking/v1/zones`);
+      const response = await axios.get(`${local_chain.get(env)?.rest[0]}/quicksilver/interchainstaking/v1/zones`);
       const liveZones = response.data.zones.map((zone: { chain_id: any }) => zone.chain_id);
       return liveZones;
     } catch (error) {
@@ -54,12 +43,12 @@ export const NetworkSelect: React.FC<CustomMenuProps> = ({ buttonTextColor = 'wh
     }
   };
 
-  const [liveNetworks, setLiveNetworks] = useState<Network[]>([]);
+  const [liveNetworks, setLiveNetworks] = useState<Chain[]>(Array.from(chains.get(env)?.values() ?? []));
 
   useEffect(() => {
     const getLiveZones = async () => {
       const liveZones = await fetchLiveZones();
-      const filteredNetworks = networks.filter((network) => liveZones.includes(network.chainId));
+      const filteredNetworks = Array.from(chains.get(env)?.values() ?? []).filter((network) => liveZones.includes(network.chain_id) && network.show == true);
       setLiveNetworks(filteredNetworks);
     };
 
@@ -72,8 +61,8 @@ export const NetworkSelect: React.FC<CustomMenuProps> = ({ buttonTextColor = 'wh
         borderRadius={100}
         position="relative"
         zIndex={5}
-        maxW="150px"
-        minW="150px"
+        maxW="175px"
+        minW="175px"
         _hover={{
           bgColor: 'rgba(255,128,0, 0.25)',
         }}
@@ -88,13 +77,14 @@ export const NetworkSelect: React.FC<CustomMenuProps> = ({ buttonTextColor = 'wh
         as={Button}
         variant="outline"
         rightIcon={<RotateIcon isOpen={isOpen} />}
+        leftIcon={<Image alt={selectedOption?.pretty_name} src={selectedOption?.logo} borderRadius={'full'} boxSize="24px" mr={1} />}
       >
-        {selectedOption.value.toUpperCase()}
+        {selectedOption?.pretty_name.toUpperCase()}
       </MenuButton>
       <MenuList borderColor="rgba(35,35,35,1)" mt={1} bgColor="rgba(35,35,35,1)">
         {liveNetworks.map((network) => (
           <MenuItem
-            key={network.value}
+            key={network.chain_id}
             py={4}
             bgColor="rgba(35,35,35,1)"
             borderRadius="4px"
@@ -105,9 +95,9 @@ export const NetworkSelect: React.FC<CustomMenuProps> = ({ buttonTextColor = 'wh
             onClick={() => handleOptionClick(network)}
           >
             <Flex justifyContent="center" alignItems="center" flexDirection="row">
-              <Image alt={network.name.toLowerCase()} px={4} borderRadius={'full'} h="40px" src={network.logo} />
+              <Image alt={network.chain_name} px={4} borderRadius={'full'} h="40px" src={network.logo} />
               <Text color="white" fontSize="20px" textAlign="center">
-                {network.name}
+                {network.pretty_name}
               </Text>
             </Flex>
           </MenuItem>

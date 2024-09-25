@@ -62,17 +62,8 @@ export const getChainAssets = (
 };
 
 export const getCoin = (chainName: string) => {
-  const chainAssets = getChainAssets(chainName);
+  const chainAssets = getChainAssets(chainName.toLowerCase());
   return chainAssets.assets[0] as Asset;
-};
-
-export const getExponent = (
-  chainName: string,
-) => {
-  return getCoin(chainName).denom_units.find(
-    (unit) =>
-      unit.denom === getCoin(chainName).display,
-  )?.exponent as number;
 };
 
 export const exponentiate = (

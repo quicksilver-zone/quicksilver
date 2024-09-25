@@ -25,14 +25,14 @@ import {
   Tooltip,
   Image,
   SkeletonCircle,
-  Link,
 } from '@chakra-ui/react';
-import { Coin, StdFee } from '@cosmjs/amino';
+import { Coin } from '@cosmjs/amino';
 import { useChain } from '@cosmos-kit/react';
 import { quicksilver } from 'quicksilverjs';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { FaStar } from 'react-icons/fa';
 
+import { env, Chain, local_chain } from '@/config';
 import { useTx } from '@/hooks';
 import { useFeeEstimation } from '@/hooks/useFeeEstimation';
 import {
@@ -44,7 +44,7 @@ import {
   useValidatorsQuery,
   useZoneQuery,
 } from '@/hooks/useQueries';
-import { getExponent, shiftDigits } from '@/utils';
+import { shiftDigits } from '@/utils';
 
 import RevertSharesProcessModal from './modals/revertSharesProcessModal';
 import StakingProcessModal from './modals/stakingProcessModal';
@@ -53,13 +53,7 @@ import BuyTokensModal from '../react/buyTokensModal';
 
 
 type StakingBoxProps = {
-  selectedOption: {
-    name: string;
-    value: string;
-    logo: string;
-    chainName: string;
-    chainId: string;
-  };
+  selectedOption: Chain;
   isStakingModalOpen: boolean;
   setStakingModalOpen: (isOpen: boolean) => void;
   isTransferModalOpen: boolean;
@@ -93,16 +87,15 @@ export const StakingBox = ({
   const openRevertSharesModal = () => setRevertSharesModalOpen(true);
   const closeRevertSharesModal = () => setRevertSharesModalOpen(false);
 
-  const { address } = useChain(selectedOption.chainName);
+  const { address } = useChain(selectedOption.chain_name);
 
   const { address: qAddress } = useChain('quicksilver');
-  const exp = getExponent(selectedOption.chainName);
 
-  const { balance, isLoading, refetchBalance } = useBalanceQuery(selectedOption.chainName, address ?? '');
+  const { balance, isLoading, refetchBalance } = useBalanceQuery(selectedOption.chain_name, address ?? '');
 
-  const { balance: allBalances, refetch: allRefetch } = useAllBalancesQuery(selectedOption.chainName, address ?? '');
+  const { balance: allBalances, refetch: allRefetch } = useAllBalancesQuery(selectedOption.chain_name, address ?? '');
 
-  const { balance: qBalance, refetch: qRefetch } = useQBalanceQuery('quicksilver', qAddress ?? '', selectedOption.value.toLowerCase());
+  const { balance: qBalance, refetch: qRefetch } = useQBalanceQuery('quicksilver', qAddress ?? '', selectedOption.major_denom.toLowerCase());
 
   const allRefetchBalances = () => {
     allRefetch();
@@ -112,13 +105,13 @@ export const StakingBox = ({
 
   const qAssets = qBalance?.balance.amount || '';
 
-  const baseBalance = shiftDigits(balance?.balance?.amount || '0', -exp);
+  const baseBalance = shiftDigits(balance?.balance?.amount || '0', -selectedOption.exponent);
 
-  const { data: zone, isLoading: isZoneLoading } = useZoneQuery(selectedOption.chainId);
+  const { data: zone, isLoading: isZoneLoading } = useZoneQuery(selectedOption.chain_id);
 
   useEffect(() => {
     setQBalance(qAssets);
-  }, [qAssets, setQBalance, selectedOption.chainName]);
+  }, [qAssets, setQBalance, selectedOption.chain_name]);
 
   useEffect(() => {
     setBalance(baseBalance);
@@ -127,7 +120,7 @@ export const StakingBox = ({
   useEffect(() => {
     setTokenAmount('0');
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedOption.chainName]);
+  }, [selectedOption.chain_name]);
 
   const truncateToThreeDecimals = (num: number) => {
     return Math.trunc(num * 1000) / 1000;
@@ -150,13 +143,15 @@ export const StakingBox = ({
 
   const [isSigning, setIsSigning] = useState<boolean>(false);
 
-  const env = process.env.NEXT_PUBLIC_CHAIN_ENV;
-  const quicksilverChainName = env === 'testnet' ? 'quicksilvertestnet' : 'quicksilver';
+  const quicksilverChainName:string = local_chain.get(env)?.chain_name ?? 'quicksilver';
 
   const { requestRedemption } = quicksilver.interchainstaking.v1.MessageComposer.withTypeUrl;
-  const parsedAmount = parseFloat(tokenAmount ?? '0');
+  let parsedAmount = parseFloat(tokenAmount ?? '0');
+  if (Number.isNaN(parsedAmount)) {
+    parsedAmount = 0;
+  }
 
-  let numericAmount = BigInt(Math.floor(parsedAmount * Math.pow(10, Number(zone?.decimals ?? '6'))));
+  let numericAmount = BigInt(Math.floor(parsedAmount * Math.pow(10, Number(zone?.decimals || 6))));
 
   if (numericAmount <= 0) {
     numericAmount = BigInt(0);
@@ -209,7 +204,7 @@ export const StakingBox = ({
   };
 
   const { delegations, delegationsIsError, delegationsIsLoading, refetchDelegations } = useNativeStakeQuery(
-    selectedOption.chainName,
+    selectedOption.chain_name,
     address ?? '',
   );
 
@@ -236,9 +231,9 @@ export const StakingBox = ({
     setUseNativeStake(false);
   }, [selectedOption]);
 
-  const { validatorsData } = useValidatorsQuery(selectedOption.chainName);
+  const { validatorsData } = useValidatorsQuery(selectedOption.chain_name);
 
-  const { data: logos } = useValidatorLogos(selectedOption.chainName, validatorsData || []);
+  const { data: logos } = useValidatorLogos(selectedOption.chain_name, validatorsData || []);
   const [selectedValidator, setSelectedValidator] = useState<string | null>(null);
 
   const [isBottomVisible, setIsBottomVisible] = useState(true);
@@ -349,10 +344,10 @@ export const StakingBox = ({
             <TabPanel>
               <VStack spacing={8} align="center">
                 <Text fontWeight="light" textAlign="center" color="white">
-                  Stake your {selectedOption.value.toUpperCase()} tokens in exchange for q{selectedOption.value.toUpperCase()} which you can
+                  Stake your {selectedOption.major_denom.toUpperCase()} tokens in exchange for q{selectedOption.major_denom.toUpperCase()} which you can
                   deploy around the ecosystem. You can liquid stake half of your balance, if you&apos;re going to LP.
                 </Text>
-                {selectedOption.name === 'Cosmos Hub' && (
+                {selectedOption.chain_name === 'Cosmos Hub' && (
                   <Flex textAlign={'left'} justifyContent={'flex-start'}>
                     {((nativeStakedAmount ?? 0) > 0 || hasTokenized) && (
                       <Tooltip
@@ -363,7 +358,7 @@ export const StakingBox = ({
                               ? "You don't have any native staked tokens or tokenized shares."
                               : nativeStakedAmount ?? 0 > 0
                                 ? `You currently have ${shiftDigits(nativeStakedAmount ?? '', -6)} ${
-                                    selectedOption.value
+                                    selectedOption.major_denom.toUpperCase()
                                   } natively staked to ${delegationsResponse?.length} validators.`
                                 : hasTokenized
                                   ? 'You have tokenized shares available for transfer.'
@@ -377,7 +372,7 @@ export const StakingBox = ({
                             color={!nativeStakedAmount && !hasTokenized ? 'whiteAlpha.800' : 'white'}
                           >
                             Use staked&nbsp;
-                            <span style={{ color: '#FF8000' }}>{selectedOption.value}</span>?
+                            <span style={{ color: '#FF8000' }}>{selectedOption.major_denom.toUpperCase()}</span>?
                           </Text>
                           {delegationsIsLoading && <SkeletonCircle size="4" startColor="complimentary.900" endColor="complimentary.400" />}
                           {!delegationsIsLoading && !delegationsIsError && (
@@ -413,7 +408,7 @@ export const StakingBox = ({
                     <Flex flexDirection="column" w="100%">
                       <Stat py={4} textAlign="left" color="white">
                         <StatLabel>Amount to stake:</StatLabel>
-                        <StatNumber>{selectedOption.value.toUpperCase()} </StatNumber>
+                        <StatNumber>{selectedOption.major_denom.toUpperCase()} </StatNumber>
                       </Stat>
                       <Input
                         _active={{
@@ -478,7 +473,7 @@ export const StakingBox = ({
                               ) : (
                                 <Text color="complimentary.900" fontWeight="light">
                                   {balance?.balance?.amount && Number(balance.balance.amount) > 0 ? (
-                                    `${truncatedBalance} ${selectedOption.value.toUpperCase()}`
+                                    `${truncatedBalance} ${selectedOption.major_denom.toUpperCase()}`
                                   ) : (
                                     <Text
                                       cursor={'pointer'}
@@ -487,7 +482,7 @@ export const StakingBox = ({
                                       _hover={{ color: 'complimentary.400' }}
                                       onClick={() => setIsTokensModalOpen(true)}
                                     >
-                                      Buy&nbsp;{selectedOption.value.toUpperCase()}
+                                      Buy&nbsp;{selectedOption.major_denom.toUpperCase()}
                                     </Text>
                                   )}
                                 </Text>
@@ -500,10 +495,10 @@ export const StakingBox = ({
                           )}
                         </Flex>
                         <BuyTokensModal
-                          denom={selectedOption.value}
+                          denom={selectedOption.major_denom}
                           isOpen={isTokensModalOpen}
                           onClose={() => setIsTokensModalOpen(false)}
-                          zone={selectedOption.name}
+                          zone={selectedOption.chain_name}
                         />
                         <HStack mb={-4} spacing={2}>
                           <Button
@@ -549,7 +544,7 @@ export const StakingBox = ({
                     <HStack pt={2} justifyContent="space-between" alignItems="left" w="100%" mt={-8}>
                       <Stat textAlign="left" color="white">
                         <StatLabel>What you&apos;ll get</StatLabel>
-                        <StatNumber>q{selectedOption.value.toUpperCase()}:</StatNumber>
+                        <StatNumber>q{selectedOption.major_denom.toUpperCase()}:</StatNumber>
                       </Stat>
                       <Spacer /> {/* This pushes the next Stat component to the right */}
                       <Stat py={4} textAlign="right" color="white">
@@ -659,7 +654,7 @@ export const StakingBox = ({
                                           )}
                                         </HStack>
                                         <Text color={'complimentary.900'} fontSize="md">
-                                          {shiftDigits(delegation.balance.amount, -6)} {selectedOption.value}
+                                          {shiftDigits(delegation.balance.amount, -selectedOption.exponent)} {selectedOption.major_denom.toUpperCase()}
                                         </Text>
                                       </VStack>
                                     </HStack>
@@ -742,12 +737,12 @@ export const StakingBox = ({
             <TabPanel>
               <VStack spacing={8} align="center">
                 <Text fontWeight="light" textAlign="center" color="white">
-                  Unstake your q{selectedOption.value.toUpperCase()} tokens in exchange for {selectedOption.value.toUpperCase()}.
+                  Unstake your q{selectedOption.major_denom.toUpperCase()} tokens in exchange for {selectedOption.major_denom.toUpperCase()}.
                 </Text>
                 <Flex flexDirection="column" w="100%">
                   <Stat py={4} textAlign="left" color="white">
                     <StatLabel>Amount to unstake:</StatLabel>
-                    <StatNumber>q{selectedOption.value.toUpperCase()} </StatNumber>
+                    <StatNumber>q{selectedOption.major_denom.toUpperCase()} </StatNumber>
                   </Stat>
                   <Input
                     _active={{
@@ -809,8 +804,8 @@ export const StakingBox = ({
                           <Text color="complimentary.900" fontWeight="light">
                             {address
                               ? qAssets && Number(qAssets) !== 0
-                                ? `${qAssetsDisplay} q${selectedOption.value.toUpperCase()}`
-                                : `No q${selectedOption.value.toUpperCase()}`
+                                ? `${qAssetsDisplay} q${selectedOption.major_denom.toUpperCase()}`
+                                : `No q${selectedOption.major_denom.toUpperCase()}`
                               : '0'}
                           </Text>
                         )}
@@ -865,7 +860,7 @@ export const StakingBox = ({
                 <HStack pt={2} justifyContent="space-between" alignItems="left" w="100%" mt={-8}>
                   <Stat textAlign="left" color="white">
                     <StatLabel>What you&apos;ll get</StatLabel>
-                    <StatNumber>{selectedOption.value.toUpperCase()}:</StatNumber>
+                    <StatNumber>{selectedOption.major_denom.toUpperCase()}:</StatNumber>
                   </Stat>
                   <Spacer /> {/* This pushes the next Stat component to the right */}
                   <Stat py={4} textAlign="right" color="white">

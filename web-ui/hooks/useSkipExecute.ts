@@ -75,22 +75,22 @@ export function useSkipExecute(skipClient: SkipRouter) {
     return executeRoute;
 }
 
-export function useSkipMessages(skipClient: SkipRouter) {
-    if (!skipClient) {
-        throw new Error('SkipRouter is not initialized');
-    }
-  const skipMessages = useCallback(async (route: RouteResponse, addressList: string[]) => {
-    return await skipClient.messages({
-        sourceAssetDenom: route.sourceAssetDenom,
-        sourceAssetChainID: route.sourceAssetChainID,
-        destAssetDenom: route.destAssetDenom,
-        destAssetChainID: route.destAssetChainID,
-        amountIn: route.amountIn,
-        amountOut: route.amountOut,
-        addressList: addressList,
-        operations: route.operations,
-    });
-  }, []);
+// export function useSkipMessages(skipClient: SkipRouter) {
+//     if (!skipClient) {
+//         throw new Error('SkipRouter is not initialized');
+//     }
+//   const skipMessages = useCallback(async (route: RouteResponse, addressList: string[]) => {
+//     return await skipClient.messages({
+//         sourceAssetDenom: route.sourceAssetDenom,
+//         sourceAssetChainID: route.sourceAssetChainID,
+//         destAssetDenom: route.destAssetDenom,
+//         destAssetChainID: route.destAssetChainID,
+//         amountIn: route.amountIn,
+//         amountOut: route.amountOut,
+//         addressList: addressList,
+//         operations: route.operations,
+//     });
+//   }, []);
 
-  return skipMessages;
-}
+//   return skipMessages;
+// }

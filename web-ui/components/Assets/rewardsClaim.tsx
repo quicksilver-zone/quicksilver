@@ -1,14 +1,13 @@
 import { CloseIcon } from '@chakra-ui/icons';
 import { Box, Flex, Text, VStack, Button, HStack, Spinner, Checkbox } from '@chakra-ui/react';
 import { StdFee } from '@cosmjs/amino';
-import { assets } from 'chain-registry';
 import { GenericAuthorization } from 'interchain-query/cosmos/authz/v1beta1/authz';
 import { quicksilver, cosmos } from 'quicksilverjs';
 import React, { useState } from 'react';
 
 import { useTx } from '@/hooks';
 import { useFeeEstimation } from '@/hooks/useFeeEstimation';
-import { useIncorrectAuthChecker, useLiquidEpochQuery } from '@/hooks/useQueries';
+import { useIncorrectAuthChecker, useEpochInterchainAssetsQuery } from '@/hooks/useQueries';
 
 interface RewardsClaimInterface {
   address: string;
@@ -16,14 +15,14 @@ interface RewardsClaimInterface {
   refetch: () => void;
 }
 export const RewardsClaim: React.FC<RewardsClaimInterface> = ({ address, onClose, refetch }) => {
-  const { tx } = useTx('quicksilver' ?? '');
+  const { tx } = useTx('quicksilver');
   const { estimateFee } = useFeeEstimation('quicksilver');
   const { authData } = useIncorrectAuthChecker(address);
 
   const [isSigning, setIsSigning] = useState<boolean>(false);
   const [isError, setIsError] = useState<boolean>(false);
 
-  const { liquidEpoch } = useLiquidEpochQuery(address);
+  const { assets: interchainAssetsEpoch } = useEpochInterchainAssetsQuery(address);
 
   const { submitClaim } = quicksilver.participationrewards.v1.MessageComposer.withTypeUrl;
 
@@ -116,14 +115,14 @@ export const RewardsClaim: React.FC<RewardsClaimInterface> = ({ address, onClose
     event.preventDefault();
     setIsSigning(true);
 
-    if (!liquidEpoch || liquidEpoch.messages.length === 0) {
+    if (!interchainAssetsEpoch || interchainAssetsEpoch.messages.length === 0) {
       console.error('No epoch data available or no messages to claim');
       setIsSigning(false);
       return;
     }
 
     try {
-      const msgSubmitClaims = liquidEpoch.messages.map((message) => {
+      const msgSubmitClaims = interchainAssetsEpoch.messages.map((message: any) => {
         const transformedProofs = transformProofs(message.proofs);
         return submitClaim({
           userAddress: message.user_address,
