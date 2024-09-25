@@ -219,7 +219,7 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
 
   const parsedAmount = parseFloat(tokenAmount ?? '0');
   let numericAmount = BigInt(0);
-  if (!isNaN(parsedAmount)) {
+  if (!Number.isNaN(parsedAmount)) {
     numericAmount = BigInt(Math.floor(parsedAmount * Math.pow(10, Number(zone?.decimals ?? '6'))));
   }
 
