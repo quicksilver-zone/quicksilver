@@ -45,7 +45,7 @@ function RotateIcon({ isOpen }: { isOpen: boolean }) {
 
 export const VotingSection = ({ chainName }: { chainName: ChainName }) => {
   const [selectedProposal, setSelectedProposal] = useState<Proposal>();
-  const [selectedPeriodOption, setSelectedPeriodOption] = useState('All Periods');
+  const [selectedPeriodOption, setSelectedPeriodOption] = useState('All Statuses');
   const [selectedProposalOption, setSelectedProposalOption] = useState('All Proposals');
 
   const { address } = useChain(chainName);
@@ -71,6 +71,7 @@ export const VotingSection = ({ chainName }: { chainName: ChainName }) => {
       const VOTING_PERIOD_STATUS = 2;
       const PASSED_STATUS = 3;
       const REJECTED_STATUS = 4;
+      const FAILED_STATUS = 5;
 
       // Filter by period
       switch (selectedPeriodOption) {
@@ -83,6 +84,9 @@ export const VotingSection = ({ chainName }: { chainName: ChainName }) => {
         case 'Rejected':
           periodMatches = proposal.status === REJECTED_STATUS;
           break;
+          case 'Failed':
+            periodMatches = proposal.status === FAILED_STATUS;
+            break;
         default:
           periodMatches = true;
       }
@@ -178,9 +182,9 @@ export const VotingSection = ({ chainName }: { chainName: ChainName }) => {
                       }}
                       color="white"
                       bgColor="#181818"
-                      onClick={() => setSelectedPeriodOption('All Periods')}
+                      onClick={() => setSelectedPeriodOption('All Statuses')}
                     >
-                      All Periods
+                      All Statuses
                     </MenuItem>
                     <MenuItem
                       borderRadius={'5px'}

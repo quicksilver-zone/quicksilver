@@ -103,6 +103,8 @@ export const ProposalModal = ({
 
   const minStakedTokens = quorum && exponentiate(quorum * Number(bondedTokens), -exponent).toFixed(6);
 
+  // TODO: using quicksilverjs, decode based upon message type. we cannot expect to decode protobuf messages as per below.
+
   const uint8ArrayValue = proposal.messages[0].value;
   const propinfo = decodeUint8Arr(uint8ArrayValue);
 
@@ -187,7 +189,7 @@ export const ProposalModal = ({
                 <TimeDisplay title="Submit Time" time={formatDate(proposal.submitTime)} />
                 <TimeDisplay title="Voting Starts" time={isDepositPeriod ? 'Not Specified Yet' : formatDate(proposal.votingStartTime)} />
                 <TimeDisplay title="Voting Ends" time={isDepositPeriod ? 'Not Specified Yet' : formatDate(proposal.votingEndTime)} />
-                <Button
+                {/* <Button
                   isDisabled={!isVotingPeriod}
                   _active={{
                     transform: 'scale(0.95)',
@@ -201,7 +203,7 @@ export const ProposalModal = ({
                   onClick={voteModalControl.onOpen}
                 >
                   {vote ? 'Edit Vote' : 'Vote'}
-                </Button>
+                </Button> */}
               </Flex>
               <Center my={4} />
               <Divider bgColor="complimentary.500" />

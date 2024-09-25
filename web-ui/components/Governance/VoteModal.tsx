@@ -19,10 +19,9 @@ import { useState } from 'react';
 
 import { useTx } from '@/hooks';
 import { useFeeEstimation } from '@/hooks/useFeeEstimation';
-import { getCoin } from '@/utils';
 
 const VoteType = cosmos.gov.v1beta1.VoteOption;
-const { vote: composeVoteMessage } = cosmos.gov.v1beta1.MessageComposer.withTypeUrl;
+const { vote: composeVoteMessage } = cosmos.gov.v1beta1.MessageComposer.fromJSON;
 
 interface VoteModalProps {
   modalControl: UseDisclosureReturn;
@@ -41,7 +40,6 @@ export const VoteModal: React.FC<VoteModalProps> = ({ modalControl, chainName, u
   const { estimateFee } = useFeeEstimation(chainName);
   const { address } = useChain(chainName);
 
-  const coin = getCoin(chainName);
   const { isOpen, onClose } = modalControl;
 
   const checkIfDisable = (option: number) => option === vote;
@@ -56,10 +54,12 @@ export const VoteModal: React.FC<VoteModalProps> = ({ modalControl, chainName, u
     setIsLoading(true);
 
     const msg = composeVoteMessage({
-      option,
-      proposalId,
-      voter: address,
+      "option": option,
+      "proposalId": proposalId.toString(),
+      "voter": address,
     });
+
+    console.log(msg)
 
     const fee = await estimateFee(address, [msg]);
 

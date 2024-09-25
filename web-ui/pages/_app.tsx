@@ -4,7 +4,7 @@ import '@interchain-ui/react/styles';
 import { Chain } from '@chain-registry/types';
 import { Box, Center, ChakraProvider, Image } from '@chakra-ui/react';
 import { Registry } from '@cosmjs/proto-signing';
-import { SigningStargateClientOptions, AminoTypes } from '@cosmjs/stargate';
+import { SigningStargateClientOptions, AminoTypes, GasPrice } from '@cosmjs/stargate';
 import { SignerOptions } from '@cosmos-kit/core';
 import { wallets as cosmostationWallets } from '@cosmos-kit/cosmostation';
 import { wallets as keplrWallets } from '@cosmos-kit/keplr';
@@ -35,17 +35,28 @@ const queryClient = new QueryClient({
 function QuickApp({ Component, pageProps }: AppProps) {
   const { themeClass } = useTheme();
   const signerOptions: SignerOptions = {
-    signingStargate: (_chain: string | Chain): SigningStargateClientOptions | undefined => {
+    signingStargate: (chain: Chain | string): SigningStargateClientOptions | undefined => {
       const mergedRegistry = new Registry([...quicksilverProtoRegistry, ...ibcProtoRegistry, ...cosmosProtoRegistry]);
       const mergedAminoTypes = new AminoTypes({
         ...cosmosAminoConverters,
         ...quicksilverAminoConverters,
         ...ibcAminoConverters,
       });
-      return {
-        aminoTypes: mergedAminoTypes,
-        registry: mergedRegistry,
+      switch (true) {
+        case chain === 'quicksilver':
+        case typeof chain != "string" && chain.chain_id === 'quicksilver-2':
+          return {
+            aminoTypes: mergedAminoTypes,
+            registry: mergedRegistry,
+            gasPrice: GasPrice.fromString('0.0025uqck'),
+          }
+        default:
+          return {
+            aminoTypes: mergedAminoTypes,
+            registry: mergedRegistry,
+          }
       };
+
     },
   };
 
