@@ -169,6 +169,12 @@ export const StatusBadge = ({ status }: { status: number }) => {
         name: 'Rejected',
       };
       break;
+    case ProposalStatus.PROPOSAL_STATUS_FAILED:
+      statusConfig = {
+        color: 'red',
+        name: 'Failed',
+      };
+      break;
     default:
       break;
   }
@@ -182,6 +188,6 @@ export const StatusBadge = ({ status }: { status: number }) => {
 
 export const VotedBadge = () => (
   <Badge colorScheme="purple" variant="solid" borderRadius={4} h="min-content">
-    Voted
+    You Voted
   </Badge>
 );

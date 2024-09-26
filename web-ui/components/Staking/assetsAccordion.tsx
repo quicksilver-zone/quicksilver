@@ -1,19 +1,13 @@
 import { Box, Image, Text, Accordion, AccordionItem, Flex, AccordionButton, SkeletonCircle } from '@chakra-ui/react';
 import React, { useEffect, useState } from 'react';
 
-import { useLiquidRewardsQuery } from '@/hooks/useQueries';
-import { shiftDigits } from '@/utils';
+import { Chain, env, getQMinorAsset } from '@/config';
+import { useCurrentInterchainAssetsQuery } from '@/hooks/useQueries';
 
 const BigNumber = require('bignumber.js');
 
 type AssetsAccordianProps = {
-  selectedOption: {
-    name: string;
-    value: string;
-    logo: string;
-    qlogo: string;
-    chainName: string;
-  };
+  selectedOption: Chain;
   balance: string;
   qBalance: string;
   address: string;
@@ -21,13 +15,14 @@ type AssetsAccordianProps = {
 
 export const AssetsAccordian: React.FC<AssetsAccordianProps> = ({ selectedOption, balance, qBalance, address }) => {
 
-  const { liquidRewards } = useLiquidRewardsQuery(address);
+  const { assets: liquidRewards } = useCurrentInterchainAssetsQuery(address);
   const [updatedQBalance, setUpdatedQBalance] = useState(qBalance);
 
   useEffect(() => {
     const calculateLiquidRewards = () => {
       let totalAmount = new BigNumber(0);
-      const denomToFind = selectedOption.value === 'DYDX' ? `aq${selectedOption.value.toLowerCase()}` : `uq${selectedOption.value.toLowerCase()}`;
+      
+      const denomToFind = getQMinorAsset(env, selectedOption.chain_id);
 
       for (const chain in liquidRewards?.assets) {
         const chainAssets = liquidRewards?.assets[chain];
@@ -42,8 +37,7 @@ export const AssetsAccordian: React.FC<AssetsAccordianProps> = ({ selectedOption
         });
       }
 
-      const exponent = selectedOption.value === 'DYDX' ? 18 : 6;
-      return totalAmount.shiftedBy(-exponent).toString();
+      return totalAmount.shiftedBy(-selectedOption.exponent).toString();
     };
 
     setUpdatedQBalance(calculateLiquidRewards());
@@ -94,14 +88,14 @@ export const AssetsAccordian: React.FC<AssetsAccordianProps> = ({ selectedOption
           <h2>
             <AccordionButton _hover={{ cursor: 'default' }} borderRadius={'10px'} borderTopColor={'transparent'}>
               <Flex p={1} flexDirection="row" flex="1" alignItems="center">
-                <Image alt="atom" src={selectedOption.logo} borderRadius={'full'} boxSize="35px" mr={2} />
+                <Image alt={selectedOption.pretty_name} src={selectedOption.logo} borderRadius={'full'} boxSize="35px" mr={2} />
                 <Text fontSize="16px" color={'white'}>
                   Available to stake
                 </Text>
               </Flex>
               {renderAssets()}
               <Text pr={2} color="complimentary.900">
-                {selectedOption.value.toUpperCase()}
+                {selectedOption.major_denom.toUpperCase()}
               </Text>
             </AccordionButton>
           </h2>
@@ -111,7 +105,7 @@ export const AssetsAccordian: React.FC<AssetsAccordianProps> = ({ selectedOption
           <h2>
             <AccordionButton _hover={{ cursor: 'default' }} borderRadius={'10px'} borderTopColor={'transparent'}>
               <Flex p={1} flexDirection="row" flex="1" alignItems="center">
-                <Image alt="qAtom" borderRadius={'full'} src={selectedOption.qlogo} boxSize="35px" mr={2} />
+                <Image alt={`q${selectedOption.major_denom.toUpperCase()}`} borderRadius={'full'} src={selectedOption.qlogo} boxSize="35px" mr={2} />
                 <Text fontSize="16px" color={'white'}>
                   Liquid Staked
                 </Text>
@@ -119,7 +113,7 @@ export const AssetsAccordian: React.FC<AssetsAccordianProps> = ({ selectedOption
 
               {renderQAssets()}
               <Text pr={2} color="complimentary.900">
-                q{selectedOption.value.toUpperCase()}
+                q{selectedOption.major_denom.toUpperCase()}
               </Text>
             </AccordionButton>
           </h2>

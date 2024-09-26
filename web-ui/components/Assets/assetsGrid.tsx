@@ -17,6 +17,7 @@ import {
 } from '@chakra-ui/react';
 import React, { useEffect, useState } from 'react';
 
+import { InterchainAssetsData, Amount } from '@/hooks/useQueries';
 import { shiftDigits, formatQasset, formatNumber } from '@/utils';
 
 import QDepositModal from './modals/qTokenDepositModal';
@@ -31,8 +32,7 @@ interface AssetCardProps {
   nativeAssetName: string;
   redemptionRates: string;
   isWalletConnected: boolean;
-  nonNative: LiquidRewardsData | undefined;
-  liquidRewards: LiquidRewardsData | undefined;
+  interchainAssets: InterchainAssetsData | undefined;
   refetch: () => void;
 }
 
@@ -46,34 +46,11 @@ interface AssetGridProps {
     native: string;
     redemptionRates: string;
   }>;
-  nonNative: LiquidRewardsData | undefined;
-  liquidRewards: LiquidRewardsData | undefined;
+  interchainAssets: InterchainAssetsData | undefined;
   refetch: () => void;
 }
 
-type Amount = {
-  denom: string;
-  amount: string;
-};
-
-type Errors = {
-  Errors: any;
-};
-
-type LiquidRewardsData = {
-  messages: any[];
-  assets: {
-    [key: string]: [
-      {
-        Type: string;
-        Amount: Amount[];
-      },
-    ];
-  };
-  errors: Errors;
-};
-
-const AssetCard: React.FC<AssetCardProps> = ({ address, assetName, balance, apy, redemptionRates, liquidRewards, refetch }) => {
+const AssetCard: React.FC<AssetCardProps> = ({ address, assetName, balance, apy, redemptionRates, interchainAssets: interchainAssets, refetch }) => {
   const chainIdToName: { [key: string]: string } = {
     'osmosis-1': 'osmosis',
     'secret-1': 'secretnetwork',
@@ -85,6 +62,7 @@ const AssetCard: React.FC<AssetCardProps> = ({ address, assetName, balance, apy,
     'juno-1': 'juno',
     'dydx-mainnet-1': 'dydx',
     'ssc-1': 'saga',
+    'agoric-3': 'agoric',
   };
 
   const getChainName = (chainId: string) => {
@@ -103,7 +81,7 @@ const AssetCard: React.FC<AssetCardProps> = ({ address, assetName, balance, apy,
 
   useEffect(() => {
     const calculateInterchainBalance = () => {
-      if (!liquidRewards || !liquidRewards.assets) return '0';
+      if (!interchainAssets || !interchainAssets.assets) return '0';
 
       let totalAmount = 0;
       const assetDenom = `uq${assetName.toLowerCase().replace('q', '')}`;
@@ -111,10 +89,10 @@ const AssetCard: React.FC<AssetCardProps> = ({ address, assetName, balance, apy,
 
       const details: { [key: string]: number } = {};
 
-      Object.keys(liquidRewards.assets).forEach((chainId) => {
+      Object.keys(interchainAssets.assets).forEach((chainId) => {
         if (chainId !== 'quicksilver-2') {
-          liquidRewards.assets[chainId].forEach((asset) => {
-            asset.Amount.forEach((amount) => {
+          interchainAssets.assets[chainId].forEach((asset) => {
+            asset.Amount.forEach((amount: Amount) => {
               if (amount.denom === assetDenom || amount.denom === aAssetDenom) {
                 const convertedAmount = parseFloat(convertAmount(amount.amount, amount.denom));
                 totalAmount += convertedAmount;
@@ -131,7 +109,7 @@ const AssetCard: React.FC<AssetCardProps> = ({ address, assetName, balance, apy,
 
     calculateInterchainBalance();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [liquidRewards, assetName]);
+  }, [interchainAssets, assetName]);
 
   const interchainBalance = Object.values(interchainDetails as { [key: string]: number })
     .reduce((acc: number, val: number) => acc + val, 0)
@@ -179,7 +157,7 @@ const AssetCard: React.FC<AssetCardProps> = ({ address, assetName, balance, apy,
           <Stat color={'white'}>
             <StatLabel fontSize={'lg'}>On Quicksilver</StatLabel>
 
-            {!balance || !liquidRewards ? (
+            {!balance || !interchainAssets ? (
               <Skeleton startColor="complimentary.900" endColor="complimentary.100" height="10px" width="auto" />
             ) : (
               <StatNumber color={'complimentary.900'} fontSize={'md'}>
@@ -187,7 +165,7 @@ const AssetCard: React.FC<AssetCardProps> = ({ address, assetName, balance, apy,
               </StatNumber>
             )}
 
-            {!balance || !liquidRewards ? (
+            {!balance || !interchainAssets ? (
               <>
                 <Skeleton startColor="complimentary.900" endColor="complimentary.100" height="10px" width="auto" mt={2} />
                 <Skeleton startColor="complimentary.900" endColor="complimentary.100" height="10px" width="auto" mt={2} />
@@ -230,7 +208,7 @@ const AssetCard: React.FC<AssetCardProps> = ({ address, assetName, balance, apy,
           <Stat color={'white'}>
             <StatLabel fontSize={'lg'}>Interchain</StatLabel>
 
-            {!balance || !liquidRewards || !interchainBalance ? (
+            {!balance || !interchainAssets || !interchainBalance ? (
               <Skeleton startColor="complimentary.900" endColor="complimentary.100" height="10px" width="auto" />
             ) : (
               <StatNumber color={'complimentary.900'} fontSize={'md'}>
@@ -238,7 +216,7 @@ const AssetCard: React.FC<AssetCardProps> = ({ address, assetName, balance, apy,
               </StatNumber>
             )}
 
-            {!balance || !liquidRewards || !interchainBalance ? (
+            {!balance || !interchainAssets || !interchainBalance ? (
               <>
                 <Skeleton startColor="complimentary.900" endColor="complimentary.100" height="10px" width="auto" mt={2} />
                 <Skeleton startColor="complimentary.900" endColor="complimentary.100" height="10px" width="auto" mt={2} />
@@ -281,7 +259,7 @@ const AssetCard: React.FC<AssetCardProps> = ({ address, assetName, balance, apy,
   );
 };
 
-const AssetsGrid: React.FC<AssetGridProps> = ({ address, assets, isWalletConnected, nonNative, liquidRewards, refetch }) => {
+const AssetsGrid: React.FC<AssetGridProps> = ({ address, assets, isWalletConnected, interchainAssets: interchainAssets, refetch }) => {
   const scrollRef = React.useRef<HTMLDivElement>(null);
   const [focusedIndex, setFocusedIndex] = useState(0);
 
@@ -389,8 +367,8 @@ const AssetsGrid: React.FC<AssetGridProps> = ({ address, assets, isWalletConnect
             <Box
               key={index}
               minW="350px"
-              transform={focusedIndex === index ? 'translateY(-10px)' : 'none'}
-              transition="transform 0.1s"
+              transform={focusedIndex === index ? 'translateY(-4px)' : 'none'}
+              transition="transform 0.25s"
               onMouseEnter={() => handleMouseEnter(index)}
             >
               <AssetCard
@@ -400,9 +378,8 @@ const AssetsGrid: React.FC<AssetGridProps> = ({ address, assets, isWalletConnect
                 nativeAssetName={asset.native}
                 balance={asset.balance}
                 apy={asset.apy}
-                nonNative={nonNative}
                 redemptionRates={asset.redemptionRates}
-                liquidRewards={liquidRewards}
+                interchainAssets={interchainAssets}
                 refetch={refetch}
               />
             </Box>

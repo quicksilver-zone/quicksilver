@@ -74,7 +74,7 @@ export const ProposalCard = ({
     >
       <GridItem colSpan={2}>
         <Center display={{ base: 'none', md: 'flex' }} color="white" w="100%" h="100%">
-          # {proposal.id ? proposal.id.toString().padStart(6, '0') : ''}
+          # {proposal.id ? proposal.id.toString().padStart(3, '0') : ''}
         </Center>
       </GridItem>
       <GridItem colSpan={9} py={2}>
@@ -102,6 +102,7 @@ export const ProposalCard = ({
             <Spacer />
             {totalVotes ? (
               <Flex gap="1px">
+                {/* need to fetch tallys from api. */}
                 <Box w={getPercentage(proposal.finalTallyResult?.yesCount, totalVotes)} h="3px" bgColor={VoteColor.YES} />
                 <Box w={getPercentage(proposal.finalTallyResult?.noCount, totalVotes)} h="3px" bgColor={VoteColor.NO} />
                 <Box w={getPercentage(proposal.finalTallyResult?.noWithVetoCount, totalVotes)} h="3px" bgColor={VoteColor.NWV} />

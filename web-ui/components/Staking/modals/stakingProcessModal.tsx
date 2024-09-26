@@ -18,21 +18,19 @@ import {
   Grid,
   Checkbox,
 } from '@chakra-ui/react';
-import { coins, StdFee } from '@cosmjs/amino';
+import { useChain } from '@cosmos-kit/react';
 import styled from '@emotion/styled';
 import { bech32 } from 'bech32';
-import { assets } from 'chain-registry';
-import chains from 'chain-registry';
 import { cosmos } from 'quicksilverjs';
 import React, { useEffect, useState } from 'react';
 
-
+import { Chain, env, chains as configChains, local_chain } from '@/config';
 import { useTx } from '@/hooks';
 import { useFeeEstimation } from '@/hooks/useFeeEstimation';
 import { useZoneQuery } from '@/hooks/useQueries';
-import { shiftDigits } from '@/utils';
 
 import { MultiModal } from './validatorSelectionModal';
+
 
 const ChakraModalContent = styled(ModalContent)`
   position: relative;
@@ -68,13 +66,7 @@ interface StakingModalProps {
   onClose: () => void;
   children?: React.ReactNode;
   tokenAmount: string;
-  selectedOption?: {
-    name: string;
-    value: string;
-    logo: string;
-    chainName: string;
-    chainId: string;
-  };
+  selectedOption?: Chain;
   address: string;
   refetch: () => void;
 }
@@ -89,23 +81,10 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
   const [isSigning, setIsSigning] = useState<boolean>(false);
   const [isError, setIsError] = useState<boolean>(false);
 
-  let newChainName: string | undefined;
-  if (selectedOption?.chainId === 'provider') {
-    newChainName = 'rsprovidertestnet';
-  } else if (selectedOption?.chainId === 'elgafar-1') {
-    newChainName = 'stargazetestnet';
-  } else if (selectedOption?.chainId === 'osmo-test-5') {
-    newChainName = 'osmosistestnet';
-  } else if (selectedOption?.chainId === 'regen-redwood-1') {
-    newChainName = 'regen';
-  } else if (selectedOption?.chainId === 'sommelier-3') {
-    newChainName = 'sommelier';
-  } else {
-    // Default case
-    newChainName = selectedOption?.chainName;
-  }
+  const newChainName = selectedOption?.chain_name;
+  
 
-  const labels = ['Choose validators', `Set weights`, `Sign & Submit`, `Receive q${selectedOption?.value}`];
+  const labels = ['Choose validators', `Set weights`, `Sign & Submit`, `Receive q${selectedOption?.major_denom.toUpperCase()}`];
   const [isModalOpen, setModalOpen] = useState(false);
 
   const [selectedValidators, setSelectedValidators] = useState<{ name: string; operatorAddress: string }[]>([]);
@@ -200,8 +179,8 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
     };
   });
 
-  const { data: zone, isLoading: isZoneLoading } = useZoneQuery(selectedOption?.chainId ?? '');
-
+  const { data: zone, isLoading: isZoneLoading } = useZoneQuery(selectedOption?.chain_id ?? '');
+  const chain = configChains.get(env)?.get(selectedOption?.chain_name ?? '');
   const valToByte = (val: number) => {
     if (val > 1) {
       val = 1;
@@ -214,9 +193,9 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
 
   const addValidator = (valAddr: string, weight: number) => {
     let { words } = bech32.decode(valAddr);
-    let wordsUint8Array = new Uint8Array(bech32.fromWords(words));
-    let weightByte = valToByte(weight);
-    return Buffer.concat([Buffer.from([weightByte]), wordsUint8Array]);
+    let wordsBuffer = new Uint8Array(bech32.fromWords(words));
+    let weightByteBuffer = new Uint8Array([valToByte(weight)]);
+    return Buffer.concat([weightByteBuffer, wordsBuffer]);
   };
 
   let memoBuffer = Buffer.alloc(0);
@@ -227,12 +206,22 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
     });
     memoBuffer = Buffer.concat([Buffer.from([0x02, memoBuffer.length]), memoBuffer]);
   }
+  const { address: qsAddress } = useChain(local_chain.get(env)?.chain_name ?? '');
 
-  let memo = memoBuffer.length > 0 && selectedValidators.length > 0 ? memoBuffer.toString('base64') : '';
+  if (chain?.is_118 == false && qsAddress) {
+    let { words } = bech32.decode(qsAddress ?? '');
+    let wordsBuffer = Buffer.from(new Uint8Array(bech32.fromWords(words)));
+    
+    memoBuffer = Buffer.concat([memoBuffer, Buffer.from([0x00, wordsBuffer.length]), wordsBuffer]);
+  }
+
+  let memo = memoBuffer.length > 0 ? memoBuffer.toString('base64') : '';
 
   const parsedAmount = parseFloat(tokenAmount ?? '0');
-
-  let numericAmount = BigInt(Math.floor(parsedAmount * Math.pow(10, Number(zone?.decimals ?? '6'))));
+  let numericAmount = BigInt(0);
+  if (!Number.isNaN(parsedAmount)) {
+    numericAmount = BigInt(Math.floor(parsedAmount * Math.pow(10, Number(zone?.decimals ?? '6'))));
+  }
 
   if (numericAmount <= 0) {
     numericAmount = BigInt(0);
@@ -246,21 +235,8 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
     amount: [{ denom: zone?.baseDenom ?? '', amount: numericAmount.toString() }],
   });
 
-  const mainTokens = assets.find(({ chain_name }) => chain_name === newChainName);
-  const fees = chains.chains.find(({ chain_name }) => chain_name === newChainName)?.fees?.fee_tokens;
-  const mainDenom = mainTokens?.assets[0].base ?? '';
-  let feeAmount;
-  if (selectedOption?.chainName === 'sommelier') {
-    // Hardcoded value for sommelier-3
-    feeAmount = '10000';
-  } else {
-    // Default case
-    const fixedMinGasPrice = fees?.find(({ denom }: { denom: string }) => denom === mainDenom)?.average_gas_price ?? '';
-    feeAmount = shiftDigits(fixedMinGasPrice, 6).toString();
-  }
-
   const { tx } = useTx(newChainName ?? '');
-
+  
   const { estimateFee } = useFeeEstimation(newChainName ?? '');
 
   const handleLiquidStake = async (event: React.MouseEvent) => {
@@ -298,7 +274,7 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
     setIsError(false);
     setIsSigning(false);
     setUseDefaultWeights(true);
-  }, [selectedOption?.chainName]);
+  }, [selectedOption?.chain_name]);
 
   const [isCustomWeight, setIsCustomWeight] = useState(false);
 
@@ -361,7 +337,7 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
                 <Stat>
                   <StatLabel color="rgba(255,255,255,0.5)">LIQUID STAKING</StatLabel>
                   <StatNumber color="white">
-                    {tokenAmount} {selectedOption?.value}
+                    {tokenAmount} {selectedOption?.major_denom.toUpperCase()}
                   </StatNumber>
                 </Stat>
                 {[1, 2, 3, 4].map((circleStep, index) => (
@@ -481,9 +457,9 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
                   <MultiModal
                     isOpen={isModalOpen}
                     onClose={() => setModalOpen(false)}
-                    selectedChainName={selectedOption?.chainName || ''}
+                    selectedChainName={selectedOption?.chain_name || ''}
                     selectedValidators={selectedValidators}
-                    selectedChainId={selectedOption?.chainId || ''}
+                    selectedChainId={selectedOption?.chain_id || ''}
                     setSelectedValidators={setSelectedValidators}
                   />
                 </>
@@ -636,7 +612,7 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
                       textAlign={'left'}
                       color="white"
                     >
-                      You’re going to liquid stake {tokenAmount} {selectedOption?.value} on Quicksilver
+                      You’re going to liquid stake {tokenAmount} {selectedOption?.major_denom} on Quicksilver
                     </Text>
                     <Text
                       display={{ base: 'block', md: 'none' }}
@@ -646,7 +622,7 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
                       textAlign={'left'}
                       color="white"
                     >
-                      Liquid staking {tokenAmount} {selectedOption?.value}
+                      Liquid staking {tokenAmount} {selectedOption?.major_denom}
                     </Text>
                     {selectedValidators.length > 0 && (
                       <Flex mt={2} textAlign={'left'} alignItems="baseline" gap="2">
@@ -662,7 +638,7 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
                       <Text fontWeight={'bold'}>Receiving:</Text>
                       <Text color="complimentary.900">
                         {!isZoneLoading ? (
-                          `${(Number(tokenAmount) / Number(zone?.redemptionRate || 1)).toFixed(2)} q${selectedOption?.value}`
+                          `${(Number(tokenAmount) / Number(zone?.redemptionRate || 1)).toFixed(2)} q${selectedOption?.major_denom}`
                         ) : (
                           <Spinner thickness="2px" speed="0.65s" emptyColor="gray.200" color="complimentary.900" size="sm" />
                         )}
@@ -716,7 +692,7 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
                         Transaction {transactionStatus}
                       </Text>
                       <Text mt={2} textAlign={'center'} fontWeight={'light'} fontSize="lg" color="white">
-                        Your q{selectedOption?.value} will arrive to your wallet in a few minutes.
+                        Your q{selectedOption?.major_denom.toUpperCase()} will arrive to your wallet in a few minutes.
                       </Text>
                       <Button
                         w="55%"

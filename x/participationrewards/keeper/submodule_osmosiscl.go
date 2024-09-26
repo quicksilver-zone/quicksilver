@@ -110,7 +110,12 @@ func (*OsmosisClModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.Msg
 			}
 		}
 
-		sdkAmount, err := osmosistypes.DetermineApplicableTokensInClPool(ctx, k, position, msg.Zone)
+		denom, found := k.ApplicableDenomForZone(ctx, msg.Zone)
+		if !found {
+			return math.ZeroInt(), errors.New("no applicable denom found for zone")
+		}
+
+		sdkAmount, err := osmosistypes.DetermineApplicableTokensInClPool(ctx, k, position, msg.Zone, denom)
 		if err != nil {
 			return math.ZeroInt(), err
 		}
@@ -125,4 +130,33 @@ func (*OsmosisClModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.Msg
 
 func (*OsmosisClModule) KeyPool(poolID uint64) []byte {
 	return osmocl.KeyPool(poolID)
+}
+
+func (k *Keeper) ApplicableDenomForZone(ctx sdk.Context, chainId string) (denom string, found bool) {
+	zone, found := k.icsKeeper.GetZone(ctx, chainId)
+	if !found {
+		return "", false
+	}
+
+	params, found := k.GetProtocolData(ctx, types.ProtocolDataTypeOsmosisParams, types.OsmosisParamsKey)
+	if !found {
+		return "", false
+	}
+
+	paramsData := types.OsmosisParamsProtocolData{}
+	if err := json.Unmarshal(params.Data, &paramsData); err != nil {
+		return "", false
+	}
+
+	k.IteratePrefixedProtocolDatas(ctx, types.GetPrefixProtocolDataKey(types.ProtocolDataTypeLiquidToken), func(idx int64, key []byte, data types.ProtocolData) bool {
+		liquidToken, _ := types.UnmarshalProtocolData(types.ProtocolDataTypeLiquidToken, data.Data)
+		liquidTokenData := liquidToken.(*types.LiquidAllowedDenomProtocolData)
+		if liquidTokenData.ChainID == paramsData.ChainID && liquidTokenData.QAssetDenom == zone.LocalDenom {
+			found = true
+			denom = liquidTokenData.IbcDenom
+			return true
+		}
+		return false
+	})
+	return denom, found
 }
