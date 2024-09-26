@@ -307,7 +307,7 @@ func (k *Keeper) verifyOsmosisLP(ctx sdk.Context, proofs []*cmtypes.Proof, cr ty
 }
 
 func (k *Keeper) verifyPoolAndGetAmount(ctx sdk.Context, lock osmosislockuptypes.PeriodLock, cr types.ClaimRecord) (sdkmath.Int, error) {
-	return osmosistypes.DetermineApplicableTokensInPool(ctx, k.prKeeper, lock, cr.ChainId)
+	return osmosistypes.DetermineApplicableTokensInPool(ctx, k.prKeeper, lock, cr.ChainId, "UNUSED")
 }
 
 // -----------

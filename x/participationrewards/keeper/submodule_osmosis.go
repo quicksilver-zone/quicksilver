@@ -139,7 +139,13 @@ func (*OsmosisModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.MsgSu
 				}
 			}
 		}
-		sdkAmount, err := osmosistypes.DetermineApplicableTokensInPool(ctx, k, lock, msg.Zone)
+
+		denom, found := k.ApplicableDenomForZone(ctx, msg.Zone)
+		if !found {
+			return math.ZeroInt(), errors.New("no applicable denom found for zone")
+		}
+
+		sdkAmount, err := osmosistypes.DetermineApplicableTokensInPool(ctx, k, lock, msg.Zone, denom)
 		if err != nil {
 			return sdk.ZeroInt(), err
 		}

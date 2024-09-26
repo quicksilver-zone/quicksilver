@@ -10,7 +10,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	osmosislockuptypes "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/lockup"
-	"github.com/quicksilver-zone/quicksilver/utils"
 	participationrewardstypes "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 
 	cl "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/concentrated-liquidity"
@@ -22,7 +21,7 @@ type ParticipationRewardsKeeper interface {
 	GetProtocolData(ctx sdk.Context, pdType participationrewardstypes.ProtocolDataType, key string) (participationrewardstypes.ProtocolData, bool)
 }
 
-func DetermineApplicableTokensInPool(ctx sdk.Context, prKeeper ParticipationRewardsKeeper, lock osmosislockuptypes.PeriodLock, chainID string) (math.Int, error) {
+func DetermineApplicableTokensInPool(ctx sdk.Context, prKeeper ParticipationRewardsKeeper, lock osmosislockuptypes.PeriodLock, chainID string, poolDenom string) (math.Int, error) {
 	gammtoken, err := lock.SingleCoin()
 	if err != nil {
 		return sdk.ZeroInt(), err
@@ -39,18 +38,6 @@ func DetermineApplicableTokensInPool(ctx sdk.Context, prKeeper ParticipationRewa
 		return sdk.ZeroInt(), err
 	}
 	pool, _ := ipool.(*participationrewardstypes.OsmosisPoolProtocolData)
-
-	poolDenom := ""
-	for _, zk := range utils.Keys(pool.Denoms) {
-		if pool.Denoms[zk].ChainID == chainID {
-			poolDenom = zk
-			break
-		}
-	}
-
-	if poolDenom == "" {
-		return sdk.ZeroInt(), fmt.Errorf("invalid zone, pool zone must match %s", chainID)
-	}
 
 	poolData, err := pool.GetPool()
 	if err != nil {
@@ -91,8 +78,10 @@ func CalculateUnderlyingAssetsFromPosition(ctx sdk.Context, position clmodel.Pos
 	return coin0, coin1, nil
 }
 
-func DetermineApplicableTokensInClPool(ctx sdk.Context, prKeeper ParticipationRewardsKeeper, position clmodel.Position, chainID string) (math.Int, error) {
+func DetermineApplicableTokensInClPool(ctx sdk.Context, prKeeper ParticipationRewardsKeeper, position clmodel.Position, chainID string, poolDenom string) (math.Int, error) {
 	poolID := position.PoolId
+
+	ctx.Logger().Info("DetermineApplicableTokensInClPool", "poolID", poolID, "position", position)
 	pd, ok := prKeeper.GetProtocolData(ctx, participationrewardstypes.ProtocolDataTypeOsmosisCLPool, fmt.Sprintf("%d", poolID))
 	if !ok {
 		return sdk.ZeroInt(), fmt.Errorf("unable to obtain protocol data for poolID=%d", poolID)
@@ -104,18 +93,6 @@ func DetermineApplicableTokensInClPool(ctx sdk.Context, prKeeper ParticipationRe
 	}
 	pool, _ := ipool.(*participationrewardstypes.OsmosisClPoolProtocolData)
 
-	poolDenom := ""
-	for _, zk := range utils.Keys(pool.Denoms) {
-		if pool.Denoms[zk].ChainID == chainID {
-			poolDenom = zk
-			break
-		}
-	}
-
-	if poolDenom == "" {
-		return sdk.ZeroInt(), fmt.Errorf("invalid zone, pool zone must match %s", chainID)
-	}
-
 	poolData, err := pool.GetPool()
 	if err != nil {
 		return sdk.ZeroInt(), err
@@ -126,13 +103,16 @@ func DetermineApplicableTokensInClPool(ctx sdk.Context, prKeeper ParticipationRe
 	if err != nil {
 		return sdk.ZeroInt(), errors.New("unable to determine underlying assets for position")
 	}
+
+	ctx.Logger().Info("DetermineApplicableTokensInClPool", "asset0", asset0, "asset1", asset1)
+
 	switch true {
 	case asset0.Denom == poolDenom:
 		asset = asset0
 	case asset1.Denom == poolDenom:
 		asset = asset1
 	default:
-		return sdk.ZeroInt(), fmt.Errorf("position does not match local denom for %s", chainID)
+		return sdk.ZeroInt(), fmt.Errorf("position does not match local denom for %s (poolDenom: %s)", chainID, poolDenom)
 	}
 
 	return asset.Amount, nil
