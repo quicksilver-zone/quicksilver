@@ -604,7 +604,7 @@ func (suite *KeeperTestSuite) TestGovReopenChannel() {
 					Authority:    "",
 				}
 			},
-			expecErr: fmt.Errorf("unable to obtain chain id: invalid connection id, \"%s\" not found", ""),
+			expecErr: fmt.Errorf("unable to obtain chain id: invalid connection id, %q not found", ""),
 		},
 		{
 			name: "chainID / connectsionID mismatch",
@@ -817,7 +817,7 @@ func (suite *KeeperTestSuite) TestMsgCancelRedemeption() {
 					FromAddress: addressutils.GenerateAddressForTestWithPrefix("quick"),
 				}
 			},
-			fmt.Sprintf("no queued record with hash \"%s\" found", hash),
+			fmt.Sprintf("no queued record with hash %q found", hash),
 		},
 		{
 			"no hash exists",
@@ -828,7 +828,7 @@ func (suite *KeeperTestSuite) TestMsgCancelRedemeption() {
 					FromAddress: addressutils.GenerateAddressForTestWithPrefix("quick"),
 				}
 			},
-			fmt.Sprintf("no queued record with hash \"%s\" found", hash),
+			fmt.Sprintf("no queued record with hash %q found", hash),
 		},
 		{
 			"hash exists but in unbond status, no errors",
@@ -851,7 +851,7 @@ func (suite *KeeperTestSuite) TestMsgCancelRedemeption() {
 					FromAddress: address,
 				}
 			},
-			fmt.Sprintf("cannot cancel unbond \"%s\" with no errors", hash),
+			fmt.Sprintf("cannot cancel unbond %q with no errors", hash),
 		},
 		{
 			"hash exists in queued status, with errors",
@@ -903,7 +903,7 @@ func (suite *KeeperTestSuite) TestMsgCancelRedemeption() {
 					FromAddress: address,
 				}
 			},
-			fmt.Sprintf("incorrect user for record with hash \"%s\"", hash),
+			fmt.Sprintf("incorrect user for record with hash %q", hash),
 		},
 		{
 			"valid",
@@ -1002,7 +1002,7 @@ func (suite *KeeperTestSuite) TestMsgRequeueRedemeption() {
 					FromAddress: addressutils.GenerateAddressForTestWithPrefix("quick"),
 				}
 			},
-			fmt.Sprintf("no unbonding record with hash \"%s\" found", hash),
+			fmt.Sprintf("no unbonding record with hash %q found", hash),
 		},
 		{
 			"no hash exists",
@@ -1013,7 +1013,7 @@ func (suite *KeeperTestSuite) TestMsgRequeueRedemeption() {
 					FromAddress: addressutils.GenerateAddressForTestWithPrefix("quick"),
 				}
 			},
-			fmt.Sprintf("no unbonding record with hash \"%s\" found", hash),
+			fmt.Sprintf("no unbonding record with hash %q found", hash),
 		},
 		{
 			"hash exists but in unbond status, no errors",
@@ -1036,7 +1036,7 @@ func (suite *KeeperTestSuite) TestMsgRequeueRedemeption() {
 					FromAddress: address,
 				}
 			},
-			fmt.Sprintf("cannot requeue unbond \"%s\" with no errors", hash),
+			fmt.Sprintf("cannot requeue unbond %q with no errors", hash),
 		},
 		{
 			"hash exists in queued status, with errors",
@@ -1086,7 +1086,7 @@ func (suite *KeeperTestSuite) TestMsgRequeueRedemeption() {
 					FromAddress: address,
 				}
 			},
-			fmt.Sprintf("incorrect user for record with hash \"%s\"", hash),
+			fmt.Sprintf("incorrect user for record with hash %q", hash),
 		},
 		{
 			"valid - governance",
@@ -1161,7 +1161,7 @@ func (suite *KeeperTestSuite) TestMsgUpdateRedemption() {
 					FromAddress: k.GetGovAuthority(ctx),
 				}
 			},
-			fmt.Sprintf("no unbonding record with hash \"%s\" found", hash),
+			fmt.Sprintf("no unbonding record with hash %q found", hash),
 			nil,
 		},
 		{
@@ -1176,7 +1176,7 @@ func (suite *KeeperTestSuite) TestMsgUpdateRedemption() {
 					FromAddress: k.GetGovAuthority(ctx),
 				}
 			},
-			fmt.Sprintf("no unbonding record with hash \"%s\" found", hash),
+			fmt.Sprintf("no unbonding record with hash %q found", hash),
 			nil,
 		},
 		{

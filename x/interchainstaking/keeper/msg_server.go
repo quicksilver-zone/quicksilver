@@ -98,15 +98,15 @@ func (k msgServer) CancelRedemption(goCtx context.Context, msg *types.MsgCancelR
 		// check for errored unbond in UNBONDING status
 		record, found = k.GetWithdrawalRecord(ctx, msg.ChainId, msg.Hash, types.WithdrawStatusUnbond)
 		if !found {
-			return nil, fmt.Errorf("no queued record with hash \"%s\" found", msg.Hash)
+			return nil, fmt.Errorf("no queued record with hash %q found", msg.Hash)
 		}
 		if record.SendErrors == 0 {
-			return nil, fmt.Errorf("cannot cancel unbond \"%s\" with no errors", msg.Hash)
+			return nil, fmt.Errorf("cannot cancel unbond %q with no errors", msg.Hash)
 		}
 	}
 
 	if record.Delegator != msg.FromAddress && k.Keeper.GetGovAuthority(ctx) != msg.FromAddress {
-		return nil, fmt.Errorf("incorrect user for record with hash \"%s\"", msg.Hash)
+		return nil, fmt.Errorf("incorrect user for record with hash %q", msg.Hash)
 	}
 
 	// all good. delete!
@@ -145,14 +145,14 @@ func (k msgServer) RequeueRedemption(goCtx context.Context, msg *types.MsgRequeu
 	// check for errored unbond in UNBONDING status
 	record, found := k.GetWithdrawalRecord(ctx, msg.ChainId, msg.Hash, types.WithdrawStatusUnbond)
 	if !found {
-		return nil, fmt.Errorf("no unbonding record with hash \"%s\" found", msg.Hash)
+		return nil, fmt.Errorf("no unbonding record with hash %q found", msg.Hash)
 	}
 	if record.SendErrors == 0 {
-		return nil, fmt.Errorf("cannot requeue unbond \"%s\" with no errors", msg.Hash)
+		return nil, fmt.Errorf("cannot requeue unbond %q with no errors", msg.Hash)
 	}
 
 	if record.Delegator != msg.FromAddress && k.Keeper.GetGovAuthority(ctx) != msg.FromAddress {
-		return nil, fmt.Errorf("incorrect user for record with hash \"%s\"", msg.Hash)
+		return nil, fmt.Errorf("incorrect user for record with hash %q", msg.Hash)
 	}
 
 	// all good. update sendErrors to zero, nil the distributions and amount (as this we be recalculated when processed), and update the state to queued.
@@ -208,7 +208,7 @@ func (k msgServer) UpdateRedemption(goCtx context.Context, msg *types.MsgUpdateR
 	})
 
 	if r == nil {
-		return nil, fmt.Errorf("no unbonding record with hash \"%s\" found", msg.Hash)
+		return nil, fmt.Errorf("no unbonding record with hash %q found", msg.Hash)
 	}
 
 	if msg.NewStatus == types.WithdrawStatusQueued {
@@ -244,7 +244,7 @@ func (k msgServer) SignalIntent(goCtx context.Context, msg *types.MsgSignalInten
 	// get zone
 	zone, ok := k.GetZone(ctx, msg.ChainId)
 	if !ok {
-		return nil, fmt.Errorf("invalid chain id \"%s\"", msg.ChainId)
+		return nil, fmt.Errorf("invalid chain id %q", msg.ChainId)
 	}
 
 	// validate intents (aggregated errors)
