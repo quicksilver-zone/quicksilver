@@ -37,7 +37,7 @@ import (
 )
 
 const (
-	VERSION = "icq-relayer/v1.0.0-alpha.1"
+	VERSION = "icq-relayer/v1.0.0-beta.3"
 )
 
 type ClientUpdateRequirement struct {
@@ -552,7 +552,7 @@ func getHeader(ctx context.Context, cfg *types.Config, client *types.ReadOnlyCha
 	if !historicOk && clientHeight.RevisionHeight >= uint64(requestHeight+1) {
 		//return nil, fmt.Errorf("trusted height >= request height")
 		//oldHeights, err := cfg.DefaultChain.GetClientStateHeights(ctx, clientId, client.ChainID, uint64(requestHeight-200), logger, metrics)
-		oldHeights, err := cfg.DefaultChain.GetClientStateHeights(ctx, clientId, client.ChainID, uint64(requestHeight-300), logger, metrics, 0)
+		oldHeights, err := cfg.DefaultChain.GetClientStateHeights(ctx, clientId, client.ChainID, uint64(requestHeight-2000), logger, metrics, 0) // TODO: make this configurable
 		if err != nil {
 			return nil, fmt.Errorf("error: Could not get old heights: %w", err)
 		}

@@ -152,13 +152,14 @@ func (r *ReadOnlyChainConfig) GetClientState(ctx context.Context, clientId strin
 }
 
 func (r *ReadOnlyChainConfig) GetClientStateHeights(ctx context.Context, clientId string, chainId string, height uint64, logger log2.Logger, metrics prommetrics.Metrics, depth int) ([]clienttypes.Height, error) {
-	if depth > 50 {
+	time.Sleep(100 * time.Millisecond)
+	if depth > 500 {
 		return nil, fmt.Errorf("reached max depth")
 	}
 	chainParts := strings.Split(chainId, "-")
-        if len(chainParts) == 1 {
-          chainParts[1] = "1"
-        }
+	if len(chainParts) == 1 {
+		chainParts = append(chainParts, "1")
+	}
 	key := fmt.Sprintf("%s-%d", chainParts[len(chainParts)-1], height)
 
 	req := clienttypes.QueryConsensusStateHeightsRequest{ClientId: clientId, Pagination: &querytypes.PageRequest{Key: []byte(key)}}
@@ -278,6 +279,12 @@ func (r *ReadOnlyChainConfig) Tx(hash []byte) (tmtypes.TxProof, int64, error) {
 
 // a minimised representation of the Tx emitted by a Tx query, only containing Height and Proof and thus compatbiel with tm0.34 and tm0.37.
 type TxResultMinimal struct {
+	Height string          `json:"height"`
+	Proof  tmtypes.TxProof `json:"proof"`
+}
+
+// define celestia based TxResultMinimal
+type TxResultMinimalCelestia struct {
 	Height string          `json:"height"`
 	Proof  tmtypes.TxProof `json:"proof"`
 }
@@ -405,10 +412,28 @@ func (r *ReadOnlyChainConfig) GetCurrentHeight(ctx context.Context, cache *ristr
 			return 0, err
 		}
 
+		fmt.Printf("block: %+v\n", block)
+
+		if block == nil {
+			return 0, fmt.Errorf("block is nil")
+		}
+
+		if block.Block == nil {
+			return 0, fmt.Errorf("block.Block is nil")
+		}
+
+		if block.Block.LastCommit == nil {
+			return 0, fmt.Errorf("block last commit is nil")
+		}
+
 		currentheight = block.Block.LastCommit.Height - 1
+		if cache == nil {
+			logger.Log("msg", "unable to cache current block height, no cache provided", "height", currentheight)
+			return currentheight.(int64), nil
+		}
 		cache.SetWithTTL("currentblock/"+r.ChainID, currentheight, 1, 6*time.Second)
 		//logger.Log("msg", "caching currentblock", "height", currentheight)
-	} else {
+		//} else {
 		//logger.Log("msg", "using cached currentblock", "height", currentheight)
 	}
 	return currentheight.(int64), nil
