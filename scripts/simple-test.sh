@@ -61,12 +61,6 @@ $HERMES_RUN create channel --a-chain $CHAINID_0 --b-chain $CHAINID_1 --a-port tr
 #$HERMES_RUN create channel --port-a transfer --port-b transfer $CHAINID_0 connection-0
 echo "Tranfer channel created"
 docker-compose up --force-recreate -d hermes
-RLY_ADDRESS_3=$($RLY_RUN keys show qstest-1 testkey)
-RLY_ADDRESS_4=$($RLY_RUN keys show lstest-1 testkey)
-$QS1_EXEC tx bank send val1 $RLY_ADDRESS_3 1000uqck --chain-id $CHAINID_0 -y --keyring-backend=test
-$TZ1_1_EXEC tx bank send val2 $RLY_ADDRESS_4 1000uatom --chain-id $CHAINID_1 -y --keyring-backend=test
-
-docker-compose up --force-recreate -d relayer
 
 rm -rf ./icq/keys
 echo "Launch and configure interchain query daemon"

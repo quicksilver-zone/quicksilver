@@ -13,6 +13,7 @@ import (
 	v6 "github.com/cosmos/ibc-go/v6/testing/simapp/upgrades/v6" // nolint:revive
 
 	"github.com/quicksilver-zone/quicksilver/app/upgrades"
+	emtypes "github.com/quicksilver-zone/quicksilver/x/eventmanager/types"
 	supplytypes "github.com/quicksilver-zone/quicksilver/x/supply/types"
 )
 
@@ -75,6 +76,10 @@ func (app *Quicksilver) setUpgradeStoreLoaders() {
 	case upgrades.V010601UpgradeName:
 		storeUpgrades = &storetypes.StoreUpgrades{
 			Deleted: []string{wasmModuleName, tfModuleName},
+		}
+	case upgrades.V010700UpgradeName:
+		storeUpgrades = &storetypes.StoreUpgrades{
+			Added: []string{emtypes.ModuleName},
 		}
 	default:
 		// no-op

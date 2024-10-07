@@ -9,8 +9,6 @@ import (
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 )
 
 const (
@@ -135,18 +133,19 @@ type UserAllocation struct {
 type ZoneScore struct {
 	ZoneID           string // chainID
 	TotalVotingPower math.Int
-	ValidatorScores  map[string]*Validator
+	ValidatorScores  map[string]*ValidatorScore
 }
 
-// Validator is an internal struct to track transient state for the calculation
-// of zone scores. It contains all relevant Validator scoring metrics with a
-// pointer reference to the actual Validator (embedded).
-type Validator struct {
-	PowerPercentage   sdk.Dec
+// ValidatorScore is an internal struct to track transient state for the calculation
+// of zone scores. It contains all relevant ValidatorScore scoring metrics with a
+// pointer reference to the actual ValidatorScore (embedded).
+type ValidatorScore struct {
 	PerformanceScore  sdk.Dec
 	DistributionScore sdk.Dec
+}
 
-	*icstypes.Validator
+func (v *ValidatorScore) TotalScore() sdk.Dec {
+	return v.PerformanceScore.Add(v.DistributionScore)
 }
 
 // UserScore is an internal struct to track transient state for rewards

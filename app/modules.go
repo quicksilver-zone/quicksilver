@@ -55,6 +55,8 @@ import (
 	claimsmanagertypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
 	"github.com/quicksilver-zone/quicksilver/x/epochs"
 	epochstypes "github.com/quicksilver-zone/quicksilver/x/epochs/types"
+	"github.com/quicksilver-zone/quicksilver/x/eventmanager"
+	eventmanagertypes "github.com/quicksilver-zone/quicksilver/x/eventmanager/types"
 	"github.com/quicksilver-zone/quicksilver/x/interchainquery"
 	interchainquerytypes "github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
 	"github.com/quicksilver-zone/quicksilver/x/interchainstaking"
@@ -107,6 +109,7 @@ var (
 		participationrewards.AppModuleBasic{},
 		airdrop.AppModuleBasic{},
 		supply.AppModuleBasic{},
+		eventmanager.AppModuleBasic{},
 	)
 
 	// module account permissions.
@@ -169,6 +172,7 @@ func appModules(
 		epochs.NewAppModule(appCodec, app.EpochsKeeper),
 		interchainstaking.NewAppModule(appCodec, app.InterchainstakingKeeper),
 		interchainquery.NewAppModule(appCodec, app.InterchainQueryKeeper),
+		eventmanager.NewAppModule(appCodec, app.EventManagerKeeper),
 		participationrewards.NewAppModule(appCodec, app.ParticipationRewardsKeeper),
 		airdrop.NewAppModule(appCodec, app.AirdropKeeper),
 		supply.NewAppModule(appCodec, app.SupplyKeeper),
@@ -207,6 +211,7 @@ func simulationModules(
 		epochs.NewAppModule(appCodec, app.EpochsKeeper),
 		interchainstaking.NewAppModule(appCodec, app.InterchainstakingKeeper),
 		interchainquery.NewAppModule(appCodec, app.InterchainQueryKeeper),
+		eventmanager.NewAppModule(appCodec, app.EventManagerKeeper),
 		participationrewards.NewAppModule(appCodec, app.ParticipationRewardsKeeper),
 		airdrop.NewAppModule(appCodec, app.AirdropKeeper),
 		// supply.NewAppModule(appCodec, app.SupplyKeeper),
@@ -237,7 +242,8 @@ func orderBeginBlockers() []string {
 		stakingtypes.ModuleName,
 		ibchost.ModuleName,
 		interchainstakingtypes.ModuleName,
-		interchainquerytypes.ModuleName, // check ordering here.
+		interchainquerytypes.ModuleName,
+		eventmanagertypes.ModuleName,
 		// no-op modules
 		ibctransfertypes.ModuleName,
 		icatypes.ModuleName,
@@ -297,6 +303,7 @@ func orderEndBlockers() []string {
 		participationrewardstypes.ModuleName,
 		airdroptypes.ModuleName,
 		supplytypes.ModuleName,
+		eventmanagertypes.ModuleName,
 		// currently no-op.
 	}
 }
@@ -339,6 +346,7 @@ func orderInitBlockers() []string {
 		participationrewardstypes.ModuleName,
 		airdroptypes.ModuleName,
 		supplytypes.ModuleName,
+		eventmanagertypes.ModuleName,
 		// NOTE: crisis module must go at the end to check for invariants on each module
 		crisistypes.ModuleName,
 	}
