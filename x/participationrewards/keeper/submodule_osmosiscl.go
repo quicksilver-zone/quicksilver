@@ -132,8 +132,8 @@ func (*OsmosisClModule) KeyPool(poolID uint64) []byte {
 	return osmocl.KeyPool(poolID)
 }
 
-func (k *Keeper) ApplicableDenomForZone(ctx sdk.Context, chainId string) (denom string, found bool) {
-	zone, found := k.icsKeeper.GetZone(ctx, chainId)
+func (k *Keeper) ApplicableDenomForZone(ctx sdk.Context, chainID string) (denom string, found bool) {
+	zone, found := k.icsKeeper.GetZone(ctx, chainID)
 	if !found {
 		return "", false
 	}
