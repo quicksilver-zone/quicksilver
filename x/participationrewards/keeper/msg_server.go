@@ -36,7 +36,7 @@ func (k msgServer) SubmitClaim(goCtx context.Context, msg *types.MsgSubmitClaim)
 	// fetch zone
 	zone, ok := k.icsKeeper.GetZone(ctx, msg.Zone)
 	if !ok {
-		return nil, fmt.Errorf("invalid zone, chain id \"%s\" not found", msg.Zone)
+		return nil, fmt.Errorf("invalid zone, chain id %q not found", msg.Zone)
 	}
 	var pd types.ProtocolData
 	pd, ok = k.GetProtocolData(ctx, types.ProtocolDataTypeConnection, msg.SrcZone)

@@ -30,7 +30,7 @@ func (k *Keeper) HandleRegisterZoneProposal(ctx sdk.Context, p *types.RegisterZo
 	// get zone
 	_, found := k.GetZone(ctx, chainID)
 	if found {
-		return fmt.Errorf("invalid chain id, zone for \"%s\" already registered", chainID)
+		return fmt.Errorf("invalid chain id, zone for %q already registered", chainID)
 	}
 
 	connection, found := k.IBCKeeper.ConnectionKeeper.GetConnection(ctx, p.ConnectionId)
