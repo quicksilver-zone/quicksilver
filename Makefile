@@ -321,60 +321,6 @@ vet:
 .PHONY: run-tests test test-all test-import test-rpc $(TEST_TARGETS)
 
 ###############################################################################
-###                             e2e interchain test                         ###
-###############################################################################
-
-# Executes basic chain tests via interchaintest
-ictest-basic: ictest-deps
-	@cd test/interchaintest && go test -v -run TestBasicQuicksilverStart .
-
-# Executes a basic chain upgrade test via interchaintest
-ictest-upgrade: ictest-deps
-	@cd test/interchaintest && go test -v -run TestBasicQuicksilverUpgrade .
-
-# Executes a basic chain upgrade locally via interchaintest after compiling a local image as quicksilver:local
-ictest-upgrade-local: local-image ictest-deps ictest-upgrade
-
-# Executes IBC Transfer tests via interchaintest
-ictest-ibc: ictest-deps
-	@cd test/interchaintest && go test -v -run TestQuicksilverJunoIBCTransfer .
-
-# Executes TestInterchainStaking tests via interchaintest
-ictest-interchainstaking: ictest-deps
-	@cd test/interchaintest && go test -v -run TestInterchainStaking .
-
-# Executes all tests via interchaintest after compiling a local image as quicksilver:local
-ictest-all: ictest-setup ictest-basic ictest-upgrade ictest-ibc ictest-interchainstaking
-
-ictest-setup: ictest-build ictest-deps
-
-ictest-build: get-heighliner local-image
-
-ictest-deps:
-	# install other docker images
-	@$(DOCKER) image pull quicksilverzone/xcclookup:v0.4.3
-	@$(DOCKER) image pull quicksilverzone/interchain-queries:latest
-
-ictest-build-push: ictest-setup
-	@$(DOCKER) tag quicksilver:local  quicksilverzone/quicksilver-e2e:latest
-	@$(DOCKER) push quicksilverzone/quicksilver-e2e:latest
-.PHONY: ictest-basic ictest-upgrade ictest-ibc ictest-all ictest-deps ictest-build ictest-build-push
-
-###############################################################################
-###                                  heighliner                             ###
-###############################################################################
-
-get-heighliner:
-	@rm -rf heighliner
-	@git clone https://github.com/strangelove-ventures/heighliner.git
-	@cd heighliner &&GOWORK=off  go build
-
-local-image:
-	@heighliner/heighliner build -c quicksilver --local --build-env BUILD_TAGS=muslc
-
-.PHONY: get-heighliner local-image
-
-###############################################################################
 ###                                  simulation                             ###
 ###############################################################################
 
