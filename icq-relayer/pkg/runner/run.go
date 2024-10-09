@@ -754,53 +754,59 @@ func FlushSendQueue(chainId string, logger log.Logger, metrics prommetrics.Metri
 	}
 }
 
-// TODO: refactor me!
 func flush(chainId string, toSend []sdk.Msg, logger log.Logger, metrics prommetrics.Metrics) {
-	if len(toSend) > 0 {
-		_ = logger.Log("msg", fmt.Sprintf("Sending batch of %d messages", len(toSend)))
-		chainClient := globalCfg.Cl[chainId]
-		if chainClient == nil {
-			return
-		}
-		// dedupe on queryId
-		msgs := unique(toSend, logger)
-		if len(msgs) > 0 {
-			ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)
-			defer cancel()
-			resp, err := chainClient.SendMsgs(ctx, msgs, VERSION)
-			if err != nil {
-				switch {
-				case resp != nil && resp.Code == 19 && resp.Codespace == "sdk":
-					_ = logger.Log("msg", "Tx already in mempool")
-				case resp != nil && resp.Code == 12 && resp.Codespace == "sdk":
-					_ = logger.Log("msg", "Not enough gas")
-				case strings.Contains(err.Error(), "request body too large"):
-					TxMsgs = TxMsgs / 2
-					LastReduced = time.Now()
-					_ = logger.Log("msg", "body too large: reduced batchsize", "size", TxMsgs)
-				// case err.Error() == "context deadline exceeded":
-				// 	_ = logger.Log("msg", "Failed to submit in time, retrying")
-				// 	resp, err := chainClient.SendMsgs(ctx, msgs, VERSION)
-				// 	if err != nil {
-				// 		switch {
-				// 		case resp != nil && resp.Code == 19 && resp.Codespace == "sdk":
-				// 			_ = logger.Log("msg", "Tx already in mempool")
-				// 		case resp != nil && resp.Code == 12 && resp.Codespace == "sdk":
-				// 			_ = logger.Log("msg", "Not enough gas")
-				// 		case err.Error() == "context deadline exceeded":
-				// 			_ = logger.Log("msg", "Failed to submit in time, bailing")
-				// 		default:
-				// 			_ = logger.Log("msg", "Failed to submit after retry; nevermind, we'll try again!", "err", err)
-				// 			metrics.FailedTxs.WithLabelValues("failed_txs").Inc()
-				// 		}
-				// 	}
-				default:
-					_ = logger.Log("msg", "Failed to submit; nevermind, we'll try again!", "err", err)
-					metrics.FailedTxs.WithLabelValues("failed_txs").Inc()
-				}
-			}
-			_ = logger.Log("msg", fmt.Sprintf("Sent batch of %d (deduplicated) messages", len(msgs)))
-		}
+	if len(toSend) == 0 {
+		return
+	}
+
+	_ = logger.Log("msg", fmt.Sprintf("Sending batch of %d messages", len(toSend)))
+	chainClient := globalCfg.Cl[chainId]
+	if chainClient == nil {
+		return
+	}
+	// dedupe on queryId
+	msgs := unique(toSend, logger)
+	if len(msgs) == 0 {
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)
+	defer cancel()
+
+	resp, err := chainClient.SendMsgs(ctx, msgs, VERSION)
+	if err == nil {
+		_ = logger.Log("msg", fmt.Sprintf("Sent batch of %d (deduplicated) messages", len(msgs)))
+		return
+	}
+
+	switch {
+	case resp != nil && resp.Code == 19 && resp.Codespace == "sdk":
+		_ = logger.Log("msg", "Tx already in mempool")
+	case resp != nil && resp.Code == 12 && resp.Codespace == "sdk":
+		_ = logger.Log("msg", "Not enough gas")
+	case strings.Contains(err.Error(), "request body too large"):
+		TxMsgs = TxMsgs / 2
+		LastReduced = time.Now()
+		_ = logger.Log("msg", "body too large: reduced batchsize", "size", TxMsgs)
+	// case err.Error() == "context deadline exceeded":
+	// 	_ = logger.Log("msg", "Failed to submit in time, retrying")
+	// 	resp, err := chainClient.SendMsgs(ctx, msgs, VERSION)
+	// 	if err != nil {
+	// 		switch {
+	// 		case resp != nil && resp.Code == 19 && resp.Codespace == "sdk":
+	// 			_ = logger.Log("msg", "Tx already in mempool")
+	// 		case resp != nil && resp.Code == 12 && resp.Codespace == "sdk":
+	// 			_ = logger.Log("msg", "Not enough gas")
+	// 		case err.Error() == "context deadline exceeded":
+	// 			_ = logger.Log("msg", "Failed to submit in time, bailing")
+	// 		default:
+	// 			_ = logger.Log("msg", "Failed to submit after retry; nevermind, we'll try again!", "err", err)
+	// 			metrics.FailedTxs.WithLabelValues("failed_txs").Inc()
+	// 		}
+	// 	}
+	default:
+		_ = logger.Log("msg", "Failed to submit; nevermind, we'll try again!", "err", err)
+		metrics.FailedTxs.WithLabelValues("failed_txs").Inc()
 	}
 }
 
