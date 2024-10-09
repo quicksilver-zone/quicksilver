@@ -1,6 +1,6 @@
 module github.com/quicksilver-zone/quicksilver
 
-go 1.22.2
+go 1.22.4
 
 require (
 	cosmossdk.io/errors v1.0.1
