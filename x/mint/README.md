@@ -48,7 +48,7 @@ the following formula:
 
 ### Minter
 
-The [`Minter`](]https://github.com/quicksilver-zone/quicksilver/blob/b95f0dce1df0769068b2962868b97fdc6151752d/x/mint/types/mint.pb.go#L31) is an abstraction for holding current rewards information.
+The [`Minter`](https://github.com/quicksilver-zone/quicksilver/blob/b95f0dce1df0769068b2962868b97fdc6151752d/x/mint/types/mint.pb.go#L31) is an abstraction for holding current rewards information.
 
 ```go
 type Minter struct {
