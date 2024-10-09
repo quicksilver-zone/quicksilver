@@ -11,6 +11,7 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
@@ -495,4 +496,46 @@ func (k msgServer) GovRemoveValidatorDenyList(goCtx context.Context, msg *types.
 	})
 
 	return &types.MsgGovRemoveValidatorDenyListResponse{}, nil
+}
+
+func (k msgServer) GovForceSend(goCtx context.Context, msg *types.MsgForceICASend) (*types.MsgForceICASendResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	// checking msg authority is the gov module address
+	if k.Keeper.GetGovAuthority(ctx) != msg.FromAddress {
+		return nil,
+			govtypes.ErrInvalidSigner.Wrapf(
+				"invalid authority: expected %s, got %s",
+				k.Keeper.GetGovAuthority(ctx), msg.FromAddress,
+			)
+	}
+
+	zone, found := k.GetZoneForAccount(ctx, msg.FromAddress)
+	if !found {
+		return nil, fmt.Errorf("source address is not a valid ICA address %s", msg.FromAddress)
+	}
+
+	sourceAddress, err := addressutils.AccAddressFromBech32(msg.SourceAddress, zone.GetAccountPrefix())
+	if err != nil {
+		return nil, err
+	}
+
+	destinationAddress, err := addressutils.AccAddressFromBech32(msg.DestinationAddress, zone.GetAccountPrefix())
+	if err != nil {
+		return nil, err
+	}
+
+	sendMsg := banktypes.NewMsgSend(sourceAddress, destinationAddress, sdk.NewCoins(msg.Amount))
+
+	icaAccount, err := k.GetICAAccount(ctx, zone, msg.FromAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	err = k.SubmitTx(ctx, []sdk.Msg{sendMsg}, icaAccount, "governance send", 1)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.MsgForceICASendResponse{}, nil
 }
