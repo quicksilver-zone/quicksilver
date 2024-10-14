@@ -6,9 +6,6 @@ on:
       - "main"
     paths-ignore:
       - webui/**
-  pull_request:
-    branches:
-      - main
 
 jobs:
   docker:
