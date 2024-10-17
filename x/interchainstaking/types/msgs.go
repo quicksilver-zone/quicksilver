@@ -11,46 +11,26 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
-	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 )
 
-// interchainstaking message types.
-const (
-	TypeMsgRequestRedemption = "requestredemption"
-	TypeMsgCancelRedemption  = "cancelredemption"
-	TypeMsgRequeueRedemption = "requeueredemption"
-	TypeMsgUpdateRedemption  = "updateredemption"
-	TypeMsgSignalIntent      = "signalintent"
-)
-
 var (
-	_ sdk.Msg            = &MsgRequestRedemption{}
-	_ sdk.Msg            = &MsgCancelRedemption{}
-	_ sdk.Msg            = &MsgRequeueRedemption{}
-	_ sdk.Msg            = &MsgSignalIntent{}
-	_ sdk.Msg            = &MsgGovCloseChannel{}
-	_ sdk.Msg            = &MsgGovReopenChannel{}
-	_ sdk.Msg            = &MsgGovSetLsmCaps{}
-	_ legacytx.LegacyMsg = &MsgRequestRedemption{}
-	_ legacytx.LegacyMsg = &MsgCancelRedemption{}
-	_ legacytx.LegacyMsg = &MsgRequeueRedemption{}
-	_ legacytx.LegacyMsg = &MsgSignalIntent{}
-	_ sdk.Msg            = &MsgGovAddValidatorDenyList{}
-	_ sdk.Msg            = &MsgGovRemoveValidatorDenyList{}
+	_ sdk.Msg = &MsgRequestRedemption{}
+	_ sdk.Msg = &MsgCancelRedemption{}
+	_ sdk.Msg = &MsgRequeueRedemption{}
+	_ sdk.Msg = &MsgSignalIntent{}
+	_ sdk.Msg = &MsgGovCloseChannel{}
+	_ sdk.Msg = &MsgGovReopenChannel{}
+	_ sdk.Msg = &MsgGovSetLsmCaps{}
+	_ sdk.Msg = &MsgGovAddValidatorDenyList{}
+	_ sdk.Msg = &MsgGovRemoveValidatorDenyList{}
 )
 
 // NewMsgRequestRedemption - construct a msg to request redemption.
 func NewMsgRequestRedemption(value sdk.Coin, destinationAddress string, fromAddress sdk.Address) *MsgRequestRedemption {
 	return &MsgRequestRedemption{Value: value, DestinationAddress: destinationAddress, FromAddress: fromAddress.String()}
 }
-
-// Route Implements Msg.
-func (MsgRequestRedemption) Route() string { return RouterKey }
-
-// Type Implements Msg.
-func (MsgRequestRedemption) Type() string { return TypeMsgRequestRedemption }
 
 // ValidateBasic Implements Msg.
 func (msg MsgRequestRedemption) ValidateBasic() error {
@@ -103,12 +83,6 @@ func NewMsgCancelRedemption(chainID string, hash string, fromAddress sdk.Address
 	return &MsgCancelRedemption{ChainId: chainID, Hash: hash, FromAddress: fromAddress.String()}
 }
 
-// Route Implements Msg.
-func (MsgCancelRedemption) Route() string { return RouterKey }
-
-// Type Implements Msg.
-func (MsgCancelRedemption) Type() string { return TypeMsgCancelRedemption }
-
 // ValidateBasic Implements Msg.
 func (msg MsgCancelRedemption) ValidateBasic() error {
 	errs := make(map[string]error)
@@ -153,12 +127,6 @@ func NewMsgRequeueRedemption(chainID string, hash string, fromAddress sdk.Addres
 	return &MsgRequeueRedemption{ChainId: chainID, Hash: hash, FromAddress: fromAddress.String()}
 }
 
-// Route Implements Msg.
-func (MsgRequeueRedemption) Route() string { return RouterKey }
-
-// Type Implements Msg.
-func (MsgRequeueRedemption) Type() string { return TypeMsgRequeueRedemption }
-
 // ValidateBasic Implements Msg.
 func (msg MsgRequeueRedemption) ValidateBasic() error {
 	errs := make(map[string]error)
@@ -202,12 +170,6 @@ func (msg MsgRequeueRedemption) GetSigners() []sdk.AccAddress {
 func NewMsgUpdateRedemption(chainID string, hash string, newStatus int32, fromAddress sdk.Address) *MsgUpdateRedemption {
 	return &MsgUpdateRedemption{ChainId: chainID, Hash: hash, NewStatus: newStatus, FromAddress: fromAddress.String()}
 }
-
-// Route Implements Msg.
-func (MsgUpdateRedemption) Route() string { return RouterKey }
-
-// Type Implements Msg.
-func (MsgUpdateRedemption) Type() string { return TypeMsgUpdateRedemption }
 
 // ValidateBasic Implements Msg.
 func (msg MsgUpdateRedemption) ValidateBasic() error {
@@ -318,12 +280,6 @@ func IntentsFromString(input string) ([]*ValidatorIntent, error) {
 func NewMsgSignalIntent(chainID, intents string, fromAddress sdk.Address) *MsgSignalIntent {
 	return &MsgSignalIntent{ChainId: chainID, Intents: intents, FromAddress: fromAddress.String()}
 }
-
-// Route Implements Msg.
-func (MsgSignalIntent) Route() string { return RouterKey }
-
-// Type Implements Msg.
-func (MsgSignalIntent) Type() string { return TypeMsgSignalIntent }
 
 // ValidateBasic Implements Msg.
 func (msg MsgSignalIntent) ValidateBasic() error {
@@ -555,5 +511,56 @@ func (msg MsgGovRemoveValidatorDenyList) GetSignBytes() []byte {
 // // GetSigners Implements Msg.
 func (msg MsgGovRemoveValidatorDenyList) GetSigners() []sdk.AccAddress {
 	fromAddress, _ := addressutils.AccAddressFromBech32(msg.Authority, "")
+	return []sdk.AccAddress{fromAddress}
+}
+
+// MsgForceICASend
+
+func NewMsgForceICASend(chainID string, sourceAddress string, destinationAddress string, amount sdk.Coin, fromAddress sdk.Address) *MsgForceICASend {
+	return &MsgForceICASend{SourceAddress: sourceAddress, DestinationAddress: destinationAddress, Amount: amount, FromAddress: fromAddress.String()}
+}
+
+// ValidateBasic Implements Msg.
+func (msg MsgForceICASend) ValidateBasic() error {
+	errs := make(map[string]error)
+
+	// check from address
+	_, err := addressutils.AccAddressFromBech32(msg.FromAddress, "")
+	if err != nil {
+		errs["FromAddress"] = err
+	}
+
+	// check source address
+	_, err = addressutils.AccAddressFromBech32(msg.SourceAddress, "")
+	if err != nil {
+		errs["SourceAddress"] = err
+	}
+
+	// check destination address
+	_, err = addressutils.AccAddressFromBech32(msg.DestinationAddress, "")
+	if err != nil {
+		errs["DestinationAddress"] = err
+	}
+
+	// check amount
+	if !msg.Amount.IsValid() {
+		errs["Amount"] = errors.New("invalid amount")
+	}
+
+	if len(errs) > 0 {
+		return multierror.New(errs)
+	}
+
+	return nil
+}
+
+// GetSignBytes Implements Msg.
+func (msg MsgForceICASend) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+// GetSigners Implements Msg.
+func (msg MsgForceICASend) GetSigners() []sdk.AccAddress {
+	fromAddress, _ := sdk.AccAddressFromBech32(msg.FromAddress)
 	return []sdk.AccAddress{fromAddress}
 }
