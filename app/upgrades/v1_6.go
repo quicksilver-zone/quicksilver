@@ -5,19 +5,22 @@ import (
 	"fmt"
 	"time"
 
+	abci "github.com/tendermint/tendermint/abci/types"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+
 	v6migration "github.com/cosmos/ibc-go/v6/modules/apps/27-interchain-accounts/controller/migrations/v6"
 	icahosttypes "github.com/cosmos/ibc-go/v6/modules/apps/27-interchain-accounts/host/types"
+
 	"github.com/quicksilver-zone/quicksilver/app/keepers"
 	"github.com/quicksilver-zone/quicksilver/utils"
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 	"github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 // ============ TESTNET UPGRADE HANDLERS ============
