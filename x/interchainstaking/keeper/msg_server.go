@@ -12,7 +12,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 )
@@ -217,6 +216,7 @@ func (k msgServer) UpdateRedemption(goCtx context.Context, msg *types.MsgUpdateR
 		r.Amount = nil
 		r.Distribution = nil
 		r.CompletionTime = time.Time{}
+		r.Acknowledged = false
 	}
 
 	k.UpdateWithdrawalRecordStatus(ctx, r, msg.NewStatus)
