@@ -121,19 +121,3 @@ services:
       - icq-relayer
       - run
     restart: always
-  relayer:
-    image: quicksilverzone/relayer:v2.3.0
-    build:
-      context: .
-      dockerfile: Dockerfile.relayer
-    volumes:
-      - ./data/rly:/rly/.relayer
-    command:
-      - rly
-      - start
-      - demo
-      #- -p
-      #- events
-      #- -b
-      #- "100"
-    restart: always

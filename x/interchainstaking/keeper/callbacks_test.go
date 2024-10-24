@@ -2227,7 +2227,7 @@ func (suite *KeeperTestSuite) TestCheckTMHeaderForZone() {
 				tc.changeCtx(qckApp, &ctx, &txRes, &zone)
 			}
 
-			err := qckApp.InterchainstakingKeeper.CheckTMHeaderForZone(ctx, &zone, txRes)
+			err := qckApp.InterchainstakingKeeper.CheckTMHeaderForZone(ctx, &zone, txRes.GetHeader())
 			if tc.expectedErr {
 				suite.Error(err)
 			} else {

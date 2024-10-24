@@ -1,11 +1,13 @@
 module github.com/quicksilver-zone/quicksilver
 
-go 1.22.4
+go 1.23.2
 
 require (
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/math v1.3.0
 	github.com/armon/go-metrics v0.4.1
+	github.com/celestiaorg/go-square/v2 v2.0.0
+	github.com/celestiaorg/nmt v0.22.2
 	github.com/client9/misspell v0.3.4
 	github.com/cometbft/cometbft-db v0.12.0
 	github.com/confio/ics23/go v0.9.1
@@ -34,7 +36,7 @@ require (
 	go.opencensus.io v0.24.0
 	golang.org/x/exp v0.0.0-20240613232115-7f521ea00fb8
 	golang.org/x/tools v0.23.0
-	google.golang.org/genproto/googleapis/api v0.0.0-20240617180043-68d350f18fd4
+	google.golang.org/genproto/googleapis/api v0.0.0-20240701130421-f6361c86f094
 	google.golang.org/grpc v1.65.0
 	google.golang.org/protobuf v1.34.2
 	gopkg.in/yaml.v2 v2.4.0
@@ -311,9 +313,10 @@ require (
 	go.etcd.io/bbolt v1.4.0-alpha.1 // indirect
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.52.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.52.0 // indirect
-	go.opentelemetry.io/otel v1.27.0 // indirect
-	go.opentelemetry.io/otel/metric v1.27.0 // indirect
-	go.opentelemetry.io/otel/trace v1.27.0 // indirect
+	go.opentelemetry.io/otel v1.28.0 // indirect
+	go.opentelemetry.io/otel/metric v1.28.0 // indirect
+	go.opentelemetry.io/otel/sdk v1.28.0 // indirect
+	go.opentelemetry.io/otel/trace v1.28.0 // indirect
 	go.uber.org/automaxprocs v1.5.3 // indirect
 	go.uber.org/mock v0.4.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
@@ -330,7 +333,7 @@ require (
 	golang.org/x/time v0.5.0 // indirect
 	google.golang.org/api v0.185.0 // indirect
 	google.golang.org/genproto v0.0.0-20240617180043-68d350f18fd4 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20240617180043-68d350f18fd4 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20240701130421-f6361c86f094 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	honnef.co/go/tools v0.4.7 // indirect
 	mvdan.cc/unparam v0.0.0-20240528143540-8a5130ca722f // indirect
