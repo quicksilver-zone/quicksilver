@@ -18,11 +18,14 @@ import (
 	"cosmossdk.io/math"
 
 	"github.com/avast/retry-go/v4"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	querytypes "github.com/cosmos/cosmos-sdk/types/query"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
 	"github.com/dgraph-io/ristretto"
 	"github.com/quicksilver-zone/quicksilver/icq-relayer/prommetrics"
+	celestiatypes "github.com/quicksilver-zone/quicksilver/third-party-chains/celestia-types/types"
+	"github.com/quicksilver-zone/quicksilver/utils/proofs"
 	abcitypes "github.com/tendermint/tendermint/abci/types"
 	cmtjson "github.com/tendermint/tendermint/libs/json"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
@@ -59,6 +62,7 @@ type ReadOnlyChainConfig struct {
 	LightProvider               prov.Provider     `toml:"-"`
 	Codec                       *codec.ProtoCodec `toml:"-"`
 	Cache                       *ristretto.Cache  `toml:"-"`
+	CompatibilityMode           string            `toml:"-"`
 }
 
 type ChainConfig struct {
@@ -105,10 +109,6 @@ func (r *ReadOnlyChainConfig) Init(codec *codec.ProtoCodec, cache *ristretto.Cac
 	if err != nil {
 		return err
 	}
-	// err = r.Client.Start()
-	// if err != nil {
-	// 	return err
-	// }
 
 	r.LightProvider, err = lighthttp.New(r.ChainID, r.RpcUrl)
 	if err != nil {
@@ -210,40 +210,41 @@ func (r *ReadOnlyChainConfig) GetClientId(ctx context.Context, connectionId stri
 // As such, we want to query the result directly, and unmarshal the json ourselves, to a representation of the result that conveniently
 // does not contain the Tx object (that we don't use, because the TxProof already contains a byte representation of tx anyway!)
 // Note: this function is compatible with 0.34 and 0.37 representations of transactions.
-func (r *ReadOnlyChainConfig) Tx(hash []byte) (tmtypes.TxProof, int64, error) {
+func (r *ReadOnlyChainConfig) Tx(hash []byte) (*codectypes.Any, int64, error) {
 	params := map[string]interface{}{
 		"hash":  hash,
 		"prove": true,
 	}
 
 	id := jsonrpctypes.JSONRPCIntID(0)
+	proofAny := &codectypes.Any{}
 
 	request, err := jsonrpctypes.MapToRequest(id, "tx", params)
 	if err != nil {
-		return tmtypes.TxProof{}, 0, fmt.Errorf("failed to encode params: %w", err)
+		return proofAny, 0, fmt.Errorf("failed to encode params: %w", err)
 	}
 
 	requestBytes, err := json.Marshal(request)
 	if err != nil {
-		return tmtypes.TxProof{}, 0, fmt.Errorf("failed to marshal request: %w", err)
+		return proofAny, 0, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
 	requestBuf := bytes.NewBuffer(requestBytes)
 	httpRequest, err := http.NewRequestWithContext(context.Background(), http.MethodPost, r.RpcUrl, requestBuf)
 	if err != nil {
-		return tmtypes.TxProof{}, 0, fmt.Errorf("request failed: %w", err)
+		return proofAny, 0, fmt.Errorf("request failed: %w", err)
 	}
 
 	httpRequest.Header.Set("Content-Type", "application/json")
 
 	httpClient, err := jsonrpcclient.DefaultHTTPClient(r.RpcUrl)
 	if err != nil {
-		return tmtypes.TxProof{}, 0, fmt.Errorf("create client failed: %w", err)
+		return proofAny, 0, fmt.Errorf("create client failed: %w", err)
 	}
 
 	httpResponse, err := httpClient.Do(httpRequest)
 	if err != nil {
-		return tmtypes.TxProof{}, 0, fmt.Errorf("post failed: %w", err)
+		return proofAny, 0, fmt.Errorf("post failed: %w", err)
 	}
 
 	defer httpResponse.Body.Close()
@@ -251,30 +252,56 @@ func (r *ReadOnlyChainConfig) Tx(hash []byte) (tmtypes.TxProof, int64, error) {
 
 	responseBytes, err := io.ReadAll(httpResponse.Body)
 	if err != nil {
-		return tmtypes.TxProof{}, 0, fmt.Errorf("failed to read response body: %w", err)
+		return proofAny, 0, fmt.Errorf("failed to read response body: %w", err)
 	}
 
 	response := &jsonrpctypes.RPCResponse{}
 	if err := json.Unmarshal(responseBytes, response); err != nil {
-		return tmtypes.TxProof{}, 0, fmt.Errorf("error unmarshalling: %w", err)
+		return proofAny, 0, fmt.Errorf("error unmarshalling: %w", err)
 	}
 
 	if response.Error != nil {
-		return tmtypes.TxProof{}, 0, response.Error
+		return proofAny, 0, response.Error
 	}
 
 	// Unmarshal the RawMessage into the result.
 	result := TxResultMinimal{}
-	if err := cmtjson.Unmarshal(response.Result, &result); err != nil {
-		return tmtypes.TxProof{}, 0, fmt.Errorf("error unmarshalling result: %w", err)
+	switch strings.ToLower(r.CompatibilityMode) {
+	case "celestia":
+		celestiaResult := TxResultMinimalCelestia{}
+		if err := cmtjson.Unmarshal(response.Result, &celestiaResult); err != nil {
+			return proofAny, 0, fmt.Errorf("error unmarshalling result: %w+", err)
+		}
+		protoShareProof := celestiaResult.Proof.ToProto()
+
+		protoProof := proofs.CelestiaProof{
+			ShareProof: &protoShareProof,
+			Index:      celestiaResult.Index,
+		}
+
+		proofAny, err = codectypes.NewAnyWithValue(&protoProof)
+		if err != nil {
+			return proofAny, 0, fmt.Errorf("error creating any: %w", err)
+		}
+	default:
+		// default is tendermint
+		txProtoProof := result.Proof.ToProto()
+		protoProof := proofs.TendermintProof{
+			TxProof: &txProtoProof,
+		}
+
+		proofAny, err = codectypes.NewAnyWithValue(&protoProof)
+		if err != nil {
+			return proofAny, 0, fmt.Errorf("error creating any: %w", err)
+		}
 	}
 
 	height, err := strconv.Atoi(result.Height)
 	if err != nil {
-		return tmtypes.TxProof{}, 0, fmt.Errorf("failed to unmarshal tx height: %w", err)
+		return proofAny, 0, fmt.Errorf("failed to unmarshal tx height: %w", err)
 	}
 
-	return result.Proof, int64(height), nil
+	return proofAny, int64(height), nil
 }
 
 // a minimised representation of the Tx emitted by a Tx query, only containing Height and Proof and thus compatbiel with tm0.34 and tm0.37.
@@ -285,8 +312,9 @@ type TxResultMinimal struct {
 
 // define celestia based TxResultMinimal
 type TxResultMinimalCelestia struct {
-	Height string          `json:"height"`
-	Proof  tmtypes.TxProof `json:"proof"`
+	Height string                   `json:"height"`
+	Proof  celestiatypes.ShareProof `json:"proof"`
+	Index  uint32                   `json:"index"`
 }
 
 type QueryClient interface {
@@ -411,8 +439,6 @@ func (r *ReadOnlyChainConfig) GetCurrentHeight(ctx context.Context, cache *ristr
 		}, retry.Attempts(uint(r.QueryRetries)), retry.Delay(time.Duration(r.QueryRetryDelayMilliseconds)*time.Millisecond), retry.LastErrorOnly(true)); err != nil {
 			return 0, err
 		}
-
-		fmt.Printf("block: %+v\n", block)
 
 		if block == nil {
 			return 0, fmt.Errorf("block is nil")

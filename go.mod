@@ -1,11 +1,13 @@
 module github.com/quicksilver-zone/quicksilver
 
-go 1.22.4
+go 1.23.2
 
 require (
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/math v1.3.0
 	github.com/armon/go-metrics v0.4.1
+	github.com/celestiaorg/go-square/v2 v2.0.0
+	github.com/celestiaorg/nmt v0.22.2
 	github.com/client9/misspell v0.3.4
 	github.com/cometbft/cometbft-db v0.12.0
 	github.com/confio/ics23/go v0.9.1

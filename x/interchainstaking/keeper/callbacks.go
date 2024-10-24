@@ -29,6 +29,7 @@ import (
 
 	"github.com/quicksilver-zone/quicksilver/utils"
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
+	"github.com/quicksilver-zone/quicksilver/utils/proofs"
 	icqtypes "github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
 	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 )
@@ -446,7 +447,7 @@ func checkTMStateValidity(
 
 // CheckTMHeaderForZone verifies the Tendermint consensus and client states for a given zone. Returns error if unable
 // to verify.
-func (k *Keeper) CheckTMHeaderForZone(ctx sdk.Context, zone *types.Zone, res icqtypes.GetTxWithProofResponse) error {
+func (k *Keeper) CheckTMHeaderForZone(ctx sdk.Context, zone *types.Zone, header *tmclienttypes.Header) error {
 	connection, _ := k.IBCKeeper.ConnectionKeeper.GetConnection(ctx, zone.ConnectionId)
 	clientState, found := k.IBCKeeper.ClientKeeper.GetClientState(ctx, connection.ClientId)
 	if !found {
@@ -457,9 +458,9 @@ func (k *Keeper) CheckTMHeaderForZone(ctx sdk.Context, zone *types.Zone, res icq
 	   which feels bad. so instead we copy the above two functions wholesale from ibc-go (this sucks too, but with
 	   predictable behaviour) and validate the inbound header manually.
 	*/
-	consensusState, found := k.IBCKeeper.ClientKeeper.GetClientConsensusState(ctx, connection.ClientId, res.Header.TrustedHeight)
+	consensusState, found := k.IBCKeeper.ClientKeeper.GetClientConsensusState(ctx, connection.ClientId, header.TrustedHeight)
 	if !found {
-		return fmt.Errorf("unable to fetch consensus state for trusted height: %s", res.Header.TrustedHeight.String())
+		return fmt.Errorf("unable to fetch consensus state for trusted height: %s", header.TrustedHeight.String())
 	}
 
 	tmclientState, ok := clientState.(*tmclienttypes.ClientState)
@@ -473,18 +474,9 @@ func (k *Keeper) CheckTMHeaderForZone(ctx sdk.Context, zone *types.Zone, res icq
 	}
 
 	// validate tendermint statefor
-	err := checkTMStateValidity(tmclientState, tmconsensusState, res.GetHeader(), ctx.BlockHeader().Time)
+	err := checkTMStateValidity(tmclientState, tmconsensusState, header, ctx.BlockHeader().Time)
 	if err != nil {
 		return fmt.Errorf("unable to validate header; %w", err)
-	}
-
-	tmproof, err := tmtypes.TxProofFromProto(*res.GetProof())
-	if err != nil {
-		return fmt.Errorf("unable to marshal proof: %w", err)
-	}
-	err = tmproof.Validate(res.Header.Header.DataHash)
-	if err != nil {
-		return fmt.Errorf("unable to validate proof: %w", err)
 	}
 
 	return nil
@@ -510,18 +502,29 @@ func DepositTxCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Q
 	k.Logger(ctx).Debug("DepositTx callback", "zone", zone.ChainId)
 
 	res := icqtypes.GetTxWithProofResponse{}
-	err := k.cdc.Unmarshal(args, &res)
+	if err := k.cdc.Unmarshal(args, &res); err != nil {
+		k.Logger(ctx).Error("Error unmarshalling args", "err", err)
+		return err
+	}
+
+	var txBytes []byte
+
+	var inclusionProof proofs.InclusionProof
+	err := k.cdc.UnpackAny(res.ProofAny, &inclusionProof)
 	if err != nil {
 		return err
 	}
 
-	// check tx is valid for hash.
-	hash := tmhash.Sum(res.Proof.Data)
+	txBytes, err = inclusionProof.Validate(res.Header.Header.DataHash)
+	if err != nil {
+		return err
+	}
+
+	hash := tmhash.Sum(txBytes)
 	hashStr := hex.EncodeToString(hash)
 
 	queryRequest := tx.GetTxRequest{}
-	err = k.cdc.Unmarshal(query.Request, &queryRequest)
-	if err != nil {
+	if err := k.cdc.Unmarshal(query.Request, &queryRequest); err != nil {
 		return err
 	}
 
@@ -537,12 +540,11 @@ func DepositTxCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Q
 	}
 
 	// check client state validity
-	err = k.CheckTMHeaderForZone(ctx, &zone, res)
-	if err != nil {
+	if err := k.CheckTMHeaderForZone(ctx, &zone, res.GetHeader()); err != nil {
 		return err
 	}
 
-	txn, err := TxDecoder(k.cdc)(res.Proof.Data)
+	txn, err := TxDecoder(k.cdc)(txBytes)
 	if err != nil {
 		return err
 	}

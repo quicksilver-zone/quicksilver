@@ -6,6 +6,7 @@ import "cosmos/base/query/v1beta1/pagination.proto";
 import "cosmos/tx/v1beta1/tx.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
+import "google/protobuf/any.proto";
 import "ibc/lightclients/tendermint/v1/tendermint.proto";
 import "quicksilver/interchainquery/v1/interchainquery.proto";
 import "tendermint/types/types.proto";
@@ -40,9 +41,9 @@ message GetTxWithProofResponse {
   // tx_response is the queried TxResponses.
   cosmos.base.abci.v1beta1.TxResponse tx_response = 2; // deprecated, v1.2.13
   // proof is the tmproto.TxProof for the queried tx
-  tendermint.types.TxProof proof = 3;
+  tendermint.types.TxProof proof = 3; // deprecated, v1.7.0
   // ibc-go header to validate txs
   ibc.lightclients.tendermint.v1.Header header = 4;
-  // tx_bytes is the byte representation of the queried tx
-  bytes tx_bytes = 5;
+  // proof_any is any wrapped proof
+  google.protobuf.Any proof_any = 5;
 }

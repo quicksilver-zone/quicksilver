@@ -1,6 +1,6 @@
 module github.com/quicksilver-zone/quicksilver/icq-relayer
 
-go 1.22.2
+go 1.23.2
 
 require (
 	cosmossdk.io/math v1.3.0
@@ -39,6 +39,8 @@ require (
 	github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d // indirect
 	github.com/bgentry/speakeasy v0.1.1-0.20220910012023-760eaf8b6816 // indirect
 	github.com/btcsuite/btcd/btcec/v2 v2.3.3 // indirect
+	github.com/celestiaorg/go-square/v2 v2.0.0 // indirect
+	github.com/celestiaorg/nmt v0.22.2 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
@@ -165,7 +167,6 @@ require (
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.52.0 // indirect
 	go.opentelemetry.io/otel v1.28.0 // indirect
 	go.opentelemetry.io/otel/metric v1.28.0 // indirect
-	go.opentelemetry.io/otel/sdk v1.28.0 // indirect
 	go.opentelemetry.io/otel/trace v1.28.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/crypto v0.25.0 // indirect
@@ -193,6 +194,6 @@ require (
 replace (
 	github.com/evmos/ethermint => github.com/evmos/ethermint v0.22.0
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
+	github.com/quicksilver-zone/quicksilver => ..
 	github.com/tendermint/tendermint => github.com/cometbft/cometbft v0.34.33
-
 )

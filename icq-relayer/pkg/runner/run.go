@@ -419,15 +419,12 @@ func doRequest(cfg *types.Config, query Query, logger log.Logger, metrics promme
 			return
 		}
 
-		fmt.Println("resquest", string(query.Request))
 		_ = logger.Log("msg", "Handling GetTxsEvents", "id", query.QueryId, "height", query.Height)
 		res, err = client.RunABCIQuery(ctx, "/"+query.Type, query.Request, query.Height, prove, metrics)
-		//res.Height = 1_000_000_000
 		if err != nil {
 			_ = logger.Log("msg", "Error: Failed in RunGRPCQuery", "type", query.Type, "id", query.QueryId, "height", query.Height)
 			return
 		}
-		//fmt.Println("res", res.Value)
 
 	case "tendermint.Tx":
 		// custom request type for fetching a tx with proof.
@@ -438,13 +435,12 @@ func doRequest(cfg *types.Config, query Query, logger log.Logger, metrics promme
 			_ = logger.Log("msg", fmt.Sprintf("Error: Could not get decode hash %s", err))
 			return
 		}
-		txRes, height, err := client.Tx(hashBytes)
+
+		proofAny, height, err := client.Tx(hashBytes)
 		if err != nil {
 			_ = logger.Log("msg", fmt.Sprintf("Error: Could not fetch proof %s", err))
 			return
 		}
-
-		protoProof := txRes.ToProto()
 
 		clientId, err := cfg.DefaultChain.GetClientId(ctx, query.ConnectionId, logger, metrics)
 		if err != nil {
@@ -458,7 +454,7 @@ func doRequest(cfg *types.Config, query Query, logger log.Logger, metrics promme
 			return
 		}
 
-		resp := qstypes.GetTxWithProofResponse{Proof: &protoProof, Header: header}
+		resp := qstypes.GetTxWithProofResponse{Header: header, ProofAny: proofAny}
 		res.Value = cfg.ProtoCodec.MustMarshal(&resp)
 
 	case "ibc.ClientUpdate":
@@ -550,16 +546,13 @@ func getHeader(ctx context.Context, cfg *types.Config, client *types.ReadOnlyCha
 	}
 
 	if !historicOk && clientHeight.RevisionHeight >= uint64(requestHeight+1) {
-		//return nil, fmt.Errorf("trusted height >= request height")
-		//oldHeights, err := cfg.DefaultChain.GetClientStateHeights(ctx, clientId, client.ChainID, uint64(requestHeight-200), logger, metrics)
-		oldHeights, err := cfg.DefaultChain.GetClientStateHeights(ctx, clientId, client.ChainID, uint64(requestHeight-2000), logger, metrics, 0) // TODO: make this configurable
+		oldHeights, err := cfg.DefaultChain.GetClientStateHeights(ctx, clientId, client.ChainID, uint64(requestHeight-500), logger, metrics, 0)
 		if err != nil {
 			return nil, fmt.Errorf("error: Could not get old heights: %w", err)
 		}
 		clientHeight = oldHeights[0]
 	}
 
-	//_ = logger.Log("msg", "Fetching client update for height", "height", requestHeight+1)
 	newBlock, err := retryLightblock(ctx, client, int64(requestHeight+1), metrics)
 	if err != nil {
 		return nil, fmt.Errorf("error: Could not fetch new light block from chain: %v", err)
@@ -658,7 +651,12 @@ func flush(cfg *types.Config, toSend []Message, logger log.Logger, metrics promm
 				regex := regexp.MustCompile(`failed to execute message; message index: (\d+)`)
 				match := regex.FindStringSubmatch(err.Error())
 				idx, _ := strconv.Atoi(match[1])
-				badMsg := msgs[idx].(*qstypes.MsgSubmitQueryResponse)
+				badMsg, ok := msgs[idx].(*qstypes.MsgSubmitQueryResponse)
+				if !ok {
+					_ = logger.Log("msg", "Failed to execute non QueryResponse (probably submitting a ClientUpdate to a syncing node)", "index", match[1], "err", err.Error())
+					metrics.FailedTxs.WithLabelValues("failed_txs").Inc()
+					break
+				}
 				cache.SetWithTTL("ignore/"+badMsg.QueryId, true, 1, time.Minute*5)
 				_ = logger.Log("msg", "Failed to execute message; ignoring for five minutes", "index", match[1], "err", err.Error())
 			case code == 65536:
