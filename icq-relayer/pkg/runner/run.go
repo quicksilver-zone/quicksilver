@@ -36,8 +36,10 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 )
 
-const (
-	VERSION = "icq-relayer/v1.0.0-beta.3"
+var (
+	VERSION             = "icq-relayer"
+	QUICKSILVER_VERSION = ""
+	COMMIT              = ""
 )
 
 type ClientUpdateRequirement struct {

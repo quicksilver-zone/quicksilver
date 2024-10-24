@@ -73,7 +73,9 @@ func VersionCommand() *cobra.Command {
 		Short: "Print the version number of icq-relayer",
 		Long:  `Print the version number of icq-relayer`,
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println(runner.VERSION)
+			fmt.Printf("Version: %s\n", runner.VERSION)
+			fmt.Printf("Quicksilver Version: %s\n", runner.QUICKSILVER_VERSION)
+			fmt.Printf("Commit: %s\n", runner.COMMIT)
 		},
 	}
 	return versionCommand
