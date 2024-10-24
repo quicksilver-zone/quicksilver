@@ -18,13 +18,11 @@ func (suite *KeeperTestSuite) TestCalcUserHoldingsAllocations() {
 	ctx := suite.chainA.GetContext()
 	bondDenom := appA.StakingKeeper.BondDenom(ctx)
 	tests := []struct {
-		name         string
-		malleate     func(ctx sdk.Context, appA *app.Quicksilver)
-		want         []types.UserAllocation
-		icsWant      []types.UserAllocation
-		remainder    math.Int
-		icsRemainder sdk.Coins
-		wantErr      string
+		name      string
+		malleate  func(ctx sdk.Context, appA *app.Quicksilver)
+		want      []types.UserAllocation
+		remainder math.Int
+		wantErr   string
 	}{
 		{
 			"zero claims; no allocation",
@@ -34,9 +32,7 @@ func (suite *KeeperTestSuite) TestCalcUserHoldingsAllocations() {
 				appA.InterchainstakingKeeper.SetZone(ctx, &zone)
 			},
 			[]types.UserAllocation{},
-			[]types.UserAllocation{},
 			sdk.ZeroInt(),
-			sdk.NewCoins(),
 			"",
 		},
 		{
@@ -49,9 +45,7 @@ func (suite *KeeperTestSuite) TestCalcUserHoldingsAllocations() {
 				appA.ClaimsManagerKeeper.SetLastEpochClaim(ctx, &cmtypes.Claim{UserAddress: user2.String(), ChainId: "otherchain-1", Module: cmtypes.ClaimTypeLiquidToken, SourceChainId: suite.chainA.ChainID, Amount: math.NewInt(1000)})
 			},
 			[]types.UserAllocation{},
-			[]types.UserAllocation{},
 			sdk.NewInt(64000),
-			sdk.NewCoins(),
 			"",
 		},
 		{
@@ -75,9 +69,7 @@ func (suite *KeeperTestSuite) TestCalcUserHoldingsAllocations() {
 					Amount:  sdk.NewCoin(bondDenom, sdk.NewInt(2500)),
 				},
 			},
-			[]types.UserAllocation{},
 			sdk.ZeroInt(),
-			sdk.NewCoins(),
 			"",
 		},
 		{
@@ -101,9 +93,7 @@ func (suite *KeeperTestSuite) TestCalcUserHoldingsAllocations() {
 					Amount:  sdk.NewCoin(bondDenom, sdk.NewInt(2000)), // 1000 / 2500 (0.4) * 5000 = 2000
 				},
 			},
-			[]types.UserAllocation{},
 			sdk.NewInt(2000),
-			sdk.NewCoins(),
 			"",
 		},
 		{
@@ -127,9 +117,7 @@ func (suite *KeeperTestSuite) TestCalcUserHoldingsAllocations() {
 					Amount:  sdk.NewCoin(bondDenom, sdk.NewInt(3333)), // 1000/1500 (0.66666) * 5000 = 3333
 				},
 			},
-			[]types.UserAllocation{},
 			sdk.OneInt(),
-			sdk.NewCoins(),
 			"",
 		},
 		{
@@ -155,18 +143,7 @@ func (suite *KeeperTestSuite) TestCalcUserHoldingsAllocations() {
 					Amount:  sdk.NewCoin(bondDenom, sdk.NewInt(3333)), // 1000/1500 (0.66666) * 5000 = 3333
 				},
 			},
-			[]types.UserAllocation{
-				{
-					Address: user1.String(),
-					Amount:  sdk.NewCoin("testcoin", sdk.NewInt(300)), // 500/1500 (0.33333) * 900 == 300
-				},
-				{
-					Address: user2.String(),
-					Amount:  sdk.NewCoin("testcoin", sdk.NewInt(600)), // 1000/1500 (0.66666) * 900 = 600
-				},
-			},
 			sdk.OneInt(),
-			sdk.NewCoins(),
 			"",
 		},
 		{
@@ -197,34 +174,7 @@ func (suite *KeeperTestSuite) TestCalcUserHoldingsAllocations() {
 					Amount:  sdk.NewCoin(bondDenom, sdk.NewInt(3333)), // 1000/1500 (0.66666) * 5000 = 3333
 				},
 			},
-			[]types.UserAllocation{
-				{
-					Address: user1.String(),
-					Amount:  sdk.NewCoin("testcoin", sdk.NewInt(300)), // 500/1500 (0.33333) * 900 == 300
-				},
-				{
-					Address: user2.String(),
-					Amount:  sdk.NewCoin("testcoin", sdk.NewInt(600)), // 1000/1500 (0.66666) * 900 = 600
-				},
-				{
-					Address: user1.String(),
-					Amount:  sdk.NewCoin("testcoin2", sdk.NewInt(6000)), // 500/1500 (0.33333) * 18k == 6k
-				},
-				{
-					Address: user2.String(),
-					Amount:  sdk.NewCoin("testcoin2", sdk.NewInt(12001)), // 1000/1500 (0.66666) * 18k = 12k
-				},
-				{
-					Address: user1.String(),
-					Amount:  sdk.NewCoin("testcoin3", sdk.NewInt(50)), // 500/1500 (0.33333) * 150 == 50
-				},
-				{
-					Address: user2.String(),
-					Amount:  sdk.NewCoin("testcoin3", sdk.NewInt(100)), // 1000/1500 (0.66666) * 150 = 100
-				},
-			},
 			sdk.OneInt(),
-			sdk.NewCoins(sdk.NewCoin("testcoin2", sdk.NewIntFromUint64(1))),
 			"",
 		},
 
@@ -254,29 +204,7 @@ func (suite *KeeperTestSuite) TestCalcUserHoldingsAllocations() {
 					Amount:  sdk.NewCoin(bondDenom, sdk.NewInt(2000)), // 1000 / 2500 (0.4) * 5000 = 2000
 				},
 			},
-			[]types.UserAllocation{
-				{
-					Address: user1.String(),
-					Amount:  sdk.NewCoin("testcoin", sdk.NewInt(180)), // 500/1500 (0.33333) * 900 == 300
-				},
-				{
-					Address: user2.String(),
-					Amount:  sdk.NewCoin("testcoin", sdk.NewInt(360)), // 1000/1500 (0.66666) * 900 = 600
-				},
-				{
-					Address: user1.String(),
-					Amount:  sdk.NewCoin("testcoin2", sdk.NewInt(3600)), // 500/1500 (0.33333) * 18k == 6k
-				},
-				{
-					Address: user2.String(),
-					Amount:  sdk.NewCoin("testcoin2", sdk.NewInt(7200)), // 1000/1500 (0.66666) * 18k = 12k
-				},
-			},
 			sdk.NewInt(2000),
-			sdk.NewCoins(
-				sdk.NewCoin("testcoin", sdk.NewInt(360)),
-				sdk.NewCoin("testcoin2", sdk.NewInt(7202)),
-			),
 			"",
 		},
 	}
@@ -301,17 +229,9 @@ func (suite *KeeperTestSuite) TestCalcUserHoldingsAllocations() {
 			suite.NoError(appA.BankKeeper.MintCoins(ctx, "mint", sdk.NewCoins(sdk.NewCoin(appA.StakingKeeper.BondDenom(ctx), sdk.NewIntFromUint64(zone.HoldingsAllocation)))))
 			suite.NoError(appA.BankKeeper.SendCoinsFromModuleToModule(ctx, "mint", types.ModuleName, sdk.NewCoins(sdk.NewCoin(appA.StakingKeeper.BondDenom(ctx), sdk.NewIntFromUint64(zone.HoldingsAllocation)))))
 
-			allocations, remainder, icsRewardsAllocations := appA.ParticipationRewardsKeeper.CalcUserHoldingsAllocations(ctx, &zone)
+			allocations, remainder := appA.ParticipationRewardsKeeper.CalcUserHoldingsAllocations(ctx, &zone)
 			suite.ElementsMatch(tt.want, allocations)
-			suite.ElementsMatch(tt.icsWant, icsRewardsAllocations)
 			suite.True(tt.remainder.Equal(remainder))
-
-			// distribute assets to users; check remainder (to be distributed next time!)
-			err := appA.ParticipationRewardsKeeper.DistributeToUsersFromAddress(ctx, icsRewardsAllocations, zone.WithdrawalAddress.Address)
-			suite.NoError(err)
-			icsAddress, _ := addressutils.AddressFromBech32(zone.WithdrawalAddress.Address, "")
-			icsBalance := appA.BankKeeper.GetAllBalances(ctx, icsAddress)
-			suite.ElementsMatch(tt.icsRemainder, icsBalance)
 		})
 	}
 }
