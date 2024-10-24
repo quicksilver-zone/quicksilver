@@ -217,6 +217,7 @@ func (k msgServer) UpdateRedemption(goCtx context.Context, msg *types.MsgUpdateR
 		r.Amount = nil
 		r.Distribution = nil
 		r.CompletionTime = time.Time{}
+		r.Acknowledged = false
 	}
 
 	k.UpdateWithdrawalRecordStatus(ctx, r, msg.NewStatus)

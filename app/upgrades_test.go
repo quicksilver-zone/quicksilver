@@ -419,3 +419,53 @@ func (s *AppTestSuite) TestV010603UpgradeHandler() {
 
 	s.Equal(postBalance.Amount.Int64(), preBalance.Add(record.BurnAmount).Amount.Int64())
 }
+
+func (s *AppTestSuite) TestV010604UpgradeHandler() {
+	s.InitV160TestZones()
+	app := s.GetQuicksilverApp(s.chainA)
+
+	ctx := s.chainA.GetContext()
+
+	hashes := []struct {
+		Zone string
+		Hash string
+	}{
+		{Zone: "cosmoshub-4", Hash: "6cc942b42150a43b45d56c39d05155206ffb40eb18268dbd0b3c1ce5248b2645"},
+		{Zone: "stargaze-1", Hash: "10af0ee10a97f01467039a69cbfb8df05dc3111c975d955ca51adda201f36555"},
+		{Zone: "juno-1", Hash: "627db4f106a8ef99053a0726f3f71d2f23bbfd4a9155b6d083ff7015bdfa44c0"},
+		{Zone: "cosmoshub-4", Hash: "0c8269f04109a55a152d3cdfd22937b4e5c2746111d579935eef4cd7ffa71f7f"},
+		{Zone: "cosmoshub-4", Hash: "677691e596338af42387cbafae9831c5e0fe4b7f31b683ad69d2cc3f17687bd8"},
+		{Zone: "cosmoshub-4", Hash: "c8351fe7e6775b39b9f480182f9ea57c914ea566dd35912a4597f234b12405a6"},
+		{Zone: "cosmoshub-4", Hash: "d750de16665edbfca2a889ccec7a16ce107987416a80304154453ff6e8e25c5d"},
+		{Zone: "cosmoshub-4", Hash: "e5a44be995514d10cce7795a28d8a997e4eb95ba805d54cfaa9ce62e78a87a50"},
+		{Zone: "cosmoshub-4", Hash: "fb73556a38faeffa4740923c585b609a002869d1a9006f660567166cd4f5a79b"},
+		{Zone: "cosmoshub-4", Hash: "fd42b32563d8beecb64ae2aa47f9b38ddecd436ac4e8b84bf9d9c46f447439e6"},
+	}
+
+	for _, hashRecord := range hashes {
+		record := icstypes.WithdrawalRecord{
+			ChainId:        hashRecord.Zone,
+			Delegator:      "quick1zyj57u72nwr23q2glz77jaana9kpvn8cxdp5gl",
+			Recipient:      "cosmos1xnvuycukuex5eae336u7umrhfea9xndr0ksjlj",
+			Txhash:         hashRecord.Hash,
+			Status:         icstypes.WithdrawStatusSend,
+			BurnAmount:     sdk.NewCoin("uqatom", math.NewInt(4754000000)),
+			Acknowledged:   true,
+			CompletionTime: time.Now(),
+		}
+
+		s.NoError(app.InterchainstakingKeeper.SetWithdrawalRecord(ctx, record))
+	}
+
+	handler := upgrades.V010604UpgradeHandler(app.mm, app.configurator, &app.AppKeepers)
+
+	_, err := handler(ctx, types.Plan{}, app.mm.GetVersionMap())
+	s.NoError(err)
+
+	for _, hashRecord := range hashes {
+		record, found := app.InterchainstakingKeeper.GetWithdrawalRecord(ctx, hashRecord.Zone, hashRecord.Hash, icstypes.WithdrawStatusQueued)
+		s.True(found)
+		s.False(record.Acknowledged)
+		s.True(record.CompletionTime.IsZero())
+	}
+}

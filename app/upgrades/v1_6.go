@@ -3,6 +3,7 @@ package upgrades
 import (
 	"encoding/json"
 	"fmt"
+	"time"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
@@ -301,6 +302,54 @@ func V010603UpgradeHandler(
 				// delete the record so that it won't re-trigger.
 				appKeepers.InterchainstakingKeeper.DeleteWithdrawalRecord(ctx, "cosmoshub-4", hash, icstypes.WithdrawStatusUnbond)
 				appKeepers.InterchainstakingKeeper.Logger(ctx).Info("deleted record", "hash", hash)
+			}
+		}
+
+		return mm.RunMigrations(ctx, configurator, fromVM)
+	}
+}
+
+func V010604UpgradeHandler(
+	mm *module.Manager,
+	configurator module.Configurator,
+	appKeepers *keepers.AppKeepers,
+) upgradetypes.UpgradeHandler {
+	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		if isMainnet(ctx) || isTest(ctx) {
+
+			hashes := []struct {
+				Zone string
+				Hash string
+			}{
+				{Zone: "cosmoshub-4", Hash: "6cc942b42150a43b45d56c39d05155206ffb40eb18268dbd0b3c1ce5248b2645"},
+				{Zone: "stargaze-1", Hash: "10af0ee10a97f01467039a69cbfb8df05dc3111c975d955ca51adda201f36555"},
+				{Zone: "juno-1", Hash: "627db4f106a8ef99053a0726f3f71d2f23bbfd4a9155b6d083ff7015bdfa44c0"},
+				{Zone: "cosmoshub-4", Hash: "0c8269f04109a55a152d3cdfd22937b4e5c2746111d579935eef4cd7ffa71f7f"},
+				{Zone: "cosmoshub-4", Hash: "677691e596338af42387cbafae9831c5e0fe4b7f31b683ad69d2cc3f17687bd8"},
+				{Zone: "cosmoshub-4", Hash: "c8351fe7e6775b39b9f480182f9ea57c914ea566dd35912a4597f234b12405a6"},
+				{Zone: "cosmoshub-4", Hash: "d750de16665edbfca2a889ccec7a16ce107987416a80304154453ff6e8e25c5d"},
+				{Zone: "cosmoshub-4", Hash: "e5a44be995514d10cce7795a28d8a997e4eb95ba805d54cfaa9ce62e78a87a50"},
+				{Zone: "cosmoshub-4", Hash: "fb73556a38faeffa4740923c585b609a002869d1a9006f660567166cd4f5a79b"},
+				{Zone: "cosmoshub-4", Hash: "fd42b32563d8beecb64ae2aa47f9b38ddecd436ac4e8b84bf9d9c46f447439e6"},
+			}
+			for _, hashRecord := range hashes {
+				record, found := appKeepers.InterchainstakingKeeper.GetWithdrawalRecord(ctx, hashRecord.Zone, hashRecord.Hash, icstypes.WithdrawStatusSend)
+				if !found {
+					appKeepers.InterchainstakingKeeper.Logger(ctx).Error(fmt.Sprintf("unable to find record for hash %s", hashRecord.Hash))
+					continue
+				}
+
+				// update the record so that it will re-trigger.
+				record.Status = icstypes.WithdrawStatusQueued
+				record.Acknowledged = false
+				record.CompletionTime = time.Time{}
+
+				err := appKeepers.InterchainstakingKeeper.SetWithdrawalRecord(ctx, record)
+				if err != nil {
+					return nil, err
+				}
+
+				appKeepers.InterchainstakingKeeper.Logger(ctx).Info("reset ack for withdrawal record", "hash", hashRecord.Hash, "zone", hashRecord.Zone)
 			}
 		}
 
