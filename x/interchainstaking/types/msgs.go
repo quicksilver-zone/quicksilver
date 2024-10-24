@@ -18,20 +18,24 @@ import (
 
 // interchainstaking message types.
 const (
-	TypeMsgRequestRedemption      = "requestredemption"
-	TypeMsgCancelQueuedRedemption = "cancelqueuedredemption"
-	TypeMsgSignalIntent           = "signalintent"
+	TypeMsgRequestRedemption = "requestredemption"
+	TypeMsgCancelRedemption  = "cancelredemption"
+	TypeMsgRequeueRedemption = "requeueredemption"
+	TypeMsgUpdateRedemption  = "updateredemption"
+	TypeMsgSignalIntent      = "signalintent"
 )
 
 var (
 	_ sdk.Msg            = &MsgRequestRedemption{}
-	_ sdk.Msg            = &MsgCancelQueuedRedemption{}
+	_ sdk.Msg            = &MsgCancelRedemption{}
+	_ sdk.Msg            = &MsgRequeueRedemption{}
 	_ sdk.Msg            = &MsgSignalIntent{}
 	_ sdk.Msg            = &MsgGovCloseChannel{}
 	_ sdk.Msg            = &MsgGovReopenChannel{}
 	_ sdk.Msg            = &MsgGovSetLsmCaps{}
 	_ legacytx.LegacyMsg = &MsgRequestRedemption{}
-	_ legacytx.LegacyMsg = &MsgCancelQueuedRedemption{}
+	_ legacytx.LegacyMsg = &MsgCancelRedemption{}
+	_ legacytx.LegacyMsg = &MsgRequeueRedemption{}
 	_ legacytx.LegacyMsg = &MsgSignalIntent{}
 	_ sdk.Msg            = &MsgGovAddValidatorDenyList{}
 	_ sdk.Msg            = &MsgGovRemoveValidatorDenyList{}
@@ -95,18 +99,18 @@ func (msg MsgRequestRedemption) GetSigners() []sdk.AccAddress {
 var hexpr = regexp.MustCompile("^[A-Fa-f0-9]{64}$")
 
 // NewMsgCancelQueuedRedemption - construct a msg to cancel a requested redemption.
-func NewMsgCancelQueuedRedemption(chainID string, hash string, fromAddress sdk.Address) *MsgCancelQueuedRedemption {
-	return &MsgCancelQueuedRedemption{ChainId: chainID, Hash: hash, FromAddress: fromAddress.String()}
+func NewMsgCancelRedemption(chainID string, hash string, fromAddress sdk.Address) *MsgCancelRedemption {
+	return &MsgCancelRedemption{ChainId: chainID, Hash: hash, FromAddress: fromAddress.String()}
 }
 
 // Route Implements Msg.
-func (MsgCancelQueuedRedemption) Route() string { return RouterKey }
+func (MsgCancelRedemption) Route() string { return RouterKey }
 
 // Type Implements Msg.
-func (MsgCancelQueuedRedemption) Type() string { return TypeMsgCancelQueuedRedemption }
+func (MsgCancelRedemption) Type() string { return TypeMsgCancelRedemption }
 
 // ValidateBasic Implements Msg.
-func (msg MsgCancelQueuedRedemption) ValidateBasic() error {
+func (msg MsgCancelRedemption) ValidateBasic() error {
 	errs := make(map[string]error)
 
 	// check from address
@@ -117,7 +121,7 @@ func (msg MsgCancelQueuedRedemption) ValidateBasic() error {
 
 	// check hash
 	if !hexpr.MatchString(msg.Hash) {
-		errs["Hash"] = fmt.Errorf("invalid sha256 hash - expecting 64 character hex string")
+		errs["Hash"] = fmt.Errorf("invalid sha256 hash - expecting 64 character hex string, got %s", msg.Hash)
 	}
 
 	// validate recipient address
@@ -133,12 +137,124 @@ func (msg MsgCancelQueuedRedemption) ValidateBasic() error {
 }
 
 // GetSignBytes Implements Msg.
-func (msg MsgCancelQueuedRedemption) GetSignBytes() []byte {
+func (msg MsgCancelRedemption) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners Implements Msg.
-func (msg MsgCancelQueuedRedemption) GetSigners() []sdk.AccAddress {
+func (msg MsgCancelRedemption) GetSigners() []sdk.AccAddress {
+	fromAddress, _ := sdk.AccAddressFromBech32(msg.FromAddress)
+	return []sdk.AccAddress{fromAddress}
+}
+
+// ---------------------------------------------------------------
+
+func NewMsgRequeueRedemption(chainID string, hash string, fromAddress sdk.Address) *MsgRequeueRedemption {
+	return &MsgRequeueRedemption{ChainId: chainID, Hash: hash, FromAddress: fromAddress.String()}
+}
+
+// Route Implements Msg.
+func (MsgRequeueRedemption) Route() string { return RouterKey }
+
+// Type Implements Msg.
+func (MsgRequeueRedemption) Type() string { return TypeMsgRequeueRedemption }
+
+// ValidateBasic Implements Msg.
+func (msg MsgRequeueRedemption) ValidateBasic() error {
+	errs := make(map[string]error)
+
+	// check from address
+	_, err := addressutils.AccAddressFromBech32(msg.FromAddress, "")
+	if err != nil {
+		errs["FromAddress"] = err
+	}
+
+	// check hash
+	if !hexpr.MatchString(msg.Hash) {
+		errs["Hash"] = fmt.Errorf("invalid sha256 hash - expecting 64 character hex string, got %s (%d)", msg.Hash, len(msg.Hash))
+	}
+
+	// validate recipient address
+	if msg.ChainId == "" {
+		errs["ChainId"] = errors.New("chainId not provided")
+	}
+
+	if len(errs) > 0 {
+		return multierror.New(errs)
+	}
+
+	return nil
+}
+
+// GetSignBytes Implements Msg.
+func (msg MsgRequeueRedemption) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+// GetSigners Implements Msg.
+func (msg MsgRequeueRedemption) GetSigners() []sdk.AccAddress {
+	fromAddress, _ := sdk.AccAddressFromBech32(msg.FromAddress)
+	return []sdk.AccAddress{fromAddress}
+}
+
+// ---------------------------------------------------------------
+
+func NewMsgUpdateRedemption(chainID string, hash string, newStatus int32, fromAddress sdk.Address) *MsgUpdateRedemption {
+	return &MsgUpdateRedemption{ChainId: chainID, Hash: hash, NewStatus: newStatus, FromAddress: fromAddress.String()}
+}
+
+// Route Implements Msg.
+func (MsgUpdateRedemption) Route() string { return RouterKey }
+
+// Type Implements Msg.
+func (MsgUpdateRedemption) Type() string { return TypeMsgUpdateRedemption }
+
+// ValidateBasic Implements Msg.
+func (msg MsgUpdateRedemption) ValidateBasic() error {
+	errs := make(map[string]error)
+
+	// check from address
+	_, err := addressutils.AccAddressFromBech32(msg.FromAddress, "")
+	if err != nil {
+		errs["FromAddress"] = err
+	}
+
+	// check hash
+	if !hexpr.MatchString(msg.Hash) {
+		errs["Hash"] = fmt.Errorf("invalid sha256 hash - expecting 64 character hex string, got %s (%d)", msg.Hash, len(msg.Hash))
+	}
+
+	// validate recipient address
+	if msg.ChainId == "" {
+		errs["ChainId"] = errors.New("chainId not provided")
+	}
+
+	switch msg.NewStatus {
+	case WithdrawStatusTokenize: // intentionally removed as not currently supported, but included here for completeness.
+		errs["NewStatus"] = errors.New("new status WithdrawStatusTokenize not supported")
+	case WithdrawStatusQueued:
+	case WithdrawStatusUnbond:
+	case WithdrawStatusSend: // send is not a valid state for recovery, included here for completeness.
+		errs["NewStatus"] = errors.New("new status WithdrawStatusSend not supported")
+	case WithdrawStatusCompleted:
+	default:
+		errs["NewStatus"] = errors.New("new status not provided or invalid")
+	}
+
+	if len(errs) > 0 {
+		return multierror.New(errs)
+	}
+
+	return nil
+}
+
+// GetSignBytes Implements Msg.
+func (msg MsgUpdateRedemption) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+// GetSigners Implements Msg.
+func (msg MsgUpdateRedemption) GetSigners() []sdk.AccAddress {
 	fromAddress, _ := sdk.AccAddressFromBech32(msg.FromAddress)
 	return []sdk.AccAddress{fromAddress}
 }

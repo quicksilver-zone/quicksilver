@@ -109,25 +109,25 @@ func (m *MsgRequestRedemptionResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgRequestRedemptionResponse proto.InternalMessageInfo
 
-// MsgCancelQueuedRedemption represents a message type to cancel .
-type MsgCancelQueuedRedemption struct {
+// MsgCancelRedemption represents a message type to cancel .
+type MsgCancelRedemption struct {
 	ChainId     string `protobuf:"bytes,1,opt,name=chain_id,json=chainId,proto3" json:"chain_id,omitempty"`
 	Hash        string `protobuf:"bytes,2,opt,name=hash,proto3" json:"hash,omitempty"`
 	FromAddress string `protobuf:"bytes,3,opt,name=from_address,json=fromAddress,proto3" json:"from_address,omitempty"`
 }
 
-func (m *MsgCancelQueuedRedemption) Reset()         { *m = MsgCancelQueuedRedemption{} }
-func (m *MsgCancelQueuedRedemption) String() string { return proto.CompactTextString(m) }
-func (*MsgCancelQueuedRedemption) ProtoMessage()    {}
-func (*MsgCancelQueuedRedemption) Descriptor() ([]byte, []int) {
+func (m *MsgCancelRedemption) Reset()         { *m = MsgCancelRedemption{} }
+func (m *MsgCancelRedemption) String() string { return proto.CompactTextString(m) }
+func (*MsgCancelRedemption) ProtoMessage()    {}
+func (*MsgCancelRedemption) Descriptor() ([]byte, []int) {
 	return fileDescriptor_ee484030fa140a82, []int{2}
 }
-func (m *MsgCancelQueuedRedemption) XXX_Unmarshal(b []byte) error {
+func (m *MsgCancelRedemption) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgCancelQueuedRedemption) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgCancelRedemption) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgCancelQueuedRedemption.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgCancelRedemption.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -137,35 +137,35 @@ func (m *MsgCancelQueuedRedemption) XXX_Marshal(b []byte, deterministic bool) ([
 		return b[:n], nil
 	}
 }
-func (m *MsgCancelQueuedRedemption) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgCancelQueuedRedemption.Merge(m, src)
+func (m *MsgCancelRedemption) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgCancelRedemption.Merge(m, src)
 }
-func (m *MsgCancelQueuedRedemption) XXX_Size() int {
+func (m *MsgCancelRedemption) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgCancelQueuedRedemption) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgCancelQueuedRedemption.DiscardUnknown(m)
+func (m *MsgCancelRedemption) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgCancelRedemption.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgCancelQueuedRedemption proto.InternalMessageInfo
+var xxx_messageInfo_MsgCancelRedemption proto.InternalMessageInfo
 
-// MsgRequestRedemptionResponse defines the MsgRequestRedemption response type.
-type MsgCancelQueuedRedemptionResponse struct {
+// MsgCancelRedemptionResponse defines the MsgCancelRedemption response type.
+type MsgCancelRedemptionResponse struct {
 	Returned types.Coin `protobuf:"bytes,1,opt,name=returned,proto3" json:"returned" yaml:"coin"`
 }
 
-func (m *MsgCancelQueuedRedemptionResponse) Reset()         { *m = MsgCancelQueuedRedemptionResponse{} }
-func (m *MsgCancelQueuedRedemptionResponse) String() string { return proto.CompactTextString(m) }
-func (*MsgCancelQueuedRedemptionResponse) ProtoMessage()    {}
-func (*MsgCancelQueuedRedemptionResponse) Descriptor() ([]byte, []int) {
+func (m *MsgCancelRedemptionResponse) Reset()         { *m = MsgCancelRedemptionResponse{} }
+func (m *MsgCancelRedemptionResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgCancelRedemptionResponse) ProtoMessage()    {}
+func (*MsgCancelRedemptionResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_ee484030fa140a82, []int{3}
 }
-func (m *MsgCancelQueuedRedemptionResponse) XXX_Unmarshal(b []byte) error {
+func (m *MsgCancelRedemptionResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgCancelQueuedRedemptionResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgCancelRedemptionResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgCancelQueuedRedemptionResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgCancelRedemptionResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -175,24 +175,179 @@ func (m *MsgCancelQueuedRedemptionResponse) XXX_Marshal(b []byte, deterministic 
 		return b[:n], nil
 	}
 }
-func (m *MsgCancelQueuedRedemptionResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgCancelQueuedRedemptionResponse.Merge(m, src)
+func (m *MsgCancelRedemptionResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgCancelRedemptionResponse.Merge(m, src)
 }
-func (m *MsgCancelQueuedRedemptionResponse) XXX_Size() int {
+func (m *MsgCancelRedemptionResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgCancelQueuedRedemptionResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgCancelQueuedRedemptionResponse.DiscardUnknown(m)
+func (m *MsgCancelRedemptionResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgCancelRedemptionResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgCancelQueuedRedemptionResponse proto.InternalMessageInfo
+var xxx_messageInfo_MsgCancelRedemptionResponse proto.InternalMessageInfo
 
-func (m *MsgCancelQueuedRedemptionResponse) GetReturned() types.Coin {
+func (m *MsgCancelRedemptionResponse) GetReturned() types.Coin {
 	if m != nil {
 		return m.Returned
 	}
 	return types.Coin{}
 }
+
+// MsgUpdateRedemption represents a message type to update a redemption.
+type MsgUpdateRedemption struct {
+	ChainId     string `protobuf:"bytes,1,opt,name=chain_id,json=chainId,proto3" json:"chain_id,omitempty"`
+	Hash        string `protobuf:"bytes,2,opt,name=hash,proto3" json:"hash,omitempty"`
+	NewStatus   int32  `protobuf:"varint,3,opt,name=new_status,json=newStatus,proto3" json:"new_status,omitempty"`
+	FromAddress string `protobuf:"bytes,4,opt,name=from_address,json=fromAddress,proto3" json:"from_address,omitempty"`
+}
+
+func (m *MsgUpdateRedemption) Reset()         { *m = MsgUpdateRedemption{} }
+func (m *MsgUpdateRedemption) String() string { return proto.CompactTextString(m) }
+func (*MsgUpdateRedemption) ProtoMessage()    {}
+func (*MsgUpdateRedemption) Descriptor() ([]byte, []int) {
+	return fileDescriptor_ee484030fa140a82, []int{4}
+}
+func (m *MsgUpdateRedemption) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUpdateRedemption) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUpdateRedemption.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUpdateRedemption) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdateRedemption.Merge(m, src)
+}
+func (m *MsgUpdateRedemption) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUpdateRedemption) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdateRedemption.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUpdateRedemption proto.InternalMessageInfo
+
+// MsgUpdateRedemptionResponse defines the MsgUpdateRedemption response type.
+type MsgUpdateRedemptionResponse struct {
+}
+
+func (m *MsgUpdateRedemptionResponse) Reset()         { *m = MsgUpdateRedemptionResponse{} }
+func (m *MsgUpdateRedemptionResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgUpdateRedemptionResponse) ProtoMessage()    {}
+func (*MsgUpdateRedemptionResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_ee484030fa140a82, []int{5}
+}
+func (m *MsgUpdateRedemptionResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUpdateRedemptionResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUpdateRedemptionResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUpdateRedemptionResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdateRedemptionResponse.Merge(m, src)
+}
+func (m *MsgUpdateRedemptionResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUpdateRedemptionResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdateRedemptionResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUpdateRedemptionResponse proto.InternalMessageInfo
+
+// MsgRequeueRedemption represents a message type to requeue.
+type MsgRequeueRedemption struct {
+	ChainId     string `protobuf:"bytes,1,opt,name=chain_id,json=chainId,proto3" json:"chain_id,omitempty"`
+	Hash        string `protobuf:"bytes,2,opt,name=hash,proto3" json:"hash,omitempty"`
+	FromAddress string `protobuf:"bytes,3,opt,name=from_address,json=fromAddress,proto3" json:"from_address,omitempty"`
+}
+
+func (m *MsgRequeueRedemption) Reset()         { *m = MsgRequeueRedemption{} }
+func (m *MsgRequeueRedemption) String() string { return proto.CompactTextString(m) }
+func (*MsgRequeueRedemption) ProtoMessage()    {}
+func (*MsgRequeueRedemption) Descriptor() ([]byte, []int) {
+	return fileDescriptor_ee484030fa140a82, []int{6}
+}
+func (m *MsgRequeueRedemption) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgRequeueRedemption) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgRequeueRedemption.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgRequeueRedemption) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgRequeueRedemption.Merge(m, src)
+}
+func (m *MsgRequeueRedemption) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgRequeueRedemption) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgRequeueRedemption.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgRequeueRedemption proto.InternalMessageInfo
+
+// MsgRequeueRedemptionResponse defines the MsgRequeueRedemption response type.
+type MsgRequeueRedemptionResponse struct {
+}
+
+func (m *MsgRequeueRedemptionResponse) Reset()         { *m = MsgRequeueRedemptionResponse{} }
+func (m *MsgRequeueRedemptionResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgRequeueRedemptionResponse) ProtoMessage()    {}
+func (*MsgRequeueRedemptionResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_ee484030fa140a82, []int{7}
+}
+func (m *MsgRequeueRedemptionResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgRequeueRedemptionResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgRequeueRedemptionResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgRequeueRedemptionResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgRequeueRedemptionResponse.Merge(m, src)
+}
+func (m *MsgRequeueRedemptionResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgRequeueRedemptionResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgRequeueRedemptionResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgRequeueRedemptionResponse proto.InternalMessageInfo
 
 // MsgSignalIntent represents a message type for signalling voting intent for
 // one or more validators.
@@ -206,7 +361,7 @@ func (m *MsgSignalIntent) Reset()         { *m = MsgSignalIntent{} }
 func (m *MsgSignalIntent) String() string { return proto.CompactTextString(m) }
 func (*MsgSignalIntent) ProtoMessage()    {}
 func (*MsgSignalIntent) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ee484030fa140a82, []int{4}
+	return fileDescriptor_ee484030fa140a82, []int{8}
 }
 func (m *MsgSignalIntent) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -243,7 +398,7 @@ func (m *MsgSignalIntentResponse) Reset()         { *m = MsgSignalIntentResponse
 func (m *MsgSignalIntentResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgSignalIntentResponse) ProtoMessage()    {}
 func (*MsgSignalIntentResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ee484030fa140a82, []int{5}
+	return fileDescriptor_ee484030fa140a82, []int{9}
 }
 func (m *MsgSignalIntentResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -275,8 +430,12 @@ var xxx_messageInfo_MsgSignalIntentResponse proto.InternalMessageInfo
 func init() {
 	proto.RegisterType((*MsgRequestRedemption)(nil), "quicksilver.interchainstaking.v1.MsgRequestRedemption")
 	proto.RegisterType((*MsgRequestRedemptionResponse)(nil), "quicksilver.interchainstaking.v1.MsgRequestRedemptionResponse")
-	proto.RegisterType((*MsgCancelQueuedRedemption)(nil), "quicksilver.interchainstaking.v1.MsgCancelQueuedRedemption")
-	proto.RegisterType((*MsgCancelQueuedRedemptionResponse)(nil), "quicksilver.interchainstaking.v1.MsgCancelQueuedRedemptionResponse")
+	proto.RegisterType((*MsgCancelRedemption)(nil), "quicksilver.interchainstaking.v1.MsgCancelRedemption")
+	proto.RegisterType((*MsgCancelRedemptionResponse)(nil), "quicksilver.interchainstaking.v1.MsgCancelRedemptionResponse")
+	proto.RegisterType((*MsgUpdateRedemption)(nil), "quicksilver.interchainstaking.v1.MsgUpdateRedemption")
+	proto.RegisterType((*MsgUpdateRedemptionResponse)(nil), "quicksilver.interchainstaking.v1.MsgUpdateRedemptionResponse")
+	proto.RegisterType((*MsgRequeueRedemption)(nil), "quicksilver.interchainstaking.v1.MsgRequeueRedemption")
+	proto.RegisterType((*MsgRequeueRedemptionResponse)(nil), "quicksilver.interchainstaking.v1.MsgRequeueRedemptionResponse")
 	proto.RegisterType((*MsgSignalIntent)(nil), "quicksilver.interchainstaking.v1.MsgSignalIntent")
 	proto.RegisterType((*MsgSignalIntentResponse)(nil), "quicksilver.interchainstaking.v1.MsgSignalIntentResponse")
 }
@@ -286,61 +445,67 @@ func init() {
 }
 
 var fileDescriptor_ee484030fa140a82 = []byte{
-	// 851 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x96, 0x4f, 0x6f, 0x1b, 0x45,
-	0x18, 0xc6, 0x3d, 0x2d, 0xd0, 0x74, 0xd2, 0x92, 0x32, 0x89, 0xd4, 0x78, 0x55, 0xad, 0xc3, 0x9e,
-	0x2a, 0xa0, 0xbb, 0x75, 0x0a, 0x01, 0x12, 0x1a, 0x48, 0x1c, 0x61, 0x19, 0xd5, 0x07, 0x36, 0x12,
-	0x07, 0x38, 0x58, 0xe3, 0xdd, 0x97, 0xf5, 0xa8, 0xbb, 0x33, 0xdb, 0x9d, 0xf1, 0xaa, 0xe6, 0xc8,
-	0x89, 0x03, 0x07, 0x10, 0x5f, 0xa0, 0x1f, 0xa2, 0xe2, 0xca, 0x01, 0x0e, 0x39, 0x56, 0x70, 0x80,
-	0x93, 0x85, 0x12, 0x90, 0x38, 0x21, 0x91, 0x4f, 0x80, 0xf6, 0x8f, 0x37, 0x76, 0xec, 0x2a, 0x5b,
-	0x27, 0xb7, 0xdd, 0x7d, 0xe7, 0x79, 0xe6, 0xf9, 0xbd, 0xf3, 0x8e, 0x65, 0x6c, 0x3d, 0xea, 0x33,
-	0xe7, 0xa1, 0x64, 0x7e, 0x0c, 0x91, 0xc5, 0xb8, 0x82, 0xc8, 0xe9, 0x51, 0xc6, 0xa5, 0xa2, 0x0f,
-	0x19, 0xf7, 0xac, 0xb8, 0x6e, 0x05, 0x20, 0x25, 0xf5, 0x40, 0x9a, 0x61, 0x24, 0x94, 0x20, 0x6b,
-	0x63, 0x02, 0x73, 0x4a, 0x60, 0xc6, 0x75, 0x4d, 0x77, 0x84, 0x0c, 0x84, 0xb4, 0xba, 0x54, 0x82,
-	0x15, 0xd7, 0xbb, 0xa0, 0x68, 0xdd, 0x72, 0x04, 0xe3, 0x99, 0x83, 0x56, 0xcd, 0xea, 0x9d, 0xf4,
-	0xcd, 0xca, 0x5e, 0xf2, 0xd2, 0x8a, 0x27, 0x3c, 0x91, 0x7d, 0x4f, 0x9e, 0xf2, 0xaf, 0xb7, 0x3c,
-	0x21, 0x3c, 0x1f, 0x2c, 0x1a, 0x32, 0x8b, 0x72, 0x2e, 0x14, 0x55, 0x4c, 0xf0, 0x91, 0xe6, 0xee,
-	0x99, 0x04, 0x61, 0x24, 0x42, 0x21, 0xa9, 0x9f, 0x2b, 0x8c, 0x7f, 0x11, 0x5e, 0x69, 0x4b, 0xcf,
-	0x86, 0x47, 0x7d, 0x90, 0xca, 0x06, 0x17, 0x82, 0x30, 0x71, 0x24, 0x7b, 0xf8, 0xe5, 0x98, 0xfa,
-	0x7d, 0x58, 0x45, 0x6b, 0xe8, 0xf6, 0xe2, 0x7a, 0xd5, 0xcc, 0xc3, 0x25, 0x24, 0x66, 0x4e, 0x62,
-	0x36, 0x04, 0xe3, 0xbb, 0xcb, 0x07, 0xc3, 0x5a, 0xe5, 0x78, 0x58, 0x5b, 0x1c, 0xd0, 0xc0, 0xdf,
-	0x34, 0x12, 0x3a, 0xc3, 0xce, 0xc4, 0xa4, 0x85, 0x97, 0x5d, 0x90, 0x8a, 0xf1, 0x34, 0x66, 0x87,
-	0xba, 0x6e, 0x04, 0x52, 0xae, 0x5e, 0x5a, 0x43, 0xb7, 0xaf, 0xee, 0xae, 0xfe, 0xfa, 0xf4, 0xce,
-	0x4a, 0x6e, 0xbb, 0x93, 0x55, 0xf6, 0x55, 0xc4, 0xb8, 0x67, 0x93, 0x31, 0x51, 0x5e, 0x21, 0x5b,
-	0xf8, 0xda, 0x97, 0x91, 0x08, 0x0a, 0x8f, 0xcb, 0x67, 0x78, 0x2c, 0x26, 0xab, 0xf3, 0x4f, 0x9b,
-	0x0b, 0xdf, 0x3c, 0xa9, 0x55, 0xfe, 0x79, 0x52, 0xab, 0x18, 0x3a, 0xbe, 0x35, 0x8b, 0xd7, 0x06,
-	0x19, 0x0a, 0x2e, 0xc1, 0xf8, 0x1e, 0xe1, 0x6a, 0x5b, 0x7a, 0x0d, 0xca, 0x1d, 0xf0, 0x3f, 0xed,
-	0x43, 0x1f, 0xdc, 0xb1, 0xae, 0x54, 0xf1, 0x42, 0xda, 0xd1, 0x0e, 0x73, 0xd3, 0xc6, 0x5c, 0xb5,
-	0xaf, 0xa4, 0xef, 0x2d, 0x97, 0x10, 0xfc, 0x52, 0x8f, 0xca, 0x5e, 0xc6, 0x66, 0xa7, 0xcf, 0x17,
-	0x95, 0x59, 0xe0, 0xd7, 0x9f, 0x1b, 0x69, 0x14, 0x9c, 0x7c, 0x82, 0x17, 0x22, 0x50, 0xfd, 0x88,
-	0x83, 0x3b, 0xe7, 0x99, 0x15, 0x7a, 0xe3, 0x47, 0x84, 0x97, 0xda, 0xd2, 0xdb, 0x67, 0x1e, 0xa7,
-	0x7e, 0x8b, 0x2b, 0xe0, 0x8a, 0x98, 0xa7, 0xd1, 0x77, 0x97, 0x8f, 0x87, 0xb5, 0xa5, 0xdc, 0x20,
-	0xaf, 0x18, 0x27, 0xfd, 0x78, 0x0b, 0x5f, 0x61, 0xa9, 0x72, 0x74, 0xdc, 0xe4, 0x78, 0x58, 0x7b,
-	0x35, 0x5b, 0x9e, 0x17, 0x0c, 0x7b, 0xb4, 0xe4, 0xa2, 0x3a, 0x55, 0xc5, 0x37, 0x4f, 0xe5, 0x1e,
-	0xf5, 0x67, 0xfd, 0xdb, 0xeb, 0xf8, 0x72, 0x5b, 0x7a, 0xe4, 0x67, 0x84, 0x5f, 0x9b, 0x1e, 0xf7,
-	0x0d, 0xf3, 0xac, 0xbb, 0x6c, 0xce, 0x1a, 0x1b, 0x6d, 0x7b, 0x3e, 0x5d, 0x31, 0x6e, 0x1b, 0x5f,
-	0xff, 0xf6, 0xd7, 0x0f, 0x97, 0xee, 0x6e, 0xa2, 0x37, 0x8c, 0x37, 0x27, 0x7e, 0x7f, 0xd4, 0xe3,
-	0xe4, 0xba, 0x4e, 0xdf, 0xe1, 0x08, 0x5c, 0x80, 0x80, 0x3c, 0x45, 0xf8, 0xda, 0xc4, 0xf1, 0xd4,
-	0x4b, 0x05, 0x19, 0x97, 0x68, 0xef, 0xbf, 0xb0, 0x64, 0xfe, 0xd8, 0xd9, 0x39, 0x93, 0xdf, 0x11,
-	0xbe, 0x91, 0xcd, 0xf1, 0x58, 0xef, 0xb7, 0x4a, 0xe5, 0x98, 0x3d, 0xfe, 0x5a, 0xe3, 0x1c, 0xe2,
-	0x02, 0x67, 0x27, 0xc5, 0xd9, 0x4a, 0x70, 0x36, 0x4a, 0xe1, 0x38, 0xa9, 0x5f, 0x27, 0x3a, 0x81,
-	0xf8, 0x05, 0xe1, 0xa5, 0xa6, 0x88, 0x1b, 0xbe, 0x90, 0xd0, 0xe8, 0x51, 0xce, 0xc1, 0x27, 0x6f,
-	0x97, 0xca, 0x76, 0x4a, 0xa5, 0x7d, 0x30, 0x8f, 0xaa, 0x40, 0xb9, 0x9f, 0xa2, 0xbc, 0x9b, 0xa0,
-	0xac, 0x97, 0x43, 0x49, 0x5c, 0x3a, 0x4e, 0x1e, 0xf9, 0x00, 0xe1, 0x1b, 0x4d, 0x11, 0xdb, 0x20,
-	0x42, 0xe0, 0x23, 0x8e, 0x77, 0xca, 0x26, 0x9a, 0x90, 0x69, 0xf7, 0xe7, 0x92, 0x15, 0x24, 0xdb,
-	0x29, 0xc9, 0x7b, 0x09, 0xc9, 0xbd, 0x92, 0x57, 0x23, 0xb1, 0x29, 0x50, 0x7e, 0x42, 0xf8, 0x7a,
-	0x53, 0xc4, 0xfb, 0xa0, 0x1e, 0xc8, 0xa0, 0x41, 0x43, 0x49, 0xd6, 0xcb, 0x06, 0x3a, 0xd1, 0x68,
-	0x9b, 0x2f, 0xae, 0xb9, 0x30, 0x82, 0xbf, 0x11, 0xbe, 0xd9, 0x14, 0xf1, 0x8e, 0xeb, 0x7e, 0x46,
-	0x7d, 0xe6, 0x52, 0x25, 0xa2, 0x3d, 0xe0, 0x83, 0x07, 0x4c, 0x2a, 0x52, 0x7a, 0x4a, 0x66, 0xa9,
-	0xb5, 0xbd, 0xf3, 0xa8, 0x0b, 0xbe, 0x8f, 0x53, 0xbe, 0x8f, 0x12, 0xbe, 0xad, 0x52, 0x7c, 0xd4,
-	0x75, 0x3b, 0xf1, 0xc8, 0xae, 0xe3, 0x02, 0x1f, 0xf8, 0x09, 0xcb, 0x7f, 0x08, 0x6b, 0xe9, 0x18,
-	0x04, 0x22, 0x86, 0x69, 0xd4, 0x0f, 0xcb, 0xcf, 0xd1, 0x4c, 0x03, 0xad, 0x79, 0x4e, 0x83, 0x02,
-	0xb8, 0x95, 0x02, 0x37, 0x12, 0xe0, 0xed, 0x92, 0x07, 0x9a, 0x18, 0xce, 0x60, 0xde, 0xfd, 0xe2,
-	0xe0, 0x50, 0x47, 0xcf, 0x0e, 0x75, 0xf4, 0xe7, 0xa1, 0x8e, 0xbe, 0x3b, 0xd2, 0x2b, 0xcf, 0x8e,
-	0xf4, 0xca, 0x1f, 0x47, 0x7a, 0xe5, 0xf3, 0x1d, 0x8f, 0xa9, 0x5e, 0xbf, 0x6b, 0x3a, 0x22, 0x18,
-	0xdf, 0xe3, 0xce, 0x57, 0x82, 0xc3, 0xc4, 0xa6, 0x8f, 0x67, 0x6c, 0xa8, 0x06, 0x21, 0xc8, 0xee,
-	0x2b, 0xe9, 0x9f, 0xbb, 0x7b, 0xff, 0x07, 0x00, 0x00, 0xff, 0xff, 0x02, 0xcc, 0x63, 0xf0, 0xd2,
-	0x0a, 0x00, 0x00,
+	// 956 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xc4, 0x97, 0x4f, 0x6f, 0xdc, 0x44,
+	0x18, 0xc6, 0x77, 0xfa, 0x87, 0x36, 0x93, 0x42, 0x82, 0x13, 0xa9, 0x89, 0x69, 0x77, 0x23, 0x9f,
+	0x2a, 0xa0, 0x76, 0x37, 0xa5, 0x29, 0x24, 0x6d, 0x20, 0xbb, 0x11, 0xab, 0xa0, 0xe6, 0xe2, 0x08,
+	0x0e, 0x70, 0x58, 0x4d, 0xd6, 0x2f, 0xde, 0x51, 0xbd, 0x33, 0xae, 0x67, 0xd6, 0x6d, 0x38, 0x72,
+	0x42, 0x82, 0x03, 0x12, 0x5f, 0x20, 0x67, 0xce, 0x15, 0x57, 0x0e, 0x70, 0x88, 0xc4, 0x81, 0x0a,
+	0x2e, 0x9c, 0x22, 0x94, 0x80, 0xc4, 0x09, 0x89, 0x7c, 0x02, 0xe4, 0xb1, 0xd7, 0xf5, 0x7a, 0x8d,
+	0xe2, 0xdd, 0x46, 0xe2, 0xb6, 0x9e, 0xf1, 0xf3, 0xf8, 0xf9, 0xcd, 0xfb, 0xce, 0x2b, 0x2d, 0xb6,
+	0x1e, 0xf5, 0x69, 0xe7, 0xa1, 0xa0, 0x5e, 0x08, 0x81, 0x45, 0x99, 0x84, 0xa0, 0xd3, 0x25, 0x94,
+	0x09, 0x49, 0x1e, 0x52, 0xe6, 0x5a, 0x61, 0xdd, 0xea, 0x81, 0x10, 0xc4, 0x05, 0x61, 0xfa, 0x01,
+	0x97, 0x5c, 0x5b, 0xca, 0x08, 0xcc, 0x11, 0x81, 0x19, 0xd6, 0xf5, 0x6a, 0x87, 0x8b, 0x1e, 0x17,
+	0xd6, 0x2e, 0x11, 0x60, 0x85, 0xf5, 0x5d, 0x90, 0xa4, 0x6e, 0x75, 0x38, 0x65, 0xb1, 0x83, 0xbe,
+	0x18, 0xef, 0xb7, 0xd5, 0x93, 0x15, 0x3f, 0x24, 0x5b, 0xf3, 0x2e, 0x77, 0x79, 0xbc, 0x1e, 0xfd,
+	0x4a, 0x56, 0xaf, 0xb9, 0x9c, 0xbb, 0x1e, 0x58, 0xc4, 0xa7, 0x16, 0x61, 0x8c, 0x4b, 0x22, 0x29,
+	0x67, 0x03, 0xcd, 0xad, 0x53, 0x09, 0xfc, 0x80, 0xfb, 0x5c, 0x10, 0x2f, 0x51, 0x18, 0x7f, 0x23,
+	0x3c, 0xbf, 0x2d, 0x5c, 0x1b, 0x1e, 0xf5, 0x41, 0x48, 0x1b, 0x1c, 0xe8, 0xf9, 0x91, 0xa3, 0xb6,
+	0x89, 0x2f, 0x86, 0xc4, 0xeb, 0xc3, 0x02, 0x5a, 0x42, 0x37, 0xa6, 0x97, 0x17, 0xcd, 0x24, 0x5c,
+	0x44, 0x62, 0x26, 0x24, 0x66, 0x93, 0x53, 0xd6, 0x98, 0x3b, 0x38, 0xac, 0x55, 0x4e, 0x0e, 0x6b,
+	0xd3, 0x7b, 0xa4, 0xe7, 0xad, 0x1a, 0x11, 0x9d, 0x61, 0xc7, 0x62, 0x6d, 0x0b, 0xcf, 0x39, 0x20,
+	0x24, 0x65, 0x2a, 0x66, 0x9b, 0x38, 0x4e, 0x00, 0x42, 0x2c, 0x9c, 0x5b, 0x42, 0x37, 0xa6, 0x1a,
+	0x0b, 0xbf, 0x3c, 0xbd, 0x39, 0x9f, 0xd8, 0x6e, 0xc4, 0x3b, 0x3b, 0x32, 0xa0, 0xcc, 0xb5, 0xb5,
+	0x8c, 0x28, 0xd9, 0xd1, 0xd6, 0xf0, 0x95, 0x4f, 0x03, 0xde, 0x4b, 0x3d, 0xce, 0x9f, 0xe2, 0x31,
+	0x1d, 0xbd, 0x9d, 0x2c, 0xad, 0x5e, 0xfe, 0x62, 0xbf, 0x56, 0xf9, 0x6b, 0xbf, 0x56, 0x31, 0xaa,
+	0xf8, 0x5a, 0x11, 0xaf, 0x0d, 0xc2, 0xe7, 0x4c, 0x80, 0xf1, 0x25, 0xc2, 0x73, 0xdb, 0xc2, 0x6d,
+	0x12, 0xd6, 0x01, 0x2f, 0x73, 0x1e, 0x8b, 0xf8, 0xb2, 0x3a, 0xcb, 0x36, 0x75, 0xd4, 0x91, 0x4c,
+	0xd9, 0x97, 0xd4, 0xf3, 0x96, 0xa3, 0x69, 0xf8, 0x42, 0x97, 0x88, 0x6e, 0x4c, 0x65, 0xab, 0xdf,
+	0x67, 0x95, 0x96, 0xe2, 0xd7, 0x0a, 0xc2, 0x0c, 0xc2, 0x6a, 0x1f, 0xe0, 0xcb, 0x01, 0xc8, 0x7e,
+	0xc0, 0xc0, 0x99, 0xb0, 0x4e, 0xa9, 0xde, 0xf8, 0x36, 0x06, 0xff, 0xd0, 0x77, 0x88, 0x84, 0xc9,
+	0xc1, 0xaf, 0x63, 0xcc, 0xe0, 0x71, 0x5b, 0x48, 0x22, 0xfb, 0x31, 0xf6, 0x45, 0x7b, 0x8a, 0xc1,
+	0xe3, 0x1d, 0xb5, 0x30, 0x72, 0x2e, 0x17, 0x26, 0x3b, 0x97, 0xeb, 0xea, 0x5c, 0xf2, 0x59, 0xd3,
+	0x22, 0x7e, 0x95, 0xe9, 0xea, 0x3e, 0xfc, 0xef, 0x55, 0xcc, 0xf4, 0x5c, 0xbf, 0x28, 0xee, 0x77,
+	0x08, 0xcf, 0x6c, 0x0b, 0x77, 0x87, 0xba, 0x8c, 0x78, 0x5b, 0x4c, 0x02, 0x93, 0x9a, 0x99, 0x4f,
+	0xda, 0x98, 0x3b, 0x39, 0xac, 0xcd, 0x24, 0xb5, 0x4b, 0x76, 0x8c, 0xe7, 0xf1, 0xdf, 0xc4, 0x97,
+	0xa8, 0x52, 0x0e, 0x6e, 0x97, 0x76, 0x72, 0x58, 0x7b, 0x25, 0x7e, 0x3d, 0xd9, 0x30, 0xec, 0xc1,
+	0x2b, 0x67, 0x05, 0xb6, 0x88, 0xaf, 0xe6, 0x72, 0x0f, 0x98, 0x96, 0xf7, 0x67, 0xf1, 0xf9, 0x6d,
+	0xe1, 0x6a, 0x3f, 0x20, 0xfc, 0xea, 0xe8, 0x74, 0x59, 0x31, 0x4f, 0x1b, 0x9d, 0x66, 0xd1, 0x2d,
+	0xd5, 0xd7, 0x27, 0xd3, 0xa5, 0x27, 0xbd, 0xf2, 0xf9, 0xaf, 0x7f, 0x7c, 0x73, 0xee, 0x96, 0xf1,
+	0xc6, 0xd0, 0xac, 0x97, 0x4f, 0xa2, 0xd1, 0x38, 0x3a, 0x2f, 0x03, 0x70, 0x00, 0x7a, 0xab, 0xe8,
+	0x75, 0xed, 0x29, 0xc2, 0x57, 0x86, 0xca, 0x53, 0x2f, 0x15, 0x24, 0x2b, 0xd1, 0xdf, 0x19, 0x5b,
+	0x32, 0x61, 0xec, 0xb8, 0xc8, 0x51, 0xec, 0x9f, 0x10, 0x9e, 0x1d, 0x99, 0x64, 0x77, 0x4a, 0xe5,
+	0xc8, 0xcb, 0xf4, 0xfb, 0x13, 0xc9, 0x52, 0x84, 0x0d, 0x85, 0xb0, 0x66, 0xac, 0x94, 0x42, 0xe8,
+	0x28, 0x9b, 0x76, 0x90, 0xfa, 0x44, 0x34, 0x3f, 0x0f, 0x5a, 0x69, 0xe8, 0x4a, 0x8f, 0xd1, 0x4a,
+	0x59, 0xdd, 0x38, 0xad, 0x54, 0x78, 0x69, 0x1b, 0x0a, 0xe8, 0x9e, 0x71, 0xb7, 0x64, 0x2b, 0x29,
+	0x9f, 0x1c, 0x51, 0x54, 0x9f, 0x91, 0x81, 0x5b, 0xae, 0x3e, 0x79, 0x59, 0xc9, 0xfa, 0xfc, 0xe7,
+	0xc8, 0x1c, 0xaf, 0x3e, 0x7d, 0x65, 0x93, 0xa3, 0xf9, 0x11, 0xe1, 0x99, 0x16, 0x0f, 0x9b, 0x1e,
+	0x17, 0xd0, 0xec, 0x12, 0xc6, 0xc0, 0xd3, 0xde, 0x2a, 0x95, 0x2a, 0xa7, 0xd2, 0xef, 0x4d, 0xa2,
+	0x4a, 0x51, 0xee, 0x2b, 0x94, 0xbb, 0xc6, 0x72, 0xb9, 0x56, 0x8b, 0x2c, 0xda, 0x9d, 0xd8, 0x23,
+	0xc2, 0x38, 0x40, 0x78, 0xb6, 0xc5, 0x43, 0x1b, 0xb8, 0x0f, 0x6c, 0xc0, 0x71, 0xa7, 0x6c, 0xa2,
+	0x21, 0x59, 0xc9, 0xa2, 0xe4, 0x65, 0x29, 0xc9, 0xba, 0x22, 0x79, 0xdb, 0xb8, 0x5d, 0xb2, 0xc7,
+	0x22, 0x8f, 0x2c, 0xca, 0xf7, 0x08, 0xbf, 0xdc, 0xe2, 0xe1, 0x0e, 0xc8, 0x07, 0xa2, 0xd7, 0x24,
+	0xbe, 0xd0, 0x96, 0xcb, 0x06, 0x7a, 0xae, 0xd1, 0x57, 0xc7, 0xd7, 0x9c, 0x19, 0xc1, 0x9f, 0x08,
+	0x5f, 0x6d, 0xf1, 0x70, 0xc3, 0x71, 0x3e, 0x22, 0x1e, 0x75, 0x88, 0xe4, 0xc1, 0x26, 0xb0, 0xbd,
+	0x07, 0x54, 0x48, 0xad, 0x74, 0x97, 0x14, 0xa9, 0xf5, 0xcd, 0x17, 0x51, 0xa7, 0x7c, 0xef, 0x2b,
+	0xbe, 0xf7, 0x8c, 0xb5, 0x52, 0x7c, 0xc4, 0x71, 0xda, 0xe1, 0xc0, 0xab, 0xed, 0x00, 0xdb, 0xf3,
+	0xa8, 0x50, 0x93, 0xfa, 0x1f, 0x84, 0x75, 0xd5, 0x06, 0x3d, 0x1e, 0xc2, 0x28, 0xea, 0xbb, 0xe5,
+	0xfb, 0xa8, 0xd0, 0x40, 0x6f, 0xbd, 0xa0, 0x41, 0x0a, 0xbc, 0xa5, 0x80, 0x9b, 0xc6, 0x7a, 0xc9,
+	0x82, 0x46, 0x6e, 0xc5, 0xcc, 0x8d, 0x4f, 0x0e, 0x8e, 0xaa, 0xe8, 0xd9, 0x51, 0x15, 0xfd, 0x7e,
+	0x54, 0x45, 0x5f, 0x1f, 0x57, 0x2b, 0xcf, 0x8e, 0xab, 0x95, 0xdf, 0x8e, 0xab, 0x95, 0x8f, 0x37,
+	0x5c, 0x2a, 0xbb, 0xfd, 0x5d, 0xb3, 0xc3, 0x7b, 0xd9, 0xcf, 0xdc, 0xfc, 0x8c, 0x33, 0x18, 0xfa,
+	0xee, 0x93, 0x82, 0x6f, 0xca, 0x3d, 0x1f, 0xc4, 0xee, 0x4b, 0xea, 0xff, 0xcd, 0xed, 0x7f, 0x03,
+	0x00, 0x00, 0xff, 0xff, 0xf2, 0xf5, 0xdb, 0x0a, 0xd5, 0x0d, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -361,9 +526,13 @@ type MsgClient interface {
 	// SignalIntent defines a method for signalling voting intent for one or more
 	// validators.
 	SignalIntent(ctx context.Context, in *MsgSignalIntent, opts ...grpc.CallOption) (*MsgSignalIntentResponse, error)
-	// CancelRedemption defines a method for cancelling a redemption request in
-	// the queued state.
-	CancelRedemption(ctx context.Context, in *MsgCancelQueuedRedemption, opts ...grpc.CallOption) (*MsgCancelQueuedRedemptionResponse, error)
+	// CancelRedemption defines a method for cancelling a redemption request and
+	// returning the escrowed assets.
+	CancelRedemption(ctx context.Context, in *MsgCancelRedemption, opts ...grpc.CallOption) (*MsgCancelRedemptionResponse, error)
+	// RequeueRedemption defines a method for requeuing a failed redemption.
+	RequeueRedemption(ctx context.Context, in *MsgRequeueRedemption, opts ...grpc.CallOption) (*MsgRequeueRedemptionResponse, error)
+	// UpdateRedemption defines a method for updating a redemption.
+	UpdateRedemption(ctx context.Context, in *MsgUpdateRedemption, opts ...grpc.CallOption) (*MsgUpdateRedemptionResponse, error)
 	// SignalIntent defines a method for signalling voting intent for one or more
 	// validators.
 	GovCloseChannel(ctx context.Context, in *MsgGovCloseChannel, opts ...grpc.CallOption) (*MsgGovCloseChannelResponse, error)
@@ -399,9 +568,27 @@ func (c *msgClient) SignalIntent(ctx context.Context, in *MsgSignalIntent, opts 
 	return out, nil
 }
 
-func (c *msgClient) CancelRedemption(ctx context.Context, in *MsgCancelQueuedRedemption, opts ...grpc.CallOption) (*MsgCancelQueuedRedemptionResponse, error) {
-	out := new(MsgCancelQueuedRedemptionResponse)
+func (c *msgClient) CancelRedemption(ctx context.Context, in *MsgCancelRedemption, opts ...grpc.CallOption) (*MsgCancelRedemptionResponse, error) {
+	out := new(MsgCancelRedemptionResponse)
 	err := c.cc.Invoke(ctx, "/quicksilver.interchainstaking.v1.Msg/CancelRedemption", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) RequeueRedemption(ctx context.Context, in *MsgRequeueRedemption, opts ...grpc.CallOption) (*MsgRequeueRedemptionResponse, error) {
+	out := new(MsgRequeueRedemptionResponse)
+	err := c.cc.Invoke(ctx, "/quicksilver.interchainstaking.v1.Msg/RequeueRedemption", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) UpdateRedemption(ctx context.Context, in *MsgUpdateRedemption, opts ...grpc.CallOption) (*MsgUpdateRedemptionResponse, error) {
+	out := new(MsgUpdateRedemptionResponse)
+	err := c.cc.Invoke(ctx, "/quicksilver.interchainstaking.v1.Msg/UpdateRedemption", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -461,9 +648,13 @@ type MsgServer interface {
 	// SignalIntent defines a method for signalling voting intent for one or more
 	// validators.
 	SignalIntent(context.Context, *MsgSignalIntent) (*MsgSignalIntentResponse, error)
-	// CancelRedemption defines a method for cancelling a redemption request in
-	// the queued state.
-	CancelRedemption(context.Context, *MsgCancelQueuedRedemption) (*MsgCancelQueuedRedemptionResponse, error)
+	// CancelRedemption defines a method for cancelling a redemption request and
+	// returning the escrowed assets.
+	CancelRedemption(context.Context, *MsgCancelRedemption) (*MsgCancelRedemptionResponse, error)
+	// RequeueRedemption defines a method for requeuing a failed redemption.
+	RequeueRedemption(context.Context, *MsgRequeueRedemption) (*MsgRequeueRedemptionResponse, error)
+	// UpdateRedemption defines a method for updating a redemption.
+	UpdateRedemption(context.Context, *MsgUpdateRedemption) (*MsgUpdateRedemptionResponse, error)
 	// SignalIntent defines a method for signalling voting intent for one or more
 	// validators.
 	GovCloseChannel(context.Context, *MsgGovCloseChannel) (*MsgGovCloseChannelResponse, error)
@@ -483,8 +674,14 @@ func (*UnimplementedMsgServer) RequestRedemption(ctx context.Context, req *MsgRe
 func (*UnimplementedMsgServer) SignalIntent(ctx context.Context, req *MsgSignalIntent) (*MsgSignalIntentResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SignalIntent not implemented")
 }
-func (*UnimplementedMsgServer) CancelRedemption(ctx context.Context, req *MsgCancelQueuedRedemption) (*MsgCancelQueuedRedemptionResponse, error) {
+func (*UnimplementedMsgServer) CancelRedemption(ctx context.Context, req *MsgCancelRedemption) (*MsgCancelRedemptionResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CancelRedemption not implemented")
+}
+func (*UnimplementedMsgServer) RequeueRedemption(ctx context.Context, req *MsgRequeueRedemption) (*MsgRequeueRedemptionResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RequeueRedemption not implemented")
+}
+func (*UnimplementedMsgServer) UpdateRedemption(ctx context.Context, req *MsgUpdateRedemption) (*MsgUpdateRedemptionResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateRedemption not implemented")
 }
 func (*UnimplementedMsgServer) GovCloseChannel(ctx context.Context, req *MsgGovCloseChannel) (*MsgGovCloseChannelResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GovCloseChannel not implemented")
@@ -543,7 +740,7 @@ func _Msg_SignalIntent_Handler(srv interface{}, ctx context.Context, dec func(in
 }
 
 func _Msg_CancelRedemption_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgCancelQueuedRedemption)
+	in := new(MsgCancelRedemption)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -555,7 +752,43 @@ func _Msg_CancelRedemption_Handler(srv interface{}, ctx context.Context, dec fun
 		FullMethod: "/quicksilver.interchainstaking.v1.Msg/CancelRedemption",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).CancelRedemption(ctx, req.(*MsgCancelQueuedRedemption))
+		return srv.(MsgServer).CancelRedemption(ctx, req.(*MsgCancelRedemption))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_RequeueRedemption_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgRequeueRedemption)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).RequeueRedemption(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/quicksilver.interchainstaking.v1.Msg/RequeueRedemption",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).RequeueRedemption(ctx, req.(*MsgRequeueRedemption))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_UpdateRedemption_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUpdateRedemption)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).UpdateRedemption(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/quicksilver.interchainstaking.v1.Msg/UpdateRedemption",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).UpdateRedemption(ctx, req.(*MsgUpdateRedemption))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -667,6 +900,14 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Msg_CancelRedemption_Handler,
 		},
 		{
+			MethodName: "RequeueRedemption",
+			Handler:    _Msg_RequeueRedemption_Handler,
+		},
+		{
+			MethodName: "UpdateRedemption",
+			Handler:    _Msg_UpdateRedemption_Handler,
+		},
+		{
 			MethodName: "GovCloseChannel",
 			Handler:    _Msg_GovCloseChannel_Handler,
 		},
@@ -761,7 +1002,7 @@ func (m *MsgRequestRedemptionResponse) MarshalToSizedBuffer(dAtA []byte) (int, e
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgCancelQueuedRedemption) Marshal() (dAtA []byte, err error) {
+func (m *MsgCancelRedemption) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -771,12 +1012,12 @@ func (m *MsgCancelQueuedRedemption) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *MsgCancelQueuedRedemption) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgCancelRedemption) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *MsgCancelQueuedRedemption) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgCancelRedemption) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -805,7 +1046,7 @@ func (m *MsgCancelQueuedRedemption) MarshalToSizedBuffer(dAtA []byte) (int, erro
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgCancelQueuedRedemptionResponse) Marshal() (dAtA []byte, err error) {
+func (m *MsgCancelRedemptionResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -815,12 +1056,12 @@ func (m *MsgCancelQueuedRedemptionResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *MsgCancelQueuedRedemptionResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgCancelRedemptionResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *MsgCancelQueuedRedemptionResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgCancelRedemptionResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -835,6 +1076,145 @@ func (m *MsgCancelQueuedRedemptionResponse) MarshalToSizedBuffer(dAtA []byte) (i
 	}
 	i--
 	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgUpdateRedemption) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUpdateRedemption) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUpdateRedemption) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.FromAddress) > 0 {
+		i -= len(m.FromAddress)
+		copy(dAtA[i:], m.FromAddress)
+		i = encodeVarintMessages(dAtA, i, uint64(len(m.FromAddress)))
+		i--
+		dAtA[i] = 0x22
+	}
+	if m.NewStatus != 0 {
+		i = encodeVarintMessages(dAtA, i, uint64(m.NewStatus))
+		i--
+		dAtA[i] = 0x18
+	}
+	if len(m.Hash) > 0 {
+		i -= len(m.Hash)
+		copy(dAtA[i:], m.Hash)
+		i = encodeVarintMessages(dAtA, i, uint64(len(m.Hash)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.ChainId) > 0 {
+		i -= len(m.ChainId)
+		copy(dAtA[i:], m.ChainId)
+		i = encodeVarintMessages(dAtA, i, uint64(len(m.ChainId)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgUpdateRedemptionResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUpdateRedemptionResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUpdateRedemptionResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgRequeueRedemption) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgRequeueRedemption) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgRequeueRedemption) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.FromAddress) > 0 {
+		i -= len(m.FromAddress)
+		copy(dAtA[i:], m.FromAddress)
+		i = encodeVarintMessages(dAtA, i, uint64(len(m.FromAddress)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.Hash) > 0 {
+		i -= len(m.Hash)
+		copy(dAtA[i:], m.Hash)
+		i = encodeVarintMessages(dAtA, i, uint64(len(m.Hash)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.ChainId) > 0 {
+		i -= len(m.ChainId)
+		copy(dAtA[i:], m.ChainId)
+		i = encodeVarintMessages(dAtA, i, uint64(len(m.ChainId)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgRequeueRedemptionResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgRequeueRedemptionResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgRequeueRedemptionResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
 	return len(dAtA) - i, nil
 }
 
@@ -944,7 +1324,7 @@ func (m *MsgRequestRedemptionResponse) Size() (n int) {
 	return n
 }
 
-func (m *MsgCancelQueuedRedemption) Size() (n int) {
+func (m *MsgCancelRedemption) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -965,7 +1345,7 @@ func (m *MsgCancelQueuedRedemption) Size() (n int) {
 	return n
 }
 
-func (m *MsgCancelQueuedRedemptionResponse) Size() (n int) {
+func (m *MsgCancelRedemptionResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -973,6 +1353,69 @@ func (m *MsgCancelQueuedRedemptionResponse) Size() (n int) {
 	_ = l
 	l = m.Returned.Size()
 	n += 1 + l + sovMessages(uint64(l))
+	return n
+}
+
+func (m *MsgUpdateRedemption) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.ChainId)
+	if l > 0 {
+		n += 1 + l + sovMessages(uint64(l))
+	}
+	l = len(m.Hash)
+	if l > 0 {
+		n += 1 + l + sovMessages(uint64(l))
+	}
+	if m.NewStatus != 0 {
+		n += 1 + sovMessages(uint64(m.NewStatus))
+	}
+	l = len(m.FromAddress)
+	if l > 0 {
+		n += 1 + l + sovMessages(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgUpdateRedemptionResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgRequeueRedemption) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.ChainId)
+	if l > 0 {
+		n += 1 + l + sovMessages(uint64(l))
+	}
+	l = len(m.Hash)
+	if l > 0 {
+		n += 1 + l + sovMessages(uint64(l))
+	}
+	l = len(m.FromAddress)
+	if l > 0 {
+		n += 1 + l + sovMessages(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgRequeueRedemptionResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
 	return n
 }
 
@@ -1209,7 +1652,7 @@ func (m *MsgRequestRedemptionResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MsgCancelQueuedRedemption) Unmarshal(dAtA []byte) error {
+func (m *MsgCancelRedemption) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1232,10 +1675,10 @@ func (m *MsgCancelQueuedRedemption) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MsgCancelQueuedRedemption: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgCancelRedemption: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgCancelQueuedRedemption: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgCancelRedemption: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -1355,7 +1798,7 @@ func (m *MsgCancelQueuedRedemption) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MsgCancelQueuedRedemptionResponse) Unmarshal(dAtA []byte) error {
+func (m *MsgCancelRedemptionResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1378,10 +1821,10 @@ func (m *MsgCancelQueuedRedemptionResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MsgCancelQueuedRedemptionResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgCancelRedemptionResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgCancelQueuedRedemptionResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgCancelRedemptionResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -1417,6 +1860,417 @@ func (m *MsgCancelQueuedRedemptionResponse) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipMessages(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthMessages
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUpdateRedemption) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowMessages
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUpdateRedemption: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUpdateRedemption: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ChainId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMessages
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthMessages
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthMessages
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ChainId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Hash", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMessages
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthMessages
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthMessages
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Hash = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field NewStatus", wireType)
+			}
+			m.NewStatus = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMessages
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.NewStatus |= int32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field FromAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMessages
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthMessages
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthMessages
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.FromAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipMessages(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthMessages
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUpdateRedemptionResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowMessages
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUpdateRedemptionResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUpdateRedemptionResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipMessages(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthMessages
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgRequeueRedemption) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowMessages
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgRequeueRedemption: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgRequeueRedemption: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ChainId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMessages
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthMessages
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthMessages
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ChainId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Hash", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMessages
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthMessages
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthMessages
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Hash = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field FromAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMessages
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthMessages
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthMessages
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.FromAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipMessages(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthMessages
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgRequeueRedemptionResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowMessages
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgRequeueRedemptionResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgRequeueRedemptionResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
 		default:
 			iNdEx = preIndex
 			skippy, err := skipMessages(dAtA[iNdEx:])

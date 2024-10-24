@@ -5,7 +5,7 @@ COSMOS_BUILD_OPTIONS ?= ""
 PACKAGES_NOSIMULATION=$(shell go list ./... | grep -v '/simulation')
 PACKAGES_SIM=github.com/quicksilver-zone/quicksilver/test/simulation
 PACKAGES_E2E=$(shell go list ./... | grep '/e2e')
-VERSION=$(shell git describe --tags | head -n1)
+VERSION=$(shell git describe --tags | head -n1 | sed 's/.*\///')
 DOCKER_VERSION ?= $(VERSION)
 TMVERSION := $(shell go list -m github.com/tendermint/tendermint | sed 's:.* ::')
 COMMIT := $(shell git log -1 --format='%H')
@@ -321,60 +321,6 @@ vet:
 .PHONY: run-tests test test-all test-import test-rpc $(TEST_TARGETS)
 
 ###############################################################################
-###                             e2e interchain test                         ###
-###############################################################################
-
-# Executes basic chain tests via interchaintest
-ictest-basic: ictest-deps
-	@cd test/interchaintest && go test -v -run TestBasicQuicksilverStart .
-
-# Executes a basic chain upgrade test via interchaintest
-ictest-upgrade: ictest-deps
-	@cd test/interchaintest && go test -v -run TestBasicQuicksilverUpgrade .
-
-# Executes a basic chain upgrade locally via interchaintest after compiling a local image as quicksilver:local
-ictest-upgrade-local: local-image ictest-deps ictest-upgrade
-
-# Executes IBC Transfer tests via interchaintest
-ictest-ibc: ictest-deps
-	@cd test/interchaintest && go test -v -run TestQuicksilverJunoIBCTransfer .
-
-# Executes TestInterchainStaking tests via interchaintest
-ictest-interchainstaking: ictest-deps
-	@cd test/interchaintest && go test -v -run TestInterchainStaking .
-
-# Executes all tests via interchaintest after compiling a local image as quicksilver:local
-ictest-all: ictest-setup ictest-basic ictest-upgrade ictest-ibc ictest-interchainstaking
-
-ictest-setup: ictest-build ictest-deps
-
-ictest-build: get-heighliner local-image
-
-ictest-deps:
-	# install other docker images
-	@$(DOCKER) image pull quicksilverzone/xcclookup:v0.4.3
-	@$(DOCKER) image pull quicksilverzone/interchain-queries:e2e
-
-ictest-build-push: ictest-setup
-	@$(DOCKER) tag quicksilver:local  quicksilverzone/quicksilver-e2e:latest
-	@$(DOCKER) push quicksilverzone/quicksilver-e2e:latest
-.PHONY: ictest-basic ictest-upgrade ictest-ibc ictest-all ictest-deps ictest-build ictest-build-push
-
-###############################################################################
-###                                  heighliner                             ###
-###############################################################################
-
-get-heighliner:
-	@rm -rf heighliner
-	@git clone https://github.com/strangelove-ventures/heighliner.git
-	@cd heighliner && go build
-
-local-image:
-	@heighliner/heighliner build -c quicksilver --local --build-env BUILD_TAGS=muslc
-
-.PHONY: get-heighliner local-image
-
-###############################################################################
 ###                                  simulation                             ###
 ###############################################################################
 
@@ -477,7 +423,7 @@ mdlint-fix:
 ###                                Protobuf                                 ###
 ###############################################################################
 
-BUF_VERSION=1.31.0
+BUF_VERSION=1.35.1
 
 proto-all: proto-gen
 

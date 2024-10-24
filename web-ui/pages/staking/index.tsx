@@ -1,4 +1,4 @@
-import { Box, Container, Flex, VStack, HStack, Stat, StatLabel, StatNumber, SlideFade, SkeletonCircle, Image } from '@chakra-ui/react';
+import { Box, Container, Flex, VStack, HStack, Stat, StatLabel, StatNumber, SlideFade, SkeletonCircle } from '@chakra-ui/react';
 import { useChain } from '@cosmos-kit/react-lite';
 import dynamic from 'next/dynamic';
 import Head from 'next/head';
@@ -8,8 +8,8 @@ import { NetworkSelect } from '@/components';
 import { StakingBox } from '@/components';
 import { InfoBox } from '@/components';
 import { AssetsAccordian } from '@/components';
+import { Chain, chains, env } from '@/config';
 import { useAPYQuery } from '@/hooks/useQueries';
-import { networks as prodNetworks, testNetworks as devNetworks } from '@/state/chains/prod';
 
 const DynamicStakingBox = dynamic(() => Promise.resolve(StakingBox), {
   ssr: false,
@@ -23,28 +23,14 @@ const DynamicAssetBox = dynamic(() => Promise.resolve(AssetsAccordian), {
   ssr: false,
 });
 
-const networks = process.env.NEXT_PUBLIC_CHAIN_ENV === 'mainnet' ? prodNetworks : devNetworks;
+const networks: Map<string, Chain> = chains.get(env) ?? new Map();
+const chain_list = Array.from(networks).filter(([_, network]) => network.show).map(([key, _]) => key);
 
 export default function Staking() {
-  const [selectedNetwork, setSelectedNetwork] = useState(networks[0]);
+  const [selectedNetwork, setSelectedNetwork] = useState(networks.get(chain_list[0])); 
+  const { address } = useChain('quicksilver');
 
-  const {address} = useChain('quicksilver');
-
-  let newChainId;
-  if (selectedNetwork.chainId === 'provider') {
-    newChainId = 'cosmoshub-4';
-  } else if (selectedNetwork.chainId === 'elgafar-1') {
-    newChainId = 'stargaze-1';
-  } else if (selectedNetwork.chainId === 'osmo-test-5') {
-    newChainId = 'osmosis-1';
-  } else if (selectedNetwork.chainId === 'regen-redwood-1') {
-    newChainId = 'regen-1';
-  } else {
-    // Default case
-    newChainId = selectedNetwork.chainId;
-  }
-
-  const { APY, isLoading, isError } = useAPYQuery(newChainId);
+  const { APY, isLoading, isError } = useAPYQuery(selectedNetwork?.chain_id); // handle testnets (chain.testnet_for)
   const [balance, setBalance] = useState('');
   const [qBalance, setQBalance] = useState('');
 
@@ -62,25 +48,64 @@ export default function Staking() {
   return (
     <>
       <Head>
-        <title>Staking</title>
+        <title>Staking - Quicksilver Zone</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="description" content="STAKING SIMPLIFIED | LIQUIDITY AMPLIFIED" />
+        <meta
+          name="keywords"
+          content="staking, Quicksilver, crypto, staking, earn rewards, DeFi, blockchain, liquid staking, lst, quicksilver zone, cosmos, Cosmos-SDK, cosmoshub, osmosis, stride, stride zone, cosmos liquid staking, Persistence "
+        />
+        <meta name="author" content="Quicksilver Zone" />
         <link rel="icon" href="/img/favicon-main.png" />
+
+        <meta property="og:title" content="Staking - Quicksilver Zone" />
+        <meta property="og:description" content="STAKING SIMPLIFIED | LIQUIDITY AMPLIFIED" />
+        <meta property="og:url" content="https://app.quicksilver.zone/staking" />
+        <meta property="og:image" content="https://app.quicksilver.zone/img/banner.png" />
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="Quicksilver Protocol" />
+
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Staking - Quicksilver Zone" />
+        <meta name="twitter:description" content="STAKING SIMPLIFIED | LIQUIDITY AMPLIFIED" />
+        <meta name="twitter:image" content="https://app.quicksilver.zone/img/banner.png" />
+        <meta name="twitter:site" content="@quicksilverzone" />
+
+        <script type="application/ld+json">
+          {JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'WebPage',
+            name: 'Staking - Quicksilver Zone',
+            description: 'STAKING SIMPLIFIED | LIQUIDITY AMPLIFIED',
+            url: 'https://app.quicksilver.zone/staking',
+            image: 'https://app.quicksilver.zone/img/banner.png',
+            publisher: {
+              '@type': 'Organization',
+              name: 'Quicksilver Protocol',
+              logo: {
+                '@type': 'ImageObject',
+                url: 'https://app.quicksilver.zone/img/logo.png',
+              },
+            },
+          })}
+        </script>
       </Head>
+
       <SlideFade offsetY={'200px'} in={true} style={{ width: '100%' }}>
         <Container
           zIndex={2}
-          mt={{ base: '50px', md: '50px' }}
           position="relative"
           maxW="container.lg"
-          height="100vh"
+          height="auto"
           display="flex"
           flexDirection="column"
           justifyContent="center"
           alignItems="center"
+          mt={6}
         >
           <Flex justifyContent={'center'} zIndex={3} direction="column" h="100%">
             {/* Dropdown and Statistic */}
-            <Box w="50%">
+            <Box w={{ base: '100%', lg: '50%' }}>
               <HStack justifyContent="space-between" w="100%">
                 <NetworkSelect selectedOption={selectedNetwork} setSelectedNetwork={setSelectedNetwork} />
                 <VStack p={1} borderRadius="10px" alignItems="flex-end">
@@ -105,10 +130,11 @@ export default function Staking() {
             </Box>
 
             {/* Content Boxes */}
-            <Flex h="100%" maxH={'2xl'} flexDir={{ base: 'column', md: 'row' }} gap={{ base: '2', md: '0' }}>
+            <Flex h="100%" maxH={'2xl'} flexDir={{ base: 'column', lg: 'row' }} gap={{ base: '2', lg: '0' }}>
               {/* Staking Box*/}
-              <DynamicStakingBox
-                selectedOption={selectedNetwork}
+              {selectedNetwork && (
+                <DynamicStakingBox
+                  selectedOption={selectedNetwork}
                 isStakingModalOpen={isStakingModalOpen}
                 setStakingModalOpen={setStakingModalOpen}
                 isTransferModalOpen={isTransferModalOpen}
@@ -116,9 +142,10 @@ export default function Staking() {
                 isRevertSharesModalOpen={isRevertSharesModalOpen}
                 setRevertSharesModalOpen={setRevertSharesModalOpen}
                 setBalance={setBalance}
-                setQBalance={setQBalance}
-              />
-              <Box w="10px" display={{ base: 'none', md: 'block' }} />
+                  setQBalance={setQBalance}
+                />
+              )}
+              <Box w="10px" display={{ base: 'none', lg: 'block' }} />
 
               {/* Right Box */}
               <Flex flex="1" direction="column">
@@ -127,22 +154,11 @@ export default function Staking() {
 
                 <Box h="10px" />
                 {/* Bottom Half (1/3) */}
-                <DynamicAssetBox address={address ?? ""} selectedOption={selectedNetwork} balance={balance} qBalance={qBalance} />
+                {selectedNetwork && (
+                  <DynamicAssetBox address={address ?? ''} selectedOption={selectedNetwork} balance={balance} qBalance={qBalance} />
+                )}
               </Flex>
             </Flex>
-            <Box>
-              <Image
-                display={{ base: 'none', lg: 'block', md: 'none' }}
-                position="relative"
-                left="885px"
-                bottom="205px"
-                zIndex={10}
-                src="/img/quicksilverWord.png"
-                alt="Quicksilver"
-                h="100px"
-                transform="rotate(90deg)"
-              />
-            </Box>
           </Flex>
         </Container>
       </SlideFade>

@@ -28,9 +28,10 @@ import {
   MenuItem,
   MenuList,
   Box,
+  Checkbox,
 } from '@chakra-ui/react';
 import { useChain, useChains } from '@cosmos-kit/react';
-import { SkipRouter, SKIP_API_URL } from '@skip-router/core';
+import { SkipRouter, SKIP_API_URL, UserAddress } from '@skip-router/core';
 import { ibc } from 'interchain-query';
 import { useCallback, useState } from 'react';
 import { FaInfoCircle } from 'react-icons/fa';
@@ -42,7 +43,21 @@ import { useSkipExecute } from '@/hooks/useSkipExecute';
 import { shiftDigits } from '@/utils';
 
 const RewardsModal = ({ address, isOpen, onClose }: { address: string; isOpen: boolean; onClose: () => void }) => {
-  const chains = useChains(['cosmoshub', 'osmosis', 'stargaze', 'juno', 'sommelier', 'regen', 'dydx']);
+  const chains = useChains([
+    'cosmoshub',
+    'osmosis',
+    'stargaze',
+    'juno',
+    'sommelier',
+    'regen',
+    'dydx',
+    'agoric',
+    'axelar',
+    'saga',
+    'stride',
+    'noble',
+    'neutron',
+  ]);
 
   const { wallet } = useChain('quicksilver');
 
@@ -65,12 +80,31 @@ const RewardsModal = ({ address, isOpen, onClose }: { address: string; isOpen: b
   const { balance, refetch } = useAllBalancesQuery('quicksilver', address);
   const [isSigning, setIsSigning] = useState<boolean>(false);
   const [isBottomVisible, setIsBottomVisible] = useState(true);
+  const [selectedAssets, setSelectedAssets] = useState<string[]>([]);
+  const [selectAll, setSelectAll] = useState<boolean>(false);
 
   const handleScroll = useCallback((event: React.UIEvent<HTMLDivElement>) => {
     const target = event.currentTarget;
     const isBottom = target.scrollHeight - target.scrollTop <= target.clientHeight;
     setIsBottomVisible(!isBottom);
   }, []);
+
+  const handleCheckboxChange = (denom: string) => {
+    setSelectedAssets((prevSelectedAssets) =>
+      prevSelectedAssets.includes(denom) ? prevSelectedAssets.filter((item) => item !== denom) : [...prevSelectedAssets, denom],
+    );
+  };
+  // Toggle selection of all assets
+  // If currently all are selected, deselect all
+  // Otherwise, select all available assets
+  const handleSelectAllChange = () => {
+    if (selectAll) {
+      setSelectedAssets([]);
+    } else {
+      setSelectedAssets(tokenDetails.map((detail) => detail?.denom ?? ''));
+    }
+    setSelectAll(!selectAll);
+  };
 
   const { assets: skipAssets } = useSkipAssets('quicksilver-2');
   const balanceData = balance?.balances || [];
@@ -81,6 +115,7 @@ const RewardsModal = ({ address, isOpen, onClose }: { address: string; isOpen: b
 
     return balanceData
       .map((balanceItem) => {
+        // filter out native quick tokens
         if (balanceItem.denom.startsWith('q') || balanceItem.denom.startsWith('aq') || balanceItem.denom.startsWith('uq')) {
           return null;
         }
@@ -133,25 +168,70 @@ const RewardsModal = ({ address, isOpen, onClose }: { address: string; isOpen: b
   const { routesData } = useSkipRoutesData(osmosisRoutesDataObjects);
 
   const executeRoute = useSkipExecute(skipClient);
+
+  // Helper function to get ordered addresses based on requiredChainAddresses
+  const getOrderedAddresses = (requiredChainAddresses: string[], allAddresses: UserAddress[]): UserAddress[] => {
+    return requiredChainAddresses.map((chainID) => {
+      const addressObj = allAddresses.find((addr) => addr.chainID === chainID);
+      if (!addressObj) {
+        console.error(`Address for chainID ${chainID} not found`);
+        return {} as UserAddress;
+      }
+      return addressObj;
+    });
+  };
+
+  // Helper function to format the token name
+  const formatTokenName = (originDenom: string) => {
+    if (originDenom.toLowerCase().startsWith('st')) {
+      if (originDenom.toLowerCase() === 'stinj') {
+        return `st${originDenom.slice(2).toUpperCase()}`;
+      }
+      return `st${originDenom.slice(3).toUpperCase()}`;
+    }
+    return originDenom.toLowerCase().startsWith('factory/')
+      ? originDenom.split('/').pop()?.replace(/^u/, '').toUpperCase()
+      : originDenom.slice(1).toUpperCase();
+  };
+
   // uses all the data gathered to create the ibc transactions for sending assets to osmosis.
   const handleExecuteRoute = async () => {
     setIsSigning(true);
 
-    const addresses = {
-      'quicksilver-2': address,
-      'osmosis-1': chains.osmosis.address,
-      'cosmoshub-4': chains.cosmoshub.address,
-      'stargaze-1': chains.stargaze.address,
-      'sommelier-3': chains.sommelier.address,
-      'regen-1': chains.regen.address,
-      'juno-1': chains.juno.address,
-      'dydx-mainnet-1': chains.dydx.address,
-    };
+    const allAddresses: UserAddress[] = [
+  
+      { chainID: 'quicksilver-2', address },
+      { chainID: 'osmosis-1', address: chains.osmosis.address ?? ''},
+      { chainID: 'cosmoshub-4', address: chains.cosmoshub.address ?? '' },
+      { chainID: 'stargaze-1', address: chains.stargaze.address ?? '' },
+      { chainID: 'sommelier-3', address: chains.sommelier.address ?? '' },
+      { chainID: 'regen-1', address: chains.regen.address ?? '' },
+      { chainID: 'juno-1', address: chains.juno.address ?? '' },
+      { chainID: 'dydx-mainnet-1', address: chains.dydx.address ?? '' },
+      { chainID: 'ssc-1', address: chains.saga.address ?? '' },
+      { chainID: 'stride-1', address: chains.stride.address ?? '' },
+      { chainID: 'noble-1', address: chains.noble.address ?? '' },
+      { chainID: 'neutron-1', address: chains.neutron.address ?? '' },
+      { chainID: 'axelar-dojo-1', address: chains.axelar.address ?? '' },
+      { chainID: 'agoric-3', address: chains.agoric.address ?? '' },
+    ];
 
-    // Execute each route in sequence
-    for (const route of routesData) {
+    // Check if any address is undefined
+    const undefinedAddresses = allAddresses.filter((addr) => !addr.address);
+    if (undefinedAddresses.length > 0) {
+      console.error('Some addresses are undefined:', undefinedAddresses);
+      setIsSigning(false);
+      return;
+    }
+
+    // Filter routesData to only include selected assets
+    const filteredRoutesData = routesData.filter((route) => selectedAssets.includes(route?.sourceAssetDenom ?? ''));
+
+    // Execute each route in sequence with ordered addresses
+    for (const route of filteredRoutesData) {
+      const orderedAddresses = getOrderedAddresses(route?.requiredChainAddresses ?? ([] as string[]), allAddresses);
       try {
-        await executeRoute(route, addresses, refetch);
+        await executeRoute(route, orderedAddresses, refetch);
       } catch (error) {
         console.error('Error executing route:', error);
         setIsSigning(false);
@@ -177,6 +257,10 @@ const RewardsModal = ({ address, isOpen, onClose }: { address: string; isOpen: b
         return;
       }
 
+      if (!selectedAssets.includes(tokenDetail?.denom ?? '')) {
+        continue;
+      }
+
       const [_, channel] = tokenDetail?.trace.split('/') ?? '';
       const sourcePort = 'transfer';
       const sourceChannel = channel;
@@ -198,6 +282,12 @@ const RewardsModal = ({ address, isOpen, onClose }: { address: string; isOpen: b
         'regen-1': 'regen',
         'juno-1': 'juno',
         'dydx-mainnet-1': 'dydx',
+        'ssc-1': 'saga',
+        'stride-1': 'stride',
+        'noble-1': 'noble',
+        'neutron-1': 'neutron',
+        'axelar-dojo-1': 'axelar',
+        'agoric-3': 'agoric',
       };
 
       const getChainName = (chainId: string) => {
@@ -271,6 +361,14 @@ const RewardsModal = ({ address, isOpen, onClose }: { address: string; isOpen: b
                   <Table variant="simple" colorScheme="whiteAlpha" size="sm">
                     <Thead position="sticky" top={0} bg="rgb(32,32,32)" zIndex={1}>
                       <Tr>
+                        <Th color="complimentary.900">
+                          <Checkbox
+                            isChecked={selectAll}
+                            onChange={handleSelectAllChange}
+                            colorScheme="complimentary"
+                            borderColor="complimentary.900"
+                          />
+                        </Th>
                         <Th color="complimentary.900">Token</Th>
                         <Th color="complimentary.900" isNumeric>
                           Amount
@@ -279,26 +377,27 @@ const RewardsModal = ({ address, isOpen, onClose }: { address: string; isOpen: b
                     </Thead>
                     <Tbody overflowY={'auto'} maxH="250px">
                       {tokenDetails.map((detail, index) => (
-                        <Tr key={index}>
+                        <Tr key={detail?.denom ?? index}>
+                          <Td color="white">
+                            <Checkbox
+                              isChecked={selectedAssets.includes(detail?.denom ?? '')}
+                              onChange={() => handleCheckboxChange(detail?.denom ?? '')}
+                              colorScheme="complimentary"
+                              borderColor="complimentary.900"
+                            />
+                          </Td>
                           <Td color="white">
                             <HStack>
                               <Image w="32px" h="32px" alt={detail?.originDenom} src={detail?.logoURI} />
-                              <Text fontSize={'large'}>
-                                {detail?.originDenom
-                                  ? detail.originDenom.toLowerCase().startsWith('factory/')
-                                    ? (() => {
-                                        const lastSegment = detail.originDenom.split('/').pop() || '';
-                                        return lastSegment.startsWith('u') ? lastSegment.slice(1).toUpperCase() : lastSegment.toUpperCase();
-                                      })()
-                                    : detail.originDenom.slice(1).toUpperCase()
-                                  : ''}
-                              </Text>
+                              <Text fontSize={'large'}>{formatTokenName(detail?.originDenom ?? '')}</Text>
                             </HStack>
                           </Td>
                           <Td fontSize={'large'} color="white" isNumeric>
-                            {Number(shiftDigits(detail?.amount ?? '', -Number(detail?.decimals)))
-                              .toFixed(2)
-                              .toString()}
+                            {Number(Number(shiftDigits(detail?.amount ?? '', -Number(detail?.decimals))).toFixed(2)) <= 0.01
+                              ? '< 0.01'
+                              : Number(shiftDigits(detail?.amount ?? '', -Number(detail?.decimals)))
+                                  .toFixed(2)
+                                  .toString()}
                           </Td>
                         </Tr>
                       ))}
@@ -329,6 +428,7 @@ const RewardsModal = ({ address, isOpen, onClose }: { address: string; isOpen: b
                   size="sm"
                   w="160px"
                   variant="outline"
+                  isDisabled={selectedAssets.length === 0}
                   onClick={() => (destination === 'osmosis' ? handleExecuteRoute() : onSubmitClick())}
                 >
                   {isSigning === true && <Spinner size="sm" />}

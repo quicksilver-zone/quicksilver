@@ -53,7 +53,7 @@ type Keeper struct {
 	ClaimsManagerKeeper types.ClaimsManagerKeeper
 
 	feeCollectorName     string
-	prSubmodules         map[cmtypes.ClaimType]Submodule
+	PrSubmodules         map[cmtypes.ClaimType]Submodule
 	ValidateProofOps     utils.ProofOpsFn
 	ValidateSelfProofOps utils.SelfProofOpsFn
 }
@@ -96,7 +96,7 @@ func NewKeeper(
 		icsKeeper:            icsk,
 		ClaimsManagerKeeper:  cmk,
 		feeCollectorName:     feeCollectorName,
-		prSubmodules:         LoadSubmodules(),
+		PrSubmodules:         LoadSubmodules(),
 		ValidateProofOps:     proofValidationFn,
 		ValidateSelfProofOps: selfProofValidationFn,
 	}
@@ -173,6 +173,7 @@ func LoadSubmodules() map[cmtypes.ClaimType]Submodule {
 	out := make(map[cmtypes.ClaimType]Submodule, 0)
 	out[cmtypes.ClaimTypeLiquidToken] = &LiquidTokensModule{}
 	out[cmtypes.ClaimTypeOsmosisPool] = &OsmosisModule{}
+	out[cmtypes.ClaimTypeOsmosisCLPool] = &OsmosisClModule{}
 	out[cmtypes.ClaimTypeUmeeToken] = &UmeeModule{}
 	return out
 }

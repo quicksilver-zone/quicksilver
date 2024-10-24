@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -36,6 +38,22 @@ func (k Keeper) SetProtocolData(ctx sdk.Context, key []byte, data *types.Protoco
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixProtocolData)
 	bz := k.cdc.MustMarshal(data)
 	store.Set(types.GetProtocolDataKey(types.ProtocolDataType(pdType), key), bz)
+}
+
+func GetAndUnmarshalProtocolData[T any](ctx sdk.Context, k *Keeper, key string, pdType types.ProtocolDataType) (dt types.ProtocolData, tt T, err error) {
+	data, ok := k.GetProtocolData(ctx, pdType, key)
+	if !ok {
+		return dt, tt, fmt.Errorf("unable to find protocol data for %q", key)
+	}
+	pd, err := types.UnmarshalProtocolData(pdType, data.Data)
+	if err != nil {
+		return dt, tt, err
+	}
+	asType, ok := pd.(T)
+	if !ok {
+		return dt, tt, fmt.Errorf("could not retrieve type of %T, actual type: %T", (*T)(nil), pd)
+	}
+	return data, asType, nil
 }
 
 // DeleteProtocolData deletes protocol data info.

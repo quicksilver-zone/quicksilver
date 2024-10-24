@@ -37,16 +37,12 @@ func DepthFirstSearch(graph AssetGraph, visited map[string]struct{}, asset strin
 func (k *Keeper) CalcTokenValues(ctx sdk.Context) (TokenValues, error) {
 	k.Logger(ctx).Info("calcTokenValues")
 
-	data, found := k.GetProtocolData(ctx, types.ProtocolDataTypeOsmosisParams, "osmosisparams")
-	if !found {
-		return TokenValues{}, errors.New("could not find osmosisparams protocol data")
-	}
-	osmoParams, err := types.UnmarshalProtocolData(types.ProtocolDataTypeOsmosisParams, data.Data)
+	_, osmoParams, err := GetAndUnmarshalProtocolData[*types.OsmosisParamsProtocolData](ctx, k, "osmosisparams", types.ProtocolDataTypeOsmosisParams)
 	if err != nil {
 		return TokenValues{}, err
 	}
 
-	baseDenom := osmoParams.(*types.OsmosisParamsProtocolData).BaseDenom
+	baseDenom := osmoParams.BaseDenom
 
 	tvs := make(TokenValues)
 	graph := make(AssetGraphSlice)

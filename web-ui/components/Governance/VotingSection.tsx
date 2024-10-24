@@ -45,7 +45,7 @@ function RotateIcon({ isOpen }: { isOpen: boolean }) {
 
 export const VotingSection = ({ chainName }: { chainName: ChainName }) => {
   const [selectedProposal, setSelectedProposal] = useState<Proposal>();
-  const [selectedPeriodOption, setSelectedPeriodOption] = useState('All Periods');
+  const [selectedPeriodOption, setSelectedPeriodOption] = useState('All Statuses');
   const [selectedProposalOption, setSelectedProposalOption] = useState('All Proposals');
 
   const { address } = useChain(chainName);
@@ -71,6 +71,7 @@ export const VotingSection = ({ chainName }: { chainName: ChainName }) => {
       const VOTING_PERIOD_STATUS = 2;
       const PASSED_STATUS = 3;
       const REJECTED_STATUS = 4;
+      const FAILED_STATUS = 5;
 
       // Filter by period
       switch (selectedPeriodOption) {
@@ -83,6 +84,9 @@ export const VotingSection = ({ chainName }: { chainName: ChainName }) => {
         case 'Rejected':
           periodMatches = proposal.status === REJECTED_STATUS;
           break;
+          case 'Failed':
+            periodMatches = proposal.status === FAILED_STATUS;
+            break;
         default:
           periodMatches = true;
       }
@@ -117,7 +121,7 @@ export const VotingSection = ({ chainName }: { chainName: ChainName }) => {
 
   return (
     <>
-      <Box mb={16}>
+      <Box>
         <Flex mb={4} alignContent="center" alignItems="center" justifyContent={'space-between'} w="100%" flexDirection={'row'}>
           <Text display={{ base: 'flex', md: 'none' }} pb={2} color="white" fontSize="24px">
             Proposals
@@ -178,9 +182,9 @@ export const VotingSection = ({ chainName }: { chainName: ChainName }) => {
                       }}
                       color="white"
                       bgColor="#181818"
-                      onClick={() => setSelectedPeriodOption('All Periods')}
+                      onClick={() => setSelectedPeriodOption('All Statuses')}
                     >
-                      All Periods
+                      All Statuses
                     </MenuItem>
                     <MenuItem
                       borderRadius={'5px'}
@@ -224,6 +228,7 @@ export const VotingSection = ({ chainName }: { chainName: ChainName }) => {
               {({ isOpen }) => (
                 <>
                   <MenuButton
+                    display={{ base: 'none', md: 'flex' }}
                     _hover={{
                       bgColor: 'rgba(255,128,0, 0.25)',
                     }}
@@ -269,7 +274,7 @@ export const VotingSection = ({ chainName }: { chainName: ChainName }) => {
         <Box
           pr={2}
           maxHeight="2xl"
-          minH={"2xl"}
+          minH={'2xl'}
           overflowY="scroll"
           sx={{
             '&::-webkit-scrollbar': {
@@ -287,21 +292,6 @@ export const VotingSection = ({ chainName }: { chainName: ChainName }) => {
         >
           {isLoading ? <Loader /> : content}
         </Box>
-        {address && (
-          <Box>
-            <Image
-              display={{ base: 'none', lg: 'block', md: 'none' }}
-              src="/img/quicksilverWord.png"
-              alt="Quicksilver"
-              position="relative"
-              bottom="100"
-              left="660"
-              h={'100px'}
-              transform="rotate(90deg)"
-              transformOrigin="bottom right"
-            />
-          </Box>
-        )}
       </Box>
 
       {selectedProposal && (

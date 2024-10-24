@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -88,17 +89,24 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 	return &types.MsgRequestRedemptionResponse{}, nil
 }
 
-func (k msgServer) CancelRedemption(goCtx context.Context, msg *types.MsgCancelQueuedRedemption) (*types.MsgCancelQueuedRedemptionResponse, error) {
+func (k msgServer) CancelRedemption(goCtx context.Context, msg *types.MsgCancelRedemption) (*types.MsgCancelRedemptionResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	record, found := k.GetWithdrawalRecord(ctx, msg.ChainId, msg.Hash, types.WithdrawStatusQueued)
-
+	// QUEUED records can be cancelled at any time.
 	if !found {
-		return nil, fmt.Errorf("no queued record with hash \"%s\" found", msg.Hash)
+		// check for errored unbond in UNBONDING status
+		record, found = k.GetWithdrawalRecord(ctx, msg.ChainId, msg.Hash, types.WithdrawStatusUnbond)
+		if !found {
+			return nil, fmt.Errorf("no queued record with hash %q found", msg.Hash)
+		}
+		if record.SendErrors == 0 {
+			return nil, fmt.Errorf("cannot cancel unbond %q with no errors", msg.Hash)
+		}
 	}
 
-	if record.Delegator != msg.FromAddress {
-		return nil, fmt.Errorf("incorrect user for record with hash \"%s\"", msg.Hash)
+	if record.Delegator != msg.FromAddress && k.Keeper.GetGovAuthority(ctx) != msg.FromAddress {
+		return nil, fmt.Errorf("incorrect user for record with hash %q", msg.Hash)
 	}
 
 	// all good. delete!
@@ -122,12 +130,113 @@ func (k msgServer) CancelRedemption(goCtx context.Context, msg *types.MsgCancelQ
 		sdk.NewEvent(
 			types.EventTypeRedemptionCancellation,
 			sdk.NewAttribute(types.AttributeKeyReturnedAmount, record.BurnAmount.String()),
-			sdk.NewAttribute(types.AttributeKeyUser, msg.FromAddress),
+			sdk.NewAttribute(types.AttributeKeyUser, record.Delegator),
+			sdk.NewAttribute(types.AttributeKeyHash, msg.Hash),
 			sdk.NewAttribute(types.AttributeKeyChainID, msg.ChainId),
 		),
 	})
 
-	return &types.MsgCancelQueuedRedemptionResponse{Returned: record.BurnAmount}, nil
+	return &types.MsgCancelRedemptionResponse{Returned: record.BurnAmount}, nil
+}
+
+func (k msgServer) RequeueRedemption(goCtx context.Context, msg *types.MsgRequeueRedemption) (*types.MsgRequeueRedemptionResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	// check for errored unbond in UNBONDING status
+	record, found := k.GetWithdrawalRecord(ctx, msg.ChainId, msg.Hash, types.WithdrawStatusUnbond)
+	if !found {
+		return nil, fmt.Errorf("no unbonding record with hash %q found", msg.Hash)
+	}
+	if record.SendErrors == 0 {
+		return nil, fmt.Errorf("cannot requeue unbond %q with no errors", msg.Hash)
+	}
+
+	if record.Delegator != msg.FromAddress && k.Keeper.GetGovAuthority(ctx) != msg.FromAddress {
+		return nil, fmt.Errorf("incorrect user for record with hash %q", msg.Hash)
+	}
+
+	// all good. update sendErrors to zero, nil the distributions and amount (as this we be recalculated when processed), and update the state to queued.
+	record.SendErrors = 0
+	record.Amount = nil
+	record.Distribution = nil
+	record.CompletionTime = time.Time{}
+	k.UpdateWithdrawalRecordStatus(ctx, &record, types.WithdrawStatusQueued)
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+		),
+		sdk.NewEvent(
+			types.EventTypeRedemptionRequeue,
+			sdk.NewAttribute(types.AttributeKeyUser, record.Delegator),
+			sdk.NewAttribute(types.AttributeKeyHash, msg.Hash),
+			sdk.NewAttribute(types.AttributeKeyChainID, msg.ChainId),
+		),
+	})
+
+	return &types.MsgRequeueRedemptionResponse{}, nil
+}
+
+func (k msgServer) UpdateRedemption(goCtx context.Context, msg *types.MsgUpdateRedemption) (*types.MsgUpdateRedemptionResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	if k.Keeper.GetGovAuthority(ctx) != msg.FromAddress {
+		return nil, fmt.Errorf("MsgUpdateRedemption may only be executed by the gov authority")
+	}
+
+	switch msg.NewStatus {
+	case types.WithdrawStatusTokenize: // intentionally removed as not currently supported, but included here for completeness.
+		return nil, fmt.Errorf("new status WithdrawStatusTokenize not supported")
+	case types.WithdrawStatusQueued:
+	case types.WithdrawStatusUnbond:
+	case types.WithdrawStatusSend: // send is not a valid state for recovery, included here for completeness.
+		return nil, fmt.Errorf("new status WithdrawStatusSend not supported")
+	case types.WithdrawStatusCompleted:
+	default:
+		return nil, fmt.Errorf("new status not provided or invalid")
+	}
+
+	var r *types.WithdrawalRecord
+
+	k.IteratePrefixedWithdrawalRecords(ctx, []byte(msg.ChainId), func(index int64, record types.WithdrawalRecord) (stop bool) {
+		if record.Txhash == msg.Hash {
+			r = &record
+			return true
+		}
+		return false
+	})
+
+	if r == nil {
+		return nil, fmt.Errorf("no unbonding record with hash %q found", msg.Hash)
+	}
+
+	if msg.NewStatus == types.WithdrawStatusQueued {
+		// update sendErrors to zero, nil the distributions and amount (as this we be recalculated when processed), and update the state to queued.
+		r.SendErrors = 0
+		r.Amount = nil
+		r.Distribution = nil
+		r.CompletionTime = time.Time{}
+		r.Acknowledged = false
+	}
+
+	k.UpdateWithdrawalRecordStatus(ctx, r, msg.NewStatus)
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+		),
+		sdk.NewEvent(
+			types.EventTypeRedemptionRequeue,
+			sdk.NewAttribute(types.AttributeKeyUser, r.Delegator),
+			sdk.NewAttribute(types.AttributeKeyHash, msg.Hash),
+			sdk.NewAttribute(types.AttributeKeyNewStatus, string(msg.NewStatus)),
+			sdk.NewAttribute(types.AttributeKeyChainID, msg.ChainId),
+		),
+	})
+
+	return &types.MsgUpdateRedemptionResponse{}, nil
 }
 
 func (k msgServer) SignalIntent(goCtx context.Context, msg *types.MsgSignalIntent) (*types.MsgSignalIntentResponse, error) {
@@ -136,7 +245,7 @@ func (k msgServer) SignalIntent(goCtx context.Context, msg *types.MsgSignalInten
 	// get zone
 	zone, ok := k.GetZone(ctx, msg.ChainId)
 	if !ok {
-		return nil, fmt.Errorf("invalid chain id \"%s\"", msg.ChainId)
+		return nil, fmt.Errorf("invalid chain id %q", msg.ChainId)
 	}
 
 	// validate intents (aggregated errors)

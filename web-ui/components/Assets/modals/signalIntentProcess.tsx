@@ -16,14 +16,12 @@ import {
   Input,
   Grid,
 } from '@chakra-ui/react';
-import { StdFee } from '@cosmjs/amino';
 import { useChain } from '@cosmos-kit/react';
 import styled from '@emotion/styled';
-import { assets } from 'chain-registry';
 import { quicksilver } from 'quicksilverjs';
 import React, { useEffect, useState } from 'react';
 
-
+import { Chain } from '@/config';
 import { useTx } from '@/hooks';
 import { useFeeEstimation } from '@/hooks/useFeeEstimation';
 
@@ -65,13 +63,7 @@ interface StakingModalProps {
   onClose: () => void;
   children?: React.ReactNode;
   refetch: () => void;
-  selectedOption?: {
-    name: string;
-    value: string;
-    logo: string;
-    chainName: string;
-    chainId: string;
-  };
+  selectedOption?: Chain;
 }
 
 interface Intent {
@@ -89,9 +81,9 @@ export const SignalIntentModal: React.FC<StakingModalProps> = ({ isOpen, onClose
   const [isSigning, setIsSigning] = useState<boolean>(false);
   const [isError, setIsError] = useState<boolean>(false);
 
-  const { address } = useChain('quicksilver' || '');
+  const { address } = useChain('quicksilver');
 
-  const labels = ['Choose validators', `Set weights`, `Sign & Submit`, `Receive q${selectedOption?.value}`];
+  const labels = ['Choose validators', `Set weights`, `Sign & Submit`, `Receive q${selectedOption?.major_denom.toUpperCase()}`];
   const [isModalOpen, setModalOpen] = useState(false);
 
   const [selectedValidators, setSelectedValidators] = React.useState<{ name: string; operatorAddress: string }[]>([]);
@@ -174,13 +166,13 @@ export const SignalIntentModal: React.FC<StakingModalProps> = ({ isOpen, onClose
 
   const { signalIntent } = quicksilver.interchainstaking.v1.MessageComposer.withTypeUrl;
   const msgSignalIntent = signalIntent({
-    chainId: selectedOption?.chainId ?? '',
+    chainId: selectedOption?.chain_id ?? '',
     intents: formattedIntentsString,
     fromAddress: address ?? '',
   });
 
-  const { tx } = useTx('quicksilver' ?? '');
-  const { estimateFee } = useFeeEstimation('quicksilver' ?? '');
+  const { tx } = useTx('quicksilver');
+  const { estimateFee } = useFeeEstimation('quicksilver');
 
   const handleSignalIntent = async (event: React.MouseEvent) => {
     event.preventDefault();
@@ -210,7 +202,7 @@ export const SignalIntentModal: React.FC<StakingModalProps> = ({ isOpen, onClose
     setStep(1);
     setIsError(false);
     setIsSigning(false);
-  }, [selectedOption?.chainName]);
+  }, [selectedOption?.chain_name]);
 
   const [isCustomWeight, setIsCustomWeight] = useState(false);
 
@@ -348,9 +340,9 @@ export const SignalIntentModal: React.FC<StakingModalProps> = ({ isOpen, onClose
                   <IntentMultiModal
                     isOpen={isModalOpen}
                     onClose={() => setModalOpen(false)}
-                    selectedChainName={selectedOption?.chainName || ''}
+                    selectedChainName={selectedOption?.chain_name || ''}
                     selectedValidators={selectedValidators}
-                    selectedChainId={selectedOption?.chainId || ''}
+                    selectedChainId={selectedOption?.chain_id || ''}
                     setSelectedValidators={setSelectedValidators}
                   />
                 </>

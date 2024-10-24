@@ -1,8 +1,13 @@
 import { ToastId } from '@chakra-ui/react';
-import {SkipRouter, TxStatusResponse} from '@skip-router/core';
+import {RouteResponse, SkipRouter, TxStatusResponse} from '@skip-router/core';
 import { useCallback } from 'react';
 
 import { useToaster, ToastType } from './useToaster';
+
+interface UserAddress {
+    chainID: string;
+    address: string;
+}
 
 export function useSkipExecute(skipClient: SkipRouter) {
     if (!skipClient) {
@@ -11,7 +16,7 @@ export function useSkipExecute(skipClient: SkipRouter) {
 
     const toaster = useToaster();
 
-    const executeRoute = useCallback(async (route: any, userAddresses: any, refetch: () => void) => {
+    const executeRoute = useCallback(async (route: any, userAddresses: UserAddress[], refetch: () => void) => {
         // Initialize with null and allow for the type to be null or ToastId
         let broadcastToastId: ToastId | null = null;
 
@@ -70,22 +75,22 @@ export function useSkipExecute(skipClient: SkipRouter) {
     return executeRoute;
 }
 
-export function useSkipMessages(skipClient: SkipRouter) {
-    if (!skipClient) {
-        throw new Error('SkipRouter is not initialized');
-    }
-  const skipMessages = useCallback(async (route: any) => {
-    return await skipClient.messages({
-        sourceAssetDenom: route.sourceAssetDenom,
-        sourceAssetChainID: route.sourceAssetChainID,
-        destAssetDenom: route.destAssetDenom,
-        destAssetChainID: route.destAssetChainID,
-        amountIn: route.amountIn,
-        amountOut: route.amountOut,
-        addressList: route.addressList,
-        operations: route.operations,
-    });
-  }, []);
+// export function useSkipMessages(skipClient: SkipRouter) {
+//     if (!skipClient) {
+//         throw new Error('SkipRouter is not initialized');
+//     }
+//   const skipMessages = useCallback(async (route: RouteResponse, addressList: string[]) => {
+//     return await skipClient.messages({
+//         sourceAssetDenom: route.sourceAssetDenom,
+//         sourceAssetChainID: route.sourceAssetChainID,
+//         destAssetDenom: route.destAssetDenom,
+//         destAssetChainID: route.destAssetChainID,
+//         amountIn: route.amountIn,
+//         amountOut: route.amountOut,
+//         addressList: addressList,
+//         operations: route.operations,
+//     });
+//   }, []);
 
-  return skipMessages;
-}
+//   return skipMessages;
+// }

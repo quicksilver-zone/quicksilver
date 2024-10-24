@@ -1,4 +1,3 @@
-import { useChain } from '@cosmos-kit/react';
 import {SkipRouter, SKIP_API_URL} from '@skip-router/core';
 import { useQueries, useQuery } from '@tanstack/react-query';
 import axios from 'axios';
@@ -10,6 +9,7 @@ import { useGrpcQueryClient } from './useGrpcQueryClient';
 
 import { getCoin, getLogoUrls } from '@/utils';
 import { ExtendedValidator, parseValidators } from '@/utils/staking';
+import { env, local_chain, chains } from '@/config';
 
 
 type WithdrawalRecord = {
@@ -33,39 +33,33 @@ type WithdrawalsResponse = {
 };
 
 
-type Amount = {
+export type Amount = {
   denom: string;
   amount: string;
 };
 
 
-interface Asset {
+export type Asset = {
   Type: string;
-  Amount: AssetAmount[];
+  Amount: Amount[];
 }
 
 
-type Errors = {
+export type Errors = {
   Errors: any; 
 };
 
 
-type LiquidRewardsData = {
-  messages: any[]; 
+export type InterchainAssetsData = {
+  messages: Message[]; 
   assets: {
-    [key: string]: [
-      {
-        Type: string;
-        Amount: Amount[];
-      }
-    ];
+    [key: string]: Asset[];
   };
   errors: Errors;
 };
 
-
-type UseLiquidRewardsQueryReturnType = {
-  liquidRewards: LiquidRewardsData | undefined;
+type UseInterchainAssetsQueryReturnType = {
+  assets: InterchainAssetsData | undefined;
   isLoading: boolean;
   isError: boolean;
   refetch: () => void;
@@ -96,25 +90,6 @@ interface Message {
   proofs: Proof[];
  
 }
-
-interface AssetAmount {
-  denom: string;
-  amount: string;
-}
-
-interface LiquidEpochData {
-  messages: Message[];
-  assets: { [key: string]: Asset[] };
-  errors: Record<string, unknown>; 
-}
-
-
-interface UseLiquidEpochQueryReturnType {
-  liquidEpoch: LiquidEpochData | undefined;
-  isLoading: boolean;
-  isError: boolean;
-}
-
 const skipClient = new SkipRouter({
   apiURL: SKIP_API_URL,
 });
@@ -162,7 +137,7 @@ export const useIncorrectAuthChecker = (address: string) => {
       }
 
       try {
-        const url = `https://lcd.quicksilver.zone/cosmos/authz/v1beta1/grants?granter=${address}&grantee=quick1w5ennfhdqrpyvewf35sv3y3t8yuzwq29mrmyal&msgTypeUrl=/quicksilver.participationrewards.v1.MsgSubmitClaim`;
+        const url = `${local_chain.get(env)?.rest[0]}/cosmos/authz/v1beta1/grants?granter=${address}&grantee=quick1w5ennfhdqrpyvewf35sv3y3t8yuzwq29mrmyal&msgTypeUrl=/quicksilver.participationrewards.v1.MsgSubmitClaim`;
         const response = await axios.get(url);
         return { data: response.data, error: null };
       } catch (error) {
@@ -193,7 +168,7 @@ export const useAuthChecker = (address: string) => {
       }
 
       try {
-        const url = `https://lcd.quicksilver.zone/cosmos/authz/v1beta1/grants?granter=${address}&grantee=quick1psevptdp90jad76zt9y9x2nga686hutgmasmwd&msgTypeUrl=/quicksilver.participationrewards.v1.MsgSubmitClaim`;
+        const url = `${local_chain.get(env)?.rest[0]}/cosmos/authz/v1beta1/grants?granter=${address}&grantee=quick1psevptdp90jad76zt9y9x2nga686hutgmasmwd&msgTypeUrl=/quicksilver.participationrewards.v1.MsgSubmitClaim`;
         const response = await axios.get(url);
         return { data: response.data, error: null };
       } catch (error) {
@@ -422,24 +397,8 @@ export const useQBalancesQuery = (chainName: string, address: string, grpcQueryC
 
 export const useIntentQuery = (chainName: string, address: string) => {
   const { grpcQueryClient } = useGrpcQueryClient('quicksilver');
-  const { chain } = useChain(chainName);
-  const env = process.env.NEXT_PUBLIC_CHAIN_ENV;
-  const baseApiUrl = env === 'testnet' ? 'https://lcd.test.quicksilver.zone' : 'https://lcd.quicksilver.zone';
+  const chain = chains.get(env)?.get(chainName);
   
-  // Determine the chain ID based on the chain name
-  let chainId = chain.chain_id;
-  if (chainName === 'osmosistestnet') {
-    chainId = 'osmo-test-5';
-  } else if (chainName === 'cosmoshubtestnet') {
-    chainId = 'provider';
-  } else if (chainName === 'stargazetestnet') {
-    chainId = 'elgafar-1';
-  } else if (chainName === 'osmo-test-5') {
-    chainId = 'osmosistestnet';
-  } else {
-    chainId = chain.chain_id;
-  }
-
   const intentQuery = useQuery(
     ['intent', chainName, address], 
     async () => {
@@ -447,7 +406,7 @@ export const useIntentQuery = (chainName: string, address: string) => {
         throw new Error('RPC Client not ready');
       }
 
-      const intent = await axios.get(`${baseApiUrl}/quicksilver/interchainstaking/v1/zones/${chainId}/delegator_intent/${address}`)
+      const intent = await axios.get(`${local_chain.get(env)?.rest[0]}/quicksilver/interchainstaking/v1/zones/${chain?.chain_id}/delegator_intent/${address}`)
       return intent;
     },
     {
@@ -465,15 +424,15 @@ export const useIntentQuery = (chainName: string, address: string) => {
   };
 };
 
-export const useLiquidRewardsQuery = (address: string): UseLiquidRewardsQueryReturnType => {
-  const liquidRewardsQuery = useQuery(
-    ['liquidRewards', address],
+export const useCurrentInterchainAssetsQuery = (address: string): UseInterchainAssetsQueryReturnType => {
+  const currentICAssetsQuery = useQuery(
+    ['currentICAssets', address],
     async () => {
       if (!address) {
         throw new Error('Address is not avaialble');
       }
 
-      const response = await axios.get<LiquidRewardsData>(`https://claim.quicksilver.zone/${address}/current`);
+      const response = await axios.get<InterchainAssetsData>(`https://claim.quicksilver.zone/${address}/current`);
       return response.data;
     },
     {
@@ -483,23 +442,23 @@ export const useLiquidRewardsQuery = (address: string): UseLiquidRewardsQueryRet
   );
 
   return {
-    liquidRewards: liquidRewardsQuery.data,
-    isLoading: liquidRewardsQuery.isLoading,
-    isError: liquidRewardsQuery.isError,
-    refetch: liquidRewardsQuery.refetch,
+    assets: currentICAssetsQuery.data,
+    isLoading: currentICAssetsQuery.isLoading,
+    isError: currentICAssetsQuery.isError,
+    refetch: currentICAssetsQuery.refetch,
   };
 
 }
 
-export const useLiquidEpochQuery = (address: string): UseLiquidEpochQueryReturnType => {
-  const liquidEpochQuery = useQuery(
-    ['liquidEpoch', address],
+export const useEpochInterchainAssetsQuery = (address: string): UseInterchainAssetsQueryReturnType => {
+  const epochICAssetsQuery = useQuery(
+    ['epochICAssets', address],
     async () => {
       if (!address) {
         throw new Error('Address is not available');
       }
 
-      const response = await axios.get<LiquidEpochData>(`https://claim.quicksilver.zone/${address}/epoch`);
+      const response = await axios.get<InterchainAssetsData>(`https://claim.quicksilver.zone/${address}/epoch`);
 
 
       if (response.data.messages.length === 0) {
@@ -515,33 +474,20 @@ export const useLiquidEpochQuery = (address: string): UseLiquidEpochQueryReturnT
   );
 
   return {
-    liquidEpoch: liquidEpochQuery.data,
-    isLoading: liquidEpochQuery.isLoading,
-    isError: liquidEpochQuery.isError,
+    assets: epochICAssetsQuery.data,
+    isLoading: epochICAssetsQuery.isLoading,
+    isError: epochICAssetsQuery.isError,
+    refetch: () => {},
   };
 };
 
 export const useUnbondingQuery = (chainName: string, address: string) => {
-  const env = process.env.NEXT_PUBLIC_CHAIN_ENV;
-  const baseApiUrl = env === 'testnet' ? 'https://lcd.test.quicksilver.zone' : 'https://lcd.quicksilver.zone';
+  const chainId = chains.get(env)?.get(chainName)?.chain_id;
   
-  const { chain } = useChain(chainName);
-  let chainId = chain.chain_id;
-  if (chainName === 'osmosistestnet') {
-    chainId = 'osmo-test-5';
-  } else if (chainName === 'stargazetestnet') {
-    chainId = 'elgafar-1';
-  } else if (chainName === 'osmo-test-5') {
-    chainId = 'osmosistestnet';
- 
-  } else {
-
-    chainId = chain.chain_id;
-  }
   const unbondingQuery = useQuery(
     ['unbond', chainName, address],
     async () => {
-      const url = `${baseApiUrl}/quicksilver/interchainstaking/v1/zones/${chainId}/withdrawal_records/${address}`;
+      const url = `${local_chain.get(env)?.rest[0]}/quicksilver/interchainstaking/v1/zones/${chainId}/withdrawal_records/${address}`;
       const response = await axios.get<WithdrawalsResponse>(url);
       return response.data; 
     },
@@ -732,7 +678,7 @@ export function useZonesData(networks: { chainId: string }[]) {
     queries: networks.map(({ chainId }) => ({
       queryKey: ['zone', chainId],
       queryFn: async () => {
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_QUICKSILVER_API}/quicksilver/interchainstaking/v1/zones`);
+        const response = await axios.get(`${local_chain.get(env)?.rest[0]}/quicksilver/interchainstaking/v1/zones`);
         const zones: any[] = response.data.zones; 
         const apiZone = zones.find(z => z.chain_id === chainId);
         if (!apiZone) {
@@ -751,7 +697,7 @@ export const useZoneQuery = (chainId: string, liveNetworks?: string[]) => {
     ['zone', chainId],
     async () => {
       
-      const res = await axios.get(`${process.env.NEXT_PUBLIC_QUICKSILVER_API}/quicksilver/interchainstaking/v1/zones`);
+      const res = await axios.get(`${local_chain.get(env)?.rest[0]}/quicksilver/interchainstaking/v1/zones`);
       const { zones } = res.data;
 
       if (!zones || zones.length === 0) {
@@ -808,7 +754,7 @@ export const useRedemptionRatesQuery = () => {
   const query = useQuery(
     ['zones'],
     async () => {
-      const res = await axios.get(`${process.env.NEXT_PUBLIC_QUICKSILVER_API}/quicksilver/interchainstaking/v1/zones`);
+      const res = await axios.get(`${local_chain.get(env)?.rest[0]}/quicksilver/interchainstaking/v1/zones`);
       const { zones } = res.data;
 
       if (!zones || zones.length === 0) {

@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"encoding/base64"
 	"errors"
 	"fmt"
 
@@ -35,7 +36,7 @@ func (k msgServer) SubmitClaim(goCtx context.Context, msg *types.MsgSubmitClaim)
 	// fetch zone
 	zone, ok := k.icsKeeper.GetZone(ctx, msg.Zone)
 	if !ok {
-		return nil, fmt.Errorf("invalid zone, chain id \"%s\" not found", msg.Zone)
+		return nil, fmt.Errorf("invalid zone, chain id %q not found", msg.Zone)
 	}
 	var pd types.ProtocolData
 	pd, ok = k.GetProtocolData(ctx, types.ProtocolDataTypeConnection, msg.SrcZone)
@@ -97,7 +98,7 @@ func (k msgServer) SubmitClaim(goCtx context.Context, msg *types.MsgSubmitClaim)
 	}
 
 	// if we get here all data was validated; verifyClaim will write the claim to the correct store.
-	if mod, ok := k.prSubmodules[msg.ClaimType]; ok {
+	if mod, ok := k.PrSubmodules[msg.ClaimType]; ok {
 		// vertifyClaim needs to return the amount!
 		amount, err := mod.ValidateClaim(ctx, k.Keeper, msg)
 		if err != nil {
@@ -123,7 +124,11 @@ func (k msgServer) GovRemoveProtocolData(goCtx context.Context, msg *types.MsgGo
 			)
 	}
 
-	k.Keeper.DeleteProtocolData(ctx, []byte(msg.Key))
+	key, err := base64.StdEncoding.DecodeString(msg.Key)
+	if err != nil {
+		return nil, fmt.Errorf("error base64 decoding key, got %w", err)
+	}
+	k.Keeper.DeleteProtocolData(ctx, key)
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(

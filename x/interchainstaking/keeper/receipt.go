@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"
+	"github.com/cosmos/cosmos-sdk/x/authz"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	icatypes "github.com/cosmos/ibc-go/v6/modules/apps/27-interchain-accounts/types"
@@ -20,12 +21,14 @@ import (
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 	minttypes "github.com/quicksilver-zone/quicksilver/x/mint/types"
+	prtypes "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 )
 
 const (
 	Unset           = "unset"
 	ICAMsgChunkSize = 5
 	ICATimeout      = time.Hour * 6
+	// AuthzAutoClaimAddress = "quick1psevptdp90jad76zt9y9x2nga686hutgmasmwd"
 )
 
 func (k *Keeper) HandleReceiptTransaction(ctx sdk.Context, txn *tx.Tx, hash string, zone types.Zone) error {
@@ -97,6 +100,7 @@ func (k *Keeper) HandleReceiptTransaction(ctx sdk.Context, txn *tx.Tx, hash stri
 		memoIntent    types.ValidatorIntents
 		memoFields    types.MemoFields
 		memoRTS       bool
+		memoAutoClaim bool
 		mappedAddress []byte
 	)
 
@@ -110,6 +114,7 @@ func (k *Keeper) HandleReceiptTransaction(ctx sdk.Context, txn *tx.Tx, hash stri
 		memoRTS = memoFields.RTS()
 		mappedAddress, _ = memoFields.AccountMap()
 		memoIntent, _ = memoFields.Intent(assets, &zone)
+		memoAutoClaim = memoFields.AutoClaim()
 	}
 
 	// update state
@@ -124,6 +129,12 @@ func (k *Keeper) HandleReceiptTransaction(ctx sdk.Context, txn *tx.Tx, hash stri
 	if err := k.TransferToDelegate(ctx, &zone, assets, hash); err != nil {
 		k.Logger(ctx).Error("unable to transfer to delegate. Ignoring.", "senderAddress", senderAddress, "zone", zone.ChainId, "err", err)
 		return fmt.Errorf("unable to transfer to delegate. Ignoring. senderAddress=%q zone=%q err: %w", senderAddress, zone.ChainId, err)
+	}
+	if memoAutoClaim {
+		if err := k.HandleAutoClaim(ctx, senderAccAddress); err != nil {
+			k.Logger(ctx).Error("unable to handle auto claim. Ignoring.", "senderAddress", senderAddress, "zone", zone.ChainId, "err", err)
+			return fmt.Errorf("unable to handle auto claim. Ignoring. senderAddress=%q zone=%q err: %w", senderAddress, zone.ChainId, err)
+		}
 	}
 
 	// create receipt
@@ -167,6 +178,22 @@ func (k *Keeper) SendTokenIBC(ctx sdk.Context, senderAccAddress sdk.AccAddress, 
 	return err
 }
 
+func (k *Keeper) HandleAutoClaim(ctx sdk.Context, senderAddress sdk.AccAddress) error {
+	authzAutoClaimAddress := k.GetAuthzAutoClaimAddress(ctx)
+	if authzAutoClaimAddress == "" {
+		return errors.New("no auto claim address set")
+	}
+
+	msgGrant, err := authz.NewMsgGrant(senderAddress, addressutils.MustAccAddressFromBech32(authzAutoClaimAddress, "quick"), &authz.GenericAuthorization{
+		Msg: sdk.MsgTypeURL(&prtypes.MsgSubmitClaim{}),
+	}, nil)
+	if err != nil {
+		return err
+	}
+	_, err = k.AuthzKeeper.Grant(ctx, msgGrant)
+	return err
+}
+
 // MintAndSendQAsset mints qAssets based on the native asset redemption rate.  Tokens are then transferred to the given user.
 // The function handles the following cases:
 //  1. If the zone is labeled "return to sender" or the Tx memo contains "return to sender" flag:
@@ -179,7 +206,7 @@ func (k *Keeper) SendTokenIBC(ctx sdk.Context, senderAccAddress sdk.AccAddress, 
 //     - Mint QAssets, set new mapping for the mapped account in the keeper, and send to corresponding mapped account.
 //  5. If the zone is 118 and no other flags are set:
 //     - Mint QAssets and transfer to send to msg creator.
-func (k *Keeper) MintAndSendQAsset(ctx sdk.Context, sender sdk.AccAddress, senderAddress string, zone *types.Zone, assets sdk.Coins, memoRTS bool, mappedAddress []byte) error {
+func (k *Keeper) MintAndSendQAsset(ctx sdk.Context, sender sdk.AccAddress, senderAddress string, zone *types.Zone, assets sdk.Coins, memoRTS bool, mappedAddress sdk.AccAddress) error {
 	if zone.RedemptionRate.IsZero() {
 		return errors.New("zero redemption rate")
 	}
@@ -218,7 +245,7 @@ func (k *Keeper) MintAndSendQAsset(ctx sdk.Context, sender sdk.AccAddress, sende
 	case mappedAddress != nil:
 		// set mapped account
 		if setMappedAddress {
-			k.SetAddressMapPair(ctx, sender, mappedAddress, zone.ChainId)
+			k.SetAddressMapPair(ctx, mappedAddress, sender, zone.ChainId)
 		}
 
 		// set send to mapped account

@@ -15,13 +15,11 @@ import {
   StatNumber,
   Spinner,
 } from '@chakra-ui/react';
-import { StdFee } from '@cosmjs/amino';
 import styled from '@emotion/styled';
-import chains from 'chain-registry';
-import { assets } from 'chain-registry';
 import { cosmos } from 'quicksilverjs';
 import React, { useEffect, useState } from 'react';
 
+import { Chain } from '@/config';
 import { useTx } from '@/hooks';
 import { useFeeEstimation } from '@/hooks/useFeeEstimation';
 import { shiftDigits } from '@/utils';
@@ -67,13 +65,7 @@ interface StakingModalProps {
   onClose: () => void;
   children?: React.ReactNode;
   selectedValidator: SelectedValidator;
-  selectedOption?: {
-    name: string;
-    value: string;
-    logo: string;
-    chainName: string;
-    chainId: string;
-  };
+  selectedOption?: Chain;
   address: string;
   isTokenized: boolean;
   denom: string;
@@ -98,18 +90,8 @@ export const RevertSharesProcessModal: React.FC<StakingModalProps> = ({
   const [isSigning, setIsSigning] = useState<boolean>(false);
   const [isError, setIsError] = useState<boolean>(false);
 
-  let newChainName: string | undefined;
-  if (selectedOption?.chainId === 'provider') {
-    newChainName = 'rsprovidertestnet';
-  } else if (selectedOption?.chainId === 'elgafar-1') {
-    newChainName = 'stargazetestnet';
-  } else if (selectedOption?.chainId === 'osmo-test-5') {
-    newChainName = 'osmosistestnet';
-  } else if (selectedOption?.chainId === 'regen-redwood-1') {
-    newChainName = 'regen';
-  } else {
-    newChainName = selectedOption?.chainName;
-  }
+  const newChainName = selectedOption?.chain_name;
+
 
   const labels = ['Revert Shares', `Receive Tokens`];
 
@@ -143,13 +125,12 @@ export const RevertSharesProcessModal: React.FC<StakingModalProps> = ({
       amount: selectedValidator.tokenAmount.toString(),
     },
   });
-  
 
   const handleRevertShares = async (event: React.MouseEvent) => {
     event.preventDefault();
     setIsSigning(true);
 
-    const fee = await estimateFee(address, [msg])
+    const fee = await estimateFee(address, [msg]);
 
     try {
       await tx([msg], {
@@ -183,7 +164,7 @@ export const RevertSharesProcessModal: React.FC<StakingModalProps> = ({
 
                   <StatNumber display={{ base: 'none', md: 'block' }} color="white">
                     {shiftDigits(selectedValidator.tokenAmount, -6)}&nbsp;
-                    {selectedOption?.value}
+                    {selectedOption?.major_denom.toUpperCase()}
                   </StatNumber>
                 </Stat>
                 {[1, 2].map((circleStep, index) => (
@@ -240,7 +221,7 @@ export const RevertSharesProcessModal: React.FC<StakingModalProps> = ({
                       You are about to revert your shares back to tokens.
                     </Text>
                     <Text mt={2} textAlign={'left'} fontWeight={'light'} fontSize="lg" color="white">
-                      Reverting&nbsp;&nbsp;{shiftDigits(selectedValidator.tokenAmount, -6)}&nbsp; {selectedOption?.value}
+                      Reverting&nbsp;&nbsp;{shiftDigits(selectedValidator.tokenAmount, -(selectedOption?.exponent ?? 6))}&nbsp; {selectedOption?.major_denom.toUpperCase()}
                     </Text>
                   </Flex>
 

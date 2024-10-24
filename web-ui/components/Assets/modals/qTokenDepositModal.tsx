@@ -18,7 +18,6 @@ import {
   InputGroup,
   InputRightElement,
 } from '@chakra-ui/react';
-import { StdFee, coins } from '@cosmjs/stargate';
 import { ChainName } from '@cosmos-kit/core';
 import { useChain, useManager } from '@cosmos-kit/react';
 import BigNumber from 'bignumber.js';
@@ -30,7 +29,7 @@ import { handleSelectChainDropdown, ChainOption, ChooseChainInfo } from '@/compo
 import { useTx } from '@/hooks';
 import { useFeeEstimation } from '@/hooks/useFeeEstimation';
 import { ibcDenomDepositMapping } from '@/state/chains/prod';
-import { getCoin, getExponent, getIbcInfo } from '@/utils';
+import { getIbcInfo } from '@/utils';
 
 export interface QDepositModalProps {
   token: string;

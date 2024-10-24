@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strconv"
 
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -11,7 +12,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
-	concentratedliquidity "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/concentrated-liquidity"
+	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/concentrated-liquidity/model"
 	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/gamm"
 	umeetypes "github.com/quicksilver-zone/quicksilver/third-party-chains/umee-types/leverage/types"
 	icqtypes "github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
@@ -138,18 +139,12 @@ func OsmosisPoolUpdateCallback(ctx sdk.Context, k *Keeper, response []byte, quer
 	}
 
 	poolID := sdk.BigEndianToUint64(query.Request[1:])
-	data, ok := k.GetProtocolData(ctx, types.ProtocolDataTypeOsmosisPool, fmt.Sprintf("%d", poolID))
-	if !ok {
-		return fmt.Errorf("unable to find protocol data for osmosispools/%d", poolID)
-	}
-	ipool, err := types.UnmarshalProtocolData(types.ProtocolDataTypeOsmosisPool, data.Data)
+	key := fmt.Sprintf("%d", poolID)
+	data, pool, err := GetAndUnmarshalProtocolData[*types.OsmosisPoolProtocolData](ctx, k, key, types.ProtocolDataTypeOsmosisPool)
 	if err != nil {
 		return err
 	}
-	pool, ok := ipool.(*types.OsmosisPoolProtocolData)
-	if !ok {
-		return fmt.Errorf("unable to unmarshal protocol data for osmosispools/%d", poolID)
-	}
+
 	pool.PoolData, err = json.Marshal(pd)
 	if err != nil {
 		return err
@@ -165,13 +160,13 @@ func OsmosisPoolUpdateCallback(ctx sdk.Context, k *Keeper, response []byte, quer
 }
 
 func OsmosisClPoolUpdateCallback(ctx sdk.Context, k *Keeper, response []byte, query icqtypes.Query) error {
-	var pd concentratedliquidity.ConcentratedPoolExtension
-	if err := k.cdc.UnmarshalInterface(response, &pd); err != nil {
+	var pd model.Pool
+	if err := k.cdc.Unmarshal(response, &pd); err != nil {
 		return err
 	}
 
-	// check query.Request is at least 9 bytes in length. (0x02 + 8 bytes for uint64)
-	if len(query.Request) < 9 {
+	// check query.Request is at least 2 bytes - 0x03 + poolID
+	if len(query.Request) < 2 {
 		return errors.New("query request not sufficient length")
 	}
 	// assert first character is 0x03 as expected (cl pool prefix)
@@ -179,19 +174,16 @@ func OsmosisClPoolUpdateCallback(ctx sdk.Context, k *Keeper, response []byte, qu
 		return errors.New("query request has unexpected prefix")
 	}
 
-	poolID := sdk.BigEndianToUint64(query.Request[1:])
-	data, ok := k.GetProtocolData(ctx, types.ProtocolDataTypeOsmosisCLPool, fmt.Sprintf("%d", poolID))
-	if !ok {
-		return fmt.Errorf("unable to find protocol data for osmosisclpools/%d", poolID)
-	}
-	ipool, err := types.UnmarshalProtocolData(types.ProtocolDataTypeOsmosisCLPool, data.Data)
+	poolID, err := strconv.ParseInt(string(query.Request[1:]), 10, 64)
 	if err != nil {
 		return err
 	}
-	pool, ok := ipool.(*types.OsmosisClPoolProtocolData)
-	if !ok {
-		return fmt.Errorf("unable to unmarshal protocol data for osmosisclpools/%d", poolID)
+
+	data, pool, err := GetAndUnmarshalProtocolData[*types.OsmosisClPoolProtocolData](ctx, k, fmt.Sprintf("%d", poolID), types.ProtocolDataTypeOsmosisCLPool)
+	if err != nil {
+		return err
 	}
+
 	pool.PoolData, err = json.Marshal(pd)
 	if err != nil {
 		return err
@@ -217,18 +209,11 @@ func UmeeReservesUpdateCallback(ctx sdk.Context, k *Keeper, response []byte, que
 	}
 
 	denom := umeetypes.DenomFromKey(query.Request, umeetypes.KeyPrefixReserveAmount)
-	data, ok := k.GetProtocolData(ctx, types.ProtocolDataTypeUmeeReserves, denom)
-	if !ok {
-		return fmt.Errorf("unable to find protocol data for umeereserves/%s", denom)
-	}
-	ireserves, err := types.UnmarshalProtocolData(types.ProtocolDataTypeUmeeReserves, data.Data)
+	data, reserves, err := GetAndUnmarshalProtocolData[*types.UmeeReservesProtocolData](ctx, k, denom, types.ProtocolDataTypeUmeeReserves)
 	if err != nil {
 		return err
 	}
-	reserves, ok := ireserves.(*types.UmeeReservesProtocolData)
-	if !ok {
-		return fmt.Errorf("unable to unmarshal protocol data for umeereserves/%s", denom)
-	}
+
 	reserves.Data, err = json.Marshal(reserveAmount)
 	if err != nil {
 		return err
@@ -254,18 +239,11 @@ func UmeeTotalBorrowsUpdateCallback(ctx sdk.Context, k *Keeper, response []byte,
 	}
 
 	denom := umeetypes.DenomFromKey(query.Request, umeetypes.KeyPrefixAdjustedTotalBorrow)
-	data, ok := k.GetProtocolData(ctx, types.ProtocolDataTypeUmeeTotalBorrows, denom)
-	if !ok {
-		return fmt.Errorf("unable to find protocol data for umee-types total borrows/%s", denom)
-	}
-	iborrows, err := types.UnmarshalProtocolData(types.ProtocolDataTypeUmeeTotalBorrows, data.Data)
+	data, borrows, err := GetAndUnmarshalProtocolData[*types.UmeeTotalBorrowsProtocolData](ctx, k, denom, types.ProtocolDataTypeUmeeTotalBorrows)
 	if err != nil {
 		return err
 	}
-	borrows, ok := iborrows.(*types.UmeeTotalBorrowsProtocolData)
-	if !ok {
-		return fmt.Errorf("unable to unmarshal protocol data for umee-types total borrows/%s", denom)
-	}
+
 	borrows.Data, err = json.Marshal(totalBorrows)
 	if err != nil {
 		return err
@@ -291,18 +269,11 @@ func UmeeInterestScalarUpdateCallback(ctx sdk.Context, k *Keeper, response []byt
 	}
 
 	denom := umeetypes.DenomFromKey(query.Request, umeetypes.KeyPrefixInterestScalar)
-	data, ok := k.GetProtocolData(ctx, types.ProtocolDataTypeUmeeInterestScalar, denom)
-	if !ok {
-		return fmt.Errorf("unable to find protocol data for interestscalar/%s", denom)
-	}
-	iinterest, err := types.UnmarshalProtocolData(types.ProtocolDataTypeUmeeInterestScalar, data.Data)
+	data, interest, err := GetAndUnmarshalProtocolData[*types.UmeeInterestScalarProtocolData](ctx, k, denom, types.ProtocolDataTypeUmeeInterestScalar)
 	if err != nil {
 		return err
 	}
-	interest, ok := iinterest.(*types.UmeeInterestScalarProtocolData)
-	if !ok {
-		return fmt.Errorf("unable to unmarshal protocol data for interestscalar/%s", denom)
-	}
+
 	interest.Data, err = json.Marshal(interestScalar)
 	if err != nil {
 		return err
@@ -328,17 +299,9 @@ func UmeeUTokenSupplyUpdateCallback(ctx sdk.Context, k *Keeper, response []byte,
 	}
 
 	denom := umeetypes.DenomFromKey(query.Request, umeetypes.KeyPrefixUtokenSupply)
-	data, ok := k.GetProtocolData(ctx, types.ProtocolDataTypeUmeeUTokenSupply, denom)
-	if !ok {
-		return fmt.Errorf("unable to find protocol data for umee-types utoken supply/%s", denom)
-	}
-	isupply, err := types.UnmarshalProtocolData(types.ProtocolDataTypeUmeeUTokenSupply, data.Data)
+	data, supply, err := GetAndUnmarshalProtocolData[*types.UmeeUTokenSupplyProtocolData](ctx, k, denom, types.ProtocolDataTypeUmeeUTokenSupply)
 	if err != nil {
 		return err
-	}
-	supply, ok := isupply.(*types.UmeeUTokenSupplyProtocolData)
-	if !ok {
-		return fmt.Errorf("unable to unmarshal protocol data for umee-types utoken supply/%s", denom)
 	}
 	supply.Data, err = json.Marshal(supplyAmount)
 	if err != nil {
@@ -372,17 +335,9 @@ func UmeeLeverageModuleBalanceUpdateCallback(ctx sdk.Context, k *Keeper, respons
 	}
 	balanceAmount := balanceCoin.Amount
 
-	data, ok := k.GetProtocolData(ctx, types.ProtocolDataTypeUmeeLeverageModuleBalance, denom)
-	if !ok {
-		return fmt.Errorf("unable to find protocol data for umee-types leverage module/%s", denom)
-	}
-	ibalance, err := types.UnmarshalProtocolData(types.ProtocolDataTypeUmeeLeverageModuleBalance, data.Data)
+	data, balance, err := GetAndUnmarshalProtocolData[*types.UmeeLeverageModuleBalanceProtocolData](ctx, k, denom, types.ProtocolDataTypeUmeeLeverageModuleBalance)
 	if err != nil {
 		return err
-	}
-	balance, ok := ibalance.(*types.UmeeLeverageModuleBalanceProtocolData)
-	if !ok {
-		return fmt.Errorf("unable to unmarshal protocol data for umee-types leverage module/%s", denom)
 	}
 	balance.Data, err = json.Marshal(balanceAmount)
 	if err != nil {
@@ -400,14 +355,8 @@ func UmeeLeverageModuleBalanceUpdateCallback(ctx sdk.Context, k *Keeper, respons
 
 // SetEpochBlockCallback records the block height of the registered zone at the epoch boundary.
 func SetEpochBlockCallback(ctx sdk.Context, k *Keeper, args []byte, query icqtypes.Query) error {
-	data, ok := k.GetProtocolData(ctx, types.ProtocolDataTypeConnection, query.ChainId)
-	if !ok {
-		return fmt.Errorf("unable to find protocol data for connection/%s", query.ChainId)
-	}
 	k.Logger(ctx).Debug("epoch callback called")
-	iConnectionData, err := types.UnmarshalProtocolData(types.ProtocolDataTypeConnection, data.Data)
-	connectionData, _ := iConnectionData.(*types.ConnectionProtocolData)
-
+	data, connectionData, err := GetAndUnmarshalProtocolData[*types.ConnectionProtocolData](ctx, k, query.ChainId, types.ProtocolDataTypeConnection)
 	if err != nil {
 		return err
 	}

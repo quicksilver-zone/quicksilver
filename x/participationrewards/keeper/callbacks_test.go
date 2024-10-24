@@ -1,9 +1,12 @@
 package keeper_test
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"strings"
+
+	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -11,14 +14,133 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
+	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/concentrated-liquidity/model"
 	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/gamm"
+	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/osmomath"
 	leveragetypes "github.com/quicksilver-zone/quicksilver/third-party-chains/umee-types/leverage/types"
+	cmtypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
 	icqkeeper "github.com/quicksilver-zone/quicksilver/x/interchainquery/keeper"
 	"github.com/quicksilver-zone/quicksilver/x/participationrewards/keeper"
 	"github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 )
 
 var PoolCoinDenom = "pool1"
+
+func (suite *KeeperTestSuite) TestOsmosisPoolUpdateCallback() {
+	suite.SetupTest()
+
+	// osmosis test pool
+	suite.addProtocolData(
+		types.ProtocolDataTypeOsmosisPool,
+		[]byte(fmt.Sprintf(
+			"{\"poolid\":%d,\"poolname\":%q,\"pooltype\":\"stableswap\",\"denoms\":{%q:{\"chainid\": %q, \"denom\":%q}, %q:{\"chainid\": %q, \"denom\":%q}}}",
+			944,
+			"atom/qatom",
+			"ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2",
+			"cosmoshub-4",
+			"uatom",
+			"ibc/FA602364BEC305A696CBDF987058E99D8B479F0318E47314C49173E8838C5BAC",
+			"cosmoshub-4",
+			"uqatom",
+		)),
+	)
+
+	ctx := suite.chainA.GetContext()
+	app := suite.GetQuicksilverApp(suite.chainA)
+	prk := app.ParticipationRewardsKeeper
+
+	prk.PrSubmodules[cmtypes.ClaimTypeOsmosisPool].Hooks(ctx, prk)
+
+	osm := &keeper.OsmosisModule{}
+	qid := icqkeeper.GenerateQueryHash("connection-77002", "osmosis-1", "store/gamm/key", osm.GetKeyPrefixPools(944), types.ModuleName, keeper.OsmosisPoolUpdateCallbackID)
+
+	query, found := prk.IcqKeeper.GetQuery(ctx, qid)
+	suite.True(found, "qid: %s", qid)
+
+	resp, err := base64.StdEncoding.DecodeString("CjAvb3Ntb3Npcy5nYW1tLnBvb2xtb2RlbHMuc3RhYmxlc3dhcC52MWJldGExLlBvb2wS7QIKP29zbW8xYXdyMzltYzJocmt0OGdxOGd0Mzg4MnJ1NDBheTQ1azhhM3lnNjlueXlwcWU5ZzByeXljczY2bGhraBCwBxoVChAzMDAwMDAwMDAwMDAwMDAwEgEwIgQxNjhoKicKDWdhbW0vcG9vbC85NDQSFjMyNzgzMDY2NTQ2MjI2OTAzNDg3OTIyUwpEaWJjLzI3Mzk0RkIwOTJEMkVDQ0Q1NjEyM0M3NEYzNkU0QzFGOTI2MDAxQ0VBREE5Q0E5N0VBNjIyQjI1RjQxRTVFQjISCzI4MDUyMzMzNjEyMlMKRGliYy9GQTYwMjM2NEJFQzMwNUE2OTZDQkRGOTg3MDU4RTk5RDhCNDc5RjAzMThFNDczMTRDNDkxNzNFODgzOEM1QkFDEgszMzUyMjgzNzU2MjoK+NHZzgSAlOvcA0Irb3NtbzE2eDAzd2NwMzdreDVlOGVoY2tqeHZ3Y2drOWowY3FuaG04bTN5eQ==")
+	suite.NoError(err)
+
+	var pdi gamm.CFMMPoolI
+	err = prk.GetCodec().UnmarshalInterface(resp, &pdi)
+	suite.NoError(err)
+
+	err = keeper.OsmosisPoolUpdateCallback(
+		ctx,
+		prk,
+		resp,
+		query,
+	)
+
+	suite.NoError(err)
+
+	_, pooldata, err := keeper.GetAndUnmarshalProtocolData[*types.OsmosisPoolProtocolData](ctx, prk, "944", types.ProtocolDataTypeOsmosisPool)
+	suite.NoError(err)
+
+	pool, err := pooldata.GetPool()
+	suite.NoError(err)
+
+	liq := pool.GetTotalPoolLiquidity(ctx)
+	suite.Equal(liq.AmountOf("ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2"), math.NewInt(28052333612))
+	suite.Equal(liq.AmountOf("ibc/FA602364BEC305A696CBDF987058E99D8B479F0318E47314C49173E8838C5BAC"), math.NewInt(33522837562))
+}
+
+func (suite *KeeperTestSuite) TestOsmosisClPoolUpdateCallback() {
+	suite.SetupTest()
+
+	// osmosis test pool
+	suite.addProtocolData(
+		types.ProtocolDataTypeOsmosisCLPool,
+		[]byte(fmt.Sprintf(
+			"{\"poolid\":%d,\"poolname\":%q,\"pooltype\":\"concentrated-liquidity\",\"denoms\":{%q:{\"chainid\": %q, \"denom\":%q}, %q:{\"chainid\": %q, \"denom\":%q}}}",
+			1089,
+			"atom/qatom",
+			"ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2",
+			"cosmoshub-4",
+			"uatom",
+			"ibc/FA602364BEC305A696CBDF987058E99D8B479F0318E47314C49173E8838C5BAC",
+			"cosmoshub-4",
+			"uqatom",
+		)),
+	)
+
+	ctx := suite.chainA.GetContext()
+	app := suite.GetQuicksilverApp(suite.chainA)
+	prk := app.ParticipationRewardsKeeper
+
+	prk.PrSubmodules[cmtypes.ClaimTypeOsmosisCLPool].Hooks(ctx, prk)
+
+	osm := &keeper.OsmosisClModule{}
+	qid := icqkeeper.GenerateQueryHash("connection-77002", "osmosis-1", "store/concentratedliquidity/key", osm.KeyPool(1089), types.ModuleName, keeper.OsmosisClPoolUpdateCallbackID)
+
+	query, found := prk.IcqKeeper.GetQuery(ctx, qid)
+	suite.True(found, "qid: %s", qid)
+
+	resp, err := base64.StdEncoding.DecodeString("Cj9vc21vMXFseXVubm1zemx2ZTl6NWM5Zzg1dTJwc3YzMGdzdmRmN3Y5cHJ5N3BndG5kbWZmZWo2ZnMydGt3MDQSP29zbW8xMnlmNHZrcHY1ZjdtcHpwMzU4Y2o5YXM5am1hMzdlcnJxZzNtdHY2dGNrZWhoZ3N2YXN2cXU2cG5sZho/b3NtbzFha3ZrbHRxOGdyeHZtdGRrMDM0cTljNjRwaG5jd2Y4NzcydXA3M3F2NmhueWhncnc2YzRzeHdqczJzILUMKhozMDA5NTY1MDg0MjI0MTI5Nzk1MDUyODQ5NTJEaWJjL0ZBNjAyMzY0QkVDMzA1QTY5NkNCREY5ODcwNThFOTlEOEI0NzlGMDMxOEU0NzMxNEM0OTE3M0U4ODM4QzVCQUM6RGliYy8yNzM5NEZCMDkyRDJFQ0NENTYxMjNDNzRGMzZFNEMxRjkyNjAwMUNFQURBOUNBOTdFQTYyMkIyNUY0MUU1RUIyQiUxMDk4ODAwOTE3ODQxODM4MDUzMTIyMDE3MTU2NTE5NzI0NDE2SIPUDFBkWPr//////////wFiDzUwMDAwMDAwMDAwMDAwMGoLCI6xzLAGEIC5s3A=")
+	suite.NoError(err)
+
+	var pdi model.Pool
+	err = prk.GetCodec().Unmarshal(resp, &pdi)
+	suite.NoError(err)
+
+	err = keeper.OsmosisClPoolUpdateCallback(
+		ctx,
+		prk,
+		resp,
+		query,
+	)
+
+	suite.NoError(err)
+
+	_, pooldata, err := keeper.GetAndUnmarshalProtocolData[*types.OsmosisClPoolProtocolData](ctx, prk, "1089", types.ProtocolDataTypeOsmosisCLPool)
+	suite.NoError(err)
+
+	pool, err := pooldata.GetPool()
+	suite.NoError(err)
+
+	liq, err := pool.SpotPrice(ctx, "ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2", "ibc/FA602364BEC305A696CBDF987058E99D8B479F0318E47314C49173E8838C5BAC")
+	suite.NoError(err)
+	liq.Equal(osmomath.NewBigDec(1))
+}
 
 func (suite *KeeperTestSuite) executeOsmosisPoolUpdateCallback() {
 	prk := suite.GetQuicksilverApp(suite.chainA).ParticipationRewardsKeeper
@@ -31,6 +153,7 @@ func (suite *KeeperTestSuite) executeOsmosisPoolUpdateCallback() {
 	suite.True(found, "qid: %s", qid)
 
 	var err error
+	// resp := []byte{`{"pool":{"@type":"/osmosis.concentratedliquidity.v1beta1.Pool","address":"osmo1x667pejfeygrp9x0725yuxwlg6cc83rv0ehswsg43wresaskxk2s0jwsej","current_sqrt_price":"1.132659465453955135474729197655764713","current_tick":"282917","current_tick_liquidity":"247410935830.646001002045074682","exponent_at_price_one":"-6","id":"1767","incentives_address":"osmo1mfnll4vtt8zk9afzupvm2ryh5xak00trlqshf05v2460sskqp97s452cem","last_liquidity_update":"2024-05-15T16:10:44.483047470Z","spread_factor":"0.000500000000000000","spread_rewards_address":"osmo14y9wf6hv9j5c5fxh54gx5fu43ute99n80nd5x2uzk6tspt7x2llq0h8pz4","tick_spacing":"100","token0":"ibc/79A676508A2ECA1021EDDC7BB9CF70CEEC9514C478DA526A5A8B3E78506C2206","token1":"ibc/1DCC8A6CB5689018431323953344A9F6CC4D0BFB261E88C9F7777372C10CD076"}}`}
 	resp := []byte{10, 26, 47, 111, 115, 109, 111, 115, 105, 115, 46, 103, 97, 109, 109, 46, 118, 49, 98, 101, 116, 97, 49, 46, 80, 111, 111, 108, 18, 202, 2, 10, 63, 111, 115, 109, 111, 49, 109, 119, 48, 97, 99, 54, 114, 119, 108, 112, 53, 114, 56, 119, 97, 112, 119, 107, 51, 122, 115, 54, 103, 50, 57, 104, 56, 102, 99, 115, 99, 120, 113, 97, 107, 100, 122, 119, 57, 101, 109, 107, 110, 101, 54, 99, 56, 119, 106, 112, 57, 113, 48, 116, 51, 118, 56, 116, 16, 1, 26, 6, 10, 1, 48, 18, 1, 48, 34, 4, 49, 54, 56, 104, 42, 43, 10, 11, 103, 97, 109, 109, 47, 112, 111, 111, 108, 47, 49, 18, 28, 49, 48, 48, 48, 48, 48, 48, 50, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 48, 48, 50, 94, 10, 80, 10, 68, 105, 98, 99, 47, 49, 53, 69, 57, 67, 53, 67, 70, 53, 57, 54, 57, 48, 56, 48, 53, 51, 57, 68, 66, 51, 57, 53, 70, 65, 55, 68, 57, 67, 48, 56, 54, 56, 50, 54, 53, 50, 49, 55, 69, 70, 67, 53, 50, 56, 52, 51, 51, 54, 55, 49, 65, 65, 70, 57, 66, 49, 57, 49, 50, 68, 49, 53, 57, 18, 8, 49, 48, 48, 48, 48, 48, 48, 51, 18, 10, 49, 48, 55, 51, 55, 52, 49, 56, 50, 52, 50, 94, 10, 80, 10, 68, 105, 98, 99, 47, 51, 48, 50, 48, 57, 50, 50, 66, 55, 53, 55, 54, 70, 67, 55, 53, 66, 66, 69, 48, 53, 55, 65, 48, 50, 57, 48, 65, 57, 65, 69, 69, 70, 70, 52, 56, 57, 66, 66, 49, 49, 49, 51, 69, 54, 69, 51, 54, 53, 67, 69, 52, 55, 50, 68, 52, 66, 70, 66, 55, 70, 70, 65, 51, 18, 8, 49, 48, 48, 48, 48, 48, 48, 51, 18, 10, 49, 48, 55, 51, 55, 52, 49, 56, 50, 52, 58, 10, 50, 49, 52, 55, 52, 56, 51, 54, 52, 56}
 	// respB64 := "Chovb3Ntb3Npcy5nYW1tLnYxYmV0YTEuUG9vbBLKAgo/b3NtbzFtdzBhYzZyd2xwNXI4d2Fwd2szenM2ZzI5aDhmY3NjeHFha2R6dzllbWtuZTZjOHdqcDlxMHQzdjh0EAEaBgoBMBIBMCIEMTY4aCorCgtnYW1tL3Bvb2wvMRIcMTAwMDAwMDI5OTk5OTk5OTk5OTk5OTk5OTkwMDJeClAKRGliYy8xNUU5QzVDRjU5NjkwODA1MzlEQjM5NUZBN0Q5QzA4NjgyNjUyMTdFRkM1Mjg0MzM2NzFBQUY5QjE5MTJEMTU5EggxMDAwMDAwMxIKMTA3Mzc0MTgyNDJeClAKRGliYy8zMDIwOTIyQjc1NzZGQzc1QkJFMDU3QTAyOTBBOUFFRUZGNDg5QkIxMTEzRTZFMzY1Q0U0NzJENEJGQjdGRkEzEggxMDAwMDAwMxIKMTA3Mzc0MTgyNDoKMjE0NzQ4MzY0OA=="
 	// resp, err := base64.StdEncoding.DecodeString(respB64)
@@ -63,12 +186,8 @@ func (suite *KeeperTestSuite) executeOsmosisPoolUpdateCallback() {
 		},
 	}
 
-	pd, found := prk.GetProtocolData(ctx, types.ProtocolDataTypeOsmosisPool, "1")
-	suite.True(found)
-
-	ioppd, err := types.UnmarshalProtocolData(types.ProtocolDataTypeOsmosisPool, pd.Data)
+	_, oppd, err := keeper.GetAndUnmarshalProtocolData[*types.OsmosisPoolProtocolData](ctx, prk, "1", types.ProtocolDataTypeOsmosisPool)
 	suite.NoError(err)
-	oppd := ioppd.(*types.OsmosisPoolProtocolData)
 	suite.Equal(want, oppd)
 }
 
@@ -186,12 +305,8 @@ func (suite *KeeperTestSuite) executeUmeeReservesUpdateCallback() {
 		},
 	}
 
-	pd, found := prk.GetProtocolData(ctx, types.ProtocolDataTypeUmeeReserves, umeeBaseDenom)
-	suite.True(found)
-
-	value, err := types.UnmarshalProtocolData(types.ProtocolDataTypeUmeeReserves, pd.Data)
+	_, result, err := keeper.GetAndUnmarshalProtocolData[*types.UmeeReservesProtocolData](ctx, prk, umeeBaseDenom, types.ProtocolDataTypeUmeeReserves)
 	suite.NoError(err)
-	result := value.(*types.UmeeReservesProtocolData)
 	suite.Equal(want, result)
 }
 
@@ -230,12 +345,8 @@ func (suite *KeeperTestSuite) executeUmeeLeverageModuleBalanceUpdateCallback() {
 		},
 	}
 
-	pd, found := prk.GetProtocolData(ctx, types.ProtocolDataTypeUmeeLeverageModuleBalance, umeeBaseDenom)
-	suite.True(found)
-
-	value, err := types.UnmarshalProtocolData(types.ProtocolDataTypeUmeeLeverageModuleBalance, pd.Data)
+	_, result, err := keeper.GetAndUnmarshalProtocolData[*types.UmeeLeverageModuleBalanceProtocolData](ctx, prk, umeeBaseDenom, types.ProtocolDataTypeUmeeLeverageModuleBalance)
 	suite.NoError(err)
-	result := value.(*types.UmeeLeverageModuleBalanceProtocolData)
 	suite.Equal(want, result)
 }
 
@@ -272,12 +383,8 @@ func (suite *KeeperTestSuite) executeUmeeUTokenSupplyUpdateCallback() {
 		},
 	}
 
-	pd, found := prk.GetProtocolData(ctx, types.ProtocolDataTypeUmeeUTokenSupply, leveragetypes.UTokenPrefix+umeeBaseDenom)
-	suite.True(found)
-
-	value, err := types.UnmarshalProtocolData(types.ProtocolDataTypeUmeeUTokenSupply, pd.Data)
+	_, result, err := keeper.GetAndUnmarshalProtocolData[*types.UmeeUTokenSupplyProtocolData](ctx, prk, leveragetypes.UTokenPrefix+umeeBaseDenom, types.ProtocolDataTypeUmeeUTokenSupply)
 	suite.NoError(err)
-	result := value.(*types.UmeeUTokenSupplyProtocolData)
 	suite.Equal(want, result)
 }
 
@@ -314,12 +421,8 @@ func (suite *KeeperTestSuite) executeUmeeTotalBorrowsUpdateCallback() {
 		},
 	}
 
-	pd, found := prk.GetProtocolData(ctx, types.ProtocolDataTypeUmeeTotalBorrows, umeeBaseDenom)
-	suite.True(found)
-
-	value, err := types.UnmarshalProtocolData(types.ProtocolDataTypeUmeeTotalBorrows, pd.Data)
+	_, result, err := keeper.GetAndUnmarshalProtocolData[*types.UmeeTotalBorrowsProtocolData](ctx, prk, umeeBaseDenom, types.ProtocolDataTypeUmeeTotalBorrows)
 	suite.NoError(err)
-	result := value.(*types.UmeeTotalBorrowsProtocolData)
 	suite.Equal(want, result)
 }
 
@@ -356,11 +459,7 @@ func (suite *KeeperTestSuite) executeUmeeInterestScalarUpdateCallback() {
 		},
 	}
 
-	pd, found := prk.GetProtocolData(ctx, types.ProtocolDataTypeUmeeInterestScalar, umeeBaseDenom)
-	suite.True(found)
-
-	value, err := types.UnmarshalProtocolData(types.ProtocolDataTypeUmeeInterestScalar, pd.Data)
+	_, result, err := keeper.GetAndUnmarshalProtocolData[*types.UmeeInterestScalarProtocolData](ctx, prk, umeeBaseDenom, types.ProtocolDataTypeUmeeInterestScalar)
 	suite.NoError(err)
-	result := value.(*types.UmeeInterestScalarProtocolData)
 	suite.Equal(want, result)
 }

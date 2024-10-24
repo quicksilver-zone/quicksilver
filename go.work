@@ -1,7 +1,8 @@
-go 1.22.2
+go 1.22.4
 
 use (
 	.
 	./icq-relayer
-	./test/interchaintest
 )
+
+replace github.com/tendermint/tendermint => github.com/cometbft/cometbft v0.34.33

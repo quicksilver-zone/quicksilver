@@ -70,11 +70,11 @@ const DefiTable = () => {
   const handleFilterClick = (filter: string) => {
     setActiveFilter(filter);
   };
-  const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' && window.innerWidth < 1274);
+  const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' && window.innerWidth < 991);
 
   useEffect(() => {
     const handleResize = () => {
-      setIsMobile(window.innerWidth < 1274);
+      setIsMobile(window.innerWidth < 991);
     };
 
     window.addEventListener('resize', handleResize);
@@ -183,67 +183,67 @@ const DefiTable = () => {
         <Table color={'white'} variant="simple">
           <Thead position="sticky">
             <Tr>
-              {!isMobile && <Th color={'complimentary.900'}>Asset Pair</Th>}
-              {!isMobile && (
-                <Th
-                  textAlign={'center'}
-                  color={'complimentary.900'}
-                  isNumeric
-                  onClick={() => handleSort('apy')}
-                  style={{ cursor: 'pointer' }}
-                >
-                  APY{' '}
-                  {sortColumn === 'apy' ? (
-                    sortOrder === 'asc' ? (
-                      <ChevronUpIcon
-                        _hover={{ color: 'complimentary.700', transform: 'scale(1.5)' }}
-                        _active={{ color: 'complimentary.500' }}
-                      />
-                    ) : (
-                      <ChevronDownIcon
-                        _hover={{ color: 'complimentary.700', transform: 'scale(1.5)' }}
-                        _active={{ color: 'complimentary.500' }}
-                      />
-                    )
-                  ) : (
-                    <ChevronDownIcon
-                      _hover={{ color: 'complimentary.700', transform: 'scale(1.5)' }}
-                      _active={{ color: 'complimentary.500' }}
-                    />
-                  )}
-                </Th>
-              )}
-              {!isMobile && (
-                <Th
-                  textAlign={'center'}
-                  color={'complimentary.900'}
-                  isNumeric
-                  style={{ cursor: 'pointer' }}
-                  onClick={() => handleSort('tvl')}
-                >
-                  TVL{' '}
-                  {sortColumn === 'tvl' ? (
-                    sortOrder === 'asc' ? (
-                      <ChevronUpIcon
-                        _hover={{ color: 'complimentary.700', transform: 'scale(1.5)' }}
-                        _active={{ color: 'complimentary.500' }}
-                      />
-                    ) : (
-                      <ChevronDownIcon
-                        _hover={{ color: 'complimentary.700', transform: 'scale(1.5)' }}
-                        _active={{ color: 'complimentary.500' }}
-                      />
-                    )
-                  ) : (
-                    <ChevronDownIcon
-                      _hover={{ color: 'complimentary.700', transform: 'scale(1.5)' }}
-                      _active={{ color: 'complimentary.500' }}
-                    />
-                  )}
-                </Th>
-              )}
+              <Th color={'complimentary.900'}>Asset Pair</Th>
 
-              <Th textAlign={'center'} color={'complimentary.900'}>
+              <Th
+                display={{ base: 'none', md: 'table-cell' }}
+                textAlign={'center'}
+                color={'complimentary.900'}
+                isNumeric
+                onClick={() => handleSort('apy')}
+                style={{ cursor: 'pointer' }}
+              >
+                APY{' '}
+                {sortColumn === 'apy' ? (
+                  sortOrder === 'asc' ? (
+                    <ChevronUpIcon
+                      _hover={{ color: 'complimentary.700', transform: 'scale(1.5)' }}
+                      _active={{ color: 'complimentary.500' }}
+                    />
+                  ) : (
+                    <ChevronDownIcon
+                      _hover={{ color: 'complimentary.700', transform: 'scale(1.5)' }}
+                      _active={{ color: 'complimentary.500' }}
+                    />
+                  )
+                ) : (
+                  <ChevronDownIcon
+                    _hover={{ color: 'complimentary.700', transform: 'scale(1.5)' }}
+                    _active={{ color: 'complimentary.500' }}
+                  />
+                )}
+              </Th>
+
+              <Th
+                display={{ base: 'none', md: 'table-cell' }}
+                textAlign={'center'}
+                color={'complimentary.900'}
+                isNumeric
+                style={{ cursor: 'pointer' }}
+                onClick={() => handleSort('tvl')}
+              >
+                TVL{' '}
+                {sortColumn === 'tvl' ? (
+                  sortOrder === 'asc' ? (
+                    <ChevronUpIcon
+                      _hover={{ color: 'complimentary.700', transform: 'scale(1.5)' }}
+                      _active={{ color: 'complimentary.500' }}
+                    />
+                  ) : (
+                    <ChevronDownIcon
+                      _hover={{ color: 'complimentary.700', transform: 'scale(1.5)' }}
+                      _active={{ color: 'complimentary.500' }}
+                    />
+                  )
+                ) : (
+                  <ChevronDownIcon
+                    _hover={{ color: 'complimentary.700', transform: 'scale(1.5)' }}
+                    _active={{ color: 'complimentary.500' }}
+                  />
+                )}
+              </Th>
+
+              <Th display={{ base: 'none', md: 'table-cell' }} textAlign={'center'} color={'complimentary.900'}>
                 Provider
               </Th>
 
@@ -268,25 +268,27 @@ const DefiTable = () => {
             {defi &&
               sortedData.map((asset, index) => (
                 <Tr _even={{ bg: 'rgba(255, 128, 0, 0.1)' }} key={index} borderBottomColor={'transparent'}>
-                  {!isMobile && (
-                    <Td textAlign={'center'} borderBottomColor="transparent">
-                      <Flex align="center">
-                        <Text>{asset.assetPair}</Text>
-                      </Flex>
-                    </Td>
-                  )}
-                  {!isMobile && (
-                    <Td textAlign={'center'} borderBottom="0" borderBottomColor="transparent" isNumeric>
-                      {formatApy(asset.apy)}
-                    </Td>
-                  )}
-                  {!isMobile && (
-                    <Td textAlign={'center'} borderBottomColor="transparent" isNumeric>
-                      ${asset.tvl.toLocaleString()}
-                    </Td>
-                  )}
+                  <Td textAlign={'center'} borderBottomColor="transparent">
+                    <Flex align="center">
+                      <Text>{asset.assetPair}</Text>
+                    </Flex>
+                  </Td>
 
-                  <Td borderBottomColor="transparent">
+                  <Td
+                    display={{ base: 'none', md: 'table-cell' }}
+                    textAlign={'center'}
+                    borderBottom="0"
+                    borderBottomColor="transparent"
+                    isNumeric
+                  >
+                    {formatApy(asset.apy)}
+                  </Td>
+
+                  <Td display={{ base: 'none', md: 'table-cell' }} textAlign={'center'} borderBottomColor="transparent" isNumeric>
+                    ${asset.tvl.toLocaleString()}
+                  </Td>
+
+                  <Td display={{ base: 'none', md: 'table-cell' }} borderBottomColor="transparent">
                     {isProviderKey(asset.provider.toLowerCase()) && (
                       <Tooltip label={`${asset.provider}`}>
                         <Center>
