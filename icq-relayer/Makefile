@@ -12,10 +12,10 @@ build:
 	go build -ldflags '$(ldflags)' -o ../build
 
 docker:
-	docker build -f Dockerfile . -t quicksilverzone/interchain-queries:${VERSION}
+	docker build -f Dockerfile . -t quicksilverzone/interchain-queries:$(VERSION)
 
 dockerx:
-	docker buildx build --platform linux/amd64 -f Dockerfile . -t quicksilverzone/interchain-queries:${VERSION}
+	docker buildx build --platform linux/amd64 -f Dockerfile . -t quicksilverzone/interchain-queries:$(VERSION)
 
 docker-push:
-	docker push quicksilverzone/interchain-queries:${VERSION}
+	docker push quicksilverzone/interchain-queries:$(VERSION)
