@@ -193,7 +193,7 @@ func (suite *KeeperTestSuite) TestCalcTokenValues() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestCalcTokenValues2() {
+func (suite *KeeperTestSuite) TestCalcTokenValuesIncCLPools() {
 	qs := suite.GetQuicksilverApp(suite.chainA)
 	ctx := suite.chainA.GetContext()
 	osmoParams := types.OsmosisParamsProtocolData{
