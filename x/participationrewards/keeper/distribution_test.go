@@ -235,8 +235,26 @@ func (suite *KeeperTestSuite) TestCalcTokenValues2() {
 		qs.ParticipationRewardsKeeper.SetProtocolData(ctx, pool.GenerateKey(), &data)
 	}
 
-	_, err = qs.ParticipationRewardsKeeper.CalcTokenValues(ctx)
+	tvs, err := qs.ParticipationRewardsKeeper.CalcTokenValues(ctx)
 	suite.NoError(err)
+	expected := map[string]sdk.Dec{
+		"uatom":   sdk.MustNewDecFromStr("12.677691539450075775"),
+		"ujuno":   sdk.MustNewDecFromStr("0.252676989792765540"),
+		"uosmo":   sdk.MustNewDecFromStr("1.000000000000000000"),
+		"uqatom":  sdk.MustNewDecFromStr("16.637863612013346262"),
+		"uqosmo":  sdk.MustNewDecFromStr("1.201708298212189075"),
+		"uqregen": sdk.MustNewDecFromStr("0.069536169040918330"),
+		"uqsomm":  sdk.MustNewDecFromStr("0.073765486093994849"),
+		"uqstars": sdk.MustNewDecFromStr("0.029935583655522436"),
+		"uregen":  sdk.MustNewDecFromStr("0.052839431713034795"),
+		"usomm":   sdk.MustNewDecFromStr("0.069792907126472964"),
+		"ustars":  sdk.MustNewDecFromStr("0.021812145938948139"),
+	}
+
+	for denom, expectedValue := range expected {
+		suite.Equal(tvs[denom], expectedValue)
+	}
+
 }
 
 var prodPDString = `[
