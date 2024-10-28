@@ -5,6 +5,7 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/quicksilver-zone/quicksilver/x/participationrewards/keeper"
 	"github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 )
@@ -236,7 +237,6 @@ func (suite *KeeperTestSuite) TestCalcTokenValues2() {
 
 	_, err = qs.ParticipationRewardsKeeper.CalcTokenValues(ctx)
 	suite.NoError(err)
-
 }
 
 var prodPDString = `[
@@ -251,6 +251,7 @@ var prodPDString = `[
 	  {"PoolID":948,"PoolName":"REGEN/qREGEN","LastUpdated":"2024-06-29T17:00:50.109029446Z","PoolData":{"address":"osmo1hylqy4uu5el36wykhzzhj786eh8rx4epyvg6nrtl503wjufz8z3sdptdzw","id":948,"pool_params":{"swap_fee":"0.003000000000000000","exit_fee":"0.000000000000000000"},"future_pool_governor":"168h","total_shares":{"denom":"gamm/pool/948","amount":"203791959210650860086725"},"pool_liquidity":[{"denom":"ibc/1DCC8A6CB5689018431323953344A9F6CC4D0BFB261E88C9F7777372C10CD076","amount":"247440093055"},{"denom":"ibc/79A676508A2ECA1021EDDC7BB9CF70CEEC9514C478DA526A5A8B3E78506C2206","amount":"177233580285"}],"scaling_factors":[1315922033,1000000000],"scaling_factor_governor":"osmo16x03wcp37kx5e8ehckjxvwcgk9j0cqnhm8m3yy"},"PoolType":"stableswap","Denoms":{"ibc/1DCC8A6CB5689018431323953344A9F6CC4D0BFB261E88C9F7777372C10CD076":{"Denom":"uregen","ChainID":"regen-1"},"ibc/79A676508A2ECA1021EDDC7BB9CF70CEEC9514C478DA526A5A8B3E78506C2206":{"Denom":"uqregen","ChainID":"regen-1"}},"IsIncentivized":true},
 	  {"PoolID":956,"PoolName":"qOSMO/OSMO","LastUpdated":"2024-06-29T17:01:08.083152922Z","PoolData":{"address":"osmo1q023e9m4d3ffvr96xwaeraa62yfvufkufkr7yf7lmacgkuspsuqsga4xp2","id":956,"pool_params":{"swap_fee":"0.003000000000000000","exit_fee":"0.000000000000000000"},"future_pool_governor":"168h","total_shares":{"denom":"gamm/pool/956","amount":"2831883387499914752885"},"pool_liquidity":[{"denom":"ibc/42D24879D4569CE6477B7E88206ADBFE47C222C6CAD51A54083E4A72594269FC","amount":"4678864416"},{"denom":"uosmo","amount":"7164359952"}],"scaling_factors":[1000000000,1182092750],"scaling_factor_governor":"osmo16x03wcp37kx5e8ehckjxvwcgk9j0cqnhm8m3yy"},"PoolType":"stableswap","Denoms":{"ibc/42D24879D4569CE6477B7E88206ADBFE47C222C6CAD51A54083E4A72594269FC":{"Denom":"uqosmo","ChainID":"osmosis-1"},"uosmo":{"Denom":"uosmo","ChainID":"osmosis-1"}},"IsIncentivized":true}
 	]`
+
 var prodPDString2 = `[
 	{"PoolID":1590,"PoolName":"qOSMO/OSMO","LastUpdated":"2024-06-29T17:01:08.083152922Z","PoolData":{"address":"osmo1ww5567k7ya8g2rzfft30mgdqwy6jyfqfl60805kclwc3x44qzp6qgd3d3r","incentives_address":"osmo1e0wfxnfrzg50wkeyakg2qxjf4fw9lrtx88grlhuw9n2ajm2sth2sdpg9ky","spread_rewards_address":"osmo1e9grc4jp9jzwqqxy6cv6ypkkytyae50wygc9zsj3w5040a3yq4es6z09q7","id":1590,"current_tick_liquidity":"987929067650.598626855339345890","token0":"ibc/42D24879D4569CE6477B7E88206ADBFE47C222C6CAD51A54083E4A72594269FC","token1":"uosmo","current_sqrt_price":"1.102849323600434041469545632253046567","current_tick":216276,"tick_spacing":100,"exponent_at_price_one":-6,"spread_factor":"0.000500000000000000","last_liquidity_update":"2024-09-16T11:42:46.811999582Z"}, "Denoms":{"ibc/42D24879D4569CE6477B7E88206ADBFE47C222C6CAD51A54083E4A72594269FC":{"Denom":"uqosmo","ChainID":"osmosis-1"},"uosmo":{"Denom":"uosmo","ChainID":"osmosis-1"}},"IsIncentivized":true}
 ]`
