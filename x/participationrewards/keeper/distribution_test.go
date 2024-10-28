@@ -254,7 +254,6 @@ func (suite *KeeperTestSuite) TestCalcTokenValuesIncCLPools() {
 	for denom, expectedValue := range expected {
 		suite.Equal(tvs[denom], expectedValue)
 	}
-
 }
 
 var prodPDString = `[
