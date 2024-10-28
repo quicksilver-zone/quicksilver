@@ -2,11 +2,9 @@ package keeper_test
 
 import (
 	"encoding/json"
-	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/quicksilver-zone/quicksilver/x/participationrewards/keeper"
 	"github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 )
@@ -195,7 +193,6 @@ func (suite *KeeperTestSuite) TestCalcTokenValues() {
 }
 
 func (suite *KeeperTestSuite) TestCalcTokenValues2() {
-	//suite.SetupTest()
 	qs := suite.GetQuicksilverApp(suite.chainA)
 	ctx := suite.chainA.GetContext()
 	osmoParams := types.OsmosisParamsProtocolData{
@@ -237,9 +234,8 @@ func (suite *KeeperTestSuite) TestCalcTokenValues2() {
 		qs.ParticipationRewardsKeeper.SetProtocolData(ctx, pool.GenerateKey(), &data)
 	}
 
-	tvs, err := qs.ParticipationRewardsKeeper.CalcTokenValues(ctx)
+	_, err = qs.ParticipationRewardsKeeper.CalcTokenValues(ctx)
 	suite.NoError(err)
-	fmt.Print(tvs)
 
 }
 
