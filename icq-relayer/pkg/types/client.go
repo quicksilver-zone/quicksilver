@@ -58,11 +58,11 @@ type ReadOnlyChainConfig struct {
 	QueryTimeoutSeconds         int
 	QueryRetries                int
 	QueryRetryDelayMilliseconds int
+	CompatibilityMode           string
 	Client                      RPCClientI        `toml:"-"`
 	LightProvider               prov.Provider     `toml:"-"`
 	Codec                       *codec.ProtoCodec `toml:"-"`
 	Cache                       *ristretto.Cache  `toml:"-"`
-	CompatibilityMode           string            `toml:"-"`
 }
 
 type ChainConfig struct {
@@ -218,6 +218,7 @@ func (r *ReadOnlyChainConfig) Tx(hash []byte) (*codectypes.Any, int64, error) {
 
 	id := jsonrpctypes.JSONRPCIntID(0)
 	proofAny := &codectypes.Any{}
+	var height int
 
 	request, err := jsonrpctypes.MapToRequest(id, "tx", params)
 	if err != nil {
@@ -265,7 +266,6 @@ func (r *ReadOnlyChainConfig) Tx(hash []byte) (*codectypes.Any, int64, error) {
 	}
 
 	// Unmarshal the RawMessage into the result.
-	result := TxResultMinimal{}
 	switch strings.ToLower(r.CompatibilityMode) {
 	case "celestia":
 		celestiaResult := TxResultMinimalCelestia{}
@@ -283,8 +283,14 @@ func (r *ReadOnlyChainConfig) Tx(hash []byte) (*codectypes.Any, int64, error) {
 		if err != nil {
 			return proofAny, 0, fmt.Errorf("error creating any: %w", err)
 		}
+
+		height, err = strconv.Atoi(celestiaResult.Height)
+		if err != nil {
+			return proofAny, 0, fmt.Errorf("failed to unmarshal tx height: %w", err)
+		}
 	default:
 		// default is tendermint
+		result := TxResultMinimal{}
 		txProtoProof := result.Proof.ToProto()
 		protoProof := proofs.TendermintProof{
 			TxProof: &txProtoProof,
@@ -294,11 +300,11 @@ func (r *ReadOnlyChainConfig) Tx(hash []byte) (*codectypes.Any, int64, error) {
 		if err != nil {
 			return proofAny, 0, fmt.Errorf("error creating any: %w", err)
 		}
-	}
 
-	height, err := strconv.Atoi(result.Height)
-	if err != nil {
-		return proofAny, 0, fmt.Errorf("failed to unmarshal tx height: %w", err)
+		height, err = strconv.Atoi(result.Height)
+		if err != nil {
+			return proofAny, 0, fmt.Errorf("failed to unmarshal tx height: %w", err)
+		}
 	}
 
 	return proofAny, int64(height), nil
