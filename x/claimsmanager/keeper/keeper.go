@@ -50,9 +50,10 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 func (k Keeper) StoreSelfConsensusState(ctx sdk.Context, key string) error {
 	var height ibcclienttypes.Height
 	if strings.Contains(ctx.ChainID(), "-") {
-		revisionNum, err := strconv.ParseUint(strings.Split(ctx.ChainID(), "-")[1], 10, 64)
+		chainParts := strings.Split(ctx.ChainID(), "-")
+		revisionNum, err := strconv.ParseUint(chainParts[len(chainParts)-1], 10, 64)
 		if err != nil {
-			k.Logger(ctx).Error("Error getting revision number for client ")
+			k.Logger(ctx).Error("Error getting revision number for client ", "chainID", ctx.ChainID())
 			return err
 		}
 
