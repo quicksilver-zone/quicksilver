@@ -2,13 +2,10 @@ package keeper
 
 import (
 	"bytes"
-	"encoding/hex"
 	"errors"
 	"fmt"
-	"strings"
 	"time"
 
-	"github.com/tendermint/tendermint/crypto/tmhash"
 	tmtypes "github.com/tendermint/tendermint/types"
 	"google.golang.org/protobuf/encoding/protowire"
 
@@ -515,27 +512,19 @@ func DepositTxCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Q
 		return err
 	}
 
-	txBytes, err = inclusionProof.Validate(res.Header.Header.DataHash)
-	if err != nil {
-		return err
-	}
-
-	hash := tmhash.Sum(txBytes)
-	hashStr := hex.EncodeToString(hash)
-
 	queryRequest := tx.GetTxRequest{}
 	if err := k.cdc.Unmarshal(query.Request, &queryRequest); err != nil {
 		return err
 	}
 
-	// check hash matches query
-	if !strings.EqualFold(hashStr, queryRequest.Hash) {
-		return fmt.Errorf("invalid tx for query - expected %s, got %s", queryRequest.Hash, hashStr)
+	txBytes, err = inclusionProof.Validate(res.Header.Header.DataHash, queryRequest.Hash)
+	if err != nil {
+		return err
 	}
 
-	_, found = k.GetReceipt(ctx, zone.ChainId, hashStr)
+	_, found = k.GetReceipt(ctx, zone.ChainId, queryRequest.Hash)
 	if found {
-		k.Logger(ctx).Info("Found previously handled tx. Ignoring.", "txhash", hashStr)
+		k.Logger(ctx).Info("Found previously handled tx. Ignoring.", "txhash", queryRequest.Hash)
 		return nil
 	}
 
@@ -553,7 +542,7 @@ func DepositTxCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Q
 	if !ok {
 		return errors.New("cannot assert type of tx")
 	}
-	return k.HandleReceiptTransaction(ctx, txtx, hashStr, zone)
+	return k.HandleReceiptTransaction(ctx, txtx, queryRequest.Hash, zone)
 }
 
 // AccountBalanceCallback is a callback handler for Balance queries.
