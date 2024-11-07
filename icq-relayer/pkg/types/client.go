@@ -291,6 +291,9 @@ func (r *ReadOnlyChainConfig) Tx(hash []byte) (*codectypes.Any, int64, error) {
 	default:
 		// default is tendermint
 		result := TxResultMinimal{}
+		if err := cmtjson.Unmarshal(response.Result, &result); err != nil {
+			return proofAny, 0, fmt.Errorf("error unmarshalling result: %w+", err)
+		}
 		txProtoProof := result.Proof.ToProto()
 		protoProof := proofs.TendermintProof{
 			TxProof: &txProtoProof,
