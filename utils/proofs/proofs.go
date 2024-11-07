@@ -3,6 +3,7 @@ package proofs
 import (
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/gogoproto/proto"
 
 	squareshare "github.com/celestiaorg/go-square/v2/share"
@@ -63,4 +64,12 @@ func (p *TendermintProof) Validate(dataHash []byte) ([]byte, error) {
 	}
 
 	return tmproof.Data, nil
+}
+
+func RegisterInterfaces(registry types.InterfaceRegistry) {
+	registry.RegisterImplementations(
+		(*InclusionProof)(nil),
+		&TendermintProof{},
+		&CelestiaProof{},
+	)
 }
