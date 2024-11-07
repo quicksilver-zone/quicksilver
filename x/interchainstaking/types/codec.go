@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 
+	"github.com/quicksilver-zone/quicksilver/utils/proofs"
 	lsmstakingtypes "github.com/quicksilver-zone/quicksilver/x/lsmtypes"
 )
 
@@ -46,6 +47,8 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		&UpdateZoneProposal{},
 		&RegisterZoneProposal{},
 	)
+
+	proofs.RegisterInterfaces(registry)
 
 	lsmstakingtypes.RegisterInterfaces(registry)
 
