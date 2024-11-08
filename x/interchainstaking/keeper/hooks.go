@@ -29,6 +29,9 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNum
 	// every epoch
 	if epochIdentifier != epochstypes.EpochIdentifierEpoch {
 		k.IterateZones(ctx, func(index int64, zone *types.Zone) (stop bool) {
+			if zone.DelegationAddress == nil {
+				return false
+			}
 			vals := k.GetValidatorAddresses(ctx, zone.ChainId)
 			delegationQuery := stakingtypes.QueryDelegatorDelegationsRequest{DelegatorAddr: zone.DelegationAddress.Address, Pagination: &query.PageRequest{Limit: uint64(len(vals))}}
 			bz := k.cdc.MustMarshal(&delegationQuery)

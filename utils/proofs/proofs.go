@@ -1,9 +1,13 @@
 package proofs
 
 import (
+	"encoding/hex"
 	"fmt"
+	"strings"
 
+	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/gogoproto/proto"
+	"github.com/tendermint/tendermint/crypto/tmhash"
 
 	squareshare "github.com/celestiaorg/go-square/v2/share"
 
@@ -14,13 +18,13 @@ import (
 type InclusionProof interface {
 	proto.Message
 
-	Validate(dataHash []byte) ([]byte, error)
+	Validate(dataHash []byte, txHash string) ([]byte, error)
 }
 
 var _ InclusionProof = &TendermintProof{}
 var _ InclusionProof = &CelestiaProof{}
 
-func (p *CelestiaProof) Validate(dataHash []byte) ([]byte, error) {
+func (p *CelestiaProof) Validate(dataHash []byte, txHash string) ([]byte, error) {
 
 	shareProof, err := celestiatypes.ShareProofFromProto(*p.ShareProof)
 	if err != nil {
@@ -49,10 +53,18 @@ func (p *CelestiaProof) Validate(dataHash []byte) ([]byte, error) {
 		return nil, fmt.Errorf("unable to validate celestia share proof: %w", err)
 	}
 
-	return txs[p.Index], nil
+	for _, tx := range txs {
+		hash := tmhash.Sum(tx)
+		hashStr := hex.EncodeToString(hash)
+		if strings.EqualFold(hashStr, txHash) {
+			return tx, nil
+		}
+	}
+
+	return nil, fmt.Errorf("unable to find tx with hash: %s", txHash)
 }
 
-func (p *TendermintProof) Validate(dataHash []byte) ([]byte, error) {
+func (p *TendermintProof) Validate(dataHash []byte, txHash string) ([]byte, error) {
 	tmproof, err := tmtypes.TxProofFromProto(*p.TxProof)
 	if err != nil {
 		return nil, fmt.Errorf("unable to marshal proof: %w", err)
@@ -62,5 +74,19 @@ func (p *TendermintProof) Validate(dataHash []byte) ([]byte, error) {
 		return nil, fmt.Errorf("unable to validate proof: %w", err)
 	}
 
-	return tmproof.Data, nil
+	hash := tmhash.Sum(tmproof.Data)
+	hashStr := hex.EncodeToString(hash)
+	if strings.EqualFold(hashStr, txHash) {
+		return tmproof.Data, nil
+	}
+
+	return nil, fmt.Errorf("unable to find tx with hash: %s", txHash)
+}
+
+func RegisterInterfaces(registry types.InterfaceRegistry) {
+	registry.RegisterImplementations(
+		(*InclusionProof)(nil),
+		&TendermintProof{},
+		&CelestiaProof{},
+	)
 }
