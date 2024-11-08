@@ -2300,6 +2300,7 @@ func (suite *KeeperTestSuite) TestDepositLsmTxCallback() {
 
 		// check receipt was created.
 		receipt, found := quicksilver.InterchainstakingKeeper.GetReceipt(ctx, zone.ChainId, requestData.Hash)
+		suite.True(found)
 
 		var proof proofs.InclusionProof
 		err = quicksilver.InterchainstakingKeeper.GetCodec().UnpackAny(payload.ProofAny, &proof)
