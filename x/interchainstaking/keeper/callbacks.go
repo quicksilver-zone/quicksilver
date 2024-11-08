@@ -512,6 +512,10 @@ func DepositTxCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Q
 		return err
 	}
 
+	if inclusionProof == nil {
+		return errors.New("inclusion proof is nil")
+	}
+
 	queryRequest := tx.GetTxRequest{}
 	if err := k.cdc.Unmarshal(query.Request, &queryRequest); err != nil {
 		return err
