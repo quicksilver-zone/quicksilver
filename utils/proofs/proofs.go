@@ -5,14 +5,14 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/cosmos/cosmos-sdk/codec/types"
+	squareshare "github.com/celestiaorg/go-square/v2/share"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/tendermint/tendermint/crypto/tmhash"
+	tmtypes "github.com/tendermint/tendermint/types"
 
-	squareshare "github.com/celestiaorg/go-square/v2/share"
+	"github.com/cosmos/cosmos-sdk/codec/types"
 
 	celestiatypes "github.com/quicksilver-zone/quicksilver/third-party-chains/celestia-types/types"
-	tmtypes "github.com/tendermint/tendermint/types"
 )
 
 type InclusionProof interface {
@@ -21,10 +21,15 @@ type InclusionProof interface {
 	Validate(dataHash []byte, txHash string) ([]byte, error)
 }
 
-var _ InclusionProof = &TendermintProof{}
-var _ InclusionProof = &CelestiaProof{}
+var (
+	_ InclusionProof = &TendermintProof{}
+	_ InclusionProof = &CelestiaProof{}
+)
 
 func (p *CelestiaProof) Validate(dataHash []byte, txHash string) ([]byte, error) {
+	if p.ShareProof == nil {
+		return nil, fmt.Errorf("ShareProof is nil")
+	}
 
 	shareProof, err := celestiatypes.ShareProofFromProto(*p.ShareProof)
 	if err != nil {

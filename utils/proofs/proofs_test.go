@@ -3,13 +3,12 @@ package proofs_test
 import (
 	"encoding/hex"
 	"encoding/json"
-	"fmt"
 	"testing"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	proto_types "github.com/quicksilver-zone/quicksilver/third-party-chains/celestia-types/proto-types"
 	celestiatypes "github.com/quicksilver-zone/quicksilver/third-party-chains/celestia-types/types"
-	proofs "github.com/quicksilver-zone/quicksilver/utils/proofs"
+	"github.com/quicksilver-zone/quicksilver/utils/proofs"
 	"github.com/stretchr/testify/require"
 )
 
@@ -36,9 +35,9 @@ func TestCelestiaProof(t *testing.T) {
 	registry := codectypes.NewInterfaceRegistry()
 	proofs.RegisterInterfaces(registry)
 
-	for i, proofJson := range proofJsons {
+	for i, proofJSON := range proofJsons {
 		proof := celestiatypes.ShareProof{}
-		err := json.Unmarshal(proofJson, &proof)
+		err := json.Unmarshal(proofJSON, &proof)
 		require.NoError(t, err, "i", i)
 
 		protoProof := proto_types.ShareProof{}
@@ -50,9 +49,6 @@ func TestCelestiaProof(t *testing.T) {
 
 		tx, err := p.Validate(dataHashes[i], txHashes[i])
 		require.NoError(t, err, "i", i)
-		fmt.Println(tx)
-
 		require.NotNil(t, tx)
 	}
-
 }
