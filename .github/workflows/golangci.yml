@@ -10,7 +10,7 @@ on:
       - develop
       - main
     paths-ignore:
-      - 'web-ui/**'
+      - "web-ui/**"
 
 permissions:
   contents: read
@@ -28,7 +28,7 @@ jobs:
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v6
         with:
-          version: v1.57.2
+          version: v1.62.0
           args: --timeout 15m
           # Optional: working directory, useful for monorepos
           # working-directory: somedir

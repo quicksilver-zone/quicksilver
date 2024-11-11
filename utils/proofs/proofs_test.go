@@ -5,11 +5,13 @@ import (
 	"encoding/json"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+
 	proto_types "github.com/quicksilver-zone/quicksilver/third-party-chains/celestia-types/proto-types"
 	celestiatypes "github.com/quicksilver-zone/quicksilver/third-party-chains/celestia-types/types"
 	"github.com/quicksilver-zone/quicksilver/utils/proofs"
-	"github.com/stretchr/testify/require"
 )
 
 func TestCelestiaProof(t *testing.T) {
