@@ -3,6 +3,7 @@ package keeper
 import (
 	"errors"
 	"fmt"
+	"math"
 
 	sdkmath "cosmossdk.io/math"
 
@@ -274,6 +275,9 @@ func (k *Keeper) WithdrawDelegationRewardsForResponse(ctx sdk.Context, zone *typ
 	// this allows us to track individual msg responses and ensure all
 	// responses have been received and handled...
 	// HandleWithdrawRewards contains the opposing decrement.
+	if len(msgs) > math.MaxUint32 {
+		return fmt.Errorf("number of messages exceeds uint32 range: %d", len(msgs))
+	}
 	if err = zone.IncrementWithdrawalWaitgroup(k.Logger(ctx), uint32(len(msgs)), "WithdrawDelegationRewardsForResponse"); err != nil {
 		return err
 	}
@@ -350,6 +354,9 @@ func (k *Keeper) FlushOutstandingDelegations(ctx sdk.Context, zone *types.Zone, 
 	numMsgs, err := k.handleSendToDelegate(ctx, zone, &sendMsg, fmt.Sprintf("batch/%d", exclusionTime.Unix()))
 	if err != nil {
 		return err
+	}
+	if numMsgs > math.MaxUint32 {
+		return fmt.Errorf("number of messages exceeds uint32 range: %d", numMsgs)
 	}
 	if err = zone.IncrementWithdrawalWaitgroup(k.Logger(ctx), uint32(numMsgs), "sending flush messages"); err != nil {
 		return err

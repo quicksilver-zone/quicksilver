@@ -281,8 +281,6 @@ func (suite *KeeperTestSuite) TestCalcUserHoldingsAllocations() {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
-
 		suite.Run(tt.name, func() {
 			suite.SetupTest()
 
@@ -386,8 +384,6 @@ func (suite *KeeperTestSuite) TestAllocateHoldingsRewards() {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
-
 		suite.Run(tt.name, func() {
 			suite.SetupTest()
 

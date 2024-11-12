@@ -201,8 +201,6 @@ func (suite *KeeperTestSuite) TestUpdateDelegation() {
 	}
 
 	for _, tt := range tests {
-		tt := tt
-
 		suite.Run(tt.name, func() {
 			suite.SetupTest()
 			suite.setupTestZones()

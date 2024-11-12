@@ -1836,7 +1836,11 @@ func TestDepositIntervalCallback(t *testing.T) {
 		}
 	}
 	// check we have the correct number (29) tendermint.Tx ICQ requests from the above payload.
-	suite.Equal(int(res.Pagination.Total), txQueryCount)
+	if res.Pagination.Total > math.MaxInt {
+		err = fmt.Errorf("pagination total exceeds int range: %d", res.Pagination.Total)
+	}
+	suite.NoError(err)
+	suite.Equal(txQueryCount, int(res.Pagination.Total)-3)
 }
 
 func TestDepositIntervalCallbackWithExistingTxs(t *testing.T) {
@@ -1881,7 +1885,11 @@ func TestDepositIntervalCallbackWithExistingTxs(t *testing.T) {
 		}
 	}
 	// check we have the correct number (29 minus - 3 receipts = 26) tendermint.Tx ICQ requests from the above payload.
-	suite.Equal(int(res.Pagination.Total)-3, txQueryCount)
+	if res.Pagination.Total > math.MaxInt {
+		err = fmt.Errorf("pagination total exceeds int range: %d", res.Pagination.Total)
+	}
+	suite.NoError(err)
+	suite.Equal(txQueryCount, int(res.Pagination.Total)-3)
 }
 
 func decodeBase64NoErr(str string) []byte {
@@ -2918,7 +2926,6 @@ func TestRejectNonADR027(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			_, err = decoder(tt.txBz)
 			if tt.shouldErr {
@@ -2956,7 +2963,6 @@ func TestVarintMinLength(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(fmt.Sprintf("test %d", tt.n), func(t *testing.T) {
 			l1 := keeper.VarintMinLength(tt.n)
 			buf := make([]byte, binary.MaxVarintLen64)

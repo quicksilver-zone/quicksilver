@@ -131,6 +131,11 @@ func GetReceiptKey(chainID, txhash string) string {
 // GetRedelegationKey gets the redelegation key.
 // Unbondigng records are keyed by chainId, validator and epoch, as they must be unique with regard to this triple.
 func GetRedelegationKey(chainID, source, destination string, epochNumber int64) []byte {
+	// Check for negative epoch numbers
+	if epochNumber < 0 {
+		panic("epoch number cannot be negative")
+	}
+
 	epochBytes := make([]byte, 8)
 	binary.BigEndian.PutUint64(epochBytes, uint64(epochNumber))
 	return append(append(KeyPrefixRedelegationRecord, chainID+source+destination...), epochBytes...)

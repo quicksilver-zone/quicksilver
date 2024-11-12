@@ -39,7 +39,7 @@ func (k Keeper) DeleteLsmCaps(ctx sdk.Context, chainID string) {
 }
 
 // IterateCaps iterate through Caps for a given zone
-func (k Keeper) IterateLsmCaps(ctx sdk.Context, fn func(index int64, chainID string, cap types.LsmCaps) (stop bool)) {
+func (k Keeper) IterateLsmCaps(ctx sdk.Context, fn func(index int64, chainID string, lsmCaps types.LsmCaps) (stop bool)) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixLsmCaps)
 
 	iterator := sdk.KVStorePrefixIterator(store, nil)

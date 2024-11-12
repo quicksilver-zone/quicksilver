@@ -82,9 +82,9 @@ func (k Keeper) CalcDistributionScores(ctx sdk.Context, zone icstypes.Zone, zs *
 	}
 
 	// calculate total voting power
-	// and determine min/max voting power for zone
-	max := sdk.NewInt(0)
-	min := sdk.NewInt(999999999999999999)
+	// and determine minVP/maxVP voting power for zone
+	maxVP := sdk.NewInt(0)
+	minVP := sdk.NewInt(999999999999999999)
 	for _, zoneVal := range zoneValidators {
 		val := zoneVal
 		if val.VotingPower.IsNegative() {
@@ -96,14 +96,14 @@ func (k Keeper) CalcDistributionScores(ctx sdk.Context, zone icstypes.Zone, zs *
 			zs.ValidatorScores[val.ValoperAddress] = &types.Validator{Validator: &val}
 		}
 
-		// Set max/min
-		if max.LT(val.VotingPower) {
-			max = val.VotingPower
-			k.Logger(ctx).Info("new power max", "max", max, "validator", val.ValoperAddress)
+		// Set maxVP/minVP
+		if maxVP.LT(val.VotingPower) {
+			maxVP = val.VotingPower
+			k.Logger(ctx).Info("new power maxVP", "maxVP", maxVP, "validator", val.ValoperAddress)
 		}
-		if min.GT(val.VotingPower) {
-			min = val.VotingPower
-			k.Logger(ctx).Info("new power min", "min", min, "validator", val.ValoperAddress)
+		if minVP.GT(val.VotingPower) {
+			minVP = val.VotingPower
+			k.Logger(ctx).Info("new power minVP", "minVP", minVP, "validator", val.ValoperAddress)
 		}
 	}
 
@@ -116,8 +116,8 @@ func (k Keeper) CalcDistributionScores(ctx sdk.Context, zone icstypes.Zone, zs *
 	}
 
 	// calculate power percentage and normalized distribution scores
-	maxp := sdk.NewDecFromInt(max).Quo(sdk.NewDecFromInt(zs.TotalVotingPower))
-	minp := sdk.NewDecFromInt(min).Quo(sdk.NewDecFromInt(zs.TotalVotingPower))
+	maxp := sdk.NewDecFromInt(maxVP).Quo(sdk.NewDecFromInt(zs.TotalVotingPower))
+	minp := sdk.NewDecFromInt(minVP).Quo(sdk.NewDecFromInt(zs.TotalVotingPower))
 	for _, vs := range zs.ValidatorScores {
 		// calculate power percentage
 		vs.PowerPercentage = sdk.NewDecFromInt(vs.VotingPower).Quo(sdk.NewDecFromInt(zs.TotalVotingPower))

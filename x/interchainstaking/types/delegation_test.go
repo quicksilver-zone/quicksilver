@@ -94,7 +94,6 @@ func TestNormalizeValidatorIntentsDeterminism(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			cached := tc.intents.Normalize()
 			// verify that sort is deterministic

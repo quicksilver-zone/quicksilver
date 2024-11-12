@@ -3,6 +3,7 @@ package keeper
 import (
 	"errors"
 	"fmt"
+	"math"
 	"strconv"
 	"strings"
 
@@ -112,7 +113,12 @@ func (k *Keeper) HandleRegisterZoneProposal(ctx sdk.Context, p *types.RegisterZo
 		return err
 	}
 
-	period := int64(k.GetParam(ctx, types.KeyValidatorSetInterval))
+	param := k.GetParam(ctx, types.KeyValidatorSetInterval)
+	if param > math.MaxInt64 {
+		return fmt.Errorf("validator set interval parameter exceeds int64 range: %d", param)
+	}
+
+	period := int64(param)
 	query := stakingtypes.QueryValidatorsRequest{}
 	err = k.EmitValSetQuery(ctx, zone.ConnectionId, zone.ChainId, query, sdkmath.NewInt(period))
 	if err != nil {
