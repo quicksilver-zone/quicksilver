@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"math"
 	"time"
 
 	tmtypes "github.com/tendermint/tendermint/types"
@@ -416,6 +417,10 @@ func checkTMStateValidity(
 
 	// Construct a trusted header using the fields in consensus state
 	// Only Height, Time, and NextValidatorsHash are necessary for verification
+	if header.TrustedHeight.RevisionHeight > math.MaxInt64 {
+		return fmt.Errorf("trusted height revision exceeds int64 range: %d", header.TrustedHeight.RevisionHeight)
+	}
+
 	trustedHeader := tmtypes.Header{
 		ChainID:            chainID,
 		Height:             int64(header.TrustedHeight.RevisionHeight),

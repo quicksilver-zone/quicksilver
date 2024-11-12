@@ -263,8 +263,6 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 	}
 
 	for _, tt := range tests {
-		tt := tt
-
 		// run tests with LSM disabled.
 		suite.Run(tt.name, func() {
 			suite.SetupTest()
@@ -352,7 +350,6 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 		// 		suite.NotNil(res)
 		// 	}
 		// })
-
 	}
 }
 
@@ -455,8 +452,6 @@ func (suite *KeeperTestSuite) TestSignalIntent() {
 	}
 
 	for _, tt := range tests {
-		tt := tt
-
 		suite.Run(tt.name, func() {
 			suite.SetupTest()
 			suite.setupTestZones()
@@ -765,8 +760,6 @@ func (suite *KeeperTestSuite) TestSetLsmCaps() {
 	}
 
 	for _, tt := range tests {
-		tt := tt
-
 		suite.Run(tt.name, func() {
 			suite.SetupTest()
 			suite.setupTestZones()
@@ -960,8 +953,6 @@ func (suite *KeeperTestSuite) TestMsgCancelRedemeption() {
 	}
 
 	for _, tt := range tests {
-		tt := tt
-
 		suite.Run(tt.name, func() {
 			suite.SetupTest()
 			suite.setupTestZones()
@@ -1115,8 +1106,6 @@ func (suite *KeeperTestSuite) TestMsgRequeueRedemeption() {
 	}
 
 	for _, tt := range tests {
-		tt := tt
-
 		suite.Run(tt.name, func() {
 			suite.SetupTest()
 			suite.setupTestZones()
@@ -1354,8 +1343,6 @@ func (suite *KeeperTestSuite) TestMsgUpdateRedemption() {
 	}
 
 	for _, tt := range tests {
-		tt := tt
-
 		suite.Run(tt.name, func() {
 			suite.SetupTest()
 			suite.setupTestZones()
@@ -1439,8 +1426,6 @@ func (suite *KeeperTestSuite) TestMsgGovAddValidatorToDenyList() {
 	}
 
 	for _, tt := range tests {
-		tt := tt
-
 		suite.Run(tt.name, func() {
 			suite.SetupTest()
 			suite.setupTestZones()
@@ -1531,8 +1516,6 @@ func (suite *KeeperTestSuite) TestMsgGovRemoveValidatorToDenyList() {
 	}
 
 	for _, tt := range tests {
-		tt := tt
-
 		suite.Run(tt.name, func() {
 			suite.SetupTest()
 			suite.setupTestZones()

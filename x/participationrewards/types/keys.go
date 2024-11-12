@@ -1,6 +1,8 @@
 package types
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -25,9 +27,15 @@ const (
 var KeyPrefixProtocolData = []byte{0x00}
 
 func GetProtocolDataKey(pdType ProtocolDataType, key []byte) []byte {
+	if pdType < 0 {
+		panic(fmt.Sprintf("protocol data type is negative: %d", pdType))
+	}
 	return append(sdk.Uint64ToBigEndian(uint64(pdType)), key...)
 }
 
 func GetPrefixProtocolDataKey(pdType ProtocolDataType) []byte {
+	if pdType < 0 {
+		panic(fmt.Sprintf("protocol data type is negative: %d", pdType))
+	}
 	return sdk.Uint64ToBigEndian(uint64(pdType))
 }

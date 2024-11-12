@@ -49,6 +49,12 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 
 func (k Keeper) StoreSelfConsensusState(ctx sdk.Context, key string) error {
 	var height ibcclienttypes.Height
+
+	blockHeight := ctx.BlockHeight() - 1
+	if blockHeight < 0 {
+		return fmt.Errorf("block height is negative: %d", blockHeight)
+	}
+
 	if strings.Contains(ctx.ChainID(), "-") {
 		chainParts := strings.Split(ctx.ChainID(), "-")
 		revisionNum, err := strconv.ParseUint(chainParts[len(chainParts)-1], 10, 64)
@@ -59,13 +65,13 @@ func (k Keeper) StoreSelfConsensusState(ctx sdk.Context, key string) error {
 
 		height = ibcclienttypes.Height{
 			RevisionNumber: revisionNum,
-			RevisionHeight: uint64(ctx.BlockHeight() - 1),
+			RevisionHeight: uint64(blockHeight),
 		}
 	} else {
 		// ONLY FOR TESTING - ibctesting module chains donot follow standard [chainname]-[num] structure
 		height = ibcclienttypes.Height{
 			RevisionNumber: 0, // revision number for testchain1 is 0 (because parseChainId splits on '-')
-			RevisionHeight: uint64(ctx.BlockHeight() - 1),
+			RevisionHeight: uint64(blockHeight),
 		}
 	}
 

@@ -61,7 +61,12 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 	}
 
 	heightBytes := make([]byte, 8)
-	binary.BigEndian.PutUint64(heightBytes, uint64(ctx.BlockHeight()))
+	blockHeight := ctx.BlockHeight()
+	if blockHeight < 0 {
+		return nil, fmt.Errorf("block height is negative: %d", blockHeight)
+	}
+
+	binary.BigEndian.PutUint64(heightBytes, uint64(blockHeight))
 	hash := sha256.Sum256(append(msg.GetSignBytes(), heightBytes...))
 	hashString := hex.EncodeToString(hash[:])
 

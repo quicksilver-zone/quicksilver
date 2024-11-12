@@ -9,7 +9,6 @@ import (
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 
-	proto_types "github.com/quicksilver-zone/quicksilver/third-party-chains/celestia-types/proto-types"
 	celestiatypes "github.com/quicksilver-zone/quicksilver/third-party-chains/celestia-types/types"
 	"github.com/quicksilver-zone/quicksilver/utils/proofs"
 )
@@ -42,8 +41,7 @@ func TestCelestiaProof(t *testing.T) {
 		err := json.Unmarshal(proofJSON, &proof)
 		require.NoError(t, err, "i", i)
 
-		protoProof := proto_types.ShareProof{}
-		protoProof = proof.ToProto()
+		protoProof := proof.ToProto()
 		p := proofs.CelestiaProof{}
 		p.ShareProof = &protoProof
 

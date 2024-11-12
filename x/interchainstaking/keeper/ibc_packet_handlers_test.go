@@ -162,7 +162,6 @@ func (suite *KeeperTestSuite) TestHandleMsgTransferGood() {
 			}
 
 			for _, claim := range tc.claims {
-				claim := claim // no implicit memory aliasing
 				quicksilver.ClaimsManagerKeeper.SetLastEpochClaim(ctx, &claim)
 			}
 

@@ -2,6 +2,8 @@ package keeper
 
 import (
 	"bytes"
+	"fmt"
+	"math"
 	"time"
 
 	sdkmath "cosmossdk.io/math"
@@ -69,7 +71,12 @@ func (k *Keeper) BeginBlocker(ctx sdk.Context) {
 
 		k.Logger(ctx).Info("IBC ValSet has changed; requerying valset")
 		// trigger valset update.
-		period := int64(k.GetParam(ctx, types.KeyValidatorSetInterval))
+		param := k.GetParam(ctx, types.KeyValidatorSetInterval)
+		if param > math.MaxInt64 {
+			k.Logger(ctx).Error("parameter value exceeds int64 range", "param", param)
+			panic(fmt.Errorf("parameter value exceeds int64 range: %d", param))
+		}
+		period := int64(param)
 		query := stakingtypes.QueryValidatorsRequest{}
 		err := k.EmitValSetQuery(ctx, zone.ConnectionId, zone.ChainId, query, sdkmath.NewInt(period))
 		if err != nil {

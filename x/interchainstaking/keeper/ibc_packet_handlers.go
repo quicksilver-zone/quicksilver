@@ -3,6 +3,7 @@ package keeper
 import (
 	"errors"
 	"fmt"
+	stdmath "math"
 	"reflect"
 	"strconv"
 	"strings"
@@ -505,7 +506,12 @@ func (k *Keeper) HandleWithdrawForUser(ctx sdk.Context, zone *types.Zone, msg *b
 		}
 	}
 
-	period := int64(k.GetParam(ctx, types.KeyValidatorSetInterval))
+	param := k.GetParam(ctx, types.KeyValidatorSetInterval)
+	if param > stdmath.MaxInt64 {
+		return fmt.Errorf("validator set interval parameter exceeds int64 range: %d", param)
+	}
+
+	period := int64(param)
 	query := stakingtypes.QueryValidatorsRequest{}
 	return k.EmitValSetQuery(ctx, zone.ConnectionId, zone.ChainId, query, math.NewInt(period))
 }
@@ -1343,7 +1349,12 @@ func (k *Keeper) UpdateDelegationRecordForAddress(
 	}
 	k.SetDelegation(ctx, zone.ChainId, delegation)
 
-	period := int64(k.GetParam(ctx, types.KeyValidatorSetInterval))
+	param := k.GetParam(ctx, types.KeyValidatorSetInterval)
+	if param > stdmath.MaxInt64 {
+		return fmt.Errorf("validator set interval parameter exceeds int64 range: %d", param)
+	}
+
+	period := int64(param)
 	query := stakingtypes.QueryValidatorsRequest{}
 	err := k.EmitValSetQuery(ctx, zone.ConnectionId, zone.ChainId, query, math.NewInt(period))
 	if err != nil {
@@ -1479,6 +1490,11 @@ func DistributeRewardsFromWithdrawAccount(k *Keeper, ctx sdk.Context, args []byt
 	}
 
 	for _, coin := range multiDenomFee.Sort() {
+		timeoutTimestamp := ctx.BlockTime().UnixNano() + 6*time.Hour.Nanoseconds()
+		if timeoutTimestamp < 0 {
+			return fmt.Errorf("timeout timestamp is negative: %d", timeoutTimestamp)
+		}
+
 		msgs = append(
 			msgs,
 			&ibctransfertypes.MsgTransfer{
@@ -1487,7 +1503,7 @@ func DistributeRewardsFromWithdrawAccount(k *Keeper, ctx sdk.Context, args []byt
 				Token:            coin,
 				Sender:           zone.WithdrawalAddress.Address,
 				Receiver:         k.AccountKeeper.GetModuleAddress(types.ModuleName).String(),
-				TimeoutTimestamp: uint64(ctx.BlockTime().UnixNano() + 6*time.Hour.Nanoseconds()),
+				TimeoutTimestamp: uint64(timeoutTimestamp),
 				TimeoutHeight:    clienttypes.Height{RevisionNumber: 0, RevisionHeight: 0},
 			},
 		)

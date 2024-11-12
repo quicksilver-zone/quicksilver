@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"math"
+
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -85,7 +87,12 @@ func (k Keeper) GetLastReductionEpochNum(ctx sdk.Context) int64 {
 		return 0
 	}
 
-	return int64(sdk.BigEndianToUint64(b))
+	value := sdk.BigEndianToUint64(b)
+	if value > math.MaxInt64 {
+		panic("last reduction epoch number exceeds maximum allowed value")
+	}
+
+	return int64(value)
 }
 
 // SetLastReductionEpochNum set last Reduction epoch number.
