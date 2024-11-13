@@ -423,7 +423,7 @@ func checkTMStateValidity(
 
 	trustedHeader := tmtypes.Header{
 		ChainID:            chainID,
-		Height:             int64(header.TrustedHeight.RevisionHeight),
+		Height:             int64(header.TrustedHeight.RevisionHeight), //nolint:gosec
 		Time:               consState.Timestamp,
 		NextValidatorsHash: consState.NextValidatorsHash,
 	}

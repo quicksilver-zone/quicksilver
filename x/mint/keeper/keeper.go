@@ -98,7 +98,7 @@ func (k Keeper) GetLastReductionEpochNum(ctx sdk.Context) int64 {
 // SetLastReductionEpochNum set last Reduction epoch number.
 func (k Keeper) SetLastReductionEpochNum(ctx sdk.Context, epochNum int64) {
 	store := ctx.KVStore(k.storeKey)
-	store.Set(types.LastReductionEpochKey, sdk.Uint64ToBigEndian(uint64(epochNum)))
+	store.Set(types.LastReductionEpochKey, sdk.Uint64ToBigEndian(uint64(epochNum))) //nolint:gosec
 }
 
 // get the minter.

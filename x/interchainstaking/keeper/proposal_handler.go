@@ -317,7 +317,7 @@ func (k *Keeper) HandleUpdateZoneProposal(ctx sdk.Context, p *types.UpdateZonePr
 				return err
 			}
 
-			period := int64(k.GetParam(ctx, types.KeyValidatorSetInterval))
+			period := int64(k.GetParam(ctx, types.KeyValidatorSetInterval)) //nolint:gosec
 			query := stakingtypes.QueryValidatorsRequest{}
 			err := k.EmitValSetQuery(ctx, zone.ConnectionId, zone.ChainId, query, sdkmath.NewInt(period))
 			if err != nil {

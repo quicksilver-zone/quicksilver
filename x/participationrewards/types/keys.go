@@ -30,12 +30,12 @@ func GetProtocolDataKey(pdType ProtocolDataType, key []byte) []byte {
 	if pdType < 0 {
 		panic(fmt.Sprintf("protocol data type is negative: %d", pdType))
 	}
-	return append(sdk.Uint64ToBigEndian(uint64(pdType)), key...)
+	return append(sdk.Uint64ToBigEndian(uint64(pdType)), key...) //nolint:gosec
 }
 
 func GetPrefixProtocolDataKey(pdType ProtocolDataType) []byte {
 	if pdType < 0 {
 		panic(fmt.Sprintf("protocol data type is negative: %d", pdType))
 	}
-	return sdk.Uint64ToBigEndian(uint64(pdType))
+	return sdk.Uint64ToBigEndian(uint64(pdType)) //nolint:gosec
 }
