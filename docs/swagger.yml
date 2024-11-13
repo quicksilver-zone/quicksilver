@@ -4818,6 +4818,9 @@ paths:
                         custom method
 
                         signatures required by gogoproto.
+                    completion_time:
+                      type: string
+                      format: date-time
               pagination:
                 type: object
                 properties:

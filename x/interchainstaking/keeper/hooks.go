@@ -66,7 +66,7 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNum
 			return false
 		})
 
-		if err := k.HandleMaturedUnbondings(ctx, zone); err != nil {
+		if err := k.HandleMaturedWithdrawals(ctx, zone); err != nil {
 			k.Logger(ctx).Error("error in HandleMaturedUnbondings", "error", err.Error())
 		}
 
