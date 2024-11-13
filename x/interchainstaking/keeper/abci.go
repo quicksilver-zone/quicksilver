@@ -10,10 +10,12 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	tmtypes "github.com/cosmos/ibc-go/v6/modules/light-clients/07-tendermint/types"
 
+	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 )
 
@@ -47,6 +49,23 @@ func (k *Keeper) BeginBlocker(ctx sdk.Context) {
 			if err := k.GCCompletedUnbondings(ctx, zone); err != nil {
 				k.Logger(ctx).Error("error in GCCompletedUnbondings", "error", err.Error())
 			}
+
+			addressBytes, err := addressutils.AccAddressFromBech32(zone.DelegationAddress.Address, zone.AccountPrefix)
+			if err != nil {
+				k.Logger(ctx).Error("cannot decode bech32 delegation addr", "error", err.Error())
+			}
+			zone.DelegationAddress.IncrementBalanceWaitgroup()
+			k.ICQKeeper.MakeRequest(
+				ctx,
+				zone.ConnectionId,
+				zone.ChainId,
+				types.BankStoreKey,
+				append(banktypes.CreateAccountBalancesPrefix(addressBytes), []byte(zone.BaseDenom)...),
+				sdk.NewInt(-1),
+				types.ModuleName,
+				"accountbalance",
+				0,
+			)
 		}
 
 		connection, found := k.IBCKeeper.ConnectionKeeper.GetConnection(ctx, zone.ConnectionId)

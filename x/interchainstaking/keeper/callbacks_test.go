@@ -1840,7 +1840,7 @@ func TestDepositIntervalCallback(t *testing.T) {
 		err = fmt.Errorf("pagination total exceeds int range: %d", res.Pagination.Total)
 	}
 	suite.NoError(err)
-	suite.Equal(txQueryCount, int(res.Pagination.Total)-3) //nolint:gosec
+	suite.Equal(int(res.Pagination.Total), txQueryCount) //nolint:gosec
 }
 
 func TestDepositIntervalCallbackWithExistingTxs(t *testing.T) {
@@ -2840,6 +2840,35 @@ func (suite *KeeperTestSuite) TestPerfBalanceCallbackUpdate() {
 		// check performance account balance been updated
 		zone, _ = quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 		suite.Equal(response.Amount, zone.PerformanceAddress.Balance.AmountOf(response.Denom))
+	})
+}
+
+func (suite *KeeperTestSuite) TestPollDelegationAccountBalanceCallback() {
+	suite.Run("poll delegation account balance", func() {
+		suite.SetupTest()
+		suite.setupTestZones()
+
+		quicksilver := suite.GetQuicksilverApp(suite.chainA)
+		quicksilver.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
+		ctx := suite.chainA.GetContext()
+
+		zone, _ := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+		zone.DelegationAddress.Balance = sdk.NewCoins(sdk.NewCoin("uatom", sdkmath.NewInt(500)))
+		quicksilver.InterchainstakingKeeper.SetZone(ctx, &zone)
+		zone.DelegationAddress.IncrementBalanceWaitgroup()
+
+		response := sdk.NewCoin("uatom", sdk.NewInt(101))
+		respbz, err := quicksilver.AppCodec().Marshal(&response)
+		suite.NoError(err)
+
+		address := zone.DelegationAddress.Address
+		accAddr, err := sdk.AccAddressFromBech32(address)
+		suite.NoError(err)
+		data := append(banktypes.CreateAccountBalancesPrefix(accAddr), "uatom"...)
+		quicksilver.InterchainstakingKeeper.SetZone(ctx, &zone)
+
+		err = keeper.AccountBalanceCallback(quicksilver.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: data})
+		suite.NoError(err)
 	})
 }
 
