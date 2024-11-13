@@ -350,7 +350,7 @@ func (suite *KeeperTestSuite) TestGetUnbondingTokensAndCount() {
 				suite.NoError(err)
 			}
 
-			actualAmount, actualCount := icsKeeper.GetUnbondingTokensAndCount(ctx, &zone)
+			actualAmount, actualCount := icsKeeper.GetWithdrawnTokensAndCount(ctx, &zone)
 			suite.Equal(tt.expectedAmount, actualAmount.Amount)
 			suite.Equal(zone.BaseDenom, actualAmount.Denom)
 			suite.Equal(tt.expectedCount, actualCount)

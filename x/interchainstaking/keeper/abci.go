@@ -31,6 +31,8 @@ func (k *Keeper) BeginBlocker(ctx sdk.Context) {
 		if err := k.GCCompletedRedelegations(ctx); err != nil {
 			k.Logger(ctx).Error("error in GCCompletedRedelegations", "error", err)
 		}
+
+		//k.HandleMaturedUnbondings(ctx)
 	}
 	k.IterateZones(ctx, func(index int64, zone *types.Zone) (stop bool) {
 		if ctx.BlockHeight()%30 == 0 {
@@ -43,8 +45,8 @@ func (k *Keeper) BeginBlocker(ctx sdk.Context) {
 			if err := k.EnsureWithdrawalAddresses(ctx, zone); err != nil {
 				k.Logger(ctx).Error("error in EnsureWithdrawalAddresses", "error", err.Error())
 			}
-			if err := k.HandleMaturedUnbondings(ctx, zone); err != nil {
-				k.Logger(ctx).Error("error in HandleMaturedUnbondings", "error", err.Error())
+			if err := k.HandleMaturedWithdrawals(ctx, zone); err != nil {
+				k.Logger(ctx).Error("error in HandleMaturedWithdrawals", "error", err.Error())
 			}
 			if err := k.GCCompletedUnbondings(ctx, zone); err != nil {
 				k.Logger(ctx).Error("error in GCCompletedUnbondings", "error", err.Error())
