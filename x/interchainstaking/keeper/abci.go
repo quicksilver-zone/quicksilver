@@ -32,7 +32,7 @@ func (k *Keeper) BeginBlocker(ctx sdk.Context) {
 			k.Logger(ctx).Error("error in GCCompletedRedelegations", "error", err)
 		}
 
-		//k.HandleMaturedUnbondings(ctx)
+		// k.HandleMaturedUnbondings(ctx)
 	}
 	k.IterateZones(ctx, func(index int64, zone *types.Zone) (stop bool) {
 		if ctx.BlockHeight()%30 == 0 {
