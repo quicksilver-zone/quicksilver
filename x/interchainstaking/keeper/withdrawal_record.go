@@ -152,7 +152,7 @@ func (k *Keeper) IterateZoneWithdrawalRecords(ctx sdk.Context, chainID string, f
 // IterateZoneStatusWithdrawalRecords iterate through records for a given zone / delegator tuple.
 func (k *Keeper) IterateZoneStatusWithdrawalRecords(ctx sdk.Context, chainID string, status int32, fn func(index int64, record types.WithdrawalRecord) (stop bool)) {
 	statusBytes := make([]byte, 8)
-	binary.BigEndian.PutUint64(statusBytes, uint64(status))
+	binary.BigEndian.PutUint64(statusBytes, uint64(status)) //nolint:gosec
 	key := append([]byte(chainID), statusBytes...)
 	k.IteratePrefixedWithdrawalRecords(ctx, key, fn)
 }

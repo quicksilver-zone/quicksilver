@@ -150,11 +150,11 @@ func (k *Keeper) GetClaimableAmountForAction(ctx sdk.Context, chainID, address s
 	// calculate action allocation:
 	//   - zone drop action weight * claim record max allocation
 	// note: use int32(action)-1 as protobuf3 spec valid enum start at 1
-	amount := zd.Actions[int32(action)-1].MulInt64(int64(cr.MaxAllocation)).TruncateInt64()
+	amount := zd.Actions[int32(action)-1].MulInt64(int64(cr.MaxAllocation)).TruncateInt64() //nolint:gosec
 
 	// airdrop has not yet started to decay
 	if ctx.BlockTime().Before(zd.StartTime.Add(zd.Duration)) {
-		return uint64(amount), nil
+		return uint64(amount), nil //nolint:gosec
 	}
 
 	// airdrop has started to decay, calculate claimable portion
@@ -163,7 +163,7 @@ func (k *Keeper) GetClaimableAmountForAction(ctx sdk.Context, chainID, address s
 	claimablePercent := sdk.OneDec().Sub(decayPercent)
 	amount = claimablePercent.MulInt64(amount).TruncateInt64()
 
-	return uint64(amount), nil
+	return uint64(amount), nil //nolint:gosec
 }
 
 // GetClaimableAmountForUser returns the amount claimable for the given user
@@ -186,7 +186,7 @@ func (k *Keeper) GetClaimableAmountForUser(ctx sdk.Context, chainID, address str
 		// protobuf3 spec: valid enum start at 1
 		action := i + 1
 
-		claimableForAction, err := k.GetClaimableAmountForAction(ctx, cr.ChainId, cr.Address, types.Action(action))
+		claimableForAction, err := k.GetClaimableAmountForAction(ctx, cr.ChainId, cr.Address, types.Action(action)) //nolint:gosec
 		if err != nil {
 			return 0, err
 		}

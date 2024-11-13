@@ -30,7 +30,7 @@ var _ types.MsgServer = msgServer{}
 func (k msgServer) Claim(goCtx context.Context, msg *types.MsgClaim) (*types.MsgClaimResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	action := types.Action(msg.Action)
+	action := types.Action(msg.Action) //nolint:gosec
 
 	amount, err := k.Keeper.Claim(ctx, msg.ChainId, action, msg.Address, msg.Proofs)
 	if err != nil {

@@ -22,7 +22,7 @@ var (
 // GetGenericKeyClaim returns the key for storing a given claim.
 func GetGenericKeyClaim(key []byte, chainID, address string, module ClaimType, srcChainID string) []byte {
 	typeBytes := make([]byte, 4)
-	binary.BigEndian.PutUint32(typeBytes, uint32(module))
+	binary.BigEndian.PutUint32(typeBytes, uint32(module)) //nolint:gosec
 	key = append(key, chainID...)
 	key = append(key, 0x00)
 	key = append(key, address...)

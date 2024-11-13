@@ -1840,7 +1840,7 @@ func TestDepositIntervalCallback(t *testing.T) {
 		err = fmt.Errorf("pagination total exceeds int range: %d", res.Pagination.Total)
 	}
 	suite.NoError(err)
-	suite.Equal(txQueryCount, int(res.Pagination.Total)-3)
+	suite.Equal(txQueryCount, int(res.Pagination.Total)-3) //nolint:gosec
 }
 
 func TestDepositIntervalCallbackWithExistingTxs(t *testing.T) {
@@ -1889,7 +1889,7 @@ func TestDepositIntervalCallbackWithExistingTxs(t *testing.T) {
 		err = fmt.Errorf("pagination total exceeds int range: %d", res.Pagination.Total)
 	}
 	suite.NoError(err)
-	suite.Equal(txQueryCount, int(res.Pagination.Total)-3)
+	suite.Equal(txQueryCount, int(res.Pagination.Total)-3) //nolint:gosec
 }
 
 func decodeBase64NoErr(str string) []byte {

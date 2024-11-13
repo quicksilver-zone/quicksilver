@@ -172,7 +172,7 @@ func (k *Keeper) SendTokenIBC(ctx sdk.Context, senderAccAddress sdk.AccAddress, 
 			RevisionNumber: 0,
 			RevisionHeight: 0,
 		},
-		TimeoutTimestamp: uint64(ctx.BlockTime().UnixNano() + 5*time.Minute.Nanoseconds()),
+		TimeoutTimestamp: uint64(ctx.BlockTime().UnixNano() + 5*time.Minute.Nanoseconds()), //nolint:gosec
 		Memo:             "",
 	})
 	return err
@@ -298,7 +298,7 @@ func ProdSubmitTx(ctx sdk.Context, k *Keeper, msgs []sdk.Msg, account *types.ICA
 		chunkSize = ICAMsgChunkSize
 	}
 
-	timeoutTimestamp := uint64(ctx.BlockTime().Add(ICATimeout).UnixNano())
+	timeoutTimestamp := uint64(ctx.BlockTime().Add(ICATimeout).UnixNano()) //nolint:gosec
 
 	for {
 		// if no messages, no chunks!

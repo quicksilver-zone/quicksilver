@@ -154,7 +154,7 @@ func (k *Keeper) verifyDeposit(ctx sdk.Context, cr types.ClaimRecord, threshold 
 	}
 
 	// calculate target amount
-	tAmount := threshold.MulInt64(int64(cr.BaseValue)).TruncateInt()
+	tAmount := threshold.MulInt64(int64(cr.BaseValue)).TruncateInt() //nolint:gosec
 
 	if gdAmount.LT(tAmount) {
 		return fmt.Errorf("insufficient deposit amount, expects %v got %v", tAmount, gdAmount)
@@ -296,7 +296,7 @@ func (k *Keeper) verifyOsmosisLP(ctx sdk.Context, proofs []*cmtypes.Proof, cr ty
 	if err := k.verifyDeposit(ctx, cr, dThreshold); err != nil {
 		return fmt.Errorf("%w, must reach at least %s of %d", err, tier4, cr.BaseValue)
 	}
-	tAmount := dThreshold.MulInt64(int64(cr.BaseValue / 2)).TruncateInt()
+	tAmount := dThreshold.MulInt64(int64(cr.BaseValue / 2)).TruncateInt() //nolint:gosec
 
 	// check liquidity threshold
 	if uAmount.LT(tAmount) {

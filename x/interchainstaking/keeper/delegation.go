@@ -278,7 +278,7 @@ func (k *Keeper) WithdrawDelegationRewardsForResponse(ctx sdk.Context, zone *typ
 	if len(msgs) > math.MaxUint32 {
 		return fmt.Errorf("number of messages exceeds uint32 range: %d", len(msgs))
 	}
-	if err = zone.IncrementWithdrawalWaitgroup(k.Logger(ctx), uint32(len(msgs)), "WithdrawDelegationRewardsForResponse"); err != nil {
+	if err = zone.IncrementWithdrawalWaitgroup(k.Logger(ctx), uint32(len(msgs)), "WithdrawDelegationRewardsForResponse"); err != nil { //nolint:gosec
 		return err
 	}
 	k.SetZone(ctx, zone)
@@ -358,7 +358,7 @@ func (k *Keeper) FlushOutstandingDelegations(ctx sdk.Context, zone *types.Zone, 
 	if numMsgs > math.MaxUint32 {
 		return fmt.Errorf("number of messages exceeds uint32 range: %d", numMsgs)
 	}
-	if err = zone.IncrementWithdrawalWaitgroup(k.Logger(ctx), uint32(numMsgs), "sending flush messages"); err != nil {
+	if err = zone.IncrementWithdrawalWaitgroup(k.Logger(ctx), uint32(numMsgs), "sending flush messages"); err != nil { //nolint:gosec
 		return err
 	}
 

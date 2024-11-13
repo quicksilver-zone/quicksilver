@@ -298,7 +298,7 @@ func TestAction_InBounds(t *testing.T) {
 		},
 		{
 			"exceed upper",
-			types.Action(len(types.Action_name)),
+			types.Action(len(types.Action_name)), //nolint:gosec
 			false,
 		},
 		{
@@ -308,7 +308,7 @@ func TestAction_InBounds(t *testing.T) {
 		},
 		{
 			"in bounds upper",
-			types.Action(len(types.Action_name) - 1),
+			types.Action(len(types.Action_name) - 1), //nolint:gosec
 			true,
 		},
 	}
