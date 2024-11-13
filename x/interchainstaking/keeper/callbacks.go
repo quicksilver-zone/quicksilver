@@ -83,8 +83,7 @@ func (c Callbacks) RegisterCallbacks() icqtypes.QueryCallbacks {
 		AddCallback("allbalances", Callback(AllBalancesCallback)).
 		AddCallback("delegationaccountbalance", Callback(DelegationAccountBalanceCallback)).
 		AddCallback("delegationaccountbalances", Callback(DelegationAccountBalancesCallback)).
-		AddCallback("signinginfo", Callback(SigningInfoCallback)).
-		AddCallback("polldelegationaccountbalance", Callback(PollDelegationAccountBalanceCallback))
+		AddCallback("signinginfo", Callback(SigningInfoCallback))
 
 	return a.(Callbacks)
 }
@@ -585,46 +584,6 @@ func AccountBalanceCallback(k *Keeper, ctx sdk.Context, args []byte, query icqty
 
 	// Ensure that the coin is valid.
 	// Please see https://github.com/quicksilver-zone/quicksilver-incognito/issues/80
-	if err := coin.Validate(); err != nil {
-		k.Logger(ctx).Error("invalid coin for zone", "zone", zone.ChainId, "err", err)
-		return err
-	}
-
-	address, err := addressutils.EncodeAddressToBech32(zone.AccountPrefix, accAddr)
-	if err != nil {
-		return err
-	}
-
-	return k.SetAccountBalanceForDenom(ctx, &zone, address, coin)
-}
-
-// PollDelegationAccountBalanceCallback is a callback handler for periodic balance queries of the delegation account for the zone's base denom.
-func PollDelegationAccountBalanceCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
-	zone, found := k.GetZone(ctx, query.GetChainId())
-	if !found {
-		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
-	}
-
-	if len(query.Request) < 2 {
-		k.Logger(ctx).Error("unable to unmarshal balance request", "zone", zone.ChainId, "error", "request length is too short")
-		return errors.New("account balance icq request must always have a length of at least 2 bytes")
-	}
-
-	balancesStore := query.Request[1:]
-	accAddr, denom, err := banktypes.AddressAndDenomFromBalancesStore(balancesStore)
-	if err != nil {
-		return err
-	}
-
-	if denom != zone.BaseDenom {
-		return fmt.Errorf("received denom %s does not match zone base denom %s", denom, zone.BaseDenom)
-	}
-
-	coin, err := bankkeeper.UnmarshalBalanceCompat(k.cdc, args, denom)
-	if err != nil {
-		return err
-	}
-
 	if err := coin.Validate(); err != nil {
 		k.Logger(ctx).Error("invalid coin for zone", "zone", zone.ChainId, "err", err)
 		return err

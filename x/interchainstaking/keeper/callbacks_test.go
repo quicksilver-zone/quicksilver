@@ -2867,7 +2867,7 @@ func (suite *KeeperTestSuite) TestPollDelegationAccountBalanceCallback() {
 		data := append(banktypes.CreateAccountBalancesPrefix(accAddr), "uatom"...)
 		quicksilver.InterchainstakingKeeper.SetZone(ctx, &zone)
 
-		err = keeper.PollDelegationAccountBalanceCallback(quicksilver.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: data})
+		err = keeper.AccountBalanceCallback(quicksilver.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: data})
 		suite.NoError(err)
 	})
 }

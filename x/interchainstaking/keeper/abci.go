@@ -63,7 +63,7 @@ func (k *Keeper) BeginBlocker(ctx sdk.Context) {
 				append(banktypes.CreateAccountBalancesPrefix(addressBytes), []byte(zone.BaseDenom)...),
 				sdk.NewInt(-1),
 				types.ModuleName,
-				"polldelegationaccountbalance",
+				"accountbalance",
 				0,
 			)
 		}
