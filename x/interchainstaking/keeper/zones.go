@@ -303,6 +303,17 @@ func (k *Keeper) SetAccountBalanceForDenom(ctx sdk.Context, zone *types.Zone, ad
 			return err
 		}
 		k.Logger(ctx).Info("Matched performance address", "address", address, "wg", zone.PerformanceAddress.BalanceWaitgroup, "balance", zone.PerformanceAddress.Balance)
+	case zone.DelegationAddress != nil && address == zone.DelegationAddress.Address:
+		existing := zone.DelegationAddress.Balance.AmountOf(coin.Denom)
+		err = zone.DelegationAddress.SetBalance(zone.DelegationAddress.Balance.Sub(sdk.NewCoins(sdk.NewCoin(coin.Denom, existing))...).Add(coin)) // reset this denom
+		if err != nil {
+			return err
+		}
+		err = zone.DelegationAddress.DecrementBalanceWaitgroup()
+		if err != nil {
+			return err
+		}
+		k.Logger(ctx).Info("Matched delegation address", "address", address, "wg", zone.DelegationAddress.BalanceWaitgroup, "balance", zone.DelegationAddress.Balance)
 	default:
 		panic("unexpected")
 	}
