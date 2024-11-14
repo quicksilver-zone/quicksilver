@@ -72,13 +72,13 @@ func (p *CelestiaProof) Validate(dataHash []byte, txHash string) ([]byte, error)
 }
 
 func (p *TendermintProof) Validate(dataHash []byte, txHash string) ([]byte, error) {
-    if p.TxProof == nil {
-        return nil, fmt.Errorf("TxProof is nil")
-    }
-    tmproof, err := tmtypes.TxProofFromProto(*p.TxProof)
-    if err != nil {
-        return nil, fmt.Errorf("unable to marshal proof: %w", err)
-    }
+	if p.TxProof == nil {
+		return nil, fmt.Errorf("TxProof is nil")
+	}
+	tmproof, err := tmtypes.TxProofFromProto(*p.TxProof)
+	if err != nil {
+		return nil, fmt.Errorf("unable to marshal proof: %w", err)
+	}
 	err = tmproof.Validate(dataHash)
 	if err != nil {
 		return nil, fmt.Errorf("unable to validate proof: %w", err)
