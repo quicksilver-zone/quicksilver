@@ -1508,8 +1508,10 @@ func DistributeRewardsFromWithdrawAccount(k *Keeper, ctx sdk.Context, args []byt
 	}
 
 	for _, coin := range multiDenomFee.Sort() {
-		timeoutTime := ctx.BlockTime().Add(6 * time.Hour)
-		timeoutTimestamp := uint64(timeoutTime.UnixNano())
+		timeoutTimestamp := ctx.BlockTime().UnixNano() + 6*time.Hour.Nanoseconds()
+		if timeoutTimestamp < 0 {
+			return fmt.Errorf("timeout timestamp is negative: %d", timeoutTimestamp)
+		}
 
 		msgs = append(
 			msgs,
