@@ -48,6 +48,9 @@ func (p *CelestiaProof) Validate(dataHash []byte, txHash string) ([]byte, error)
 	if err != nil {
 		return nil, fmt.Errorf("unable to parse txs from shareProof: %w", err)
 	}
+	if len(txs) == 0 {
+		return nil, fmt.Errorf("no transactions found in shares")
+	}
 
 	if !shareProof.VerifyProof() {
 		return nil, fmt.Errorf("share proof failed to verify")
