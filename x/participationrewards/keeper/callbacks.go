@@ -382,7 +382,7 @@ func SetEpochBlockCallback(ctx sdk.Context, k *Keeper, args []byte, query icqtyp
 		connectionData.LastEpoch = blockResponse.SdkBlock.Header.Height
 	}
 
-	heightInBytes := sdk.Uint64ToBigEndian(uint64(connectionData.LastEpoch))
+	heightInBytes := sdk.Uint64ToBigEndian(uint64(connectionData.LastEpoch)) //nolint:gosec
 	// trigger a client update at the epoch boundary
 	k.IcqKeeper.MakeRequest(
 		ctx,

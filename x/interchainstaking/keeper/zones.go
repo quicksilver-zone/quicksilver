@@ -98,8 +98,24 @@ func (k *Keeper) GetDelegatedAmount(ctx sdk.Context, zone *types.Zone) sdk.Coin 
 	return out
 }
 
-// GetUnbondingTokensAndCount return the total amount of unbonding tokens and the count of unbonding for a given zone.
-func (k *Keeper) GetUnbondingTokensAndCount(ctx sdk.Context, zone *types.Zone) (sdk.Coin, uint32) {
+// GetUnbondingTokensAndCount returns the total amount of unbonding tokens and the count of unbonding for a given zone.
+func (k *Keeper) GetUnbondingTokens(ctx sdk.Context, zone *types.Zone) sdk.Coin {
+	out := sdk.NewCoin(zone.BaseDenom, sdk.ZeroInt())
+	k.IterateUnbondingRecords(ctx, func(index int64, wr types.UnbondingRecord) (stop bool) {
+		if wr.ChainId != zone.ChainId {
+			return false
+		}
+		amount := wr.Amount
+		if !amount.IsNegative() {
+			out = out.Add(amount)
+		}
+		return false
+	})
+	return out
+}
+
+// GetWithdrawingTokensAndCount return the total amount of unbonding tokens and the count of unbonding for a given zone.
+func (k *Keeper) GetWithdrawnTokensAndCount(ctx sdk.Context, zone *types.Zone) (sdk.Coin, uint32) {
 	out := sdk.NewCoin(zone.BaseDenom, sdk.ZeroInt())
 	var count uint32
 	k.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, types.WithdrawStatusUnbond, func(index int64, wr types.WithdrawalRecord) (stop bool) {
@@ -303,6 +319,17 @@ func (k *Keeper) SetAccountBalanceForDenom(ctx sdk.Context, zone *types.Zone, ad
 			return err
 		}
 		k.Logger(ctx).Info("Matched performance address", "address", address, "wg", zone.PerformanceAddress.BalanceWaitgroup, "balance", zone.PerformanceAddress.Balance)
+	case zone.DelegationAddress != nil && address == zone.DelegationAddress.Address:
+		existing := zone.DelegationAddress.Balance.AmountOf(coin.Denom)
+		err = zone.DelegationAddress.SetBalance(zone.DelegationAddress.Balance.Sub(sdk.NewCoins(sdk.NewCoin(coin.Denom, existing))...).Add(coin)) // reset this denom
+		if err != nil {
+			return err
+		}
+		err = zone.DelegationAddress.DecrementBalanceWaitgroup()
+		if err != nil {
+			return err
+		}
+		k.Logger(ctx).Info("Matched delegation address", "address", address, "wg", zone.DelegationAddress.BalanceWaitgroup, "balance", zone.DelegationAddress.Balance)
 	default:
 		panic("unexpected")
 	}
@@ -461,7 +488,7 @@ func (k *Keeper) CollectStatsForZone(ctx sdk.Context, zone *types.Zone) (*types.
 	out.DistanceToTarget = fmt.Sprintf("%f", distance)
 
 	// Unbonding info
-	out.UnbondingAmount, out.UnbondingCount = k.GetUnbondingTokensAndCount(ctx, zone)
+	out.UnbondingAmount, out.UnbondingCount = k.GetWithdrawnTokensAndCount(ctx, zone)
 	out.QueuedAmount, out.QueuedCount = k.GetQueuedTokensAndCount(ctx, zone)
 	out.UnbondRecordCount = k.GetUnbondRecordCount(ctx, zone)
 	return out, nil

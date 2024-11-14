@@ -58,12 +58,12 @@ func CalculateAllocationDeltas(
 		// diff between target and current allocations
 		// positive == below target (target), negative == above target (source)
 		delta := targetAmount.Sub(current)
-		max, ok := maxCanAllocate[valoper]
+		maxAmount, ok := maxCanAllocate[valoper]
 		if !ok {
-			max = delta
+			maxAmount = delta
 		}
-		if max.LT(delta) {
-			delta = max
+		if maxAmount.LT(delta) {
+			delta = maxAmount
 		}
 
 		if delta.IsPositive() {

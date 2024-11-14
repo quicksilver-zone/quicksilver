@@ -482,8 +482,6 @@ func (suite *KeeperTestSuite) Test_msgServer_Claim() {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
-
 		suite.Run(tt.name, func() {
 			tt.malleate()
 
@@ -555,8 +553,6 @@ func (suite *KeeperTestSuite) Test_msgServer_IncentivePoolSpend() {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
-
 		suite.Run(tt.name, func() {
 			tt.malleate()
 

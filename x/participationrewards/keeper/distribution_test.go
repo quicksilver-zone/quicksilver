@@ -153,8 +153,6 @@ func (suite *KeeperTestSuite) TestCalcTokenValues() {
 	}
 
 	for _, tt := range tests {
-		tt := tt
-
 		suite.Run(tt.name, func() {
 			suite.SetupTest()
 

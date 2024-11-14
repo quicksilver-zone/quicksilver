@@ -38,6 +38,10 @@ func ValidateProofOps(
 		return errors.New("unable to find connection")
 	}
 
+	if height < 0 {
+		return errors.New("height is negative")
+	}
+
 	csHeight := clienttypes.NewHeight(clienttypes.ParseChainID(chainID), uint64(height)+1)
 	consensusState, found := ibcKeeper.ClientKeeper.GetClientConsensusState(ctx, connection.ClientId, csHeight)
 

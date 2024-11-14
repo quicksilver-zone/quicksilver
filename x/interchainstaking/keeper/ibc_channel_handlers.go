@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"math"
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -59,13 +60,18 @@ func (k *Keeper) HandleChannelOpenAck(ctx sdk.Context, portID, connectionID stri
 				return err
 			}
 
+			param := k.GetParam(ctx, types.KeyDepositInterval)
+			if param > math.MaxInt64 {
+				return fmt.Errorf("deposit interval parameter exceeds int64 range: %d", param)
+			}
+
 			k.ICQKeeper.MakeRequest(
 				ctx,
 				connectionID,
 				chainID,
 				"cosmos.bank.v1beta1.Query/AllBalances",
 				bz,
-				sdk.NewInt(int64(k.GetParam(ctx, types.KeyDepositInterval))),
+				sdk.NewInt(int64(param)),
 				types.ModuleName,
 				"allbalances",
 				0,

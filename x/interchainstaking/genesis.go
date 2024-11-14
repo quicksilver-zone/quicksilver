@@ -14,8 +14,6 @@ func InitGenesis(ctx sdk.Context, k *keeper.Keeper, genState types.GenesisState)
 
 	// set registered zones info from genesis
 	for _, zone := range genState.Zones {
-		// explicit memory referencing
-		zone := zone
 		k.SetZone(ctx, &zone)
 	}
 

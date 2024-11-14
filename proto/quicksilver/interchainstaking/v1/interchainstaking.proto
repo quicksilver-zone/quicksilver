@@ -139,6 +139,10 @@ message UnbondingRecord {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin",
     (gogoproto.nullable) = false
   ];
+  google.protobuf.Timestamp completion_time = 6 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdtime) = true
+  ];
 }
 
 message RedelegationRecord {

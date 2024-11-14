@@ -2,16 +2,20 @@ package keeper
 
 import (
 	"bytes"
+	"fmt"
+	"math"
 	"time"
 
 	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	tmtypes "github.com/cosmos/ibc-go/v6/modules/light-clients/07-tendermint/types"
 
+	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 )
 
@@ -27,6 +31,8 @@ func (k *Keeper) BeginBlocker(ctx sdk.Context) {
 		if err := k.GCCompletedRedelegations(ctx); err != nil {
 			k.Logger(ctx).Error("error in GCCompletedRedelegations", "error", err)
 		}
+
+		// k.HandleMaturedUnbondings(ctx)
 	}
 	k.IterateZones(ctx, func(index int64, zone *types.Zone) (stop bool) {
 		if ctx.BlockHeight()%30 == 0 {
@@ -39,12 +45,29 @@ func (k *Keeper) BeginBlocker(ctx sdk.Context) {
 			if err := k.EnsureWithdrawalAddresses(ctx, zone); err != nil {
 				k.Logger(ctx).Error("error in EnsureWithdrawalAddresses", "error", err.Error())
 			}
-			if err := k.HandleMaturedUnbondings(ctx, zone); err != nil {
-				k.Logger(ctx).Error("error in HandleMaturedUnbondings", "error", err.Error())
+			if err := k.HandleMaturedWithdrawals(ctx, zone); err != nil {
+				k.Logger(ctx).Error("error in HandleMaturedWithdrawals", "error", err.Error())
 			}
 			if err := k.GCCompletedUnbondings(ctx, zone); err != nil {
 				k.Logger(ctx).Error("error in GCCompletedUnbondings", "error", err.Error())
 			}
+
+			addressBytes, err := addressutils.AccAddressFromBech32(zone.DelegationAddress.Address, zone.AccountPrefix)
+			if err != nil {
+				k.Logger(ctx).Error("cannot decode bech32 delegation addr", "error", err.Error())
+			}
+			zone.DelegationAddress.IncrementBalanceWaitgroup()
+			k.ICQKeeper.MakeRequest(
+				ctx,
+				zone.ConnectionId,
+				zone.ChainId,
+				types.BankStoreKey,
+				append(banktypes.CreateAccountBalancesPrefix(addressBytes), []byte(zone.BaseDenom)...),
+				sdk.NewInt(-1),
+				types.ModuleName,
+				"accountbalance",
+				0,
+			)
 		}
 
 		connection, found := k.IBCKeeper.ConnectionKeeper.GetConnection(ctx, zone.ConnectionId)
@@ -69,7 +92,12 @@ func (k *Keeper) BeginBlocker(ctx sdk.Context) {
 
 		k.Logger(ctx).Info("IBC ValSet has changed; requerying valset")
 		// trigger valset update.
-		period := int64(k.GetParam(ctx, types.KeyValidatorSetInterval))
+		param := k.GetParam(ctx, types.KeyValidatorSetInterval)
+		if param > math.MaxInt64 {
+			k.Logger(ctx).Error("parameter value exceeds int64 range", "param", param)
+			panic(fmt.Errorf("parameter value exceeds int64 range: %d", param))
+		}
+		period := int64(param)
 		query := stakingtypes.QueryValidatorsRequest{}
 		err := k.EmitValSetQuery(ctx, zone.ConnectionId, zone.ChainId, query, sdkmath.NewInt(period))
 		if err != nil {

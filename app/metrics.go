@@ -50,7 +50,7 @@ func (app *Quicksilver) ShipMetrics(ctx sdk.Context) {
 	buf := &bytes.Buffer{}
 	defer buf.Reset()
 
-	e := expfmt.NewEncoder(buf, expfmt.FmtText)
+	e := expfmt.NewEncoder(buf, expfmt.NewFormat(expfmt.TypeTextPlain))
 	for _, mf := range metricsFamilies {
 		if err := e.Encode(mf); err != nil {
 			ctx.Logger().Error("Error encoding metrics", "error", err)
@@ -70,7 +70,7 @@ func (app *Quicksilver) ShipMetrics(ctx sdk.Context) {
 		ctx.Logger().Error("Error creating metrics request", "error", err)
 		return
 	}
-	req.Header.Set("Content-Type", string(expfmt.FmtText))
+	req.Header.Set("Content-Type", string(expfmt.NewFormat(expfmt.TypeTextPlain)))
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {

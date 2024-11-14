@@ -35,6 +35,10 @@ func (k msgServer) SubmitQueryResponse(goCtx context.Context, msg *types.MsgSubm
 	}
 
 	latest := k.GetLatestHeight(ctx, msg.ChainId)
+	if msg.Height < 0 {
+		k.Logger(ctx).Error("negative height in message", "msgHeight", msg.Height)
+		return &types.MsgSubmitQueryResponseResponse{}, fmt.Errorf("negative height: %d", msg.Height)
+	}
 	if latest > uint64(msg.Height) && q.QueryType != "tendermint.Tx" && q.QueryType != "ibc.ClientUpdate" {
 		k.Logger(ctx).Error("ignoring stale query result", "id", q.Id, "type", q.QueryType, "latestHeight", latest, "msgHeight", msg.Height)
 		// technically this is an error, but will cause the entire tx to fail

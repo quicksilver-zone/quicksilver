@@ -82,7 +82,6 @@ func TestAccountSetWithdrawalAddress(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			err := ica.SetWithdrawalAddress(tc.addr)
 			if tc.wantErr != "" {

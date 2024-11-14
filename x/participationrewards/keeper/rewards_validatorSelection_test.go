@@ -215,8 +215,6 @@ func (suite *KeeperTestSuite) TestCalcUserValidatorSelectionAllocations() {
 	}
 
 	for _, tt := range tests {
-		tt := tt
-
 		suite.Run(tt.name, func() {
 			suite.SetupTest()
 
@@ -382,8 +380,6 @@ func (suite *KeeperTestSuite) TestCalcDistributionScores() {
 	}
 
 	for _, tt := range tests {
-		tt := tt
-
 		suite.Run(tt.name, func() {
 			suite.SetupTest()
 
@@ -557,8 +553,6 @@ func (suite *KeeperTestSuite) TestCalcOverallScores() {
 	}
 
 	for _, tt := range tests {
-		tt := tt
-
 		suite.Run(tt.name, func() {
 			suite.SetupTest()
 

@@ -45,19 +45,19 @@ func RandStringOfLength(r *rand.Rand, n int) string {
 }
 
 // RandPositiveInt get a rand positive sdkmath.Int.
-func RandPositiveInt(r *rand.Rand, max sdkmath.Int) (sdkmath.Int, error) {
-	if !max.GTE(sdk.OneInt()) {
-		return sdkmath.Int{}, errors.New("max too small")
+func RandPositiveInt(r *rand.Rand, maxPositiveInt sdkmath.Int) (sdkmath.Int, error) {
+	if !maxPositiveInt.GTE(sdk.OneInt()) {
+		return sdkmath.Int{}, errors.New("maxPositiveInt too small")
 	}
 
-	max = max.Sub(sdk.OneInt())
+	maxPositiveInt = maxPositiveInt.Sub(sdk.OneInt())
 
-	return sdk.NewIntFromBigInt(new(big.Int).Rand(r, max.BigInt())).Add(sdkmath.OneInt()), nil
+	return sdk.NewIntFromBigInt(new(big.Int).Rand(r, maxPositiveInt.BigInt())).Add(sdkmath.OneInt()), nil
 }
 
 // RandomAmount generates a random amount.
 // Note: The range of RandomAmount includes max, and is, in fact, biased to return max as well as 0.
-func RandomAmount(r *rand.Rand, max sdkmath.Int) sdkmath.Int {
+func RandomAmount(r *rand.Rand, maxAmount sdkmath.Int) sdkmath.Int {
 	randInt := big.NewInt(0)
 
 	switch r.Intn(10) {
@@ -65,9 +65,9 @@ func RandomAmount(r *rand.Rand, max sdkmath.Int) sdkmath.Int {
 		// do nothing
 		// randInt = big.NewInt(0)
 	case 1:
-		randInt = max.BigInt()
+		randInt = maxAmount.BigInt()
 	default: // NOTE: there are 10 total cases.
-		randInt = big.NewInt(0).Rand(r, max.BigInt()) // up to max - 1
+		randInt = big.NewInt(0).Rand(r, maxAmount.BigInt()) // up to maxAmount - 1
 	}
 
 	return sdk.NewIntFromBigInt(randInt)
@@ -75,16 +75,16 @@ func RandomAmount(r *rand.Rand, max sdkmath.Int) sdkmath.Int {
 
 // RandomDecAmount generates a random decimal amount
 // Note: The range of RandomDecAmount includes max, and is, in fact, biased to return max as well as 0.
-func RandomDecAmount(r *rand.Rand, max sdk.Dec) sdk.Dec {
+func RandomDecAmount(r *rand.Rand, maxDec sdk.Dec) sdk.Dec {
 	randInt := big.NewInt(0)
 
 	switch r.Intn(10) {
 	case 0:
 		return sdk.NewDecFromBigIntWithPrec(randInt, sdk.Precision)
 	case 1:
-		randInt = max.BigInt() // the underlying big int with all precision bits.
+		randInt = maxDec.BigInt() // the underlying big int with all precision bits.
 	default: // NOTE: there are 10 total cases.
-		randInt = big.NewInt(0).Rand(r, max.BigInt())
+		randInt = big.NewInt(0).Rand(r, maxDec.BigInt())
 	}
 
 	return sdk.NewDecFromBigIntWithPrec(randInt, sdk.Precision)
@@ -98,8 +98,8 @@ func RandTimestamp(r *rand.Rand) time.Time {
 }
 
 // RandIntBetween returns a random int between two numbers inclusively.
-func RandIntBetween(r *rand.Rand, min, max int) int {
-	return r.Intn(max-min) + min
+func RandIntBetween(r *rand.Rand, minInt, maxInt int) int {
+	return r.Intn(maxInt-minInt) + minInt
 }
 
 // RandSubsetCoins returns random subset of the provided coins
@@ -182,8 +182,8 @@ func RandLTBound[T constraints.Integer](r *rand.Rand, upperbound T) T {
 }
 
 func RandLTEBound[T constraints.Integer](r *rand.Rand, upperbound T) T {
-	max := int(upperbound)
-	i := RandIntBetween(r, 0, max+1)
+	maxUB := int(upperbound)
+	i := RandIntBetween(r, 0, maxUB+1)
 	t := T(i)
 	return t
 }

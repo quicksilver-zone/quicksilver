@@ -162,7 +162,6 @@ func (suite *KeeperTestSuite) TestHandleMsgTransferGood() {
 			}
 
 			for _, claim := range tc.claims {
-				claim := claim // no implicit memory aliasing
 				quicksilver.ClaimsManagerKeeper.SetLastEpochClaim(ctx, &claim)
 			}
 
@@ -3745,7 +3744,7 @@ func (suite *KeeperTestSuite) TestHandleMaturedUbondings() {
 				_ = quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(ctx, wdr)
 			}
 
-			err := quicksilver.InterchainstakingKeeper.HandleMaturedUnbondings(ctx, &zone)
+			err := quicksilver.InterchainstakingKeeper.HandleMaturedWithdrawals(ctx, &zone)
 			suite.NoError(err)
 
 			for idx, ewdr := range test.expectedWithdrawalRecords(ctx, quicksilver, zone) {

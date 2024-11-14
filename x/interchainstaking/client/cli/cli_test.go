@@ -144,8 +144,6 @@ func (s *IntegrationTestSuite) TestGetCmdZones() {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
-
 		s.Run(tt.name, func() {
 			clientCtx := val.ClientCtx
 
@@ -254,8 +252,6 @@ func (s *IntegrationTestSuite) TestGetDelegatorIntentCmd() {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
-
 		s.Run(tt.name, func() {
 			clientCtx := val.ClientCtx
 			runFlags := []string{
@@ -318,8 +314,6 @@ func (s *IntegrationTestSuite) TestGetDepositAccountCmd() {
 		}, */
 	}
 	for _, tt := range tests {
-		tt := tt
-
 		s.Run(tt.name, func() {
 			clientCtx := val.ClientCtx
 
@@ -434,8 +428,6 @@ func (s *IntegrationTestSuite) TestGetSignalIntentTxCmd() {
 		}, */
 	}
 	for _, tt := range tests {
-		tt := tt
-
 		s.Run(tt.name, func() {
 			clientCtx := val.ClientCtx
 
@@ -490,8 +482,6 @@ func (s *IntegrationTestSuite) TestGetWithdrawalRecordsCmd() {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
-
 		s.Run(tt.name, func() {
 			clientCtx := val.ClientCtx
 
@@ -557,8 +547,6 @@ func (s *IntegrationTestSuite) TestGetUserWithdrawalRecords() {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
-
 		s.Run(tt.name, func() {
 			clientCtx := val.ClientCtx
 
@@ -613,8 +601,6 @@ func (s *IntegrationTestSuite) TestGetZoneWithdrawalRecordsCmd() {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
-
 		s.Run(tt.name, func() {
 			clientCtx := val.ClientCtx
 
@@ -701,8 +687,6 @@ func (s *IntegrationTestSuite) TestGetZoneRedelegationRecordsCmd() {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
-
 		s.Run(tt.name, func() {
 			clientCtx := val.ClientCtx
 
@@ -783,8 +767,6 @@ func (s *IntegrationTestSuite) TestGetZoneValidatorsCmd() {
 		// },
 	}
 	for _, tt := range tests {
-		tt := tt
-
 		s.Run(tt.name, func() {
 			clientCtx := val.ClientCtx
 
@@ -842,8 +824,6 @@ func (s *IntegrationTestSuite) TestGetTxStatusCmd() {
 		// },
 	}
 	for _, tt := range tests {
-		tt := tt
-
 		s.Run(tt.name, func() {
 			clientCtx := val.ClientCtx
 
@@ -904,8 +884,6 @@ func (s *IntegrationTestSuite) TestGetReceiptsCmd() {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
-
 		s.Run(tt.name, func() {
 			clientCtx := val.ClientCtx
 
@@ -949,8 +927,6 @@ func (s *IntegrationTestSuite) TestGetUnbondingRecordsCmd() {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
-
 		s.Run(tt.name, func() {
 			clientCtx := val.ClientCtx
 
@@ -1009,8 +985,6 @@ func (s *IntegrationTestSuite) TestGetZoneCmd() {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
-
 		s.Run(tt.name, func() {
 			clientCtx := val.ClientCtx
 
