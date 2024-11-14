@@ -34,20 +34,21 @@ func InitializeConfigFromToml(homepath string) Config {
 	config := Config{}
 	_, err := toml.DecodeFile(filepath.Join(homepath, "config.toml"), &config)
 	if err != nil {
-		//log.Fatal().Msg(fmt.Sprintf("Error Decoding config: %v\n", err.Error()))
-		fmt.Printf("Error Decoding config: %v\n", err.Error())
+		log.Printf("Error decoding config: %v\n", err)
 	}
 
 	if config.DefaultChain == nil {
 		config = NewConfig()
 		file, err := os.Create(filepath.Join(homepath, "config.toml"))
 		if err != nil {
-			log.Fatalf(fmt.Sprintf("Error creating config file: %v\n", err.Error()))
+			log.Fatalf("Error creating config file: %v", err)
+		}
+		if err := toml.NewEncoder(file).Encode(config); err != nil {
+			file.Close()
+			log.Fatalf("Error encoding config: %v", err)
 		}
 		file.Close()
-		defer toml.NewEncoder(file).Encode(config)
 	}
-	//zerolog.SetGlobalLevel(config.LogLevel)
 	config.HomePath = homepath
 	return config
 }
