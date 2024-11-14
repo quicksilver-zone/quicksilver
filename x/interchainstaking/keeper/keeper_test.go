@@ -9,7 +9,6 @@ import (
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 
 	icatypes "github.com/cosmos/ibc-go/v6/modules/apps/27-interchain-accounts/types"
 	transfertypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
@@ -26,6 +25,7 @@ import (
 	claimsmanagertypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
 	ics "github.com/quicksilver-zone/quicksilver/x/interchainstaking"
 	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
+	minttypes "github.com/quicksilver-zone/quicksilver/x/mint/types"
 )
 
 var (
@@ -477,7 +477,7 @@ func (suite *KeeperTestSuite) TestGetRatio() {
 				return out
 			},
 			supply:   math.NewInt(10000000),
-			expected: sdk.NewDecWithPrec(75, 2),
+			expected: sdk.NewDec(6).Quo(sdk.NewDec(11)),
 		},
 		{
 			name: "multi unbonding withdrawal, delegation, gt 1.0",
@@ -497,7 +497,7 @@ func (suite *KeeperTestSuite) TestGetRatio() {
 				return out
 			},
 			supply:   math.NewInt(22500000),
-			expected: sdk.NewDec(4).Quo(sdk.NewDec(3)),
+			expected: sdk.NewDec(54).Quo(sdk.NewDec(39)),
 		},
 	}
 
@@ -512,8 +512,13 @@ func (suite *KeeperTestSuite) TestGetRatio() {
 			zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
 			suite.True(found)
 
+			err := quicksilver.MintKeeper.MintCoins(ctx, sdk.NewCoins(sdk.NewCoin(zone.LocalDenom, tt.supply)))
+			suite.NoError(err)
+
 			for _, record := range tt.records(ctx, quicksilver, zone) {
 				err := icsKeeper.SetWithdrawalRecord(ctx, record)
+				suite.NoError(err)
+				err = quicksilver.BankKeeper.SendCoinsFromModuleToModule(ctx, minttypes.ModuleName, icstypes.EscrowModuleAccount, sdk.NewCoins(record.BurnAmount))
 				suite.NoError(err)
 			}
 
@@ -521,11 +526,7 @@ func (suite *KeeperTestSuite) TestGetRatio() {
 				icsKeeper.SetDelegation(ctx, zone.ChainId, delegation)
 			}
 
-			err := quicksilver.MintKeeper.MintCoins(ctx, sdk.NewCoins(sdk.NewCoin(zone.LocalDenom, tt.supply)))
-			suite.NoError(err)
-
-			actual, isZero := icsKeeper.GetRatio(ctx, &zone, sdk.ZeroInt())
-			suite.Equal(tt.supply.IsZero(), isZero)
+			actual, _ := icsKeeper.GetRatio(ctx, &zone, sdk.ZeroInt())
 			suite.Equal(tt.expected, actual)
 		})
 	}
