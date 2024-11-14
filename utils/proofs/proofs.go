@@ -30,10 +30,6 @@ func (p *CelestiaProof) Validate(dataHash []byte, txHash string) ([]byte, error)
 	if p.ShareProof == nil {
 		return nil, fmt.Errorf("ShareProof is nil")
 	}
-
-	if p.ShareProof == nil {
-		return nil, fmt.Errorf("ShareProof is nil")
-	}
 	shareProof, err := celestiatypes.ShareProofFromProto(*p.ShareProof)
 	if err != nil {
 		return nil, fmt.Errorf("unable to convert shareProof from proto: %w", err)
