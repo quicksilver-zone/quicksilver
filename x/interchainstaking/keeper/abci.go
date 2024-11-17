@@ -52,22 +52,24 @@ func (k *Keeper) BeginBlocker(ctx sdk.Context) {
 				k.Logger(ctx).Error("error in GCCompletedUnbondings", "error", err.Error())
 			}
 
-			addressBytes, err := addressutils.AccAddressFromBech32(zone.DelegationAddress.Address, zone.AccountPrefix)
-			if err != nil {
-				k.Logger(ctx).Error("cannot decode bech32 delegation addr", "error", err.Error())
+			if zone.DelegationAddress != nil {
+				addressBytes, err := addressutils.AccAddressFromBech32(zone.DelegationAddress.Address, zone.AccountPrefix)
+				if err != nil {
+					k.Logger(ctx).Error("cannot decode bech32 delegation addr", "error", err.Error())
+				}
+				zone.DelegationAddress.IncrementBalanceWaitgroup()
+				k.ICQKeeper.MakeRequest(
+					ctx,
+					zone.ConnectionId,
+					zone.ChainId,
+					types.BankStoreKey,
+					append(banktypes.CreateAccountBalancesPrefix(addressBytes), []byte(zone.BaseDenom)...),
+					sdk.NewInt(-1),
+					types.ModuleName,
+					"accountbalance",
+					0,
+				)
 			}
-			zone.DelegationAddress.IncrementBalanceWaitgroup()
-			k.ICQKeeper.MakeRequest(
-				ctx,
-				zone.ConnectionId,
-				zone.ChainId,
-				types.BankStoreKey,
-				append(banktypes.CreateAccountBalancesPrefix(addressBytes), []byte(zone.BaseDenom)...),
-				sdk.NewInt(-1),
-				types.ModuleName,
-				"accountbalance",
-				0,
-			)
 		}
 
 		connection, found := k.IBCKeeper.ConnectionKeeper.GetConnection(ctx, zone.ConnectionId)
