@@ -358,3 +358,7 @@ replace (
 	github.com/tendermint/tendermint => github.com/cometbft/cometbft v0.34.33
 	github.com/tendermint/tm-db => github.com/notional-labs/tm-db v0.11.0
 )
+
+retract (
+	v1.7.0 // safety bug
+)
