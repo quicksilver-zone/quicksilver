@@ -4,7 +4,7 @@ go 1.23.3
 
 require (
 	cosmossdk.io/errors v1.0.1
-	cosmossdk.io/math v1.3.0
+	cosmossdk.io/math v1.4.0
 	github.com/armon/go-metrics v0.4.1
 	github.com/celestiaorg/go-square/v2 v2.0.0
 	github.com/celestiaorg/nmt v0.22.2
@@ -359,6 +359,4 @@ replace (
 	github.com/tendermint/tm-db => github.com/notional-labs/tm-db v0.11.0
 )
 
-retract (
-	v1.7.0 // safety bug
-)
+retract v1.7.0 // safety bug
