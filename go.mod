@@ -4,7 +4,7 @@ go 1.22.4
 
 require (
 	cosmossdk.io/errors v1.0.1
-	cosmossdk.io/math v1.3.0
+	cosmossdk.io/math v1.4.0
 	github.com/armon/go-metrics v0.4.1
 	github.com/client9/misspell v0.3.4
 	github.com/cometbft/cometbft-db v0.12.0
