@@ -38,7 +38,7 @@ require (
 	golang.org/x/tools v0.27.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20240827150818-7e3bb234dfed
 	google.golang.org/grpc v1.67.1
-	google.golang.org/protobuf v1.35.1
+	google.golang.org/protobuf v1.35.2
 	gopkg.in/yaml.v2 v2.4.0
 	gopkg.in/yaml.v3 v3.0.1
 	mvdan.cc/gofumpt v0.7.0
@@ -359,6 +359,4 @@ replace (
 	github.com/tendermint/tm-db => github.com/notional-labs/tm-db v0.11.0
 )
 
-retract (
-	v1.7.0 // safety bug
-)
+retract v1.7.0 // safety bug
