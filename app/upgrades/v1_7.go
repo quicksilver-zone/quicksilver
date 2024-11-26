@@ -1,6 +1,8 @@
 package upgrades
 
 import (
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
@@ -68,6 +70,69 @@ func V010702UpgradeHandler(
 				return false
 			})
 
+		}
+
+		return mm.RunMigrations(ctx, configurator, fromVM)
+	}
+}
+
+func V010704UpgradeHandler(
+	mm *module.Manager,
+	configurator module.Configurator,
+	appKeepers *keepers.AppKeepers,
+) upgradetypes.UpgradeHandler {
+	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		if isMainnet(ctx) || isTest(ctx) {
+
+			// delete previously sent records. this record was not removed in the previous upgrade because it was not in the unbond status.
+			hashes := []struct {
+				Zone   string
+				Hash   string
+				Status int32
+			}{
+				{Zone: "stargaze-1", Hash: "10af0ee10a97f01467039a69cbfb8df05dc3111c975d955ca51adda201f36555", Status: icstypes.WithdrawStatusSend},
+			}
+			for _, hashRecord := range hashes {
+				// delete duplicate records.
+				appKeepers.InterchainstakingKeeper.DeleteWithdrawalRecord(ctx, hashRecord.Zone, hashRecord.Hash, hashRecord.Status)
+			}
+
+			hashes = []struct {
+				Zone   string
+				Hash   string
+				Status int32
+			}{
+				{Zone: "cosmoshub-4", Hash: "02c2d4bcb869b9ddf26540c2854c2ca09d70492a3831170da293f4101fda32b3", Status: icstypes.WithdrawStatusUnbond},
+			}
+			for _, hashRecord := range hashes {
+				// requeue duplicate records.
+				record, found := appKeepers.InterchainstakingKeeper.GetWithdrawalRecord(ctx, hashRecord.Zone, hashRecord.Hash, hashRecord.Status)
+				if !found {
+					panic("record not found")
+				}
+				record.SendErrors = 0
+				record.Amount = nil
+				record.Distribution = nil
+				record.CompletionTime = time.Time{}
+				record.Acknowledged = false
+
+				appKeepers.InterchainstakingKeeper.UpdateWithdrawalRecordStatus(ctx, &record, icstypes.WithdrawStatusQueued)
+			}
+
+			// get zone
+			zone, found := appKeepers.InterchainstakingKeeper.GetZone(ctx, "cosmoshub-4")
+			if !found {
+				panic("zone not found")
+			}
+
+			appKeepers.InterchainstakingKeeper.OverrideRedemptionRateNoCap(ctx, &zone)
+			// set new redemption rate to 1.37
+			zone.LastRedemptionRate = sdk.NewDecWithPrec(137, 2)
+			appKeepers.InterchainstakingKeeper.SetZone(ctx, &zone)
+
+			// remove 2x old icq queries that will never be satisfied.
+			appKeepers.InterchainQueryKeeper.DeleteQuery(ctx, "d611198d85fed38e7486b9402480e561533911059a35258abce1220479b7bb7e")
+			appKeepers.InterchainQueryKeeper.DeleteQuery(ctx, "533f78f574edcfe6153c753d7769072e86b6586cf9837fe9fec1ad84354433ec")
 		}
 
 		return mm.RunMigrations(ctx, configurator, fromVM)

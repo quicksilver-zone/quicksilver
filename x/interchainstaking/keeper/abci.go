@@ -69,6 +69,7 @@ func (k *Keeper) BeginBlocker(ctx sdk.Context) {
 					"accountbalance",
 					0,
 				)
+				k.SetZone(ctx, zone)
 			}
 		}
 
