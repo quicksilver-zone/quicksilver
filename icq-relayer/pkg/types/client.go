@@ -153,16 +153,16 @@ func (r *ReadOnlyChainConfig) GetClientState(ctx context.Context, clientId strin
 
 func (r *ReadOnlyChainConfig) GetClientStateHeights(ctx context.Context, clientId string, chainId string, height uint64, logger log2.Logger, metrics prommetrics.Metrics, depth int) ([]clienttypes.Height, error) {
 	time.Sleep(100 * time.Millisecond)
-	if depth > 500 {
+	if depth > 10 {
 		return nil, fmt.Errorf("reached max depth")
 	}
 	chainParts := strings.Split(chainId, "-")
 	if len(chainParts) == 1 {
-		chainParts = append(chainParts, "1")
+		chainParts = append(chainParts, "0")
 	}
 	key := fmt.Sprintf("%s-%d", chainParts[len(chainParts)-1], height)
 
-	req := clienttypes.QueryConsensusStateHeightsRequest{ClientId: clientId, Pagination: &querytypes.PageRequest{Key: []byte(key)}}
+	req := clienttypes.QueryConsensusStateHeightsRequest{ClientId: clientId, Pagination: &querytypes.PageRequest{Key: []byte(key), Limit: 10}}
 	bz := r.Codec.MustMarshal(&req)
 	res, err := r.Client.ABCIQuery(ctx, "/ibc.core.client.v1.Query/ConsensusStateHeights", bz)
 	if err != nil {
@@ -294,6 +294,7 @@ func (r *ReadOnlyChainConfig) Tx(hash []byte) (*codectypes.Any, int64, error) {
 		if err := cmtjson.Unmarshal(response.Result, &result); err != nil {
 			return proofAny, 0, fmt.Errorf("error unmarshalling result: %w+", err)
 		}
+		fmt.Println(result)
 		txProtoProof := result.Proof.ToProto()
 		protoProof := proofs.TendermintProof{
 			TxProof: &txProtoProof,
