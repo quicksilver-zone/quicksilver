@@ -2,7 +2,7 @@
 
 QSVERSION ?= $(shell grep github.com/quicksilver-zone/quicksilver go.mod | grep -Eo 'v[0-9]\.[0-9]\.[0-9].*')
 COMMIT ?= $(shell git log -1 --format='%H')
-VERSION ?= $(shell git describe --tags | grep 'icq-relayer' | head -n1 | sed 's/.*\///')
+VERSION ?= $(shell git describe --tags --match 'icq-relayer/*' | head -n1 | sed 's/.*\///')
 
 ldflags = -X github.com/quicksilver-zone/quicksilver/icq-relayer/pkg/runner.VERSION=icq-relayer/$(VERSION) \
           -X github.com/quicksilver-zone/quicksilver/icq-relayer/pkg/runner.COMMIT=$(COMMIT) \
