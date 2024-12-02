@@ -397,8 +397,9 @@ func (suite *KeeperTestSuite) TestMintAndSendQAsset1RR() {
 	amount := sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(5000)))
 
 	// Test sending QAsset
-	err := quicksilver.InterchainstakingKeeper.MintAndSendQAsset(ctx, sender, senderAddress, &zone, amount, false, nil)
+	success, err := quicksilver.InterchainstakingKeeper.MintAndSendQAsset(ctx, sender, senderAddress, &zone, amount, false, nil)
 	suite.NoError(err)
+	suite.True(success)
 
 	// Verify balance of receiver
 	receiverBalance := quicksilver.BankKeeper.GetBalance(ctx, sender, zone.LocalDenom)
@@ -422,8 +423,9 @@ func (suite *KeeperTestSuite) TestMintAndSendQAssetNon1RR() {
 	amount := sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(5000)))
 
 	// Test sending QAsset
-	err := quicksilver.InterchainstakingKeeper.MintAndSendQAsset(ctx, sender, senderAddress, &zone, amount, false, nil)
+	success, err := quicksilver.InterchainstakingKeeper.MintAndSendQAsset(ctx, sender, senderAddress, &zone, amount, false, nil)
 	suite.NoError(err)
+	suite.True(success)
 
 	// Verify balance of receiver
 	receiverBalance := quicksilver.BankKeeper.GetBalance(ctx, sender, zone.LocalDenom)
@@ -447,8 +449,9 @@ func (suite *KeeperTestSuite) TestMintAndSendQAssetSub1RR() {
 	amount := sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(5000)))
 
 	// Test sending QAsset
-	err := quicksilver.InterchainstakingKeeper.MintAndSendQAsset(ctx, sender, senderAddress, &zone, amount, false, nil)
+	success, err := quicksilver.InterchainstakingKeeper.MintAndSendQAsset(ctx, sender, senderAddress, &zone, amount, false, nil)
 	suite.NoError(err)
+	suite.True(success)
 
 	// Verify balance of receiver
 	receiverBalance := quicksilver.BankKeeper.GetBalance(ctx, sender, zone.LocalDenom)
@@ -464,6 +467,7 @@ func (suite *KeeperTestSuite) TestMintAndSendQAssetNon1RRMappedAccount() {
 
 	zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 	zone.RedemptionRate = sdk.NewDecWithPrec(110, 2)
+	zone.Is_118 = false
 	suite.True(found)
 
 	senderAddress := addressutils.GenerateAddressForTestWithPrefix("cosmos")
@@ -473,8 +477,9 @@ func (suite *KeeperTestSuite) TestMintAndSendQAssetNon1RRMappedAccount() {
 	amount := sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(5000)))
 
 	// Test sending QAsset
-	err := quicksilver.InterchainstakingKeeper.MintAndSendQAsset(ctx, sender, senderAddress, &zone, amount, false, mappedAccount)
+	success, err := quicksilver.InterchainstakingKeeper.MintAndSendQAsset(ctx, sender, senderAddress, &zone, amount, false, mappedAccount)
 	suite.NoError(err)
+	suite.True(success)
 
 	// Verify balance of receiver
 	receiverBalance := quicksilver.BankKeeper.GetBalance(ctx, sender, zone.LocalDenom)
@@ -490,6 +495,29 @@ func (suite *KeeperTestSuite) TestMintAndSendQAssetNon1RRMappedAccount() {
 	localAddress, found := quicksilver.InterchainstakingKeeper.GetLocalAddressMap(ctx, sender, suite.chainB.ChainID)
 	suite.True(found)
 	suite.Equal(mappedAccount, localAddress)
+}
+
+func (suite *KeeperTestSuite) TestMintAndSendQAssetNon1RRNon118NoMappedAccount() {
+	suite.SetupTest()
+	suite.setupTestZones()
+
+	quicksilver := suite.GetQuicksilverApp(suite.chainA)
+	ctx := suite.chainA.GetContext()
+
+	zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+	zone.RedemptionRate = sdk.NewDecWithPrec(110, 2)
+	zone.Is_118 = false
+	suite.True(found)
+
+	senderAddress := addressutils.GenerateAddressForTestWithPrefix("cosmos")
+	sender := addressutils.MustAccAddressFromBech32(senderAddress, "")
+
+	amount := sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(5000)))
+
+	// Test sending QAsset
+	success, err := quicksilver.InterchainstakingKeeper.MintAndSendQAsset(ctx, sender, senderAddress, &zone, amount, false, nil)
+	suite.NoError(err)
+	suite.False(success)
 }
 
 func (suite *KeeperTestSuite) TestMintAndSendQAssetNon1RTS() {
@@ -514,8 +542,9 @@ func (suite *KeeperTestSuite) TestMintAndSendQAssetNon1RTS() {
 	amount := sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(5000)))
 
 	// Test sending QAsset
-	err := quicksilver.InterchainstakingKeeper.MintAndSendQAsset(ctx, sender, senderAddress, &zone, amount, true, nil)
+	success, err := quicksilver.InterchainstakingKeeper.MintAndSendQAsset(ctx, sender, senderAddress, &zone, amount, true, nil)
 	suite.NoError(err)
+	suite.True(success)
 
 	// Verify balance of receiver
 	receiverBalance := quicksilver.BankKeeper.GetBalance(ctx, sender, zone.LocalDenom)
