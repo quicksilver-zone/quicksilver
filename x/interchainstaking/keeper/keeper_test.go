@@ -461,6 +461,27 @@ func (suite *KeeperTestSuite) TestGetRatio() {
 			expected: sdk.OneDec(),
 		},
 		{
+			name: "multi unbonding withdrawal, inc queued, delegation, expect 1.0",
+			records: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []icstypes.WithdrawalRecord {
+				out := make([]icstypes.WithdrawalRecord, 0)
+				out = append(out,
+					icstypes.WithdrawalRecord{ChainId: zone.ChainId, Delegator: zone.DelegationAddress.Address, Recipient: addressutils.GenerateAddressForTestWithPrefix(zone.AccountPrefix), Amount: sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, math.NewInt(3000000))), Status: icstypes.WithdrawStatusQueued, Txhash: randomutils.GenerateRandomHashAsHex(64), BurnAmount: sdk.NewCoin(zone.LocalDenom, math.NewInt(3000000))},
+					icstypes.WithdrawalRecord{ChainId: zone.ChainId, Delegator: zone.DelegationAddress.Address, Recipient: addressutils.GenerateAddressForTestWithPrefix(zone.AccountPrefix), Amount: sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, math.NewInt(10000000))), Status: icstypes.WithdrawStatusUnbond, Txhash: randomutils.GenerateRandomHashAsHex(64), BurnAmount: sdk.NewCoin(zone.LocalDenom, math.NewInt(10000000))},
+					icstypes.WithdrawalRecord{ChainId: zone.ChainId, Delegator: zone.DelegationAddress.Address, Recipient: addressutils.GenerateAddressForTestWithPrefix(zone.AccountPrefix), Amount: sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, math.NewInt(1500000))), Status: icstypes.WithdrawStatusUnbond, Txhash: randomutils.GenerateRandomHashAsHex(64), BurnAmount: sdk.NewCoin(zone.LocalDenom, math.NewInt(1500000))},
+				)
+				return out
+			},
+			delegations: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []icstypes.Delegation {
+				validators := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
+				out := make([]icstypes.Delegation, 0)
+				out = append(out, icstypes.NewDelegation(zone.DepositAddress.Address, validators[0], sdk.NewCoin(zone.BaseDenom, sdk.NewInt(3000000))))
+				out = append(out, icstypes.NewDelegation(zone.DepositAddress.Address, validators[1], sdk.NewCoin(zone.BaseDenom, sdk.NewInt(3000000))))
+				return out
+			},
+			supply:   math.NewInt(17500000), // supply 17.5; unbonding 11.5; queued 3.0; delegated 6.0.
+			expected: sdk.OneDec(),
+		},
+		{
 			name: "multi unbonding withdrawal, delegation, sub 1.0",
 			records: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []icstypes.WithdrawalRecord {
 				out := make([]icstypes.WithdrawalRecord, 0)
@@ -498,6 +519,27 @@ func (suite *KeeperTestSuite) TestGetRatio() {
 			},
 			supply:   math.NewInt(22500000),
 			expected: sdk.NewDec(54).Quo(sdk.NewDec(39)),
+		},
+		{
+			name: "multi unbonding withdrawal inc. withdrawal, delegation, gt 1.0",
+			records: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []icstypes.WithdrawalRecord {
+				out := make([]icstypes.WithdrawalRecord, 0)
+				out = append(out, icstypes.WithdrawalRecord{ChainId: zone.ChainId, Delegator: zone.DelegationAddress.Address, Recipient: addressutils.GenerateAddressForTestWithPrefix(zone.AccountPrefix), Amount: sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, math.NewInt(3300000))), Status: icstypes.WithdrawStatusUnbond, Txhash: randomutils.GenerateRandomHashAsHex(64), BurnAmount: sdk.NewCoin(zone.LocalDenom, math.NewInt(3000000))})
+				out = append(out, icstypes.WithdrawalRecord{ChainId: zone.ChainId, Delegator: zone.DelegationAddress.Address, Recipient: addressutils.GenerateAddressForTestWithPrefix(zone.AccountPrefix), Amount: sdk.NewCoins(), Status: icstypes.WithdrawStatusQueued, Txhash: randomutils.GenerateRandomHashAsHex(64), BurnAmount: sdk.NewCoin(zone.LocalDenom, math.NewInt(2000000))})
+				return out
+			},
+			delegations: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []icstypes.Delegation {
+				validators := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
+				out := make([]icstypes.Delegation, 0)
+				out = append(out,
+					icstypes.NewDelegation(zone.DepositAddress.Address, validators[0], sdk.NewCoin(zone.BaseDenom, sdk.NewInt(3300000))),
+					icstypes.NewDelegation(zone.DepositAddress.Address, validators[1], sdk.NewCoin(zone.BaseDenom, sdk.NewInt(17600000))),
+					icstypes.NewDelegation(zone.DepositAddress.Address, validators[2], sdk.NewCoin(zone.BaseDenom, sdk.NewInt(9100000))),
+				)
+				return out
+			},
+			supply:   math.NewInt(23000000),
+			expected: sdk.NewDec(3).Quo(sdk.NewDec(2)),
 		},
 	}
 
