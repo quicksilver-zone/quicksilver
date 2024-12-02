@@ -1179,6 +1179,140 @@ func (suite *KeeperTestSuite) TestKeeper_RedelegationRecords() {
 	}
 }
 
+func (suite *KeeperTestSuite) TestKeeper_InverseMappedAccounts() {
+	icsKeeper := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
+	usrAddress1 := addressutils.GenerateAccAddressForTest()
+	ctx := suite.chainA.GetContext()
+
+	tests := []struct {
+		name         string
+		malleate     func() []*types.QueryInverseMappedAccountsRequest
+		wantErr      bool
+		expectLength int
+	}{
+		{
+			"MappedAccounts_Nil_Request",
+			func() []*types.QueryInverseMappedAccountsRequest { return []*types.QueryInverseMappedAccountsRequest{} },
+			true,
+			0,
+		},
+		{
+			"MappedAccounts_NoRecords_Request",
+			func() []*types.QueryInverseMappedAccountsRequest {
+				// setup zones
+				zone := types.Zone{
+					ConnectionId:    "connection-77001",
+					ChainId:         "evmos_9001-1",
+					AccountPrefix:   "evmos",
+					LocalDenom:      "uqevmos",
+					BaseDenom:       "uevmos",
+					MultiSend:       false,
+					LiquidityModule: false,
+					Is_118:          false,
+				}
+				icsKeeper.SetZone(ctx, &zone)
+				return []*types.QueryInverseMappedAccountsRequest{}
+			},
+			false,
+			0,
+		},
+		{
+			"MappedAccounts_ValidRecord_Request",
+			func() []*types.QueryInverseMappedAccountsRequest {
+				// setup zones
+				suite.setupTestZones()
+				zone := types.Zone{
+					ConnectionId:    "connection-77881",
+					ChainId:         "evmos_9001-1",
+					AccountPrefix:   "evmos",
+					LocalDenom:      "uqevmos",
+					BaseDenom:       "uevmos",
+					MultiSend:       false,
+					LiquidityModule: false,
+					Is_118:          false,
+				}
+				icsKeeper.SetZone(ctx, &zone)
+
+				remoteAddress := sdk.AccAddress(randomutils.GenerateRandomBytes(32))
+				icsKeeper.SetLocalAddressMap(ctx, usrAddress1, remoteAddress, zone.ChainId)
+				return []*types.QueryInverseMappedAccountsRequest{
+					{RemoteAddress: addressutils.MustEncodeAddressToBech32(zone.AccountPrefix, remoteAddress), ChainId: zone.ChainId},
+				}
+			},
+			false,
+			1,
+		},
+
+		{
+			"MappedAccounts_ValidMultipleRecord_Request",
+			func() []*types.QueryInverseMappedAccountsRequest {
+				// setup zones
+				zone := types.Zone{
+					ConnectionId:    "connection-77881",
+					ChainId:         "evmos_9001-1",
+					AccountPrefix:   "evmos",
+					LocalDenom:      "uqevmos",
+					BaseDenom:       "uevmos",
+					MultiSend:       false,
+					LiquidityModule: false,
+					Is_118:          false,
+				}
+				icsKeeper.SetZone(ctx, &zone)
+
+				remoteAddress1 := sdk.AccAddress(randomutils.GenerateRandomBytes(32))
+				icsKeeper.SetLocalAddressMap(ctx, usrAddress1, remoteAddress1, zone.ChainId)
+
+				zone2 := types.Zone{
+					ConnectionId:    "connection-77891",
+					ChainId:         "injective-1",
+					AccountPrefix:   "injective",
+					LocalDenom:      "uqinj",
+					BaseDenom:       "uinj",
+					MultiSend:       false,
+					LiquidityModule: false,
+					Is_118:          false,
+				}
+				icsKeeper.SetZone(ctx, &zone2)
+
+				remoteAddress2 := sdk.AccAddress(randomutils.GenerateRandomBytes(32))
+				icsKeeper.SetLocalAddressMap(ctx, usrAddress1, remoteAddress2, zone2.ChainId)
+				return []*types.QueryInverseMappedAccountsRequest{
+					{RemoteAddress: addressutils.MustEncodeAddressToBech32(zone.AccountPrefix, remoteAddress1), ChainId: zone.ChainId},
+					{RemoteAddress: addressutils.MustEncodeAddressToBech32(zone2.AccountPrefix, remoteAddress2), ChainId: zone2.ChainId},
+				}
+			},
+			false,
+			2,
+		},
+	}
+
+	// run tests:
+	for _, tt := range tests {
+		suite.Run(tt.name, func() {
+			reqs := tt.malleate()
+			for _, req := range reqs {
+				resp, err := icsKeeper.InverseMappedAccounts(
+					ctx,
+					req,
+				)
+				if tt.wantErr {
+					suite.T().Logf("Error:\n%v\n", err)
+					suite.Error(err)
+					return
+				}
+				suite.NoError(err)
+				suite.NotNil(resp)
+				suite.Equal(usrAddress1.String(), resp.LocalAddress)
+
+				vstr, err := json.MarshalIndent(resp, "", "\t")
+				suite.NoError(err)
+
+				suite.T().Logf("Response:\n%s\n", vstr)
+			}
+		})
+	}
+}
+
 func (suite *KeeperTestSuite) TestKeeper_MappedAccounts() {
 	icsKeeper := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
 	usrAddress1, _ := addressutils.AccAddressFromBech32("cosmos1vwh8mkgefn73vpsv7td68l3tynayck07engahn", "cosmos")
@@ -1296,6 +1430,12 @@ func (suite *KeeperTestSuite) TestKeeper_MappedAccounts() {
 			suite.NoError(err)
 			suite.NotNil(resp)
 			suite.Equal(tt.expectLength, len(resp.RemoteAddressMap))
+			for chainID, record := range resp.RemoteAddressMap {
+				zone, found := icsKeeper.GetZone(ctx, chainID)
+				suite.True(found)
+				_, err := addressutils.AddressFromBech32(record, zone.AccountPrefix)
+				suite.NoError(err)
+			}
 
 			vstr, err := json.MarshalIndent(resp, "", "\t")
 			suite.NoError(err)

@@ -339,18 +339,47 @@ func (k *Keeper) MappedAccounts(c context.Context, req *types.QueryMappedAccount
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	remoteAddressMap := make(map[string][]byte)
+	remoteAddressMap := make(map[string]string)
 	addrBytes, err := addressutils.AccAddressFromBech32(req.Address, sdk.GetConfig().GetBech32AccountAddrPrefix())
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, "Invalid Address")
 	}
 
 	k.IterateUserMappedAccounts(ctx, addrBytes, func(index int64, chainID string, remoteAddressBytes sdk.AccAddress) (stop bool) {
-		remoteAddressMap[chainID] = remoteAddressBytes
+		zone, found := k.GetZone(ctx, chainID)
+		if !found {
+			return false
+		}
+		remoteAddressMap[zone.ChainId] = addressutils.MustEncodeAddressToBech32(zone.AccountPrefix, remoteAddressBytes)
 		return false
 	})
 
 	return &types.QueryMappedAccountsResponse{RemoteAddressMap: remoteAddressMap}, nil
+}
+
+func (k *Keeper) InverseMappedAccounts(c context.Context, req *types.QueryInverseMappedAccountsRequest) (*types.QueryInverseMappedAccountsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+
+	zone, found := k.GetZone(ctx, req.ChainId)
+	if !found {
+		return nil, status.Error(codes.NotFound, fmt.Sprintf("no zone found matching %s", req.ChainId))
+	}
+
+	addrBytes, err := addressutils.AccAddressFromBech32(req.RemoteAddress, zone.AccountPrefix)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "Invalid Address")
+	}
+
+	localAddress, ok := k.GetLocalAddressMap(ctx, addrBytes, req.ChainId)
+	if !ok {
+		return nil, status.Error(codes.NotFound, fmt.Sprintf("no local address found matching %s", req.ChainId))
+	}
+
+	return &types.QueryInverseMappedAccountsResponse{LocalAddress: localAddress.String()}, nil
 }
 
 func (k *Keeper) ValidatorDenyList(c context.Context, req *types.QueryDenyListRequest) (*types.QueryDenyListResponse, error) {
