@@ -294,7 +294,6 @@ func (r *ReadOnlyChainConfig) Tx(hash []byte) (*codectypes.Any, int64, error) {
 		if err := cmtjson.Unmarshal(response.Result, &result); err != nil {
 			return proofAny, 0, fmt.Errorf("error unmarshalling result: %w+", err)
 		}
-		fmt.Println(result)
 		txProtoProof := result.Proof.ToProto()
 		protoProof := proofs.TendermintProof{
 			TxProof: &txProtoProof,
