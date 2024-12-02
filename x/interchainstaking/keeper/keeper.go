@@ -733,6 +733,10 @@ func (k *Keeper) GetRatio(ctx sdk.Context, zone *types.Zone, epochRewards sdkmat
 	qAssetAmount := k.BankKeeper.GetSupply(ctx, zone.LocalDenom).Amount
 	escrowAmount := k.BankKeeper.GetBalance(ctx, k.AccountKeeper.GetModuleAddress(types.EscrowModuleAccount), zone.LocalDenom)
 	qAssetAmount = qAssetAmount.Sub(escrowAmount.Amount)
+	k.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, types.WithdrawStatusQueued, func(_ int64, record types.WithdrawalRecord) (stop bool) {
+		qAssetAmount = qAssetAmount.Add(record.BurnAmount.Amount)
+		return false
+	})
 
 	// check if zone is fully withdrawn (no qAssets remain)
 	if qAssetAmount.IsZero() {
