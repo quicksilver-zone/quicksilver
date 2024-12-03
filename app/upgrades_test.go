@@ -469,3 +469,49 @@ func (s *AppTestSuite) TestV010604UpgradeHandler() {
 		s.True(record.CompletionTime.IsZero())
 	}
 }
+
+func (s *AppTestSuite) TestV010705UpgradeHandler() {
+	s.InitV160TestZones()
+	app := s.GetQuicksilverApp(s.chainA)
+
+	ctx := s.chainA.GetContext()
+	completion, err := time.Parse("2006-01-02T15:04:05Z", "2024-12-20T17:00:47Z")
+	s.NoError(err)
+
+	record := icstypes.WithdrawalRecord{
+		ChainId:        "cosmoshub-4",
+		Delegator:      "quick1efpktthkfsuzqhsnqdyyjxv5fl9eemchrlmhyd",
+		Recipient:      "cosmos1efpktthkfsuzqhsnqdyyjxv5fl9eemchgmt9al",
+		Txhash:         "02c2d4bcb869b9ddf26540c2854c2ca09d70492a3831170da293f4101fda32b3",
+		Status:         icstypes.WithdrawStatusUnbond,
+		BurnAmount:     sdk.NewCoin("uqatom", math.NewInt(3534090000)),
+		Amount:         sdk.NewCoins(sdk.NewCoin("uatom", math.NewInt(4841699172))),
+		Acknowledged:   true,
+		CompletionTime: completion,
+	}
+
+	zone, found := app.InterchainstakingKeeper.GetZone(ctx, "cosmoshub-4")
+	s.True(found)
+
+	delegation := icstypes.Delegation{
+		DelegationAddress: zone.DelegationAddress.Address,
+		ValidatorAddress:  "cosmosvaloper1efpktthkfsuzqhsnqdyyjxv5fl9eemchd0ls3v",
+		Amount:            sdk.NewCoin("uatom", math.NewInt(37848188596)),
+	}
+
+	app.InterchainstakingKeeper.SetDelegation(ctx, "cosmoshub-4", delegation)
+
+	s.NoError(app.BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(sdk.NewCoin("uqatom", math.NewInt(30811987786)))))
+	s.NoError(app.BankKeeper.SendCoinsFromModuleToModule(ctx, icstypes.ModuleName, icstypes.EscrowModuleAccount, sdk.NewCoins(sdk.NewCoin("uqatom", math.NewInt(3534090000)))))
+	s.NoError(app.InterchainstakingKeeper.SetWithdrawalRecord(ctx, record))
+
+	handler := upgrades.V010705UpgradeHandler(app.mm, app.configurator, &app.AppKeepers)
+
+	_, err = handler(ctx, types.Plan{}, app.mm.GetVersionMap())
+	s.NoError(err)
+
+	zone, found = app.InterchainstakingKeeper.GetZone(ctx, "cosmoshub-4")
+	s.True(found)
+	s.Equal(sdk.NewDecWithPrec(1387503864591246254, 18), zone.RedemptionRate)
+	s.Equal(sdk.NewDecWithPrec(138, 2), zone.LastRedemptionRate)
+}

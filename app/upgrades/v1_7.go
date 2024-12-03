@@ -138,3 +138,24 @@ func V010704UpgradeHandler(
 		return mm.RunMigrations(ctx, configurator, fromVM)
 	}
 }
+
+func V010705UpgradeHandler(
+	mm *module.Manager,
+	configurator module.Configurator,
+	appKeepers *keepers.AppKeepers,
+) upgradetypes.UpgradeHandler {
+	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		if isMainnet(ctx) || isTest(ctx) {
+			// get zone
+			zone, found := appKeepers.InterchainstakingKeeper.GetZone(ctx, "cosmoshub-4")
+			if !found {
+				panic("zone not found")
+			}
+
+			appKeepers.InterchainstakingKeeper.OverrideRedemptionRateNoCap(ctx, &zone)
+			zone.LastRedemptionRate = sdk.NewDecWithPrec(138, 2) // correct as of 3/12
+			appKeepers.InterchainstakingKeeper.SetZone(ctx, &zone)
+		}
+		return mm.RunMigrations(ctx, configurator, fromVM)
+	}
+}
