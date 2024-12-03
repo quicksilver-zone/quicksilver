@@ -350,7 +350,11 @@ func (k *Keeper) MappedAccounts(c context.Context, req *types.QueryMappedAccount
 		if !found {
 			return false
 		}
-		remoteAddressMap[zone.ChainId] = addressutils.MustEncodeAddressToBech32(zone.AccountPrefix, remoteAddressBytes)
+		encodedAddress, err := addressutils.EncodeAddressToBech32(zone.AccountPrefix, remoteAddressBytes)
+		if err != nil {
+			return false
+		}
+		remoteAddressMap[zone.ChainId] = encodedAddress
 		return false
 	})
 
