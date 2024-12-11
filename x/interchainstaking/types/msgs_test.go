@@ -64,16 +64,6 @@ func TestIntentsFromString(t *testing.T) {
 	}
 	require.Nil(t, err)
 
-	// Check the router key.
-	gotRoute := sigIntent.Route()
-	wantRoute := "interchainstaking"
-	require.Equal(t, wantRoute, gotRoute, "mismatch in route")
-
-	// Check the type.
-	gotType := sigIntent.Type()
-	wantType := "signalintent"
-	require.Equal(t, wantType, gotType, "mismatch in type")
-
 	// Check the signBytes.
 	signBytes := sigIntent.GetSignBytes()
 	require.True(t, len(signBytes) != 0, "expecting signBytes to be produced")
@@ -518,16 +508,6 @@ func TestMsgUpdateRedemption(t *testing.T) {
 	fromAddr := addressutils.GenerateAccAddressForTest()
 	msg := types.NewMsgUpdateRedemption("cosmoshub-4", randomutils.GenerateRandomHashAsHex(32), types.WithdrawStatusQueued, fromAddr)
 
-	// Check the router key.
-	gotRoute := msg.Route()
-	wantRoute := types.ModuleName
-	require.Equal(t, wantRoute, gotRoute, "mismatch in route")
-
-	// Check the type.
-	gotType := msg.Type()
-	wantType := types.TypeMsgUpdateRedemption
-	require.Equal(t, wantType, gotType, "mismatch in type")
-
 	// Check the signBytes.
 	signBytes := msg.GetSignBytes()
 	require.True(t, len(signBytes) != 0, "expecting signBytes to be produced")
@@ -542,16 +522,6 @@ func TestMsgRequeueRedemption(t *testing.T) {
 	fromAddr := addressutils.GenerateAccAddressForTest()
 	msg := types.NewMsgRequeueRedemption("cosmoshub-4", randomutils.GenerateRandomHashAsHex(32), fromAddr)
 
-	// Check the router key.
-	gotRoute := msg.Route()
-	wantRoute := types.ModuleName
-	require.Equal(t, wantRoute, gotRoute, "mismatch in route")
-
-	// Check the type.
-	gotType := msg.Type()
-	wantType := types.TypeMsgRequeueRedemption
-	require.Equal(t, wantType, gotType, "mismatch in type")
-
 	// Check the signBytes.
 	signBytes := msg.GetSignBytes()
 	require.True(t, len(signBytes) != 0, "expecting signBytes to be produced")
@@ -565,16 +535,6 @@ func TestMsgRequeueRedemption(t *testing.T) {
 func TestMsgCancelRedemption(t *testing.T) {
 	fromAddr := addressutils.GenerateAccAddressForTest()
 	msg := types.NewMsgCancelRedemption("cosmoshub-4", randomutils.GenerateRandomHashAsHex(32), fromAddr)
-
-	// Check the router key.
-	gotRoute := msg.Route()
-	wantRoute := types.ModuleName
-	require.Equal(t, wantRoute, gotRoute, "mismatch in route")
-
-	// Check the type.
-	gotType := msg.Type()
-	wantType := types.TypeMsgCancelRedemption
-	require.Equal(t, wantType, gotType, "mismatch in type")
 
 	// Check the signBytes.
 	signBytes := msg.GetSignBytes()
@@ -695,16 +655,6 @@ func TestMsgRequestRedemption_ValidateBasic(t *testing.T) {
 func TestMsgRequestRedemption(t *testing.T) {
 	fromAddr := addressutils.GenerateAccAddressForTest()
 	msg := types.NewMsgRequestRedemption(sdk.NewCoin("uqatom", sdkmath.NewInt(500)), addressutils.GenerateAddressForTestWithPrefix("cosmos"), fromAddr)
-
-	// Check the router key.
-	gotRoute := msg.Route()
-	wantRoute := types.ModuleName
-	require.Equal(t, wantRoute, gotRoute, "mismatch in route")
-
-	// Check the type.
-	gotType := msg.Type()
-	wantType := types.TypeMsgRequestRedemption
-	require.Equal(t, wantType, gotType, "mismatch in type")
 
 	// Check the signBytes.
 	signBytes := msg.GetSignBytes()
