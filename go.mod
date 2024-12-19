@@ -9,7 +9,7 @@ require (
 	github.com/celestiaorg/go-square/v2 v2.0.0
 	github.com/celestiaorg/nmt v0.22.2
 	github.com/client9/misspell v0.3.4
-	github.com/cometbft/cometbft-db v0.12.0
+	github.com/cometbft/cometbft-db v1.0.1
 	github.com/confio/ics23/go v0.9.1
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/cosmos-sdk v0.46.16
