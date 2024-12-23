@@ -55,6 +55,15 @@ service Msg {
 
   // SignalIntent defines a method for signalling voting intent for one or more
   // validators.
+  rpc GovForceSend(MsgForceICASend) returns (MsgForceICASendResponse) {
+    option (google.api.http) = {
+      post: "/quicksilver/tx/v1/interchainstaking/force_send"
+      body: "*"
+    };
+  }
+
+  // SignalIntent defines a method for signalling voting intent for one or more
+  // validators.
   rpc GovCloseChannel(MsgGovCloseChannel) returns (MsgGovCloseChannelResponse) {
     option (google.api.http) = {
       post: "/quicksilver/tx/v1/interchainstaking/close_channel"
@@ -166,3 +175,21 @@ message MsgSignalIntent {
 
 // MsgSignalIntentResponse defines the MsgSignalIntent response type.
 message MsgSignalIntentResponse {}
+
+// MsgForceICASend represents a governance-only message that causes a transfer
+// of tokens from one ICA to another address.
+message MsgForceICASend {
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string source_address = 1;
+  string destination_address = 2;
+  cosmos.base.v1beta1.Coin amount = 3 [
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags) = "yaml:\"coin\""
+  ];
+  string from_address = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// MsgForceICASendResponse defines the MsgForceICASend response type.
+message MsgForceICASendResponse {}

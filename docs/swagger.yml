@@ -2337,6 +2337,77 @@ paths:
                 type: string
       tags:
         - Msg
+  /quicksilver/tx/v1/interchainstaking/force_send:
+    post:
+      summary: >-
+        SignalIntent defines a method for signalling voting intent for one or
+        more
+
+        validators.
+      operationId: GovForceSend
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            description: MsgForceICASendResponse defines the MsgForceICASend response type.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            properties:
+              source_address:
+                type: string
+              destination_address:
+                type: string
+              amount:
+                type: object
+                properties:
+                  denom:
+                    type: string
+                  amount:
+                    type: string
+                description: >-
+                  Coin defines a token with a denomination and an amount.
+
+
+                  NOTE: The amount field is an Int which implements the custom
+                  method
+
+                  signatures required by gogoproto.
+              from_address:
+                type: string
+            description: >-
+              MsgForceICASend represents a governance-only message that causes a
+              transfer
+
+              of tokens from one ICA to another address.
+      tags:
+        - Msg
   /quicksilver/tx/v1/interchainstaking/intent:
     post:
       summary: >-
