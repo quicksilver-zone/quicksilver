@@ -44,3 +44,15 @@ func (q Querier) Supply(c context.Context, _ *types.QuerySupplyRequest) (*types.
 	}
 	return nil, fmt.Errorf("endpoint disabled")
 }
+
+func (q Querier) TopN(c context.Context, req *types.QueryTopNRequest) (*types.QueryTopNResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+
+	if q.endpointEnabled {
+
+		accounts := q.Keeper.TopN(ctx, q.stakingKeeper.BondDenom(ctx), int(req.N))
+
+		return &types.QueryTopNResponse{Accounts: accounts}, nil
+	}
+	return nil, fmt.Errorf("endpoint disabled")
+}
