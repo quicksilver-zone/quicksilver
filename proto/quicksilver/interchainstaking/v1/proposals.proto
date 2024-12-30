@@ -29,7 +29,7 @@ message RegisterZoneProposal {
   bool is_118 = 14;
   string dust_threshold = 15 [
     (cosmos_proto.scalar) = "cosmos.Int",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.nullable) = false
   ];
   string transfer_channel = 16;
@@ -56,7 +56,7 @@ message RegisterZoneProposalWithDeposit {
   bool is_118 = 15;
   string dust_threshold = 16 [
     (cosmos_proto.scalar) = "cosmos.Int",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.nullable) = false
   ];
   string transfer_channel = 17;
