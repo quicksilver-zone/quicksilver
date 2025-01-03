@@ -9,7 +9,7 @@ import { useGrpcQueryClient } from './useGrpcQueryClient';
 
 import { getCoin, getLogoUrls } from '@/utils';
 import { ExtendedValidator, parseValidators } from '@/utils/staking';
-import { env, local_chain, chains } from '@/config';
+import { env, local_chain, chains, getExponent } from '@/config';
 
 
 type WithdrawalRecord = {
@@ -322,7 +322,19 @@ export const useQBalanceQuery = (chainName: string, address: string, qAsset: str
       if (!grpcQueryClient) {
         throw new Error('RPC Client not ready');
       }
-      const denom = qAsset === 'dydx' ? 'aq'+ qAsset : 'uq' + qAsset;
+      let denom = ""
+      const chain = chains.get(env)?.get(chainName);
+      switch (chain?.exponent) {
+        case 6:
+          denom = 'uq' + qAsset;
+          break;
+        case 12:
+          denom = 'pq' + qAsset;
+          break;
+        case 18:
+          denom = 'aq' + qAsset;
+          break;
+      }
 
       const balance = await grpcQueryClient.cosmos.bank.v1beta1.balance({
         address: address || '',

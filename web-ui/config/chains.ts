@@ -369,7 +369,26 @@ const prod_chains = new Map<string, Chain>([
         logo: '/img/networks/arch.svg',
         qlogo: '/img/networks/qarch.svg',
         is_118: true,
+    }],
+    ["composable", {
+        chain_id: "centauri-1",
+        chain_name: "composable",
+        pretty_name: "Picasso",
+        rpc: ["https://centuari-1.rpc.quicksilver.zone"],
+        rest: ["https://centauri-1.lcd.quicksilver.zone"],
+        explorer: "https://explorer.nodestake.org/composable/tx/{}",
+        show: true,
+        enable_deposits: true,
+        enable_withdrawals: true,
+        lsm_enabled: false,
+        major_denom: "pica",
+        minor_denom: "ppica",
+        exponent: 12,
+        logo: '/img/networks/pica.svg',
+        qlogo: '/img/networks/qpica.svg',
+        is_118: true,
     }]
+
 
 ]);
 

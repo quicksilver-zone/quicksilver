@@ -81,28 +81,45 @@ export const NetworkSelect: React.FC<CustomMenuProps> = ({ buttonTextColor = 'wh
       >
         {selectedOption?.pretty_name.toUpperCase()}
       </MenuButton>
-      <MenuList borderColor="rgba(35,35,35,1)" mt={1} bgColor="rgba(35,35,35,1)">
-        {liveNetworks.map((network) => (
-          <MenuItem
-            key={network.chain_id}
-            py={4}
-            bgColor="rgba(35,35,35,1)"
-            borderRadius="4px"
-            color="white"
-            _hover={{
-              bgColor: 'rgba(255,128,0, 0.25)',
-            }}
-            onClick={() => handleOptionClick(network)}
-          >
-            <Flex justifyContent="center" alignItems="center" flexDirection="row">
-              <Image alt={network.chain_name} px={4} borderRadius={'full'} h="40px" src={network.logo} />
-              <Text color="white" fontSize="20px" textAlign="center">
-                {network.pretty_name}
-              </Text>
-            </Flex>
-          </MenuItem>
-        ))}
-      </MenuList>
+      <MenuList
+  borderColor="rgba(35,35,35,1)"
+  mt={1}
+  pl={2}
+  pr={2}
+  bgColor="rgba(35,35,35,1)"
+  display="grid"
+  gridTemplateColumns="repeat(3, 1fr)" 
+  gap={2} // optional: adds spacing between items
+  zIndex={10}
+>
+  {liveNetworks.map((network) => (
+    <MenuItem
+      key={network.chain_id}
+      py={4}
+      bgColor="rgba(35,35,35,1)"
+      borderRadius="4px"
+      color="white"
+      _hover={{
+        bgColor: 'rgba(255,128,0, 0.25)',
+      }}
+      onClick={() => handleOptionClick(network)}
+    >
+      <Flex justifyContent="center" alignItems="center">
+        <Image
+          alt={network.chain_name}
+          px={4}
+          borderRadius="full"
+          h="40px"
+          src={network.logo}
+        />
+        <Text color="white" fontSize="20px" textAlign="center">
+          {network.pretty_name}
+        </Text>
+      </Flex>
+    </MenuItem>
+  ))}
+</MenuList>
+
     </Menu>
   );
 };

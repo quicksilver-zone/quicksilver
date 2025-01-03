@@ -32,7 +32,7 @@ import { quicksilver } from 'quicksilverjs';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { FaStar } from 'react-icons/fa';
 
-import { env, Chain, local_chain } from '@/config';
+import { env, Chain, local_chain, getExponent } from '@/config';
 import { useTx } from '@/hooks';
 import { useFeeEstimation } from '@/hooks/useFeeEstimation';
 import {
@@ -128,13 +128,13 @@ export const StakingBox = ({
 
   const truncatedBalance = truncateToThreeDecimals(Number(baseBalance));
 
-  const maxStakingAmount = truncateToThreeDecimals(truncatedBalance ? truncatedBalance - 0.005 : 0);
+  const maxStakingAmount = truncateToThreeDecimals(truncatedBalance ? truncatedBalance - 0.005 : 0); // this needs to be dynamic per chain.
 
   const maxHalfStakingAmount = maxStakingAmount / 2;
 
   const [inputError, setInputError] = useState(false);
 
-  const exponent = qBalance?.balance.denom === 'aqdydx' ? -18 : -6;
+  const exponent = getExponent(env, qBalance?.balance.denom ?? '') || 6;
   const qAssetsExponent = shiftDigits(qAssets, exponent);
   const qAssetsDisplay = qAssetsExponent.includes('.') ? qAssetsExponent.substring(0, qAssetsExponent.indexOf('.') + 3) : qAssetsExponent;
 
