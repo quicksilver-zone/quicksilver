@@ -26,6 +26,7 @@ dist
 rocksdb
 data
 heighliner
+icq-relayer/icq-relayer
 
 # python script
 autotest.py

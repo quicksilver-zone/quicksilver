@@ -122,21 +122,25 @@ func (k *Keeper) HandleReceiptTransaction(ctx sdk.Context, txn *tx.Tx, hash stri
 		k.Logger(ctx).Error("unable to update intent. Ignoring.", "senderAddress", senderAddress, "zone", zone.ChainId, "err", err.Error())
 		return fmt.Errorf("unable to update intent. Ignoring. senderAddress=%q zone=%q err: %w", senderAddress, zone.ChainId, err)
 	}
-	if err := k.MintAndSendQAsset(ctx, senderAccAddress, senderAddress, &zone, assets, memoRTS, mappedAddress); err != nil {
+
+	success, err := k.MintAndSendQAsset(ctx, senderAccAddress, senderAddress, &zone, assets, memoRTS, mappedAddress)
+	if err != nil {
 		k.Logger(ctx).Error("unable to mint QAsset. Ignoring.", "senderAddress", senderAddress, "zone", zone.ChainId, "err", err)
 		return fmt.Errorf("unable to mint QAsset. Ignoring. senderAddress=%q zone=%q err: %w", senderAddress, zone.ChainId, err)
 	}
-	if err := k.TransferToDelegate(ctx, &zone, assets, hash); err != nil {
-		k.Logger(ctx).Error("unable to transfer to delegate. Ignoring.", "senderAddress", senderAddress, "zone", zone.ChainId, "err", err)
-		return fmt.Errorf("unable to transfer to delegate. Ignoring. senderAddress=%q zone=%q err: %w", senderAddress, zone.ChainId, err)
-	}
-	if memoAutoClaim {
-		if err := k.HandleAutoClaim(ctx, senderAccAddress); err != nil {
-			k.Logger(ctx).Error("unable to handle auto claim. Ignoring.", "senderAddress", senderAddress, "zone", zone.ChainId, "err", err)
-			return fmt.Errorf("unable to handle auto claim. Ignoring. senderAddress=%q zone=%q err: %w", senderAddress, zone.ChainId, err)
+
+	if success {
+		if err := k.TransferToDelegate(ctx, &zone, assets, hash); err != nil {
+			k.Logger(ctx).Error("unable to transfer to delegate. Ignoring.", "senderAddress", senderAddress, "zone", zone.ChainId, "err", err)
+			return fmt.Errorf("unable to transfer to delegate. Ignoring. senderAddress=%q zone=%q err: %w", senderAddress, zone.ChainId, err)
+		}
+		if memoAutoClaim {
+			if err := k.HandleAutoClaim(ctx, senderAccAddress); err != nil {
+				k.Logger(ctx).Error("unable to handle auto claim. Ignoring.", "senderAddress", senderAddress, "zone", zone.ChainId, "err", err)
+				return fmt.Errorf("unable to handle auto claim. Ignoring. senderAddress=%q zone=%q err: %w", senderAddress, zone.ChainId, err)
+			}
 		}
 	}
-
 	// create receipt
 	receipt := k.NewReceipt(ctx, &zone, senderAddress, hash, assets)
 	k.SetReceipt(ctx, *receipt)
@@ -172,7 +176,7 @@ func (k *Keeper) SendTokenIBC(ctx sdk.Context, senderAccAddress sdk.AccAddress, 
 			RevisionNumber: 0,
 			RevisionHeight: 0,
 		},
-		TimeoutTimestamp: uint64(ctx.BlockTime().UnixNano() + 5*time.Minute.Nanoseconds()),
+		TimeoutTimestamp: uint64(ctx.BlockTime().UnixNano() + 5*time.Minute.Nanoseconds()), //nolint:gosec
 		Memo:             "",
 	})
 	return err
@@ -206,9 +210,9 @@ func (k *Keeper) HandleAutoClaim(ctx sdk.Context, senderAddress sdk.AccAddress) 
 //     - Mint QAssets, set new mapping for the mapped account in the keeper, and send to corresponding mapped account.
 //  5. If the zone is 118 and no other flags are set:
 //     - Mint QAssets and transfer to send to msg creator.
-func (k *Keeper) MintAndSendQAsset(ctx sdk.Context, sender sdk.AccAddress, senderAddress string, zone *types.Zone, assets sdk.Coins, memoRTS bool, mappedAddress sdk.AccAddress) error {
+func (k *Keeper) MintAndSendQAsset(ctx sdk.Context, sender sdk.AccAddress, senderAddress string, zone *types.Zone, assets sdk.Coins, memoRTS bool, mappedAddress sdk.AccAddress) (bool, error) {
 	if zone.RedemptionRate.IsZero() {
-		return errors.New("zero redemption rate")
+		return false, errors.New("zero redemption rate")
 	}
 
 	qAssets := sdk.Coins{}
@@ -225,7 +229,7 @@ func (k *Keeper) MintAndSendQAsset(ctx sdk.Context, sender sdk.AccAddress, sende
 		if !found {
 			// if not found, skip minting and refund assets
 			msg := &banktypes.MsgSend{FromAddress: zone.DepositAddress.GetAddress(), ToAddress: senderAddress, Amount: assets}
-			return k.SubmitTx(ctx, []sdk.Msg{msg}, zone.DepositAddress, "refund", zone.MessagesPerTx)
+			return false, k.SubmitTx(ctx, []sdk.Msg{msg}, zone.DepositAddress, "refund", zone.MessagesPerTx)
 		}
 		// do not set, since mapped address already exists
 		setMappedAddress = false
@@ -234,7 +238,7 @@ func (k *Keeper) MintAndSendQAsset(ctx sdk.Context, sender sdk.AccAddress, sende
 	k.Logger(ctx).Info("Minting qAssets for receipt", "assets", qAssets)
 	err := k.BankKeeper.MintCoins(ctx, types.ModuleName, qAssets)
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	switch {
@@ -258,7 +262,7 @@ func (k *Keeper) MintAndSendQAsset(ctx sdk.Context, sender sdk.AccAddress, sende
 	}
 
 	if err != nil {
-		return fmt.Errorf("unable to transfer coins: %w", err)
+		return false, fmt.Errorf("unable to transfer coins: %w", err)
 	}
 
 	ctx.EventManager().EmitEvent(
@@ -267,7 +271,7 @@ func (k *Keeper) MintAndSendQAsset(ctx sdk.Context, sender sdk.AccAddress, sende
 			sdk.NewAttribute(sdk.AttributeKeyAmount, qAssets.String()),
 		),
 	)
-	return nil
+	return true, nil
 }
 
 // TransferToDelegate transfers tokens from the zone deposit account address to the zone delegate account address.
@@ -298,7 +302,7 @@ func ProdSubmitTx(ctx sdk.Context, k *Keeper, msgs []sdk.Msg, account *types.ICA
 		chunkSize = ICAMsgChunkSize
 	}
 
-	timeoutTimestamp := uint64(ctx.BlockTime().Add(ICATimeout).UnixNano())
+	timeoutTimestamp := uint64(ctx.BlockTime().Add(ICATimeout).UnixNano()) //nolint:gosec
 
 	for {
 		// if no messages, no chunks!

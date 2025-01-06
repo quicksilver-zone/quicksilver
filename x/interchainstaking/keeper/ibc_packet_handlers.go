@@ -3,6 +3,7 @@ package keeper
 import (
 	"errors"
 	"fmt"
+	stdmath "math"
 	"reflect"
 	"strconv"
 	"strings"
@@ -505,7 +506,12 @@ func (k *Keeper) HandleWithdrawForUser(ctx sdk.Context, zone *types.Zone, msg *b
 		}
 	}
 
-	period := int64(k.GetParam(ctx, types.KeyValidatorSetInterval))
+	param := k.GetParam(ctx, types.KeyValidatorSetInterval)
+	if param > stdmath.MaxInt64 {
+		return fmt.Errorf("validator set interval parameter exceeds int64 range: %d", param)
+	}
+
+	period := int64(param)
 	query := stakingtypes.QueryValidatorsRequest{}
 	return k.EmitValSetQuery(ctx, zone.ConnectionId, zone.ChainId, query, math.NewInt(period))
 }
@@ -525,7 +531,7 @@ func (k *Keeper) GCCompletedRedelegations(ctx sdk.Context) error {
 	return err
 }
 
-func (k *Keeper) HandleMaturedUnbondings(ctx sdk.Context, zone *types.Zone) error {
+func (k *Keeper) HandleMaturedWithdrawals(ctx sdk.Context, zone *types.Zone) error {
 	k.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, types.WithdrawStatusUnbond, func(idx int64, withdrawal types.WithdrawalRecord) bool {
 		if ctx.BlockTime().After(withdrawal.CompletionTime) && withdrawal.Acknowledged { // completion date has passed.
 			k.Logger(ctx).Info("found completed unbonding")
@@ -550,6 +556,16 @@ func (k *Keeper) HandleMaturedUnbondings(ctx sdk.Context, zone *types.Zone) erro
 		return false
 	})
 	return nil
+}
+
+func (k *Keeper) HandleMaturedUnbondings(ctx sdk.Context) {
+	k.IterateUnbondingRecords(ctx, func(idx int64, record types.UnbondingRecord) bool {
+		if ctx.BlockTime().After(record.CompletionTime) {
+			k.Logger(ctx).Info("found matured unbonding", "chain", record.ChainId, "validator", record.Validator, "epoch", record.EpochNumber, "completion", record.CompletionTime)
+			k.DeleteUnbondingRecord(ctx, record.ChainId, record.Validator, record.EpochNumber)
+		}
+		return false
+	})
 }
 
 func (k *Keeper) GetInflightUnbondingAmount(ctx sdk.Context, zone *types.Zone) sdk.Coin {
@@ -791,6 +807,14 @@ func (k *Keeper) HandleUndelegate(ctx sdk.Context, msg sdk.Msg, completion time.
 		k.Logger(ctx).Info("withdrawal record to save", "rcd", record)
 		k.UpdateWithdrawalRecordStatus(ctx, &record, types.WithdrawStatusUnbond)
 	}
+
+	ur, found := k.GetUnbondingRecord(ctx, zone.ChainId, undelegateMsg.ValidatorAddress, epochNumber)
+	if !found {
+		return fmt.Errorf("cannot find unbonding record for %s/%s/%d", zone.ChainId, undelegateMsg.ValidatorAddress, epochNumber)
+	}
+
+	ur.CompletionTime = completion
+	k.SetUnbondingRecord(ctx, ur)
 
 	delAddr, err := addressutils.AccAddressFromBech32(undelegateMsg.DelegatorAddress, "")
 	if err != nil {
@@ -1343,7 +1367,12 @@ func (k *Keeper) UpdateDelegationRecordForAddress(
 	}
 	k.SetDelegation(ctx, zone.ChainId, delegation)
 
-	period := int64(k.GetParam(ctx, types.KeyValidatorSetInterval))
+	param := k.GetParam(ctx, types.KeyValidatorSetInterval)
+	if param > stdmath.MaxInt64 {
+		return fmt.Errorf("validator set interval parameter exceeds int64 range: %d", param)
+	}
+
+	period := int64(param)
 	query := stakingtypes.QueryValidatorsRequest{}
 	err := k.EmitValSetQuery(ctx, zone.ConnectionId, zone.ChainId, query, math.NewInt(period))
 	if err != nil {
@@ -1479,6 +1508,11 @@ func DistributeRewardsFromWithdrawAccount(k *Keeper, ctx sdk.Context, args []byt
 	}
 
 	for _, coin := range multiDenomFee.Sort() {
+		timeoutTimestamp := ctx.BlockTime().UnixNano() + 6*time.Hour.Nanoseconds()
+		if timeoutTimestamp < 0 {
+			return fmt.Errorf("timeout timestamp is negative: %d", timeoutTimestamp)
+		}
+
 		msgs = append(
 			msgs,
 			&ibctransfertypes.MsgTransfer{
@@ -1487,7 +1521,7 @@ func DistributeRewardsFromWithdrawAccount(k *Keeper, ctx sdk.Context, args []byt
 				Token:            coin,
 				Sender:           zone.WithdrawalAddress.Address,
 				Receiver:         k.AccountKeeper.GetModuleAddress(types.ModuleName).String(),
-				TimeoutTimestamp: uint64(ctx.BlockTime().UnixNano() + 6*time.Hour.Nanoseconds()),
+				TimeoutTimestamp: uint64(timeoutTimestamp),
 				TimeoutHeight:    clienttypes.Height{RevisionNumber: 0, RevisionHeight: 0},
 			},
 		)

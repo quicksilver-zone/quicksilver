@@ -5,7 +5,7 @@ COSMOS_BUILD_OPTIONS ?= ""
 PACKAGES_NOSIMULATION=$(shell go list ./... | grep -v '/simulation')
 PACKAGES_SIM=github.com/quicksilver-zone/quicksilver/test/simulation
 PACKAGES_E2E=$(shell go list ./... | grep '/e2e')
-VERSION=$(shell git describe --tags | head -n1 | sed 's/.*\///')
+VERSION=$(shell git describe --tags --exclude "icq-relayer/*" --exclude "fe/*" --match "v*" | head -n1 | sed 's/.*\///')
 DOCKER_VERSION ?= $(VERSION)
 TMVERSION := $(shell go list -m github.com/tendermint/tendermint | sed 's:.* ::')
 COMMIT := $(shell git log -1 --format='%H')
@@ -38,6 +38,7 @@ default_target: all
 
 build_tags = netgo
 build_tags += pebbledb
+build_tags += osusergo
 
 ifeq ($(LEDGER_ENABLED),true)
   ifeq ($(OS),Windows_NT)
@@ -103,8 +104,8 @@ endif
 BUILD_TARGETS := build install
 
 check_version:
-ifneq ($(GO_MINOR_VERSION),22)
-	@echo "ERROR: Go version 1.22 is required for building Quicksilver. Detected version: $(GO_MAJOR_VERSION).$(GO_MINOR_VERSION). There are consensus breaking changes between binaries compiled with different Go versions."
+ifneq ($(GO_MINOR_VERSION),23)
+	@echo "ERROR: Go version 1.23 is required for building Quicksilver. Detected version: $(GO_MAJOR_VERSION).$(GO_MINOR_VERSION). There are consensus breaking changes between binaries compiled with different Go versions."
 	exit 1
 endif
 

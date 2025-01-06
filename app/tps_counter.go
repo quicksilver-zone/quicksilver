@@ -2,6 +2,8 @@ package app
 
 import (
 	"context"
+	"fmt"
+	"math"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -102,18 +104,18 @@ const (
 	statusFailure = "failure"
 )
 
-func (*tpsCounter) recordValue(ctx context.Context, latest, previous uint64, status status) (int64, error) {
+func (tpc *tpsCounter) recordValue(ctx context.Context, latest, previous uint64, status status) (int64, error) {
 	if latest < previous {
 		return 0, nil
 	}
 
-	n := int64(latest - previous)
-	if n < 0 {
-		// Perhaps we exceeded the uint64 limits then wrapped around, for the latest value.
-		// TODO: Perhaps log this?
-		return 0, nil
+	diff := latest - previous
+
+	if diff > math.MaxInt64 {
+		return 0, fmt.Errorf("difference exceeds int64 max value")
 	}
 
+	n := int64(diff)
 	statusValue := "OK"
 	if status == statusFailure {
 		statusValue = "ERR"

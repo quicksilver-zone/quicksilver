@@ -178,7 +178,7 @@ func DetermineAllocationsForDelegation(currentAllocations map[string]sdkmath.Int
 		// for each target
 		for _, targetAllocation := range targetAllocations {
 			// does this target validator have a cap?
-			max, hasMax := maxCanAllocate[targetAllocation.ValoperAddress]
+			maxAllocation, hasMax := maxCanAllocate[targetAllocation.ValoperAddress]
 			// does it have an existing allocation?
 			delta, found := deltas.GetForValoper(targetAllocation.GetValoperAddress())
 			if !found {
@@ -191,14 +191,14 @@ func DetermineAllocationsForDelegation(currentAllocations map[string]sdkmath.Int
 			// if there is a cap...
 			if hasMax {
 				// belt and braces.
-				if max.LT(sdk.ZeroInt()) {
+				if maxAllocation.LT(sdk.ZeroInt()) {
 					return nil, errors.New("maxCanAllocate underflow")
 				}
 				// determine if cap is breached
-				if delta.Amount.Add(thisAllocation).GTE(max) {
+				if delta.Amount.Add(thisAllocation).GTE(maxAllocation) {
 					// if so, truncate and remove from target allocations for next round
-					thisAllocation = max.Sub(delta.Amount)
-					delta.Amount = max
+					thisAllocation = maxAllocation.Sub(delta.Amount)
+					delta.Amount = maxAllocation
 					targetAllocations = targetAllocations.Remove(delta.ValoperAddress)
 				} else {
 					// if not, increase delta

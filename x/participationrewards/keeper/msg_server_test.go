@@ -350,8 +350,6 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
-
 		suite.Run(tt.name, func() {
 			tt.malleate()
 			ctx := suite.chainA.GetContext()
@@ -579,8 +577,6 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitLocalClaim() {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
-
 		suite.Run(tt.name, func() {
 			suite.SetupTest()
 
