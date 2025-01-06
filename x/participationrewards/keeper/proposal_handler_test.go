@@ -2,7 +2,6 @@ package keeper_test
 
 import (
 	"encoding/base64"
-	"encoding/json"
 	"fmt"
 
 	"github.com/quicksilver-zone/quicksilver/x/participationrewards/keeper"
@@ -111,47 +110,36 @@ func (suite *KeeperTestSuite) TestHandleAddProtocolDataProposal() {
 
 func (suite *KeeperTestSuite) TestHandleRemoveProtocolDataProposal() {
 	appA := suite.GetQuicksilverApp(suite.chainA)
+	ctx := suite.chainA.GetContext()
+	k := appA.ParticipationRewardsKeeper
 
+	// set the protocol data
 	pd := types.ConnectionProtocolData{
 		ConnectionID: suite.path.EndpointB.ConnectionID,
 		ChainID:      suite.chainB.ChainID,
 		LastEpoch:    0,
 		Prefix:       "cosmos",
 	}
-
-	pdString, err := json.Marshal(pd)
+	err := keeper.MarshalAndSetProtocolData(ctx, k, types.ProtocolDataTypeConnection, &pd)
 	suite.NoError(err)
 
-	ctx := suite.chainA.GetContext()
-
-	prop := types.ProtocolData{
-		Type: types.ProtocolDataType_name[int32(types.ProtocolDataTypeConnection)],
-		Data: pdString,
-	}
-
-	k := appA.ParticipationRewardsKeeper
-
-	k.SetProtocolData(ctx, pd.GenerateKey(), &prop)
-	// set the protocol data
-
+	// check if the protocol data is set
 	_, found := k.GetProtocolData(ctx, types.ProtocolDataTypeConnection, string(pd.GenerateKey()))
 	suite.True(found)
 
 	msgServer := keeper.NewMsgServerImpl(k)
 
-	// submit proposal
-
+	// submit proposal to remove the protocol data
 	proposalMsg := types.MsgGovRemoveProtocolData{
 		Title:       "remove chain B connection string",
 		Description: "remove the protocol data",
-		Key:         base64.StdEncoding.EncodeToString(pd.GenerateKey()),
+		Key:         base64.StdEncoding.EncodeToString(types.GetProtocolDataKey(types.ProtocolDataTypeConnection, pd.GenerateKey())),
 		Authority:   k.GetGovAuthority(ctx),
 	}
 
 	_, err = msgServer.GovRemoveProtocolData(ctx, &proposalMsg)
-
 	suite.NoError(err)
 
 	_, found = k.GetProtocolData(ctx, types.ProtocolDataTypeConnection, string(pd.GenerateKey()))
-	suite.True(found)
+	suite.False(found)
 }
