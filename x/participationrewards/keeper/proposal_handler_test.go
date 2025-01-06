@@ -133,14 +133,13 @@ func (suite *KeeperTestSuite) TestHandleRemoveProtocolDataProposal() {
 	proposalMsg := types.MsgGovRemoveProtocolData{
 		Title:       "remove chain B connection string",
 		Description: "remove the protocol data",
-		Key:         base64.StdEncoding.EncodeToString(pd.GenerateKey()),
+		Key:         base64.StdEncoding.EncodeToString(types.GetProtocolDataKey(types.ProtocolDataTypeConnection, pd.GenerateKey())),
 		Authority:   k.GetGovAuthority(ctx),
 	}
 
 	_, err = msgServer.GovRemoveProtocolData(ctx, &proposalMsg)
-
 	suite.NoError(err)
 
 	_, found = k.GetProtocolData(ctx, types.ProtocolDataTypeConnection, string(pd.GenerateKey()))
-	suite.True(found)
+	suite.False(found)
 }

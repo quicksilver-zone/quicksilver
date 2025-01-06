@@ -150,16 +150,16 @@ func (k *Keeper) AfterZoneCreated(ctx sdk.Context, zone *icstypes.Zone) error {
 	})
 
 	// channel for the host chain
-	channel, found := k.IBCKeeper.ChannelKeeper.GetChannel(ctx, "transfer", zone.TransferChannel)
+	channel, found := k.IBCKeeper.ChannelKeeper.GetChannel(ctx, transfertypes.PortID, zone.TransferChannel)
 	if !found {
-		return fmt.Errorf("channel not found: %s, for zone : %s", zone.TransferChannel, zone.ChainId)
+		return fmt.Errorf("channel not found: %s", zone.TransferChannel)
 	}
 
 	// Create LiquidAllowedDenomProtocolData for the host zone
 	hostZoneDenom := types.LiquidAllowedDenomProtocolData{
 		ChainID:               zone.ChainId,
 		RegisteredZoneChainID: zone.ChainId,
-		IbcDenom:              utils.DeriveIbcDenom(transfertypes.PortID, channel.Counterparty.ChannelId, transfertypes.PortID, zone.TransferChannel, zone.LocalDenom),
+		IbcDenom:              utils.DeriveIbcDenom(transfertypes.PortID, channel.Counterparty.ChannelId, channel.Counterparty.PortId, zone.TransferChannel, zone.LocalDenom),
 		QAssetDenom:           zone.LocalDenom,
 	}
 	if err := hostZoneDenom.ValidateBasic(); err != nil {
@@ -194,7 +194,7 @@ func (k *Keeper) AfterZoneCreated(ctx sdk.Context, zone *icstypes.Zone) error {
 		osmosisChannel := tt.TransferChannel
 
 		// channel for the osmosis chain
-		channel, found := k.IBCKeeper.ChannelKeeper.GetChannel(ctx, "transfer", osmosisChannel)
+		channel, found := k.IBCKeeper.ChannelKeeper.GetChannel(ctx, transfertypes.PortID, osmosisChannel)
 		if !found {
 			return errors.New("channel not found: " + osmosisChannel)
 		}
@@ -238,7 +238,7 @@ func (k *Keeper) AfterZoneCreated(ctx sdk.Context, zone *icstypes.Zone) error {
 		umeeChannel := tt.TransferChannel
 
 		// channel for the umee chain
-		channel, found := k.IBCKeeper.ChannelKeeper.GetChannel(ctx, "transfer", umeeChannel)
+		channel, found := k.IBCKeeper.ChannelKeeper.GetChannel(ctx, transfertypes.PortID, umeeChannel)
 		if !found {
 			return errors.New("channel not found: " + umeeChannel)
 		}
