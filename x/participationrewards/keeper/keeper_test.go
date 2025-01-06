@@ -36,7 +36,6 @@ var (
 	umeeBaseDenom      = "uumee"
 
 	osmosisTestChain = "osmosis-1"
-	osmosisBaseDenom = "uosmo"
 
 	cosmosIBCDenom  = "ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3"
 	osmosisIBCDenom = "ibc/15E9C5CF5969080539DB395FA7D9C0868265217EFC528433671AAF9B1912D159"
