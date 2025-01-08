@@ -3,15 +3,13 @@ package types_test
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/libs/log"
-
+	"github.com/cometbft/cometbft/libs/log"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-
 	"github.com/quicksilver-zone/quicksilver/utils"
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
+	"github.com/stretchr/testify/require"
 )
 
 func TestIsDelegateAddress(t *testing.T) {

@@ -4,22 +4,19 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"math/rand"
 
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/spf13/cobra"
-	abci "github.com/tendermint/tendermint/abci/types"
-
+	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/quicksilver-zone/quicksilver/x/participationrewards/client/cli"
 	"github.com/quicksilver-zone/quicksilver/x/participationrewards/keeper"
 	"github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
+	"github.com/spf13/cobra"
 )
 
 var (
@@ -180,8 +177,8 @@ func (AppModule) ProposalContents(_ module.SimulationState) []simtypes.WeightedP
 	return nil
 }
 
-// RandomizedParams creates randomized pool-incentives param changes for the simulator.
-func (AppModule) RandomizedParams(_ *rand.Rand) []simtypes.ParamChange {
+// ProposalMsgs doesn't return any content functions for governance proposals
+func (AppModule) ProposalMsgs(_ module.SimulationState) []simtypes.WeightedProposalMsg {
 	return nil
 }
 

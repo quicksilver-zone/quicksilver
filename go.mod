@@ -12,7 +12,7 @@ require (
 	github.com/cometbft/cometbft-db v0.12.0
 	github.com/confio/ics23/go v0.9.1
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
-	github.com/cosmos/cosmos-sdk v0.46.16
+	github.com/cosmos/cosmos-sdk v0.47.15
 	github.com/cosmos/gogoproto v1.7.0
 	github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v6 v6.1.2
 	github.com/cosmos/ibc-go/v6 v6.3.1
@@ -31,8 +31,8 @@ require (
 	github.com/spf13/viper v1.19.0
 	github.com/stretchr/testify v1.10.0
 	github.com/syndtr/goleveldb v1.0.1-0.20220721030215-126854af5e6d
-	github.com/tendermint/tendermint v0.34.33
-	github.com/tendermint/tm-db v0.6.8-0.20220506192307-f628bb5dc95b
+	github.com/cometbft/cometbft v0.37.5
+	github.com/cometbft/cometbft-db v0.7.0
 	go.opencensus.io v0.24.0
 	golang.org/x/exp v0.0.0-20240909161429-701f63a606c0
 	golang.org/x/tools v0.28.0
@@ -358,8 +358,8 @@ replace (
 	// replace broken goleveldb
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
 	// use cometbft
-	github.com/tendermint/tendermint => github.com/cometbft/cometbft v0.34.33
-	github.com/tendermint/tm-db => github.com/notional-labs/tm-db v0.11.0
+	//github.com/tendermint/tendermint => github.com/cometbft/cometbft v0.34.33
+	//github.com/tendermint/tm-db => github.com/notional-labs/tm-db v0.11.0
 )
 
 retract v1.7.0 // safety bug

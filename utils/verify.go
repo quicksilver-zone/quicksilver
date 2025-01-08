@@ -6,18 +6,18 @@ import (
 	"fmt"
 	"time"
 
-	tmmath "github.com/tendermint/tendermint/libs/math"
-	"github.com/tendermint/tendermint/light"
-	"github.com/tendermint/tendermint/types"
+	tmmath "github.com/cometbft/cometbft/libs/math"
+	"github.com/cometbft/cometbft/light"
+	"github.com/cometbft/cometbft/types"
 )
 
 // VerifyNonAdjacent is identical to VerifyNonAdjacent in tendermint/tendermint/light/verifier.go, with the exception that
 // it does not attempt to validate that the block is _newer_ than the current consensus state.
 func VerifyNonAdjacent(
-	trustedHeader *types.SignedHeader, // height=X
-	trustedVals *types.ValidatorSet, // height=X or height=X+1
+	trustedHeader *types.SignedHeader,   // height=X
+	trustedVals *types.ValidatorSet,     // height=X or height=X+1
 	untrustedHeader *types.SignedHeader, // height=Y
-	untrustedVals *types.ValidatorSet, // height=Y
+	untrustedVals *types.ValidatorSet,   // height=Y
 	trustingPeriod time.Duration,
 	now time.Time,
 	_ time.Duration,
@@ -63,9 +63,9 @@ func VerifyNonAdjacent(
 }
 
 func VerifyAdjacent(
-	trustedHeader *types.SignedHeader, // height=X
+	trustedHeader *types.SignedHeader,   // height=X
 	untrustedHeader *types.SignedHeader, // height=X+1
-	untrustedVals *types.ValidatorSet, // height=X+1
+	untrustedVals *types.ValidatorSet,   // height=X+1
 	trustingPeriod time.Duration,
 	now time.Time,
 	maxClockDrift time.Duration, // nolint:revive
@@ -105,10 +105,10 @@ func VerifyAdjacent(
 
 // Verify combines both VerifyAdjacent and VerifyNonAdjacent functions.
 func Verify(
-	trustedHeader *types.SignedHeader, // height=X
-	trustedVals *types.ValidatorSet, // height=X or height=X+1
+	trustedHeader *types.SignedHeader,   // height=X
+	trustedVals *types.ValidatorSet,     // height=X or height=X+1
 	untrustedHeader *types.SignedHeader, // height=Y
-	untrustedVals *types.ValidatorSet, // height=Y
+	untrustedVals *types.ValidatorSet,   // height=Y
 	trustingPeriod time.Duration,
 	now time.Time,
 	maxClockDrift time.Duration,

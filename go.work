@@ -2,7 +2,7 @@ go 1.23.3
 
 use (
 	.
-	./icq-relayer
+	//./icq-relayer
 )
 
 replace github.com/tendermint/tendermint => github.com/cometbft/cometbft v0.34.33

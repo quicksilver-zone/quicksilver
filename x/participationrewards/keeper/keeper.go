@@ -4,19 +4,15 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/tendermint/tendermint/libs/log"
-
+	config "github.com/quicksilver-zone/quicksilver/cmd/config" //nolint:revive
 	sdkmath "cosmossdk.io/math"
-
+	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-
 	ibckeeper "github.com/cosmos/ibc-go/v6/modules/core/keeper"
-
-	config "github.com/quicksilver-zone/quicksilver/cmd/config" //nolint:revive
 	osmosistypes "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types"
 	umeetypes "github.com/quicksilver-zone/quicksilver/third-party-chains/umee-types"
 	"github.com/quicksilver-zone/quicksilver/utils"

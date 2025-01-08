@@ -5,10 +5,8 @@ import (
 	"fmt"
 	"net/url"
 
-	"github.com/tendermint/tendermint/proto/tendermint/crypto"
-
+	"github.com/cometbft/cometbft/proto/tendermint/crypto"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
 	commitmenttypes "github.com/cosmos/ibc-go/v6/modules/core/23-commitment/types"
 	ibckeeper "github.com/cosmos/ibc-go/v6/modules/core/keeper"

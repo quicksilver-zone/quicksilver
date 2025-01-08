@@ -1,12 +1,10 @@
 package keeper_test
 
 import (
-	"github.com/tendermint/tendermint/proto/tendermint/crypto"
-
+	"github.com/cometbft/cometbft/proto/tendermint/crypto"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	staking "github.com/cosmos/cosmos-sdk/x/staking/types"
-
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	"github.com/quicksilver-zone/quicksilver/x/airdrop/keeper"
 	"github.com/quicksilver-zone/quicksilver/x/airdrop/types"

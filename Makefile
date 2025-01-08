@@ -7,7 +7,7 @@ PACKAGES_SIM=github.com/quicksilver-zone/quicksilver/test/simulation
 PACKAGES_E2E=$(shell go list ./... | grep '/e2e')
 VERSION=$(shell git describe --tags --exclude "icq-relayer/*" --exclude "fe/*" --match "v*" | head -n1 | sed 's/.*\///')
 DOCKER_VERSION ?= $(VERSION)
-TMVERSION := $(shell go list -m github.com/tendermint/tendermint | sed 's:.* ::')
+TMVERSION := $(shell go list -m github.com/cometbft/cometbft | sed 's:.* ::')
 COMMIT := $(shell git log -1 --format='%H')
 LEDGER_ENABLED ?= true
 BINDIR ?= $(GOPATH)/bin
@@ -69,7 +69,7 @@ ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=quicksilver \
           -X github.com/cosmos/cosmos-sdk/version.AppName=$(QS_BINARY) \
           -X github.com/cosmos/cosmos-sdk/version.Version=$(VERSION) \
           -X github.com/cosmos/cosmos-sdk/version.Commit=$(COMMIT) \
-          -X github.com/tendermint/tendermint/version.TMCoreSemVer=$(TMVERSION)
+          -X github.com/cometbft/cometbft/version.TMCoreSemVer=$(TMVERSION)
 
 ifeq ($(LINK_STATICALLY),true)
 	ldflags += -linkmode=external -extldflags "-Wl,-z,muldefs -static"

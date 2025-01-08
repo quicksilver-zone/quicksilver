@@ -1,11 +1,7 @@
 package keepers
 
 import (
-	"github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v6/packetforward"
-	packetforwardkeeper "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v6/packetforward/keeper"
-	packetforwardtypes "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v6/packetforward/types"
-	tmos "github.com/tendermint/tendermint/libs/os"
-
+	tmos "github.com/cometbft/cometbft/libs/os"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
@@ -42,7 +38,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-
+	"github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v6/packetforward"
+	packetforwardkeeper "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v6/packetforward/keeper"
+	packetforwardtypes "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v6/packetforward/types"
 	ica "github.com/cosmos/ibc-go/v6/modules/apps/27-interchain-accounts"
 	icacontroller "github.com/cosmos/ibc-go/v6/modules/apps/27-interchain-accounts/controller"
 	icacontrollerkeeper "github.com/cosmos/ibc-go/v6/modules/apps/27-interchain-accounts/controller/keeper"
@@ -58,7 +56,6 @@ import (
 	porttypes "github.com/cosmos/ibc-go/v6/modules/core/05-port/types"
 	ibchost "github.com/cosmos/ibc-go/v6/modules/core/24-host"
 	ibckeeper "github.com/cosmos/ibc-go/v6/modules/core/keeper"
-
 	appconfig "github.com/quicksilver-zone/quicksilver/cmd/config"
 	"github.com/quicksilver-zone/quicksilver/utils"
 	airdropkeeper "github.com/quicksilver-zone/quicksilver/x/airdrop/keeper"
@@ -566,7 +563,7 @@ func (appKeepers *AppKeepers) SetupHooks() {
 
 	appKeepers.GovKeeper.SetHooks(
 		govtypes.NewMultiGovHooks(
-		// insert governance hooks receivers here
+			// insert governance hooks receivers here
 		),
 	)
 
