@@ -365,10 +365,24 @@ func (appKeepers *AppKeepers) InitKeepers(
 	appKeepers.ICAModule = ica.NewAppModule(&appKeepers.ICAControllerKeeper, &appKeepers.ICAHostKeeper)
 	icaHostIBCModule := icahost.NewIBCModule(appKeepers.ICAHostKeeper)
 
+	// todo : fix cyclical issue of claimsmanagerkeeper
+	// reason :
+	//imports github.com/quicksilver-zone/quicksilver/app
+	//imports github.com/quicksilver-zone/quicksilver/app/keepers
+	//imports github.com/quicksilver-zone/quicksilver/x/airdrop/keeper
+	//imports github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types
+	//imports github.com/quicksilver-zone/quicksilver/x/claimsmanager/types
+	//imports github.com/quicksilver-zone/quicksilver/x/interchainstaking/types
+	//imports github.com/quicksilver-zone/quicksilver/x/claimsmanager/types
 	appKeepers.ClaimsManagerKeeper = claimsmanagerkeeper.NewKeeper(
 		appCodec,
 		appKeepers.keys[claimsmanagertypes.StoreKey],
 		appKeepers.IBCKeeper,
+		appKeepers.GetSubspace(claimsmanagertypes.ModuleName),
+		appKeepers.InterchainstakingKeeper,
+		&appKeepers.InterchainQueryKeeper,
+		proofOpsFn,
+		selfProofOpsFn,
 	)
 
 	// claimsmanagerModule := claimsmanager.NewAppModule(appCodec, appKeepers.ClaimsManagerKeeper)
