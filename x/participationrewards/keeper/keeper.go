@@ -17,8 +17,6 @@ import (
 	ibckeeper "github.com/cosmos/ibc-go/v6/modules/core/keeper"
 
 	config "github.com/quicksilver-zone/quicksilver/cmd/config" //nolint:revive
-	osmosistypes "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types"
-	umeetypes "github.com/quicksilver-zone/quicksilver/third-party-chains/umee-types"
 	"github.com/quicksilver-zone/quicksilver/utils"
 	cmtypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
 	epochskeeper "github.com/quicksilver-zone/quicksilver/x/epochs/keeper"
@@ -32,11 +30,6 @@ type UserAllocation struct {
 	Address string
 	Amount  sdkmath.Int
 }
-
-var (
-	_ osmosistypes.ParticipationRewardsKeeper = &Keeper{}
-	_ umeetypes.ParticipationRewardsKeeper    = &Keeper{}
-)
 
 type Keeper struct {
 	cdc           codec.BinaryCodec

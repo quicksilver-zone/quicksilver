@@ -1,9 +1,15 @@
 package types
 
 import (
+	"fmt"
 	"gopkg.in/yaml.v2"
 
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+)
+
+var (
+	KeyClaimsEnabled     = []byte("ClaimsEnabled")
+	DefaultClaimsEnabled = false
 )
 
 // ParamKeyTable for claimsmanager module.
@@ -13,7 +19,9 @@ func ParamKeyTable() paramtypes.KeyTable {
 
 // NewParams creates a new claimsmanager Params instance.
 func NewParams() Params {
-	return Params{}
+	return Params{
+		DefaultClaimsEnabled,
+	}
 }
 
 // DefaultParams default claimsmanager params.
@@ -24,8 +32,17 @@ func DefaultParams() Params {
 // ParamSetPairs implements params.ParamSet.
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
-		// paramtypes.NewParamSetPair(Key, &p.Attribute, validateAttrib),
+		paramtypes.NewParamSetPair(KeyClaimsEnabled, &p.ClaimsEnabled, validateBoolean),
 	}
+}
+
+func validateBoolean(i interface{}) error {
+	_, ok := i.(bool)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	return nil
 }
 
 // Validate validates params.

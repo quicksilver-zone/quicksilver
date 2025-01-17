@@ -195,21 +195,15 @@ Description of message types that trigger state transitions;
 message MsgSubmitClaim {
   option (gogoproto.equal) = false;
   option (gogoproto.goproto_getters) = false;
-  string module_address = 1 [ json_name = "module_address", (cosmos_proto.scalar) = "cosmos.AddressString" ];
-  string event_name = 2 [ json_name = "zone" ];
-  // todo add more fields
-}
-```
 
-### MsgDeleteClaimableEvent
-```protobuf
-message MsgDeleteClaimableEvent {
-  option (gogoproto.equal) = false;
-  option (gogoproto.goproto_getters) = false;
-  
-  string event_module = 0;              // module name doing the claim, “govbyproxy”, “participationrewards”, “airdrop” (types.ModuleName)
-  string event_name = 1;                // “epoch”, “proposal/cosmoshub-4/764”, “airdrop/cosmoshub-4”
-  // todo add more fields
+  string user_address = 1 [
+    json_name = "user_address",
+    (cosmos_proto.scalar) = "cosmos.AddressString"
+  ];
+  string zone = 2 [json_name = "zone"];
+  string src_zone = 3 [json_name = "src_zone"];
+  quicksilver.claimsmanager.v1.ClaimType claim_type = 4 [json_name = "claim_type"];
+  repeated quicksilver.claimsmanager.v1.Proof proofs = 5 [json_name = "proofs"];
 }
 ```
 

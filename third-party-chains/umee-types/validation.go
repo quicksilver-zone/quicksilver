@@ -6,16 +6,16 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/quicksilver-zone/quicksilver/third-party-chains/umee-types/leverage/types"
-	participationrewardstypes "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
+	claimsmanagertypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
 )
 
-type ParticipationRewardsKeeper interface {
-	GetProtocolData(ctx sdk.Context, pdType participationrewardstypes.ProtocolDataType, key string) (participationrewardstypes.ProtocolData, bool)
+type ClaimsManagerKeeper interface {
+	GetProtocolData(ctx sdk.Context, pdType claimsmanagertypes.ProtocolDataType, key string) (claimsmanagertypes.ProtocolData, bool)
 }
 
 // ExchangeUToken converts an sdk.Coin containing a uToken to its value in a base
 // token.
-func ExchangeUToken(ctx sdk.Context, uToken sdk.Coin, prKeeper ParticipationRewardsKeeper) (sdk.Coin, error) {
+func ExchangeUToken(ctx sdk.Context, uToken sdk.Coin, prKeeper ClaimsManagerKeeper) (sdk.Coin, error) {
 	if err := uToken.Validate(); err != nil {
 		return sdk.Coin{}, err
 	}
@@ -34,18 +34,18 @@ func ExchangeUToken(ctx sdk.Context, uToken sdk.Coin, prKeeper ParticipationRewa
 }
 
 // DeriveExchangeRate calculated the token:uToken exchange rate of a base token denom.
-func DeriveExchangeRate(ctx sdk.Context, denom string, prKeeper ParticipationRewardsKeeper) (sdk.Dec, error) {
+func DeriveExchangeRate(ctx sdk.Context, denom string, prKeeper ClaimsManagerKeeper) (sdk.Dec, error) {
 	// Get reserves
-	reservesPD, ok := prKeeper.GetProtocolData(ctx, participationrewardstypes.ProtocolDataTypeUmeeReserves, denom)
+	reservesPD, ok := prKeeper.GetProtocolData(ctx, claimsmanagertypes.ProtocolDataTypeUmeeReserves, denom)
 	if !ok {
 		return sdk.ZeroDec(), fmt.Errorf("unable to obtain protocol data for denom=%s", denom)
 	}
-	reservesData, err := participationrewardstypes.UnmarshalProtocolData(participationrewardstypes.ProtocolDataTypeUmeeReserves, reservesPD.Data)
+	reservesData, err := claimsmanagertypes.UnmarshalProtocolData(claimsmanagertypes.ProtocolDataTypeUmeeReserves, reservesPD.Data)
 	if err != nil {
 		return sdk.ZeroDec(), err
 	}
 
-	reserves, _ := reservesData.(*participationrewardstypes.UmeeReservesProtocolData)
+	reserves, _ := reservesData.(*claimsmanagertypes.UmeeReservesProtocolData)
 
 	intamount, err := reserves.GetReserveAmount()
 	if err != nil {
@@ -55,16 +55,16 @@ func DeriveExchangeRate(ctx sdk.Context, denom string, prKeeper ParticipationRew
 	reserveAmount := sdk.NewDecFromInt(intamount)
 
 	// get leverage module balance
-	balancePD, ok := prKeeper.GetProtocolData(ctx, participationrewardstypes.ProtocolDataTypeUmeeLeverageModuleBalance, denom)
+	balancePD, ok := prKeeper.GetProtocolData(ctx, claimsmanagertypes.ProtocolDataTypeUmeeLeverageModuleBalance, denom)
 	if !ok {
 		return sdk.ZeroDec(), fmt.Errorf("unable to obtain protocol data for denom=%s", denom)
 	}
-	balanceData, err := participationrewardstypes.UnmarshalProtocolData(participationrewardstypes.ProtocolDataTypeUmeeLeverageModuleBalance, balancePD.Data)
+	balanceData, err := claimsmanagertypes.UnmarshalProtocolData(claimsmanagertypes.ProtocolDataTypeUmeeLeverageModuleBalance, balancePD.Data)
 	if err != nil {
 		return sdk.ZeroDec(), err
 	}
 
-	balance, _ := balanceData.(*participationrewardstypes.UmeeLeverageModuleBalanceProtocolData)
+	balance, _ := balanceData.(*claimsmanagertypes.UmeeLeverageModuleBalanceProtocolData)
 
 	intamount, err = balance.GetModuleBalance()
 	if err != nil {
@@ -73,32 +73,32 @@ func DeriveExchangeRate(ctx sdk.Context, denom string, prKeeper ParticipationRew
 	moduleBalance := sdk.NewDecFromInt(intamount)
 
 	// get interest scalar
-	interestPD, ok := prKeeper.GetProtocolData(ctx, participationrewardstypes.ProtocolDataTypeUmeeInterestScalar, denom)
+	interestPD, ok := prKeeper.GetProtocolData(ctx, claimsmanagertypes.ProtocolDataTypeUmeeInterestScalar, denom)
 	if !ok {
 		return sdk.ZeroDec(), fmt.Errorf("unable to obtain protocol data for denom=%s", denom)
 	}
-	interestData, err := participationrewardstypes.UnmarshalProtocolData(participationrewardstypes.ProtocolDataTypeUmeeInterestScalar, interestPD.Data)
+	interestData, err := claimsmanagertypes.UnmarshalProtocolData(claimsmanagertypes.ProtocolDataTypeUmeeInterestScalar, interestPD.Data)
 	if err != nil {
 		return sdk.ZeroDec(), err
 	}
 
-	interest, _ := interestData.(*participationrewardstypes.UmeeInterestScalarProtocolData)
+	interest, _ := interestData.(*claimsmanagertypes.UmeeInterestScalarProtocolData)
 	interestScalar, err := interest.GetInterestScalar()
 	if err != nil {
 		return sdk.ZeroDec(), err
 	}
 
 	// get total borrowed
-	borrowsPD, ok := prKeeper.GetProtocolData(ctx, participationrewardstypes.ProtocolDataTypeUmeeTotalBorrows, denom)
+	borrowsPD, ok := prKeeper.GetProtocolData(ctx, claimsmanagertypes.ProtocolDataTypeUmeeTotalBorrows, denom)
 	if !ok {
 		return sdk.ZeroDec(), fmt.Errorf("unable to obtain protocol data for denom=%s", denom)
 	}
-	borrowsData, err := participationrewardstypes.UnmarshalProtocolData(participationrewardstypes.ProtocolDataTypeUmeeTotalBorrows, borrowsPD.Data)
+	borrowsData, err := claimsmanagertypes.UnmarshalProtocolData(claimsmanagertypes.ProtocolDataTypeUmeeTotalBorrows, borrowsPD.Data)
 	if err != nil {
 		return sdk.ZeroDec(), err
 	}
 
-	borrows, _ := borrowsData.(*participationrewardstypes.UmeeTotalBorrowsProtocolData)
+	borrows, _ := borrowsData.(*claimsmanagertypes.UmeeTotalBorrowsProtocolData)
 	borrowAmount, err := borrows.GetTotalBorrows()
 	if err != nil {
 		return sdk.ZeroDec(), err
@@ -107,16 +107,16 @@ func DeriveExchangeRate(ctx sdk.Context, denom string, prKeeper ParticipationRew
 	totalBorrowed := borrowAmount.Mul(interestScalar)
 
 	// get UToken supply
-	uTokenPD, ok := prKeeper.GetProtocolData(ctx, participationrewardstypes.ProtocolDataTypeUmeeUTokenSupply, types.ToUTokenDenom(denom))
+	uTokenPD, ok := prKeeper.GetProtocolData(ctx, claimsmanagertypes.ProtocolDataTypeUmeeUTokenSupply, types.ToUTokenDenom(denom))
 	if !ok {
 		return sdk.ZeroDec(), fmt.Errorf("unable to obtain protocol data for denom=%s", denom)
 	}
-	uTokenData, err := participationrewardstypes.UnmarshalProtocolData(participationrewardstypes.ProtocolDataTypeUmeeUTokenSupply, uTokenPD.Data)
+	uTokenData, err := claimsmanagertypes.UnmarshalProtocolData(claimsmanagertypes.ProtocolDataTypeUmeeUTokenSupply, uTokenPD.Data)
 	if err != nil {
 		return sdk.ZeroDec(), err
 	}
 
-	utokens, _ := uTokenData.(*participationrewardstypes.UmeeUTokenSupplyProtocolData)
+	utokens, _ := uTokenData.(*claimsmanagertypes.UmeeUTokenSupplyProtocolData)
 	uTokenSupply, err := utokens.GetUTokenSupply()
 	if err != nil {
 		return sdk.ZeroDec(), err
