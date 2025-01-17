@@ -24,6 +24,8 @@ enum ClaimType {
 message Params {
   option (gogoproto.goproto_getters) = false;
   option (gogoproto.goproto_stringer) = false;
+
+  bool claims_enabled = 1;
 }
 
 // Claim define the users claim for holding assets within a given zone.
@@ -52,4 +54,39 @@ message Proof {
   tendermint.crypto.ProofOps proof_ops = 3 [json_name = "proof_ops"];
   int64 height = 4 [json_name = "height"];
   string proof_type = 5 [json_name = "proof_type"];
+}
+
+message KeyedProtocolData {
+  string key = 1;
+  ProtocolData protocol_data = 2;
+}
+
+// Protocol Data is an arbitrary data type held against a given zone for the
+// determination of rewards.
+message ProtocolData {
+  string type = 1;
+  bytes data = 2 [(gogoproto.casttype) = "encoding/json.RawMessage"];
+}
+
+enum ProtocolDataType {
+  option (gogoproto.goproto_enum_prefix) = false;
+
+  // Undefined action (per protobuf spec)
+  ProtocolDataTypeUndefined = 0;
+  ProtocolDataTypeConnection = 1;
+  ProtocolDataTypeOsmosisParams = 2;
+  ProtocolDataTypeLiquidToken = 3;
+  ProtocolDataTypeOsmosisPool = 4;
+  ProtocolDataTypeCrescentPool = 5 [deprecated = true];
+  ProtocolDataTypeSifchainPool = 6 [deprecated = true];
+  ProtocolDataTypeUmeeParams = 7;
+  ProtocolDataTypeUmeeReserves = 8;
+  ProtocolDataTypeUmeeInterestScalar = 9;
+  ProtocolDataTypeUmeeTotalBorrows = 10;
+  ProtocolDataTypeUmeeUTokenSupply = 11;
+  ProtocolDataTypeUmeeLeverageModuleBalance = 12;
+  ProtocolDataTypeCrescentParams = 13 [deprecated = true];
+  ProtocolDataTypeCrescentReserveAddressBalance = 14 [deprecated = true];
+  ProtocolDataTypeCrescentPoolCoinSupply = 15 [deprecated = true];
+  ProtocolDataTypeOsmosisCLPool = 16;
 }

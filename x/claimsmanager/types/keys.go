@@ -2,6 +2,8 @@ package types
 
 import (
 	"encoding/binary"
+	"fmt"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 const (
@@ -11,13 +13,35 @@ const (
 	StoreKey = ModuleName
 	// QuerierRoute is the querier route for the claimsmanager store.
 	QuerierRoute = StoreKey
+
+	OsmosisParamsKey  = "osmosisparams"
+	UmeeParamsKey     = "umeeparams"
+	CrescentParamsKey = "crescentparams"
+	ProofTypeBank     = "bank"
+	ProofTypeLeverage = "leverage"
+	ProofTypeLPFarm   = "lpfarm"
 )
 
 var (
 	KeyPrefixClaim          = []byte{0x00}
 	KeyPrefixLastEpochClaim = []byte{0x01}
 	KeySelfConsensusState   = []byte{0x02}
+	KeyPrefixProtocolData   = []byte{0x00}
 )
+
+func GetProtocolDataKey(pdType ProtocolDataType, key []byte) []byte {
+	if pdType < 0 {
+		panic(fmt.Sprintf("protocol data type is negative: %d", pdType))
+	}
+	return append(sdk.Uint64ToBigEndian(uint64(pdType)), key...) //nolint:gosec
+}
+
+func GetPrefixProtocolDataKey(pdType ProtocolDataType) []byte {
+	if pdType < 0 {
+		panic(fmt.Sprintf("protocol data type is negative: %d", pdType))
+	}
+	return sdk.Uint64ToBigEndian(uint64(pdType)) //nolint:gosec
+}
 
 // GetGenericKeyClaim returns the key for storing a given claim.
 func GetGenericKeyClaim(key []byte, chainID, address string, module ClaimType, srcChainID string) []byte {

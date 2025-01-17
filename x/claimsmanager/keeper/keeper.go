@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"github.com/quicksilver-zone/quicksilver/utils"
 	"strconv"
 	"strings"
 
@@ -15,13 +16,27 @@ import (
 	ibckeeper "github.com/cosmos/ibc-go/v6/modules/core/keeper"
 	ibctmtypes "github.com/cosmos/ibc-go/v6/modules/light-clients/07-tendermint/types"
 
+	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	osmosistypes "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types"
+	umeetypes "github.com/quicksilver-zone/quicksilver/third-party-chains/umee-types"
 	"github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
 )
 
+var (
+	_ osmosistypes.ClaimsManagerKeeper = &Keeper{}
+	_ umeetypes.ClaimsManagerKeeper    = &Keeper{}
+)
+
 type Keeper struct {
-	cdc       codec.BinaryCodec
-	storeKey  storetypes.StoreKey
-	IBCKeeper *ibckeeper.Keeper
+	cdc                  codec.BinaryCodec
+	storeKey             storetypes.StoreKey
+	IBCKeeper            *ibckeeper.Keeper
+	paramSpace           paramtypes.Subspace
+	IcqKeeper            types.InterchainQueryKeeper
+	icsKeeper            types.InterchainStakingKeeper
+	PrSubmodules         map[types.ClaimType]Submodule
+	ValidateProofOps     utils.ProofOpsFn
+	ValidateSelfProofOps utils.SelfProofOpsFn
 }
 
 // NewKeeper returns a new instance of participationrewards Keeper.
@@ -30,15 +45,31 @@ func NewKeeper(
 	cdc codec.Codec,
 	key storetypes.StoreKey,
 	ibcKeeper *ibckeeper.Keeper,
+	ps paramtypes.Subspace,
+	icsk types.InterchainStakingKeeper,
+	icqk types.InterchainQueryKeeper,
+	proofValidationFn utils.ProofOpsFn,
+	selfProofValidationFn utils.SelfProofOpsFn,
 ) Keeper {
 	if ibcKeeper == nil {
 		panic("ibcKeeper is nil")
 	}
 
+	// set KeyTable if it has not already been set
+	if !ps.HasKeyTable() {
+		ps = ps.WithKeyTable(types.ParamKeyTable())
+	}
+
 	return Keeper{
-		cdc:       cdc,
-		storeKey:  key,
-		IBCKeeper: ibcKeeper,
+		cdc:                  cdc,
+		storeKey:             key,
+		IBCKeeper:            ibcKeeper,
+		paramSpace:           ps,
+		icsKeeper:            icsk,
+		IcqKeeper:            icqk,
+		PrSubmodules:         LoadSubmodules(),
+		ValidateProofOps:     proofValidationFn,
+		ValidateSelfProofOps: selfProofValidationFn,
 	}
 }
 
@@ -85,4 +116,19 @@ func (k Keeper) StoreSelfConsensusState(ctx sdk.Context, key string) error {
 	k.SetSelfConsensusState(ctx, key, state)
 
 	return nil
+}
+
+func (k Keeper) GetClaimsEnabled(ctx sdk.Context) bool {
+	var out bool
+	k.paramSpace.Get(ctx, types.KeyClaimsEnabled, &out)
+	return out
+}
+
+func LoadSubmodules() map[types.ClaimType]Submodule {
+	out := make(map[types.ClaimType]Submodule, 0)
+	out[types.ClaimTypeLiquidToken] = &LiquidTokensModule{}
+	out[types.ClaimTypeOsmosisPool] = &OsmosisModule{}
+	out[types.ClaimTypeOsmosisCLPool] = &OsmosisClModule{}
+	out[types.ClaimTypeUmeeToken] = &UmeeModule{}
+	return out
 }
