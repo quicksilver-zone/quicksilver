@@ -347,8 +347,8 @@ github.com/ccojocar/zxcvbn-go v1.0.2 h1:na/czXU8RrhXO4EZme6eQJLR4PzcGsahsBOAwU6I
 github.com/ccojocar/zxcvbn-go v1.0.2/go.mod h1:g1qkXtUSvHP8lhHp5GrSmTz6uWALGRMQdw6Qnz/hi60=
 github.com/celestiaorg/go-square/v2 v2.0.0 h1:U5QV8/de5lc7glosfgyHhcxbFwNuwU4+6aYZ2RgjM04=
 github.com/celestiaorg/go-square/v2 v2.0.0/go.mod h1:y0BolG0tRM7UN1sAQyDDUkT+aMJPwFIjviVvnCB62C0=
-github.com/celestiaorg/nmt v0.22.3 h1:5k+fG7rF6zDcyyJgwr57usAFwL0h1jy+b79qDuTE3ko=
-github.com/celestiaorg/nmt v0.22.3/go.mod h1:kYfIjRq5rmA2mJnv41GLWkxn5KyLNPlma3v5Q68rHdI=
+github.com/celestiaorg/nmt v0.23.0 h1:cfYy//hL1HeDSH0ub3CPlJuox5U5xzgg4JGZrw23I/I=
+github.com/celestiaorg/nmt v0.23.0/go.mod h1:kYfIjRq5rmA2mJnv41GLWkxn5KyLNPlma3v5Q68rHdI=
 github.com/cenkalti/backoff v2.2.1+incompatible h1:tNowT99t7UNflLxfYYSlKYsBpXdEet03Pg2g16Swow4=
 github.com/cenkalti/backoff v2.2.1+incompatible/go.mod h1:90ReRw6GdpyfrHakVjL/QHaoyV4aDUVVkXQJJJ3NXXM=
 github.com/cenkalti/backoff/v4 v4.1.1/go.mod h1:scbssz8iZGpm3xbr14ovlUdkxfGXNInqkPWOWmG2CLw=
