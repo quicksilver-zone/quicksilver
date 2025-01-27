@@ -40,7 +40,6 @@ func NewKeeper(
 	moduleAccounts []string,
 	endpointEnabled bool,
 ) Keeper {
-
 	if addr := ak.GetModuleAddress(types.AirdropAccount); addr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.AirdropAccount))
 	}
