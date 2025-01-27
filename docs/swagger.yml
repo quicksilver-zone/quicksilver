@@ -5203,11 +5203,9 @@ paths:
                 type: string
               description:
                 type: string
-            description: >-
+            description: |-
               MsgIncentivePoolSpend represents a message to send coins from the
-              airdrop
-
-              module account to another.
+              incentive pool module account to another.
       tags:
         - Msg
   /quicksilver/supply/v1/supply:
