@@ -50,7 +50,7 @@ func (q Querier) TopN(c context.Context, req *types.QueryTopNRequest) (*types.Qu
 
 	if q.endpointEnabled {
 
-		accounts := q.Keeper.TopN(ctx, q.stakingKeeper.BondDenom(ctx), int(req.N))
+		accounts := q.Keeper.TopN(ctx, q.stakingKeeper.BondDenom(ctx), req.N)
 
 		return &types.QueryTopNResponse{Accounts: accounts}, nil
 	}
