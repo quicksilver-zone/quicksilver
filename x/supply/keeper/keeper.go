@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	"github.com/tendermint/tendermint/libs/log"
 
 	"cosmossdk.io/math"
@@ -21,6 +23,7 @@ type Keeper struct {
 	accountKeeper   types.AccountKeeper
 	bankKeeper      types.BankKeeper
 	stakingKeeper   types.StakingKeeper
+	govAuthority    string
 	moduleAccounts  []string
 	endpointEnabled bool
 }
@@ -32,15 +35,22 @@ func NewKeeper(
 	ak types.AccountKeeper,
 	bk types.BankKeeper,
 	sk types.StakingKeeper,
+	govAuthority string,
 	moduleAccounts []string,
 	endpointEnabled bool,
 ) Keeper {
+
+	if addr := ak.GetModuleAddress(types.AirdropAccount); addr == nil {
+		panic(fmt.Sprintf("%s module account has not been set", types.AirdropAccount))
+	}
+
 	return Keeper{
 		cdc:             cdc,
 		storeKey:        storeKey,
 		accountKeeper:   ak,
 		bankKeeper:      bk,
 		stakingKeeper:   sk,
+		govAuthority:    govAuthority,
 		moduleAccounts:  moduleAccounts,
 		endpointEnabled: endpointEnabled,
 	}

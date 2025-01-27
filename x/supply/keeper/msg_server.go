@@ -12,7 +12,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
-	"github.com/quicksilver-zone/quicksilver/x/airdrop/types"
+	"github.com/quicksilver-zone/quicksilver/x/supply/types"
 )
 
 type msgServer struct {
@@ -27,22 +27,9 @@ func NewMsgServerImpl(keeper *Keeper) types.MsgServer {
 
 var _ types.MsgServer = msgServer{}
 
-func (k msgServer) Claim(goCtx context.Context, msg *types.MsgClaim) (*types.MsgClaimResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	action := types.Action(msg.Action) //nolint:gosec
-
-	amount, err := k.Keeper.Claim(ctx, msg.ChainId, action, msg.Address, msg.Proofs)
-	if err != nil {
-		return nil, err
-	}
-
-	return &types.MsgClaimResponse{Amount: amount}, nil
-}
-
 func (k msgServer) IncentivePoolSpend(goCtx context.Context, msg *types.MsgIncentivePoolSpend) (*types.MsgIncentivePoolSpendResponse, error) {
-	if k.GetAuthority() != msg.Authority {
-		return nil, sdkioerrors.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.GetAuthority(), msg.Authority)
+	if k.govAuthority != msg.Authority {
+		return nil, sdkioerrors.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.govAuthority, msg.Authority)
 	}
 
 	to, err := sdk.AccAddressFromBech32(msg.ToAddress)

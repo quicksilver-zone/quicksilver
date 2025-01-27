@@ -49,8 +49,6 @@ import (
 	ibcclientclient "github.com/cosmos/ibc-go/v6/modules/core/02-client/client"
 	ibchost "github.com/cosmos/ibc-go/v6/modules/core/24-host"
 
-	"github.com/quicksilver-zone/quicksilver/x/airdrop"
-	airdroptypes "github.com/quicksilver-zone/quicksilver/x/airdrop/types"
 	"github.com/quicksilver-zone/quicksilver/x/claimsmanager"
 	claimsmanagertypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
 	"github.com/quicksilver-zone/quicksilver/x/epochs"
@@ -105,7 +103,6 @@ var (
 		interchainstaking.AppModuleBasic{},
 		interchainquery.AppModuleBasic{},
 		participationrewards.AppModuleBasic{},
-		airdrop.AppModuleBasic{},
 		supply.AppModuleBasic{},
 	)
 
@@ -124,7 +121,7 @@ var (
 		interchainstakingtypes.EscrowModuleAccount: {authtypes.Burner},
 		interchainquerytypes.ModuleName:            nil,
 		participationrewardstypes.ModuleName:       nil,
-		airdroptypes.ModuleName:                    nil,
+		supplytypes.AirdropAccount:                 nil,
 		packetforwardtypes.ModuleName:              nil,
 	}
 )
@@ -170,7 +167,6 @@ func appModules(
 		interchainstaking.NewAppModule(appCodec, app.InterchainstakingKeeper),
 		interchainquery.NewAppModule(appCodec, app.InterchainQueryKeeper),
 		participationrewards.NewAppModule(appCodec, app.ParticipationRewardsKeeper),
-		airdrop.NewAppModule(appCodec, app.AirdropKeeper),
 		supply.NewAppModule(appCodec, app.SupplyKeeper),
 	}
 }
@@ -208,7 +204,6 @@ func simulationModules(
 		interchainstaking.NewAppModule(appCodec, app.InterchainstakingKeeper),
 		interchainquery.NewAppModule(appCodec, app.InterchainQueryKeeper),
 		participationrewards.NewAppModule(appCodec, app.ParticipationRewardsKeeper),
-		airdrop.NewAppModule(appCodec, app.AirdropKeeper),
 		// supply.NewAppModule(appCodec, app.SupplyKeeper),
 	}
 }
@@ -244,7 +239,6 @@ func orderBeginBlockers() []string {
 		packetforwardtypes.ModuleName,
 		claimsmanagertypes.ModuleName,
 		participationrewardstypes.ModuleName,
-		airdroptypes.ModuleName,
 		authtypes.ModuleName,
 		banktypes.ModuleName,
 		govtypes.ModuleName,
@@ -295,7 +289,6 @@ func orderEndBlockers() []string {
 		claimsmanagertypes.ModuleName,
 		interchainstakingtypes.ModuleName,
 		participationrewardstypes.ModuleName,
-		airdroptypes.ModuleName,
 		supplytypes.ModuleName,
 		// currently no-op.
 	}
@@ -337,7 +330,6 @@ func orderInitBlockers() []string {
 		interchainstakingtypes.ModuleName,
 		interchainquerytypes.ModuleName,
 		participationrewardstypes.ModuleName,
-		airdroptypes.ModuleName,
 		supplytypes.ModuleName,
 		// NOTE: crisis module must go at the end to check for invariants on each module
 		crisistypes.ModuleName,

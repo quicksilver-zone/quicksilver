@@ -5,4 +5,6 @@ var (
 	QuerierRoute = ModuleName
 	RouterKey    = ModuleName
 	StoreKey     = ModuleName
+
+	AirdropAccount = "airdrop"
 )
