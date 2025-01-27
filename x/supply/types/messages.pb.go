@@ -33,8 +33,8 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// MsgIncentivePoolSpend represents a message to send coins from the airdrop
-// module account to another.
+// MsgIncentivePoolSpend represents a message to send coins from the
+// incentive pool module account to another.
 type MsgIncentivePoolSpend struct {
 	Authority   string                                   `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
 	ToAddress   string                                   `protobuf:"bytes,2,opt,name=to_address,json=toAddress,proto3" json:"to_address,omitempty"`

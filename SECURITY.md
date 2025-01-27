@@ -1,12 +1,15 @@
 # Security
 
-> **🚨IMPORTANT🚨**: If you find a security issue, please report it to our [security mailing list](mailto:security@ingenuity.build) *PLEASE DO NOT* create a public issue.
+> **🚨IMPORTANT🚨**: If you find a security issue, please report it to our [security mailing list](mailto:security@quicksilver.zone) _PLEASE DO NOT_ create a public issue.
 
 ## Reporting
-Please report to our security mailing list at [security@ingenuity.build](mailto:security@ingenuity.build) and we shall respond to you within 72 hours.
+
+Please report to our security mailing list at [security@quicksilver.zone](mailto:security@quicksilver.zone) and we shall respond to you within 72 hours.
 
 ###
+
 If you want to send us encrypted data, our GPG Public key is below. [Here](https://www.gnupg.org/gph/en/manual/x110.html) are instructions on how to do it.
+
 ```
 -----BEGIN PGP PUBLIC KEY BLOCK-----
 
@@ -52,7 +55,11 @@ FzMQju0rjm1ULDBu1wo2dZjrvpwtxVYd9ZH5NXifFrw=
 ```
 
 ## Packages in scope
-* [x/airdrop](/x/airdrop)
-* [x/interchainstaking](/x/interchainstaking)
-* [x/mint](/x/mint)
-* [x/participationrewards](/x/participationrewards)
+
+- [x/interchainstaking](/x/interchainstaking)
+- [x/interchainquery](/x/interchainquery)
+- [x/claimsmanager](/x/claimsmanager)
+- [x/participationrewards](/x/participationrewards)
+- [x/supply](/x/supply)
+- [x/mint](/x/mint)
+- [x/epochs]

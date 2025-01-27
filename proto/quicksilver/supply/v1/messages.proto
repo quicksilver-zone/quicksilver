@@ -20,8 +20,8 @@ service Msg {
   }
 }
 
-// MsgIncentivePoolSpend represents a message to send coins from the airdrop
-// module account to another.
+// MsgIncentivePoolSpend represents a message to send coins from the
+// incentive pool module account to another.
 message MsgIncentivePoolSpend {
   option (cosmos.msg.v1.signer) = "authority";
 
