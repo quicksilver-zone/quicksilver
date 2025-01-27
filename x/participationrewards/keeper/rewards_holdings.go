@@ -26,7 +26,7 @@ func (k Keeper) AllocateHoldingsRewards(ctx sdk.Context) error {
 		if remaining.IsPositive() {
 			k.Logger(ctx).Error("remaining amount to return to incentives pool", "remainder", remaining, "pool balance", k.GetModuleBalance(ctx))
 			// send unclaimed remainder to incentives pool
-			if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, supplytypes.ModuleName, sdk.NewCoins(sdk.NewCoin(k.stakingKeeper.BondDenom(ctx), remaining))); err != nil {
+			if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, supplytypes.AirdropAccount, sdk.NewCoins(sdk.NewCoin(k.stakingKeeper.BondDenom(ctx), remaining))); err != nil {
 				k.Logger(ctx).Error("failed to send remaining amount to return to incentives pool", "remainder", remaining, "pool balance", k.GetModuleBalance(ctx), "err", err)
 				return false
 			}
