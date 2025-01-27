@@ -10,9 +10,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
-	airdroptypes "github.com/quicksilver-zone/quicksilver/x/airdrop/types"
 	"github.com/quicksilver-zone/quicksilver/x/mint/types"
 	participationrewards "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
+	supplytypes "github.com/quicksilver-zone/quicksilver/x/supply/types"
 )
 
 // Keeper of the mint store.
@@ -165,9 +165,8 @@ func (k Keeper) DistributeMintedCoin(ctx sdk.Context, mintedCoin sdk.Coin) error
 
 	// allocate pool allocation ratio to pool-incentives module  account
 	poolIncentivesCoins := sdk.NewCoins(k.GetProportions(mintedCoin, proportions.PoolIncentives))
-	// temporary until we have incentives pool sorted :)
 
-	err = k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, airdroptypes.ModuleName, poolIncentivesCoins)
+	err = k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, supplytypes.AirdropAccount, poolIncentivesCoins)
 	if err != nil {
 		return err
 	}

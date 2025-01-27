@@ -17,8 +17,9 @@ import (
 )
 
 const (
-	wasmModuleName = "wasm"
-	tfModuleName   = "tokenfactory"
+	wasmModuleName    = "wasm"
+	tfModuleName      = "tokenfactory"
+	airdropModuleName = "airdrop"
 )
 
 func (app *Quicksilver) setUpgradeHandlers() {
@@ -75,6 +76,10 @@ func (app *Quicksilver) setUpgradeStoreLoaders() {
 	case upgrades.V010601UpgradeName:
 		storeUpgrades = &storetypes.StoreUpgrades{
 			Deleted: []string{wasmModuleName, tfModuleName},
+		}
+	case upgrades.V010706UpgradeName:
+		storeUpgrades = &storetypes.StoreUpgrades{
+			Deleted: []string{airdropModuleName},
 		}
 	default:
 		// no-op

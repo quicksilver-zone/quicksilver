@@ -23,7 +23,6 @@ import (
 	ibctransfertypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
 	ibchost "github.com/cosmos/ibc-go/v6/modules/core/24-host"
 
-	airdroptypes "github.com/quicksilver-zone/quicksilver/x/airdrop/types"
 	claimsmanagertypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
 	epochstypes "github.com/quicksilver-zone/quicksilver/x/epochs/types"
 	interchainquerytypes "github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
@@ -62,7 +61,6 @@ func KVStoreKeys() []string {
 		interchainstakingtypes.StoreKey,
 		interchainquerytypes.StoreKey,
 		participationrewardstypes.StoreKey,
-		airdroptypes.StoreKey,
 		supplytypes.StoreKey,
 	}
 }

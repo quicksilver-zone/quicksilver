@@ -3,25 +3,9 @@
   "info": {
     "title": "Quicksilver Chain - REST API",
     "description": "REST interface for query and transaction services",
-    "version": "1.0.0"
+    "version": "1.7.6"
   },
   "apis": [
-    {
-      "url": "./tmp-swagger-gen/quicksilver/airdrop/v1/messages.swagger.json"
-    },
-    {
-      "url": "./tmp-swagger-gen/quicksilver/airdrop/v1/query.swagger.json",
-      "operationIds": {
-        "rename": {
-          "Params": "AirdropParams"
-        }
-      },
-      "tags": {
-        "rename": {
-          "Query": "QueryAirdrop"
-        }
-      }
-    },
     {
       "url": "./tmp-swagger-gen/quicksilver/claimsmanager/v1/messages.swagger.json"
     },
@@ -47,7 +31,7 @@
       }
     },
     {
-      "url": "./tmp-swagger-gen/quicksilver/interchainquery/v1/messages.swagger.json",
+      "url": "./tmp-swagger-gen/quicksilver/interchainquery/v1/messages.swagger.json"
     },
     {
       "url": "./tmp-swagger-gen/quicksilver/interchainquery/v1/query.swagger.json",
@@ -99,6 +83,22 @@
       "tags": {
         "rename": {
           "Query": "QueryParticipationRewards"
+        }
+      }
+    },
+    {
+      "url": "./tmp-swagger-gen/quicksilver/supply/v1/messages.swagger.json"
+    },
+    {
+      "url": "./tmp-swagger-gen/quicksilver/supply/v1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "SupplyParams"
+        }
+      },
+      "tags": {
+        "rename": {
+          "Query": "QuerySupply"
         }
       }
     }
