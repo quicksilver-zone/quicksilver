@@ -118,5 +118,9 @@ func (k Keeper) TopN(ctx sdk.Context, baseDenom string, n uint64) []*types.Accou
 		return accountSlice[i].Balance.GT(accountSlice[j].Balance)
 	})
 
+	if n > uint64(len(accountSlice)) {
+		n = uint64(len(accountSlice))
+	}
+
 	return accountSlice[:n]
 }
