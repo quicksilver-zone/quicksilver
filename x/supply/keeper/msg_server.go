@@ -46,7 +46,7 @@ func (k msgServer) IncentivePoolSpend(goCtx context.Context, msg *types.MsgIncen
 		return nil, sdkioerrors.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive funds", msg.ToAddress)
 	}
 
-	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, to, msg.Amount)
+	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.AirdropAccount, to, msg.Amount)
 	if err != nil {
 		return nil, err
 	}

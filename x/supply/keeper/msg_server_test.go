@@ -21,7 +21,7 @@ func (suite *KeeperTestSuite) Test_msgServer_IncentivePoolSpend() {
 	// set up mod acct with funds
 	err := appA.BankKeeper.MintCoins(suite.chainA.GetContext(), minttypes.ModuleName, mintCoins)
 	suite.Require().NoError(err)
-	err = appA.BankKeeper.SendCoinsFromModuleToModule(suite.chainA.GetContext(), minttypes.ModuleName, types.ModuleName, mintCoins)
+	err = appA.BankKeeper.SendCoinsFromModuleToModule(suite.chainA.GetContext(), minttypes.ModuleName, types.AirdropAccount, mintCoins)
 	suite.Require().NoError(err)
 
 	msg := types.MsgIncentivePoolSpend{}
