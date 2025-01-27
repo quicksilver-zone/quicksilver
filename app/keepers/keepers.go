@@ -61,8 +61,6 @@ import (
 
 	appconfig "github.com/quicksilver-zone/quicksilver/cmd/config"
 	"github.com/quicksilver-zone/quicksilver/utils"
-	airdropkeeper "github.com/quicksilver-zone/quicksilver/x/airdrop/keeper"
-	airdroptypes "github.com/quicksilver-zone/quicksilver/x/airdrop/types"
 	claimsmanagerkeeper "github.com/quicksilver-zone/quicksilver/x/claimsmanager/keeper"
 	claimsmanagertypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
 	epochskeeper "github.com/quicksilver-zone/quicksilver/x/epochs/keeper"
@@ -111,7 +109,6 @@ type AppKeepers struct {
 	InterchainstakingKeeper    *interchainstakingkeeper.Keeper
 	InterchainQueryKeeper      interchainquerykeeper.Keeper
 	ParticipationRewardsKeeper *participationrewardskeeper.Keeper
-	AirdropKeeper              *airdropkeeper.Keeper
 	SupplyKeeper               supplykeeper.Keeper
 
 	// 		IBC keepers
@@ -334,6 +331,7 @@ func (appKeepers *AppKeepers) InitKeepers(
 		appKeepers.AccountKeeper,
 		appKeepers.BankKeeper,
 		appKeepers.StakingKeeper,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 		utils.Keys[[]string](maccPerms),
 		supplyEndpointEnabled,
 	)
@@ -489,22 +487,6 @@ func (appKeepers *AppKeepers) InitKeepers(
 		govConfig,
 	)
 
-	appKeepers.AirdropKeeper = airdropkeeper.NewKeeper(
-		appCodec,
-		appKeepers.keys[airdroptypes.StoreKey],
-		appKeepers.GetSubspace(airdroptypes.ModuleName),
-		appKeepers.AccountKeeper,
-		appKeepers.BankKeeper,
-		appKeepers.StakingKeeper,
-		appKeepers.GovKeeper,
-		appKeepers.IBCKeeper,
-		appKeepers.InterchainstakingKeeper,
-		appKeepers.ParticipationRewardsKeeper,
-		proofOpsFn,
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-	)
-	// airdropModule := airdrop.NewAppModule(appCodec, appKeepers.AirdropKeeper)
-
 	appKeepers.ScopedIBCKeeper = scopedIBCKeeper
 	appKeepers.ScopedTransferKeeper = scopedTransferKeeper
 	appKeepers.ScopedICAControllerKeeper = scopedICAControllerKeeper
@@ -536,7 +518,6 @@ func (*AppKeepers) initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *cod
 	paramsKeeper.Subspace(interchainstakingtypes.ModuleName)
 	paramsKeeper.Subspace(interchainquerytypes.ModuleName)
 	paramsKeeper.Subspace(participationrewardstypes.ModuleName)
-	paramsKeeper.Subspace(airdroptypes.ModuleName)
 
 	return paramsKeeper
 }
