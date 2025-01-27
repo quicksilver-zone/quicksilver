@@ -32,7 +32,7 @@ import { quicksilver } from 'quicksilverjs';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { FaStar } from 'react-icons/fa';
 
-import { env, Chain, local_chain } from '@/config';
+import { env, Chain, local_chain, getChainForQDenom } from '@/config';
 import { useTx } from '@/hooks';
 import { useFeeEstimation } from '@/hooks/useFeeEstimation';
 import {
@@ -95,7 +95,7 @@ export const StakingBox = ({
 
   const { balance: allBalances, refetch: allRefetch } = useAllBalancesQuery(selectedOption.chain_name, address ?? '');
 
-  const { balance: qBalance, refetch: qRefetch } = useQBalanceQuery('quicksilver', qAddress ?? '', selectedOption.major_denom.toLowerCase());
+  const { balance: qBalance, refetch: qRefetch } = useQBalanceQuery('quicksilver', qAddress ?? '', selectedOption.major_denom);
 
   const allRefetchBalances = () => {
     allRefetch();
@@ -128,14 +128,15 @@ export const StakingBox = ({
 
   const truncatedBalance = truncateToThreeDecimals(Number(baseBalance));
 
-  const maxStakingAmount = truncateToThreeDecimals(truncatedBalance ? truncatedBalance - 0.005 : 0);
+  const maxStakingAmount = truncateToThreeDecimals(truncatedBalance ? truncatedBalance - 0.005 : 0); // this needs to be dynamic per chain.
 
   const maxHalfStakingAmount = maxStakingAmount / 2;
 
   const [inputError, setInputError] = useState(false);
 
-  const exponent = qBalance?.balance.denom === 'aqdydx' ? -18 : -6;
-  const qAssetsExponent = shiftDigits(qAssets, exponent);
+  const chain = getChainForQDenom(env, qBalance?.balance.denom ?? '');
+  const exponent = chain?.exponent ?? 6;
+  const qAssetsExponent = shiftDigits(qAssets, -exponent);
   const qAssetsDisplay = qAssetsExponent.includes('.') ? qAssetsExponent.substring(0, qAssetsExponent.indexOf('.') + 3) : qAssetsExponent;
 
   const maxUnstakingAmount = truncateToThreeDecimals(Number(qAssetsDisplay));
@@ -302,37 +303,41 @@ export const StakingBox = ({
   return (
     <Box position="relative" backdropFilter="blur(50px)" bgColor="rgba(255,255,255,0.1)" flex="1" borderRadius="10px" p={5}>
       <Tabs isFitted variant="enclosed" onChange={handleTabsChange}>
-        <TabList mt={'4'} mb="1em" overflow="hidden" borderBottomColor="transparent" bg="rgba(255,255,255,0.1)" p={2} borderRadius="25px">
+        <TabList mt={'4'} mb="1em" overflow="hidden" borderBottomColor="transparent" bg="rgba(255,255,255,0.1)" p={2} borderRadius="10px">
           <Tab
-            borderRadius="25px"
+            borderRadius="5px"
             flex="1"
             color="white"
             fontWeight="bold"
+            marginRight={1}
             transition="background-color 0.2s ease-in-out, color 0.2s ease-in-out, border-color 0.2s ease-in-out"
             _hover={{
-              borderBottomColor: 'complimentary.900',
+              bgColor: 'rgba(255,255,255,0.05)',
+              backdropFilter: 'blur(10px)',
             }}
             _selected={{
               bgColor: 'rgba(0,0,0,0.5)',
-              color: 'complimentary.900',
-              borderColor: 'complimentary.900',
+              color: 'complimentary.700',
+              borderColor: 'complimentary.700',
             }}
           >
             Stake
           </Tab>
           <Tab
-            borderRadius="25px"
+            borderRadius="5px"
             flex="1"
             color="white"
             fontWeight="bold"
+            marginLeft={1}
             transition="background-color 0.2s ease-in-out, color 0.2s ease-in-out, border-color 0.2s ease-in-out"
             _hover={{
-              borderBottomColor: 'complimentary.900',
+              bgColor: 'rgba(255,255,255,0.05)',
+              backdropFilter: 'blur(10px)',
             }}
             _selected={{
               bgColor: 'rgba(0,0,0,0.5)',
-              color: 'complimentary.900',
-              borderColor: 'complimentary.900',
+              color: 'complimentary.700',
+              borderColor: 'complimentary.700',
             }}
           >
             Unstake
@@ -374,20 +379,20 @@ export const StakingBox = ({
                             Use staked&nbsp;
                             <span style={{ color: '#FF8000' }}>{selectedOption.major_denom.toUpperCase()}</span>?
                           </Text>
-                          {delegationsIsLoading && <SkeletonCircle size="4" startColor="complimentary.900" endColor="complimentary.400" />}
+                          {delegationsIsLoading && <SkeletonCircle size="4" startColor="complimentary.700" endColor="complimentary.400" />}
                           {!delegationsIsLoading && !delegationsIsError && (
                             <Switch
                               _active={{
-                                borderColor: 'complimentary.900',
+                                borderColor: 'complimentary.700',
                               }}
                               _selected={{
-                                borderColor: 'complimentary.900',
+                                borderColor: 'complimentary.700',
                               }}
                               _hover={{
-                                borderColor: 'complimentary.900',
+                                borderColor: 'complimentary.700',
                               }}
                               _focus={{
-                                borderColor: 'complimentary.900',
+                                borderColor: 'complimentary.700',
                                 boxShadow: '0 0 0 3px #FF8000',
                               }}
                               isDisabled={(!nativeStakedAmount && !hasTokenized) || !logos}
@@ -397,7 +402,7 @@ export const StakingBox = ({
                               colorScheme="orange"
                             />
                           )}
-                          <InfoOutlineIcon color={!nativeStakedAmount && !hasTokenized ? 'complimentary.1100' : 'complimentary.900'} />
+                          <InfoOutlineIcon color={!nativeStakedAmount && !hasTokenized ? 'complimentary.1100' : 'complimentary.700'} />
                         </HStack>
                       </Tooltip>
                     )}
@@ -412,19 +417,19 @@ export const StakingBox = ({
                       </Stat>
                       <Input
                         _active={{
-                          borderColor: 'complimentary.900',
+                          borderColor: 'complimentary.700',
                         }}
                         _selected={{
-                          borderColor: 'complimentary.900',
+                          borderColor: 'complimentary.700',
                         }}
                         _hover={{
-                          borderColor: 'complimentary.900',
+                          borderColor: 'complimentary.700',
                         }}
                         _focus={{
-                          borderColor: 'complimentary.900',
+                          borderColor: 'complimentary.700',
                           boxShadow: '0 0 0 3px #FF8000',
                         }}
-                        color="complimentary.900"
+                        color="complimentary.700"
                         textAlign={'right'}
                         placeholder={inputError ? 'Invalid Number' : 'amount'}
                         _placeholder={{
@@ -467,17 +472,17 @@ export const StakingBox = ({
                                 Tokens available:{' '}
                               </Text>
                               {isLoading ? (
-                                <Skeleton startColor="complimentary.900" endColor="complimentary.400">
+                                <Skeleton startColor="complimentary.700" endColor="complimentary.400">
                                   <SkeletonText w={'95px'} noOfLines={1} skeletonHeight={'18px'} />
                                 </Skeleton>
                               ) : (
-                                <Text color="complimentary.900" fontWeight="light">
+                                <Text color="complimentary.700" fontWeight="light">
                                   {balance?.balance?.amount && Number(balance.balance.amount) > 0 ? (
                                     `${truncatedBalance} ${selectedOption.major_denom.toUpperCase()}`
                                   ) : (
                                     <Text
                                       cursor={'pointer'}
-                                      color="complimentary.900"
+                                      color="complimentary.700"
                                       fontWeight="light"
                                       _hover={{ color: 'complimentary.400' }}
                                       onClick={() => setIsTokensModalOpen(true)}
@@ -489,7 +494,7 @@ export const StakingBox = ({
                               )}
                             </>
                           ) : (
-                            <Text color="complimentary.900" fontWeight="light">
+                            <Text color="complimentary.700" fontWeight="light">
                               Connect your wallet to stake
                             </Text>
                           )}
@@ -510,7 +515,7 @@ export const StakingBox = ({
                               bgColor: 'rgba(255,255,255,0.05)',
                               backdropFilter: 'blur(10px)',
                             }}
-                            color="complimentary.900"
+                            color="complimentary.700"
                             variant="ghost"
                             w="60px"
                             h="30px"
@@ -528,7 +533,7 @@ export const StakingBox = ({
                               bgColor: 'rgba(255,255,255,0.05)',
                               backdropFilter: 'blur(10px)',
                             }}
-                            color="complimentary.900"
+                            color="complimentary.700"
                             variant="ghost"
                             w="60px"
                             h="30px"
@@ -540,7 +545,7 @@ export const StakingBox = ({
                         </HStack>
                       </Flex>
                     </Flex>
-                    <Divider bgColor="complimentary.900" />
+                    <Divider bgColor="complimentary.700" />
                     <HStack pt={2} justifyContent="space-between" alignItems="left" w="100%" mt={-8}>
                       <Stat textAlign="left" color="white">
                         <StatLabel>What you&apos;ll get</StatLabel>
@@ -548,11 +553,11 @@ export const StakingBox = ({
                       </Stat>
                       <Spacer /> {/* This pushes the next Stat component to the right */}
                       <Stat py={4} textAlign="right" color="white">
-                        <StatNumber textColor="complimentary.900">
+                        <StatNumber textColor="complimentary.700">
                           {!isZoneLoading ? (
                             (Number(tokenAmount) / Number(zone?.redemptionRate || 1)).toFixed(2)
                           ) : (
-                            <Spinner thickness="2px" speed="0.65s" emptyColor="gray.200" color="complimentary.900" size="sm" />
+                            <Spinner thickness="2px" speed="0.65s" emptyColor="gray.200" color="complimentary.700" size="sm" />
                           )}
                         </StatNumber>
                       </Stat>
@@ -629,7 +634,7 @@ export const StakingBox = ({
                                   <Flex py={2} align="center" justify="space-between">
                                     <HStack align="center" ml={4}>
                                       {!validatorLogo ? (
-                                        <SkeletonCircle size="8" startColor="complimentary.900" endColor="complimentary.400" />
+                                        <SkeletonCircle size="8" startColor="complimentary.700" endColor="complimentary.400" />
                                       ) : (
                                         <Image
                                           src={validatorLogo}
@@ -653,7 +658,7 @@ export const StakingBox = ({
                                             </Tooltip>
                                           )}
                                         </HStack>
-                                        <Text color={'complimentary.900'} fontSize="md">
+                                        <Text color={'complimentary.700'} fontSize="md">
                                           {shiftDigits(delegation.balance.amount, -selectedOption.exponent)} {selectedOption.major_denom.toUpperCase()}
                                         </Text>
                                       </VStack>
@@ -746,19 +751,19 @@ export const StakingBox = ({
                   </Stat>
                   <Input
                     _active={{
-                      borderColor: 'complimentary.900',
+                      borderColor: 'complimentary.700',
                     }}
                     _selected={{
-                      borderColor: 'complimentary.900',
+                      borderColor: 'complimentary.700',
                     }}
                     _hover={{
-                      borderColor: 'complimentary.900',
+                      borderColor: 'complimentary.700',
                     }}
                     _focus={{
-                      borderColor: 'complimentary.900',
+                      borderColor: 'complimentary.700',
                       boxShadow: '0 0 0 3px #FF8000',
                     }}
-                    color="complimentary.900"
+                    color="complimentary.700"
                     textAlign={'right'}
                     placeholder={inputError ? 'Invalid Number' : 'amount'}
                     _placeholder={{
@@ -797,11 +802,11 @@ export const StakingBox = ({
                           Tokens available:{' '}
                         </Text>
                         {isLoading ? (
-                          <Skeleton startColor="complimentary.900" endColor="complimentary.400">
+                          <Skeleton startColor="complimentary.700" endColor="complimentary.400">
                             <SkeletonText w={'95px'} noOfLines={1} skeletonHeight={'18px'} />
                           </Skeleton>
                         ) : (
-                          <Text color="complimentary.900" fontWeight="light">
+                          <Text color="complimentary.700" fontWeight="light">
                             {address
                               ? qAssets && Number(qAssets) !== 0
                                 ? `${qAssetsDisplay} q${selectedOption.major_denom.toUpperCase()}`
@@ -811,7 +816,7 @@ export const StakingBox = ({
                         )}
                       </Flex>
                     ) : (
-                      <Text color="complimentary.900" fontWeight="light">
+                      <Text color="complimentary.700" fontWeight="light">
                         Connect your wallet to unstake
                       </Text>
                     )}
@@ -826,7 +831,7 @@ export const StakingBox = ({
                           bgColor: 'rgba(255,255,255,0.05)',
                           backdropFilter: 'blur(10px)',
                         }}
-                        color="complimentary.900"
+                        color="complimentary.700"
                         variant="ghost"
                         w="60px"
                         h="30px"
@@ -844,7 +849,7 @@ export const StakingBox = ({
                           bgColor: 'rgba(255,255,255,0.05)',
                           backdropFilter: 'blur(10px)',
                         }}
-                        color="complimentary.900"
+                        color="complimentary.700"
                         variant="ghost"
                         w="60px"
                         h="30px"
@@ -856,7 +861,7 @@ export const StakingBox = ({
                     </HStack>
                   </Flex>
                 </Flex>
-                <Divider bgColor="complimentary.900" />
+                <Divider bgColor="complimentary.700" />
                 <HStack pt={2} justifyContent="space-between" alignItems="left" w="100%" mt={-8}>
                   <Stat textAlign="left" color="white">
                     <StatLabel>What you&apos;ll get</StatLabel>
@@ -864,11 +869,11 @@ export const StakingBox = ({
                   </Stat>
                   <Spacer /> {/* This pushes the next Stat component to the right */}
                   <Stat py={4} textAlign="right" color="white">
-                    <StatNumber textColor="complimentary.900">
+                    <StatNumber textColor="complimentary.700">
                       {!isZoneLoading ? (
                         (Number(tokenAmount) * Math.min(Number(zone?.redemptionRate), Number(zone?.lastRedemptionRate))).toFixed(2)
                       ) : (
-                        <Spinner thickness="2px" speed="0.65s" emptyColor="gray.200" color="complimentary.900" size="sm" />
+                        <Spinner thickness="2px" speed="0.65s" emptyColor="gray.200" color="complimentary.700" size="sm" />
                       )}
                     </StatNumber>
                   </Stat>
@@ -887,7 +892,7 @@ export const StakingBox = ({
                   isDisabled={Number(tokenAmount) === 0 || !address || isSigning || Number(qBalance?.balance.amount) === 0}
                 >
                   {isSigning ? (
-                    <Spinner thickness="2px" speed="0.65s" emptyColor="gray.200" color="complimentary.900" size="sm" />
+                    <Spinner thickness="2px" speed="0.65s" emptyColor="gray.200" color="complimentary.700" size="sm" />
                   ) : (
                     'Unstake'
                   )}

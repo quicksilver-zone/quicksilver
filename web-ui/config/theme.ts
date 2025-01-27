@@ -28,8 +28,9 @@ const defaultThemeObject = {
         background: props.colorMode === 'dark' ? '#000000' : '#000000',
         bgGradient:
           props.colorMode === 'dark'
-            ? 'linear(to-r, #000000, #000000)'
-            : 'linear(to-l, #000000, #000000)',
+            ? 'linear(217deg, #222, #000, #222)'
+            : 'linear(217deg, #222, #000, #222)',
+        bgAttachment: 'fixed',
         color:
           props.colorMode === 'dark' ? 'rgb(255, 255, 255)' : 'rgb(0, 0, 0)',
       },
@@ -149,11 +150,11 @@ const defaultThemeObject = {
       },
       variants: {
         solid: {
-          bgColor: 'complimentary.900',
+          bgColor: 'complimentary.700',
           color: 'white',
         },
         outline: {
-          borderColor: 'complimentary.900',
+          borderColor: 'complimentary.700',
           color: 'primary.600',
           _hover: {
             color: 'complimentary.300',

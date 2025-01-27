@@ -168,7 +168,7 @@ export default function Home() {
               </Stat>
               <Text textAlign={'center'}>
                 If you believe there is an issue, please contact us on{' '}
-                <Link color="complimentary.900" href="https://discord.gg/4QXEJQcv" isExternal>
+                <Link color="complimentary.700" href="https://discord.gg/4QXEJQcv" isExternal>
                   Discord
                 </Link>
               </Text>
@@ -385,12 +385,12 @@ export const StakingBox = ({ selectedOption, valoperAddress }: StakingBoxProps) 
             fontWeight="bold"
             transition="background-color 0.2s ease-in-out, color 0.2s ease-in-out, border-color 0.2s ease-in-out"
             _hover={{
-              borderBottomColor: 'complimentary.900',
+              borderBottomColor: 'complimentary.700',
             }}
             _selected={{
               bgColor: 'rgba(0,0,0,0.5)',
-              color: 'complimentary.900',
-              borderColor: 'complimentary.900',
+              color: 'complimentary.700',
+              borderColor: 'complimentary.700',
             }}
           >
             Stake
@@ -402,12 +402,12 @@ export const StakingBox = ({ selectedOption, valoperAddress }: StakingBoxProps) 
             fontWeight="bold"
             transition="background-color 0.2s ease-in-out, color 0.2s ease-in-out, border-color 0.2s ease-in-out"
             _hover={{
-              borderBottomColor: 'complimentary.900',
+              borderBottomColor: 'complimentary.700',
             }}
             _selected={{
               bgColor: 'rgba(0,0,0,0.5)',
-              color: 'complimentary.900',
-              borderColor: 'complimentary.900',
+              color: 'complimentary.700',
+              borderColor: 'complimentary.700',
             }}
           >
             Unstake
@@ -433,7 +433,7 @@ export const StakingBox = ({ selectedOption, valoperAddress }: StakingBoxProps) 
                           marginRight="8px"
                           display="inline-block"
                           verticalAlign="middle"
-                          startColor="complimentary.900"
+                          startColor="complimentary.700"
                           endColor="complimentary.100"
                         />
                       )}
@@ -453,7 +453,7 @@ export const StakingBox = ({ selectedOption, valoperAddress }: StakingBoxProps) 
                       {moniker}
                     </StatNumber>
                   ) : (
-                    <SkeletonText mt="4" h="20px" startColor="complimentary.900" endColor="complimentary.500" noOfLines={1} w="150px" />
+                    <SkeletonText mt="4" h="20px" startColor="complimentary.700" endColor="complimentary.500" noOfLines={1} w="150px" />
                   )}
                 </Stat>
 
@@ -465,19 +465,19 @@ export const StakingBox = ({ selectedOption, valoperAddress }: StakingBoxProps) 
                     </Stat>
                     <Input
                       _active={{
-                        borderColor: 'complimentary.900',
+                        borderColor: 'complimentary.700',
                       }}
                       _selected={{
-                        borderColor: 'complimentary.900',
+                        borderColor: 'complimentary.700',
                       }}
                       _hover={{
-                        borderColor: 'complimentary.900',
+                        borderColor: 'complimentary.700',
                       }}
                       _focus={{
-                        borderColor: 'complimentary.900',
+                        borderColor: 'complimentary.700',
                         boxShadow: '0 0 0 3px #FF8000',
                       }}
-                      color="complimentary.900"
+                      color="complimentary.700"
                       textAlign={'right'}
                       placeholder={inputError ? 'Invalid Number' : 'amount'}
                       _placeholder={{
@@ -521,11 +521,11 @@ export const StakingBox = ({ selectedOption, valoperAddress }: StakingBoxProps) 
                               Tokens available:{' '}
                             </Text>
                             {isLoading ? (
-                              <Skeleton startColor="complimentary.900" endColor="complimentary.400">
+                              <Skeleton startColor="complimentary.700" endColor="complimentary.400">
                                 <SkeletonText w={'95px'} noOfLines={1} skeletonHeight={'18px'} />
                               </Skeleton>
                             ) : (
-                              <Text color="complimentary.900" fontWeight="light">
+                              <Text color="complimentary.700" fontWeight="light">
                                 {address ? (
                                   balance?.balance?.amount && Number(balance?.balance?.amount) !== 0 ? (
                                     `${truncatedBalance} ${selectedOption.major_denom.toUpperCase()}`
@@ -541,7 +541,7 @@ export const StakingBox = ({ selectedOption, valoperAddress }: StakingBoxProps) 
                             )}
                           </>
                         ) : (
-                          <Text color="complimentary.900" fontWeight="light">
+                          <Text color="complimentary.700" fontWeight="light">
                             Connect your wallet to stake
                           </Text>
                         )}
@@ -556,7 +556,7 @@ export const StakingBox = ({ selectedOption, valoperAddress }: StakingBoxProps) 
                             bgColor: 'rgba(255,255,255,0.05)',
                             backdropFilter: 'blur(10px)',
                           }}
-                          color="complimentary.900"
+                          color="complimentary.700"
                           variant="ghost"
                           w="60px"
                           h="30px"
@@ -574,7 +574,7 @@ export const StakingBox = ({ selectedOption, valoperAddress }: StakingBoxProps) 
                             bgColor: 'rgba(255,255,255,0.05)',
                             backdropFilter: 'blur(10px)',
                           }}
-                          color="complimentary.900"
+                          color="complimentary.700"
                           variant="ghost"
                           w="60px"
                           h="30px"
@@ -586,7 +586,7 @@ export const StakingBox = ({ selectedOption, valoperAddress }: StakingBoxProps) 
                       </HStack>
                     </Flex>
                   </Flex>
-                  <Divider bgColor="complimentary.900" />
+                  <Divider bgColor="complimentary.700" />
                   <HStack pt={2} justifyContent="space-between" alignItems="left" w="100%" mt={-8}>
                     <Stat textAlign="left" color="white">
                       <StatLabel>What you&apos;ll get</StatLabel>
@@ -594,11 +594,11 @@ export const StakingBox = ({ selectedOption, valoperAddress }: StakingBoxProps) 
                     </Stat>
                     <Spacer /> {/* This pushes the next Stat component to the right */}
                     <Stat py={4} textAlign="right" color="white">
-                      <StatNumber textColor="complimentary.900">
+                      <StatNumber textColor="complimentary.700">
                         {!isZoneLoading ? (
                           (Number(tokenAmount) * Number(zone?.redemptionRate || 1)).toFixed(2)
                         ) : (
-                          <Spinner thickness="2px" speed="0.65s" emptyColor="gray.200" color="complimentary.900" size="sm" />
+                          <Spinner thickness="2px" speed="0.65s" emptyColor="gray.200" color="complimentary.700" size="sm" />
                         )}
                       </StatNumber>
                     </Stat>
@@ -613,7 +613,7 @@ export const StakingBox = ({ selectedOption, valoperAddress }: StakingBoxProps) 
                       onClick={handleLiquidStake}
                     >
                       {isSigning ? (
-                        <Spinner thickness="2px" speed="0.65s" emptyColor="gray.200" color="complimentary.900" size="sm" />
+                        <Spinner thickness="2px" speed="0.65s" emptyColor="gray.200" color="complimentary.700" size="sm" />
                       ) : (
                         'Liquid Stake'
                       )}
@@ -636,19 +636,19 @@ export const StakingBox = ({ selectedOption, valoperAddress }: StakingBoxProps) 
                   </Stat>
                   <Input
                     _active={{
-                      borderColor: 'complimentary.900',
+                      borderColor: 'complimentary.700',
                     }}
                     _selected={{
-                      borderColor: 'complimentary.900',
+                      borderColor: 'complimentary.700',
                     }}
                     _hover={{
-                      borderColor: 'complimentary.900',
+                      borderColor: 'complimentary.700',
                     }}
                     _focus={{
-                      borderColor: 'complimentary.900',
+                      borderColor: 'complimentary.700',
                       boxShadow: '0 0 0 3px #FF8000',
                     }}
-                    color="complimentary.900"
+                    color="complimentary.700"
                     textAlign={'right'}
                     placeholder={inputError ? 'Invalid Number' : 'amount'}
                     _placeholder={{
@@ -687,11 +687,11 @@ export const StakingBox = ({ selectedOption, valoperAddress }: StakingBoxProps) 
                           Tokens available:{' '}
                         </Text>
                         {isLoading ? (
-                          <Skeleton startColor="complimentary.900" endColor="complimentary.400">
+                          <Skeleton startColor="complimentary.700" endColor="complimentary.400">
                             <SkeletonText w={'95px'} noOfLines={1} skeletonHeight={'18px'} />
                           </Skeleton>
                         ) : (
-                          <Text color="complimentary.900" fontWeight="light">
+                          <Text color="complimentary.700" fontWeight="light">
                             {address
                               ? qAssets && Number(qAssets) !== 0
                                 ? `${qAssetsDisplay} ${selectedOption.major_denom.toUpperCase()}`
@@ -701,7 +701,7 @@ export const StakingBox = ({ selectedOption, valoperAddress }: StakingBoxProps) 
                         )}
                       </Flex>
                     ) : (
-                      <Text color="complimentary.900" fontWeight="light">
+                      <Text color="complimentary.700" fontWeight="light">
                         Connect your wallet to unstake
                       </Text>
                     )}
@@ -716,7 +716,7 @@ export const StakingBox = ({ selectedOption, valoperAddress }: StakingBoxProps) 
                           bgColor: 'rgba(255,255,255,0.05)',
                           backdropFilter: 'blur(10px)',
                         }}
-                        color="complimentary.900"
+                        color="complimentary.700"
                         variant="ghost"
                         w="60px"
                         h="30px"
@@ -734,7 +734,7 @@ export const StakingBox = ({ selectedOption, valoperAddress }: StakingBoxProps) 
                           bgColor: 'rgba(255,255,255,0.05)',
                           backdropFilter: 'blur(10px)',
                         }}
-                        color="complimentary.900"
+                        color="complimentary.700"
                         variant="ghost"
                         w="60px"
                         h="30px"
@@ -746,7 +746,7 @@ export const StakingBox = ({ selectedOption, valoperAddress }: StakingBoxProps) 
                     </HStack>
                   </Flex>
                 </Flex>
-                <Divider bgColor="complimentary.900" />
+                <Divider bgColor="complimentary.700" />
                 <HStack pt={2} justifyContent="space-between" alignItems="left" w="100%" mt={-8}>
                   <Stat textAlign="left" color="white">
                     <StatLabel>What you&apos;ll get</StatLabel>
@@ -754,11 +754,11 @@ export const StakingBox = ({ selectedOption, valoperAddress }: StakingBoxProps) 
                   </Stat>
                   <Spacer /> {/* This pushes the next Stat component to the right */}
                   <Stat py={4} textAlign="right" color="white">
-                    <StatNumber textColor="complimentary.900">
+                    <StatNumber textColor="complimentary.700">
                       {!isZoneLoading ? (
                         (Number(tokenAmount) * Number(zone?.redemptionRate || 1)).toFixed(2)
                       ) : (
-                        <Spinner thickness="2px" speed="0.65s" emptyColor="gray.200" color="complimentary.900" size="sm" />
+                        <Spinner thickness="2px" speed="0.65s" emptyColor="gray.200" color="complimentary.700" size="sm" />
                       )}
                     </StatNumber>
                   </Stat>
@@ -772,7 +772,7 @@ export const StakingBox = ({ selectedOption, valoperAddress }: StakingBoxProps) 
                   isDisabled={Number(tokenAmount) === 0 || !address || isSigning || Number(qBalance?.balance.amount) === 0}
                 >
                   {isSigning ? (
-                    <Spinner thickness="2px" speed="0.65s" emptyColor="gray.200" color="complimentary.900" size="sm" />
+                    <Spinner thickness="2px" speed="0.65s" emptyColor="gray.200" color="complimentary.700" size="sm" />
                   ) : (
                     'Unstake'
                   )}

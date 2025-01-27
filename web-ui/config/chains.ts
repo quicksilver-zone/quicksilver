@@ -16,6 +16,7 @@ export type Chain = {
     lsm_enabled: boolean;
     major_denom: string;
     minor_denom: string;
+    q_denom: string;
     exponent: number;
     logo: string;
     qlogo: string;
@@ -36,6 +37,7 @@ const quicksilver_mainnet: Chain = {
     lsm_enabled: false,
     major_denom: "qck",
     minor_denom: "uqck",
+    q_denom: "uqck",
     exponent: 6,
     logo: '/img/networks/qck.svg',
     qlogo: '/img/networks/qck.svg',
@@ -55,6 +57,7 @@ const quicksilver_testnet: Chain = {
     lsm_enabled: false,
     major_denom: "qck",
     minor_denom: "uqck",
+    q_denom: "uqck",
     exponent: 6,
     logo: '/img/networks/qck.svg',
     qlogo: '/img/networks/qck.svg',
@@ -81,6 +84,7 @@ const test_chains = new Map<string, Chain>([
         lsm_enabled: true,
         major_denom: "atom",
         minor_denom: "uatom",
+        q_denom: "uqatom",
         exponent: 6,
         logo: '/img/networks/atom.svg',
         qlogo: '/img/networks/qatom.svg',
@@ -99,6 +103,7 @@ const test_chains = new Map<string, Chain>([
         lsm_enabled: true,
         major_denom: "osmo",
         minor_denom: "uosmo",
+        q_denom: "uqosmo",
         exponent: 6,
         logo: '/img/networks/osmo.svg',
         qlogo: '/img/networks/qosmo.svg',
@@ -106,7 +111,7 @@ const test_chains = new Map<string, Chain>([
     }],
     ["celestia-testnet", {
         chain_id: "mocha-4",
-        chain_name: "celestia",
+        chain_name: "celestiatestnet3",
         pretty_name: "Celestia",
         rpc: ["https://mocha-4.rpc.quicksilver.zone"],
         rest: ["https://mocha-4.lcd.quicksilver.zone"],
@@ -117,6 +122,7 @@ const test_chains = new Map<string, Chain>([
         lsm_enabled: true,
         major_denom: "tia",
         minor_denom: "utia",
+        q_denom: "uqtia",
         exponent: 6,
         logo: '/img/networks/tia.svg',
         qlogo: '/img/networks/qtia.svg',
@@ -133,12 +139,32 @@ const test_chains = new Map<string, Chain>([
         enable_deposits: true,
         enable_withdrawals: true,
         lsm_enabled: true,
-        major_denom: "atom",
-        minor_denom: "uatom",
+        major_denom: "prysm",
+        minor_denom: "uprysm",
+        q_denom: "uqprysm",
         exponent: 6,
         logo: '/img/networks/atom.svg',
         qlogo: '/img/networks/qatom.svg',
         is_118: true,
+    }],
+    ["injective", {
+        chain_id: "injective-888",
+        chain_name: "injectivetestnet",
+        pretty_name: "Injective",
+        rpc: ["https://injective-888.rpc.quicksilver.zone"],
+        rest: ["https://injective-888.lcd.quicksilver.zone"],
+        explorer: "https://www.mintscan.io/injective-testnet/tx/{}",
+        show: true,
+        enable_deposits: true,
+        enable_withdrawals: true,
+        lsm_enabled: false,
+        major_denom: "INJ",
+        minor_denom: "inj",
+        q_denom: "qinj",
+        exponent: 18,
+        logo: '/img/networks/inj.svg',
+        qlogo: '/img/networks/qinj.svg',
+        is_118: false,
     }]
 ])
 
@@ -157,6 +183,7 @@ const prod_chains = new Map<string, Chain>([
         lsm_enabled: true,
         major_denom: "atom",
         minor_denom: "uatom",
+        q_denom: "uqatom",
         exponent: 6,
         logo: '/img/networks/atom.svg',
         qlogo: '/img/networks/qatom.svg',
@@ -175,6 +202,7 @@ const prod_chains = new Map<string, Chain>([
         lsm_enabled: false,
         major_denom: "osmo",
         minor_denom: "uosmo",
+        q_denom: "uqosmo",
         exponent: 6,
         logo: '/img/networks/osmo.svg',
         qlogo: '/img/networks/qosmo.svg',
@@ -193,6 +221,7 @@ const prod_chains = new Map<string, Chain>([
         lsm_enabled: false,
         major_denom: "stars",
         minor_denom: "ustars",
+        q_denom: "uqstars",
         exponent: 6,
         logo: '/img/networks/stargaze.svg',
         qlogo: '/img/networks/qstars.svg',
@@ -211,6 +240,7 @@ const prod_chains = new Map<string, Chain>([
         lsm_enabled: false,
         major_denom: "juno",
         minor_denom: "ujuno",
+        q_denom: "uqjuno",
         exponent: 6,
         logo: '/img/networks/juno.svg',
         qlogo: '/img/networks/qjuno.svg',
@@ -232,6 +262,7 @@ const prod_chains = new Map<string, Chain>([
         exponent: 6,
         logo: '/img/networks/regen.svg',
         qlogo: '/img/networks/qregen.svg',
+        q_denom: "uqregen",
         is_118: true,
     }],
     // ["terra", {
@@ -257,6 +288,7 @@ const prod_chains = new Map<string, Chain>([
         lsm_enabled: false,
         major_denom: "saga",
         minor_denom: "usaga",
+        q_denom: "uqsaga",
         exponent: 6,
         logo: '/img/networks/saga.svg',
         qlogo: '/img/networks/qsaga.svg',
@@ -275,6 +307,7 @@ const prod_chains = new Map<string, Chain>([
         lsm_enabled: false,
         major_denom: "tia",
         minor_denom: "utia",
+        q_denom: "uqtia",
         exponent: 6,
         logo: '/img/networks/tia.svg',
         qlogo: '/img/networks/qtia.svg',
@@ -293,6 +326,7 @@ const prod_chains = new Map<string, Chain>([
         lsm_enabled: false,
         major_denom: "dydx",
         minor_denom: "adydx",
+        q_denom: "aqdydx",
         exponent: 18,
         logo: '/img/networks/dydx.svg',
         qlogo: '/img/networks/qdydx.svg',
@@ -311,6 +345,7 @@ const prod_chains = new Map<string, Chain>([
         lsm_enabled: false,
         major_denom: "somm",
         minor_denom: "usomm",
+        q_denom: "uqsomm",
         exponent: 6,
         logo: '/img/networks/somm.svg',
         qlogo: '/img/networks/qsomm.svg',
@@ -329,6 +364,7 @@ const prod_chains = new Map<string, Chain>([
         lsm_enabled: false,
         major_denom: "umee",
         minor_denom: "uumee",
+        q_denom: "uqumee",
         exponent: 6,
         logo: '/img/networks/umee.svg',
         qlogo: '/img/networks/qumee.svg',
@@ -347,6 +383,7 @@ const prod_chains = new Map<string, Chain>([
         lsm_enabled: false,
         major_denom: "bld",
         minor_denom: "ubld",
+        q_denom: "uqbld",
         exponent: 6,
         logo: '/img/networks/bld.svg',
         qlogo: '/img/networks/qbld.svg',
@@ -365,11 +402,89 @@ const prod_chains = new Map<string, Chain>([
         lsm_enabled: false,
         major_denom: "arch",
         minor_denom: "aarch",
+        q_denom: "aqarch",
         exponent: 18,
         logo: '/img/networks/arch.svg',
         qlogo: '/img/networks/qarch.svg',
         is_118: true,
+    }],
+    ["composable", {
+        chain_id: "centauri-1",
+        chain_name: "composable",
+        pretty_name: "Picasso",
+        rpc: ["https://centauri-1.rpc.quicksilver.zone"],
+        rest: ["https://centauri-1.lcd.quicksilver.zone"],
+        explorer: "https://explorer.nodestake.org/composable/tx/{}",
+        show: true,
+        enable_deposits: true,
+        enable_withdrawals: true,
+        lsm_enabled: false,
+        major_denom: "pica",
+        minor_denom: "ppica",
+        q_denom: "pqpica",
+        exponent: 12,
+        logo: '/img/networks/pica.svg',
+        qlogo: '/img/networks/qpica.svg',
+        is_118: true,
+    }],
+    ["omniflixhub", {
+        chain_id: "omniflixhub-1",
+        chain_name: "omniflixhub",
+        pretty_name: "Omniflix",
+        rpc: ["https://omniflixhub-1.rpc.quicksilver.zone"],
+        rest: ["https://omniflixhub-1.lcd.quicksilver.zone"],
+        explorer: "https://www.mintscan.io/omniflix/tx/{}",
+        show: true,
+        enable_deposits: true,
+        enable_withdrawals: true,
+        lsm_enabled: false,
+        major_denom: "flix",
+        minor_denom: "uflix",
+        q_denom: "uqflix",
+        exponent: 6,
+        logo: '/img/networks/flix.svg',
+        qlogo: '/img/networks/qflix.svg',
+        is_118: true,
+    }],
+    ["injective", {
+        chain_id: "injective-1",
+        chain_name: "injective",
+        pretty_name: "Injective",
+        rpc: ["https://injective-1.rpc.quicksilver.zone"],
+        rest: ["https://injective-1.lcd.quicksilver.zone"],
+        explorer: "https://www.mintscan.io/injective/tx/{}",
+        show: false,
+        enable_deposits: true,
+        enable_withdrawals: true,
+        lsm_enabled: false,
+        major_denom: "INJ",
+        minor_denom: "inj",
+        q_denom: "qinj",
+        exponent: 18,
+        logo: '/img/networks/inj.svg',
+        qlogo: '/img/networks/qinj.svg',
+        is_118: false,
+    }],
+    ["terra2", {
+        chain_id: "phoenix-1",
+        chain_name: "terra2",
+        pretty_name: "Terra",
+        rpc: ["https://phoenix-1.rpc.quicksilver.zone"],
+        rest: ["https://phoenix-1.lcd.quicksilver.zone"],
+        explorer: "https://www.mintscan.io/terra/tx/{}",
+        show: true,
+        enable_deposits: true,
+        enable_withdrawals: true,
+        lsm_enabled: false,
+        major_denom: "luna",
+        minor_denom: "uluna",
+        q_denom: "uqluna",
+        exponent: 6,
+        logo: '/img/networks/luna.svg',
+        qlogo: '/img/networks/qluna.svg',
+        is_118: false,
     }]
+
 
 ]);
 
@@ -404,15 +519,14 @@ export const getChainExplorer = (env: string, chain: string) => {
 }
 
 export const getQMinorAsset = (env: string, chain: string) => {
-    let minor_denom = chains.get(env)?.get(chain)?.minor_denom;
-    return minor_denom?.substring(0, 1).toUpperCase() + "q" + minor_denom?.substring(1);
+    return chains.get(env)?.get(chain)?.q_denom;
 }
 
 export const getQMajorAsset = (env: string, chain: string) => {
     let major_denom = chains.get(env)?.get(chain)?.major_denom;
     return "q" + major_denom;
 }
- 
+
 export const tokenToChainNameMap = (env: string) => {
     const map: { [key: string]: string } = {};
   for (const chain of chains.get(env)?.values() || []) {
@@ -429,9 +543,27 @@ export const tokenToChainIdMap = (env: string) => {
     return map;
 }
 
-export const getExponent = (env: string, denom: string) => { const c = getChainForToken(tokenToChainNameMap(env), denom); if (c != null) { return chains.get(env)?.get(c)?.exponent } else { return 6}};
-
-export const getChainForToken = (tokenToChainIdMap: { [x: string]: string }, baseToken: string) => {
-    return tokenToChainIdMap[baseToken.toLowerCase()] || null;
+export const getChainForMajorDenom = (env: string, baseToken: string) => {
+    return getChainForFieldValue(env, "major_denom", baseToken);
 }
 
+export const getChainForMinorDenom = (env: string, minorDenom: string) => {
+    return getChainForFieldValue(env, "minor_denom", minorDenom);
+}
+
+export const getChainForQDenom = (env: string, qDenom: string) => {
+    return getChainForFieldValue(env, "q_denom", qDenom);
+}
+
+export const getChainForFieldValue = <K extends keyof Chain>(env: string, field: K, value: string): Chain|null => {
+   for (const [_, chain] of chains.get(env)?.entries() || []) {
+    if (getValue(chain, field) === value) {
+        return chain;
+    }
+   }
+   return null;
+}
+
+function getValue<T, K extends keyof T>(data: T, key: K): T[K] {
+    return data[key];
+  }

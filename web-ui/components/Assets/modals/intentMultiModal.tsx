@@ -89,7 +89,7 @@ export const IntentMultiModal: React.FC<MultiModalProps> = ({
                       Validator Selection
                     </Text>
                   </Box>
-                  <AccordionIcon mb={-4} color="complimentary.900" />
+                  <AccordionIcon mb={-4} color="complimentary.700" />
                 </AccordionButton>
               </h2>
               <AccordionPanel textAlign="left" alignContent="center" justifyContent="center" mt={-2}>
@@ -101,11 +101,11 @@ export const IntentMultiModal: React.FC<MultiModalProps> = ({
           </Accordion>
         </ModalHeader>
         <ModalCloseButton color="white" />
-        <Divider bgColor="complimentary.900" alignSelf="center" w="88%" m="auto" />
+        <Divider bgColor="complimentary.700" alignSelf="center" w="88%" m="auto" />
         <ModalBody bgColor="#1A1A1A" borderRadius={'6px'} justifyContent="center">
           {isLoading ? (
             <Box minH={'md'} display="flex" justifyContent="center" alignItems="center" height="200px">
-              <Spinner h="50px" w="50px" color="complimentary.900" />
+              <Spinner h="50px" w="50px" color="complimentary.700" />
             </Box>
           ) : (
             <Box mt={-1}>
@@ -124,16 +124,16 @@ export const IntentMultiModal: React.FC<MultiModalProps> = ({
                     width="55%"
                     borderRadius={'4px'}
                     _active={{
-                      borderColor: 'complimentary.900',
+                      borderColor: 'complimentary.700',
                     }}
                     _selected={{
-                      borderColor: 'complimentary.900',
+                      borderColor: 'complimentary.700',
                     }}
                     _hover={{
-                      borderColor: 'complimentary.900',
+                      borderColor: 'complimentary.700',
                     }}
                     _focus={{
-                      borderColor: 'complimentary.900',
+                      borderColor: 'complimentary.700',
                       boxShadow: '0 0 0 3px #FF8000',
                     }}
                   />
@@ -181,7 +181,7 @@ export const IntentMultiModal: React.FC<MultiModalProps> = ({
           )}
           <Text mt={'2'} fontSize={'sm'} fontWeight={'light'}>
             <>
-              <Text as="span" color="complimentary.900">
+              <Text as="span" color="complimentary.700">
                 {selectedValidators.length}
               </Text>
               &nbsp;{'Validators Selected'}

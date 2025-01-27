@@ -1,6 +1,7 @@
 import { useToast, Text, Box, Link } from '@chakra-ui/react';
 
 import { convertChainName } from '@/utils';
+import { chains, env } from '@/config';
 
 export enum ToastType {
   Info = 'info',
@@ -29,17 +30,17 @@ export const useToaster = () => {
   const customToast = ({ type, title, message, closable = true, duration = 5000, txHash, chainName }: CustomToast) => {
     let description;
 
-    if (type === ToastType.Success && txHash) {
-      let mintscanUrl = `https://www.mintscan.io/${convertChainName(chainName ?? '')}/txs/${txHash}`;
-      if (chainName === 'quicksilver') {
-        mintscanUrl = `https://explorer.quicksilver.zone/transactions/${txHash}`;
+    if (type === ToastType.Success && txHash && chainName) {
+      let explorerUrl = chains.get(env)?.get(chainName)?.explorer ?? "";
+      if (explorerUrl.includes("{}")) {
+        explorerUrl = explorerUrl.replace("{}", txHash);
       }
       description = (
         <Box pr="20px">
           <Text fontSize="sm" color="white">
             {message}
           </Text>
-          <Link href={mintscanUrl} isExternal color="white">
+          <Link href={explorerUrl} isExternal color="white">
             View in Explorer
           </Link>
         </Box>
@@ -66,3 +67,4 @@ export const useToaster = () => {
 
   return { ...toast, toast: customToast };
 };
+  

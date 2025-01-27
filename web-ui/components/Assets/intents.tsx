@@ -126,7 +126,7 @@ const StakingIntent: React.FC<StakingIntentProps> = ({ address, isWalletConnecte
         gap={6}
         color="white"
       >
-        <Spinner w={'200px'} h="200px" color="complimentary.900" />
+        <Spinner w={'200px'} h="200px" color="complimentary.700" />
       </Flex>
     );
   }
@@ -138,7 +138,7 @@ const StakingIntent: React.FC<StakingIntentProps> = ({ address, isWalletConnecte
           <Heading fontSize="lg" fontWeight="bold" textTransform="uppercase">
             Stake Intent
           </Heading>
-          <Button color="GrayText" _hover={{ color: 'complimentary.900' }} variant="link" onClick={openSignalIntentModal}>
+          <Button color="GrayText" _hover={{ color: 'complimentary.700' }} variant="link" onClick={openSignalIntentModal}>
             Edit Intent
             <ChevronRightIcon />
           </Button>
@@ -150,10 +150,10 @@ const StakingIntent: React.FC<StakingIntentProps> = ({ address, isWalletConnecte
           />
         </Flex>
 
-        <Flex borderBottom="1px" borderBottomColor="complimentary.900" alignItems="center" justifyContent="space-between">
+        <Flex borderBottom="1px" borderBottomColor="complimentary.700" alignItems="center" justifyContent="space-between">
           <IconButton
             variant="ghost"
-            _hover={{ bgColor: 'transparent', color: 'complimentary.900' }}
+            _hover={{ bgColor: 'transparent', color: 'complimentary.700' }}
             _active={{
               transform: 'scale(0.75)',
               color: 'complimentary.800',
@@ -174,7 +174,7 @@ const StakingIntent: React.FC<StakingIntentProps> = ({ address, isWalletConnecte
               color: 'complimentary.800',
             }}
             color="GrayText"
-            _hover={{ bgColor: 'transparent', color: 'complimentary.900' }}
+            _hover={{ bgColor: 'transparent', color: 'complimentary.700' }}
             variant="ghost"
             aria-label="Next chain"
             icon={<ChevronRightIcon w={'25px'} h={'25px'} />}
@@ -213,7 +213,7 @@ const StakingIntent: React.FC<StakingIntentProps> = ({ address, isWalletConnecte
                         marginRight="8px"
                         display="inline-block"
                         verticalAlign="middle"
-                        startColor="complimentary.900"
+                        startColor="complimentary.700"
                         endColor="complimentary.100"
                       />
                     )}
@@ -223,7 +223,7 @@ const StakingIntent: React.FC<StakingIntentProps> = ({ address, isWalletConnecte
                       <SkeletonText
                         display="inline-block"
                         verticalAlign="middle"
-                        startColor="complimentary.900"
+                        startColor="complimentary.700"
                         endColor="complimentary.100"
                         noOfLines={1}
                         width="100px"
