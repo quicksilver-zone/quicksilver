@@ -2,7 +2,9 @@ package keeper_test
 
 import (
 	"cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	"github.com/quicksilver-zone/quicksilver/x/supply/keeper"
 	"github.com/quicksilver-zone/quicksilver/x/supply/types"
@@ -82,6 +84,7 @@ func (suite *KeeperTestSuite) TestKeeper_TopN_Disabled() {
 		suite.Error(err)
 	})
 }
+
 func (suite *KeeperTestSuite) TestKeeper_TopN() {
 	suite.Run("Params", func() {
 		ctx := suite.chainA.GetContext()
@@ -105,6 +108,5 @@ func (suite *KeeperTestSuite) TestKeeper_TopN() {
 		suite.Equal(5, len(topN.Accounts))
 		suite.Equal(addr.String(), topN.Accounts[0].Address)
 		suite.Equal(amount, topN.Accounts[0].Balance)
-
 	})
 }

@@ -96,7 +96,7 @@ func (k Keeper) CalculateCirculatingSupply(ctx sdk.Context, baseDenom string, ex
 	return k.bankKeeper.GetSupply(ctx, baseDenom).Amount.Sub(nonCirculating)
 }
 
-func (k Keeper) TopN(ctx sdk.Context, baseDenom string, n int) []*types.Account {
+func (k Keeper) TopN(ctx sdk.Context, baseDenom string, n uint64) []*types.Account {
 	accountMap := map[string]math.Int{}
 
 	modMap := map[string]bool{}
@@ -132,8 +132,8 @@ func (k Keeper) TopN(ctx sdk.Context, baseDenom string, n int) []*types.Account 
 		return accountSlice[i].Balance.GT(accountSlice[j].Balance)
 	})
 
-	if n > len(accountSlice) {
-		n = len(accountSlice)
+	if n > uint64(len(accountSlice)) {
+		n = uint64(len(accountSlice))
 	}
 
 	return accountSlice[:n]
