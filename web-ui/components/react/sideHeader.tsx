@@ -42,7 +42,7 @@ export const SideHeader = () => {
       w={'fit-content'}
       h={'95vh'}
       backdropFilter="blur(10px)"
-      borderRadius={100}
+      borderRadius={10}
       zIndex={10}
       top={6}
       left={6}
@@ -68,16 +68,12 @@ export const SideHeader = () => {
               <VStack justifyContent="center" alignItems="center" spacing={16}>
                 <Tooltip borderLeft="4px solid rgba(255, 128, 0, 0.9)" label="Staking" placement="right">
                   <Box
-                    w="60px"
-                    h="60px"
+                    w="50px"
+                    h="50px"
                     onClick={() => router.push('/staking')}
                     cursor="pointer"
                     borderRadius="100px"
-                    boxShadow={
-                      selectedPage === 'staking' ? `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}` : ''
-                    }
                     _hover={{
-                      boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`,
                       transition: transitionStyle,
                     }}
                   >
@@ -87,8 +83,8 @@ export const SideHeader = () => {
                         filter: 'contrast(100%)',
                       }}
                       alt="Staking"
-                      h="60px"
-                      w="60px"
+                      h="50px"
+                      w="50px"
                       src="/img/liquid.png"
                     />
                   </Box>
@@ -96,18 +92,12 @@ export const SideHeader = () => {
 
                 <Tooltip borderLeft="4px solid rgba(255, 128, 0, 0.9)" label="Governance" placement="right">
                   <Box
-                    w="60px"
-                    h="60px"
+                    w="50px"
+                    h="50px"
                     onClick={() => router.push('/governance')}
                     cursor="pointer"
                     borderRadius="100px"
-                    boxShadow={
-                      selectedPage === 'governance'
-                        ? `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`
-                        : ''
-                    }
                     _hover={{
-                      boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`,
                       transition: transitionStyle,
                     }}
                   >
@@ -117,8 +107,8 @@ export const SideHeader = () => {
                         filter: 'contrast(100%)',
                       }}
                       alt="Governance"
-                      h="60px"
-                      w="65px"
+                      h="50px"
+                      w="50px"
                       src="/img/governance.png"
                     />
                   </Box>
@@ -126,16 +116,12 @@ export const SideHeader = () => {
 
                 <Tooltip borderLeft="4px solid rgba(255, 128, 0, 0.9)" label="Assets" placement="right">
                   <Box
-                    w="55px"
-                    h="55px"
+                    w="50px"
+                    h="50px"
                     onClick={() => router.push('/assets')}
                     cursor="pointer"
                     borderRadius="100px"
-                    boxShadow={
-                      selectedPage === 'assets' ? `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}` : ''
-                    }
                     _hover={{
-                      boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`,
                       transition: transitionStyle,
                     }}
                   >
@@ -145,7 +131,7 @@ export const SideHeader = () => {
                         filter: 'contrast(100%)',
                       }}
                       alt="Assets"
-                      h="55px"
+                      h="50px"
                       src="/img/assets.png"
                     />
                   </Box>
@@ -179,16 +165,12 @@ export const SideHeader = () => {
 
                 <Tooltip borderLeft="4px solid rgba(255, 128, 0, 0.9)" label="DeFi" placement="right">
                   <Box
-                    w="55px"
-                    h="55px"
+                    w="50px"
+                    h="50px"
                     onClick={() => router.push('/defi')}
                     cursor="pointer"
                     borderRadius="100px"
-                    boxShadow={
-                      selectedPage === 'defi' ? `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}` : ''
-                    }
                     _hover={{
-                      boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`,
                       transition: transitionStyle,
                     }}
                   >
@@ -198,7 +180,7 @@ export const SideHeader = () => {
                         filter: 'contrast(100%)',
                       }}
                       alt="DeFi"
-                      h="55px"
+                      h="50px"
                       src="/img/defi.png"
                     />
                   </Box>
@@ -216,7 +198,6 @@ export const SideHeader = () => {
                       borderRadius={'full'}
                       _hover={{
                         cursor: 'pointer',
-                        boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`,
                       }}
                     >
                       <FaInfo size={'25px'} color="rgb(255, 128, 0)" />
@@ -230,7 +211,6 @@ export const SideHeader = () => {
                       borderRadius={'full'}
                       _hover={{
                         cursor: 'pointer',
-                        boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`,
                         transition: transitionStyle,
                       }}
                     >
@@ -244,7 +224,6 @@ export const SideHeader = () => {
                     onClick={onOpen}
                     _hover={{
                       cursor: 'pointer',
-                      boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 15px 5px ${commonBoxShadowColor}`,
                       transition: transitionStyle,
                     }}
                   >
@@ -258,7 +237,6 @@ export const SideHeader = () => {
                       borderRadius={'full'}
                       _hover={{
                         cursor: 'pointer',
-                        boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`,
                         transition: transitionStyle,
                       }}
                     >
@@ -272,7 +250,6 @@ export const SideHeader = () => {
                       borderRadius={'full'}
                       _hover={{
                         cursor: 'pointer',
-                        boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`,
                         transition: transitionStyle,
                       }}
                     >
@@ -286,7 +263,6 @@ export const SideHeader = () => {
                       borderRadius={'full'}
                       _hover={{
                         cursor: 'pointer',
-                        boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`,
                         transition: transitionStyle,
                       }}
                     >
@@ -302,7 +278,7 @@ export const SideHeader = () => {
         <Spacer />
 
         <IconButton
-          borderRadius={'100'}
+          borderRadius={10}
           icon={showSocialLinks ? <ArrowBackIcon /> : <HamburgerIcon />}
           aria-label="Toggle View"
           onClick={toggleSocialLinks}

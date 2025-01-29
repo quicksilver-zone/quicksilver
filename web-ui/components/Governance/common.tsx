@@ -19,7 +19,7 @@ const MarkdownStyled = styled(ReactMarkdown)`
 
 export const Loader = () => (
   <Center w="100%" h="650px" bgColor="rgba(214, 219, 220, 0.1)" borderRadius="xl">
-    <Spinner thickness="3px" color="complimentary.900" size="lg" speed="0.4s" />
+    <Spinner thickness="3px" color="complimentary.700" size="lg" speed="0.4s" />
   </Center>
 );
 
@@ -62,7 +62,7 @@ export const VoteRatio = ({
   amount: string;
   token: string;
 }) => (
-  <Box py={2} px={4} border="1px solid" borderRadius="md" borderColor="complimentary.900" bgColor="primary.900" w="200px">
+  <Box py={2} px={4} border="1px solid" borderRadius="md" borderColor="complimentary.700" bgColor="primary.900" w="200px">
     <Text color={VoteColor[type]} fontWeight="bold">
       {type} {ratio}
     </Text>

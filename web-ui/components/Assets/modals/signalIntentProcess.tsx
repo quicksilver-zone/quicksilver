@@ -74,7 +74,7 @@ interface Intent {
 export const SignalIntentModal: React.FC<StakingModalProps> = ({ isOpen, onClose, selectedOption, refetch }) => {
   const [step, setStep] = React.useState(1);
   const getProgressColor = (circleStep: number) => {
-    if (step >= circleStep) return 'complimentary.900';
+    if (step >= circleStep) return 'complimentary.700';
     return 'rgba(255,255,255,0.2)';
   };
 
@@ -399,7 +399,7 @@ export const SignalIntentModal: React.FC<StakingModalProps> = ({ isOpen, onClose
                     bgColor="none"
                     _hover={{
                       bgColor: 'none',
-                      color: 'complimentary.900',
+                      color: 'complimentary.700',
                     }}
                     _selected={{
                       bgColor: 'none',
@@ -437,19 +437,19 @@ export const SignalIntentModal: React.FC<StakingModalProps> = ({ isOpen, onClose
                           </Text>
                           <Input
                             _active={{
-                              borderColor: 'complimentary.900',
+                              borderColor: 'complimentary.700',
                             }}
                             _selected={{
-                              borderColor: 'complimentary.900',
+                              borderColor: 'complimentary.700',
                             }}
                             _hover={{
-                              borderColor: 'complimentary.900',
+                              borderColor: 'complimentary.700',
                             }}
                             _focus={{
-                              borderColor: 'complimentary.900',
+                              borderColor: 'complimentary.700',
                               boxShadow: '0 0 0 3px #FF8000',
                             }}
-                            color="complimentary.900"
+                            color="complimentary.700"
                             type="number"
                             width="55px"
                             placeholder="0"
@@ -464,7 +464,7 @@ export const SignalIntentModal: React.FC<StakingModalProps> = ({ isOpen, onClose
                       bgColor="none"
                       _hover={{
                         bgColor: 'none',
-                        color: 'complimentary.900',
+                        color: 'complimentary.700',
                       }}
                       _selected={{
                         bgColor: 'none',
@@ -505,7 +505,7 @@ export const SignalIntentModal: React.FC<StakingModalProps> = ({ isOpen, onClose
                         <Text mt={2} textAlign={'left'} fontWeight={'bold'} fontSize="lg" color="white">
                           {selectedValidators.length === 1 ? 'Selected Validator:' : 'Selected Validators:'}
                         </Text>
-                        <Text color="complimentary.900">
+                        <Text color="complimentary.700">
                           {selectedValidators.length === 1 ? selectedValidators[0].name : `${selectedValidators.length}`}
                         </Text>
                       </Flex>
@@ -538,7 +538,7 @@ export const SignalIntentModal: React.FC<StakingModalProps> = ({ isOpen, onClose
                     bgColor="none"
                     _hover={{
                       bgColor: 'none',
-                      color: 'complimentary.900',
+                      color: 'complimentary.700',
                     }}
                     _selected={{
                       bgColor: 'none',

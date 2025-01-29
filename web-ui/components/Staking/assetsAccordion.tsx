@@ -1,7 +1,7 @@
 import { Box, Image, Text, Accordion, AccordionItem, Flex, AccordionButton, SkeletonCircle } from '@chakra-ui/react';
 import React, { useEffect, useState } from 'react';
 
-import { Chain, env, getQMinorAsset } from '@/config';
+import { Chain, env, getChainForFieldValue} from '@/config';
 import { useCurrentInterchainAssetsQuery } from '@/hooks/useQueries';
 
 const BigNumber = require('bignumber.js');
@@ -22,8 +22,7 @@ export const AssetsAccordian: React.FC<AssetsAccordianProps> = ({ selectedOption
     const calculateLiquidRewards = () => {
       let totalAmount = new BigNumber(0);
       
-      const denomToFind = getQMinorAsset(env, selectedOption.chain_id);
-
+      const denomToFind = getChainForFieldValue(env, "chain_id",selectedOption.chain_id)?.q_denom;
       for (const chain in liquidRewards?.assets) {
         const chainAssets = liquidRewards?.assets[chain];
         chainAssets.forEach((assetGroup) => {
@@ -49,14 +48,14 @@ export const AssetsAccordian: React.FC<AssetsAccordianProps> = ({ selectedOption
   const renderQAssets = () => {
     if (qBalance && liquidRewards) {
       return (
-        <Text pr={2} color="complimentary.900">
+        <Text pr={2} color="complimentary.700">
           {qAssetsDisplay}
         </Text>
       );
     } else {
       return (
         <Box mr={2} display="inline-block">
-          <SkeletonCircle size="2" startColor="complimentary.900" endColor="complimentary.400" />
+          <SkeletonCircle size="2" startColor="complimentary.700" endColor="complimentary.400" />
         </Box>
       );
     }
@@ -65,14 +64,14 @@ export const AssetsAccordian: React.FC<AssetsAccordianProps> = ({ selectedOption
   const renderAssets = () => {
     if (balance) {
       return (
-        <Text pr={2} color="complimentary.900">
+        <Text pr={2} color="complimentary.700">
           {balanceDisplay}
         </Text>
       );
     } else {
       return (
         <Box mr={2} display="inline-block">
-          <SkeletonCircle size="2" startColor="complimentary.900" endColor="complimentary.400" />
+          <SkeletonCircle size="2" startColor="complimentary.700" endColor="complimentary.400" />
         </Box>
       );
     }
@@ -94,7 +93,7 @@ export const AssetsAccordian: React.FC<AssetsAccordianProps> = ({ selectedOption
                 </Text>
               </Flex>
               {renderAssets()}
-              <Text pr={2} color="complimentary.900">
+              <Text pr={2} color="complimentary.700">
                 {selectedOption.major_denom.toUpperCase()}
               </Text>
             </AccordionButton>
@@ -112,7 +111,7 @@ export const AssetsAccordian: React.FC<AssetsAccordianProps> = ({ selectedOption
               </Flex>
 
               {renderQAssets()}
-              <Text pr={2} color="complimentary.900">
+              <Text pr={2} color="complimentary.700">
                 q{selectedOption.major_denom.toUpperCase()}
               </Text>
             </AccordionButton>

@@ -109,7 +109,7 @@ export default function Staking() {
               <HStack justifyContent="space-between" w="100%">
                 <NetworkSelect selectedOption={selectedNetwork} setSelectedNetwork={setSelectedNetwork} />
                 <VStack p={1} borderRadius="10px" alignItems="flex-end">
-                  <Stat minW={'90px'} color="complimentary.900">
+                  <Stat minW={'90px'} color="complimentary.700">
                     <StatLabel>APR</StatLabel>
                     <StatNumber height={'34px'}>
                       {!isLoading && APY !== undefined ? (
@@ -117,9 +117,9 @@ export default function Staking() {
                       ) : (
                         <>
                           <HStack height={'34px'}>
-                            <SkeletonCircle size="3" startColor="complimentary.900" endColor="complimentary.400" />{' '}
-                            <SkeletonCircle size="2" startColor="complimentary.900" endColor="complimentary.400" />
-                            <SkeletonCircle size="3" startColor="complimentary.900" endColor="complimentary.400" />
+                            <SkeletonCircle size="3" startColor="complimentary.700" endColor="complimentary.400" />{' '}
+                            <SkeletonCircle size="2" startColor="complimentary.700" endColor="complimentary.400" />
+                            <SkeletonCircle size="3" startColor="complimentary.700" endColor="complimentary.400" />
                           </HStack>
                         </>
                       )}

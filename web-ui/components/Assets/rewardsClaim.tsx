@@ -158,7 +158,7 @@ export const RewardsClaim: React.FC<RewardsClaimInterface> = ({ address, onClose
   return (
     <Box bgColor="rgb(32,32,32)" maxW={'sm'} p="4" borderRadius="lg" mb="4">
       <Flex direction="column" alignItems="flex-end">
-        <CloseIcon color="white" cursor="pointer" onClick={onClose} _hover={{ color: 'complimentary.900' }} />
+        <CloseIcon color="white" cursor="pointer" onClick={onClose} _hover={{ color: 'complimentary.700' }} />
         <VStack alignItems="flex-start" spacing="2">
           <Text fontSize="xl" fontWeight="bold" color="white">
             Cross Chain Claims
@@ -170,13 +170,13 @@ export const RewardsClaim: React.FC<RewardsClaimInterface> = ({ address, onClose
             <Checkbox
               _selected={{ bgColor: 'transparent' }}
               _active={{
-                borderColor: 'complimentary.900',
+                borderColor: 'complimentary.700',
               }}
               _hover={{
-                borderColor: 'complimentary.900',
+                borderColor: 'complimentary.700',
               }}
               _focus={{
-                borderColor: 'complimentary.900',
+                borderColor: 'complimentary.700',
                 boxShadow: '0 0 0 3px #FF8000',
               }}
               isChecked={autoClaimEnabled}
