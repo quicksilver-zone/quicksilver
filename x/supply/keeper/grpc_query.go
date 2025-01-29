@@ -40,7 +40,9 @@ func (q Querier) Supply(c context.Context, _ *types.QuerySupplyRequest) (*types.
 			"quick1e22za5qrqqp488h5p7vw2pfx8v0y4u444ufeuw", // ingenuity
 		})
 
-		return &types.QuerySupplyResponse{Supply: supply.Amount.Uint64(), CirculatingSupply: circulatingSupply.Uint64()}, nil
+		fmt.Println("supply", supply.Amount)
+		fmt.Println("circulatingSupply", circulatingSupply)
+		return &types.QuerySupplyResponse{Supply: supply.Amount, CirculatingSupply: circulatingSupply}, nil
 	}
 	return nil, fmt.Errorf("endpoint disabled")
 }
@@ -50,7 +52,7 @@ func (q Querier) TopN(c context.Context, req *types.QueryTopNRequest) (*types.Qu
 
 	if q.endpointEnabled {
 
-		accounts := q.Keeper.TopN(ctx, q.stakingKeeper.BondDenom(ctx), req.N)
+		accounts := q.Keeper.TopN(ctx, q.stakingKeeper.BondDenom(ctx), int(req.N))
 
 		return &types.QueryTopNResponse{Accounts: accounts}, nil
 	}

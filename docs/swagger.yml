@@ -5220,10 +5220,8 @@ paths:
             properties:
               supply:
                 type: string
-                format: uint64
               circulating_supply:
                 type: string
-                format: uint64
         default:
           description: An unexpected error response.
           schema:
@@ -5246,5 +5244,53 @@ paths:
                     value:
                       type: string
                       format: byte
+      tags:
+        - QuerySupply
+  /quicksilver/supply/v1/topn/{n}:
+    get:
+      operationId: TopN
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              accounts:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    address:
+                      type: string
+                    balance:
+                      type: string
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: 'n'
+          in: path
+          required: true
+          type: string
+          format: uint64
       tags:
         - QuerySupply

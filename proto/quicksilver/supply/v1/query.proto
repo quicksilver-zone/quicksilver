@@ -22,8 +22,16 @@ service Query {
 
 message QuerySupplyRequest {}
 message QuerySupplyResponse {
-  uint64 supply = 1;
-  uint64 circulating_supply = 2;
+  string supply = 1 [
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable) = false
+  ];
+  string circulating_supply = 2 [
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable) = false
+  ];
 }
 
 message Account {

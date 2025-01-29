@@ -46,6 +46,34 @@ func (suite *KeeperTestSuite) Test_msgServer_IncentivePoolSpend() {
 			wantErr: true,
 		},
 		{
+			name: "invalid address",
+			malleate: func() {
+				msg = types.MsgIncentivePoolSpend{
+					Authority:   modAccAddr,
+					ToAddress:   "invalid",
+					Amount:      coins,
+					Title:       "Invalid Incentive Pool Spend Title",
+					Description: "Invalid Incentive Pool Spend Description",
+				}
+			},
+			want:    nil,
+			wantErr: true,
+		},
+		{
+			name: "blocked address (gov module acc)",
+			malleate: func() {
+				msg = types.MsgIncentivePoolSpend{
+					Authority:   modAccAddr,
+					ToAddress:   "quick10d07y265gmmuvt4z0w9aw880jnsr700j3xrh0p",
+					Amount:      coins,
+					Title:       "Invalid Incentive Pool Spend Title",
+					Description: "Invalid Incentive Pool Spend Description",
+				}
+			},
+			want:    nil,
+			wantErr: true,
+		},
+		{
 			name: "valid",
 			malleate: func() {
 				msg = types.MsgIncentivePoolSpend{
