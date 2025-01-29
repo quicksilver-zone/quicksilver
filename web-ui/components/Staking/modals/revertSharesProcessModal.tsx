@@ -83,7 +83,7 @@ export const RevertSharesProcessModal: React.FC<StakingModalProps> = ({
 }) => {
   const [step, setStep] = useState(1);
   const getProgressColor = (circleStep: number) => {
-    if (step >= circleStep) return 'complimentary.900';
+    if (step >= circleStep) return 'complimentary.700';
     return 'rgba(255,255,255,0.2)';
   };
 

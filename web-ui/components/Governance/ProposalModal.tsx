@@ -161,7 +161,7 @@ export const ProposalModal = ({
                 width: '8px',
               },
               '&::-webkit-scrollbar-thumb': {
-                backgroundColor: 'complimentary.900',
+                backgroundColor: 'complimentary.700',
                 borderRadius: '4px',
               },
               '&::-webkit-scrollbar-track': {
@@ -313,7 +313,7 @@ export const ProposalModal = ({
             </ModalBody>
 
             <ModalFooter>
-              <Button _hover={{ color: 'complimentary.900' }} mt={-4} color="white" variant="ghost" onClick={onClose}>
+              <Button _hover={{ color: 'complimentary.700' }} mt={-4} color="white" variant="ghost" onClick={onClose}>
                 Close
               </Button>
             </ModalFooter>

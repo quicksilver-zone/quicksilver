@@ -34,16 +34,16 @@ const SelectOptions = ({ data, value, onChange }: ChangeChainMenuType) => {
       ...provided,
       height: 12,
       _active: {
-        borderColor: 'complimentary.900',
+        borderColor: 'complimentary.700',
       },
       _selected: {
-        borderColor: 'complimentary.900',
+        borderColor: 'complimentary.700',
       },
       _hover: {
-        borderColor: 'complimentary.900',
+        borderColor: 'complimentary.700',
       },
       _focus: {
-        borderColor: 'complimentary.900',
+        borderColor: 'complimentary.700',
         boxShadow: '0 0 0 3px #FF8000',
       },
     }),
@@ -57,13 +57,13 @@ const SelectOptions = ({ data, value, onChange }: ChangeChainMenuType) => {
       borderRadius: '0.3rem',
       color: 'white',
       _active: {
-        borderColor: 'complimentary.900',
+        borderColor: 'complimentary.700',
       },
       _selected: {
-        borderColor: 'complimentary.900',
+        borderColor: 'complimentary.700',
       },
       _hover: {
-        borderColor: 'complimentary.900',
+        borderColor: 'complimentary.700',
       },
     }),
     menuList: (provided: SystemStyleObject) => ({
@@ -76,10 +76,10 @@ const SelectOptions = ({ data, value, onChange }: ChangeChainMenuType) => {
       p: 2,
 
       _hover: {
-        borderColor: 'complimentary.900',
+        borderColor: 'complimentary.700',
       },
       _focus: {
-        borderColor: 'complimentary.900',
+        borderColor: 'complimentary.700',
       },
       // For Firefox
       scrollbarWidth: 'auto',
@@ -140,7 +140,7 @@ const SelectOptions = ({ data, value, onChange }: ChangeChainMenuType) => {
           cursor={'pointer'}
           borderRadius={'full'}
           _hover={{ bgColor: 'rgba(255,255,255,0.15)' }}
-          color="complimentary.900"
+          color="complimentary.700"
         />
       </chakraComponents.DropdownIndicator>
     );

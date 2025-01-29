@@ -10,7 +10,7 @@ import MyPortfolio from '@/components/Assets/portfolio';
 import QuickBox from '@/components/Assets/quickbox';
 import RewardsClaim from '@/components/Assets/rewardsClaim';
 import UnbondingAssetsTable from '@/components/Assets/unbondingTable';
-import { chains, getExponent, env, getChainForToken, tokenToChainIdMap } from '@/config';
+import { chains, env, tokenToChainIdMap, getChainForMajorDenom, getChainForQDenom } from '@/config';
 import { useGrpcQueryClient } from '@/hooks/useGrpcQueryClient';
 import {
   useAPYQuery,
@@ -59,7 +59,6 @@ function Home() {
 
     // Flatten nonNative assets into a single array and accumulate amounts for each denom
     const amountsMap = new Map();
-    console.log(amountsMap)
     Object.values(nonNative || {})
       .flat()
       .flatMap((reward) => reward.Amount)
@@ -70,16 +69,17 @@ function Home() {
 
     // Map over the accumulated results to create portfolio items
     return Array.from(amountsMap.entries()).map(([denom, amount]) => {
-      const normalizedDenom = denom.slice(2);
-      const chainId = getChainForToken(tokenToChainIdMap(env), normalizedDenom);
-      const tokenPriceInfo = tokenPrices?.find((info) => info.token === normalizedDenom);
+      const chain = getChainForQDenom(env, denom);
+      const normalizedDenom = chain?.major_denom ?? "";
+      const chainId = chain?.chain_id;
+      const tokenPriceInfo = tokenPrices?.get(normalizedDenom.toLocaleUpperCase());
       const redemptionRate = chainId && redemptionRates[chainId] ? redemptionRates[chainId].current : 1;
-      const qTokenPrice = tokenPriceInfo ? tokenPriceInfo.price * redemptionRate : 0;
-      const exp = getExponent(env, normalizedDenom);
+      const qTokenPrice = tokenPriceInfo ? tokenPriceInfo * redemptionRate : 0;
+      const exp = chain?.exponent;
       const normalizedAmount = shiftDigits(amount, -(exp ?? 6));
-
+      
       return {
-        title: 'q' + normalizedDenom.toUpperCase(),
+        title: 'q' + normalizedDenom?.toUpperCase(),
         amount: normalizedAmount.toString(),
         qTokenPrice: qTokenPrice,
         chainId: chainId ?? '',
@@ -124,28 +124,29 @@ function Home() {
   // Data for the assets grid
   // the query return `qbalance` is an array of quicksilver staked assets held by the user
   // assetsData maps over the assets in qbalance and returns the name, balance, apy, native asset denom, and redemption rate.
-  const qtokens = Array.from(chains.get(env)?.values() || []).filter(chain => chain.show).map((chain) => "q" + chain.major_denom.toLowerCase());
+  const liveChains = Array.from(chains.get(env)?.values() || []).filter(chain => chain.show).map((chain) => chain.chain_name);
 
   const assetsData = useMemo(() => {
-    return qtokens.map((token) => {
-      const baseToken = token.substring(1).toLowerCase();
+    return liveChains.map((chain_name) => {
+      const chain = chains.get(env)?.get(chain_name);
+      const baseToken = chain?.major_denom.toLowerCase();
 
       const asset = qbalance?.find((a) => a.denom.substring(2).toLowerCase() === baseToken);
-      const chainId = getChainForToken(tokenToChainIdMap(env), baseToken);
+      const chainId = chain?.chain_id;
       const apy = chainId && APYs && APYs[chainId] ? APYs[chainId] : 0;
 
       const redemptionRate = chainId && redemptionRates && redemptionRates[chainId] ? redemptionRates[chainId].last || 1 : 1;
-      const exp = getExponent(env, baseToken);
+      const exp = chain?.exponent;
       return {
-        name: token.toUpperCase(),
+        name: "q"+chain?.major_denom.toUpperCase(),
         balance: asset ? shiftDigits(Number(asset.amount), -(exp || 6)).toString() : '0',
         apy: parseFloat(((apy * 100) / 100).toFixed(4)),
-        native: baseToken.toUpperCase(),
+        native: baseToken?.toUpperCase() ?? '',
         redemptionRates: redemptionRate.toString(),
       };
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [qtokens, qbalance, tokenToChainIdMap, APYs, redemptionRates, refetchAll]);
+  }, [liveChains, qbalance, tokenToChainIdMap, APYs, redemptionRates, refetchAll]);
 
   const showAssetsGrid = qbalance && qbalance.length > 0 && !qIsLoading && !qIsError;
 
