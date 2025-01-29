@@ -1,0 +1,43 @@
+syntax = "proto3";
+package quicksilver.supply.v1;
+
+import "cosmos/base/v1beta1/coin.proto";
+import "cosmos/msg/v1/msg.proto";
+import "cosmos_proto/cosmos.proto";
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+
+option go_package = "github.com/quicksilver-zone/quicksilver/x/supply/types";
+
+// Msg defines the interchainquery Msg service.
+service Msg {
+  // MsgIncentivePoolSpend defines a method for submit query responses.
+  rpc IncentivePoolSpend(MsgIncentivePoolSpend) returns (MsgIncentivePoolSpendResponse) {
+    option (google.api.http) = {
+      post: "/supply/tx/v1beta1/incentive_pool_spend"
+      body: "*"
+    };
+  }
+}
+
+// MsgIncentivePoolSpend represents a message to send coins from the
+// incentive pool module account to another.
+message MsgIncentivePoolSpend {
+  option (cosmos.msg.v1.signer) = "authority";
+
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string to_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  repeated cosmos.base.v1beta1.Coin amount = 3 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+  string title = 4;
+  string description = 5;
+}
+
+// MsgIncentivePoolSpendResponse defines the MsgIncentivePoolSpend response
+// type.
+message MsgIncentivePoolSpendResponse {}

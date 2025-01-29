@@ -92,14 +92,14 @@ claims against any specific protocol.
 
 The following standrad sub-modules are implemented:
 
-* `LiquidTokenModule` - to track off-chain liquid qAssets.
-* `OsmosisModule` - to track qAssets locked in Osmosis pools.
+- `LiquidTokenModule` - to track off-chain liquid qAssets.
+- `OsmosisModule` - to track qAssets locked in Osmosis pools.
 
 ## State
 
 A `Score` is maintained for every `Validator` within a `Zone`. `Score` is
 initially set to zero and is updated at the end of every epoch to reflect the
-**overall score** for the validator (decntralization_score * performance_score).
+**overall score** for the validator (decntralization_score \* performance_score).
 
 A `ValidatorSelectionAllocation` and `HoldingsAllocation` are maintained for
 every `Zone`. These are calculated and set at the end of every epoch according
@@ -225,11 +225,11 @@ type MsgSubmitClaim struct {
 }
 ```
 
-* **UserAddress** - the address of the claimant account on the native chain;
-* **Zone** - the native zone related to the qAsset;
-* **SrcZone** - the zone on which the qAsset is used (from where the proof originates);
-* **ClaimType** - see [`x/claimsmanager/spec/README.md#ClaimType`](../../claimsmanager/spec/README.md#ClaimType);
-* **Proofs** - see [`x/claimsmanager/spec/README.md#Proof`](../../claimsmanager/spec/README.md#Proof);
+- **UserAddress** - the address of the claimant account on the native chain;
+- **Zone** - the native zone related to the qAsset;
+- **SrcZone** - the zone on which the qAsset is used (from where the proof originates);
+- **ClaimType** - see [`x/claimsmanager/spec/README.md#ClaimType`](../../claimsmanager/spec/README.md#ClaimType);
+- **Proofs** - see [`x/claimsmanager/spec/README.md#Proof`](../../claimsmanager/spec/README.md#Proof);
 
 **Transaction**: [`claim`](#claim)
 
@@ -266,9 +266,9 @@ Where proposal.json contains:
   "key": "pools/XXX",
   "type": "osmosispool",
   "data": {
-	"poolID": "596",
-	"ibcToken": "27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2",
-	"localDenom": "uqatom"
+    "poolID": "596",
+    "ibcToken": "27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2",
+    "localDenom": "uqatom"
   },
   "deposit": "512000000uqck"
 }
@@ -307,7 +307,7 @@ service Query {
 
 ### params
 
-Query the current airdrop module parameters.
+Query the current module parameters.
 
 ```go
 // QueryParamsRequest is the request type for the Query/Params RPC method.
@@ -348,16 +348,16 @@ type QueryProtocolDataResponse struct {
 Module parameters:
 
 | Key                                                     | Type         | Example |
-|:--------------------------------------------------------|:-------------|:--------|
+| :------------------------------------------------------ | :----------- | :------ |
 | distribution_proportions.validator_selection_allocation | string (dec) | "0.34"  |
 | distribution_proportions.holdings_allocation            | string (dec) | "0.33"  |
 | distribution_proportions.lockup_allocation              | string (dec) | "0.33"  |
 
 Description of parameters:
 
-* `validator_selection_allocation` - the percentage of inflation rewards allocated to validator selection rewards;
-* `holdings_allocation` - the percentage of inflation rewards allocated to qAssets hoildings rewards;
-* `lockup_allocation` - the percentage of inflation rewards allocated to staking and locking of QCK;
+- `validator_selection_allocation` - the percentage of inflation rewards allocated to validator selection rewards;
+- `holdings_allocation` - the percentage of inflation rewards allocated to qAssets hoildings rewards;
+- `lockup_allocation` - the percentage of inflation rewards allocated to staking and locking of QCK;
 
 ## Begin Block
 
@@ -371,25 +371,25 @@ N/A
 
 The following is performed at the end of every epoch:
 
-* Obtains the rewards allocations according to the module balances and
+- Obtains the rewards allocations according to the module balances and
   distribution proportions parameters;
-* Allocate zone rewards according to the proportional zone Total Value Locked
+- Allocate zone rewards according to the proportional zone Total Value Locked
   (TVL) for both **Validator Selection** and **qAsset Holdings**;
-* Calculate validator selection scores and allocations for every zone:
+- Calculate validator selection scores and allocations for every zone:
   1. Obtain performance account delegation rewards (`performanceScores`);
   2. Calculate decentralization scores (`distributionScores`);
   3. Calculate overall validator scores;
   4. Calculate user validator selection rewards;
   5. Distribute validator selection rewards;
-* Calculate qAsset holdings:
+- Calculate qAsset holdings:
   1. Obtain qAssets held by account (locally and off-chain via claims / Poof of
      Possession);
   2. Calculate user proportion (cap at 2%);
   3. Normalize and distribute allocation;
-* Allocate lockup rewards by sending portion to `feeCollector` for distribution
+- Allocate lockup rewards by sending portion to `feeCollector` for distribution
   by Staking Module;
-* Update protocol data with the epoch boundary block height;
-* Update osmosis pools protocol data;
+- Update protocol data with the epoch boundary block height;
+- Update osmosis pools protocol data;
 
 ## IBC
 
@@ -404,20 +404,20 @@ This module registers the following queries, requests and callbacks.
 Queries the performance delegation rewards of the zone and computes the
 validator scores based on the performance rewards.
 
-* **Query:** `cosmos.distribution.v1beta1.Query/DelegationTotalRewards`
-* **Callback:** `ValidatorSelectionRewardsCallback`
+- **Query:** `cosmos.distribution.v1beta1.Query/DelegationTotalRewards`
+- **Callback:** `ValidatorSelectionRewardsCallback`
 
 #### Osmosis Pool Update
 
 Updates the registered Osmosis pools at the end of each epoch.
 
-* **Query:** `store/gamm/key`
-* **Callback:** `OsmosisPoolUpdateCallback`
+- **Query:** `store/gamm/key`
+- **Callback:** `OsmosisPoolUpdateCallback`
 
 #### Epoch Block
 
 Queries and records the block height of the registered zone at the epoch
 boundary.
 
-* **Query:** `cosmos.base.tendermint.v1beta1.Service/GetLatestBlock`
-* **Callback:** `SetEpochBlockCallback`
+- **Query:** `cosmos.base.tendermint.v1beta1.Service/GetLatestBlock`
+- **Callback:** `SetEpochBlockCallback`

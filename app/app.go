@@ -39,8 +39,8 @@ import (
 
 	"github.com/quicksilver-zone/quicksilver/app/keepers"
 	"github.com/quicksilver-zone/quicksilver/docs"
-	airdroptypes "github.com/quicksilver-zone/quicksilver/x/airdrop/types"
 	interchainstakingtypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
+	supplytypes "github.com/quicksilver-zone/quicksilver/x/supply/types"
 )
 
 func Init() {
@@ -64,7 +64,7 @@ var (
 	allowedReceivingModAcc = map[string]bool{
 		distrtypes.ModuleName:             true,
 		interchainstakingtypes.ModuleName: true,
-		airdroptypes.ModuleName:           true,
+		supplytypes.AirdropAccount:        true,
 	}
 )
 

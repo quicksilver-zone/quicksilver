@@ -6,10 +6,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/quicksilver-zone/quicksilver/utils"
-	airdroptypes "github.com/quicksilver-zone/quicksilver/x/airdrop/types"
 	cmtypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
 	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 	"github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
+	supplytypes "github.com/quicksilver-zone/quicksilver/x/supply/types"
 )
 
 func (k Keeper) AllocateHoldingsRewards(ctx sdk.Context) error {
@@ -20,14 +20,13 @@ func (k Keeper) AllocateHoldingsRewards(ctx sdk.Context) error {
 
 		if err := k.DistributeToUsersFromModule(ctx, userAllocations); err != nil {
 			k.Logger(ctx).Error("failed to distribute to users", "ua", userAllocations, "err", err)
-			// we might want to do a soft fail here so that all zones are not affected...
 			return false
 		}
 
 		if remaining.IsPositive() {
 			k.Logger(ctx).Error("remaining amount to return to incentives pool", "remainder", remaining, "pool balance", k.GetModuleBalance(ctx))
 			// send unclaimed remainder to incentives pool
-			if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, airdroptypes.ModuleName, sdk.NewCoins(sdk.NewCoin(k.stakingKeeper.BondDenom(ctx), remaining))); err != nil {
+			if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, supplytypes.AirdropAccount, sdk.NewCoins(sdk.NewCoin(k.stakingKeeper.BondDenom(ctx), remaining))); err != nil {
 				k.Logger(ctx).Error("failed to send remaining amount to return to incentives pool", "remainder", remaining, "pool balance", k.GetModuleBalance(ctx), "err", err)
 				return false
 			}

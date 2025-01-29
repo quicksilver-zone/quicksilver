@@ -159,3 +159,13 @@ func V010705UpgradeHandler(
 		return mm.RunMigrations(ctx, configurator, fromVM)
 	}
 }
+
+func V010706UpgradeHandler(
+	mm *module.Manager,
+	configurator module.Configurator,
+	appKeepers *keepers.AppKeepers,
+) upgradetypes.UpgradeHandler {
+	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		return mm.RunMigrations(ctx, configurator, fromVM)
+	}
+}
