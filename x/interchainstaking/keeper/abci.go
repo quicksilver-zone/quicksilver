@@ -31,11 +31,11 @@ func (k *Keeper) BeginBlocker(ctx sdk.Context) {
 		if err := k.GCCompletedRedelegations(ctx); err != nil {
 			k.Logger(ctx).Error("error in GCCompletedRedelegations", "error", err)
 		}
-
-		// k.HandleMaturedUnbondings(ctx)
+		k.HandleMaturedUnbondings(ctx)
 	}
+
 	k.IterateZones(ctx, func(index int64, zone *types.Zone) (stop bool) {
-		if ctx.BlockHeight()%30 == 0 {
+		if ctx.BlockHeight()%blockInterval == 0 {
 			// for the tasks below, we cannot panic in begin blocker; as this will crash the chain.
 			// and as failing here is not terminal panicking is not necessary, but we should log
 			// as an error. we don't return on failure here as we still want to attempt the unrelated
