@@ -8,7 +8,7 @@ import (
 )
 
 func Keys[V interface{}](in map[string]V) []string {
-	out := make([]string, 0)
+	out := make([]string, 0, len(in))
 
 	for k := range in {
 		out = append(out, k)
