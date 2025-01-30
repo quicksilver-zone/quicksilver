@@ -40,7 +40,6 @@ func (q Querier) Supply(c context.Context, _ *types.QuerySupplyRequest) (*types.
 			"quick1e22za5qrqqp488h5p7vw2pfx8v0y4u444ufeuw", // ingenuity
 		})
 
-		fmt.Println("circulatingSupply", circulatingSupply)
 		return &types.QuerySupplyResponse{Supply: supply.Amount, CirculatingSupply: circulatingSupply}, nil
 	}
 	return nil, fmt.Errorf("endpoint disabled")
