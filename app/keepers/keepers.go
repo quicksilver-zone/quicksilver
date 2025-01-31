@@ -379,7 +379,6 @@ func (appKeepers *AppKeepers) InitKeepers(
 		appKeepers.keys[claimsmanagertypes.StoreKey],
 		appKeepers.IBCKeeper,
 		appKeepers.GetSubspace(claimsmanagertypes.ModuleName),
-		appKeepers.InterchainstakingKeeper,
 		&appKeepers.InterchainQueryKeeper,
 		proofOpsFn,
 		selfProofOpsFn,

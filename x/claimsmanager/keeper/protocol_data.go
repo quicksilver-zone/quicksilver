@@ -121,3 +121,5 @@ func MarshalAndSetProtocolData(ctx sdk.Context, k *Keeper, datatype types.Protoc
 	k.SetProtocolData(ctx, pd.GenerateKey(), storedProtocolData)
 	return nil
 }
+
+// todo : Iterate connections data for all the zones

@@ -27,6 +27,7 @@ var (
 	KeyPrefixLastEpochClaim = []byte{0x01}
 	KeySelfConsensusState   = []byte{0x02}
 	KeyPrefixProtocolData   = []byte{0x00}
+	KeyPrefixClaimableEvent = []byte{0x03}
 )
 
 func GetProtocolDataKey(pdType ProtocolDataType, key []byte) []byte {
@@ -56,6 +57,19 @@ func GetGenericKeyClaim(key []byte, chainID, address string, module ClaimType, s
 
 func GetKeyClaim(chainID, address string, module ClaimType, srcChainID string) []byte {
 	return GetGenericKeyClaim(KeyPrefixClaim, chainID, address, module, srcChainID)
+}
+
+// GetGenericKeyClaim returns the key for storing a given claim.
+func GetGenericKeyClaimableEvent(eventModule string, eventName string) []byte {
+	key := KeyPrefixClaimableEvent
+	key = append(key, eventModule...)
+	key = append(key, 0x00)
+	key = append(key, eventName...)
+	return key
+}
+
+func GetKeyClaimableEvent(eventModule, eventName string) []byte {
+	return GetGenericKeyClaimableEvent(eventModule, eventName)
 }
 
 func GetPrefixClaim(chainID string) []byte {

@@ -2,6 +2,7 @@ package types
 
 import (
 	"github.com/ingenuity-build/multierror"
+	"time"
 
 	"cosmossdk.io/math"
 
@@ -33,5 +34,19 @@ func (c *Claim) ValidateBasic() error {
 		return multierror.New(errs)
 	}
 
+	return nil
+}
+
+func NewClaimableEvent(eventModule, eventName string, heights map[string]int64, maxClaimTime time.Time) ClaimableEvent {
+	return ClaimableEvent{
+		EventModule:  eventModule,
+		EventName:    eventName,
+		Heights:      heights,
+		MaxClaimTime: maxClaimTime,
+	}
+}
+
+func (c *ClaimableEvent) ValidateEventName() error {
+	// todo implement this
 	return nil
 }

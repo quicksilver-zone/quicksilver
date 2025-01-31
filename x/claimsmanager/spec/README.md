@@ -200,8 +200,8 @@ message MsgSubmitClaim {
     json_name = "user_address",
     (cosmos_proto.scalar) = "cosmos.AddressString"
   ];
-  string zone = 2 [json_name = "zone"];
-  string src_zone = 3 [json_name = "src_zone"];
+  string event_module = 2 [json_name = "zone"];
+  string chain_id = 3 [json_name = "src_zone"];
   quicksilver.claimsmanager.v1.ClaimType claim_type = 4 [json_name = "claim_type"];
   repeated quicksilver.claimsmanager.v1.Proof proofs = 5 [json_name = "proofs"];
 }

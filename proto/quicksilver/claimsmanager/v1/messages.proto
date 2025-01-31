@@ -16,6 +16,12 @@ service Msg {
       body: "*"
     };
   }
+  rpc SubmitClaimableEvent(MsgSubmitClaimableEventClaim) returns (MsgSubmitClaimableEventClaimResponse) {
+    option (google.api.http) = {
+      post: "/quicksilver/tx/v1/claimsmanager/claimableEvent"
+      body: "*"
+    };
+  }
 }
 
 // MsgSubmitClaim represents a message type for submitting a
@@ -36,3 +42,18 @@ message MsgSubmitClaim {
 
 // MsgSubmitClaimResponse defines the MsgSubmitClaim response type.
 message MsgSubmitClaimResponse {}
+
+message MsgSubmitClaimableEventClaim {
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string user_address = 1 [
+    json_name = "user_address",
+    (cosmos_proto.scalar) = "cosmos.AddressString"
+  ];
+  string event_module = 3 [json_name = "event_module"];
+  string event_name = 4 [json_name = "event_name"];
+  repeated quicksilver.claimsmanager.v1.Proof proofs = 5 [json_name = "proofs"];
+}
+
+message MsgSubmitClaimableEventClaimResponse {}

@@ -33,3 +33,8 @@ func (p *Proof) ValidateBasic() error {
 
 	return nil
 }
+
+func (m *MsgSubmitClaimableEventClaim) ValidateMsgClaimableEvent() error {
+	// todo implement this
+	return nil
+}

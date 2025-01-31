@@ -44,3 +44,7 @@ message QueryClaimsResponse {
   repeated Claim claims = 1 [(gogoproto.nullable) = false];
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
+
+
+// return all the height for each chain for each claimable event
+// return latest event of each module

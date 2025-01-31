@@ -3,6 +3,7 @@ package quicksilver.claimsmanager.v1;
 
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
+import "google/protobuf/timestamp.proto";
 import "tendermint/crypto/proof.proto";
 
 option go_package = "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types";
@@ -27,6 +28,16 @@ message Params {
 
   bool claims_enabled = 1;
 }
+
+message ClaimableEvent {
+  string event_module = 1; // module name doing the claim, “govbyproxy”, “participationrewards”, “airdrop” (types.ModuleName)
+  string event_name = 2; // “epoch”, “proposal/cosmoshub-4/764”, “airdrop/cosmoshub-4” // todo set as id
+  map<string, int64> heights = 3; // heights across each chain for this event - when initialised create with the chainID and 0, for each relevant zone. For all zones, use all zones we have a connectionData for; airdrop proofs will require _latest_ (pool contents, etc.) to be submitted by the user.
+  google.protobuf.Timestamp max_claim_time = 4 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];  // when can we claim until? (Proposal end vote time, next epoch boundary, airdrop end)
+}
+
+// trigger self consensus state on every claimable event
+// icq query fired off every time
 
 // Claim define the users claim for holding assets within a given zone.
 message Claim {
