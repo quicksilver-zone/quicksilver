@@ -93,6 +93,7 @@ func StartCommand() *cobra.Command {
 			}
 
 			config := InitConfig(homepath)
+			config.FilterHA()
 
 			rpcClient, err := rpchttp.New(config.DefaultChain.RpcUrl, "/websocket")
 			if err != nil {
