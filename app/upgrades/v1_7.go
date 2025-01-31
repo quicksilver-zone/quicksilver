@@ -166,6 +166,40 @@ func V010706UpgradeHandler(
 	appKeepers *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		if isMainnet(ctx) || isTest(ctx) {
+			// unblock 2x stuck unbondings
+			hashes := []struct {
+				Zone   string
+				Hash   string
+				Status int32
+			}{
+				{Zone: "regen-1", Hash: "ee0b5f5c423508c8dd6a501168a77a0b72d5a8aaf1702a64804e522334ff272b", Status: icstypes.WithdrawStatusUnbond},
+				{Zone: "sommelier-3", Hash: "a55f1f4deaa501ff5671ef96fbbb5b60e225d4b8db4825ae3706893bb94e052c", Status: icstypes.WithdrawStatusUnbond},
+			}
+			for _, hashRecord := range hashes {
+				record, found := appKeepers.InterchainstakingKeeper.GetWithdrawalRecord(ctx, hashRecord.Zone, hashRecord.Hash, hashRecord.Status)
+				if !found {
+					panic("record not found")
+				}
+				record.SendErrors = 0
+				record.Amount = nil
+				record.Distribution = nil
+				record.CompletionTime = time.Time{}
+				record.Acknowledged = false
+
+				appKeepers.InterchainstakingKeeper.UpdateWithdrawalRecordStatus(ctx, &record, icstypes.WithdrawStatusQueued)
+			}
+		}
+
+		// garbage collect old records
+		appKeepers.InterchainstakingKeeper.IterateUnbondingRecords(ctx, func(index int64, record icstypes.UnbondingRecord) (stop bool) {
+			if record.CompletionTime.Equal(time.Time{}) || record.CompletionTime.Before(ctx.BlockTime().Add(-time.Hour*24)) { // old records
+				appKeepers.InterchainstakingKeeper.Logger(ctx).Info("deleting old unbonding record", "chain_id", record.ChainId, "validator", record.Validator, "epoch_number", record.EpochNumber)
+				appKeepers.InterchainstakingKeeper.DeleteUnbondingRecord(ctx, record.ChainId, record.Validator, record.EpochNumber)
+			}
+			return false
+		})
+
 		return mm.RunMigrations(ctx, configurator, fromVM)
 	}
 }

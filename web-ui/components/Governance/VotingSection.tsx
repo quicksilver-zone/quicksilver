@@ -34,7 +34,7 @@ import { ProposalModal } from './ProposalModal';
 function RotateIcon({ isOpen }: { isOpen: boolean }) {
   return (
     <ChevronDownIcon
-      color="complimentary.900"
+      color="complimentary.700"
       transform={isOpen ? 'rotate(180deg)' : 'none'}
       transition="transform 0.2s"
       h="25px"
@@ -139,16 +139,16 @@ export const VotingSection = ({ chainName }: { chainName: ChainName }) => {
               width="35%"
               borderRadius={'4px'}
               _active={{
-                borderColor: 'complimentary.900',
+                borderColor: 'complimentary.700',
               }}
               _selected={{
-                borderColor: 'complimentary.900',
+                borderColor: 'complimentary.700',
               }}
               _hover={{
-                borderColor: 'complimentary.900',
+                borderColor: 'complimentary.700',
               }}
               _focus={{
-                borderColor: 'complimentary.900',
+                borderColor: 'complimentary.700',
                 boxShadow: '0 0 0 3px #FF8000',
               }}
             />
@@ -281,7 +281,7 @@ export const VotingSection = ({ chainName }: { chainName: ChainName }) => {
               width: '8px',
             },
             '&::-webkit-scrollbar-thumb': {
-              backgroundColor: 'complimentary.900',
+              backgroundColor: 'complimentary.700',
               borderRadius: '4px',
             },
             '&::-webkit-scrollbar-track': {

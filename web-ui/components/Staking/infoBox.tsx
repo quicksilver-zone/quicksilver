@@ -17,14 +17,14 @@ export const InfoBox: React.FC<AssetsAccordianProps> = ({ selectedOption, displa
   const renderRedemptionRate = () => {
     if (!isZoneLoading && zone) {
       return (
-        <Text color={'complimentary.900'}>
+        <Text color={'complimentary.700'}>
           1 q{selectedOption?.major_denom.toUpperCase()} = {Number(zone.redemptionRate).toFixed(2)} {selectedOption?.major_denom.toUpperCase()}
         </Text>
       );
     } else {
       return (
         <Box display="inline-block">
-          <SkeletonCircle size="2" startColor="complimentary.900" endColor="complimentary.400" />
+          <SkeletonCircle size="2" startColor="complimentary.700" endColor="complimentary.400" />
         </Box>
       );
     }
@@ -33,14 +33,14 @@ export const InfoBox: React.FC<AssetsAccordianProps> = ({ selectedOption, displa
   const renderApy = () => {
     if (displayApr) {
       return (
-        <Text pr={2} color="complimentary.900">
+        <Text pr={2} color="complimentary.700">
           {displayApr}
         </Text>
       );
     } else {
       return (
         <Box display="inline-block">
-          <SkeletonCircle size="2" startColor="complimentary.900" endColor="complimentary.400" />
+          <SkeletonCircle size="2" startColor="complimentary.700" endColor="complimentary.400" />
         </Box>
       );
     }
@@ -48,11 +48,11 @@ export const InfoBox: React.FC<AssetsAccordianProps> = ({ selectedOption, displa
 
   const renderUnbondingPeriod = () => {
     if (!isZoneLoading && zone) {
-      return <Text color={'complimentary.900'}>{(Number(zone?.unbondingPeriod) / 86400000000000).toString()} days</Text>;
+      return <Text color={'complimentary.700'}>{(Number(zone?.unbondingPeriod) / 86400000000000).toString()} days</Text>;
     } else {
       return (
         <Box display="inline-block">
-          <SkeletonCircle size="2" startColor="complimentary.900" endColor="complimentary.400" />
+          <SkeletonCircle size="2" startColor="complimentary.700" endColor="complimentary.400" />
         </Box>
       );
     }
@@ -101,7 +101,7 @@ export const InfoBox: React.FC<AssetsAccordianProps> = ({ selectedOption, displa
                   Fees
                 </Text>
               </Flex>
-              <Text pr={2} color="complimentary.900">
+              <Text pr={2} color="complimentary.700">
                 3% of Rewards
               </Text>
             </Flex>
@@ -127,11 +127,11 @@ export const InfoBox: React.FC<AssetsAccordianProps> = ({ selectedOption, displa
             <VStack spacing={2} width="100%">
               <HStack justifyContent="space-between" width="100%">
                 <Text color="white">on {selectedOption?.major_denom.toUpperCase()}</Text>
-                <Text color="complimentary.900">0 {selectedOption?.major_denom.toUpperCase()}</Text>
+                <Text color="complimentary.700">0 {selectedOption?.major_denom.toUpperCase()}</Text>
               </HStack>
               <HStack justifyContent="space-between" width="100%">
                 <Text color="white">on Quicksilver</Text>
-                <Text color="complimentary.900">0 {selectedOption?.major_denom.toUpperCase()}</Text>
+                <Text color="complimentary.700">0 {selectedOption?.major_denom.toUpperCase()}</Text>
               </HStack>
             </VStack>
           </AccordionPanel>
@@ -156,7 +156,7 @@ export const InfoBox: React.FC<AssetsAccordianProps> = ({ selectedOption, displa
 
       <Text mt={3} color="white" textAlign="center" bgColor="rgba(0,0,0,0.4)" p={5} width="100%" borderRadius={6} fontWeight="light">
         Want to learn more about rewards, fees, and unbonding on Quicksilver?&nbsp;Check out the{' '}
-        <Link href="https://docs.quicksilver.zone" color="complimentary.900" isExternal>
+        <Link href="https://docs.quicksilver.zone" color="complimentary.700" isExternal>
           docs
         </Link>
         .

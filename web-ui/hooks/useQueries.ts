@@ -9,7 +9,7 @@ import { useGrpcQueryClient } from './useGrpcQueryClient';
 
 import { getCoin, getLogoUrls } from '@/utils';
 import { ExtendedValidator, parseValidators } from '@/utils/staking';
-import { env, local_chain, chains } from '@/config';
+import { env, local_chain, chains, Chain, getChainForMajorDenom } from '@/config';
 
 
 type WithdrawalRecord = {
@@ -191,37 +191,6 @@ export const useAuthChecker = (address: string) => {
   };
 };
 
-export const useParamsQuery = (chainName: string) => {
-  const { grpcQueryClient } = useGrpcQueryClient(chainName);
-
-  const paramsQuery = useQuery(
-    ['params'],
-    async () => {
-      if (!grpcQueryClient) {
-        throw new Error('RPC Client not ready');
-      }
-
-      const params = await grpcQueryClient.cosmos.mint.v1beta1.annualProvisions({
-
-
-      });
-
-      return params;
-    },
-    {
-      enabled: !!grpcQueryClient,
-      staleTime: Infinity,
-    },
-  );
-
-  return {
-    params: paramsQuery.data,
-    isLoading: paramsQuery.isLoading,
-    isError: paramsQuery.isError,
-  };
-
-}
-
 export const useAllBalancesQuery = (chainName: string, address: string) => {
   const { grpcQueryClient } = useGrpcQueryClient(chainName);
 
@@ -294,19 +263,32 @@ export const useIbcBalanceQuery = (chainName: string, address: string) => {
   };
 };
 
+let priceMap = new Map<string, number>();
+let priceTime = 0;
 
-export const useTokenPriceQuery = (tokenSymbol: string) => {
-  const fetchTokenPrice = async () => {
-    if (!tokenSymbol) {
-      throw new Error('Token symbol is required');
-    }
+export const useTokenPrices = (tokens: string[]) => {
+  
+    const fetchTokenPrices = async () => {
+      if (!tokens) {
+        throw new Error('Token symbol is required');
+      }
+  
+      if (priceTime + 300000 < Date.now()) {
+        const response = await axios.get(`https://data.quicksilver.zone/prices`);
+        priceMap = new Map(Object.entries(response.data));
+        priceTime = Date.now();
+      }
+      console.log(priceMap);
+      console.log(tokens);
 
-    const response = await axios.get(`https://api-osmosis.imperator.co/tokens/v2/price/${tokenSymbol}`);
-    return response.data;
+    
+      return priceMap;
+
+    
   };
 
-  return useQuery(['tokenPrice', tokenSymbol], fetchTokenPrice, {
-    enabled: !!tokenSymbol,
+  return useQuery(['tokenPrices', ...tokens], fetchTokenPrices, {
+    enabled: !!tokens,
     staleTime: 300000, 
   });
 };
@@ -322,7 +304,10 @@ export const useQBalanceQuery = (chainName: string, address: string, qAsset: str
       if (!grpcQueryClient) {
         throw new Error('RPC Client not ready');
       }
-      const denom = qAsset === 'dydx' ? 'aq'+ qAsset : 'uq' + qAsset;
+      console.log(qAsset)
+      const chain = getChainForMajorDenom(env, qAsset);
+      const denom = chain?.q_denom ?? '';
+      
 
       const balance = await grpcQueryClient.cosmos.bank.v1beta1.balance({
         address: address || '',
@@ -355,8 +340,6 @@ export const useQBalancesQuery = (chainName: string, address: string, grpcQueryC
         throw new Error('RPC Client not ready');
       }
 
-
-
       const next_key = new Uint8Array();
       const balance = await grpcQueryClient.cosmos.bank.v1beta1.allBalances({
         address: address || '',
@@ -369,6 +352,8 @@ export const useQBalancesQuery = (chainName: string, address: string, grpcQueryC
         },
       });
 
+      console.log(balance)
+
       return balance;
     },
     {
@@ -377,18 +362,21 @@ export const useQBalancesQuery = (chainName: string, address: string, grpcQueryC
     },
   );
 
-  const sortAndFindQAssets = (balances: QueryAllBalancesResponse) => {
-    return balances.balances?.filter(b => 
-        (b.denom.startsWith('uq') || b.denom.startsWith('aq')) &&
-        !b.denom.startsWith('uqck') &&
-        !b.denom.includes('ibc/') 
-      )
+  const sortAndFindQAssets = (balances: QueryAllBalancesResponse, chains: Map<string, Chain>) => {
+
+    const qAssets = Array.from(chains?.values() ?? []).reduce((accumulator, current) => {
+      accumulator.push(current.q_denom);
+      return accumulator;
+    }, [] as string[]);
+
+
+    return balances.balances?.filter(b => qAssets.includes(b.denom))
       .sort((a, b) => a.denom.localeCompare(b.denom));
   };
 
 
   return {
-    qbalance: sortAndFindQAssets(allQBalanceQuery.data ?? {} as QueryAllBalancesResponse),
+    qbalance: sortAndFindQAssets(allQBalanceQuery.data ?? {} as QueryAllBalancesResponse, chains.get(env) ?? new Map()),
     qIsLoading: allQBalanceQuery.isLoading,
     qIsError: allQBalanceQuery.isError,
     qRefetch: allQBalanceQuery.refetch,
@@ -538,7 +526,7 @@ export const useValidatorsQuery = (chainName: string) => {
       do {
         const response = await fetchValidators(next_key);
         allValidators = allValidators.concat(response.validators);
-        next_key = response.pagination.next_key ?? new Uint8Array();
+        next_key = new Uint8Array(response.pagination.next_key) ?? new Uint8Array();
       } while (next_key && next_key.length > 0);
       const sorted = allValidators.sort((a, b) => new BigNumber(b.tokens).minus(a.tokens).toNumber());
       return parseValidators(sorted);
@@ -556,26 +544,6 @@ export const useValidatorsQuery = (chainName: string) => {
   };
 };
 
-export const useTokenPrices = (tokens: string[]) => {
-  const fetchTokenPrices = async () => {
-    return Promise.all(
-      tokens.map(async (token) => {
-        try {
-          const response = await axios.get(`https://api-osmosis.imperator.co/tokens/v2/price/${token}`);
-          return { token, price: response.data.price };
-        } catch (error) {
-          console.error(`Error fetching price for ${token}:`, error);
-          return { token, price: null };
-        }
-      })
-    );
-  };
-
-  return useQuery(['tokenPrices', ...tokens], fetchTokenPrices, {
-    enabled: !!tokens,
-    staleTime: Infinity, 
-  });
-};
 
 const fetchAPY = async (chainId: any) => {
   const res = await axios.get(`${process.env.NEXT_PUBLIC_QUICKSILVER_DATA_API}/apr`);
@@ -831,7 +799,7 @@ export const useMissedBlocks = (chainName: string) => {
       });
       
       allMissedBlocks = allMissedBlocks.concat(filteredMissedBlocks);
-      next_key = response.pagination?.next_key ?? new Uint8Array();
+      next_key = new Uint8Array(response.pagination?.next_key) ?? new Uint8Array();
     } while (next_key && next_key.length > 0);
   
     return allMissedBlocks;

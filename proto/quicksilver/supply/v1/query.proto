@@ -1,6 +1,9 @@
 syntax = "proto3";
 package quicksilver.supply.v1;
 
+import "cosmos/base/v1beta1/coin.proto";
+import "cosmos_proto/cosmos.proto";
+import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 
 option go_package = "github.com/quicksilver-zone/quicksilver/x/supply/types";
@@ -11,10 +14,38 @@ service Query {
   rpc Supply(QuerySupplyRequest) returns (QuerySupplyResponse) {
     option (google.api.http).get = "/quicksilver/supply/v1/supply";
   }
+
+  rpc TopN(QueryTopNRequest) returns (QueryTopNResponse) {
+    option (google.api.http).get = "/quicksilver/supply/v1/topn/{n}";
+  }
 }
 
 message QuerySupplyRequest {}
 message QuerySupplyResponse {
-  uint64 supply = 1;
-  uint64 circulating_supply = 2;
+  string supply = 1 [
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable) = false
+  ];
+  string circulating_supply = 2 [
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message Account {
+  string address = 1;
+  string balance = 2 [
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message QueryTopNRequest {
+  uint64 n = 1;
+}
+message QueryTopNResponse {
+  repeated Account accounts = 1;
 }

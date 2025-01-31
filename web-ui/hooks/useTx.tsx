@@ -8,6 +8,7 @@ import { useState } from 'react';
 
 import { useToaster, ToastType, type CustomToast } from './useToaster';
 
+
 interface Msg {
   typeUrl: string;
   value: any;
@@ -32,6 +33,8 @@ export const useTx = (chainName: string) => {
   const { address, getSigningStargateClient, estimateFee } = useChain(chainName);
   const [responseEvents, setResponseEvents] = useState<readonly Event[] | null>(null);
   const toaster = useToaster();
+
+ 
 
   const tx = async (msgs: Msg[], options: TxOptions) => {
     if (!address) {

@@ -1,7 +1,9 @@
 package keeper
 
 import (
+	"bytes"
 	"fmt"
+	"sort"
 
 	"github.com/tendermint/tendermint/libs/log"
 
@@ -13,6 +15,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
+	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	"github.com/quicksilver-zone/quicksilver/x/supply/types"
 )
 
@@ -62,11 +65,15 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", "x/"+types.ModuleName)
 }
 
+func (k *Keeper) Enable(ctx sdk.Context, enabled bool) {
+	k.endpointEnabled = enabled
+}
+
 func (k Keeper) CalculateCirculatingSupply(ctx sdk.Context, baseDenom string, excludeAddresses []string) math.Int {
 	nonCirculating := math.ZeroInt()
 	k.accountKeeper.IterateAccounts(ctx, func(account authtypes.AccountI) (stop bool) {
 		for _, addr := range excludeAddresses {
-			if addr == account.GetAddress().String() {
+			if bytes.Equal(addressutils.MustAccAddressFromBech32(addr, ""), account.GetAddress()) {
 				// matched excluded address
 				nonCirculating = nonCirculating.Add(k.bankKeeper.GetBalance(ctx, account.GetAddress(), baseDenom).Amount)
 				return false
@@ -87,4 +94,47 @@ func (k Keeper) CalculateCirculatingSupply(ctx sdk.Context, baseDenom string, ex
 	}
 
 	return k.bankKeeper.GetSupply(ctx, baseDenom).Amount.Sub(nonCirculating)
+}
+
+func (k Keeper) TopN(ctx sdk.Context, baseDenom string, n uint64) []*types.Account {
+	accountMap := map[string]math.Int{}
+
+	modMap := map[string]bool{}
+
+	for _, mod := range k.moduleAccounts {
+		modMap[k.accountKeeper.GetModuleAddress(mod).String()] = true
+	}
+
+	k.accountKeeper.IterateAccounts(ctx, func(account authtypes.AccountI) (stop bool) {
+		if modMap[account.GetAddress().String()] {
+			return false
+		}
+		balance := k.bankKeeper.GetBalance(ctx, account.GetAddress(), baseDenom).Amount
+		accountMap[account.GetAddress().String()] = balance
+		return false
+	})
+
+	k.stakingKeeper.IterateAllDelegations(ctx, func(delegation stakingtypes.Delegation) (stop bool) {
+		if modMap[delegation.GetDelegatorAddr().String()] {
+			return false
+		}
+		balance := delegation.GetShares().TruncateInt()
+		accountMap[delegation.GetDelegatorAddr().String()] = accountMap[delegation.GetDelegatorAddr().String()].Add(balance)
+		return false
+	})
+
+	accountSlice := []*types.Account{}
+	for addr, balance := range accountMap {
+		accountSlice = append(accountSlice, &types.Account{Address: addr, Balance: balance})
+	}
+
+	sort.Slice(accountSlice, func(i, j int) bool {
+		return accountSlice[i].Balance.GT(accountSlice[j].Balance)
+	})
+
+	if n > uint64(len(accountSlice)) {
+		n = uint64(len(accountSlice))
+	}
+
+	return accountSlice[:n]
 }

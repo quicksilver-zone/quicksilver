@@ -131,19 +131,19 @@ const DefiTable = () => {
       {isMobile ? (
         <Select
           _active={{
-            borderColor: 'complimentary.900',
+            borderColor: 'complimentary.700',
           }}
           _selected={{
-            borderColor: 'complimentary.900',
+            borderColor: 'complimentary.700',
           }}
           _hover={{
-            borderColor: 'complimentary.900',
+            borderColor: 'complimentary.700',
           }}
           _focus={{
-            borderColor: 'complimentary.900',
+            borderColor: 'complimentary.700',
             boxShadow: '0 0 0 3px #FF8000',
           }}
-          color="complimentary.900"
+          color="complimentary.700"
           textAlign={'center'}
           onChange={handleFilterChange}
           value={activeFilter}
@@ -183,12 +183,12 @@ const DefiTable = () => {
         <Table color={'white'} variant="simple">
           <Thead position="sticky">
             <Tr>
-              <Th color={'complimentary.900'}>Asset Pair</Th>
+              <Th color={'complimentary.700'}>Asset Pair</Th>
 
               <Th
                 display={{ base: 'none', md: 'table-cell' }}
                 textAlign={'center'}
-                color={'complimentary.900'}
+                color={'complimentary.700'}
                 isNumeric
                 onClick={() => handleSort('apy')}
                 style={{ cursor: 'pointer' }}
@@ -217,7 +217,7 @@ const DefiTable = () => {
               <Th
                 display={{ base: 'none', md: 'table-cell' }}
                 textAlign={'center'}
-                color={'complimentary.900'}
+                color={'complimentary.700'}
                 isNumeric
                 style={{ cursor: 'pointer' }}
                 onClick={() => handleSort('tvl')}
@@ -243,11 +243,11 @@ const DefiTable = () => {
                 )}
               </Th>
 
-              <Th display={{ base: 'none', md: 'table-cell' }} textAlign={'center'} color={'complimentary.900'}>
+              <Th display={{ base: 'none', md: 'table-cell' }} textAlign={'center'} color={'complimentary.700'}>
                 Provider
               </Th>
 
-              <Th textAlign={'center'} color={'complimentary.900'}>
+              <Th textAlign={'center'} color={'complimentary.700'}>
                 Action
               </Th>
             </Tr>
@@ -260,7 +260,7 @@ const DefiTable = () => {
                   {' '}
                   {/* Span across all columns */}
                   <Center my={42}>
-                    <Spinner size="xl" color="complimentary.900" />
+                    <Spinner size="xl" color="complimentary.700" />
                   </Center>
                 </Td>
               </Tr>
@@ -327,7 +327,7 @@ const DefiTable = () => {
                   {' '}
                   {/* Span across all columns */}
                   <Center my={4}>
-                    <Text color="complimentary.900">Nothing here yet. Stay tuned!</Text>
+                    <Text color="complimentary.700">Nothing here yet. Stay tuned!</Text>
                   </Center>
                 </Td>
               </Tr>

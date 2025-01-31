@@ -46,7 +46,7 @@ const QuickBox: React.FC<QuickBoxProps> = ({ stakingApy }) => {
         gap={6}
         color="white"
       >
-        <Spinner w={'200px'} h="200px" color="complimentary.900" />
+        <Spinner w={'200px'} h="200px" color="complimentary.700" />
       </Flex>
     );
   }
@@ -58,7 +58,7 @@ const QuickBox: React.FC<QuickBoxProps> = ({ stakingApy }) => {
   return (
     <Flex direction="column" py={8} borderRadius="lg" align="center" justify="space-around" w="full" h="full">
       <VStack w="75%" spacing={8}>
-        <HStack borderBottom="1px" borderBottomColor="complimentary.900" w="full" justify="space-between">
+        <HStack borderBottom="1px" borderBottomColor="complimentary.700" w="full" justify="space-between">
           <Text fontWeight="bold" fontSize={'xl'} isTruncated>
             QCK
           </Text>
@@ -75,7 +75,7 @@ const QuickBox: React.FC<QuickBoxProps> = ({ stakingApy }) => {
         <VStack>
           <Stat color={'white'}>
             <StatLabel fontSize={'lg'}>Quicksilver Balance</StatLabel>
-            <StatNumber textAlign={'center'} color={'complimentary.900'} fontSize={'lg'}>
+            <StatNumber textAlign={'center'} color={'complimentary.700'} fontSize={'lg'}>
               {tokenBalance} QCK
             </StatNumber>
           </Stat>

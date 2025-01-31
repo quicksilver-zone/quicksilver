@@ -74,7 +74,7 @@ interface StakingModalProps {
 export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClose, selectedOption, tokenAmount, address, refetch }) => {
   const [step, setStep] = useState(1);
   const getProgressColor = (circleStep: number) => {
-    if (step >= circleStep) return 'complimentary.900';
+    if (step >= circleStep) return 'complimentary.700';
     return 'rgba(255,255,255,0.2)';
   };
 
@@ -244,8 +244,10 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
     setIsSigning(true);
     setTransactionStatus('Pending');
 
+    console.log(msgSend)
     const feeAmountQuery = await estimateFee(address, [msgSend]);
-
+    console.log(feeAmountQuery)
+    
     try {
       await tx([msgSend], {
         memo,
@@ -438,13 +440,13 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
                       <Checkbox
                         _selected={{ bgColor: 'transparent' }}
                         _active={{
-                          borderColor: 'complimentary.900',
+                          borderColor: 'complimentary.700',
                         }}
                         _hover={{
-                          borderColor: 'complimentary.900',
+                          borderColor: 'complimentary.700',
                         }}
                         _focus={{
-                          borderColor: 'complimentary.900',
+                          borderColor: 'complimentary.700',
                           boxShadow: '0 0 0 3px #FF8000',
                         }}
                         isChecked={check}
@@ -512,7 +514,7 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
                     bgColor="none"
                     _hover={{
                       bgColor: 'none',
-                      color: 'complimentary.900',
+                      color: 'complimentary.700',
                     }}
                     _selected={{
                       bgColor: 'none',
@@ -543,19 +545,19 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
                         </Text>
                         <Input
                           _active={{
-                            borderColor: 'complimentary.900',
+                            borderColor: 'complimentary.700',
                           }}
                           _selected={{
-                            borderColor: 'complimentary.900',
+                            borderColor: 'complimentary.700',
                           }}
                           _hover={{
-                            borderColor: 'complimentary.900',
+                            borderColor: 'complimentary.700',
                           }}
                           _focus={{
-                            borderColor: 'complimentary.900',
+                            borderColor: 'complimentary.700',
                             boxShadow: '0 0 0 3px #FF8000',
                           }}
-                          color="complimentary.900"
+                          color="complimentary.700"
                           type="number"
                           width="55px"
                           placeholder="0"
@@ -570,7 +572,7 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
                       fontSize={'2xl'}
                       _hover={{
                         bgColor: 'none',
-                        color: 'complimentary.900',
+                        color: 'complimentary.700',
                       }}
                       _selected={{
                         bgColor: 'none',
@@ -612,7 +614,7 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
                       textAlign={'left'}
                       color="white"
                     >
-                      You’re going to liquid stake {tokenAmount} {selectedOption?.major_denom} on Quicksilver
+                      You’re going to liquid stake {tokenAmount} {selectedOption?.major_denom.toUpperCase()} on Quicksilver
                     </Text>
                     <Text
                       display={{ base: 'block', md: 'none' }}
@@ -622,25 +624,25 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
                       textAlign={'left'}
                       color="white"
                     >
-                      Liquid staking {tokenAmount} {selectedOption?.major_denom}
+                      Liquid staking {tokenAmount} {selectedOption?.major_denom.toUpperCase()}
                     </Text>
                     {selectedValidators.length > 0 && (
                       <Flex mt={2} textAlign={'left'} alignItems="baseline" gap="2">
                         <Text mt={2} textAlign={'left'} fontWeight={'bold'} fontSize="lg" color="white">
                           {selectedValidators.length === 1 ? 'Selected Validator:' : 'Selected Validators:'}
                         </Text>
-                        <Text color="complimentary.900">
+                        <Text color="complimentary.700">
                           {selectedValidators.length === 1 ? selectedValidators[0].name : `${selectedValidators.length} / 8`}
                         </Text>
                       </Flex>
                     )}
                     <HStack mt={2} textAlign={'left'} fontWeight={'light'} fontSize="lg" color="white">
                       <Text fontWeight={'bold'}>Receiving:</Text>
-                      <Text color="complimentary.900">
+                      <Text color="complimentary.700">
                         {!isZoneLoading ? (
-                          `${(Number(tokenAmount) / Number(zone?.redemptionRate || 1)).toFixed(2)} q${selectedOption?.major_denom}`
+                          `${(Number(tokenAmount) / Number(zone?.redemptionRate || 1)).toFixed(2)} q${selectedOption?.major_denom.toUpperCase()}`
                         ) : (
-                          <Spinner thickness="2px" speed="0.65s" emptyColor="gray.200" color="complimentary.900" size="sm" />
+                          <Spinner thickness="2px" speed="0.65s" emptyColor="gray.200" color="complimentary.700" size="sm" />
                         )}
                       </Text>
                     </HStack>
@@ -671,7 +673,7 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
                     bgColor="none"
                     _hover={{
                       bgColor: 'none',
-                      color: 'complimentary.900',
+                      color: 'complimentary.700',
                     }}
                     _selected={{
                       bgColor: 'none',

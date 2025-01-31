@@ -162,7 +162,7 @@ const QWithdrawModal: React.FC<QDepositModalProps> = ({ max, token, isOpen, onCl
         <ModalHeader color="white">
           <Text>Withdraw {token} Tokens</Text> <Divider mt={3} bgColor={'cyan.500'} />
         </ModalHeader>
-        <ModalCloseButton color={'complimentary.900'} />
+        <ModalCloseButton color={'complimentary.700'} />
         <ModalBody>
           {/* Chain Selection Dropdown */}
           <FormControl>
@@ -179,16 +179,16 @@ const QWithdrawModal: React.FC<QDepositModalProps> = ({ max, token, isOpen, onCl
                 type="number"
                 pr="4.5rem" // Padding to ensure text doesn't overlap with buttons
                 _active={{
-                  borderColor: 'complimentary.900',
+                  borderColor: 'complimentary.700',
                 }}
                 _selected={{
-                  borderColor: 'complimentary.900',
+                  borderColor: 'complimentary.700',
                 }}
                 _hover={{
-                  borderColor: 'complimentary.900',
+                  borderColor: 'complimentary.700',
                 }}
                 _focus={{
-                  borderColor: 'complimentary.900',
+                  borderColor: 'complimentary.700',
                   boxShadow: '0 0 0 3px #FF8000',
                 }}
                 value={amount}
@@ -201,7 +201,7 @@ const QWithdrawModal: React.FC<QDepositModalProps> = ({ max, token, isOpen, onCl
                 <HStack mr={14} spacing={1}>
                   <Button
                     variant={'ghost'}
-                    color="complimentary.900"
+                    color="complimentary.700"
                     h="1.75rem"
                     size="xs"
                     _active={{ transform: 'scale(0.95)', color: 'complimentary.800' }}
@@ -218,7 +218,7 @@ const QWithdrawModal: React.FC<QDepositModalProps> = ({ max, token, isOpen, onCl
                   </Button>
                   <Button
                     variant={'ghost'}
-                    color="complimentary.900"
+                    color="complimentary.700"
                     _active={{ transform: 'scale(0.95)', color: 'complimentary.800' }}
                     _hover={{ bgColor: 'transparent', color: 'complimentary.400' }}
                     h="1.75rem"

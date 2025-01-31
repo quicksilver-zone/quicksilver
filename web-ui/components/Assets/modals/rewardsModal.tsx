@@ -341,13 +341,13 @@ const RewardsModal = ({ address, isOpen, onClose }: { address: string; isOpen: b
               placement="right"
             >
               <span>
-                <Icon color={'complimentary.900'} as={FaInfoCircle} w={4} h={4} />
+                <Icon color={'complimentary.700'} as={FaInfoCircle} w={4} h={4} />
               </span>
             </Tooltip>
           </HStack>
           <Divider mt={3} bgColor={'cyan.500'} />
         </ModalHeader>
-        <ModalCloseButton color={'complimentary.900'} />
+        <ModalCloseButton color={'complimentary.700'} />
         <ModalBody>
           {tokenDetails.length === 0 && (
             <Text color="white" textAlign={'center'} fontSize="md">
@@ -361,16 +361,16 @@ const RewardsModal = ({ address, isOpen, onClose }: { address: string; isOpen: b
                   <Table variant="simple" colorScheme="whiteAlpha" size="sm">
                     <Thead position="sticky" top={0} bg="rgb(32,32,32)" zIndex={1}>
                       <Tr>
-                        <Th color="complimentary.900">
+                        <Th color="complimentary.700">
                           <Checkbox
                             isChecked={selectAll}
                             onChange={handleSelectAllChange}
                             colorScheme="complimentary"
-                            borderColor="complimentary.900"
+                            borderColor="complimentary.700"
                           />
                         </Th>
-                        <Th color="complimentary.900">Token</Th>
-                        <Th color="complimentary.900" isNumeric>
+                        <Th color="complimentary.700">Token</Th>
+                        <Th color="complimentary.700" isNumeric>
                           Amount
                         </Th>
                       </Tr>
@@ -383,7 +383,7 @@ const RewardsModal = ({ address, isOpen, onClose }: { address: string; isOpen: b
                               isChecked={selectedAssets.includes(detail?.denom ?? '')}
                               onChange={() => handleCheckboxChange(detail?.denom ?? '')}
                               colorScheme="complimentary"
-                              borderColor="complimentary.900"
+                              borderColor="complimentary.700"
                             />
                           </Td>
                           <Td color="white">

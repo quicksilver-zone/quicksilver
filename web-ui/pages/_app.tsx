@@ -48,6 +48,13 @@ function QuickApp({ Component, pageProps }: AppProps) {
             registry: mergedRegistry,
             gasPrice: GasPrice.fromString('0.0025uqck'),
           }
+        case chain === 'injective':
+        case typeof chain != "string" && chain.chain_id === 'injective-1':
+          return {
+            aminoTypes: mergedAminoTypes,
+            registry: mergedRegistry,
+            gasPrice: GasPrice.fromString('500000000inj'),
+          }
         default:
           return {
             aminoTypes: mergedAminoTypes,

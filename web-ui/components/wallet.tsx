@@ -1,5 +1,5 @@
 import { Box, Center, GridItem, Icon } from '@chakra-ui/react';
-import { useChain, useManager } from '@cosmos-kit/react';
+import { useChain } from '@cosmos-kit/react';
 import { MouseEventHandler } from 'react';
 import { FiAlertTriangle } from 'react-icons/fi';
 
@@ -19,8 +19,7 @@ import {
 
 
 export const WalletSection = () => {
-  const { connect, openView, status, username, address, message, wallet, chain: chainInfo } = useChain(chainName);
-  const { getChainLogo } = useManager();
+  const { connect, openView, status, message, wallet } = useChain(chainName);
 
   // Events
   const onClickConnect: MouseEventHandler = async (e) => {
