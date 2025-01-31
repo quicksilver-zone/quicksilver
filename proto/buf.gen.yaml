@@ -6,7 +6,7 @@ plugins:
     - plugins=grpc,Mgoogle/protobuf/any.proto=github.com/cosmos/cosmos-sdk/codec/types,
   - name: grpc-gateway
     out: ..
-  - name: swagger
-    out: ../tmp-swagger-gen
-    opt:
-      - simple_operation_ids=true
+#  - name: swagger
+#    out: ../tmp-swagger-gen
+#    opt:
+#      - simple_operation_ids=true
