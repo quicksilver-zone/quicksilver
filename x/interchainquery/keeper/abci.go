@@ -4,15 +4,14 @@ import (
 	"encoding/hex"
 	"time"
 
+	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
 )
 
-const (
-	RetryInterval = 25
-)
+const DefaultTTL = 1000
 
 // EndBlocker of interchainquery module.
 func (k Keeper) EndBlocker(ctx sdk.Context) {
@@ -21,6 +20,15 @@ func (k Keeper) EndBlocker(ctx sdk.Context) {
 	events := sdk.Events{}
 	// emit events for periodic queries
 	k.IterateQueries(ctx, func(_ int64, queryInfo types.Query) (stop bool) {
+		// if !periodic, and emission was too long ago, delete
+		if !queryInfo.Period.IsNegative() && // not periodic
+			!queryInfo.LastEmission.IsNil() && // has been emitted
+			!queryInfo.LastEmission.IsZero() && // has been emitted
+			queryInfo.LastEmission.LT(math.NewInt(ctx.BlockHeight()-DefaultTTL)) { //TODO: add per query TTL
+			k.DeleteQuery(ctx, queryInfo.Id)
+			return false
+		}
+
 		if queryInfo.LastEmission.IsNil() || queryInfo.LastEmission.IsZero() || queryInfo.LastEmission.Add(queryInfo.Period).Equal(sdk.NewInt(ctx.BlockHeight())) {
 			k.Logger(ctx).Debug("Interchainquery event emitted", "id", queryInfo.Id)
 			event := sdk.NewEvent(
