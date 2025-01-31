@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -24,7 +25,7 @@ func (k Keeper) EndBlocker(ctx sdk.Context) {
 		if !queryInfo.Period.IsNegative() && // not periodic
 			!queryInfo.LastEmission.IsNil() && // has been emitted
 			!queryInfo.LastEmission.IsZero() && // has been emitted
-			queryInfo.LastEmission.LT(math.NewInt(ctx.BlockHeight()-DefaultTTL)) { //TODO: add per query TTL
+			queryInfo.LastEmission.LT(math.NewInt(ctx.BlockHeight()-DefaultTTL)) { // TODO: add per query TTL
 			k.DeleteQuery(ctx, queryInfo.Id)
 			return false
 		}
