@@ -10,7 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	osmosislockuptypes "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/lockup"
-	partcipationrewardstypes "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
+	participationrewardstypes "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 
 	cl "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/concentrated-liquidity"
 	clmodel "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/concentrated-liquidity/model"
@@ -18,7 +18,7 @@ import (
 )
 
 type ParticipationRewardsKeeper interface {
-	GetProtocolData(ctx sdk.Context, pdType partcipationrewardstypes.ProtocolDataType, key string) (partcipationrewardstypes.ProtocolData, bool)
+	GetProtocolData(ctx sdk.Context, pdType participationrewardstypes.ProtocolDataType, key string) (participationrewardstypes.ProtocolData, bool)
 }
 
 func DetermineApplicableTokensInPool(ctx sdk.Context, prKeeper ParticipationRewardsKeeper, lock osmosislockuptypes.PeriodLock, chainID string, poolDenom string) (math.Int, error) {
@@ -28,16 +28,16 @@ func DetermineApplicableTokensInPool(ctx sdk.Context, prKeeper ParticipationRewa
 	}
 
 	poolID := gammtoken.Denom[strings.LastIndex(gammtoken.Denom, "/")+1:]
-	pd, ok := prKeeper.GetProtocolData(ctx, partcipationrewardstypes.ProtocolDataTypeOsmosisPool, poolID)
+	pd, ok := prKeeper.GetProtocolData(ctx, participationrewardstypes.ProtocolDataTypeOsmosisPool, poolID)
 	if !ok {
 		return sdk.ZeroInt(), fmt.Errorf("unable to obtain protocol data for poolID=%s", poolID)
 	}
 
-	ipool, err := partcipationrewardstypes.UnmarshalProtocolData(partcipationrewardstypes.ProtocolDataTypeOsmosisPool, pd.Data)
+	ipool, err := participationrewardstypes.UnmarshalProtocolData(participationrewardstypes.ProtocolDataTypeOsmosisPool, pd.Data)
 	if err != nil {
 		return sdk.ZeroInt(), err
 	}
-	pool, _ := ipool.(*partcipationrewardstypes.OsmosisPoolProtocolData)
+	pool, _ := ipool.(*participationrewardstypes.OsmosisPoolProtocolData)
 
 	poolData, err := pool.GetPool()
 	if err != nil {
@@ -82,16 +82,16 @@ func DetermineApplicableTokensInClPool(ctx sdk.Context, prKeeper ParticipationRe
 	poolID := position.PoolId
 
 	ctx.Logger().Info("DetermineApplicableTokensInClPool", "poolID", poolID, "position", position)
-	pd, ok := prKeeper.GetProtocolData(ctx, partcipationrewardstypes.ProtocolDataTypeOsmosisCLPool, fmt.Sprintf("%d", poolID))
+	pd, ok := prKeeper.GetProtocolData(ctx, participationrewardstypes.ProtocolDataTypeOsmosisCLPool, fmt.Sprintf("%d", poolID))
 	if !ok {
 		return sdk.ZeroInt(), fmt.Errorf("unable to obtain protocol data for poolID=%d", poolID)
 	}
 
-	ipool, err := partcipationrewardstypes.UnmarshalProtocolData(partcipationrewardstypes.ProtocolDataTypeOsmosisCLPool, pd.Data)
+	ipool, err := participationrewardstypes.UnmarshalProtocolData(participationrewardstypes.ProtocolDataTypeOsmosisCLPool, pd.Data)
 	if err != nil {
 		return sdk.ZeroInt(), err
 	}
-	pool, _ := ipool.(*partcipationrewardstypes.OsmosisClPoolProtocolData)
+	pool, _ := ipool.(*participationrewardstypes.OsmosisClPoolProtocolData)
 
 	poolData, err := pool.GetPool()
 	if err != nil {

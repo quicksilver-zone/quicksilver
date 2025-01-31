@@ -6,11 +6,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/quicksilver-zone/quicksilver/third-party-chains/umee-types/leverage/types"
-	partcipationrewardstypes "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
+	participationrewardstypes "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 )
 
 type ParticipationRewardsKeeper interface {
-	GetProtocolData(ctx sdk.Context, pdType partcipationrewardstypes.ProtocolDataType, key string) (partcipationrewardstypes.ProtocolData, bool)
+	GetProtocolData(ctx sdk.Context, pdType participationrewardstypes.ProtocolDataType, key string) (participationrewardstypes.ProtocolData, bool)
 }
 
 // ExchangeUToken converts an sdk.Coin containing a uToken to its value in a base
@@ -36,16 +36,16 @@ func ExchangeUToken(ctx sdk.Context, uToken sdk.Coin, prKeeper ParticipationRewa
 // DeriveExchangeRate calculated the token:uToken exchange rate of a base token denom.
 func DeriveExchangeRate(ctx sdk.Context, denom string, prKeeper ParticipationRewardsKeeper) (sdk.Dec, error) {
 	// Get reserves
-	reservesPD, ok := prKeeper.GetProtocolData(ctx, partcipationrewardstypes.ProtocolDataTypeUmeeReserves, denom)
+	reservesPD, ok := prKeeper.GetProtocolData(ctx, participationrewardstypes.ProtocolDataTypeUmeeReserves, denom)
 	if !ok {
 		return sdk.ZeroDec(), fmt.Errorf("unable to obtain protocol data for denom=%s", denom)
 	}
-	reservesData, err := partcipationrewardstypes.UnmarshalProtocolData(partcipationrewardstypes.ProtocolDataTypeUmeeReserves, reservesPD.Data)
+	reservesData, err := participationrewardstypes.UnmarshalProtocolData(participationrewardstypes.ProtocolDataTypeUmeeReserves, reservesPD.Data)
 	if err != nil {
 		return sdk.ZeroDec(), err
 	}
 
-	reserves, _ := reservesData.(*partcipationrewardstypes.UmeeReservesProtocolData)
+	reserves, _ := reservesData.(*participationrewardstypes.UmeeReservesProtocolData)
 
 	intamount, err := reserves.GetReserveAmount()
 	if err != nil {
@@ -55,16 +55,16 @@ func DeriveExchangeRate(ctx sdk.Context, denom string, prKeeper ParticipationRew
 	reserveAmount := sdk.NewDecFromInt(intamount)
 
 	// get leverage module balance
-	balancePD, ok := prKeeper.GetProtocolData(ctx, partcipationrewardstypes.ProtocolDataTypeUmeeLeverageModuleBalance, denom)
+	balancePD, ok := prKeeper.GetProtocolData(ctx, participationrewardstypes.ProtocolDataTypeUmeeLeverageModuleBalance, denom)
 	if !ok {
 		return sdk.ZeroDec(), fmt.Errorf("unable to obtain protocol data for denom=%s", denom)
 	}
-	balanceData, err := partcipationrewardstypes.UnmarshalProtocolData(partcipationrewardstypes.ProtocolDataTypeUmeeLeverageModuleBalance, balancePD.Data)
+	balanceData, err := participationrewardstypes.UnmarshalProtocolData(participationrewardstypes.ProtocolDataTypeUmeeLeverageModuleBalance, balancePD.Data)
 	if err != nil {
 		return sdk.ZeroDec(), err
 	}
 
-	balance, _ := balanceData.(*partcipationrewardstypes.UmeeLeverageModuleBalanceProtocolData)
+	balance, _ := balanceData.(*participationrewardstypes.UmeeLeverageModuleBalanceProtocolData)
 
 	intamount, err = balance.GetModuleBalance()
 	if err != nil {
@@ -73,32 +73,32 @@ func DeriveExchangeRate(ctx sdk.Context, denom string, prKeeper ParticipationRew
 	moduleBalance := sdk.NewDecFromInt(intamount)
 
 	// get interest scalar
-	interestPD, ok := prKeeper.GetProtocolData(ctx, partcipationrewardstypes.ProtocolDataTypeUmeeInterestScalar, denom)
+	interestPD, ok := prKeeper.GetProtocolData(ctx, participationrewardstypes.ProtocolDataTypeUmeeInterestScalar, denom)
 	if !ok {
 		return sdk.ZeroDec(), fmt.Errorf("unable to obtain protocol data for denom=%s", denom)
 	}
-	interestData, err := partcipationrewardstypes.UnmarshalProtocolData(partcipationrewardstypes.ProtocolDataTypeUmeeInterestScalar, interestPD.Data)
+	interestData, err := participationrewardstypes.UnmarshalProtocolData(participationrewardstypes.ProtocolDataTypeUmeeInterestScalar, interestPD.Data)
 	if err != nil {
 		return sdk.ZeroDec(), err
 	}
 
-	interest, _ := interestData.(*partcipationrewardstypes.UmeeInterestScalarProtocolData)
+	interest, _ := interestData.(*participationrewardstypes.UmeeInterestScalarProtocolData)
 	interestScalar, err := interest.GetInterestScalar()
 	if err != nil {
 		return sdk.ZeroDec(), err
 	}
 
 	// get total borrowed
-	borrowsPD, ok := prKeeper.GetProtocolData(ctx, partcipationrewardstypes.ProtocolDataTypeUmeeTotalBorrows, denom)
+	borrowsPD, ok := prKeeper.GetProtocolData(ctx, participationrewardstypes.ProtocolDataTypeUmeeTotalBorrows, denom)
 	if !ok {
 		return sdk.ZeroDec(), fmt.Errorf("unable to obtain protocol data for denom=%s", denom)
 	}
-	borrowsData, err := partcipationrewardstypes.UnmarshalProtocolData(partcipationrewardstypes.ProtocolDataTypeUmeeTotalBorrows, borrowsPD.Data)
+	borrowsData, err := participationrewardstypes.UnmarshalProtocolData(participationrewardstypes.ProtocolDataTypeUmeeTotalBorrows, borrowsPD.Data)
 	if err != nil {
 		return sdk.ZeroDec(), err
 	}
 
-	borrows, _ := borrowsData.(*partcipationrewardstypes.UmeeTotalBorrowsProtocolData)
+	borrows, _ := borrowsData.(*participationrewardstypes.UmeeTotalBorrowsProtocolData)
 	borrowAmount, err := borrows.GetTotalBorrows()
 	if err != nil {
 		return sdk.ZeroDec(), err
@@ -107,16 +107,16 @@ func DeriveExchangeRate(ctx sdk.Context, denom string, prKeeper ParticipationRew
 	totalBorrowed := borrowAmount.Mul(interestScalar)
 
 	// get UToken supply
-	uTokenPD, ok := prKeeper.GetProtocolData(ctx, partcipationrewardstypes.ProtocolDataTypeUmeeUTokenSupply, types.ToUTokenDenom(denom))
+	uTokenPD, ok := prKeeper.GetProtocolData(ctx, participationrewardstypes.ProtocolDataTypeUmeeUTokenSupply, types.ToUTokenDenom(denom))
 	if !ok {
 		return sdk.ZeroDec(), fmt.Errorf("unable to obtain protocol data for denom=%s", denom)
 	}
-	uTokenData, err := partcipationrewardstypes.UnmarshalProtocolData(partcipationrewardstypes.ProtocolDataTypeUmeeUTokenSupply, uTokenPD.Data)
+	uTokenData, err := participationrewardstypes.UnmarshalProtocolData(participationrewardstypes.ProtocolDataTypeUmeeUTokenSupply, uTokenPD.Data)
 	if err != nil {
 		return sdk.ZeroDec(), err
 	}
 
-	utokens, _ := uTokenData.(*partcipationrewardstypes.UmeeUTokenSupplyProtocolData)
+	utokens, _ := uTokenData.(*participationrewardstypes.UmeeUTokenSupplyProtocolData)
 	uTokenSupply, err := utokens.GetUTokenSupply()
 	if err != nil {
 		return sdk.ZeroDec(), err
