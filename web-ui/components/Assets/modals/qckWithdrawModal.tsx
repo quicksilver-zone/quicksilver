@@ -133,7 +133,7 @@ export function WithdrawModal() {
         <ModalOverlay />
         <ModalContent bgColor="rgb(32,32,32)">
         <ModalHeader color="white"><Text>Withdraw QCK Tokens</Text>  <Divider mt={3} bgColor={'cyan.500'} /></ModalHeader>
-          <ModalCloseButton color={'complimentary.900'} />
+          <ModalCloseButton color={'complimentary.700'} />
           <ModalBody>
             {/* Chain Selection Dropdown */}
             <FormControl>
@@ -146,16 +146,16 @@ export function WithdrawModal() {
               <FormLabel color="white">Amount</FormLabel>
               <Input
                 _active={{
-                  borderColor: 'complimentary.900',
+                  borderColor: 'complimentary.700',
                 }}
                 _selected={{
-                  borderColor: 'complimentary.900',
+                  borderColor: 'complimentary.700',
                 }}
                 _hover={{
-                  borderColor: 'complimentary.900',
+                  borderColor: 'complimentary.700',
                 }}
                 _focus={{
-                  borderColor: 'complimentary.900',
+                  borderColor: 'complimentary.700',
                   boxShadow: '0 0 0 3px #FF8000',
                 }}
                 value={amount}

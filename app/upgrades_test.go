@@ -515,3 +515,110 @@ func (s *AppTestSuite) TestV010705UpgradeHandler() {
 	s.Equal(sdk.NewDecWithPrec(1387503864591246254, 18), zone.RedemptionRate)
 	s.Equal(sdk.NewDecWithPrec(138, 2), zone.LastRedemptionRate)
 }
+
+func (s *AppTestSuite) TestV010706UpgradeHandler() {
+	s.InitV160TestZones()
+	app := s.GetQuicksilverApp(s.chainA)
+
+	ctx := s.chainA.GetContext()
+	completion, err := time.Parse("2006-01-02T15:04:05Z", "2025-01-30T18:17:24Z")
+	s.NoError(err)
+
+	record := icstypes.WithdrawalRecord{
+		ChainId:        "regen-1",
+		Delegator:      "quick1nvyqrve35fpzgrewnaxmyxsqtaq4dxvydf5gpj",
+		Recipient:      "regen1nvyqrve35fpzgrewnaxmyxsqtaq4dxvye00xwy",
+		Txhash:         "ee0b5f5c423508c8dd6a501168a77a0b72d5a8aaf1702a64804e522334ff272b",
+		Status:         icstypes.WithdrawStatusUnbond,
+		BurnAmount:     sdk.NewCoin("uqregen", math.NewInt(31569450000)),
+		Amount:         sdk.NewCoins(sdk.NewCoin("uregen", math.NewInt(43107830342))),
+		Acknowledged:   true,
+		CompletionTime: completion,
+		EpochNumber:    230,
+		SendErrors:     187,
+	}
+
+	s.NoError(app.BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(sdk.NewCoin("uqregen", math.NewInt(31569450000)))))
+	s.NoError(app.BankKeeper.SendCoinsFromModuleToModule(ctx, icstypes.ModuleName, icstypes.EscrowModuleAccount, sdk.NewCoins(sdk.NewCoin("uqregen", math.NewInt(31569450000)))))
+	s.NoError(app.InterchainstakingKeeper.SetWithdrawalRecord(ctx, record))
+
+	completion, err = time.Parse("2006-01-02T15:04:05Z", "2025-01-30T16:45:43Z")
+	s.NoError(err)
+
+	record = icstypes.WithdrawalRecord{
+		ChainId:        "sommelier-3",
+		Delegator:      "quick1t5zgnfz0jrvflywjmgs95rey3un57n42jr7qd4",
+		Recipient:      "somm1t5zgnfz0jrvflywjmgs95rey3un57n424mp79d",
+		Txhash:         "a55f1f4deaa501ff5671ef96fbbb5b60e225d4b8db4825ae3706893bb94e052c",
+		Status:         icstypes.WithdrawStatusUnbond,
+		BurnAmount:     sdk.NewCoin("uqsomm", math.NewInt(1231350000)),
+		Amount:         sdk.NewCoins(sdk.NewCoin("usomm", math.NewInt(1320763919))),
+		Acknowledged:   true,
+		CompletionTime: completion,
+		EpochNumber:    230,
+		SendErrors:     150,
+	}
+
+	s.NoError(app.BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(sdk.NewCoin("uqsomm", math.NewInt(1231350000)))))
+	s.NoError(app.BankKeeper.SendCoinsFromModuleToModule(ctx, icstypes.ModuleName, icstypes.EscrowModuleAccount, sdk.NewCoins(sdk.NewCoin("uqsomm", math.NewInt(1231350000)))))
+	s.NoError(app.InterchainstakingKeeper.SetWithdrawalRecord(ctx, record))
+
+	// setup unbondign records
+	// no ct
+	ubr1 := icstypes.UnbondingRecord{
+		ChainId:        "sommelier-3",
+		Validator:      "sommvaloper10m5g48u53vss7xqmqw6089d02ua0d85d7s8gu0",
+		EpochNumber:    133,
+		CompletionTime: time.Time{},
+		RelatedTxhash: []string{
+			"0fc9c66af331cbb3b015f97a2257220e16c2d58f75f5cdcbce3e77cb90570834",
+			"1b3c51013bc5753b728083703cd00dd236f14759dc1e13f20899e4e8863baa66",
+			"204c56e09f176373d73a63be060f560eb4d2bda83ffedd838de814e6175c2bc4",
+			"24fc99033051c0504b85e3da033a6aa006ac76c373ef60791f8046c7713814e4",
+		},
+		Amount: sdk.NewCoin("usomm", math.NewInt(2759679739)),
+	}
+
+	completion, err = time.Parse("2006-01-02T15:04:05Z", "2025-01-20T16:45:43Z")
+	s.NoError(err)
+
+	ubr2 := icstypes.UnbondingRecord{
+		ChainId:        "sommelier-3",
+		Validator:      "sommvaloper1y0few0kgxa7vtq8nskjsdwdtyqglj3k5pv2c4d",
+		EpochNumber:    238,
+		CompletionTime: completion,
+		RelatedTxhash: []string{
+			"184365ad8ea78478cf49e7fb28c829f64aa9dac026905bef239f8fb16cc3dcb6",
+		},
+		Amount: sdk.NewCoin("usomm", math.NewInt(19803)),
+	}
+
+	ubr3 := icstypes.UnbondingRecord{
+		ChainId:        "sommelier-3",
+		Validator:      "sommvaloper1y0few0kgxa7vtq8nskjsdwdtyqglj3k5pv2c4d",
+		EpochNumber:    243,
+		CompletionTime: ctx.BlockTime().Add(-time.Hour * 12),
+		RelatedTxhash: []string{
+			"bb09ae31a44f83a292c4ddf16870b033daccc1ea9fb1620ccf36c1e232af11c3",
+		},
+		Amount: sdk.NewCoin("usomm", math.NewInt(95016053)),
+	}
+
+	app.InterchainstakingKeeper.SetUnbondingRecord(ctx, ubr1)
+	app.InterchainstakingKeeper.SetUnbondingRecord(ctx, ubr2)
+	app.InterchainstakingKeeper.SetUnbondingRecord(ctx, ubr3)
+
+	handler := upgrades.V010706UpgradeHandler(app.mm, app.configurator, &app.AppKeepers)
+
+	_, err = handler(ctx, types.Plan{}, app.mm.GetVersionMap())
+	s.NoError(err)
+
+	_, found := app.InterchainstakingKeeper.GetUnbondingRecord(ctx, "sommelier-3", "sommvaloper10m5g48u53vss7xqmqw6089d02ua0d85d7s8gu0", 133)
+	s.False(found)
+
+	_, found = app.InterchainstakingKeeper.GetUnbondingRecord(ctx, "sommelier-3", "sommvaloper1y0few0kgxa7vtq8nskjsdwdtyqglj3k5pv2c4d", 238)
+	s.False(found)
+
+	_, found = app.InterchainstakingKeeper.GetUnbondingRecord(ctx, "sommelier-3", "sommvaloper1y0few0kgxa7vtq8nskjsdwdtyqglj3k5pv2c4d", 243)
+	s.True(found)
+}

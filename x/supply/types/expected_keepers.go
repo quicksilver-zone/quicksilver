@@ -3,6 +3,7 @@ package types // noalias
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // AccountKeeper defines the contract required for account APIs.
@@ -27,4 +28,5 @@ type BankKeeper interface {
 
 type StakingKeeper interface {
 	BondDenom(ctx sdk.Context) string
+	IterateAllDelegations(ctx sdk.Context, cb func(delegation stakingtypes.Delegation) (stop bool))
 }

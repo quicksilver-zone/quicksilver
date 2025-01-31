@@ -59,7 +59,7 @@ const MyPortfolio: React.FC<MyPortfolioProps> = ({
         gap={6}
         color="white"
       >
-        <Spinner w={'220px'} h="220px" color="complimentary.900" />
+        <Spinner w={'220px'} h="220px" color="complimentary.700" />
       </Flex>
     );
   }
@@ -74,7 +74,7 @@ const MyPortfolio: React.FC<MyPortfolioProps> = ({
         <Flex
           alignSelf="stretch"
           borderBottom="1px"
-          borderBottomColor="complimentary.900"
+          borderBottomColor="complimentary.700"
           justifyContent="flex-start"
           alignItems="center"
           gap={5}

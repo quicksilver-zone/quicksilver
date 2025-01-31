@@ -63,6 +63,9 @@ const AssetCard: React.FC<AssetCardProps> = ({ address, assetName, balance, apy,
     'dydx-mainnet-1': 'dydx',
     'ssc-1': 'saga',
     'agoric-3': 'agoric',
+    'injective-1': 'injective',
+    'omniflixhub-1': 'omniflixhub',
+    'archway-1': 'archway',
   };
 
   const getChainName = (chainId: string) => {
@@ -131,7 +134,7 @@ const AssetCard: React.FC<AssetCardProps> = ({ address, assetName, balance, apy,
         gap={6}
         color="white"
       >
-        <Spinner w={'200px'} h="200px" color="complimentary.900" />
+        <Spinner w={'200px'} h="200px" color="complimentary.700" />
       </Flex>
     );
   }
@@ -151,24 +154,24 @@ const AssetCard: React.FC<AssetCardProps> = ({ address, assetName, balance, apy,
           </Text>
         </HStack>
       </HStack>
-      <Divider bgColor={'complimentary.900'} />
+      <Divider bgColor={'complimentary.700'} />
       <HStack h="140px" justifyContent={'space-between'} w="full">
         <VStack minH="150px" alignItems="left">
           <Stat color={'white'}>
             <StatLabel fontSize={'lg'}>On Quicksilver</StatLabel>
 
             {!balance || !interchainAssets ? (
-              <Skeleton startColor="complimentary.900" endColor="complimentary.100" height="10px" width="auto" />
+              <Skeleton startColor="complimentary.700" endColor="complimentary.100" height="10px" width="auto" />
             ) : (
-              <StatNumber color={'complimentary.900'} fontSize={'md'}>
+              <StatNumber color={'complimentary.700'} fontSize={'md'}>
                 {formatNumber(parseFloat(balance))} {assetName}
               </StatNumber>
             )}
 
             {!balance || !interchainAssets ? (
               <>
-                <Skeleton startColor="complimentary.900" endColor="complimentary.100" height="10px" width="auto" mt={2} />
-                <Skeleton startColor="complimentary.900" endColor="complimentary.100" height="10px" width="auto" mt={2} />
+                <Skeleton startColor="complimentary.700" endColor="complimentary.100" height="10px" width="auto" mt={2} />
+                <Skeleton startColor="complimentary.700" endColor="complimentary.100" height="10px" width="auto" mt={2} />
               </>
             ) : (
               Number(balance) > 0 && (
@@ -209,17 +212,17 @@ const AssetCard: React.FC<AssetCardProps> = ({ address, assetName, balance, apy,
             <StatLabel fontSize={'lg'}>Interchain</StatLabel>
 
             {!balance || !interchainAssets || !interchainBalance ? (
-              <Skeleton startColor="complimentary.900" endColor="complimentary.100" height="10px" width="auto" />
+              <Skeleton startColor="complimentary.700" endColor="complimentary.100" height="10px" width="auto" />
             ) : (
-              <StatNumber color={'complimentary.900'} fontSize={'md'}>
+              <StatNumber color={'complimentary.700'} fontSize={'md'}>
                 {formatNumber(parseFloat(interchainBalance))} {assetName}
               </StatNumber>
             )}
 
             {!balance || !interchainAssets || !interchainBalance ? (
               <>
-                <Skeleton startColor="complimentary.900" endColor="complimentary.100" height="10px" width="auto" mt={2} />
-                <Skeleton startColor="complimentary.900" endColor="complimentary.100" height="10px" width="auto" mt={2} />
+                <Skeleton startColor="complimentary.700" endColor="complimentary.100" height="10px" width="auto" mt={2} />
+                <Skeleton startColor="complimentary.700" endColor="complimentary.100" height="10px" width="auto" mt={2} />
               </>
             ) : (
               Number(interchainBalance) > 0 && (
@@ -260,6 +263,7 @@ const AssetCard: React.FC<AssetCardProps> = ({ address, assetName, balance, apy,
 };
 
 const AssetsGrid: React.FC<AssetGridProps> = ({ address, assets, isWalletConnected, interchainAssets: interchainAssets, refetch }) => {
+  console.log(assets)
   const scrollRef = React.useRef<HTMLDivElement>(null);
   const [focusedIndex, setFocusedIndex] = useState(0);
 
@@ -267,45 +271,7 @@ const AssetsGrid: React.FC<AssetGridProps> = ({ address, assets, isWalletConnect
     setFocusedIndex(index);
   };
 
-  // const scrollByOne = (direction: 'left' | 'right') => {
-  //   if (!scrollRef.current) return;
-
-  //   const cardWidth = 380;
-  //   let newIndex = focusedIndex;
-
-  //   if (direction === 'left' && focusedIndex > 0) {
-  //     scrollRef.current.scrollBy({ left: -cardWidth, behavior: 'smooth' });
-  //     newIndex = focusedIndex - 1;
-  //   } else if (direction === 'right' && focusedIndex < assets.length - 1) {
-  //     scrollRef.current.scrollBy({ left: cardWidth, behavior: 'smooth' });
-  //     newIndex = focusedIndex + 1;
-  //   }
-
-  //   setFocusedIndex(newIndex);
-  // };
-
-  // const getZoneName = (qAssetName: string) => {
-  //   switch (qAssetName) {
-  //     case 'QATOM':
-  //       return 'Cosmos';
-  //     case 'QOSMO':
-  //       return 'Osmosis';
-  //     case 'QSTARS':
-  //       return 'Stargaze';
-  //     case 'QSOMM':
-  //       return 'Sommelier';
-  //     case 'QREGEN':
-  //       return 'Regen';
-  //     case 'QJUNO':
-  //       return 'Juno';
-  //     case 'QDYDX':
-  //       return 'DyDx';
-
-  //     default:
-  //       return qAssetName;
-  //   }
-  // };
-
+ 
   return (
     <>
       {/* Carousel controls and title */}
@@ -313,35 +279,6 @@ const AssetsGrid: React.FC<AssetGridProps> = ({ address, assets, isWalletConnect
         <Text fontSize="xl" fontWeight="bold" color="white">
           qAssets
         </Text>
-        {/* <Flex alignItems="center" gap="2">
-          <IconButton
-            icon={<ChevronLeftIcon />}
-            onClick={() => scrollByOne('left')}
-            aria-label="Scroll left"
-            variant="ghost"
-            _hover={{ bgColor: 'transparent', color: 'complimentary.900' }}
-            _active={{ transform: 'scale(0.75)', color: 'complimentary.800' }}
-            color="white"
-            isDisabled={focusedIndex === 0}
-            _disabled={{ cursor: 'default' }}
-          />
-          <Box minWidth="100px" textAlign="center">
-            <Text fontSize="md" fontWeight="bold" color="white">
-              {getZoneName(assets[focusedIndex]?.name)}
-            </Text>
-          </Box>
-          <IconButton
-            icon={<ChevronRightIcon />}
-            onClick={() => scrollByOne('right')}
-            aria-label="Scroll right"
-            variant="ghost"
-            _hover={{ bgColor: 'transparent', color: 'complimentary.900' }}
-            _active={{ transform: 'scale(0.75)', color: 'complimentary.800' }}
-            color="white"
-            isDisabled={focusedIndex === assets.length - 1}
-            _disabled={{ cursor: 'default' }}
-          />
-        </Flex> */}
       </Flex>
 
       {/* Carousel content */}

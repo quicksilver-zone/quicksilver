@@ -84,7 +84,7 @@ const UnbondingAssetsTable: React.FC<UnbondingAssetsTableProps> = ({ address, is
               onClick={handleLeftArrowClick}
               aria-label="Previous chain"
               variant="ghost"
-              _hover={{ bgColor: 'transparent', color: 'complimentary.900' }}
+              _hover={{ bgColor: 'transparent', color: 'complimentary.700' }}
               _active={{
                 transform: 'scale(0.75)',
                 color: 'complimentary.800',
@@ -99,7 +99,7 @@ const UnbondingAssetsTable: React.FC<UnbondingAssetsTableProps> = ({ address, is
               onClick={handleRightArrowClick}
               aria-label="Next chain"
               variant="ghost"
-              _hover={{ bgColor: 'transparent', color: 'complimentary.900' }}
+              _hover={{ bgColor: 'transparent', color: 'complimentary.700' }}
               _active={{
                 transform: 'scale(0.75)',
                 color: 'complimentary.800',
@@ -143,7 +143,7 @@ const UnbondingAssetsTable: React.FC<UnbondingAssetsTableProps> = ({ address, is
               onClick={handleLeftArrowClick}
               aria-label="Previous chain"
               variant="ghost"
-              _hover={{ bgColor: 'transparent', color: 'complimentary.900' }}
+              _hover={{ bgColor: 'transparent', color: 'complimentary.700' }}
               _active={{
                 transform: 'scale(0.75)',
                 color: 'complimentary.800',
@@ -158,7 +158,7 @@ const UnbondingAssetsTable: React.FC<UnbondingAssetsTableProps> = ({ address, is
               onClick={handleRightArrowClick}
               aria-label="Next chain"
               variant="ghost"
-              _hover={{ bgColor: 'transparent', color: 'complimentary.900' }}
+              _hover={{ bgColor: 'transparent', color: 'complimentary.700' }}
               _active={{
                 transform: 'scale(0.75)',
                 color: 'complimentary.800',
@@ -181,7 +181,7 @@ const UnbondingAssetsTable: React.FC<UnbondingAssetsTableProps> = ({ address, is
           color="white"
         >
           <Flex justifyContent="center" alignItems="center" h="200px">
-            <Spinner size="xl" color="complimentary.900" />
+            <Spinner size="xl" color="complimentary.700" />
           </Flex>
         </Flex>
       </Flex>
@@ -200,7 +200,7 @@ const UnbondingAssetsTable: React.FC<UnbondingAssetsTableProps> = ({ address, is
             onClick={handleLeftArrowClick}
             aria-label="Previous chain"
             variant="ghost"
-            _hover={{ bgColor: 'transparent', color: 'complimentary.900' }}
+            _hover={{ bgColor: 'transparent', color: 'complimentary.700' }}
             _active={{
               transform: 'scale(0.75)',
               color: 'complimentary.800',
@@ -215,7 +215,7 @@ const UnbondingAssetsTable: React.FC<UnbondingAssetsTableProps> = ({ address, is
             onClick={handleRightArrowClick}
             aria-label="Next chain"
             variant="ghost"
-            _hover={{ bgColor: 'transparent', color: 'complimentary.900' }}
+            _hover={{ bgColor: 'transparent', color: 'complimentary.700' }}
             _active={{
               transform: 'scale(0.75)',
               color: 'complimentary.800',
@@ -250,19 +250,19 @@ const UnbondingAssetsTable: React.FC<UnbondingAssetsTableProps> = ({ address, is
               <Table variant="simple" color="white">
                 <Thead boxShadow="0px 0.5px 0px 0px rgba(255,255,255,1)" position={'sticky'} bgColor="#1A1A1A" top="0" zIndex="sticky">
                   <Tr>
-                    <Th textAlign="center" borderBottomColor={'transparent'} color="complimentary.900">
+                    <Th textAlign="center" borderBottomColor={'transparent'} color="complimentary.700">
                       Burn Amount
                     </Th>
-                    <Th textAlign="center" borderBottomColor={'transparent'} color="complimentary.900" display={hideOnMobile}>
+                    <Th textAlign="center" borderBottomColor={'transparent'} color="complimentary.700" display={hideOnMobile}>
                       Status
                     </Th>
-                    <Th textAlign="center" borderBottomColor={'transparent'} color="complimentary.900">
+                    <Th textAlign="center" borderBottomColor={'transparent'} color="complimentary.700">
                       Redemption Amount
                     </Th>
-                    <Th textAlign="center" borderBottomColor={'transparent'} color="complimentary.900" display={hideOnMobile}>
+                    <Th textAlign="center" borderBottomColor={'transparent'} color="complimentary.700" display={hideOnMobile}>
                       Epoch Number
                     </Th>
-                    <Th textAlign="center" borderBottomColor={'transparent'} color="complimentary.900" display={hideOnMobile}>
+                    <Th textAlign="center" borderBottomColor={'transparent'} color="complimentary.700" display={hideOnMobile}>
                       Completion Time
                     </Th>
                   </Tr>

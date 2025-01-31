@@ -16,7 +16,6 @@ import {
   Button,
   Text,
   IconButton,
-  Tooltip,
   useBreakpointValue,
 } from '@chakra-ui/react';
 import { useChain } from '@cosmos-kit/react';
@@ -32,19 +31,19 @@ import { WalletButton } from '../wallet-button';
 
 const shadowKeyframes = keyframes`
   0% {
-    box-shadow: 0 0 10px 5px #FF8000;
+    box-shadow: 0 0 5px 5px #FF8000;
   }
   25% {
-    box-shadow: 0 0 10px 5px #FF9933;
+    box-shadow: 0 0 5px 5px #FF9933;
   }
   50% {
-    box-shadow: 0 0 10px 5px #FFB266;
+    box-shadow: 0 0 5px 5px #FFB266;
   }
   75% {
-    box-shadow: 0 0 10px 5px #FF9933;
+    box-shadow: 0 0 5px 5px #FF9933;
   }
   100% {
-    box-shadow: 0 0 10px 5px #FF8000;
+    box-shadow: 0 0 5px 5px #FF8000;
   }
 `;
 
@@ -89,28 +88,28 @@ const Header: React.FC<{ chainName: string }> = ({ chainName }) => {
             p={3}
             variant="solid"
             minW="fit-content"
-            bgColor="complimentary.900"
+            bgColor="complimentary.700"
             icon={<KadoIconContent width={'1.8em'} height={'1.8em'} />}
             sx={{
               position: 'relative',
               boxShadow: '0 6px 8px rgba(0, 0, 0, 0.3)',
-              borderRadius: 100,
+              borderRadius: 5,
               _hover: {
                 boxShadow: '0 0 10px #FF9933, 0 0 15px #FFB266',
-                transform: 'scale(1.1)',
-                '&::before': {
-                  content: '""',
-                  position: 'absolute',
-                  top: '-2px',
-                  right: '-2px',
-                  bottom: '-2px',
-                  left: '-2px',
-                  zIndex: -1,
-                  borderRadius: 'inherit',
-                  background: 'linear-gradient(60deg, #FF8000, #FF9933, #FFB266, #FFD9B3, #FFE6CC)',
-                  backgroundSize: '350% 350%',
-                  animation: 'animatedgradient 12s linear infinite',
-                },
+                // transform: 'scale(1.1)',
+                // '&::before': {
+                //   content: '""',
+                //   position: 'absolute',
+                //   top: '-2px',
+                //   right: '-2px',
+                //   bottom: '-2px',
+                //   left: '-2px',
+                //   zIndex: -1,
+                //   borderRadius: 'inherit',
+                //   background: 'linear-gradient(60deg, #FF8000, #FF9933, #FFB266, #FFD9B3, #FFE6CC)',
+                //   backgroundSize: '350% 350%',
+                //   animation: 'animatedgradient 12s linear infinite',
+                // },
               },
               _active: {
                 transform: 'translateY(4px)',
@@ -129,29 +128,29 @@ const Header: React.FC<{ chainName: string }> = ({ chainName }) => {
           <Button
             variant="solid"
             minW="fit-content"
-            bgColor="complimentary.900"
+            bgColor="complimentary.700"
             leftIcon={<KadoIconContent width={'1.8em'} height={'1.8em'} />}
             isDisabled={!isWalletConnected}
             sx={{
               position: 'relative',
               boxShadow: '0 6px 8px rgba(0, 0, 0, 0.3)',
-              borderRadius: 100,
+              borderRadius: 5,
               _hover: {
                 boxShadow: '0 0 10px #FF9933, 0 0 15px #FFB266',
-                transform: 'scale(1.1)',
-                '&::before': {
-                  content: '""',
-                  position: 'absolute',
-                  top: '-2px',
-                  right: '-2px',
-                  bottom: '-2px',
-                  left: '-2px',
-                  zIndex: -1,
-                  borderRadius: 'inherit',
-                  background: 'linear-gradient(60deg, #FF8000, #FF9933, #FFB266, #FFD9B3, #FFE6CC)',
-                  backgroundSize: '350% 350%',
-                  animation: 'animatedgradient 12s linear infinite',
-                },
+                // transform: 'scale(1.1)',
+                // '&::before': {
+                //   content: '""',
+                //   position: 'absolute',
+                //   top: '-2px',
+                //   right: '-2px',
+                //   bottom: '-2px',
+                //   left: '-2px',
+                //   zIndex: -1,
+                //   borderRadius: 'inherit',
+                //   background: 'linear-gradient(60deg, #FF8000, #FF9933, #FFB266, #FFD9B3, #FFE6CC)',
+                //   backgroundSize: '350% 350%',
+                //   animation: 'animatedgradient 12s linear infinite',
+                // },
               },
 
               _active: {

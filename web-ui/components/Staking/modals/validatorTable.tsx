@@ -92,7 +92,7 @@ export const ValidatorsTable: React.FC<{
             width: '8px',
           },
           '&::-webkit-scrollbar-thumb': {
-            backgroundColor: 'complimentary.900',
+            backgroundColor: 'complimentary.700',
             borderRadius: '4px',
           },
           '&::-webkit-scrollbar-track': {
@@ -189,7 +189,7 @@ export const ValidatorsTable: React.FC<{
                             marginRight="8px"
                             display="inline-block"
                             verticalAlign="middle"
-                            startColor="complimentary.900"
+                            startColor="complimentary.700"
                             endColor="complimentary.100"
                           />
                         )}
