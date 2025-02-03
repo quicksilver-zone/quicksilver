@@ -91,12 +91,13 @@ func NewConfig() Config {
 			"celestia":       DefaultReadOnlyChainConfig("celestia", "https://celestia.rpc.quicksilver.zone:443"),
 			"archway-1":      DefaultReadOnlyChainConfig("archway-1", "https://archway-1.rpc.quicksilver.zone:443"),
 			"injective-1":    DefaultReadOnlyChainConfig("injective-1", "https://injective-1.rpc.quicksilver.zone:443"),
-			"centauri-1":     DefaultReadOnlyChainConfig("centauri-1", "https://kujira-1.rpc.quicksilver.zone:443"),
+			"centauri-1":     DefaultReadOnlyChainConfig("centauri-1", "https://centauri-1.rpc.quicksilver.zone:443"),
 			"phoenix-1":      DefaultReadOnlyChainConfig("phoenix-1", "https://phoenix-1.rpc.quicksilver.zone:443"),
 			"omniflixhub-1":  DefaultReadOnlyChainConfig("omniflixhub-1", "https://omniflixhub-1.rpc.quicksilver.zone:443"),
 		},
 		HA: HAConfig{
 			NodeIndex:  0,
+			NodeCount:  1,
 			Redundancy: 1,
 		},
 	}
