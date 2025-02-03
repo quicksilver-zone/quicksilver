@@ -1,7 +1,6 @@
 package types
 
 import (
-	"fmt"
 	"log"
 	"maps"
 	"math/rand"
@@ -165,7 +164,6 @@ func DistributeConfigs(N, R, seed int, configs []string) map[int][]string {
 
 	r := rand.New(rand.NewSource(int64(seed)))
 	r.Shuffle(len(configPool), func(i, j int) { configPool[i], configPool[j] = configPool[j], configPool[i] })
-	fmt.Println("Shuffled", configPool)
 	for i, config := range configPool {
 		node := i % N // Ensures an even spread
 		nodeConfigs[node] = append(nodeConfigs[node], config)
