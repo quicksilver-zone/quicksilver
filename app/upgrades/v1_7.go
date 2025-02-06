@@ -190,7 +190,6 @@ func V010706UpgradeHandler(
 				appKeepers.InterchainstakingKeeper.UpdateWithdrawalRecordStatus(ctx, &record, icstypes.WithdrawStatusQueued)
 			}
 		}
-
 		// garbage collect old records
 		appKeepers.InterchainstakingKeeper.IterateUnbondingRecords(ctx, func(index int64, record icstypes.UnbondingRecord) (stop bool) {
 			if record.CompletionTime.Equal(time.Time{}) || record.CompletionTime.Before(ctx.BlockTime().Add(-time.Hour*24)) { // old records
@@ -201,5 +200,21 @@ func V010706UpgradeHandler(
 		})
 
 		return mm.RunMigrations(ctx, configurator, fromVM)
+	}
+}
+
+func V010706TestnetUpgradeHandler(
+	mm *module.Manager,
+	configurator module.Configurator,
+	appKeepers *keepers.AppKeepers,
+) upgradetypes.UpgradeHandler {
+	return func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		if isTestnet(ctx) {
+			// remove zones where clients have expired, so we can redo them.
+			appKeepers.InterchainstakingKeeper.RemoveZoneAndAssociatedRecords(ctx, "osmo-test-5")
+			appKeepers.InterchainstakingKeeper.RemoveZoneAndAssociatedRecords(ctx, "provider-1")
+		}
+
+		return V010706UpgradeHandler(mm, configurator, appKeepers)(ctx, plan, fromVM)
 	}
 }

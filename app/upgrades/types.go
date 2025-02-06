@@ -12,7 +12,7 @@ import (
 // upgrade name consts: vMMmmppUpgradeName (M=Major, m=minor, p=patch).
 const (
 	ProductionChainID = "quicksilver-2"
-	RhyeChainID       = "rhye-2"
+	RhyeChainID       = "rhye-3"
 	DevnetChainID     = "magic-2"
 	TestChainID       = "testchain1"
 
@@ -49,11 +49,12 @@ const (
 	V010603UpgradeName = "v1.6.3"
 	V010604UpgradeName = "v1.6.4"
 
-	V010700UpgradeName = "v1.7.0"
-	V010702UpgradeName = "v1.7.2"
-	V010704UpgradeName = "v1.7.4"
-	V010705UpgradeName = "v1.7.5"
-	V010706UpgradeName = "v1.7.6"
+	V010700UpgradeName        = "v1.7.0"
+	V010702UpgradeName        = "v1.7.2"
+	V010704UpgradeName        = "v1.7.4"
+	V010705UpgradeName        = "v1.7.5"
+	V010706UpgradeName        = "v1.7.6"
+	V010706TestnetUpgradeName = "v1.7.6-testnet"
 )
 
 // Upgrade defines a struct containing necessary fields that a SoftwareUpgradeProposal
