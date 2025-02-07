@@ -212,7 +212,7 @@ func V010706TestnetUpgradeHandler(
 		if isTestnet(ctx) {
 			// remove zones where clients have expired, so we can redo them.
 			appKeepers.InterchainstakingKeeper.RemoveZoneAndAssociatedRecords(ctx, "osmo-test-5")
-			appKeepers.InterchainstakingKeeper.RemoveZoneAndAssociatedRecords(ctx, "provider-1")
+			appKeepers.InterchainstakingKeeper.RemoveZoneAndAssociatedRecords(ctx, "provider")
 		}
 
 		return V010706UpgradeHandler(mm, configurator, appKeepers)(ctx, plan, fromVM)
