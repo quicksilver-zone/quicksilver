@@ -2,7 +2,6 @@ package types
 
 import (
 	"errors"
-	"fmt"
 	"sort"
 
 	sdkmath "cosmossdk.io/math"
@@ -146,10 +145,10 @@ func (vi ValidatorIntents) Normalize() ValidatorIntents {
 
 func DetermineAllocationsForDelegation(currentAllocations map[string]sdkmath.Int, currentSum sdkmath.Int, targetAllocations ValidatorIntents, amount sdk.Coins, maxCanAllocate map[string]sdkmath.Int) (map[string]sdkmath.Int, error) {
 	if amount.IsZero() {
-		return make(map[string]sdkmath.Int, 0), fmt.Errorf("unable to delegate zero amount")
+		return make(map[string]sdkmath.Int, 0), errors.New("unable to delegate zero amount")
 	}
 	if len(targetAllocations) == 0 {
-		return make(map[string]sdkmath.Int, 0), fmt.Errorf("unable to process nil delegation targets")
+		return make(map[string]sdkmath.Int, 0), errors.New("unable to process nil delegation targets")
 	}
 	input := amount[0].Amount
 	deltas, _ := CalculateAllocationDeltas(currentAllocations, map[string]bool{}, currentSum.Add(amount[0].Amount), targetAllocations, maxCanAllocate)

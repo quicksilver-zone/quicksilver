@@ -34,7 +34,7 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	if !k.Keeper.GetUnbondingEnabled(ctx) {
-		return nil, fmt.Errorf("unbonding is currently disabled")
+		return nil, errors.New("unbonding is currently disabled")
 	}
 
 	zone := k.Keeper.GetZoneByLocalDenom(ctx, msg.Value.Denom)
@@ -187,19 +187,19 @@ func (k msgServer) UpdateRedemption(goCtx context.Context, msg *types.MsgUpdateR
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	if k.Keeper.GetGovAuthority(ctx) != msg.FromAddress {
-		return nil, fmt.Errorf("MsgUpdateRedemption may only be executed by the gov authority")
+		return nil, errors.New("MsgUpdateRedemption may only be executed by the gov authority")
 	}
 
 	switch msg.NewStatus {
 	case types.WithdrawStatusTokenize: // intentionally removed as not currently supported, but included here for completeness.
-		return nil, fmt.Errorf("new status WithdrawStatusTokenize not supported")
+		return nil, errors.New("new status WithdrawStatusTokenize not supported")
 	case types.WithdrawStatusQueued:
 	case types.WithdrawStatusUnbond:
 	case types.WithdrawStatusSend: // send is not a valid state for recovery, included here for completeness.
-		return nil, fmt.Errorf("new status WithdrawStatusSend not supported")
+		return nil, errors.New("new status WithdrawStatusSend not supported")
 	case types.WithdrawStatusCompleted:
 	default:
-		return nil, fmt.Errorf("new status not provided or invalid")
+		return nil, errors.New("new status not provided or invalid")
 	}
 
 	var r *types.WithdrawalRecord

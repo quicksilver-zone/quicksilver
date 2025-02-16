@@ -357,7 +357,7 @@ func (k *Keeper) DistributeToClaimants(ctx sdk.Context, zone *types.Zone, zoneAd
 	})
 
 	if toDistribute.IsNegative() {
-		return sdk.Coin{}, fmt.Errorf("unexpected negative value")
+		return sdk.Coin{}, errors.New("unexpected negative value")
 	}
 
 	return sdk.NewCoin(rewardsCoin.Denom, toDistribute), err
@@ -888,7 +888,7 @@ func (k *Keeper) HandleFailedBankSend(ctx sdk.Context, msg sdk.Msg, memo string,
 		k.Logger(ctx).Info("MsgSend from delegate account failed; updating withdrawal", "amount", sMsg.Amount, "memo", memo)
 		return k.HandleFailedUnbondSend(ctx, sMsg, memo)
 	default:
-		err = fmt.Errorf("unexpected failed send (1) from %s to %s (amount: %s)", sMsg.FromAddress, sMsg.ToAddress, sMsg.Amount)
+		err = fmt.Errorf("unexpected MsgSend from %s to %s (amount: %s)", sMsg.FromAddress, sMsg.ToAddress, sMsg.Amount)
 		k.Logger(ctx).Error(err.Error())
 	}
 

@@ -3,7 +3,7 @@ package keeper
 import (
 	"encoding/binary"
 	"encoding/hex"
-	"fmt"
+	"errors"
 	"time"
 
 	gogotypes "github.com/gogo/protobuf/types"
@@ -54,7 +54,7 @@ func (k *Keeper) GetNextWithdrawalRecordSequence(ctx sdk.Context) uint64 {
 func (k *Keeper) AddWithdrawalRecord(ctx sdk.Context, chainID, delegator string, distributions []*types.Distribution, recipient string, burnAmount sdk.Coin, hash string, status int32, completionTime time.Time, epochNumber int64) error {
 	record := types.WithdrawalRecord{ChainId: chainID, Delegator: delegator, Distribution: distributions, Recipient: recipient, Status: status, BurnAmount: burnAmount, Txhash: hash, CompletionTime: completionTime, EpochNumber: epochNumber}
 	if !record.BurnAmount.IsPositive() {
-		return fmt.Errorf("burnAmount cannot be negative or zero")
+		return errors.New("burnAmount cannot be negative or zero")
 	}
 	k.Logger(ctx).Info("addWithdrawalRecord", "record", record)
 	err := k.SetWithdrawalRecord(ctx, record)
@@ -88,11 +88,11 @@ func (k *Keeper) SetWithdrawalRecord(ctx sdk.Context, record types.WithdrawalRec
 	}
 	// check if burnAmount is set
 	if record.BurnAmount.IsNil() {
-		return fmt.Errorf("burnAmount cannot be nil")
+		return errors.New("burnAmount cannot be nil")
 	}
 
 	if !record.BurnAmount.IsPositive() {
-		return fmt.Errorf("burnAmount cannot be negative or zero")
+		return errors.New("burnAmount cannot be negative or zero")
 	}
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.GetWithdrawalKey(record.ChainId, record.Status))
 	bz := k.cdc.MustMarshal(&record)
@@ -287,7 +287,7 @@ func (k *Keeper) UpdateWithdrawalRecordsForSlash(ctx sdk.Context, zone *types.Zo
 			}
 			distAmount := sdk.NewDecFromInt(d.Amount)
 			if distAmount.IsNegative() {
-				err = fmt.Errorf("distAmount cannot be negative; suspected overflow")
+				err = errors.New("distAmount cannot be negative; suspected overflow")
 				return true
 			}
 
@@ -303,7 +303,7 @@ func (k *Keeper) UpdateWithdrawalRecordsForSlash(ctx sdk.Context, zone *types.Zo
 		record.Distribution = distr
 		subAmount := sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, recordSubAmount))
 		if !record.Amount.IsAllGT(subAmount) {
-			err = fmt.Errorf("deductedTotal cannot contain negative coins; suspected overflow")
+			err = errors.New("deductedTotal cannot contain negative coins; suspected overflow")
 			return true
 		}
 		record.Amount = record.Amount.Sub(subAmount...)
