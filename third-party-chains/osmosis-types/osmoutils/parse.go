@@ -2,6 +2,7 @@ package osmoutils
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 
@@ -23,11 +24,11 @@ var ProposalFlags = []string{
 
 func (p Proposal) validate() error {
 	if p.Title == "" {
-		return fmt.Errorf("proposal title is required")
+		return errors.New("proposal title is required")
 	}
 
 	if p.Description == "" {
-		return fmt.Errorf("proposal description is required")
+		return errors.New("proposal description is required")
 	}
 	return nil
 }

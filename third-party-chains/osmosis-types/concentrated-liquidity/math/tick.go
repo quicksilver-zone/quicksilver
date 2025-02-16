@@ -2,7 +2,6 @@ package math
 
 import (
 	"errors"
-	"fmt"
 
 	types "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/concentrated-liquidity"
 	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/osmomath"
@@ -187,7 +186,7 @@ func powTenBigDec(exponent int64) osmomath.BigDec {
 // it uses BigDec in internal calculations
 func CalculatePriceToTick(price osmomath.BigDec) (tickIndex int64, err error) {
 	if price.IsNegative() {
-		return 0, fmt.Errorf("price must be greater than zero")
+		return 0, errors.New("price must be greater than zero")
 	}
 	if price.GT(osmomath.BigDecFromDec(types.MaxSpotPrice)) || price.LT(types.MinSpotPriceV2) {
 		return 0, types.PriceBoundError{ProvidedPrice: price, MinSpotPrice: types.MinSpotPriceV2, MaxSpotPrice: types.MaxSpotPrice}

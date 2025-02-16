@@ -1,6 +1,7 @@
 package dag
 
 import (
+	"errors"
 	"fmt"
 	"sort"
 )
@@ -61,10 +62,10 @@ func (dag DAG) hasDirectedEdge(u, v int) bool {
 // addEdge adds a directed edge from u -> v.
 func (dag *DAG) addEdge(u, v int) error {
 	if u == v {
-		return fmt.Errorf("can't make self-edge")
+		return errors.New("can't make self-edge")
 	}
 	if dag.hasDirectedEdge(v, u) {
-		return fmt.Errorf("dag has conflicting edge")
+		return errors.New("dag has conflicting edge")
 	}
 	dag.directedEdgeList[u][v] = 1
 	dag.directedEdgeList[v][u] = -1
@@ -75,7 +76,7 @@ func (dag *DAG) addEdge(u, v int) error {
 // it removes any edge that may already exist between the two.
 func (dag *DAG) replaceEdge(u, v int) error {
 	if u == v {
-		return fmt.Errorf("can't make self-edge")
+		return errors.New("can't make self-edge")
 	}
 
 	dag.directedEdgeList[u][v] = 1

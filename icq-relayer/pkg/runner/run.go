@@ -3,6 +3,7 @@ package runner
 import (
 	"context"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	stdlog "log"
 	"math"
@@ -372,7 +373,7 @@ func retryLightblock(ctx context.Context, chain *types.ReadOnlyChainConfig, heig
 			metrics.LightBlockRequests.WithLabelValues("lightblock_requests").Inc()
 			return err
 		}, RtyAtt, RtyDel, RtyErr); err != nil {
-			return nil, fmt.Errorf("unable to query light block, max interval exceeded")
+			return nil, errors.New("unable to query light block, max interval exceeded")
 		}
 		cache.Set("lightblock/"+chain.ChainID+"/"+fmt.Sprintf("%d", height), lightBlock, 5)
 	}
@@ -528,7 +529,7 @@ func getCachedClientUpdate(connectionId string, height int64) (sdk.Msg, error) {
 		return cu.(sdk.Msg), nil
 	}
 	fmt.Printf("cache miss for %s-%d\n", connectionId, height)
-	return nil, fmt.Errorf("client update not found")
+	return nil, errors.New("client update not found")
 }
 
 func getHeader(ctx context.Context, cfg *types.Config, client *types.ReadOnlyChainConfig, clientId string, requestHeight int64, logger log.Logger, historicOk bool, metrics prommetrics.Metrics) (*tmclient.Header, error) {
@@ -544,7 +545,7 @@ func getHeader(ctx context.Context, cfg *types.Config, client *types.ReadOnlyCha
 	trustedHeight := unpackedState.GetLatestHeight()
 	clientHeight, ok := trustedHeight.(clienttypes.Height)
 	if !ok {
-		return nil, fmt.Errorf("error: Could coerce trusted height")
+		return nil, errors.New("error: Could coerce trusted height")
 	}
 
 	if !historicOk && clientHeight.RevisionHeight >= uint64(requestHeight+1) {

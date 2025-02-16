@@ -154,7 +154,7 @@ func (r *ReadOnlyChainConfig) GetClientState(ctx context.Context, clientId strin
 func (r *ReadOnlyChainConfig) GetClientStateHeights(ctx context.Context, clientId string, chainId string, height uint64, logger log2.Logger, metrics prommetrics.Metrics, depth int) ([]clienttypes.Height, error) {
 	time.Sleep(100 * time.Millisecond)
 	if depth > 10 {
-		return nil, fmt.Errorf("reached max depth")
+		return nil, errors.New("reached max depth")
 	}
 	chainParts := strings.Split(chainId, "-")
 	if len(chainParts) == 1 {
@@ -450,15 +450,15 @@ func (r *ReadOnlyChainConfig) GetCurrentHeight(ctx context.Context, cache *ristr
 		}
 
 		if block == nil {
-			return 0, fmt.Errorf("block is nil")
+			return 0, errors.New("block is nil")
 		}
 
 		if block.Block == nil {
-			return 0, fmt.Errorf("block.Block is nil")
+			return 0, errors.New("block.Block is nil")
 		}
 
 		if block.Block.LastCommit == nil {
-			return 0, fmt.Errorf("block last commit is nil")
+			return 0, errors.New("block last commit is nil")
 		}
 
 		currentheight = block.Block.LastCommit.Height - 1

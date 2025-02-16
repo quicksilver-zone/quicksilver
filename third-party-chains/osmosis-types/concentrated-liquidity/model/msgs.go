@@ -1,6 +1,7 @@
 package model
 
 import (
+	"errors"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -46,7 +47,7 @@ func (msg MsgCreateConcentratedPool) ValidateBasic() error {
 	}
 
 	if msg.TickSpacing <= 0 {
-		return fmt.Errorf("tick spacing must be positive")
+		return errors.New("tick spacing must be positive")
 	}
 
 	if msg.Denom0 == msg.Denom1 {

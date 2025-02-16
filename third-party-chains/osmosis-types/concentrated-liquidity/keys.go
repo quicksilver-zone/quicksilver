@@ -1,6 +1,7 @@
 package concentrated_liquidity
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -270,11 +271,11 @@ func KeyBalancerFullRange(clPoolId, balancerPoolId, uptimeIndex uint64) []byte {
 // Helper Functions
 func GetPoolIdFromShareDenom(denom string) (uint64, error) {
 	if !strings.HasPrefix(denom, ConcentratedLiquidityTokenPrefix) {
-		return 0, fmt.Errorf("denom does not start with the cl token prefix")
+		return 0, errors.New("denom does not start with the cl token prefix")
 	}
 	parts := strings.Split(denom, "/")
 	if len(parts) != 3 {
-		return 0, fmt.Errorf("cl token denom does not have the correct number of parts")
+		return 0, errors.New("cl token denom does not have the correct number of parts")
 	}
 	poolIdStr := parts[2]
 	poolId, err := strconv.Atoi(poolIdStr)

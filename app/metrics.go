@@ -3,6 +3,7 @@ package app
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"sync"
@@ -34,7 +35,7 @@ func (app *Quicksilver) InitNodeID() (string, error) {
 			return "", err
 		}
 		if result.DefaultNodeInfo == nil {
-			return "", fmt.Errorf("node info is nil")
+			return "", errors.New("node info is nil")
 		}
 		nodeID = result.DefaultNodeInfo.DefaultNodeID
 	}

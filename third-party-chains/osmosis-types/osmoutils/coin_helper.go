@@ -1,7 +1,7 @@
 package osmoutils
 
 import (
-	"fmt"
+	"errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -10,7 +10,7 @@ import (
 // Note that this takes in two _arrays_ of DecCoins, meaning that each term itself is of type DecCoins (i.e. an array of DecCoin).
 func SubDecCoinArrays(decCoinsArrayA []sdk.DecCoins, decCoinsArrayB []sdk.DecCoins) ([]sdk.DecCoins, error) {
 	if len(decCoinsArrayA) != len(decCoinsArrayB) {
-		return []sdk.DecCoins{}, fmt.Errorf("DecCoin arrays must be of equal length to be subtracted")
+		return []sdk.DecCoins{}, errors.New("DecCoin arrays must be of equal length to be subtracted")
 	}
 
 	finalDecCoinArray := []sdk.DecCoins{}
@@ -26,7 +26,7 @@ func SubDecCoinArrays(decCoinsArrayA []sdk.DecCoins, decCoinsArrayB []sdk.DecCoi
 // Contrary to SubDecCoinArrays, this subtractions allows for negative result values.
 func SafeSubDecCoinArrays(decCoinsArrayA []sdk.DecCoins, decCoinsArrayB []sdk.DecCoins) ([]sdk.DecCoins, error) {
 	if len(decCoinsArrayA) != len(decCoinsArrayB) {
-		return []sdk.DecCoins{}, fmt.Errorf("DecCoin arrays must be of equal length to be subtracted")
+		return []sdk.DecCoins{}, errors.New("DecCoin arrays must be of equal length to be subtracted")
 	}
 
 	finalDecCoinArray := []sdk.DecCoins{}
@@ -42,7 +42,7 @@ func SafeSubDecCoinArrays(decCoinsArrayA []sdk.DecCoins, decCoinsArrayB []sdk.De
 // Note that this takes in two _arrays_ of DecCoins, meaning that each term itself is of type DecCoins (i.e. an array of DecCoin).
 func AddDecCoinArrays(decCoinsArrayA []sdk.DecCoins, decCoinsArrayB []sdk.DecCoins) ([]sdk.DecCoins, error) {
 	if len(decCoinsArrayA) != len(decCoinsArrayB) {
-		return []sdk.DecCoins{}, fmt.Errorf("DecCoin arrays must be of equal length to be added")
+		return []sdk.DecCoins{}, errors.New("DecCoin arrays must be of equal length to be added")
 	}
 
 	finalDecCoinArray := []sdk.DecCoins{}

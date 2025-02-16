@@ -2,6 +2,7 @@ package proofs
 
 import (
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -28,7 +29,7 @@ var (
 
 func (p *CelestiaProof) Validate(dataHash []byte, txHash string) ([]byte, error) {
 	if p.ShareProof == nil {
-		return nil, fmt.Errorf("ShareProof is nil")
+		return nil, errors.New("ShareProof is nil")
 	}
 	shareProof, err := celestiatypes.ShareProofFromProto(*p.ShareProof)
 	if err != nil {
@@ -49,11 +50,11 @@ func (p *CelestiaProof) Validate(dataHash []byte, txHash string) ([]byte, error)
 		return nil, fmt.Errorf("unable to parse txs from shareProof: %w", err)
 	}
 	if len(txs) == 0 {
-		return nil, fmt.Errorf("no transactions found in shares")
+		return nil, errors.New("no transactions found in shares")
 	}
 
 	if !shareProof.VerifyProof() {
-		return nil, fmt.Errorf("share proof failed to verify")
+		return nil, errors.New("share proof failed to verify")
 	}
 
 	if err := shareProof.Validate(dataHash); err != nil {
@@ -73,7 +74,7 @@ func (p *CelestiaProof) Validate(dataHash []byte, txHash string) ([]byte, error)
 
 func (p *TendermintProof) Validate(dataHash []byte, txHash string) ([]byte, error) {
 	if p.TxProof == nil {
-		return nil, fmt.Errorf("TxProof is nil")
+		return nil, errors.New("TxProof is nil")
 	}
 	tmproof, err := tmtypes.TxProofFromProto(*p.TxProof)
 	if err != nil {

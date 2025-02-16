@@ -2,7 +2,7 @@ package app
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"math"
 	"sync"
 	"sync/atomic"
@@ -112,7 +112,7 @@ func (tpc *tpsCounter) recordValue(ctx context.Context, latest, previous uint64,
 	diff := latest - previous
 
 	if diff > math.MaxInt64 {
-		return 0, fmt.Errorf("difference exceeds int64 max value")
+		return 0, errors.New("difference exceeds int64 max value")
 	}
 
 	n := int64(diff)

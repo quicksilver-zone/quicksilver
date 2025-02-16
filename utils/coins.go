@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -18,7 +19,7 @@ func DenomFromRequestKey(query []byte, accAddr sdk.AccAddress) (string, error) {
 	}
 
 	if denom == "" {
-		return "", fmt.Errorf("key contained no denom")
+		return "", errors.New("key contained no denom")
 	}
 
 	if !gotAccAddress.Equals(accAddr) {
