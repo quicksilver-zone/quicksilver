@@ -4979,3 +4979,107 @@ func (suite *KeeperTestSuite) TestHandleFailedDelegate_BadMsg_Fail() {
 	err := app.InterchainstakingKeeper.HandleFailedDelegate(ctx, msgMsg, "batch/12345678")
 	suite.ErrorContains(err, "unable to cast source message to MsgDelegate")
 }
+
+func (suite *KeeperTestSuite) TestHandleMaturedUnbondings_NoDeleteFuture() {
+	suite.SetupTest()
+	suite.setupTestZones()
+
+	app := suite.GetQuicksilverApp(suite.chainA)
+
+	testVal := addressutils.GenerateAddressForTestWithPrefix("cosmosvaloper")
+
+	ctx := suite.chainA.GetContext()
+
+	zone, found := app.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+	suite.True(found)
+
+	app.InterchainstakingKeeper.SetUnbondingRecord(ctx, types.UnbondingRecord{
+		ChainId:        zone.ChainId,
+		Validator:      testVal,
+		EpochNumber:    258,
+		CompletionTime: ctx.BlockTime().Add(time.Hour * 24),
+	})
+
+	app.InterchainstakingKeeper.HandleMaturedUnbondings(ctx)
+
+	_, found = app.InterchainstakingKeeper.GetUnbondingRecord(ctx, zone.ChainId, testVal, 258)
+	suite.True(found)
+}
+
+func (suite *KeeperTestSuite) TestHandleMaturedUnbondings_DeleteExpired() {
+	suite.SetupTest()
+	suite.setupTestZones()
+
+	app := suite.GetQuicksilverApp(suite.chainA)
+
+	testVal := addressutils.GenerateAddressForTestWithPrefix("cosmosvaloper")
+
+	ctx := suite.chainA.GetContext()
+
+	zone, found := app.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+	suite.True(found)
+
+	app.InterchainstakingKeeper.SetUnbondingRecord(ctx, types.UnbondingRecord{
+		ChainId:        zone.ChainId,
+		Validator:      testVal,
+		EpochNumber:    258,
+		CompletionTime: ctx.BlockTime().Add(-time.Hour * 25),
+	})
+
+	app.InterchainstakingKeeper.HandleMaturedUnbondings(ctx)
+
+	_, found = app.InterchainstakingKeeper.GetUnbondingRecord(ctx, zone.ChainId, testVal, 258)
+	suite.False(found)
+}
+
+func (suite *KeeperTestSuite) TestHandleMaturedUnbondings_NoNilCompletionTime() {
+	suite.SetupTest()
+	suite.setupTestZones()
+
+	app := suite.GetQuicksilverApp(suite.chainA)
+
+	testVal := addressutils.GenerateAddressForTestWithPrefix("cosmosvaloper")
+
+	ctx := suite.chainA.GetContext()
+
+	zone, found := app.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+	suite.True(found)
+
+	app.InterchainstakingKeeper.SetUnbondingRecord(ctx, types.UnbondingRecord{
+		ChainId:        zone.ChainId,
+		Validator:      testVal,
+		EpochNumber:    258,
+		CompletionTime: time.Time{},
+	})
+
+	app.InterchainstakingKeeper.HandleMaturedUnbondings(ctx)
+
+	_, found = app.InterchainstakingKeeper.GetUnbondingRecord(ctx, zone.ChainId, testVal, 258)
+	suite.True(found)
+}
+
+func (suite *KeeperTestSuite) TestUndelegate_NoRecordEpoch259() {
+	suite.SetupTest()
+	suite.setupTestZones()
+
+	app := suite.GetQuicksilverApp(suite.chainA)
+
+	testVal := addressutils.GenerateAddressForTestWithPrefix("cosmosvaloper")
+
+	ctx := suite.chainA.GetContext()
+
+	zone, found := app.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+	suite.True(found)
+
+	app.InterchainstakingKeeper.HandleUndelegate(ctx, &stakingtypes.MsgUndelegate{
+		DelegatorAddress: zone.DelegationAddress.Address,
+		ValidatorAddress: testVal,
+		Amount:           sdk.NewCoin(zone.BaseDenom, sdk.NewInt(100)),
+	}, ctx.BlockTime().Add(time.Hour*24), types.EpochWithdrawalMemo(259))
+
+	ubr, found := app.InterchainstakingKeeper.GetUnbondingRecord(ctx, zone.ChainId, testVal, 259)
+	// record should be created
+	suite.True(found)
+	suite.Equal(0, len(ubr.RelatedTxhash))
+	suite.Equal(ctx.BlockTime().Add(time.Hour*24), ubr.CompletionTime)
+}
