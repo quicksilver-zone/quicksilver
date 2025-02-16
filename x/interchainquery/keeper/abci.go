@@ -22,7 +22,7 @@ func (k Keeper) EndBlocker(ctx sdk.Context) {
 	// emit events for periodic queries
 	k.IterateQueries(ctx, func(_ int64, queryInfo types.Query) (stop bool) {
 		// if !periodic, and emission was too long ago, delete
-		if !queryInfo.Period.IsNegative() && // not periodic
+		if queryInfo.Period.IsNegative() && // not periodic
 			!queryInfo.LastEmission.IsNil() && // has been emitted
 			!queryInfo.LastEmission.IsZero() && // has been emitted
 			queryInfo.LastEmission.LT(math.NewInt(ctx.BlockHeight()-DefaultTTL)) { // TODO: add per query TTL

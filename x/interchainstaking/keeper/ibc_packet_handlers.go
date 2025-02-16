@@ -560,7 +560,7 @@ func (k *Keeper) HandleMaturedWithdrawals(ctx sdk.Context, zone *types.Zone) err
 
 func (k *Keeper) HandleMaturedUnbondings(ctx sdk.Context) {
 	k.IterateUnbondingRecords(ctx, func(idx int64, record types.UnbondingRecord) bool {
-		if ctx.BlockTime().After(record.CompletionTime) {
+		if ctx.BlockTime().After(record.CompletionTime) && !record.CompletionTime.Equal(time.Time{}) {
 			k.Logger(ctx).Info("found matured unbonding", "chain", record.ChainId, "validator", record.Validator, "epoch", record.EpochNumber, "completion", record.CompletionTime)
 			k.DeleteUnbondingRecord(ctx, record.ChainId, record.Validator, record.EpochNumber)
 		}
@@ -788,6 +788,22 @@ func (k *Keeper) HandleUndelegate(ctx sdk.Context, msg sdk.Msg, completion time.
 	}
 	ubr, found := k.GetUnbondingRecord(ctx, zone.ChainId, undelegateMsg.ValidatorAddress, epochNumber)
 	if !found {
+		if epochNumber >= 258 && epochNumber < 261 {
+			// this is a temporary fix for a bug that occurred in epoch 258-261
+			// where the unbonding record was not found.
+			// we acknowledge the unbonding, and create a stub ubr that has no related txhash.
+			// this means the unbond tx will get rescheduled on the next epoch.
+			k.Logger(ctx).Info("unbonding record for %s not found for epoch %d", undelegateMsg.ValidatorAddress, epochNumber)
+			ubr := types.UnbondingRecord{
+				ChainId:        zone.ChainId,
+				Validator:      undelegateMsg.ValidatorAddress,
+				EpochNumber:    epochNumber,
+				CompletionTime: completion,
+			}
+			k.SetUnbondingRecord(ctx, ubr)
+			k.SetZone(ctx, zone)
+			return nil
+		}
 		return fmt.Errorf("unbonding record for %s not found for epoch %d", undelegateMsg.ValidatorAddress, epochNumber)
 	}
 
@@ -808,13 +824,8 @@ func (k *Keeper) HandleUndelegate(ctx sdk.Context, msg sdk.Msg, completion time.
 		k.UpdateWithdrawalRecordStatus(ctx, &record, types.WithdrawStatusUnbond)
 	}
 
-	ur, found := k.GetUnbondingRecord(ctx, zone.ChainId, undelegateMsg.ValidatorAddress, epochNumber)
-	if !found {
-		return fmt.Errorf("cannot find unbonding record for %s/%s/%d", zone.ChainId, undelegateMsg.ValidatorAddress, epochNumber)
-	}
-
-	ur.CompletionTime = completion
-	k.SetUnbondingRecord(ctx, ur)
+	ubr.CompletionTime = completion
+	k.SetUnbondingRecord(ctx, ubr)
 
 	delAddr, err := addressutils.AccAddressFromBech32(undelegateMsg.DelegatorAddress, "")
 	if err != nil {
