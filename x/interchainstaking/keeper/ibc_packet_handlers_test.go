@@ -5071,12 +5071,12 @@ func (suite *KeeperTestSuite) TestUndelegate_NoRecordEpoch259() {
 	zone, found := app.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 	suite.True(found)
 
-	app.InterchainstakingKeeper.HandleUndelegate(ctx, &stakingtypes.MsgUndelegate{
+	err := app.InterchainstakingKeeper.HandleUndelegate(ctx, &stakingtypes.MsgUndelegate{
 		DelegatorAddress: zone.DelegationAddress.Address,
 		ValidatorAddress: testVal,
 		Amount:           sdk.NewCoin(zone.BaseDenom, sdk.NewInt(100)),
 	}, ctx.BlockTime().Add(time.Hour*24), types.EpochWithdrawalMemo(259))
-
+	suite.NoError(err)
 	ubr, found := app.InterchainstakingKeeper.GetUnbondingRecord(ctx, zone.ChainId, testVal, 259)
 	// record should be created
 	suite.True(found)
