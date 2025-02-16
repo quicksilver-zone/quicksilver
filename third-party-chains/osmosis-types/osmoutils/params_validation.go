@@ -1,6 +1,7 @@
 package osmoutils
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
@@ -22,7 +23,7 @@ func ValidateAddressList(i interface{}) error {
 
 	for _, a := range whitelist {
 		if _, err := addressutils.AccAddressFromBech32(a, ""); err != nil {
-			return fmt.Errorf("invalid address")
+			return errors.New("invalid address")
 		}
 	}
 

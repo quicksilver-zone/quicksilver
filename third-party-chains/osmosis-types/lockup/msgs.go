@@ -1,6 +1,7 @@
 package lockup
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -49,7 +50,7 @@ func (m MsgLockTokens) ValidateBasic() error {
 	}
 
 	if !m.Coins.IsAllPositive() {
-		return fmt.Errorf("cannot lock up a zero or negative amount")
+		return errors.New("cannot lock up a zero or negative amount")
 	}
 
 	return nil
@@ -121,7 +122,7 @@ func (m MsgBeginUnlocking) ValidateBasic() error {
 	}
 
 	if !m.Coins.Empty() && !m.Coins.IsAllPositive() {
-		return fmt.Errorf("cannot unlock a zero or negative amount")
+		return errors.New("cannot unlock a zero or negative amount")
 	}
 
 	return nil
@@ -153,7 +154,7 @@ func (m MsgExtendLockup) ValidateBasic() error {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid owner address (%s)", err)
 	}
 	if m.ID == 0 {
-		return fmt.Errorf("id is empty")
+		return errors.New("id is empty")
 	}
 	if m.Duration <= 0 {
 		return fmt.Errorf("duration should be positive: %d < 0", m.Duration)

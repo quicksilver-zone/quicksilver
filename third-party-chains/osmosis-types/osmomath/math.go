@@ -1,6 +1,7 @@
 package osmomath
 
 import (
+	"errors"
 	"fmt"
 )
 
@@ -57,12 +58,12 @@ func Pow(base Dec, exp Dec) Dec {
 	// (And would have to implement complex logarithms)
 	// We don't have a need for negative bases, so we don't include any such logic.
 	if !base.IsPositive() {
-		panic(fmt.Errorf("base must be greater than 0"))
+		panic(errors.New("base must be greater than 0"))
 	}
 	// TODO: Remove this if we want to generalize the function,
 	// we can adjust the algorithm in this setting.
 	if base.GTE(two) {
-		panic(fmt.Errorf("base must be lesser than two"))
+		panic(errors.New("base must be lesser than two"))
 	}
 
 	// We will use an approximation algorithm to compute the power.
@@ -86,7 +87,7 @@ func Pow(base Dec, exp Dec) Dec {
 // 0 <= exp < 1.
 func PowApprox(originalBase Dec, exp Dec, precision Dec) Dec {
 	if !originalBase.IsPositive() {
-		panic(fmt.Errorf("base must be greater than 0"))
+		panic(errors.New("base must be greater than 0"))
 	}
 
 	if exp.IsZero() {

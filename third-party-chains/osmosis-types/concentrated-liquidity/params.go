@@ -1,6 +1,7 @@
 package concentrated_liquidity
 
 import (
+	"errors"
 	fmt "fmt"
 	"time"
 
@@ -119,7 +120,7 @@ func validateTicks(i interface{}) error {
 	// and not being able to reach max and min ticks.
 	for _, tickSpacing := range authorizedTickSpacing {
 		if tickSpacing == 0 {
-			return fmt.Errorf("tick spacing cannot be zero")
+			return errors.New("tick spacing cannot be zero")
 		}
 
 		tickSpacingInt64 := int64(tickSpacing)
@@ -172,7 +173,7 @@ func validateAuthorizedQuoteDenoms(i interface{}) error {
 	}
 
 	if len(authorizedQuoteDenoms) == 0 {
-		return fmt.Errorf("authorized quote denoms cannot be empty")
+		return errors.New("authorized quote denoms cannot be empty")
 	}
 
 	for _, denom := range authorizedQuoteDenoms {
@@ -228,7 +229,7 @@ func validateAuthorizedUptimes(i interface{}) error {
 	}
 
 	if len(authorizedUptimes) == 0 {
-		return fmt.Errorf("authorized uptimes cannot be empty")
+		return errors.New("authorized uptimes cannot be empty")
 	}
 
 	// Check if each passed in uptime is in the list of supported uptimes
