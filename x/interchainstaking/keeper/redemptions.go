@@ -372,7 +372,7 @@ WITHDRAWAL:
 				vidx++
 				v = valopers[vidx]
 			} else if !amountToWithdrawPerWithdrawal[hash].IsZero() {
-				return nil, nil, nil, fmt.Errorf("unable to satisfy unbonding")
+				return nil, nil, nil, errors.New("unable to satisfy unbonding")
 			}
 		}
 	}

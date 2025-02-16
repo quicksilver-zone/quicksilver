@@ -168,7 +168,7 @@ func validateNonNegativeDec(i interface{}) error {
 	}
 
 	if dec.IsNil() {
-		return fmt.Errorf("invalid (nil) parameter value")
+		return errors.New("invalid (nil) parameter value")
 	}
 
 	if dec.IsNegative() {

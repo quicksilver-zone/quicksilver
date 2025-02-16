@@ -1506,7 +1506,7 @@ func (suite *KeeperTestSuite) TestHandleFailedUndelegate() {
 func makeAckForMsgs(ctx sdk.Context, cdc codec.Codec, msgs []sdk.Msg, success bool) (channeltypes.Acknowledgement, error) {
 	// If the operation was not successful, return an error acknowledgement
 	if !success {
-		return channeltypes.NewErrorAcknowledgement(fmt.Errorf("an error happened")), nil
+		return channeltypes.NewErrorAcknowledgement(errors.New("an error happened")), nil
 	}
 
 	// Initialize an empty TxMsgData object to hold the responses

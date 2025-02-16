@@ -1,6 +1,7 @@
 package types
 
 import (
+	"errors"
 	"fmt"
 
 	"cosmossdk.io/math"
@@ -82,7 +83,7 @@ func DetermineAllocationsForUndelegation(currentAllocations map[string]math.Int,
 	}
 
 	if input.IsNegative() {
-		return map[string]math.Int{}, fmt.Errorf("input is unexpectedly negative (1), aborting")
+		return map[string]math.Int{}, errors.New("input is unexpectedly negative (1), aborting")
 	}
 
 	// negate all values in underallocated.
@@ -133,7 +134,7 @@ func DetermineAllocationsForUndelegation(currentAllocations map[string]math.Int,
 	}
 
 	if input.IsNegative() {
-		return map[string]math.Int{}, fmt.Errorf("input is unexpectedly negative (2), aborting")
+		return map[string]math.Int{}, errors.New("input is unexpectedly negative (2), aborting")
 	}
 
 	// equalSplit is the portion of input that should be distributed across all validators proportion to intent, once targets are met.
@@ -177,7 +178,7 @@ func DetermineAllocationsForUndelegation(currentAllocations map[string]math.Int,
 		return map[string]math.Int{}, fmt.Errorf("outSum (%s) is unexpectedly greater than the input amount (%s), aborting", outSum.String(), amount[0].Amount.String())
 	}
 	if input.IsNegative() {
-		return map[string]math.Int{}, fmt.Errorf("input is unexpectedly negative (2), aborting")
+		return map[string]math.Int{}, errors.New("input is unexpectedly negative (2), aborting")
 	}
 
 	// dust is the portion of the input that was truncated in previous calculations; add this to the first validator in the list,

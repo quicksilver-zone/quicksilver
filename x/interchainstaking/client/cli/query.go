@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -452,7 +453,7 @@ func GetZoneValidatorsCmd() *cobra.Command {
 
 			chainID := args[0]
 			if chainID == "" {
-				return fmt.Errorf("chain-id cannot be empty")
+				return errors.New("chain-id cannot be empty")
 			}
 			req := &types.QueryZoneValidatorsRequest{
 				ChainId: chainID,

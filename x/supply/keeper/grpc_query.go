@@ -2,7 +2,7 @@ package keeper
 
 import (
 	"context"
-	"fmt"
+	"errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -42,7 +42,7 @@ func (q Querier) Supply(c context.Context, _ *types.QuerySupplyRequest) (*types.
 
 		return &types.QuerySupplyResponse{Supply: supply.Amount, CirculatingSupply: circulatingSupply}, nil
 	}
-	return nil, fmt.Errorf("endpoint disabled")
+	return nil, errors.New("endpoint disabled")
 }
 
 func (q Querier) TopN(c context.Context, req *types.QueryTopNRequest) (*types.QueryTopNResponse, error) {
@@ -54,5 +54,5 @@ func (q Querier) TopN(c context.Context, req *types.QueryTopNRequest) (*types.Qu
 
 		return &types.QueryTopNResponse{Accounts: accounts}, nil
 	}
-	return nil, fmt.Errorf("endpoint disabled")
+	return nil, errors.New("endpoint disabled")
 }

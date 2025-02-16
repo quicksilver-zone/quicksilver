@@ -70,7 +70,7 @@ func (k *Keeper) CalcTokenValues(ctx sdk.Context) (TokenValues, error) {
 		}
 
 		if pool.PoolData == nil {
-			errs[idxLabel] = fmt.Errorf("pool data is nil, awaiting OsmosisPoolUpdateCallback")
+			errs[idxLabel] = errors.New("pool data is nil, awaiting OsmosisPoolUpdateCallback")
 			return false
 		}
 		gammPool, err := pool.GetPool()
@@ -131,7 +131,7 @@ func (k *Keeper) CalcTokenValues(ctx sdk.Context) (TokenValues, error) {
 		}
 
 		if pool.PoolData == nil {
-			errs[idxLabel] = fmt.Errorf("pool data is nil, awaiting OsmosisClPoolUpdateCallback")
+			errs[idxLabel] = errors.New("pool data is nil, awaiting OsmosisClPoolUpdateCallback")
 			return false
 		}
 		clPool, err := pool.GetPool()
