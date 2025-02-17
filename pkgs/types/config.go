@@ -6,6 +6,7 @@ import (
 
 type Config struct {
 	BindPort    int               `yaml:"bind_port"`
+	Timeout     int               `yaml:"timeout"`
 	SourceChain string            `yaml:"source_chain"`
 	SourceLcd   string            `yaml:"source_lcd"`
 	Chains      map[string]string `yaml:"chains"`

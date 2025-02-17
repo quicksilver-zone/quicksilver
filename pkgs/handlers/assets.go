@@ -24,6 +24,8 @@ func GetAssetsHandler(
 		errors := make(map[string]error)
 		vars := mux.Vars(req)
 
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Content-Type", "application/json")
 		response := &types.Response{
 			Messages: make([]prewards.MsgSubmitClaim, 0),
 			Assets:   make(map[string][]types.Asset),
@@ -59,11 +61,22 @@ func GetAssetsHandler(
 			go func() {
 				defer wg.Done()
 				fmt.Println("fetch osmosis claim for ", vars["address"])
-				messages, assets, err := claims.OsmosisClaim(ctx, cfg, cacheMgr, vars["address"], vars["address"], chain, heights[chain])
-				if err != nil {
-					errors["OsmosisClaim"] = err
+				result := claims.OsmosisClaim(ctx, cfg, cacheMgr, vars["address"], vars["address"], chain, heights[chain]) // return OsmosisResult{OsmosisPool{msg, assets, err}, OsmosisClPool{msg, assets, err}}
+				if result.Err != nil {
+					errors["OsmosisClaim"] = result.Err
 				}
-				response.Update(messages, assets, "osmosispool")
+				if result.OsmosisPool.Err != nil {
+					errors["OsmosisPoolClaim"] = result.OsmosisPool.Err
+				}
+				if result.OsmosisClPool.Err != nil {
+					errors["OsmosisClPoolClaim"] = result.OsmosisClPool.Err
+				}
+				if result.OsmosisPool.Msg != nil {
+					response.Update(result.OsmosisPool.Msg, result.OsmosisPool.Assets, "osmosispool")
+				}
+				if result.OsmosisClPool.Msg != nil {
+					response.Update(result.OsmosisClPool.Msg, result.OsmosisClPool.Assets, "osmosisclpool")
+				}
 			}()
 
 			if mappedAddress, ok := mappedAddresses[chain]; ok {
@@ -71,11 +84,22 @@ func GetAssetsHandler(
 				go func() {
 					defer wg.Done()
 					fmt.Println("fetch osmosis claim for mapped account", mappedAddress)
-					messages, assets, err := claims.OsmosisClaim(ctx, cfg, cacheMgr, mappedAddress, vars["address"], chain, heights[chain])
-					if err != nil {
-						errors["OsmosisClaim"] = err
+					result := claims.OsmosisClaim(ctx, cfg, cacheMgr, mappedAddress, vars["address"], chain, heights[chain])
+					if result.Err != nil {
+						errors["OsmosisClaim"] = result.Err
 					}
-					response.Update(messages, assets, "osmosispool")
+					if result.OsmosisPool.Err != nil {
+						errors["OsmosisPoolClaim"] = result.OsmosisPool.Err
+					}
+					if result.OsmosisClPool.Err != nil {
+						errors["OsmosisClPoolClaim"] = result.OsmosisClPool.Err
+					}
+					if result.OsmosisPool.Msg != nil {
+						response.Update(result.OsmosisPool.Msg, result.OsmosisPool.Assets, "osmosispool")
+					}
+					if result.OsmosisClPool.Msg != nil {
+						response.Update(result.OsmosisClPool.Msg, result.OsmosisClPool.Assets, "osmosisclpool")
+					}
 				}()
 			}
 		}

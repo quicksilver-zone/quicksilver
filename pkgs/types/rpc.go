@@ -2,11 +2,13 @@ package types
 
 import (
 	"fmt"
+	"log"
 	"sync"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ingenuity-build/multierror"
+	"github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
 	prewards "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 	tmhttp "github.com/tendermint/tendermint/rpc/client/http"
 	libclient "github.com/tendermint/tendermint/rpc/jsonrpc/client"
@@ -37,13 +39,21 @@ func (response *Response) Update(messages map[string]prewards.MsgSubmitClaim, as
 	defer m.Unlock()
 
 	for _, message := range messages {
-		fmt.Println("Adding message: ", message)
-
+		if message.ClaimType == types.ClaimTypeUndefined {
+			log.Default().Println("ERROR: skipping message with undefined claim: ", message)
+			continue
+		}
+		fmt.Printf("adding message. claim_type: %s, zone: %s, src_zone: %s, user_address: %s\n", message.ClaimType, message.Zone, message.SrcZone, message.UserAddress)
 		response.Messages = append(response.Messages, message)
+
 	}
 
 	for chainID, asset := range assets {
-		fmt.Println("Adding asset: ", chainID, asset)
+		if asset.IsZero() {
+			log.Default().Printf("ERROR: skipping asset with no value: chain_id: %s, asset: %s\n", chainID, asset)
+			continue
+		}
+		fmt.Printf("Adding asset: chain_id: %s, asset: %s\n", chainID, asset)
 		response.Assets[chainID] = append(response.Assets[chainID], Asset{Type: assetType, Amount: asset})
 	}
 }

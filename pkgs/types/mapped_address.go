@@ -17,7 +17,7 @@ import (
 
 func GetMappedAddresses(ctx context.Context, address string, connections []prewards.ConnectionProtocolData, config *Config) (map[string]string, error) {
 	host := config.Chains[config.SourceChain]
-	client, err := NewRPCClient(host, 30*time.Second)
+	client, err := NewRPCClient(host, time.Duration(config.Timeout)*time.Second)
 	if err != nil {
 		return nil, err
 	}

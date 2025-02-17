@@ -77,7 +77,7 @@ func LiquidClaim(
 		return nil, nil, nil
 	}
 
-	client, err := types.NewRPCClient(host, 30*time.Second)
+	client, err := types.NewRPCClient(host, time.Duration(cfg.Timeout)*time.Second)
 	if err != nil {
 		return nil, nil, fmt.Errorf("%w [NewRPCClient]", err)
 	}

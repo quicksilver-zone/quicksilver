@@ -53,7 +53,7 @@ func UmeeClaim(
 	}
 	fmt.Printf("found %q in config for %q...\n", host, chain)
 
-	client, err := types.NewRPCClient(host, 30*time.Second)
+	client, err := types.NewRPCClient(host, time.Duration(cfg.Timeout)*time.Second)
 	if err != nil {
 		return nil, nil, err
 	}
