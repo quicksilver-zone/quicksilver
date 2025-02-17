@@ -62,7 +62,7 @@ var (
 	ctx                   = context.Background()
 	sendQueue             = make(chan Message)
 	cache                 *ristretto.Cache
-	LastReduced           time.Time
+	LastReduced           = time.Now()
 
 	// Variables used for retries
 	RtyAttNum = uint(5)
@@ -75,7 +75,7 @@ func Run(ctx context.Context, cfg *types.Config, errHandler func(error)) error {
 
 	MaxTxMsgs = cfg.MaxMsgsPerTx
 	if MaxTxMsgs == 0 {
-		MaxTxMsgs = 40
+		MaxTxMsgs = 30
 	}
 	TxMsgs = MaxTxMsgs
 
@@ -411,10 +411,15 @@ func doRequest(cfg *types.Config, query Query, logger log.Logger, metrics promme
 			_ = logger.Log("msg", "Error: Failed in Unmarshalling Request", "type", query.Type, "id", query.QueryId, "height", query.Height)
 			return
 		}
+
 		request.OrderBy = txtypes.OrderBy_ORDER_BY_DESC
 		request.Limit = 200
 		request.Pagination.Limit = 200
-		request.Query = request.Events[0]
+		// temporary fix, until we release quicksilverd with message.action statement
+ 		// then revert to request.Query = strings.Join(" AND ", request.Events)
+		// or should v0.47 happen first, check for remaining 0.46 chains, else remove support.
+		request.Query = request.Events[0] + " AND message.action='/cosmos.bank.v1beta.MsgSend'"
+		request.Events = append(request.Events, "message.action='/cosmos.bank.v1beta.MsgSend'")
 
 		query.Request, err = cfg.ProtoCodec.Marshal(&request)
 		if err != nil {
@@ -647,7 +652,7 @@ func flush(cfg *types.Config, toSend []Message, logger log.Logger, metrics promm
 			case code == 19:
 				_ = logger.Log("msg", "Tx already in mempool")
 			case strings.Contains(err.Error(), "request body too large"):
-				TxMsgs = TxMsgs / 4 * 3
+				TxMsgs = max(1, TxMsgs * 3 / 4)
 				LastReduced = time.Now()
 				_ = logger.Log("msg", "body too large: reduced batchsize", "size", TxMsgs)
 			case strings.Contains(err.Error(), "failed to execute message"):
