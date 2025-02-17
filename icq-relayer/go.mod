@@ -211,5 +211,4 @@ replace (
 	github.com/evmos/ethermint => github.com/evmos/ethermint v0.22.0
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	github.com/tendermint/tendermint => github.com/cometbft/cometbft v0.34.33
-	github.com/quicksilver-zone/quicksilver => ../
 )

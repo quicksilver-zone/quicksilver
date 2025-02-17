@@ -10,11 +10,9 @@ ldflags = -X github.com/quicksilver-zone/quicksilver/icq-relayer/pkg/runner.VERS
 
 build:
 	go build -ldflags '$(ldflags)'
-docker:
-	docker build -f Dockerfile . -t quicksilverzone/interchain-queries:$(VERSION) --build-arg VERSION=$(VERSION) --build-arg COMMIT=$(COMMIT)
 
-dockerx:
-	docker buildx build --platform linux/amd64 -f Dockerfile . -t quicksilverzone/interchain-queries:$(VERSION)
+docker:
+	docker buildx build --platform linux/amd64 -f Dockerfile . -t quicksilverzone/interchain-queries:$(VERSION) --build-arg VERSION=$(VERSION) --build-arg COMMIT=$(COMMIT)
 
 docker-push:
 	docker push quicksilverzone/interchain-queries:$(VERSION)
