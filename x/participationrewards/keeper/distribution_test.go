@@ -270,3 +270,68 @@ var prodPDString = `[
 var prodPDString2 = `[
 	{"PoolID":1590,"PoolName":"qOSMO/OSMO","LastUpdated":"2024-06-29T17:01:08.083152922Z","PoolData":{"address":"osmo1ww5567k7ya8g2rzfft30mgdqwy6jyfqfl60805kclwc3x44qzp6qgd3d3r","incentives_address":"osmo1e0wfxnfrzg50wkeyakg2qxjf4fw9lrtx88grlhuw9n2ajm2sth2sdpg9ky","spread_rewards_address":"osmo1e9grc4jp9jzwqqxy6cv6ypkkytyae50wygc9zsj3w5040a3yq4es6z09q7","id":1590,"current_tick_liquidity":"987929067650.598626855339345890","token0":"ibc/42D24879D4569CE6477B7E88206ADBFE47C222C6CAD51A54083E4A72594269FC","token1":"uosmo","current_sqrt_price":"1.102849323600434041469545632253046567","current_tick":216276,"tick_spacing":100,"exponent_at_price_one":-6,"spread_factor":"0.000500000000000000","last_liquidity_update":"2024-09-16T11:42:46.811999582Z"}, "Denoms":{"ibc/42D24879D4569CE6477B7E88206ADBFE47C222C6CAD51A54083E4A72594269FC":{"Denom":"uqosmo","ChainID":"osmosis-1"},"uosmo":{"Denom":"uosmo","ChainID":"osmosis-1"}},"IsIncentivized":true}
 ]`
+
+var prodPDStringMultiCL = `[
+	{"PoolID":1464,"PoolName":"USDC/OSMO","LastUpdated":"2024-06-29T17:01:08.083152922Z","PoolData":{"address":"osmo13vhcd3xllpvz8tql4dzp8yszxeas8zxpzptyvjttdy7m64kuyz5sv6caqq","incentives_address":"osmo1wsfhgwgvpylkcde80vzyry3dt2vhkah83ctqc23r8780vujsxvdq952del","spread_rewards_address":"osmo1zdze9lvalg9x6zj9u4vzrsyjljnmgp46kwcelzz4eqddsqk8uecsrxwmcv","id":1464,"current_tick_liquidity":"129078009529296.719773219874633244","token0":"uosmo","token1":"ibc/498A0751C798A0D9A389AA3691123DADA57DAA4FE165D5C75894505B876BA6E4","current_sqrt_price":"0.557616705830189281239597214228869685","current_tick":-6890637,"tick_spacing":100,"exponent_at_price_one":-6,"spread_factor":"0.000100000000000000","last_liquidity_update":"2025-02-14T12:55:26.825007462Z"}, "Denoms":{"ibc/498A0751C798A0D9A389AA3691123DADA57DAA4FE165D5C75894505B876BA6E4":{"Denom":"uusdc","ChainID":"noble-1"},"uosmo":{"Denom":"uosmo","ChainID":"osmosis-1"}},"IsIncentivized":true}
+]`
+
+var prodPDStringMultiBal = `[
+	{"PoolID":1375,"PoolName":"ARCH/USDC","LastUpdated":"2024-06-29T17:01:08.083152922Z","PoolData":{"address":"osmo10dfhtg23am39tdnhnfrnxmcaqqekp6ml6m7yd8fxf3y5m5m58uls8lm3j9","id":1375,"pool_params":{"swap_fee":"0.002000000000000000","exit_fee":"0.000000000000000000","smooth_weight_change_params":null},"future_pool_governor":"24h","total_shares":{"denom":"gamm/pool/1375","amount":"395161442348370816494"},"pool_assets":[{"token":{"denom":"ibc/23AB778D694C1ECFC59B91D8C399C115CC53B0BD1C61020D8E19519F002BDD85","amount":"926122549577757019795975"},"weight":"536870912000000"},{"token":{"denom":"ibc/498A0751C798A0D9A389AA3691123DADA57DAA4FE165D5C75894505B876BA6E4","amount":"14146096669"},"weight":"536870912000000"}],"total_weight":"1073741824000000"}, "Denoms":{"ibc/498A0751C798A0D9A389AA3691123DADA57DAA4FE165D5C75894505B876BA6E4":{"Denom":"uusdc","ChainID":"noble-1"},"ibc/23AB778D694C1ECFC59B91D8C399C115CC53B0BD1C61020D8E19519F002BDD85":{"Denom":"aarch","ChainID":"archway-1"}},"IsIncentivized":false}
+]`
+
+// check deriving price of X via intermediary pools
+// calculate price of aarch when we have no direct osmo/arch pool
+func (suite *KeeperTestSuite) TestCalcTokenValuesPoolsMultihop() {
+	qs := suite.GetQuicksilverApp(suite.chainA)
+	ctx := suite.chainA.GetContext()
+	osmoParams := types.OsmosisParamsProtocolData{
+		ChainID:   "osmosis-1",
+		BaseDenom: "uosmo",
+		BaseChain: "osmosis-1",
+	}
+	osmoParamsJSON, err := json.Marshal(osmoParams)
+	suite.NoError(err)
+	data := types.ProtocolData{
+		Type: types.ProtocolDataType_name[int32(types.ProtocolDataTypeOsmosisParams)],
+		Data: osmoParamsJSON,
+	}
+	qs.ParticipationRewardsKeeper.SetProtocolData(ctx, osmoParams.GenerateKey(), &data)
+
+	pools := []types.OsmosisPoolProtocolData{}
+	err = json.Unmarshal([]byte(prodPDStringMultiBal), &pools)
+	suite.NoError(err)
+	for _, pool := range pools {
+		poolJSON, err := json.Marshal(pool)
+		suite.NoError(err)
+		data := types.ProtocolData{
+			Type: types.ProtocolDataType_name[int32(types.ProtocolDataTypeOsmosisPool)],
+			Data: poolJSON,
+		}
+		qs.ParticipationRewardsKeeper.SetProtocolData(ctx, pool.GenerateKey(), &data)
+	}
+
+	clpools := []types.OsmosisClPoolProtocolData{}
+	err = json.Unmarshal([]byte(prodPDStringMultiCL), &clpools)
+	suite.NoError(err)
+	for _, pool := range clpools {
+		poolJSON, err := json.Marshal(pool)
+		suite.NoError(err)
+		data := types.ProtocolData{
+			Type: types.ProtocolDataType_name[int32(types.ProtocolDataTypeOsmosisCLPool)],
+			Data: poolJSON,
+		}
+		qs.ParticipationRewardsKeeper.SetProtocolData(ctx, pool.GenerateKey(), &data)
+	}
+
+	tvs, err := qs.ParticipationRewardsKeeper.CalcTokenValues(ctx)
+	suite.NoError(err)
+	expected := map[string]sdk.Dec{
+		"aarch": sdk.MustNewDecFromStr("0.000000000000049126"),
+		"uusdc": sdk.MustNewDecFromStr("3.216091876550989897"),
+		"uosmo": sdk.MustNewDecFromStr("1.000000000000000000"),
+	}
+
+	for denom, expectedValue := range expected {
+		suite.Equal(tvs[denom], expectedValue)
+	}
+}
