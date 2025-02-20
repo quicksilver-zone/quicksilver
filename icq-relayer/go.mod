@@ -12,9 +12,9 @@ require (
 	github.com/go-kit/log v0.2.1
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/prometheus/client_golang v1.20.5
-	github.com/quicksilver-zone/quicksilver v1.7.6
+	github.com/quicksilver-zone/quicksilver v1.7.7
 	github.com/rs/zerolog v1.33.0
-	github.com/spf13/cobra v1.8.1
+	github.com/spf13/cobra v1.9.1
 	github.com/spf13/viper v1.19.0
 	github.com/tendermint/tendermint v0.34.33
 )
