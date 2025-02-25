@@ -417,6 +417,7 @@ func doRequest(cfg *types.Config, query Query, logger log.Logger, metrics promme
 		request.OrderBy = txtypes.OrderBy_ORDER_BY_DESC
 		request.Limit = cfg.MaxTxsPerQuery
 		request.Pagination.Limit = cfg.MaxTxsPerQuery
+		request.Query = request.Events[0]
 
 		query.Request, err = cfg.ProtoCodec.Marshal(&request)
 		if err != nil {
