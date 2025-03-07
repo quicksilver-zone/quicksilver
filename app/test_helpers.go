@@ -7,14 +7,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto/secp256k1"
-	"github.com/tendermint/tendermint/libs/log"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	tmtypes "github.com/tendermint/tendermint/types"
-	dbm "github.com/tendermint/tm-db"
-
+	dbm "github.com/cometbft/cometbft-db"
+	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cometbft/cometbft/crypto/secp256k1"
+	"github.com/cometbft/cometbft/libs/log"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	tmtypes "github.com/cometbft/cometbft/types"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	cosmossecp256k1 "github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -23,8 +21,8 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-
-	ibctesting "github.com/cosmos/ibc-go/v6/testing"
+	ibctesting "github.com/cosmos/ibc-go/v7/testing"
+	"github.com/stretchr/testify/require"
 )
 
 // EmptyAppOptions is a stub implementing AppOptions.
@@ -37,22 +35,22 @@ func (EmptyAppOptions) Get(_ string) interface{} {
 
 // DefaultConsensusParams defines the default Tendermint consensus params used in
 // Quicksilver testing.
-var DefaultConsensusParams = &abci.ConsensusParams{
-	Block: &abci.BlockParams{
-		MaxBytes: 200000,
-		MaxGas:   -1, // no limit
-	},
-	Evidence: &tmproto.EvidenceParams{
-		MaxAgeNumBlocks: 302400,
-		MaxAgeDuration:  504 * time.Hour, // 3 weeks is the max duration
-		MaxBytes:        10000,
-	},
-	Validator: &tmproto.ValidatorParams{
-		PubKeyTypes: []string{
-			tmtypes.ABCIPubKeyTypeEd25519,
-		},
-	},
-}
+// var DefaultConsensusParams = &abci.ConsensusParams{
+// 	Block: &abci.BlockParams{
+// 		MaxBytes: 200000,
+// 		MaxGas:   -1, // no limit
+// 	},
+// 	Evidence: &tmproto.EvidenceParams{
+// 		MaxAgeNumBlocks: 302400,
+// 		MaxAgeDuration:  504 * time.Hour, // 3 weeks is the max duration
+// 		MaxBytes:        10000,
+// 	},
+// 	Validator: &tmproto.ValidatorParams{
+// 		PubKeyTypes: []string{
+// 			tmtypes.ABCIPubKeyTypeEd25519,
+// 		},
+// 	},
+// }
 
 // Setup initializes a new Quicksilver. A Nop logger is set in Quicksilver.
 func Setup(t *testing.T, isCheckTx bool) *Quicksilver {
@@ -106,10 +104,10 @@ func Setup(t *testing.T, isCheckTx bool) *Quicksilver {
 		// Initialize the chain
 		app.InitChain(
 			abci.RequestInitChain{
-				ChainId:         "mercury-1",
-				Validators:      []abci.ValidatorUpdate{},
-				ConsensusParams: DefaultConsensusParams,
-				AppStateBytes:   stateBytes,
+				ChainId:    "mercury-1",
+				Validators: []abci.ValidatorUpdate{},
+				//ConsensusParams: DefaultConsensusParams,
+				AppStateBytes: stateBytes,
 			},
 		)
 	}
@@ -206,7 +204,7 @@ func GenesisStateWithValSet(
 	})
 
 	// update total supply
-	bankGenesis := banktypes.NewGenesisState(banktypes.DefaultGenesisState().Params, balances, totalSupply, []banktypes.Metadata{})
+	bankGenesis := banktypes.NewGenesisState(banktypes.DefaultGenesisState().Params, balances, totalSupply, []banktypes.Metadata{}, []banktypes.SendEnabled{})
 	genesisState[banktypes.ModuleName] = app.AppCodec().MustMarshalJSON(bankGenesis)
 
 	return genesisState

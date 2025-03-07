@@ -2,15 +2,14 @@ package keeper_test
 
 import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/simapp"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 )
 
-var PKs = simapp.CreateTestPubKeys(10)
+var PKs = simtestutil.CreateTestPubKeys(10)
 
 func (suite *KeeperTestSuite) TestStoreGetDeleteValidator() {
 	suite.Run("validator - store / get / delete", func() {

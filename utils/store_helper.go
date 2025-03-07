@@ -4,11 +4,10 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/gogo/protobuf/proto"
-	db "github.com/tendermint/tm-db"
-
+	db "github.com/cometbft/cometbft-db"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/gogo/protobuf/proto"
 )
 
 func GatherAllKeysFromStore(storeObj store.KVStore) []string {

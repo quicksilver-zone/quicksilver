@@ -4,9 +4,9 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/cometbft/cometbft/crypto/merkle"
+	tmbytes "github.com/cometbft/cometbft/libs/bytes"
 	tmproto "github.com/quicksilver-zone/quicksilver/third-party-chains/celestia-types/proto-types"
-	"github.com/tendermint/tendermint/crypto/merkle"
-	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 )
 
 // RowProof is a Merkle proof that a set of rows exist in a Merkle tree with a
