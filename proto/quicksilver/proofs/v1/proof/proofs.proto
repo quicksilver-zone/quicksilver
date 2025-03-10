@@ -1,7 +1,7 @@
 syntax = "proto3";
 package quicksilver.proofs.v1.proof;
 
-import "celestia/proof.proto";
+import "celestia/core/v1/proof/proof.proto";
 import "tendermint/crypto/proof.proto";
 import "tendermint/types/types.proto";
 
