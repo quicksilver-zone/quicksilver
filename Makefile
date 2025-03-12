@@ -424,43 +424,30 @@ mdlint-fix:
 ###                                Protobuf                                 ###
 ###############################################################################
 
-BUF_VERSION=1.50.0
+protoVer=0.15.0
+protoImageName=ghcr.io/cosmos/proto-builder:$(protoVer)
+protoImage=$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(protoImageName)
 
-proto-all: proto-gen
+proto-all: proto-format proto-lint proto-gen
 
-proto-gen: proto-format
+proto-gen: 
 	@echo "🤖 Generating code from protobuf..."
-	@$(DOCKER) run --rm --volume "$(PWD)":/workspace --workdir /workspace \
-		quicksilver-proto sh ./proto/generate.sh
+	@$(protoImage) sh ./proto/proto-gen.sh
 	@echo "✅ Completed code generation!"
 
 proto-lint:
 	@echo "🤖 Running protobuf linter..."
-	@$(DOCKER) run --volume "$(PWD)":/workspace --workdir /workspace \
-		bufbuild/buf:$(BUF_VERSION) lint
+	@$(protoImage) buf lint
 	@echo "✅ Completed protobuf linting!"
 
 proto-format:
 	@echo "🤖 Running protobuf format..."
-	@$(DOCKER) run --volume "$(PWD)":/workspace --workdir /workspace \
-		bufbuild/buf:$(BUF_VERSION) format -w
+	@$(protoImage) buf format -w
 	@echo "✅ Completed protobuf format!"
 
 proto-breaking-check:
-	@echo "🤖 Running protobuf breaking check against develop branch..."
-	@$(DOCKER) run --volume "$(PWD)":/workspace --workdir /workspace \
-		bufbuild/buf:$(BUF_VERSION) breaking --against '.git#branch=develop'
+	@echo "🤖 Running protobuf breaking check against main branch..."
+	@$(protoImage) buf breaking --against '.git#branch=main'
 	@echo "✅ Completed protobuf breaking check!"
 
-# proto-setup:
-#	@echo "🤖 Setting up protobuf environment..."
-#	@$(DOCKER) build --rm --tag quicksilver-proto:latest --file proto/Dockerfile .
-#	@echo "✅ Setup protobuf environment!"
-
-### Other tools
-.PHONY: hermes-build
-
-hermes-build:
-	docker buildx build --platform linux/amd64 --build-arg VERSION=$HERMES_VERSION -f Dockerfile.hermes . -t quicksilverzone/hermes:$HERMES_VERSION
-	docker push quicksilverzone/hermes:$HERMES_VERSION
 
