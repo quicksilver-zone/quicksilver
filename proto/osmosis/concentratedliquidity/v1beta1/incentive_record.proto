@@ -2,12 +2,11 @@ syntax = "proto3";
 package osmosis.concentratedliquidity.v1beta1;
 
 import "cosmos/base/v1beta1/coin.proto";
-import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 
-option go_package = "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/concentrated-liquidity";
+option go_package = "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/concentrated-liquidity/types";
 
 // IncentiveRecord is the high-level struct we use to deal with an independent
 // incentive being distributed on a pool. Note that PoolId, Denom, and MinUptime

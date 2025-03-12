@@ -7,8 +7,8 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 
-	types "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/gamm"
-	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/osmomath"
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/gamm/types"
 )
 
 // subPoolAssetWeights subtracts the weights of two different pool asset slices.
@@ -107,8 +107,8 @@ func solveConstantFunctionInvariant(
 
 	// amountY = balanceY * (1 - (y ^ weightRatio))
 	yToWeightRatio := osmomath.Pow(y, weightRatio)
-	paranthetical := osmomath.OneDec().Sub(yToWeightRatio)
-	amountY := tokenBalanceUnknownBefore.Mul(paranthetical)
+	paranthetical := oneDec.Sub(yToWeightRatio)
+	amountY := paranthetical.MulMut(tokenBalanceUnknownBefore)
 	return amountY
 }
 

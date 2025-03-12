@@ -4,16 +4,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/msgservice"
-
-	types "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/concentrated-liquidity"
-	poolmanagertypes "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/poolmanager"
+	types "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/concentrated-liquidity/types"
+	poolmanagertypes "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/poolmanager/types"
 )
 
 func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&Pool{}, "osmosis/cl-pool", nil)
-	cdc.RegisterConcrete(&MsgCreateConcentratedPool{}, "osmosis/cl-create-pool", nil)
 }
 
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
@@ -29,15 +25,5 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&Pool{},
 	)
 
-	registry.RegisterImplementations(
-		(*sdk.Msg)(nil),
-		&MsgCreateConcentratedPool{},
-	)
-
-	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
+	//msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }
-
-var (
-	amino     = codec.NewLegacyAmino()
-	ModuleCdc = codec.NewAminoCodec(amino)
-)

@@ -11,7 +11,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/gamm/pool-models/stableswap"
-	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/poolmanager"
+	poolmanager "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/poolmanager/types"
 	"github.com/quicksilver-zone/quicksilver/utils"
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"

@@ -6,9 +6,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/math"
 
-	types "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/gamm"
-	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/osmomath"
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/gamm/types"
 )
 
 const errMsgFormatSharesLargerThanMax = "cannot exit all shares in a pool. Attempted to exit %s shares, max allowed is %s"
@@ -25,7 +26,7 @@ func CalcExitPool(ctx sdk.Context, pool types.CFMMPoolI, exitingShares osmomath.
 	var refundedShares osmomath.Dec
 	if !exitFee.IsZero() {
 		// exitingShares * (1 - exit fee)
-		oneSubExitFee := osmomath.OneDec().Sub(exitFee)
+		oneSubExitFee := osmomath.OneDec().SubMut(exitFee)
 		refundedShares = oneSubExitFee.MulIntMut(exitingShares)
 	} else {
 		refundedShares = exitingShares.ToLegacyDec()
@@ -33,8 +34,8 @@ func CalcExitPool(ctx sdk.Context, pool types.CFMMPoolI, exitingShares osmomath.
 
 	shareOutRatio := refundedShares.QuoInt(totalShares)
 	// exitedCoins = shareOutRatio * pool liquidity
-	exitedCoins := sdk.Coins{}
 	poolLiquidity := pool.GetTotalPoolLiquidity(ctx)
+	exitedCoins := make(sdk.Coins, 0, len(poolLiquidity))
 
 	for _, asset := range poolLiquidity {
 		// round down here, due to not wanting to over-exit
@@ -45,10 +46,74 @@ func CalcExitPool(ctx sdk.Context, pool types.CFMMPoolI, exitingShares osmomath.
 		if exitAmt.GTE(asset.Amount) {
 			return sdk.Coins{}, errors.New("too many shares out")
 		}
-		exitedCoins = exitedCoins.Add(sdk.NewCoin(asset.Denom, exitAmt))
+		exitedCoins = append(exitedCoins, sdk.Coin{Denom: asset.Denom, Amount: exitAmt})
 	}
 
 	return exitedCoins, nil
+}
+
+// MaximalExactRatioJoin calculates the maximal amount of tokens that can be joined whilst maintaining pool asset's ratio
+// returning the number of shares that'd be and how many coins would be left over.
+//
+//	e.g) suppose we have a pool of 10 foo tokens and 10 bar tokens, with the total amount of 100 shares.
+//		 if `tokensIn` provided is 1 foo token and 2 bar tokens, `MaximalExactRatioJoin`
+//		 would be returning (10 shares, 1 bar token, nil)
+//
+// This can be used when `tokensIn` are not guaranteed the same ratio as assets in the pool.
+// Calculation for this is done in the following steps.
+//  1. iterate through all the tokens provided as an argument, calculate how much ratio it accounts for the asset in the pool
+//  2. get the minimal share ratio that would work as the benchmark for all tokens.
+//  3. calculate the number of shares that could be joined (total share * min share ratio), return the remaining coins
+func MaximalExactRatioJoin(p types.CFMMPoolI, ctx sdk.Context, tokensIn sdk.Coins) (numShares osmomath.Int, remCoins sdk.Coins, err error) {
+	coinShareRatios := make([]osmomath.Dec, len(tokensIn))
+	minShareRatio := math.LegacyMaxSortableDec
+	maxShareRatio := osmomath.ZeroDec()
+
+	poolLiquidity := p.GetTotalPoolLiquidity(ctx)
+	totalShares := p.GetTotalShares()
+
+	for i, coin := range tokensIn {
+		// Note: QuoInt implements floor division, unlike Quo
+		// This is because it calls the native golang routine big.Int.Quo
+		// https://pkg.go.dev/math/big#Int.Quo
+		shareRatio := coin.Amount.ToLegacyDec().QuoInt(poolLiquidity.AmountOfNoDenomValidation(coin.Denom))
+		if shareRatio.LT(minShareRatio) {
+			minShareRatio = shareRatio
+		}
+		if shareRatio.GT(maxShareRatio) {
+			maxShareRatio = shareRatio
+		}
+		coinShareRatios[i] = shareRatio
+	}
+
+	if minShareRatio.Equal(math.LegacyMaxSortableDec) {
+		return numShares, remCoins, errors.New("unexpected error in MaximalExactRatioJoin")
+	}
+
+	remCoins = sdk.Coins{}
+	// critically we round down here (TruncateInt), to ensure that the returned LP shares
+	// are always less than or equal to % liquidity added.
+	numShares = minShareRatio.MulInt(totalShares).TruncateInt()
+
+	// if we have multiple share values, calculate remainingCoins
+	if !minShareRatio.Equal(maxShareRatio) {
+		// we have to calculate remCoins
+		for i, coin := range tokensIn {
+			// if coinShareRatios[i] == minShareRatio, no remainder
+			if coinShareRatios[i].Equal(minShareRatio) {
+				continue
+			}
+
+			usedAmount := minShareRatio.MulInt(poolLiquidity.AmountOfNoDenomValidation(coin.Denom)).Ceil().TruncateInt()
+			newAmt := coin.Amount.Sub(usedAmount)
+			// if newAmt is non-zero, add to RemCoins. (It could be zero due to rounding)
+			if !newAmt.IsZero() {
+				remCoins = remCoins.Add(sdk.Coin{Denom: coin.Denom, Amount: newAmt})
+			}
+		}
+	}
+
+	return numShares, remCoins, nil
 }
 
 // We binary search a number of LP shares, s.t. if we exited the pool with the updated liquidity,

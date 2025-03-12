@@ -4,14 +4,14 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/quicksilver-zone/quicksilver/app" //nolint:revive
 	"cosmossdk.io/math"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/proto/tendermint/crypto"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/lockup"
+	"github.com/quicksilver-zone/quicksilver/app" //nolint:revive
+	lockup "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/lockup/types"
 	umeetypes "github.com/quicksilver-zone/quicksilver/third-party-chains/umee-types/leverage/types"
 	"github.com/quicksilver-zone/quicksilver/utils"
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"

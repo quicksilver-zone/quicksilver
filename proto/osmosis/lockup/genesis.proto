@@ -5,7 +5,7 @@ import "gogoproto/gogo.proto";
 import "osmosis/lockup/lock.proto";
 import "osmosis/lockup/params.proto";
 
-option go_package = "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/lockup";
+option go_package = "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/lockup/types";
 
 // GenesisState defines the lockup module's genesis state.
 message GenesisState {

@@ -44,3 +44,21 @@ func DeriveIbcDenom(port, channel, counterpartyPort, counterpartyChannel, denom 
 	prefixedDenom := transfertypes.GetDenomPrefix(port, channel) + denom
 	return transfertypes.ParseDenomTrace(prefixedDenom).IBCDenom()
 }
+
+func Equal(a, b sdk.Coin) bool {
+	return a.Denom == b.Denom && a.Amount.Equal(b.Amount)
+}
+
+func EqualCoins(a, b sdk.Coins) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	a.Sort()
+	b.Sort()
+	for i, coin := range a {
+		if !Equal(coin, b[i]) {
+			return false
+		}
+	}
+	return true
+}

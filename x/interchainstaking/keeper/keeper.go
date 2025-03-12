@@ -818,7 +818,7 @@ func (k *Keeper) Rebalance(ctx sdk.Context, zone *types.Zone, epochNumber int64)
 	return k.SubmitTx(ctx, msgs, zone.DelegationAddress, types.EpochRebalanceMemo(epochNumber), zone.MessagesPerTx)
 }
 
-// UnmarshalValidatorsResponse attempts to umarshal  a byte slice into a QueryValidatorsResponse.
+// UnmarshalValidatorsResponse attempts to umarshal a byte slice into a QueryValidatorsResponse.
 func (k *Keeper) UnmarshalValidatorsResponse(data []byte) (lsmstakingtypes.QueryValidatorsResponse, error) {
 	validatorsRes := lsmstakingtypes.QueryValidatorsResponse{}
 	if len(data) == 0 {

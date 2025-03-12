@@ -12,9 +12,9 @@ import (
 	query "github.com/cosmos/cosmos-sdk/types/query"
 	tx "github.com/cosmos/cosmos-sdk/types/tx"
 	_ "github.com/cosmos/gogoproto/gogoproto"
+	grpc1 "github.com/cosmos/gogoproto/grpc"
+	proto "github.com/cosmos/gogoproto/proto"
 	_07_tendermint "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
-	grpc1 "github.com/gogo/protobuf/grpc"
-	proto "github.com/gogo/protobuf/proto"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
@@ -346,6 +346,7 @@ func _QuerySrvr_Queries_Handler(srv interface{}, ctx context.Context, dec func(i
 	return interceptor(ctx, in, info, handler)
 }
 
+var QuerySrvr_serviceDesc = _QuerySrvr_serviceDesc
 var _QuerySrvr_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "quicksilver.interchainquery.v1.QuerySrvr",
 	HandlerType: (*QuerySrvrServer)(nil),

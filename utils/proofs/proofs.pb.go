@@ -7,7 +7,7 @@ import (
 	fmt "fmt"
 	_ "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	types "github.com/cometbft/cometbft/proto/tendermint/types"
-	proto "github.com/gogo/protobuf/proto"
+	proto "github.com/cosmos/gogoproto/proto"
 	proto_types "github.com/quicksilver-zone/quicksilver/third-party-chains/celestia-types/proto-types"
 	io "io"
 	math "math"

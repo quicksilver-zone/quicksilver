@@ -3,7 +3,7 @@ package osmosis.poolmanager.v1beta1;
 
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/poolmanager";
+option go_package = "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/poolmanager/types";
 
 message SwapAmountInRoute {
   uint64 pool_id = 1 [(gogoproto.moretags) = "yaml:\"pool_id\""];
