@@ -28,6 +28,9 @@ func (app *Quicksilver) setUpgradeHandlers() {
 	}
 }
 
+// TODO: add upgrade handler for consensus params (https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc2/UPGRADING.md)
+// and ibc migrations
+
 func (app *Quicksilver) setUpgradeStoreLoaders() {
 	// When a planned update height is reached, the old binary will panic
 	// writing on disk the height and name of the update that triggered it
