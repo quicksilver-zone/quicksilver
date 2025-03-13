@@ -9,12 +9,12 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	osmosislockuptypes "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/lockup"
+	osmosislockuptypes "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/lockup/types"
 	participationrewardstypes "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 
-	cl "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/concentrated-liquidity"
+	"github.com/osmosis-labs/osmosis/osmomath"
 	clmodel "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/concentrated-liquidity/model"
-	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/osmomath"
+	cl "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/concentrated-liquidity/types"
 )
 
 type ParticipationRewardsKeeper interface {
@@ -22,10 +22,7 @@ type ParticipationRewardsKeeper interface {
 }
 
 func DetermineApplicableTokensInPool(ctx sdk.Context, prKeeper ParticipationRewardsKeeper, lock osmosislockuptypes.PeriodLock, chainID string, poolDenom string) (math.Int, error) {
-	gammtoken, err := lock.SingleCoin()
-	if err != nil {
-		return sdk.ZeroInt(), err
-	}
+	gammtoken := lock.Coins[0]
 
 	poolID := gammtoken.Denom[strings.LastIndex(gammtoken.Denom, "/")+1:]
 	pd, ok := prKeeper.GetProtocolData(ctx, participationrewardstypes.ProtocolDataTypeOsmosisPool, poolID)

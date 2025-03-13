@@ -17,8 +17,8 @@ import (
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-	channeltypes "github.com/cosmos/ibc-go/v6/modules/core/04-channel/types"
-	ibctesting "github.com/cosmos/ibc-go/v6/testing"
+	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
+	ibctesting "github.com/cosmos/ibc-go/v7/testing"
 
 	"github.com/quicksilver-zone/quicksilver/app/upgrades"
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
@@ -339,135 +339,6 @@ func (s *AppTestSuite) InitV160TestZones() {
 		Is_118:          true,
 	}
 	s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetZone(s.chainA.GetContext(), &zone)
-}
-
-func (s *AppTestSuite) TestV010601UpgradeHandler() {
-	s.InitV160TestZones()
-	app := s.GetQuicksilverApp(s.chainA)
-
-	ctx := s.chainA.GetContext()
-
-	handler := upgrades.V010601UpgradeHandler(app.mm,
-		app.configurator, &app.AppKeepers)
-
-	_, err := handler(ctx, types.Plan{}, app.mm.GetVersionMap())
-	s.NoError(err)
-
-	junoZone, found := app.InterchainstakingKeeper.GetZone(ctx, "juno-1")
-	s.True(found)
-	s.Equal("juno-1", junoZone.ChainId)
-	s.Equal("channel-86", junoZone.TransferChannel)
-
-	atomZone, found := app.InterchainstakingKeeper.GetZone(ctx, "cosmoshub-4")
-	s.True(found)
-	s.Equal("cosmoshub-4", atomZone.ChainId)
-	s.Equal("channel-1", atomZone.TransferChannel)
-
-	osmoZone, found := app.InterchainstakingKeeper.GetZone(ctx, "osmosis-1")
-	s.True(found)
-	s.Equal("osmosis-1", osmoZone.ChainId)
-	s.Equal("channel-2", osmoZone.TransferChannel)
-
-	agoricZone, found := app.InterchainstakingKeeper.GetZone(ctx, "agoric-3")
-	s.True(found)
-	s.Equal("agoric-3", agoricZone.ChainId)
-	s.Equal("channel-125", agoricZone.TransferChannel)
-	s.False(agoricZone.Is_118)
-
-	// check block params
-	consensusParams := app.GetConsensusParams(ctx)
-	s.Equal(int64(2072576), consensusParams.Block.MaxBytes)
-	s.Equal(int64(150000000), consensusParams.Block.MaxGas)
-}
-
-func (s *AppTestSuite) TestV010603UpgradeHandler() {
-	s.InitV160TestZones()
-	app := s.GetQuicksilverApp(s.chainA)
-
-	ctx := s.chainA.GetContext()
-
-	record := icstypes.WithdrawalRecord{
-		ChainId:    "cosmoshub-4",
-		Delegator:  "quick1zyj57u72nwr23q2glz77jaana9kpvn8cxdp5gl",
-		Recipient:  "cosmos1xnvuycukuex5eae336u7umrhfea9xndr0ksjlj",
-		Txhash:     "ea0d86a3fb4b25fcb13a587e72542f99ebf8c7c3aa255a0922dfa7002a8ee861",
-		Status:     icstypes.WithdrawStatusUnbond,
-		BurnAmount: sdk.NewCoin("uqatom", math.NewInt(4754000000)),
-	}
-
-	s.NoError(app.InterchainstakingKeeper.SetWithdrawalRecord(ctx, record))
-
-	s.NoError(app.BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(record.BurnAmount)))
-	s.NoError(app.BankKeeper.SendCoinsFromModuleToModule(ctx, icstypes.ModuleName, icstypes.EscrowModuleAccount, sdk.NewCoins(record.BurnAmount)))
-
-	handler := upgrades.V010603UpgradeHandler(app.mm,
-		app.configurator, &app.AppKeepers)
-
-	preBalance := app.BankKeeper.GetBalance(ctx, addressutils.MustAccAddressFromBech32(record.Delegator, ""), "uqatom")
-
-	_, err := handler(ctx, types.Plan{}, app.mm.GetVersionMap())
-	s.NoError(err)
-
-	// check this hash no longer exists.
-	for _, status := range []int32{icstypes.WithdrawStatusQueued, icstypes.WithdrawStatusUnbond, icstypes.WithdrawStatusSend, icstypes.WithdrawStatusCompleted} {
-		_, found := app.InterchainstakingKeeper.GetWithdrawalRecord(ctx, record.ChainId, record.Txhash, status)
-		s.False(found)
-	}
-
-	// check balance of uatom increased by 4754000000
-	postBalance := app.BankKeeper.GetBalance(ctx, addressutils.MustAccAddressFromBech32(record.Delegator, ""), "uqatom")
-
-	s.Equal(postBalance.Amount.Int64(), preBalance.Add(record.BurnAmount).Amount.Int64())
-}
-
-func (s *AppTestSuite) TestV010604UpgradeHandler() {
-	s.InitV160TestZones()
-	app := s.GetQuicksilverApp(s.chainA)
-
-	ctx := s.chainA.GetContext()
-
-	hashes := []struct {
-		Zone string
-		Hash string
-	}{
-		{Zone: "cosmoshub-4", Hash: "6cc942b42150a43b45d56c39d05155206ffb40eb18268dbd0b3c1ce5248b2645"},
-		{Zone: "stargaze-1", Hash: "10af0ee10a97f01467039a69cbfb8df05dc3111c975d955ca51adda201f36555"},
-		{Zone: "juno-1", Hash: "627db4f106a8ef99053a0726f3f71d2f23bbfd4a9155b6d083ff7015bdfa44c0"},
-		{Zone: "cosmoshub-4", Hash: "0c8269f04109a55a152d3cdfd22937b4e5c2746111d579935eef4cd7ffa71f7f"},
-		{Zone: "cosmoshub-4", Hash: "677691e596338af42387cbafae9831c5e0fe4b7f31b683ad69d2cc3f17687bd8"},
-		{Zone: "cosmoshub-4", Hash: "c8351fe7e6775b39b9f480182f9ea57c914ea566dd35912a4597f234b12405a6"},
-		{Zone: "cosmoshub-4", Hash: "d750de16665edbfca2a889ccec7a16ce107987416a80304154453ff6e8e25c5d"},
-		{Zone: "cosmoshub-4", Hash: "e5a44be995514d10cce7795a28d8a997e4eb95ba805d54cfaa9ce62e78a87a50"},
-		{Zone: "cosmoshub-4", Hash: "fb73556a38faeffa4740923c585b609a002869d1a9006f660567166cd4f5a79b"},
-		{Zone: "cosmoshub-4", Hash: "fd42b32563d8beecb64ae2aa47f9b38ddecd436ac4e8b84bf9d9c46f447439e6"},
-	}
-
-	for _, hashRecord := range hashes {
-		record := icstypes.WithdrawalRecord{
-			ChainId:        hashRecord.Zone,
-			Delegator:      "quick1zyj57u72nwr23q2glz77jaana9kpvn8cxdp5gl",
-			Recipient:      "cosmos1xnvuycukuex5eae336u7umrhfea9xndr0ksjlj",
-			Txhash:         hashRecord.Hash,
-			Status:         icstypes.WithdrawStatusSend,
-			BurnAmount:     sdk.NewCoin("uqatom", math.NewInt(4754000000)),
-			Acknowledged:   true,
-			CompletionTime: time.Now(),
-		}
-
-		s.NoError(app.InterchainstakingKeeper.SetWithdrawalRecord(ctx, record))
-	}
-
-	handler := upgrades.V010604UpgradeHandler(app.mm, app.configurator, &app.AppKeepers)
-
-	_, err := handler(ctx, types.Plan{}, app.mm.GetVersionMap())
-	s.NoError(err)
-
-	for _, hashRecord := range hashes {
-		record, found := app.InterchainstakingKeeper.GetWithdrawalRecord(ctx, hashRecord.Zone, hashRecord.Hash, icstypes.WithdrawStatusQueued)
-		s.True(found)
-		s.False(record.Acknowledged)
-		s.True(record.CompletionTime.IsZero())
-	}
 }
 
 func (s *AppTestSuite) TestV010705UpgradeHandler() {

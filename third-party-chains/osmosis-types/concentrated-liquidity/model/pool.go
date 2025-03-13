@@ -7,12 +7,11 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	types "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/concentrated-liquidity"
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/concentrated-liquidity/math"
-	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/osmomath"
+	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/concentrated-liquidity/types"
 	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/osmoutils"
-	poolmanagertypes "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/poolmanager"
-	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
+	poolmanagertypes "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/poolmanager/types"
 )
 
 const (
@@ -58,7 +57,7 @@ func NewConcentratedLiquidityPool(poolId uint64, denom0, denom1 string, tickSpac
 
 // GetAddress returns the address of the concentrated liquidity pool
 func (p Pool) GetAddress() sdk.AccAddress {
-	addr, err := addressutils.AccAddressFromBech32(p.Address, "")
+	addr, err := sdk.AccAddressFromBech32(p.Address)
 	if err != nil {
 		panic(fmt.Sprintf("could not bech32 decode address of pool with id: %d", p.GetId()))
 	}
@@ -67,7 +66,7 @@ func (p Pool) GetAddress() sdk.AccAddress {
 
 // GetIncentivesAddress returns the address storing incentives of the concentrated liquidity pool.
 func (p Pool) GetIncentivesAddress() sdk.AccAddress {
-	addr, err := addressutils.AccAddressFromBech32(p.IncentivesAddress, "")
+	addr, err := sdk.AccAddressFromBech32(p.IncentivesAddress)
 	if err != nil {
 		panic(fmt.Sprintf("could not bech32 decode incentive address of pool with id: %d", p.GetId()))
 	}
@@ -75,7 +74,7 @@ func (p Pool) GetIncentivesAddress() sdk.AccAddress {
 }
 
 func (p Pool) GetSpreadRewardsAddress() sdk.AccAddress {
-	addr, err := addressutils.AccAddressFromBech32(p.SpreadRewardsAddress, "")
+	addr, err := sdk.AccAddressFromBech32(p.SpreadRewardsAddress)
 	if err != nil {
 		panic(fmt.Sprintf("could not bech32 decode spread factor address of pool with id: %d", p.GetId()))
 	}
@@ -119,13 +118,14 @@ func (p Pool) SpotPrice(ctx sdk.Context, quoteAssetDenom string, baseAssetDenom 
 		return osmomath.BigDec{}, fmt.Errorf("quote asset denom (%s) is not in pool with (%s, %s) pair", quoteAssetDenom, p.Token0, p.Token1)
 	}
 
+	priceSquared := p.CurrentSqrtPrice.PowerInteger(2)
 	// The reason why we convert the result to Dec and then back to BigDec is to temporarily
 	// maintain backwards compatibility with the original implementation.
 	// TODO: remove before https://github.com/osmosis-labs/osmosis/issues/5726 is complete
 	if baseAssetDenom == p.Token0 {
-		return osmomath.BigDecFromDec(p.CurrentSqrtPrice.PowerInteger(2).Dec()), nil
+		return osmomath.BigDecFromDecMut(priceSquared.Dec()), nil
 	}
-	return osmomath.BigDecFromDec(osmomath.OneBigDec().Quo(p.CurrentSqrtPrice.PowerInteger(2)).Dec()), nil
+	return osmomath.BigDecFromDecMut(osmomath.OneBigDec().QuoMut(priceSquared).Dec()), nil
 }
 
 // GetToken0 returns the token0 of the pool
@@ -246,9 +246,8 @@ func (p Pool) CalcActualAmounts(ctx sdk.Context, lowerTick, upperTick int64, liq
 	roundUp := liquidityDelta.IsPositive()
 
 	var (
-		liquidityDeltaBigDec = osmomath.BigDecFromDec(liquidityDelta)
-		actualAmountDenom0   osmomath.BigDec
-		actualAmountDenom1   osmomath.BigDec
+		actualAmountDenom0 osmomath.BigDec
+		actualAmountDenom1 osmomath.BigDec
 	)
 
 	if p.IsCurrentTickInRange(lowerTick, upperTick) {
@@ -256,18 +255,18 @@ func (p Pool) CalcActualAmounts(ctx sdk.Context, lowerTick, upperTick int64, liq
 		// if this is the case, we attempt to provide liquidity evenly between asset0 and asset1
 		// we also update the pool liquidity since the virtual liquidity is modified by this position's creation
 		currentSqrtPrice := p.CurrentSqrtPrice
-		actualAmountDenom0 = math.CalcAmount0Delta(liquidityDeltaBigDec, currentSqrtPrice, sqrtPriceUpperTick, roundUp)
-		actualAmountDenom1 = math.CalcAmount1Delta(liquidityDeltaBigDec, currentSqrtPrice, sqrtPriceLowerTick, roundUp)
+		actualAmountDenom0 = math.CalcAmount0Delta(liquidityDelta, currentSqrtPrice, sqrtPriceUpperTick, roundUp)
+		actualAmountDenom1 = math.CalcAmount1Delta(liquidityDelta, currentSqrtPrice, sqrtPriceLowerTick, roundUp)
 	} else if p.CurrentTick < lowerTick {
 		// outcome two: position is below current price
 		// this means position is solely made up of asset0
 		actualAmountDenom1 = osmomath.ZeroBigDec()
-		actualAmountDenom0 = math.CalcAmount0Delta(liquidityDeltaBigDec, sqrtPriceLowerTick, sqrtPriceUpperTick, roundUp)
+		actualAmountDenom0 = math.CalcAmount0Delta(liquidityDelta, sqrtPriceLowerTick, sqrtPriceUpperTick, roundUp)
 	} else {
 		// outcome three: position is above current price
 		// this means position is solely made up of asset1
 		actualAmountDenom0 = osmomath.ZeroBigDec()
-		actualAmountDenom1 = math.CalcAmount1Delta(liquidityDeltaBigDec, sqrtPriceLowerTick, sqrtPriceUpperTick, roundUp)
+		actualAmountDenom1 = math.CalcAmount1Delta(liquidityDelta, sqrtPriceLowerTick, sqrtPriceUpperTick, roundUp)
 	}
 
 	if roundUp {

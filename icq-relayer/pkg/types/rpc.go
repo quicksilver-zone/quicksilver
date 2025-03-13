@@ -4,15 +4,15 @@ import (
 	"context"
 	"time"
 
-	"github.com/tendermint/tendermint/libs/bytes"
-	rpcclient "github.com/tendermint/tendermint/rpc/client"
-	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
-	ctypes "github.com/tendermint/tendermint/rpc/core/types"
-	jsonrpcclient "github.com/tendermint/tendermint/rpc/jsonrpc/client"
-	"github.com/tendermint/tendermint/types"
+	"github.com/cometbft/cometbft/libs/bytes"
+	rpcclient "github.com/cometbft/cometbft/rpc/client"
+	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
+	ctypes "github.com/cometbft/cometbft/rpc/core/types"
+	jsonrpcclient "github.com/cometbft/cometbft/rpc/jsonrpc/client"
+	"github.com/cometbft/cometbft/types"
 )
 
-// RPCClient is a client for the Tendermint RPC interface. This is copy and pasted from github.com/tendermint/tendermint/rpc/client/http,
+// RPCClient is a client for the Tendermint RPC interface. This is copy and pasted from github.com/cometbft/cometbft/rpc/client/http,
 // which does not expost the baseRPCClient, and as such does not permit you to create a HTTP RPC Client without websocket connection.
 type RPCClient struct {
 	caller jsonrpcclient.Caller
@@ -403,6 +403,31 @@ func (c *RPCClient) BroadcastEvidence(
 ) (*ctypes.ResultBroadcastEvidence, error) {
 	result := new(ctypes.ResultBroadcastEvidence)
 	_, err := c.caller.Call(ctx, "broadcast_evidence", map[string]interface{}{"evidence": ev}, result)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+func (c *RPCClient) Header(ctx context.Context, height *int64) (*ctypes.ResultHeader, error) {
+	result := new(ctypes.ResultHeader)
+	params := make(map[string]interface{})
+	if height != nil {
+		params["height"] = height
+	}
+	_, err := c.caller.Call(ctx, "header", params, result)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+func (c *RPCClient) HeaderByHash(ctx context.Context, hash bytes.HexBytes) (*ctypes.ResultHeader, error) {
+	result := new(ctypes.ResultHeader)
+	params := map[string]interface{}{
+		"hash": hash,
+	}
+	_, err := c.caller.Call(ctx, "header_by_hash", params, result)
 	if err != nil {
 		return nil, err
 	}

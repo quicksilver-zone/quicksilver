@@ -1,11 +1,13 @@
 syntax = "proto3";
 package osmosis.gamm.v1beta1;
 
+import "amino/amino.proto";
 import "cosmos/base/v1beta1/coin.proto";
+import "cosmos/msg/v1/msg.proto";
 import "gogoproto/gogo.proto";
 import "osmosis/poolmanager/v1beta1/swap_route.proto";
 
-option go_package = "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/gamm";
+option go_package = "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/gamm/types";
 
 service Msg {
   rpc JoinPool(MsgJoinPool) returns (MsgJoinPoolResponse);
@@ -21,6 +23,9 @@ service Msg {
 // ===================== MsgJoinPool
 // This is really MsgJoinPoolNoSwap
 message MsgJoinPool {
+  option (amino.name) = "osmosis/gamm/join-pool";
+  option (cosmos.msg.v1.signer) = "sender";
+
   string sender = 1 [(gogoproto.moretags) = "yaml:\"sender\""];
   uint64 pool_id = 2 [(gogoproto.moretags) = "yaml:\"pool_id\""];
   string share_out_amount = 3 [
@@ -48,6 +53,9 @@ message MsgJoinPoolResponse {
 
 // ===================== MsgExitPool
 message MsgExitPool {
+  option (amino.name) = "osmosis/gamm/exit-pool";
+  option (cosmos.msg.v1.signer) = "sender";
+
   string sender = 1 [(gogoproto.moretags) = "yaml:\"sender\""];
   uint64 pool_id = 2 [(gogoproto.moretags) = "yaml:\"pool_id\""];
   string share_in_amount = 3 [
@@ -71,6 +79,9 @@ message MsgExitPoolResponse {
 
 // ===================== MsgSwapExactAmountIn
 message MsgSwapExactAmountIn {
+  option (amino.name) = "osmosis/gamm/swap-exact-amount-in";
+  option (cosmos.msg.v1.signer) = "sender";
+
   string sender = 1 [(gogoproto.moretags) = "yaml:\"sender\""];
   repeated osmosis.poolmanager.v1beta1.SwapAmountInRoute routes = 2 [(gogoproto.nullable) = false];
   cosmos.base.v1beta1.Coin token_in = 3 [
@@ -93,6 +104,9 @@ message MsgSwapExactAmountInResponse {
 }
 
 message MsgSwapExactAmountOut {
+  option (amino.name) = "osmosis/gamm/swap-exact-amount-out";
+  option (cosmos.msg.v1.signer) = "sender";
+
   string sender = 1 [(gogoproto.moretags) = "yaml:\"sender\""];
   repeated osmosis.poolmanager.v1beta1.SwapAmountOutRoute routes = 2 [(gogoproto.nullable) = false];
   string token_in_max_amount = 3 [
@@ -117,6 +131,9 @@ message MsgSwapExactAmountOutResponse {
 // ===================== MsgJoinSwapExternAmountIn
 // TODO: Rename to MsgJoinSwapExactAmountIn
 message MsgJoinSwapExternAmountIn {
+  option (amino.name) = "osmosis/gamm/join-swap-extern-amount-in";
+  option (cosmos.msg.v1.signer) = "sender";
+
   string sender = 1 [(gogoproto.moretags) = "yaml:\"sender\""];
   uint64 pool_id = 2 [(gogoproto.moretags) = "yaml:\"pool_id\""];
   cosmos.base.v1beta1.Coin token_in = 3 [
@@ -144,6 +161,9 @@ message MsgJoinSwapExternAmountInResponse {
 
 // ===================== MsgJoinSwapShareAmountOut
 message MsgJoinSwapShareAmountOut {
+  option (amino.name) = "osmosis/gamm/join-swap-share-amount-out";
+  option (cosmos.msg.v1.signer) = "sender";
+
   string sender = 1 [(gogoproto.moretags) = "yaml:\"sender\""];
   uint64 pool_id = 2 [(gogoproto.moretags) = "yaml:\"pool_id\""];
   string token_in_denom = 3 [(gogoproto.moretags) = "yaml:\"token_in_denom\""];
@@ -169,6 +189,9 @@ message MsgJoinSwapShareAmountOutResponse {
 
 // ===================== MsgExitSwapShareAmountIn
 message MsgExitSwapShareAmountIn {
+  option (amino.name) = "osmosis/gamm/exit-swap-share-amount-in";
+  option (cosmos.msg.v1.signer) = "sender";
+
   string sender = 1 [(gogoproto.moretags) = "yaml:\"sender\""];
   uint64 pool_id = 2 [(gogoproto.moretags) = "yaml:\"pool_id\""];
   string token_out_denom = 3 [(gogoproto.moretags) = "yaml:\"token_out_denom\""];
@@ -194,6 +217,9 @@ message MsgExitSwapShareAmountInResponse {
 
 // ===================== MsgExitSwapExternAmountOut
 message MsgExitSwapExternAmountOut {
+  option (amino.name) = "osmosis/gamm/exit-swap-extern-amount-out";
+  option (cosmos.msg.v1.signer) = "sender";
+
   string sender = 1 [(gogoproto.moretags) = "yaml:\"sender\""];
   uint64 pool_id = 2 [(gogoproto.moretags) = "yaml:\"pool_id\""];
   cosmos.base.v1beta1.Coin token_out = 3 [

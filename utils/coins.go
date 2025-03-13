@@ -8,7 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	transfertypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
+	transfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
 )
 
 func DenomFromRequestKey(query []byte, accAddr sdk.AccAddress) (string, error) {
@@ -43,4 +43,22 @@ func DeriveIbcDenom(port, channel, counterpartyPort, counterpartyChannel, denom 
 	}
 	prefixedDenom := transfertypes.GetDenomPrefix(port, channel) + denom
 	return transfertypes.ParseDenomTrace(prefixedDenom).IBCDenom()
+}
+
+func Equal(a, b sdk.Coin) bool {
+	return a.Denom == b.Denom && a.Amount.Equal(b.Amount)
+}
+
+func EqualCoins(a, b sdk.Coins) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	a.Sort()
+	b.Sort()
+	for i, coin := range a {
+		if !Equal(coin, b[i]) {
+			return false
+		}
+	}
+	return true
 }

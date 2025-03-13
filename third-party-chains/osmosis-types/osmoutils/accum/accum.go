@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/cosmos/cosmos-sdk/store"
+	store "github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/osmomath"
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/osmoutils"
 )
 
@@ -57,6 +57,19 @@ func MakeAccumulator(accumStore store.KVStore, accumName string) error {
 func MakeAccumulatorWithValueAndShare(accumStore store.KVStore, accumName string, accumValue sdk.DecCoins, totalShares osmomath.Dec) error {
 	if accumStore.Has(formatAccumPrefixKey(accumName)) {
 		return errors.New("Accumulator with given name already exists in store")
+	}
+
+	newAccum := AccumulatorObject{accumStore, accumName, accumValue, totalShares}
+
+	// Stores accumulator in state
+	return setAccumulator(&newAccum, accumValue, totalShares)
+}
+
+// OverwriteAccumulatorUnsafe overwrites the accumulator with the given name in accumStore.
+// Use with caution as this method is only meant for use in migrations.
+func OverwriteAccumulatorUnsafe(accumStore store.KVStore, accumName string, accumValue sdk.DecCoins, totalShares osmomath.Dec) error {
+	if !accumStore.Has(formatAccumPrefixKey(accumName)) {
+		return errors.New("Accumulator with given name does not exist in store")
 	}
 
 	newAccum := AccumulatorObject{accumStore, accumName, accumValue, totalShares}

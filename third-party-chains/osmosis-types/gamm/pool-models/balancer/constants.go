@@ -1,7 +1,7 @@
 package balancer
 
 import (
-	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/osmomath"
+	"github.com/osmosis-labs/osmosis/osmomath"
 )
 
 var (
@@ -19,4 +19,5 @@ var (
 	GuaranteedWeightPrecision int64 = 1 << 30
 
 	PoolTypeName string = "Balancer"
+	oneDec              = osmomath.OneDec()
 )

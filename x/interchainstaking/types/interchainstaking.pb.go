@@ -10,8 +10,8 @@ import (
 	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
 	types "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/cosmos/gogoproto/gogoproto"
-	proto "github.com/gogo/protobuf/proto"
-	github_com_gogo_protobuf_types "github.com/gogo/protobuf/types"
+	proto "github.com/cosmos/gogoproto/proto"
+	github_com_cosmos_gogoproto_types "github.com/cosmos/gogoproto/types"
 	_ "google.golang.org/protobuf/types/known/timestamppb"
 	io "io"
 	math "math"
@@ -1926,7 +1926,7 @@ func (m *WithdrawalRecord) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x50
 	}
-	n6, err6 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.CompletionTime, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.CompletionTime):])
+	n6, err6 := github_com_cosmos_gogoproto_types.StdTimeMarshalTo(m.CompletionTime, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdTime(m.CompletionTime):])
 	if err6 != nil {
 		return 0, err6
 	}
@@ -2028,7 +2028,7 @@ func (m *UnbondingRecord) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	n8, err8 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.CompletionTime, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.CompletionTime):])
+	n8, err8 := github_com_cosmos_gogoproto_types.StdTimeMarshalTo(m.CompletionTime, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdTime(m.CompletionTime):])
 	if err8 != nil {
 		return 0, err8
 	}
@@ -2107,7 +2107,7 @@ func (m *RedelegationRecord) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	}
 	i--
 	dAtA[i] = 0x3a
-	n10, err10 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.CompletionTime, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.CompletionTime):])
+	n10, err10 := github_com_cosmos_gogoproto_types.StdTimeMarshalTo(m.CompletionTime, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdTime(m.CompletionTime):])
 	if err10 != nil {
 		return 0, err10
 	}
@@ -2189,7 +2189,7 @@ func (m *Validator) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	}
 	i--
 	dAtA[i] = 0x52
-	n11, err11 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.JailedSince, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.JailedSince):])
+	n11, err11 := github_com_cosmos_gogoproto_types.StdTimeMarshalTo(m.JailedSince, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdTime(m.JailedSince):])
 	if err11 != nil {
 		return 0, err11
 	}
@@ -2473,7 +2473,7 @@ func (m *Receipt) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	var l int
 	_ = l
 	if m.Completed != nil {
-		n13, err13 := github_com_gogo_protobuf_types.StdTimeMarshalTo(*m.Completed, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(*m.Completed):])
+		n13, err13 := github_com_cosmos_gogoproto_types.StdTimeMarshalTo(*m.Completed, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdTime(*m.Completed):])
 		if err13 != nil {
 			return 0, err13
 		}
@@ -2483,7 +2483,7 @@ func (m *Receipt) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		dAtA[i] = 0x32
 	}
 	if m.FirstSeen != nil {
-		n14, err14 := github_com_gogo_protobuf_types.StdTimeMarshalTo(*m.FirstSeen, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(*m.FirstSeen):])
+		n14, err14 := github_com_cosmos_gogoproto_types.StdTimeMarshalTo(*m.FirstSeen, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdTime(*m.FirstSeen):])
 		if err14 != nil {
 			return 0, err14
 		}
@@ -2776,7 +2776,7 @@ func (m *WithdrawalRecord) Size() (n int) {
 	if m.Status != 0 {
 		n += 1 + sovInterchainstaking(uint64(m.Status))
 	}
-	l = github_com_gogo_protobuf_types.SizeOfStdTime(m.CompletionTime)
+	l = github_com_cosmos_gogoproto_types.SizeOfStdTime(m.CompletionTime)
 	n += 1 + l + sovInterchainstaking(uint64(l))
 	if m.Requeued {
 		n += 2
@@ -2818,7 +2818,7 @@ func (m *UnbondingRecord) Size() (n int) {
 	}
 	l = m.Amount.Size()
 	n += 1 + l + sovInterchainstaking(uint64(l))
-	l = github_com_gogo_protobuf_types.SizeOfStdTime(m.CompletionTime)
+	l = github_com_cosmos_gogoproto_types.SizeOfStdTime(m.CompletionTime)
 	n += 1 + l + sovInterchainstaking(uint64(l))
 	return n
 }
@@ -2847,7 +2847,7 @@ func (m *RedelegationRecord) Size() (n int) {
 	if m.XAmount != 0 {
 		n += 1 + sovInterchainstaking(uint64(m.XAmount))
 	}
-	l = github_com_gogo_protobuf_types.SizeOfStdTime(m.CompletionTime)
+	l = github_com_cosmos_gogoproto_types.SizeOfStdTime(m.CompletionTime)
 	n += 1 + l + sovInterchainstaking(uint64(l))
 	l = m.Amount.Size()
 	n += 1 + l + sovInterchainstaking(uint64(l))
@@ -2882,7 +2882,7 @@ func (m *Validator) Size() (n int) {
 	if m.Tombstoned {
 		n += 2
 	}
-	l = github_com_gogo_protobuf_types.SizeOfStdTime(m.JailedSince)
+	l = github_com_cosmos_gogoproto_types.SizeOfStdTime(m.JailedSince)
 	n += 1 + l + sovInterchainstaking(uint64(l))
 	l = m.ValidatorBondShares.Size()
 	n += 1 + l + sovInterchainstaking(uint64(l))
@@ -2992,11 +2992,11 @@ func (m *Receipt) Size() (n int) {
 		}
 	}
 	if m.FirstSeen != nil {
-		l = github_com_gogo_protobuf_types.SizeOfStdTime(*m.FirstSeen)
+		l = github_com_cosmos_gogoproto_types.SizeOfStdTime(*m.FirstSeen)
 		n += 1 + l + sovInterchainstaking(uint64(l))
 	}
 	if m.Completed != nil {
-		l = github_com_gogo_protobuf_types.SizeOfStdTime(*m.Completed)
+		l = github_com_cosmos_gogoproto_types.SizeOfStdTime(*m.Completed)
 		n += 1 + l + sovInterchainstaking(uint64(l))
 	}
 	return n
@@ -4827,7 +4827,7 @@ func (m *WithdrawalRecord) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(&m.CompletionTime, dAtA[iNdEx:postIndex]); err != nil {
+			if err := github_com_cosmos_gogoproto_types.StdTimeUnmarshal(&m.CompletionTime, dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -5136,7 +5136,7 @@ func (m *UnbondingRecord) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(&m.CompletionTime, dAtA[iNdEx:postIndex]); err != nil {
+			if err := github_com_cosmos_gogoproto_types.StdTimeUnmarshal(&m.CompletionTime, dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -5353,7 +5353,7 @@ func (m *RedelegationRecord) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(&m.CompletionTime, dAtA[iNdEx:postIndex]); err != nil {
+			if err := github_com_cosmos_gogoproto_types.StdTimeUnmarshal(&m.CompletionTime, dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -5710,7 +5710,7 @@ func (m *Validator) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(&m.JailedSince, dAtA[iNdEx:postIndex]); err != nil {
+			if err := github_com_cosmos_gogoproto_types.StdTimeUnmarshal(&m.JailedSince, dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -6525,7 +6525,7 @@ func (m *Receipt) Unmarshal(dAtA []byte) error {
 			if m.FirstSeen == nil {
 				m.FirstSeen = new(time.Time)
 			}
-			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(m.FirstSeen, dAtA[iNdEx:postIndex]); err != nil {
+			if err := github_com_cosmos_gogoproto_types.StdTimeUnmarshal(m.FirstSeen, dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -6561,7 +6561,7 @@ func (m *Receipt) Unmarshal(dAtA []byte) error {
 			if m.Completed == nil {
 				m.Completed = new(time.Time)
 			}
-			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(m.Completed, dAtA[iNdEx:postIndex]); err != nil {
+			if err := github_com_cosmos_gogoproto_types.StdTimeUnmarshal(m.Completed, dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

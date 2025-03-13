@@ -16,45 +16,15 @@ const (
 	DevnetChainID     = "magic-2"
 	TestChainID       = "testchain1"
 
-	// testnet upgrades
-	V010405rc6UpgradeName   = "v1.4.5-rc6"
-	V010405rc7UpgradeName   = "v1.4.5-rc7"
-	V010407rc0UpgradeName   = "v1.4.7-rc0"
-	V010407rc1UpgradeName   = "v1.4.7-rc1"
-	V010407rc2UpgradeName   = "v1.4.7-rc2"
-	V010500rc0UpgradeName   = "v1.5.0-rc0"
-	V010500rc1UpgradeName   = "v1.5.0-rc1"
-	V010503rc0UpgradeName   = "v1.5.3-rc0"
-	V010600beta0UpgradeName = "v1.6.0-beta0"
-	V010600beta1UpgradeName = "v1.6.0-beta1"
-	V010600rc0UpgradeName   = "v1.6.0-rc0"
-	V010600rc1UpgradeName   = "v1.6.0-rc1"
-	V010601rc0UpgradeName   = "v1.6.1-rc0"
-	V010601rc2UpgradeName   = "v1.6.1-rc2"
-	V010601rc3UpgradeName   = "v1.6.1-rc3"
-	V010601rc4UpgradeName   = "v1.6.1-rc4"
-
-	// mainnet upgrades
-	V010217UpgradeName = "v1.2.17"
-	V010405UpgradeName = "v1.4.5"
-	V010406UpgradeName = "v1.4.6"
-	V010407UpgradeName = "v1.4.7"
-	V010500UpgradeName = "v1.5.0"
-	V010501UpgradeName = "v1.5.1"
-	V010503UpgradeName = "v1.5.3"
-	V010504UpgradeName = "v1.5.4"
-	V010505UpgradeName = "v1.5.5"
-	V010601UpgradeName = "v1.6.1"
-	V010602UpgradeName = "v1.6.2"
-	V010603UpgradeName = "v1.6.3"
-	V010604UpgradeName = "v1.6.4"
-
+	// mainnet
 	V010700UpgradeName = "v1.7.0"
 	V010702UpgradeName = "v1.7.2"
 	V010704UpgradeName = "v1.7.4"
 	V010705UpgradeName = "v1.7.5"
 	V010706UpgradeName = "v1.7.6"
 	V010707UpgradeName = "v1.7.7"
+
+	V010800UpgradeName = "v1.8.0"
 )
 
 // Upgrade defines a struct containing necessary fields that a SoftwareUpgradeProposal

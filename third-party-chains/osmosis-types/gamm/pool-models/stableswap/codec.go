@@ -3,20 +3,15 @@ package stableswap
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/msgservice"
 
-	poolmanagertypes "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/poolmanager"
-
-	types "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/gamm"
+	types "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/gamm/types"
+	poolmanagertypes "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/poolmanager/types"
 )
 
 // RegisterLegacyAminoCodec registers the necessary x/gamm interfaces and concrete types
 // on the provided LegacyAmino codec. These types are used for Amino JSON serialization.
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&Pool{}, "osmosis/gamm/StableswapPool", nil)
-	cdc.RegisterConcrete(&MsgCreateStableswapPool{}, "osmosis/gamm/create-stableswap-pool", nil)
-	cdc.RegisterConcrete(&MsgStableSwapAdjustScalingFactors{}, "osmosis/gamm/stableswap-adjust-scaling-factors", nil)
 	cdc.RegisterConcrete(&PoolParams{}, "osmosis/gamm/StableswapPoolParams", nil)
 }
 
@@ -31,24 +26,8 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 		(*types.CFMMPoolI)(nil),
 		&Pool{},
 	)
-	registry.RegisterImplementations(
-		(*sdk.Msg)(nil),
-		&MsgCreateStableswapPool{},
-		&MsgStableSwapAdjustScalingFactors{},
-	)
-	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
+
+	//msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }
-
-var (
-	amino = codec.NewLegacyAmino()
-
-	// ModuleCdc references the global x/bank module codec. Note, the codec should
-	// ONLY be used in certain instances of tests and for JSON encoding as Amino is
-	// still used for that purpose.
-	//
-	// The actual codec used for serialization should be provided to x/staking and
-	// defined at the application level.
-	ModuleCdc = codec.NewAminoCodec(amino)
-)
 
 const PoolTypeName string = "Stableswap"

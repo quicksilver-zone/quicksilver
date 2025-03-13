@@ -16,7 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
 
 	osmosistypes "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types"
-	osmolockup "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/lockup"
+	osmolockup "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/lockup/types"
 	"github.com/quicksilver-zone/quicksilver/utils"
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	"github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
@@ -115,11 +115,17 @@ func (*OsmosisModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.MsgSu
 			if err != nil {
 				return sdk.ZeroInt(), err
 			}
-			poolID, err := strconv.Atoi(poolDenom[strings.LastIndex(poolDenom, "/")+1:])
+			poolID, err := strconv.ParseUint(poolDenom[strings.LastIndex(poolDenom, "/")+1:], 10, 64)
 			if err != nil {
 				return sdk.ZeroInt(), err
 			}
-			lock = osmolockup.NewPeriodLock(uint64(poolID), addr, addr.String(), time.Hour, time.Time{}, sdk.NewCoins(coin)) //nolint:gosec
+			lock = osmolockup.PeriodLock{
+				ID:       poolID,
+				Owner:    addr.String(),
+				Duration: time.Hour,
+				EndTime:  time.Time{},
+				Coins:    sdk.NewCoins(coin),
+			}
 		} else {
 			lock = osmolockup.PeriodLock{}
 			err := k.cdc.Unmarshal(proof.Data, &lock)

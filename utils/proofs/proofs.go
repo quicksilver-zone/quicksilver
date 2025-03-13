@@ -8,10 +8,11 @@ import (
 
 	squareshare "github.com/celestiaorg/go-square/v2/share"
 	"github.com/cosmos/gogoproto/proto"
-	"github.com/tendermint/tendermint/crypto/tmhash"
-	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
+
+	"github.com/cometbft/cometbft/crypto/tmhash"
+	tmtypes "github.com/cometbft/cometbft/types"
 
 	celestiatypes "github.com/quicksilver-zone/quicksilver/third-party-chains/celestia-types/types"
 )

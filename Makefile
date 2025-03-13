@@ -7,7 +7,7 @@ PACKAGES_SIM=github.com/quicksilver-zone/quicksilver/test/simulation
 PACKAGES_E2E=$(shell go list ./... | grep '/e2e')
 VERSION=$(shell git describe --tags --exclude "icq-relayer/*" --exclude "fe/*" --match "v*" | head -n1 | sed 's/.*\///')
 DOCKER_VERSION ?= $(VERSION)
-TMVERSION := $(shell go list -m github.com/tendermint/tendermint | sed 's:.* ::')
+TMVERSION := $(shell go list -m github.com/cometbft/cometbft | sed 's:.* ::')
 COMMIT := $(shell git log -1 --format='%H')
 LEDGER_ENABLED ?= true
 BINDIR ?= $(GOPATH)/bin
@@ -69,7 +69,7 @@ ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=quicksilver \
           -X github.com/cosmos/cosmos-sdk/version.AppName=$(QS_BINARY) \
           -X github.com/cosmos/cosmos-sdk/version.Version=$(VERSION) \
           -X github.com/cosmos/cosmos-sdk/version.Commit=$(COMMIT) \
-          -X github.com/tendermint/tendermint/version.TMCoreSemVer=$(TMVERSION)
+          -X github.com/cometbft/cometbft/version.TMCoreSemVer=$(TMVERSION)
 
 ifeq ($(LINK_STATICALLY),true)
 	ldflags += -linkmode=external -extldflags "-Wl,-z,muldefs -static"
@@ -121,12 +121,9 @@ $(BUILDDIR)/:
 	mkdir -p $(BUILDDIR)/
 
 build-docker:
-	$(DOCKER) build . -f Dockerfile -t quicksilverzone/quicksilver:$(DOCKER_VERSION) -t quicksilverzone/quicksilver:latest
-
-build-docker-xbuild:
 	$(DOCKER) buildx build --platform linux/amd64 . -f Dockerfile -t quicksilverzone/quicksilver:$(DOCKER_VERSION) -t quicksilverzone/quicksilver:latest
 
-build-docker-release: build-docker-xbuild
+build-docker-release: build-docker
 	$(DOCKER)  run -v /tmp:/tmp quicksilverzone/quicksilver:$(DOCKER_VERSION) cp /usr/local/bin/quicksilverd /tmp/quicksilverd
 	mv /tmp/quicksilverd build/quicksilverd-$(DOCKER_VERSION)-amd64
 
@@ -424,43 +421,30 @@ mdlint-fix:
 ###                                Protobuf                                 ###
 ###############################################################################
 
-BUF_VERSION=1.35.1
+protoVer=0.15.0
+protoImageName=ghcr.io/cosmos/proto-builder:$(protoVer)
+protoImage=$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(protoImageName)
 
-proto-all: proto-gen
+proto-all: proto-format proto-lint proto-gen
 
-proto-gen: proto-format
+proto-gen: 
 	@echo "🤖 Generating code from protobuf..."
-	@$(DOCKER) run --rm --volume "$(PWD)":/workspace --workdir /workspace \
-		quicksilver-proto sh ./proto/generate.sh
+	@$(protoImage) sh ./proto/proto-gen.sh
 	@echo "✅ Completed code generation!"
 
 proto-lint:
 	@echo "🤖 Running protobuf linter..."
-	@$(DOCKER) run --volume "$(PWD)":/workspace --workdir /workspace \
-		bufbuild/buf:$(BUF_VERSION) lint
+	@$(protoImage) buf lint
 	@echo "✅ Completed protobuf linting!"
 
 proto-format:
 	@echo "🤖 Running protobuf format..."
-	@$(DOCKER) run --volume "$(PWD)":/workspace --workdir /workspace \
-		bufbuild/buf:$(BUF_VERSION) format -w
+	@$(protoImage) buf format -w
 	@echo "✅ Completed protobuf format!"
 
 proto-breaking-check:
-	@echo "🤖 Running protobuf breaking check against develop branch..."
-	@$(DOCKER) run --volume "$(PWD)":/workspace --workdir /workspace \
-		bufbuild/buf:$(BUF_VERSION) breaking --against '.git#branch=develop'
+	@echo "🤖 Running protobuf breaking check against main branch..."
+	@$(protoImage) buf breaking --against '.git#branch=main'
 	@echo "✅ Completed protobuf breaking check!"
 
-# proto-setup:
-#	@echo "🤖 Setting up protobuf environment..."
-#	@$(DOCKER) build --rm --tag quicksilver-proto:latest --file proto/Dockerfile .
-#	@echo "✅ Setup protobuf environment!"
-
-### Other tools
-.PHONY: hermes-build
-
-hermes-build:
-	docker buildx build --platform linux/amd64 --build-arg VERSION=$HERMES_VERSION -f Dockerfile.hermes . -t quicksilverzone/hermes:$HERMES_VERSION
-	docker push quicksilverzone/hermes:$HERMES_VERSION
 

@@ -9,7 +9,7 @@ import "google/protobuf/duration.proto";
 import "osmosis/poolmanager/v1beta1/module_route.proto";
 import "osmosis/poolmanager/v1beta1/tx.proto";
 
-option go_package = "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/poolmanager";
+option go_package = "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/poolmanager/types";
 
 // Params holds parameters for the poolmanager module
 message Params {

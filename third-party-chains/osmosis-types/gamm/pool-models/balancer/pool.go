@@ -10,11 +10,11 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	types "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/gamm"
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/gamm/pool-models/internal/cfmm_common"
-	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/osmomath"
-	poolmanagertypes "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/poolmanager"
-	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
+	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/gamm/types"
+	poolmanagertypes "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/poolmanager/types"
+	"github.com/quicksilver-zone/quicksilver/utils"
 )
 
 //nolint:deadcode
@@ -63,10 +63,10 @@ func NewBalancerPool(poolId uint64, balancerPoolParams PoolParams, assets []Pool
 	}
 
 	sortedPoolAssets := pool.GetAllPoolAssets()
-	err = balancerPoolParams.Validate(sortedPoolAssets)
-	if err != nil {
-		return Pool{}, err
-	}
+	// err = balancerPoolParams.Validate(sortedPoolAssets)
+	// if err != nil {
+	// 	return Pool{}, err
+	// }
 
 	err = pool.setInitialPoolParams(balancerPoolParams, sortedPoolAssets, blockTime)
 	if err != nil {
@@ -79,7 +79,7 @@ func NewBalancerPool(poolId uint64, balancerPoolParams PoolParams, assets []Pool
 // GetAddress returns the address of a pool.
 // If the pool address is not bech32 valid, it returns an empty address.
 func (p Pool) GetAddress() sdk.AccAddress {
-	addr, err := addressutils.AccAddressFromBech32(p.Address, "")
+	addr, err := sdk.AccAddressFromBech32(p.Address)
 	if err != nil {
 		panic(fmt.Sprintf("could not bech32 decode address of pool with id: %d", p.GetId()))
 	}
@@ -142,7 +142,7 @@ func (p *Pool) SetInitialPoolAssets(PoolAssets []PoolAsset) error {
 	// TODO: Refactor this into PoolAsset.validate()
 	for _, asset := range PoolAssets {
 		if asset.Token.Amount.LTE(osmomath.ZeroInt()) {
-			return errors.New("can't add the zero or negative balance of token")
+			return fmt.Errorf("can't add the zero or negative balance of token")
 		}
 
 		err := asset.validateWeight()
@@ -151,7 +151,7 @@ func (p *Pool) SetInitialPoolAssets(PoolAssets []PoolAsset) error {
 		}
 
 		if exists[asset.Token.Denom] {
-			return errors.New("same PoolAsset already exists")
+			return fmt.Errorf("same PoolAsset already exists")
 		}
 		exists[asset.Token.Denom] = true
 
@@ -212,6 +212,10 @@ func (p *Pool) setInitialPoolParams(params PoolParams, sortedAssets []PoolAsset,
 	return nil
 }
 
+func (p Pool) String() string {
+	return ""
+}
+
 // GetPoolAssets returns the denom's PoolAsset, If the PoolAsset doesn't exist, will return error.
 // As above, it will search the denom's PoolAsset by using binary search.
 // So, it is important to make sure that the PoolAssets are sorted.
@@ -223,7 +227,7 @@ func (p Pool) GetPoolAsset(denom string) (PoolAsset, error) {
 // Returns a pool asset, and its index. If err != nil, then the index will be valid.
 func (p Pool) getPoolAssetAndIndex(denom string) (int, PoolAsset, error) {
 	if denom == "" {
-		return -1, PoolAsset{}, errors.New("you tried to find the PoolAsset with empty denom")
+		return -1, PoolAsset{}, fmt.Errorf("you tried to find the PoolAsset with empty denom")
 	}
 
 	if len(p.PoolAssets) == 0 {
@@ -302,7 +306,7 @@ func (p *Pool) UpdatePoolAssetBalance(coin sdk.Coin) error {
 	}
 
 	if coin.Amount.LTE(osmomath.ZeroInt()) {
-		return errors.New("can't set the pool's balance of a token to be zero or negative")
+		return fmt.Errorf("can't set the pool's balance of a token to be zero or negative")
 	}
 
 	// Update the supply of the asset
@@ -501,9 +505,9 @@ func (p Pool) CalcOutAmtGivenIn(
 		return sdk.Coin{}, err
 	}
 
-	tokenAmountInAfterFee := tokenIn.Amount.ToLegacyDec().Mul(osmomath.OneDec().Sub(spreadFactor))
+	tokenAmountInAfterFee := tokenIn.Amount.ToLegacyDec().MulMut(oneDec.Sub(spreadFactor))
 	poolTokenInBalance := poolAssetIn.Token.Amount.ToLegacyDec()
-	poolPostSwapInBalance := poolTokenInBalance.Add(tokenAmountInAfterFee)
+	poolPostSwapInBalance := tokenAmountInAfterFee.AddMut(poolTokenInBalance)
 
 	// deduct spread factor on the tokensIn
 	// delta balanceOut is positive(tokens inside the pool decreases)
@@ -646,7 +650,7 @@ func (p Pool) SpotPrice(ctx sdk.Context, quoteAsset, baseAsset string) (spotPric
 	supplyRatio := quote.Token.Amount.ToLegacyDec().Quo(base.Token.Amount.ToLegacyDec())
 	spotPriceDec := supplyRatio.Mul(invWeightRatio)
 
-	return osmomath.BigDecFromDec(spotPriceDec), err
+	return osmomath.BigDecFromDecMut(spotPriceDec), err
 }
 
 // calcPoolOutGivenSingleIn - balance pAo.
@@ -755,7 +759,7 @@ func (p *Pool) CalcJoinPoolShares(ctx sdk.Context, tokensIn sdk.Coins, spreadFac
 	// safely ends the calculation if all input tokens are successfully LP'd
 	if tokensJoined.IsAnyGT(tokensIn) {
 		return osmomath.ZeroInt(), sdk.NewCoins(), errors.New("an error has occurred, more coins joined than tokens passed in")
-	} else if tokensJoined.IsEqual(tokensIn) {
+	} else if utils.EqualCoins(tokensJoined, tokensIn) {
 		return numShares, tokensJoined, nil
 	}
 
@@ -796,8 +800,37 @@ func (p *Pool) CalcJoinPoolShares(ctx sdk.Context, tokensIn sdk.Coins, spreadFac
 // more complex / don't just alter the state.
 // We should simplify this logic further in the future using multi-join equations.
 func (p *Pool) CalcJoinPoolNoSwapShares(ctx sdk.Context, tokensIn sdk.Coins, spreadFactor osmomath.Dec) (numShares osmomath.Int, tokensJoined sdk.Coins, err error) {
-	// clobber
-	return osmomath.Int{}, sdk.Coins{}, nil
+	// get all 'pool assets' (aka current pool liquidity + balancer weight)
+	poolAssetsByDenom, err := getPoolAssetsByDenom(p.GetAllPoolAssets())
+	if err != nil {
+		return osmomath.ZeroInt(), sdk.NewCoins(), err
+	}
+
+	err = ensureDenomInPool(poolAssetsByDenom, tokensIn)
+	if err != nil {
+		return osmomath.ZeroInt(), sdk.NewCoins(), err
+	}
+
+	// ensure that there aren't too many or too few assets in `tokensIn`
+	if tokensIn.Len() != p.NumAssets() {
+		return osmomath.ZeroInt(), sdk.NewCoins(), errors.New("no-swap joins require LP'ing with all assets in pool")
+	}
+
+	// execute a no-swap join with as many tokens as possible given a perfect ratio:
+	// * numShares is how many shares are perfectly matched.
+	// * remainingTokensIn is how many coins we have left to join that have not already been used.
+	numShares, remainingTokensIn, err := cfmm_common.MaximalExactRatioJoin(p, ctx, tokensIn)
+	if err != nil {
+		return osmomath.ZeroInt(), sdk.NewCoins(), err
+	}
+
+	// ensure that no more tokens have been joined than is possible with the given `tokensIn`
+	tokensJoined = tokensIn.Sub(remainingTokensIn...)
+	if tokensJoined.IsAnyGT(tokensIn) {
+		return osmomath.ZeroInt(), sdk.NewCoins(), errors.New("an error has occurred, more coins joined than token In")
+	}
+
+	return numShares, tokensJoined, nil
 }
 
 // calcJoinSingleAssetTokensIn attempts to calculate single
@@ -958,9 +991,5 @@ func (p *Pool) AsSerializablePool() poolmanagertypes.PoolI {
 // GetPoolDenoms implements types.CFMMPoolI.
 func (p *Pool) GetPoolDenoms(ctx sdk.Context) []string {
 	liquidity := p.GetTotalPoolLiquidity(ctx)
-	denoms := []string{}
-	for _, i := range liquidity {
-		denoms = append(denoms, i.Denom)
-	}
-	return denoms
+	return liquidity.Denoms()
 }
