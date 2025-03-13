@@ -505,6 +505,8 @@ func (appKeepers *AppKeepers) InitKeepers(
 		govAuthority,
 	)
 
+	appKeepers.GovKeeper.SetLegacyRouter(govRouter)
+
 	appKeepers.ScopedIBCKeeper = scopedIBCKeeper
 	appKeepers.ScopedTransferKeeper = scopedTransferKeeper
 	appKeepers.ScopedICAControllerKeeper = scopedICAControllerKeeper
