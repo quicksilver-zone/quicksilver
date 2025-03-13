@@ -7,10 +7,9 @@ import (
 	"os"
 	"path/filepath"
 
-	dbm "github.com/cometbft/cometbft-db"
-	tmcfg "github.com/cometbft/cometbft/config"
-	tmcli "github.com/cometbft/cometbft/libs/cli"
-	"github.com/cometbft/cometbft/libs/log"
+	"github.com/spf13/cast"
+	"github.com/spf13/cobra"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/config"
@@ -30,11 +29,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
+
+	dbm "github.com/cometbft/cometbft-db"
+	tmcfg "github.com/cometbft/cometbft/config"
+	tmcli "github.com/cometbft/cometbft/libs/cli"
+	"github.com/cometbft/cometbft/libs/log"
+
 	"github.com/quicksilver-zone/quicksilver/app"
 	quicksilverconfig "github.com/quicksilver-zone/quicksilver/cmd/config"
 	servercfg "github.com/quicksilver-zone/quicksilver/server/config"
-	"github.com/spf13/cast"
-	"github.com/spf13/cobra"
 )
 
 const (
@@ -118,7 +121,7 @@ func NewRootCmd() (*cobra.Command, app.EncodingConfig) {
 	)
 
 	// add rosetta
-	//rootCmd.AddCommand(rosettaCmd.RosettaCommand(encodingConfig.InterfaceRegistry, encodingConfig.Marshaler))
+	// rootCmd.AddCommand(rosettaCmd.RosettaCommand(encodingConfig.InterfaceRegistry, encodingConfig.Marshaler))
 
 	return rootCmd, encodingConfig
 }

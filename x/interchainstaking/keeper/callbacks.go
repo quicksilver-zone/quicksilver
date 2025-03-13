@@ -7,8 +7,10 @@ import (
 	"math"
 	"time"
 
+	"google.golang.org/protobuf/encoding/protowire"
+
 	sdkioerrors "cosmossdk.io/errors"
-	tmtypes "github.com/cometbft/cometbft/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -18,14 +20,17 @@ import (
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
+	tmtypes "github.com/cometbft/cometbft/types"
+
 	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
 	tmclienttypes "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
+
 	"github.com/quicksilver-zone/quicksilver/utils"
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	"github.com/quicksilver-zone/quicksilver/utils/proofs"
 	icqtypes "github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
 	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
-	"google.golang.org/protobuf/encoding/protowire"
 )
 
 // ___________________________________________________________________________________________________

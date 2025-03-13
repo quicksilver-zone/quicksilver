@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
+
 	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
@@ -14,7 +16,6 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/concentrated-liquidity/model"
 	gamm "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/gamm/types"
 	leveragetypes "github.com/quicksilver-zone/quicksilver/third-party-chains/umee-types/leverage/types"

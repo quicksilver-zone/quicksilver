@@ -7,12 +7,8 @@ import (
 	"testing"
 	"time"
 
-	dbm "github.com/cometbft/cometbft-db"
-	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/cometbft/cometbft/crypto/secp256k1"
-	"github.com/cometbft/cometbft/libs/log"
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	tmtypes "github.com/cometbft/cometbft/types"
+	"github.com/stretchr/testify/require"
+
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	cosmossecp256k1 "github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -21,8 +17,15 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
+	dbm "github.com/cometbft/cometbft-db"
+	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cometbft/cometbft/crypto/secp256k1"
+	"github.com/cometbft/cometbft/libs/log"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	tmtypes "github.com/cometbft/cometbft/types"
+
 	ibctesting "github.com/cosmos/ibc-go/v7/testing"
-	"github.com/stretchr/testify/require"
 )
 
 // EmptyAppOptions is a stub implementing AppOptions.
@@ -106,7 +109,7 @@ func Setup(t *testing.T, isCheckTx bool) *Quicksilver {
 			abci.RequestInitChain{
 				ChainId:    "mercury-1",
 				Validators: []abci.ValidatorUpdate{},
-				//ConsensusParams: DefaultConsensusParams,
+				// ConsensusParams: DefaultConsensusParams,
 				AppStateBytes: stateBytes,
 			},
 		)

@@ -8,12 +8,11 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/spf13/cast"
+
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
-	dbm "github.com/cometbft/cometbft-db"
-	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/cometbft/cometbft/libs/log"
-	tmos "github.com/cometbft/cometbft/libs/os"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	nodeservice "github.com/cosmos/cosmos-sdk/client/grpc/node"
@@ -35,13 +34,19 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
+
+	dbm "github.com/cometbft/cometbft-db"
+	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cometbft/cometbft/libs/log"
+	tmos "github.com/cometbft/cometbft/libs/os"
+
 	ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
 	ibctestingtypes "github.com/cosmos/ibc-go/v7/testing/types"
+
 	"github.com/quicksilver-zone/quicksilver/app/keepers"
 	"github.com/quicksilver-zone/quicksilver/docs"
 	interchainstakingtypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 	supplytypes "github.com/quicksilver-zone/quicksilver/x/supply/types"
-	"github.com/spf13/cast"
 )
 
 func Init() {

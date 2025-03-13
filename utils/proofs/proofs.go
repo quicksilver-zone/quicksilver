@@ -7,10 +7,13 @@ import (
 	"strings"
 
 	squareshare "github.com/celestiaorg/go-square/v2/share"
+	"github.com/cosmos/gogoproto/proto"
+
+	"github.com/cosmos/cosmos-sdk/codec/types"
+
 	"github.com/cometbft/cometbft/crypto/tmhash"
 	tmtypes "github.com/cometbft/cometbft/types"
-	"github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/gogoproto/proto"
+
 	celestiatypes "github.com/quicksilver-zone/quicksilver/third-party-chains/celestia-types/types"
 )
 

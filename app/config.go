@@ -22,7 +22,7 @@ func DefaultConfig() network.Config {
 		LegacyAmino:       encCfg.Amino,
 		InterfaceRegistry: encCfg.InterfaceRegistry,
 		AccountRetriever:  authtypes.AccountRetriever{},
-		//AppConstructor:    NewAppConstructor(encCfg),
+		// AppConstructor:    NewAppConstructor(encCfg),
 		GenesisState:   ModuleBasics.DefaultGenesis(encCfg.Marshaler),
 		TimeoutCommit:  1 * time.Second / 2,
 		ChainID:        "quicktest-1",

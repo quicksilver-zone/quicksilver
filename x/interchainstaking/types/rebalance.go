@@ -6,8 +6,11 @@ import (
 	"sort"
 
 	sdkmath "cosmossdk.io/math"
-	"github.com/cometbft/cometbft/libs/log"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/cometbft/cometbft/libs/log"
+
 	"github.com/quicksilver-zone/quicksilver/utils"
 )
 

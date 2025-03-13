@@ -6,12 +6,15 @@ import (
 	"testing"
 	"time"
 
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	"github.com/stretchr/testify/require"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+
 	simapp "github.com/quicksilver-zone/quicksilver/app"
 	"github.com/quicksilver-zone/quicksilver/x/participationrewards"
 	"github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
-	"github.com/stretchr/testify/require"
 )
 
 func TestParticipationRewardsExportGenesis(t *testing.T) {

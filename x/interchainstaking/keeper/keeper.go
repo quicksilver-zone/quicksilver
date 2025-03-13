@@ -8,7 +8,7 @@ import (
 	"time"
 
 	sdkmath "cosmossdk.io/math"
-	"github.com/cometbft/cometbft/libs/log"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -25,10 +25,14 @@ import (
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
+	"github.com/cometbft/cometbft/libs/log"
+
 	icacontrollerkeeper "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/keeper"
 	ibctransferkeeper "github.com/cosmos/ibc-go/v7/modules/apps/transfer/keeper"
 	ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
 	ibctmtypes "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
+
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	claimsmanagertypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
 	epochskeeper "github.com/quicksilver-zone/quicksilver/x/epochs/keeper"

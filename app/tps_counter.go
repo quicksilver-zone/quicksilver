@@ -8,10 +8,11 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/cometbft/cometbft/libs/log"
 	"go.opencensus.io/stats"
 	"go.opencensus.io/stats/view"
 	"go.opencensus.io/tag"
+
+	"github.com/cometbft/cometbft/libs/log"
 )
 
 var (
