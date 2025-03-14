@@ -13,6 +13,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
+	icacontrollerkeeper "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/keeper"
+	icacontrollertypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/types"
 	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
 	transfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
@@ -336,7 +338,9 @@ func ProdSubmitTx(ctx sdk.Context, k *Keeper, msgs []sdk.Msg, account *types.ICA
 			Memo: memo,
 		}
 
-		_, err = k.ICAControllerKeeper.SendTx(ctx, nil, connectionID, portID, packetData, timeoutTimestamp) // nolint:staticcheck
+		ckMsgServer := icacontrollerkeeper.NewMsgServerImpl(&k.ICAControllerKeeper)
+		msgSendTx := icacontrollertypes.NewMsgSendTx(portID, connectionID, timeoutTimestamp, packetData)
+		_, err = ckMsgServer.SendTx(ctx, msgSendTx)
 		if err != nil {
 			return err
 		}

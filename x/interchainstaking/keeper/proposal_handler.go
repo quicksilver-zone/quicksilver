@@ -7,6 +7,9 @@ import (
 	"strconv"
 	"strings"
 
+	icacontrollerkeeper "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/keeper"
+	icacontrollertypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/types"
+
 	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -147,9 +150,14 @@ func (k *Keeper) HandleRegisterZoneProposal(ctx sdk.Context, p *types.RegisterZo
 }
 
 func (k *Keeper) registerInterchainAccount(ctx sdk.Context, connectionID, portOwner string) error {
-	if err := k.ICAControllerKeeper.RegisterInterchainAccountWithOrdering(ctx, connectionID, portOwner, "", channeltypes.ORDERED); err != nil { // todo: add version
+	msg := icacontrollertypes.NewMsgRegisterInterchainAccountWithOrdering(portOwner, connectionID, "", channeltypes.ORDERED)
+
+	ckMsgServer := icacontrollerkeeper.NewMsgServerImpl(&k.ICAControllerKeeper)
+	_, err := ckMsgServer.RegisterInterchainAccount(ctx, msg)
+	if err != nil {
 		return err
 	}
+
 	portID, err := icatypes.NewControllerPortID(portOwner)
 	if err != nil {
 		return err

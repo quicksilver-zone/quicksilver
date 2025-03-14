@@ -210,7 +210,6 @@ func (appKeepers *AppKeepers) InitKeepers(
 	scopedTransferKeeper := appKeepers.CapabilityKeeper.ScopeToModule(ibctransfertypes.ModuleName)
 	scopedICAControllerKeeper := appKeepers.CapabilityKeeper.ScopeToModule(icacontrollertypes.SubModuleName)
 	scopedICAHostKeeper := appKeepers.CapabilityKeeper.ScopeToModule(icahosttypes.SubModuleName)
-	scopedInterchainStakingKeeper := appKeepers.CapabilityKeeper.ScopeToModule(interchainstakingtypes.ModuleName)
 
 	appKeepers.CapabilityKeeper.Seal()
 
@@ -379,7 +378,7 @@ func (appKeepers *AppKeepers) InitKeepers(
 	appKeepers.ConsensusKeeper = consensuskeeper.NewKeeper(
 		appCodec,
 		appKeepers.keys[upgradetypes.StoreKey],
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		govAuthority,
 	)
 
 	// set the BaseApp's parameter store
@@ -407,15 +406,13 @@ func (appKeepers *AppKeepers) InitKeepers(
 		appKeepers.AuthzKeeper,
 		appKeepers.BankKeeper,
 		appKeepers.ICAControllerKeeper,
-		&scopedInterchainStakingKeeper,
 		appKeepers.InterchainQueryKeeper,
 		appKeepers.IBCKeeper,
 		appKeepers.TransferKeeper,
 		appKeepers.ClaimsManagerKeeper,
 		appKeepers.GetSubspace(interchainstakingtypes.ModuleName),
+		govAuthority,
 	)
-
-	// interchainstakingModule := interchainstaking.NewAppModule(appCodec, app.InterchainstakingKeeper)
 
 	interchainstakingIBCModule := interchainstaking.NewIBCModule(appKeepers.InterchainstakingKeeper)
 
@@ -433,13 +430,12 @@ func (appKeepers *AppKeepers) InitKeepers(
 		authtypes.FeeCollectorName,
 		proofOpsFn,
 		selfProofOpsFn,
+		govAuthority,
 	)
 
 	if err := appKeepers.InterchainQueryKeeper.SetCallbackHandler(interchainstakingtypes.ModuleName, appKeepers.InterchainstakingKeeper.CallbackHandler()); err != nil {
 		panic(err)
 	}
-
-	// participationrewardsModule := participationrewards.NewAppModule(appCodec, appKeepers.ParticipationRewardsKeeper)
 
 	if err := appKeepers.InterchainQueryKeeper.SetCallbackHandler(participationrewardstypes.ModuleName, appKeepers.ParticipationRewardsKeeper.CallbackHandler()); err != nil {
 		panic(err)
@@ -470,7 +466,7 @@ func (appKeepers *AppKeepers) InitKeepers(
 	ibcRouter := porttypes.NewRouter()
 	ibcRouter.
 		AddRoute(ibctransfertypes.ModuleName, ibcStack).
-		AddRoute(icacontrollertypes.SubModuleName, icaControllerIBCModule).
+		// AddRoute(icacontrollertypes.SubModuleName, icaControllerIBCModule).
 		AddRoute(icahosttypes.SubModuleName, icaHostIBCModule).
 		AddRoute(interchainstakingtypes.ModuleName, icaControllerIBCModule)
 	appKeepers.IBCKeeper.SetRouter(ibcRouter)
@@ -514,7 +510,6 @@ func (appKeepers *AppKeepers) InitKeepers(
 	appKeepers.ScopedIBCKeeper = scopedIBCKeeper
 	appKeepers.ScopedTransferKeeper = scopedTransferKeeper
 	appKeepers.ScopedICAControllerKeeper = scopedICAControllerKeeper
-	appKeepers.ScopedInterchainStakingAccountKeeper = scopedInterchainStakingKeeper
 	appKeepers.ScopedICAHostKeeper = scopedICAHostKeeper
 }
 
