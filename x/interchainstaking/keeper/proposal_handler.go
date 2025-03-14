@@ -14,6 +14,7 @@ import (
 
 	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
 	transfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
+	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
 	ibcexported "github.com/cosmos/ibc-go/v7/modules/core/exported"
 	tmclienttypes "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
 
@@ -146,7 +147,7 @@ func (k *Keeper) HandleRegisterZoneProposal(ctx sdk.Context, p *types.RegisterZo
 }
 
 func (k *Keeper) registerInterchainAccount(ctx sdk.Context, connectionID, portOwner string) error {
-	if err := k.ICAControllerKeeper.RegisterInterchainAccount(ctx, connectionID, portOwner, ""); err != nil { // todo: add version
+	if err := k.ICAControllerKeeper.RegisterInterchainAccountWithOrdering(ctx, connectionID, portOwner, "", channeltypes.ORDERED); err != nil { // todo: add version
 		return err
 	}
 	portID, err := icatypes.NewControllerPortID(portOwner)
