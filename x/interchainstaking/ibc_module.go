@@ -51,9 +51,9 @@ func (IBCModule) OnChanOpenTry(
 	_ string,
 	_ *capabilitytypes.Capability,
 	_ channeltypes.Counterparty,
-	_ string,
+	version string,
 ) (string, error) {
-	panic("not implemented")
+	return version, nil
 }
 
 // OnChanOpenAck implements the IBCModule interface.
@@ -107,7 +107,7 @@ func (im IBCModule) OnRecvPacket(
 	_ channeltypes.Packet,
 	_ sdk.AccAddress,
 ) ibcexported.Acknowledgement {
-	return channeltypes.NewErrorAcknowledgement(errors.New("cannot receive packet via interchain accounts authentication module"))
+	return channeltypes.NewErrorAcknowledgement(errors.New("cannot receive packet via interchainstaking authentication module"))
 }
 
 // OnAcknowledgementPacket implements the IBCModule interface.
@@ -146,7 +146,7 @@ func (IBCModule) NegotiateAppVersion(
 	_ string,
 	_ string,
 	_ channeltypes.Counterparty,
-	_ string,
+	proposedVersion string,
 ) (string, error) {
-	return "", nil
+	return proposedVersion, nil
 }
