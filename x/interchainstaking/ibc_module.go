@@ -69,6 +69,7 @@ func (im IBCModule) OnChanOpenAck(
 	if err != nil {
 		return err
 	}
+	fmt.Println("OnChanOpenAck", portID, channelID, connectionID)
 	return im.keeper.HandleChannelOpenAck(ctx, portID, connectionID)
 }
 
@@ -117,12 +118,14 @@ func (im IBCModule) OnAcknowledgementPacket(
 	acknowledgement []byte,
 	_ sdk.AccAddress,
 ) error {
+	fmt.Println("OnAcknowledgementPacket", packet.SourcePort, packet.SourceChannel)
+	fmt.Println("acknowledgement", string(acknowledgement))
 	connectionID, _, err := im.keeper.IBCKeeper.ChannelKeeper.GetChannelConnection(ctx, packet.SourcePort, packet.SourceChannel)
-	if err != nil {
-		err = fmt.Errorf("packet connection not found: %w", err)
-		ctx.Logger().Error(err.Error())
-		return err
-	}
+	// if err != nil {
+	// 	err = fmt.Errorf("packet connection not found: %w", err)
+	// 	ctx.Logger().Error(err.Error())
+	// 	return err
+	// }
 	err = im.keeper.HandleAcknowledgement(ctx, packet, acknowledgement, connectionID)
 	if err != nil {
 		im.keeper.Logger(ctx).Error("CALLBACK ERROR:", "error", err.Error())
