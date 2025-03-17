@@ -7,13 +7,13 @@ require (
 	github.com/BurntSushi/toml v1.4.1-0.20240526193622-a339e1f7089c
 	github.com/avast/retry-go/v4 v4.6.0
 	github.com/cometbft/cometbft v0.37.15
-	github.com/cosmos/cosmos-sdk v0.47.15
-	github.com/cosmos/ibc-go/v7 v7.4.0
+	github.com/cosmos/cosmos-sdk v0.47.16
+	github.com/cosmos/ibc-go/v7 v7.9.2
 	github.com/dgraph-io/ristretto v0.2.0
 	github.com/go-kit/log v0.2.1
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/prometheus/client_golang v1.21.1
-	github.com/quicksilver-zone/quicksilver v1.7.6
+	github.com/quicksilver-zone/quicksilver v1.8.0-beta.11
 	github.com/rs/zerolog v1.33.0
 	github.com/spf13/cobra v1.9.1
 	github.com/spf13/viper v1.19.0
@@ -149,13 +149,14 @@ require (
 	github.com/mtibben/percent v0.2.1 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/onsi/gomega v1.36.2 // indirect
+	github.com/osmosis-labs/osmosis/osmomath v0.0.16 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.3 // indirect
 	github.com/petermattis/goid v0.0.0-20240813172612-4fcff4a6cae7 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/planetscale/vtprotobuf v0.6.1-0.20240319094008-0393e58bdf10 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/prometheus/client_model v0.6.1 // indirect
-	github.com/prometheus/common v0.62.0 // indirect
+	github.com/prometheus/common v0.63.0 // indirect
 	github.com/prometheus/procfs v0.15.1 // indirect
 	github.com/rakyll/statik v0.1.7 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
@@ -214,5 +215,6 @@ require (
 replace (
 	github.com/evmos/ethermint => github.com/evmos/ethermint v0.22.0
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
-	github.com/quicksilver-zone/quicksilver => ../
+	github.com/osmosis-labs/osmosis/osmomath => github.com/quicksilver-zone/osmomath v0.0.16-sdk47
+//github.com/quicksilver-zone/quicksilver => ../
 )
