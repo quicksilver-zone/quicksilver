@@ -414,7 +414,7 @@ func (appKeepers *AppKeepers) InitKeepers(
 		govAuthority,
 	)
 
-	interchainstakingIBCModule := interchainstaking.NewIBCModule(appKeepers.InterchainstakingKeeper)
+	interchainstakingIBCModule := interchainstaking.NewIBCModule(appKeepers.InterchainstakingKeeper, &appKeepers.ICAControllerKeeper)
 
 	appKeepers.ParticipationRewardsKeeper = participationrewardskeeper.NewKeeper(
 		appCodec,
@@ -467,8 +467,8 @@ func (appKeepers *AppKeepers) InitKeepers(
 	ibcRouter.
 		AddRoute(ibctransfertypes.ModuleName, ibcStack).
 		AddRoute(icacontrollertypes.SubModuleName, icaControllerIBCModule).
-		AddRoute(icahosttypes.SubModuleName, icaHostIBCModule).
-		AddRoute(interchainstakingtypes.ModuleName, icaControllerIBCModule)
+		AddRoute(icahosttypes.SubModuleName, icaHostIBCModule)
+		//AddRoute(interchainstakingtypes.ModuleName, interchainstakingIBCModule)
 	appKeepers.IBCKeeper.SetRouter(ibcRouter)
 
 	// create evidence keeper with router

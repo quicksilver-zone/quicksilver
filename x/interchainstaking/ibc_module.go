@@ -6,7 +6,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
-
+	icacontrollerkeeper "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/keeper"
 	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
 	porttypes "github.com/cosmos/ibc-go/v7/modules/core/05-port/types"
 	ibcexported "github.com/cosmos/ibc-go/v7/modules/core/exported"
@@ -18,33 +18,35 @@ var _ porttypes.IBCModule = IBCModule{}
 
 // IBCModule implements the ICS26 interface for interchain accounts controller chains.
 type IBCModule struct {
-	keeper *keeper.Keeper
+	keeper    *keeper.Keeper
+	icaKeeper *icacontrollerkeeper.Keeper
 }
 
 // NewIBCModule creates a new IBCModule given the keeper.
-func NewIBCModule(k *keeper.Keeper) IBCModule {
+func NewIBCModule(k *keeper.Keeper, icaKeeper *icacontrollerkeeper.Keeper) IBCModule {
 	return IBCModule{
-		keeper: k,
+		keeper:    k,
+		icaKeeper: icaKeeper,
 	}
 }
 
 // OnChanOpenInit implements the IBCModule interface.
 func (im IBCModule) OnChanOpenInit(
 	ctx sdk.Context,
-	_ channeltypes.Order,
-	_ []string,
+	order channeltypes.Order,
+	connectionHops []string,
 	portID string,
 	channelID string,
 	chanCap *capabilitytypes.Capability,
-	_ channeltypes.Counterparty,
+	counterparty channeltypes.Counterparty,
 	version string,
 ) (string, error) {
-	return version, nil
+	return im.icaKeeper.OnChanOpenInit(ctx, order, connectionHops, portID, channelID, chanCap, counterparty, version)
 }
 
 // OnChanOpenTry implements the IBCModule interface.
 func (IBCModule) OnChanOpenTry(
-	_ sdk.Context,
+	ctx sdk.Context,
 	_ channeltypes.Order,
 	_ []string,
 	_ string,
@@ -61,16 +63,20 @@ func (im IBCModule) OnChanOpenAck(
 	ctx sdk.Context,
 	portID,
 	channelID string,
-	_ string,
-	_ string,
+	counterpartyChannelID string,
+	counterpartyVersion string,
 ) error {
 	// get connection from port
 	connectionID, _, err := im.keeper.IBCKeeper.ChannelKeeper.GetChannelConnection(ctx, portID, channelID)
 	if err != nil {
 		return err
 	}
-	fmt.Println("OnChanOpenAck", portID, channelID, connectionID)
-	return im.keeper.HandleChannelOpenAck(ctx, portID, connectionID)
+
+	err = im.keeper.HandleChannelOpenAck(ctx, portID, connectionID)
+	if err != nil {
+		return err
+	}
+	return im.icaKeeper.OnChanOpenAck(ctx, portID, channelID, connectionID)
 }
 
 // OnChanOpenConfirm implements the IBCModule interface.
@@ -92,12 +98,12 @@ func (im IBCModule) OnChanCloseInit(
 }
 
 // OnChanCloseConfirm implements the IBCModule interface.
-func (IBCModule) OnChanCloseConfirm(
-	_ sdk.Context,
-	_,
-	_ string,
+func (im IBCModule) OnChanCloseConfirm(
+	ctx sdk.Context,
+	portID,
+	channelID string,
 ) error {
-	return nil
+	return im.icaKeeper.OnChanCloseConfirm(ctx, portID, channelID)
 }
 
 // OnRecvPacket implements the IBCModule interface. A successful acknowledgement
