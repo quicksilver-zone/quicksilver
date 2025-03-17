@@ -547,18 +547,27 @@ func (c *ChainConfig) SignAndBroadcastMsg(ctx context.Context, cliContext *clien
 
 	res, err := serviceClient.BroadcastTx(ctx, &txtypes.BroadcastTxRequest{
 		TxBytes: txBytes,
-		Mode:    txtypes.BroadcastMode_BROADCAST_MODE_BLOCK,
+		Mode:    txtypes.BroadcastMode_BROADCAST_MODE_ASYNC,
 	})
+
+	fmt.Println("DEBUG::res", res.TxResponse.TxHash)
+
+	time.Sleep(10 * time.Second)
+	txRes, err := serviceClient.GetTx(ctx, &txtypes.GetTxRequest{
+		Hash: res.TxResponse.TxHash,
+	})
+
+	fmt.Println("DEBUG::tx", txRes)
 
 	switch {
 	case err != nil:
 		//log.Err(err).Msg("Transaction error")
 		return "", 65536, err
-	case res.TxResponse.Code > 0:
+	case txRes.TxResponse.Code > 0:
 		//log.Error().Msgf("Transaction failed: %v", res.TxResponse)
 		return "err", res.TxResponse.Code, fmt.Errorf("transaction failed: %v", res.TxResponse)
 	default:
 		//log.Info().Msgf("Transaction broadcast successfully: %s", res.TxResponse.TxHash)
-		return res.TxResponse.TxHash, res.TxResponse.Code, nil
+		return txRes.TxResponse.TxHash, txRes.TxResponse.Code, nil
 	}
 }
