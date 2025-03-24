@@ -72,11 +72,13 @@ func (im IBCModule) OnChanOpenAck(
 		return err
 	}
 
-	err = im.keeper.HandleChannelOpenAck(ctx, portID, connectionID)
+	err = im.icaKeeper.OnChanOpenAck(ctx, portID, channelID, counterpartyVersion)
 	if err != nil {
 		return err
 	}
-	return im.icaKeeper.OnChanOpenAck(ctx, portID, channelID, connectionID)
+
+	return im.keeper.HandleChannelOpenAck(ctx, portID, connectionID)
+
 }
 
 // OnChanOpenConfirm implements the IBCModule interface.
