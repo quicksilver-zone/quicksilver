@@ -339,7 +339,8 @@ func ProdSubmitTx(ctx sdk.Context, k *Keeper, msgs []sdk.Msg, account *types.ICA
 		}
 
 		ckMsgServer := icacontrollerkeeper.NewMsgServerImpl(&k.ICAControllerKeeper)
-		msgSendTx := icacontrollertypes.NewMsgSendTx(portID, connectionID, timeoutTimestamp, packetData)
+		portOwner := portID[len(icatypes.ControllerPortPrefix):] // TODO: this is a hack to get the port owner; change PortName() to PortOwner() sans prefix.
+		msgSendTx := icacontrollertypes.NewMsgSendTx(portOwner, connectionID, timeoutTimestamp, packetData)
 		_, err = ckMsgServer.SendTx(ctx, msgSendTx)
 		if err != nil {
 			return err
