@@ -467,8 +467,7 @@ func (appKeepers *AppKeepers) InitKeepers(
 	ibcRouter.
 		AddRoute(ibctransfertypes.ModuleName, ibcStack).
 		AddRoute(icacontrollertypes.SubModuleName, icaControllerIBCModule).
-		AddRoute(icahosttypes.SubModuleName, icaHostIBCModule).
-		Seal()
+		AddRoute(icahosttypes.SubModuleName, icaHostIBCModule)
 
 	appKeepers.IBCKeeper.SetRouter(ibcRouter)
 
