@@ -163,6 +163,7 @@ func (k *Keeper) registerInterchainAccount(ctx sdk.Context, connectionID, portOw
 	}
 
 	k.SetConnectionForPort(ctx, connectionID, portID)
+	k.ICAControllerKeeper.SetMiddlewareEnabled(ctx, portID, connectionID)
 
 	return nil
 }
