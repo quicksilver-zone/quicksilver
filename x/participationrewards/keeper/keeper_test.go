@@ -354,7 +354,7 @@ func (suite *KeeperTestSuite) setupChannelForICA(chainID, connectionID, accountS
 	suite.T().Helper()
 	quicksilver := suite.GetQuicksilverApp(suite.chainA)
 
-	ibcModule := ics.NewIBCModule(quicksilver.InterchainstakingKeeper, &quicksilver.ICAControllerKeeper)
+	ibcModule := ics.NewIBCModule(quicksilver.InterchainstakingKeeper)
 	portID, err := icatypes.NewControllerPortID(chainID + "." + accountSuffix)
 	if err != nil {
 		return err

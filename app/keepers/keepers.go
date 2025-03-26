@@ -414,8 +414,6 @@ func (appKeepers *AppKeepers) InitKeepers(
 		govAuthority,
 	)
 
-	interchainstakingIBCModule := interchainstaking.NewIBCModule(appKeepers.InterchainstakingKeeper, &appKeepers.ICAControllerKeeper)
-
 	appKeepers.ParticipationRewardsKeeper = participationrewardskeeper.NewKeeper(
 		appCodec,
 		appKeepers.keys[participationrewardstypes.StoreKey],
@@ -449,6 +447,8 @@ func (appKeepers *AppKeepers) InitKeepers(
 	// The last arguments can contain custom message handlers, and custom query handlers,
 	// if we want to allow any custom callbacks
 
+	interchainstakingIBCModule := interchainstaking.NewIBCModule(appKeepers.InterchainstakingKeeper)
+
 	icaControllerIBCModule := icacontroller.NewIBCMiddleware(interchainstakingIBCModule, appKeepers.ICAControllerKeeper)
 
 	var ibcStack porttypes.IBCModule
@@ -467,8 +467,9 @@ func (appKeepers *AppKeepers) InitKeepers(
 	ibcRouter.
 		AddRoute(ibctransfertypes.ModuleName, ibcStack).
 		AddRoute(icacontrollertypes.SubModuleName, icaControllerIBCModule).
-		AddRoute(icahosttypes.SubModuleName, icaHostIBCModule)
-		//AddRoute(interchainstakingtypes.ModuleName, interchainstakingIBCModule)
+		AddRoute(icahosttypes.SubModuleName, icaHostIBCModule).
+		Seal()
+
 	appKeepers.IBCKeeper.SetRouter(ibcRouter)
 
 	// create evidence keeper with router
@@ -486,7 +487,6 @@ func (appKeepers *AppKeepers) InitKeepers(
 
 	govRouter.AddRoute(govtypes.RouterKey, govv1beta1.ProposalHandler).
 		AddRoute(paramproposal.RouterKey, params.NewParamChangeProposalHandler(appKeepers.ParamsKeeper)).
-		// AddRoute(distrtypes.RouterKey, distr.NewCommunityPoolSpendProposalHandler(appKeepers.DistrKeeper)).
 		AddRoute(upgradetypes.RouterKey, upgrade.NewSoftwareUpgradeProposalHandler(appKeepers.UpgradeKeeper)).
 		AddRoute(ibcexported.RouterKey, ibcclient.NewClientProposalHandler(appKeepers.IBCKeeper.ClientKeeper)).
 		AddRoute(ibcclienttypes.RouterKey, ibcclient.NewClientProposalHandler(appKeepers.IBCKeeper.ClientKeeper)).

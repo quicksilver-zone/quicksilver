@@ -23,10 +23,9 @@ type IBCModule struct {
 }
 
 // NewIBCModule creates a new IBCModule given the keeper.
-func NewIBCModule(k *keeper.Keeper, icaKeeper *icacontrollerkeeper.Keeper) IBCModule {
+func NewIBCModule(k *keeper.Keeper) IBCModule {
 	return IBCModule{
-		keeper:    k,
-		icaKeeper: icaKeeper,
+		keeper: k,
 	}
 }
 
@@ -41,7 +40,7 @@ func (im IBCModule) OnChanOpenInit(
 	counterparty channeltypes.Counterparty,
 	version string,
 ) (string, error) {
-	return im.icaKeeper.OnChanOpenInit(ctx, order, connectionHops, portID, channelID, chanCap, counterparty, version)
+	return "", nil
 }
 
 // OnChanOpenTry implements the IBCModule interface.
@@ -72,13 +71,7 @@ func (im IBCModule) OnChanOpenAck(
 		return err
 	}
 
-	err = im.icaKeeper.OnChanOpenAck(ctx, portID, channelID, counterpartyVersion)
-	if err != nil {
-		return err
-	}
-
 	return im.keeper.HandleChannelOpenAck(ctx, portID, connectionID)
-
 }
 
 // OnChanOpenConfirm implements the IBCModule interface.
