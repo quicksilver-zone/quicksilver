@@ -15,7 +15,6 @@ import (
 	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
 	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
 	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
-	host "github.com/cosmos/ibc-go/v7/modules/core/24-host"
 	tmclienttypes "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
 	ibctesting "github.com/cosmos/ibc-go/v7/testing"
 
@@ -367,46 +366,6 @@ func (suite *KeeperTestSuite) setupChannelForICA(chainID, connectionID, accountS
 
 	quicksilver.IBCKeeper.ChannelKeeper.SetNextSequenceSend(suite.chainA.GetContext(), portID, channelID, 1)
 	quicksilver.ICAControllerKeeper.SetActiveChannelID(suite.chainA.GetContext(), connectionID, portID, channelID)
-	key, err := quicksilver.GetScopedICAControllerKeeper().NewCapability(
-		suite.chainA.GetContext(),
-		host.ChannelCapabilityPath(portID, channelID),
-	)
-	if err != nil {
-		return err
-	}
-	err = quicksilver.GetScopedIBCKeeper().ClaimCapability(
-		suite.chainA.GetContext(),
-		key,
-		host.ChannelCapabilityPath(portID, channelID),
-	)
-	if err != nil {
-		return err
-	}
-
-	err = quicksilver.GetScopedICAControllerKeeper().ClaimCapability(
-		suite.chainA.GetContext(),
-		key,
-		host.ChannelCapabilityPath(portID, channelID),
-	)
-	if err != nil {
-		return err
-	}
-
-	key, err = quicksilver.GetScopedICAControllerKeeper().NewCapability(
-		suite.chainA.GetContext(),
-		host.PortPath(portID),
-	)
-	if err != nil {
-		return err
-	}
-	err = quicksilver.GetScopedIBCKeeper().ClaimCapability(
-		suite.chainA.GetContext(),
-		key,
-		host.PortPath(portID),
-	)
-	if err != nil {
-		return err
-	}
 
 	addr := addressutils.GenerateAddressForTestWithPrefix(remotePrefix)
 	quicksilver.ICAControllerKeeper.SetInterchainAccountAddress(suite.chainA.GetContext(), connectionID, portID, addr)
