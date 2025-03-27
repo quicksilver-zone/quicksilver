@@ -176,8 +176,8 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 				zone.UnbondingEnabled = false
 				suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetZone(suite.chainA.GetContext(), &zone)
 			},
-			"unbonding currently disabled for zone testchain2",
-			"unbonding currently disabled for zone testchain2",
+			"unbonding currently disabled for zone testchain2-1",
+			"unbonding currently disabled for zone testchain2-1",
 		},
 		{
 			"invalid - wrong denom",
@@ -610,7 +610,7 @@ func (suite *KeeperTestSuite) TestGovReopenChannel() {
 					Authority:    "",
 				}
 			},
-			expecErr: fmt.Errorf("chainID / connectionID mismatch. Connection: %s, Port: %s", "testchain2", ""),
+			expecErr: fmt.Errorf("chainID / connectionID mismatch. Connection: %s, Port: %s", "testchain2-1", ""),
 		},
 		{
 			name: "existing active channel",
@@ -624,7 +624,7 @@ func (suite *KeeperTestSuite) TestGovReopenChannel() {
 					Authority:    sdk.MustBech32ifyAddressBytes(sdk.GetConfig().GetBech32AccountAddrPrefix(), k.AccountKeeper.GetModuleAddress(govtypes.ModuleName)),
 				}
 			},
-			expecErr: errors.New("existing active channel channel-7 for portID icacontroller-testchain2.delegate on connection connection-0: active channel already set for this owner"),
+			expecErr: errors.New("existing active channel channel-7 for portID icacontroller-testchain2-1.delegate on connection connection-0: active channel already set for this owner"),
 		},
 		{
 			name: "pass",
@@ -632,7 +632,7 @@ func (suite *KeeperTestSuite) TestGovReopenChannel() {
 				quicksilver := suite.GetQuicksilverApp(suite.chainA)
 				ctx := suite.chainA.GetContext()
 				connectionID := "connection-1"
-				portID := "icacontroller-testchain2.delegate"
+				portID := "icacontroller-testchain2-1.delegate"
 				channelID := "channel-9"
 
 				version := []*connectiontypes.Version{
