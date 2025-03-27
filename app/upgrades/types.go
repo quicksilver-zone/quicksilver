@@ -14,7 +14,7 @@ const (
 	ProductionChainID = "quicksilver-2"
 	RhyeChainID       = "rhye-2"
 	DevnetChainID     = "magic-2"
-	TestChainID       = "testchain1"
+	TestChainID       = "testchain1-1"
 
 	// mainnet
 	V010700UpgradeName = "v1.7.0"

@@ -334,7 +334,7 @@ func TestUnmarshalProtocolData(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := types.UnmarshalProtocolData(tt.args.datatype, tt.args.data)
 			if tt.wantErr {
-				t.Logf("Error:\n%v\n", err)
+				//t.Logf("Error:\n%v\n", err)
 				require.Error(t, err)
 				return
 			}

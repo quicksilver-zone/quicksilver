@@ -67,12 +67,6 @@ func (k Keeper) StoreSelfConsensusState(ctx sdk.Context, key string) error {
 			RevisionNumber: revisionNum,
 			RevisionHeight: uint64(blockHeight),
 		}
-	} else {
-		// ONLY FOR TESTING - ibctesting module chains donot follow standard [chainname]-[num] structure
-		height = ibcclienttypes.Height{
-			RevisionNumber: 0, // revision number for testchain1 is 0 (because parseChainId splits on '-')
-			RevisionHeight: uint64(blockHeight),
-		}
 	}
 
 	selfConsState, err := k.IBCKeeper.ClientKeeper.GetSelfConsensusState(ctx, height)

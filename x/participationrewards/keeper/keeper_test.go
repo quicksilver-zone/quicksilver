@@ -234,7 +234,7 @@ func (suite *KeeperTestSuite) setupTestZones() {
 
 	zoneSelf := icstypes.Zone{
 		ConnectionId:       "connection-77004",
-		ChainId:            "testchain1",
+		ChainId:            "testchain-1",
 		AccountPrefix:      "osmo",
 		LocalDenom:         "uqosmo",
 		BaseDenom:          "uosmo",
