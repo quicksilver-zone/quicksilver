@@ -99,7 +99,7 @@ func (suite *KeeperTestSuite) TestHandleAddProtocolDataProposal() {
 			err := keeper.HandleAddProtocolDataProposal(suite.chainA.GetContext(), k, &prop)
 			if tt.wantErr {
 				suite.Error(err)
-				//suite.T().Logf("Error: %v", err)
+				// suite.T().Logf("Error: %v", err)
 				return
 			}
 
