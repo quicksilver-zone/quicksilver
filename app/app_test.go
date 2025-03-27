@@ -7,6 +7,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	cosmossecp256k1 "github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -56,6 +57,7 @@ func TestQuicksilverExport(t *testing.T) {
 		false,
 		false,
 		"",
+		baseapp.SetChainID("quicksilver-1"),
 	)
 
 	genesisState := app.NewDefaultGenesisState()
