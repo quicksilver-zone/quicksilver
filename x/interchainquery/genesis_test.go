@@ -81,11 +81,10 @@ func (s *InterChainQueryTestSuite) TestInitGenesis() {
 	s.Equal("", queryResponse.CallbackId)
 }
 
-// TODO: fixme?
-// func (s *InterChainQueryTestSuite) TestInitGenesisDefault() {
-// 	app := s.GetSimApp(s.chainA)
-// 	app.GetModuleManager().Modules[types.ModuleName].InitGenesis(s.chainA.GetContext(), app.AppCodec(), app.GetModuleManager().Modules[types.ModuleName].DefaultGenesis(app.AppCodec()))
-// }
+func (s *InterChainQueryTestSuite) TestInitGenesisDefault() {
+	app := s.GetSimApp(s.chainA)
+	app.GetModuleManager().Modules[types.ModuleName].(interchainquery.AppModule).InitGenesis(s.chainA.GetContext(), app.AppCodec(), app.GetModuleManager().Modules[types.ModuleName].(interchainquery.AppModule).DefaultGenesis(app.AppCodec()))
+}
 
 func newSimAppPath(chainA, chainB *ibctesting.TestChain) *ibctesting.Path {
 	path := ibctesting.NewPath(chainA, chainB)
