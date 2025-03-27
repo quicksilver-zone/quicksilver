@@ -9,6 +9,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	cosmossecp256k1 "github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -93,6 +94,7 @@ func Setup(t *testing.T, isCheckTx bool) *Quicksilver {
 		false,
 		false,
 		"",
+		baseapp.SetChainID("quicksilver-1"),
 	)
 
 	genesisState := NewDefaultGenesisState()
@@ -107,7 +109,7 @@ func Setup(t *testing.T, isCheckTx bool) *Quicksilver {
 		// Initialize the chain
 		app.InitChain(
 			abci.RequestInitChain{
-				ChainId:    "mercury-1",
+				ChainId:    "quicksilver-1",
 				Validators: []abci.ValidatorUpdate{},
 				// ConsensusParams: DefaultConsensusParams,
 				AppStateBytes: stateBytes,
@@ -154,7 +156,6 @@ func GenesisStateWithValSet(
 	balances ...banktypes.Balance,
 ) GenesisState {
 	t.Helper()
-
 	// set genesis accounts
 	authGenesis := authtypes.NewGenesisState(authtypes.DefaultParams(), genAccs)
 	genesisState[authtypes.ModuleName] = app.AppCodec().MustMarshalJSON(authGenesis)
