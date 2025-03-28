@@ -1,12 +1,13 @@
 module github.com/quicksilver-zone/quicksilver
 
 go 1.23.3
+toolchain go1.24.1
 
 require (
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/math v1.5.0
 	github.com/armon/go-metrics v0.4.1
-	github.com/celestiaorg/go-square/v2 v2.1.0
+	github.com/celestiaorg/go-square/v2 v2.2.0
 	github.com/celestiaorg/nmt v0.23.0
 	github.com/client9/misspell v0.3.4
 	github.com/cometbft/cometbft-db v0.12.0
@@ -38,7 +39,7 @@ require (
 	golang.org/x/tools v0.31.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20250124145028-65684f501c47
 	google.golang.org/grpc v1.71.0
-	google.golang.org/protobuf v1.36.5
+	google.golang.org/protobuf v1.36.6
 	gopkg.in/yaml.v2 v2.4.0
 	gopkg.in/yaml.v3 v3.0.1
 	mvdan.cc/gofumpt v0.7.0
