@@ -3,11 +3,14 @@ package app
 import (
 	"fmt"
 
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	crsistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+
 	ibctmmigrations "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint/migrations"
+
 	"github.com/quicksilver-zone/quicksilver/app/upgrades"
 )
 

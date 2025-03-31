@@ -6,7 +6,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+
 	"github.com/cosmos/ibc-go/v7/modules/core/exported"
+
 	"github.com/quicksilver-zone/quicksilver/app/keepers"
 )
 
