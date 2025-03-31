@@ -190,14 +190,15 @@ func (k *Keeper) HandleAutoClaim(ctx sdk.Context, senderAddress sdk.AccAddress) 
 		return errors.New("no auto claim address set")
 	}
 
-	msgGrant, err := authz.NewMsgGrant(senderAddress, addressutils.MustAccAddressFromBech32(authzAutoClaimAddress, "quick"), &authz.GenericAuthorization{
-		Msg: sdk.MsgTypeURL(&prtypes.MsgSubmitClaim{}),
-	}, nil)
-	if err != nil {
-		return err
-	}
-	_, err = k.AuthzKeeper.Grant(ctx, msgGrant)
-	return err
+	return k.AuthzKeeper.SaveGrant(
+		ctx,
+		addressutils.MustAccAddressFromBech32(authzAutoClaimAddress, "quick"),
+		senderAddress,
+		&authz.GenericAuthorization{
+			Msg: sdk.MsgTypeURL(&prtypes.MsgSubmitClaim{}),
+		},
+		nil,
+	)
 }
 
 // MintAndSendQAsset mints qAssets based on the native asset redemption rate.  Tokens are then transferred to the given user.

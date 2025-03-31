@@ -112,6 +112,14 @@ func (suite *KeeperTestSuite) TestHandleUpdateZoneProposal() {
 
 				err := quicksilver.InterchainstakingKeeper.HandleRegisterZoneProposal(ctx, proposal)
 				suite.NoError(err)
+
+				// set client state and consensus state for connection-1
+				version := []*connectiontypes.Version{
+					{Identifier: "1", Features: []string{"ORDER_ORDERED", "ORDER_UNORDERED"}},
+				}
+				quicksilver.IBCKeeper.ClientKeeper.SetClientState(ctx, "07-tendermint-1", &tmclienttypes.ClientState{ChainId: suite.chainB.ChainID, TrustingPeriod: time.Hour, LatestHeight: clienttypes.Height{RevisionNumber: 1, RevisionHeight: 100}})
+				quicksilver.IBCKeeper.ClientKeeper.SetClientConsensusState(ctx, "07-tendermint-1", clienttypes.Height{RevisionNumber: 1, RevisionHeight: 100}, &tmclienttypes.ConsensusState{Timestamp: ctx.BlockTime().Add(-time.Minute)})
+				quicksilver.IBCKeeper.ConnectionKeeper.SetConnection(ctx, "connection-1", connectiontypes.ConnectionEnd{ClientId: "07-tendermint-1", State: connectiontypes.OPEN, Versions: version})
 			},
 			proposals: func(zone icstypes.Zone) []icstypes.UpdateZoneProposal {
 				return []icstypes.UpdateZoneProposal{
@@ -120,7 +128,7 @@ func (suite *KeeperTestSuite) TestHandleUpdateZoneProposal() {
 						Changes: []*icstypes.UpdateZoneValue{
 							{
 								Key:   "connection_id",
-								Value: suite.path.EndpointA.ConnectionID,
+								Value: "connection-1",
 							},
 						},
 					},
@@ -130,7 +138,7 @@ func (suite *KeeperTestSuite) TestHandleUpdateZoneProposal() {
 				newZone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 				suite.True(found)
 
-				suite.Equal(newZone.ConnectionId, suite.path.EndpointA.ConnectionID)
+				suite.Equal(newZone.ConnectionId, "connection-1")
 			},
 		},
 		{

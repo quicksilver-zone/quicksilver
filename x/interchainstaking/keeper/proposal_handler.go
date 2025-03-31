@@ -150,7 +150,6 @@ func (k *Keeper) HandleRegisterZoneProposal(ctx sdk.Context, p *types.RegisterZo
 
 func (k *Keeper) registerInterchainAccount(ctx sdk.Context, connectionID, portOwner string) error {
 	msg := icacontrollertypes.NewMsgRegisterInterchainAccountWithOrdering(connectionID, portOwner, "", channeltypes.ORDERED)
-
 	ckMsgServer := icacontrollerkeeper.NewMsgServerImpl(&k.ICAControllerKeeper)
 	_, err := ckMsgServer.RegisterInterchainAccount(ctx, msg)
 	if err != nil {
@@ -299,6 +298,7 @@ func (k *Keeper) HandleUpdateZoneProposal(ctx sdk.Context, p *types.UpdateZonePr
 			}
 
 			zone.ConnectionId = change.Value
+			fmt.Println("zone.ConnectionId", zone.ConnectionId)
 
 			k.SetZone(ctx, &zone)
 

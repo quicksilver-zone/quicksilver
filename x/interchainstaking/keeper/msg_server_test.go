@@ -624,7 +624,7 @@ func (suite *KeeperTestSuite) TestGovReopenChannel() {
 					Authority:    sdk.MustBech32ifyAddressBytes(sdk.GetConfig().GetBech32AccountAddrPrefix(), k.AccountKeeper.GetModuleAddress(govtypes.ModuleName)),
 				}
 			},
-			expecErr: errors.New("existing active channel channel-7 for portID icacontroller-testchain2-1.delegate on connection connection-0: active channel already set for this owner"),
+			expecErr: errors.New("channel is already active or a handshake is in flight: invalid message sent to channel end"),
 		},
 		{
 			name: "pass",
@@ -653,6 +653,7 @@ func (suite *KeeperTestSuite) TestGovReopenChannel() {
 				quicksilver.IBCKeeper.ChannelKeeper.SetChannel(ctx, portID, channelID, channelSet)
 
 				quicksilver.IBCKeeper.ClientKeeper.SetClientState(ctx, connectionEnd.ClientId, &tmclienttypes.ClientState{ChainId: suite.chainB.ChainID, TrustingPeriod: time.Hour, LatestHeight: clienttypes.Height{RevisionNumber: 1, RevisionHeight: 100}})
+				quicksilver.IBCKeeper.ClientKeeper.SetClientConsensusState(ctx, connectionEnd.ClientId, clienttypes.Height{RevisionNumber: 1, RevisionHeight: 100}, &tmclienttypes.ConsensusState{Timestamp: time.Now().Add(-time.Minute * 10)})
 
 				return &icstypes.MsgGovReopenChannel{
 					ConnectionId: connectionID,

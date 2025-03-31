@@ -574,7 +574,11 @@ func (suite *KeeperTestSuite) TestHandleAutoClaim() {
 	suite.NoError(err)
 
 	// test if grant is added
-	grant, err := quicksilver.InterchainstakingKeeper.AuthzKeeper.GetAuthorizations(ctx, addressutils.MustAccAddressFromBech32(autoClaimAddr, ""), addressutils.MustAccAddressFromBech32(normalUserAddr, ""))
+	grant, err := quicksilver.InterchainstakingKeeper.AuthzKeeper.GetAuthorizations(
+		ctx,
+		addressutils.MustAccAddressFromBech32(autoClaimAddr, ""),
+		addressutils.MustAccAddressFromBech32(normalUserAddr, ""),
+	)
 	suite.NoError(err)
 	suite.Equal(1, len(grant))
 }
