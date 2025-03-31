@@ -7,10 +7,6 @@ import (
 	crsistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
-
-	ibctmmigrations "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint/migrations"
-
 	"github.com/quicksilver-zone/quicksilver/app/upgrades"
 )
 
@@ -22,13 +18,6 @@ const (
 
 func (app *Quicksilver) setUpgradeHandlers() {
 	for _, upgrade := range upgrades.Upgrades() {
-		if upgrade.UpgradeName == upgrades.V010800UpgradeName {
-			_, err := ibctmmigrations.PruneExpiredConsensusStates(app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()}), app.appCodec, app.IBCKeeper.ClientKeeper)
-			if err != nil {
-				panic(fmt.Errorf("failed to prune expired consensus states: %w", err))
-			}
-		}
-
 		app.UpgradeKeeper.SetUpgradeHandler(
 			upgrade.UpgradeName,
 			upgrade.CreateUpgradeHandler(

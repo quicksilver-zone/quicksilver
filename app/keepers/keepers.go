@@ -80,6 +80,7 @@ import (
 )
 
 type AppKeepers struct {
+	AppCodec codec.Codec
 	// make scoped keepers public for test purposes
 	ScopedIBCKeeper                      capabilitykeeper.ScopedKeeper
 	ScopedTransferKeeper                 capabilitykeeper.ScopedKeeper
@@ -146,6 +147,7 @@ func NewAppKeepers(
 	logger log.Logger,
 ) AppKeepers {
 	appKeepers := AppKeepers{}
+	appKeepers.AppCodec = appCodec
 
 	// Set keys KVStoreKey, TransientStoreKey, MemoryStoreKey
 	appKeepers.GenerateKeys()

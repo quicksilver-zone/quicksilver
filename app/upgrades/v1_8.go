@@ -1,6 +1,8 @@
 package upgrades
 
 import (
+	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -10,6 +12,8 @@ import (
 	"github.com/cosmos/ibc-go/v7/modules/core/exported"
 
 	"github.com/quicksilver-zone/quicksilver/app/keepers"
+
+	ibctmmigrations "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint/migrations"
 )
 
 func V010800UpgradeHandler(
@@ -29,6 +33,11 @@ func V010800UpgradeHandler(
 		params := appKeepers.IBCKeeper.ClientKeeper.GetParams(ctx)
 		params.AllowedClients = append(params.AllowedClients, exported.Localhost)
 		appKeepers.IBCKeeper.ClientKeeper.SetParams(ctx, params)
+
+		_, err := ibctmmigrations.PruneExpiredConsensusStates(ctx, appKeepers.AppCodec, appKeepers.IBCKeeper.ClientKeeper)
+		if err != nil {
+			panic(fmt.Errorf("failed to prune expired consensus states: %w", err))
+		}
 
 		ctx.Logger().Info("Upgrade v1.8.0 complete")
 		return mm.RunMigrations(ctx, configurator, fromVM)
