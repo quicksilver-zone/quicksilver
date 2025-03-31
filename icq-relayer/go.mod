@@ -4,11 +4,11 @@ go 1.23.7
 
 require (
 	cosmossdk.io/math v1.5.1
-	github.com/BurntSushi/toml v1.4.1-0.20240526193622-a339e1f7089c
+	github.com/BurntSushi/toml v1.5.0
 	github.com/avast/retry-go/v4 v4.6.0
 	github.com/cometbft/cometbft v0.37.15
 	github.com/cosmos/cosmos-sdk v0.47.16
-	github.com/cosmos/ibc-go/v7 v7.9.2
+	github.com/cosmos/ibc-go/v7 v7.10.0
 	github.com/dgraph-io/ristretto v0.2.0
 	github.com/go-kit/log v0.2.1
 	github.com/mitchellh/go-homedir v1.1.0
