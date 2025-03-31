@@ -7,7 +7,7 @@ require (
 	github.com/BurntSushi/toml v1.5.0
 	github.com/avast/retry-go/v4 v4.6.0
 	github.com/cometbft/cometbft v0.37.15
-	github.com/cosmos/cosmos-sdk v0.47.16
+	github.com/cosmos/cosmos-sdk v0.47.17
 	github.com/cosmos/ibc-go/v7 v7.10.0
 	github.com/dgraph-io/ristretto v0.2.0
 	github.com/go-kit/log v0.2.1
@@ -71,7 +71,7 @@ require (
 	github.com/cosmos/gogogateway v1.2.0 // indirect
 	github.com/cosmos/gogoproto v1.7.0 // indirect
 	github.com/cosmos/iavl v0.20.1 // indirect
-	github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7 v7.1.3 // indirect
+	github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7 v7.3.0 // indirect
 	github.com/cosmos/ics23/go v0.10.0 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.12.4 // indirect
 	github.com/cosmos/rosetta-sdk-go v0.10.0 // indirect

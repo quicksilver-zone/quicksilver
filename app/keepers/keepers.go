@@ -315,7 +315,6 @@ func (appKeepers *AppKeepers) InitKeepers(
 		appKeepers.keys[packetforwardtypes.StoreKey],
 		appKeepers.TransferKeeper,
 		appKeepers.IBCKeeper.ChannelKeeper,
-		appKeepers.DistrKeeper,
 		appKeepers.BankKeeper,
 		appKeepers.IBCKeeper.ChannelKeeper,
 		govAuthority,
