@@ -221,8 +221,8 @@ func (suite *KeeperTestSuite) TestHandleValsetCallback() {
 		{
 			name: "valid - commission 0.5 val[0], 0.05 val[2]",
 			valset: func(in stakingtypes.Validators) stakingtypes.QueryValidatorsResponse {
-				in[0].Commission.CommissionRates.Rate = sdk.NewDecWithPrec(5, 1)
-				in[2].Commission.CommissionRates.Rate = sdk.NewDecWithPrec(5, 2)
+				in[0].Commission.Rate = sdk.NewDecWithPrec(5, 1)
+				in[2].Commission.Rate = sdk.NewDecWithPrec(5, 2)
 				return stakingtypes.QueryValidatorsResponse{Validators: in}
 			},
 			checks: func(require *require.Assertions, ctx sdk.Context, quicksilver *app.Quicksilver, in stakingtypes.Validators) {

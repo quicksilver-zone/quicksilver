@@ -399,7 +399,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitLocalClaim() {
 					Prove:  true,
 				}
 
-				resp := appA.BaseApp.Query(query)
+				resp := appA.Query(query)
 
 				return &types.MsgSubmitClaim{
 					UserAddress: address.String(),
@@ -437,7 +437,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitLocalClaim() {
 					Prove:  true,
 				}
 
-				resp := appA.BaseApp.Query(query)
+				resp := appA.Query(query)
 
 				return &types.MsgSubmitClaim{
 					UserAddress: address.String(),
@@ -489,7 +489,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitLocalClaim() {
 					Prove:  true,
 				}
 
-				resp := appA.BaseApp.Query(query)
+				resp := appA.Query(query)
 
 				return &types.MsgSubmitClaim{
 					UserAddress: address.String(),
@@ -547,7 +547,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitLocalClaim() {
 					Prove:  true,
 				}
 
-				resp := appA.BaseApp.Query(query)
+				resp := appA.Query(query)
 
 				return &types.MsgSubmitClaim{
 					UserAddress: address.String(),

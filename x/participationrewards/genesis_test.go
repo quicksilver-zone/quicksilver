@@ -19,7 +19,7 @@ import (
 
 func TestParticipationRewardsExportGenesis(t *testing.T) {
 	app := simapp.Setup(t, false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.NewContext(false, tmproto.Header{})
 
 	chainStartTime := ctx.BlockTime()
 
@@ -48,7 +48,7 @@ func TestParticipationRewardsExportGenesis(t *testing.T) {
 func TestParticipationRewardsInitGenesis(t *testing.T) {
 	// setup params
 	app := simapp.Setup(t, false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.NewContext(false, tmproto.Header{})
 
 	now := time.Now()
 	ctx = ctx.WithBlockHeight(1)

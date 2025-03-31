@@ -238,9 +238,6 @@ func NewQuicksilver(
 	return app
 }
 
-// Name returns the name of the App.
-func (app *Quicksilver) Name() string { return app.BaseApp.Name() }
-
 // BeginBlocker updates every begin block.
 func (app *Quicksilver) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
 	return app.mm.BeginBlock(ctx, req)
@@ -367,14 +364,14 @@ func (*Quicksilver) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APICo
 }
 
 func (app *Quicksilver) RegisterTxService(clientCtx client.Context) {
-	authtx.RegisterTxService(app.BaseApp.GRPCQueryRouter(), clientCtx, app.BaseApp.Simulate, app.interfaceRegistry)
+	authtx.RegisterTxService(app.GRPCQueryRouter(), clientCtx, app.Simulate, app.interfaceRegistry)
 }
 
 // RegisterTendermintService implements the Application.RegisterTendermintService method.
 func (app *Quicksilver) RegisterTendermintService(clientCtx client.Context) {
 	tmservice.RegisterTendermintService(
 		clientCtx,
-		app.BaseApp.GRPCQueryRouter(),
+		app.GRPCQueryRouter(),
 		app.interfaceRegistry,
 		app.Query,
 	)

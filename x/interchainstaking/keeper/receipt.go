@@ -307,12 +307,7 @@ func ProdSubmitTx(ctx sdk.Context, k *Keeper, msgs []sdk.Msg, account *types.ICA
 
 	timeoutTimestamp := uint64(ctx.BlockTime().Add(ICATimeout).UnixNano()) //nolint:gosec
 
-	for {
-		// if no messages, no chunks!
-		if len(msgs) == 0 {
-			break
-		}
-
+	for len(msgs) > 0 {
 		// if the last chunk, make chunksize the number of messages
 		if len(msgs) < chunkSize {
 			chunkSize = len(msgs)

@@ -123,8 +123,8 @@ func FuzzValsetCallback(f *testing.F) {
 			return stakingtypes.QueryValidatorsResponse{Validators: in}
 		},
 		func(in stakingtypes.Validators) stakingtypes.QueryValidatorsResponse {
-			in[0].Commission.CommissionRates.Rate = sdk.NewDecWithPrec(5, 1)
-			in[2].Commission.CommissionRates.Rate = sdk.NewDecWithPrec(5, 2)
+			in[0].Commission.Rate = sdk.NewDecWithPrec(5, 1)
+			in[2].Commission.Rate = sdk.NewDecWithPrec(5, 2)
 			return stakingtypes.QueryValidatorsResponse{Validators: in}
 		},
 		func(in stakingtypes.Validators) stakingtypes.QueryValidatorsResponse {
