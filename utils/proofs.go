@@ -3,7 +3,6 @@ package utils
 import (
 	"errors"
 	"fmt"
-	"net/url"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -96,7 +95,7 @@ func ValidateSelfProofOps(ctx sdk.Context, claimsKeeper ClaimsManagerKeeper, con
 
 	proofSpecs := commitmenttypes.GetSDKSpecs()
 
-	path := commitmenttypes.NewMerklePath([]string{module, url.PathEscape(string(key))}...)
+	path := commitmenttypes.NewMerklePath([]string{module, string(key)}...)
 
 	merkleProof, err := commitmenttypes.ConvertProofs(proofOps)
 	if err != nil {
