@@ -3,9 +3,11 @@ package app
 import (
 	"fmt"
 
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	crsistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-
+	ibctmmigrations "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint/migrations"
 	"github.com/quicksilver-zone/quicksilver/app/upgrades"
 )
 
@@ -17,6 +19,13 @@ const (
 
 func (app *Quicksilver) setUpgradeHandlers() {
 	for _, upgrade := range upgrades.Upgrades() {
+		if upgrade.UpgradeName == upgrades.V010800UpgradeName {
+			_, err := ibctmmigrations.PruneExpiredConsensusStates(app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()}), app.appCodec, app.IBCKeeper.ClientKeeper)
+			if err != nil {
+				panic(fmt.Errorf("failed to prune expired consensus states: %w", err))
+			}
+		}
+
 		app.UpgradeKeeper.SetUpgradeHandler(
 			upgrade.UpgradeName,
 			upgrade.CreateUpgradeHandler(
@@ -27,9 +36,6 @@ func (app *Quicksilver) setUpgradeHandlers() {
 		)
 	}
 }
-
-// TODO: add upgrade handler for consensus params (https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc2/UPGRADING.md)
-// and ibc migrations
 
 func (app *Quicksilver) setUpgradeStoreLoaders() {
 	// When a planned update height is reached, the old binary will panic
@@ -51,6 +57,10 @@ func (app *Quicksilver) setUpgradeStoreLoaders() {
 	case upgrades.V010706UpgradeName:
 		storeUpgrades = &storetypes.StoreUpgrades{
 			Deleted: []string{airdropModuleName},
+		}
+	case upgrades.V010800UpgradeName:
+		storeUpgrades = &storetypes.StoreUpgrades{
+			Added: []string{crsistypes.ModuleName},
 		}
 	default:
 		// no-op
