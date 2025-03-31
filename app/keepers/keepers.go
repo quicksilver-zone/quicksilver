@@ -340,7 +340,7 @@ func (appKeepers *AppKeepers) InitKeepers(
 		appKeepers.BankKeeper,
 		appKeepers.StakingKeeper,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-		utils.Keys[[]string](maccPerms),
+		utils.Keys(maccPerms),
 		supplyEndpointEnabled,
 	)
 	appKeepers.PacketForwardKeeper.SetTransferKeeper(appKeepers.TransferKeeper)
