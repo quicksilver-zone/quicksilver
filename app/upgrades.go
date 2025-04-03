@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 	crsistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
@@ -52,7 +53,7 @@ func (app *Quicksilver) setUpgradeStoreLoaders() {
 		}
 	case upgrades.V010800UpgradeName:
 		storeUpgrades = &storetypes.StoreUpgrades{
-			Added: []string{crsistypes.ModuleName},
+			Added: []string{crsistypes.ModuleName, consensustypes.ModuleName},
 		}
 	default:
 		// no-op
