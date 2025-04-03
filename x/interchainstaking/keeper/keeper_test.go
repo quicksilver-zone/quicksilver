@@ -24,6 +24,7 @@ import (
 	"github.com/quicksilver-zone/quicksilver/utils/randomutils"
 	claimsmanagertypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
 	ics "github.com/quicksilver-zone/quicksilver/x/interchainstaking"
+	keeper "github.com/quicksilver-zone/quicksilver/x/interchainstaking/keeper"
 	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 	minttypes "github.com/quicksilver-zone/quicksilver/x/mint/types"
 )
@@ -79,21 +80,54 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.coordinator.SetupConnections(suite.path)
 }
 
+func SetZoneForTest(ctx sdk.Context, k *keeper.Keeper, zone *icstypes.Zone) error {
+	k.SetZone(ctx, zone)
+
+	// generate deposit account
+	portOwner := zone.ChainId + ".deposit"
+	if err := k.RegisterInterchainAccount(ctx, zone.ConnectionId, portOwner); err != nil {
+		return err
+	}
+
+	// generate withdrawal account
+	portOwner = zone.ChainId + ".withdrawal"
+	if err := k.RegisterInterchainAccount(ctx, zone.ConnectionId, portOwner); err != nil {
+		return err
+	}
+
+	// generate perf account
+	portOwner = zone.ChainId + ".performance"
+	if err := k.RegisterInterchainAccount(ctx, zone.ConnectionId, portOwner); err != nil {
+		return err
+	}
+
+	// generate delegate accounts
+	portOwner = zone.ChainId + ".delegate"
+	if err := k.RegisterInterchainAccount(ctx, zone.ConnectionId, portOwner); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (suite *KeeperTestSuite) setupTestZones() {
-	proposal := &icstypes.RegisterZoneProposal{
-		Title:            "register zone A",
-		Description:      "register zone A",
-		ConnectionId:     suite.path.EndpointA.ConnectionID,
-		LocalDenom:       "uqatom",
-		BaseDenom:        "uatom",
-		AccountPrefix:    "cosmos",
-		ReturnToSender:   false,
-		UnbondingEnabled: false,
-		LiquidityModule:  true,
-		DepositsEnabled:  true,
-		Decimals:         6,
-		Is_118:           true,
-		DustThreshold:    math.NewInt(1000000),
+	zone := icstypes.Zone{
+		ChainId:            suite.chainB.ChainID,
+		ConnectionId:       suite.path.EndpointA.ConnectionID,
+		LocalDenom:         "uqatom",
+		BaseDenom:          "uatom",
+		AccountPrefix:      "cosmos",
+		RedemptionRate:     sdk.NewDec(1),
+		LastRedemptionRate: sdk.NewDec(1),
+		UnbondingEnabled:   true,
+		ReturnToSender:     false,
+		LiquidityModule:    true,
+		DepositsEnabled:    true,
+		Decimals:           6,
+		UnbondingPeriod:    10000000,
+		MessagesPerTx:      1,
+		Is_118:             true,
+		TransferChannel:    testTransferChannel,
+		DustThreshold:      math.NewInt(1000000),
 	}
 
 	quicksilver := suite.GetQuicksilverApp(suite.chainA)
@@ -102,13 +136,12 @@ func (suite *KeeperTestSuite) setupTestZones() {
 	// create a transfer channel and set it in the proposal
 	quicksilver.IBCKeeper.ChannelKeeper.SetChannel(ctx, transfertypes.PortID, testTransferChannel,
 		channeltypes.Channel{
-			State: channeltypes.OPEN, Ordering: channeltypes.ORDERED,
+			State: channeltypes.OPEN, Ordering: channeltypes.UNORDERED,
 			Counterparty:   channeltypes.Counterparty{PortId: transfertypes.PortID, ChannelId: testTransferChannel},
 			ConnectionHops: []string{suite.path.EndpointA.ConnectionID},
 		})
-	proposal.TransferChannel = testTransferChannel
 
-	err := quicksilver.InterchainstakingKeeper.HandleRegisterZoneProposal(ctx, proposal)
+	err := SetZoneForTest(ctx, quicksilver.InterchainstakingKeeper, &zone)
 	suite.NoError(err)
 
 	zone, found := quicksilver.InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
@@ -122,16 +155,11 @@ func (suite *KeeperTestSuite) setupTestZones() {
 	suite.NoError(suite.setupChannelForICA(ctx, suite.chainB.ChainID, suite.path.EndpointA.ConnectionID, "performance", zone.AccountPrefix))
 	suite.NoError(suite.setupChannelForICA(ctx, suite.chainB.ChainID, suite.path.EndpointA.ConnectionID, "delegate", zone.AccountPrefix))
 
-	zone, found = quicksilver.InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
-	suite.True(found)
-
 	vals := suite.GetQuicksilverApp(suite.chainB).StakingKeeper.GetBondedValidatorsByPower(suite.chainB.GetContext())
 	for i := range vals {
 		suite.NoError(quicksilver.InterchainstakingKeeper.SetValidatorForZone(suite.chainA.GetContext(), &zone, app.DefaultConfig().Codec.MustMarshal(&vals[i])))
 	}
-
-	suite.coordinator.CommitNBlocks(suite.chainA, 2)
-	suite.coordinator.CommitNBlocks(suite.chainB, 2)
+	suite.coordinator.CommitBlock(suite.chainA, suite.chainB)
 }
 
 func (suite *KeeperTestSuite) setupChannelForICA(ctx sdk.Context, chainID, connectionID, accountSuffix, remotePrefix string) error {

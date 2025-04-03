@@ -311,7 +311,7 @@ func (k msgServer) GovReopenChannel(goCtx context.Context, msg *types.MsgGovReop
 		return nil, errors.New("invalid port format; zone not found")
 	}
 
-	if err := k.registerInterchainAccount(ctx, msg.ConnectionId, portID); err != nil {
+	if err := k.RegisterInterchainAccount(ctx, msg.ConnectionId, portID); err != nil {
 		return nil, err
 	}
 

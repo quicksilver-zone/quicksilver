@@ -12,7 +12,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
-	cosmossecp256k1 "github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -21,7 +20,6 @@ import (
 
 	dbm "github.com/cometbft/cometbft-db"
 	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/cometbft/cometbft/crypto/secp256k1"
 	"github.com/cometbft/cometbft/libs/log"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	tmtypes "github.com/cometbft/cometbft/types"
@@ -50,12 +48,10 @@ func Setup(t *testing.T, isCheckTx bool) *Quicksilver {
 	valSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
 
 	// generate genesis account
-	senderPrivKey := secp256k1.GenPrivKey()
-	senderPubKey := cosmossecp256k1.PubKey{
-		Key: senderPrivKey.PubKey().Bytes(),
-	}
+	senderPrivKey := mock.NewPV()
+	senderPubkey := senderPrivKey.PrivKey.PubKey()
 
-	acc := authtypes.NewBaseAccount(senderPrivKey.PubKey().Address().Bytes(), &senderPubKey, 0, 0)
+	acc := authtypes.NewBaseAccount(senderPubkey.Address().Bytes(), senderPubkey, 0, 0)
 	balance := banktypes.Balance{
 		Address: acc.GetAddress().String(),
 		Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000000000000))),
@@ -69,7 +65,7 @@ func Setup(t *testing.T, isCheckTx bool) *Quicksilver {
 		true,
 		map[int64]bool{},
 		DefaultNodeHome,
-		5,
+		0,
 		MakeEncodingConfig(),
 		EmptyAppOptions{},
 		false,

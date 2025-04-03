@@ -61,6 +61,5 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.coordinator.CurrentTime = time.Now().UTC()
 	suite.coordinator.UpdateTime()
 
-	suite.coordinator.CommitNBlocks(suite.chainA, 10)
-	suite.coordinator.CommitNBlocks(suite.chainB, 10)
+	suite.coordinator.CommitBlock(suite.chainA, suite.chainB)
 }

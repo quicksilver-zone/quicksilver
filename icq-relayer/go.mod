@@ -3,7 +3,7 @@ module github.com/quicksilver-zone/quicksilver/icq-relayer
 go 1.23.7
 
 require (
-	cosmossdk.io/math v1.5.1
+	cosmossdk.io/math v1.5.2
 	github.com/BurntSushi/toml v1.5.0
 	github.com/avast/retry-go/v4 v4.6.0
 	github.com/cometbft/cometbft v0.37.15

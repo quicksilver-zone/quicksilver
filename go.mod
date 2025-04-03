@@ -5,7 +5,7 @@ go 1.23.7
 require (
 	cosmossdk.io/api v0.3.1
 	cosmossdk.io/errors v1.0.2
-	cosmossdk.io/math v1.5.1
+	cosmossdk.io/math v1.5.2
 	github.com/armon/go-metrics v0.4.1
 	github.com/celestiaorg/go-square/v2 v2.2.0
 	github.com/celestiaorg/nmt v0.23.0

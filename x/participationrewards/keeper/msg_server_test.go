@@ -585,15 +585,13 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitLocalClaim() {
 			appA.ParticipationRewardsKeeper.ValidateProofOps = utils.ValidateProofOps
 			appA.ParticipationRewardsKeeper.ValidateSelfProofOps = utils.ValidateSelfProofOps
 
-			suite.coordinator.CommitNBlocks(suite.chainA, 3)
+			suite.coordinator.CommitBlock(suite.chainA)
 			ctx := suite.chainA.GetContext()
 			tt.malleate(ctx, appA)
-			suite.coordinator.CommitNBlocks(suite.chainA, 3)
-			ctx = suite.chainA.GetContext()
+			suite.coordinator.CommitBlock(suite.chainA)
 			suite.NoError(appA.ClaimsManagerKeeper.StoreSelfConsensusState(ctx, "epoch"))
-			suite.coordinator.CommitNBlocks(suite.chainA, 1)
+			suite.coordinator.CommitBlock(suite.chainA)
 
-			ctx = suite.chainA.GetContext()
 			msg = tt.generate(ctx, appA)
 			params := appA.ParticipationRewardsKeeper.GetParams(ctx)
 			params.ClaimsEnabled = true

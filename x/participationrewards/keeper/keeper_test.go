@@ -117,8 +117,7 @@ func (suite *KeeperTestSuite) coreTest() {
 	suite.Equal(15, len(akpd))
 
 	// advance the chains
-	suite.coordinator.CommitNBlocks(suite.chainA, 1)
-	suite.coordinator.CommitNBlocks(suite.chainB, 1)
+	suite.coordinator.CommitBlock(suite.chainA, suite.chainB)
 
 	// callback test
 	suite.executeSetEpochBlockCallback()
