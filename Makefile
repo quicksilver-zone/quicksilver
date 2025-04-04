@@ -397,10 +397,10 @@ benchmark:
 ###############################################################################
 
 lint:
-	@go run github.com/golangci/golangci-lint/cmd/golangci-lint run --out-format=tab
+	@go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint run
 
 lint-fix:
-	@go run github.com/golangci/golangci-lint/cmd/golangci-lint run --fix --out-format=tab --issues-exit-code=0
+	@go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint run --fix --issues-exit-code=0
 
 .PHONY: lint lint-fix
 

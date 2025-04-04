@@ -24,7 +24,7 @@ import (
 	"github.com/quicksilver-zone/quicksilver/utils/randomutils"
 	claimsmanagertypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
 	ics "github.com/quicksilver-zone/quicksilver/x/interchainstaking"
-	keeper "github.com/quicksilver-zone/quicksilver/x/interchainstaking/keeper"
+	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/keeper"
 	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 	minttypes "github.com/quicksilver-zone/quicksilver/x/mint/types"
 )
