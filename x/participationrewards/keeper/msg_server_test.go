@@ -592,6 +592,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitLocalClaim() {
 			suite.NoError(appA.ClaimsManagerKeeper.StoreSelfConsensusState(ctx, "epoch"))
 			suite.coordinator.CommitBlock(suite.chainA)
 
+			ctx = suite.chainA.GetContext() // update context to get latest block height
 			msg = tt.generate(ctx, appA)
 			params := appA.ParticipationRewardsKeeper.GetParams(ctx)
 			params.ClaimsEnabled = true
