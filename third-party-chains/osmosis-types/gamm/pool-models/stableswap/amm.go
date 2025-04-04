@@ -1,11 +1,13 @@
 package stableswap
 
 import (
+	"errors"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	types "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/gamm"
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/gamm/pool-models/internal/cfmm_common"
-	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/osmomath"
+	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/gamm/types"
 )
 
 // Simplified multi-asset CFMM is xy(x^2 + y^2 + w) = k,
@@ -49,11 +51,11 @@ func targetKCalculator(x0, y0, w, yf osmomath.BigDec) osmomath.BigDec {
 	// cfmmNoV(x0, y0, w) = x_0 y_0 (x_0^2 + y_0^2 + w)
 	startK := cfmmConstantMultiNoV(x0, y0, w)
 	// remove extra yf term
-	yfRemoved := startK.Quo(yf)
+	yfRemoved := startK.QuoMut(yf)
 	// removed constant term from expression
 	// namely - (x_0 (y_f^2 + w) + x_0^3) = x_0(y_f^2 + w + x_0^2)
 	// innerTerm = y_f^2 + w + x_0^2
-	innerTerm := yf.Mul(yf).Add(w).Add((x0.Mul(x0)))
+	innerTerm := yf.Mul(yf).AddMut(w).AddMut((x0.Mul(x0)))
 	constantTerm := innerTerm.Mul(x0)
 	return yfRemoved.Sub(constantTerm)
 }
@@ -64,7 +66,7 @@ func iterKCalculator(x0, w, yf osmomath.BigDec) func(osmomath.BigDec) osmomath.B
 	// compute coefficients first. Notice that the leading coefficient is -1, we will use this to compute faster.
 	// cubicCoeff := -1
 	quadraticCoeff := x0.MulInt64(3)
-	linearCoeff := quadraticCoeff.Mul(x0).Add(w).Add(yf.Mul(yf)).NegMut()
+	linearCoeff := quadraticCoeff.Mul(x0).AddMut(w).AddMut(yf.Mul(yf)).NegMut()
 	return func(xf osmomath.BigDec) osmomath.BigDec {
 		xOut := x0.Sub(xf)
 		// horners method
@@ -176,7 +178,7 @@ func (p Pool) spotPrice(quoteDenom, baseDenom string) (spotPrice osmomath.Dec, e
 }
 
 func oneMinus(spreadFactor osmomath.Dec) osmomath.BigDec {
-	return osmomath.BigDecFromDec(osmomath.OneDec().Sub(spreadFactor))
+	return osmomath.BigDecFromDecMut(osmomath.OneDec().SubMut(spreadFactor))
 }
 
 // calcOutAmtGivenIn calculate amount of specified denom to output from a pool in osmomath.Dec given the input `tokenIn`
@@ -277,4 +279,41 @@ func (p *Pool) singleAssetJoinSpreadFactorRatio(tokenInDenom string) (osmomath.D
 	// Dec() rounds down (as it truncates), therefore 1 - term is rounded up, as desired.
 	nonInternalAssetRatio := osmomath.OneDec().Sub(ratioOfInputAssetLiquidityToTotalLiquidity.Dec())
 	return nonInternalAssetRatio, nil
+}
+
+// Route a pool join attempt to either a single-asset join or all-asset join (mutates pool state)
+// Eventually, we intend to switch this to a COW wrapped pa for better performance
+func (p *Pool) joinPoolSharesInternal(ctx sdk.Context, tokensIn sdk.Coins, spreadFactor osmomath.Dec) (numShares osmomath.Int, tokensJoined sdk.Coins, err error) {
+	if !tokensIn.DenomsSubsetOf(p.GetTotalPoolLiquidity(ctx)) {
+		return osmomath.ZeroInt(), sdk.NewCoins(), errors.New("attempted joining pool with assets that do not exist in pool")
+	}
+
+	if len(tokensIn) == 1 && tokensIn[0].Amount.GT(osmomath.OneInt()) {
+		numShares, err = p.calcSingleAssetJoinShares(tokensIn[0], spreadFactor)
+		if err != nil {
+			return osmomath.ZeroInt(), sdk.NewCoins(), err
+		}
+
+		tokensJoined = tokensIn
+	} else if len(tokensIn) != p.NumAssets() {
+		return osmomath.ZeroInt(), sdk.NewCoins(), errors.New(
+			"stableswap pool only supports LP'ing with one asset, or all assets in pool")
+	} else {
+		// Add all exact coins we can (no swap). ctx arg doesn't matter for Stableswap
+		var remCoins sdk.Coins
+		numShares, remCoins, err = cfmm_common.MaximalExactRatioJoin(p, sdk.Context{}, tokensIn)
+		if err != nil {
+			return osmomath.ZeroInt(), sdk.NewCoins(), err
+		}
+
+		tokensJoined = tokensIn.Sub(remCoins...)
+	}
+
+	p.updatePoolForJoin(tokensJoined, numShares)
+
+	if err = validatePoolLiquidity(p.PoolLiquidity, p.ScalingFactors); err != nil {
+		return osmomath.ZeroInt(), sdk.NewCoins(), err
+	}
+
+	return numShares, tokensJoined, nil
 }

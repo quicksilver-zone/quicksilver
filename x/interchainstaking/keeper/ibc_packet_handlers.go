@@ -22,10 +22,10 @@ import (
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	icatypes "github.com/cosmos/ibc-go/v6/modules/apps/27-interchain-accounts/types"
-	ibctransfertypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
-	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
-	channeltypes "github.com/cosmos/ibc-go/v6/modules/core/04-channel/types"
+	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
+	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
+	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
+	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
 
 	"github.com/quicksilver-zone/quicksilver/utils"
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
@@ -141,6 +141,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 			}
 			continue
 		case "/cosmos.staking.v1beta1.MsgRedeemTokensForShares":
+		case "/cosmos.lsmstaking.v1beta1.MsgRedeemTokensForShares":
 			if !success {
 				if err := k.HandleFailedRedeemTokens(ctx, msg.Msg, packetData.Memo); err != nil {
 					return err
@@ -162,6 +163,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 			}
 			continue
 		case "/cosmos.staking.v1beta1.MsgTokenizeShares":
+		case "/cosmos.lsmstaking.v1beta1.MsgTokenizeShares":
 			if !success {
 				// We can safely ignore this, as this can reasonably fail, and we cater for this in the flush logic.
 				return nil

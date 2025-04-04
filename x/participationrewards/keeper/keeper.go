@@ -4,17 +4,16 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/tendermint/tendermint/libs/log"
-
 	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
-	ibckeeper "github.com/cosmos/ibc-go/v6/modules/core/keeper"
+	"github.com/cometbft/cometbft/libs/log"
+
+	ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
 
 	config "github.com/quicksilver-zone/quicksilver/cmd/config" //nolint:revive
 	osmosistypes "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types"
@@ -56,6 +55,7 @@ type Keeper struct {
 	PrSubmodules         map[cmtypes.ClaimType]Submodule
 	ValidateProofOps     utils.ProofOpsFn
 	ValidateSelfProofOps utils.SelfProofOpsFn
+	govAuthority         string
 }
 
 // NewKeeper returns a new instance of participationrewards Keeper.
@@ -74,6 +74,7 @@ func NewKeeper(
 	feeCollectorName string,
 	proofValidationFn utils.ProofOpsFn,
 	selfProofValidationFn utils.SelfProofOpsFn,
+	govAuthority string,
 ) *Keeper {
 	if addr := ak.GetModuleAddress(types.ModuleName); addr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
@@ -99,11 +100,12 @@ func NewKeeper(
 		PrSubmodules:         LoadSubmodules(),
 		ValidateProofOps:     proofValidationFn,
 		ValidateSelfProofOps: selfProofValidationFn,
+		govAuthority:         govAuthority,
 	}
 }
 
 func (k *Keeper) GetGovAuthority(_ sdk.Context) string {
-	return sdk.MustBech32ifyAddressBytes(sdk.GetConfig().GetBech32AccountAddrPrefix(), k.accountKeeper.GetModuleAddress(govtypes.ModuleName))
+	return k.govAuthority
 }
 
 func (k *Keeper) SetEpochsKeeper(epochsKeeper epochskeeper.Keeper) {

@@ -1,125 +1,133 @@
+version: "2"
 run:
   tests: true
-  #   # timeout for analysis, e.g. 30s, 5m, default is 1m
-  timeout: 10m
-
 linters:
-  disable-all: true
+  default: none
   enable:
     - copyloopvar
     - errcheck
-    - gci
     - goconst
     - gocritic
-    - gofumpt
     - gosec
-    - gosimple
     - govet
     - ineffassign
     - misspell
     - nakedret
+    - revive
     - staticcheck
     - thelper
-    - typecheck
-    - stylecheck
-    - revive
-    - typecheck
-    - usetesting
     - unconvert
-    - unparam # Prefer unparam over revive's unused param. It is more thorough in its checking.
+    - unparam
     - unused
-    - misspell
-
+    - usetesting
+  settings:
+    revive:
+      enable-all-rules: true
+      rules:
+        - name: use-any
+          disabled: true
+        - name: if-return
+          disabled: true
+        - name: max-public-structs
+          disabled: true
+        - name: unchecked-type-assertion
+          disabled: true
+        - name: import-shadowing
+          disabled: true
+        - name: cognitive-complexity
+          disabled: true
+        - name: var-naming
+          disabled: true
+        - name: argument-limit
+          disabled: true
+        - name: cyclomatic
+          disabled: true
+        - name: file-header
+          disabled: true
+        - name: function-length
+          disabled: true
+        - name: function-result-limit
+          disabled: true
+        - name: line-length-limit
+          disabled: true
+        - name: flag-parameter
+          disabled: true
+        - name: add-constant
+          disabled: true
+        - name: empty-lines
+          disabled: true
+        - name: unused-receiver
+          disabled: true
+        - name: banned-characters
+          disabled: true
+        - name: deep-exit
+          disabled: true
+        - name: confusing-results
+          disabled: true
+        - name: unused-parameter
+          disabled: true
+        - name: modifies-value-receiver
+          disabled: true
+        - name: early-return
+          disabled: true
+        - name: confusing-naming
+          disabled: true
+        - name: defer
+          disabled: true
+        - name: unused-parameter
+          disabled: true
+        - name: unhandled-error
+          arguments:
+            - b.WriteString
+            - respJSON.Write
+            - fmt.Printf
+            - fmt.Print
+            - fmt.Println
+            - fmt.Fprintf
+          disabled: true
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    rules:
+      - linters:
+          - revive
+        text: differs only by capitalization to method
+      - linters:
+          - gosec
+        text: Use of weak random number generator
+    paths:
+      - third-party-chains
+      - third_party$
+      - builtin$
+      - examples$
 issues:
-  exclude-rules:
-    - text: "differs only by capitalization to method"
-      linters:
-        - revive
-    - text: "Use of weak random number generator"
-      linters:
-        - gosec
-
   max-issues-per-linter: 10000
   max-same-issues: 10000
-  exclude-dirs:
-    - third-party-chains
-
-linters-settings:
-  gci:
-    sections:
-      - standard # Standard section: captures all standard packages.
-      - default # Default section: contains all imports that could not be matched to another section type.
-      - blank # blank imports
-      - dot # dot imports
-      - prefix(cosmossdk.io)
-      - prefix(github.com/cosmos/cosmos-sdk)
-      - prefix(github.com/cometbft/cometbft)
-      - prefix(github.com/cosmos/ibc-go)
-      - prefix(github.com/quicksilver-zone/quicksilver)
-    custom-order: true
-  revive:
-    enable-all-rules: true
-    # Do NOT whine about the following, full explanation found in:
-    # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#description-of-available-rules
-    rules:
-      - name: use-any
-        disabled: true
-      - name: if-return
-        disabled: true
-      - name: max-public-structs
-        disabled: true
-      - name: unchecked-type-assertion
-        disabled: true
-      - name: import-shadowing
-        disabled: true
-      - name: cognitive-complexity
-        disabled: true
-      - name: var-naming
-        disabled: true
-      - name: argument-limit
-        disabled: true
-      - name: cyclomatic
-        disabled: true
-      - name: file-header
-        disabled: true
-      - name: function-length
-        disabled: true
-      - name: function-result-limit
-        disabled: true
-      - name: line-length-limit
-        disabled: true
-      - name: flag-parameter
-        disabled: true
-      - name: add-constant
-        disabled: true
-      - name: empty-lines
-        disabled: true
-      - name: unused-receiver # remove later
-        disabled: true
-      - name: banned-characters
-        disabled: true
-      - name: deep-exit
-        disabled: true
-      - name: confusing-results
-        disabled: true
-      - name: unused-parameter
-        disabled: true
-      - name: modifies-value-receiver
-        disabled: true
-      - name: early-return
-        disabled: true
-      - name: confusing-naming
-        disabled: true
-      - name: defer
-        disabled: true
-      - name: unused-parameter # Disabled in favour of unparam.
-        disabled: true
-      - name: unhandled-error # enable later, currently covered by errcheck
-        disabled: true
-        arguments:
-          - "b.WriteString"
-          - "respJSON.Write"
-          - "fmt.Printf"
-          - "fmt.Print"
-          - "fmt.Println"
-          - "fmt.Fprintf"
+formatters:
+  enable:
+    - gci
+    - gofumpt
+  settings:
+    gci:
+      sections:
+        - standard
+        - default
+        - blank
+        - dot
+        - prefix(cosmossdk.io)
+        - prefix(github.com/cosmos/cosmos-sdk)
+        - prefix(github.com/cometbft/cometbft)
+        - prefix(github.com/cosmos/ibc-go)
+        - prefix(github.com/quicksilver-zone/quicksilver)
+      custom-order: true
+  exclusions:
+    generated: lax
+    paths:
+      - third-party-chains
+      - third_party$
+      - builtin$
+      - examples$

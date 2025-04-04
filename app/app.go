@@ -2,27 +2,27 @@ package app
 
 import (
 	"context"
-	"encoding/json"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
 
 	"github.com/spf13/cast"
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/log"
-	tmos "github.com/tendermint/tendermint/libs/os"
-	dbm "github.com/tendermint/tm-db"
+
+	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
+	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
+	nodeservice "github.com/cosmos/cosmos-sdk/client/grpc/node"
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/runtime"
+	runtimeservices "github.com/cosmos/cosmos-sdk/runtime/services"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/version"
@@ -34,8 +34,14 @@ import (
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
-	ibckeeper "github.com/cosmos/ibc-go/v6/modules/core/keeper"
-	ibctestingtypes "github.com/cosmos/ibc-go/v6/testing/types"
+	dbm "github.com/cometbft/cometbft-db"
+	abci "github.com/cometbft/cometbft/abci/types"
+	tmjson "github.com/cometbft/cometbft/libs/json"
+	"github.com/cometbft/cometbft/libs/log"
+	tmos "github.com/cometbft/cometbft/libs/os"
+
+	ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
+	ibctestingtypes "github.com/cosmos/ibc-go/v7/testing/types"
 
 	"github.com/quicksilver-zone/quicksilver/app/keepers"
 	"github.com/quicksilver-zone/quicksilver/docs"
@@ -70,7 +76,7 @@ var (
 
 var (
 	_ servertypes.Application = (*Quicksilver)(nil)
-	_ simapp.App              = (*Quicksilver)(nil)
+	_ runtime.AppI            = (*Quicksilver)(nil)
 )
 
 // Quicksilver implements an extended ABCI application.
@@ -130,6 +136,7 @@ func NewQuicksilver(
 	bApp.SetCommitMultiStoreTracer(traceStore)
 	bApp.SetVersion(version.Version)
 	bApp.SetInterfaceRegistry(interfaceRegistry)
+	bApp.SetTxEncoder(encodingConfig.TxConfig.TxEncoder())
 
 	app := &Quicksilver{
 		BaseApp:           bApp,
@@ -152,6 +159,7 @@ func NewQuicksilver(
 		invCheckPeriod,
 		appOpts,
 		enableSupplyEndpoint,
+		logger,
 	)
 
 	// ****  Module Options ****/
@@ -165,8 +173,7 @@ func NewQuicksilver(
 	app.mm.SetOrderEndBlockers(orderEndBlockers()...)
 	app.mm.SetOrderInitGenesis(orderInitBlockers()...)
 
-	app.mm.RegisterInvariants(&app.CrisisKeeper)
-	app.mm.RegisterRoutes(app.Router(), app.QueryRouter(), encodingConfig.Amino)
+	app.mm.RegisterInvariants(app.CrisisKeeper)
 	app.configurator = module.NewConfigurator(app.appCodec, app.MsgServiceRouter(), app.GRPCQueryRouter())
 	app.mm.RegisterServices(app.configurator)
 
@@ -178,6 +185,14 @@ func NewQuicksilver(
 	// NOTE: this is not required apps that don't use the simulator for fuzz testing
 	// transactions
 	app.sm = module.NewSimulationManager(simulationModules(app, encodingConfig)...)
+
+	autocliv1.RegisterQueryServer(app.GRPCQueryRouter(), runtimeservices.NewAutoCLIQueryService(app.mm.Modules))
+	reflectionSvc, err := runtimeservices.NewReflectionService()
+	if err != nil {
+		panic(err)
+	}
+	reflectionv1.RegisterReflectionServiceServer(app.GRPCQueryRouter(), reflectionSvc)
+
 	app.sm.RegisterStoreDecoders()
 
 	// initialize stores
@@ -223,9 +238,6 @@ func NewQuicksilver(
 	return app
 }
 
-// Name returns the name of the App.
-func (app *Quicksilver) Name() string { return app.BaseApp.Name() }
-
 // BeginBlocker updates every begin block.
 func (app *Quicksilver) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
 	return app.mm.BeginBlock(ctx, req)
@@ -257,7 +269,7 @@ func (app *Quicksilver) DeliverTx(req abci.RequestDeliverTx) (res abci.ResponseD
 // InitChainer updates at chain initialization.
 func (app *Quicksilver) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 	var genesisState GenesisState
-	if err := json.Unmarshal(req.AppStateBytes, &genesisState); err != nil {
+	if err := tmjson.Unmarshal(req.AppStateBytes, &genesisState); err != nil {
 		panic(err)
 	}
 	app.UpgradeKeeper.SetModuleVersionMap(ctx, app.mm.GetVersionMap())
@@ -270,7 +282,7 @@ func (app *Quicksilver) LoadHeight(height int64) error {
 }
 
 // ModuleAccountAddrs returns all the app's module account addresses.
-func (*Quicksilver) ModuleAccountAddrs() map[string]bool {
+func (app *Quicksilver) ModuleAccountAddrs() map[string]bool {
 	modAccAddrs := make(map[string]bool)
 	for acc := range maccPerms {
 		modAccAddrs[authtypes.NewModuleAddress(acc).String()] = true
@@ -281,7 +293,7 @@ func (*Quicksilver) ModuleAccountAddrs() map[string]bool {
 
 // BlockedAddrs returns all the app's module account addresses that are not
 // allowed to receive external tokens.
-func (*Quicksilver) BlockedAddrs() map[string]bool {
+func (app *Quicksilver) BlockedAddrs() map[string]bool {
 	blockedAddrs := make(map[string]bool)
 	for acc := range maccPerms {
 		blockedAddrs[authtypes.NewModuleAddress(acc).String()] = !allowedReceivingModAcc[acc]
@@ -338,7 +350,11 @@ func (*Quicksilver) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APICo
 	// Register new tendermint queries routes from grpc-gateway.
 	tmservice.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 
+	// Register legacy and grpc-gateway routes for all modules.
 	ModuleBasics.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
+
+	// Register node gRPC service for grpc-gateway.
+	nodeservice.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 
 	// register swagger API
 	if apiConfig.Swagger {
@@ -348,17 +364,23 @@ func (*Quicksilver) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APICo
 }
 
 func (app *Quicksilver) RegisterTxService(clientCtx client.Context) {
-	authtx.RegisterTxService(app.BaseApp.GRPCQueryRouter(), clientCtx, app.BaseApp.Simulate, app.interfaceRegistry)
+	authtx.RegisterTxService(app.GRPCQueryRouter(), clientCtx, app.Simulate, app.interfaceRegistry)
 }
 
 // RegisterTendermintService implements the Application.RegisterTendermintService method.
 func (app *Quicksilver) RegisterTendermintService(clientCtx client.Context) {
 	tmservice.RegisterTendermintService(
 		clientCtx,
-		app.BaseApp.GRPCQueryRouter(),
+		app.GRPCQueryRouter(),
 		app.interfaceRegistry,
 		app.Query,
 	)
+}
+
+// RegisterNodeService registers the node gRPC service on the provided
+// application gRPC query router.
+func (app *Quicksilver) RegisterNodeService(clientCtx client.Context) {
+	nodeservice.RegisterNodeService(clientCtx, app.GRPCQueryRouter())
 }
 
 // IBC Go TestingApp functions
@@ -389,7 +411,7 @@ func (app *Quicksilver) GetScopedICAControllerKeeper() capabilitykeeper.ScopedKe
 }
 
 // GetTxConfig implements the TestingApp interface.
-func (*Quicksilver) GetTxConfig() client.TxConfig {
+func (app *Quicksilver) GetTxConfig() client.TxConfig {
 	cfg := MakeEncodingConfig()
 	return cfg.TxConfig
 }

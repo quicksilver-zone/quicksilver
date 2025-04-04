@@ -1,0 +1,17 @@
+syntax = "proto3";
+package osmosis.gamm.v1beta1;
+
+import "cosmos/base/v1beta1/coin.proto";
+import "cosmos_proto/cosmos.proto";
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/gamm/types";
+
+// Params holds parameters for the incentives module
+message Params {
+  repeated cosmos.base.v1beta1.Coin pool_creation_fee = 1 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.moretags) = "yaml:\"pool_creation_fee\"",
+    (gogoproto.nullable) = false
+  ];
+}

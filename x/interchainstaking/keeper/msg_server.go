@@ -33,11 +33,11 @@ var _ types.MsgServer = msgServer{}
 func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgRequestRedemption) (*types.MsgRequestRedemptionResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if !k.Keeper.GetUnbondingEnabled(ctx) {
+	if !k.GetUnbondingEnabled(ctx) {
 		return nil, errors.New("unbonding is currently disabled")
 	}
 
-	zone := k.Keeper.GetZoneByLocalDenom(ctx, msg.Value.Denom)
+	zone := k.GetZoneByLocalDenom(ctx, msg.Value.Denom)
 
 	// does zone exist?
 	if zone == nil {
@@ -110,7 +110,7 @@ func (k msgServer) CancelRedemption(goCtx context.Context, msg *types.MsgCancelR
 		}
 	}
 
-	if record.Delegator != msg.FromAddress && k.Keeper.GetGovAuthority(ctx) != msg.FromAddress {
+	if record.Delegator != msg.FromAddress && k.GetGovAuthority(ctx) != msg.FromAddress {
 		return nil, fmt.Errorf("incorrect user for record with hash %q", msg.Hash)
 	}
 
@@ -156,7 +156,7 @@ func (k msgServer) RequeueRedemption(goCtx context.Context, msg *types.MsgRequeu
 		return nil, fmt.Errorf("cannot requeue unbond %q with no errors", msg.Hash)
 	}
 
-	if record.Delegator != msg.FromAddress && k.Keeper.GetGovAuthority(ctx) != msg.FromAddress {
+	if record.Delegator != msg.FromAddress && k.GetGovAuthority(ctx) != msg.FromAddress {
 		return nil, fmt.Errorf("incorrect user for record with hash %q", msg.Hash)
 	}
 
@@ -186,7 +186,7 @@ func (k msgServer) RequeueRedemption(goCtx context.Context, msg *types.MsgRequeu
 func (k msgServer) UpdateRedemption(goCtx context.Context, msg *types.MsgUpdateRedemption) (*types.MsgUpdateRedemptionResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if k.Keeper.GetGovAuthority(ctx) != msg.FromAddress {
+	if k.GetGovAuthority(ctx) != msg.FromAddress {
 		return nil, errors.New("MsgUpdateRedemption may only be executed by the gov authority")
 	}
 
@@ -311,7 +311,7 @@ func (k msgServer) GovReopenChannel(goCtx context.Context, msg *types.MsgGovReop
 		return nil, errors.New("invalid port format; zone not found")
 	}
 
-	if err := k.Keeper.registerInterchainAccount(ctx, msg.ConnectionId, portID); err != nil {
+	if err := k.RegisterInterchainAccount(ctx, msg.ConnectionId, portID); err != nil {
 		return nil, err
 	}
 
@@ -335,15 +335,15 @@ func (k msgServer) GovCloseChannel(goCtx context.Context, msg *types.MsgGovClose
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// checking msg authority is the gov module address
-	if k.Keeper.GetGovAuthority(ctx) != msg.Authority {
+	if k.GetGovAuthority(ctx) != msg.Authority {
 		return nil,
 			govtypes.ErrInvalidSigner.Wrapf(
 				"invalid authority: expected %s, got %s",
-				k.Keeper.GetGovAuthority(ctx), msg.Authority,
+				k.GetGovAuthority(ctx), msg.Authority,
 			)
 	}
 
-	_, capability, err := k.Keeper.IBCKeeper.ChannelKeeper.LookupModuleByChannel(ctx, msg.PortId, msg.ChannelId)
+	_, capability, err := k.IBCKeeper.ChannelKeeper.LookupModuleByChannel(ctx, msg.PortId, msg.ChannelId)
 	if err != nil {
 		return nil, err
 	}
@@ -372,15 +372,15 @@ func (k msgServer) GovSetLsmCaps(goCtx context.Context, msg *types.MsgGovSetLsmC
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// checking msg authority is the gov module address
-	if k.Keeper.GetGovAuthority(ctx) != msg.Authority {
+	if k.GetGovAuthority(ctx) != msg.Authority {
 		return nil,
 			govtypes.ErrInvalidSigner.Wrapf(
 				"invalid authority: expected %s, got %s",
-				k.Keeper.GetGovAuthority(ctx), msg.Authority,
+				k.GetGovAuthority(ctx), msg.Authority,
 			)
 	}
 
-	zone, found := k.Keeper.GetZone(ctx, msg.ChainId)
+	zone, found := k.GetZone(ctx, msg.ChainId)
 	if !found {
 		return nil,
 			fmt.Errorf(
@@ -418,15 +418,15 @@ func (k msgServer) GovAddValidatorDenyList(goCtx context.Context, msg *types.Msg
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// checking msg authority is the gov module address
-	if k.Keeper.GetGovAuthority(ctx) != msg.Authority {
+	if k.GetGovAuthority(ctx) != msg.Authority {
 		return nil,
 			govtypes.ErrInvalidSigner.Wrapf(
 				"invalid authority: expected %s, got %s",
-				k.Keeper.GetGovAuthority(ctx), msg.Authority,
+				k.GetGovAuthority(ctx), msg.Authority,
 			)
 	}
 
-	zone, found := k.Keeper.GetZone(ctx, msg.ChainId)
+	zone, found := k.GetZone(ctx, msg.ChainId)
 	if !found {
 		return nil,
 			fmt.Errorf(
@@ -462,15 +462,15 @@ func (k msgServer) GovRemoveValidatorDenyList(goCtx context.Context, msg *types.
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// checking msg authority is the gov module address
-	if k.Keeper.GetGovAuthority(ctx) != msg.Authority {
+	if k.GetGovAuthority(ctx) != msg.Authority {
 		return nil,
 			govtypes.ErrInvalidSigner.Wrapf(
 				"invalid authority: expected %s, got %s",
-				k.Keeper.GetGovAuthority(ctx), msg.Authority,
+				k.GetGovAuthority(ctx), msg.Authority,
 			)
 	}
 
-	zone, found := k.Keeper.GetZone(ctx, msg.ChainId)
+	zone, found := k.GetZone(ctx, msg.ChainId)
 	if !found {
 		return nil,
 			fmt.Errorf(

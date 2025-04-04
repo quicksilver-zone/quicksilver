@@ -68,7 +68,7 @@ func (k msgServer) SubmitQueryResponse(goCtx context.Context, msg *types.MsgSubm
 
 	callbackExecuted := false
 
-	for _, key := range utils.Keys[types.QueryCallbacks](k.callbacks) {
+	for _, key := range utils.Keys(k.callbacks) {
 		module := k.callbacks[key]
 		if module.Has(q.CallbackId) {
 			err := module.Call(ctx, q.CallbackId, msg.Result, q)

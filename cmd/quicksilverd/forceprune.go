@@ -11,12 +11,12 @@ import (
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/opt"
 	"github.com/syndtr/goleveldb/leveldb/util"
-	"github.com/tendermint/tendermint/config"
-	tmstore "github.com/tendermint/tendermint/store"
 
 	"github.com/cosmos/cosmos-sdk/client"
 
 	tmdb "github.com/cometbft/cometbft-db"
+	"github.com/cometbft/cometbft/config"
+	tmstore "github.com/cometbft/cometbft/store"
 )
 
 const (

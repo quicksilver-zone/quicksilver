@@ -9,11 +9,10 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 
-	types "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/gamm"
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/gamm/pool-models/internal/cfmm_common"
-	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/osmomath"
-	poolmanagertypes "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/poolmanager"
-	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
+	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/gamm/types"
+	poolmanagertypes "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/poolmanager/types"
 )
 
 var (
@@ -49,9 +48,9 @@ func NewStableswapPool(poolId uint64,
 		return Pool{}, err
 	}
 
-	if err = types.ValidateFutureGovernor(futureGovernor); err != nil {
-		return Pool{}, err
-	}
+	// if err = types.ValidateFutureGovernor(futureGovernor); err != nil {
+	// 	return Pool{}, err
+	// }
 
 	pool := Pool{
 		Address:                 poolmanagertypes.NewPoolAddress(poolId).String(),
@@ -68,7 +67,7 @@ func NewStableswapPool(poolId uint64,
 }
 
 func (p Pool) GetAddress() sdk.AccAddress {
-	addr, err := addressutils.AccAddressFromBech32(p.Address, "")
+	addr, err := sdk.AccAddressFromBech32(p.Address)
 	if err != nil {
 		panic(fmt.Sprintf("could not bech32 decode address of pool with id: %d", p.GetId()))
 	}
@@ -318,7 +317,7 @@ func (p Pool) SpotPrice(ctx sdk.Context, quoteAssetDenom string, baseAssetDenom 
 	if err != nil {
 		return osmomath.BigDec{}, err
 	}
-	return osmomath.BigDecFromDec(spotPriceDec), nil
+	return osmomath.BigDecFromDecMut(spotPriceDec), nil
 }
 
 func (p Pool) Copy() Pool {
@@ -328,7 +327,8 @@ func (p Pool) Copy() Pool {
 }
 
 func (p *Pool) CalcJoinPoolShares(ctx sdk.Context, tokensIn sdk.Coins, spreadFactor osmomath.Dec) (numShares osmomath.Int, newLiquidity sdk.Coins, err error) {
-	return osmomath.Int{}, sdk.Coins{}, nil
+	pCopy := p.Copy()
+	return pCopy.joinPoolSharesInternal(ctx, tokensIn, spreadFactor)
 }
 
 // CalcJoinPoolNoSwapShares calculates the number of shares created to execute an all-asset pool join with the provided amount of `tokensIn`.
@@ -337,11 +337,31 @@ func (p *Pool) CalcJoinPoolShares(ctx sdk.Context, tokensIn sdk.Coins, spreadFac
 // Returns the number of shares created, the amount of coins actually joined into the pool as not all may tokens may be joinable.
 // If an all-asset join is not possible, returns an error.
 func (p Pool) CalcJoinPoolNoSwapShares(ctx sdk.Context, tokensIn sdk.Coins, spreadFactor osmomath.Dec) (numShares osmomath.Int, tokensJoined sdk.Coins, err error) {
-	return osmomath.Int{}, sdk.Coins{}, nil
+	// ensure that there aren't too many or too few assets in `tokensIn`
+	if tokensIn.Len() != p.NumAssets() || !tokensIn.DenomsSubsetOf(p.GetTotalPoolLiquidity(ctx)) {
+		return osmomath.ZeroInt(), sdk.NewCoins(), errors.New("no-swap joins require LP'ing with all assets in pool")
+	}
+
+	// execute a no-swap join with as many tokens as possible given a perfect ratio:
+	// * numShares is how many shares are perfectly matched.
+	// * remainingTokensIn is how many coins we have left to join that have not already been used.
+	numShares, remainingTokensIn, err := cfmm_common.MaximalExactRatioJoin(&p, ctx, tokensIn)
+	if err != nil {
+		return osmomath.ZeroInt(), sdk.NewCoins(), err
+	}
+
+	// ensure that no more tokens have been joined than is possible with the given `tokensIn`
+	tokensJoined = tokensIn.Sub(remainingTokensIn...)
+	if tokensJoined.IsAnyGT(tokensIn) {
+		return osmomath.ZeroInt(), sdk.NewCoins(), errors.New("an error has occurred, more coins joined than token In")
+	}
+
+	return numShares, tokensJoined, nil
 }
 
 func (p *Pool) JoinPool(ctx sdk.Context, tokensIn sdk.Coins, spreadFactor osmomath.Dec) (osmomath.Int, error) {
-	return osmomath.Int{}, nil
+	numShares, _, err := p.joinPoolSharesInternal(ctx, tokensIn, spreadFactor)
+	return numShares, err
 }
 
 func (p *Pool) JoinPoolNoSwap(ctx sdk.Context, tokensIn sdk.Coins, spreadFactor osmomath.Dec) (osmomath.Int, error) {
@@ -404,7 +424,7 @@ func validateScalingFactorController(scalingFactorController string) error {
 	if len(scalingFactorController) == 0 {
 		return nil
 	}
-	_, err := addressutils.AccAddressFromBech32(scalingFactorController, "")
+	_, err := sdk.AccAddressFromBech32(scalingFactorController)
 	return err
 }
 
@@ -476,9 +496,5 @@ func (p *Pool) AsSerializablePool() poolmanagertypes.PoolI {
 // GetPoolDenoms implements types.CFMMPoolI.
 func (p *Pool) GetPoolDenoms(ctx sdk.Context) []string {
 	liquidity := p.GetTotalPoolLiquidity(ctx)
-	denoms := []string{}
-	for _, i := range liquidity {
-		denoms = append(denoms, i.Denom)
-	}
-	return denoms
+	return liquidity.Denoms()
 }

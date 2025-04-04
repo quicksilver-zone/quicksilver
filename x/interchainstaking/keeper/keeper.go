@@ -7,8 +7,6 @@ import (
 	"slices"
 	"time"
 
-	"github.com/tendermint/tendermint/libs/log"
-
 	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -21,17 +19,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
-	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	icacontrollerkeeper "github.com/cosmos/ibc-go/v6/modules/apps/27-interchain-accounts/controller/keeper"
-	ibctransferkeeper "github.com/cosmos/ibc-go/v6/modules/apps/transfer/keeper"
-	ibckeeper "github.com/cosmos/ibc-go/v6/modules/core/keeper"
-	ibctmtypes "github.com/cosmos/ibc-go/v6/modules/light-clients/07-tendermint/types"
+	"github.com/cometbft/cometbft/libs/log"
+
+	icacontrollerkeeper "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/keeper"
+	ibctransferkeeper "github.com/cosmos/ibc-go/v7/modules/apps/transfer/keeper"
+	ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
+	ibctmtypes "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
 
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	claimsmanagertypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
@@ -48,7 +45,6 @@ type TxSubmitFn func(ctx sdk.Context, k *Keeper, msgs []sdk.Msg, account *types.
 type Keeper struct {
 	cdc                 codec.Codec
 	storeKey            storetypes.StoreKey
-	scopedKeeper        *capabilitykeeper.ScopedKeeper
 	ICAControllerKeeper icacontrollerkeeper.Keeper
 	ICQKeeper           interchainquerykeeper.Keeper
 	AccountKeeper       types.AccountKeeper
@@ -62,6 +58,7 @@ type Keeper struct {
 	hooks               types.IcsHooks
 	paramStore          paramtypes.Subspace
 	txSubmit            TxSubmitFn
+	govAuthority        string
 }
 
 // NewKeeper returns a new instance of zones Keeper.
@@ -73,12 +70,12 @@ func NewKeeper(
 	authzKeeper types.AuthzKeeper,
 	bankKeeper types.BankKeeper,
 	icaControllerKeeper icacontrollerkeeper.Keeper,
-	scopedKeeper *capabilitykeeper.ScopedKeeper,
 	icqKeeper interchainquerykeeper.Keeper,
 	ibcKeeper *ibckeeper.Keeper,
 	transferKeeper ibctransferkeeper.Keeper,
 	claimsManagerKeeper types.ClaimsManagerKeeper,
 	ps paramtypes.Subspace,
+	govAuthority string,
 ) *Keeper {
 	if addr := accountKeeper.GetModuleAddress(types.ModuleName); addr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
@@ -99,7 +96,6 @@ func NewKeeper(
 	return &Keeper{
 		cdc:                 cdc,
 		storeKey:            storeKey,
-		scopedKeeper:        scopedKeeper,
 		ICAControllerKeeper: icaControllerKeeper,
 		ICQKeeper:           icqKeeper,
 		BankKeeper:          bankKeeper,
@@ -111,6 +107,7 @@ func NewKeeper(
 		txSubmit:            ProdSubmitTx,
 		paramStore:          ps,
 		AuthzKeeper:         authzKeeper,
+		govAuthority:        govAuthority,
 	}
 }
 
@@ -130,7 +127,7 @@ func (k *Keeper) SetHooks(icsh types.IcsHooks) *Keeper {
 }
 
 func (k *Keeper) GetGovAuthority(_ sdk.Context) string {
-	return sdk.MustBech32ifyAddressBytes(sdk.GetConfig().GetBech32AccountAddrPrefix(), k.AccountKeeper.GetModuleAddress(govtypes.ModuleName))
+	return k.govAuthority
 }
 
 func (k *Keeper) SetEpochsKeeper(epochsKeeper epochskeeper.Keeper) {
@@ -144,15 +141,6 @@ func (*Keeper) Logger(ctx sdk.Context) log.Logger {
 
 func (k *Keeper) GetCodec() codec.Codec {
 	return k.cdc
-}
-
-func (k *Keeper) ScopedKeeper() *capabilitykeeper.ScopedKeeper {
-	return k.scopedKeeper
-}
-
-// ClaimCapability claims the channel capability passed via the OnOpenChanInit callback.
-func (k *Keeper) ClaimCapability(ctx sdk.Context, capability *capabilitytypes.Capability, name string) error {
-	return k.scopedKeeper.ClaimCapability(ctx, capability, name)
 }
 
 func (k *Keeper) SetConnectionForPort(ctx sdk.Context, connectionID, port string) {
@@ -822,7 +810,7 @@ func (k *Keeper) Rebalance(ctx sdk.Context, zone *types.Zone, epochNumber int64)
 	return k.SubmitTx(ctx, msgs, zone.DelegationAddress, types.EpochRebalanceMemo(epochNumber), zone.MessagesPerTx)
 }
 
-// UnmarshalValidatorsResponse attempts to umarshal  a byte slice into a QueryValidatorsResponse.
+// UnmarshalValidatorsResponse attempts to umarshal a byte slice into a QueryValidatorsResponse.
 func (k *Keeper) UnmarshalValidatorsResponse(data []byte) (lsmstakingtypes.QueryValidatorsResponse, error) {
 	validatorsRes := lsmstakingtypes.QueryValidatorsResponse{}
 	if len(data) == 0 {

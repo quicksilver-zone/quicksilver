@@ -8,23 +8,23 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto/secp256k1"
-	"github.com/tendermint/tendermint/libs/log"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	tmtypes "github.com/tendermint/tendermint/types"
-	dbm "github.com/tendermint/tm-db"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
-	cosmossecp256k1 "github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	ibctesting "github.com/cosmos/ibc-go/v6/testing"
+	dbm "github.com/cometbft/cometbft-db"
+	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cometbft/cometbft/libs/log"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	tmtypes "github.com/cometbft/cometbft/types"
+
+	ibctesting "github.com/cosmos/ibc-go/v7/testing"
 )
 
 // EmptyAppOptions is a stub implementing AppOptions.
@@ -33,25 +33,6 @@ type EmptyAppOptions struct{}
 // Get implements AppOptions.
 func (EmptyAppOptions) Get(_ string) interface{} {
 	return nil
-}
-
-// DefaultConsensusParams defines the default Tendermint consensus params used in
-// Quicksilver testing.
-var DefaultConsensusParams = &abci.ConsensusParams{
-	Block: &abci.BlockParams{
-		MaxBytes: 200000,
-		MaxGas:   -1, // no limit
-	},
-	Evidence: &tmproto.EvidenceParams{
-		MaxAgeNumBlocks: 302400,
-		MaxAgeDuration:  504 * time.Hour, // 3 weeks is the max duration
-		MaxBytes:        10000,
-	},
-	Validator: &tmproto.ValidatorParams{
-		PubKeyTypes: []string{
-			tmtypes.ABCIPubKeyTypeEd25519,
-		},
-	},
 }
 
 // Setup initializes a new Quicksilver. A Nop logger is set in Quicksilver.
@@ -67,12 +48,10 @@ func Setup(t *testing.T, isCheckTx bool) *Quicksilver {
 	valSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
 
 	// generate genesis account
-	senderPrivKey := secp256k1.GenPrivKey()
-	senderPubKey := cosmossecp256k1.PubKey{
-		Key: senderPrivKey.PubKey().Bytes(),
-	}
+	senderPrivKey := mock.NewPV()
+	senderPubkey := senderPrivKey.PrivKey.PubKey()
 
-	acc := authtypes.NewBaseAccount(senderPrivKey.PubKey().Address().Bytes(), &senderPubKey, 0, 0)
+	acc := authtypes.NewBaseAccount(senderPubkey.Address().Bytes(), senderPubkey, 0, 0)
 	balance := banktypes.Balance{
 		Address: acc.GetAddress().String(),
 		Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000000000000))),
@@ -86,12 +65,13 @@ func Setup(t *testing.T, isCheckTx bool) *Quicksilver {
 		true,
 		map[int64]bool{},
 		DefaultNodeHome,
-		5,
+		0,
 		MakeEncodingConfig(),
 		EmptyAppOptions{},
 		false,
 		false,
 		"",
+		baseapp.SetChainID("quicksilver-1"),
 	)
 
 	genesisState := NewDefaultGenesisState()
@@ -106,10 +86,10 @@ func Setup(t *testing.T, isCheckTx bool) *Quicksilver {
 		// Initialize the chain
 		app.InitChain(
 			abci.RequestInitChain{
-				ChainId:         "mercury-1",
-				Validators:      []abci.ValidatorUpdate{},
-				ConsensusParams: DefaultConsensusParams,
-				AppStateBytes:   stateBytes,
+				ChainId:    "quicksilver-1",
+				Validators: []abci.ValidatorUpdate{},
+				// ConsensusParams: DefaultConsensusParams,
+				AppStateBytes: stateBytes,
 			},
 		)
 	}
@@ -121,7 +101,7 @@ func GetAppWithContext(t *testing.T, init bool) (*Quicksilver, sdk.Context) {
 	t.Helper()
 
 	app := Setup(t, !init)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "mercury-1", Time: time.Now().UTC()})
+	ctx := app.NewContext(false, tmproto.Header{Height: 1, ChainID: "mercury-1", Time: time.Now().UTC()})
 	return app, ctx
 }
 
@@ -153,7 +133,6 @@ func GenesisStateWithValSet(
 	balances ...banktypes.Balance,
 ) GenesisState {
 	t.Helper()
-
 	// set genesis accounts
 	authGenesis := authtypes.NewGenesisState(authtypes.DefaultParams(), genAccs)
 	genesisState[authtypes.ModuleName] = app.AppCodec().MustMarshalJSON(authGenesis)
@@ -206,7 +185,7 @@ func GenesisStateWithValSet(
 	})
 
 	// update total supply
-	bankGenesis := banktypes.NewGenesisState(banktypes.DefaultGenesisState().Params, balances, totalSupply, []banktypes.Metadata{})
+	bankGenesis := banktypes.NewGenesisState(banktypes.DefaultGenesisState().Params, balances, totalSupply, []banktypes.Metadata{}, []banktypes.SendEnabled{})
 	genesisState[banktypes.ModuleName] = app.AppCodec().MustMarshalJSON(bankGenesis)
 
 	return genesisState

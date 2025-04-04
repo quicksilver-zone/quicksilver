@@ -13,7 +13,7 @@ import (
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
 	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/concentrated-liquidity/model"
-	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/gamm"
+	gamm "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/gamm/types"
 	umeetypes "github.com/quicksilver-zone/quicksilver/third-party-chains/umee-types/leverage/types"
 	icqtypes "github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
 	"github.com/quicksilver-zone/quicksilver/x/participationrewards/types"

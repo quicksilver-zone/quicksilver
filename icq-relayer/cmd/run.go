@@ -15,6 +15,7 @@ import (
 	"syscall"
 
 	"github.com/BurntSushi/toml"
+	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -22,7 +23,6 @@ import (
 	"github.com/quicksilver-zone/quicksilver/icq-relayer/pkg/runner"
 	"github.com/quicksilver-zone/quicksilver/icq-relayer/pkg/types"
 	"github.com/rs/zerolog/log"
-	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 )
 
 const (

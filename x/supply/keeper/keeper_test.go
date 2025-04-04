@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	ibctesting "github.com/cosmos/ibc-go/v6/testing"
+	ibctesting "github.com/cosmos/ibc-go/v7/testing"
 
 	"github.com/quicksilver-zone/quicksilver/app"
 )
@@ -61,6 +61,5 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.coordinator.CurrentTime = time.Now().UTC()
 	suite.coordinator.UpdateTime()
 
-	suite.coordinator.CommitNBlocks(suite.chainA, 10)
-	suite.coordinator.CommitNBlocks(suite.chainB, 10)
+	suite.coordinator.CommitBlock(suite.chainA, suite.chainB)
 }

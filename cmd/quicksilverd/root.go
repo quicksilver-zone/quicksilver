@@ -9,10 +9,6 @@ import (
 
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
-	tmcfg "github.com/tendermint/tendermint/config"
-	tmcli "github.com/tendermint/tendermint/libs/cli"
-	"github.com/tendermint/tendermint/libs/log"
-	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -32,6 +28,13 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
+	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
+
+	dbm "github.com/cometbft/cometbft-db"
+	tmcfg "github.com/cometbft/cometbft/config"
+	tmcli "github.com/cometbft/cometbft/libs/cli"
+	"github.com/cometbft/cometbft/libs/log"
+	tmtypes "github.com/cometbft/cometbft/types"
 
 	"github.com/quicksilver-zone/quicksilver/app"
 	quicksilverconfig "github.com/quicksilver-zone/quicksilver/cmd/config"
@@ -60,7 +63,7 @@ func NewRootCmd() (*cobra.Command, app.EncodingConfig) {
 		WithLegacyAmino(encodingConfig.Amino).
 		WithInput(os.Stdin).
 		WithAccountRetriever(types.AccountRetriever{}).
-		WithBroadcastMode(flags.BroadcastBlock).
+		WithBroadcastMode(flags.FlagBroadcastMode).
 		WithHomeDir(app.DefaultNodeHome).
 		WithViper(EnvPrefix)
 
@@ -96,7 +99,7 @@ func NewRootCmd() (*cobra.Command, app.EncodingConfig) {
 	rootCmd.AddCommand(
 		forceprune(),
 		genutilcli.InitCmd(app.ModuleBasics, app.DefaultNodeHome),
-		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome),
+		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome, genutiltypes.DefaultMessageValidator),
 		genutilcli.GenTxCmd(app.ModuleBasics, encodingConfig.TxConfig, banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome),
 		genutilcli.ValidateGenesisCmd(app.ModuleBasics),
 		AddGenesisAccountCmd(app.DefaultNodeHome),
@@ -119,7 +122,7 @@ func NewRootCmd() (*cobra.Command, app.EncodingConfig) {
 	)
 
 	// add rosetta
-	rootCmd.AddCommand(server.RosettaCommand(encodingConfig.InterfaceRegistry, encodingConfig.Marshaler))
+	// rootCmd.AddCommand(rosettaCmd.RosettaCommand(encodingConfig.InterfaceRegistry, encodingConfig.Marshaler))
 
 	return rootCmd, encodingConfig
 }
@@ -232,7 +235,20 @@ func (ac appCreator) newApp(
 		panic(err)
 	}
 
-	snapshotDir := filepath.Join(cast.ToString(appOpts.Get(flags.FlagHome)), "data", "snapshots")
+	homeDir := cast.ToString(appOpts.Get(flags.FlagHome))
+	chainID := cast.ToString(appOpts.Get(flags.FlagChainID))
+	if chainID == "" {
+		// fallback to genesis chain-id
+		genDocFile := filepath.Join(homeDir, cast.ToString(appOpts.Get("genesis_file")))
+		appGenesis, err := tmtypes.GenesisDocFromFile(genDocFile)
+		if err != nil {
+			panic(err)
+		}
+
+		chainID = appGenesis.ChainID
+	}
+
+	snapshotDir := filepath.Join(homeDir, "data", "snapshots")
 	snapshotDB, err := dbm.NewDB("metadata", server.GetAppDBBackend(appOpts), snapshotDir)
 	if err != nil {
 		panic(err)
@@ -256,6 +272,7 @@ func (ac appCreator) newApp(
 		false,
 		cast.ToBool(appOpts.Get(FlagSupplyEnabled)),
 		cast.ToString(appOpts.Get(FlagMetricsURL)),
+		baseapp.SetChainID(chainID),
 		baseapp.SetPruning(pruningOpts),
 		baseapp.SetMinGasPrices(cast.ToString(appOpts.Get(server.FlagMinGasPrices))),
 		baseapp.SetHaltHeight(cast.ToUint64(appOpts.Get(server.FlagHaltHeight))),
@@ -272,6 +289,7 @@ func addModuleInitFlags(startCmd *cobra.Command) {
 	crisis.AddModuleInitFlags(startCmd)
 	startCmd.Flags().Bool(FlagSupplyEnabled, false, "Enable supply module endpoint")
 	startCmd.Flags().String(FlagMetricsURL, "", "Enable metrics sender")
+	startCmd.Flags().String(flags.FlagChainID, "", "The network chain ID")
 }
 
 func (ac appCreator) appExport(
@@ -282,6 +300,7 @@ func (ac appCreator) appExport(
 	forZeroHeight bool,
 	jailAllowedAddrs []string,
 	appOpts servertypes.AppOptions,
+	modulesToExport []string,
 ) (servertypes.ExportedApp, error) {
 	homePath, ok := appOpts.Get(flags.FlagHome).(string)
 	if !ok || homePath == "" {
@@ -314,5 +333,5 @@ func (ac appCreator) appExport(
 		}
 	}
 
-	return qsApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs)
+	return qsApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs, modulesToExport)
 }

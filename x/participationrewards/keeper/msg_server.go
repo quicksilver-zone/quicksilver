@@ -116,11 +116,11 @@ func (k msgServer) GovRemoveProtocolData(goCtx context.Context, msg *types.MsgGo
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// checking msg authority is the gov module address
-	if k.Keeper.GetGovAuthority(ctx) != msg.Authority {
+	if k.GetGovAuthority(ctx) != msg.Authority {
 		return &types.MsgGovRemoveProtocolDataResponse{},
 			govtypes.ErrInvalidSigner.Wrapf(
 				"invalid authority: expected %s, got %s",
-				k.Keeper.GetGovAuthority(ctx), msg.Authority,
+				k.GetGovAuthority(ctx), msg.Authority,
 			)
 	}
 
@@ -128,7 +128,7 @@ func (k msgServer) GovRemoveProtocolData(goCtx context.Context, msg *types.MsgGo
 	if err != nil {
 		return nil, fmt.Errorf("error base64 decoding key, got %w", err)
 	}
-	k.Keeper.DeleteProtocolData(ctx, key)
+	k.DeleteProtocolData(ctx, key)
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(

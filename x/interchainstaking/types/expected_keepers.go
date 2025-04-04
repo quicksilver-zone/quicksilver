@@ -1,14 +1,14 @@
 package types
 
 import (
-	"context"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 
-	channeltypes "github.com/cosmos/ibc-go/v6/modules/core/04-channel/types"
-	ibcexported "github.com/cosmos/ibc-go/v6/modules/core/exported"
+	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
+	ibcexported "github.com/cosmos/ibc-go/v7/modules/core/exported"
 
 	claimsmanagertypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
 	epochstypes "github.com/quicksilver-zone/quicksilver/x/epochs/types"
@@ -64,6 +64,6 @@ type EpochsKeeper interface {
 }
 
 type AuthzKeeper interface {
-	Grant(goCtx context.Context, msg *authz.MsgGrant) (*authz.MsgGrantResponse, error)
+	SaveGrant(ctx sdk.Context, grantee, granter sdk.AccAddress, authorization authz.Authorization, expiration *time.Time) error
 	GetAuthorizations(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress) ([]authz.Authorization, error)
 }

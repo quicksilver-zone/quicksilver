@@ -3,7 +3,7 @@ package utils
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	ibctmtypes "github.com/cosmos/ibc-go/v6/modules/light-clients/07-tendermint/types"
+	ibctmtypes "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
 )
 
 type ClaimsManagerKeeper interface {

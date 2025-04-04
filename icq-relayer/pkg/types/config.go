@@ -19,6 +19,7 @@ import (
 type Config struct {
 	BindPort       int
 	MaxMsgsPerTx   int
+	MaxTxsPerQuery uint64
 	AllowedQueries []string
 	SkipEpoch      bool
 	HA             HAConfig
@@ -60,6 +61,13 @@ func InitializeConfigFromToml(homepath string) Config {
 		file.Close()
 	}
 	config.HomePath = homepath
+	if config.MaxTxsPerQuery == 0 {
+		config.MaxTxsPerQuery = 50
+	}
+
+	if config.MaxMsgsPerTx == 0 {
+		config.MaxMsgsPerTx = 40
+	}
 	return config
 }
 
@@ -67,6 +75,7 @@ func NewConfig() Config {
 	return Config{
 		BindPort:       2112,
 		MaxMsgsPerTx:   40,
+		MaxTxsPerQuery: 50,
 		AllowedQueries: []string{},
 		SkipEpoch:      false,
 		DefaultChain: &ChainConfig{
@@ -94,6 +103,7 @@ func NewConfig() Config {
 			"centauri-1":     DefaultReadOnlyChainConfig("centauri-1", "https://centauri-1.rpc.quicksilver.zone:443"),
 			"phoenix-1":      DefaultReadOnlyChainConfig("phoenix-1", "https://phoenix-1.rpc.quicksilver.zone:443"),
 			"omniflixhub-1":  DefaultReadOnlyChainConfig("omniflixhub-1", "https://omniflixhub-1.rpc.quicksilver.zone:443"),
+			"Oraichain":      DefaultReadOnlyChainConfig("Oraichain", "https://oraichain.rpc.quicksilver.zone:443"),
 		},
 		HA: HAConfig{
 			NodeIndex:  0,

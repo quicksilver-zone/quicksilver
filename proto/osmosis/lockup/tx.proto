@@ -1,12 +1,14 @@
 syntax = "proto3";
 package osmosis.lockup;
 
+import "amino/amino.proto";
 import "cosmos/base/v1beta1/coin.proto";
+import "cosmos/msg/v1/msg.proto";
 import "gogoproto/gogo.proto";
 import "google/protobuf/duration.proto";
 import "osmosis/lockup/lock.proto";
 
-option go_package = "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/lockup";
+option go_package = "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/lockup/types";
 
 // Msg defines the Msg service.
 service Msg {
@@ -24,6 +26,9 @@ service Msg {
 }
 
 message MsgLockTokens {
+  option (amino.name) = "osmosis/lockup/lock-tokens";
+  option (cosmos.msg.v1.signer) = "owner";
+
   string owner = 1 [(gogoproto.moretags) = "yaml:\"owner\""];
   google.protobuf.Duration duration = 2 [
     (gogoproto.nullable) = false,
@@ -41,6 +46,9 @@ message MsgLockTokensResponse {
 }
 
 message MsgBeginUnlockingAll {
+  option (amino.name) = "osmosis/lockup/begin-unlock-tokens";
+  option (cosmos.msg.v1.signer) = "owner";
+
   string owner = 1 [(gogoproto.moretags) = "yaml:\"owner\""];
 }
 message MsgBeginUnlockingAllResponse {
@@ -48,6 +56,9 @@ message MsgBeginUnlockingAllResponse {
 }
 
 message MsgBeginUnlocking {
+  option (amino.name) = "osmosis/lockup/begin-unlock-period-lock";
+  option (cosmos.msg.v1.signer) = "owner";
+
   string owner = 1 [(gogoproto.moretags) = "yaml:\"owner\""];
   uint64 ID = 2;
   // Amount of unlocking coins. Unlock all if not set.
@@ -64,6 +75,9 @@ message MsgBeginUnlockingResponse {
 // MsgExtendLockup extends the existing lockup's duration.
 // The new duration is longer than the original.
 message MsgExtendLockup {
+  option (amino.name) = "osmosis/lockup/extend-lockup";
+  option (cosmos.msg.v1.signer) = "owner";
+
   string owner = 1 [(gogoproto.moretags) = "yaml:\"owner\""];
   uint64 ID = 2;
 
@@ -86,6 +100,9 @@ message MsgExtendLockupResponse {
 // MsgForceUnlock unlocks locks immediately for
 // addresses registered via governance.
 message MsgForceUnlock {
+  option (amino.name) = "osmosis/lockup/force-unlock-tokens";
+  option (cosmos.msg.v1.signer) = "owner";
+
   string owner = 1 [(gogoproto.moretags) = "yaml:\"owner\""];
   uint64 ID = 2;
   // Amount of unlocking coins. Unlock all if not set.
@@ -100,10 +117,24 @@ message MsgForceUnlockResponse {
 }
 
 message MsgSetRewardReceiverAddress {
+  option (amino.name) = "osmosis/lockup/set-reward-receiver-address";
+  option (cosmos.msg.v1.signer) = "owner";
+
   string owner = 1 [(gogoproto.moretags) = "yaml:\"owner\""];
   uint64 lockID = 2;
   string reward_receiver = 3 [(gogoproto.moretags) = "yaml:\"reward_receiver\""];
 }
 message MsgSetRewardReceiverAddressResponse {
   bool success = 1;
+}
+
+// DEPRECATED
+// Following messages are deprecated but kept to support indexing.
+message MsgUnlockPeriodLock {
+  string owner = 1 [(gogoproto.moretags) = "yaml:\"owner\""];
+  uint64 ID = 2;
+}
+
+message MsgUnlockTokens {
+  string owner = 1 [(gogoproto.moretags) = "yaml:\"owner\""];
 }

@@ -12,8 +12,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 
 	osmosistypes "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types"
-	osmocl "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/concentrated-liquidity"
 	osmoclmodel "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/concentrated-liquidity/model"
+	osmocl "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/concentrated-liquidity/types"
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	"github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 )

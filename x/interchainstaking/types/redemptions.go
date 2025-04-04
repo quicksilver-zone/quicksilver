@@ -14,7 +14,7 @@ import (
 // remove zero and potential negative values
 func filter(in map[string]math.Int) map[string]math.Int {
 	out := make(map[string]math.Int)
-	for _, v := range utils.Keys[math.Int](in) {
+	for _, v := range utils.Keys(in) {
 		if !in[v].IsNil() && in[v].IsPositive() {
 			out[v] = in[v]
 		}

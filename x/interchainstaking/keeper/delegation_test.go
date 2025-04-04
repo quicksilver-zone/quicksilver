@@ -22,11 +22,13 @@ func (suite *KeeperTestSuite) TestKeeper_DelegationStore() {
 
 	icsKeeper := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
 	ctx := suite.chainA.GetContext()
-
 	// get test zone
-	zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+	zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
 	suite.True(found)
-	zoneValidatorAddresses := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
+	zoneValidatorAddresses := icsKeeper.GetValidatorAddresses(ctx, zone.ChainId)
+	for _, validator := range zoneValidatorAddresses {
+		icsKeeper.SetPerformanceDelegation(ctx, zone.ChainId, types.NewDelegation(zone.PerformanceAddress.Address, validator, sdk.NewCoin(zone.BaseDenom, sdk.NewInt(10000))))
+	}
 
 	performanceDelegations := icsKeeper.GetAllPerformanceDelegations(ctx, zone.ChainId)
 	suite.Len(performanceDelegations, 4)
@@ -39,7 +41,7 @@ func (suite *KeeperTestSuite) TestKeeper_DelegationStore() {
 	// update performance delegation
 	updateDelegation, found := icsKeeper.GetPerformanceDelegation(ctx, zone.ChainId, zone.PerformanceAddress, zoneValidatorAddresses[0])
 	suite.True(found)
-	suite.Equal(uint64(0), updateDelegation.Amount.Amount.Uint64())
+	suite.Equal(uint64(10000), updateDelegation.Amount.Amount.Uint64())
 
 	updateDelegation.Amount.Amount = sdkmath.NewInt(10000)
 	icsKeeper.SetPerformanceDelegation(ctx, zone.ChainId, updateDelegation)
