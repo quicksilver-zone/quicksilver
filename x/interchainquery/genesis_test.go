@@ -8,7 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	ibctesting "github.com/cosmos/ibc-go/v6/testing"
+	ibctesting "github.com/cosmos/ibc-go/v7/testing"
 
 	"github.com/quicksilver-zone/quicksilver/app"
 	"github.com/quicksilver-zone/quicksilver/x/interchainquery"
@@ -83,7 +83,7 @@ func (s *InterChainQueryTestSuite) TestInitGenesis() {
 
 func (s *InterChainQueryTestSuite) TestInitGenesisDefault() {
 	app := s.GetSimApp(s.chainA)
-	app.GetModuleManager().Modules[types.ModuleName].InitGenesis(s.chainA.GetContext(), app.AppCodec(), app.GetModuleManager().Modules[types.ModuleName].DefaultGenesis(app.AppCodec()))
+	app.GetModuleManager().Modules[types.ModuleName].(interchainquery.AppModule).InitGenesis(s.chainA.GetContext(), app.AppCodec(), app.GetModuleManager().Modules[types.ModuleName].(interchainquery.AppModule).DefaultGenesis(app.AppCodec()))
 }
 
 func newSimAppPath(chainA, chainB *ibctesting.TestChain) *ibctesting.Path {

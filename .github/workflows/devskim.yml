@@ -7,7 +7,7 @@ name: DevSkim
 
 on:
   push:
-    branches: [ "main", "develop", "feat*", "main*", "unstable*" ]
+    branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
   schedule:
@@ -16,7 +16,7 @@ on:
 jobs:
   lint:
     name: DevSkim
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     permissions:
       actions: read
       contents: read
@@ -27,6 +27,8 @@ jobs:
 
       - name: Run DevSkim scanner
         uses: microsoft/DevSkim-Action@v1
+        with:
+          ignore-globs: "third-party-chains/*"
 
       - name: Upload DevSkim scan results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v3

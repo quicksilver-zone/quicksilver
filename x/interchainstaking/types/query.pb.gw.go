@@ -17,7 +17,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/grpc-ecosystem/grpc-gateway/utilities"
-	types_1 "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
+	types_0 "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/grpclog"
@@ -1248,13 +1248,13 @@ func request_Query_ClaimedPercentageByClaimType_0(ctx context.Context, marshaler
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "claim_type")
 	}
 
-	e, err = runtime.Enum(val, types_1.ClaimType_value)
+	e, err = runtime.Enum(val, types_0.ClaimType_value)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "claim_type", err)
 	}
 
-	protoReq.ClaimType = types_1.ClaimType(e)
+	protoReq.ClaimType = types_0.ClaimType(e)
 
 	msg, err := client.ClaimedPercentageByClaimType(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
@@ -1289,13 +1289,13 @@ func local_request_Query_ClaimedPercentageByClaimType_0(ctx context.Context, mar
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "claim_type")
 	}
 
-	e, err = runtime.Enum(val, types_1.ClaimType_value)
+	e, err = runtime.Enum(val, types_0.ClaimType_value)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "claim_type", err)
 	}
 
-	protoReq.ClaimType = types_1.ClaimType(e)
+	protoReq.ClaimType = types_0.ClaimType(e)
 
 	msg, err := server.ClaimedPercentageByClaimType(ctx, &protoReq)
 	return msg, metadata, err
@@ -2170,43 +2170,43 @@ func RegisterQueryHandlerClient(ctx context.Context, mux *runtime.ServeMux, clie
 }
 
 var (
-	pattern_Query_Zones_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"quicksilver", "interchainstaking", "v1", "zones"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_Zones_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"quicksilver", "interchainstaking", "v1", "zones"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_Zone_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"quicksilver", "interchainstaking", "v1", "zone", "chain_id"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_Zone_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"quicksilver", "interchainstaking", "v1", "zone", "chain_id"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_ZoneValidators_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"quicksilver", "interchainstaking", "v1", "zones", "chain_id", "validators"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_ZoneValidators_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"quicksilver", "interchainstaking", "v1", "zones", "chain_id", "validators"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_DepositAccount_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"quicksilver", "interchainstaking", "v1", "zones", "chain_id", "deposit_address"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_DepositAccount_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"quicksilver", "interchainstaking", "v1", "zones", "chain_id", "deposit_address"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_DelegatorIntent_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6}, []string{"quicksilver", "interchainstaking", "v1", "zones", "chain_id", "delegator_intent", "delegator_address"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_DelegatorIntent_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6}, []string{"quicksilver", "interchainstaking", "v1", "zones", "chain_id", "delegator_intent", "delegator_address"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_DelegatorIntents_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"quicksilver", "interchainstaking", "v1", "delegator_intents", "delegator_address"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_DelegatorIntents_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"quicksilver", "interchainstaking", "v1", "delegator_intents", "delegator_address"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_Delegations_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"quicksilver", "interchainstaking", "v1", "zones", "chain_id", "delegations"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_Delegations_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"quicksilver", "interchainstaking", "v1", "zones", "chain_id", "delegations"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_Receipts_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"quicksilver", "interchainstaking", "v1", "zones", "chain_id", "receipts"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_Receipts_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"quicksilver", "interchainstaking", "v1", "zones", "chain_id", "receipts"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_TxStatus_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6}, []string{"quicksilver", "interchainstaking", "v1", "zones", "chain_id", "deposits", "tx_hash"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_TxStatus_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6}, []string{"quicksilver", "interchainstaking", "v1", "zones", "chain_id", "deposits", "tx_hash"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_ZoneWithdrawalRecords_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"quicksilver", "interchainstaking", "v1", "zones", "chain_id", "withdrawal_records"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_ZoneWithdrawalRecords_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"quicksilver", "interchainstaking", "v1", "zones", "chain_id", "withdrawal_records"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_UserZoneWithdrawalRecords_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6}, []string{"quicksilver", "interchainstaking", "v1", "zones", "chain_id", "withdrawal_records", "delegator_address"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_UserZoneWithdrawalRecords_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6}, []string{"quicksilver", "interchainstaking", "v1", "zones", "chain_id", "withdrawal_records", "delegator_address"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_WithdrawalRecords_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"quicksilver", "interchainstaking", "v1", "zones", "withdrawal_records"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_WithdrawalRecords_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"quicksilver", "interchainstaking", "v1", "zones", "withdrawal_records"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_UserWithdrawalRecords_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"quicksilver", "interchainstaking", "v1", "users", "user_address", "withdrawal_records"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_UserWithdrawalRecords_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"quicksilver", "interchainstaking", "v1", "users", "user_address", "withdrawal_records"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_UnbondingRecords_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"quicksilver", "interchainstaking", "v1", "zones", "chain_id", "unbonding_records"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_UnbondingRecords_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"quicksilver", "interchainstaking", "v1", "zones", "chain_id", "unbonding_records"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_RedelegationRecords_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"quicksilver", "interchainstaking", "v1", "zones", "chain_id", "redelegation_records"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_RedelegationRecords_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"quicksilver", "interchainstaking", "v1", "zones", "chain_id", "redelegation_records"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_MappedAccounts_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5}, []string{"quicksilver", "interchainstaking", "v1", "mapped_addresses", "local", "address"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_MappedAccounts_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5}, []string{"quicksilver", "interchainstaking", "v1", "mapped_addresses", "local", "address"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_InverseMappedAccounts_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5, 1, 0, 4, 1, 5, 6}, []string{"quicksilver", "interchainstaking", "v1", "mapped_addresses", "remote", "chain_id", "remote_address"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_InverseMappedAccounts_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5, 1, 0, 4, 1, 5, 6}, []string{"quicksilver", "interchainstaking", "v1", "mapped_addresses", "remote", "chain_id", "remote_address"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_ClaimedPercentage_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"quicksilver", "interchainstaking", "v1", "claimed_percentage", "chain_id"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_ClaimedPercentage_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"quicksilver", "interchainstaking", "v1", "claimed_percentage", "chain_id"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_ClaimedPercentageByClaimType_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 1, 0, 4, 1, 5, 5}, []string{"quicksilver", "interchainstaking", "v1", "claimed_percentage", "chain_id", "claim_type"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_ClaimedPercentageByClaimType_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 1, 0, 4, 1, 5, 5}, []string{"quicksilver", "interchainstaking", "v1", "claimed_percentage", "chain_id", "claim_type"}, "", runtime.AssumeColonVerbOpt(false)))
 )
 
 var (

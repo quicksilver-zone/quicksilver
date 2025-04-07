@@ -10,26 +10,14 @@ import (
 
 func Upgrades() []Upgrade {
 	return []Upgrade{
-		// testnet upgrades
-		{UpgradeName: V010600beta0UpgradeName, CreateUpgradeHandler: V010600beta0UpgradeHandler},
-		{UpgradeName: V010600beta1UpgradeName, CreateUpgradeHandler: V010600beta1UpgradeHandler},
-		{UpgradeName: V010600rc0UpgradeName, CreateUpgradeHandler: V010600rc0UpgradeHandler},
-		{UpgradeName: V010601rc0UpgradeName, CreateUpgradeHandler: V010601rc0UpgradeHandler},
-		{UpgradeName: V010601rc2UpgradeName, CreateUpgradeHandler: V010601rc0UpgradeHandler}, // this name mismatch is intentional, as we want to rerun the upgrade after resolving some issues.
-		{UpgradeName: V010601rc3UpgradeName, CreateUpgradeHandler: NoOpHandler},
-		{UpgradeName: V010601rc4UpgradeName, CreateUpgradeHandler: NoOpHandler},
-
-		// v1.5: this needs to be present to support upgrade on mainnet
-		{UpgradeName: V010601UpgradeName, CreateUpgradeHandler: V010601UpgradeHandler},
-		{UpgradeName: V010602UpgradeName, CreateUpgradeHandler: NoOpHandler},
-		{UpgradeName: V010603UpgradeName, CreateUpgradeHandler: V010603UpgradeHandler},
-		{UpgradeName: V010604UpgradeName, CreateUpgradeHandler: V010604UpgradeHandler},
 		{UpgradeName: V010700UpgradeName, CreateUpgradeHandler: V010700UpgradeHandler},
 		{UpgradeName: V010702UpgradeName, CreateUpgradeHandler: V010702UpgradeHandler},
 		{UpgradeName: V010704UpgradeName, CreateUpgradeHandler: V010704UpgradeHandler},
 		{UpgradeName: V010705UpgradeName, CreateUpgradeHandler: V010705UpgradeHandler},
 		{UpgradeName: V010706UpgradeName, CreateUpgradeHandler: V010706UpgradeHandler},
 		{UpgradeName: V010707UpgradeName, CreateUpgradeHandler: NoOpHandler},
+
+		{UpgradeName: V010800UpgradeName, CreateUpgradeHandler: V010800UpgradeHandler},
 	}
 }
 

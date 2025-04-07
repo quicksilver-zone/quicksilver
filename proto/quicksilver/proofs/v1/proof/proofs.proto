@@ -1,0 +1,17 @@
+syntax = "proto3";
+package quicksilver.proofs.v1.proof;
+
+import "celestia/core/v1/proof/proof.proto";
+import "tendermint/crypto/proof.proto";
+import "tendermint/types/types.proto";
+
+option go_package = "github.com/quicksilver-zone/quicksilver/utils/proofs";
+
+message CelestiaProof {
+  celestia.core.v1.proof.ShareProof share_proof = 1;
+  uint32 index = 2;
+}
+
+message TendermintProof {
+  tendermint.types.TxProof tx_proof = 1;
+}

@@ -7,6 +7,8 @@ import (
 	"golang.org/x/exp/constraints"
 )
 
+// Keys returns a sorted slice of the keys of the map.
+// Unlike maps.Keys, this function's output is deterministic.
 func Keys[V interface{}](in map[string]V) []string {
 	out := make([]string, 0, len(in))
 

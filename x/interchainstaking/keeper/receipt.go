@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/gogo/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -13,10 +13,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	icatypes "github.com/cosmos/ibc-go/v6/modules/apps/27-interchain-accounts/types"
-	transfertypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
-	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
-	channeltypes "github.com/cosmos/ibc-go/v6/modules/core/04-channel/types"
+	icacontrollerkeeper "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/keeper"
+	icacontrollertypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/types"
+	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
+	transfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
+	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
+	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
 
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
@@ -188,14 +190,15 @@ func (k *Keeper) HandleAutoClaim(ctx sdk.Context, senderAddress sdk.AccAddress) 
 		return errors.New("no auto claim address set")
 	}
 
-	msgGrant, err := authz.NewMsgGrant(senderAddress, addressutils.MustAccAddressFromBech32(authzAutoClaimAddress, "quick"), &authz.GenericAuthorization{
-		Msg: sdk.MsgTypeURL(&prtypes.MsgSubmitClaim{}),
-	}, nil)
-	if err != nil {
-		return err
-	}
-	_, err = k.AuthzKeeper.Grant(ctx, msgGrant)
-	return err
+	return k.AuthzKeeper.SaveGrant(
+		ctx,
+		addressutils.MustAccAddressFromBech32(authzAutoClaimAddress, "quick"),
+		senderAddress,
+		&authz.GenericAuthorization{
+			Msg: sdk.MsgTypeURL(&prtypes.MsgSubmitClaim{}),
+		},
+		nil,
+	)
 }
 
 // MintAndSendQAsset mints qAssets based on the native asset redemption rate.  Tokens are then transferred to the given user.
@@ -304,12 +307,7 @@ func ProdSubmitTx(ctx sdk.Context, k *Keeper, msgs []sdk.Msg, account *types.ICA
 
 	timeoutTimestamp := uint64(ctx.BlockTime().Add(ICATimeout).UnixNano()) //nolint:gosec
 
-	for {
-		// if no messages, no chunks!
-		if len(msgs) == 0 {
-			break
-		}
-
+	for len(msgs) > 0 {
 		// if the last chunk, make chunksize the number of messages
 		if len(msgs) < chunkSize {
 			chunkSize = len(msgs)
@@ -336,7 +334,10 @@ func ProdSubmitTx(ctx sdk.Context, k *Keeper, msgs []sdk.Msg, account *types.ICA
 			Memo: memo,
 		}
 
-		_, err = k.ICAControllerKeeper.SendTx(ctx, nil, connectionID, portID, packetData, timeoutTimestamp) // nolint:staticcheck
+		ckMsgServer := icacontrollerkeeper.NewMsgServerImpl(&k.ICAControllerKeeper)
+		portOwner := portID[len(icatypes.ControllerPortPrefix):] // TODO: this is a hack to get the port owner; change PortName() to PortOwner() sans prefix.
+		msgSendTx := icacontrollertypes.NewMsgSendTx(portOwner, connectionID, timeoutTimestamp, packetData)
+		_, err = ckMsgServer.SendTx(ctx, msgSendTx)
 		if err != nil {
 			return err
 		}

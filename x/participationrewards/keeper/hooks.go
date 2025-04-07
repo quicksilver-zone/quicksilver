@@ -8,7 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	transfertypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
+	transfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
 
 	"github.com/quicksilver-zone/quicksilver/utils"
 	epochstypes "github.com/quicksilver-zone/quicksilver/x/epochs/types"

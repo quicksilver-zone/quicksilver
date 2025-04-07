@@ -6,16 +6,15 @@ import (
 	"fmt"
 	"time"
 
-	dbm "github.com/tendermint/tm-db"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	purningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+
+	dbm "github.com/cometbft/cometbft-db"
 )
 
 func DefaultConfig() network.Config {
@@ -30,7 +29,7 @@ func DefaultConfig() network.Config {
 		AppConstructor:    NewAppConstructor(encCfg),
 		GenesisState:      ModuleBasics.DefaultGenesis(encCfg.Marshaler),
 		TimeoutCommit:     1 * time.Second / 2,
-		ChainID:           "quicktest-1",
+		ChainID:           "quicksilver-1",
 		NumValidators:     1,
 		BondDenom:         sdk.DefaultBondDenom,
 		MinGasPrices:      fmt.Sprintf("0.000006%s", sdk.DefaultBondDenom),
@@ -44,9 +43,9 @@ func DefaultConfig() network.Config {
 }
 
 func NewAppConstructor(encCfg EncodingConfig) network.AppConstructor {
-	return func(val network.Validator) servertypes.Application {
+	return func(val network.ValidatorI) servertypes.Application {
 		return NewQuicksilver(
-			val.Ctx.Logger,
+			val.GetCtx().Logger,
 			dbm.NewMemDB(),
 			nil,
 			true,
@@ -58,8 +57,9 @@ func NewAppConstructor(encCfg EncodingConfig) network.AppConstructor {
 			false,
 			false,
 			"",
-			baseapp.SetPruning(purningtypes.NewPruningOptionsFromString(val.AppConfig.Pruning)),
+			// baseapp.SetPruning(purningtypes.NewPruningOptionsFromString(val.AppConfig.Pruning)),
 			// baseapp.SetMinGasPrices(val.AppConfig.MinGasPrices),
+			baseapp.SetChainID("quicksilver-1"),
 		)
 	}
 }

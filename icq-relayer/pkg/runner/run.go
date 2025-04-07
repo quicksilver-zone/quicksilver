@@ -18,11 +18,18 @@ import (
 	"time"
 
 	"github.com/avast/retry-go/v4"
+	abcitypes "github.com/cometbft/cometbft/abci/types"
+	tmquery "github.com/cometbft/cometbft/libs/pubsub/query"
+	"github.com/cometbft/cometbft/proto/tendermint/crypto"
+	coretypes "github.com/cometbft/cometbft/rpc/core/types"
+	tmtypes "github.com/cometbft/cometbft/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtxtypes "github.com/cosmos/cosmos-sdk/x/auth/tx"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	querytypes "github.com/cosmos/cosmos-sdk/types/query"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
-	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
-	tmclient "github.com/cosmos/ibc-go/v6/modules/light-clients/07-tendermint/types"
+	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
+	tmclient "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
 	"github.com/dgraph-io/ristretto"
 	"github.com/go-kit/log"
 	"github.com/prometheus/client_golang/prometheus"
@@ -30,11 +37,6 @@ import (
 	"github.com/quicksilver-zone/quicksilver/icq-relayer/pkg/types"
 	"github.com/quicksilver-zone/quicksilver/icq-relayer/prommetrics"
 	qstypes "github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
-	abcitypes "github.com/tendermint/tendermint/abci/types"
-	tmquery "github.com/tendermint/tendermint/libs/pubsub/query"
-	"github.com/tendermint/tendermint/proto/tendermint/crypto"
-	coretypes "github.com/tendermint/tendermint/rpc/core/types"
-	tmtypes "github.com/tendermint/tendermint/types"
 )
 
 var (
@@ -413,13 +415,11 @@ func doRequest(cfg *types.Config, query Query, logger log.Logger, metrics promme
 		}
 
 		request.OrderBy = txtypes.OrderBy_ORDER_BY_DESC
+		request.Limit = cfg.MaxTxsPerQuery
+		request.Pagination.Limit = cfg.MaxTxsPerQuery
+		request.Query = request.Events[0]
 		request.Limit = 200
 		request.Pagination.Limit = 200
-		// temporary fix, until we release quicksilverd with message.action statement
- 		// then revert to request.Query = strings.Join(" AND ", request.Events)
-		// or should v0.47 happen first, check for remaining 0.46 chains, else remove support.
-		request.Query = request.Events[0] + " AND message.action='/cosmos.bank.v1beta.MsgSend'"
-		request.Events = append(request.Events, "message.action='/cosmos.bank.v1beta.MsgSend'")
 
 		query.Request, err = cfg.ProtoCodec.Marshal(&request)
 		if err != nil {
@@ -433,6 +433,36 @@ func doRequest(cfg *types.Config, query Query, logger log.Logger, metrics promme
 			_ = logger.Log("msg", "Error: Failed in RunGRPCQuery", "type", query.Type, "id", query.QueryId, "height", query.Height)
 			return
 		}
+               txDecoder := authtxtypes.DefaultTxDecoder(cfg.ProtoCodec)
+               resp := txtypes.GetTxsEventResponse{}
+               err = cfg.ProtoCodec.Unmarshal(res.Value, &resp)
+               if err != nil {
+                       _ = logger.Log("msg", "Error: Failed in Unmarshalling Response", "type", query.Type, "id", query.QueryId, "height", query.Height)
+               }
+               _ = logger.Log("msg", "Got transactions", "num", len(resp.TxResponses), "id", query.QueryId, "height", query.Height)
+               txResponses := make([]*sdk.TxResponse, 0, len(resp.TxResponses))
+               for _, txr := range resp.TxResponses {
+                       tx, err := txDecoder(txr.Tx.Value)
+
+                       if err != nil {
+                               _ = logger.Log("msg", "Error: Failed in Unpacking Any", "type", query.Type, "id", query.QueryId, "height", query.Height)
+                       }
+                       msgs := tx.GetMsgs()
+                       for _, msg := range msgs {
+                               _, ok := msg.(*banktypes.MsgSend)
+                               if ok {
+                                       txResponses = append(txResponses, txr)
+                               } else {
+                                       fmt.Println("found non MsgSend message; removing")
+                               }
+                       }
+               }
+               resp.TxResponses = txResponses
+               res.Value, err = cfg.ProtoCodec.Marshal(&resp)
+               if err != nil {
+                       _ = logger.Log("msg", "Error: Failed in Marshalling Response", "type", query.Type, "id", query.QueryId, "height", query.Height)
+                       return
+               }
 
 	case "tendermint.Tx":
 		// custom request type for fetching a tx with proof.
@@ -652,7 +682,7 @@ func flush(cfg *types.Config, toSend []Message, logger log.Logger, metrics promm
 			case code == 19:
 				_ = logger.Log("msg", "Tx already in mempool")
 			case strings.Contains(err.Error(), "request body too large"):
-				TxMsgs = max(1, TxMsgs * 3 / 4)
+				TxMsgs = max(1, TxMsgs*3/4)
 				LastReduced = time.Now()
 				_ = logger.Log("msg", "body too large: reduced batchsize", "size", TxMsgs)
 			case strings.Contains(err.Error(), "failed to execute message"):

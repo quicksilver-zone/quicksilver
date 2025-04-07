@@ -12,7 +12,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	transfertypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
+	transfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
 
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	"github.com/quicksilver-zone/quicksilver/utils/randomutils"
@@ -574,7 +574,11 @@ func (suite *KeeperTestSuite) TestHandleAutoClaim() {
 	suite.NoError(err)
 
 	// test if grant is added
-	grant, err := quicksilver.InterchainstakingKeeper.AuthzKeeper.GetAuthorizations(ctx, addressutils.MustAccAddressFromBech32(autoClaimAddr, ""), addressutils.MustAccAddressFromBech32(normalUserAddr, ""))
+	grant, err := quicksilver.InterchainstakingKeeper.AuthzKeeper.GetAuthorizations(
+		ctx,
+		addressutils.MustAccAddressFromBech32(autoClaimAddr, ""),
+		addressutils.MustAccAddressFromBech32(normalUserAddr, ""),
+	)
 	suite.NoError(err)
 	suite.Equal(1, len(grant))
 }

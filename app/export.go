@@ -3,19 +3,19 @@ package app
 import (
 	"encoding/json"
 
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 )
 
 // ExportAppStateAndValidators exports the state of the application for a genesis
 // file.
 func (app *Quicksilver) ExportAppStateAndValidators(
-	forZeroHeight bool, jailAllowedAddrs []string,
+	forZeroHeight bool, jailAllowedAddrs []string, modulesToExport []string,
 ) (servertypes.ExportedApp, error) {
 	// Creates context with current height and checks txs for ctx to be usable by start of next block
 	ctx := app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()})
@@ -31,13 +31,13 @@ func (app *Quicksilver) ExportAppStateAndValidators(
 		}
 	}
 
-	genState := app.mm.ExportGenesis(ctx, app.appCodec)
+	genState := app.mm.ExportGenesisForModules(ctx, app.appCodec, modulesToExport)
 	appState, err := json.MarshalIndent(genState, "", "  ")
 	if err != nil {
 		return servertypes.ExportedApp{}, err
 	}
 
-	validators, err := staking.WriteValidators(ctx, *app.StakingKeeper)
+	validators, err := staking.WriteValidators(ctx, app.StakingKeeper)
 	if err != nil {
 		return servertypes.ExportedApp{}, err
 	}
@@ -46,7 +46,7 @@ func (app *Quicksilver) ExportAppStateAndValidators(
 		AppState:        appState,
 		Validators:      validators,
 		Height:          height,
-		ConsensusParams: app.BaseApp.GetConsensusParams(ctx),
+		ConsensusParams: app.GetConsensusParams(ctx),
 	}, nil
 }
 
@@ -54,12 +54,7 @@ func (app *Quicksilver) ExportAppStateAndValidators(
 // NOTE zero height genesis is a temporary feature which will be deprecated
 // in favor of export at a block height.
 func (app *Quicksilver) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []string) error {
-	applyAllowedAddrs := false
-
-	// check if there is a allowed address list
-	if len(jailAllowedAddrs) > 0 {
-		applyAllowedAddrs = true
-	}
+	applyAllowedAddrs := (len(jailAllowedAddrs) > 0)
 
 	allowedAddrsMap := make(map[string]bool)
 

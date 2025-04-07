@@ -4,17 +4,17 @@ import (
 	"encoding/json"
 	"time"
 
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/proto/tendermint/crypto"
-
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
+	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cometbft/cometbft/proto/tendermint/crypto"
+
 	"github.com/quicksilver-zone/quicksilver/app" //nolint:revive
-	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/lockup"
+	lockup "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/lockup/types"
 	umeetypes "github.com/quicksilver-zone/quicksilver/third-party-chains/umee-types/leverage/types"
 	"github.com/quicksilver-zone/quicksilver/utils"
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
@@ -159,7 +159,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 				msg = types.MsgSubmitClaim{
 					UserAddress: address.String(),
 					Zone:        "cosmoshub-4",
-					SrcZone:     "testchain1",
+					SrcZone:     "testchain-1",
 					ClaimType:   cmtypes.ClaimTypeUmeeToken,
 					Proofs: []*cmtypes.Proof{
 						{
@@ -291,7 +291,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 				msg = types.MsgSubmitClaim{
 					UserAddress: address.String(),
 					Zone:        "cosmoshub-4",
-					SrcZone:     "testchain1",
+					SrcZone:     "testchain-1",
 					ClaimType:   cmtypes.ClaimTypeLiquidToken,
 					Proofs: []*cmtypes.Proof{
 						{
@@ -325,7 +325,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 				msg = types.MsgSubmitClaim{
 					UserAddress: userAddress,
 					Zone:        "cosmoshub-4",
-					SrcZone:     "testchain1",
+					SrcZone:     "testchain-1",
 					ClaimType:   cmtypes.ClaimTypeUmeeToken,
 					Proofs: []*cmtypes.Proof{
 						{
@@ -399,7 +399,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitLocalClaim() {
 					Prove:  true,
 				}
 
-				resp := appA.BaseApp.Query(query)
+				resp := appA.Query(query)
 
 				return &types.MsgSubmitClaim{
 					UserAddress: address.String(),
@@ -437,7 +437,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitLocalClaim() {
 					Prove:  true,
 				}
 
-				resp := appA.BaseApp.Query(query)
+				resp := appA.Query(query)
 
 				return &types.MsgSubmitClaim{
 					UserAddress: address.String(),
@@ -489,7 +489,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitLocalClaim() {
 					Prove:  true,
 				}
 
-				resp := appA.BaseApp.Query(query)
+				resp := appA.Query(query)
 
 				return &types.MsgSubmitClaim{
 					UserAddress: address.String(),
@@ -547,7 +547,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitLocalClaim() {
 					Prove:  true,
 				}
 
-				resp := appA.BaseApp.Query(query)
+				resp := appA.Query(query)
 
 				return &types.MsgSubmitClaim{
 					UserAddress: address.String(),
@@ -585,15 +585,14 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitLocalClaim() {
 			appA.ParticipationRewardsKeeper.ValidateProofOps = utils.ValidateProofOps
 			appA.ParticipationRewardsKeeper.ValidateSelfProofOps = utils.ValidateSelfProofOps
 
-			suite.coordinator.CommitNBlocks(suite.chainA, 3)
+			suite.coordinator.CommitBlock(suite.chainA)
 			ctx := suite.chainA.GetContext()
 			tt.malleate(ctx, appA)
-			suite.coordinator.CommitNBlocks(suite.chainA, 3)
-			ctx = suite.chainA.GetContext()
+			suite.coordinator.CommitBlock(suite.chainA)
 			suite.NoError(appA.ClaimsManagerKeeper.StoreSelfConsensusState(ctx, "epoch"))
-			suite.coordinator.CommitNBlocks(suite.chainA, 1)
+			suite.coordinator.CommitBlock(suite.chainA)
 
-			ctx = suite.chainA.GetContext()
+			ctx = suite.chainA.GetContext() // update context to get latest block height
 			msg = tt.generate(ctx, appA)
 			params := appA.ParticipationRewardsKeeper.GetParams(ctx)
 			params.ClaimsEnabled = true

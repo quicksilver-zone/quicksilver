@@ -18,21 +18,25 @@ import (
 	"cosmossdk.io/math"
 
 	"github.com/avast/retry-go/v4"
+	abcitypes "github.com/cometbft/cometbft/abci/types"
+	cmtjson "github.com/cometbft/cometbft/libs/json"
+	coretypes "github.com/cometbft/cometbft/rpc/core/types"
+	jsonrpcclient "github.com/cometbft/cometbft/rpc/jsonrpc/client"
+	jsonrpctypes "github.com/cometbft/cometbft/rpc/jsonrpc/types"
+	tmtypes "github.com/cometbft/cometbft/types"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	querytypes "github.com/cosmos/cosmos-sdk/types/query"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
-	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
+	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
 	"github.com/dgraph-io/ristretto"
 	"github.com/quicksilver-zone/quicksilver/icq-relayer/prommetrics"
 	celestiatypes "github.com/quicksilver-zone/quicksilver/third-party-chains/celestia-types/types"
 	"github.com/quicksilver-zone/quicksilver/utils/proofs"
-	abcitypes "github.com/tendermint/tendermint/abci/types"
-	cmtjson "github.com/tendermint/tendermint/libs/json"
-	coretypes "github.com/tendermint/tendermint/rpc/core/types"
-	jsonrpcclient "github.com/tendermint/tendermint/rpc/jsonrpc/client"
-	jsonrpctypes "github.com/tendermint/tendermint/rpc/jsonrpc/types"
-	tmtypes "github.com/tendermint/tendermint/types"
 
+	prov "github.com/cometbft/cometbft/light/provider"
+	lighthttp "github.com/cometbft/cometbft/light/provider/http"
+	rpcclient "github.com/cometbft/cometbft/rpc/client"
+	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -42,13 +46,9 @@ import (
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	xauthsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
-	connectiontypes "github.com/cosmos/ibc-go/v6/modules/core/03-connection/types"
+	connectiontypes "github.com/cosmos/ibc-go/v7/modules/core/03-connection/types"
 	log2 "github.com/go-kit/log"
 	home "github.com/mitchellh/go-homedir"
-	prov "github.com/tendermint/tendermint/light/provider"
-	lighthttp "github.com/tendermint/tendermint/light/provider/http"
-	rpcclient "github.com/tendermint/tendermint/rpc/client"
-	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 )
 
 type ReadOnlyChainConfig struct {
@@ -547,18 +547,27 @@ func (c *ChainConfig) SignAndBroadcastMsg(ctx context.Context, cliContext *clien
 
 	res, err := serviceClient.BroadcastTx(ctx, &txtypes.BroadcastTxRequest{
 		TxBytes: txBytes,
-		Mode:    txtypes.BroadcastMode_BROADCAST_MODE_BLOCK,
+		Mode:    txtypes.BroadcastMode_BROADCAST_MODE_ASYNC,
 	})
+
+	fmt.Println("DEBUG::res", res.TxResponse.TxHash)
+
+	time.Sleep(10 * time.Second)
+	txRes, err := serviceClient.GetTx(ctx, &txtypes.GetTxRequest{
+		Hash: res.TxResponse.TxHash,
+	})
+
+	fmt.Println("DEBUG::tx", txRes)
 
 	switch {
 	case err != nil:
 		//log.Err(err).Msg("Transaction error")
 		return "", 65536, err
-	case res.TxResponse.Code > 0:
+	case txRes.TxResponse.Code > 0:
 		//log.Error().Msgf("Transaction failed: %v", res.TxResponse)
 		return "err", res.TxResponse.Code, fmt.Errorf("transaction failed: %v", res.TxResponse)
 	default:
 		//log.Info().Msgf("Transaction broadcast successfully: %s", res.TxResponse.TxHash)
-		return res.TxResponse.TxHash, res.TxResponse.Code, nil
+		return txRes.TxResponse.TxHash, txRes.TxResponse.Code, nil
 	}
 }

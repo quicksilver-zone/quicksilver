@@ -7,14 +7,14 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/tendermint/tendermint/libs/log"
-	dbm "github.com/tendermint/tm-db"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+
+	dbm "github.com/cometbft/cometbft-db"
+	"github.com/cometbft/cometbft/libs/log"
 
 	"github.com/quicksilver-zone/quicksilver/app"
 	"github.com/quicksilver-zone/quicksilver/app/helpers"
@@ -23,7 +23,7 @@ import (
 // SetupSimulation creates the config, db (levelDB), temporary directory and logger for
 // the simulation tests. If `FlagEnabledValue` is false it skips the current test.
 // Returns error on an invalid db instantiation or temp dir creation.
-func SetupSimulation(dirPrefix, dbName string) (simtypes.Config, dbm.DB, string, log.Logger, bool, error) { // nolint:gocritic test util does not need to be simplified
+func SetupSimulation(dirPrefix, dbName string) (simtypes.Config, dbm.DB, string, log.Logger, bool, error) { // nolint:gocritic
 	if !FlagEnabledValue {
 		return simtypes.Config{}, nil, "", nil, true, nil
 	}
@@ -71,8 +71,8 @@ func Operations(quicksilver *app.Quicksilver, cdc codec.JSONCodec, config simtyp
 		}
 	}
 
-	simState.ParamChanges = quicksilver.SimulationManager().GenerateParamChanges(config.Seed)
-	simState.Contents = quicksilver.SimulationManager().GetProposalContents(simState)
+	simState.LegacyProposalContents = quicksilver.SimulationManager().GetProposalContents(simState) //nolint:staticcheck
+	simState.ProposalMsgs = quicksilver.SimulationManager().GetProposalMsgs(simState)
 	return quicksilver.SimulationManager().WeightedOperations(simState)
 }
 
@@ -85,7 +85,7 @@ func CheckExportSimulation(
 ) error {
 	if config.ExportStatePath != "" {
 		fmt.Println("exporting app state...")
-		exported, err := quicksilver.ExportAppStateAndValidators(false, nil)
+		exported, err := quicksilver.ExportAppStateAndValidators(false, nil, nil)
 		if err != nil {
 			return err
 		}

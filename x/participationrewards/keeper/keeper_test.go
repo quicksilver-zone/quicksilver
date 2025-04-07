@@ -12,12 +12,12 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	icatypes "github.com/cosmos/ibc-go/v6/modules/apps/27-interchain-accounts/types"
-	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
-	channeltypes "github.com/cosmos/ibc-go/v6/modules/core/04-channel/types"
-	host "github.com/cosmos/ibc-go/v6/modules/core/24-host"
-	tmclienttypes "github.com/cosmos/ibc-go/v6/modules/light-clients/07-tendermint/types"
-	ibctesting "github.com/cosmos/ibc-go/v6/testing"
+	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
+	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
+	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
+	host "github.com/cosmos/ibc-go/v7/modules/core/24-host"
+	tmclienttypes "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
+	ibctesting "github.com/cosmos/ibc-go/v7/testing"
 
 	"github.com/quicksilver-zone/quicksilver/app"
 	umeetypes "github.com/quicksilver-zone/quicksilver/third-party-chains/umee-types/leverage/types"
@@ -117,8 +117,7 @@ func (suite *KeeperTestSuite) coreTest() {
 	suite.Equal(15, len(akpd))
 
 	// advance the chains
-	suite.coordinator.CommitNBlocks(suite.chainA, 1)
-	suite.coordinator.CommitNBlocks(suite.chainB, 1)
+	suite.coordinator.CommitBlock(suite.chainA, suite.chainB)
 
 	// callback test
 	suite.executeSetEpochBlockCallback()
@@ -234,7 +233,7 @@ func (suite *KeeperTestSuite) setupTestZones() {
 
 	zoneSelf := icstypes.Zone{
 		ConnectionId:       "connection-77004",
-		ChainId:            "testchain1",
+		ChainId:            "testchain-1",
 		AccountPrefix:      "osmo",
 		LocalDenom:         "uqosmo",
 		BaseDenom:          "uosmo",
@@ -367,42 +366,18 @@ func (suite *KeeperTestSuite) setupChannelForICA(chainID, connectionID, accountS
 
 	quicksilver.IBCKeeper.ChannelKeeper.SetNextSequenceSend(suite.chainA.GetContext(), portID, channelID, 1)
 	quicksilver.ICAControllerKeeper.SetActiveChannelID(suite.chainA.GetContext(), connectionID, portID, channelID)
-	key, err := quicksilver.InterchainstakingKeeper.ScopedKeeper().NewCapability(
-		suite.chainA.GetContext(),
-		host.ChannelCapabilityPath(portID, channelID),
-	)
-	if err != nil {
-		return err
-	}
-	err = quicksilver.GetScopedIBCKeeper().ClaimCapability(
-		suite.chainA.GetContext(),
-		key,
-		host.ChannelCapabilityPath(portID, channelID),
-	)
-	if err != nil {
-		return err
-	}
 
+	key, err := quicksilver.GetScopedIBCKeeper().NewCapability(
+		suite.chainA.GetContext(),
+		host.ChannelCapabilityPath(portID, channelID),
+	)
+	if err != nil {
+		return err
+	}
 	err = quicksilver.GetScopedICAControllerKeeper().ClaimCapability(
 		suite.chainA.GetContext(),
 		key,
 		host.ChannelCapabilityPath(portID, channelID),
-	)
-	if err != nil {
-		return err
-	}
-
-	key, err = quicksilver.InterchainstakingKeeper.ScopedKeeper().NewCapability(
-		suite.chainA.GetContext(),
-		host.PortPath(portID),
-	)
-	if err != nil {
-		return err
-	}
-	err = quicksilver.GetScopedIBCKeeper().ClaimCapability(
-		suite.chainA.GetContext(),
-		key,
-		host.PortPath(portID),
 	)
 	if err != nil {
 		return err
@@ -433,7 +408,7 @@ func (suite *KeeperTestSuite) setupTestProtocolData() {
 	// // connection type for ibc testsuite chainB
 	suite.addProtocolData(
 		types.ProtocolDataTypeConnection,
-		[]byte(fmt.Sprintf("{\"connectionid\": %q,\"chainid\": %q,\"lastepoch\": %d,\"transferchannel\": %q}", suite.path.EndpointB.ConnectionID, "testzone-1", 0, "channel-3")),
+		[]byte(fmt.Sprintf("{\"connectionid\": %q,\"chainid\": %q,\"lastepoch\": %d,\"transferchannel\": %q}", suite.path.EndpointB.ConnectionID, "testchain-1", 10, "channel-3")),
 	)
 	// connection type for ibc testsuite chainB
 	suite.addProtocolData(

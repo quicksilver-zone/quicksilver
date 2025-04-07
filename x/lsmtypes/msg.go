@@ -3,7 +3,6 @@ package lsmtypes
 import (
 	"cosmossdk.io/errors"
 
-	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -40,8 +39,6 @@ const (
 )
 
 // NewMsgUnbondValidator creates a new MsgUnbondValidator instance.
-//
-//nolint:interfacer
 func NewMsgUnbondValidator(valAddr sdk.ValAddress) *MsgUnbondValidator {
 	return &MsgUnbondValidator{
 		ValidatorAddress: valAddr.String(),
@@ -79,8 +76,6 @@ func (msg MsgUnbondValidator) ValidateBasic() error {
 }
 
 // NewMsgTokenizeShares creates a new MsgTokenizeShares instance.
-//
-//nolint:interfacer
 func NewMsgTokenizeShares(delAddr sdk.AccAddress, valAddr sdk.ValAddress, amount sdk.Coin, owner sdk.AccAddress) *MsgTokenizeShares {
 	return &MsgTokenizeShares{
 		DelegatorAddress:    delAddr.String(),
@@ -134,8 +129,6 @@ func (msg MsgTokenizeShares) ValidateBasic() error {
 }
 
 // NewMsgRedeemTokensForShares creates a new MsgRedeemTokensForShares instance.
-//
-//nolint:interfacer
 func NewMsgRedeemTokensForShares(delAddr sdk.AccAddress, amount sdk.Coin) *MsgRedeemTokensForShares {
 	return &MsgRedeemTokensForShares{
 		DelegatorAddress: delAddr.String(),
@@ -181,8 +174,6 @@ func (msg MsgRedeemTokensForShares) ValidateBasic() error {
 }
 
 // NewMsgTransferTokenizeShareRecord creates a new MsgTransferTokenizeShareRecord instance.
-//
-//nolint:interfacer
 func NewMsgTransferTokenizeShareRecord(recordID uint64, sender, newOwner sdk.AccAddress) *MsgTransferTokenizeShareRecord {
 	return &MsgTransferTokenizeShareRecord{
 		TokenizeShareRecordId: recordID,
@@ -225,8 +216,6 @@ func (msg MsgTransferTokenizeShareRecord) ValidateBasic() error {
 }
 
 // NewMsgDisableTokenizeShares creates a new MsgDisableTokenizeShares instance.
-//
-//nolint:interfacer
 func NewMsgDisableTokenizeShares(delAddr sdk.AccAddress) *MsgDisableTokenizeShares {
 	return &MsgDisableTokenizeShares{
 		DelegatorAddress: delAddr.String(),
@@ -264,8 +253,6 @@ func (msg MsgDisableTokenizeShares) ValidateBasic() error {
 }
 
 // NewMsgEnableTokenizeShares creates a new MsgEnableTokenizeShares instance.
-//
-//nolint:interfacer
 func NewMsgEnableTokenizeShares(delAddr sdk.AccAddress) *MsgEnableTokenizeShares {
 	return &MsgEnableTokenizeShares{
 		DelegatorAddress: delAddr.String(),
@@ -303,8 +290,6 @@ func (msg MsgEnableTokenizeShares) ValidateBasic() error {
 }
 
 // NewMsgValidatorBond creates a new MsgValidatorBond instance.
-//
-//nolint:interfacer
 func NewMsgValidatorBond(delAddr sdk.AccAddress, valAddr sdk.ValAddress) *MsgValidatorBond {
 	return &MsgValidatorBond{
 		DelegatorAddress: delAddr.String(),
@@ -342,75 +327,5 @@ func (msg MsgValidatorBond) ValidateBasic() error {
 		return sdkerrors.ErrInvalidAddress.Wrapf("invalid validator address: %s", err)
 	}
 
-	return nil
-}
-
-func NewMsgWithdrawTokenizeShareRecordReward(ownerAddr sdk.AccAddress, recordID uint64) *MsgWithdrawTokenizeShareRecordReward {
-	return &MsgWithdrawTokenizeShareRecordReward{
-		OwnerAddress: ownerAddr.String(),
-		RecordId:     recordID,
-	}
-}
-
-func (msg MsgWithdrawTokenizeShareRecordReward) Route() string { return ModuleName }
-func (msg MsgWithdrawTokenizeShareRecordReward) Type() string {
-	return TypeMsgWithdrawTokenizeShareRecordReward
-}
-
-// Return address that must sign over msg.GetSignBytes()
-func (msg MsgWithdrawTokenizeShareRecordReward) GetSigners() []sdk.AccAddress {
-	owner, err := sdk.AccAddressFromBech32(msg.OwnerAddress)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{owner}
-}
-
-// get the bytes for the message signer to sign on
-func (msg MsgWithdrawTokenizeShareRecordReward) GetSignBytes() []byte {
-	bz := legacy.Cdc.MustMarshalJSON(&msg)
-	return sdk.MustSortJSON(bz)
-}
-
-// quick validity check
-func (msg MsgWithdrawTokenizeShareRecordReward) ValidateBasic() error {
-	if _, err := sdk.AccAddressFromBech32(msg.OwnerAddress); err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid owner address: %s", err)
-	}
-	return nil
-}
-
-func NewMsgWithdrawAllTokenizeShareRecordReward(ownerAddr sdk.AccAddress) *MsgWithdrawAllTokenizeShareRecordReward {
-	return &MsgWithdrawAllTokenizeShareRecordReward{
-		OwnerAddress: ownerAddr.String(),
-	}
-}
-
-func (msg MsgWithdrawAllTokenizeShareRecordReward) Route() string { return ModuleName }
-
-func (msg MsgWithdrawAllTokenizeShareRecordReward) Type() string {
-	return TypeMsgWithdrawAllTokenizeShareRecordReward
-}
-
-// Return address that must sign over msg.GetSignBytes()
-func (msg MsgWithdrawAllTokenizeShareRecordReward) GetSigners() []sdk.AccAddress {
-	owner, err := sdk.AccAddressFromBech32(msg.OwnerAddress)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{owner}
-}
-
-// get the bytes for the message signer to sign on
-func (msg MsgWithdrawAllTokenizeShareRecordReward) GetSignBytes() []byte {
-	bz := ModuleCdc.MustMarshalJSON(&msg)
-	return sdk.MustSortJSON(bz)
-}
-
-// quick validity check
-func (msg MsgWithdrawAllTokenizeShareRecordReward) ValidateBasic() error {
-	if _, err := sdk.AccAddressFromBech32(msg.OwnerAddress); err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid owner address: %s", err)
-	}
 	return nil
 }

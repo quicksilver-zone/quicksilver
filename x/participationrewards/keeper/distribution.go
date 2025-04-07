@@ -11,7 +11,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/gamm/pool-models/stableswap"
-	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/poolmanager"
+	poolmanager "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/poolmanager/types"
 	"github.com/quicksilver-zone/quicksilver/utils"
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
@@ -84,7 +84,7 @@ func (k *Keeper) CalcTokenValues(ctx sdk.Context) (TokenValues, error) {
 		prettyDenom0 := pool.Denoms[denoms[0]].Denom
 		prettyDenom1 := pool.Denoms[denoms[1]].Denom
 
-		for _, ibcDenom := range utils.Keys(pool.Denoms) {
+		for _, ibcDenom := range denoms {
 			if _, ok := graph[pool.Denoms[ibcDenom].Denom]; !ok {
 				graph[pool.Denoms[ibcDenom].Denom] = make(map[string][]sdk.Dec)
 			}
@@ -144,7 +144,7 @@ func (k *Keeper) CalcTokenValues(ctx sdk.Context) (TokenValues, error) {
 		prettyDenom0 := pool.Denoms[denoms[0]].Denom
 		prettyDenom1 := pool.Denoms[denoms[1]].Denom
 
-		for _, ibcDenom := range utils.Keys(pool.Denoms) {
+		for _, ibcDenom := range denoms {
 			if _, ok := graph[pool.Denoms[ibcDenom].Denom]; !ok {
 				graph[pool.Denoms[ibcDenom].Denom] = make(map[string][]sdk.Dec)
 			}
