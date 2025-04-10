@@ -334,6 +334,11 @@ func ProdSubmitTx(ctx sdk.Context, k *Keeper, msgs []sdk.Msg, account *types.ICA
 			Memo: memo,
 		}
 
+		// DEBUG:
+		activeChannelID, _ := k.ICAControllerKeeper.GetOpenActiveChannel(ctx, connectionID, portID)
+		module, cap, err := k.IBCKeeper.ChannelKeeper.LookupModuleByChannel(ctx, portID, activeChannelID)
+		k.Logger(ctx).Error("DEBUG - CAPS FOR CHANNEL", "module", module, "cap", cap, "err", err)
+
 		ckMsgServer := icacontrollerkeeper.NewMsgServerImpl(&k.ICAControllerKeeper)
 		portOwner := portID[len(icatypes.ControllerPortPrefix):] // TODO: this is a hack to get the port owner; change PortName() to PortOwner() sans prefix.
 		msgSendTx := icacontrollertypes.NewMsgSendTx(portOwner, connectionID, timeoutTimestamp, packetData)
