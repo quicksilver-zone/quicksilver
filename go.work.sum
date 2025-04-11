@@ -519,6 +519,8 @@ github.com/cloudflare/circl v1.3.7/go.mod h1:sRTcRWXGLrKw6yIGJ+l7amYJFfAXbZG0kBS
 github.com/cncf/udpa/go v0.0.0-20220112060539-c52dc94e7fbe h1:QQ3GSy+MqSHxm/d8nCtnAiZdYFd45cYZPs8vOOIYKfk=
 github.com/cncf/xds/go v0.0.0-20240723142845-024c85f92f20/go.mod h1:W+zGtBO5Y1IgJhy4+A9GOqVhqLpfZi+vwmdNXUehLA8=
 github.com/cncf/xds/go v0.0.0-20240905190251-b4127c9b8d78/go.mod h1:W+zGtBO5Y1IgJhy4+A9GOqVhqLpfZi+vwmdNXUehLA8=
+github.com/cockroachdb/apd/v3 v3.2.1 h1:U+8j7t0axsIgvQUqthuNm82HIrYXodOV2iWLWtEaIwg=
+github.com/cockroachdb/apd/v3 v3.2.1/go.mod h1:klXJcjp+FffLTHlhIG69tezTDvdP065naDsHzKhYSqc=
 github.com/cockroachdb/datadriven v1.0.0/go.mod h1:5Ib8Meh+jk1RlHIXej6Pzevx/NLlNvQB9pmSBZErGA4=
 github.com/cockroachdb/datadriven v1.0.2/go.mod h1:a9RdTaap04u637JoCzcUoIcDmvwSUtcUFtT/C3kJlTU=
 github.com/cockroachdb/datadriven v1.0.3-0.20230801171734-e384cf455877/go.mod h1:a9RdTaap04u637JoCzcUoIcDmvwSUtcUFtT/C3kJlTU=
@@ -596,15 +598,12 @@ github.com/cosmos/iavl v1.1.2/go.mod h1:jLeUvm6bGT1YutCaL2fIar/8vGUE8cPZvh/gXEWD
 github.com/cosmos/iavl v1.1.3 h1:MnROShfUCkQTM3N9aPK/qPYMRaPxh7e3AzM7dejfYr8=
 github.com/cosmos/iavl v1.1.3/go.mod h1:jLeUvm6bGT1YutCaL2fIar/8vGUE8cPZvh/gXEWDaDM=
 github.com/cosmos/iavl v1.2.0/go.mod h1:HidWWLVAtODJqFD6Hbne2Y0q3SdxByJepHUOeoH4LiI=
-github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7 v7.1.3 h1:MZGDMETv72suFpTAD6VPGqSIm1FJcChtk2HmVh9D+Bo=
-github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7 v7.1.3/go.mod h1:UvDmcGIWJPIytq+Q78/ff5NTOsuX/7IrNgEugTW5i0s=
 github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7 v7.3.0/go.mod h1:tLfRg+cJc0Dzx/jtF0Lo4n9Pa/NqobagOMrB+BVjCrk=
 github.com/cosmos/ibc-go/modules/capability v1.0.0/go.mod h1:D81ZxzjZAe0ZO5ambnvn1qedsFQ8lOwtqicG6liLBco=
 github.com/cosmos/ibc-go/v6 v6.2.0 h1:HKS5WNxQrlmjowHb73J9LqlNJfvTnvkbhXZ9QzNTU7Q=
 github.com/cosmos/ibc-go/v6 v6.2.0/go.mod h1:+S3sxcNwOhgraYDJAhIFDg5ipXHaUnJrg7tOQqGyWlc=
 github.com/cosmos/ibc-go/v7 v7.9.2/go.mod h1:v2hOSSf9Lmx2S590X/3aJ8CvHj4ewZV3Bviu6by2Y3g=
 github.com/cosmos/ibc-go/v8 v8.2.1/go.mod h1:wj3qx75iC/XNnsMqbPDCIGs0G6Y3E/lo3bdqCyoCy+8=
-github.com/cosmos/ics23/go v0.11.0/go.mod h1:A8OjxPE67hHST4Icw94hOxxFEJMBG031xIGF/JHNIY0=
 github.com/cosmos/ledger-cosmos-go v0.13.3/go.mod h1:HENcEP+VtahZFw38HZ3+LS3Iv5XV6svsnkk9vdJtLr8=
 github.com/cpuguy83/go-md2man v1.0.10/go.mod h1:SmD6nW6nTyfqj6ABTjUi3V3JVMnlJmwcJI5acqYI6dE=
 github.com/cpuguy83/go-md2man/v2 v2.0.0/go.mod h1:maD7wRr/U5Z6m/iR4s+kqSMx2CaBsrgA7czyZG/E6dU=
