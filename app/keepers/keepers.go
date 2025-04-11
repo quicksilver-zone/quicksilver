@@ -83,11 +83,10 @@ import (
 type AppKeepers struct {
 	AppCodec codec.Codec
 	// make scoped keepers public for test purposes
-	ScopedIBCKeeper                      capabilitykeeper.ScopedKeeper
-	ScopedTransferKeeper                 capabilitykeeper.ScopedKeeper
-	ScopedICAControllerKeeper            capabilitykeeper.ScopedKeeper
-	ScopedICAHostKeeper                  capabilitykeeper.ScopedKeeper
-	ScopedInterchainStakingAccountKeeper capabilitykeeper.ScopedKeeper
+	ScopedIBCKeeper           capabilitykeeper.ScopedKeeper
+	ScopedTransferKeeper      capabilitykeeper.ScopedKeeper
+	ScopedICAControllerKeeper capabilitykeeper.ScopedKeeper
+	ScopedICAHostKeeper       capabilitykeeper.ScopedKeeper
 
 	// "Normal" keepers
 	// 		SDK
@@ -209,11 +208,10 @@ func (appKeepers *AppKeepers) InitKeepers(
 
 	// add capability keeper and ScopeToModule for ibc module
 	appKeepers.CapabilityKeeper = capabilitykeeper.NewKeeper(appCodec, appKeepers.keys[capabilitytypes.StoreKey], appKeepers.memKeys[capabilitytypes.MemStoreKey])
-	scopedIBCKeeper := appKeepers.CapabilityKeeper.ScopeToModule(ibcexported.ModuleName)
-	scopedTransferKeeper := appKeepers.CapabilityKeeper.ScopeToModule(ibctransfertypes.ModuleName)
-	scopedICAControllerKeeper := appKeepers.CapabilityKeeper.ScopeToModule(icacontrollertypes.SubModuleName)
-	scopedICAHostKeeper := appKeepers.CapabilityKeeper.ScopeToModule(icahosttypes.SubModuleName)
-
+	appKeepers.ScopedIBCKeeper = appKeepers.CapabilityKeeper.ScopeToModule(ibcexported.ModuleName)
+	appKeepers.ScopedTransferKeeper = appKeepers.CapabilityKeeper.ScopeToModule(ibctransfertypes.ModuleName)
+	appKeepers.ScopedICAControllerKeeper = appKeepers.CapabilityKeeper.ScopeToModule(icacontrollertypes.SubModuleName)
+	appKeepers.ScopedICAHostKeeper = appKeepers.CapabilityKeeper.ScopeToModule(icahosttypes.SubModuleName)
 	appKeepers.CapabilityKeeper.Seal()
 
 	govAuthority := authtypes.NewModuleAddress(govtypes.ModuleName).String()
@@ -307,7 +305,7 @@ func (appKeepers *AppKeepers) InitKeepers(
 		appKeepers.GetSubspace(ibcexported.ModuleName),
 		appKeepers.StakingKeeper,
 		appKeepers.UpgradeKeeper,
-		scopedIBCKeeper,
+		appKeepers.ScopedIBCKeeper,
 	)
 
 	// RouterKeeper must be created before TransferKeeper
@@ -332,7 +330,7 @@ func (appKeepers *AppKeepers) InitKeepers(
 		&appKeepers.IBCKeeper.PortKeeper,
 		appKeepers.AccountKeeper,
 		appKeepers.BankKeeper,
-		scopedTransferKeeper,
+		appKeepers.ScopedTransferKeeper,
 	)
 
 	appKeepers.SupplyKeeper = supplykeeper.NewKeeper(
@@ -360,7 +358,7 @@ func (appKeepers *AppKeepers) InitKeepers(
 		appKeepers.IBCKeeper.ChannelKeeper, // may be replaced with middleware such as ics29 fee
 		appKeepers.IBCKeeper.ChannelKeeper,
 		&appKeepers.IBCKeeper.PortKeeper,
-		scopedICAControllerKeeper,
+		appKeepers.ScopedICAControllerKeeper,
 		bApp.MsgServiceRouter(),
 	)
 
@@ -372,7 +370,7 @@ func (appKeepers *AppKeepers) InitKeepers(
 		appKeepers.IBCKeeper.ChannelKeeper,
 		&appKeepers.IBCKeeper.PortKeeper,
 		appKeepers.AccountKeeper,
-		scopedICAHostKeeper,
+		appKeepers.ScopedICAHostKeeper,
 		bApp.MsgServiceRouter(),
 	)
 
@@ -508,11 +506,6 @@ func (appKeepers *AppKeepers) InitKeepers(
 	)
 
 	appKeepers.GovKeeper.SetLegacyRouter(govRouter)
-
-	appKeepers.ScopedIBCKeeper = scopedIBCKeeper
-	appKeepers.ScopedTransferKeeper = scopedTransferKeeper
-	appKeepers.ScopedICAControllerKeeper = scopedICAControllerKeeper
-	appKeepers.ScopedICAHostKeeper = scopedICAHostKeeper
 }
 
 // initParamsKeeper init params keeper and its subspaces.
