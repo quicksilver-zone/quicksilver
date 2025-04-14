@@ -26,7 +26,7 @@ func (suite *KeeperTestSuite) TestKeeper_Supply() {
 
 		k := suite.GetQuicksilverApp(suite.chainA).SupplyKeeper
 		k.Enable(ctx, true)
-		s, ok := math.NewIntFromString("100000000000120393424")
+		s, ok := math.NewIntFromString("100000000000058098352")
 		suite.True(ok)
 		cs, ok := math.NewIntFromString("100000000000004000000")
 		suite.True(ok)
@@ -51,7 +51,7 @@ func (suite *KeeperTestSuite) TestKeeper_Supply_Excluded_Account() {
 		stk := suite.GetQuicksilverApp(suite.chainA).StakingKeeper
 		mk := suite.GetQuicksilverApp(suite.chainA).MintKeeper
 		k.Enable(ctx, true)
-		s, ok := math.NewIntFromString("100000000000125393424") // this included the 5stake minted below.
+		s, ok := math.NewIntFromString("100000000000063098352") // this included the 5stake minted below.
 		suite.True(ok)
 		cs, ok := math.NewIntFromString("100000000000004000000") // this does not include the new stake, as it is excluded.
 		suite.True(ok)
