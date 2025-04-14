@@ -1,8 +1,6 @@
 package keeper_test
 
 import (
-	"fmt"
-
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -40,8 +38,6 @@ func (suite *KeeperTestSuite) TestKeeper_Supply() {
 		got, err := querier.Supply(ctx, &types.QuerySupplyRequest{})
 		suite.NoError(err)
 		suite.NotNil(got)
-		fmt.Println("got", got)
-		fmt.Println("want", want)
 		suite.Equal(want, *got)
 	})
 }
