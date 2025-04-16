@@ -20,7 +20,7 @@ require (
 	github.com/cosmos/ics23/go v0.11.0
 	github.com/gogo/protobuf v1.3.3
 	github.com/golang/protobuf v1.5.4
-	github.com/golangci/golangci-lint/v2 v2.1.1
+	github.com/golangci/golangci-lint/v2 v2.1.2
 	github.com/gorilla/mux v1.8.1
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	github.com/ingenuity-build/multierror v0.1.0
@@ -155,7 +155,7 @@ require (
 	github.com/fsnotify/fsnotify v1.8.0 // indirect
 	github.com/fzipp/gocyclo v0.6.0 // indirect
 	github.com/getsentry/sentry-go v0.31.1 // indirect
-	github.com/ghostiam/protogetter v0.3.13 // indirect
+	github.com/ghostiam/protogetter v0.3.15 // indirect
 	github.com/go-critic/go-critic v0.13.0 // indirect
 	github.com/go-kit/kit v0.13.0 // indirect
 	github.com/go-kit/log v0.2.1 // indirect
@@ -234,11 +234,11 @@ require (
 	github.com/kulti/thelper v0.6.3 // indirect
 	github.com/kunwardeep/paralleltest v1.0.14 // indirect
 	github.com/lasiar/canonicalheader v1.1.2 // indirect
-	github.com/ldez/exptostd v0.4.2 // indirect
+	github.com/ldez/exptostd v0.4.3 // indirect
 	github.com/ldez/gomoddirectives v0.6.1 // indirect
 	github.com/ldez/grignotin v0.9.0 // indirect
 	github.com/ldez/tagliatelle v0.7.1 // indirect
-	github.com/ldez/usetesting v0.4.2 // indirect
+	github.com/ldez/usetesting v0.4.3 // indirect
 	github.com/leonklingele/grouper v1.1.2 // indirect
 	github.com/lib/pq v1.10.9 // indirect
 	github.com/linxGnu/grocksdb v1.9.3 // indirect
