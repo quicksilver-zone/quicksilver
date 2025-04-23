@@ -9,12 +9,11 @@ import (
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
-
 	"github.com/cosmos/ibc-go/v7/modules/core/exported"
 	ibctmmigrations "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint/migrations"
 
 	"github.com/quicksilver-zone/quicksilver/app/keepers"
+	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 )
 
 func V010800UpgradeHandler(
