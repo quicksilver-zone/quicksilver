@@ -550,14 +550,10 @@ func (c *ChainConfig) SignAndBroadcastMsg(ctx context.Context, cliContext *clien
 		Mode:    txtypes.BroadcastMode_BROADCAST_MODE_ASYNC,
 	})
 
-	fmt.Println("DEBUG::res", res.TxResponse.TxHash)
-
 	time.Sleep(10 * time.Second)
 	txRes, err := serviceClient.GetTx(ctx, &txtypes.GetTxRequest{
 		Hash: res.TxResponse.TxHash,
 	})
-
-	fmt.Println("DEBUG::tx", txRes)
 
 	switch {
 	case err != nil:
