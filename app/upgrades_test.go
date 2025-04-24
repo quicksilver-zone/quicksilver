@@ -493,3 +493,114 @@ func (s *AppTestSuite) TestV010706UpgradeHandler() {
 	_, found = app.InterchainstakingKeeper.GetUnbondingRecord(ctx, "sommelier-3", "sommvaloper1y0few0kgxa7vtq8nskjsdwdtyqglj3k5pv2c4d", 243)
 	s.True(found)
 }
+
+func (s *AppTestSuite) TestV010800UpgradeHandler() {
+	s.InitV160TestZones()
+	app := s.GetQuicksilverApp(s.chainA)
+
+	ctx := s.chainA.GetContext()
+	completion, err := time.Parse("2006-01-02T15:04:05Z", "2025-04-11T11:17:29Z")
+	s.NoError(err)
+
+	record := icstypes.WithdrawalRecord{
+		ChainId:        "juno-1",
+		Delegator:      "quick1npxuk4c30xm3q27lyx24vvrhqzm089wdxmhe93",
+		Recipient:      "juno1npxuk4c30xm3q27lyx24vvrhqzm089wdmdysml",
+		Txhash:         "564e8a6263763644bbe32e4bd0bf9f99619aaf68b938216fff2acef2dfb8aec6",
+		Status:         icstypes.WithdrawStatusSend,
+		BurnAmount:     sdk.NewCoin("uqjuno", math.NewInt(59560000)),
+		Amount:         sdk.NewCoins(sdk.NewCoin("ujuno", math.NewInt(82121494))),
+		Requeued:       false,
+		Acknowledged:   true,
+		CompletionTime: completion,
+		EpochNumber:    266,
+		SendErrors:     0,
+	}
+
+	s.NoError(app.InterchainstakingKeeper.SetWithdrawalRecord(ctx, record))
+
+	completion, err = time.Parse("2006-01-02T15:04:05Z", "2025-04-11T11:20:26Z")
+	s.NoError(err)
+
+	record = icstypes.WithdrawalRecord{
+		ChainId:        "juno-1",
+		Delegator:      "quick194dawsp29zcp4s9r6hdppdak0cy5kf3xqumt9x",
+		Recipient:      "juno194dawsp29zcp4s9r6hdppdak0cy5kf3xa2gzmg",
+		Txhash:         "c746ceba8da060f25a81f2e0cc6ed53fecd69dbbd89ff7c9aa8b5d0464302f84",
+		Status:         icstypes.WithdrawStatusUnbond,
+		BurnAmount:     sdk.NewCoin("uqjuno", math.NewInt(773810000)),
+		Amount:         sdk.NewCoins(sdk.NewCoin("ujuno", math.NewInt(1066930053))),
+		Requeued:       false,
+		Acknowledged:   true,
+		CompletionTime: completion,
+		EpochNumber:    266,
+		SendErrors:     0,
+	}
+
+	s.NoError(app.InterchainstakingKeeper.SetWithdrawalRecord(ctx, record))
+
+	// setup unbondign records
+	// no ct
+	ubr1 := icstypes.UnbondingRecord{
+		ChainId:        "juno-1",
+		Validator:      "junovaloper10m5g48u53vss7xqmqw6089d02ua0d85d7s8gu0",
+		EpochNumber:    277,
+		CompletionTime: time.Time{},
+		RelatedTxhash: []string{
+			"0fc9c66af331cbb3b015f97a2257220e16c2d58f75f5cdcbce3e77cb90570834",
+			"1b3c51013bc5753b728083703cd00dd236f14759dc1e13f20899e4e8863baa66",
+			"204c56e09f176373d73a63be060f560eb4d2bda83ffedd838de814e6175c2bc4",
+			"24fc99033051c0504b85e3da033a6aa006ac76c373ef60791f8046c7713814e4",
+		},
+		Amount: sdk.NewCoin("usomm", math.NewInt(2759679739)),
+	}
+
+	completion, err = time.Parse("2006-01-02T15:04:05Z", "2025-01-20T16:45:43Z")
+	s.NoError(err)
+
+	ubr2 := icstypes.UnbondingRecord{
+		ChainId:        "juno-1",
+		Validator:      "junovaloper1y0few0kgxa7vtq8nskjsdwdtyqglj3k5pv2c4d",
+		EpochNumber:    277,
+		CompletionTime: completion,
+		RelatedTxhash: []string{
+			"184365ad8ea78478cf49e7fb28c829f64aa9dac026905bef239f8fb16cc3dcb6",
+		},
+		Amount: sdk.NewCoin("usomm", math.NewInt(19803)),
+	}
+
+	ubr3 := icstypes.UnbondingRecord{
+		ChainId:        "sommelier-3",
+		Validator:      "sommvaloper1y0few0kgxa7vtq8nskjsdwdtyqglj3k5pv2c4d",
+		EpochNumber:    277,
+		CompletionTime: ctx.BlockTime().Add(time.Hour * 36),
+		RelatedTxhash: []string{
+			"bb09ae31a44f83a292c4ddf16870b033daccc1ea9fb1620ccf36c1e232af11c3",
+		},
+		Amount: sdk.NewCoin("usomm", math.NewInt(95016053)),
+	}
+
+	app.InterchainstakingKeeper.SetUnbondingRecord(ctx, ubr1)
+	app.InterchainstakingKeeper.SetUnbondingRecord(ctx, ubr2)
+	app.InterchainstakingKeeper.SetUnbondingRecord(ctx, ubr3)
+
+	handler := upgrades.V010800UpgradeHandler(app.mm, app.configurator, &app.AppKeepers)
+
+	_, err = handler(ctx, types.Plan{}, app.mm.GetVersionMap())
+	s.NoError(err)
+
+	_, found := app.InterchainstakingKeeper.GetUnbondingRecord(ctx, "juno-1", "junovaloper10m5g48u53vss7xqmqw6089d02ua0d85d7s8gu0", 277)
+	s.False(found)
+
+	_, found = app.InterchainstakingKeeper.GetUnbondingRecord(ctx, "juno-1", "junovaloper1y0few0kgxa7vtq8nskjsdwdtyqglj3k5pv2c4d", 277)
+	s.False(found)
+
+	_, found = app.InterchainstakingKeeper.GetUnbondingRecord(ctx, "sommelier-3", "sommvaloper1y0few0kgxa7vtq8nskjsdwdtyqglj3k5pv2c4d", 277)
+	s.True(found)
+
+	_, found = app.InterchainstakingKeeper.GetWithdrawalRecord(ctx, "juno-1", "quick1npxuk4c30xm3q27lyx24vvrhqzm089wdxmhe93", 266)
+	s.False(found)
+
+	_, found = app.InterchainstakingKeeper.GetWithdrawalRecord(ctx, "juno-1", "quick194dawsp29zcp4s9r6hdppdak0cy5kf3xqumt9x", 266)
+	s.False(found)
+}
