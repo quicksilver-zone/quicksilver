@@ -502,3 +502,41 @@ func (k msgServer) GovRemoveValidatorDenyList(goCtx context.Context, msg *types.
 
 	return &types.MsgGovRemoveValidatorDenyListResponse{}, nil
 }
+
+func (k msgServer) GovExecuteICATx(goCtx context.Context, msg *types.MsgGovExecuteICATx) (*types.MsgGovExecuteICATxResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	// checking msg authority is the gov module address
+	if k.GetGovAuthority(ctx) != msg.Authority {
+		return nil,
+			govtypes.ErrInvalidSigner.Wrapf(
+				"invalid authority: expected %s, got %s",
+				k.GetGovAuthority(ctx), msg.Authority,
+			)
+	}
+
+	unpackedMsgs := make([]sdk.Msg, len(msg.Msgs))
+	for i, anyMsg := range msg.Msgs {
+		if err := k.cdc.UnpackAny(anyMsg, &unpackedMsgs[i]); err != nil {
+			return nil, err
+		}
+	}
+
+	for _, msg := range unpackedMsgs {
+		if err := msg.ValidateBasic(); err != nil {
+			return nil, err
+		}
+	}
+
+	account, zone, err := k.GetICAAccountForAddress(ctx, msg.Address)
+	if err != nil {
+		return nil, err
+	}
+
+	err = k.SubmitTx(ctx, unpackedMsgs, account, "NFA", zone.MessagesPerTx)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.MsgGovExecuteICATxResponse{}, nil
+}

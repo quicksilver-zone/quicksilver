@@ -39,6 +39,7 @@ var (
 	_ legacytx.LegacyMsg = &MsgSignalIntent{}
 	_ sdk.Msg            = &MsgGovAddValidatorDenyList{}
 	_ sdk.Msg            = &MsgGovRemoveValidatorDenyList{}
+	_ sdk.Msg            = &MsgGovExecuteICATx{}
 )
 
 // NewMsgRequestRedemption - construct a msg to request redemption.
@@ -556,4 +557,38 @@ func (msg MsgGovRemoveValidatorDenyList) GetSignBytes() []byte {
 func (msg MsgGovRemoveValidatorDenyList) GetSigners() []sdk.AccAddress {
 	fromAddress, _ := addressutils.AccAddressFromBech32(msg.Authority, "")
 	return []sdk.AccAddress{fromAddress}
+}
+
+// MsgGovExecuteICATx
+
+// GetSignBytes Implements Msg.
+func (msg MsgGovExecuteICATx) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+// GetSigners Implements Msg.
+func (msg MsgGovExecuteICATx) GetSigners() []sdk.AccAddress {
+	fromAddress, _ := addressutils.AccAddressFromBech32(msg.Authority, "")
+	return []sdk.AccAddress{fromAddress}
+}
+
+// ValidateBasic
+func (msg MsgGovExecuteICATx) ValidateBasic() error {
+	_, err := addressutils.AccAddressFromBech32(msg.Authority, "")
+	if err != nil {
+		return err
+	}
+
+	if _, err := addressutils.AccAddressFromBech32(msg.Address, ""); err != nil {
+		return err
+	}
+
+	if len(msg.Msgs) == 0 {
+		return errors.New("no msgs provided")
+	}
+
+	// we can't validate the msgs here because they are packed, and require the cdc to unpack them.
+	// we will validate them when they are unpacked in the keeper.
+
+	return nil
 }
