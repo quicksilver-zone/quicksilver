@@ -1685,9 +1685,6 @@ func (suite *KeeperTestSuite) TestHandleFailedUnbondSend() {
 				suite.NoError(err)
 			}
 
-			// set address for zone mapping
-			quicksilver.InterchainstakingKeeper.SetAddressZoneMapping(ctx, user, zone.ChainId)
-
 			// trigger handler
 			for i := range test.message {
 				err := quicksilver.InterchainstakingKeeper.HandleFailedUnbondSend(ctx, &test.message[i], test.memo)
@@ -3350,7 +3347,6 @@ func (suite *KeeperTestSuite) TestReceiveAckErrForBankSend() {
 
 	v1 := addressutils.GenerateValAddressForTest().String()
 	v2 := addressutils.GenerateValAddressForTest().String()
-	user := addressutils.GenerateAddressForTestWithPrefix("quick")
 
 	withdrawalRecord := types.WithdrawalRecord{
 		ChainId:   zone.ChainId,
@@ -3366,7 +3362,6 @@ func (suite *KeeperTestSuite) TestReceiveAckErrForBankSend() {
 		Status:     types.WithdrawStatusSend,
 	}
 	_ = quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(ctx, withdrawalRecord)
-	quicksilver.InterchainstakingKeeper.SetAddressZoneMapping(ctx, user, zone.ChainId)
 
 	send := &banktypes.MsgSend{
 		FromAddress: zone.DelegationAddress.Address,
@@ -4430,7 +4425,6 @@ func (suite *KeeperTestSuite) TestHandleCompleteSend() {
 func (suite *KeeperTestSuite) TestHandleFailedBankSend() {
 	v1 := addressutils.GenerateValAddressForTest().String()
 	v2 := addressutils.GenerateValAddressForTest().String()
-	user := addressutils.GenerateAddressForTestWithPrefix("quick")
 	tests := []struct {
 		name            string
 		record          func(zone *types.Zone) types.WithdrawalRecord
@@ -4612,7 +4606,6 @@ func (suite *KeeperTestSuite) TestHandleFailedBankSend() {
 			}
 
 			// set address for zone mapping
-			quicksilver.InterchainstakingKeeper.SetAddressZoneMapping(ctx, user, zone.ChainId)
 			msg := test.message(&zone)
 			err := quicksilver.InterchainstakingKeeper.HandleFailedBankSend(ctx, msg, test.memo, zone.ConnectionId)
 

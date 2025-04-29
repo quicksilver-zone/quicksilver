@@ -533,6 +533,10 @@ func (k msgServer) GovExecuteICATx(goCtx context.Context, msg *types.MsgGovExecu
 		return nil, err
 	}
 
+	if msg.ChainId != zone.ChainId {
+		return nil, fmt.Errorf("chain id mismatch. Zone: %s, Msg: %s", zone.ChainId, msg.ChainId)
+	}
+
 	err = k.SubmitTx(ctx, unpackedMsgs, account, "NFA", zone.MessagesPerTx)
 	if err != nil {
 		return nil, err

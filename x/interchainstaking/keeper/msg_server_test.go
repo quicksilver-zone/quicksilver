@@ -7,7 +7,9 @@ import (
 
 	"cosmossdk.io/math"
 
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
@@ -17,6 +19,7 @@ import (
 	tmclienttypes "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
 
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
+	"github.com/quicksilver-zone/quicksilver/utils/ica"
 	"github.com/quicksilver-zone/quicksilver/utils/randomutils"
 	icskeeper "github.com/quicksilver-zone/quicksilver/x/interchainstaking/keeper"
 	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
@@ -1531,6 +1534,150 @@ func (suite *KeeperTestSuite) TestMsgGovRemoveValidatorToDenyList() {
 			} else {
 				suite.NoError(err)
 				suite.NotNil(res)
+			}
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestMsgGovExecuteICATx() {
+	validAuthority := addressutils.MustEncodeAddressToBech32(sdk.GetConfig().GetBech32AccountAddrPrefix(), suite.GetQuicksilverApp(suite.chainA).AccountKeeper.GetModuleAddress(govtypes.ModuleName))
+
+	tests := []struct {
+		name   string
+		error  bool
+		GetMsg func(ctx sdk.Context, icsKeeper *icskeeper.Keeper) *icstypes.MsgGovExecuteICATx
+		assert func(s *KeeperTestSuite, txKeeper ica.TxKeeper) bool
+	}{
+		{
+			name:  "valid",
+			error: false,
+			GetMsg: func(ctx sdk.Context, icsKeeper *icskeeper.Keeper) *icstypes.MsgGovExecuteICATx {
+				zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
+				suite.True(found)
+				return &icstypes.MsgGovExecuteICATx{
+					ChainId: zone.ChainId,
+					Address: zone.DelegationAddress.Address,
+					Msgs: []*codectypes.Any{
+						codectypes.UnsafePackAny(&banktypes.MsgSend{
+							FromAddress: "cosmos1qyqszqgpqyqszqgpqyqszqgpqy66879a",
+							ToAddress:   "cosmos1y4zqtwq05tfa3xv9fdu3fczqueqergtv6sdk7n",
+							Amount:      sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(1000000))),
+						}),
+					},
+					Authority: validAuthority,
+				}
+			},
+			assert: func(s *KeeperTestSuite, txKeeper ica.TxKeeper) bool {
+				suite.Equal(len(txKeeper.Txs), 1)
+				tx := txKeeper.Txs[0]
+				suite.Equal(tx.Msgs[0].(*banktypes.MsgSend).FromAddress, "cosmos1qyqszqgpqyqszqgpqyqszqgpqy66879a")
+				suite.Equal(tx.Msgs[0].(*banktypes.MsgSend).ToAddress, "cosmos1y4zqtwq05tfa3xv9fdu3fczqueqergtv6sdk7n")
+				suite.Equal(tx.Msgs[0].(*banktypes.MsgSend).Amount, sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(1000000))))
+				return true
+			},
+		},
+		{
+			name: "invalid - address does not match zone",
+			GetMsg: func(ctx sdk.Context, icsKeeper *icskeeper.Keeper) *icstypes.MsgGovExecuteICATx {
+				zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
+				suite.True(found)
+				return &icstypes.MsgGovExecuteICATx{
+					ChainId: zone.ChainId,
+					Address: addressutils.GenerateAddressForTestWithPrefix("quick"),
+					Msgs: []*codectypes.Any{
+						codectypes.UnsafePackAny(&banktypes.MsgSend{
+							FromAddress: "cosmos1qyqszqgpqyqszqgpqyqszqgpqy66879a",
+							ToAddress:   "cosmos1y4zqtwq05tfa3xv9fdu3fczqueqergtv6sdk7n",
+							Amount:      sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(1000000))),
+						}),
+					},
+					Authority: validAuthority,
+				}
+			},
+			error: true,
+		},
+		{
+			name: "invalid - zone does not match address",
+			GetMsg: func(ctx sdk.Context, icsKeeper *icskeeper.Keeper) *icstypes.MsgGovExecuteICATx {
+				zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
+				suite.True(found)
+				return &icstypes.MsgGovExecuteICATx{
+					ChainId: "badzone-1",
+					Address: zone.DelegationAddress.Address,
+					Msgs: []*codectypes.Any{
+						codectypes.UnsafePackAny(&banktypes.MsgSend{
+							FromAddress: "cosmos1qyqszqgpqyqszqgpqyqszqgpqy66879a",
+							ToAddress:   "cosmos1y4zqtwq05tfa3xv9fdu3fczqueqergtv6sdk7n",
+							Amount:      sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(1000000))),
+						}),
+					},
+					Authority: validAuthority,
+				}
+			},
+			error: true,
+		},
+		{
+			name: "invalid - msg does not validate",
+			GetMsg: func(ctx sdk.Context, icsKeeper *icskeeper.Keeper) *icstypes.MsgGovExecuteICATx {
+				zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
+				suite.True(found)
+				return &icstypes.MsgGovExecuteICATx{
+					ChainId: suite.chainB.ChainID,
+					Address: zone.DelegationAddress.Address,
+					Msgs: []*codectypes.Any{
+						codectypes.UnsafePackAny(&banktypes.MsgSend{
+							FromAddress: "cosmos1qyqszqgpqyqszqgpqyqszqgpqy66879a",
+							ToAddress:   "BAD",
+							Amount:      sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(1000000))),
+						}),
+					},
+					Authority: validAuthority,
+				}
+			},
+			error: true,
+		},
+		{
+			name: "invalid - bad authority",
+			GetMsg: func(ctx sdk.Context, icsKeeper *icskeeper.Keeper) *icstypes.MsgGovExecuteICATx {
+				zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
+				suite.True(found)
+				return &icstypes.MsgGovExecuteICATx{
+					ChainId: suite.chainB.ChainID,
+					Address: zone.DelegationAddress.Address,
+					Msgs: []*codectypes.Any{
+						codectypes.UnsafePackAny(&banktypes.MsgSend{
+							FromAddress: "cosmos1qyqszqgpqyqszqgpqyqszqgpqy66879a",
+							ToAddress:   "cosmos1qyqszqgpqyqszqgpqyqszqgpqy66879a",
+							Amount:      sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(1000000))),
+						}),
+					},
+					Authority: "cosmos1qyqszqgpqyqszqgpqyqszqgpqy66879a",
+				}
+			},
+			error: true,
+		},
+	}
+
+	for _, tt := range tests {
+		suite.Run(tt.name, func() {
+			suite.SetupTest()
+			suite.setupTestZones()
+			txk := ica.TxKeeper{}
+			icsKeeper := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
+			icsKeeper.OverrideTxSubmit(ica.GetTestSubmitTxFn(&txk))
+			ctx := suite.chainA.GetContext()
+			msg := tt.GetMsg(ctx, icsKeeper)
+
+			msgSrv := icskeeper.NewMsgServerImpl(icsKeeper)
+			res, err := msgSrv.GovExecuteICATx(sdk.WrapSDKContext(ctx), msg)
+			if !tt.error {
+				suite.NoError(err)
+				suite.NotNil(res)
+				tt.assert(suite, txk)
+
+			} else {
+				suite.Error(err)
+				suite.Nil(res)
 			}
 		})
 	}
