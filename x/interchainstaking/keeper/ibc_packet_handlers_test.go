@@ -1039,7 +1039,7 @@ func (suite *KeeperTestSuite) TestNFA() {
 	ack, err := makeAckForMsgs(ctx, quicksilver.AppCodec(), msgs, true)
 	suite.NoError(err)
 	bz, err := quicksilver.AppCodec().MarshalJSON(&ack)
-
+	suite.NoError(err)
 	// no nfa flag, will error because no msgresponse exists.
 	err = quicksilver.InterchainstakingKeeper.HandleAcknowledgement(ctx, packet, bz, "connection-0")
 	suite.Error(err)
@@ -1047,9 +1047,8 @@ func (suite *KeeperTestSuite) TestNFA() {
 	// with nfa flag, will succeed.
 	packet, err = makePacketFromMsgs(quicksilver.AppCodec(), msgs, types.FlagNoFurtherAction)
 	suite.NoError(err)
-	ack, err = makeAckForMsgs(ctx, quicksilver.AppCodec(), msgs, true)
+	err = quicksilver.InterchainstakingKeeper.HandleAcknowledgement(ctx, packet, bz, "connection-0")
 	suite.NoError(err)
-
 }
 
 func (suite *KeeperTestSuite) TestHandleFailedUndelegate() {
