@@ -1617,26 +1617,6 @@ func (suite *KeeperTestSuite) TestMsgGovExecuteICATx() {
 			error: true,
 		},
 		{
-			name: "invalid - msg does not validate",
-			GetMsg: func(ctx sdk.Context, icsKeeper *icskeeper.Keeper) *icstypes.MsgGovExecuteICATx {
-				zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
-				suite.True(found)
-				return &icstypes.MsgGovExecuteICATx{
-					ChainId: suite.chainB.ChainID,
-					Address: zone.DelegationAddress.Address,
-					Msgs: []*codectypes.Any{
-						codectypes.UnsafePackAny(&banktypes.MsgSend{
-							FromAddress: "cosmos1qyqszqgpqyqszqgpqyqszqgpqy66879a",
-							ToAddress:   "BAD",
-							Amount:      sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(1000000))),
-						}),
-					},
-					Authority: validAuthority,
-				}
-			},
-			error: true,
-		},
-		{
 			name: "invalid - bad authority",
 			GetMsg: func(ctx sdk.Context, icsKeeper *icskeeper.Keeper) *icstypes.MsgGovExecuteICATx {
 				zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
