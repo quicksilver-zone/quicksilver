@@ -522,12 +522,6 @@ func (k msgServer) GovExecuteICATx(goCtx context.Context, msg *types.MsgGovExecu
 		}
 	}
 
-	for _, msg := range unpackedMsgs {
-		if err := msg.ValidateBasic(); err != nil {
-			return nil, err
-		}
-	}
-
 	account, zone, err := k.GetICAAccountForAddress(ctx, msg.Address)
 	if err != nil {
 		return nil, err
@@ -537,7 +531,7 @@ func (k msgServer) GovExecuteICATx(goCtx context.Context, msg *types.MsgGovExecu
 		return nil, fmt.Errorf("chain id mismatch. Zone: %s, Msg: %s", zone.ChainId, msg.ChainId)
 	}
 
-	err = k.SubmitTx(ctx, unpackedMsgs, account, "NFA", zone.MessagesPerTx)
+	err = k.SubmitTx(ctx, unpackedMsgs, account, types.FlagNoFurtherAction, zone.MessagesPerTx)
 	if err != nil {
 		return nil, err
 	}

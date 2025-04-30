@@ -1018,6 +1018,40 @@ type txAck struct {
 	success bool
 }
 
+func (suite *KeeperTestSuite) TestNFA() {
+	suite.SetupTest()
+	suite.setupTestZones()
+
+	user := addressutils.GenerateAddressForTestWithPrefix("cosmos")
+
+	quicksilver := suite.GetQuicksilverApp(suite.chainA)
+	ctx := suite.chainA.GetContext()
+
+	msgs := []sdk.Msg{
+		&banktypes.MsgSend{
+			FromAddress: user,
+			ToAddress:   user,
+			Amount:      sdk.NewCoins(sdk.NewCoin("uatom", math.NewInt(100000000))),
+		},
+	}
+	packet, err := makePacketFromMsgs(quicksilver.AppCodec(), msgs, "")
+	suite.NoError(err)
+	ack, err := makeAckForMsgs(ctx, quicksilver.AppCodec(), msgs, true)
+	suite.NoError(err)
+	bz, err := quicksilver.AppCodec().MarshalJSON(&ack)
+
+	// no nfa flag, will error because no msgresponse exists.
+	err = quicksilver.InterchainstakingKeeper.HandleAcknowledgement(ctx, packet, bz, "connection-0")
+	suite.Error(err)
+
+	// with nfa flag, will succeed.
+	packet, err = makePacketFromMsgs(quicksilver.AppCodec(), msgs, types.FlagNoFurtherAction)
+	suite.NoError(err)
+	ack, err = makeAckForMsgs(ctx, quicksilver.AppCodec(), msgs, true)
+	suite.NoError(err)
+
+}
+
 func (suite *KeeperTestSuite) TestHandleFailedUndelegate() {
 	user := addressutils.GenerateAddressForTestWithPrefix("quick")
 	user2 := addressutils.GenerateAddressForTestWithPrefix("quick")

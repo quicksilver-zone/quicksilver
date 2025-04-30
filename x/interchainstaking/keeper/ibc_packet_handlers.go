@@ -102,6 +102,11 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 		return errors.New("unable to unmarshal packet data; got empty JSON object")
 	}
 
+	if packetData.Memo == types.FlagNoFurtherAction {
+		// if we have a memo of NFA, we explicitly do not handle the acknowledgement.
+		return nil
+	}
+
 	msgs, err := DeserializeCosmosTxTyped(k.cdc, packetData.Data)
 	if err != nil {
 		k.Logger(ctx).Error("unable to decode messages", "err", err)
