@@ -25,6 +25,8 @@ const (
 
 	PortID = ModuleName
 
+	FlagNoFurtherAction = "NFA"
+
 	Version = "ics27-1"
 
 	GenericToken = "tokens"

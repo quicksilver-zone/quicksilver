@@ -8,7 +8,9 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	"github.com/quicksilver-zone/quicksilver/utils/randomutils"
@@ -63,16 +65,6 @@ func TestIntentsFromString(t *testing.T) {
 		t.Fatal(err.Error())
 	}
 	require.Nil(t, err)
-
-	// Check the router key.
-	gotRoute := sigIntent.Route()
-	wantRoute := "interchainstaking"
-	require.Equal(t, wantRoute, gotRoute, "mismatch in route")
-
-	// Check the type.
-	gotType := sigIntent.Type()
-	wantType := "signalintent"
-	require.Equal(t, wantType, gotType, "mismatch in type")
 
 	// Check the signBytes.
 	signBytes := sigIntent.GetSignBytes()
@@ -518,16 +510,6 @@ func TestMsgUpdateRedemption(t *testing.T) {
 	fromAddr := addressutils.GenerateAccAddressForTest()
 	msg := types.NewMsgUpdateRedemption("cosmoshub-4", randomutils.GenerateRandomHashAsHex(32), types.WithdrawStatusQueued, fromAddr)
 
-	// Check the router key.
-	gotRoute := msg.Route()
-	wantRoute := types.ModuleName
-	require.Equal(t, wantRoute, gotRoute, "mismatch in route")
-
-	// Check the type.
-	gotType := msg.Type()
-	wantType := types.TypeMsgUpdateRedemption
-	require.Equal(t, wantType, gotType, "mismatch in type")
-
 	// Check the signBytes.
 	signBytes := msg.GetSignBytes()
 	require.True(t, len(signBytes) != 0, "expecting signBytes to be produced")
@@ -542,16 +524,6 @@ func TestMsgRequeueRedemption(t *testing.T) {
 	fromAddr := addressutils.GenerateAccAddressForTest()
 	msg := types.NewMsgRequeueRedemption("cosmoshub-4", randomutils.GenerateRandomHashAsHex(32), fromAddr)
 
-	// Check the router key.
-	gotRoute := msg.Route()
-	wantRoute := types.ModuleName
-	require.Equal(t, wantRoute, gotRoute, "mismatch in route")
-
-	// Check the type.
-	gotType := msg.Type()
-	wantType := types.TypeMsgRequeueRedemption
-	require.Equal(t, wantType, gotType, "mismatch in type")
-
 	// Check the signBytes.
 	signBytes := msg.GetSignBytes()
 	require.True(t, len(signBytes) != 0, "expecting signBytes to be produced")
@@ -565,16 +537,6 @@ func TestMsgRequeueRedemption(t *testing.T) {
 func TestMsgCancelRedemption(t *testing.T) {
 	fromAddr := addressutils.GenerateAccAddressForTest()
 	msg := types.NewMsgCancelRedemption("cosmoshub-4", randomutils.GenerateRandomHashAsHex(32), fromAddr)
-
-	// Check the router key.
-	gotRoute := msg.Route()
-	wantRoute := types.ModuleName
-	require.Equal(t, wantRoute, gotRoute, "mismatch in route")
-
-	// Check the type.
-	gotType := msg.Type()
-	wantType := types.TypeMsgCancelRedemption
-	require.Equal(t, wantType, gotType, "mismatch in type")
 
 	// Check the signBytes.
 	signBytes := msg.GetSignBytes()
@@ -695,16 +657,6 @@ func TestMsgRequestRedemption_ValidateBasic(t *testing.T) {
 func TestMsgRequestRedemption(t *testing.T) {
 	fromAddr := addressutils.GenerateAccAddressForTest()
 	msg := types.NewMsgRequestRedemption(sdk.NewCoin("uqatom", sdkmath.NewInt(500)), addressutils.GenerateAddressForTestWithPrefix("cosmos"), fromAddr)
-
-	// Check the router key.
-	gotRoute := msg.Route()
-	wantRoute := types.ModuleName
-	require.Equal(t, wantRoute, gotRoute, "mismatch in route")
-
-	// Check the type.
-	gotType := msg.Type()
-	wantType := types.TypeMsgRequestRedemption
-	require.Equal(t, wantType, gotType, "mismatch in type")
 
 	// Check the signBytes.
 	signBytes := msg.GetSignBytes()
@@ -1145,4 +1097,63 @@ func TestMsgGovSetLsmCaps(t *testing.T) {
 	gotSigners := msg.GetSigners()
 	wantSigners := []sdk.AccAddress{fromAddr}
 	require.Equal(t, wantSigners, gotSigners, "mismatch in signers")
+}
+
+func TestMsgGovExecuteICATx(t *testing.T) {
+	fromAddr := addressutils.GenerateAccAddressForTest()
+	authority := addressutils.GenerateAccAddressForTest()
+	msg := codectypes.UnsafePackAny(banktypes.MsgSend{FromAddress: fromAddr.String(), ToAddress: addressutils.GenerateAddressForTestWithPrefix("quick"), Amount: sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(1000000000000000000)))})
+	cases := []struct {
+		Name string
+		Msg  types.MsgGovExecuteICATx
+		Err  string
+	}{
+		{
+			Name: "valid",
+			Msg:  types.MsgGovExecuteICATx{ChainId: "cosmoshub-4", Address: fromAddr.String(), Authority: authority.String(), Msgs: []*codectypes.Any{msg}},
+			Err:  "",
+		},
+		{
+			Name: "invalid authority",
+			Msg:  types.MsgGovExecuteICATx{ChainId: "cosmoshub-4", Address: fromAddr.String(), Authority: "raa", Msgs: []*codectypes.Any{msg}},
+			Err:  "decoding bech32 failed: invalid bech32 string length 3",
+		},
+		{
+			Name: "invalid chain id",
+			Msg:  types.MsgGovExecuteICATx{ChainId: "", Address: fromAddr.String(), Authority: authority.String(), Msgs: []*codectypes.Any{msg}},
+			Err:  "invalid chain id",
+		},
+		{
+			Name: "invalid address",
+			Msg:  types.MsgGovExecuteICATx{ChainId: "cosmoshub-4", Address: "raa", Authority: authority.String(), Msgs: []*codectypes.Any{msg}},
+			Err:  "decoding bech32 failed: invalid bech32 string length 3",
+		},
+		{
+			Name: "invalid msgs",
+			Msg:  types.MsgGovExecuteICATx{ChainId: "cosmoshub-4", Address: fromAddr.String(), Authority: authority.String(), Msgs: []*codectypes.Any{}},
+			Err:  "no msgs provided",
+		},
+		{
+			Name: "invalid msgs",
+			Msg:  types.MsgGovExecuteICATx{ChainId: "cosmoshub-4", Address: fromAddr.String(), Authority: authority.String(), Msgs: []*codectypes.Any{msg, msg, msg, msg, msg, msg, msg, msg, msg, msg, msg, msg, msg, msg, msg, msg, msg, msg, msg, msg, msg}},
+			Err:  "max 20 msgs are supported",
+		},
+	}
+
+	for _, c := range cases {
+		err := c.Msg.ValidateBasic()
+		if c.Err == "" { // happy
+			require.NoError(t, err, c.Name)
+			signBytes := c.Msg.GetSignBytes()
+			require.True(t, len(signBytes) != 0, "expecting signBytes to be produced")
+
+			// Signers should return the from address.
+			gotSigners := c.Msg.GetSigners()
+			wantSigners := []sdk.AccAddress{authority}
+			require.Equal(t, wantSigners, gotSigners, "mismatch in signers")
+		} else {
+			require.ErrorContains(t, err, c.Err, c.Name)
+		}
+
+	}
 }

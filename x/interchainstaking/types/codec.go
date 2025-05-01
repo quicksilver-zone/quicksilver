@@ -24,6 +24,7 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgRequeueRedemption{}, "quicksilver/MsgRequeueRedemption", nil)
 	cdc.RegisterConcrete(&RegisterZoneProposal{}, "quicksilver/RegisterZoneProposal", nil)
 	cdc.RegisterConcrete(&UpdateZoneProposal{}, "quicksilver/UpdateZoneProposal", nil)
+	cdc.RegisterConcrete(&MsgGovExecuteICATx{}, "quicksilver/MsgGovExecuteICATx", nil)
 	lsmstakingtypes.RegisterLegacyAminoCodec(cdc)
 }
 
@@ -40,6 +41,7 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		&MsgGovSetLsmCaps{},
 		&MsgGovAddValidatorDenyList{},
 		&MsgGovRemoveValidatorDenyList{},
+		&MsgGovExecuteICATx{},
 	)
 
 	registry.RegisterImplementations(

@@ -298,7 +298,6 @@ func (k *Keeper) HandleUpdateZoneProposal(ctx sdk.Context, p *types.UpdateZonePr
 			}
 
 			zone.ConnectionId = change.Value
-			fmt.Println("zone.ConnectionId", zone.ConnectionId)
 
 			k.SetZone(ctx, &zone)
 

@@ -13,12 +13,6 @@ const (
 
 var _ sdk.Msg = &MsgSubmitQueryResponse{}
 
-// Route Implements Msg.
-func (MsgSubmitQueryResponse) Route() string { return RouterKey }
-
-// Type Implements Msg.
-func (MsgSubmitQueryResponse) Type() string { return TypeMsgSubmitQueryResponse }
-
 // ValidateBasic Implements Msg.
 func (msg MsgSubmitQueryResponse) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.FromAddress)
