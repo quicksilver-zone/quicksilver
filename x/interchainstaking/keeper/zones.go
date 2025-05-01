@@ -231,6 +231,26 @@ func (k *Keeper) GetZoneForWithdrawalAccount(ctx sdk.Context, address string) (*
 	return nil, false // address found, but not withdrawal account
 }
 
+func (k *Keeper) GetICAAccountForAddress(ctx sdk.Context, address string) (*types.ICAAccount, *types.Zone, error) {
+	zone, found := k.GetZoneForAccount(ctx, address)
+	if !found {
+		return nil, nil, errors.New("address not found") // address not found
+	}
+
+	switch {
+	case zone.DepositAddress != nil && address == zone.DepositAddress.Address:
+		return zone.DepositAddress, zone, nil
+	case zone.WithdrawalAddress != nil && address == zone.WithdrawalAddress.Address:
+		return zone.WithdrawalAddress, zone, nil
+	case zone.DelegationAddress != nil && address == zone.DelegationAddress.Address:
+		return zone.DelegationAddress, zone, nil
+	case zone.PerformanceAddress != nil && address == zone.PerformanceAddress.Address:
+		return zone.PerformanceAddress, zone, nil
+	default:
+		return nil, zone, errors.New("unexpected account type")
+	}
+}
+
 func (k *Keeper) EnsureWithdrawalAddresses(ctx sdk.Context, zone *types.Zone) error {
 	if zone.WithdrawalAddress == nil {
 		k.Logger(ctx).Info("Withdrawal address not set")
@@ -244,6 +264,11 @@ func (k *Keeper) EnsureWithdrawalAddresses(ctx sdk.Context, zone *types.Zone) er
 
 	if zone.DepositAddress == nil {
 		k.Logger(ctx).Info("Deposit address not set")
+		return nil
+	}
+
+	if zone.PerformanceAddress == nil {
+		k.Logger(ctx).Info("Performance address not set")
 		return nil
 	}
 

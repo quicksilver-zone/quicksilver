@@ -341,59 +341,6 @@ func (suite *KeeperTestSuite) TestRemoveZoneAndAssociatedRecords() {
 	suite.Equal(types.Zone{}, zone, "Expecting the blank zone")
 }
 
-// TODO: convert to keeper tests
-
-/*
-	 func TestZone_GetBondedValidatorAddressesAsSlice(t *testing.T) {
-		zone := types.Zone{ConnectionId: "connection-0", ChainId: "cosmoshub-4", AccountPrefix: "cosmos", LocalDenom: "uqatom", BaseDenom: "uatom"}
-		zone.Validators = append(zone.Validators, &types.Validator{
-			ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0",
-			CommissionRate: sdk.MustNewDecFromStr("0.2"),
-			VotingPower:    sdk.NewInt(2000),
-			Status:         stakingtypes.BondStatusUnbonded,
-		},
-			&types.Validator{
-				ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf",
-				CommissionRate: sdk.MustNewDecFromStr("0.2"),
-				VotingPower:    sdk.NewInt(2000),
-				Status:         stakingtypes.BondStatusUnbonded,
-			},
-			&types.Validator{
-				ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy",
-				CommissionRate: sdk.MustNewDecFromStr("0.2"),
-				VotingPower:    sdk.NewInt(2000),
-				Status:         stakingtypes.BondStatusBonded,
-			},
-			&types.Validator{
-				ValoperAddress: "cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll",
-				CommissionRate: sdk.MustNewDecFromStr("0.2"),
-				VotingPower:    sdk.NewInt(2000),
-				Status:         stakingtypes.BondStatusBonded,
-			},
-			&types.Validator{
-				ValoperAddress: "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7",
-				CommissionRate: sdk.MustNewDecFromStr("0.2"),
-				VotingPower:    sdk.NewInt(2000),
-				Status:         stakingtypes.BondStatusBonded,
-			},
-			&types.Validator{
-				ValoperAddress: "cosmosvaloper1qaa9zej9a0ge3ugpx3pxyx602lxh3ztqgfnp42",
-				CommissionRate: sdk.MustNewDecFromStr("0.2"),
-				VotingPower:    sdk.NewInt(2000),
-				Status:         stakingtypes.BondStatusBonded,
-			},
-		)
-
-		// sorted list
-		expected := []string{
-			"cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy",
-			"cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll",
-			"cosmosvaloper1qaa9zej9a0ge3ugpx3pxyx602lxh3ztqgfnp42",
-			"cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7",
-		}
-		require.Equal(t, expected, zone.GetBondedValidatorAddressesAsSlice())
-	}
-*/
 func (suite *KeeperTestSuite) TestZone_GetAggregateIntentOrDefault() {
 	suite.SetupTest()
 	suite.setupTestZones()
@@ -467,4 +414,34 @@ func (suite *KeeperTestSuite) TestZone_GetAggregateIntentOrDefault() {
 	actual, err := icsKeeper.GetAggregateIntentOrDefault(ctx, &zone)
 	require.NoError(suite.T(), err)
 	require.Equal(suite.T(), expected, actual)
+}
+
+func (suite *KeeperTestSuite) TestZone_GetZoneForAccount() {
+	suite.SetupTest()
+	suite.setupTestZones()
+
+	icsKeeper := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
+	ctx := suite.chainA.GetContext()
+	zoneB, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
+	suite.True(found)
+
+	zone, found := icsKeeper.GetZoneForAccount(ctx, zoneB.DelegationAddress.Address)
+	suite.True(found)
+	suite.Equal(zoneB.ChainId, zone.ChainId)
+
+	zone, found = icsKeeper.GetZoneForAccount(ctx, zoneB.DepositAddress.Address)
+	suite.True(found)
+	suite.Equal(zoneB.ChainId, zone.ChainId)
+
+	zone, found = icsKeeper.GetZoneForAccount(ctx, zoneB.WithdrawalAddress.Address)
+	suite.True(found)
+	suite.Equal(zoneB.ChainId, zone.ChainId)
+
+	zone, found = icsKeeper.GetZoneForAccount(ctx, zoneB.PerformanceAddress.Address)
+	suite.True(found)
+	suite.Equal(zoneB.ChainId, zone.ChainId)
+
+	zone, found = icsKeeper.GetZoneForAccount(ctx, addressutils.GenerateAddressForTestWithPrefix("cosmos"))
+	suite.False(found)
+	suite.Nil(zone)
 }

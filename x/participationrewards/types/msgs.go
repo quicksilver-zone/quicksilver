@@ -8,7 +8,6 @@ import (
 	"github.com/ingenuity-build/multierror"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	cmtypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
@@ -20,9 +19,7 @@ const (
 )
 
 var (
-	_ sdk.Msg            = &MsgSubmitClaim{}
-	_ legacytx.LegacyMsg = &MsgSubmitClaim{}
-
+	_ sdk.Msg = &MsgSubmitClaim{}
 	_ sdk.Msg = &MsgGovRemoveProtocolData{}
 )
 
@@ -47,12 +44,6 @@ func NewMsgSubmitClaim(
 func (msg MsgSubmitClaim) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
-
-// Route implements LegacyMsg.
-func (MsgSubmitClaim) Route() string { return RouterKey }
-
-// Type Implements Msg.
-func (MsgSubmitClaim) Type() string { return TypeMsgSubmitClaim }
 
 // GetSigners implements Msg.
 func (msg MsgSubmitClaim) GetSigners() []sdk.AccAddress {

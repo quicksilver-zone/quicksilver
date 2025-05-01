@@ -70,7 +70,5 @@ func TestMsgSubmitQueryResponse(t *testing.T) {
 	}
 
 	require.NoError(t, msg.ValidateBasic())
-	require.Equal(t, types.RouterKey, msg.Route())
-	require.Equal(t, types.TypeMsgSubmitQueryResponse, msg.Type())
 	require.Equal(t, testAddress.String(), msg.GetSigners()[0].String())
 }
