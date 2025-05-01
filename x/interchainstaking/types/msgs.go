@@ -9,8 +9,10 @@ import (
 
 	"github.com/ingenuity-build/multierror"
 
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
+	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
@@ -574,8 +576,7 @@ func (msg MsgGovExecuteICATx) GetSigners() []sdk.AccAddress {
 
 // ValidateBasic
 func (msg MsgGovExecuteICATx) ValidateBasic() error {
-	_, err := addressutils.AccAddressFromBech32(msg.Authority, "")
-	if err != nil {
+	if _, err := addressutils.AccAddressFromBech32(msg.Authority, ""); err != nil {
 		return err
 	}
 
@@ -583,12 +584,21 @@ func (msg MsgGovExecuteICATx) ValidateBasic() error {
 		return err
 	}
 
+	if msg.ChainId == "" {
+		return errors.New("invalid chain id")
+	}
+
 	if len(msg.Msgs) == 0 {
 		return errors.New("no msgs provided")
 	}
 
-	// we can't validate the msgs here because they are packed, and require the cdc to unpack them.
-	// we will validate them when they are unpacked in the keeper.
+	if len(msg.Msgs) > 20 {
+		return errors.New("max 20 msgs are supported")
+	}
 
 	return nil
+}
+
+func (msg MsgGovExecuteICATx) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+	return tx.UnpackInterfaces(unpacker, msg.Msgs)
 }
