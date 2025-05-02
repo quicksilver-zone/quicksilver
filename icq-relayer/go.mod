@@ -212,6 +212,7 @@ require (
 )
 
 replace (
+	github.com/coinbase/rosetta-sdk-go => github.com/coinbase/mesh-sdk-go v1.0.0
 	github.com/evmos/ethermint => github.com/evmos/ethermint v0.22.0
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	github.com/osmosis-labs/osmosis/osmomath => github.com/quicksilver-zone/osmomath v0.0.16-sdk47
