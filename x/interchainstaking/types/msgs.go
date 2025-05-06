@@ -14,16 +14,24 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 
+	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
+
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 )
 
 // interchainstaking message types.
 const (
-	TypeMsgRequestRedemption = "requestredemption"
-	TypeMsgCancelRedemption  = "cancelredemption"
-	TypeMsgRequeueRedemption = "requeueredemption"
-	TypeMsgUpdateRedemption  = "updateredemption"
-	TypeMsgSignalIntent      = "signalintent"
+	TypeMsgRequestRedemption          = "requestredemption"
+	TypeMsgCancelRedemption           = "cancelredemption"
+	TypeMsgRequeueRedemption          = "requeueredemption"
+	TypeMsgUpdateRedemption           = "updateredemption"
+	TypeMsgSignalIntent               = "signalintent"
+	TypeMsgGovCloseChannel            = "govclosechannel"
+	TypeMsgGovReopenChannel           = "govreopenchannel"
+	TypeMsgGovSetLsmCaps              = "govsetlsmcaps"
+	TypeMsgGovAddValidatorDenyList    = "govaddvalidatordenylist"
+	TypeMsgGovRemoveValidatorDenyList = "govremovevalidatordenylist"
+	TypeMsgGovExecuteICATx            = "govexecuteicatx"
 )
 
 var (
@@ -37,6 +45,18 @@ var (
 	_ sdk.Msg = &MsgGovAddValidatorDenyList{}
 	_ sdk.Msg = &MsgGovRemoveValidatorDenyList{}
 	_ sdk.Msg = &MsgGovExecuteICATx{}
+
+	_ legacytx.LegacyMsg = &MsgRequestRedemption{}
+	_ legacytx.LegacyMsg = &MsgCancelRedemption{}
+	_ legacytx.LegacyMsg = &MsgRequeueRedemption{}
+	_ legacytx.LegacyMsg = &MsgUpdateRedemption{}
+	_ legacytx.LegacyMsg = &MsgSignalIntent{}
+	_ legacytx.LegacyMsg = &MsgGovCloseChannel{}
+	_ legacytx.LegacyMsg = &MsgGovReopenChannel{}
+	_ legacytx.LegacyMsg = &MsgGovSetLsmCaps{}
+	_ legacytx.LegacyMsg = &MsgGovAddValidatorDenyList{}
+	_ legacytx.LegacyMsg = &MsgGovRemoveValidatorDenyList{}
+	_ legacytx.LegacyMsg = &MsgGovExecuteICATx{}
 
 	_ codectypes.UnpackInterfacesMessage = &MsgGovExecuteICATx{}
 )
@@ -568,4 +588,115 @@ func (msg MsgGovExecuteICATx) ValidateBasic() error {
 
 func (msg MsgGovExecuteICATx) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	return tx.UnpackInterfaces(unpacker, msg.Msgs)
+}
+
+// legacytx.LegacyMsg implementations - remove with SDk v0.50
+
+// MsgGovExecuteICATx
+func (msg MsgGovExecuteICATx) Route() string {
+	return RouterKey
+}
+
+func (msg MsgGovExecuteICATx) Type() string {
+	return TypeMsgGovExecuteICATx
+}
+
+// MsgSignalIntent
+
+func (msg MsgSignalIntent) Route() string {
+	return RouterKey
+}
+
+func (msg MsgSignalIntent) Type() string {
+	return TypeMsgSignalIntent
+}
+
+// MsgGovCloseChannel
+
+func (msg MsgGovCloseChannel) Route() string {
+	return RouterKey
+}
+
+func (msg MsgGovCloseChannel) Type() string {
+	return TypeMsgGovCloseChannel
+}
+
+// MsgGovReopenChannel
+
+func (msg MsgGovReopenChannel) Route() string {
+	return RouterKey
+}
+
+func (msg MsgGovReopenChannel) Type() string {
+	return TypeMsgGovReopenChannel
+}
+
+// MsgGovSetLsmCaps
+
+func (msg MsgGovSetLsmCaps) Route() string {
+	return RouterKey
+}
+
+func (msg MsgGovSetLsmCaps) Type() string {
+	return TypeMsgGovSetLsmCaps
+}
+
+// MsgGovAddValidatorDenyList
+
+func (msg MsgGovAddValidatorDenyList) Route() string {
+	return RouterKey
+}
+
+func (msg MsgGovAddValidatorDenyList) Type() string {
+	return TypeMsgGovAddValidatorDenyList
+}
+
+// MsgGovRemoveValidatorDenyList
+
+func (msg MsgGovRemoveValidatorDenyList) Route() string {
+	return RouterKey
+}
+
+func (msg MsgGovRemoveValidatorDenyList) Type() string {
+	return TypeMsgGovRemoveValidatorDenyList
+}
+
+// MsgRequestRedemption
+
+func (msg MsgRequestRedemption) Route() string {
+	return RouterKey
+}
+
+func (msg MsgRequestRedemption) Type() string {
+	return TypeMsgRequestRedemption
+}
+
+// MsgCancelRedemption
+
+func (msg MsgCancelRedemption) Route() string {
+	return RouterKey
+}
+
+func (msg MsgCancelRedemption) Type() string {
+	return TypeMsgCancelRedemption
+}
+
+// MsgRequeueRedemption
+
+func (msg MsgRequeueRedemption) Route() string {
+	return RouterKey
+}
+
+func (msg MsgRequeueRedemption) Type() string {
+	return TypeMsgRequeueRedemption
+}
+
+// MsgUpdateRedemption
+
+func (msg MsgUpdateRedemption) Route() string {
+	return RouterKey
+}
+
+func (msg MsgUpdateRedemption) Type() string {
+	return TypeMsgUpdateRedemption
 }
