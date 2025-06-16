@@ -7,7 +7,7 @@ require (
 	cosmossdk.io/errors v1.0.2
 	cosmossdk.io/math v1.5.3
 	github.com/armon/go-metrics v0.4.1
-	github.com/celestiaorg/go-square/v2 v2.2.0
+	github.com/celestiaorg/go-square/v2 v2.3.0
 	github.com/celestiaorg/nmt v0.24.0
 	github.com/client9/misspell v0.3.4
 	github.com/cometbft/cometbft v0.37.15
