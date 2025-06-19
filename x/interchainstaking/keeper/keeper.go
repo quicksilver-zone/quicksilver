@@ -36,7 +36,6 @@ import (
 	interchainquerykeeper "github.com/quicksilver-zone/quicksilver/x/interchainquery/keeper"
 	icqtypes "github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
 	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
-	lsmstakingtypes "github.com/quicksilver-zone/quicksilver/x/lsmtypes"
 )
 
 type TxSubmitFn func(ctx sdk.Context, k *Keeper, msgs []sdk.Msg, account *types.ICAAccount, memo string, messagesPerTx int64) error
@@ -296,12 +295,12 @@ func (k *Keeper) SetValidatorsForZone(ctx sdk.Context, data []byte, icqQuery icq
 		case val.Status != validator.Status.String():
 			k.Logger(ctx).Debug("bond status change; fetching proof", "valoper", validator.OperatorAddress, "from", val.Status, "to", validator.Status.String())
 			toQuery = true
-		case !validator.LiquidShares.IsNil() && !val.LiquidShares.Equal(validator.LiquidShares):
-			k.Logger(ctx).Debug("liquid shares amount change; fetching proof", "valoper", validator.OperatorAddress, "from", val.LiquidShares, "to", validator.LiquidShares)
-			toQuery = true
-		case !validator.ValidatorBondShares.IsNil() && !val.ValidatorBondShares.Equal(validator.ValidatorBondShares):
-			k.Logger(ctx).Debug("Validator bond shares amount change; fetching proof", "valoper", validator.OperatorAddress, "from", val.ValidatorBondShares, "to", validator.ValidatorBondShares)
-			toQuery = true
+			// case !validator.LiquidShares.IsNil() && !val.LiquidShares.Equal(validator.LiquidShares):
+			// 	k.Logger(ctx).Debug("liquid shares amount change; fetching proof", "valoper", validator.OperatorAddress, "from", val.LiquidShares, "to", validator.LiquidShares)
+			// 	toQuery = true
+			// case !validator.ValidatorBondShares.IsNil() && !val.ValidatorBondShares.Equal(validator.ValidatorBondShares):
+			// 	k.Logger(ctx).Debug("Validator bond shares amount change; fetching proof", "valoper", validator.OperatorAddress, "from", val.ValidatorBondShares, "to", validator.ValidatorBondShares)
+			// 	toQuery = true
 		}
 
 		if toQuery {
@@ -446,15 +445,15 @@ func (k *Keeper) SetValidatorForZone(ctx sdk.Context, zone *types.Zone, data []b
 			val.Status = validator.Status.String()
 		}
 
-		if !validator.ValidatorBondShares.IsNil() && !val.ValidatorBondShares.Equal(validator.ValidatorBondShares) {
-			k.Logger(ctx).Info("Validator bonded shares change; updating", "valoper", validator.OperatorAddress, "oldShares", val.ValidatorBondShares, "newShares", validator.ValidatorBondShares)
-			val.ValidatorBondShares = validator.ValidatorBondShares
-		}
+		// if !validator.ValidatorBondShares.IsNil() && !val.ValidatorBondShares.Equal(validator.ValidatorBondShares) {
+		// 	k.Logger(ctx).Info("Validator bonded shares change; updating", "valoper", validator.OperatorAddress, "oldShares", val.ValidatorBondShares, "newShares", validator.ValidatorBondShares)
+		// 	val.ValidatorBondShares = validator.ValidatorBondShares
+		// }
 
-		if !validator.LiquidShares.IsNil() && !val.LiquidShares.Equal(validator.LiquidShares) {
-			k.Logger(ctx).Info("Validator liquid shares change; updating", "valoper", validator.OperatorAddress, "oldShares", val.LiquidShares, "newShares", validator.LiquidShares)
-			val.LiquidShares = validator.LiquidShares
-		}
+		// if !validator.LiquidShares.IsNil() && !val.LiquidShares.Equal(validator.LiquidShares) {
+		// 	k.Logger(ctx).Info("Validator liquid shares change; updating", "valoper", validator.OperatorAddress, "oldShares", val.LiquidShares, "newShares", validator.LiquidShares)
+		// 	val.LiquidShares = validator.LiquidShares
+		// }
 
 		if err := k.SetValidator(ctx, zone.ChainId, val); err != nil {
 			return err
@@ -595,7 +594,7 @@ func (k *Keeper) EmitValSetQuery(ctx sdk.Context, connectionID, chainID string, 
 	return nil
 }
 
-func (k *Keeper) EmitValidatorQuery(ctx sdk.Context, connectionID, chainID string, validator lsmstakingtypes.Validator) error {
+func (k *Keeper) EmitValidatorQuery(ctx sdk.Context, connectionID, chainID string, validator stakingtypes.Validator) error {
 	_, addr, err := bech32.DecodeAndConvert(validator.OperatorAddress)
 	if err != nil {
 		return fmt.Errorf("EmitValidatorQuery failed to decode validator.OperatorAddress: %q got error: %w",
@@ -640,7 +639,7 @@ func (k *Keeper) EmitDepositIntervalQuery(ctx sdk.Context, zone *types.Zone) {
 	)
 }
 
-func (k *Keeper) EmitSigningInfoQuery(ctx sdk.Context, connectionID, chainID string, validator lsmstakingtypes.Validator) error {
+func (k *Keeper) EmitSigningInfoQuery(ctx sdk.Context, connectionID, chainID string, validator stakingtypes.Validator) error {
 	consAddress, err := validator.GetConsAddr()
 	if err != nil {
 		return err
@@ -811,8 +810,8 @@ func (k *Keeper) Rebalance(ctx sdk.Context, zone *types.Zone, epochNumber int64)
 }
 
 // UnmarshalValidatorsResponse attempts to umarshal a byte slice into a QueryValidatorsResponse.
-func (k *Keeper) UnmarshalValidatorsResponse(data []byte) (lsmstakingtypes.QueryValidatorsResponse, error) {
-	validatorsRes := lsmstakingtypes.QueryValidatorsResponse{}
+func (k *Keeper) UnmarshalValidatorsResponse(data []byte) (stakingtypes.QueryValidatorsResponse, error) {
+	validatorsRes := stakingtypes.QueryValidatorsResponse{}
 	if len(data) == 0 {
 		return validatorsRes, errors.New("attempted to unmarshal zero length byte slice (8)")
 	}
@@ -836,8 +835,8 @@ func (k *Keeper) UnmarshalValidatorsRequest(data []byte) (stakingtypes.QueryVali
 }
 
 // UnmarshalValidator attempts to umarshal  a byte slice into a Validator.
-func (k *Keeper) UnmarshalValidator(data []byte) (lsmstakingtypes.Validator, error) {
-	validator := lsmstakingtypes.Validator{}
+func (k *Keeper) UnmarshalValidator(data []byte) (stakingtypes.Validator, error) {
+	validator := stakingtypes.Validator{}
 	if len(data) == 0 {
 		return validator, errors.New("attempted to unmarshal zero length byte slice (9)")
 	}
