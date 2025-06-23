@@ -8,8 +8,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 
+	lsmstakingtypes "github.com/quicksilver-zone/quicksilver/third-party-chains/gaia-types/liquid/types"
 	"github.com/quicksilver-zone/quicksilver/utils/proofs"
-	lsmstakingtypes "github.com/quicksilver-zone/quicksilver/x/lsmtypes"
 )
 
 var (
