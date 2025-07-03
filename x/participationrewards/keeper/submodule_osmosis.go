@@ -100,7 +100,7 @@ func (*OsmosisModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.MsgSu
 			poolDenom, err := utils.DenomFromRequestKey(proof.Key, addr)
 			if err != nil {
 				// check for mapped address for this user from SrcZone.
-				mappedAddr, found := k.icsKeeper.GetLocalAddressMap(ctx, addr, msg.SrcZone)
+				mappedAddr, found := k.icsKeeper.GetRemoteAddressMap(ctx, addr, msg.SrcZone)
 				if found {
 					poolDenom, err = utils.DenomFromRequestKey(proof.Key, mappedAddr)
 					if err != nil {

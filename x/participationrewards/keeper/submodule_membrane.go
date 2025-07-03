@@ -8,9 +8,10 @@ import (
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/bech32"
 
+	config "github.com/quicksilver-zone/quicksilver/cmd/config"
 	"github.com/quicksilver-zone/quicksilver/utils"
+	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	"github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 )
 
@@ -37,6 +38,11 @@ func (*MembraneModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.MsgS
 		return sdk.ZeroInt(), err
 	}
 
+	paramsContractAddr, err := addressutils.AccAddressFromBech32(paramsData.ContractAddress, "osmo")
+	if err != nil {
+		return sdk.ZeroInt(), errors.New("membrane contract address is not valid")
+	}
+
 	osmosisParams, found := k.GetProtocolData(ctx, types.ProtocolDataTypeOsmosisParams, types.OsmosisParamsKey)
 	if !found {
 		k.Logger(ctx).Error("unable to query osmosisparams in MembraneModule")
@@ -58,7 +64,7 @@ func (*MembraneModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.MsgS
 		return sdk.ZeroInt(), fmt.Errorf("unable to find registered zone for chain id: %s", msg.Zone)
 	}
 
-	_, addr, err := bech32.DecodeAndConvert(msg.UserAddress)
+	submitAddress, err := addressutils.AccAddressFromBech32(msg.UserAddress, config.Bech32Prefix)
 	if err != nil {
 		return sdk.ZeroInt(), err
 	}
@@ -82,40 +88,27 @@ func (*MembraneModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.MsgS
 			return sdk.ZeroInt(), err
 		}
 
-		if !contractAddr.Equals(sdk.AccAddress(paramsData.ContractAddress)) {
+		if !contractAddr.Equals(paramsContractAddr) {
 			return sdk.ZeroInt(), errors.New("not a valid membrane contract address")
-		}
-
-		if len(parts) != 2 {
-			return sdk.ZeroInt(), errors.New("not a key length for membrane claims")
 		}
 
 		if string(parts[0]) != "positions" {
 			return sdk.ZeroInt(), errors.New("not a valid key for membrane claims")
 		}
 
-		if sdk.AccAddress(parts[1]).Equals(sdk.AccAddress(addr)) {
-			mappedAddr, found := k.icsKeeper.GetLocalAddressMap(ctx, addr, msg.SrcZone)
-			if found {
-				if sdk.AccAddress(parts[1]).Equals(mappedAddr) {
-					return sdk.ZeroInt(), errors.New("not a valid key for submitting user")
-				}
-			} else {
-				return sdk.ZeroInt(), errors.New("not a valid key for submitting user (mapped address not found)")
-			}
+		userBytes, err := addressutils.AccAddressFromBech32(string(parts[1]), "osmo")
+		if err != nil {
+			return sdk.ZeroInt(), errors.New("user address is not valid")
 		}
 
-		denom, err := utils.DenomFromRequestKey(proof.Key, addr)
-		if err != nil {
-			// check for mapped address for this user from SrcZone.
-			mappedAddr, found := k.icsKeeper.GetLocalAddressMap(ctx, addr, msg.SrcZone)
+		if !userBytes.Equals(sdk.AccAddress(submitAddress)) {
+			mappedAddr, found := k.icsKeeper.GetRemoteAddressMap(ctx, submitAddress, msg.SrcZone)
 			if found {
-				denom, err = utils.DenomFromRequestKey(proof.Key, mappedAddr)
-				if err != nil {
-					return sdk.ZeroInt(), errors.New("not a valid proof for submitting user or mapped account")
-				}
+				if !sdk.AccAddress(userBytes).Equals(mappedAddr) {
+					return sdk.ZeroInt(), errors.New("not a valid key for submitting user (mapped address does not match)")
+				} // else, fall through.
 			} else {
-				return sdk.ZeroInt(), errors.New("not a valid proof for submitting user")
+				return sdk.ZeroInt(), errors.New("not a valid key for submitting user (mapped address not found)")
 			}
 		}
 
@@ -138,7 +131,7 @@ func (*MembraneModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.MsgS
 				if err != nil {
 					return sdk.ZeroInt(), err
 				}
-				if denomData.QAssetDenom == zone.LocalDenom && denomData.IbcDenom == denom {
+				if denomData.QAssetDenom == zone.LocalDenom && denomData.IbcDenom == collateralAsset.Asset.Info.NativeToken.Denom {
 					amount = amount.Add(collateralAsset.Asset.Amount)
 				}
 

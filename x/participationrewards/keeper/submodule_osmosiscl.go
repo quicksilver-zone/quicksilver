@@ -104,7 +104,7 @@ func (*OsmosisClModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.Msg
 		}
 
 		if !bytes.Equal(lockupOwner, addr) {
-			mappedAddr, found := k.icsKeeper.GetLocalAddressMap(ctx, addr, msg.SrcZone)
+			mappedAddr, found := k.icsKeeper.GetRemoteAddressMap(ctx, addr, msg.SrcZone)
 			if !found || !bytes.Equal(lockupOwner, mappedAddr) {
 				return math.ZeroInt(), errors.New("not a valid proof for submitting user or mapped account")
 			}
