@@ -16,7 +16,6 @@ import (
 // As we are unable to determine the length of the final key, we must pass in the
 // number of parts we expect out (including the final key).
 func DecodeCwNamespacedKey(key []byte, numParts int) (sdk.AccAddress, [][]byte, error) {
-
 	if len(key) < 37 { // prefix (1 byte) + 32 byte address + 1 byte null terminator + len (1 byte) + min 1 byte namespace + min 1 byte key
 		return nil, nil, errors.New("invalid key length")
 	}
