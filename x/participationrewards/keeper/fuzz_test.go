@@ -38,7 +38,6 @@ func FuzzCalcUserScores(f *testing.F) {
 
 	// 2. Run the fuzzers.
 	f.Fuzz(func(t *testing.T, input []byte) {
-
 		ste.SetT(t)
 		ste.SetS(ste)
 		ste.SetupTest()
