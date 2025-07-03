@@ -25,5 +25,5 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&Pool{},
 	)
 
-	//msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
+	// msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }

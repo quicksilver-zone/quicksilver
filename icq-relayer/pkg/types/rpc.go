@@ -26,8 +26,10 @@ type RPCClientI interface {
 	rpcclient.StatusClient
 }
 
-var _ RPCClientI = &RPCClient{}
-var _ RPCClientI = &rpchttp.HTTP{}
+var (
+	_ RPCClientI = &RPCClient{}
+	_ RPCClientI = &rpchttp.HTTP{}
+)
 
 // Create timeout enabled http client
 func NewWithTimeout(remote string, timeout uint) (*RPCClient, error) {
@@ -77,7 +79,8 @@ func (c *RPCClient) ABCIQueryWithOptions(
 	ctx context.Context,
 	path string,
 	data bytes.HexBytes,
-	opts rpcclient.ABCIQueryOptions) (*ctypes.ResultABCIQuery, error) {
+	opts rpcclient.ABCIQueryOptions,
+) (*ctypes.ResultABCIQuery, error) {
 	result := new(ctypes.ResultABCIQuery)
 	_, err := c.caller.Call(ctx, "abci_query",
 		map[string]interface{}{"path": path, "data": data, "height": opts.Height, "prove": opts.Prove},
@@ -322,7 +325,6 @@ func (c *RPCClient) TxSearch(
 	perPage *int,
 	orderBy string,
 ) (*ctypes.ResultTxSearch, error) {
-
 	result := new(ctypes.ResultTxSearch)
 	params := map[string]interface{}{
 		"query":    query,
@@ -351,7 +353,6 @@ func (c *RPCClient) BlockSearch(
 	page, perPage *int,
 	orderBy string,
 ) (*ctypes.ResultBlockSearch, error) {
-
 	result := new(ctypes.ResultBlockSearch)
 	params := map[string]interface{}{
 		"query":    query,

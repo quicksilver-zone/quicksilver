@@ -17,5 +17,5 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		(*CFMMPoolI)(nil),
 	)
 
-	//msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
+	// msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }

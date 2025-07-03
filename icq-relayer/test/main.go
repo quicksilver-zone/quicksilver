@@ -33,7 +33,9 @@ func DistributeConfigs(N, M, redundancy, seed int) map[int][]int {
 
 func CheckDistributions(dist map[int][]int) bool {
 	for i := range maps.Values(dist) {
-		if !IsUniqueSliceElements(i) { return false; }
+		if !IsUniqueSliceElements(i) {
+			return false
+		}
 	}
 	return true
 }
@@ -50,22 +52,23 @@ func IsUniqueSliceElements[T comparable](inputSlice []T) bool {
 }
 
 func main() {
-	N := 10  // Number of configurations
-	M := 4   // Number of nodes
+	N := 10         // Number of configurations
+	M := 4          // Number of nodes
 	redundancy := 3 // Each config appears exactly `redundancy` times
-	seed := 0 // Deterministic seed for reproducibility
+	seed := 0       // Deterministic seed for reproducibility
 
 	var result map[int][]int
 	for true {
 		seed = seed + 1
 		result = DistributeConfigs(N, M, redundancy, seed)
 		check := CheckDistributions(result)
-		if check { break }
+		if check {
+			break
+		}
 	}
 
-	fmt.Printf("Took %d iterations\n\n", seed) 
+	fmt.Printf("Took %d iterations\n\n", seed)
 	for node, configs := range result {
 		fmt.Printf("Node %d will have configs: %v (Total: %d)\n", node, configs, len(configs))
 	}
 }
-

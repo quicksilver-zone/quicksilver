@@ -9,7 +9,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	config "github.com/quicksilver-zone/quicksilver/cmd/config"
+	"github.com/quicksilver-zone/quicksilver/cmd/config"
 	"github.com/quicksilver-zone/quicksilver/utils"
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	"github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
@@ -23,9 +23,6 @@ func (*MembraneModule) Hooks(_ sdk.Context, _ *Keeper) {
 }
 
 func (*MembraneModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.MsgSubmitClaim) (math.Int, error) {
-	// message
-	// check denom is valid vs allowed
-
 	params, found := k.GetProtocolData(ctx, types.ProtocolDataTypeMembraneParams, types.MembraneParamsKey)
 	if !found {
 		k.Logger(ctx).Error("unable to query membraneparams in MembraneModule")
@@ -101,10 +98,10 @@ func (*MembraneModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.MsgS
 			return sdk.ZeroInt(), errors.New("user address is not valid")
 		}
 
-		if !userBytes.Equals(sdk.AccAddress(submitAddress)) {
+		if !userBytes.Equals(submitAddress) {
 			mappedAddr, found := k.icsKeeper.GetRemoteAddressMap(ctx, submitAddress, msg.SrcZone)
 			if found {
-				if !sdk.AccAddress(userBytes).Equals(mappedAddr) {
+				if !userBytes.Equals(mappedAddr) {
 					return sdk.ZeroInt(), errors.New("not a valid key for submitting user (mapped address does not match)")
 				} // else, fall through.
 			} else {
