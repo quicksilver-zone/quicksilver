@@ -77,4 +77,5 @@ type InterchainStakingKeeper interface {
 	GetValidators(ctx sdk.Context, chainID string) []interchainstakingtypes.Validator
 	SetValidator(ctx sdk.Context, chainID string, val interchainstakingtypes.Validator) error
 	GetLocalAddressMap(ctx sdk.Context, remoteAddress sdk.AccAddress, chainID string) (sdk.AccAddress, bool)
+	GetRemoteAddressMap(ctx sdk.Context, localAddress sdk.AccAddress, chainID string) (sdk.AccAddress, bool)
 }

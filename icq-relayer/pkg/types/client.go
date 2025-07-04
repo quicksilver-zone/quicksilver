@@ -1,19 +1,18 @@
 package types
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"log"
+	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"time"
-
-	"bytes"
-	"encoding/json"
-	"io"
-	"net/http"
-	"strconv"
 
 	"cosmossdk.io/math"
 
@@ -122,7 +121,6 @@ func (r *ReadOnlyChainConfig) Init(codec *codec.ProtoCodec, cache *ristretto.Cac
 }
 
 func (r *ReadOnlyChainConfig) LightBlock(ctx context.Context, height int64) (*tmtypes.LightBlock, error) {
-
 	ctx, cancel := context.WithTimeout(ctx, 2*time.Second)
 	defer cancel()
 	lightBlock, err := r.LightProvider.LightBlock(ctx, height)
@@ -338,8 +336,10 @@ type TxClient interface {
 	SignAndBroadcastMsg(ctx context.Context, cliContext *client.Context, exec []sdktypes.Msg, memo string) (string, uint32, error)
 }
 
-var _ TxClient = &ChainConfig{}
-var _ QueryClient = &ChainConfig{}
+var (
+	_ TxClient    = &ChainConfig{}
+	_ QueryClient = &ChainConfig{}
+)
 
 func SetSDKConfigPrefix(prefix string) {
 	configuration := sdktypes.GetConfig()
@@ -418,7 +418,6 @@ func (r *ReadOnlyChainConfig) RunABCIQuery(ctx context.Context, method string, r
 	// metrics: query duration?
 	var abciRes abcitypes.ResponseQuery
 	if err := retry.Do(func() error {
-
 		opts := rpcclient.ABCIQueryOptions{
 			Height: height,
 			Prove:  prove,
@@ -557,13 +556,13 @@ func (c *ChainConfig) SignAndBroadcastMsg(ctx context.Context, cliContext *clien
 
 	switch {
 	case err != nil:
-		//log.Err(err).Msg("Transaction error")
+		// log.Err(err).Msg("Transaction error")
 		return "", 65536, err
 	case txRes.TxResponse.Code > 0:
-		//log.Error().Msgf("Transaction failed: %v", res.TxResponse)
+		// log.Error().Msgf("Transaction failed: %v", res.TxResponse)
 		return "err", res.TxResponse.Code, fmt.Errorf("transaction failed: %v", res.TxResponse)
 	default:
-		//log.Info().Msgf("Transaction broadcast successfully: %s", res.TxResponse.TxHash)
+		// log.Info().Msgf("Transaction broadcast successfully: %s", res.TxResponse.TxHash)
 		return txRes.TxResponse.TxHash, txRes.TxResponse.Code, nil
 	}
 }

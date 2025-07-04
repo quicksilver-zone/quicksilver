@@ -14,8 +14,8 @@ enum ClaimType {
   ClaimTypeUndefined = 0;
   ClaimTypeLiquidToken = 1;
   ClaimTypeOsmosisPool = 2;
-  ClaimTypeCrescentPool = 3 [deprecated = true];
-  ClaimTypeSifchainPool = 4 [deprecated = true];
+  ClaimTypeMembrane = 3;
+  ClaimTypeSifchainPool = 4 [ deprecated = true ];
   ClaimTypeUmeeToken = 5;
   ClaimTypeOsmosisCLPool = 6;
 }
@@ -30,11 +30,11 @@ message Params {
 message Claim {
   option (gogoproto.goproto_getters) = false;
 
-  string user_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string user_address = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
   string chain_id = 2;
   ClaimType module = 3;
   string source_chain_id = 4;
-  uint64 _amount = 5 [deprecated = true];
+  uint64 _amount = 5 [ deprecated = true ];
   string amount = 6 [
     (cosmos_proto.scalar) = "cosmos.Int",
     (gogoproto.customtype) = "cosmossdk.io/math.Int",
@@ -47,9 +47,9 @@ message Proof {
   option (gogoproto.equal) = false;
   option (gogoproto.goproto_getters) = false;
 
-  bytes key = 1 [json_name = "key"];
-  bytes data = 2 [json_name = "data"];
-  tendermint.crypto.ProofOps proof_ops = 3 [json_name = "proof_ops"];
-  int64 height = 4 [json_name = "height"];
-  string proof_type = 5 [json_name = "proof_type"];
+  bytes key = 1 [ json_name = "key" ];
+  bytes data = 2 [ json_name = "data" ];
+  tendermint.crypto.ProofOps proof_ops = 3 [ json_name = "proof_ops" ];
+  int64 height = 4 [ json_name = "height" ];
+  string proof_type = 5 [ json_name = "proof_type" ];
 }

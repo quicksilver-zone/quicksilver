@@ -69,5 +69,5 @@ func init() {
 		panic(err)
 	}
 
-	//rootCmd.AddCommand(keysCmd())
+	// rootCmd.AddCommand(keysCmd())
 }

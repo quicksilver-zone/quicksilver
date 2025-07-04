@@ -15,5 +15,5 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		(*ConcentratedPoolExtension)(nil),
 	)
 
-	//msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
+	// msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }

@@ -4,15 +4,14 @@ Copyright © 2022 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	"fmt"
-	"path/filepath"
-
-	"github.com/spf13/cobra"
-
 	"context"
+	"fmt"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
+
+	"github.com/spf13/cobra"
 
 	"github.com/BurntSushi/toml"
 	rpchttp "github.com/cometbft/cometbft/rpc/client/http"

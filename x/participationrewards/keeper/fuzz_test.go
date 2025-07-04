@@ -6,8 +6,6 @@ import (
 	"path/filepath"
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 	"github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 )
@@ -23,7 +21,6 @@ func FuzzCalcUserScores(f *testing.F) {
 	}
 
 	type corpusData struct {
-		Ctx       sdk.Context     `json:"ctx"`
 		Zone      *icstypes.Zone  `json:"zone"`
 		ZoneScore types.ZoneScore `json:"zs"`
 	}
@@ -38,16 +35,19 @@ func FuzzCalcUserScores(f *testing.F) {
 	}
 
 	ste := new(KeeperTestSuite)
-	ste.SetupTest()
-	appA := ste.GetQuicksilverApp(ste.chainA)
 
 	// 2. Run the fuzzers.
 	f.Fuzz(func(t *testing.T, input []byte) {
+		ste.SetT(t)
+		ste.SetS(ste)
+		ste.SetupTest()
+		appA := ste.GetQuicksilverApp(ste.chainA)
+
 		cj := new(corpusData)
 		if err := json.Unmarshal(input, cj); err != nil {
 			t.Fatal(err)
 		}
 
-		_ = appA.ParticipationRewardsKeeper.CalcUserValidatorSelectionAllocations(cj.Ctx, cj.Zone, cj.ZoneScore)
+		_ = appA.ParticipationRewardsKeeper.CalcUserValidatorSelectionAllocations(ste.chainA.GetContext(), cj.Zone, cj.ZoneScore)
 	})
 }

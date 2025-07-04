@@ -206,7 +206,7 @@ func (UmeeModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.MsgSubmit
 
 		udenom, err := getDenomFromProof(proof, addr)
 		if err != nil {
-			mappedAddr, found := k.icsKeeper.GetLocalAddressMap(ctx, addr, msg.SrcZone)
+			mappedAddr, found := k.icsKeeper.GetRemoteAddressMap(ctx, addr, msg.SrcZone)
 			if found {
 				udenom, err = getDenomFromProof(proof, mappedAddr)
 				if err != nil {

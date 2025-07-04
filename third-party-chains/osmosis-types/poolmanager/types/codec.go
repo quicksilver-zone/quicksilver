@@ -15,5 +15,5 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 }
 
 func RegisterInterfaces(registry types.InterfaceRegistry) {
-	//msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
+	// msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }

@@ -27,7 +27,7 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 		&Pool{},
 	)
 
-	//msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
+	// msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }
 
 const PoolTypeName string = "Stableswap"
