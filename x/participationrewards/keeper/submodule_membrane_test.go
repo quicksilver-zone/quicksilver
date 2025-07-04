@@ -13,7 +13,7 @@ import (
 	"github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 )
 
-func (suite *KeeperTestSuite) Test_ValidateClaim() {
+func (suite *KeeperTestSuite) Test_Membrane_ValidateClaim() {
 	cases := []struct {
 		name          string
 		submitAddress string
@@ -128,7 +128,7 @@ func (suite *KeeperTestSuite) Test_ValidateClaim() {
 	}
 }
 
-func (suite *KeeperTestSuite) Test_ValidateClaim_IgnoreDoubleClaim() {
+func (suite *KeeperTestSuite) Test_Membrane_ValidateClaim_IgnoreDoubleClaim() {
 	suite.Run("double_claim", func() {
 		suite.SetupTest()
 
@@ -207,7 +207,7 @@ func (suite *KeeperTestSuite) Test_ValidateClaim_IgnoreDoubleClaim() {
 	})
 }
 
-func (suite *KeeperTestSuite) Test_ValidateClaim_FailContractMismatch() {
+func (suite *KeeperTestSuite) Test_Membrane_ValidateClaim_FailContractMismatch() {
 	suite.Run("fail_contract_mismatch", func() {
 		suite.SetupTest()
 
@@ -279,7 +279,7 @@ func (suite *KeeperTestSuite) Test_ValidateClaim_FailContractMismatch() {
 	})
 }
 
-func (suite *KeeperTestSuite) Test_ValidateClaim_IgnoreUnclaimableDenom() {
+func (suite *KeeperTestSuite) Test_Membrane_ValidateClaim_IgnoreUnclaimableDenom() {
 	suite.Run("ignore_unclaimable_denom", func() {
 		suite.SetupTest()
 
