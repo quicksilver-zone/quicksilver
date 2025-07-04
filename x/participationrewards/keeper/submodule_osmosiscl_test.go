@@ -228,6 +228,13 @@ func (suite *KeeperTestSuite) Test_OsmosisCL_ValidateClaim_IgnoreDoubleClaim() {
 					Height:    27966503,
 					ProofType: cmtypes.ClaimType_name[int32(cmtypes.ClaimTypeOsmosisCLPool)],
 				},
+				{
+					Key:       key,
+					Data:      data,
+					ProofOps:  &proofOps,
+					Height:    27966503,
+					ProofType: cmtypes.ClaimType_name[int32(cmtypes.ClaimTypeOsmosisCLPool)],
+				},
 			},
 		}
 
