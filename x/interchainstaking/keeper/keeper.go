@@ -253,7 +253,7 @@ func (k *Keeper) SetValidatorsForZone(ctx sdk.Context, data []byte, icqQuery icq
 	zone, found := k.GetZone(ctx, icqQuery.ChainId)
 	if !found {
 		k.Logger(ctx).Error("unable to find zone", "zone", icqQuery.ChainId)
-		return fmt.Errorf("unable to find zone")
+		return errors.New("unable to find zone")
 	}
 
 	if validatorsRes.Pagination != nil && !bytes.Equal(validatorsRes.Pagination.NextKey, []byte{}) {
