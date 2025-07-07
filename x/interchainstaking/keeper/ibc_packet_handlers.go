@@ -147,6 +147,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 			continue
 		case "/cosmos.staking.v1beta1.MsgRedeemTokensForShares":
 		case "/cosmos.lsmstaking.v1beta1.MsgRedeemTokensForShares":
+		case "/gaia.liquid.v1beta1.MsgRedeemTokensForShares":
 			if !success {
 				if err := k.HandleFailedRedeemTokens(ctx, msg.Msg, packetData.Memo); err != nil {
 					return err
@@ -169,6 +170,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 			continue
 		case "/cosmos.staking.v1beta1.MsgTokenizeShares":
 		case "/cosmos.lsmstaking.v1beta1.MsgTokenizeShares":
+		case "/gaia.liquid.v1beta1.MsgTokenizeShares":
 			if !success {
 				// We can safely ignore this, as this can reasonably fail, and we cater for this in the flush logic.
 				return nil
@@ -607,11 +609,19 @@ func (k *Keeper) HandleTokenizedShares(ctx sdk.Context, msg sdk.Msg, sharesAmoun
 		return errors.New("no matching withdrawal record found")
 	}
 
+	// Try to find a matching distribution
+	matchFound := false
 	for _, dist := range withdrawalRecord.Distribution {
 		if equalLsmCoin(dist.Valoper, dist.Amount, sharesAmount) {
 			withdrawalRecord.Amount = withdrawalRecord.Amount.Add(sharesAmount)
+			matchFound = true
 			break
 		}
+	}
+
+	// If no match found, add the shares amount directly
+	if !matchFound {
+		withdrawalRecord.Amount = withdrawalRecord.Amount.Add(sharesAmount)
 	}
 
 	err = k.SetWithdrawalRecord(ctx, withdrawalRecord)
@@ -625,6 +635,11 @@ func (k *Keeper) HandleTokenizedShares(ctx sdk.Context, msg sdk.Msg, sharesAmoun
 		k.Logger(ctx).Info("Found matching withdrawal; marking for send")
 		k.DeleteWithdrawalRecord(ctx, zone.ChainId, memo, types.WithdrawStatusTokenize)
 		withdrawalRecord.Status = types.WithdrawStatusSend
+		// Ensure the Amount field is properly set when creating the new record
+		// The Amount field should contain the tokenized shares that were received
+		if len(withdrawalRecord.Amount) == 0 {
+			withdrawalRecord.Amount = sdk.Coins{sharesAmount}
+		}
 		err = k.SetWithdrawalRecord(ctx, withdrawalRecord)
 		if err != nil {
 			return err

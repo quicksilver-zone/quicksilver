@@ -30,6 +30,7 @@ import (
 	ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
 	ibctmtypes "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
 
+	lsmstakingtypes "github.com/quicksilver-zone/quicksilver/third-party-chains/gaia-types/liquid/types"
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	claimsmanagertypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
 	epochskeeper "github.com/quicksilver-zone/quicksilver/x/epochs/keeper"
@@ -249,6 +250,11 @@ func (k *Keeper) SetValidatorsForZone(ctx sdk.Context, data []byte, icqQuery icq
 		k.Logger(ctx).Error("unable to unmarshal validators info for zone", "zone", icqQuery.ChainId, "err", err)
 		return err
 	}
+	zone, found := k.GetZone(ctx, icqQuery.ChainId)
+	if !found {
+		k.Logger(ctx).Error("unable to find zone", "zone", icqQuery.ChainId)
+		return fmt.Errorf("unable to find zone")
+	}
 
 	if validatorsRes.Pagination != nil && !bytes.Equal(validatorsRes.Pagination.NextKey, []byte{}) {
 		validatorsReq, err := k.UnmarshalValidatorsRequest(icqQuery.Request)
@@ -295,12 +301,6 @@ func (k *Keeper) SetValidatorsForZone(ctx sdk.Context, data []byte, icqQuery icq
 		case val.Status != validator.Status.String():
 			k.Logger(ctx).Debug("bond status change; fetching proof", "valoper", validator.OperatorAddress, "from", val.Status, "to", validator.Status.String())
 			toQuery = true
-			// case !validator.LiquidShares.IsNil() && !val.LiquidShares.Equal(validator.LiquidShares):
-			// 	k.Logger(ctx).Debug("liquid shares amount change; fetching proof", "valoper", validator.OperatorAddress, "from", val.LiquidShares, "to", validator.LiquidShares)
-			// 	toQuery = true
-			// case !validator.ValidatorBondShares.IsNil() && !val.ValidatorBondShares.Equal(validator.ValidatorBondShares):
-			// 	k.Logger(ctx).Debug("Validator bond shares amount change; fetching proof", "valoper", validator.OperatorAddress, "from", val.ValidatorBondShares, "to", validator.ValidatorBondShares)
-			// 	toQuery = true
 		}
 
 		if toQuery {
@@ -308,6 +308,11 @@ func (k *Keeper) SetValidatorsForZone(ctx sdk.Context, data []byte, icqQuery icq
 				k.Logger(ctx).Error("EmitValidatorQuery error", "valoper", validator.OperatorAddress, "err", err)
 				return err
 			}
+			if zone.SupportLsm() {
+				// emit liquid validator query
+				k.EmitLiquidValidatorQuery(ctx, icqQuery.ConnectionId, icqQuery.ChainId, addr)
+			}
+
 		}
 	}
 
@@ -635,6 +640,21 @@ func (k *Keeper) EmitDepositIntervalQuery(ctx sdk.Context, zone *types.Zone) {
 		sdk.NewInt(-1),
 		types.ModuleName,
 		"depositinterval",
+		0,
+	)
+}
+
+func (k *Keeper) EmitLiquidValidatorQuery(ctx sdk.Context, connectionID, chainID string, addr sdk.ValAddress) {
+	data := lsmstakingtypes.GetLiquidValidatorKey(addr)
+	k.ICQKeeper.MakeRequest(
+		ctx,
+		connectionID,
+		chainID,
+		"store/liquid/key",
+		data,
+		sdk.NewInt(-1),
+		types.ModuleName,
+		"lsminfo",
 		0,
 	)
 }
