@@ -619,9 +619,10 @@ func (k *Keeper) HandleTokenizedShares(ctx sdk.Context, msg sdk.Msg, sharesAmoun
 		}
 	}
 
-	// If no match found, add the shares amount directly
+	// If no match found, don't update the withdrawal record
 	if !matchFound {
-		withdrawalRecord.Amount = withdrawalRecord.Amount.Add(sharesAmount)
+		k.Logger(ctx).Info("no matching distribution found for tokenized shares", "sharesAmount", sharesAmount)
+		return nil
 	}
 
 	err = k.SetWithdrawalRecord(ctx, withdrawalRecord)
