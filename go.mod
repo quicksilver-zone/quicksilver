@@ -10,12 +10,12 @@ require (
 	github.com/celestiaorg/go-square/v2 v2.3.0
 	github.com/celestiaorg/nmt v0.24.0
 	github.com/client9/misspell v0.3.4
-	github.com/cometbft/cometbft v0.37.15
-	github.com/cometbft/cometbft-db v0.12.0
+	github.com/cometbft/cometbft v0.38.17
+	github.com/cometbft/cometbft-db v0.14.1
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/cosmos-sdk v0.47.17
 	github.com/cosmos/gogoproto v1.7.0
-	github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7 v7.1.3
+	github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7 v7.2.1
 	github.com/cosmos/ibc-go/v7 v7.10.0
 	github.com/cosmos/ics23/go v0.11.0
 	github.com/gogo/protobuf v1.3.3
@@ -70,7 +70,6 @@ require (
 	github.com/Antonboom/nilnil v1.1.0 // indirect
 	github.com/Antonboom/testifylint v1.6.1 // indirect
 	github.com/BurntSushi/toml v1.5.0 // indirect
-	github.com/ChainSafe/go-schnorrkel v1.1.0 // indirect
 	github.com/DataDog/zstd v1.5.6 // indirect
 	github.com/Djarvur/go-err113 v0.1.0 // indirect
 	github.com/GaijinEntertainment/go-exhaustruct/v3 v3.3.1 // indirect
@@ -131,7 +130,6 @@ require (
 	github.com/cosmos/iavl v0.20.1 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.12.4 // indirect
 	github.com/cosmos/rosetta-sdk-go v0.10.0 // indirect
-	github.com/creachadair/taskgroup v0.13.2 // indirect
 	github.com/curioswitch/go-reassign v0.3.0 // indirect
 	github.com/daixiang0/gci v0.13.6 // indirect
 	github.com/danieljoos/wincred v1.2.2 // indirect
@@ -206,8 +204,6 @@ require (
 	github.com/gostaticanalysis/nilerr v0.1.1 // indirect
 	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0 // indirect
 	github.com/gsterjov/go-libsecret v0.0.0-20161001094733-a6f4afe4910c // indirect
-	github.com/gtank/merlin v0.1.1 // indirect
-	github.com/gtank/ristretto255 v0.1.2 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-getter v1.7.8 // indirect
 	github.com/hashicorp/go-immutable-radix v1.3.1 // indirect
@@ -257,7 +253,6 @@ require (
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-runewidth v0.0.16 // indirect
 	github.com/mgechev/revive v1.10.0 // indirect
-	github.com/mimoo/StrobeGo v0.0.0-20220103164710-9a04d6ca976b // indirect
 	github.com/minio/highwayhash v1.0.3 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/go-testing-interface v1.14.1 // indirect
@@ -271,8 +266,8 @@ require (
 	github.com/nishanths/predeclared v0.2.2 // indirect
 	github.com/nunnatsa/ginkgolinter v0.19.1 // indirect
 	github.com/nxadm/tail v1.4.11 // indirect
+	github.com/oasisprotocol/curve25519-voi v0.0.0-20220708102147-0a8a51822cae // indirect
 	github.com/onsi/ginkgo v1.16.5 // indirect
-	github.com/opencontainers/image-spec v1.1.0-rc2 // indirect
 	github.com/opencontainers/runc v1.2.0 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.4 // indirect
 	github.com/petermattis/goid v0.0.0-20240813172612-4fcff4a6cae7 //indirect
@@ -351,7 +346,6 @@ require (
 	go.opentelemetry.io/otel/sdk/metric v1.36.0 // indirect
 	go.opentelemetry.io/otel/trace v1.36.0 // indirect
 	go.uber.org/automaxprocs v1.6.0 // indirect
-	go.uber.org/mock v0.4.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.27.0 // indirect
 	golang.org/x/crypto v0.39.0 // indirect
