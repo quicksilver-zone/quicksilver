@@ -314,7 +314,6 @@ func (appKeepers *AppKeepers) InitKeepers(
 		appKeepers.keys[packetforwardtypes.StoreKey],
 		appKeepers.TransferKeeper,
 		appKeepers.IBCKeeper.ChannelKeeper,
-		appKeepers.DistrKeeper,
 		appKeepers.BankKeeper,
 		appKeepers.IBCKeeper.ChannelKeeper,
 		govAuthority,
@@ -525,7 +524,7 @@ func (*AppKeepers) initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *cod
 	paramsKeeper.Subspace(icacontrollertypes.SubModuleName).WithKeyTable(icacontrollertypes.ParamKeyTable())
 	paramsKeeper.Subspace(icahosttypes.SubModuleName).WithKeyTable(icahosttypes.ParamKeyTable())
 	paramsKeeper.Subspace(ibcexported.ModuleName)
-	paramsKeeper.Subspace(packetforwardtypes.ModuleName).WithKeyTable(packetforwardtypes.ParamKeyTable())
+	paramsKeeper.Subspace(packetforwardtypes.ModuleName)
 	// quicksilver subspaces
 	paramsKeeper.Subspace(claimsmanagertypes.ModuleName).WithKeyTable(claimsmanagertypes.ParamKeyTable())
 	paramsKeeper.Subspace(minttypes.ModuleName).WithKeyTable(minttypes.ParamKeyTable())
