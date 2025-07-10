@@ -348,11 +348,11 @@ func LsmInfoCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Que
 		return fmt.Errorf("no registered zone for chain id: %s", zone.ChainId)
 	}
 
-	k.Logger(ctx).Debug("Validator signing info callback", "zone", zone.ChainId)
+	k.Logger(ctx).Debug("Validator liquid info callback", "zone", zone.ChainId)
 
 	lsmValInfo := lsmtypes.LiquidValidator{}
 	if len(args) == 0 {
-		k.Logger(ctx).Error("unable to find signing info for validator", "query", query.Request)
+		k.Logger(ctx).Error("unable to find liquid info for validator", "query", query.Request)
 		return nil
 	}
 	err := k.cdc.Unmarshal(args, &lsmValInfo)
