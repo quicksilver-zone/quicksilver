@@ -350,7 +350,7 @@ func LsmInfoCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Que
 
 	k.Logger(ctx).Debug("Validator signing info callback", "zone", zone.ChainId)
 
-	lsmValInfo := lsmtypes.QueryLiquidValidatorResponse{}
+	lsmValInfo := lsmtypes.LiquidValidator{}
 	if len(args) == 0 {
 		k.Logger(ctx).Error("unable to find signing info for validator", "query", query.Request)
 		return nil
@@ -360,7 +360,7 @@ func LsmInfoCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Que
 		return err
 	}
 
-	validatorAddr, err := addressutils.ValAddressFromBech32(lsmValInfo.LiquidValidator.OperatorAddress, zone.GetValoperPrefix())
+	validatorAddr, err := addressutils.ValAddressFromBech32(lsmValInfo.OperatorAddress, zone.GetValoperPrefix())
 	if err != nil {
 		return err
 	}
@@ -368,7 +368,7 @@ func LsmInfoCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Que
 	if !found {
 		return fmt.Errorf("validator not found: %s", validatorAddr)
 	}
-	validator.LiquidShares = lsmValInfo.LiquidValidator.LiquidShares
+	validator.LiquidShares = lsmValInfo.LiquidShares
 	if err := k.SetValidator(ctx, query.ChainId, validator); err != nil {
 		return err
 	}

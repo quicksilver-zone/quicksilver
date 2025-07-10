@@ -36,6 +36,7 @@ import (
 	lightclienttypes "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
 
 	"github.com/quicksilver-zone/quicksilver/app"
+	lsmtypes "github.com/quicksilver-zone/quicksilver/third-party-chains/gaia-types/liquid/types"
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	"github.com/quicksilver-zone/quicksilver/utils/ica"
 	"github.com/quicksilver-zone/quicksilver/utils/proofs"
@@ -2159,6 +2160,135 @@ func (suite *KeeperTestSuite) TestSigningInfoCallback() {
 
 			data := tc.malleate(quicksilver, ctx)
 			err := keeper.SigningInfoCallback(quicksilver.InterchainstakingKeeper, ctx, data, tc.query)
+			if tc.expectErr {
+				suite.Error(err)
+			} else {
+				suite.NoError(err)
+				tc.check(quicksilver, ctx)
+			}
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestLsmInfoCallback() {
+	validator := addressutils.GenerateValAddressForTest()
+
+	testCases := []struct {
+		name      string
+		malleate  func(quicksilver *app.Quicksilver, ctx sdk.Context) []byte
+		query     icqtypes.Query
+		expectErr bool
+		check     func(quicksilver *app.Quicksilver, ctx sdk.Context)
+	}{
+		// wrong chain id
+		{
+			name: "wrong chain id",
+			malleate: func(quicksilver *app.Quicksilver, ctx sdk.Context) []byte {
+				info := slashingtypes.ValidatorSigningInfo{}
+				cdc := quicksilver.InterchainstakingKeeper.GetCodec()
+				bz := cdc.MustMarshal(&info)
+				return bz
+			},
+			query: icqtypes.Query{
+				ChainId: "wrong-chain-id",
+			},
+			expectErr: true,
+		},
+		// wrong type args
+		{
+			name: "wrong type args",
+			malleate: func(quicksilver *app.Quicksilver, ctx sdk.Context) []byte {
+				return []byte("wrong type")
+			},
+			query: icqtypes.Query{
+				ChainId: suite.chainB.ChainID,
+			},
+			expectErr: true,
+		},
+		// consaddress decoding err
+		{
+			name: "consaddress decoding err",
+			malleate: func(quicksilver *app.Quicksilver, ctx sdk.Context) []byte {
+				info := lsmtypes.LiquidValidator{
+					OperatorAddress: "wrong bech32 address",
+					LiquidShares:    sdk.NewDec(20000),
+				}
+				cdc := quicksilver.InterchainstakingKeeper.GetCodec()
+				bz := cdc.MustMarshal(&info)
+				return bz
+			},
+			query: icqtypes.Query{
+				ChainId: suite.chainB.ChainID,
+			},
+			expectErr: true,
+		},
+		// error case not found validator
+		{
+			name: "error case not found validator",
+			malleate: func(quicksilver *app.Quicksilver, ctx sdk.Context) []byte {
+				info := lsmtypes.LiquidValidator{
+					OperatorAddress: validator.String(),
+					LiquidShares:    sdk.NewDec(20000),
+				}
+				cdc := quicksilver.InterchainstakingKeeper.GetCodec()
+				bz := cdc.MustMarshal(&info)
+				return bz
+			},
+			query: icqtypes.Query{
+				ChainId: suite.chainB.ChainID,
+			},
+			expectErr: true,
+		},
+		// success case found validator
+		{
+			name: "success case found validator",
+			malleate: func(quicksilver *app.Quicksilver, ctx sdk.Context) []byte {
+				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+				suite.True(found)
+				err := quicksilver.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, icstypes.Validator{
+					ValoperAddress: validator.String(),
+					Jailed:         false,
+					Tombstoned:     false,
+					LiquidShares:   sdk.NewDec(0o0000),
+				})
+				suite.NoError(err)
+
+				info := lsmtypes.LiquidValidator{
+					OperatorAddress: validator.String(),
+					LiquidShares:    sdk.NewDec(20000),
+				}
+				cdc := quicksilver.InterchainstakingKeeper.GetCodec()
+				bz := cdc.MustMarshal(&info)
+				return bz
+			},
+			query: icqtypes.Query{
+				ChainId: suite.chainB.ChainID,
+			},
+			expectErr: false,
+			check: func(quicksilver *app.Quicksilver, ctx sdk.Context) {
+				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+				suite.True(found)
+
+				valAddrBytes, err := addressutils.ValAddressFromBech32(validator.String(), zone.GetValoperPrefix())
+				suite.NoError(err)
+				val, found := quicksilver.InterchainstakingKeeper.GetValidator(ctx, zone.ChainId, valAddrBytes)
+				suite.True(found)
+				suite.Equal(val.LiquidShares, sdk.NewDec(20000))
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", tc.name), func() {
+			suite.SetupTest()
+			suite.setupTestZones()
+
+			quicksilver := suite.GetQuicksilverApp(suite.chainA)
+			quicksilver.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
+			ctx := suite.chainA.GetContext()
+
+			data := tc.malleate(quicksilver, ctx)
+			err := keeper.LsmInfoCallback(quicksilver.InterchainstakingKeeper, ctx, data, tc.query)
 			if tc.expectErr {
 				suite.Error(err)
 			} else {
