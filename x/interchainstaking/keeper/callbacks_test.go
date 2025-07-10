@@ -2249,7 +2249,7 @@ func (suite *KeeperTestSuite) TestLsmInfoCallback() {
 					ValoperAddress: validator.String(),
 					Jailed:         false,
 					Tombstoned:     false,
-					LiquidShares:   sdk.NewDec(0o0000),
+					LiquidShares:   sdk.ZeroDec(),
 				})
 				suite.NoError(err)
 
