@@ -6,10 +6,13 @@ import (
 	"sync"
 	"time"
 
+	"github.com/ingenuity-build/multierror"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	tmhttp "github.com/cometbft/cometbft/rpc/client/http"
 	libclient "github.com/cometbft/cometbft/rpc/jsonrpc/client"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/ingenuity-build/multierror"
+
 	"github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
 	prewards "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 )

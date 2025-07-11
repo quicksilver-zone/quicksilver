@@ -2,6 +2,7 @@ package claims
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strconv"
 	"sync"
@@ -9,14 +10,16 @@ import (
 
 	"cosmossdk.io/math"
 
-	rpcclient "github.com/cometbft/cometbft/rpc/client"
-	tmhttp "github.com/cometbft/cometbft/rpc/client/http"
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+
+	rpcclient "github.com/cometbft/cometbft/rpc/client"
+	tmhttp "github.com/cometbft/cometbft/rpc/client/http"
+
 	osmotypes "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types"
 	osmoclmodelquery "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/concentrated-liquidity/client/queryproto"
 	osmoclmodel "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/concentrated-liquidity/model"
@@ -39,20 +42,22 @@ var (
 )
 
 type (
-	poolMap       map[string][]osmogamm.CFMMPoolI
-	clPoolMap     map[string][]osmocl.ConcentratedPoolExtension
+	poolMap     map[string][]osmogamm.CFMMPoolI
+	clPoolMap   map[string][]osmocl.ConcentratedPoolExtension
+	OsmosisPool struct {
+		Msg    map[string]prewards.MsgSubmitClaim
+		Assets map[string]sdk.Coins
+		Err    error
+	}
+	OsmosisClPool struct {
+		Msg    map[string]prewards.MsgSubmitClaim
+		Assets map[string]sdk.Coins
+		Err    error
+	}
 	OsmosisResult struct {
-		Err         error
-		OsmosisPool struct {
-			Msg    map[string]prewards.MsgSubmitClaim
-			Assets map[string]sdk.Coins
-			Err    error
-		}
-		OsmosisClPool struct {
-			Msg    map[string]prewards.MsgSubmitClaim
-			Assets map[string]sdk.Coins
-			Err    error
-		}
+		Err           error
+		OsmosisPool   OsmosisPool
+		OsmosisClPool OsmosisClPool
 	}
 )
 
@@ -114,7 +119,7 @@ func OsmosisClaim(
 
 		emptyBlockResponse := tmservice.GetLatestBlockResponse{}
 		if blockQueryResponse == emptyBlockResponse {
-			err = fmt.Errorf("unable to query height from Osmosis chain")
+			err = errors.New("unable to query height from Osmosis chain")
 		}
 		if err != nil {
 			return OsmosisResult{Err: err}
@@ -148,7 +153,7 @@ func OsmosisClaim(
 
 		emptyBlockResponse := tmservice.GetBlockByHeightResponse{}
 		if blockQueryResponse == emptyBlockResponse {
-			err = fmt.Errorf("unable to query height from Osmosis chain")
+			err = errors.New("unable to query height from Osmosis chain")
 		}
 		if err != nil {
 			return OsmosisResult{Err: err}
@@ -223,7 +228,8 @@ func GetOsmosisClaim(ctx context.Context, cfg types.Config, cacheMgr *types.Cach
 	assets := map[string]sdk.Coins{}
 
 	for _, pool := range types.GetCache[prewards.OsmosisPoolProtocolData](ctx, cacheMgr) {
-		if ignores.Contains(strconv.Itoa(int(pool.PoolID))) {
+
+		if ignores.Contains(strconv.FormatUint(pool.PoolID, 10)) {
 			continue
 		}
 		if pool.IsIncentivized {
@@ -248,8 +254,8 @@ func GetOsmosisClaim(ctx context.Context, cfg types.Config, cacheMgr *types.Cach
 
 			poolCoinDenom := fmt.Sprintf("gamm/pool/%d", p.GetId())
 
-			accountPrefix := banktypes.CreateAccountBalancesPrefix(addrBytes)
-			lookupKey := append(accountPrefix, []byte(poolCoinDenom)...)
+			lookupKey := banktypes.CreateAccountBalancesPrefix(addrBytes)
+			lookupKey = append(lookupKey, []byte(poolCoinDenom)...)
 
 			if keyCache[string(lookupKey)] {
 				continue
@@ -345,7 +351,9 @@ func GetOsmosisClaim(ctx context.Context, cfg types.Config, cacheMgr *types.Cach
 						assets[chain] = sdk.Coins{}
 					}
 
-					lockupKey := append(KeyPrefixPeriodLock, append(KeyIndexSeparator, sdk.Uint64ToBigEndian(lockup.ID)...)...)
+					lockupKey := KeyPrefixPeriodLock
+					lockupKey = append(lockupKey, KeyIndexSeparator...)
+					lockupKey = append(lockupKey, sdk.Uint64ToBigEndian(lockup.ID)...)
 
 					abciquery, err := client.ABCIQueryWithOptions(
 						ctx,
@@ -373,7 +381,8 @@ func GetOsmosisClaim(ctx context.Context, cfg types.Config, cacheMgr *types.Cach
 					}
 
 					gammCoins := lockupResponse.Coins
-					gammShares := gammCoins.AmountOf("gamm/pool/" + strconv.Itoa(int(p.GetId())))
+
+					gammShares := gammCoins.AmountOf("gamm/pool/" + strconv.FormatUint(p.GetId(), 10))
 
 					exitedCoins, err := p.CalcExitPoolCoinsFromShares(sdk.Context{}, gammShares, math.LegacyZeroDec())
 					// 11:
@@ -424,7 +433,7 @@ func GetOsmosisClClaim(ctx context.Context, cfg types.Config, cacheMgr *types.Ca
 	assets := map[string]sdk.Coins{}
 
 	for _, clpool := range types.GetCache[prewards.OsmosisClPoolProtocolData](ctx, cacheMgr) {
-		if ignores.Contains(strconv.Itoa(int(clpool.PoolID))) {
+		if ignores.Contains(strconv.FormatUint(clpool.PoolID, 10)) {
 			continue
 		}
 		if clpool.IsIncentivized {

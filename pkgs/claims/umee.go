@@ -1,21 +1,23 @@
 package claims
 
+//revive:disable:redundant-import-alias
 import (
 	"context"
 	"fmt"
 	"time"
 
-	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
-
-	rpcclient "github.com/cometbft/cometbft/rpc/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+
+	rpcclient "github.com/cometbft/cometbft/rpc/client"
+
 	leverage "github.com/quicksilver-zone/quicksilver/third-party-chains/umee-types/leverage"
 	leveragetypes "github.com/quicksilver-zone/quicksilver/third-party-chains/umee-types/leverage/types"
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	cmtypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
+	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 	prewards "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 
 	"github.com/quicksilver-zone/xcclookup/pkgs/types"
@@ -115,7 +117,7 @@ func UmeeClaim(
 			lookupKey,
 			rpcclient.ABCIQueryOptions{Height: leverageaccountbalancesquery.Response.Height, Prove: true},
 		)
-		fmt.Println("Querying for value (umee - leverage)", "prefix", lookupKey) // debug?
+		fmt.Println("Querying for value (umee - leverage)", "prefix", string(lookupKey)) // debug?
 		if err != nil {
 			return nil, nil, err
 		}
