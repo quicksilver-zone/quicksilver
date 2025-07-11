@@ -6,12 +6,12 @@ import (
 	"sync"
 	"time"
 
+	tmhttp "github.com/cometbft/cometbft/rpc/client/http"
+	libclient "github.com/cometbft/cometbft/rpc/jsonrpc/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ingenuity-build/multierror"
 	"github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
 	prewards "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
-	tmhttp "github.com/tendermint/tendermint/rpc/client/http"
-	libclient "github.com/tendermint/tendermint/rpc/jsonrpc/client"
 )
 
 func NewRPCClient(addr string, timeout time.Duration) (*tmhttp.HTTP, error) {

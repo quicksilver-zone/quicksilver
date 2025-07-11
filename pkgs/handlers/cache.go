@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/ingenuity-build/xcclookup/pkgs/types"
+	"github.com/quicksilver-zone/xcclookup/pkgs/types"
 
 	prewards "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 )

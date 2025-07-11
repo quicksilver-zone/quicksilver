@@ -8,17 +8,16 @@ import (
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 
+	rpcclient "github.com/cometbft/cometbft/rpc/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	osmolockup "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/lockup"
 	cmtypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
 	prewards "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
-	rpcclient "github.com/tendermint/tendermint/rpc/client"
 
-	"github.com/ingenuity-build/xcclookup/pkgs/types"
+	"github.com/quicksilver-zone/xcclookup/pkgs/types"
 )
 
 type TokenTuple struct {
@@ -85,7 +84,7 @@ func LiquidClaim(
 	// fetch timestamp of block
 	interfaceRegistry := cdctypes.NewInterfaceRegistry()
 	banktypes.RegisterInterfaces(interfaceRegistry)
-	osmolockup.RegisterInterfaces(interfaceRegistry)
+	cmtypes.RegisterInterfaces(interfaceRegistry)
 	marshaler := codec.NewProtoCodec(interfaceRegistry)
 
 	// we need the prefix

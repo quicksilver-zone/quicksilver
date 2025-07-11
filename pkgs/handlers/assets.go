@@ -8,9 +8,9 @@ import (
 
 	"github.com/gorilla/mux"
 
-	"github.com/ingenuity-build/xcclookup/pkgs/claims"
-	"github.com/ingenuity-build/xcclookup/pkgs/types"
 	prewards "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
+	"github.com/quicksilver-zone/xcclookup/pkgs/claims"
+	"github.com/quicksilver-zone/xcclookup/pkgs/types"
 )
 
 func GetAssetsHandler(

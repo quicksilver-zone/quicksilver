@@ -7,6 +7,7 @@ import (
 
 	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 
+	rpcclient "github.com/cometbft/cometbft/rpc/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -16,9 +17,8 @@ import (
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	cmtypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
 	prewards "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
-	rpcclient "github.com/tendermint/tendermint/rpc/client"
 
-	"github.com/ingenuity-build/xcclookup/pkgs/types"
+	"github.com/quicksilver-zone/xcclookup/pkgs/types"
 )
 
 func UmeeClaim(
