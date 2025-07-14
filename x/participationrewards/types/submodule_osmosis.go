@@ -153,5 +153,5 @@ func (oppd *OsmosisParamsProtocolData) ValidateBasic() error {
 }
 
 func (*OsmosisParamsProtocolData) GenerateKey() []byte {
-	return []byte("osmosisparams")
+	return []byte(OsmosisParamsKey)
 }

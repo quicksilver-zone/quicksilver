@@ -177,5 +177,6 @@ func LoadSubmodules() map[cmtypes.ClaimType]Submodule {
 	out[cmtypes.ClaimTypeOsmosisPool] = &OsmosisModule{}
 	out[cmtypes.ClaimTypeOsmosisCLPool] = &OsmosisClModule{}
 	out[cmtypes.ClaimTypeUmeeToken] = &UmeeModule{}
+	out[cmtypes.ClaimTypeMembrane] = &MembraneModule{}
 	return out
 }

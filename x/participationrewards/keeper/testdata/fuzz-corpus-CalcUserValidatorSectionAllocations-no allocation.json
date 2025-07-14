@@ -1,1 +1,33 @@
-{"ctx":{},"zone":{"connection_id":"connection-0","chain_id":"testchain2-1","withdrawal_address":{"address":"cosmos1ymnsdscyzwkw6hv5rl02mz9cxz2d95ekmenh0c88jvea9xgm62ms57gpn8","balance":[],"port_name":"testchain2-1.withdrawal","withdrawal_address":"cosmos1ymnsdscyzwkw6hv5rl02mz9cxz2d95ekmenh0c88jvea9xgm62ms57gpn8"},"performance_address":{"address":"cosmos14f0cff8mv9ctl8ye6a0f9q45ajcgn78xwg6rj254ftw6mpednvxqsqenc4","balance":[],"port_name":"icacontroller-testchain2-1.performance","withdrawal_address":"cosmos14f0cff8mv9ctl8ye6a0f9q45ajcgn78xwg6rj254ftw6mpednvxqsqenc4"},"account_prefix":"cosmos","local_denom":"uqatom","base_denom":"uatom","redemption_rate":"0.000000000000000000","last_redemption_rate":"0.000000000000000000","liquidity_module":true,"holdings_allocation":"524585","tvl":"150000000.000000000000000000","deposits_enabled":true,"is_118":true},"zs":{"ZoneID":"testchain2-1","TotalVotingPower":"0","ValidatorScores":null}}
+{
+  "zone": {
+    "connection_id": "connection-0",
+    "chain_id": "testchain2-1",
+    "withdrawal_address": {
+      "address": "cosmos1ymnsdscyzwkw6hv5rl02mz9cxz2d95ekmenh0c88jvea9xgm62ms57gpn8",
+      "balance": [],
+      "port_name": "testchain2-1.withdrawal",
+      "withdrawal_address": "cosmos1ymnsdscyzwkw6hv5rl02mz9cxz2d95ekmenh0c88jvea9xgm62ms57gpn8"
+    },
+    "performance_address": {
+      "address": "cosmos14f0cff8mv9ctl8ye6a0f9q45ajcgn78xwg6rj254ftw6mpednvxqsqenc4",
+      "balance": [],
+      "port_name": "icacontroller-testchain2-1.performance",
+      "withdrawal_address": "cosmos14f0cff8mv9ctl8ye6a0f9q45ajcgn78xwg6rj254ftw6mpednvxqsqenc4"
+    },
+    "account_prefix": "cosmos",
+    "local_denom": "uqatom",
+    "base_denom": "uatom",
+    "redemption_rate": "0.000000000000000000",
+    "last_redemption_rate": "0.000000000000000000",
+    "liquidity_module": true,
+    "holdings_allocation": "524585",
+    "tvl": "150000000.000000000000000000",
+    "deposits_enabled": true,
+    "is_118": true
+  },
+  "zs": {
+    "ZoneID": "testchain2-1",
+    "TotalVotingPower": "0",
+    "ValidatorScores": null
+  }
+}

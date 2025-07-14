@@ -1,1 +1,83 @@
-{"ctx":{},"zone":{"connection_id":"connection-0","chain_id":"testchain2-1","withdrawal_address":{"address":"cosmos1phe57ldq837un36xqc9rcl6jnnu26gnmp5nkthgz6d6pyf5d0tvqrmu2w2","balance":[],"port_name":"testchain2.withrawal","withdrawal_address":"cosmos1phe57ldq837un36xqc9rcl6jnnu26gnmp5nkthgz6d6pyf5d0tvqrmu2w2"},"performance_address":{"address":"cosmos1mr0gthtygdayp36ercvu3nnelsx4p46daw9vthzum24t0dsteqmsnxymw6","balance":[],"port_name":"icacontroller-testchain2.performance","withdrawal_address":"cosmos1mr0gthtygdayp36ercvu3nnelsx4p46daw9vthzum24t0dsteqmsnxymw6"},"account_prefix":"cosmos","local_denom":"uqatom","base_denom":"uatom","redemption_rate":"0.000000000000000000","last_redemption_rate":"0.000000000000000000","liquidity_module":true,"validator_selection_allocation":"5000","holdings_allocation":"524585","tvl":"150000000.000000000000000000","deposits_enabled":true,"is_118":true},"zs":{"ZoneID":"testchain2-1","TotalVotingPower":"0","ValidatorScores":{"cosmosvaloper156e0nv0f6jwu0gkj6aftvwltknat92y0jfdz8m":{"PowerPercentage":"1.000000000000000000","PerformanceScore":"1.000000000000000000","DistributionScore":"1.000000000000000000","valoper_address":"cosmosvaloper156e0nv0f6jwu0gkj6aftvwltknat92y0jfdz8m","commission_rate":"0.000000000000000000","delegator_shares":"1.000000000000000000","voting_power":"1000000","score":"1.000000000000000000","status":"BOND_STATUS_BONDED","jailed_since":"0001-01-01T00:00:00Z"},"cosmosvaloper1cje9scxzv5lhrzlnv6ulkf9jwukrj5scqkpwvq":{"PowerPercentage":"1.000000000000000000","PerformanceScore":"1.000000000000000000","DistributionScore":"1.000000000000000000","valoper_address":"cosmosvaloper1cje9scxzv5lhrzlnv6ulkf9jwukrj5scqkpwvq","commission_rate":"0.000000000000000000","delegator_shares":"1.000000000000000000","voting_power":"1000000","score":"1.000000000000000000","status":"BOND_STATUS_BONDED","jailed_since":"0001-01-01T00:00:00Z"},"cosmosvaloper1j6hw60ytpa3p2x6jd0dhevy2m64gdvsu4s8vsd":{"PowerPercentage":"1.000000000000000000","PerformanceScore":"1.000000000000000000","DistributionScore":"1.000000000000000000","valoper_address":"cosmosvaloper1j6hw60ytpa3p2x6jd0dhevy2m64gdvsu4s8vsd","commission_rate":"0.000000000000000000","delegator_shares":"1.000000000000000000","voting_power":"1000000","score":"1.000000000000000000","status":"BOND_STATUS_BONDED","jailed_since":"0001-01-01T00:00:00Z"},"cosmosvaloper1xnf33uep7xk85xuchp8wr72ujen5maqgchusuh":{"PowerPercentage":"1.000000000000000000","PerformanceScore":"1.000000000000000000","DistributionScore":"1.000000000000000000","valoper_address":"cosmosvaloper1xnf33uep7xk85xuchp8wr72ujen5maqgchusuh","commission_rate":"0.000000000000000000","delegator_shares":"1.000000000000000000","voting_power":"1000000","score":"1.000000000000000000","status":"BOND_STATUS_BONDED","jailed_since":"0001-01-01T00:00:00Z"}}}}
+{
+  "zone": {
+    "connection_id": "connection-0",
+    "chain_id": "testchain2-1",
+    "withdrawal_address": {
+      "address": "cosmos1phe57ldq837un36xqc9rcl6jnnu26gnmp5nkthgz6d6pyf5d0tvqrmu2w2",
+      "balance": [],
+      "port_name": "testchain2.withrawal",
+      "withdrawal_address": "cosmos1phe57ldq837un36xqc9rcl6jnnu26gnmp5nkthgz6d6pyf5d0tvqrmu2w2"
+    },
+    "performance_address": {
+      "address": "cosmos1mr0gthtygdayp36ercvu3nnelsx4p46daw9vthzum24t0dsteqmsnxymw6",
+      "balance": [],
+      "port_name": "icacontroller-testchain2.performance",
+      "withdrawal_address": "cosmos1mr0gthtygdayp36ercvu3nnelsx4p46daw9vthzum24t0dsteqmsnxymw6"
+    },
+    "account_prefix": "cosmos",
+    "local_denom": "uqatom",
+    "base_denom": "uatom",
+    "redemption_rate": "0.000000000000000000",
+    "last_redemption_rate": "0.000000000000000000",
+    "liquidity_module": true,
+    "validator_selection_allocation": "5000",
+    "holdings_allocation": "524585",
+    "tvl": "150000000.000000000000000000",
+    "deposits_enabled": true,
+    "is_118": true
+  },
+  "zs": {
+    "ZoneID": "testchain2-1",
+    "TotalVotingPower": "0",
+    "ValidatorScores": {
+      "cosmosvaloper156e0nv0f6jwu0gkj6aftvwltknat92y0jfdz8m": {
+        "PowerPercentage": "1.000000000000000000",
+        "PerformanceScore": "1.000000000000000000",
+        "DistributionScore": "1.000000000000000000",
+        "valoper_address": "cosmosvaloper156e0nv0f6jwu0gkj6aftvwltknat92y0jfdz8m",
+        "commission_rate": "0.000000000000000000",
+        "delegator_shares": "1.000000000000000000",
+        "voting_power": "1000000",
+        "score": "1.000000000000000000",
+        "status": "BOND_STATUS_BONDED",
+        "jailed_since": "0001-01-01T00:00:00Z"
+      },
+      "cosmosvaloper1cje9scxzv5lhrzlnv6ulkf9jwukrj5scqkpwvq": {
+        "PowerPercentage": "1.000000000000000000",
+        "PerformanceScore": "1.000000000000000000",
+        "DistributionScore": "1.000000000000000000",
+        "valoper_address": "cosmosvaloper1cje9scxzv5lhrzlnv6ulkf9jwukrj5scqkpwvq",
+        "commission_rate": "0.000000000000000000",
+        "delegator_shares": "1.000000000000000000",
+        "voting_power": "1000000",
+        "score": "1.000000000000000000",
+        "status": "BOND_STATUS_BONDED",
+        "jailed_since": "0001-01-01T00:00:00Z"
+      },
+      "cosmosvaloper1j6hw60ytpa3p2x6jd0dhevy2m64gdvsu4s8vsd": {
+        "PowerPercentage": "1.000000000000000000",
+        "PerformanceScore": "1.000000000000000000",
+        "DistributionScore": "1.000000000000000000",
+        "valoper_address": "cosmosvaloper1j6hw60ytpa3p2x6jd0dhevy2m64gdvsu4s8vsd",
+        "commission_rate": "0.000000000000000000",
+        "delegator_shares": "1.000000000000000000",
+        "voting_power": "1000000",
+        "score": "1.000000000000000000",
+        "status": "BOND_STATUS_BONDED",
+        "jailed_since": "0001-01-01T00:00:00Z"
+      },
+      "cosmosvaloper1xnf33uep7xk85xuchp8wr72ujen5maqgchusuh": {
+        "PowerPercentage": "1.000000000000000000",
+        "PerformanceScore": "1.000000000000000000",
+        "DistributionScore": "1.000000000000000000",
+        "valoper_address": "cosmosvaloper1xnf33uep7xk85xuchp8wr72ujen5maqgchusuh",
+        "commission_rate": "0.000000000000000000",
+        "delegator_shares": "1.000000000000000000",
+        "voting_power": "1000000",
+        "score": "1.000000000000000000",
+        "status": "BOND_STATUS_BONDED",
+        "jailed_since": "0001-01-01T00:00:00Z"
+      }
+    }
+  }
+}
