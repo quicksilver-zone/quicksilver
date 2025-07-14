@@ -14,8 +14,8 @@ import (
 	prewards "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 	"gopkg.in/yaml.v3"
 
-	"github.com/ingenuity-build/xcclookup/pkgs/handlers"
-	"github.com/ingenuity-build/xcclookup/pkgs/types"
+	"github.com/quicksilver-zone/xcclookup/pkgs/handlers"
+	"github.com/quicksilver-zone/xcclookup/pkgs/types"
 )
 
 const (

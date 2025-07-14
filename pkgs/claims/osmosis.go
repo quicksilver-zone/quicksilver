@@ -9,6 +9,8 @@ import (
 
 	"cosmossdk.io/math"
 
+	rpcclient "github.com/cometbft/cometbft/rpc/client"
+	tmhttp "github.com/cometbft/cometbft/rpc/client/http"
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -16,18 +18,24 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	osmotypes "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types"
-	osmocl "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/concentrated-liquidity"
+	osmoclmodelquery "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/concentrated-liquidity/client/queryproto"
 	osmoclmodel "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/concentrated-liquidity/model"
-	osmogamm "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/gamm"
-	osmolockup "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/lockup"
+	osmocl "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/concentrated-liquidity/types"
+	osmogamm "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/gamm/types"
+	osmolockup "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/lockup/types"
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	cmtypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
 	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 	prewards "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
-	rpcclient "github.com/tendermint/tendermint/rpc/client"
-	tmhttp "github.com/tendermint/tendermint/rpc/client/http"
 
-	"github.com/ingenuity-build/xcclookup/pkgs/types"
+	"github.com/quicksilver-zone/xcclookup/pkgs/types"
+)
+
+var (
+	// these values are taken from https://github.com/osmosis-labs/osmosis/blob/c6ed71fd59b5d899d8798629e9b9f89e3b0c24e8/x/lockup/types/keys.go#L68;
+	// they were inadvertently removed from quicksilver in v1.8.0.
+	KeyPrefixPeriodLock = []byte{0x02}
+	KeyIndexSeparator   = []byte{0xFF}
 )
 
 type (
@@ -75,16 +83,13 @@ func OsmosisClaim(
 		return OsmosisResult{Err: err}
 	}
 
-
 	client, err := types.NewRPCClient(host, time.Duration(cfg.Timeout)*time.Second)
 	if err != nil {
 		return OsmosisResult{Err: err}
 	}
 
 	interfaceRegistry := cdctypes.NewInterfaceRegistry()
-	osmolockup.RegisterInterfaces(interfaceRegistry)
-	osmocl.RegisterInterfaces(interfaceRegistry)
-	osmoclmodel.RegisterInterfaces(interfaceRegistry)
+	cmtypes.RegisterInterfaces(interfaceRegistry)
 	marshaler := codec.NewProtoCodec(interfaceRegistry)
 	var timestamp time.Time
 
@@ -340,7 +345,7 @@ func GetOsmosisClaim(ctx context.Context, cfg types.Config, cacheMgr *types.Cach
 						assets[chain] = sdk.Coins{}
 					}
 
-					lockupKey := append(osmolockup.KeyPrefixPeriodLock, append(osmolockup.KeyIndexSeparator, sdk.Uint64ToBigEndian(lockup.ID)...)...)
+					lockupKey := append(KeyPrefixPeriodLock, append(KeyIndexSeparator, sdk.Uint64ToBigEndian(lockup.ID)...)...)
 
 					abciquery, err := client.ABCIQueryWithOptions(
 						ctx,
@@ -441,7 +446,7 @@ func GetOsmosisClClaim(ctx context.Context, cfg types.Config, cacheMgr *types.Ca
 			}
 		}
 	}
-	clquery := osmoclmodel.UserPositionsRequest{Address: osmoAddress}
+	clquery := osmoclmodelquery.UserPositionsRequest{Address: osmoAddress}
 	clbytes := marshaler.MustMarshal(&clquery)
 	clabciquery, err := client.ABCIQueryWithOptions(
 		ctx,
@@ -453,7 +458,7 @@ func GetOsmosisClClaim(ctx context.Context, cfg types.Config, cacheMgr *types.Ca
 		return nil, nil, err
 	}
 
-	clqueryResponse := osmoclmodel.UserPositionsResponse{}
+	clqueryResponse := osmoclmodelquery.UserPositionsResponse{}
 	err = marshaler.Unmarshal(clabciquery.Response.Value, &clqueryResponse)
 	if err != nil {
 		return nil, nil, err
