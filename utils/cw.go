@@ -36,6 +36,9 @@ func DecodeCwNamespacedKey(key []byte, numParts int) (sdk.AccAddress, [][]byte, 
 	for pointer < len(key) && numParts-1 > len(parts) {
 		length := int(key[pointer])
 		pointer++
+		if pointer+length > len(key) {
+			return nil, nil, errors.New("part extends beyond key length")
+		}
 		part := key[pointer : pointer+length]
 		pointer += length
 		parts = append(parts, part)
