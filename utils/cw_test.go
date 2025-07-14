@@ -52,3 +52,13 @@ func TestDecodeCwNamespacedKeyBadKeyTooShort(t *testing.T) {
 	require.Nil(t, address)
 	require.Nil(t, parts)
 }
+
+func TestDecodeCwNamespacedKeyBadPartExtendsBeyondKeyLength(t *testing.T) {
+	test := "03412880801f5ddf20eca469bfb4a748a6c334b0693363b4e0edb916f8bbbcdac40009706f736974696f6e736f736d6f31787878787878787878787878"
+	unhex, err := hex.DecodeString(test)
+	require.NoError(t, err)
+	address, parts, err := utils.DecodeCwNamespacedKey(unhex, 3)
+	require.ErrorContains(t, err, "part extends beyond key length")
+	require.Nil(t, address)
+	require.Nil(t, parts)
+}
