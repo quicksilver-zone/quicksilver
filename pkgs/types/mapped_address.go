@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/ingenuity-build/multierror"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/ingenuity-build/multierror"
 
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	interchainstaking "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"

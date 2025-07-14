@@ -81,7 +81,7 @@ type Cache[T any] struct {
 
 func (c *Cache[T]) Type() string {
 	a := new(T)
-	return strings.Replace(reflect.TypeOf(*a).String(), "types.", "", -1)
+	return strings.ReplaceAll(reflect.TypeOf(*a).String(), "types.", "")
 }
 
 func (c *Cache[T]) unmarshal(responseData []byte) []T {

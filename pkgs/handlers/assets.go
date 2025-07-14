@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"sync"
@@ -9,6 +10,7 @@ import (
 	"github.com/gorilla/mux"
 
 	prewards "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
+
 	"github.com/quicksilver-zone/xcclookup/pkgs/claims"
 	"github.com/quicksilver-zone/xcclookup/pkgs/types"
 )
@@ -21,7 +23,7 @@ func GetAssetsHandler(
 	outputFunc func(http.ResponseWriter, *types.Response, map[string]error),
 ) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, req *http.Request) {
-		errors := make(map[string]error)
+		errs := make(map[string]error)
 		vars := mux.Vars(req)
 
 		w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -34,7 +36,7 @@ func GetAssetsHandler(
 		wg := sync.WaitGroup{}
 
 		// ensure a neatly formatted JSON response
-		defer outputFunc(w, response, errors)
+		defer outputFunc(w, response, errs)
 
 		var connections []prewards.ConnectionProtocolData
 		var chain string
@@ -48,12 +50,12 @@ func GetAssetsHandler(
 
 		mappedAddresses, err := types.GetMappedAddresses(ctx, vars["address"], unfilteredConnections, &cfg)
 		if err != nil {
-			errors["MappedAddresses"] = err
+			errs["MappedAddresses"] = err
 		}
 
 		fmt.Println("check config for osmosis chain id...")
 		if len(types.GetCache[prewards.OsmosisParamsProtocolData](ctx, cacheMgr)) == 0 {
-			errors["OsmosisConfig"] = fmt.Errorf("osmosis params not set")
+			errs["OsmosisConfig"] = errors.New("osmosis params not set")
 		} else {
 			chain = types.GetCache[prewards.OsmosisParamsProtocolData](ctx, cacheMgr)[0].ChainID
 
@@ -63,13 +65,13 @@ func GetAssetsHandler(
 				fmt.Println("fetch osmosis claim for ", vars["address"])
 				result := claims.OsmosisClaim(ctx, cfg, cacheMgr, vars["address"], vars["address"], chain, heights[chain]) // return OsmosisResult{OsmosisPool{msg, assets, err}, OsmosisClPool{msg, assets, err}}
 				if result.Err != nil {
-					errors["OsmosisClaim"] = result.Err
+					errs["OsmosisClaim"] = result.Err
 				}
 				if result.OsmosisPool.Err != nil {
-					errors["OsmosisPoolClaim"] = result.OsmosisPool.Err
+					errs["OsmosisPoolClaim"] = result.OsmosisPool.Err
 				}
 				if result.OsmosisClPool.Err != nil {
-					errors["OsmosisClPoolClaim"] = result.OsmosisClPool.Err
+					errs["OsmosisClPoolClaim"] = result.OsmosisClPool.Err
 				}
 				if result.OsmosisPool.Msg != nil {
 					response.Update(result.OsmosisPool.Msg, result.OsmosisPool.Assets, "osmosispool")
@@ -86,13 +88,13 @@ func GetAssetsHandler(
 					fmt.Println("fetch osmosis claim for mapped account", mappedAddress)
 					result := claims.OsmosisClaim(ctx, cfg, cacheMgr, mappedAddress, vars["address"], chain, heights[chain])
 					if result.Err != nil {
-						errors["OsmosisClaim"] = result.Err
+						errs["OsmosisClaim"] = result.Err
 					}
 					if result.OsmosisPool.Err != nil {
-						errors["OsmosisPoolClaim"] = result.OsmosisPool.Err
+						errs["OsmosisPoolClaim"] = result.OsmosisPool.Err
 					}
 					if result.OsmosisClPool.Err != nil {
-						errors["OsmosisClPoolClaim"] = result.OsmosisClPool.Err
+						errs["OsmosisClPoolClaim"] = result.OsmosisClPool.Err
 					}
 					if result.OsmosisPool.Msg != nil {
 						response.Update(result.OsmosisPool.Msg, result.OsmosisPool.Assets, "osmosispool")
@@ -107,7 +109,7 @@ func GetAssetsHandler(
 		// umee claim
 		fmt.Println("check config for umee chain id...")
 		if len(types.GetCache[prewards.UmeeParamsProtocolData](ctx, cacheMgr)) == 0 {
-			errors["UmeeConfig"] = fmt.Errorf("umee params not set")
+			errs["UmeeConfig"] = errors.New("umee params not set")
 		} else {
 			wg.Add(1)
 			go func() {
@@ -117,7 +119,7 @@ func GetAssetsHandler(
 				fmt.Println("fetch umee claim for", vars["address"])
 				messages, assets, err := claims.UmeeClaim(ctx, cfg, cacheMgr, vars["address"], vars["address"], chain, heights[chain])
 				if err != nil {
-					errors["UmeeClaim"] = err
+					errs["UmeeClaim"] = err
 				}
 				response.Update(messages, assets, "umee")
 			}()
@@ -128,7 +130,7 @@ func GetAssetsHandler(
 					fmt.Println("fetch umee claim for mapped account", mappedAddress)
 					messages, assets, err := claims.UmeeClaim(ctx, cfg, cacheMgr, mappedAddress, vars["address"], chain, heights[chain])
 					if err != nil {
-						errors["UmeeClaim"] = err
+						errs["UmeeClaim"] = err
 					}
 					response.Update(messages, assets, "umee")
 				}()
@@ -143,7 +145,7 @@ func GetAssetsHandler(
 				defer wg.Done()
 				messages, assets, err := claims.LiquidClaim(ctx, cfg, cacheMgr, vars["address"], vars["address"], con, heights[con.ChainID])
 				if err != nil {
-					errors[fmt.Sprintf("LiquidClaim:%s", con.ChainID)] = err
+					errs[fmt.Sprintf("LiquidClaim:%s", con.ChainID)] = err
 					return
 				}
 				response.Update(messages, assets, "liquid")
@@ -155,7 +157,7 @@ func GetAssetsHandler(
 					defer wg.Done()
 					messages, assets, err := claims.LiquidClaim(ctx, cfg, cacheMgr, mappedAddress, vars["address"], con, heights[con.ChainID])
 					if err != nil {
-						errors[fmt.Sprintf("LiquidClaim:%s", con.ChainID)] = err
+						errs[fmt.Sprintf("LiquidClaim:%s", con.ChainID)] = err
 						return
 					}
 					response.Update(messages, assets, "liquid")

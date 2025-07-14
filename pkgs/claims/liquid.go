@@ -3,18 +3,20 @@ package claims
 import (
 	"context"
 	"fmt"
+	"log"
 	"time"
 
-	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
-	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
-
-	rpcclient "github.com/cometbft/cometbft/rpc/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+
+	rpcclient "github.com/cometbft/cometbft/rpc/client"
+
+	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	cmtypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
+	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 	prewards "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 
 	"github.com/quicksilver-zone/xcclookup/pkgs/types"
@@ -72,7 +74,8 @@ func LiquidClaim(
 
 	host, ok := cfg.Chains[chain]
 	if !ok {
-		err = fmt.Errorf("unable to find endpoint for %s", chain)
+		log.Printf("unable to find endpoint for %s", chain)
+		// explicitly don't return an error here, as we don't want to fail the entire claim process for a temporary issue.
 		return nil, nil, nil
 	}
 
@@ -132,15 +135,15 @@ func LiquidClaim(
 			}
 		}
 
-		accountPrefix := banktypes.CreateAccountBalancesPrefix(addrBytes)
-		lookupKey := append(accountPrefix, []byte(coin.Denom)...)
+		lookupKey := banktypes.CreateAccountBalancesPrefix(addrBytes)
+		lookupKey = append(lookupKey, []byte(coin.Denom)...)
 		abciquery, err := client.ABCIQueryWithOptions(
 			ctx,
 			"/store/bank/key",
 			lookupKey,
 			rpcclient.ABCIQueryOptions{Height: abciquery.Response.Height, Prove: true},
 		)
-		fmt.Println("Querying for value (liquid tokens)", "chain", chain, "prefix", accountPrefix, "denom", tuple.denom) // debug?
+		fmt.Println("Querying for value (liquid tokens)", "chain", chain, "address", address, "denom", tuple.denom) // debug?
 		// 7:
 		if err != nil {
 			return nil, nil, fmt.Errorf("%w [ABCIQueryWithOptions/gamm_tokens]", err)

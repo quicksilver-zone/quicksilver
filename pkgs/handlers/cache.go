@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/quicksilver-zone/xcclookup/pkgs/types"
-
 	prewards "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
+
+	"github.com/quicksilver-zone/xcclookup/pkgs/types"
 )
 
 type CacheOutput struct {

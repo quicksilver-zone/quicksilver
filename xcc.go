@@ -8,11 +8,13 @@ import (
 	"os"
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/gorilla/mux"
+	"gopkg.in/yaml.v3"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 	prewards "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
-	"gopkg.in/yaml.v3"
 
 	"github.com/quicksilver-zone/xcclookup/pkgs/handlers"
 	"github.com/quicksilver-zone/xcclookup/pkgs/types"
