@@ -42,5 +42,9 @@ func DecodeCwNamespacedKey(key []byte, numParts int) (sdk.AccAddress, [][]byte, 
 	}
 	parts = append(parts, key[pointer:])
 
+	if len(parts) != numParts {
+		return nil, nil, errors.New("unexpected number of parts")
+	}
+
 	return address, parts, nil
 }
