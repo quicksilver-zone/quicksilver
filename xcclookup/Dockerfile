@@ -14,4 +14,4 @@ FROM alpine:3.22
 
 COPY --from=build /app/xcclookup /usr/local/bin/xcclookup
 
-ENTRYPOINT xcclookup
+ENTRYPOINT ["xcclookup"]
