@@ -209,7 +209,7 @@ func OsmosisClaim(
 
 func GetOsmosisClaim(ctx context.Context, cfg types.Config, cacheMgr *types.CacheManager, client *tmhttp.HTTP, marshaler *codec.ProtoCodec, addrBytes []byte, osmoAddress, submitAddress, chain string, tokens map[string]TokenTuple, height int64, timestamp time.Time) (map[string]prewards.MsgSubmitClaim, map[string]sdk.Coins, error) {
 	// fetch timestamp of block
-	var errors map[string]error
+	errs := make(map[string]error)
 	query := osmolockup.AccountLockedPastTimeRequest{Owner: osmoAddress, Timestamp: timestamp}
 	bytes := marshaler.MustMarshal(&query)
 
@@ -303,10 +303,7 @@ func GetOsmosisClaim(ctx context.Context, cfg types.Config, cacheMgr *types.Cach
 					exitedCoins, err = p.CalcExitPoolCoinsFromShares(sdk.Context{}, amount.Amount, math.LegacyZeroDec())
 				}
 				if err != nil {
-					if errors == nil {
-						errors = make(map[string]error)
-					}
-					errors[chain] = fmt.Errorf("unable to account for assets on zone %q: %w", chain, err)
+					errs[chain] = fmt.Errorf("unable to account for assets on zone %q: %w", chain, err)
 					continue
 				}
 
@@ -374,10 +371,7 @@ func GetOsmosisClaim(ctx context.Context, cfg types.Config, cacheMgr *types.Cach
 						rpcclient.ABCIQueryOptions{Height: height, Prove: true},
 					)
 					if err != nil {
-						if errors == nil {
-							errors = make(map[string]error)
-						}
-						errors[chain] = fmt.Errorf("unable to account for assets on zone %q: %w", chain, err)
+						errs[chain] = fmt.Errorf("unable to account for assets on zone %q: %w", chain, err)
 						continue
 					}
 
@@ -385,10 +379,7 @@ func GetOsmosisClaim(ctx context.Context, cfg types.Config, cacheMgr *types.Cach
 					err = marshaler.Unmarshal(abciquery.Response.Value, &lockupResponse)
 					// 10:
 					if err != nil {
-						if errors == nil {
-							errors = make(map[string]error)
-						}
-						errors[chain] = fmt.Errorf("unable to account for assets on zone %q: %w", chain, err)
+						errs[chain] = fmt.Errorf("unable to account for assets on zone %q: %w", chain, err)
 						continue
 					}
 
@@ -399,10 +390,7 @@ func GetOsmosisClaim(ctx context.Context, cfg types.Config, cacheMgr *types.Cach
 					exitedCoins, err := p.CalcExitPoolCoinsFromShares(sdk.Context{}, gammShares, math.LegacyZeroDec())
 					// 11:
 					if err != nil {
-						if errors == nil {
-							errors = make(map[string]error)
-						}
-						errors[chain] = fmt.Errorf("unable to account for assets on zone %q: %w", chain, err)
+						errs[chain] = fmt.Errorf("unable to account for assets on zone %q: %w", chain, err)
 						continue
 					}
 
@@ -437,7 +425,7 @@ func GetOsmosisClaim(ctx context.Context, cfg types.Config, cacheMgr *types.Cach
 }
 
 func GetOsmosisClClaim(ctx context.Context, cfg types.Config, cacheMgr *types.CacheManager, client *tmhttp.HTTP, marshaler *codec.ProtoCodec, addrBytes []byte, osmoAddress, submitAddress, chain string, tokens map[string]TokenTuple, height int64) (map[string]prewards.MsgSubmitClaim, map[string]sdk.Coins, error) {
-	errors := make(map[string]error)
+	errs := make(map[string]error)
 	ignores := cfg.Ignore.GetIgnoresForType(types.IgnoreTypeOsmosisCLPool)
 
 	clpools := clPoolMap{}
@@ -526,7 +514,7 @@ func GetOsmosisClClaim(ctx context.Context, cfg types.Config, cacheMgr *types.Ca
 						rpcclient.ABCIQueryOptions{Height: height, Prove: true},
 					)
 					if err != nil {
-						errors[chain] = fmt.Errorf("unable to query position for pool %d on chain %q: %w", p.GetId(), chain, err)
+						errs[chain] = fmt.Errorf("unable to query position for pool %d on chain %q: %w", p.GetId(), chain, err)
 						continue
 					}
 
@@ -538,19 +526,13 @@ func GetOsmosisClClaim(ctx context.Context, cfg types.Config, cacheMgr *types.Ca
 					err = marshaler.Unmarshal(abciquery.Response.Value, &positionResponse)
 					// 10:
 					if err != nil {
-						if errors == nil {
-							errors = make(map[string]error)
-						}
-						errors[chain] = fmt.Errorf("unable to unmarshal position for pool %d on chain %q: %w", p.GetId(), chain, err)
+						errs[chain] = fmt.Errorf("unable to unmarshal position for pool %d on chain %q: %w", p.GetId(), chain, err)
 						continue
 					}
 
 					asset0, asset1, err := osmotypes.CalculateUnderlyingAssetsFromPosition(sdk.Context{}, positionResponse, p)
 					if err != nil {
-						if errors == nil {
-							errors = make(map[string]error)
-						}
-						errors[chain] = fmt.Errorf("unable to calculate underlying assets for position %d on chain %q: %w", p.GetId(), chain, err)
+						errs[chain] = fmt.Errorf("unable to calculate underlying assets for position %d on chain %q: %w", p.GetId(), chain, err)
 						continue
 					}
 

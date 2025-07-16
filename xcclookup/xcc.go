@@ -107,13 +107,42 @@ func main() {
 	}
 
 	ctx := context.Background()
-	cacheMgr.Add(ctx, &types.Cache[prewards.ConnectionProtocolData]{}, cfg.SourceLcd+"/quicksilver/participationrewards/v1/protocoldata/ProtocolDataTypeConnection/", types.DataTypeProtocolData, time.Minute*5)
-	cacheMgr.Add(ctx, &types.Cache[prewards.OsmosisParamsProtocolData]{}, cfg.SourceLcd+"/quicksilver/participationrewards/v1/protocoldata/ProtocolDataTypeOsmosisParams/", types.DataTypeProtocolData, time.Hour*24)
-	cacheMgr.Add(ctx, &types.Cache[prewards.UmeeParamsProtocolData]{}, cfg.SourceLcd+"/quicksilver/participationrewards/v1/protocoldata/ProtocolDataTypeUmeeParams/", types.DataTypeProtocolData, time.Hour*24)
-	cacheMgr.Add(ctx, &types.Cache[prewards.OsmosisPoolProtocolData]{}, cfg.SourceLcd+"/quicksilver/participationrewards/v1/protocoldata/ProtocolDataTypeOsmosisPool/", types.DataTypeProtocolData, time.Minute*5)
-	cacheMgr.Add(ctx, &types.Cache[prewards.OsmosisClPoolProtocolData]{}, cfg.SourceLcd+"/quicksilver/participationrewards/v1/protocoldata/ProtocolDataTypeOsmosisCLPool/", types.DataTypeProtocolData, time.Minute*5)
-	cacheMgr.Add(ctx, &types.Cache[prewards.LiquidAllowedDenomProtocolData]{}, cfg.SourceLcd+"/quicksilver/participationrewards/v1/protocoldata/ProtocolDataTypeLiquidToken/", types.DataTypeProtocolData, time.Minute*5)
-	cacheMgr.Add(ctx, &types.Cache[icstypes.Zone]{}, cfg.SourceLcd+"/quicksilver/interchainstaking/v1/zones", types.DataTypeZone, time.Hour*24)
+	err = cacheMgr.Add(ctx, &types.Cache[prewards.ConnectionProtocolData]{}, cfg.SourceLcd+"/quicksilver/participationrewards/v1/protocoldata/ProtocolDataTypeConnection/", types.DataTypeProtocolData, time.Minute*5)
+	if err != nil {
+		fmt.Printf("Error: %v\n", err.Error())
+		return
+	}
+	err = cacheMgr.Add(ctx, &types.Cache[prewards.OsmosisParamsProtocolData]{}, cfg.SourceLcd+"/quicksilver/participationrewards/v1/protocoldata/ProtocolDataTypeOsmosisParams/", types.DataTypeProtocolData, time.Hour*24)
+	if err != nil {
+		fmt.Printf("Error: %v\n", err.Error())
+		return
+	}
+	err = cacheMgr.Add(ctx, &types.Cache[prewards.UmeeParamsProtocolData]{}, cfg.SourceLcd+"/quicksilver/participationrewards/v1/protocoldata/ProtocolDataTypeUmeeParams/", types.DataTypeProtocolData, time.Hour*24)
+	if err != nil {
+		fmt.Printf("Error: %v\n", err.Error())
+		return
+	}
+	err = cacheMgr.Add(ctx, &types.Cache[prewards.OsmosisPoolProtocolData]{}, cfg.SourceLcd+"/quicksilver/participationrewards/v1/protocoldata/ProtocolDataTypeOsmosisPool/", types.DataTypeProtocolData, time.Minute*5)
+	if err != nil {
+		fmt.Printf("Error: %v\n", err.Error())
+		return
+	}
+	err = cacheMgr.Add(ctx, &types.Cache[prewards.OsmosisClPoolProtocolData]{}, cfg.SourceLcd+"/quicksilver/participationrewards/v1/protocoldata/ProtocolDataTypeOsmosisCLPool/", types.DataTypeProtocolData, time.Minute*5)
+	if err != nil {
+		fmt.Printf("Error: %v\n", err.Error())
+		return
+	}
+	err = cacheMgr.Add(ctx, &types.Cache[prewards.LiquidAllowedDenomProtocolData]{}, cfg.SourceLcd+"/quicksilver/participationrewards/v1/protocoldata/ProtocolDataTypeLiquidToken/", types.DataTypeProtocolData, time.Minute*5)
+	if err != nil {
+		fmt.Printf("Error: %v\n", err.Error())
+		return
+	}
+	err = cacheMgr.Add(ctx, &types.Cache[icstypes.Zone]{}, cfg.SourceLcd+"/quicksilver/interchainstaking/v1/zones", types.DataTypeZone, time.Hour*24)
+	if err != nil {
+		fmt.Printf("Error: %v\n", err.Error())
+		return
+	}
+
 	config := sdk.GetConfig()
 	config.SetBech32PrefixForAccount(Bech32PrefixAccAddr, Bech32PrefixAccPub)
 	config.SetBech32PrefixForValidator(Bech32PrefixValAddr, Bech32PrefixValPub)

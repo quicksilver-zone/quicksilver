@@ -25,7 +25,6 @@ func GetCacheHandler(
 	cacheMgr *types.CacheManager,
 ) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, req *http.Request) {
-
 		connections, err := types.GetCache[prewards.ConnectionProtocolData](ctx, cacheMgr)
 		if err != nil {
 			fmt.Fprintf(w, "Error: %s", err)

@@ -57,9 +57,13 @@ type CacheManagerElementI interface {
 	Type() string
 }
 
-func (m *CacheManager) Add(ctx context.Context, element CacheManagerElementI, url string, dataType int, updateTime time.Duration) {
+func (m *CacheManager) Add(ctx context.Context, element CacheManagerElementI, url string, dataType int, updateTime time.Duration) error {
 	m.Data[element.Type()] = element
-	m.Data[element.Type()].Init(ctx, url, dataType, updateTime)
+	err := m.Data[element.Type()].Init(ctx, url, dataType, updateTime)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 type CacheI[T any] interface {
