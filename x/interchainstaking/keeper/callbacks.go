@@ -26,6 +26,7 @@ import (
 	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
 	tmclienttypes "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
 
+	lsmtypes "github.com/quicksilver-zone/quicksilver/third-party-chains/gaia-types/liquid/types"
 	"github.com/quicksilver-zone/quicksilver/utils"
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	"github.com/quicksilver-zone/quicksilver/utils/proofs"
@@ -84,7 +85,8 @@ func (c Callbacks) RegisterCallbacks() icqtypes.QueryCallbacks {
 		AddCallback("allbalances", Callback(AllBalancesCallback)).
 		AddCallback("delegationaccountbalance", Callback(DelegationAccountBalanceCallback)).
 		AddCallback("delegationaccountbalances", Callback(DelegationAccountBalancesCallback)).
-		AddCallback("signinginfo", Callback(SigningInfoCallback))
+		AddCallback("signinginfo", Callback(SigningInfoCallback)).
+		AddCallback("lsminfo", Callback(LsmInfoCallback))
 
 	return a.(Callbacks)
 }
@@ -337,6 +339,40 @@ func SigningInfoCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes
 		k.Logger(ctx).Info(fmt.Sprintf("%q on chainID: %q was found to already have been tombstoned, added information", val.ValoperAddress, zone.ChainId))
 
 	}
+	return nil
+}
+
+func LsmInfoCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
+	zone, found := k.GetZone(ctx, query.GetChainId())
+	if !found {
+		return fmt.Errorf("no registered zone for chain id: %s", zone.ChainId)
+	}
+
+	k.Logger(ctx).Debug("Validator liquid info callback", "zone", zone.ChainId)
+
+	lsmValInfo := lsmtypes.LiquidValidator{}
+	if len(args) == 0 {
+		k.Logger(ctx).Error("unable to find liquid info for validator", "query", query.Request)
+		return nil
+	}
+	err := k.cdc.Unmarshal(args, &lsmValInfo)
+	if err != nil {
+		return err
+	}
+
+	validatorAddr, err := addressutils.ValAddressFromBech32(lsmValInfo.OperatorAddress, zone.GetValoperPrefix())
+	if err != nil {
+		return err
+	}
+	validator, found := k.GetValidator(ctx, query.ChainId, validatorAddr)
+	if !found {
+		return fmt.Errorf("validator not found: %s", validatorAddr)
+	}
+	validator.LiquidShares = lsmValInfo.LiquidShares
+	if err := k.SetValidator(ctx, query.ChainId, validator); err != nil {
+		return err
+	}
+	k.Logger(ctx).Info("Liquid validator info updated", "validator", validator)
 	return nil
 }
 

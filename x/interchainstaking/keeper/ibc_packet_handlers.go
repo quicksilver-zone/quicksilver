@@ -27,12 +27,12 @@ import (
 	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
 	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
 
+	lsmstakingtypes "github.com/quicksilver-zone/quicksilver/third-party-chains/gaia-types/liquid/types"
 	"github.com/quicksilver-zone/quicksilver/utils"
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	cmtypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
 	querytypes "github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
 	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
-	lsmstakingtypes "github.com/quicksilver-zone/quicksilver/x/lsmtypes"
 )
 
 type TypedMsg struct {
@@ -145,8 +145,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 				return err
 			}
 			continue
-		case "/cosmos.staking.v1beta1.MsgRedeemTokensForShares":
-		case "/cosmos.lsmstaking.v1beta1.MsgRedeemTokensForShares":
+		case "/gaia.liquid.v1beta1.MsgRedeemTokensForShares":
 			if !success {
 				if err := k.HandleFailedRedeemTokens(ctx, msg.Msg, packetData.Memo); err != nil {
 					return err
@@ -167,8 +166,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 				return err
 			}
 			continue
-		case "/cosmos.staking.v1beta1.MsgTokenizeShares":
-		case "/cosmos.lsmstaking.v1beta1.MsgTokenizeShares":
+		case "/gaia.liquid.v1beta1.MsgTokenizeShares":
 			if !success {
 				// We can safely ignore this, as this can reasonably fail, and we cater for this in the flush logic.
 				return nil
@@ -607,11 +605,20 @@ func (k *Keeper) HandleTokenizedShares(ctx sdk.Context, msg sdk.Msg, sharesAmoun
 		return errors.New("no matching withdrawal record found")
 	}
 
+	// Try to find a matching distribution
+	matchFound := false
 	for _, dist := range withdrawalRecord.Distribution {
 		if equalLsmCoin(dist.Valoper, dist.Amount, sharesAmount) {
 			withdrawalRecord.Amount = withdrawalRecord.Amount.Add(sharesAmount)
+			matchFound = true
 			break
 		}
+	}
+
+	// If no match found, don't update the withdrawal record
+	if !matchFound {
+		k.Logger(ctx).Info("no matching distribution found for tokenized shares", "sharesAmount", sharesAmount)
+		return nil
 	}
 
 	err = k.SetWithdrawalRecord(ctx, withdrawalRecord)
@@ -625,6 +632,11 @@ func (k *Keeper) HandleTokenizedShares(ctx sdk.Context, msg sdk.Msg, sharesAmoun
 		k.Logger(ctx).Info("Found matching withdrawal; marking for send")
 		k.DeleteWithdrawalRecord(ctx, zone.ChainId, memo, types.WithdrawStatusTokenize)
 		withdrawalRecord.Status = types.WithdrawStatusSend
+		// Ensure the Amount field is properly set when creating the new record
+		// The Amount field should contain the tokenized shares that were received
+		if len(withdrawalRecord.Amount) == 0 {
+			withdrawalRecord.Amount = sdk.Coins{sharesAmount}
+		}
 		err = k.SetWithdrawalRecord(ctx, withdrawalRecord)
 		if err != nil {
 			return err

@@ -14,7 +14,7 @@ import (
 )
 
 func TestDetermineAllocationsForRebalancing(t *testing.T) {
-	vals := addressutils.GenerateValidatorsDeterministic(5)
+	vals := addressutils.GenerateValidatorsSorted(5)
 
 	type testcase struct {
 		name        string

@@ -117,12 +117,43 @@ func MustEncodeAddressToBech32(prefix string, address sdk.Address) string {
 	return addr
 }
 
-// Generate a slice of validator bech32 addresses, sorted alphabetically (deterministic).
-func GenerateValidatorsDeterministic(n int) (out []string) {
+// GenerateValidatorsSorted generates a slice of random validator bech32 addresses,
+// then sorts them alphabetically. Each call produces different random addresses,
+// but the result is always sorted consistently.
+// Note: The individual addresses are random, but the final list is always sorted.
+func GenerateValidatorsSorted(n int) (out []string) {
 	out = make([]string, 0, n)
 	for i := 0; i < n; i++ {
 		out = append(out, GenerateAddressForTestWithPrefix("cosmosvaloper"))
 	}
 	sort.Strings(out)
 	return out
+}
+
+// MaxAddrLen is the maximum allowed length (in bytes) for an address.
+const MaxAddrLen = 255
+
+// LengthPrefix prefixes the address bytes with its length, this is used
+// for example for variable-length components in store keys.
+func LengthPrefix(bz []byte) ([]byte, error) {
+	bzLen := len(bz)
+	if bzLen == 0 {
+		return bz, nil
+	}
+
+	if bzLen > MaxAddrLen {
+		return nil, fmt.Errorf("address length should be max %d bytes, got %d", MaxAddrLen, bzLen)
+	}
+
+	return append([]byte{byte(bzLen)}, bz...), nil
+}
+
+// MustLengthPrefix is LengthPrefix with panic on error.
+func MustLengthPrefix(bz []byte) []byte {
+	res, err := LengthPrefix(bz)
+	if err != nil {
+		panic(err)
+	}
+
+	return res
 }
