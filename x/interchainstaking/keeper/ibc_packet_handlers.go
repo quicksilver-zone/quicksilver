@@ -145,8 +145,6 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 				return err
 			}
 			continue
-		case "/cosmos.staking.v1beta1.MsgRedeemTokensForShares":
-		case "/cosmos.lsmstaking.v1beta1.MsgRedeemTokensForShares":
 		case "/gaia.liquid.v1beta1.MsgRedeemTokensForShares":
 			if !success {
 				if err := k.HandleFailedRedeemTokens(ctx, msg.Msg, packetData.Memo); err != nil {
@@ -168,8 +166,6 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 				return err
 			}
 			continue
-		case "/cosmos.staking.v1beta1.MsgTokenizeShares":
-		case "/cosmos.lsmstaking.v1beta1.MsgTokenizeShares":
 		case "/gaia.liquid.v1beta1.MsgTokenizeShares":
 			if !success {
 				// We can safely ignore this, as this can reasonably fail, and we cater for this in the flush logic.
