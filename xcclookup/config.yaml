@@ -1,0 +1,63 @@
+bind_port: 8090
+timeout: 3
+source_chain: quicksilver-2
+source_lcd: https://quicksilver-2.lcd.quicksilver.zone
+chains:
+  cosmoshub-4: https://cosmoshub-4.rpc.quicksilver.zone:443
+  stargaze-1: https://stargaze-1.rpc.quicksilver.zone:443
+  #osmosis-1: https://osmosis-1.rpc.quicksilver.zone:443
+  osmosis-1: https://rpc-osmosis-01.stakeflow.io:443
+  regen-1: https://regen-1.rpc.quicksilver.zone:443
+  sommelier-3: https://sommelier-3.rpc.quicksilver.zone:443
+  juno-1: https://juno-1.rpc.quicksilver.zone:443
+  dydx-mainnet-1: https://dydx-mainnet-1.rpc.quicksilver.zone:443
+  ssc-1: https://ssc-1.rpc.quicksilver.zone:443
+  agoric-3: https://agoric-3.rpc.quicksilver.zone:443
+  quicksilver-2: https://quicksilver-2.rpc.quicksilver.zone:443
+  umee-1: https://umee-1.rpc.quicksilver.zone:443
+  celestia: https://celestia.rpc.quicksilver.zone:443
+  archway-1: https://archway-1.rpc.quicksilver.zone:443
+  omniflixhub-1: https://omniflixhub-1.rpc.quicksilver.zone:443
+  injective-1: https://injective-1.rpc.quicksilver.zone:443
+#mocks:
+#   umee_params:
+#     - chainid: umee-1
+#   connections:
+#     - connectionid: connection-13
+#       chainid: umee-1
+#       lastepoch: 11654900
+#       prefix: umee
+#   osmosis_pools:
+#     - poolid: 1059
+#       poolname: qOSMO/OSMO
+#       lastupdated: 2024-04-27T17:00:44.560214732Z
+#       pooldata: '{
+#         "address": "osmo1q023e9m4d3ffvr96xwaeraa62yfvufkufkr7yf7lmacgkuspsuqsga4xp2",
+#         "future_pool_governor": "168h",
+##         "id": 1056,
+##         "pool_liquidity":
+##         [
+##         {
+##         "amount": "4090415962",
+#         "denom": "ibc/42D24879D4569CE6477B7E88206ADBFE47C222C6CAD51A54083E4A72594269FC",
+#         },
+#         { "amount": "7409016072", "denom": "uosmo" },
+#         ],
+#         "pool_params":
+#         {
+#         "exit_fee": "0.000000000000000000",
+#         "swap_fee": "0.003000000000000000",
+#         },
+#         "scaling_factor": [1000000000, 1128014272],
+#         "scaling_factor_governor": "osmo16x03wcp37kx5e8ehckjxvwcgk9j0cqnhm8m3yy",
+#         "total_shares":
+#         { "amount": "2745924419991863230656", "denom": "gamm/pool/1056" },
+#         }'
+#       pooltype: stableswap
+#       denoms:
+#         {
+#           "ibc/42D24879D4569CE6477B7E88206ADBFE47C222C6CAD51A54083E4A72594269FC":
+#             { "denom": "uqosmo", "chainid": "osmosis-1" },
+#           "uosmo": { "denom": "uosmo", "chainid": "osmosis-1" },
+#         }
+#       isincentivized: true
