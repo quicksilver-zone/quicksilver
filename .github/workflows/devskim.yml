@@ -16,7 +16,7 @@ on:
 jobs:
   lint:
     name: DevSkim
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest # pin to latest LTS
     permissions:
       actions: read
       contents: read
