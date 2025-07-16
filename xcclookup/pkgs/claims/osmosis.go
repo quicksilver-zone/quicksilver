@@ -167,7 +167,15 @@ func OsmosisClaim(
 
 	ignores := cfg.Ignore.GetIgnoresForType(types.IgnoreTypeLiquid)
 	// add GetFiltered to CacheManager, to allow filtered lookups on a single field == value
-	tokens := GetTokenMap(types.GetCache[prewards.LiquidAllowedDenomProtocolData](ctx, cacheMgr), types.GetCache[icstypes.Zone](ctx, cacheMgr), chain, "", ignores)
+	laCache, err := types.GetCache[prewards.LiquidAllowedDenomProtocolData](ctx, cacheMgr)
+	if err != nil {
+		return OsmosisResult{Err: err}
+	}
+	zoneCache, err := types.GetCache[icstypes.Zone](ctx, cacheMgr)
+	if err != nil {
+		return OsmosisResult{Err: err}
+	}
+	tokens := GetTokenMap(laCache, zoneCache, chain, "", ignores)
 
 	result := OsmosisResult{}
 
@@ -227,8 +235,12 @@ func GetOsmosisClaim(ctx context.Context, cfg types.Config, cacheMgr *types.Cach
 	msg := map[string]prewards.MsgSubmitClaim{}
 	assets := map[string]sdk.Coins{}
 
-	for _, pool := range types.GetCache[prewards.OsmosisPoolProtocolData](ctx, cacheMgr) {
+	poolsCache, err := types.GetCache[prewards.OsmosisPoolProtocolData](ctx, cacheMgr)
+	if err != nil {
+		return nil, nil, err
+	}
 
+	for _, pool := range poolsCache {
 		if ignores.Contains(strconv.FormatUint(pool.PoolID, 10)) {
 			continue
 		}
@@ -432,7 +444,12 @@ func GetOsmosisClClaim(ctx context.Context, cfg types.Config, cacheMgr *types.Ca
 	msg := map[string]prewards.MsgSubmitClaim{}
 	assets := map[string]sdk.Coins{}
 
-	for _, clpool := range types.GetCache[prewards.OsmosisClPoolProtocolData](ctx, cacheMgr) {
+	poolsCache, err := types.GetCache[prewards.OsmosisClPoolProtocolData](ctx, cacheMgr)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	for _, clpool := range poolsCache {
 		if ignores.Contains(strconv.FormatUint(clpool.PoolID, 10)) {
 			continue
 		}

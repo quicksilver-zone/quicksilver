@@ -114,7 +114,15 @@ func LiquidClaim(
 	ignores := cfg.Ignore.GetIgnoresForType(types.IgnoreTypeLiquid)
 
 	// add GetFiltered to CacheManager, to allow filtered lookups on a single field == value
-	tokens := GetTokenMap(types.GetCache[prewards.LiquidAllowedDenomProtocolData](ctx, cacheMgr), types.GetCache[icstypes.Zone](ctx, cacheMgr), chain, "", ignores)
+	laCache, err := types.GetCache[prewards.LiquidAllowedDenomProtocolData](ctx, cacheMgr)
+	if err != nil {
+		return nil, nil, fmt.Errorf("%w [GetCache[prewards.LiquidAllowedDenomProtocolData]]", err)
+	}
+	zoneCache, err := types.GetCache[icstypes.Zone](ctx, cacheMgr)
+	if err != nil {
+		return nil, nil, fmt.Errorf("%w [GetCache[icstypes.Zone]]", err)
+	}
+	tokens := GetTokenMap(laCache, zoneCache, chain, "", ignores)
 
 	msg := map[string]prewards.MsgSubmitClaim{}
 	assets := map[string]sdk.Coins{}

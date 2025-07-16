@@ -84,8 +84,15 @@ func UmeeClaim(
 
 	ignores := cfg.Ignore.GetIgnoresForType(types.IgnoreTypeLiquid)
 
-	// add GetFiltered to CacheManager, to allow filtered lookups on a single field == value
-	tokens := GetTokenMap(types.GetCache[prewards.LiquidAllowedDenomProtocolData](ctx, cacheMgr), types.GetCache[icstypes.Zone](ctx, cacheMgr), chain, leveragetypes.UTokenPrefix, ignores)
+	laCache, err := types.GetCache[prewards.LiquidAllowedDenomProtocolData](ctx, cacheMgr)
+	if err != nil {
+		return nil, nil, err
+	}
+	zoneCache, err := types.GetCache[icstypes.Zone](ctx, cacheMgr)
+	if err != nil {
+		return nil, nil, err
+	}
+	tokens := GetTokenMap(laCache, zoneCache, chain, leveragetypes.UTokenPrefix, ignores)
 
 	msg := map[string]prewards.MsgSubmitClaim{}
 	assets := map[string]sdk.Coins{}

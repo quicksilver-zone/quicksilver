@@ -124,7 +124,11 @@ func main() {
 	types.AddMocks(ctx, &cacheMgr, cfg.Mocks.UmeeParams)
 
 	r := mux.NewRouter()
-	connections := types.GetCache[prewards.ConnectionProtocolData](ctx, &cacheMgr)
+	connections, err := types.GetCache[prewards.ConnectionProtocolData](ctx, &cacheMgr)
+	if err != nil {
+		fmt.Printf("Error: %v\n", err.Error())
+		return
+	}
 
 	r.HandleFunc("/cache", handlers.GetCacheHandler(ctx, cfg, &cacheMgr))
 	r.HandleFunc("/{address}/epoch", handlers.GetAssetsHandler(ctx, cfg, &cacheMgr, types.GetHeights(connections), types.OutputEpoch))

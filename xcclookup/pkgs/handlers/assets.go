@@ -41,7 +41,10 @@ func GetAssetsHandler(
 		var connections []prewards.ConnectionProtocolData
 		var chain string
 
-		unfilteredConnections := types.GetCache[prewards.ConnectionProtocolData](ctx, cacheMgr)
+		unfilteredConnections, err := types.GetCache[prewards.ConnectionProtocolData](ctx, cacheMgr)
+		if err != nil {
+			errs["Connections"] = err
+		}
 		for _, ufc := range unfilteredConnections {
 			if ufc.LastEpoch > 0 {
 				connections = append(connections, ufc)
@@ -54,10 +57,14 @@ func GetAssetsHandler(
 		}
 
 		fmt.Println("check config for osmosis chain id...")
-		if len(types.GetCache[prewards.OsmosisParamsProtocolData](ctx, cacheMgr)) == 0 {
+		osmosisParamsCache, err := types.GetCache[prewards.OsmosisParamsProtocolData](ctx, cacheMgr)
+		if err != nil {
+			errs["OsmosisParams"] = err
+		}
+		if len(osmosisParamsCache) == 0 {
 			errs["OsmosisConfig"] = errors.New("osmosis params not set")
 		} else {
-			chain = types.GetCache[prewards.OsmosisParamsProtocolData](ctx, cacheMgr)[0].ChainID
+			chain = osmosisParamsCache[0].ChainID
 
 			wg.Add(1)
 			go func() {
@@ -108,13 +115,17 @@ func GetAssetsHandler(
 
 		// umee claim
 		fmt.Println("check config for umee chain id...")
-		if len(types.GetCache[prewards.UmeeParamsProtocolData](ctx, cacheMgr)) == 0 {
+		umeeParamsCache, err := types.GetCache[prewards.UmeeParamsProtocolData](ctx, cacheMgr)
+		if err != nil {
+			errs["UmeeParams"] = err
+		}
+		if len(umeeParamsCache) == 0 {
 			errs["UmeeConfig"] = errors.New("umee params not set")
 		} else {
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
-				chain = types.GetCache[prewards.UmeeParamsProtocolData](ctx, cacheMgr)[0].ChainID
+				chain = umeeParamsCache[0].ChainID
 
 				fmt.Println("fetch umee claim for", vars["address"])
 				messages, assets, err := claims.UmeeClaim(ctx, cfg, cacheMgr, vars["address"], vars["address"], chain, heights[chain])
