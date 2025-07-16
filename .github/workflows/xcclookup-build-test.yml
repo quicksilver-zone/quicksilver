@@ -19,6 +19,8 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: ${{ matrix.go-version }}
+          cache: true
+          cache-dependency-path: xcclookup/go.sum
       - run: |
           cd xcclookup
           go test ./...
@@ -33,7 +35,8 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: ${{ matrix.go-version }}
+          cache: true
+          cache-dependency-path: xcclookup/go.sum
       - run: |
-        cd xcclookup
-        make build
-
+          cd xcclookup
+          make build
