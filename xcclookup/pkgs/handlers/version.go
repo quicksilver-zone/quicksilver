@@ -15,9 +15,10 @@ func GetVersionHandler() func(http.ResponseWriter, *http.Request) {
 			fmt.Fprintf(w, "Error: %s", err)
 			return
 		}
+		w.WriteHeader(http.StatusOK)
+		w.Header().Set("Content-Type", "application/json")
 		_, err = w.Write(version)
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
 			fmt.Fprintf(w, "Error: %s", err)
 			return
 		}
