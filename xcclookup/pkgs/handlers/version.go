@@ -1,27 +1,21 @@
 package handlers
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
+
+	"github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/types"
 )
 
-type Version struct {
-	Version string
-}
+func GetVersionHandler() func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		version, err := types.GetVersion()
 
-func GetVersionHandler(version string) func(http.ResponseWriter, *http.Request) {
-	return func(w http.ResponseWriter, req *http.Request) {
-		v := Version{
-			Version: version,
-		}
-
-		jsonOut, err := json.Marshal(v)
 		if err != nil {
-			fmt.Println("Error:", err)
-			fmt.Fprintf(w, "Error: %s", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(fmt.Sprintf("Error: %s", err)))
 			return
 		}
-		fmt.Fprint(w, string(jsonOut))
+		w.Write(version)
 	}
 }

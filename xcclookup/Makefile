@@ -1,21 +1,22 @@
-git_commit = $(shell git rev-parse --short HEAD)
-build_version = v$(shell cat VERSION)
-linker_flags = "-s -X main.GitCommit=${git_commit} -X main.Version=${build_version}" #-linkmode external -extldflags -static"
+.PHONY: build
+
+QSVERSION ?= $(shell grep github.com/quicksilver-zone/quicksilver go.mod | grep -Eo 'v[0-9]\.[0-9]\.[0-9].*')
+COMMIT ?= $(shell git log -1 --format='%H')
+VERSION ?= $(shell git describe --tags --match 'xcclookup/*' | head -n1 | sed 's/.*\///')
+
+ldflags = -X github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/types.VERSION=xcclookup/$(VERSION) \
+          -X github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/types.COMMIT=$(COMMIT) \
+          -X github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/types.QUICKSILVER_VERSION=$(QSVERSION)
 
 build:
-	go build -ldflags=${linker_flags} -a xcc.go
+	go build -ldflags '$(ldflags)'
 
-build-docker-local: build
-	docker build -f Dockerfile.local . -t quicksilverzone/xcclookup:$(build_version)
+docker:
+	docker buildx build --platform linux/amd64 -f Dockerfile . -t quicksilverzone/xcclookup:$(VERSION) --build-arg VERSION=$(VERSION) --build-arg COMMIT=$(COMMIT)
 
-build-docker:
-	docker build --build-arg lfs=$(linker_flags) . -t quicksilverzone/xcclookup:$(build_version)
+docker-push:
+	docker push quicksilverzone/xcclookup:$(VERSION)
 
-xbuild-docker:
-	docker buildx build --platform linux/amd64 --build-arg lfs=$(linker_flags) . -t quicksilverzone/xcclookup:$(build_version)
-
-docker-release:
-	docker push quicksilverzone/xcclookup:$(build_version)
 
 ###############################################################################
 ###                                Linting                                  ###
@@ -32,7 +33,7 @@ lint-fix:
 format:
 	@find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/docs/statik/statik.go" -not -name '*.pb.go' -not -name '*.gw.go' | xargs go run mvdan.cc/gofumpt -w .
 	@find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/docs/statik/statik.go" -not -name '*.pb.go' -not -name '*.gw.go' | xargs go run github.com/client9/misspell/cmd/misspell -w
-	@find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/docs/statik/statik.go" -not -name '*.pb.go' -not -name '*.gw.go' | xargs go run golang.org/x/tools/cmd/goimports -w -local github.com/quicksilver-zone/xcclookup
+	@find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/docs/statik/statik.go" -not -name '*.pb.go' -not -name '*.gw.go' | xargs go run golang.org/x/tools/cmd/goimports -w -local github.com/quicksilver-zone/quicksilver/xcclookup
 .PHONY: format
 
 mdlint:

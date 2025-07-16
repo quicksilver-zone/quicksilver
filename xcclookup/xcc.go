@@ -39,9 +39,7 @@ const (
 )
 
 var (
-	GitCommit string
-	Version   = "development"
-	Logo      = `
+	Logo = `
                                .........                                        
                        ..::-----------------::..                                
                    ..::---------------------------.                             
@@ -79,7 +77,12 @@ var (
 
 func main() {
 	fmt.Println(Logo)
-	fmt.Printf("Quicksilver - Cross Chain Claims %s (%s)\n", Version, GitCommit)
+	version, err := types.GetVersion()
+	if err != nil {
+		fmt.Printf("Error getting version: %s\n", err)
+		return
+	}
+	fmt.Printf("xcclookup (Cross Chain Claims) %s\n", string(version))
 
 	var fileName, action string
 	flag.StringVar(&fileName, "f", "", "YAML file to parse.")
@@ -126,7 +129,7 @@ func main() {
 	r.HandleFunc("/cache", handlers.GetCacheHandler(ctx, cfg, &cacheMgr))
 	r.HandleFunc("/{address}/epoch", handlers.GetAssetsHandler(ctx, cfg, &cacheMgr, types.GetHeights(connections), types.OutputEpoch))
 	r.HandleFunc("/{address}/current", handlers.GetAssetsHandler(ctx, cfg, &cacheMgr, types.GetZeroHeights(connections), types.OutputCurrent))
-	r.HandleFunc("/version", handlers.GetVersionHandler(Version))
+	r.HandleFunc("/version", handlers.GetVersionHandler())
 	http.Handle("/", r)
 
 	bindPort := 8090
