@@ -123,12 +123,12 @@ func (c *Cache[T]) SetMock(mocks []T) {
 func (c *Cache[T]) read(ctx context.Context) ([]byte, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.url, http.NoBody)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	response, err := http.DefaultClient.Do(req)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	defer response.Body.Close()
