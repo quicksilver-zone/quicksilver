@@ -10,12 +10,16 @@ import (
 func GetVersionHandler() func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		version, err := types.GetVersion()
-
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(fmt.Sprintf("Error: %s", err)))
+			fmt.Fprintf(w, "Error: %s", err)
 			return
 		}
-		w.Write(version)
+		_, err = w.Write(version)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			fmt.Fprintf(w, "Error: %s", err)
+			return
+		}
 	}
 }

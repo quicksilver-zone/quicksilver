@@ -123,7 +123,7 @@ formatters:
         - prefix(github.com/cometbft/cometbft)
         - prefix(github.com/cosmos/ibc-go)
         - prefix(github.com/quicksilver-zone/quicksilver)
-        - prefix(github.com/quicksilver-zone/xcclookup)
+        - prefix(github.com/quicksilver-zone/quicksilver/xcclookup)
       custom-order: true
   exclusions:
     generated: lax
