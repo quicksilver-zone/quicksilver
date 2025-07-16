@@ -1,6 +1,6 @@
 module github.com/quicksilver-zone/quicksilver/icq-relayer
 
-go 1.23.7
+go 1.24.5
 
 require (
 	cosmossdk.io/math v1.5.3

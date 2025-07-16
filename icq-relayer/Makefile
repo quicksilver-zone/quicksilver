@@ -1,4 +1,4 @@
-.PHONY: build
+.PHONY: build lint lint-fix
 
 QSVERSION ?= $(shell grep github.com/quicksilver-zone/quicksilver go.mod | grep -Eo 'v[0-9]\.[0-9]\.[0-9].*')
 COMMIT ?= $(shell git log -1 --format='%H')
@@ -16,3 +16,15 @@ docker:
 
 docker-push:
 	docker push quicksilverzone/interchain-queries:$(VERSION)
+
+
+###############################################################################
+###                                Linting                                  ###
+###############################################################################
+
+lint:
+	@go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint run
+
+lint-fix:
+	@go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint run --fix --issues-exit-code=0
+
