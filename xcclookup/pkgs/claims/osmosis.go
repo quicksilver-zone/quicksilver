@@ -437,7 +437,7 @@ func GetOsmosisClaim(ctx context.Context, cfg types.Config, cacheMgr *types.Cach
 }
 
 func GetOsmosisClClaim(ctx context.Context, cfg types.Config, cacheMgr *types.CacheManager, client *tmhttp.HTTP, marshaler *codec.ProtoCodec, addrBytes []byte, osmoAddress, submitAddress, chain string, tokens map[string]TokenTuple, height int64) (map[string]prewards.MsgSubmitClaim, map[string]sdk.Coins, error) {
-	var errors map[string]error
+	errors := make(map[string]error)
 	ignores := cfg.Ignore.GetIgnoresForType(types.IgnoreTypeOsmosisCLPool)
 
 	clpools := clPoolMap{}
@@ -526,9 +526,6 @@ func GetOsmosisClClaim(ctx context.Context, cfg types.Config, cacheMgr *types.Ca
 						rpcclient.ABCIQueryOptions{Height: height, Prove: true},
 					)
 					if err != nil {
-						if errors == nil {
-							errors = make(map[string]error)
-						}
 						errors[chain] = fmt.Errorf("unable to query position for pool %d on chain %q: %w", p.GetId(), chain, err)
 						continue
 					}
