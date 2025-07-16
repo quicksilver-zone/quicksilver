@@ -15,7 +15,7 @@ import (
 
 var (
 	acc1 = addressutils.GenerateAddressForTestWithPrefix("cosmos")
-	vals = addressutils.GenerateValidatorsDeterministic(4)
+	vals = addressutils.GenerateValidatorsSorted(4)
 )
 
 func TestSharesToTokens(t *testing.T) {
