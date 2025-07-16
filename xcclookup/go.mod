@@ -1,4 +1,4 @@
-module github.com/quicksilver-zone/xcclookup
+module github.com/quicksilver-zone/quicksilver/xcclookup
 
 go 1.24.5
 
