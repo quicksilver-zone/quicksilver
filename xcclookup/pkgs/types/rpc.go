@@ -1,12 +1,11 @@
 package types
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"sync"
 	"time"
-
-	"github.com/ingenuity-build/multierror"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -16,6 +15,31 @@ import (
 	"github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
 	prewards "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 )
+
+// ErrorString is a custom type that implements json.Marshaler to serialize errors as strings
+type ErrorString struct {
+	error
+}
+
+func (e ErrorString) MarshalJSON() ([]byte, error) {
+	if e.error == nil {
+		return []byte("null"), nil
+	}
+	return json.Marshal(e.error.Error())
+}
+
+func (e *ErrorString) UnmarshalJSON(data []byte) error {
+	if string(data) == "null" {
+		e.error = nil
+		return nil
+	}
+	var s string
+	if err := json.Unmarshal(data, &s); err != nil {
+		return err
+	}
+	e.error = fmt.Errorf("%s", s)
+	return nil
+}
 
 func NewRPCClient(addr string, timeout time.Duration) (*tmhttp.HTTP, error) {
 	httpClient, err := libclient.DefaultHTTPClient(addr)
@@ -33,7 +57,7 @@ func NewRPCClient(addr string, timeout time.Duration) (*tmhttp.HTTP, error) {
 type Response struct {
 	Messages []prewards.MsgSubmitClaim `json:"messages"`
 	Assets   map[string][]Asset        `json:"assets"`
-	Errors   multierror.MultiError     `json:"errors,omitempty"`
+	Errors   *ErrorString              `json:"errors,omitempty"`
 }
 
 func (response *Response) Update(messages map[string]prewards.MsgSubmitClaim, assets map[string]sdk.Coins, assetType string) {
