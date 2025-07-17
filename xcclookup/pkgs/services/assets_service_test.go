@@ -5,12 +5,15 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	cmtypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
 	prewards "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
+
 	"github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/mocks"
 	"github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/types"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestAssetsService_GetAssets(t *testing.T) {
@@ -18,8 +21,7 @@ func TestAssetsService_GetAssets(t *testing.T) {
 	origGetMappedAddresses := types.GetMappedAddresses
 
 	// Create a variable to hold the mock function
-	var mockGetMappedAddresses func(context.Context, string, []prewards.ConnectionProtocolData, *types.Config) (map[string]string, error)
-	mockGetMappedAddresses = func(ctx context.Context, address string, connections []prewards.ConnectionProtocolData, config *types.Config) (map[string]string, error) {
+	mockGetMappedAddresses := func(ctx context.Context, address string, connections []prewards.ConnectionProtocolData, config *types.Config) (map[string]string, error) {
 		return map[string]string{}, nil
 	}
 
@@ -189,8 +191,7 @@ func TestAssetsService_GetAssets_WithMappedAddresses(t *testing.T) {
 	}
 
 	// Create a variable to hold the mock function
-	var mockGetMappedAddresses func(context.Context, string, []prewards.ConnectionProtocolData, *types.Config) (map[string]string, error)
-	mockGetMappedAddresses = func(ctx context.Context, address string, connections []prewards.ConnectionProtocolData, config *types.Config) (map[string]string, error) {
+	mockGetMappedAddresses := func(ctx context.Context, address string, connections []prewards.ConnectionProtocolData, config *types.Config) (map[string]string, error) {
 		return mockMappedAddresses, nil
 	}
 
