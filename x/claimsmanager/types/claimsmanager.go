@@ -1,7 +1,7 @@
 package types
 
 import (
-	fmt "fmt"
+	"fmt"
 
 	"go.uber.org/multierr"
 
@@ -20,15 +20,15 @@ func (c *Claim) ValidateBasic() error {
 
 	_, err := sdk.AccAddressFromBech32(c.UserAddress)
 	if err != nil {
-		errs = multierr.Append(errs, fmt.Errorf("UserAddress: %w", err))
+		errs = multierr.Append(errs, fmt.Errorf("userAddress: %w", err))
 	}
 
 	if c.ChainId == "" {
-		errs = multierr.Append(errs, fmt.Errorf("ChainID: %w", ErrUndefinedAttribute))
+		errs = multierr.Append(errs, fmt.Errorf("chainID: %w", ErrUndefinedAttribute))
 	}
 
 	if c.Amount.IsNil() || !c.Amount.IsPositive() {
-		errs = multierr.Append(errs, fmt.Errorf("Amount: %w", ErrNotPositive))
+		errs = multierr.Append(errs, fmt.Errorf("amount: %w", ErrNotPositive))
 	}
 
 	return errs
