@@ -36,6 +36,9 @@ func NewCacheManager() CacheManager {
 }
 
 func GetCache[T prewards.ConnectionProtocolData | prewards.OsmosisParamsProtocolData | prewards.OsmosisPoolProtocolData | prewards.OsmosisClPoolProtocolData | prewards.LiquidAllowedDenomProtocolData | prewards.UmeeParamsProtocolData | icstypes.Zone](ctx context.Context, mgr *CacheManager) ([]T, error) {
+	if mgr == nil {
+		return nil, fmt.Errorf("cache manager is nil")
+	}
 	cache, ok := mgr.Data[new(Cache[T]).Type()].(*Cache[T])
 	if !ok {
 		return nil, fmt.Errorf("cache not found for type %T", new(T))

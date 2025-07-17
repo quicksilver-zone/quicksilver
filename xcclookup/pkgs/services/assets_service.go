@@ -202,8 +202,11 @@ func (s *AssetsService) processUmeeClaims(
 			errsMutex.Lock()
 			errs["UmeeClaim"] = err
 			errsMutex.Unlock()
+			return
 		}
-		response.Update(messages, assets, "umee")
+		if messages != nil {
+			response.Update(messages, assets, "umee")
+		}
 	}()
 
 	if mappedAddress, ok := mappedAddresses[chain]; ok {
@@ -216,7 +219,9 @@ func (s *AssetsService) processUmeeClaims(
 				errs["UmeeClaim"] = err
 				errsMutex.Unlock()
 			}
-			response.Update(messages, assets, "umee")
+			if messages != nil {
+				response.Update(messages, assets, "umee")
+			}
 		}()
 	}
 }
