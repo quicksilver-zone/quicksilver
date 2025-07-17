@@ -64,7 +64,6 @@ func UmeeClaim(
 	}
 	// fetch timestamp of block
 	interfaceRegistry := cdctypes.NewInterfaceRegistry()
-	// banktypes.RegisterInterfaces(interfaceRegistry)
 	marshaler := codec.NewProtoCodec(interfaceRegistry)
 
 	leveragequery := leverage.QueryAccountBalances{Address: umeeAddress}
