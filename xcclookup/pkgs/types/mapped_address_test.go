@@ -94,12 +94,12 @@ func TestGetMappedAddresses(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ctx := context.Background()
+			ctx := t.Context()
 
 			if tt.config == nil {
 				// Test that nil config causes panic
 				assert.Panics(t, func() {
-					GetMappedAddresses(ctx, tt.address, tt.connections, tt.config)
+					_, _ = GetMappedAddresses(ctx, tt.address, tt.connections, tt.config)
 				})
 				return
 			}
@@ -123,7 +123,7 @@ func TestGetMappedAddressesWithMockRPC(t *testing.T) {
 	// This test would require mocking the RPC client
 	// For now, we'll test the function structure and error handling
 	t.Run("test function signature and basic error handling", func(t *testing.T) {
-		ctx := context.Background()
+		ctx := t.Context()
 		address := "quick1testaddress"
 		connections := []prewards.ConnectionProtocolData{
 			{
@@ -347,7 +347,7 @@ func TestGetHeightsAndGetZeroHeightsConsistency(t *testing.T) {
 
 func TestGetMappedAddressesEdgeCases(t *testing.T) {
 	t.Run("empty address", func(t *testing.T) {
-		ctx := context.Background()
+		ctx := t.Context()
 		connections := []prewards.ConnectionProtocolData{
 			{
 				ChainID:   "test-chain",
@@ -371,7 +371,7 @@ func TestGetMappedAddressesEdgeCases(t *testing.T) {
 	})
 
 	t.Run("nil connections", func(t *testing.T) {
-		ctx := context.Background()
+		ctx := t.Context()
 		config := &Config{
 			SourceChain: "quicksilver",
 			Chains: map[string]string{
@@ -388,7 +388,7 @@ func TestGetMappedAddressesEdgeCases(t *testing.T) {
 	})
 
 	t.Run("context with timeout", func(t *testing.T) {
-		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Millisecond)
+		ctx, cancel := context.WithTimeout(t.Context(), 1*time.Millisecond)
 		defer cancel()
 
 		connections := []prewards.ConnectionProtocolData{
