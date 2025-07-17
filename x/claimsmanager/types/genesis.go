@@ -4,6 +4,8 @@ import (
 	"fmt"
 
 	"go.uber.org/multierr"
+
+	"github.com/quicksilver-zone/quicksilver/utils"
 )
 
 func NewGenesisState(params Params) *GenesisState {
@@ -34,11 +36,7 @@ func (gs *GenesisState) Validate() error {
 	}
 
 	if len(errs) > 0 {
-		var errList []error
-		for _, err := range errs {
-			errList = append(errList, err)
-		}
-		return multierr.Combine(errList...)
+		return multierr.Combine(utils.ErrorMapToSlice(errs)...)
 	}
 
 	return nil
