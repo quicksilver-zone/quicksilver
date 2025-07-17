@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/gorilla/mux"
 	prewards "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 	"github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/mocks"
@@ -30,7 +31,7 @@ func TestAssetsHandler_Handle(t *testing.T) {
 					{UserAddress: "test-address"},
 				},
 				Assets: map[string][]types.Asset{
-					"chain1": {{Denom: "token1", Amount: "100"}},
+					"chain1": {{Type: "token1", Amount: sdk.NewCoins(sdk.NewCoin("token1", sdk.NewInt(100)))}},
 				},
 			},
 			mockErrors:     make(map[string]error),
@@ -112,7 +113,7 @@ func TestNewAssetsHandler(t *testing.T) {
 
 	assert.NotNil(t, handler)
 	assert.Equal(t, assetsService, handler.assetsService)
-	assert.Equal(t, outputFunc, handler.outputFunc)
+	// Note: Cannot directly compare function types in Go
 }
 
 func TestGetAssetsHandler(t *testing.T) {

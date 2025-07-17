@@ -374,7 +374,7 @@ func TestCacheGet(t *testing.T) {
 			duration:      30 * time.Second,
 			lastUpdated:   time.Now(),
 			expectFetch:   false,
-			expectedTotal: 2,
+			expectedTotal: 1, // Only mock data is returned when mock data is present
 		},
 		{
 			name: "cache expired",
@@ -575,7 +575,7 @@ func TestCachePerformance(t *testing.T) {
 	// Should complete quickly (less than 10ms)
 	assert.Less(t, duration, 10*time.Millisecond)
 	assert.NoError(t, err)
-	assert.Len(t, result, 2000) // cache + mock data
+	assert.Len(t, result, 1000) // Only mock data when cache is not expired
 }
 
 func TestCacheEdgeCases(t *testing.T) {

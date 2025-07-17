@@ -23,12 +23,13 @@ func NewVersionHandler(versionService *services.VersionService) *VersionHandler 
 func (h *VersionHandler) Handle(w http.ResponseWriter, r *http.Request) {
 	version, err := h.versionService.GetVersion()
 	if err != nil {
+		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprintf(w, "Error: %s", err)
 		return
 	}
-	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
 	_, err = w.Write(version)
 	if err != nil {
 		fmt.Fprintf(w, "Error: %s", err)
