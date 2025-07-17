@@ -182,7 +182,7 @@ func (k *Keeper) CalcTokenValues(ctx sdk.Context) (TokenValues, error) {
 	DepthFirstSearch(graph2, visited, baseDenom, sdk.OneDec(), tvs)
 
 	if len(errs) > 0 {
-		return nil, multierr.Combine(utils.ErrorMapToSlice(errs)...)
+		return TokenValues{}, multierr.Combine(utils.ErrorMapToSlice(errs)...)
 	}
 
 	return tvs, nil
