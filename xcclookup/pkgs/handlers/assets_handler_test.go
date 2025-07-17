@@ -126,7 +126,7 @@ func TestGetAssetsHandler(t *testing.T) {
 	heights := map[string]int64{}
 	outputFunc := func(w http.ResponseWriter, response *types.Response, errors map[string]error) {}
 
-	handlerFunc := GetAssetsHandler(context.Background(), cfg, mockCacheManager, mockClaimsService, heights, outputFunc)
+	handlerFunc := GetAssetsHandler(t.Context(), cfg, mockCacheManager, mockClaimsService, heights, outputFunc)
 
 	assert.NotNil(t, handlerFunc)
 

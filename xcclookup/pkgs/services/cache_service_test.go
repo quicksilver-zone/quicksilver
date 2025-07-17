@@ -93,7 +93,7 @@ func TestCacheService_GetCacheData(t *testing.T) {
 			service := NewCacheService(mockCacheManager)
 
 			// Call the method
-			result, err := service.GetCacheData(context.Background())
+			result, err := service.GetCacheData(t.Context())
 
 			// Assert results
 			if tt.expectedError != nil {

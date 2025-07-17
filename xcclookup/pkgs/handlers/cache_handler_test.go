@@ -124,7 +124,7 @@ func TestGetCacheHandler(t *testing.T) {
 	mockCacheManager := &mocks.MockCacheManager{}
 	cfg := types.Config{}
 
-	handlerFunc := GetCacheHandler(context.Background(), cfg, mockCacheManager)
+	handlerFunc := GetCacheHandler(t.Context(), cfg, mockCacheManager)
 
 	assert.NotNil(t, handlerFunc)
 

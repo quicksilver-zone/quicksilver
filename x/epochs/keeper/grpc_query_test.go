@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	gocontext "context"
 	"time"
 
 	"github.com/quicksilver-zone/quicksilver/x/epochs/types"
@@ -14,7 +13,7 @@ func (suite *KeeperTestSuite) TestQueryEpochInfos() {
 	chainStartTime := suite.ctx.BlockTime()
 
 	// Invalid param
-	epochInfosResponse, err := queryClient.EpochInfos(gocontext.Background(), &types.QueryEpochsInfoRequest{})
+	epochInfosResponse, err := queryClient.EpochInfos(suite.ctx, &types.QueryEpochsInfoRequest{})
 	suite.Require().NoError(err)
 	suite.Require().Len(epochInfosResponse.Epochs, 3)
 
