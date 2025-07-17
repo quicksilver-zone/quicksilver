@@ -1,13 +1,13 @@
 package types
 
 import (
-	"fmt"
-
 	"go.uber.org/multierr"
 
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/quicksilver-zone/quicksilver/utils"
 )
 
 func NewClaim(address, chainID string, module ClaimType, srcChainID string, amount math.Int) Claim {
@@ -16,20 +16,24 @@ func NewClaim(address, chainID string, module ClaimType, srcChainID string, amou
 
 // ValidateBasic performs stateless validation of a Claim.
 func (c *Claim) ValidateBasic() error {
-	var errs error
+	errs := make(map[string]error)
 
 	_, err := sdk.AccAddressFromBech32(c.UserAddress)
 	if err != nil {
-		errs = multierr.Append(errs, fmt.Errorf("userAddress: %w", err))
+		errs["userAddress"] = err
 	}
 
 	if c.ChainId == "" {
-		errs = multierr.Append(errs, fmt.Errorf("chainID: %w", ErrUndefinedAttribute))
+		errs["chainID"] = ErrUndefinedAttribute
 	}
 
 	if c.Amount.IsNil() || !c.Amount.IsPositive() {
-		errs = multierr.Append(errs, fmt.Errorf("amount: %w", ErrNotPositive))
+		errs["amount"] = ErrNotPositive
 	}
 
-	return errs
+	if len(errs) > 0 {
+		return multierr.Combine(utils.ErrorMapToSlice(errs)...)
+	}
+
+	return nil
 }
