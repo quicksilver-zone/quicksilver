@@ -156,7 +156,7 @@ func (c *Cache[T]) Fetch(ctx context.Context) error {
 	return nil
 }
 
-func (c Cache[T]) Get(ctx context.Context) ([]T, error) {
+func (c *Cache[T]) Get(ctx context.Context) ([]T, error) {
 	if time.Now().After(c.lastUpdated.Add(c.duration)) {
 		err := c.Fetch(ctx)
 		if err != nil {

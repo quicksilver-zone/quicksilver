@@ -614,3 +614,76 @@ func TestCacheEdgeCases(t *testing.T) {
 		assert.Nil(t, result)
 	})
 }
+
+func TestCacheEndToEndWithGarbageData(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		_, err := w.Write([]byte("not valid json"))
+		require.NoError(t, err)
+	}))
+	defer server.Close()
+
+	ctx := t.Context()
+	cache := &Cache[prewards.ConnectionProtocolData]{}
+	// Should error on Init due to bad data
+	err := cache.Init(ctx, server.URL, DataTypeProtocolData, 30*time.Second)
+	require.Error(t, err)
+}
+
+func TestCacheEndToEndWithTTLRefresh(t *testing.T) {
+	// Track request count to serve different data
+	requestCount := 0
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		requestCount++
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+
+		var response string
+		if requestCount == 1 {
+			// First request: initial data
+			response = `{"data":[{"ConnectionID":"conn-1","ChainID":"initial-chain","Prefix":"init","LastEpoch":100,"TransferChannel":"channel-1"}]}`
+		} else {
+			// Subsequent requests: updated data
+			response = `{"data":[{"ConnectionID":"conn-2","ChainID":"updated-chain","Prefix":"upd","LastEpoch":200,"TransferChannel":"channel-2"}]}`
+		}
+
+		_, err := w.Write([]byte(response))
+		require.NoError(t, err)
+	}))
+	defer server.Close()
+
+	ctx := t.Context()
+	cache := &Cache[prewards.ConnectionProtocolData]{}
+
+	// Set a very short TTL for testing
+	shortTTL := 10 * time.Millisecond
+	err := cache.Init(ctx, server.URL, DataTypeProtocolData, shortTTL)
+	require.NoError(t, err)
+
+	// First fetch: should get initial data
+	result1, err := cache.Get(ctx)
+	require.NoError(t, err)
+	require.Len(t, result1, 1)
+	assert.Equal(t, "conn-1", result1[0].ConnectionID)
+	assert.Equal(t, "initial-chain", result1[0].ChainID)
+	assert.Equal(t, "init", result1[0].Prefix)
+	assert.Equal(t, int64(100), result1[0].LastEpoch)
+	assert.Equal(t, "channel-1", result1[0].TransferChannel)
+
+	// Wait for TTL to expire
+	time.Sleep(shortTTL + 5*time.Millisecond)
+
+	// Second fetch: should get updated data
+	result2, err := cache.Get(ctx)
+	require.NoError(t, err)
+	require.Len(t, result2, 1)
+	assert.Equal(t, "conn-2", result2[0].ConnectionID)
+	assert.Equal(t, "updated-chain", result2[0].ChainID)
+	assert.Equal(t, "upd", result2[0].Prefix)
+	assert.Equal(t, int64(200), result2[0].LastEpoch)
+	assert.Equal(t, "channel-2", result2[0].TransferChannel)
+
+	// Verify that the server was called twice
+	assert.Equal(t, 2, requestCount)
+}
