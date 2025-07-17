@@ -53,22 +53,22 @@ func (l *Logger) With(keyvals ...interface{}) *Logger {
 
 // Debug logs a debug message
 func (l *Logger) Debug(msg string, keyvals ...interface{}) {
-	level.Debug(l.logger).Log(append([]interface{}{"msg", msg}, keyvals...)...)
+	_ = level.Debug(l.logger).Log(append([]interface{}{"msg", msg}, keyvals...)...)
 }
 
 // Info logs an info message
 func (l *Logger) Info(msg string, keyvals ...interface{}) {
-	level.Info(l.logger).Log(append([]interface{}{"msg", msg}, keyvals...)...)
+	_ = level.Info(l.logger).Log(append([]interface{}{"msg", msg}, keyvals...)...)
 }
 
 // Warn logs a warning message
 func (l *Logger) Warn(msg string, keyvals ...interface{}) {
-	level.Warn(l.logger).Log(append([]interface{}{"msg", msg}, keyvals...)...)
+	_ = level.Warn(l.logger).Log(append([]interface{}{"msg", msg}, keyvals...)...)
 }
 
 // Error logs an error message
 func (l *Logger) Error(msg string, keyvals ...interface{}) {
-	level.Error(l.logger).Log(append([]interface{}{"msg", msg}, keyvals...)...)
+	_ = level.Error(l.logger).Log(append([]interface{}{"msg", msg}, keyvals...)...)
 }
 
 // GetKitLogger returns the underlying go-kit logger for advanced usage

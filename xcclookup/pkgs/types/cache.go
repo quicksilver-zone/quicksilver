@@ -3,6 +3,7 @@ package types
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -37,7 +38,7 @@ func NewCacheManager() CacheManager {
 
 func GetCache[T prewards.ConnectionProtocolData | prewards.OsmosisParamsProtocolData | prewards.OsmosisPoolProtocolData | prewards.OsmosisClPoolProtocolData | prewards.LiquidAllowedDenomProtocolData | prewards.UmeeParamsProtocolData | icstypes.Zone](ctx context.Context, mgr *CacheManager) ([]T, error) {
 	if mgr == nil {
-		return nil, fmt.Errorf("cache manager is nil")
+		return nil, errors.New("cache manager is nil")
 	}
 	cache, ok := mgr.Data[new(Cache[T]).Type()].(*Cache[T])
 	if !ok {
