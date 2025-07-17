@@ -9,8 +9,8 @@ require (
 	github.com/cosmos/cosmos-sdk v0.47.17
 	github.com/golangci/golangci-lint/v2 v2.2.1
 	github.com/gorilla/mux v1.8.1
-	github.com/ingenuity-build/multierror v0.1.0
 	github.com/quicksilver-zone/quicksilver v1.8.2-0.20250707101051-6cb838a1fa0e
+	go.uber.org/multierr v1.11.0
 	golang.org/x/tools v0.34.0
 	gopkg.in/yaml.v3 v3.0.1
 	mvdan.cc/gofumpt v0.8.0
