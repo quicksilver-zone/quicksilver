@@ -156,7 +156,7 @@ func TestAssetsService_GetAssets(t *testing.T) {
 			service := NewAssetsService(cfg, mockCacheManager, mockClaimsService, heights)
 
 			// Call the method
-			response, errs := service.GetAssets(context.Background(), tt.address)
+			response, errs := service.GetAssets(t.Context(), tt.address)
 
 			// Debug: print out any errors
 			if len(errs) > 0 {
@@ -295,7 +295,7 @@ func TestAssetsService_GetAssets_WithMappedAddresses(t *testing.T) {
 
 	// Call the method
 	originalAddress := "quick1originaladdress"
-	response, errs := service.GetAssets(context.Background(), originalAddress)
+	response, errs := service.GetAssets(t.Context(), originalAddress)
 
 	// Assert no errors
 	assert.Equal(t, 0, len(errs))
