@@ -2,6 +2,7 @@ package types
 
 import (
 	prewards "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
+	"github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/logger"
 )
 
 type Config struct {
@@ -12,6 +13,20 @@ type Config struct {
 	Chains      map[string]string `yaml:"chains"`
 	Ignore      Ignores           `yaml:"ignores"`
 	Mocks       Mocks             `yaml:"mocks"`
+	Logging     LoggingConfig     `yaml:"logging"`
+}
+
+// LoggingConfig defines the logging configuration
+type LoggingConfig struct {
+	Level string `yaml:"level" default:"info"`
+}
+
+// GetLogLevel returns the configured log level, defaulting to info if not set
+func (c *LoggingConfig) GetLogLevel() logger.LogLevel {
+	if c.Level == "" {
+		return logger.InfoLevel
+	}
+	return logger.LogLevel(c.Level)
 }
 
 type Ignores []Ignore

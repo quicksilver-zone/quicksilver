@@ -12,6 +12,8 @@ import (
 
 	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 	prewards "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
+
+	"github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/logger"
 )
 
 const (
@@ -34,11 +36,11 @@ func NewCacheManager() CacheManager {
 }
 
 func GetCache[T prewards.ConnectionProtocolData | prewards.OsmosisParamsProtocolData | prewards.OsmosisPoolProtocolData | prewards.OsmosisClPoolProtocolData | prewards.LiquidAllowedDenomProtocolData | prewards.UmeeParamsProtocolData | icstypes.Zone](ctx context.Context, mgr *CacheManager) ([]T, error) {
-	cache, _ := mgr.Data[new(Cache[T]).Type()].(*Cache[T])
-	value, err := cache.Get(ctx)
-	if err != nil {
-		return nil, err
+	cache, ok := mgr.Data[new(Cache[T]).Type()].(*Cache[T])
+	if !ok {
+		return nil, fmt.Errorf("cache not found for type %T", new(T))
 	}
+	value := cache.Get(ctx)
 	return value, nil
 }
 
@@ -53,17 +55,13 @@ type CacheManager struct {
 
 type CacheManagerElementI interface {
 	Init(ctx context.Context, url string, dataType int, updateTime time.Duration) error
-	Fetch(ctx context.Context) error
+	Fetch(ctx context.Context)
 	Type() string
 }
 
 func (m *CacheManager) Add(ctx context.Context, element CacheManagerElementI, url string, dataType int, updateTime time.Duration) error {
 	m.Data[element.Type()] = element
-	err := m.Data[element.Type()].Init(ctx, url, dataType, updateTime)
-	if err != nil {
-		return err
-	}
-	return nil
+	return m.Data[element.Type()].Init(ctx, url, dataType, updateTime)
 }
 
 // GetConnections implements CacheManagerInterface
@@ -109,8 +107,8 @@ func (m *CacheManager) AddMocks(ctx context.Context, mocks interface{}) error {
 
 type CacheI[T any] interface {
 	Init(ctx context.Context, url string, dataType int, updateTime time.Duration) error
-	Fetch(ctx context.Context) error
-	Get(ctx context.Context) ([]T, error)
+	Fetch(ctx context.Context)
+	Get(ctx context.Context) []T
 }
 
 var (
@@ -132,33 +130,34 @@ func (c *Cache[T]) Type() string {
 	return strings.ReplaceAll(reflect.TypeOf(*a).String(), "types.", "")
 }
 
-func (c *Cache[T]) unmarshal(responseData []byte) ([]T, error) {
+func (c *Cache[T]) unmarshal(responseData []byte) []T {
 	switch c.dataType {
 	case DataTypeProtocolData:
 		data := Data[T]{}
 
 		err := json.Unmarshal(responseData, &data)
 		if err != nil {
-			return nil, err
+			panic(err)
 		}
-		return data.Data, nil
+		return data.Data
 	case DataTypeZone:
 		data := Zone[T]{}
 
 		err := json.Unmarshal(responseData, &data)
 		if err != nil {
-			return nil, err
+			panic(err)
 		}
-		return data.Zones, nil
+		return data.Zones
 	}
-	return nil, fmt.Errorf("invalid data type: %d", c.dataType)
+	return nil
 }
 
 func (c *Cache[T]) Init(ctx context.Context, url string, dataType int, updateInterval time.Duration) error {
 	c.url = url
 	c.duration = updateInterval
 	c.dataType = dataType
-	return c.Fetch(ctx)
+	c.Fetch(ctx)
+	return nil
 }
 
 func (c *Cache[T]) SetMock(mocks []T) {
@@ -181,34 +180,23 @@ func (c *Cache[T]) read(ctx context.Context) ([]byte, error) {
 	return io.ReadAll(response.Body)
 }
 
-func (c *Cache[T]) Fetch(ctx context.Context) error {
-	fmt.Println("Fetching and caching " + c.url)
+func (c *Cache[T]) Fetch(ctx context.Context) {
+	log := logger.FromContext(ctx)
+	log.Debug("Fetching and caching data", "url", c.url)
 
 	responseData, err := c.read(ctx)
 	if err != nil {
-		return err
+		log.Error("Failed to read cache data", "error", err, "url", c.url)
+		return
 	}
 
-	c.cache, err = c.unmarshal(responseData)
-	if err != nil {
-		return err
-	}
+	c.cache = c.unmarshal(responseData)
 	c.lastUpdated = time.Now()
-	return nil
 }
 
-func (c *Cache[T]) Get(ctx context.Context) ([]T, error) {
+func (c Cache[T]) Get(ctx context.Context) []T {
 	if time.Now().After(c.lastUpdated.Add(c.duration)) {
-		err := c.Fetch(ctx)
-		if err != nil {
-			return nil, err
-		}
+		c.Fetch(ctx)
 	}
-
-	// If mock data is present, return only mock data (prioritize mocks over live data)
-	if len(c.mockData) > 0 {
-		return c.mockData, nil
-	}
-
-	return c.cache, nil
+	return append(c.cache, c.mockData...)
 }

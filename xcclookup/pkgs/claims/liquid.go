@@ -3,7 +3,6 @@ package claims
 import (
 	"context"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -19,6 +18,7 @@ import (
 	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 	prewards "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 
+	"github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/logger"
 	"github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/types"
 )
 
@@ -58,6 +58,8 @@ func LiquidClaim(
 	connection prewards.ConnectionProtocolData,
 	height int64,
 ) (map[string]prewards.MsgSubmitClaim, map[string]sdk.Coins, error) {
+	log := logger.FromContext(ctx)
+
 	chain := connection.ChainID
 	prefix := connection.Prefix
 
@@ -74,7 +76,7 @@ func LiquidClaim(
 
 	host, ok := cfg.Chains[chain]
 	if !ok {
-		log.Printf("unable to find endpoint for %s", chain)
+		log.Warn("Unable to find endpoint for chain", "chain", chain)
 		// explicitly don't return an error here, as we don't want to fail the entire claim process for a temporary issue.
 		return nil, nil, nil
 	}
@@ -116,11 +118,11 @@ func LiquidClaim(
 	// add GetFiltered to CacheManager, to allow filtered lookups on a single field == value
 	laCache, err := types.GetCache[prewards.LiquidAllowedDenomProtocolData](ctx, cacheMgr)
 	if err != nil {
-		return nil, nil, fmt.Errorf("%w [GetCache[prewards.LiquidAllowedDenomProtocolData]]", err)
+		return nil, nil, err
 	}
 	zoneCache, err := types.GetCache[icstypes.Zone](ctx, cacheMgr)
 	if err != nil {
-		return nil, nil, fmt.Errorf("%w [GetCache[icstypes.Zone]]", err)
+		return nil, nil, err
 	}
 	tokens := GetTokenMap(laCache, zoneCache, chain, "", ignores)
 
@@ -151,7 +153,7 @@ func LiquidClaim(
 			lookupKey,
 			rpcclient.ABCIQueryOptions{Height: abciquery.Response.Height, Prove: true},
 		)
-		fmt.Println("Querying for value (liquid tokens)", "chain", chain, "address", address, "denom", tuple.denom) // debug?
+		log.Debug("Querying for value (liquid tokens)", "chain", chain, "address", address, "denom", tuple.denom)
 		// 7:
 		if err != nil {
 			return nil, nil, fmt.Errorf("%w [ABCIQueryWithOptions/gamm_tokens]", err)
@@ -181,5 +183,6 @@ func LiquidClaim(
 		msg[tuple.chain] = chainMsg
 	}
 
+	log.Debug("Liquid claim processing completed", "address", address, "chain", chain, "balance_count", len(queryResponse.Balances))
 	return msg, assets, nil
 }
