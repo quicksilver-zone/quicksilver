@@ -4,9 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/ingenuity-build/multierror"
+	"go.uber.org/multierr"
 
 	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+
+	"github.com/quicksilver-zone/quicksilver/utils"
 )
 
 const (
@@ -55,7 +57,7 @@ func (m *AddProtocolDataProposal) ValidateBasic() error {
 	}
 
 	if len(errors) > 0 {
-		return multierror.New(errors)
+		return multierr.Combine(utils.ErrorMapToSlice(errors)...)
 	}
 
 	return nil

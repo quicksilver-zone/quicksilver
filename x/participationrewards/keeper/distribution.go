@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/ingenuity-build/multierror"
+	"go.uber.org/multierr"
 
 	"cosmossdk.io/math"
 
@@ -182,7 +182,7 @@ func (k *Keeper) CalcTokenValues(ctx sdk.Context) (TokenValues, error) {
 	DepthFirstSearch(graph2, visited, baseDenom, sdk.OneDec(), tvs)
 
 	if len(errs) > 0 {
-		return nil, multierror.New(errs)
+		return nil, multierr.Combine(utils.ErrorMapToSlice(errs)...)
 	}
 
 	return tvs, nil

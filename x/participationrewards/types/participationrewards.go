@@ -4,12 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/ingenuity-build/multierror"
+	"go.uber.org/multierr"
 
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/quicksilver-zone/quicksilver/utils"
 	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 )
 
@@ -48,7 +49,7 @@ func (dp *DistributionProportions) ValidateBasic() error {
 	}
 
 	if len(errs) > 0 {
-		return multierror.New(errs)
+		return multierr.Combine(utils.ErrorMapToSlice(errs)...)
 	}
 
 	return nil
@@ -59,37 +60,37 @@ func (dp *DistributionProportions) Total() sdk.Dec {
 }
 
 func (kpd *KeyedProtocolData) ValidateBasic() error {
-	errors := make(map[string]error)
+	errs := make(map[string]error)
 
 	if kpd.Key == "" {
-		errors["Key"] = ErrUndefinedAttribute
+		errs["Key"] = ErrUndefinedAttribute
 	}
 
 	if kpd.ProtocolData == nil {
-		errors["ProtocolData"] = ErrUndefinedAttribute
+		errs["ProtocolData"] = ErrUndefinedAttribute
 	} else {
 		if err := kpd.ProtocolData.ValidateBasic(); err != nil {
-			errors["ProtocolData"] = err
+			errs["ProtocolData"] = err
 		}
 	}
 
-	if len(errors) > 0 {
-		return multierror.New(errors)
+	if len(errs) > 0 {
+		return multierr.Combine(utils.ErrorMapToSlice(errs)...)
 	}
 
 	return nil
 }
 
 func (pd *ProtocolData) ValidateBasic() error {
-	errors := make(map[string]error)
+	errs := make(map[string]error)
 
 	// type enumerator
 	var te ProtocolDataType
 	if pd.Type == "" {
-		errors["Type"] = ErrUndefinedAttribute
+		errs["Type"] = ErrUndefinedAttribute
 	} else {
 		if tv, exists := ProtocolDataType_value[pd.Type]; !exists {
-			errors["Type"] = fmt.Errorf("%w: %s", ErrUnknownProtocolDataType, pd.Type)
+			errs["Type"] = fmt.Errorf("%w: %s", ErrUnknownProtocolDataType, pd.Type)
 		} else {
 			// capture enum value to validate protocol data according to type
 			te = ProtocolDataType(tv)
@@ -97,15 +98,15 @@ func (pd *ProtocolData) ValidateBasic() error {
 	}
 
 	if len(pd.Data) == 0 {
-		errors["Data"] = ErrUndefinedAttribute
+		errs["Data"] = ErrUndefinedAttribute
 	} else if te != -1 {
 		if err := validateProtocolData(pd.Data, te); err != nil {
-			errors["Data"] = err
+			errs["Data"] = err
 		}
 	}
 
-	if len(errors) > 0 {
-		return multierror.New(errors)
+	if len(errs) > 0 {
+		return multierr.Combine(utils.ErrorMapToSlice(errs)...)
 	}
 
 	return nil
