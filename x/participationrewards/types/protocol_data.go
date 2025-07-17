@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/quicksilver-zone/quicksilver/utils"
 	"go.uber.org/multierr"
 )
 
@@ -90,11 +91,7 @@ func (cpd *ConnectionProtocolData) ValidateBasic() error {
 	}
 
 	if len(errs) > 0 {
-		var errList []error
-		for _, err := range errs {
-			errList = append(errList, err)
-		}
-		return multierr.Combine(errList...)
+		return multierr.Combine(utils.ErrorMapToSlice(errs)...)
 	}
 
 	return nil

@@ -9,6 +9,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/quicksilver-zone/quicksilver/utils"
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	cmtypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
 )
@@ -92,11 +93,7 @@ func (msg MsgSubmitClaim) ValidateBasic() error {
 
 	// check for errors and return
 	if len(errs) > 0 {
-		var errList []error
-		for _, err := range errs {
-			errList = append(errList, err)
-		}
-		return multierr.Combine(errList...)
+		return multierr.Combine(utils.ErrorMapToSlice(errs)...)
 	}
 
 	return nil

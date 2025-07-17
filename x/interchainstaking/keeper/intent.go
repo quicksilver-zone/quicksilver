@@ -246,11 +246,7 @@ func (k msgServer) validateValidatorIntents(ctx sdk.Context, zone types.Zone, in
 	}
 
 	if len(errMap) > 0 {
-		var errList []error
-		for _, err := range errMap {
-			errList = append(errList, err)
-		}
-		return multierr.Combine(errList...)
+		return multierr.Combine(utils.ErrorMapToSlice(errMap)...)
 	}
 
 	return nil
