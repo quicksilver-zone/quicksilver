@@ -44,9 +44,6 @@ func UmeeClaim(
 		return nil, nil, err
 	}
 
-	if err != nil {
-		return nil, nil, err
-	}
 	log.Debug("Umee address encoding successful", "address", address, "umee_address", umeeAddress)
 
 	host, ok := cfg.Chains[chain]
