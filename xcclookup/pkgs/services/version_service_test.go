@@ -4,8 +4,9 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/mocks"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/mocks"
 )
 
 func TestVersionService_GetVersion(t *testing.T) {

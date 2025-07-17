@@ -3,10 +3,12 @@ package claims
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 	prewards "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
+
 	"github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/types"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestGetTokenMap(t *testing.T) {

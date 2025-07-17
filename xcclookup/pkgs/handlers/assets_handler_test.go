@@ -6,13 +6,16 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/gorilla/mux"
+	"github.com/stretchr/testify/assert"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	prewards "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
+
 	"github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/mocks"
 	"github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/services"
 	"github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/types"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestAssetsHandler_Handle(t *testing.T) {

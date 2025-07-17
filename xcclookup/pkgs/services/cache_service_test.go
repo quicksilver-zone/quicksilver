@@ -6,9 +6,11 @@ import (
 	"errors"
 	"testing"
 
-	prewards "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
-	"github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/mocks"
 	"github.com/stretchr/testify/assert"
+
+	prewards "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
+
+	"github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/mocks"
 )
 
 func TestCacheService_GetCacheData(t *testing.T) {
