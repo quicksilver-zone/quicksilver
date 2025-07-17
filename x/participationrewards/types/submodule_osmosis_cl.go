@@ -78,11 +78,7 @@ func (opd *OsmosisClPoolProtocolData) ValidateBasic() error {
 	}
 
 	if len(errs) > 0 {
-		var errList []error
-		for _, err := range errs {
-			errList = append(errList, err)
-		}
-		return multierr.Combine(errList...)
+		return multierr.Combine(utils.ErrorMapToSlice(errs)...)
 	}
 
 	return nil

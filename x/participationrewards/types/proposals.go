@@ -32,10 +32,10 @@ func (m *AddProtocolDataProposal) ValidateBasic() error {
 		return err
 	}
 
-	errors := make(map[string]error)
+	errs := make(map[string]error)
 
 	if m.Type == "" {
-		errors["Type"] = ErrUndefinedAttribute
+		errs["Type"] = ErrUndefinedAttribute
 	}
 
 	// Key is now a deprecated field and unused.
@@ -44,20 +44,20 @@ func (m *AddProtocolDataProposal) ValidateBasic() error {
 	// }
 
 	if len(m.Data) == 0 {
-		errors["Data"] = ErrUndefinedAttribute
+		errs["Data"] = ErrUndefinedAttribute
 	}
 
 	pd, err := UnmarshalProtocolData(ProtocolDataType(ProtocolDataType_value[m.Type]), m.Data)
 	if err != nil {
-		errors["Data"] = err
+		errs["Data"] = err
 	} else {
 		if err = pd.ValidateBasic(); err != nil {
-			errors["Data"] = err
+			errs["Data"] = err
 		}
 	}
 
-	if len(errors) > 0 {
-		return multierr.Combine(utils.ErrorMapToSlice(errors)...)
+	if len(errs) > 0 {
+		return multierr.Combine(utils.ErrorMapToSlice(errs)...)
 	}
 
 	return nil
