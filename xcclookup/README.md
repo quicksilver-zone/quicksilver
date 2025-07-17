@@ -1,6 +1,6 @@
 # xcclookup
 
-xcclookup is a utility to assemble Quicksilver x/partiticipationrewards MsgSubmitClaim transactions for a user, in response to a REST request.
+xcclookup is a utility to assemble Quicksilver x/participationrewards MsgSubmitClaim transactions for a user, in response to a REST request.
 
 ## Build
 
