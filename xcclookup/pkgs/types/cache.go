@@ -40,8 +40,7 @@ func GetCache[T prewards.ConnectionProtocolData | prewards.OsmosisParamsProtocol
 	if !ok {
 		return nil, fmt.Errorf("cache not found for type %T", new(T))
 	}
-	value := cache.Get(ctx)
-	return value, nil
+	return cache.Get(ctx)
 }
 
 func AddMocks[T prewards.ConnectionProtocolData | prewards.OsmosisParamsProtocolData | prewards.OsmosisPoolProtocolData | prewards.OsmosisClPoolProtocolData | prewards.LiquidAllowedDenomProtocolData | prewards.UmeeParamsProtocolData | icstypes.Zone](ctx context.Context, mgr *CacheManager, mocks []T) {
@@ -55,7 +54,7 @@ type CacheManager struct {
 
 type CacheManagerElementI interface {
 	Init(ctx context.Context, url string, dataType int, updateTime time.Duration) error
-	Fetch(ctx context.Context)
+	Fetch(ctx context.Context) error
 	Type() string
 }
 
@@ -107,8 +106,8 @@ func (m *CacheManager) AddMocks(ctx context.Context, mocks interface{}) error {
 
 type CacheI[T any] interface {
 	Init(ctx context.Context, url string, dataType int, updateTime time.Duration) error
-	Fetch(ctx context.Context)
-	Get(ctx context.Context) []T
+	Fetch(ctx context.Context) error
+	Get(ctx context.Context) ([]T, error)
 }
 
 var (
@@ -130,34 +129,33 @@ func (c *Cache[T]) Type() string {
 	return strings.ReplaceAll(reflect.TypeOf(*a).String(), "types.", "")
 }
 
-func (c *Cache[T]) unmarshal(responseData []byte) []T {
+func (c *Cache[T]) unmarshal(responseData []byte) ([]T, error) {
 	switch c.dataType {
 	case DataTypeProtocolData:
 		data := Data[T]{}
 
 		err := json.Unmarshal(responseData, &data)
 		if err != nil {
-			panic(err)
+			return nil, err
 		}
-		return data.Data
+		return data.Data, nil
 	case DataTypeZone:
 		data := Zone[T]{}
 
 		err := json.Unmarshal(responseData, &data)
 		if err != nil {
-			panic(err)
+			return nil, err
 		}
-		return data.Zones
+		return data.Zones, nil
 	}
-	return nil
+	return nil, fmt.Errorf("unknown data type: %d", c.dataType)
 }
 
 func (c *Cache[T]) Init(ctx context.Context, url string, dataType int, updateInterval time.Duration) error {
 	c.url = url
 	c.duration = updateInterval
 	c.dataType = dataType
-	c.Fetch(ctx)
-	return nil
+	return c.Fetch(ctx)
 }
 
 func (c *Cache[T]) SetMock(mocks []T) {
@@ -180,23 +178,33 @@ func (c *Cache[T]) read(ctx context.Context) ([]byte, error) {
 	return io.ReadAll(response.Body)
 }
 
-func (c *Cache[T]) Fetch(ctx context.Context) {
+func (c *Cache[T]) Fetch(ctx context.Context) error {
 	log := logger.FromContext(ctx)
 	log.Debug("Fetching and caching data", "url", c.url)
 
 	responseData, err := c.read(ctx)
 	if err != nil {
 		log.Error("Failed to read cache data", "error", err, "url", c.url)
-		return
+		return err
 	}
 
-	c.cache = c.unmarshal(responseData)
+	cache, err := c.unmarshal(responseData)
+	if err != nil {
+		log.Error("Failed to unmarshal cache data", "error", err, "url", c.url)
+		return err
+	}
+
+	c.cache = cache
 	c.lastUpdated = time.Now()
+	return nil
 }
 
-func (c Cache[T]) Get(ctx context.Context) []T {
+func (c *Cache[T]) Get(ctx context.Context) ([]T, error) {
 	if time.Now().After(c.lastUpdated.Add(c.duration)) {
-		c.Fetch(ctx)
+		err := c.Fetch(ctx)
+		if err != nil {
+			return nil, err
+		}
 	}
-	return append(c.cache, c.mockData...)
+	return append(c.cache, c.mockData...), nil
 }
