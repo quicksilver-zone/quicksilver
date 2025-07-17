@@ -4,23 +4,22 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/ingenuity-build/multierror"
+	"go.uber.org/multierr"
 )
 
 func TestErrorsDeterminism(t *testing.T) {
-	e := multierror.MultiError{
-		Errors: map[string]error{
-			"a":    errors.New("a"),
-			"Z":    errors.New("Z"),
-			"🚨":    errors.New("🚨"),
-			"a🚨":   errors.New("a🚨"),
-			"ABC":  errors.New("ABC"),
-			"1one": errors.New("1one"),
-			"A":    errors.New("A"),
-			"X":    errors.New("X"),
-		},
+	errs := []error{
+		errors.New("a"),
+		errors.New("Z"),
+		errors.New("🚨"),
+		errors.New("a🚨"),
+		errors.New("ABC"),
+		errors.New("1one"),
+		errors.New("A"),
+		errors.New("X"),
 	}
 
+	e := multierr.Combine(errs...)
 	e0 := e.Error()
 
 	for i := 0; i < 100; i++ {

@@ -1,7 +1,9 @@
 package types
 
 import (
-	"github.com/ingenuity-build/multierror"
+	fmt "fmt"
+
+	"go.uber.org/multierr"
 
 	"cosmossdk.io/math"
 
@@ -14,24 +16,20 @@ func NewClaim(address, chainID string, module ClaimType, srcChainID string, amou
 
 // ValidateBasic performs stateless validation of a Claim.
 func (c *Claim) ValidateBasic() error {
-	errs := make(map[string]error)
+	var errs error
 
 	_, err := sdk.AccAddressFromBech32(c.UserAddress)
 	if err != nil {
-		errs["UserAddress"] = err
+		errs = multierr.Append(errs, fmt.Errorf("UserAddress: %w", err))
 	}
 
 	if c.ChainId == "" {
-		errs["ChainID"] = ErrUndefinedAttribute
+		errs = multierr.Append(errs, fmt.Errorf("ChainID: %w", ErrUndefinedAttribute))
 	}
 
 	if c.Amount.IsNil() || !c.Amount.IsPositive() {
-		errs["Amount"] = ErrNotPositive
+		errs = multierr.Append(errs, fmt.Errorf("Amount: %w", ErrNotPositive))
 	}
 
-	if len(errs) > 0 {
-		return multierror.New(errs)
-	}
-
-	return nil
+	return errs
 }

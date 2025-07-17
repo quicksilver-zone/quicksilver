@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/ingenuity-build/multierror"
+	"go.uber.org/multierr"
 )
 
 func NewProtocolData(datatype string, data json.RawMessage) *ProtocolData {
@@ -90,7 +90,11 @@ func (cpd *ConnectionProtocolData) ValidateBasic() error {
 	}
 
 	if len(errs) > 0 {
-		return multierror.New(errs)
+		var errList []error
+		for _, err := range errs {
+			errList = append(errList, err)
+		}
+		return multierr.Combine(errList...)
 	}
 
 	return nil

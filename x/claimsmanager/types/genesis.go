@@ -3,7 +3,7 @@ package types
 import (
 	"fmt"
 
-	"github.com/ingenuity-build/multierror"
+	"go.uber.org/multierr"
 )
 
 func NewGenesisState(params Params) *GenesisState {
@@ -34,7 +34,11 @@ func (gs *GenesisState) Validate() error {
 	}
 
 	if len(errs) > 0 {
-		return multierror.New(errs)
+		var errList []error
+		for _, err := range errs {
+			errList = append(errList, err)
+		}
+		return multierr.Combine(errList...)
 	}
 
 	return nil

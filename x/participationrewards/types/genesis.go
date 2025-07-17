@@ -3,7 +3,7 @@ package types
 import (
 	"fmt"
 
-	"github.com/ingenuity-build/multierror"
+	"go.uber.org/multierr"
 )
 
 func NewGenesisState(params Params) *GenesisState {
@@ -20,22 +20,25 @@ func DefaultGenesisState() *GenesisState {
 // Validate validates the provided genesis state to ensure the
 // expected invariants holds.
 func (gs *GenesisState) Validate() error {
-	errors := make(map[string]error)
+	errs := make(map[string]error)
 
 	if err := gs.Params.Validate(); err != nil {
-		errors["Params"] = err
+		errs["Params"] = err
 	}
 
 	for i, kpd := range gs.ProtocolData {
 		if err := kpd.ValidateBasic(); err != nil {
 			el := fmt.Sprintf("ProtocolData[%d]", i)
-			errors[el] = err
-			continue
+			errs[el] = err
 		}
 	}
 
-	if len(errors) > 0 {
-		return multierror.New(errors)
+	if len(errs) > 0 {
+		var errList []error
+		for _, err := range errs {
+			errList = append(errList, err)
+		}
+		return multierr.Combine(errList...)
 	}
 
 	return nil

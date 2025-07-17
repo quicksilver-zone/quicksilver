@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"errors"
+	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -11,8 +12,6 @@ import (
 
 	cmtypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
 	prewards "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
-
-	"sync"
 
 	"github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/mocks"
 	"github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/types"
