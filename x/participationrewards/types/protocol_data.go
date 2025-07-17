@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/quicksilver-zone/quicksilver/utils"
 	"go.uber.org/multierr"
+
+	"github.com/quicksilver-zone/quicksilver/utils"
 )
 
 func NewProtocolData(datatype string, data json.RawMessage) *ProtocolData {
