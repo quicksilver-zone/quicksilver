@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/ingenuity-build/multierror"
+	"go.uber.org/multierr"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -60,6 +60,15 @@ var (
 	_ codectypes.UnpackInterfacesMessage = &MsgGovExecuteICATx{}
 )
 
+// helper function to convert error map to slice for multierr
+func errorMapToSlice(errs map[string]error) []error {
+	var errList []error
+	for _, err := range errs {
+		errList = append(errList, err)
+	}
+	return errList
+}
+
 // NewMsgRequestRedemption - construct a msg to request redemption.
 func NewMsgRequestRedemption(value sdk.Coin, destinationAddress string, fromAddress sdk.Address) *MsgRequestRedemption {
 	return &MsgRequestRedemption{Value: value, DestinationAddress: destinationAddress, FromAddress: fromAddress.String()}
@@ -90,7 +99,7 @@ func (msg MsgRequestRedemption) ValidateBasic() error {
 	}
 
 	if len(errs) > 0 {
-		return multierror.New(errs)
+		return multierr.Combine(errorMapToSlice(errs)...)
 	}
 
 	return nil
@@ -137,7 +146,7 @@ func (msg MsgCancelRedemption) ValidateBasic() error {
 	}
 
 	if len(errs) > 0 {
-		return multierror.New(errs)
+		return multierr.Combine(errorMapToSlice(errs)...)
 	}
 
 	return nil
@@ -181,7 +190,7 @@ func (msg MsgRequeueRedemption) ValidateBasic() error {
 	}
 
 	if len(errs) > 0 {
-		return multierror.New(errs)
+		return multierr.Combine(errorMapToSlice(errs)...)
 	}
 
 	return nil
@@ -237,7 +246,7 @@ func (msg MsgUpdateRedemption) ValidateBasic() error {
 	}
 
 	if len(errs) > 0 {
-		return multierror.New(errs)
+		return multierr.Combine(errorMapToSlice(errs)...)
 	}
 
 	return nil
@@ -337,7 +346,7 @@ func (msg MsgSignalIntent) ValidateBasic() error {
 		}
 	}
 	if len(errm) > 0 {
-		return multierror.New(errm)
+		return multierr.Combine(errorMapToSlice(errm)...)
 	}
 
 	return nil

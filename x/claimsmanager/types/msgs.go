@@ -1,6 +1,6 @@
 package types
 
-import "github.com/ingenuity-build/multierror"
+import "go.uber.org/multierr"
 
 // ValidateBasic performs stateless validation for Proof.
 func (p *Proof) ValidateBasic() error {
@@ -28,7 +28,11 @@ func (p *Proof) ValidateBasic() error {
 
 	// check for errors and return
 	if len(errs) > 0 {
-		return multierror.New(errs)
+		var errList []error
+		for _, err := range errs {
+			errList = append(errList, err)
+		}
+		return multierr.Combine(errList...)
 	}
 
 	return nil

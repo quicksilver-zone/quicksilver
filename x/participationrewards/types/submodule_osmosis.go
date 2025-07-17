@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ingenuity-build/multierror"
+	"go.uber.org/multierr"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -110,7 +110,11 @@ func (opd *OsmosisPoolProtocolData) ValidateBasic() error {
 	}
 
 	if len(errs) > 0 {
-		return multierror.New(errs)
+		var errList []error
+		for _, err := range errs {
+			errList = append(errList, err)
+		}
+		return multierr.Combine(errList...)
 	}
 
 	return nil
@@ -146,7 +150,11 @@ func (oppd *OsmosisParamsProtocolData) ValidateBasic() error {
 	}
 
 	if len(errs) > 0 {
-		return multierror.New(errs)
+		var errList []error
+		for _, err := range errs {
+			errList = append(errList, err)
+		}
+		return multierr.Combine(errList...)
 	}
 
 	return nil

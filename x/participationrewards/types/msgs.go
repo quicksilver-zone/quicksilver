@@ -5,9 +5,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/ingenuity-build/multierror"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"go.uber.org/multierr"
 
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	cmtypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
@@ -92,7 +91,11 @@ func (msg MsgSubmitClaim) ValidateBasic() error {
 
 	// check for errors and return
 	if len(errs) > 0 {
-		return multierror.New(errs)
+		var errList []error
+		for _, err := range errs {
+			errList = append(errList, err)
+		}
+		return multierr.Combine(errList...)
 	}
 
 	return nil
