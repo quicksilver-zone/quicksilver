@@ -1,3 +1,5 @@
+logging:
+  level: info
 bind_port: 8090
 timeout: 3
 source_chain: quicksilver-2
@@ -18,16 +20,17 @@ chains:
   archway-1: https://archway-1.rpc.quicksilver.zone:443
   omniflixhub-1: https://omniflixhub-1.rpc.quicksilver.zone:443
   injective-1: https://injective-1.rpc.quicksilver.zone:443
+
 mocks:
-#   umee_params:
-#     - chainid: umee-1
-   connections:
-     - connectionid: connection-2
-       chainid: osmosis-1
-       lastepoch: 39990000
-       prefix: osmo
-       transferchannel: channel-2
-#   osmosis_pools:
+#     umee_params:
+#       - chainid: umee-1
+#  connections:
+#    - connectionid: connection-2
+#      chainid: osmosis-1
+#      lastepoch: 39990000
+#      prefix: osmo
+#      transferchannel: channel-2
+#  osmosis_pools:
 #     - poolid: 1059
 #       poolname: qOSMO/OSMO
 #       lastupdated: 2024-04-27T17:00:44.560214732Z

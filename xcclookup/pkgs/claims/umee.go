@@ -20,6 +20,7 @@ import (
 	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 	prewards "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 
+	"github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/logger"
 	"github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/types"
 )
 
@@ -32,6 +33,8 @@ func UmeeClaim(
 	chain string,
 	height int64,
 ) (map[string]prewards.MsgSubmitClaim, map[string]sdk.Coins, error) {
+	log := logger.FromContext(ctx)
+
 	addrBytes, err := addressutils.AccAddressFromBech32(address, "")
 	if err != nil {
 		return nil, nil, err
@@ -44,7 +47,7 @@ func UmeeClaim(
 	if err != nil {
 		return nil, nil, err
 	}
-	fmt.Println("valid umee address encoding...")
+	log.Debug("Umee address encoding successful", "address", address, "umee_address", umeeAddress)
 
 	host, ok := cfg.Chains[chain]
 	if !ok {
@@ -53,7 +56,7 @@ func UmeeClaim(
 	if err != nil {
 		return nil, nil, err
 	}
-	fmt.Printf("found %q in config for %q...\n", host, chain)
+	log.Debug("Found chain endpoint in config", "chain", chain, "host", host)
 
 	client, err := types.NewRPCClient(host, time.Duration(cfg.Timeout)*time.Second)
 	if err != nil {
@@ -84,6 +87,7 @@ func UmeeClaim(
 
 	ignores := cfg.Ignore.GetIgnoresForType(types.IgnoreTypeLiquid)
 
+	// add GetFiltered to CacheManager, to allow filtered lookups on a single field == value
 	laCache, err := types.GetCache[prewards.LiquidAllowedDenomProtocolData](ctx, cacheMgr)
 	if err != nil {
 		return nil, nil, err
@@ -124,7 +128,7 @@ func UmeeClaim(
 			lookupKey,
 			rpcclient.ABCIQueryOptions{Height: leverageaccountbalancesquery.Response.Height, Prove: true},
 		)
-		fmt.Println("Querying for value (umee - leverage)", "prefix", string(lookupKey)) // debug?
+		log.Debug("Querying for value (umee - leverage)", "prefix", string(lookupKey), "address", address, "chain", chain)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -155,5 +159,6 @@ func UmeeClaim(
 		msg[tuple.chain] = chainMsg
 	}
 
+	log.Debug("Umee claim processing completed", "address", address, "chain", chain, "collateral_count", len(leverageQueryResponse.Collateral))
 	return msg, assets, nil
 }
