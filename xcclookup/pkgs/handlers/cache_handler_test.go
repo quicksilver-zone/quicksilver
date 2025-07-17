@@ -31,7 +31,7 @@ func TestCacheHandler_Handle(t *testing.T) {
 						{ChainID: "test-chain-1", LastEpoch: 1},
 					},
 					OsmosisPools: []prewards.OsmosisPoolProtocolData{
-						{PoolID: "pool-1"},
+						{PoolID: 1},
 					},
 				}
 				jsonData, _ := json.Marshal(data)
