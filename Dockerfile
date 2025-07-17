@@ -1,4 +1,4 @@
-FROM golang:1.23.7-alpine3.21 AS builder
+FROM golang:1.24.5-alpine3.21 AS builder
 RUN apk add --no-cache git musl-dev openssl-dev linux-headers ca-certificates build-base
 
 WORKDIR /src/app/

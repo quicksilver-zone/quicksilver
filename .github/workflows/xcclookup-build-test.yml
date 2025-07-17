@@ -1,12 +1,12 @@
 on:
   push:
     paths:
-      - icq-relayer/**
+      - xcclookup/**
   pull_request:
     paths:
-      - icq-relayer/**
+      - xcclookup/**
 
-name: icq-relayer
+name: xcclookup
 jobs:
   test:
     strategy:
@@ -20,9 +20,9 @@ jobs:
         with:
           go-version: ${{ matrix.go-version }}
           cache: true
-          cache-dependency-path: icq-relayer/go.sum
+          cache-dependency-path: xcclookup/go.sum
       - run: |
-          cd icq-relayer
+          cd xcclookup
           go test ./...
   build:
     strategy:
@@ -36,7 +36,7 @@ jobs:
         with:
           go-version: ${{ matrix.go-version }}
           cache: true
-          cache-dependency-path: icq-relayer/go.sum
+          cache-dependency-path: xcclookup/go.sum
       - run: |
-          cd icq-relayer
+          cd xcclookup
           make build

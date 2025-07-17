@@ -23,7 +23,7 @@ func TestTPSCounter(t *testing.T) {
 	wlog := &writerLogger{w: buf}
 	tpc := newTPSCounter(wlog)
 	tpc.reportPeriod = 5 * time.Millisecond
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(t.Context())
 	go func() {
 		if err := tpc.start(ctx); err != nil {
 			panic(err)
