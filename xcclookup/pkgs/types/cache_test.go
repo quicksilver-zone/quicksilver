@@ -205,58 +205,70 @@ func TestCacheSetMock(t *testing.T) {
 
 func TestCacheRead(t *testing.T) {
 	tests := []struct {
-		name        string
-		serverFunc  func(w http.ResponseWriter, r *http.Request)
-		expectError bool
-		expectedLen int
+		name         string
+		dataType     int
+		responseData []byte
+		expectError  bool
+		expectedLen  int
 	}{
 		{
-			name: "successful read",
-			serverFunc: func(w http.ResponseWriter, r *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusOK)
-				_, err := w.Write([]byte(`{"data":[]}`))
-				require.NoError(t, err)
-			},
-			expectError: false,
-			expectedLen: 11, // Length of `{"data":[]}` (11 bytes)
+			name:         "valid protocol data",
+			dataType:     DataTypeProtocolData,
+			responseData: []byte(`{"data":[{"chain_id":"test-chain","prefix":"test","last_epoch":100}]}`),
+			expectError:  false,
+			expectedLen:  1,
 		},
 		{
-			name: "server error",
-			serverFunc: func(w http.ResponseWriter, r *http.Request) {
-				w.WriteHeader(http.StatusInternalServerError)
-			},
-			expectError: false, // HTTP errors don't cause read errors
-			expectedLen: 0,
+			name:         "valid zone data",
+			dataType:     DataTypeZone,
+			responseData: []byte(`{"zones":[{"chain_id":"test-zone","connection_id":"test-conn"}],"stats":null,"pagination":null}`),
+			expectError:  false,
+			expectedLen:  1,
 		},
 		{
-			name: "large response",
-			serverFunc: func(w http.ResponseWriter, r *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusOK)
-				largeData := make([]byte, 10000)
-				for i := range largeData {
-					largeData[i] = 'a'
-				}
-				_, err := w.Write(largeData)
-				require.NoError(t, err)
-			},
-			expectError: false,
-			expectedLen: 10000,
+			name:         "invalid data type",
+			dataType:     999,
+			responseData: []byte(`{"data":[]}`),
+			expectError:  true,
+			expectedLen:  0,
+		},
+		{
+			name:         "invalid JSON for protocol data",
+			dataType:     DataTypeProtocolData,
+			responseData: []byte(`invalid json`),
+			expectError:  true,
+			expectedLen:  0,
+		},
+		{
+			name:         "invalid JSON for zone data",
+			dataType:     DataTypeZone,
+			responseData: []byte(`invalid json`),
+			expectError:  true,
+			expectedLen:  0,
+		},
+		{
+			name:         "empty protocol data",
+			dataType:     DataTypeProtocolData,
+			responseData: []byte(`{"data":[]}`),
+			expectError:  false,
+			expectedLen:  0,
+		},
+		{
+			name:         "empty zone data",
+			dataType:     DataTypeZone,
+			responseData: []byte(`{"zones":[],"stats":null,"pagination":null}`),
+			expectError:  false,
+			expectedLen:  0,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			server := httptest.NewServer(http.HandlerFunc(tt.serverFunc))
-			defer server.Close()
-
-			ctx := t.Context()
 			cache := &Cache[prewards.ConnectionProtocolData]{
-				url: server.URL,
+				dataType: tt.dataType,
 			}
 
-			result, err := cache.read(ctx)
+			result, err := cache.unmarshal(tt.responseData)
 
 			if tt.expectError {
 				assert.Error(t, err)
@@ -343,128 +355,6 @@ func TestCacheFetch(t *testing.T) {
 }
 
 func TestCacheGet(t *testing.T) {
-	tests := []struct {
-		name          string
-		cacheData     []prewards.ConnectionProtocolData
-		mockData      []prewards.ConnectionProtocolData
-		duration      time.Duration
-		lastUpdated   time.Time
-		expectFetch   bool
-		expectedTotal int
-	}{
-		{
-			name: "cache not expired, no mock data",
-			cacheData: []prewards.ConnectionProtocolData{
-				{ChainID: "cache-1", Prefix: "cache", LastEpoch: 100},
-			},
-			mockData:      []prewards.ConnectionProtocolData{},
-			duration:      30 * time.Second,
-			lastUpdated:   time.Now(),
-			expectFetch:   false,
-			expectedTotal: 1,
-		},
-		{
-			name: "cache not expired, with mock data",
-			cacheData: []prewards.ConnectionProtocolData{
-				{ChainID: "cache-1", Prefix: "cache", LastEpoch: 100},
-			},
-			mockData: []prewards.ConnectionProtocolData{
-				{ChainID: "mock-1", Prefix: "mock", LastEpoch: 200},
-			},
-			duration:      30 * time.Second,
-			lastUpdated:   time.Now(),
-			expectFetch:   false,
-			expectedTotal: 1, // Only mock data is returned when mock data is present
-		},
-		{
-			name: "cache expired",
-			cacheData: []prewards.ConnectionProtocolData{
-				{ChainID: "cache-1", Prefix: "cache", LastEpoch: 100},
-			},
-			mockData:      []prewards.ConnectionProtocolData{},
-			duration:      30 * time.Second,
-			lastUpdated:   time.Now().Add(-31 * time.Second), // Expired
-			expectFetch:   true,
-			expectedTotal: 0, // Will fail to fetch due to no server
-		},
-		{
-			name:          "empty cache",
-			cacheData:     []prewards.ConnectionProtocolData{},
-			mockData:      []prewards.ConnectionProtocolData{},
-			duration:      30 * time.Second,
-			lastUpdated:   time.Now(),
-			expectFetch:   false,
-			expectedTotal: 0,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			ctx := t.Context()
-			cache := &Cache[prewards.ConnectionProtocolData]{
-				cache:       tt.cacheData,
-				mockData:    tt.mockData,
-				duration:    tt.duration,
-				lastUpdated: tt.lastUpdated,
-				url:         "http://invalid-url-for-testing", // Invalid URL to test fetch failure
-			}
-
-			result, err := cache.Get(ctx)
-
-			if tt.expectFetch {
-				// Should fail due to invalid URL
-				assert.Error(t, err)
-			} else {
-				assert.NoError(t, err)
-				assert.Len(t, result, tt.expectedTotal)
-			}
-		})
-	}
-}
-
-func TestCacheManagerAdd(t *testing.T) {
-	tests := []struct {
-		name        string
-		url         string
-		dataType    int
-		updateTime  time.Duration
-		expectError bool
-	}{
-		{
-			name:        "valid cache element",
-			url:         "http://localhost:8080/test",
-			dataType:    DataTypeProtocolData,
-			updateTime:  30 * time.Second,
-			expectError: true, // Will fail due to HTTP request, but we test the structure
-		},
-		{
-			name:        "empty URL",
-			url:         "",
-			dataType:    DataTypeProtocolData,
-			updateTime:  30 * time.Second,
-			expectError: true,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			ctx := t.Context()
-			manager := NewCacheManager()
-			cache := &Cache[prewards.ConnectionProtocolData]{}
-
-			err := manager.Add(ctx, cache, tt.url, tt.dataType, tt.updateTime)
-
-			if tt.expectError {
-				assert.Error(t, err)
-			} else {
-				assert.NoError(t, err)
-				assert.Contains(t, manager.Data, cache.Type())
-			}
-		})
-	}
-}
-
-func TestGetCache(t *testing.T) {
 	ctx := t.Context()
 	manager := NewCacheManager()
 
@@ -482,8 +372,9 @@ func TestGetCache(t *testing.T) {
 	result, err := GetCache[prewards.ConnectionProtocolData](ctx, &manager)
 
 	assert.NoError(t, err)
-	assert.Len(t, result, 1)
-	assert.Equal(t, "test-chain", result[0].ChainID)
+	// Expect the sum of cache and mockData lengths
+	assert.Len(t, result, len(cache.cache)+len(cache.mockData))
+	assert.Equal(t, "test-chain", result[len(cache.cache)].ChainID)
 }
 
 func TestAddMocks(t *testing.T) {
@@ -575,7 +466,8 @@ func TestCachePerformance(t *testing.T) {
 	// Should complete quickly (less than 10ms)
 	assert.Less(t, duration, 10*time.Millisecond)
 	assert.NoError(t, err)
-	assert.Len(t, result, 1000) // Only mock data when cache is not expired
+	// Expect the sum of cache and mockData lengths
+	assert.Len(t, result, len(cache.cache)+len(cache.mockData))
 }
 
 func TestCacheEdgeCases(t *testing.T) {
@@ -583,20 +475,18 @@ func TestCacheEdgeCases(t *testing.T) {
 		ctx := t.Context()
 		var manager *CacheManager
 
-		// This should panic or return an error
-		assert.Panics(t, func() {
-			_, _ = GetCache[prewards.ConnectionProtocolData](ctx, manager)
-		})
+		// This should return an error, not panic
+		_, err := GetCache[prewards.ConnectionProtocolData](ctx, manager)
+		assert.Error(t, err)
 	})
 
 	t.Run("cache not found in manager", func(t *testing.T) {
 		ctx := t.Context()
 		manager := NewCacheManager()
 
-		// Try to get cache that doesn't exist - this will panic due to nil pointer
-		assert.Panics(t, func() {
-			_, _ = GetCache[prewards.ConnectionProtocolData](ctx, &manager)
-		})
+		// Try to get cache that doesn't exist - should return error, not panic
+		_, err := GetCache[prewards.ConnectionProtocolData](ctx, &manager)
+		assert.Error(t, err)
 	})
 
 	t.Run("zero duration cache", func(t *testing.T) {

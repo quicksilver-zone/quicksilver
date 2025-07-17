@@ -12,6 +12,8 @@ import (
 	cmtypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
 	prewards "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 
+	"sync"
+
 	"github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/mocks"
 	"github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/types"
 )
@@ -200,7 +202,9 @@ func TestAssetsService_GetAssets_WithMappedAddresses(t *testing.T) {
 	defer func() { types.GetMappedAddresses = origGetMappedAddresses }()
 
 	// Track which addresses were used in claims service calls
-	var osmosisAddressUsed, umeeAddressUsed, liquidAddressUsed string
+	var osmosisAddressesUsed, umeeAddressesUsed []string
+	var liquidAddressUsed string
+	var osmosisMutex, umeeMutex sync.Mutex
 
 	// Create mock cache manager
 	mockCacheManager := &mocks.MockCacheManager{
@@ -224,7 +228,10 @@ func TestAssetsService_GetAssets_WithMappedAddresses(t *testing.T) {
 	// Create mock claims service that tracks the addresses used
 	mockClaimsService := &mocks.MockClaimsService{
 		OsmosisClaimFunc: func(ctx context.Context, address, submitAddress, chain string, height int64) (types.OsmosisResult, error) {
-			osmosisAddressUsed = address
+			osmosisMutex.Lock()
+			osmosisAddressesUsed = append(osmosisAddressesUsed, address)
+			osmosisMutex.Unlock()
+			t.Logf("Osmosis claim called with address: %s", address)
 			return types.OsmosisResult{
 				OsmosisPool: types.OsmosisPool{
 					Msg: map[string]prewards.MsgSubmitClaim{
@@ -240,7 +247,10 @@ func TestAssetsService_GetAssets_WithMappedAddresses(t *testing.T) {
 			}, nil
 		},
 		UmeeClaimFunc: func(ctx context.Context, address, submitAddress, chain string, height int64) (map[string]prewards.MsgSubmitClaim, map[string]sdk.Coins, error) {
-			umeeAddressUsed = address
+			umeeMutex.Lock()
+			umeeAddressesUsed = append(umeeAddressesUsed, address)
+			umeeMutex.Unlock()
+			t.Logf("Umee claim called with address: %s", address)
 			return map[string]prewards.MsgSubmitClaim{
 					"umee-1": {
 						UserAddress: submitAddress,
@@ -252,6 +262,7 @@ func TestAssetsService_GetAssets_WithMappedAddresses(t *testing.T) {
 		},
 		LiquidClaimFunc: func(ctx context.Context, address, submitAddress string, connection prewards.ConnectionProtocolData, height int64) (map[string]prewards.MsgSubmitClaim, map[string]sdk.Coins, error) {
 			liquidAddressUsed = address
+			t.Logf("Liquid claim called with address: %s", address)
 			return map[string]prewards.MsgSubmitClaim{
 					"liquid-1": {
 						UserAddress: submitAddress,
@@ -291,9 +302,16 @@ func TestAssetsService_GetAssets_WithMappedAddresses(t *testing.T) {
 	assert.Equal(t, 0, len(errs))
 	assert.NotNil(t, response)
 
-	// Verify that mapped addresses were used for chains that have mappings
-	assert.Equal(t, mockMappedAddresses["osmosis-1"], osmosisAddressUsed, "Osmosis claim should use mapped address")
-	assert.Equal(t, mockMappedAddresses["umee-1"], umeeAddressUsed, "Umee claim should use mapped address")
+	// Log the addresses that were actually used
+	t.Logf("Osmosis addresses used: %v", osmosisAddressesUsed)
+	t.Logf("Umee addresses used: %v", umeeAddressesUsed)
+	t.Logf("Liquid address used: %s", liquidAddressUsed)
+
+	// Verify that both original and mapped addresses were used for chains that have mappings
+	assert.Contains(t, osmosisAddressesUsed, originalAddress, "Osmosis claim should use original address")
+	assert.Contains(t, osmosisAddressesUsed, mockMappedAddresses["osmosis-1"], "Osmosis claim should also use mapped address")
+	assert.Contains(t, umeeAddressesUsed, originalAddress, "Umee claim should use original address")
+	assert.Contains(t, umeeAddressesUsed, mockMappedAddresses["umee-1"], "Umee claim should also use mapped address")
 
 	// Verify that original address was used for liquid claim (no mapping for liquid-1)
 	assert.Equal(t, originalAddress, liquidAddressUsed, "Liquid claim should use original address when no mapping exists")
