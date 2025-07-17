@@ -66,6 +66,47 @@ func (m *CacheManager) Add(ctx context.Context, element CacheManagerElementI, ur
 	return nil
 }
 
+// GetConnections implements CacheManagerInterface
+func (m *CacheManager) GetConnections(ctx context.Context) ([]prewards.ConnectionProtocolData, error) {
+	return GetCache[prewards.ConnectionProtocolData](ctx, m)
+}
+
+// GetOsmosisParams implements CacheManagerInterface
+func (m *CacheManager) GetOsmosisParams(ctx context.Context) ([]prewards.OsmosisParamsProtocolData, error) {
+	return GetCache[prewards.OsmosisParamsProtocolData](ctx, m)
+}
+
+// GetOsmosisPools implements CacheManagerInterface
+func (m *CacheManager) GetOsmosisPools(ctx context.Context) ([]prewards.OsmosisPoolProtocolData, error) {
+	return GetCache[prewards.OsmosisPoolProtocolData](ctx, m)
+}
+
+// GetOsmosisClPools implements CacheManagerInterface
+func (m *CacheManager) GetOsmosisClPools(ctx context.Context) ([]prewards.OsmosisClPoolProtocolData, error) {
+	return GetCache[prewards.OsmosisClPoolProtocolData](ctx, m)
+}
+
+// GetLiquidAllowedDenoms implements CacheManagerInterface
+func (m *CacheManager) GetLiquidAllowedDenoms(ctx context.Context) ([]prewards.LiquidAllowedDenomProtocolData, error) {
+	return GetCache[prewards.LiquidAllowedDenomProtocolData](ctx, m)
+}
+
+// GetUmeeParams implements CacheManagerInterface
+func (m *CacheManager) GetUmeeParams(ctx context.Context) ([]prewards.UmeeParamsProtocolData, error) {
+	return GetCache[prewards.UmeeParamsProtocolData](ctx, m)
+}
+
+// GetZones implements CacheManagerInterface
+func (m *CacheManager) GetZones(ctx context.Context) ([]icstypes.Zone, error) {
+	return GetCache[icstypes.Zone](ctx, m)
+}
+
+// AddMocks implements CacheManagerInterface
+func (m *CacheManager) AddMocks(ctx context.Context, mocks interface{}) error {
+	// This is a simplified implementation - in practice you'd need to handle different types
+	return nil
+}
+
 type CacheI[T any] interface {
 	Init(ctx context.Context, url string, dataType int, updateTime time.Duration) error
 	Fetch(ctx context.Context) error
@@ -163,5 +204,11 @@ func (c *Cache[T]) Get(ctx context.Context) ([]T, error) {
 			return nil, err
 		}
 	}
-	return append(c.cache, c.mockData...), nil
+
+	// If mock data is present, return only mock data (prioritize mocks over live data)
+	if len(c.mockData) > 0 {
+		return c.mockData, nil
+	}
+
+	return c.cache, nil
 }

@@ -17,6 +17,7 @@ import (
 	prewards "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 
 	"github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/handlers"
+	"github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/services"
 	"github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/types"
 )
 
@@ -68,7 +69,7 @@ var (
          .::--=--::::-=----------::::.          ..:==+*#@@@@%%%%####+=-         
           ..::--=--::----------:::::.           .:--===+#%@@@%%%%#+==-.         
             ..::---=--------::::::..            .::-======+****+===-:.          
-              ...::----------::::..              ..:----======---:..            
+              ...::----------::::..            .::-======+****+===-:.          
                  ...::::::::::..                  ...:::::::::::..              
                      ........                         .........
 `
@@ -159,10 +160,16 @@ func main() {
 		return
 	}
 
+	// Create services
+	versionService := services.NewVersionService(&types.VersionService{})
+
+	// Create claims service
+	claimsService := services.NewClaimsService(cfg, &cacheMgr)
+
 	r.HandleFunc("/cache", handlers.GetCacheHandler(ctx, cfg, &cacheMgr))
-	r.HandleFunc("/{address}/epoch", handlers.GetAssetsHandler(ctx, cfg, &cacheMgr, types.GetHeights(connections), types.OutputEpoch))
-	r.HandleFunc("/{address}/current", handlers.GetAssetsHandler(ctx, cfg, &cacheMgr, types.GetZeroHeights(connections), types.OutputCurrent))
-	r.HandleFunc("/version", handlers.GetVersionHandler())
+	r.HandleFunc("/{address}/epoch", handlers.GetAssetsHandler(ctx, cfg, &cacheMgr, claimsService, types.GetHeights(connections), types.OutputEpoch))
+	r.HandleFunc("/{address}/current", handlers.GetAssetsHandler(ctx, cfg, &cacheMgr, claimsService, types.GetZeroHeights(connections), types.OutputCurrent))
+	r.HandleFunc("/version", handlers.GetVersionHandler(versionService))
 	http.Handle("/", r)
 
 	bindPort := 8090

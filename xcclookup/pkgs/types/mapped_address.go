@@ -16,7 +16,7 @@ import (
 	prewards "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 )
 
-func GetMappedAddresses(ctx context.Context, address string, connections []prewards.ConnectionProtocolData, config *Config) (map[string]string, error) {
+var GetMappedAddresses = func(ctx context.Context, address string, connections []prewards.ConnectionProtocolData, config *Config) (map[string]string, error) {
 	host := config.Chains[config.SourceChain]
 	client, err := NewRPCClient(host, time.Duration(config.Timeout)*time.Second)
 	if err != nil {
