@@ -141,105 +141,89 @@ func MembraneClaim(
 		return nil, nil, fmt.Errorf("invalid address: %w", err)
 	}
 
-	osmoAddress, err := addressutils.EncodeAddressToBech32("osmo", addrBytes)
+	addr, err := addressutils.EncodeAddressToBech32("osmo", addrBytes)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to encode address: %w", err)
 	}
-
-	// Get mapped address if it exists
-	mappedAddress := osmoAddress
-	// Note: Address mapping is handled by the assets service through GetMappedAddresses
-	// For now, we'll just use the original address and let the assets service handle mapping
-
-	// Query both the original address and mapped address
-	addresses := []string{osmoAddress}
-	if mappedAddress != osmoAddress {
-		addresses = append(addresses, mappedAddress)
-	}
-
 	msg := map[string]prewards.MsgSubmitClaim{}
 	assets := map[string]sdk.Coins{}
 
-	// Process each address
-	for _, addr := range addresses {
-		// Generate the key for the membrane contract query using the proper key format
-		// The key should be a CW namespaced key: 0x03 + contract_address + 0x00 + "positions" + user_address
-		contractAddrBytes, err := addressutils.AccAddressFromBech32(membraneParams.ContractAddress, "osmo")
-		if err != nil {
-			log.Debug("Invalid membrane contract address", "address", membraneParams.ContractAddress, "error", err)
-			continue
-		}
+	// Generate the key for the membrane contract query using the proper key format
+	// The key should be a CW namespaced key: 0x03 + contract_address + 0x00 + "positions" + user_address
+	contractAddrBytes, err := addressutils.AccAddressFromBech32(membraneParams.ContractAddress, "osmo")
+	if err != nil {
+		return nil, nil, fmt.Errorf("invalid membrane contract address: %w", err)
+	}
 
-		// Build the CW namespaced key
-		key := make([]byte, 0)
-		key = append(key, 0x03)                   // prefix
-		key = append(key, contractAddrBytes...)   // contract address
-		key = append(key, 0x00)                   // null terminator
-		key = append(key, byte(len("positions"))) // length of "positions"
-		key = append(key, []byte("positions")...) // "positions"
-		key = append(key, []byte(addr)...)        // user address
+	// Build the CW namespaced key
+	key := make([]byte, 0)
+	key = append(key, 0x03)                   // prefix
+	key = append(key, contractAddrBytes...)   // contract address
+	key = append(key, 0x00)                   // null terminator
+	key = append(key, byte(len("positions"))) // length of "positions"
+	key = append(key, []byte("positions")...) // "positions"
+	key = append(key, []byte(addr)...)        // user address
 
-		// Query the membrane contract
-		abciquery, err := client.ABCIQueryWithOptions(
-			ctx,
-			"/store/wasm/key",
-			key,
-			rpcclient.ABCIQueryOptions{Height: height, Prove: true},
-		)
-		if err != nil {
-			log.Debug("Failed to query membrane contract", "address", addr, "error", err)
-			continue
-		}
+	// Query the membrane contract
+	abciquery, err := client.ABCIQueryWithOptions(
+		ctx,
+		"/store/wasm/key",
+		key,
+		rpcclient.ABCIQueryOptions{Height: height, Prove: true},
+	)
+	if err != nil {
+		log.Debug("Failed to query membrane contract", "address", addr, "error", err)
+		return nil, nil, fmt.Errorf("failed to query membrane contract: %w", err)
+	}
 
-		// Parse the response
-		var positions []MembranePosition
-		if err := json.Unmarshal(abciquery.Response.Value, &positions); err != nil {
-			log.Debug("Failed to unmarshal membrane positions", "address", addr, "error", err)
-			continue
-		}
+	// Parse the response
+	var positions []MembranePosition
+	if err := json.Unmarshal(abciquery.Response.Value, &positions); err != nil {
+		log.Debug("Failed to unmarshal membrane positions", "address", addr, "error", err)
+		return nil, nil, fmt.Errorf("failed to unmarshal membrane positions: %w", err)
+	}
 
-		// Process each position
-		for _, position := range positions {
-			for _, collateralAsset := range position.CollateralAssets {
-				// Check if this denom is in the allowed liquid tokens
-				for _, liquidToken := range liquidAllowedDenomsCache {
-					if liquidToken.ChainID == chain && liquidToken.IbcDenom == collateralAsset.Asset.Info.NativeToken.Denom {
-						// Find the corresponding zone
-						for _, zone := range zoneCache {
-							if zone.ChainId == liquidToken.RegisteredZoneChainID {
-								// Create or update the claim message
-								if _, ok := msg[zone.ChainId]; !ok {
-									msg[zone.ChainId] = prewards.MsgSubmitClaim{
-										UserAddress: submitAddress,
-										Zone:        zone.ChainId,
-										SrcZone:     chain,
-										ClaimType:   cmtypes.ClaimTypeMembrane,
-										Proofs:      make([]*cmtypes.Proof, 0),
-									}
+	// Process each position
+	for _, position := range positions {
+		for _, collateralAsset := range position.CollateralAssets {
+			// Check if this denom is in the allowed liquid tokens
+			for _, liquidToken := range liquidAllowedDenomsCache {
+				if liquidToken.ChainID == chain && liquidToken.IbcDenom == collateralAsset.Asset.Info.NativeToken.Denom {
+					// Find the corresponding zone
+					for _, zone := range zoneCache {
+						if zone.ChainId == liquidToken.RegisteredZoneChainID {
+							// Create or update the claim message
+							if _, ok := msg[zone.ChainId]; !ok {
+								msg[zone.ChainId] = prewards.MsgSubmitClaim{
+									UserAddress: submitAddress,
+									Zone:        zone.ChainId,
+									SrcZone:     chain,
+									ClaimType:   cmtypes.ClaimTypeMembrane,
+									Proofs:      make([]*cmtypes.Proof, 0),
 								}
-
-								// Add the proof
-								proof := cmtypes.Proof{
-									Data:      abciquery.Response.Value,
-									Key:       abciquery.Response.Key,
-									ProofOps:  abciquery.Response.ProofOps,
-									Height:    abciquery.Response.Height,
-									ProofType: "membrane",
-								}
-
-								chainMsg := msg[zone.ChainId]
-								chainMsg.Proofs = append(chainMsg.Proofs, &proof)
-								msg[zone.ChainId] = chainMsg
-
-								// Add to assets
-								coin := sdk.NewCoin(liquidToken.QAssetDenom, collateralAsset.Asset.Amount)
-								assets[chain] = assets[chain].Add(coin)
-
-								break
 							}
+
+							// Add the proof
+							proof := cmtypes.Proof{
+								Data:      abciquery.Response.Value,
+								Key:       abciquery.Response.Key,
+								ProofOps:  abciquery.Response.ProofOps,
+								Height:    abciquery.Response.Height,
+								ProofType: "membrane",
+							}
+
+							chainMsg := msg[zone.ChainId]
+							chainMsg.Proofs = append(chainMsg.Proofs, &proof)
+							msg[zone.ChainId] = chainMsg
+
+							// Add to assets
+							coin := sdk.NewCoin(liquidToken.QAssetDenom, collateralAsset.Asset.Amount)
+							assets[chain] = assets[chain].Add(coin)
+
+							break
 						}
-						break
 					}
+					break
 				}
 			}
 		}
