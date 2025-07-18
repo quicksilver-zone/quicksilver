@@ -128,6 +128,11 @@ func main() {
 		log.Error("Failed to add umee params cache", "error", err)
 		return
 	}
+	err = cacheMgr.Add(ctx, &types.Cache[prewards.MembraneProtocolData]{}, cfg.SourceLcd+"/quicksilver/participationrewards/v1/protocoldata/ProtocolDataTypeMembraneParams/", types.DataTypeProtocolData, time.Hour*24)
+	if err != nil {
+		log.Error("Failed to add membrane params cache", "error", err)
+		return
+	}
 	err = cacheMgr.Add(ctx, &types.Cache[prewards.OsmosisPoolProtocolData]{}, cfg.SourceLcd+"/quicksilver/participationrewards/v1/protocoldata/ProtocolDataTypeOsmosisPool/", types.DataTypeProtocolData, time.Minute*5)
 	if err != nil {
 		log.Error("Failed to add osmosis pool cache", "error", err)
@@ -159,6 +164,7 @@ func main() {
 	types.AddMocks(ctx, &cacheMgr, cfg.Mocks.OsmosisPools)
 	types.AddMocks(ctx, &cacheMgr, cfg.Mocks.Connections)
 	types.AddMocks(ctx, &cacheMgr, cfg.Mocks.UmeeParams)
+	types.AddMocks(ctx, &cacheMgr, cfg.Mocks.MembraneParams)
 
 	r := mux.NewRouter()
 	connections, err := types.GetCache[prewards.ConnectionProtocolData](ctx, &cacheMgr)

@@ -70,6 +70,9 @@ func (s *AssetsService) GetAssets(ctx context.Context, address string) (*types.R
 	// Process Umee claims
 	s.processUmeeClaims(ctx, address, mappedAddresses, response, errs, &errsMutex, &wg)
 
+	// Process Membrane claims
+	s.processMembraneClaims(ctx, address, mappedAddresses, response, errs, &errsMutex, &wg)
+
 	// Process Liquid claims
 	s.processLiquidClaims(ctx, address, mappedAddresses, connections, response, errs, &errsMutex, &wg)
 
@@ -127,10 +130,10 @@ func (s *AssetsService) processOsmosisClaims(
 			errsMutex.Unlock()
 		}
 		if result.OsmosisPool.Msg != nil {
-			response.Update(result.OsmosisPool.Msg, result.OsmosisPool.Assets, "osmosispool")
+			response.Update(ctx, result.OsmosisPool.Msg, result.OsmosisPool.Assets, "osmosispool")
 		}
 		if result.OsmosisClPool.Msg != nil {
-			response.Update(result.OsmosisClPool.Msg, result.OsmosisClPool.Assets, "osmosisclpool")
+			response.Update(ctx, result.OsmosisClPool.Msg, result.OsmosisClPool.Assets, "osmosisclpool")
 		}
 	}()
 
@@ -160,10 +163,10 @@ func (s *AssetsService) processOsmosisClaims(
 				errsMutex.Unlock()
 			}
 			if result.OsmosisPool.Msg != nil {
-				response.Update(result.OsmosisPool.Msg, result.OsmosisPool.Assets, "osmosispool")
+				response.Update(ctx, result.OsmosisPool.Msg, result.OsmosisPool.Assets, "osmosispool")
 			}
 			if result.OsmosisClPool.Msg != nil {
-				response.Update(result.OsmosisClPool.Msg, result.OsmosisClPool.Assets, "osmosisclpool")
+				response.Update(ctx, result.OsmosisClPool.Msg, result.OsmosisClPool.Assets, "osmosisclpool")
 			}
 		}()
 	}
@@ -205,7 +208,7 @@ func (s *AssetsService) processUmeeClaims(
 			return
 		}
 		if messages != nil {
-			response.Update(messages, assets, "umee")
+			response.Update(ctx, messages, assets, "umee")
 		}
 	}()
 
@@ -220,7 +223,79 @@ func (s *AssetsService) processUmeeClaims(
 				errsMutex.Unlock()
 			}
 			if messages != nil {
-				response.Update(messages, assets, "umee")
+				response.Update(ctx, messages, assets, "umee")
+			}
+		}()
+	}
+}
+
+func (s *AssetsService) processMembraneClaims(
+	ctx context.Context,
+	address string,
+	mappedAddresses map[string]string,
+	response *types.Response,
+	errs map[string]error,
+	errsMutex *sync.Mutex,
+	wg *sync.WaitGroup,
+) {
+	membraneParamsCache, err := s.cacheManager.GetMembraneParams(ctx)
+	if err != nil {
+		errsMutex.Lock()
+		errs["MembraneParams"] = err
+		errsMutex.Unlock()
+		return
+	}
+	if len(membraneParamsCache) == 0 {
+		errsMutex.Lock()
+		errs["MembraneConfig"] = errors.New("membrane params not set")
+		errsMutex.Unlock()
+		return
+	}
+
+	// Get osmosis params to determine the chain
+	osmosisParamsCache, err := s.cacheManager.GetOsmosisParams(ctx)
+	if err != nil {
+		errsMutex.Lock()
+		errs["OsmosisParams"] = err
+		errsMutex.Unlock()
+		return
+	}
+	if len(osmosisParamsCache) == 0 {
+		errsMutex.Lock()
+		errs["OsmosisConfig"] = errors.New("osmosis params not set")
+		errsMutex.Unlock()
+		return
+	}
+
+	chain := osmosisParamsCache[0].ChainID
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		messages, assets, err := s.claimsService.MembraneClaim(ctx, address, address, chain, s.heights[chain])
+		if err != nil {
+			errsMutex.Lock()
+			errs["MembraneClaim"] = err
+			errsMutex.Unlock()
+			return
+		}
+		if messages != nil {
+			response.Update(ctx, messages, assets, "membrane")
+		}
+	}()
+
+	if mappedAddress, ok := mappedAddresses[chain]; ok {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			messages, assets, err := s.claimsService.MembraneClaim(ctx, mappedAddress, address, chain, s.heights[chain])
+			if err != nil {
+				errsMutex.Lock()
+				errs["MembraneClaim"] = err
+				errsMutex.Unlock()
+			}
+			if messages != nil {
+				response.Update(ctx, messages, assets, "membrane")
 			}
 		}()
 	}
@@ -247,7 +322,7 @@ func (s *AssetsService) processLiquidClaims(
 				errsMutex.Unlock()
 				return
 			}
-			response.Update(messages, assets, "liquid")
+			response.Update(ctx, messages, assets, "liquid")
 		}(con)
 
 		if mappedAddress, ok := mappedAddresses[con.ChainID]; ok {
@@ -261,7 +336,7 @@ func (s *AssetsService) processLiquidClaims(
 					errsMutex.Unlock()
 					return
 				}
-				response.Update(messages, assets, "liquid")
+				response.Update(ctx, messages, assets, "liquid")
 			}(con)
 		}
 	}
