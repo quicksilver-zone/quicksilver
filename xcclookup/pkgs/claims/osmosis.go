@@ -119,7 +119,7 @@ func OsmosisClaim(
 
 		emptyBlockResponse := tmservice.GetLatestBlockResponse{}
 		if blockQueryResponse == emptyBlockResponse {
-			err = errors.New("unable to query height from Osmosis chain")
+			err = errors.New("unable to query latest height from Osmosis chain")
 		}
 		if err != nil {
 			return OsmosisResult{Err: err}
@@ -153,7 +153,7 @@ func OsmosisClaim(
 
 		emptyBlockResponse := tmservice.GetBlockByHeightResponse{}
 		if blockQueryResponse == emptyBlockResponse {
-			err = errors.New("unable to query height from Osmosis chain")
+			err = fmt.Errorf("unable to query height %d from Osmosis chain: %w", height, err)
 		}
 		if err != nil {
 			return OsmosisResult{Err: err}

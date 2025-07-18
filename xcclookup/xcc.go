@@ -17,6 +17,8 @@ import (
 	prewards "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 
 	"github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/handlers"
+	"github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/logger"
+	"github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/services"
 	"github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/types"
 )
 
@@ -39,7 +41,9 @@ const (
 )
 
 var (
-	Logo = `
+	GitCommit string
+	Version   = "development"
+	Logo      = `
                                .........                                        
                        ..::-----------------::..                                
                    ..::---------------------------.                             
@@ -68,7 +72,7 @@ var (
          .::--=--::::-=----------::::.          ..:==+*#@@@@%%%%####+=-         
           ..::--=--::----------:::::.           .:--===+#%@@@%%%%#+==-.         
             ..::---=--------::::::..            .::-======+****+===-:.          
-              ...::----------::::..              ..:----======---:..            
+              ...::----------::::..            .::-======+****+===-:.          
                  ...::::::::::..                  ...:::::::::::..              
                      ........                         .........
 `
@@ -76,14 +80,6 @@ var (
 )
 
 func main() {
-	fmt.Println(Logo)
-	version, err := types.GetVersion()
-	if err != nil {
-		fmt.Printf("Error getting version: %s\n", err)
-		return
-	}
-	fmt.Printf("xcclookup (Cross Chain Claims) %s\n", string(version))
-
 	var fileName, action string
 	flag.StringVar(&fileName, "f", "", "YAML file to parse.")
 	flag.StringVar(&action, "a", "serve", "Action - either 'serve' or 'backend'.")
@@ -104,44 +100,56 @@ func main() {
 	err = yaml.Unmarshal(yamlFile, &cfg)
 	if err != nil {
 		fmt.Printf("Error parsing config file: %s\n", err)
+		return
 	}
 
+	// Initialize logger with config
+	log := logger.New(cfg.Logging.GetLogLevel())
+	log.Info("Starting Quicksilver Cross Chain Claims", "version", Version, "commit", GitCommit)
+	log.Debug("Logo", "logo", Logo)
+
+	// Create context with logger
 	ctx := context.Background()
+	ctx = logger.WithLogger(ctx, log)
+
+	// Initialize cache manager
 	err = cacheMgr.Add(ctx, &types.Cache[prewards.ConnectionProtocolData]{}, cfg.SourceLcd+"/quicksilver/participationrewards/v1/protocoldata/ProtocolDataTypeConnection/", types.DataTypeProtocolData, time.Minute*5)
 	if err != nil {
-		fmt.Printf("Error: %v\n", err.Error())
+		log.Error("Failed to add connection cache", "error", err)
 		return
 	}
 	err = cacheMgr.Add(ctx, &types.Cache[prewards.OsmosisParamsProtocolData]{}, cfg.SourceLcd+"/quicksilver/participationrewards/v1/protocoldata/ProtocolDataTypeOsmosisParams/", types.DataTypeProtocolData, time.Hour*24)
 	if err != nil {
-		fmt.Printf("Error: %v\n", err.Error())
+		log.Error("Failed to add osmosis params cache", "error", err)
 		return
 	}
 	err = cacheMgr.Add(ctx, &types.Cache[prewards.UmeeParamsProtocolData]{}, cfg.SourceLcd+"/quicksilver/participationrewards/v1/protocoldata/ProtocolDataTypeUmeeParams/", types.DataTypeProtocolData, time.Hour*24)
 	if err != nil {
-		fmt.Printf("Error: %v\n", err.Error())
+		log.Error("Failed to add umee params cache", "error", err)
 		return
 	}
 	err = cacheMgr.Add(ctx, &types.Cache[prewards.OsmosisPoolProtocolData]{}, cfg.SourceLcd+"/quicksilver/participationrewards/v1/protocoldata/ProtocolDataTypeOsmosisPool/", types.DataTypeProtocolData, time.Minute*5)
 	if err != nil {
-		fmt.Printf("Error: %v\n", err.Error())
+		log.Error("Failed to add osmosis pool cache", "error", err)
 		return
 	}
 	err = cacheMgr.Add(ctx, &types.Cache[prewards.OsmosisClPoolProtocolData]{}, cfg.SourceLcd+"/quicksilver/participationrewards/v1/protocoldata/ProtocolDataTypeOsmosisCLPool/", types.DataTypeProtocolData, time.Minute*5)
 	if err != nil {
-		fmt.Printf("Error: %v\n", err.Error())
+		log.Error("Failed to add osmosis CL pool cache", "error", err)
 		return
 	}
 	err = cacheMgr.Add(ctx, &types.Cache[prewards.LiquidAllowedDenomProtocolData]{}, cfg.SourceLcd+"/quicksilver/participationrewards/v1/protocoldata/ProtocolDataTypeLiquidToken/", types.DataTypeProtocolData, time.Minute*5)
 	if err != nil {
-		fmt.Printf("Error: %v\n", err.Error())
+		log.Error("Failed to add liquid denom cache", "error", err)
 		return
 	}
 	err = cacheMgr.Add(ctx, &types.Cache[icstypes.Zone]{}, cfg.SourceLcd+"/quicksilver/interchainstaking/v1/zones", types.DataTypeZone, time.Hour*24)
 	if err != nil {
-		fmt.Printf("Error: %v\n", err.Error())
+		log.Error("Failed to add zone cache", "error", err)
 		return
 	}
+
+	log.Debug("Cache manager initialized", "source_lcd", cfg.SourceLcd)
 
 	config := sdk.GetConfig()
 	config.SetBech32PrefixForAccount(Bech32PrefixAccAddr, Bech32PrefixAccPub)
@@ -155,20 +163,29 @@ func main() {
 	r := mux.NewRouter()
 	connections, err := types.GetCache[prewards.ConnectionProtocolData](ctx, &cacheMgr)
 	if err != nil {
-		fmt.Printf("Error: %v\n", err.Error())
+		log.Error("Failed to get connections cache", "error", err)
 		return
 	}
 
+	// Create services
+	versionService := services.NewVersionService(&types.VersionService{})
+
+	// Create claims service
+	claimsService := services.NewClaimsService(cfg, &cacheMgr)
+
 	r.HandleFunc("/cache", handlers.GetCacheHandler(ctx, cfg, &cacheMgr))
-	r.HandleFunc("/{address}/epoch", handlers.GetAssetsHandler(ctx, cfg, &cacheMgr, types.GetHeights(connections), types.OutputEpoch))
-	r.HandleFunc("/{address}/current", handlers.GetAssetsHandler(ctx, cfg, &cacheMgr, types.GetZeroHeights(connections), types.OutputCurrent))
-	r.HandleFunc("/version", handlers.GetVersionHandler())
+	r.HandleFunc("/{address}/epoch", handlers.GetAssetsHandler(ctx, cfg, &cacheMgr, claimsService, types.GetHeights(connections), types.OutputEpoch))
+	r.HandleFunc("/{address}/current", handlers.GetAssetsHandler(ctx, cfg, &cacheMgr, claimsService, types.GetZeroHeights(connections), types.OutputCurrent))
+	r.HandleFunc("/version", handlers.GetVersionHandler(versionService))
 	http.Handle("/", r)
 
 	bindPort := 8090
 	if cfg.BindPort != 0 {
 		bindPort = cfg.BindPort
 	}
+
+	log.Info("Starting HTTP server", "port", bindPort)
+
 	server := &http.Server{
 		Addr:              fmt.Sprintf(":%d", bindPort),
 		Handler:           r,
@@ -176,7 +193,7 @@ func main() {
 	}
 
 	if err := server.ListenAndServe(); err != nil {
-		fmt.Printf("Error: %v\n", err.Error())
+		log.Error("Server error", "error", err.Error())
 		return
 	}
 }

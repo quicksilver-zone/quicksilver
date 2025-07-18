@@ -1,25 +1,27 @@
 package types
 
-import "encoding/json"
-
-var (
-	VERSION             = "xcclookup/development"
-	QUICKSILVER_VERSION = ""
-	COMMIT              = ""
+import (
+	"encoding/json"
+	"runtime"
 )
 
-type Version struct {
-	Version            string
-	QuicksilverVersion string
-	QuicksilverCommit  string
+// VersionService is a concrete implementation of VersionServiceInterface
+type VersionService struct{}
+
+// GetVersion implements VersionServiceInterface
+func (v *VersionService) GetVersion() ([]byte, error) {
+	version := map[string]string{
+		"version": "1.0.0",
+		"go":      runtime.Version(),
+		"os":      runtime.GOOS,
+		"arch":    runtime.GOARCH,
+	}
+
+	return json.Marshal(version)
 }
 
+// GetVersion is a legacy function that uses the concrete implementation
 func GetVersion() ([]byte, error) {
-	v := Version{
-		Version:            VERSION,
-		QuicksilverVersion: QUICKSILVER_VERSION,
-		QuicksilverCommit:  COMMIT,
-	}
-	jsonOut, err := json.Marshal(v)
-	return jsonOut, err
+	vs := &VersionService{}
+	return vs.GetVersion()
 }

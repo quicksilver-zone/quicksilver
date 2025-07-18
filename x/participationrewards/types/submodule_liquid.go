@@ -1,7 +1,9 @@
 package types
 
 import (
-	"github.com/ingenuity-build/multierror"
+	"go.uber.org/multierr"
+
+	"github.com/quicksilver-zone/quicksilver/utils"
 )
 
 // LiquidAllowedDenomProtocolData defines protocol state to track off-chain
@@ -33,7 +35,7 @@ func (lpd *LiquidAllowedDenomProtocolData) ValidateBasic() error {
 	}
 
 	if len(errs) > 0 {
-		return multierror.New(errs)
+		return multierr.Combine(utils.ErrorMapToSlice(errs)...)
 	}
 
 	return nil

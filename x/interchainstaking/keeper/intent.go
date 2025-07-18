@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/ingenuity-build/multierror"
+	"go.uber.org/multierr"
 
 	sdkmath "cosmossdk.io/math"
 
@@ -246,7 +246,7 @@ func (k msgServer) validateValidatorIntents(ctx sdk.Context, zone types.Zone, in
 	}
 
 	if len(errMap) > 0 {
-		return multierror.New(errMap)
+		return multierr.Combine(utils.ErrorMapToSlice(errMap)...)
 	}
 
 	return nil

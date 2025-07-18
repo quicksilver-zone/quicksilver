@@ -1,6 +1,10 @@
 package types
 
-import "github.com/ingenuity-build/multierror"
+import (
+	"go.uber.org/multierr"
+
+	"github.com/quicksilver-zone/quicksilver/utils"
+)
 
 // ValidateBasic performs stateless validation for Proof.
 func (p *Proof) ValidateBasic() error {
@@ -28,7 +32,7 @@ func (p *Proof) ValidateBasic() error {
 
 	// check for errors and return
 	if len(errs) > 0 {
-		return multierror.New(errs)
+		return multierr.Combine(utils.ErrorMapToSlice(errs)...)
 	}
 
 	return nil

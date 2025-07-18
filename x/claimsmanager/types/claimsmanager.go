@@ -1,11 +1,13 @@
 package types
 
 import (
-	"github.com/ingenuity-build/multierror"
+	"go.uber.org/multierr"
 
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/quicksilver-zone/quicksilver/utils"
 )
 
 func NewClaim(address, chainID string, module ClaimType, srcChainID string, amount math.Int) Claim {
@@ -18,19 +20,19 @@ func (c *Claim) ValidateBasic() error {
 
 	_, err := sdk.AccAddressFromBech32(c.UserAddress)
 	if err != nil {
-		errs["UserAddress"] = err
+		errs["userAddress"] = err
 	}
 
 	if c.ChainId == "" {
-		errs["ChainID"] = ErrUndefinedAttribute
+		errs["chainID"] = ErrUndefinedAttribute
 	}
 
 	if c.Amount.IsNil() || !c.Amount.IsPositive() {
-		errs["Amount"] = ErrNotPositive
+		errs["amount"] = ErrNotPositive
 	}
 
 	if len(errs) > 0 {
-		return multierror.New(errs)
+		return multierr.Combine(utils.ErrorMapToSlice(errs)...)
 	}
 
 	return nil

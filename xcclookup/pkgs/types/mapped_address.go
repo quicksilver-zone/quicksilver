@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ingenuity-build/multierror"
+	"go.uber.org/multierr"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -16,7 +16,7 @@ import (
 	prewards "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 )
 
-func GetMappedAddresses(ctx context.Context, address string, connections []prewards.ConnectionProtocolData, config *Config) (map[string]string, error) {
+var GetMappedAddresses = func(ctx context.Context, address string, connections []prewards.ConnectionProtocolData, config *Config) (map[string]string, error) {
 	host := config.Chains[config.SourceChain]
 	client, err := NewRPCClient(host, time.Duration(config.Timeout)*time.Second)
 	if err != nil {
@@ -47,7 +47,7 @@ func GetMappedAddresses(ctx context.Context, address string, connections []prewa
 		return nil, err
 	}
 
-	errs := map[string]error{}
+	var errs error
 
 	addressMap := map[string]string{}
 	for chain, addrBytes := range maResponse.RemoteAddressMap {
@@ -55,14 +55,14 @@ func GetMappedAddresses(ctx context.Context, address string, connections []prewa
 			if connection.ChainID == chain {
 				addressMap[chain], err = addressutils.EncodeAddressToBech32(connection.Prefix, sdk.AccAddress(addrBytes))
 				if err != nil {
-					errs[fmt.Sprintf("addressMap:%s", chain)] = err
+					errs = multierr.Append(errs, fmt.Errorf("addressMap:%s: %w", chain, err))
 				}
 			}
 		}
 	}
 
-	if len(errs) > 0 {
-		return addressMap, multierror.New(errs)
+	if errs != nil {
+		return addressMap, errs
 	}
 	return addressMap, nil
 }

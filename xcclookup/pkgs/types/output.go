@@ -5,40 +5,46 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/ingenuity-build/multierror"
+	"go.uber.org/multierr"
 )
 
-var OutputEpoch = func(w http.ResponseWriter, response *Response, errors map[string]error) {
-	fmt.Println("check for errors...")
+func outputResponse(w http.ResponseWriter, response *Response, errors map[string]error, clearMessages bool) {
+	// Set appropriate headers for JSON API responses
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+	w.Header().Set("Pragma", "no-cache")
+	w.Header().Set("Expires", "0")
+	w.Header().Set("X-Content-Type-Options", "nosniff")
+	w.Header().Set("X-Frame-Options", "DENY")
+	w.Header().Set("X-XSS-Protection", "1; mode=block")
+
 	if len(errors) > 0 {
-		fmt.Printf("found %d error(s)\n", len(errors))
-		response.Errors = multierror.New(errors)
-		fmt.Println(response.Errors)
+		var err error
+		for key, e := range errors {
+			err = multierr.Append(err, fmt.Errorf("%s: %w", key, e))
+		}
+		response.Errors = &ErrorString{error: err}
+	}
+
+	if clearMessages {
+		response.Messages = nil
 	}
 
 	jsonOut, err := json.Marshal(response)
 	if err != nil {
-		fmt.Println("Error:", err)
+		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprintf(w, "Error: %s", err.Error())
 		return
 	}
+
+	w.WriteHeader(http.StatusOK)
 	fmt.Fprint(w, string(jsonOut))
 }
 
-var OutputCurrent = func(w http.ResponseWriter, response *Response, errors map[string]error) {
-	fmt.Println("check for errors...")
-	if len(errors) > 0 {
-		fmt.Printf("found %d error(s)\n", len(errors))
-		response.Errors = multierror.New(errors)
-		fmt.Println(response.Errors)
-	}
+var OutputEpoch = func(w http.ResponseWriter, response *Response, errors map[string]error) {
+	outputResponse(w, response, errors, false)
+}
 
-	response.Messages = nil
-	jsonOut, err := json.Marshal(response)
-	if err != nil {
-		fmt.Println("Error:", err)
-		fmt.Fprintf(w, "Error: %s", err)
-		return
-	}
-	fmt.Fprint(w, string(jsonOut))
+var OutputCurrent = func(w http.ResponseWriter, response *Response, errors map[string]error) {
+	outputResponse(w, response, errors, true)
 }

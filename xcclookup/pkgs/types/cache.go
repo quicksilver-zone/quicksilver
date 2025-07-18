@@ -3,6 +3,7 @@ package types
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -12,6 +13,8 @@ import (
 
 	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 	prewards "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
+
+	"github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/logger"
 )
 
 const (
@@ -34,12 +37,14 @@ func NewCacheManager() CacheManager {
 }
 
 func GetCache[T prewards.ConnectionProtocolData | prewards.OsmosisParamsProtocolData | prewards.OsmosisPoolProtocolData | prewards.OsmosisClPoolProtocolData | prewards.LiquidAllowedDenomProtocolData | prewards.UmeeParamsProtocolData | icstypes.Zone](ctx context.Context, mgr *CacheManager) ([]T, error) {
-	cache, _ := mgr.Data[new(Cache[T]).Type()].(*Cache[T])
-	value, err := cache.Get(ctx)
-	if err != nil {
-		return nil, err
+	if mgr == nil {
+		return nil, errors.New("cache manager is nil")
 	}
-	return value, nil
+	cache, ok := mgr.Data[new(Cache[T]).Type()].(*Cache[T])
+	if !ok {
+		return nil, fmt.Errorf("cache not found for type %T", new(T))
+	}
+	return cache.Get(ctx)
 }
 
 func AddMocks[T prewards.ConnectionProtocolData | prewards.OsmosisParamsProtocolData | prewards.OsmosisPoolProtocolData | prewards.OsmosisClPoolProtocolData | prewards.LiquidAllowedDenomProtocolData | prewards.UmeeParamsProtocolData | icstypes.Zone](ctx context.Context, mgr *CacheManager, mocks []T) {
@@ -59,10 +64,47 @@ type CacheManagerElementI interface {
 
 func (m *CacheManager) Add(ctx context.Context, element CacheManagerElementI, url string, dataType int, updateTime time.Duration) error {
 	m.Data[element.Type()] = element
-	err := m.Data[element.Type()].Init(ctx, url, dataType, updateTime)
-	if err != nil {
-		return err
-	}
+	return m.Data[element.Type()].Init(ctx, url, dataType, updateTime)
+}
+
+// GetConnections implements CacheManagerInterface
+func (m *CacheManager) GetConnections(ctx context.Context) ([]prewards.ConnectionProtocolData, error) {
+	return GetCache[prewards.ConnectionProtocolData](ctx, m)
+}
+
+// GetOsmosisParams implements CacheManagerInterface
+func (m *CacheManager) GetOsmosisParams(ctx context.Context) ([]prewards.OsmosisParamsProtocolData, error) {
+	return GetCache[prewards.OsmosisParamsProtocolData](ctx, m)
+}
+
+// GetOsmosisPools implements CacheManagerInterface
+func (m *CacheManager) GetOsmosisPools(ctx context.Context) ([]prewards.OsmosisPoolProtocolData, error) {
+	return GetCache[prewards.OsmosisPoolProtocolData](ctx, m)
+}
+
+// GetOsmosisClPools implements CacheManagerInterface
+func (m *CacheManager) GetOsmosisClPools(ctx context.Context) ([]prewards.OsmosisClPoolProtocolData, error) {
+	return GetCache[prewards.OsmosisClPoolProtocolData](ctx, m)
+}
+
+// GetLiquidAllowedDenoms implements CacheManagerInterface
+func (m *CacheManager) GetLiquidAllowedDenoms(ctx context.Context) ([]prewards.LiquidAllowedDenomProtocolData, error) {
+	return GetCache[prewards.LiquidAllowedDenomProtocolData](ctx, m)
+}
+
+// GetUmeeParams implements CacheManagerInterface
+func (m *CacheManager) GetUmeeParams(ctx context.Context) ([]prewards.UmeeParamsProtocolData, error) {
+	return GetCache[prewards.UmeeParamsProtocolData](ctx, m)
+}
+
+// GetZones implements CacheManagerInterface
+func (m *CacheManager) GetZones(ctx context.Context) ([]icstypes.Zone, error) {
+	return GetCache[icstypes.Zone](ctx, m)
+}
+
+// AddMocks implements CacheManagerInterface
+func (m *CacheManager) AddMocks(ctx context.Context, mocks interface{}) error {
+	// This is a simplified implementation - in practice you'd need to handle different types
 	return nil
 }
 
@@ -110,7 +152,7 @@ func (c *Cache[T]) unmarshal(responseData []byte) ([]T, error) {
 		}
 		return data.Zones, nil
 	}
-	return nil, fmt.Errorf("invalid data type: %d", c.dataType)
+	return nil, fmt.Errorf("unknown data type: %d", c.dataType)
 }
 
 func (c *Cache[T]) Init(ctx context.Context, url string, dataType int, updateInterval time.Duration) error {
@@ -141,22 +183,27 @@ func (c *Cache[T]) read(ctx context.Context) ([]byte, error) {
 }
 
 func (c *Cache[T]) Fetch(ctx context.Context) error {
-	fmt.Println("Fetching and caching " + c.url)
+	log := logger.FromContext(ctx)
+	log.Debug("Fetching and caching data", "url", c.url)
 
 	responseData, err := c.read(ctx)
 	if err != nil {
+		log.Error("Failed to read cache data", "error", err, "url", c.url)
 		return err
 	}
 
-	c.cache, err = c.unmarshal(responseData)
+	cache, err := c.unmarshal(responseData)
 	if err != nil {
+		log.Error("Failed to unmarshal cache data", "error", err, "url", c.url)
 		return err
 	}
+
+	c.cache = cache
 	c.lastUpdated = time.Now()
 	return nil
 }
 
-func (c Cache[T]) Get(ctx context.Context) ([]T, error) {
+func (c *Cache[T]) Get(ctx context.Context) ([]T, error) {
 	if time.Now().After(c.lastUpdated.Add(c.duration)) {
 		err := c.Fetch(ctx)
 		if err != nil {

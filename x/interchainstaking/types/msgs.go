@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/ingenuity-build/multierror"
+	"go.uber.org/multierr"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -15,6 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 
+	"github.com/quicksilver-zone/quicksilver/utils"
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 )
 
@@ -90,7 +91,7 @@ func (msg MsgRequestRedemption) ValidateBasic() error {
 	}
 
 	if len(errs) > 0 {
-		return multierror.New(errs)
+		return multierr.Combine(utils.ErrorMapToSlice(errs)...)
 	}
 
 	return nil
@@ -137,7 +138,7 @@ func (msg MsgCancelRedemption) ValidateBasic() error {
 	}
 
 	if len(errs) > 0 {
-		return multierror.New(errs)
+		return multierr.Combine(utils.ErrorMapToSlice(errs)...)
 	}
 
 	return nil
@@ -181,7 +182,7 @@ func (msg MsgRequeueRedemption) ValidateBasic() error {
 	}
 
 	if len(errs) > 0 {
-		return multierror.New(errs)
+		return multierr.Combine(utils.ErrorMapToSlice(errs)...)
 	}
 
 	return nil
@@ -237,7 +238,7 @@ func (msg MsgUpdateRedemption) ValidateBasic() error {
 	}
 
 	if len(errs) > 0 {
-		return multierror.New(errs)
+		return multierr.Combine(utils.ErrorMapToSlice(errs)...)
 	}
 
 	return nil
@@ -337,7 +338,7 @@ func (msg MsgSignalIntent) ValidateBasic() error {
 		}
 	}
 	if len(errm) > 0 {
-		return multierror.New(errm)
+		return multierr.Combine(utils.ErrorMapToSlice(errm)...)
 	}
 
 	return nil

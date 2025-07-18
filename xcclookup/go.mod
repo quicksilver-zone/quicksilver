@@ -7,10 +7,12 @@ require (
 	github.com/client9/misspell v0.3.4
 	github.com/cometbft/cometbft v0.37.15
 	github.com/cosmos/cosmos-sdk v0.47.17
+	github.com/go-kit/log v0.2.1
 	github.com/golangci/golangci-lint/v2 v2.2.1
 	github.com/gorilla/mux v1.8.1
-	github.com/ingenuity-build/multierror v0.1.0
 	github.com/quicksilver-zone/quicksilver v1.8.2-0.20250707101051-6cb838a1fa0e
+	github.com/stretchr/testify v1.10.0
+	go.uber.org/multierr v1.11.0
 	golang.org/x/tools v0.34.0
 	gopkg.in/yaml.v3 v3.0.1
 	mvdan.cc/gofumpt v0.8.0
@@ -113,7 +115,6 @@ require (
 	github.com/ghostiam/protogetter v0.3.15 // indirect
 	github.com/go-critic/go-critic v0.13.0 // indirect
 	github.com/go-kit/kit v0.13.0 // indirect
-	github.com/go-kit/log v0.2.1 // indirect
 	github.com/go-logfmt/logfmt v0.6.0 // indirect
 	github.com/go-toolsmith/astcast v1.1.0 // indirect
 	github.com/go-toolsmith/astcopy v1.1.0 // indirect
@@ -163,6 +164,7 @@ require (
 	github.com/hexops/gotextdiff v1.0.3 // indirect
 	github.com/huandu/skiplist v1.2.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
+	github.com/ingenuity-build/multierror v0.1.0 // indirect
 	github.com/jgautheron/goconst v1.8.2 // indirect
 	github.com/jingyugao/rowserrcheck v1.1.1 // indirect
 	github.com/jjti/go-spancheck v0.6.5 // indirect
@@ -247,7 +249,6 @@ require (
 	github.com/ssgreg/nlreturn/v2 v2.2.1 // indirect
 	github.com/stbenjam/no-sprintf-host-port v0.2.0 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
-	github.com/stretchr/testify v1.10.0 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/syndtr/goleveldb v1.0.1-0.20220721030215-126854af5e6d // indirect
 	github.com/tdakkota/asciicheck v0.4.1 // indirect
@@ -277,7 +278,6 @@ require (
 	go.etcd.io/bbolt v1.4.0-alpha.1 // indirect
 	go.opencensus.io v0.24.0 // indirect
 	go.uber.org/automaxprocs v1.6.0 // indirect
-	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.27.0 // indirect
 	golang.org/x/crypto v0.39.0 // indirect
 	golang.org/x/exp v0.0.0-20250128182459-e0ece0dbea4c // indirect
