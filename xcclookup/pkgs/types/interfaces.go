@@ -28,6 +28,7 @@ type CacheManagerInterface interface {
 	GetOsmosisClPools(ctx context.Context) ([]prewards.OsmosisClPoolProtocolData, error)
 	GetLiquidAllowedDenoms(ctx context.Context) ([]prewards.LiquidAllowedDenomProtocolData, error)
 	GetUmeeParams(ctx context.Context) ([]prewards.UmeeParamsProtocolData, error)
+	GetMembraneParams(ctx context.Context) ([]prewards.MembraneProtocolData, error)
 	GetZones(ctx context.Context) ([]icstypes.Zone, error)
 	AddMocks(ctx context.Context, mocks interface{}) error
 }
@@ -63,6 +64,7 @@ type ClaimsServiceInterface interface {
 	OsmosisClaim(ctx context.Context, address, submitAddress, chain string, height int64) (OsmosisResult, error)
 	UmeeClaim(ctx context.Context, address, submitAddress, chain string, height int64) (map[string]prewards.MsgSubmitClaim, map[string]sdk.Coins, error)
 	LiquidClaim(ctx context.Context, address, submitAddress string, connection prewards.ConnectionProtocolData, height int64) (map[string]prewards.MsgSubmitClaim, map[string]sdk.Coins, error)
+	MembraneClaim(ctx context.Context, address, submitAddress, chain string, height int64) (map[string]prewards.MsgSubmitClaim, map[string]sdk.Coins, error)
 }
 
 // OutputFunction defines the interface for output functions

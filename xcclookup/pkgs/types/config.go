@@ -63,7 +63,8 @@ const (
 )
 
 type Mocks struct {
-	OsmosisPools []prewards.OsmosisPoolProtocolData `yaml:"osmosis_pools"`
-	Connections  []prewards.ConnectionProtocolData  `yaml:"connections"`
-	UmeeParams   []prewards.UmeeParamsProtocolData  `yaml:"umee_params"`
+	OsmosisPools   []prewards.OsmosisPoolProtocolData `yaml:"osmosis_pools"`
+	Connections    []prewards.ConnectionProtocolData  `yaml:"connections"`
+	UmeeParams     []prewards.UmeeParamsProtocolData  `yaml:"umee_params"`
+	MembraneParams []prewards.MembraneProtocolData    `yaml:"membrane_params"`
 }

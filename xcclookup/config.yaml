@@ -20,16 +20,20 @@ chains:
   archway-1: https://archway-1.rpc.quicksilver.zone:443
   omniflixhub-1: https://omniflixhub-1.rpc.quicksilver.zone:443
   injective-1: https://injective-1.rpc.quicksilver.zone:443
+  phoenix-1: https://phoenix-1.rpc.quicksilver.zone:443
+  centauri-1: https://centauri-1.rpc.quicksilver.zone:443
 
 mocks:
+  membrane_params:
+    - contractaddress: osmo1gy5gpqqlth0jpm9ydxlmff6g5mpnfvrfxd3mfc8dhyt03waumtzqt8exxr
+  connections:
+    - connectionid: connection-2
+      chainid: osmosis-1
+      lastepoch: 39990000
+      prefix: osmo
+      transferchannel: channel-2
 #     umee_params:
 #       - chainid: umee-1
-#  connections:
-#    - connectionid: connection-2
-#      chainid: osmosis-1
-#      lastepoch: 39990000
-#      prefix: osmo
-#      transferchannel: channel-2
 #  osmosis_pools:
 #     - poolid: 1059
 #       poolname: qOSMO/OSMO

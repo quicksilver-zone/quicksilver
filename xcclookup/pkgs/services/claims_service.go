@@ -56,3 +56,11 @@ func (c *ClaimsService) LiquidClaim(ctx context.Context, address, submitAddress 
 	}
 	return nil, nil, types.ErrUnsupportedCacheManager
 }
+
+// MembraneClaim implements ClaimsServiceInterface
+func (c *ClaimsService) MembraneClaim(ctx context.Context, address, submitAddress, chain string, height int64) (map[string]prewards.MsgSubmitClaim, map[string]sdk.Coins, error) {
+	if concreteCacheMgr, ok := c.cacheMgr.(*types.CacheManager); ok {
+		return claims.MembraneClaim(ctx, c.cfg, concreteCacheMgr, address, submitAddress, chain, height)
+	}
+	return nil, nil, types.ErrUnsupportedCacheManager
+}

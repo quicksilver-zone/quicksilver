@@ -1,9 +1,9 @@
 package types
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"sync"
 	"time"
 
@@ -14,6 +14,8 @@ import (
 
 	"github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
 	prewards "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
+
+	"github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/logger"
 )
 
 // ErrorString is a custom type that implements json.Marshaler to serialize errors as strings
@@ -60,27 +62,28 @@ type Response struct {
 	Errors   *ErrorString              `json:"errors,omitempty"`
 }
 
-func (response *Response) Update(messages map[string]prewards.MsgSubmitClaim, assets map[string]sdk.Coins, assetType string) {
+func (response *Response) Update(ctx context.Context, messages map[string]prewards.MsgSubmitClaim, assets map[string]sdk.Coins, assetType string) {
+	log := logger.FromContext(ctx)
 	m := sync.Mutex{}
 	m.Lock()
 	defer m.Unlock()
 
 	for _, message := range messages {
 		if message.ClaimType == types.ClaimTypeUndefined {
-			log.Default().Println("ERROR: skipping message with undefined claim: ", message)
+			log.Error("Skipping message with undefined claim", "message", message)
 			continue
 		}
-		fmt.Printf("adding message. claim_type: %s, zone: %s, src_zone: %s, user_address: %s\n", message.ClaimType, message.Zone, message.SrcZone, message.UserAddress)
+		log.Debug("Adding message", "claim_type", message.ClaimType, "zone", message.Zone, "src_zone", message.SrcZone, "user_address", message.UserAddress)
 		response.Messages = append(response.Messages, message)
 
 	}
 
 	for chainID, asset := range assets {
 		if asset.IsZero() {
-			log.Default().Printf("ERROR: skipping asset with no value: chain_id: %s, asset: %s\n", chainID, asset)
+			log.Error("Skipping asset with no value", "chain_id", chainID, "asset", asset)
 			continue
 		}
-		fmt.Printf("Adding asset: chain_id: %s, asset: %s\n", chainID, asset)
+		log.Debug("Adding asset", "chain_id", chainID, "asset", asset)
 		response.Assets[chainID] = append(response.Assets[chainID], Asset{Type: assetType, Amount: asset})
 	}
 }
