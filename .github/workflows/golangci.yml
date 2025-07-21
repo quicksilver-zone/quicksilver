@@ -28,7 +28,7 @@ jobs:
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v8
         with:
-          version: v2.1.2
+          version: v2.2.2
           args: --timeout 15m
 
   golangci-xcclookup:
@@ -43,7 +43,7 @@ jobs:
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v8
         with:
-          version: v2.1.2
+          version: v2.2.2
           args: --timeout 15m
           working-directory: xcclookup
 #
@@ -60,6 +60,6 @@ jobs:
 #       - name: golangci-lint
 #         uses: golangci/golangci-lint-action@v8
 #         with:
-#           version: v2.1.2
+#           version: v2.2.2
 #           args: --timeout 15m
 #           working-directory: icq-relayer
