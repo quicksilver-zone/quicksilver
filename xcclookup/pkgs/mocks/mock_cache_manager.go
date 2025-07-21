@@ -17,6 +17,7 @@ type MockCacheManager struct {
 	GetOsmosisClPoolsFunc      func(ctx context.Context) ([]prewards.OsmosisClPoolProtocolData, error)
 	GetLiquidAllowedDenomsFunc func(ctx context.Context) ([]prewards.LiquidAllowedDenomProtocolData, error)
 	GetUmeeParamsFunc          func(ctx context.Context) ([]prewards.UmeeParamsProtocolData, error)
+	GetMembraneParamsFunc      func(ctx context.Context) ([]prewards.MembraneProtocolData, error)
 	GetZonesFunc               func(ctx context.Context) ([]icstypes.Zone, error)
 	AddMocksFunc               func(ctx context.Context, mocks interface{}) error
 }
@@ -67,6 +68,14 @@ func (m *MockCacheManager) GetUmeeParams(ctx context.Context) ([]prewards.UmeePa
 		return m.GetUmeeParamsFunc(ctx)
 	}
 	return make([]prewards.UmeeParamsProtocolData, 0), nil
+}
+
+// GetMembraneParams calls the mock function
+func (m *MockCacheManager) GetMembraneParams(ctx context.Context) ([]prewards.MembraneProtocolData, error) {
+	if m.GetMembraneParamsFunc != nil {
+		return m.GetMembraneParamsFunc(ctx)
+	}
+	return make([]prewards.MembraneProtocolData, 0), nil
 }
 
 // GetZones calls the mock function

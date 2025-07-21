@@ -31,18 +31,21 @@ func TestAssetsService_GetAssets(t *testing.T) {
 	defer func() { types.GetMappedAddresses = origGetMappedAddresses }()
 
 	tests := []struct {
-		name              string
-		address           string
-		mockConnections   []prewards.ConnectionProtocolData
-		mockOsmosisParams []prewards.OsmosisParamsProtocolData
-		mockUmeeParams    []prewards.UmeeParamsProtocolData
-		mockOsmosisResult types.OsmosisResult
-		mockUmeeResult    map[string]prewards.MsgSubmitClaim
-		mockUmeeAssets    map[string]sdk.Coins
-		mockLiquidResult  map[string]prewards.MsgSubmitClaim
-		mockLiquidAssets  map[string]sdk.Coins
-		mockError         error
-		expectedErrors    map[string]error
+		name               string
+		address            string
+		mockConnections    []prewards.ConnectionProtocolData
+		mockOsmosisParams  []prewards.OsmosisParamsProtocolData
+		mockUmeeParams     []prewards.UmeeParamsProtocolData
+		mockMembraneParams []prewards.MembraneProtocolData
+		mockOsmosisResult  types.OsmosisResult
+		mockUmeeResult     map[string]prewards.MsgSubmitClaim
+		mockUmeeAssets     map[string]sdk.Coins
+		mockLiquidResult   map[string]prewards.MsgSubmitClaim
+		mockLiquidAssets   map[string]sdk.Coins
+		mockMembraneResult map[string]prewards.MsgSubmitClaim
+		mockMembraneAssets map[string]sdk.Coins
+		mockError          error
+		expectedErrors     map[string]error
 	}{
 		{
 			name:    "successful assets retrieval",
@@ -55,6 +58,9 @@ func TestAssetsService_GetAssets(t *testing.T) {
 			},
 			mockUmeeParams: []prewards.UmeeParamsProtocolData{
 				{ChainID: "umee-1"},
+			},
+			mockMembraneParams: []prewards.MembraneProtocolData{
+				{ContractAddress: "osmo1contractaddress"},
 			},
 			mockOsmosisResult: types.OsmosisResult{
 				OsmosisPool: types.OsmosisPool{
@@ -86,6 +92,15 @@ func TestAssetsService_GetAssets(t *testing.T) {
 			},
 			mockLiquidAssets: map[string]sdk.Coins{
 				"liquid-1": sdk.NewCoins(sdk.NewCoin("liquid1", sdk.NewInt(300))),
+			},
+			mockMembraneResult: map[string]prewards.MsgSubmitClaim{
+				"membrane-1": {
+					UserAddress: "test-address",
+					ClaimType:   cmtypes.ClaimTypeMembrane,
+				},
+			},
+			mockMembraneAssets: map[string]sdk.Coins{
+				"membrane-1": sdk.NewCoins(sdk.NewCoin("membrane1", sdk.NewInt(400))),
 			},
 			expectedErrors: make(map[string]error),
 		},
@@ -121,6 +136,12 @@ func TestAssetsService_GetAssets(t *testing.T) {
 					}
 					return tt.mockUmeeParams, nil
 				},
+				GetMembraneParamsFunc: func(ctx context.Context) ([]prewards.MembraneProtocolData, error) {
+					if tt.mockError != nil {
+						return nil, tt.mockError
+					}
+					return tt.mockMembraneParams, nil
+				},
 			}
 
 			// Create mock claims service
@@ -133,6 +154,9 @@ func TestAssetsService_GetAssets(t *testing.T) {
 				},
 				LiquidClaimFunc: func(ctx context.Context, address, submitAddress string, connection prewards.ConnectionProtocolData, height int64) (map[string]prewards.MsgSubmitClaim, map[string]sdk.Coins, error) {
 					return tt.mockLiquidResult, tt.mockLiquidAssets, nil
+				},
+				MembraneClaimFunc: func(ctx context.Context, address, submitAddress, chain string, height int64) (map[string]prewards.MsgSubmitClaim, map[string]sdk.Coins, error) {
+					return tt.mockMembraneResult, tt.mockMembraneAssets, nil
 				},
 			}
 
@@ -222,6 +246,11 @@ func TestAssetsService_GetAssets_WithMappedAddresses(t *testing.T) {
 				{ChainID: "umee-1"},
 			}, nil
 		},
+		GetMembraneParamsFunc: func(ctx context.Context) ([]prewards.MembraneProtocolData, error) {
+			return []prewards.MembraneProtocolData{
+				{ContractAddress: "osmo1contractaddress"},
+			}, nil
+		},
 	}
 
 	// Create mock claims service that tracks the addresses used
@@ -269,6 +298,16 @@ func TestAssetsService_GetAssets_WithMappedAddresses(t *testing.T) {
 					},
 				}, map[string]sdk.Coins{
 					"liquid-1": sdk.NewCoins(sdk.NewCoin("liquid1", sdk.NewInt(300))),
+				}, nil
+		},
+		MembraneClaimFunc: func(ctx context.Context, address, submitAddress, chain string, height int64) (map[string]prewards.MsgSubmitClaim, map[string]sdk.Coins, error) {
+			return map[string]prewards.MsgSubmitClaim{
+					"membrane-1": {
+						UserAddress: submitAddress,
+						ClaimType:   cmtypes.ClaimTypeMembrane,
+					},
+				}, map[string]sdk.Coins{
+					"membrane-1": sdk.NewCoins(sdk.NewCoin("membrane1", sdk.NewInt(400))),
 				}, nil
 		},
 	}

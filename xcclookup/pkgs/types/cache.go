@@ -32,11 +32,19 @@ type Zone[T any] struct {
 	Pagination any
 }
 
+// SupportedCacheTypes is a type constraint for the cache manager.
+// Define all the types that can be cached here.
+type SupportedCacheTypes interface {
+	prewards.ConnectionProtocolData | prewards.OsmosisParamsProtocolData | prewards.OsmosisPoolProtocolData |
+		prewards.OsmosisClPoolProtocolData | prewards.LiquidAllowedDenomProtocolData |
+		prewards.UmeeParamsProtocolData | prewards.MembraneProtocolData | icstypes.Zone
+}
+
 func NewCacheManager() CacheManager {
 	return CacheManager{Data: make(map[string]CacheManagerElementI, 0)}
 }
 
-func GetCache[T prewards.ConnectionProtocolData | prewards.OsmosisParamsProtocolData | prewards.OsmosisPoolProtocolData | prewards.OsmosisClPoolProtocolData | prewards.LiquidAllowedDenomProtocolData | prewards.UmeeParamsProtocolData | icstypes.Zone](ctx context.Context, mgr *CacheManager) ([]T, error) {
+func GetCache[T SupportedCacheTypes](ctx context.Context, mgr *CacheManager) ([]T, error) {
 	if mgr == nil {
 		return nil, errors.New("cache manager is nil")
 	}
@@ -47,7 +55,7 @@ func GetCache[T prewards.ConnectionProtocolData | prewards.OsmosisParamsProtocol
 	return cache.Get(ctx)
 }
 
-func AddMocks[T prewards.ConnectionProtocolData | prewards.OsmosisParamsProtocolData | prewards.OsmosisPoolProtocolData | prewards.OsmosisClPoolProtocolData | prewards.LiquidAllowedDenomProtocolData | prewards.UmeeParamsProtocolData | icstypes.Zone](ctx context.Context, mgr *CacheManager, mocks []T) {
+func AddMocks[T SupportedCacheTypes](ctx context.Context, mgr *CacheManager, mocks []T) {
 	cache, _ := mgr.Data[new(Cache[T]).Type()].(*Cache[T])
 	cache.SetMock(mocks)
 }
@@ -95,6 +103,11 @@ func (m *CacheManager) GetLiquidAllowedDenoms(ctx context.Context) ([]prewards.L
 // GetUmeeParams implements CacheManagerInterface
 func (m *CacheManager) GetUmeeParams(ctx context.Context) ([]prewards.UmeeParamsProtocolData, error) {
 	return GetCache[prewards.UmeeParamsProtocolData](ctx, m)
+}
+
+// GetMembraneParams implements CacheManagerInterface
+func (m *CacheManager) GetMembraneParams(ctx context.Context) ([]prewards.MembraneProtocolData, error) {
+	return GetCache[prewards.MembraneProtocolData](ctx, m)
 }
 
 // GetZones implements CacheManagerInterface
