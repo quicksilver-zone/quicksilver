@@ -60,13 +60,13 @@ type Response struct {
 	Messages []prewards.MsgSubmitClaim `json:"messages"`
 	Assets   map[string][]Asset        `json:"assets"`
 	Errors   *ErrorString              `json:"errors,omitempty"`
+	mu       sync.RWMutex              `json:"-"` // mutex for thread-safe access
 }
 
 func (response *Response) Update(ctx context.Context, messages map[string]prewards.MsgSubmitClaim, assets map[string]sdk.Coins, assetType string) {
 	log := logger.FromContext(ctx)
-	m := sync.Mutex{}
-	m.Lock()
-	defer m.Unlock()
+	response.mu.Lock()
+	defer response.mu.Unlock()
 
 	for _, message := range messages {
 		if message.ClaimType == types.ClaimTypeUndefined {
@@ -86,6 +86,30 @@ func (response *Response) Update(ctx context.Context, messages map[string]prewar
 		log.Debug("Adding asset", "chain_id", chainID, "asset", asset)
 		response.Assets[chainID] = append(response.Assets[chainID], Asset{Type: assetType, Amount: asset})
 	}
+}
+
+// GetAssets returns a copy of the assets map for thread-safe reading
+func (response *Response) GetAssets() map[string][]Asset {
+	response.mu.RLock()
+	defer response.mu.RUnlock()
+
+	// Create a deep copy to avoid race conditions
+	result := make(map[string][]Asset)
+	for k, v := range response.Assets {
+		result[k] = append([]Asset{}, v...)
+	}
+	return result
+}
+
+// GetMessages returns a copy of the messages slice for thread-safe reading
+func (response *Response) GetMessages() []prewards.MsgSubmitClaim {
+	response.mu.RLock()
+	defer response.mu.RUnlock()
+
+	// Create a copy to avoid race conditions
+	result := make([]prewards.MsgSubmitClaim, len(response.Messages))
+	copy(result, response.Messages)
+	return result
 }
 
 type Asset struct {
