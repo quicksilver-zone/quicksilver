@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"net/http"
 
-	prewards "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 	"go.uber.org/multierr"
+
+	prewards "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 )
 
 func outputResponse(w http.ResponseWriter, response *Response, errors map[string]error, clearMessages bool) {
