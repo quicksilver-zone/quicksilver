@@ -16,11 +16,12 @@ func TestResponse_Mutex_Exists(t *testing.T) {
 	}
 
 	// Test that we can access the Assets field
-	assert.NotNil(t, response.Assets)
-
-	// Test that the GetAssets method works
 	assets := response.GetAssets()
 	assert.NotNil(t, assets)
+
+	// Test that the GetAssets method works
+	assets2 := response.GetAssets()
+	assert.NotNil(t, assets2)
 }
 
 func TestResponse_GetAssets_ThreadSafe(t *testing.T) {
@@ -29,9 +30,12 @@ func TestResponse_GetAssets_ThreadSafe(t *testing.T) {
 	}
 
 	// Add some initial data
-	response.Assets["chain1"] = []Asset{
-		{Type: "test", Amount: sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(100)))},
+	initialAssets := map[string][]Asset{
+		"chain1": {
+			{Type: "test", Amount: sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(100)))},
+		},
 	}
+	response.SetAssets(initialAssets)
 
 	// Test concurrent reads
 	numGoroutines := 50

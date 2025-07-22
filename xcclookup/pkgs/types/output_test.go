@@ -186,9 +186,10 @@ func TestOutputEpoch(t *testing.T) {
 			require.NoError(t, err)
 
 			// Verify messages are preserved (not cleared)
-			if len(tt.response.Messages) > 0 {
+			responseMessages := tt.response.GetMessages()
+			if len(responseMessages) > 0 {
 				assert.NotNil(t, result.Messages)
-				assert.Len(t, result.Messages, len(tt.response.Messages))
+				assert.Len(t, result.Messages, len(responseMessages))
 			}
 
 			// Verify errors are handled correctly

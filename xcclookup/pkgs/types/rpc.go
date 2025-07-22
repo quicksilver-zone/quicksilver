@@ -65,8 +65,6 @@ type Response struct {
 
 func (response *Response) Update(ctx context.Context, messages map[string]prewards.MsgSubmitClaim, assets map[string]sdk.Coins, assetType string) {
 	log := logger.FromContext(ctx)
-	response.mu.Lock()
-	defer response.mu.Unlock()
 
 	for _, message := range messages {
 		if message.ClaimType == types.ClaimTypeUndefined {
@@ -74,8 +72,7 @@ func (response *Response) Update(ctx context.Context, messages map[string]prewar
 			continue
 		}
 		log.Debug("Adding message", "claim_type", message.ClaimType, "zone", message.Zone, "src_zone", message.SrcZone, "user_address", message.UserAddress)
-		response.Messages = append(response.Messages, message)
-
+		response.AddMessage(message)
 	}
 
 	for chainID, asset := range assets {
@@ -84,7 +81,7 @@ func (response *Response) Update(ctx context.Context, messages map[string]prewar
 			continue
 		}
 		log.Debug("Adding asset", "chain_id", chainID, "asset", asset)
-		response.Assets[chainID] = append(response.Assets[chainID], Asset{Type: assetType, Amount: asset})
+		response.AddAsset(chainID, Asset{Type: assetType, Amount: asset})
 	}
 }
 
@@ -112,7 +109,61 @@ func (response *Response) GetMessages() []prewards.MsgSubmitClaim {
 	return result
 }
 
+// SetMessages sets the messages slice in a thread-safe manner
+func (response *Response) SetMessages(messages []prewards.MsgSubmitClaim) {
+	response.mu.Lock()
+	defer response.mu.Unlock()
+	response.Messages = messages
+}
+
+// ClearMessages clears the messages slice in a thread-safe manner
+func (response *Response) ClearMessages() {
+	response.mu.Lock()
+	defer response.mu.Unlock()
+	response.Messages = nil
+}
+
+// AddMessage adds a single message in a thread-safe manner
+func (response *Response) AddMessage(message prewards.MsgSubmitClaim) {
+	response.mu.Lock()
+	defer response.mu.Unlock()
+	response.Messages = append(response.Messages, message)
+}
+
+// AddAsset adds an asset to a specific chain in a thread-safe manner
+func (response *Response) AddAsset(chainID string, asset Asset) {
+	response.mu.Lock()
+	defer response.mu.Unlock()
+	response.Assets[chainID] = append(response.Assets[chainID], asset)
+}
+
+// SetAssets sets the assets map in a thread-safe manner
+func (response *Response) SetAssets(assets map[string][]Asset) {
+	response.mu.Lock()
+	defer response.mu.Unlock()
+	response.Assets = assets
+}
+
+// GetJSONSafeCopy returns a copy of the Response safe for JSON marshaling
+func (response *Response) GetJSONSafeCopy() ResponseJSON {
+	response.mu.RLock()
+	defer response.mu.RUnlock()
+
+	return ResponseJSON{
+		Messages: response.Messages,
+		Assets:   response.Assets,
+		Errors:   response.Errors,
+	}
+}
+
 type Asset struct {
 	Type   string
 	Amount sdk.Coins
+}
+
+// ResponseJSON is a JSON-safe version of Response without the mutex
+type ResponseJSON struct {
+	Messages []prewards.MsgSubmitClaim `json:"messages"`
+	Assets   map[string][]Asset        `json:"assets"`
+	Errors   *ErrorString              `json:"errors,omitempty"`
 }
