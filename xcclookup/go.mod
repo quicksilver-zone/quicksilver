@@ -10,7 +10,6 @@ require (
 	github.com/go-kit/log v0.2.1
 	github.com/golangci/golangci-lint/v2 v2.2.2
 	github.com/gorilla/mux v1.8.1
-	github.com/quicksilver-zone/quicksilver v1.8.2-0.20250707101051-6cb838a1fa0e
 	github.com/stretchr/testify v1.10.0
 	go.uber.org/multierr v1.11.0
 	golang.org/x/tools v0.35.0

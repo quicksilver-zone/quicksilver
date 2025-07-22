@@ -13,7 +13,7 @@ require (
 	github.com/go-kit/log v0.2.1
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/prometheus/client_golang v1.22.0
-	github.com/quicksilver-zone/quicksilver v1.8.0-beta.11
+	github.com/quicksilver-zone/quicksilver v1.9.0
 	github.com/rs/zerolog v1.34.0
 	github.com/spf13/cobra v1.9.1
 	github.com/spf13/viper v1.20.1
