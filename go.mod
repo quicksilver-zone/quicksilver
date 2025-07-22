@@ -20,7 +20,7 @@ require (
 	github.com/cosmos/ics23/go v0.11.0
 	github.com/gogo/protobuf v1.3.3
 	github.com/golang/protobuf v1.5.4
-	github.com/golangci/golangci-lint/v2 v2.2.2
+	github.com/golangci/golangci-lint/v2 v2.3.0
 	github.com/gorilla/mux v1.8.1
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	github.com/osmosis-labs/osmosis/osmomath v0.0.16
@@ -268,7 +268,7 @@ require (
 	github.com/nakabonne/nestif v0.3.1 // indirect
 	github.com/nishanths/exhaustive v0.12.0 // indirect
 	github.com/nishanths/predeclared v0.2.2 // indirect
-	github.com/nunnatsa/ginkgolinter v0.19.1 // indirect
+	github.com/nunnatsa/ginkgolinter v0.20.0 // indirect
 	github.com/nxadm/tail v1.4.11 // indirect
 	github.com/onsi/ginkgo v1.16.5 // indirect
 	github.com/opencontainers/image-spec v1.1.1 // indirect
@@ -300,10 +300,10 @@ require (
 	github.com/sasha-s/go-deadlock v0.3.5 // indirect
 	github.com/sashamelentyev/interfacebloat v1.1.0 // indirect
 	github.com/sashamelentyev/usestdlibvars v1.29.0 // indirect
-	github.com/securego/gosec/v2 v2.22.5 // indirect
+	github.com/securego/gosec/v2 v2.22.6 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/sivchari/containedctx v1.0.3 // indirect
-	github.com/sonatard/noctx v0.3.4 // indirect
+	github.com/sonatard/noctx v0.3.5 // indirect
 	github.com/sourcegraph/conc v0.3.0 // indirect
 	github.com/sourcegraph/go-diff v0.7.0 // indirect
 	github.com/spf13/afero v1.14.0 // indirect
