@@ -360,8 +360,9 @@ func TestOutputResponseNilResponse(t *testing.T) {
 	err := json.Unmarshal(w.Body.Bytes(), &result)
 	require.NoError(t, err)
 
-	// Should handle nil gracefully
-	assert.NotNil(t, result)
+	// Should handle nil gracefully - check individual fields instead of the whole struct
+	assert.NotNil(t, result.Messages)
+	assert.NotNil(t, result.Assets)
 }
 
 func TestOutputResponseEmptyErrorsMap(t *testing.T) {

@@ -4,8 +4,9 @@ import (
 	"sync"
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/assert"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestResponse_Mutex_Exists(t *testing.T) {
@@ -29,15 +30,16 @@ func TestResponse_GetAssets_ThreadSafe(t *testing.T) {
 
 	// Add some initial data
 	response.Assets["chain1"] = []Asset{
-		{Type: "test", Amount: sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(100)))}}
+		{Type: "test", Amount: sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(100)))},
+	}
 
 	// Test concurrent reads
-	numGoroutines := 10
+	numGoroutines := 50
 	var wg sync.WaitGroup
 
 	for i := 0; i < numGoroutines; i++ {
 		wg.Add(1)
-		go func(id int) {
+		go func() {
 			defer wg.Done()
 
 			// Read assets multiple times
@@ -45,7 +47,7 @@ func TestResponse_GetAssets_ThreadSafe(t *testing.T) {
 				assets := response.GetAssets()
 				assert.NotNil(t, assets)
 			}
-		}(i)
+		}()
 	}
 
 	wg.Wait()

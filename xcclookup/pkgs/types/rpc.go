@@ -60,7 +60,7 @@ type Response struct {
 	Messages []prewards.MsgSubmitClaim `json:"messages"`
 	Assets   map[string][]Asset        `json:"assets"`
 	Errors   *ErrorString              `json:"errors,omitempty"`
-	mu       sync.RWMutex              `json:"-"` // mutex for thread-safe access
+	mu       sync.RWMutex
 }
 
 func (response *Response) Update(ctx context.Context, messages map[string]prewards.MsgSubmitClaim, assets map[string]sdk.Coins, assetType string) {
