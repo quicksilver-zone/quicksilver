@@ -18,14 +18,17 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/go-kit/log"
+	"github.com/go-kit/log/level"
 	"github.com/quicksilver-zone/quicksilver/app"
+	"github.com/quicksilver-zone/quicksilver/icq-relayer/pkg/logger"
 	"github.com/quicksilver-zone/quicksilver/icq-relayer/pkg/runner"
 	"github.com/quicksilver-zone/quicksilver/icq-relayer/pkg/types"
-	"github.com/rs/zerolog/log"
 )
 
 const (
 	FlagHomePath = "home"
+	FlagLogLevel = "log-level"
 )
 
 func init() {
@@ -90,8 +93,14 @@ func StartCommand() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			logLevel, err := cmd.Flags().GetString(FlagLogLevel)
+			if err != nil {
+				return err
+			}
 
-			config := InitConfig(homepath)
+			logger := logger.New(logger.LogLevel(logLevel))
+
+			config := InitConfig(homepath, logger)
 			config.FilterHA()
 
 			rpcClient, err := rpchttp.New(config.DefaultChain.RpcUrl, "/websocket")
@@ -116,15 +125,15 @@ func StartCommand() *cobra.Command {
 			config.ClientContext = &clientContext
 			config.ProtoCodec = codec.NewProtoCodec(clientContext.InterfaceRegistry)
 			ctx := context.Background()
-			log.Print("starting the server and listening for epochs")
+			level.Info(logger).Log("msg", "starting the server and listening for epochs")
 
 			c := make(chan os.Signal, 1)
 			signal.Notify(c, os.Interrupt, syscall.SIGTERM, syscall.SIGABRT)
 
-			go runner.Run(ctx, &config, CreateErrHandler(c))
+			go runner.Run(ctx, &config, logger, CreateErrHandler(c, logger))
 
 			for sig := range c {
-				log.Printf("Signal Received (%s) - gracefully shutting down", sig.String())
+				level.Info(logger).Log("msg", "Signal Received, shutting down", "signal", sig.String())
 				break
 			}
 			return nil
@@ -132,17 +141,18 @@ func StartCommand() *cobra.Command {
 	}
 
 	startCommand.Flags().String(FlagHomePath, types.DefaultConfigPath, "homedir")
+	startCommand.Flags().String(FlagLogLevel, "info", "log level")
 	return startCommand
 }
 
-func InitConfig(homepath string) types.Config {
-	cfg := types.InitializeConfigFromToml(homepath)
+func InitConfig(homepath string, logger log.Logger) types.Config {
+	cfg := types.InitializeConfigFromToml(homepath, logger)
 	return cfg
 }
 
-func CreateErrHandler(sigC chan os.Signal) func(err error) {
+func CreateErrHandler(sigC chan os.Signal, logger log.Logger) func(err error) {
 	return func(err error) {
-		log.Err(err).Msg("Aborting")
+		level.Error(logger).Log("msg", "fatal error received", "err", err)
 		sigC <- syscall.SIGABRT
 	}
 }

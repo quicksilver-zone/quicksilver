@@ -9,10 +9,11 @@ import (
 	"slices"
 	"sort"
 
+	"github.com/BurntSushi/toml"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
-
-	"github.com/BurntSushi/toml"
+	gokitlog "github.com/go-kit/log"
+	"github.com/go-kit/log/level"
 )
 
 // Config represents the config file for the relayer
@@ -41,22 +42,23 @@ var (
 	DefaultConfigPath  = filepath.Join(DefaultHomePath, ".icq-relayer")
 )
 
-func InitializeConfigFromToml(homepath string) Config {
+func InitializeConfigFromToml(homepath string, logger gokitlog.Logger) Config {
 	config := Config{}
 	_, err := toml.DecodeFile(filepath.Join(homepath, "config.toml"), &config)
 	if err != nil {
-		log.Printf("Error decoding config: %v\n", err)
+		level.Warn(logger).Log("msg", "Error decoding config", "err", err)
 	}
 
 	if config.DefaultChain == nil {
 		config = NewConfig()
 		file, err := os.Create(filepath.Join(homepath, "config.toml"))
 		if err != nil {
+			level.Error(logger).Log("msg", "Error creating config file", "err", err)
 			log.Fatalf("Error creating config file: %v", err)
 		}
 		if err := toml.NewEncoder(file).Encode(config); err != nil {
 			file.Close()
-			log.Fatalf("Error encoding config: %v", err)
+			level.Error(logger).Log("msg", "Error encoding config", "err", err)
 		}
 		file.Close()
 	}

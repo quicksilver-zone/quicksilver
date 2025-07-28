@@ -5,11 +5,9 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	stdlog "log"
 	"math"
 	"math/rand"
 	"net/http"
-	"os"
 	"regexp"
 	"sort"
 	"strconv"
@@ -32,6 +30,7 @@ import (
 	tmclient "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
 	"github.com/dgraph-io/ristretto"
 	"github.com/go-kit/log"
+	"github.com/go-kit/log/level"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/quicksilver-zone/quicksilver/icq-relayer/pkg/types"
@@ -73,18 +72,17 @@ var (
 	RtyErr    = retry.LastErrorOnly(true)
 )
 
-func Run(ctx context.Context, cfg *types.Config, errHandler func(error)) error {
+func Run(ctx context.Context, cfg *types.Config, baseLogger log.Logger, errHandler func(error)) error {
 	MaxTxMsgs = cfg.MaxMsgsPerTx
 	if MaxTxMsgs == 0 {
 		MaxTxMsgs = 30
 	}
 	TxMsgs = MaxTxMsgs
 
-	logger := log.NewLogfmtLogger(log.NewSyncWriter(os.Stderr))
-	logger = log.With(logger, "ts", log.DefaultTimestampUTC, "caller", log.DefaultCaller)
+	logger := log.With(baseLogger, "caller", log.DefaultCaller)
 
-	_ = logger.Log("worker", "init", "msg", "starting icq relayer", "version", VERSION)
-	_ = logger.Log("worker", "init", "msg", "permitted queries", "queries", strings.Join(cfg.AllowedQueries, ","))
+	level.Info(logger).Log("worker", "init", "msg", "starting icq relayer", "version", VERSION)
+	level.Info(logger).Log("worker", "init", "msg", "permitted queries", "queries", strings.Join(cfg.AllowedQueries, ","))
 
 	reg := prometheus.NewRegistry()
 	metrics := *prommetrics.NewMetrics(reg)
@@ -97,32 +95,37 @@ func Run(ctx context.Context, cfg *types.Config, errHandler func(error)) error {
 		BufferItems: 64,      // Number of keys per Get buffer.
 	})
 	if err != nil {
-		panic("unable to start ristretto cache")
+		level.Error(logger).Log("msg", "unable to start ristretto cache")
+		return err
 	}
 
 	http.Handle("/metrics", promHandler)
 	go func() {
-		stdlog.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", cfg.BindPort), nil))
+		err := http.ListenAndServe(fmt.Sprintf(":%d", cfg.BindPort), nil)
+		if err != nil {
+			level.Error(logger).Log("msg", "failed to start metrics server", "err", err)
+			panic(err)
+		}
 	}()
 
 	defer func() {
 		err := Close(cfg)
 		if err != nil {
-			logger.Log("worker", "init", "msg", "error in closing the routine")
+			level.Error(logger).Log("worker", "init", "msg", "error in closing the routine")
 		}
 	}()
 
-	if err := cfg.DefaultChain.Init(cfg.ProtoCodec, cache); err != nil {
-		fmt.Println(err)
+	if err := cfg.DefaultChain.Init(cfg.ProtoCodec, cache, logger); err != nil {
+		level.Error(logger).Log("msg", "failed to init default chain", "err", err)
 		return err
 	}
 
 	for _, c := range cfg.Chains {
-		if err := c.Init(cfg.ProtoCodec, cache); err != nil {
+		if err := c.Init(cfg.ProtoCodec, cache, logger); err != nil {
 			return err
 		}
 
-		_ = logger.Log("worker", "init", "msg", "configured chain", "chain", c.ChainID)
+		level.Info(logger).Log("worker", "init", "msg", "configured chain", "chain", c.ChainID)
 	}
 
 	query := tmquery.MustParse(fmt.Sprintf("message.module='%s'", "interchainquery"))
@@ -130,11 +133,11 @@ func Run(ctx context.Context, cfg *types.Config, errHandler func(error)) error {
 	wg := &sync.WaitGroup{}
 	defer wg.Wait()
 
-	_ = logger.Log("worker", "init", "msg", "configuring subscription on default chainClient", "chain", cfg.DefaultChain.ChainID)
+	level.Info(logger).Log("worker", "init", "msg", "configuring subscription on default chainClient", "chain", cfg.DefaultChain.ChainID)
 
 	ch, err := cfg.DefaultChain.GetClient().Subscribe(ctx, cfg.DefaultChain.ChainID+"-icq", query.String())
 	if err != nil {
-		_ = logger.Log("error", err.Error())
+		level.Error(logger).Log("error", err.Error())
 		return err
 	}
 	wg.Add(1)
@@ -153,7 +156,7 @@ func Run(ctx context.Context, cfg *types.Config, errHandler func(error)) error {
 		defer wg.Done()
 		err := FlushSendQueue(cfg, log.With(logger, "worker", "flusher", "chain", cfg.DefaultChain.ChainID), metrics)
 		if err != nil {
-			_ = logger.Log("Flush Go-routine Bailing")
+			level.Error(logger).Log("msg", "Flush Go-routine Bailing")
 			panic(err)
 		}
 	}()
@@ -182,13 +185,10 @@ func Run(ctx context.Context, cfg *types.Config, errHandler func(error)) error {
 				out := qstypes.QueryRequestsResponse{}
 				err = cfg.ProtoCodec.Unmarshal(res.Response.Value, &out)
 				if err != nil {
-					err := logger.Log("msg", "Error: Unable to unmarshal: ", "error", err)
-					if err != nil {
-						return
-					}
+					level.Error(logger).Log("msg", "Error: Unable to unmarshal", "err", err)
 					continue CNT
 				}
-				_ = logger.Log("worker", "chainClient", "msg", "fetched historic queries for chain", "count", len(out.Queries))
+				level.Debug(logger).Log("worker", "chainClient", "msg", "fetched historic queries for chain", "count", len(out.Queries))
 
 				if len(out.Queries) > 0 {
 					go handleHistoricRequests(cfg, srcClient, out.Queries, cfg.DefaultChain.ChainID, log.With(logger, "worker", "historic"), metrics)
@@ -233,19 +233,19 @@ func handleHistoricRequests(cfg *types.Config, queryClient *types.ReadOnlyChainC
 		q.Type = query.QueryType
 
 		if _, found := cache.Get("query/" + q.QueryId); found {
-			logger.Log("msg", "Query already in cache", "id", q.QueryId)
+			level.Debug(logger).Log("msg", "Query already in cache", "id", q.QueryId)
 			continue
 		}
 
 		if _, found := cache.Get("ignore/" + q.QueryId); found {
-			logger.Log("msg", "Query already in ignore cache", "id", q.QueryId)
+			level.Debug(logger).Log("msg", "Query already in ignore cache", "id", q.QueryId)
 			continue
 		}
 
 		var err error
 		q.Height, err = queryClient.GetCurrentHeight(ctx, cache, log.With(logger, "chain", queryClient.ChainID))
 		if err != nil {
-			_ = logger.Log("msg", "Error getting current height", "error", err)
+			level.Error(logger).Log("msg", "Error getting current height", "error", err)
 			continue
 		}
 
@@ -262,10 +262,10 @@ func handleHistoricRequests(cfg *types.Config, queryClient *types.ReadOnlyChainC
 		}
 
 		if !handle {
-			_ = logger.Log("msg", "Ignoring existing query; not a permitted type", "id", query.Id, "type", q.Type)
+			level.Debug(logger).Log("msg", "Ignoring existing query; not a permitted type", "id", query.Id, "type", q.Type)
 			continue
 		}
-		//_ = logger.Log("msg", "Handling existing query", "id", query.Id)
+		//level.Debug(logger).Log("msg", "Handling existing query", "id", query.Id)
 
 		time.Sleep(75 * time.Millisecond) // try to avoid thundering herd.
 
@@ -294,12 +294,12 @@ func handleEvent(cfg *types.Config, event coretypes.ResultEvent, logger log.Logg
 		}
 		req, err := hex.DecodeString(request[i])
 		if err != nil {
-			_ = logger.Log("worker", "handler", "msg", err.Error())
+			level.Error(logger).Log("worker", "handler", "msg", err.Error())
 			continue
 		}
 		h, err := strconv.ParseInt(height[i], 10, 64)
 		if err != nil {
-			_ = logger.Log("worker", "handler", "msg", err.Error())
+			level.Error(logger).Log("worker", "handler", "msg", err.Error())
 			continue
 		}
 
@@ -316,7 +316,7 @@ func handleEvent(cfg *types.Config, event coretypes.ResultEvent, logger log.Logg
 		}
 
 		if !handle {
-			_ = logger.Log("worker", "handler", "msg", "Ignoring current query; not a permitted type", "id", queryIds[i], "type", types[i])
+			level.Debug(logger).Log("worker", "handler", "msg", "Ignoring current query; not a permitted type", "id", queryIds[i], "type", types[i])
 			continue
 		}
 		if _, found := cache.Get("query/" + queryIds[i]); found {
@@ -325,7 +325,7 @@ func handleEvent(cfg *types.Config, event coretypes.ResultEvent, logger log.Logg
 		}
 
 		if _, found := cache.Get("ignore/" + queryIds[i]); found {
-			logger.Log("msg", "Query already in ignore cache", "id", queryIds[i])
+			level.Debug(logger).Log("msg", "Query already in ignore cache", "id", queryIds[i])
 			// break if this is in the cache
 			continue
 		}
@@ -333,7 +333,7 @@ func handleEvent(cfg *types.Config, event coretypes.ResultEvent, logger log.Logg
 		if h == 0 {
 			currentheight, err := client.GetCurrentHeight(ctx, cache, log.With(logger, "chain", chains[i]))
 			if err != nil {
-				logger.Log("worker", "handler", "msg", "error getting current block", "height", currentheight)
+				level.Error(logger).Log("worker", "handler", "msg", "error getting current block", "height", currentheight)
 				continue
 			}
 		}
@@ -398,7 +398,7 @@ func doRequest(cfg *types.Config, query Query, logger log.Logger, metrics promme
 		return
 	}
 
-	//_ = logger.Log("msg", "Handling request", "type", query.Type, "id", query.QueryId, "height", query.Height)
+	//level.Debug(logger).Log("msg", "Handling request", "type", query.Type, "id", query.QueryId, "height", query.Height)
 
 	pathParts := strings.Split(query.Type, "/")
 	prove := pathParts[len(pathParts)-1] == "key" // fetch proof if the query is 'key'
@@ -411,7 +411,7 @@ func doRequest(cfg *types.Config, query Query, logger log.Logger, metrics promme
 		request := qstypes.GetTxsEventRequest{}
 		err = cfg.ProtoCodec.Unmarshal(query.Request, &request)
 		if err != nil {
-			_ = logger.Log("msg", "Error: Failed in Unmarshalling Request", "type", query.Type, "id", query.QueryId, "height", query.Height)
+			level.Error(logger).Log("msg", "Error: Failed in Unmarshalling Request", "type", query.Type, "id", query.QueryId, "height", query.Height)
 			return
 		}
 
@@ -424,28 +424,28 @@ func doRequest(cfg *types.Config, query Query, logger log.Logger, metrics promme
 
 		query.Request, err = cfg.ProtoCodec.Marshal(&request)
 		if err != nil {
-			_ = logger.Log("msg", "Error: Failed in Marshalling Request", "type", query.Type, "id", query.QueryId, "height", query.Height)
+			level.Error(logger).Log("msg", "Error: Failed in Marshalling Request", "type", query.Type, "id", query.QueryId, "height", query.Height)
 			return
 		}
 
-		_ = logger.Log("msg", "Handling GetTxsEvents", "id", query.QueryId, "height", query.Height)
+		level.Debug(logger).Log("msg", "Handling GetTxsEvents", "id", query.QueryId, "height", query.Height)
 		res, err = client.RunABCIQuery(ctx, "/"+query.Type, query.Request, query.Height, prove, metrics)
 		if err != nil {
-			_ = logger.Log("msg", "Error: Failed in RunGRPCQuery", "type", query.Type, "id", query.QueryId, "height", query.Height)
+			level.Error(logger).Log("msg", "Error: Failed in RunGRPCQuery", "type", query.Type, "id", query.QueryId, "height", query.Height)
 			return
 		}
 		txDecoder := authtxtypes.DefaultTxDecoder(cfg.ProtoCodec)
 		resp := txtypes.GetTxsEventResponse{}
 		err = cfg.ProtoCodec.Unmarshal(res.Value, &resp)
 		if err != nil {
-			_ = logger.Log("msg", "Error: Failed in Unmarshalling Response", "type", query.Type, "id", query.QueryId, "height", query.Height)
+			level.Error(logger).Log("msg", "Error: Failed in Unmarshalling Response", "type", query.Type, "id", query.QueryId, "height", query.Height)
 		}
-		_ = logger.Log("msg", "Got transactions", "num", len(resp.TxResponses), "id", query.QueryId, "height", query.Height)
+		level.Debug(logger).Log("msg", "Got transactions", "num", len(resp.TxResponses), "id", query.QueryId, "height", query.Height)
 		txResponses := make([]*sdk.TxResponse, 0, len(resp.TxResponses))
 		for _, txr := range resp.TxResponses {
 			tx, err := txDecoder(txr.Tx.Value)
 			if err != nil {
-				_ = logger.Log("msg", "Error: Failed in Unpacking Any", "type", query.Type, "id", query.QueryId, "height", query.Height)
+				level.Error(logger).Log("msg", "Error: Failed in Unpacking Any", "type", query.Type, "id", query.QueryId, "height", query.Height)
 			}
 			msgs := tx.GetMsgs()
 			for _, msg := range msgs {
@@ -453,14 +453,14 @@ func doRequest(cfg *types.Config, query Query, logger log.Logger, metrics promme
 				if ok {
 					txResponses = append(txResponses, txr)
 				} else {
-					fmt.Println("found non MsgSend message; removing")
+					level.Debug(logger).Log("msg", "found non MsgSend message; removing")
 				}
 			}
 		}
 		resp.TxResponses = txResponses
 		res.Value, err = cfg.ProtoCodec.Marshal(&resp)
 		if err != nil {
-			_ = logger.Log("msg", "Error: Failed in Marshalling Response", "type", query.Type, "id", query.QueryId, "height", query.Height)
+			level.Error(logger).Log("msg", "Error: Failed in Marshalling Response", "type", query.Type, "id", query.QueryId, "height", query.Height)
 			return
 		}
 
@@ -470,25 +470,25 @@ func doRequest(cfg *types.Config, query Query, logger log.Logger, metrics promme
 		cfg.ProtoCodec.MustUnmarshal(query.Request, &req)
 		hashBytes, err := hex.DecodeString(req.GetHash())
 		if err != nil {
-			_ = logger.Log("msg", fmt.Sprintf("Error: Could not get decode hash %s", err))
+			level.Error(logger).Log("msg", "Error: Could not get decode hash", "err", err)
 			return
 		}
 
 		proofAny, height, err := client.Tx(hashBytes)
 		if err != nil {
-			_ = logger.Log("msg", fmt.Sprintf("Error: Could not fetch proof %s", err))
+			level.Error(logger).Log("msg", "Error: Could not fetch proof", "err", err)
 			return
 		}
 
 		clientId, err := cfg.DefaultChain.GetClientId(ctx, query.ConnectionId, logger, metrics)
 		if err != nil {
-			_ = logger.Log("msg", fmt.Sprintf("Error: Could not get client id %s", err))
+			level.Error(logger).Log("msg", "Error: Could not get client id", "err", err)
 			return
 		}
 
 		header, err := getHeader(ctx, cfg, client, clientId, height-1, logger, true, metrics)
 		if err != nil {
-			_ = logger.Log("msg", fmt.Sprintf("Error: Could not get header %s", err))
+			level.Error(logger).Log("msg", "Error: Could not get header", "err", err)
 			return
 		}
 
@@ -503,7 +503,7 @@ func doRequest(cfg *types.Config, query Query, logger log.Logger, metrics promme
 	default:
 		res, err = client.RunABCIQuery(ctx, "/"+query.Type, query.Request, query.Height, prove, metrics)
 		if err != nil {
-			_ = logger.Log("msg", "Error: Failed in RunGRPCQuery", "type", query.Type, "id", query.QueryId, "height", query.Height)
+			level.Error(logger).Log("msg", "Error: Failed in RunGRPCQuery", "type", query.Type, "id", query.QueryId, "height", query.Height)
 			return
 		}
 	}
@@ -524,12 +524,12 @@ func asyncCacheClientUpdate(ctx context.Context, cfg *types.Config, client *type
 
 	_, ok := cache.Get("cu/" + cacheKey)
 	if ok {
-		fmt.Println("cache found for ", cacheKey)
+		level.Debug(logger).Log("msg", "cache found for", "key", cacheKey)
 		return nil
 	} else {
 		_, ok := cache.Get(queryKey) // lock on querying the same block
 		if ok {
-			//_ = logger.Log("msg", "cache miss, but cuquery/"+cacheKey+" exists, skipping")
+			//level.Debug(logger).Log("msg", "cache miss, but cuquery/"+cacheKey+" exists, skipping")
 			return nil
 		}
 		cache.SetWithTTL(queryKey, true, 1, 10*time.Second)
@@ -537,18 +537,18 @@ func asyncCacheClientUpdate(ctx context.Context, cfg *types.Config, client *type
 
 		clientId, err := cfg.DefaultChain.GetClientId(ctx, query.ConnectionId, logger, metrics)
 		if err != nil {
-			_ = logger.Log("msg", fmt.Sprintf("Error: Could not get clientId %s", err))
+			level.Error(logger).Log("msg", "Error: Could not get clientId", "err", err)
 			return err
 		}
 		header, err := getHeader(ctx, cfg, client, clientId, height, logger, false, metrics)
 		if err != nil {
-			_ = logger.Log("msg", fmt.Sprintf("Error: Could not get header %s", err))
+			level.Error(logger).Log("msg", "Error: Could not get header", "err", err)
 			return err
 		}
 
 		msg, err := clienttypes.NewMsgUpdateClient(clientId, header, cfg.DefaultChain.GetAddress())
 		if err != nil {
-			_ = logger.Log("msg", fmt.Sprintf("Error: Could not create msg update: %s", err))
+			level.Error(logger).Log("msg", "Error: Could not create msg update", "err", err)
 			return err
 		}
 		cache.SetWithTTL(cacheKey, msg, 5, 10*time.Minute)
@@ -556,14 +556,14 @@ func asyncCacheClientUpdate(ctx context.Context, cfg *types.Config, client *type
 	}
 }
 
-func getCachedClientUpdate(connectionId string, height int64) (sdk.Msg, error) {
+func getCachedClientUpdate(connectionId string, height int64, logger log.Logger) (sdk.Msg, error) {
 	cacheKey := fmt.Sprintf("cu/%s-%d", connectionId, height)
 	cu, ok := cache.Get(cacheKey)
 	if ok {
-		fmt.Printf("cache hit for %s-%d\n", connectionId, height)
+		level.Debug(logger).Log("msg", "cache hit", "connection", connectionId, "height", height)
 		return cu.(sdk.Msg), nil
 	}
-	fmt.Printf("cache miss for %s-%d\n", connectionId, height)
+	level.Debug(logger).Log("msg", "cache miss", "connection", connectionId, "height", height)
 	return nil, errors.New("client update not found")
 }
 
@@ -634,7 +634,7 @@ func FlushSendQueue(cfg *types.Config, logger log.Logger, metrics prommetrics.Me
 			} else {
 				TxMsgs = 2 * TxMsgs
 			}
-			_ = logger.Log("msg", "increased batchsize", "size", TxMsgs)
+			level.Debug(logger).Log("msg", "increased batchsize", "size", TxMsgs)
 			LastReduced = time.Now()
 		}
 
@@ -650,7 +650,7 @@ func FlushSendQueue(cfg *types.Config, logger log.Logger, metrics prommetrics.Me
 				go func() {
 					err := asyncCacheClientUpdate(ctx, cfg, cfg.Chains[msg.ClientUpdate.ChainId], Query{ConnectionId: msg.ClientUpdate.ConnectionId, Height: msg.ClientUpdate.Height}, msg.ClientUpdate.Height, logger, metrics)
 					if err != nil {
-						_ = logger.Log("msg", fmt.Sprintf("Error: Could not submit client update %s", err))
+						level.Error(logger).Log("msg", "Error: Could not submit client update", "err", err)
 					}
 				}()
 			}
@@ -665,9 +665,9 @@ func FlushSendQueue(cfg *types.Config, logger log.Logger, metrics prommetrics.Me
 
 // TODO: refactor me!
 func flush(cfg *types.Config, toSend []Message, logger log.Logger, metrics prommetrics.Metrics) {
-	fmt.Println("flush messages", len(toSend))
+	level.Info(logger).Log("msg", "flush messages", "count", len(toSend))
 	if len(toSend) > 0 {
-		_ = logger.Log("msg", fmt.Sprintf("Sending batch of %d messages", len(toSend)))
+		level.Info(logger).Log("msg", "Sending batch of messages", "count", len(toSend))
 		msgs := prepareMessages(toSend, logger)
 		if len(msgs) > 0 {
 			ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)
@@ -676,31 +676,31 @@ func flush(cfg *types.Config, toSend []Message, logger log.Logger, metrics promm
 
 			switch {
 			case err == nil:
-				_ = logger.Log("msg", fmt.Sprintf("Sent batch of %d (deduplicated) messages [hash: %s]", len(msgs), hash))
+				level.Info(logger).Log("msg", "Sent batch of messages", "count", len(msgs), "hash", hash)
 			case code == 12:
-				_ = logger.Log("msg", "Not enough gas")
+				level.Warn(logger).Log("msg", "Not enough gas")
 			case code == 19:
-				_ = logger.Log("msg", "Tx already in mempool")
+				level.Warn(logger).Log("msg", "Tx already in mempool")
 			case strings.Contains(err.Error(), "request body too large"):
 				TxMsgs = max(1, TxMsgs*3/4)
 				LastReduced = time.Now()
-				_ = logger.Log("msg", "body too large: reduced batchsize", "size", TxMsgs)
+				level.Warn(logger).Log("msg", "body too large: reduced batchsize", "size", TxMsgs)
 			case strings.Contains(err.Error(), "failed to execute message"):
 				regex := regexp.MustCompile(`failed to execute message; message index: (\d+)`)
 				match := regex.FindStringSubmatch(err.Error())
 				idx, _ := strconv.Atoi(match[1])
 				badMsg, ok := msgs[idx].(*qstypes.MsgSubmitQueryResponse)
 				if !ok {
-					_ = logger.Log("msg", "Failed to execute non QueryResponse (probably submitting a ClientUpdate to a syncing node)", "index", match[1], "err", err.Error())
+					level.Error(logger).Log("msg", "Failed to execute non QueryResponse (probably submitting a ClientUpdate to a syncing node)", "index", match[1], "err", err.Error())
 					metrics.FailedTxs.WithLabelValues("failed_txs").Inc()
 					break
 				}
 				cache.SetWithTTL("ignore/"+badMsg.QueryId, true, 1, time.Minute*5)
-				_ = logger.Log("msg", "Failed to execute message; ignoring for five minutes", "index", match[1], "err", err.Error())
+				level.Warn(logger).Log("msg", "Failed to execute message; ignoring for five minutes", "index", match[1], "err", err.Error())
 			case code == 65536:
-				_ = logger.Log("msg", "error in tx", "err", err.Error())
+				level.Warn(logger).Log("msg", "error in tx", "err", err.Error())
 			default:
-				_ = logger.Log("msg", "Failed to submit; nevermind, we'll try again!", "err", err)
+				level.Error(logger).Log("msg", "Failed to submit; nevermind, we'll try again!", "err", err)
 				metrics.FailedTxs.WithLabelValues("failed_txs").Inc()
 			}
 
@@ -719,37 +719,37 @@ func prepareMessages(msgSlice []Message, logger log.Logger) []sdk.Msg {
 	}
 
 	for _, entry := range msgSlice {
-		// fmt.Println("prepareMessages", idx)
+		// level.Debug(logger).Log("msg", "prepareMessages", "idx", idx)
 		if len(list) > TxMsgs {
-			// fmt.Println("transaction full; requeueing")
+			// level.Debug(logger).Log("msg", "transaction full; requeueing")
 			go func(entry Message) { time.Sleep(time.Second * 2); sendQueue <- entry }(entry) // client update not ready; requeue.
 			continue
 		}
 
 		msg, ok := entry.Msg.(*qstypes.MsgSubmitQueryResponse)
 		if !ok {
-			fmt.Println("unable to cast message to MsgSubmitQueryResponse")
+			level.Error(logger).Log("msg", "unable to cast message to MsgSubmitQueryResponse")
 			continue // unable to cast message to MsgSubmitQueryResponse
 		}
 
 		if _, ok := cache.Get("ignore/" + msg.QueryId); ok {
-			logger.Log("msg", "Query already in ignore cache", "id", msg.QueryId)
+			level.Debug(logger).Log("msg", "Query already in ignore cache", "id", msg.QueryId)
 			continue
 		}
 
 		if _, ok := keys[msg.QueryId]; ok {
-			// fmt.Println("message already added")
+			// level.Debug(logger).Log("msg", "message already added")
 			continue // message already added
 		}
 
 		if entry.ClientUpdate != nil && !exists(keys, fmt.Sprintf("%s-%d", entry.ClientUpdate.ConnectionId, entry.ClientUpdate.Height)) {
-			// fmt.Println("client update required")
-			cu, err := getCachedClientUpdate(entry.ClientUpdate.ConnectionId, entry.ClientUpdate.Height)
+			// level.Debug(logger).Log("msg", "client update required")
+			cu, err := getCachedClientUpdate(entry.ClientUpdate.ConnectionId, entry.ClientUpdate.Height, logger)
 			if err != nil {
-				// fmt.Println("client update not ready; requeueing")
+				// level.Debug(logger).Log("msg", "client update not ready; requeueing")
 				go func(entry Message) { time.Sleep(time.Second * 2); sendQueue <- entry }(entry) // client update not ready; requeue.
 			} else {
-				fmt.Println("client update ready; adding update and query response to send list")
+				level.Debug(logger).Log("msg", "client update ready; adding update and query response to send list")
 				list = append(list, cu)
 				list = append(list, entry.Msg)
 				keys[msg.QueryId] = true
@@ -757,7 +757,7 @@ func prepareMessages(msgSlice []Message, logger log.Logger) []sdk.Msg {
 				cache.Del("query/" + msg.QueryId)
 			}
 		} else {
-			fmt.Println("adding query response to send list")
+			level.Debug(logger).Log("msg", "adding query response to send list")
 			list = append(list, entry.Msg)
 			keys[msg.QueryId] = true
 			cache.Del("query/" + msg.QueryId)
@@ -765,7 +765,7 @@ func prepareMessages(msgSlice []Message, logger log.Logger) []sdk.Msg {
 
 	}
 
-	fmt.Printf("prepared %d messages\n", len(list))
+	level.Info(logger).Log("msg", "prepared messages", "count", len(list))
 
 	return list
 }

@@ -79,7 +79,7 @@ func (r *ChainConfig) GetClient() *rpchttp.HTTP {
 	return r.Client.(*rpchttp.HTTP)
 }
 
-func (r *ChainConfig) Init(codec *codec.ProtoCodec, cache *ristretto.Cache) error {
+func (r *ChainConfig) Init(codec *codec.ProtoCodec, cache *ristretto.Cache, logger log2.Logger) error {
 	var err error
 	r.Client, err = rpchttp.NewWithTimeout(r.RpcUrl, "/websocket", uint(r.ConnectTimeoutSeconds))
 	if err != nil {
@@ -102,7 +102,7 @@ func (r *ChainConfig) Init(codec *codec.ProtoCodec, cache *ristretto.Cache) erro
 	return nil
 }
 
-func (r *ReadOnlyChainConfig) Init(codec *codec.ProtoCodec, cache *ristretto.Cache) error {
+func (r *ReadOnlyChainConfig) Init(codec *codec.ProtoCodec, cache *ristretto.Cache, logger log2.Logger) error {
 	var err error
 	r.Client, err = NewWithTimeout(r.RpcUrl, uint(r.ConnectTimeoutSeconds))
 	if err != nil {
@@ -120,12 +120,11 @@ func (r *ReadOnlyChainConfig) Init(codec *codec.ProtoCodec, cache *ristretto.Cac
 	return nil
 }
 
-func (r *ReadOnlyChainConfig) LightBlock(ctx context.Context, height int64) (*tmtypes.LightBlock, error) {
+func (r *ReadOnlyChainConfig) LightBlock(ctx context.Context, height int64, logger log2.Logger) (*tmtypes.LightBlock, error) {
 	ctx, cancel := context.WithTimeout(ctx, 2*time.Second)
 	defer cancel()
 	lightBlock, err := r.LightProvider.LightBlock(ctx, height)
 	if err != nil {
-		fmt.Println("error getting light block", err)
 		return nil, err
 	}
 	return lightBlock, nil
@@ -136,13 +135,11 @@ func (r *ReadOnlyChainConfig) GetClientState(ctx context.Context, clientId strin
 	bz := r.Codec.MustMarshal(&clientStateQuery)
 	res, err := r.Client.ABCIQuery(ctx, "/ibc.core.client.v1.Query/ClientState", bz)
 	if err != nil {
-		_ = logger.Log("msg", fmt.Sprintf("Error: Could not get client state from client %s", err))
 		return nil, err
 	}
 	clientStateResponse := clienttypes.QueryClientStateResponse{}
 	err = r.Codec.Unmarshal(res.Response.Value, &clientStateResponse)
 	if err != nil {
-		_ = logger.Log("msg", fmt.Sprintf("Error: Could not unmarshal connection %s", err))
 		return nil, err
 	}
 
@@ -164,7 +161,6 @@ func (r *ReadOnlyChainConfig) GetClientStateHeights(ctx context.Context, clientI
 	bz := r.Codec.MustMarshal(&req)
 	res, err := r.Client.ABCIQuery(ctx, "/ibc.core.client.v1.Query/ConsensusStateHeights", bz)
 	if err != nil {
-		_ = logger.Log("msg", fmt.Sprintf("Error: Could not get consensus state heights from client %s", err))
 		return nil, err
 	}
 	resp := clienttypes.QueryConsensusStateHeightsResponse{}
@@ -187,13 +183,11 @@ func (r *ReadOnlyChainConfig) GetClientId(ctx context.Context, connectionId stri
 		bz := r.Codec.MustMarshal(&connectionQuery)
 		res, err := r.Client.ABCIQuery(ctx, "/ibc.core.connection.v1.Query/Connection", bz)
 		if err != nil {
-			_ = logger.Log("msg", fmt.Sprintf("Error: Could not get connection from chain %s", err))
 			return "", err
 		}
 		connectionResponse := connectiontypes.QueryConnectionResponse{}
 		err = r.Codec.Unmarshal(res.Response.Value, &connectionResponse)
 		if err != nil {
-			_ = logger.Log("msg", fmt.Sprintf("Error: Could not unmarshal connection %s", err))
 			return "", err
 		}
 
@@ -462,13 +456,9 @@ func (r *ReadOnlyChainConfig) GetCurrentHeight(ctx context.Context, cache *ristr
 
 		currentheight = block.Block.LastCommit.Height - 1
 		if cache == nil {
-			logger.Log("msg", "unable to cache current block height, no cache provided", "height", currentheight)
 			return currentheight.(int64), nil
 		}
 		cache.SetWithTTL("currentblock/"+r.ChainID, currentheight, 1, 6*time.Second)
-		//logger.Log("msg", "caching currentblock", "height", currentheight)
-		//} else {
-		//logger.Log("msg", "using cached currentblock", "height", currentheight)
 	}
 	return currentheight.(int64), nil
 }
