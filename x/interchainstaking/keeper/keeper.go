@@ -301,6 +301,7 @@ func (k *Keeper) SetValidatorsForZone(ctx sdk.Context, data []byte, icqQuery icq
 		case val.Status != validator.Status.String():
 			k.Logger(ctx).Debug("bond status change; fetching proof", "valoper", validator.OperatorAddress, "from", val.Status, "to", validator.Status.String())
 			toQuery = true
+		default:
 		}
 
 		if toQuery {

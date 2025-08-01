@@ -3,7 +3,7 @@ package keeper_test
 import (
 	"fmt"
 	"io"
-	"sort"
+	"slices"
 	"testing"
 	"time"
 
@@ -128,13 +128,21 @@ func TestKeeperWithZonesRoundTrip(t *testing.T) {
 	wantAllZones := maps.Values(gotZonesMapping)
 	require.Equal(t, nzones, len(gotAllZones), "expecting unique nzones")
 	// Sort them for determinism
-	sort.Slice(gotAllZones, func(i, j int) bool {
-		zi, zj := gotAllZones[i], gotAllZones[j]
-		return zi.ChainId < zj.ChainId
+	slices.SortFunc(gotAllZones, func(i, j types.Zone) int {
+		if i.ChainId < j.ChainId {
+			return -1
+		} else if i.ChainId > j.ChainId {
+			return 1
+		}
+		return 0
 	})
-	sort.Slice(wantAllZones, func(i, j int) bool {
-		zi, zj := wantAllZones[i], wantAllZones[j]
-		return zi.ChainId < zj.ChainId
+	slices.SortFunc(wantAllZones, func(i, j types.Zone) int {
+		if i.ChainId < j.ChainId {
+			return -1
+		} else if i.ChainId > j.ChainId {
+			return 1
+		}
+		return 0
 	})
 	require.Equal(t, wantAllZones, gotAllZones, "expecting the zones to match")
 

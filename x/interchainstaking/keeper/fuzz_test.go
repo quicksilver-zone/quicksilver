@@ -69,6 +69,7 @@ func FuzzZones(f *testing.F) {
 			return
 		case "\n\t\n\x01K\x10\x0000(0", "\n\t\n\x030D0 0(0", "\n\t\n\x0301000(0":
 			return
+		default:
 		}
 
 		suite := new(FuzzingTestSuite)

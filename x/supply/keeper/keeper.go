@@ -3,7 +3,7 @@ package keeper
 import (
 	"bytes"
 	"fmt"
-	"sort"
+	"slices"
 
 	"cosmossdk.io/math"
 
@@ -128,8 +128,13 @@ func (k Keeper) TopN(ctx sdk.Context, baseDenom string, n uint64) []*types.Accou
 		accountSlice = append(accountSlice, &types.Account{Address: addr, Balance: balance})
 	}
 
-	sort.Slice(accountSlice, func(i, j int) bool {
-		return accountSlice[i].Balance.GT(accountSlice[j].Balance)
+	slices.SortFunc(accountSlice, func(i, j *types.Account) int {
+		if i.Balance.GT(j.Balance) {
+			return -1
+		} else if i.Balance.LT(j.Balance) {
+			return 1
+		}
+		return 0
 	})
 
 	if n > uint64(len(accountSlice)) {

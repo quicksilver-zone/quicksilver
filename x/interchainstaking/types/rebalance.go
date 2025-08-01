@@ -3,6 +3,7 @@ package types
 import (
 	"fmt"
 	"math"
+	"slices"
 	"sort"
 
 	sdkmath "cosmossdk.io/math"
@@ -102,14 +103,23 @@ func (deltas AllocationDeltas) Sort() {
 	deltas = newAllocationDeltas
 
 	// sort keys by relative value of delta
-	sort.SliceStable(deltas, func(i, j int) bool {
-		// < sorts alphabetically.
-		return deltas[i].ValoperAddress < deltas[j].ValoperAddress
+	slices.SortStableFunc(deltas, func(i, j *AllocationDelta) int {
+		if i.ValoperAddress < j.ValoperAddress {
+			return -1
+		} else if i.ValoperAddress > j.ValoperAddress {
+			return 1
+		}
+		return 0
 	})
 
 	// sort keys by relative value of delta
-	sort.SliceStable(deltas, func(i, j int) bool {
-		return deltas[i].Amount.GT(deltas[j].Amount)
+	slices.SortStableFunc(deltas, func(i, j *AllocationDelta) int {
+		if i.Amount.GT(j.Amount) {
+			return -1
+		} else if i.Amount.LT(j.Amount) {
+			return 1
+		}
+		return 0
 	})
 }
 
@@ -180,20 +190,33 @@ type RebalanceTargets []*RebalanceTarget
 // Sort RebalanceTargets deterministically.
 func (tgts RebalanceTargets) Sort() {
 	// sort keys by relative value of delta
-	sort.SliceStable(tgts, func(i, j int) bool {
-		// < sorts alphabetically.
-		return tgts[i].Source < tgts[j].Source
+	slices.SortStableFunc(tgts, func(i, j *RebalanceTarget) int {
+		if i.Source < j.Source {
+			return -1
+		} else if i.Source > j.Source {
+			return 1
+		}
+		return 0
 	})
 
 	// sort keys by relative value of delta
-	sort.SliceStable(tgts, func(i, j int) bool {
-		// < sorts alphabetically.
-		return tgts[i].Target < tgts[j].Target
+	slices.SortStableFunc(tgts, func(i, j *RebalanceTarget) int {
+		if i.Target < j.Target {
+			return -1
+		} else if i.Target > j.Target {
+			return 1
+		}
+		return 0
 	})
 
 	// sort keys by relative value of delta
-	sort.SliceStable(tgts, func(i, j int) bool {
-		return tgts[i].Amount.LT(tgts[j].Amount)
+	slices.SortStableFunc(tgts, func(i, j *RebalanceTarget) int {
+		if i.Amount.LT(j.Amount) {
+			return -1
+		} else if i.Amount.GT(j.Amount) {
+			return 1
+		}
+		return 0
 	})
 }
 
@@ -272,6 +295,7 @@ TARGET:
 					continue TARGET
 				}
 				// otherwise, try next source.
+			default:
 			}
 		}
 		// we only get here if we are unable to satisfy targets due to rebalanceBudget depletion.
