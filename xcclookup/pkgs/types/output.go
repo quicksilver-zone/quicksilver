@@ -6,6 +6,8 @@ import (
 	"net/http"
 
 	"go.uber.org/multierr"
+
+	prewards "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 )
 
 func outputResponse(w http.ResponseWriter, response *Response, errors map[string]error, clearMessages bool) {
@@ -18,6 +20,14 @@ func outputResponse(w http.ResponseWriter, response *Response, errors map[string
 	w.Header().Set("X-Frame-Options", "DENY")
 	w.Header().Set("X-XSS-Protection", "1; mode=block")
 
+	// Handle nil response
+	if response == nil {
+		response = &Response{
+			Messages: []prewards.MsgSubmitClaim{},
+			Assets:   map[string][]Asset{},
+		}
+	}
+
 	if len(errors) > 0 {
 		var err error
 		for key, e := range errors {
@@ -27,10 +37,12 @@ func outputResponse(w http.ResponseWriter, response *Response, errors map[string
 	}
 
 	if clearMessages {
-		response.Messages = nil
+		response.ClearMessages()
 	}
 
-	jsonOut, err := json.Marshal(response)
+	// Get a thread-safe copy for JSON marshaling
+	responseCopy := response.GetJSONSafeCopy()
+	jsonOut, err := json.Marshal(responseCopy)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprintf(w, "Error: %s", err.Error())
