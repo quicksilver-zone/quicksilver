@@ -2,7 +2,7 @@ package types
 
 import (
 	"errors"
-	"sort"
+	"slices"
 
 	sdkmath "cosmossdk.io/math"
 
@@ -69,8 +69,13 @@ func (d Delegation) GetValidatorAddr() sdk.ValAddress {
 type ValidatorIntents []*ValidatorIntent
 
 func (vi ValidatorIntents) Sort() ValidatorIntents {
-	sort.SliceStable(vi, func(i, j int) bool {
-		return vi[i].ValoperAddress < vi[j].ValoperAddress
+	slices.SortStableFunc(vi, func(i, j *ValidatorIntent) int {
+		if i.ValoperAddress < j.ValoperAddress {
+			return -1
+		} else if i.ValoperAddress > j.ValoperAddress {
+			return 1
+		}
+		return 0
 	})
 	return vi
 }

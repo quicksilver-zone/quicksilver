@@ -355,7 +355,8 @@ func TestAssetsService_GetAssets_WithMappedAddresses(t *testing.T) {
 	assert.Equal(t, originalAddress, liquidAddressUsed, "Liquid claim should use original address when no mapping exists")
 
 	// Verify that the submit address is always the original address
-	for _, msg := range response.Messages {
+	responseMessages := response.GetMessages()
+	for _, msg := range responseMessages {
 		assert.Equal(t, originalAddress, msg.UserAddress, "Submit address should always be the original address")
 	}
 }
