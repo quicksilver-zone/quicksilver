@@ -186,9 +186,10 @@ func TestOutputEpoch(t *testing.T) {
 			require.NoError(t, err)
 
 			// Verify messages are preserved (not cleared)
-			if len(tt.response.Messages) > 0 {
+			responseMessages := tt.response.GetMessages()
+			if len(responseMessages) > 0 {
 				assert.NotNil(t, result.Messages)
-				assert.Len(t, result.Messages, len(tt.response.Messages))
+				assert.Len(t, result.Messages, len(responseMessages))
 			}
 
 			// Verify errors are handled correctly
@@ -360,8 +361,9 @@ func TestOutputResponseNilResponse(t *testing.T) {
 	err := json.Unmarshal(w.Body.Bytes(), &result)
 	require.NoError(t, err)
 
-	// Should handle nil gracefully
-	assert.NotNil(t, result)
+	// Should handle nil gracefully - check individual fields instead of the whole struct
+	assert.NotNil(t, result.Messages)
+	assert.NotNil(t, result.Assets)
 }
 
 func TestOutputResponseEmptyErrorsMap(t *testing.T) {
