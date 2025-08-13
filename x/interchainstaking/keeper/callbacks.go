@@ -799,6 +799,7 @@ func AllBalancesCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes
 			zone.PerformanceAddress.BalanceWaitgroup = 0
 			k.Logger(ctx).Info("zeroing performance balance waitgroup")
 		}
+	default:
 	}
 	k.SetZone(ctx, &zone)
 
