@@ -1181,8 +1181,6 @@ github.com/inconshreveable/mousetrap v1.0.0/go.mod h1:PxqpIevigyE2G7u3NXJIT2ANyt
 github.com/inconshreveable/mousetrap v1.1.0 h1:wN+x4NVGpMsO7ErUn/mUI3vEoE6Jt13X2s0bqwp9tc8=
 github.com/inconshreveable/mousetrap v1.1.0/go.mod h1:vpF70FUmC8bwa3OWnCshd2FqLfsEA9PFc4w1p2J65bw=
 github.com/influxdata/influxdb1-client v0.0.0-20191209144304-8bf82d3c094d/go.mod h1:qj24IKcXYK6Iy9ceXlo3Tc+vtHo9lIhSX5JddghvEPo=
-github.com/ingenuity-build/multierror v0.1.0 h1:nS+YE/+ujwtl09kNWsIMNu8TUjs9PKrtnP5x45txxOs=
-github.com/ingenuity-build/multierror v0.1.0/go.mod h1:ZU6BORie0gkg/hhdTvEH979RsaCE2Wdsxph9AISVmac=
 github.com/jhump/protoreflect v1.15.1 h1:HUMERORf3I3ZdX05WaQ6MIpd/NJ434hTp5YiKgfCL6c=
 github.com/jhump/protoreflect v1.15.1/go.mod h1:jD/2GMKKE6OqX8qTjhADU1e6DShO+gavG9e0Q693nKo=
 github.com/jmespath/go-jmespath v0.0.0-20180206201540-c2b33e8439af/go.mod h1:Nht3zPeWKUH0NzdCt2Blrr5ys8VGpn0CEB0cQHVjt7k=
@@ -1409,8 +1407,7 @@ github.com/prometheus/procfs v0.17.0 h1:FuLQ+05u4ZI+SS/w9+BWEM2TXiHKsUQ9TADiRH7D
 github.com/prometheus/procfs v0.17.0/go.mod h1:oPQLaDAMRbA+u8H5Pbfq+dl3VDAvHxMUOVhe0wYB2zw=
 github.com/quicksilver-zone/osmomath v0.0.16-sdk47 h1:89yl/1QKksSaZtXX8bF1y3UwBulBvv97F27sWB6mBT4=
 github.com/quicksilver-zone/osmomath v0.0.16-sdk47/go.mod h1:6Uhjlk6eybH2M4ARYcKW+/mYlh/0Shmpl1xcPVl/lOA=
-github.com/quicksilver-zone/quicksilver v1.8.0-beta.11 h1:0HnRfrGQqqSkQsZ1GawkR/cdaOUMOYcG9pq1Kj24rUQ=
-github.com/quicksilver-zone/quicksilver v1.8.0-beta.11/go.mod h1:nhMPGdihMJDS7C+5eQdEE/YEk1TaxjjCPQ1V+uKBlBA=
+github.com/quicksilver-zone/quicksilver v1.9.0 h1:+umE5e01bBSdKP12s5QwR+nOrvkybCUAUC1GQAU6K04=
 github.com/rakyll/statik v0.1.7 h1:OF3QCZUuyPxuGEP7B4ypUa7sB/iHtqOTDYZXGM8KOdQ=
 github.com/rakyll/statik v0.1.7/go.mod h1:AlZONWzMtEnMs7W4e/1LURLiI49pIMmp6V9Unghqrcc=
 github.com/rcrowley/go-metrics v0.0.0-20181016184325-3113b8401b8a/go.mod h1:bCqnVzQkZxMG4s8nGwiZ5l3QUCyqpo9Y+/ZMZ9VjZe4=
