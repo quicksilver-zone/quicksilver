@@ -11,7 +11,7 @@ require (
 	github.com/celestiaorg/nmt v0.24.0
 	github.com/client9/misspell v0.3.4
 	github.com/cometbft/cometbft v0.37.15
-	github.com/cometbft/cometbft-db v0.14.1
+	github.com/cometbft/cometbft-db v0.12.0
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/cosmos-sdk v0.47.17
 	github.com/cosmos/gogoproto v1.7.0
@@ -393,4 +393,4 @@ replace (
 
 retract v1.7.0 // safety bug
 
-retract v1.9.0 // build issue with dependendy
+retract [v1.9.0, v1.9.1] // issue with dependencies
