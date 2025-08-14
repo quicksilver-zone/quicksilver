@@ -872,8 +872,8 @@ github.com/coinbase/mesh-sdk-go/types v1.0.0 h1:CQjX3SnIZvRClvSgjgNDLq342Wn9WNnG
 github.com/coinbase/mesh-sdk-go/types v1.0.0/go.mod h1:eq7W2TMRH22GTW0N0beDnN931DW0/WOI1R2sdHNHG4c=
 github.com/cometbft/cometbft v0.37.15 h1:un+iXPh7naon5e7LQgKB2BYcrnAG0SGmUgDesyX7FII=
 github.com/cometbft/cometbft v0.37.15/go.mod h1:t/BvwfSJKt2HUHX01L6y1+uw+LOoxU6hFj447wOB5IA=
-github.com/cometbft/cometbft-db v0.14.1 h1:SxoamPghqICBAIcGpleHbmoPqy+crij/++eZz3DlerQ=
-github.com/cometbft/cometbft-db v0.14.1/go.mod h1:KHP1YghilyGV/xjD5DP3+2hyigWx0WTp9X+0Gnx0RxQ=
+github.com/cometbft/cometbft-db v0.12.0 h1:v77/z0VyfSU7k682IzZeZPFZrQAKiQwkqGN0QzAjMi0=
+github.com/cometbft/cometbft-db v0.12.0/go.mod h1:aX2NbCrjNVd2ZajYxt1BsiFf/Z+TQ2MN0VxdicheYuw=
 github.com/confio/ics23/go v0.9.1 h1:3MV46eeWwO3xCauKyAtuAdJYMyPnnchW4iLr2bTw6/U=
 github.com/confio/ics23/go v0.9.1/go.mod h1:4LPZ2NYqnYIVRklaozjNR1FScgDJ2s5Xrp+e/mYVRak=
 github.com/containerd/continuity v0.3.0 h1:nisirsYROK15TAMVukJOUyGJjz4BNQJBVsNvAXZJ/eg=
