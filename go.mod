@@ -41,7 +41,7 @@ require (
 	google.golang.org/protobuf v1.36.6
 	gopkg.in/yaml.v2 v2.4.0
 	gopkg.in/yaml.v3 v3.0.1
-	mvdan.cc/gofumpt v0.8.0
+	mvdan.cc/gofumpt v0.9.1
 )
 
 require (
