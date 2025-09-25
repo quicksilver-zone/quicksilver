@@ -8,7 +8,7 @@ require (
 	cosmossdk.io/math v1.5.3
 	github.com/armon/go-metrics v0.4.1
 	github.com/celestiaorg/go-square/v2 v2.3.1
-	github.com/celestiaorg/nmt v0.24.0
+	github.com/celestiaorg/nmt v0.24.2
 	github.com/client9/misspell v0.3.4
 	github.com/cometbft/cometbft v0.37.15
 	github.com/cometbft/cometbft-db v0.14.1
@@ -30,7 +30,7 @@ require (
 	github.com/spf13/cast v1.9.2
 	github.com/spf13/cobra v1.9.1
 	github.com/spf13/viper v1.20.1
-	github.com/stretchr/testify v1.10.0
+	github.com/stretchr/testify v1.11.1
 	github.com/syndtr/goleveldb v1.0.1-0.20220721030215-126854af5e6d
 	go.opencensus.io v0.24.0
 	go.uber.org/multierr v1.11.0
