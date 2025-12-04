@@ -28,7 +28,7 @@ require (
 	github.com/prometheus/common v0.65.0
 	github.com/rakyll/statik v0.1.7
 	github.com/spf13/cast v1.9.2
-	github.com/spf13/cobra v1.10.1
+	github.com/spf13/cobra v1.10.2
 	github.com/spf13/viper v1.20.1
 	github.com/stretchr/testify v1.11.1
 	github.com/syndtr/goleveldb v1.0.1-0.20220721030215-126854af5e6d
