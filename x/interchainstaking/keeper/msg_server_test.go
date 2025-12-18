@@ -1662,3 +1662,355 @@ func (suite *KeeperTestSuite) TestMsgGovExecuteICATx() {
 		})
 	}
 }
+
+func (suite *KeeperTestSuite) TestGovSetZoneOffboarding() {
+	testCases := []struct {
+		name      string
+		malleate  func(suite *KeeperTestSuite) *icstypes.MsgGovSetZoneOffboarding
+		expectErr bool
+		errMsg    string
+		postCheck func(suite *KeeperTestSuite, ctx sdk.Context)
+	}{
+		{
+			name: "invalid authority",
+			malleate: func(suite *KeeperTestSuite) *icstypes.MsgGovSetZoneOffboarding {
+				return &icstypes.MsgGovSetZoneOffboarding{
+					ChainId:       suite.chainB.ChainID,
+					IsOffboarding: true,
+					Authority:     testAddress, // not gov module
+				}
+			},
+			expectErr: true,
+			errMsg:    "invalid authority",
+		},
+		{
+			name: "zone not found",
+			malleate: func(suite *KeeperTestSuite) *icstypes.MsgGovSetZoneOffboarding {
+				k := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
+				return &icstypes.MsgGovSetZoneOffboarding{
+					ChainId:       "invalid-chain-id",
+					IsOffboarding: true,
+					Authority:     sdk.MustBech32ifyAddressBytes(sdk.GetConfig().GetBech32AccountAddrPrefix(), k.AccountKeeper.GetModuleAddress(govtypes.ModuleName)),
+				}
+			},
+			expectErr: true,
+			errMsg:    "zone not found",
+		},
+		{
+			name: "enable offboarding success",
+			malleate: func(suite *KeeperTestSuite) *icstypes.MsgGovSetZoneOffboarding {
+				k := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
+				return &icstypes.MsgGovSetZoneOffboarding{
+					ChainId:       suite.chainB.ChainID,
+					IsOffboarding: true,
+					Authority:     sdk.MustBech32ifyAddressBytes(sdk.GetConfig().GetBech32AccountAddrPrefix(), k.AccountKeeper.GetModuleAddress(govtypes.ModuleName)),
+				}
+			},
+			expectErr: false,
+			postCheck: func(suite *KeeperTestSuite, ctx sdk.Context) {
+				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+				suite.True(found)
+				suite.True(zone.IsOffboarding)
+				suite.False(zone.DepositsEnabled)
+				suite.False(zone.UnbondingEnabled)
+			},
+		},
+		{
+			name: "disable offboarding success",
+			malleate: func(suite *KeeperTestSuite) *icstypes.MsgGovSetZoneOffboarding {
+				k := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
+				ctx := suite.chainA.GetContext()
+				// First enable offboarding
+				zone, _ := k.GetZone(ctx, suite.chainB.ChainID)
+				zone.IsOffboarding = true
+				k.SetZone(ctx, &zone)
+
+				return &icstypes.MsgGovSetZoneOffboarding{
+					ChainId:       suite.chainB.ChainID,
+					IsOffboarding: false,
+					Authority:     sdk.MustBech32ifyAddressBytes(sdk.GetConfig().GetBech32AccountAddrPrefix(), k.AccountKeeper.GetModuleAddress(govtypes.ModuleName)),
+				}
+			},
+			expectErr: false,
+			postCheck: func(suite *KeeperTestSuite, ctx sdk.Context) {
+				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+				suite.True(found)
+				suite.False(zone.IsOffboarding)
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.Run(tc.name, func() {
+			suite.SetupTest()
+			suite.setupTestZones()
+
+			msg := tc.malleate(suite)
+			msgSrv := icskeeper.NewMsgServerImpl(suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper)
+			ctx := suite.chainA.GetContext()
+
+			_, err := msgSrv.GovSetZoneOffboarding(ctx, msg)
+			if tc.expectErr {
+				suite.Error(err)
+				suite.Contains(err.Error(), tc.errMsg)
+				return
+			}
+			suite.NoError(err)
+			if tc.postCheck != nil {
+				tc.postCheck(suite, ctx)
+			}
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestGovCancelAllPendingRedemptions() {
+	testCases := []struct {
+		name      string
+		malleate  func(suite *KeeperTestSuite) *icstypes.MsgGovCancelAllPendingRedemptions
+		expectErr bool
+		errMsg    string
+		postCheck func(suite *KeeperTestSuite, ctx sdk.Context, resp *icstypes.MsgGovCancelAllPendingRedemptionsResponse)
+	}{
+		{
+			name: "invalid authority",
+			malleate: func(suite *KeeperTestSuite) *icstypes.MsgGovCancelAllPendingRedemptions {
+				return &icstypes.MsgGovCancelAllPendingRedemptions{
+					ChainId:   suite.chainB.ChainID,
+					Authority: testAddress,
+				}
+			},
+			expectErr: true,
+			errMsg:    "invalid authority",
+		},
+		{
+			name: "zone not found",
+			malleate: func(suite *KeeperTestSuite) *icstypes.MsgGovCancelAllPendingRedemptions {
+				k := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
+				return &icstypes.MsgGovCancelAllPendingRedemptions{
+					ChainId:   "invalid-chain-id",
+					Authority: sdk.MustBech32ifyAddressBytes(sdk.GetConfig().GetBech32AccountAddrPrefix(), k.AccountKeeper.GetModuleAddress(govtypes.ModuleName)),
+				}
+			},
+			expectErr: true,
+			errMsg:    "zone not found",
+		},
+		{
+			name: "zone not in offboarding mode",
+			malleate: func(suite *KeeperTestSuite) *icstypes.MsgGovCancelAllPendingRedemptions {
+				k := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
+				return &icstypes.MsgGovCancelAllPendingRedemptions{
+					ChainId:   suite.chainB.ChainID,
+					Authority: sdk.MustBech32ifyAddressBytes(sdk.GetConfig().GetBech32AccountAddrPrefix(), k.AccountKeeper.GetModuleAddress(govtypes.ModuleName)),
+				}
+			},
+			expectErr: true,
+			errMsg:    "not in offboarding mode",
+		},
+		{
+			name: "cancel pending redemptions success - no records",
+			malleate: func(suite *KeeperTestSuite) *icstypes.MsgGovCancelAllPendingRedemptions {
+				k := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
+				ctx := suite.chainA.GetContext()
+				// Enable offboarding
+				zone, _ := k.GetZone(ctx, suite.chainB.ChainID)
+				zone.IsOffboarding = true
+				k.SetZone(ctx, &zone)
+
+				return &icstypes.MsgGovCancelAllPendingRedemptions{
+					ChainId:   suite.chainB.ChainID,
+					Authority: sdk.MustBech32ifyAddressBytes(sdk.GetConfig().GetBech32AccountAddrPrefix(), k.AccountKeeper.GetModuleAddress(govtypes.ModuleName)),
+				}
+			},
+			expectErr: false,
+			postCheck: func(suite *KeeperTestSuite, ctx sdk.Context, resp *icstypes.MsgGovCancelAllPendingRedemptionsResponse) {
+				suite.Equal(uint64(0), resp.CancelledCount)
+			},
+		},
+		{
+			name: "cancel pending redemptions success - with records",
+			malleate: func(suite *KeeperTestSuite) *icstypes.MsgGovCancelAllPendingRedemptions {
+				quicksilver := suite.GetQuicksilverApp(suite.chainA)
+				k := quicksilver.InterchainstakingKeeper
+				ctx := suite.chainA.GetContext()
+
+				zone, _ := k.GetZone(ctx, suite.chainB.ChainID)
+				zone.IsOffboarding = true
+				k.SetZone(ctx, &zone)
+
+				// Create a user address and fund escrow
+				userAddr := addressutils.GenerateAddressForTestWithPrefix("quick")
+				burnAmount := sdk.NewCoin(zone.LocalDenom, sdk.NewInt(1000000))
+
+				// Mint qAssets to escrow module for refund
+				suite.NoError(k.BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(burnAmount)))
+				suite.NoError(k.BankKeeper.SendCoinsFromModuleToModule(ctx, icstypes.ModuleName, icstypes.EscrowModuleAccount, sdk.NewCoins(burnAmount)))
+
+				// Create withdrawal record with proper quick prefix address and valid hex txhash
+				err := k.SetWithdrawalRecord(ctx, icstypes.WithdrawalRecord{
+					ChainId:      zone.ChainId,
+					Delegator:    userAddr,
+					Distribution: nil,
+					Recipient:    "cosmos1user123",
+					Amount:       nil,
+					BurnAmount:   burnAmount,
+					Txhash:       "7C8B95EEE82CB63492EA7A1636AC940F855F9F82B01966CC41BA32B7BBC6A3E9",
+					Status:       icstypes.WithdrawStatusQueued,
+				})
+				suite.NoError(err)
+
+				return &icstypes.MsgGovCancelAllPendingRedemptions{
+					ChainId:   suite.chainB.ChainID,
+					Authority: sdk.MustBech32ifyAddressBytes(sdk.GetConfig().GetBech32AccountAddrPrefix(), k.AccountKeeper.GetModuleAddress(govtypes.ModuleName)),
+				}
+			},
+			expectErr: false,
+			postCheck: func(suite *KeeperTestSuite, ctx sdk.Context, resp *icstypes.MsgGovCancelAllPendingRedemptionsResponse) {
+				suite.Equal(uint64(1), resp.CancelledCount)
+				suite.False(resp.RefundedAmounts.IsZero())
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.Run(tc.name, func() {
+			suite.SetupTest()
+			suite.setupTestZones()
+
+			msg := tc.malleate(suite)
+			msgSrv := icskeeper.NewMsgServerImpl(suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper)
+			ctx := suite.chainA.GetContext()
+
+			resp, err := msgSrv.GovCancelAllPendingRedemptions(ctx, msg)
+			if tc.expectErr {
+				suite.Error(err)
+				suite.Contains(err.Error(), tc.errMsg)
+				return
+			}
+			suite.NoError(err)
+			if tc.postCheck != nil {
+				tc.postCheck(suite, ctx, resp)
+			}
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestGovForceUnbondAllDelegations() {
+	testCases := []struct {
+		name      string
+		malleate  func(suite *KeeperTestSuite) *icstypes.MsgGovForceUnbondAllDelegations
+		expectErr bool
+		errMsg    string
+		postCheck func(suite *KeeperTestSuite, ctx sdk.Context, resp *icstypes.MsgGovForceUnbondAllDelegationsResponse, txk ica.TxKeeper)
+	}{
+		{
+			name: "invalid authority",
+			malleate: func(suite *KeeperTestSuite) *icstypes.MsgGovForceUnbondAllDelegations {
+				return &icstypes.MsgGovForceUnbondAllDelegations{
+					ChainId:   suite.chainB.ChainID,
+					Authority: testAddress,
+				}
+			},
+			expectErr: true,
+			errMsg:    "invalid authority",
+		},
+		{
+			name: "zone not found",
+			malleate: func(suite *KeeperTestSuite) *icstypes.MsgGovForceUnbondAllDelegations {
+				k := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
+				return &icstypes.MsgGovForceUnbondAllDelegations{
+					ChainId:   "invalid-chain-id",
+					Authority: sdk.MustBech32ifyAddressBytes(sdk.GetConfig().GetBech32AccountAddrPrefix(), k.AccountKeeper.GetModuleAddress(govtypes.ModuleName)),
+				}
+			},
+			expectErr: true,
+			errMsg:    "zone not found",
+		},
+		{
+			name: "zone not in offboarding mode",
+			malleate: func(suite *KeeperTestSuite) *icstypes.MsgGovForceUnbondAllDelegations {
+				k := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
+				return &icstypes.MsgGovForceUnbondAllDelegations{
+					ChainId:   suite.chainB.ChainID,
+					Authority: sdk.MustBech32ifyAddressBytes(sdk.GetConfig().GetBech32AccountAddrPrefix(), k.AccountKeeper.GetModuleAddress(govtypes.ModuleName)),
+				}
+			},
+			expectErr: true,
+			errMsg:    "not in offboarding mode",
+		},
+		{
+			name: "no delegations to unbond",
+			malleate: func(suite *KeeperTestSuite) *icstypes.MsgGovForceUnbondAllDelegations {
+				k := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
+				ctx := suite.chainA.GetContext()
+				zone, _ := k.GetZone(ctx, suite.chainB.ChainID)
+				zone.IsOffboarding = true
+				k.SetZone(ctx, &zone)
+
+				return &icstypes.MsgGovForceUnbondAllDelegations{
+					ChainId:   suite.chainB.ChainID,
+					Authority: sdk.MustBech32ifyAddressBytes(sdk.GetConfig().GetBech32AccountAddrPrefix(), k.AccountKeeper.GetModuleAddress(govtypes.ModuleName)),
+				}
+			},
+			expectErr: true,
+			errMsg:    "no delegations",
+		},
+		{
+			name: "force unbond success",
+			malleate: func(suite *KeeperTestSuite) *icstypes.MsgGovForceUnbondAllDelegations {
+				k := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
+				ctx := suite.chainA.GetContext()
+				zone, _ := k.GetZone(ctx, suite.chainB.ChainID)
+				zone.IsOffboarding = true
+				k.SetZone(ctx, &zone)
+
+				// Create some delegations
+				vals := suite.GetQuicksilverApp(suite.chainB).StakingKeeper.GetBondedValidatorsByPower(suite.chainB.GetContext())
+				if len(vals) > 0 {
+					delegation := icstypes.Delegation{
+						DelegationAddress: zone.DelegationAddress.Address,
+						ValidatorAddress:  vals[0].OperatorAddress,
+						Amount:            sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000000)),
+					}
+					k.SetDelegation(ctx, zone.ChainId, delegation)
+				}
+
+				return &icstypes.MsgGovForceUnbondAllDelegations{
+					ChainId:   suite.chainB.ChainID,
+					Authority: sdk.MustBech32ifyAddressBytes(sdk.GetConfig().GetBech32AccountAddrPrefix(), k.AccountKeeper.GetModuleAddress(govtypes.ModuleName)),
+				}
+			},
+			expectErr: false,
+			postCheck: func(suite *KeeperTestSuite, ctx sdk.Context, resp *icstypes.MsgGovForceUnbondAllDelegationsResponse, txk ica.TxKeeper) {
+				suite.Equal(uint64(1), resp.UnbondingCount)
+				suite.False(resp.TotalUnbonded.IsZero())
+				// Verify ICA tx was submitted
+				suite.Equal(1, len(txk.Txs))
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.Run(tc.name, func() {
+			suite.SetupTest()
+			suite.setupTestZones()
+			txk := ica.TxKeeper{}
+			icsKeeper := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
+			icsKeeper.OverrideTxSubmit(ica.GetTestSubmitTxFn(&txk))
+
+			msg := tc.malleate(suite)
+			msgSrv := icskeeper.NewMsgServerImpl(icsKeeper)
+			ctx := suite.chainA.GetContext()
+
+			resp, err := msgSrv.GovForceUnbondAllDelegations(ctx, msg)
+			if tc.expectErr {
+				suite.Error(err)
+				suite.Contains(err.Error(), tc.errMsg)
+				return
+			}
+			suite.NoError(err)
+			if tc.postCheck != nil {
+				tc.postCheck(suite, ctx, resp, txk)
+			}
+		})
+	}
+}

@@ -25,6 +25,9 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&RegisterZoneProposal{}, "quicksilver/RegisterZoneProposal", nil)
 	cdc.RegisterConcrete(&UpdateZoneProposal{}, "quicksilver/UpdateZoneProposal", nil)
 	cdc.RegisterConcrete(&MsgGovExecuteICATx{}, "quicksilver/MsgGovExecuteICATx", nil)
+	cdc.RegisterConcrete(&MsgGovSetZoneOffboarding{}, "quicksilver/MsgGovSetZoneOffboarding", nil)
+	cdc.RegisterConcrete(&MsgGovCancelAllPendingRedemptions{}, "quicksilver/MsgGovCancelAllPendingRedemptions", nil)
+	cdc.RegisterConcrete(&MsgGovForceUnbondAllDelegations{}, "quicksilver/MsgGovForceUnbondAllDelegations", nil)
 	lsmstakingtypes.RegisterLegacyAminoCodec(cdc)
 }
 
@@ -42,6 +45,9 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		&MsgGovAddValidatorDenyList{},
 		&MsgGovRemoveValidatorDenyList{},
 		&MsgGovExecuteICATx{},
+		&MsgGovSetZoneOffboarding{},
+		&MsgGovCancelAllPendingRedemptions{},
+		&MsgGovForceUnbondAllDelegations{},
 	)
 
 	registry.RegisterImplementations(

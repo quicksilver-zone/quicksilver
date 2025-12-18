@@ -793,14 +793,21 @@ func (k *Keeper) HandleUndelegate(ctx sdk.Context, msg sdk.Msg, completion time.
 		return errors.New("unable to cast source message to MsgUndelegate")
 	}
 
-	epochNumber, err := types.ParseEpochMsgMemo(memo, types.MsgTypeWithdrawal)
-	if err != nil {
-		return err
-	}
-
 	zone, found := k.GetZoneForDelegateAccount(ctx, undelegateMsg.DelegatorAddress)
 	if !found {
 		return fmt.Errorf("zone for delegate account %s not found", undelegateMsg.DelegatorAddress)
+	}
+
+	// Check if this is an offboarding unbond
+	_, offboardErr := types.ParseEpochMsgMemo(memo, types.MsgTypeOffboardingUnbond)
+	if offboardErr == nil {
+		// This is an offboarding unbond - handle it separately
+		return k.HandleOffboardingUndelegate(ctx, undelegateMsg, completion, zone)
+	}
+
+	epochNumber, err := types.ParseEpochMsgMemo(memo, types.MsgTypeWithdrawal)
+	if err != nil {
+		return err
 	}
 
 	if err := zone.DecrementWithdrawalWaitgroup(k.Logger(ctx), 1, "unbonding message ack"); err != nil {
@@ -877,6 +884,66 @@ func (k *Keeper) HandleUndelegate(ctx sdk.Context, msg sdk.Msg, completion time.
 		return err
 	}
 	k.SetZone(ctx, zone)
+
+	return nil
+}
+
+// HandleOffboardingUndelegate handles the acknowledgement of an offboarding unbonding.
+// For offboarding, we don't track epoch-based unbonding records - we just need to
+// decrement the waitgroup and update the delegation state.
+func (k *Keeper) HandleOffboardingUndelegate(ctx sdk.Context, undelegateMsg *stakingtypes.MsgUndelegate, completion time.Time, zone *types.Zone) error {
+	k.Logger(ctx).Info("Handling offboarding unbonding acknowledgement",
+		"chain_id", zone.ChainId,
+		"validator", undelegateMsg.ValidatorAddress,
+		"amount", undelegateMsg.Amount,
+		"completion", completion,
+	)
+
+	// Decrement the withdrawal waitgroup
+	if err := zone.DecrementWithdrawalWaitgroup(k.Logger(ctx), 1, "offboarding unbonding ack"); err != nil {
+		k.Logger(ctx).Error(err.Error())
+	}
+
+	// Update the delegation record via ICQ
+	delAddr, err := addressutils.AccAddressFromBech32(undelegateMsg.DelegatorAddress, "")
+	if err != nil {
+		return err
+	}
+	valAddr, err := addressutils.ValAddressFromBech32(undelegateMsg.ValidatorAddress, "")
+	if err != nil {
+		return err
+	}
+
+	data := stakingtypes.GetDelegationKey(delAddr, valAddr)
+
+	// send request to update delegation record for undelegated del/val tuple.
+	k.ICQKeeper.MakeRequest(
+		ctx,
+		zone.ConnectionId,
+		zone.ChainId,
+		"store/staking/key",
+		data,
+		sdk.NewInt(-1),
+		types.ModuleName,
+		"delegation_epoch",
+		0,
+	)
+
+	if err = zone.IncrementWithdrawalWaitgroup(k.Logger(ctx), 1, "offboarding unbonding ack emit delegation_epoch query"); err != nil {
+		return err
+	}
+
+	k.SetZone(ctx, zone)
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeOffboardingUnbondAck,
+			sdk.NewAttribute(types.AttributeKeyChainID, zone.ChainId),
+			sdk.NewAttribute(types.AttributeKeyValidator, undelegateMsg.ValidatorAddress),
+			sdk.NewAttribute(types.AttributeKeyAmount, undelegateMsg.Amount.String()),
+			sdk.NewAttribute(types.AttributeKeyCompletionTime, completion.String()),
+		),
+	)
 
 	return nil
 }
@@ -1473,6 +1540,12 @@ func (k *Keeper) HandleWithdrawRewards(ctx sdk.Context, msg sdk.Msg, connectionI
 }
 
 func (k *Keeper) TriggerRedemptionRate(ctx sdk.Context, zone *types.Zone) error {
+	// Skip redemption rate updates for offboarding zones
+	if zone.IsOffboarding {
+		k.Logger(ctx).Info("Skipping redemption rate update for offboarding zone", "chain_id", zone.ChainId)
+		return nil
+	}
+
 	// interface assertion
 	balanceQuery := banktypes.QueryAllBalancesRequest{Address: zone.WithdrawalAddress.Address}
 	bz, err := k.cdc.Marshal(&balanceQuery)

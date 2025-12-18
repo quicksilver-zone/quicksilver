@@ -1,6 +1,7 @@
 syntax = "proto3";
 package quicksilver.interchainstaking.v1;
 
+import "cosmos/base/v1beta1/coin.proto";
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "quicksilver/interchainstaking/v1/interchainstaking.proto";
@@ -160,3 +161,51 @@ message MsgGovRemoveValidatorDenyList {
 }
 
 message MsgGovRemoveValidatorDenyListResponse {}
+
+// MsgGovSetZoneOffboarding sets a zone into offboarding mode.
+// When enabled, deposits are disabled and redemption rate updates are frozen.
+message MsgGovSetZoneOffboarding {
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string chain_id = 1;
+  bool is_offboarding = 2;
+  string authority = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+message MsgGovSetZoneOffboardingResponse {}
+
+// MsgGovCancelAllPendingRedemptions cancels all pending redemptions for a zone
+// and refunds the escrowed qAssets to users.
+message MsgGovCancelAllPendingRedemptions {
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string chain_id = 1;
+  string authority = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+message MsgGovCancelAllPendingRedemptionsResponse {
+  uint64 cancelled_count = 1;
+  repeated cosmos.base.v1beta1.Coin refunded_amounts = 2 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.nullable) = false
+  ];
+}
+
+// MsgGovForceUnbondAllDelegations force unbonds all delegations for a zone.
+// This can only be called when the zone is in offboarding mode and has no pending redemptions.
+message MsgGovForceUnbondAllDelegations {
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string chain_id = 1;
+  string authority = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+message MsgGovForceUnbondAllDelegationsResponse {
+  uint64 unbonding_count = 1;
+  cosmos.base.v1beta1.Coin total_unbonded = 2 [
+    (gogoproto.nullable) = false
+  ];
+}
