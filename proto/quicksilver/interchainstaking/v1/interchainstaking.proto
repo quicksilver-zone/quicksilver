@@ -56,6 +56,7 @@ message Zone {
     (gogoproto.nullable) = false
   ];
   string transfer_channel = 31;
+  bool is_offboarding = 32;
 }
 
 message SubzoneInfo {

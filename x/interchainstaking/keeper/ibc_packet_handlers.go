@@ -459,7 +459,8 @@ func (k *Keeper) HandleWithdrawForUser(ctx sdk.Context, zone *types.Zone, msg *b
 
 	withdrawalRecord, found := k.GetWithdrawalRecord(ctx, zone.ChainId, txHash, types.WithdrawStatusSend)
 	if !found {
-		return errors.New("no matching withdrawal record found")
+		k.Logger(ctx).Info("withdrawal record not found; may have already been processed", "chain_id", zone.ChainId, "tx_hash", txHash, "status", types.WithdrawStatusSend)
+		return nil
 	}
 
 	// case 1: total amount - native unbonding
@@ -602,7 +603,8 @@ func (k *Keeper) HandleTokenizedShares(ctx sdk.Context, msg sdk.Msg, sharesAmoun
 	withdrawalRecord, found := k.GetWithdrawalRecord(ctx, zone.ChainId, memo, types.WithdrawStatusTokenize)
 
 	if !found {
-		return errors.New("no matching withdrawal record found")
+		k.Logger(ctx).Info("withdrawal record not found; may have already been processed", "chain_id", zone.ChainId, "memo", memo, "status", types.WithdrawStatusTokenize)
+		return nil
 	}
 
 	// Try to find a matching distribution
@@ -791,14 +793,21 @@ func (k *Keeper) HandleUndelegate(ctx sdk.Context, msg sdk.Msg, completion time.
 		return errors.New("unable to cast source message to MsgUndelegate")
 	}
 
-	epochNumber, err := types.ParseEpochMsgMemo(memo, types.MsgTypeWithdrawal)
-	if err != nil {
-		return err
-	}
-
 	zone, found := k.GetZoneForDelegateAccount(ctx, undelegateMsg.DelegatorAddress)
 	if !found {
 		return fmt.Errorf("zone for delegate account %s not found", undelegateMsg.DelegatorAddress)
+	}
+
+	// Check if this is an offboarding unbond
+	_, offboardErr := types.ParseEpochMsgMemo(memo, types.MsgTypeOffboardingUnbond)
+	if offboardErr == nil {
+		// This is an offboarding unbond - handle it separately
+		return k.HandleOffboardingUndelegate(ctx, undelegateMsg, completion, zone)
+	}
+
+	epochNumber, err := types.ParseEpochMsgMemo(memo, types.MsgTypeWithdrawal)
+	if err != nil {
+		return err
 	}
 
 	if err := zone.DecrementWithdrawalWaitgroup(k.Logger(ctx), 1, "unbonding message ack"); err != nil {
@@ -831,7 +840,8 @@ func (k *Keeper) HandleUndelegate(ctx sdk.Context, msg sdk.Msg, completion time.
 
 		record, found := k.GetWithdrawalRecord(ctx, zone.ChainId, hash, types.WithdrawStatusUnbond)
 		if !found {
-			return fmt.Errorf("unable to lookup withdrawal record; chain: %s, hash: %s", zone.ChainId, hash)
+			k.Logger(ctx).Info("withdrawal record not found; may have already been processed", "chain_id", zone.ChainId, "hash", hash, "status", types.WithdrawStatusUnbond, "validator", undelegateMsg.ValidatorAddress, "epoch", epochNumber)
+			continue
 		}
 
 		record.Acknowledged = true
@@ -874,6 +884,66 @@ func (k *Keeper) HandleUndelegate(ctx sdk.Context, msg sdk.Msg, completion time.
 		return err
 	}
 	k.SetZone(ctx, zone)
+
+	return nil
+}
+
+// HandleOffboardingUndelegate handles the acknowledgement of an offboarding unbonding.
+// For offboarding, we don't track epoch-based unbonding records - we just need to
+// decrement the waitgroup and update the delegation state.
+func (k *Keeper) HandleOffboardingUndelegate(ctx sdk.Context, undelegateMsg *stakingtypes.MsgUndelegate, completion time.Time, zone *types.Zone) error {
+	k.Logger(ctx).Info("Handling offboarding unbonding acknowledgement",
+		"chain_id", zone.ChainId,
+		"validator", undelegateMsg.ValidatorAddress,
+		"amount", undelegateMsg.Amount,
+		"completion", completion,
+	)
+
+	// Decrement the withdrawal waitgroup
+	if err := zone.DecrementWithdrawalWaitgroup(k.Logger(ctx), 1, "offboarding unbonding ack"); err != nil {
+		k.Logger(ctx).Error(err.Error())
+	}
+
+	// Update the delegation record via ICQ
+	delAddr, err := addressutils.AccAddressFromBech32(undelegateMsg.DelegatorAddress, "")
+	if err != nil {
+		return err
+	}
+	valAddr, err := addressutils.ValAddressFromBech32(undelegateMsg.ValidatorAddress, "")
+	if err != nil {
+		return err
+	}
+
+	data := stakingtypes.GetDelegationKey(delAddr, valAddr)
+
+	// send request to update delegation record for undelegated del/val tuple.
+	k.ICQKeeper.MakeRequest(
+		ctx,
+		zone.ConnectionId,
+		zone.ChainId,
+		"store/staking/key",
+		data,
+		sdk.NewInt(-1),
+		types.ModuleName,
+		"delegation_epoch",
+		0,
+	)
+
+	if err = zone.IncrementWithdrawalWaitgroup(k.Logger(ctx), 1, "offboarding unbonding ack emit delegation_epoch query"); err != nil {
+		return err
+	}
+
+	k.SetZone(ctx, zone)
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeOffboardingUnbondAck,
+			sdk.NewAttribute(types.AttributeKeyChainID, zone.ChainId),
+			sdk.NewAttribute(types.AttributeKeyValidator, undelegateMsg.ValidatorAddress),
+			sdk.NewAttribute(types.AttributeKeyAmount, undelegateMsg.Amount.String()),
+			sdk.NewAttribute(types.AttributeKeyCompletionTime, completion.String()),
+		),
+	)
 
 	return nil
 }
@@ -928,7 +998,8 @@ func (k *Keeper) HandleFailedUnbondSend(ctx sdk.Context, sendMsg *banktypes.MsgS
 
 	wdr, found := k.GetWithdrawalRecord(ctx, chainID, txHash, types.WithdrawStatusSend)
 	if !found {
-		return fmt.Errorf("unable to find withdrawal record for %s: txHash %s", sendMsg.ToAddress, txHash)
+		k.Logger(ctx).Info("withdrawal record not found; may have already been processed", "chain_id", chainID, "tx_hash", txHash, "to_address", sendMsg.ToAddress, "status", types.WithdrawStatusSend)
+		return nil
 	}
 
 	// update delayed record with status
@@ -965,7 +1036,8 @@ func (k *Keeper) HandleFailedUndelegate(ctx sdk.Context, msg sdk.Msg, memo strin
 	for _, hash := range ubr.RelatedTxhash {
 		wdr, found := k.GetWithdrawalRecord(ctx, zone.ChainId, hash, types.WithdrawStatusUnbond)
 		if !found {
-			return fmt.Errorf("cannot find withdrawal record for %s/%s", zone.ChainId, hash)
+			k.Logger(ctx).Info("withdrawal record not found; may have already been processed", "chain_id", zone.ChainId, "hash", hash, "status", types.WithdrawStatusUnbond, "validator", undelegateMsg.ValidatorAddress, "epoch", epochNumber)
+			continue
 		}
 		// if multi val then:
 		// - remove this validator from distribution
@@ -1468,6 +1540,12 @@ func (k *Keeper) HandleWithdrawRewards(ctx sdk.Context, msg sdk.Msg, connectionI
 }
 
 func (k *Keeper) TriggerRedemptionRate(ctx sdk.Context, zone *types.Zone) error {
+	// Skip redemption rate updates for offboarding zones
+	if zone.IsOffboarding {
+		k.Logger(ctx).Info("Skipping redemption rate update for offboarding zone", "chain_id", zone.ChainId)
+		return nil
+	}
+
 	// interface assertion
 	balanceQuery := banktypes.QueryAllBalancesRequest{Address: zone.WithdrawalAddress.Address}
 	bz, err := k.cdc.Marshal(&balanceQuery)

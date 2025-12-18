@@ -21,17 +21,20 @@ import (
 
 // interchainstaking message types.
 const (
-	TypeMsgRequestRedemption          = "requestredemption"
-	TypeMsgCancelRedemption           = "cancelredemption"
-	TypeMsgRequeueRedemption          = "requeueredemption"
-	TypeMsgUpdateRedemption           = "updateredemption"
-	TypeMsgSignalIntent               = "signalintent"
-	TypeMsgGovCloseChannel            = "govclosechannel"
-	TypeMsgGovReopenChannel           = "govreopenchannel"
-	TypeMsgGovSetLsmCaps              = "govsetlsmcaps"
-	TypeMsgGovAddValidatorDenyList    = "govaddvalidatordenylist"
-	TypeMsgGovRemoveValidatorDenyList = "govremovevalidatordenylist"
-	TypeMsgGovExecuteICATx            = "govexecuteicatx"
+	TypeMsgRequestRedemption              = "requestredemption"
+	TypeMsgCancelRedemption               = "cancelredemption"
+	TypeMsgRequeueRedemption              = "requeueredemption"
+	TypeMsgUpdateRedemption               = "updateredemption"
+	TypeMsgSignalIntent                   = "signalintent"
+	TypeMsgGovCloseChannel                = "govclosechannel"
+	TypeMsgGovReopenChannel               = "govreopenchannel"
+	TypeMsgGovSetLsmCaps                  = "govsetlsmcaps"
+	TypeMsgGovAddValidatorDenyList        = "govaddvalidatordenylist"
+	TypeMsgGovRemoveValidatorDenyList     = "govremovevalidatordenylist"
+	TypeMsgGovExecuteICATx                = "govexecuteicatx"
+	TypeMsgGovSetZoneOffboarding          = "govsetzoneoffboarding"
+	TypeMsgGovCancelAllPendingRedemptions = "govcancelallpendingredemptions"
+	TypeMsgGovForceUnbondAllDelegations   = "govforceunbondalldelegations"
 )
 
 var (
@@ -45,6 +48,9 @@ var (
 	_ sdk.Msg = &MsgGovAddValidatorDenyList{}
 	_ sdk.Msg = &MsgGovRemoveValidatorDenyList{}
 	_ sdk.Msg = &MsgGovExecuteICATx{}
+	_ sdk.Msg = &MsgGovSetZoneOffboarding{}
+	_ sdk.Msg = &MsgGovCancelAllPendingRedemptions{}
+	_ sdk.Msg = &MsgGovForceUnbondAllDelegations{}
 
 	_ legacytx.LegacyMsg = &MsgRequestRedemption{}
 	_ legacytx.LegacyMsg = &MsgCancelRedemption{}
@@ -57,6 +63,9 @@ var (
 	_ legacytx.LegacyMsg = &MsgGovAddValidatorDenyList{}
 	_ legacytx.LegacyMsg = &MsgGovRemoveValidatorDenyList{}
 	_ legacytx.LegacyMsg = &MsgGovExecuteICATx{}
+	_ legacytx.LegacyMsg = &MsgGovSetZoneOffboarding{}
+	_ legacytx.LegacyMsg = &MsgGovCancelAllPendingRedemptions{}
+	_ legacytx.LegacyMsg = &MsgGovForceUnbondAllDelegations{}
 
 	_ codectypes.UnpackInterfacesMessage = &MsgGovExecuteICATx{}
 )
@@ -699,4 +708,100 @@ func (msg MsgUpdateRedemption) Route() string {
 
 func (msg MsgUpdateRedemption) Type() string {
 	return TypeMsgUpdateRedemption
+}
+
+// MsgGovSetZoneOffboarding
+
+func (msg MsgGovSetZoneOffboarding) ValidateBasic() error {
+	_, err := addressutils.AccAddressFromBech32(msg.Authority, "")
+	if err != nil {
+		return err
+	}
+
+	if len(msg.ChainId) == 0 || len(msg.ChainId) > 100 {
+		return errors.New("invalid chain id")
+	}
+
+	return nil
+}
+
+func (msg MsgGovSetZoneOffboarding) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+func (msg MsgGovSetZoneOffboarding) GetSigners() []sdk.AccAddress {
+	fromAddress, _ := addressutils.AccAddressFromBech32(msg.Authority, "")
+	return []sdk.AccAddress{fromAddress}
+}
+
+func (msg MsgGovSetZoneOffboarding) Route() string {
+	return RouterKey
+}
+
+func (msg MsgGovSetZoneOffboarding) Type() string {
+	return TypeMsgGovSetZoneOffboarding
+}
+
+// MsgGovCancelAllPendingRedemptions
+
+func (msg MsgGovCancelAllPendingRedemptions) ValidateBasic() error {
+	_, err := addressutils.AccAddressFromBech32(msg.Authority, "")
+	if err != nil {
+		return err
+	}
+
+	if len(msg.ChainId) == 0 || len(msg.ChainId) > 100 {
+		return errors.New("invalid chain id")
+	}
+
+	return nil
+}
+
+func (msg MsgGovCancelAllPendingRedemptions) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+func (msg MsgGovCancelAllPendingRedemptions) GetSigners() []sdk.AccAddress {
+	fromAddress, _ := addressutils.AccAddressFromBech32(msg.Authority, "")
+	return []sdk.AccAddress{fromAddress}
+}
+
+func (msg MsgGovCancelAllPendingRedemptions) Route() string {
+	return RouterKey
+}
+
+func (msg MsgGovCancelAllPendingRedemptions) Type() string {
+	return TypeMsgGovCancelAllPendingRedemptions
+}
+
+// MsgGovForceUnbondAllDelegations
+
+func (msg MsgGovForceUnbondAllDelegations) ValidateBasic() error {
+	_, err := addressutils.AccAddressFromBech32(msg.Authority, "")
+	if err != nil {
+		return err
+	}
+
+	if len(msg.ChainId) == 0 || len(msg.ChainId) > 100 {
+		return errors.New("invalid chain id")
+	}
+
+	return nil
+}
+
+func (msg MsgGovForceUnbondAllDelegations) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+func (msg MsgGovForceUnbondAllDelegations) GetSigners() []sdk.AccAddress {
+	fromAddress, _ := addressutils.AccAddressFromBech32(msg.Authority, "")
+	return []sdk.AccAddress{fromAddress}
+}
+
+func (msg MsgGovForceUnbondAllDelegations) Route() string {
+	return RouterKey
+}
+
+func (msg MsgGovForceUnbondAllDelegations) Type() string {
+	return TypeMsgGovForceUnbondAllDelegations
 }

@@ -582,7 +582,7 @@ func (suite *KeeperTestSuite) TestHandleWithdrawForUser() {
 		err     bool
 	}{
 		{
-			name: "invalid - no matching record",
+			name: "no matching record - returns nil",
 			records: func(zone *types.Zone) []types.WithdrawalRecord {
 				return []types.WithdrawalRecord{
 					{
@@ -599,7 +599,7 @@ func (suite *KeeperTestSuite) TestHandleWithdrawForUser() {
 			},
 			message: banktypes.MsgSend{},
 			memo:    "unbondSend/7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
-			err:     true,
+			err:     false,
 		},
 		{
 			name: "valid",
@@ -1616,7 +1616,7 @@ func (suite *KeeperTestSuite) TestHandleFailedUnbondSend() {
 			check:   false,
 		},
 		{
-			name: "invalid - no matching record",
+			name: "no matching record - returns nil",
 			record: func(zone *types.Zone) types.WithdrawalRecord {
 				return types.WithdrawalRecord{
 					ChainId:   zone.ChainId,
@@ -1634,11 +1634,11 @@ func (suite *KeeperTestSuite) TestHandleFailedUnbondSend() {
 			},
 			message: []banktypes.MsgSend{},
 			memo:    "unbondSend/7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
-			err:     []bool{true},
+			err:     []bool{false},
 			check:   false,
 		},
 		{
-			name: "invalid - try msg send 2 times with one txHash",
+			name: "try msg send 2 times with one txHash - second returns nil",
 			record: func(zone *types.Zone) types.WithdrawalRecord {
 				return types.WithdrawalRecord{
 					ChainId:   zone.ChainId,
@@ -1665,7 +1665,7 @@ func (suite *KeeperTestSuite) TestHandleFailedUnbondSend() {
 				},
 			},
 			memo:  "unbondSend/7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
-			err:   []bool{false, true},
+			err:   []bool{false, false},
 			check: true,
 		},
 		{
@@ -4397,7 +4397,7 @@ func (suite *KeeperTestSuite) TestHandleCompleteSend() {
 			expectedError: nil,
 		},
 		{
-			name: "From DepositAddress",
+			name: "From DelegationAddress - missing record returns nil",
 			message: func(zone *types.Zone) sdk.Msg {
 				return &banktypes.MsgSend{
 					FromAddress: zone.DelegationAddress.Address,
@@ -4406,7 +4406,7 @@ func (suite *KeeperTestSuite) TestHandleCompleteSend() {
 				}
 			},
 			memo:          "unbondSend/7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
-			expectedError: errors.New("no matching withdrawal record found"),
+			expectedError: nil,
 		},
 		{
 			name: "From DepositAddress to Withdrawal Address",
@@ -4510,7 +4510,7 @@ func (suite *KeeperTestSuite) TestHandleFailedBankSend() {
 			check: false,
 		},
 		{
-			name:            "Send from DelegateAddress then HandleFailedUnbondSend, invalid - no matching record",
+			name:            "Send from DelegateAddress then HandleFailedUnbondSend, no matching record - returns nil",
 			setupConnection: true,
 			record: func(zone *types.Zone) types.WithdrawalRecord {
 				return types.WithdrawalRecord{
@@ -4534,7 +4534,7 @@ func (suite *KeeperTestSuite) TestHandleFailedBankSend() {
 				}
 			},
 			memo:  "unbondSend/7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
-			err:   true,
+			err:   false,
 			check: false,
 		},
 		{
@@ -5115,4 +5115,171 @@ func (suite *KeeperTestSuite) TestUndelegate_NoRecordEpoch259() {
 	suite.True(found)
 	suite.Equal(0, len(ubr.RelatedTxhash))
 	suite.Equal(ctx.BlockTime().Add(time.Hour*24), ubr.CompletionTime)
+}
+
+// TestHandleWithdrawForUser_MissingRecord tests that HandleWithdrawForUser returns nil
+// when the withdrawal record doesn't exist (instead of returning an error).
+func (suite *KeeperTestSuite) TestHandleWithdrawForUser_MissingRecord() {
+	suite.SetupTest()
+	suite.setupTestZones()
+
+	quicksilver := suite.GetQuicksilverApp(suite.chainA)
+	ctx := suite.chainA.GetContext()
+
+	zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+	suite.True(found)
+
+	// Create a MsgSend from delegate address (which triggers HandleWithdrawForUser)
+	// but don't create any withdrawal record
+	msg := &banktypes.MsgSend{
+		FromAddress: zone.DelegationAddress.Address,
+		ToAddress:   addressutils.GenerateAddressForTestWithPrefix(zone.AccountPrefix),
+		Amount:      sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000000))),
+	}
+
+	// Use a valid memo format but for a non-existent record
+	memo := "unbondSend/7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D"
+
+	// Should return nil (not error) when record not found
+	err := quicksilver.InterchainstakingKeeper.HandleWithdrawForUser(ctx, &zone, msg, memo)
+	suite.NoError(err)
+}
+
+// TestHandleTokenizedShares_MissingRecord tests that HandleTokenizedShares returns nil
+// when the withdrawal record doesn't exist (instead of returning an error).
+func (suite *KeeperTestSuite) TestHandleTokenizedShares_MissingRecord() {
+	suite.SetupTest()
+	suite.setupTestZones()
+
+	quicksilver := suite.GetQuicksilverApp(suite.chainA)
+	ctx := suite.chainA.GetContext()
+
+	zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+	suite.True(found)
+
+	vals := quicksilver.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
+
+	// Create a MsgTokenizeShares but don't create withdrawal record
+	msg := &lsmstakingtypes.MsgTokenizeShares{
+		DelegatorAddress:    zone.DelegationAddress.Address,
+		ValidatorAddress:    vals[0],
+		Amount:              sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000)),
+		TokenizedShareOwner: addressutils.GenerateAddressForTestWithPrefix(zone.AccountPrefix),
+	}
+
+	sharesAmount := sdk.NewCoin(vals[0]+"/1", sdk.NewInt(1000))
+	memo := randomutils.GenerateRandomHashAsHex(32) // Non-existent record
+
+	// Should return nil (not error) when record not found
+	err := quicksilver.InterchainstakingKeeper.HandleTokenizedShares(ctx, msg, sharesAmount, memo)
+	suite.NoError(err)
+}
+
+// TestHandleUndelegate_MissingWithdrawalRecord tests that HandleUndelegate continues
+// processing when a withdrawal record doesn't exist (instead of returning an error).
+func (suite *KeeperTestSuite) TestHandleUndelegate_MissingWithdrawalRecord() {
+	suite.SetupTest()
+	suite.setupTestZones()
+
+	quicksilver := suite.GetQuicksilverApp(suite.chainA)
+	ctx := suite.chainA.GetContext()
+
+	zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+	suite.True(found)
+
+	vals := quicksilver.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
+	hash := randomutils.GenerateRandomHashAsHex(32)
+
+	// Create unbonding record with a hash that has no corresponding withdrawal record
+	quicksilver.InterchainstakingKeeper.SetUnbondingRecord(ctx, types.UnbondingRecord{
+		ChainId:       zone.ChainId,
+		EpochNumber:   1,
+		Validator:     vals[0],
+		RelatedTxhash: []string{hash}, // This hash has no withdrawal record
+	})
+
+	msg := &stakingtypes.MsgUndelegate{
+		DelegatorAddress: zone.DelegationAddress.Address,
+		ValidatorAddress: vals[0],
+		Amount:           sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000)),
+	}
+
+	completion := time.Now().UTC().Add(21 * 24 * time.Hour)
+
+	// Should return nil (not error) when withdrawal record not found
+	err := quicksilver.InterchainstakingKeeper.HandleUndelegate(ctx, msg, completion, types.EpochWithdrawalMemo(1))
+	suite.NoError(err)
+
+	// Verify unbonding record was updated with completion time
+	ubr, found := quicksilver.InterchainstakingKeeper.GetUnbondingRecord(ctx, zone.ChainId, vals[0], 1)
+	suite.True(found)
+	suite.Equal(completion.UTC(), ubr.CompletionTime.UTC())
+}
+
+// TestHandleFailedUnbondSend_MissingRecord tests that HandleFailedUnbondSend returns nil
+// when the withdrawal record doesn't exist (instead of returning an error).
+func (suite *KeeperTestSuite) TestHandleFailedUnbondSend_MissingRecord() {
+	suite.SetupTest()
+	suite.setupTestZones()
+
+	quicksilver := suite.GetQuicksilverApp(suite.chainA)
+	ctx := suite.chainA.GetContext()
+
+	zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+	suite.True(found)
+
+	user := addressutils.GenerateAddressForTestWithPrefix("quick")
+	quicksilver.InterchainstakingKeeper.SetAddressZoneMapping(ctx, user, zone.ChainId)
+
+	// Don't create any withdrawal record
+
+	msg := &banktypes.MsgSend{
+		FromAddress: user,
+		ToAddress:   addressutils.GenerateAddressForTestWithPrefix(zone.AccountPrefix),
+		Amount:      sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000000))),
+	}
+
+	memo := "unbondSend/7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D"
+
+	// Should return nil (not error) when record not found
+	err := quicksilver.InterchainstakingKeeper.HandleFailedUnbondSend(ctx, msg, memo)
+	suite.NoError(err)
+}
+
+// TestHandleFailedUndelegate_MissingWithdrawalRecord tests that HandleFailedUndelegate
+// continues processing when a withdrawal record doesn't exist (instead of returning an error).
+func (suite *KeeperTestSuite) TestHandleFailedUndelegate_MissingWithdrawalRecord() {
+	suite.SetupTest()
+	suite.setupTestZones()
+
+	quicksilver := suite.GetQuicksilverApp(suite.chainA)
+	ctx := suite.chainA.GetContext()
+
+	zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+	suite.True(found)
+
+	vals := quicksilver.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
+	hash := randomutils.GenerateRandomHashAsHex(32)
+
+	// Create unbonding record but NO withdrawal record
+	quicksilver.InterchainstakingKeeper.SetUnbondingRecord(ctx, types.UnbondingRecord{
+		ChainId:       zone.ChainId,
+		EpochNumber:   1,
+		Validator:     vals[0],
+		RelatedTxhash: []string{hash}, // No corresponding withdrawal record
+	})
+
+	msg := &stakingtypes.MsgUndelegate{
+		DelegatorAddress: zone.DelegationAddress.Address,
+		ValidatorAddress: vals[0],
+		Amount:           sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000)),
+	}
+
+	// Should return nil (not error) - just skips the missing record
+	err := quicksilver.InterchainstakingKeeper.HandleFailedUndelegate(ctx, msg, types.EpochWithdrawalMemo(1))
+	suite.NoError(err)
+
+	// Verify unbonding record was still cleaned up
+	_, found = quicksilver.InterchainstakingKeeper.GetUnbondingRecord(ctx, zone.ChainId, vals[0], 1)
+	suite.False(found)
 }

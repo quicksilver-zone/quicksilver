@@ -97,6 +97,30 @@ service Msg {
       body: "*"
     };
   }
+
+  // GovSetZoneOffboarding sets a zone into offboarding mode.
+  rpc GovSetZoneOffboarding(MsgGovSetZoneOffboarding) returns (MsgGovSetZoneOffboardingResponse) {
+    option (google.api.http) = {
+      post: "/quicksilver/tx/v1/interchainstaking/set_zone_offboarding"
+      body: "*"
+    };
+  }
+
+  // GovCancelAllPendingRedemptions cancels all pending redemptions for a zone.
+  rpc GovCancelAllPendingRedemptions(MsgGovCancelAllPendingRedemptions) returns (MsgGovCancelAllPendingRedemptionsResponse) {
+    option (google.api.http) = {
+      post: "/quicksilver/tx/v1/interchainstaking/cancel_all_pending_redemptions"
+      body: "*"
+    };
+  }
+
+  // GovForceUnbondAllDelegations force unbonds all delegations for a zone.
+  rpc GovForceUnbondAllDelegations(MsgGovForceUnbondAllDelegations) returns (MsgGovForceUnbondAllDelegationsResponse) {
+    option (google.api.http) = {
+      post: "/quicksilver/tx/v1/interchainstaking/force_unbond_all_delegations"
+      body: "*"
+    };
+  }
 }
 
 // MsgRequestRedemption represents a message type to request a burn of qAssets

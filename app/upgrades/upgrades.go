@@ -23,6 +23,10 @@ func Upgrades() []Upgrade {
 		{UpgradeName: V010801UpgradeName, CreateUpgradeHandler: NoOpHandler},
 
 		{UpgradeName: V010900UpgradeName, CreateUpgradeHandler: NoOpHandler},
+
+		// v1.10.0 - Zone Offboarding
+		{UpgradeName: V0101000rc0UpgradeName, CreateUpgradeHandler: V0101000UpgradeHandler},
+		{UpgradeName: V0101000UpgradeName, CreateUpgradeHandler: V0101000UpgradeHandler},
 	}
 }
 

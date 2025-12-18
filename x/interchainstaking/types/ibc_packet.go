@@ -8,11 +8,12 @@ import (
 )
 
 const (
-	MsgTypeWithdrawal  = "withdrawal"
-	MsgTypeRebalance   = "rebalance"
-	MsgTypeUnbondSend  = "unbondSend"
-	MsgTypePerformance = "perf"
-	MsgTypeBatch       = "batch"
+	MsgTypeWithdrawal        = "withdrawal"
+	MsgTypeRebalance         = "rebalance"
+	MsgTypeUnbondSend        = "unbondSend"
+	MsgTypePerformance       = "perf"
+	MsgTypeBatch             = "batch"
+	MsgTypeOffboardingUnbond = "offboard"
 	// TransferPort is the portID for ibc transfer module.
 	TransferPort = "transfer"
 )
@@ -59,4 +60,8 @@ func EpochWithdrawalMemo(epoch int64) string {
 
 func TxUnbondSendMemo(hash string) string {
 	return fmt.Sprintf("%s/%s", MsgTypeUnbondSend, hash)
+}
+
+func OffboardingUnbondMemo(blockHeight int64) string {
+	return fmt.Sprintf("%s/%d", MsgTypeOffboardingUnbond, blockHeight)
 }
