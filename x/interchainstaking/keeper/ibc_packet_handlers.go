@@ -459,7 +459,8 @@ func (k *Keeper) HandleWithdrawForUser(ctx sdk.Context, zone *types.Zone, msg *b
 
 	withdrawalRecord, found := k.GetWithdrawalRecord(ctx, zone.ChainId, txHash, types.WithdrawStatusSend)
 	if !found {
-		return errors.New("no matching withdrawal record found")
+		k.Logger(ctx).Info("withdrawal record not found; may have already been processed", "chain_id", zone.ChainId, "tx_hash", txHash, "status", types.WithdrawStatusSend)
+		return nil
 	}
 
 	// case 1: total amount - native unbonding
@@ -602,7 +603,8 @@ func (k *Keeper) HandleTokenizedShares(ctx sdk.Context, msg sdk.Msg, sharesAmoun
 	withdrawalRecord, found := k.GetWithdrawalRecord(ctx, zone.ChainId, memo, types.WithdrawStatusTokenize)
 
 	if !found {
-		return errors.New("no matching withdrawal record found")
+		k.Logger(ctx).Info("withdrawal record not found; may have already been processed", "chain_id", zone.ChainId, "memo", memo, "status", types.WithdrawStatusTokenize)
+		return nil
 	}
 
 	// Try to find a matching distribution
@@ -831,7 +833,8 @@ func (k *Keeper) HandleUndelegate(ctx sdk.Context, msg sdk.Msg, completion time.
 
 		record, found := k.GetWithdrawalRecord(ctx, zone.ChainId, hash, types.WithdrawStatusUnbond)
 		if !found {
-			return fmt.Errorf("unable to lookup withdrawal record; chain: %s, hash: %s", zone.ChainId, hash)
+			k.Logger(ctx).Info("withdrawal record not found; may have already been processed", "chain_id", zone.ChainId, "hash", hash, "status", types.WithdrawStatusUnbond, "validator", undelegateMsg.ValidatorAddress, "epoch", epochNumber)
+			continue
 		}
 
 		record.Acknowledged = true
@@ -928,7 +931,8 @@ func (k *Keeper) HandleFailedUnbondSend(ctx sdk.Context, sendMsg *banktypes.MsgS
 
 	wdr, found := k.GetWithdrawalRecord(ctx, chainID, txHash, types.WithdrawStatusSend)
 	if !found {
-		return fmt.Errorf("unable to find withdrawal record for %s: txHash %s", sendMsg.ToAddress, txHash)
+		k.Logger(ctx).Info("withdrawal record not found; may have already been processed", "chain_id", chainID, "tx_hash", txHash, "to_address", sendMsg.ToAddress, "status", types.WithdrawStatusSend)
+		return nil
 	}
 
 	// update delayed record with status
@@ -965,7 +969,8 @@ func (k *Keeper) HandleFailedUndelegate(ctx sdk.Context, msg sdk.Msg, memo strin
 	for _, hash := range ubr.RelatedTxhash {
 		wdr, found := k.GetWithdrawalRecord(ctx, zone.ChainId, hash, types.WithdrawStatusUnbond)
 		if !found {
-			return fmt.Errorf("cannot find withdrawal record for %s/%s", zone.ChainId, hash)
+			k.Logger(ctx).Info("withdrawal record not found; may have already been processed", "chain_id", zone.ChainId, "hash", hash, "status", types.WithdrawStatusUnbond, "validator", undelegateMsg.ValidatorAddress, "epoch", epochNumber)
+			continue
 		}
 		// if multi val then:
 		// - remove this validator from distribution
