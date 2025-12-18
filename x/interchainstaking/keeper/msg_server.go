@@ -12,6 +12,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
@@ -537,4 +538,230 @@ func (k msgServer) GovExecuteICATx(goCtx context.Context, msg *types.MsgGovExecu
 	}
 
 	return &types.MsgGovExecuteICATxResponse{}, nil
+}
+
+// GovSetZoneOffboarding sets the offboarding status for a zone.
+// When offboarding is enabled, deposits are disabled and redemption rate updates are frozen.
+func (k msgServer) GovSetZoneOffboarding(goCtx context.Context, msg *types.MsgGovSetZoneOffboarding) (*types.MsgGovSetZoneOffboardingResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	// checking msg authority is the gov module address
+	if k.GetGovAuthority(ctx) != msg.Authority {
+		return nil,
+			govtypes.ErrInvalidSigner.Wrapf(
+				"invalid authority: expected %s, got %s",
+				k.GetGovAuthority(ctx), msg.Authority,
+			)
+	}
+
+	zone, found := k.GetZone(ctx, msg.ChainId)
+	if !found {
+		return nil, fmt.Errorf("zone not found for chain id: %s", msg.ChainId)
+	}
+
+	zone.IsOffboarding = msg.IsOffboarding
+
+	// When enabling offboarding, also disable deposits and unbonding
+	if msg.IsOffboarding {
+		zone.DepositsEnabled = false
+		zone.UnbondingEnabled = false
+	}
+
+	k.SetZone(ctx, &zone)
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+		),
+		sdk.NewEvent(
+			types.EventTypeSetZoneOffboarding,
+			sdk.NewAttribute(types.AttributeKeyChainID, msg.ChainId),
+			sdk.NewAttribute(types.AttributeKeyIsOffboarding, fmt.Sprintf("%t", msg.IsOffboarding)),
+		),
+	})
+
+	return &types.MsgGovSetZoneOffboardingResponse{}, nil
+}
+
+// GovCancelAllPendingRedemptions cancels all pending (queued) redemptions for an offboarding zone.
+// It refunds qAssets from escrow back to users and deletes the withdrawal records.
+func (k msgServer) GovCancelAllPendingRedemptions(goCtx context.Context, msg *types.MsgGovCancelAllPendingRedemptions) (*types.MsgGovCancelAllPendingRedemptionsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	// checking msg authority is the gov module address
+	if k.GetGovAuthority(ctx) != msg.Authority {
+		return nil,
+			govtypes.ErrInvalidSigner.Wrapf(
+				"invalid authority: expected %s, got %s",
+				k.GetGovAuthority(ctx), msg.Authority,
+			)
+	}
+
+	zone, found := k.GetZone(ctx, msg.ChainId)
+	if !found {
+		return nil, fmt.Errorf("zone not found for chain id: %s", msg.ChainId)
+	}
+
+	// Ensure zone is in offboarding mode
+	if !zone.IsOffboarding {
+		return nil, fmt.Errorf("zone %s is not in offboarding mode", msg.ChainId)
+	}
+
+	var cancelledCount uint64
+	refundedAmounts := sdk.NewCoins()
+	recordsToDelete := []types.WithdrawalRecord{}
+
+	// Iterate through all queued withdrawal records for this zone
+	k.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, types.WithdrawStatusQueued, func(idx int64, record types.WithdrawalRecord) bool {
+		recordsToDelete = append(recordsToDelete, record)
+		return false
+	})
+
+	// Also cancel records in UNBOND status (unbonding initiated but not complete)
+	k.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, types.WithdrawStatusUnbond, func(idx int64, record types.WithdrawalRecord) bool {
+		recordsToDelete = append(recordsToDelete, record)
+		return false
+	})
+
+	// Process each record
+	for _, record := range recordsToDelete {
+		userAccAddress, err := addressutils.AddressFromBech32(record.Delegator, "")
+		if err != nil {
+			k.Logger(ctx).Error("failed to parse delegator address", "address", record.Delegator, "error", err)
+			continue
+		}
+
+		// Refund the qAssets from escrow to user
+		if err := k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.EscrowModuleAccount, userAccAddress, sdk.NewCoins(record.BurnAmount)); err != nil {
+			k.Logger(ctx).Error("failed to refund qAssets", "user", record.Delegator, "amount", record.BurnAmount, "error", err)
+			continue
+		}
+
+		// Delete the withdrawal record
+		k.DeleteWithdrawalRecord(ctx, record.ChainId, record.Txhash, record.Status)
+
+		cancelledCount++
+		refundedAmounts = refundedAmounts.Add(record.BurnAmount)
+
+		ctx.EventManager().EmitEvent(
+			sdk.NewEvent(
+				types.EventTypeRedemptionCancellation,
+				sdk.NewAttribute(types.AttributeKeyReturnedAmount, record.BurnAmount.String()),
+				sdk.NewAttribute(types.AttributeKeyUser, record.Delegator),
+				sdk.NewAttribute(types.AttributeKeyHash, record.Txhash),
+				sdk.NewAttribute(types.AttributeKeyChainID, record.ChainId),
+			),
+		)
+	}
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+		),
+		sdk.NewEvent(
+			types.EventTypeCancelAllPendingRedemptions,
+			sdk.NewAttribute(types.AttributeKeyChainID, msg.ChainId),
+			sdk.NewAttribute(types.AttributeKeyCancelledCount, fmt.Sprintf("%d", cancelledCount)),
+			sdk.NewAttribute(types.AttributeKeyRefundedAmounts, refundedAmounts.String()),
+		),
+	})
+
+	return &types.MsgGovCancelAllPendingRedemptionsResponse{
+		CancelledCount:  cancelledCount,
+		RefundedAmounts: refundedAmounts,
+	}, nil
+}
+
+// GovForceUnbondAllDelegations initiates unbonding of all delegations for an offboarding zone.
+// It creates MsgUndelegate messages for each validator and submits them via ICA.
+func (k msgServer) GovForceUnbondAllDelegations(goCtx context.Context, msg *types.MsgGovForceUnbondAllDelegations) (*types.MsgGovForceUnbondAllDelegationsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	// checking msg authority is the gov module address
+	if k.GetGovAuthority(ctx) != msg.Authority {
+		return nil,
+			govtypes.ErrInvalidSigner.Wrapf(
+				"invalid authority: expected %s, got %s",
+				k.GetGovAuthority(ctx), msg.Authority,
+			)
+	}
+
+	zone, found := k.GetZone(ctx, msg.ChainId)
+	if !found {
+		return nil, fmt.Errorf("zone not found for chain id: %s", msg.ChainId)
+	}
+
+	// Ensure zone is in offboarding mode
+	if !zone.IsOffboarding {
+		return nil, fmt.Errorf("zone %s is not in offboarding mode", msg.ChainId)
+	}
+
+	// Ensure delegation address exists
+	if zone.DelegationAddress == nil {
+		return nil, fmt.Errorf("zone %s has no delegation address", msg.ChainId)
+	}
+
+	// Get all delegations for this zone
+	delegations := k.GetAllDelegations(ctx, zone.ChainId)
+	if len(delegations) == 0 {
+		return nil, fmt.Errorf("no delegations found for zone %s", msg.ChainId)
+	}
+
+	var msgs []sdk.Msg
+	totalUnbonded := sdk.NewCoin(zone.BaseDenom, sdk.ZeroInt())
+	var unbondingCount uint64
+
+	// Create MsgUndelegate for each delegation
+	for _, delegation := range delegations {
+		if delegation.Amount.IsZero() {
+			continue
+		}
+
+		undelegateMsg := &stakingtypes.MsgUndelegate{
+			DelegatorAddress: zone.DelegationAddress.Address,
+			ValidatorAddress: delegation.ValidatorAddress,
+			Amount:           delegation.Amount,
+		}
+		msgs = append(msgs, undelegateMsg)
+		totalUnbonded = totalUnbonded.Add(delegation.Amount)
+		unbondingCount++
+	}
+
+	if len(msgs) == 0 {
+		return nil, errors.New("no delegations to unbond")
+	}
+
+	// Use a special memo prefix for offboarding unbonds
+	offboardingMemo := types.OffboardingUnbondMemo(ctx.BlockHeight())
+
+	// Submit the unbonding transactions via ICA
+	if err := k.SubmitTx(ctx, msgs, zone.DelegationAddress, offboardingMemo, zone.MessagesPerTx); err != nil {
+		return nil, fmt.Errorf("failed to submit unbonding transactions: %w", err)
+	}
+
+	// Increment withdrawal waitgroup for the unbonding messages
+	if err := zone.IncrementWithdrawalWaitgroup(k.Logger(ctx), uint32(len(msgs)), "offboarding unbond messages"); err != nil { //nolint:gosec
+		return nil, err
+	}
+	k.SetZone(ctx, &zone)
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+		),
+		sdk.NewEvent(
+			types.EventTypeForceUnbondAllDelegations,
+			sdk.NewAttribute(types.AttributeKeyChainID, msg.ChainId),
+			sdk.NewAttribute(types.AttributeKeyUnbondingCount, fmt.Sprintf("%d", unbondingCount)),
+			sdk.NewAttribute(types.AttributeKeyTotalUnbonded, totalUnbonded.String()),
+		),
+	})
+
+	return &types.MsgGovForceUnbondAllDelegationsResponse{
+		UnbondingCount: unbondingCount,
+		TotalUnbonded:  totalUnbonded,
+	}, nil
 }
