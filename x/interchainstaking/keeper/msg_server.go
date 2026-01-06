@@ -603,39 +603,43 @@ func (k msgServer) GovCancelAllPendingRedemptions(goCtx context.Context, msg *ty
 		return nil, fmt.Errorf("zone not found for chain id: %s", msg.ChainId)
 	}
 
-	// Ensure zone is in offboarding mode
-	if !zone.IsOffboarding {
-		return nil, fmt.Errorf("zone %s is not in offboarding mode", msg.ChainId)
-	}
-
 	var cancelledCount uint64
 	refundedAmounts := sdk.NewCoins()
 	recordsToDelete := []types.WithdrawalRecord{}
+	amountsToRefund := sdk.NewCoins()
 
 	// Iterate through all queued withdrawal records for this zone
 	k.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, types.WithdrawStatusQueued, func(idx int64, record types.WithdrawalRecord) bool {
 		recordsToDelete = append(recordsToDelete, record)
+		amountsToRefund = amountsToRefund.Add(record.BurnAmount)
 		return false
 	})
 
 	// Also cancel records in UNBOND status (unbonding initiated but not complete)
 	k.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, types.WithdrawStatusUnbond, func(idx int64, record types.WithdrawalRecord) bool {
 		recordsToDelete = append(recordsToDelete, record)
+		amountsToRefund = amountsToRefund.Add(record.BurnAmount)
 		return false
 	})
+
+	// check if the amounts to refund are greater than the escrow balance
+	escrowBalance := k.BankKeeper.GetBalance(ctx, k.AccountKeeper.GetModuleAddress(types.EscrowModuleAccount), amountsToRefund[0].Denom)
+	if escrowBalance.IsLT(amountsToRefund[0]) {
+		return nil, fmt.Errorf("insufficient escrow balance to refund. Escrow balance: %s, amounts to refund: %s", escrowBalance.String(), amountsToRefund[0].String())
+	}
 
 	// Process each record
 	for _, record := range recordsToDelete {
 		userAccAddress, err := addressutils.AddressFromBech32(record.Delegator, "")
 		if err != nil {
 			k.Logger(ctx).Error("failed to parse delegator address", "address", record.Delegator, "error", err)
-			continue
+			return nil, err
 		}
 
 		// Refund the qAssets from escrow to user
 		if err := k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.EscrowModuleAccount, userAccAddress, sdk.NewCoins(record.BurnAmount)); err != nil {
 			k.Logger(ctx).Error("failed to refund qAssets", "user", record.Delegator, "amount", record.BurnAmount, "error", err)
-			continue
+			return nil, err
 		}
 
 		// Delete the withdrawal record
