@@ -2,11 +2,45 @@
 
 ## Unreleased
 
-- Cosmos-SDK 0.47 upgrade
-- IBC-go v7.9.2 upgrade
-- CometBFT v0.37.15 upgrade
-
 ## Released
+
+### v1.10.0
+
+#### 🚀 Major Features
+
+**Zone Offboarding Support** - A complete governance-controlled zone offboarding process for safely winding down liquid staking zones (e.g., when a chain is sunsetting).
+
+- Add `MsgGovSetZoneOffboarding` to enable/disable offboarding mode for a zone by @ajansari95 in #2018
+- Add `MsgGovCancelAllPendingRedemptions` to refund pending redemptions (qAssets returned to users)
+- Add `MsgGovForceUnbondAllDelegations` to force unbond all delegations via ICA
+- Skip redemption rate updates for offboarding zones
+- Add `is_offboarding` field to Zone proto
+- Add ADR-003 documentation for zone offboarding process
+
+#### 🐛 Bug Fixes
+
+- fix: potential out-of-bounds panics by @joe-bowman
+- fix: be defensive around refunds; error on refund failures. Don't require zone to be offboarded to cancel withdrawals by @joe-bowman
+- fix: NoOp instead of error on cleared WithdrawalRecord by @ajansari95
+
+#### 📦 Dependencies
+
+- chore(deps): bump github.com/golangci/golangci-lint/v2 from 2.6.1 to 2.7.2 by @dependabot in #2011
+- chore(deps): bump actions/cache from 4 to 5 by @dependabot in #2014
+- chore(deps): bump next from 13.5.11 to 16.0.10 in /web-ui by @dependabot in #2015
+- chore(deps): bump actions/upload-artifact from 5 to 6 by @dependabot in #2017
+- chore(deps): bump peter-evans/create-issue-from-file from 5 to 6 by @dependabot in #1988
+- chore(deps): bump actions/upload-artifact from 4 to 5 by @dependabot in #1994
+- chore(deps): bump lycheeverse/lychee-action from 2.5.0 to 2.7.0 by @dependabot in #1998
+- chore(deps): bump github/codeql-action from 3 to 4 by @dependabot in #1991
+- chore(deps): bump github.com/cosmos/gogoproto from 1.7.0 to 1.7.2 by @dependabot in #1999
+- chore(deps): bump google.golang.org/grpc from 1.76.0-dev to 1.78.0-dev by @dependabot in #1997
+
+#### 🔧 Upgrade Notes
+
+- Upgrade name: `v1.10.0`
+- No store migrations required
+- New proto types for zone offboarding governance messages
 
 ### v1.7.7
 
