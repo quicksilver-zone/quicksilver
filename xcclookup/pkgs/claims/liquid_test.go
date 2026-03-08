@@ -8,7 +8,7 @@ import (
 	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 	prewards "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 
-	"github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/types"
+	"github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/lookup"
 )
 
 func TestGetTokenMap(t *testing.T) {
@@ -18,7 +18,7 @@ func TestGetTokenMap(t *testing.T) {
 		zones          []icstypes.Zone
 		chain          string
 		keyPrefix      string
-		ignores        types.Ignores
+		ignores        lookup.Ignores
 		expectedResult map[string]TokenTuple
 	}{
 		{
@@ -43,7 +43,7 @@ func TestGetTokenMap(t *testing.T) {
 			},
 			chain:     "chain1",
 			keyPrefix: "prefix",
-			ignores:   types.Ignores{},
+			ignores:   lookup.Ignores{},
 			expectedResult: map[string]TokenTuple{
 				"prefixibc/denom1": {denom: "qasset1", chain: "zone1"},
 				"prefixibc/denom2": {denom: "qasset2", chain: "zone2"},
@@ -64,8 +64,8 @@ func TestGetTokenMap(t *testing.T) {
 			},
 			chain:     "chain1",
 			keyPrefix: "",
-			ignores: types.Ignores{
-				{Type: "liquid", Key: "qasset1"},
+			ignores: lookup.Ignores{
+				lookup.Ignore{Type: "liquid", Key: "qasset1"},
 			},
 			expectedResult: map[string]TokenTuple{},
 		},
@@ -84,7 +84,7 @@ func TestGetTokenMap(t *testing.T) {
 			},
 			chain:          "chain1",
 			keyPrefix:      "",
-			ignores:        types.Ignores{},
+			ignores:        lookup.Ignores{},
 			expectedResult: map[string]TokenTuple{},
 		},
 		{
@@ -102,7 +102,7 @@ func TestGetTokenMap(t *testing.T) {
 			},
 			chain:          "chain2", // Different chain
 			keyPrefix:      "",
-			ignores:        types.Ignores{},
+			ignores:        lookup.Ignores{},
 			expectedResult: map[string]TokenTuple{},
 		},
 	}

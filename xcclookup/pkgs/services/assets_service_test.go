@@ -13,22 +13,22 @@ import (
 	cmtypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
 	prewards "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 
+	"github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/lookup"
 	"github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/mocks"
-	"github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/types"
 )
 
 func TestAssetsService_GetAssets(t *testing.T) {
 	// Store original function
-	origGetMappedAddresses := types.GetMappedAddresses
+	origGetMappedAddresses := lookup.GetMappedAddresses
 
 	// Create a variable to hold the mock function
-	mockGetMappedAddresses := func(ctx context.Context, address string, connections []prewards.ConnectionProtocolData, config *types.Config) (map[string]string, error) {
+	mockGetMappedAddresses := func(ctx context.Context, address string, connections []prewards.ConnectionProtocolData, config *lookup.Config) (map[string]string, error) {
 		return map[string]string{}, nil
 	}
 
 	// Replace the function temporarily
-	types.GetMappedAddresses = mockGetMappedAddresses
-	defer func() { types.GetMappedAddresses = origGetMappedAddresses }()
+	lookup.GetMappedAddresses = mockGetMappedAddresses
+	defer func() { lookup.GetMappedAddresses = origGetMappedAddresses }()
 
 	tests := []struct {
 		name               string
@@ -37,7 +37,7 @@ func TestAssetsService_GetAssets(t *testing.T) {
 		mockOsmosisParams  []prewards.OsmosisParamsProtocolData
 		mockUmeeParams     []prewards.UmeeParamsProtocolData
 		mockMembraneParams []prewards.MembraneProtocolData
-		mockOsmosisResult  types.OsmosisResult
+		mockOsmosisResult  lookup.OsmosisResult
 		mockUmeeResult     map[string]prewards.MsgSubmitClaim
 		mockUmeeAssets     map[string]sdk.Coins
 		mockLiquidResult   map[string]prewards.MsgSubmitClaim
@@ -62,8 +62,8 @@ func TestAssetsService_GetAssets(t *testing.T) {
 			mockMembraneParams: []prewards.MembraneProtocolData{
 				{ContractAddress: "osmo1contractaddress"},
 			},
-			mockOsmosisResult: types.OsmosisResult{
-				OsmosisPool: types.OsmosisPool{
+			mockOsmosisResult: lookup.OsmosisResult{
+				OsmosisPool: lookup.OsmosisPool{
 					Msg: map[string]prewards.MsgSubmitClaim{
 						"chain1": {
 							UserAddress: "test-address",
@@ -146,7 +146,7 @@ func TestAssetsService_GetAssets(t *testing.T) {
 
 			// Create mock claims service
 			mockClaimsService := &mocks.MockClaimsService{
-				OsmosisClaimFunc: func(ctx context.Context, address, submitAddress, chain string, height int64) (types.OsmosisResult, error) {
+				OsmosisClaimFunc: func(ctx context.Context, address, submitAddress, chain string, height int64) (lookup.OsmosisResult, error) {
 					return tt.mockOsmosisResult, nil
 				},
 				UmeeClaimFunc: func(ctx context.Context, address, submitAddress, chain string, height int64) (map[string]prewards.MsgSubmitClaim, map[string]sdk.Coins, error) {
@@ -161,7 +161,7 @@ func TestAssetsService_GetAssets(t *testing.T) {
 			}
 
 			// Create config
-			cfg := types.Config{
+			cfg := lookup.Config{
 				SourceChain: "quicksilver-1",
 				Chains: map[string]string{
 					"quicksilver-1": "http://quicksilver:26657",
@@ -207,7 +207,7 @@ func TestAssetsService_GetAssets(t *testing.T) {
 
 func TestAssetsService_GetAssets_WithMappedAddresses(t *testing.T) {
 	// Store original function
-	origGetMappedAddresses := types.GetMappedAddresses
+	origGetMappedAddresses := lookup.GetMappedAddresses
 
 	// Mock mapped addresses for specific chains
 	mockMappedAddresses := map[string]string{
@@ -216,13 +216,13 @@ func TestAssetsService_GetAssets_WithMappedAddresses(t *testing.T) {
 	}
 
 	// Create a variable to hold the mock function
-	mockGetMappedAddresses := func(ctx context.Context, address string, connections []prewards.ConnectionProtocolData, config *types.Config) (map[string]string, error) {
+	mockGetMappedAddresses := func(ctx context.Context, address string, connections []prewards.ConnectionProtocolData, config *lookup.Config) (map[string]string, error) {
 		return mockMappedAddresses, nil
 	}
 
 	// Replace the function temporarily
-	types.GetMappedAddresses = mockGetMappedAddresses
-	defer func() { types.GetMappedAddresses = origGetMappedAddresses }()
+	lookup.GetMappedAddresses = mockGetMappedAddresses
+	defer func() { lookup.GetMappedAddresses = origGetMappedAddresses }()
 
 	// Track which addresses were used in claims service calls
 	var osmosisAddressesUsed, umeeAddressesUsed []string
@@ -255,13 +255,13 @@ func TestAssetsService_GetAssets_WithMappedAddresses(t *testing.T) {
 
 	// Create mock claims service that tracks the addresses used
 	mockClaimsService := &mocks.MockClaimsService{
-		OsmosisClaimFunc: func(ctx context.Context, address, submitAddress, chain string, height int64) (types.OsmosisResult, error) {
+		OsmosisClaimFunc: func(ctx context.Context, address, submitAddress, chain string, height int64) (lookup.OsmosisResult, error) {
 			osmosisMutex.Lock()
 			osmosisAddressesUsed = append(osmosisAddressesUsed, address)
 			osmosisMutex.Unlock()
 			t.Logf("Osmosis claim called with address: %s", address)
-			return types.OsmosisResult{
-				OsmosisPool: types.OsmosisPool{
+			return lookup.OsmosisResult{
+				OsmosisPool: lookup.OsmosisPool{
 					Msg: map[string]prewards.MsgSubmitClaim{
 						"chain1": {
 							UserAddress: submitAddress,
@@ -313,7 +313,7 @@ func TestAssetsService_GetAssets_WithMappedAddresses(t *testing.T) {
 	}
 
 	// Create config
-	cfg := types.Config{
+	cfg := lookup.Config{
 		SourceChain: "quicksilver-1",
 		Chains: map[string]string{
 			"quicksilver-1": "http://quicksilver:26657",
@@ -364,7 +364,7 @@ func TestAssetsService_GetAssets_WithMappedAddresses(t *testing.T) {
 func TestNewAssetsService(t *testing.T) {
 	mockCacheManager := &mocks.MockCacheManager{}
 	mockClaimsService := &mocks.MockClaimsService{}
-	cfg := types.Config{}
+	cfg := lookup.Config{}
 	heights := map[string]int64{}
 
 	service := NewAssetsService(cfg, mockCacheManager, mockClaimsService, heights)

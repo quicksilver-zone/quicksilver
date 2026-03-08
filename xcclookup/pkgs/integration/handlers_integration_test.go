@@ -15,9 +15,9 @@ import (
 	prewards "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 
 	"github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/handlers"
+	"github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/lookup"
 	"github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/mocks"
 	"github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/services"
-	"github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/types"
 )
 
 func TestHandlersIntegration(t *testing.T) {
@@ -102,9 +102,9 @@ func TestHandlersIntegration(t *testing.T) {
 		}
 
 		mockClaimsService := &mocks.MockClaimsService{
-			OsmosisClaimFunc: func(ctx context.Context, address, submitAddress, chain string, height int64) (types.OsmosisResult, error) {
-				return types.OsmosisResult{
-					OsmosisPool: types.OsmosisPool{
+			OsmosisClaimFunc: func(ctx context.Context, address, submitAddress, chain string, height int64) (lookup.OsmosisResult, error) {
+				return lookup.OsmosisResult{
+					OsmosisPool: lookup.OsmosisPool{
 						Msg: map[string]prewards.MsgSubmitClaim{
 							"chain1": {UserAddress: address},
 						},
@@ -130,7 +130,7 @@ func TestHandlersIntegration(t *testing.T) {
 			},
 		}
 
-		cfg := types.Config{
+		cfg := lookup.Config{
 			Chains: map[string]string{
 				"osmosis-1": "http://osmosis:26657",
 				"umee-1":    "http://umee:26657",
@@ -143,7 +143,7 @@ func TestHandlersIntegration(t *testing.T) {
 
 		assetsService := services.NewAssetsService(cfg, mockCacheManager, mockClaimsService, heights)
 
-		outputFunc := func(w http.ResponseWriter, response *types.Response, errors map[string]error) {
+		outputFunc := func(w http.ResponseWriter, response *lookup.Response, errors map[string]error) {
 			w.Header().Set("Content-Type", "application/json")
 			err := json.NewEncoder(w).Encode(response)
 			if err != nil {

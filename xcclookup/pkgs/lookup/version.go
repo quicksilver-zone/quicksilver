@@ -1,8 +1,15 @@
-package types
+package lookup
 
 import (
 	"encoding/json"
 	"runtime"
+)
+
+// Build-time variables set via ldflags
+var (
+	VERSION             string
+	COMMIT              string
+	QUICKSILVER_VERSION string
 )
 
 // VersionService is a concrete implementation of VersionServiceInterface

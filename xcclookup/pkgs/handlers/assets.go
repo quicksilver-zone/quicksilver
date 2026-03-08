@@ -6,18 +6,18 @@ import (
 
 	"github.com/gorilla/mux"
 
+	"github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/lookup"
 	"github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/services"
-	"github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/types"
 )
 
 // AssetsHandler handles assets-related HTTP requests
 type AssetsHandler struct {
 	assetsService *services.AssetsService
-	outputFunc    types.OutputFunction
+	outputFunc    lookup.OutputFunction
 }
 
 // NewAssetsHandler creates a new assets handler
-func NewAssetsHandler(assetsService *services.AssetsService, outputFunc types.OutputFunction) *AssetsHandler {
+func NewAssetsHandler(assetsService *services.AssetsService, outputFunc lookup.OutputFunction) *AssetsHandler {
 	return &AssetsHandler{
 		assetsService: assetsService,
 		outputFunc:    outputFunc,
@@ -41,11 +41,11 @@ func (h *AssetsHandler) Handle(w http.ResponseWriter, r *http.Request) {
 // GetAssetsHandler returns a function that creates an assets handler
 func GetAssetsHandler(
 	ctx context.Context,
-	cfg types.Config,
-	cacheMgr types.CacheManagerInterface,
-	claimsService types.ClaimsServiceInterface,
+	cfg lookup.Config,
+	cacheMgr lookup.CacheManagerInterface,
+	claimsService lookup.ClaimsServiceInterface,
 	heights map[string]int64,
-	outputFunc types.OutputFunction,
+	outputFunc lookup.OutputFunction,
 ) func(http.ResponseWriter, *http.Request) {
 	assetsService := services.NewAssetsService(cfg, cacheMgr, claimsService, heights)
 	handler := NewAssetsHandler(assetsService, outputFunc)

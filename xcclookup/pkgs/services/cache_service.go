@@ -6,7 +6,7 @@ import (
 
 	prewards "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 
-	"github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/types"
+	"github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/lookup"
 )
 
 // CacheOutput represents the output structure for cache data
@@ -20,11 +20,11 @@ type CacheOutput struct {
 
 // CacheService handles cache-related operations
 type CacheService struct {
-	cacheManager types.CacheManagerInterface
+	cacheManager lookup.CacheManagerInterface
 }
 
 // NewCacheService creates a new cache service
-func NewCacheService(cacheManager types.CacheManagerInterface) *CacheService {
+func NewCacheService(cacheManager lookup.CacheManagerInterface) *CacheService {
 	return &CacheService{
 		cacheManager: cacheManager,
 	}
