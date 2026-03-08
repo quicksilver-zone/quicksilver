@@ -603,6 +603,10 @@ func (k msgServer) GovCancelAllPendingRedemptions(goCtx context.Context, msg *ty
 		return nil, fmt.Errorf("zone not found for chain id: %s", msg.ChainId)
 	}
 
+	if !zone.IsOffboarding {
+		return nil, fmt.Errorf("zone %s is not in offboarding mode", msg.ChainId)
+	}
+
 	var cancelledCount uint64
 	refundedAmounts := sdk.NewCoins()
 	recordsToDelete := []types.WithdrawalRecord{}

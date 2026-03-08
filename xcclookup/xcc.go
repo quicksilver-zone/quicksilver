@@ -18,8 +18,8 @@ import (
 
 	"github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/handlers"
 	"github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/logger"
+	"github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/lookup"
 	"github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/services"
-	"github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/types"
 )
 
 const (
@@ -76,7 +76,7 @@ var (
                  ...::::::::::..                  ...:::::::::::..              
                      ........                         .........
 `
-	cacheMgr = types.NewCacheManager()
+	cacheMgr = lookup.NewCacheManager()
 )
 
 func main() {
@@ -96,7 +96,7 @@ func main() {
 		return
 	}
 
-	var cfg types.Config
+	var cfg lookup.Config
 	err = yaml.Unmarshal(yamlFile, &cfg)
 	if err != nil {
 		fmt.Printf("Error parsing config file: %s\n", err)
@@ -113,42 +113,42 @@ func main() {
 	ctx = logger.WithLogger(ctx, log)
 
 	// Initialize cache manager
-	err = cacheMgr.Add(ctx, &types.Cache[prewards.ConnectionProtocolData]{}, cfg.SourceLcd+"/quicksilver/participationrewards/v1/protocoldata/ProtocolDataTypeConnection/", types.DataTypeProtocolData, time.Minute*5)
+	err = cacheMgr.Add(ctx, &lookup.Cache[prewards.ConnectionProtocolData]{}, cfg.SourceLcd+"/quicksilver/participationrewards/v1/protocoldata/ProtocolDataTypeConnection/", lookup.DataTypeProtocolData, time.Minute*5)
 	if err != nil {
 		log.Error("Failed to add connection cache", "error", err)
 		return
 	}
-	err = cacheMgr.Add(ctx, &types.Cache[prewards.OsmosisParamsProtocolData]{}, cfg.SourceLcd+"/quicksilver/participationrewards/v1/protocoldata/ProtocolDataTypeOsmosisParams/", types.DataTypeProtocolData, time.Hour*24)
+	err = cacheMgr.Add(ctx, &lookup.Cache[prewards.OsmosisParamsProtocolData]{}, cfg.SourceLcd+"/quicksilver/participationrewards/v1/protocoldata/ProtocolDataTypeOsmosisParams/", lookup.DataTypeProtocolData, time.Hour*24)
 	if err != nil {
 		log.Error("Failed to add osmosis params cache", "error", err)
 		return
 	}
-	err = cacheMgr.Add(ctx, &types.Cache[prewards.UmeeParamsProtocolData]{}, cfg.SourceLcd+"/quicksilver/participationrewards/v1/protocoldata/ProtocolDataTypeUmeeParams/", types.DataTypeProtocolData, time.Hour*24)
+	err = cacheMgr.Add(ctx, &lookup.Cache[prewards.UmeeParamsProtocolData]{}, cfg.SourceLcd+"/quicksilver/participationrewards/v1/protocoldata/ProtocolDataTypeUmeeParams/", lookup.DataTypeProtocolData, time.Hour*24)
 	if err != nil {
 		log.Error("Failed to add umee params cache", "error", err)
 		return
 	}
-	err = cacheMgr.Add(ctx, &types.Cache[prewards.MembraneProtocolData]{}, cfg.SourceLcd+"/quicksilver/participationrewards/v1/protocoldata/ProtocolDataTypeMembraneParams/", types.DataTypeProtocolData, time.Hour*24)
+	err = cacheMgr.Add(ctx, &lookup.Cache[prewards.MembraneProtocolData]{}, cfg.SourceLcd+"/quicksilver/participationrewards/v1/protocoldata/ProtocolDataTypeMembraneParams/", lookup.DataTypeProtocolData, time.Hour*24)
 	if err != nil {
 		log.Error("Failed to add membrane params cache", "error", err)
 		return
 	}
-	err = cacheMgr.Add(ctx, &types.Cache[prewards.OsmosisPoolProtocolData]{}, cfg.SourceLcd+"/quicksilver/participationrewards/v1/protocoldata/ProtocolDataTypeOsmosisPool/", types.DataTypeProtocolData, time.Minute*5)
+	err = cacheMgr.Add(ctx, &lookup.Cache[prewards.OsmosisPoolProtocolData]{}, cfg.SourceLcd+"/quicksilver/participationrewards/v1/protocoldata/ProtocolDataTypeOsmosisPool/", lookup.DataTypeProtocolData, time.Minute*5)
 	if err != nil {
 		log.Error("Failed to add osmosis pool cache", "error", err)
 		return
 	}
-	err = cacheMgr.Add(ctx, &types.Cache[prewards.OsmosisClPoolProtocolData]{}, cfg.SourceLcd+"/quicksilver/participationrewards/v1/protocoldata/ProtocolDataTypeOsmosisCLPool/", types.DataTypeProtocolData, time.Minute*5)
+	err = cacheMgr.Add(ctx, &lookup.Cache[prewards.OsmosisClPoolProtocolData]{}, cfg.SourceLcd+"/quicksilver/participationrewards/v1/protocoldata/ProtocolDataTypeOsmosisCLPool/", lookup.DataTypeProtocolData, time.Minute*5)
 	if err != nil {
 		log.Error("Failed to add osmosis CL pool cache", "error", err)
 		return
 	}
-	err = cacheMgr.Add(ctx, &types.Cache[prewards.LiquidAllowedDenomProtocolData]{}, cfg.SourceLcd+"/quicksilver/participationrewards/v1/protocoldata/ProtocolDataTypeLiquidToken/", types.DataTypeProtocolData, time.Minute*5)
+	err = cacheMgr.Add(ctx, &lookup.Cache[prewards.LiquidAllowedDenomProtocolData]{}, cfg.SourceLcd+"/quicksilver/participationrewards/v1/protocoldata/ProtocolDataTypeLiquidToken/", lookup.DataTypeProtocolData, time.Minute*5)
 	if err != nil {
 		log.Error("Failed to add liquid denom cache", "error", err)
 		return
 	}
-	err = cacheMgr.Add(ctx, &types.Cache[icstypes.Zone]{}, cfg.SourceLcd+"/quicksilver/interchainstaking/v1/zones", types.DataTypeZone, time.Hour*24)
+	err = cacheMgr.Add(ctx, &lookup.Cache[icstypes.Zone]{}, cfg.SourceLcd+"/quicksilver/interchainstaking/v1/zones", lookup.DataTypeZone, time.Hour*24)
 	if err != nil {
 		log.Error("Failed to add zone cache", "error", err)
 		return
@@ -161,27 +161,27 @@ func main() {
 	config.SetBech32PrefixForValidator(Bech32PrefixValAddr, Bech32PrefixValPub)
 	config.SetBech32PrefixForConsensusNode(Bech32PrefixConsAddr, Bech32PrefixConsPub)
 
-	types.AddMocks(ctx, &cacheMgr, cfg.Mocks.OsmosisPools)
-	types.AddMocks(ctx, &cacheMgr, cfg.Mocks.Connections)
-	types.AddMocks(ctx, &cacheMgr, cfg.Mocks.UmeeParams)
-	types.AddMocks(ctx, &cacheMgr, cfg.Mocks.MembraneParams)
+	lookup.AddMocks(ctx, &cacheMgr, cfg.Mocks.OsmosisPools)
+	lookup.AddMocks(ctx, &cacheMgr, cfg.Mocks.Connections)
+	lookup.AddMocks(ctx, &cacheMgr, cfg.Mocks.UmeeParams)
+	lookup.AddMocks(ctx, &cacheMgr, cfg.Mocks.MembraneParams)
 
 	r := mux.NewRouter()
-	connections, err := types.GetCache[prewards.ConnectionProtocolData](ctx, &cacheMgr)
+	connections, err := lookup.GetCache[prewards.ConnectionProtocolData](ctx, &cacheMgr)
 	if err != nil {
 		log.Error("Failed to get connections cache", "error", err)
 		return
 	}
 
 	// Create services
-	versionService := services.NewVersionService(&types.VersionService{})
+	versionService := services.NewVersionService(&lookup.VersionService{})
 
 	// Create claims service
 	claimsService := services.NewClaimsService(cfg, &cacheMgr)
 
 	r.HandleFunc("/cache", handlers.GetCacheHandler(ctx, cfg, &cacheMgr))
-	r.HandleFunc("/{address}/epoch", handlers.GetAssetsHandler(ctx, cfg, &cacheMgr, claimsService, types.GetHeights(connections), types.OutputEpoch))
-	r.HandleFunc("/{address}/current", handlers.GetAssetsHandler(ctx, cfg, &cacheMgr, claimsService, types.GetZeroHeights(connections), types.OutputCurrent))
+	r.HandleFunc("/{address}/epoch", handlers.GetAssetsHandler(ctx, cfg, &cacheMgr, claimsService, lookup.GetHeights(connections), lookup.OutputEpoch))
+	r.HandleFunc("/{address}/current", handlers.GetAssetsHandler(ctx, cfg, &cacheMgr, claimsService, lookup.GetZeroHeights(connections), lookup.OutputCurrent))
 	r.HandleFunc("/version", handlers.GetVersionHandler(versionService))
 	http.Handle("/", r)
 

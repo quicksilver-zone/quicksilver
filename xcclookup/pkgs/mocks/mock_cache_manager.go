@@ -6,7 +6,7 @@ import (
 	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 	prewards "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 
-	"github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/types"
+	"github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/lookup"
 )
 
 // MockCacheManager is a mock implementation of CacheManagerInterface
@@ -95,4 +95,4 @@ func (m *MockCacheManager) AddMocks(ctx context.Context, mocks interface{}) erro
 }
 
 // Ensure MockCacheManager implements CacheManagerInterface
-var _ types.CacheManagerInterface = &MockCacheManager{}
+var _ lookup.CacheManagerInterface = &MockCacheManager{}

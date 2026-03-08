@@ -8,22 +8,22 @@ import (
 
 	prewards "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 
-	"github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/types"
+	"github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/lookup"
 )
 
 // AssetsService handles assets-related operations
 type AssetsService struct {
-	cfg           types.Config
-	cacheManager  types.CacheManagerInterface
-	claimsService types.ClaimsServiceInterface
+	cfg           lookup.Config
+	cacheManager  lookup.CacheManagerInterface
+	claimsService lookup.ClaimsServiceInterface
 	heights       map[string]int64
 }
 
 // NewAssetsService creates a new assets service
 func NewAssetsService(
-	cfg types.Config,
-	cacheManager types.CacheManagerInterface,
-	claimsService types.ClaimsServiceInterface,
+	cfg lookup.Config,
+	cacheManager lookup.CacheManagerInterface,
+	claimsService lookup.ClaimsServiceInterface,
 	heights map[string]int64,
 ) *AssetsService {
 	return &AssetsService{
@@ -35,12 +35,12 @@ func NewAssetsService(
 }
 
 // GetAssets retrieves assets for a given address
-func (s *AssetsService) GetAssets(ctx context.Context, address string) (*types.Response, map[string]error) {
+func (s *AssetsService) GetAssets(ctx context.Context, address string) (*lookup.Response, map[string]error) {
 	errs := make(map[string]error)
 	errsMutex := sync.Mutex{}
-	response := &types.Response{
+	response := &lookup.Response{
 		Messages: make([]prewards.MsgSubmitClaim, 0),
-		Assets:   make(map[string][]types.Asset),
+		Assets:   make(map[string][]lookup.Asset),
 	}
 
 	wg := sync.WaitGroup{}
@@ -59,7 +59,7 @@ func (s *AssetsService) GetAssets(ctx context.Context, address string) (*types.R
 		}
 	}
 
-	mappedAddresses, err := types.GetMappedAddresses(ctx, address, unfilteredConnections, &s.cfg)
+	mappedAddresses, err := lookup.GetMappedAddresses(ctx, address, unfilteredConnections, &s.cfg)
 	if err != nil {
 		errs["MappedAddresses"] = err
 	}
@@ -84,7 +84,7 @@ func (s *AssetsService) processOsmosisClaims(
 	ctx context.Context,
 	address string,
 	mappedAddresses map[string]string,
-	response *types.Response,
+	response *lookup.Response,
 	errs map[string]error,
 	errsMutex *sync.Mutex,
 	wg *sync.WaitGroup,
@@ -176,7 +176,7 @@ func (s *AssetsService) processUmeeClaims(
 	ctx context.Context,
 	address string,
 	mappedAddresses map[string]string,
-	response *types.Response,
+	response *lookup.Response,
 	errs map[string]error,
 	errsMutex *sync.Mutex,
 	wg *sync.WaitGroup,
@@ -233,7 +233,7 @@ func (s *AssetsService) processMembraneClaims(
 	ctx context.Context,
 	address string,
 	mappedAddresses map[string]string,
-	response *types.Response,
+	response *lookup.Response,
 	errs map[string]error,
 	errsMutex *sync.Mutex,
 	wg *sync.WaitGroup,
@@ -306,7 +306,7 @@ func (s *AssetsService) processLiquidClaims(
 	address string,
 	mappedAddresses map[string]string,
 	connections []prewards.ConnectionProtocolData,
-	response *types.Response,
+	response *lookup.Response,
 	errs map[string]error,
 	errsMutex *sync.Mutex,
 	wg *sync.WaitGroup,

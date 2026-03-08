@@ -33,12 +33,11 @@ func New(logLevel LogLevel) *Logger {
 	switch logLevel {
 	case DebugLevel:
 		logger = level.NewFilter(logger, level.AllowDebug())
-	case InfoLevel:
-		logger = level.NewFilter(logger, level.AllowInfo())
 	case WarnLevel:
 		logger = level.NewFilter(logger, level.AllowWarn())
 	case ErrorLevel:
 		logger = level.NewFilter(logger, level.AllowError())
+	case InfoLevel:
 	default:
 		logger = level.NewFilter(logger, level.AllowInfo())
 	}
