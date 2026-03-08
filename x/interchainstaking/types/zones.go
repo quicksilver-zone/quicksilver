@@ -187,10 +187,8 @@ func (m *MemoField) Validate() error {
 		if err != nil {
 			return fmt.Errorf("invalid address for account map memo field: address: %s", m.Data)
 		}
-	case FieldTypeReturnToSender:
-		// do nothing - we ignore data if RTS
-	case FieldTypeAutoClaim:
-		// do nothing - we ignore data if AutoClaim
+	case FieldTypeReturnToSender, FieldTypeAutoClaim:
+		// do nothing - we ignore data if RTS or AutoClaim
 	case FieldTypeIntent:
 		if len(m.Data)%21 != 0 { // memo must be one byte (1-200) weight then 20 byte valoperAddress
 			return fmt.Errorf("invalid length for validator intent memo field %d", len(m.Data))

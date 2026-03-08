@@ -1,4 +1,4 @@
-FROM golang:1.24.5-alpine3.22 as build
+FROM golang:1.24.13-alpine3.23 as build
 
 ARG VERSION
 ARG COMMIT
@@ -16,7 +16,7 @@ COPY . .
 
 RUN make build
 
-FROM alpine:3.22
+FROM alpine:3.23
 
 RUN apk add --no-cache ca-certificates jq curl
 

@@ -196,11 +196,9 @@ func (k msgServer) UpdateRedemption(goCtx context.Context, msg *types.MsgUpdateR
 	switch msg.NewStatus {
 	case types.WithdrawStatusTokenize: // intentionally removed as not currently supported, but included here for completeness.
 		return nil, errors.New("new status WithdrawStatusTokenize not supported")
-	case types.WithdrawStatusQueued:
-	case types.WithdrawStatusUnbond:
+	case types.WithdrawStatusQueued, types.WithdrawStatusUnbond, types.WithdrawStatusCompleted:
 	case types.WithdrawStatusSend: // send is not a valid state for recovery, included here for completeness.
 		return nil, errors.New("new status WithdrawStatusSend not supported")
-	case types.WithdrawStatusCompleted:
 	default:
 		return nil, errors.New("new status not provided or invalid")
 	}

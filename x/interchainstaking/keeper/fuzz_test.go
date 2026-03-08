@@ -65,9 +65,7 @@ func FuzzZones(f *testing.F) {
 		switch str := string(reqBz); str {
 		// Manually skipping over known and reported vectors
 		// as we know they cause crashes.
-		case "\n\t\n\x01000 0(0", "\n\t\n\x03000 0(0": // https://github.com/quicksilver-zone/quicksilver-incognito/issues/88
-			return
-		case "\n\t\n\x01K\x10\x0000(0", "\n\t\n\x030D0 0(0", "\n\t\n\x0301000(0":
+		case "\n\t\n\x01000 0(0", "\n\t\n\x03000 0(0", "\n\t\n\x01K\x10\x0000(0", "\n\t\n\x030D0 0(0", "\n\t\n\x0301000(0": // https://github.com/quicksilver-zone/quicksilver-incognito/issues/88
 			return
 		default:
 		}
