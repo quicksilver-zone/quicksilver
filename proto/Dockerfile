@@ -1,5 +1,5 @@
 FROM bufbuild/buf:latest as BUILDER
-FROM golang:1.24.5-alpine3.22
+FROM golang:1.24.13-alpine3.23
 
 RUN apk add --no-cache \
   nodejs \
