@@ -159,9 +159,9 @@ Tests the edge case where `BurnAmount=1` and `Amount=1,000,000` — the redempti
 
 Validates correct behavior when an unbonding record references two WDRs: one where the validator IS in the distribution (normal requeue at 299,999,999 due to TruncateInt), and one where it is NOT (skip requeue). Confirms both paths work within a single `HandleFailedUndelegate` call.
 
-### TestHandleFailedUndelegate_Guard3_RelatedQAssetExceedsBurnAmount
+### TestHandleFailedUndelegate_DistributionAmountExceedsTotalAmount
 
-Tests Guard 3 (cap relatedQAsset at BurnAmount) with corrupt state where distribution amount exceeds total amount. Verifies that `relatedQAsset` is capped to prevent negative values after `SubAmount`.
+Tests the relatedAmount clamp with corrupt state where distribution amount (150) exceeds WDR total amount (100). Verifies that relatedAmount is capped at amount, preventing `relatedQAsset` from exceeding `BurnAmount` and producing negative values after `SubAmount`. Guard 3 (relatedQAsset cap) provides an additional safety net but is unreachable given this prior clamp.
 
 ### TestHandleFailedUndelegate_AmountZeroGuard
 
@@ -179,7 +179,7 @@ All 10 tests pass (4 existing + 1 pre-existing missing-WDR + 5 new):
 --- PASS: TestHandleFailedUndelegate_ValidatorNotInDistribution (0.30s)
 --- PASS: TestHandleFailedUndelegate_TinyBurnAmountTruncatesToZero (0.32s)
 --- PASS: TestHandleFailedUndelegate_MixedDistributionMultiWDR (0.35s)
---- PASS: TestHandleFailedUndelegate_Guard3_RelatedQAssetExceedsBurnAmount (0.30s)
+--- PASS: TestHandleFailedUndelegate_DistributionAmountExceedsTotalAmount (0.30s)
 --- PASS: TestHandleFailedUndelegate_AmountZeroGuard (0.30s)
 ```
 

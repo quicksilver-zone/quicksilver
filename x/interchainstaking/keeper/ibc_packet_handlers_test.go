@@ -5546,11 +5546,12 @@ func (suite *KeeperTestSuite) TestHandleFailedUndelegate_MixedDistributionMultiW
 	suite.False(found)
 }
 
-// TestHandleFailedUndelegate_Guard3_RelatedQAssetExceedsBurnAmount tests the defensive
-// Guard 3 which caps relatedQAsset at BurnAmount. This guards against corrupt state where
-// distribution amount exceeds total amount, which would cause relatedQAsset to exceed
-// BurnAmount and potentially produce negative values after SubAmount.
-func (suite *KeeperTestSuite) TestHandleFailedUndelegate_Guard3_RelatedQAssetExceedsBurnAmount() {
+// TestHandleFailedUndelegate_DistributionAmountExceedsTotalAmount tests the defensive
+// clamp that caps relatedAmount at the WDR's total Amount when the distribution amount
+// exceeds it (corrupt state). Without this clamp, relatedQAsset would exceed BurnAmount,
+// causing SubAmount to produce negative values. The relatedQAsset > BurnAmount guard
+// (line 1119) provides an additional safety net but is unreachable given this prior clamp.
+func (suite *KeeperTestSuite) TestHandleFailedUndelegate_DistributionAmountExceedsTotalAmount() {
 	suite.SetupTest()
 	suite.setupTestZones()
 
@@ -5565,12 +5566,11 @@ func (suite *KeeperTestSuite) TestHandleFailedUndelegate_Guard3_RelatedQAssetExc
 	beneficiary := addressutils.GenerateAddressForTestWithPrefix("cosmos")
 	hash := randomutils.GenerateRandomHashAsHex(32)
 
-	// Corrupt state: Distribution amount (150) > Total Amount (100)
-	// This should not happen in practice, but Guard 1 protects against it.
-	// rr = BurnAmount/Amount = 80/100 = 0.8
-	// relatedQAsset = floor(150 * 0.8) = 120 > BurnAmount (80)
-	// Without Guard 1: SubAmount(120) on BurnAmount(80) = -40 (negative!)
-	// With Guard 1: relatedQAsset capped to 80, SubAmount(80) = 0, then Guard 2 deletes
+	// Corrupt state: Distribution amount (150) > Total Amount (100).
+	// Without the relatedAmount clamp: rr = 80/100 = 0.8, relatedQAsset = floor(150 * 0.8) = 120 > BurnAmount (80).
+	// SubAmount(120) on BurnAmount(80) would produce -40 (negative!).
+	// With the clamp: relatedAmount is capped to 100, so relatedQAsset = floor(100 * 0.8) = 80 = BurnAmount.
+	// Single-distribution path deletes original WDR and requeues with BurnAmount = 80.
 	err := quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(ctx, types.WithdrawalRecord{
 		ChainId:   suite.chainB.ChainID,
 		Delegator: user,
@@ -5603,8 +5603,6 @@ func (suite *KeeperTestSuite) TestHandleFailedUndelegate_Guard3_RelatedQAssetExc
 		Amount:           sdk.NewCoin("uatom", math.NewInt(150)),
 	}
 
-	// Without Guard 1, this would panic or produce corrupt state.
-	// With Guard 1, relatedQAsset is capped at BurnAmount (80).
 	err = quicksilver.InterchainstakingKeeper.HandleFailedUndelegate(ctx, msg, types.EpochWithdrawalMemo(1))
 	suite.NoError(err)
 
@@ -5612,10 +5610,10 @@ func (suite *KeeperTestSuite) TestHandleFailedUndelegate_Guard3_RelatedQAssetExc
 	_, found = quicksilver.InterchainstakingKeeper.GetWithdrawalRecord(ctx, suite.chainB.ChainID, hash, types.WithdrawStatusUnbond)
 	suite.False(found, "original WDR should be deleted")
 
-	// Requeued record should exist with BurnAmount = 80 (capped by Guard 1)
+	// Requeued record should exist with BurnAmount = 80 (relatedAmount clamped to amount)
 	allRecords := quicksilver.InterchainstakingKeeper.AllZoneWithdrawalRecords(ctx, suite.chainB.ChainID)
 	suite.Equal(1, len(allRecords))
-	suite.Equal(math.NewInt(80), allRecords[0].BurnAmount.Amount, "requeued BurnAmount should be capped at original BurnAmount")
+	suite.Equal(math.NewInt(80), allRecords[0].BurnAmount.Amount, "requeued BurnAmount should equal original BurnAmount after clamp")
 	suite.Equal(types.WithdrawStatusQueued, allRecords[0].Status)
 	suite.True(allRecords[0].Requeued)
 
