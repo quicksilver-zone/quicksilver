@@ -126,7 +126,7 @@ When `TruncateInt` rounds to zero (tiny BurnAmount relative to Amount), there is
 
 ICA channels use `ORDER_ORDERED`. The counterparty enforces sequential packet delivery:
 
-```
+```text
 cosmoshub-4 ch-1344 (counterparty of QS ch-251):
   next_recv_seq = 3460
 
@@ -169,7 +169,7 @@ Tests Guard 2 (division by zero protection) with corrupt state where WDR has wro
 
 All 10 tests pass (4 existing + 1 pre-existing missing-WDR + 5 new):
 
-```
+```text
 --- PASS: TestKeeperTestSuite/TestHandleFailedUndelegate (1.36s)
     --- PASS: failed_unbond_-_single_wdr,_single_dist (0.50s)
     --- PASS: failed_unbond_-_multi_related_wdr,_single_dist (0.29s)

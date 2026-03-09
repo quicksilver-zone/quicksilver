@@ -1064,9 +1064,40 @@ func (k *Keeper) HandleFailedUndelegate(ctx sdk.Context, msg sdk.Msg, memo strin
 
 		amount := wdr.Amount.AmountOf(zone.BaseDenom)
 
-		// guard against division by zero if Amount is somehow zero
+		// Guard against division by zero if Amount is somehow zero (e.g. corrupt state where
+		// the WDR Amount coin denom does not match the zone BaseDenom).
+		// Rather than orphaning the WDR in WithdrawStatusUnbond with Acknowledged=false
+		// (which HandleMaturedWithdrawals would never advance), we delete it and requeue
+		// the full BurnAmount so the user's funds remain recoverable.
 		if amount.IsZero() {
-			k.Logger(ctx).Error("withdrawal record amount is zero; skipping", "chain_id", zone.ChainId, "txhash", hash)
+			k.Logger(ctx).Error("withdrawal record amount is zero; requeueing full burn amount", "chain_id", zone.ChainId, "txhash", hash)
+			k.DeleteWithdrawalRecord(ctx, wdr.ChainId, wdr.Txhash, wdr.Status)
+			if wdr.BurnAmount.IsPositive() {
+				// If a requeued record already exists for this delegator (e.g. a previous
+				// iteration of this loop already hit the zero-amount path for another WDR),
+				// accumulate into it rather than creating a duplicate.
+				record := k.GetUserChainRequeuedWithdrawalRecord(ctx, zone.ChainId, wdr.Delegator)
+				if record.Txhash == "" {
+					record = types.WithdrawalRecord{
+						ChainId:      zone.ChainId,
+						Delegator:    wdr.Delegator,
+						Recipient:    wdr.Recipient,
+						Distribution: nil,
+						BurnAmount:   sdk.NewCoin(zone.LocalDenom, wdr.BurnAmount.Amount),
+						Txhash:       fmt.Sprintf("%064d", k.GetNextWithdrawalRecordSequence(ctx)),
+						Status:       types.WithdrawStatusQueued,
+						Requeued:     true,
+						EpochNumber:  wdr.EpochNumber,
+					}
+				} else {
+					record.BurnAmount = record.BurnAmount.Add(sdk.NewCoin(zone.LocalDenom, wdr.BurnAmount.Amount))
+				}
+				if err := k.SetWithdrawalRecord(ctx, record); err != nil {
+					return err
+				}
+			}
+			// If BurnAmount is not positive there is nothing to requeue; the WDR has
+			// already been deleted above so no orphan is created.
 			continue
 		}
 		if relatedAmount.GT(amount) {

@@ -5677,21 +5677,119 @@ func (suite *KeeperTestSuite) TestHandleFailedUndelegate_AmountZeroGuard() {
 	}
 
 	// Without the Amount=0 guard, this would panic with division by zero.
-	// With the guard, it skips processing this WDR.
+	// With the guard, the WDR is deleted and the full BurnAmount is requeued for recovery.
 	err = quicksilver.InterchainstakingKeeper.HandleFailedUndelegate(ctx, msg, types.EpochWithdrawalMemo(1))
 	suite.NoError(err)
 
-	// WDR should still exist unchanged (skipped due to Amount=0 for BaseDenom)
-	wdr, found := quicksilver.InterchainstakingKeeper.GetWithdrawalRecord(ctx, suite.chainB.ChainID, hash, types.WithdrawStatusUnbond)
-	suite.True(found, "WDR should still exist - it was skipped")
-	suite.Equal(math.NewInt(80), wdr.BurnAmount.Amount)
+	// WDR should be deleted — no longer orphaned in WithdrawStatusUnbond
+	_, found = quicksilver.InterchainstakingKeeper.GetWithdrawalRecord(ctx, suite.chainB.ChainID, hash, types.WithdrawStatusUnbond)
+	suite.False(found, "WDR should be deleted, not orphaned")
 
-	// No requeued records created
+	// Full BurnAmount requeued for recovery
 	allRecords := quicksilver.InterchainstakingKeeper.AllZoneWithdrawalRecords(ctx, suite.chainB.ChainID)
-	suite.Equal(1, len(allRecords))
-	suite.Equal(types.WithdrawStatusUnbond, allRecords[0].Status)
+	suite.Equal(1, len(allRecords), "requeued record should exist")
+	suite.Equal(types.WithdrawStatusQueued, allRecords[0].Status)
+	suite.Equal(math.NewInt(80), allRecords[0].BurnAmount.Amount)
+	suite.True(allRecords[0].Requeued)
 
 	// Unbonding record should still be cleaned up (happens at end regardless)
+	_, found = quicksilver.InterchainstakingKeeper.GetUnbondingRecord(ctx, suite.chainB.ChainID, vals[0], 1)
+	suite.False(found)
+}
+
+// TestHandleFailedUndelegate_AmountZeroGuard_MultiWDRAccumulation verifies that when multiple
+// withdrawal records for the same delegator both hit the zero-amount guard in the same
+// HandleFailedUndelegate call, their BurnAmounts are accumulated into a single requeued
+// record rather than creating duplicates. This exercises the else-branch of the
+// GetUserChainRequeuedWithdrawalRecord check inside the amount.IsZero() guard.
+func (suite *KeeperTestSuite) TestHandleFailedUndelegate_AmountZeroGuard_MultiWDRAccumulation() {
+	suite.SetupTest()
+	suite.setupTestZones()
+
+	quicksilver := suite.GetQuicksilverApp(suite.chainA)
+	ctx := suite.chainA.GetContext()
+
+	zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+	suite.True(found)
+	vals := quicksilver.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
+
+	user := addressutils.GenerateAddressForTestWithPrefix("quick")
+	beneficiary := addressutils.GenerateAddressForTestWithPrefix("cosmos")
+	hash1 := randomutils.GenerateRandomHashAsHex(32)
+	hash2 := randomutils.GenerateRandomHashAsHex(32)
+
+	// Both WDRs use "wrongdenom" so Amount.AmountOf(baseDenom) == 0, triggering the guard.
+	err := quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(ctx, types.WithdrawalRecord{
+		ChainId:   suite.chainB.ChainID,
+		Delegator: user,
+		Distribution: []*types.Distribution{
+			{Valoper: vals[0], Amount: math.NewInt(100)},
+		},
+		Recipient:      beneficiary,
+		Amount:         sdk.NewCoins(sdk.NewCoin("wrongdenom", math.NewInt(100))),
+		BurnAmount:     sdk.NewCoin("uqatom", math.NewInt(80)),
+		Txhash:         hash1,
+		Status:         types.WithdrawStatusUnbond,
+		CompletionTime: time.Time{},
+		Acknowledged:   false,
+		Requeued:       false,
+		EpochNumber:    1,
+	})
+	suite.NoError(err)
+
+	err = quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(ctx, types.WithdrawalRecord{
+		ChainId:   suite.chainB.ChainID,
+		Delegator: user,
+		Distribution: []*types.Distribution{
+			{Valoper: vals[0], Amount: math.NewInt(60)},
+		},
+		Recipient:      beneficiary,
+		Amount:         sdk.NewCoins(sdk.NewCoin("wrongdenom", math.NewInt(60))),
+		BurnAmount:     sdk.NewCoin("uqatom", math.NewInt(50)),
+		Txhash:         hash2,
+		Status:         types.WithdrawStatusUnbond,
+		CompletionTime: time.Time{},
+		Acknowledged:   false,
+		Requeued:       false,
+		EpochNumber:    1,
+	})
+	suite.NoError(err)
+
+	// Single unbonding record references both WDRs via the same validator.
+	quicksilver.InterchainstakingKeeper.SetUnbondingRecord(ctx, types.UnbondingRecord{
+		ChainId:       suite.chainB.ChainID,
+		EpochNumber:   1,
+		Validator:     vals[0],
+		RelatedTxhash: []string{hash1, hash2},
+		Amount:        sdk.NewCoin("uatom", math.NewInt(160)),
+	})
+
+	msg := &stakingtypes.MsgUndelegate{
+		DelegatorAddress: zone.DelegationAddress.Address,
+		ValidatorAddress: vals[0],
+		Amount:           sdk.NewCoin("uatom", math.NewInt(160)),
+	}
+
+	// Without the fix both WDRs would be orphaned. With the fix, the first iteration
+	// creates a requeued record and the second accumulates into it.
+	err = quicksilver.InterchainstakingKeeper.HandleFailedUndelegate(ctx, msg, types.EpochWithdrawalMemo(1))
+	suite.NoError(err)
+
+	// Both original WDRs must be gone.
+	_, found = quicksilver.InterchainstakingKeeper.GetWithdrawalRecord(ctx, suite.chainB.ChainID, hash1, types.WithdrawStatusUnbond)
+	suite.False(found, "first WDR should be deleted")
+
+	_, found = quicksilver.InterchainstakingKeeper.GetWithdrawalRecord(ctx, suite.chainB.ChainID, hash2, types.WithdrawStatusUnbond)
+	suite.False(found, "second WDR should be deleted")
+
+	// Exactly one requeued record must exist with the combined BurnAmount (80 + 50 = 130).
+	allRecords := quicksilver.InterchainstakingKeeper.AllZoneWithdrawalRecords(ctx, suite.chainB.ChainID)
+	suite.Equal(1, len(allRecords), "exactly one requeued record should exist")
+	suite.Equal(types.WithdrawStatusQueued, allRecords[0].Status)
+	suite.Equal(math.NewInt(130), allRecords[0].BurnAmount.Amount, "BurnAmounts should be accumulated: 80 + 50 = 130")
+	suite.True(allRecords[0].Requeued)
+
+	// Unbonding record cleaned up as normal.
 	_, found = quicksilver.InterchainstakingKeeper.GetUnbondingRecord(ctx, suite.chainB.ChainID, vals[0], 1)
 	suite.False(found)
 }
