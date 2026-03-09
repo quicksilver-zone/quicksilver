@@ -31,7 +31,7 @@ import (
 	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 	prewards "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 
-	"github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/types"
+	"github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/lookup"
 )
 
 var (
@@ -63,8 +63,8 @@ type (
 
 func OsmosisClaim(
 	ctx context.Context,
-	cfg types.Config,
-	cacheMgr *types.CacheManager,
+	cfg lookup.Config,
+	cacheMgr *lookup.CacheManager,
 	address string,
 	submitAddress string,
 	chain string,
@@ -88,7 +88,7 @@ func OsmosisClaim(
 		return OsmosisResult{Err: err}
 	}
 
-	client, err := types.NewRPCClient(host, time.Duration(cfg.Timeout)*time.Second)
+	client, err := lookup.NewRPCClient(host, time.Duration(cfg.Timeout)*time.Second)
 	if err != nil {
 		return OsmosisResult{Err: err}
 	}
@@ -165,13 +165,13 @@ func OsmosisClaim(
 		}
 	}
 
-	ignores := cfg.Ignore.GetIgnoresForType(types.IgnoreTypeLiquid)
+	ignores := cfg.Ignore.GetIgnoresForType(lookup.IgnoreTypeLiquid)
 	// add GetFiltered to CacheManager, to allow filtered lookups on a single field == value
-	laCache, err := types.GetCache[prewards.LiquidAllowedDenomProtocolData](ctx, cacheMgr)
+	laCache, err := lookup.GetCache[prewards.LiquidAllowedDenomProtocolData](ctx, cacheMgr)
 	if err != nil {
 		return OsmosisResult{Err: err}
 	}
-	zoneCache, err := types.GetCache[icstypes.Zone](ctx, cacheMgr)
+	zoneCache, err := lookup.GetCache[icstypes.Zone](ctx, cacheMgr)
 	if err != nil {
 		return OsmosisResult{Err: err}
 	}
@@ -207,7 +207,7 @@ func OsmosisClaim(
 	return result
 }
 
-func GetOsmosisClaim(ctx context.Context, cfg types.Config, cacheMgr *types.CacheManager, client *tmhttp.HTTP, marshaler *codec.ProtoCodec, addrBytes []byte, osmoAddress, submitAddress, chain string, tokens map[string]TokenTuple, height int64, timestamp time.Time) (map[string]prewards.MsgSubmitClaim, map[string]sdk.Coins, error) {
+func GetOsmosisClaim(ctx context.Context, cfg lookup.Config, cacheMgr *lookup.CacheManager, client *tmhttp.HTTP, marshaler *codec.ProtoCodec, addrBytes []byte, osmoAddress, submitAddress, chain string, tokens map[string]TokenTuple, height int64, timestamp time.Time) (map[string]prewards.MsgSubmitClaim, map[string]sdk.Coins, error) {
 	// fetch timestamp of block
 	errs := make(map[string]error)
 	query := osmolockup.AccountLockedPastTimeRequest{Owner: osmoAddress, Timestamp: timestamp}
@@ -229,13 +229,13 @@ func GetOsmosisClaim(ctx context.Context, cfg types.Config, cacheMgr *types.Cach
 		return nil, nil, err
 	}
 
-	ignores := cfg.Ignore.GetIgnoresForType(types.IgnoreTypeOsmosisPool)
+	ignores := cfg.Ignore.GetIgnoresForType(lookup.IgnoreTypeOsmosisPool)
 
 	pools := poolMap{}
 	msg := map[string]prewards.MsgSubmitClaim{}
 	assets := map[string]sdk.Coins{}
 
-	poolsCache, err := types.GetCache[prewards.OsmosisPoolProtocolData](ctx, cacheMgr)
+	poolsCache, err := lookup.GetCache[prewards.OsmosisPoolProtocolData](ctx, cacheMgr)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -424,15 +424,15 @@ func GetOsmosisClaim(ctx context.Context, cfg types.Config, cacheMgr *types.Cach
 	return msg, assets, nil
 }
 
-func GetOsmosisClClaim(ctx context.Context, cfg types.Config, cacheMgr *types.CacheManager, client *tmhttp.HTTP, marshaler *codec.ProtoCodec, addrBytes []byte, osmoAddress, submitAddress, chain string, tokens map[string]TokenTuple, height int64) (map[string]prewards.MsgSubmitClaim, map[string]sdk.Coins, error) {
+func GetOsmosisClClaim(ctx context.Context, cfg lookup.Config, cacheMgr *lookup.CacheManager, client *tmhttp.HTTP, marshaler *codec.ProtoCodec, addrBytes []byte, osmoAddress, submitAddress, chain string, tokens map[string]TokenTuple, height int64) (map[string]prewards.MsgSubmitClaim, map[string]sdk.Coins, error) {
 	errs := make(map[string]error)
-	ignores := cfg.Ignore.GetIgnoresForType(types.IgnoreTypeOsmosisCLPool)
+	ignores := cfg.Ignore.GetIgnoresForType(lookup.IgnoreTypeOsmosisCLPool)
 
 	clpools := clPoolMap{}
 	msg := map[string]prewards.MsgSubmitClaim{}
 	assets := map[string]sdk.Coins{}
 
-	poolsCache, err := types.GetCache[prewards.OsmosisClPoolProtocolData](ctx, cacheMgr)
+	poolsCache, err := lookup.GetCache[prewards.OsmosisClPoolProtocolData](ctx, cacheMgr)
 	if err != nil {
 		return nil, nil, err
 	}

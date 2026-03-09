@@ -1056,9 +1056,69 @@ func (k *Keeper) HandleFailedUndelegate(ctx sdk.Context, msg sdk.Msg, memo strin
 			}
 		}
 
+		// skip if validator not in distribution (relatedAmount=0) — no work to do
+		if relatedAmount.IsZero() {
+			k.Logger(ctx).Info("validator not in distribution; skipping", "chain_id", zone.ChainId, "txhash", hash, "validator", ubr.Validator)
+			continue
+		}
+
 		amount := wdr.Amount.AmountOf(zone.BaseDenom)
+
+		// Guard against division by zero if Amount is somehow zero (e.g. corrupt state where
+		// the WDR Amount coin denom does not match the zone BaseDenom).
+		// Rather than orphaning the WDR in WithdrawStatusUnbond with Acknowledged=false
+		// (which HandleMaturedWithdrawals would never advance), we delete it and requeue
+		// the full BurnAmount so the user's funds remain recoverable.
+		if amount.IsZero() {
+			k.Logger(ctx).Error("withdrawal record amount is zero; requeueing full burn amount", "chain_id", zone.ChainId, "txhash", hash)
+			k.DeleteWithdrawalRecord(ctx, wdr.ChainId, wdr.Txhash, wdr.Status)
+			if wdr.BurnAmount.IsPositive() {
+				// If a requeued record already exists for this delegator (e.g. a previous
+				// iteration of this loop already hit the zero-amount path for another WDR),
+				// accumulate into it rather than creating a duplicate.
+				record := k.GetUserChainRequeuedWithdrawalRecord(ctx, zone.ChainId, wdr.Delegator)
+				if record.Txhash == "" {
+					record = types.WithdrawalRecord{
+						ChainId:      zone.ChainId,
+						Delegator:    wdr.Delegator,
+						Recipient:    wdr.Recipient,
+						Distribution: nil,
+						BurnAmount:   sdk.NewCoin(zone.LocalDenom, wdr.BurnAmount.Amount),
+						Txhash:       fmt.Sprintf("%064d", k.GetNextWithdrawalRecordSequence(ctx)),
+						Status:       types.WithdrawStatusQueued,
+						Requeued:     true,
+						EpochNumber:  wdr.EpochNumber,
+					}
+				} else {
+					record.BurnAmount = record.BurnAmount.Add(sdk.NewCoin(zone.LocalDenom, wdr.BurnAmount.Amount))
+				}
+				if err := k.SetWithdrawalRecord(ctx, record); err != nil {
+					return err
+				}
+			}
+			// If BurnAmount is not positive there is nothing to requeue; the WDR has
+			// already been deleted above so no orphan is created.
+			continue
+		}
+		if relatedAmount.GT(amount) {
+			k.Logger(ctx).Error(
+				"withdrawal record distribution amount exceeds total amount; capping related amount",
+				"chain_id", zone.ChainId,
+				"txhash", hash,
+				"validator", ubr.Validator,
+				"related_amount", relatedAmount.String(),
+				"amount", amount.String(),
+			)
+			relatedAmount = amount
+		}
+
 		rr := sdk.NewDecFromInt(wdr.BurnAmount.Amount).Quo(sdk.NewDecFromInt(amount))
 		relatedQAsset := sdk.NewDecFromInt(relatedAmount).Mul(rr).TruncateInt()
+
+		//  cap relatedQAsset at BurnAmount to prevent SubAmount producing negative
+		if relatedQAsset.GT(wdr.BurnAmount.Amount) {
+			relatedQAsset = wdr.BurnAmount.Amount
+		}
 
 		if len(newDistribution) == 0 {
 			// if this was the final record, delete the withdrawal record
@@ -1068,11 +1128,22 @@ func (k *Keeper) HandleFailedUndelegate(ctx sdk.Context, msg sdk.Msg, memo strin
 			wdr.Distribution = newDistribution
 			wdr.Amount = wdr.Amount.Sub(sdk.NewCoin(zone.BaseDenom, relatedAmount))
 			wdr.BurnAmount = wdr.BurnAmount.SubAmount(relatedQAsset)
-			err = k.SetWithdrawalRecord(ctx, wdr)
-			if err != nil {
-				return err
+			// if rounding exhausted BurnAmount, delete rather than saving zero-amount record
+			if !wdr.BurnAmount.IsPositive() {
+				k.Logger(ctx).Info("burn amount exhausted by rounding; deleting withdrawal record", "chain_id", wdr.ChainId, "txhash", wdr.Txhash)
+				k.DeleteWithdrawalRecord(ctx, wdr.ChainId, wdr.Txhash, wdr.Status)
+			} else {
+				err = k.SetWithdrawalRecord(ctx, wdr)
+				if err != nil {
+					return err
+				}
 			}
+		}
 
+		//  skip requeue if relatedQAsset rounded to zero (no value to requeue)
+		if relatedQAsset.IsZero() {
+			k.Logger(ctx).Info("relatedQAsset is zero after rounding; skipping requeue", "chain_id", zone.ChainId, "txhash", wdr.Txhash)
+			continue
 		}
 
 		record := k.GetUserChainRequeuedWithdrawalRecord(ctx, zone.ChainId, wdr.Delegator)
@@ -1097,7 +1168,6 @@ func (k *Keeper) HandleFailedUndelegate(ctx sdk.Context, msg sdk.Msg, memo strin
 			return err
 		}
 	}
-
 	k.DeleteUnbondingRecord(ctx, zone.ChainId, undelegateMsg.ValidatorAddress, epochNumber)
 	k.Logger(ctx).Info("cleaning up unbonding record")
 	return nil

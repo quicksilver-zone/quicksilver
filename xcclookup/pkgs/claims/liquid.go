@@ -19,7 +19,7 @@ import (
 	prewards "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 
 	"github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/logger"
-	"github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/types"
+	"github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/lookup"
 )
 
 type TokenTuple struct {
@@ -27,7 +27,7 @@ type TokenTuple struct {
 	chain string
 }
 
-func GetTokenMap(in []prewards.LiquidAllowedDenomProtocolData, zones []icstypes.Zone, chain, keyPrefix string, ignores types.Ignores) map[string]TokenTuple {
+func GetTokenMap(in []prewards.LiquidAllowedDenomProtocolData, zones []icstypes.Zone, chain, keyPrefix string, ignores lookup.Ignores) map[string]TokenTuple {
 	out := make(map[string]TokenTuple)
 	for _, i := range in {
 		if ignores.Contains(i.QAssetDenom) {
@@ -51,8 +51,8 @@ func ZoneOnboarded(zones []icstypes.Zone, token prewards.LiquidAllowedDenomProto
 
 func LiquidClaim(
 	ctx context.Context,
-	cfg types.Config,
-	cacheMgr *types.CacheManager,
+	cfg lookup.Config,
+	cacheMgr *lookup.CacheManager,
 	address string,
 	submitAddress string,
 	connection prewards.ConnectionProtocolData,
@@ -81,7 +81,7 @@ func LiquidClaim(
 		return nil, nil, nil
 	}
 
-	client, err := types.NewRPCClient(host, time.Duration(cfg.Timeout)*time.Second)
+	client, err := lookup.NewRPCClient(host, time.Duration(cfg.Timeout)*time.Second)
 	if err != nil {
 		return nil, nil, fmt.Errorf("%w [NewRPCClient]", err)
 	}
@@ -113,14 +113,14 @@ func LiquidClaim(
 		return nil, nil, fmt.Errorf("%w [unmarshalling query response]", err)
 	}
 
-	ignores := cfg.Ignore.GetIgnoresForType(types.IgnoreTypeLiquid)
+	ignores := cfg.Ignore.GetIgnoresForType(lookup.IgnoreTypeLiquid)
 
 	// add GetFiltered to CacheManager, to allow filtered lookups on a single field == value
-	laCache, err := types.GetCache[prewards.LiquidAllowedDenomProtocolData](ctx, cacheMgr)
+	laCache, err := lookup.GetCache[prewards.LiquidAllowedDenomProtocolData](ctx, cacheMgr)
 	if err != nil {
 		return nil, nil, err
 	}
-	zoneCache, err := types.GetCache[icstypes.Zone](ctx, cacheMgr)
+	zoneCache, err := lookup.GetCache[icstypes.Zone](ctx, cacheMgr)
 	if err != nil {
 		return nil, nil, err
 	}

@@ -27,6 +27,9 @@ func Upgrades() []Upgrade {
 		// v1.10.0 - Zone Offboarding
 		{UpgradeName: V0101000rc0UpgradeName, CreateUpgradeHandler: V0101000UpgradeHandler},
 		{UpgradeName: V0101000UpgradeName, CreateUpgradeHandler: V0101000UpgradeHandler},
+
+		// v1.10.1 - HandleFailedUndelegate BurnAmount zero guard hotfix
+		{UpgradeName: V0101001UpgradeName, CreateUpgradeHandler: NoOpHandler},
 	}
 }
 

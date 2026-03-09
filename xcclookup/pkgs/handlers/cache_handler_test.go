@@ -12,9 +12,9 @@ import (
 
 	prewards "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 
+	"github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/lookup"
 	"github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/mocks"
 	"github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/services"
-	"github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/types"
 )
 
 func TestCacheHandler_Handle(t *testing.T) {
@@ -122,7 +122,7 @@ func TestNewCacheHandler(t *testing.T) {
 
 func TestGetCacheHandler(t *testing.T) {
 	mockCacheManager := &mocks.MockCacheManager{}
-	cfg := types.Config{}
+	cfg := lookup.Config{}
 
 	handlerFunc := GetCacheHandler(t.Context(), cfg, mockCacheManager)
 

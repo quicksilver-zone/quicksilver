@@ -1,4 +1,4 @@
-FROM golang:1.24.5-alpine3.21 AS builder
+FROM golang:1.24.13-alpine3.23 AS builder
 RUN apk add --no-cache git musl-dev openssl-dev linux-headers ca-certificates build-base
 
 WORKDIR /src/app/
@@ -15,7 +15,7 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
     LINK_STATICALLY=true make build
 
 # Add to a distroless container
-FROM alpine:3.20
+FROM alpine:3.23
 COPY --from=builder /src/app/build/quicksilverd /usr/local/bin/quicksilverd
 RUN adduser -S -h /quicksilver -D quicksilver -u 1000
 USER quicksilver

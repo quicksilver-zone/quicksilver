@@ -19,7 +19,7 @@ import (
 	prewards "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 
 	"github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/logger"
-	"github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/types"
+	"github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/lookup"
 )
 
 // MembranePosition represents a position in the Membrane protocol
@@ -58,8 +58,8 @@ type MembraneNativeToken struct {
 // the allowed liquid tokens for the Osmosis chain
 func MembraneClaim(
 	ctx context.Context,
-	cfg types.Config,
-	cacheMgr *types.CacheManager,
+	cfg lookup.Config,
+	cacheMgr *lookup.CacheManager,
 	address string,
 	submitAddress string,
 	chain string,
@@ -68,22 +68,22 @@ func MembraneClaim(
 	log := logger.FromContext(ctx)
 
 	// Get cached data
-	membraneParamsCache, err := types.GetCache[prewards.MembraneProtocolData](ctx, cacheMgr)
+	membraneParamsCache, err := lookup.GetCache[prewards.MembraneProtocolData](ctx, cacheMgr)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to get membrane params cache: %w", err)
 	}
 
-	osmosisParamsCache, err := types.GetCache[prewards.OsmosisParamsProtocolData](ctx, cacheMgr)
+	osmosisParamsCache, err := lookup.GetCache[prewards.OsmosisParamsProtocolData](ctx, cacheMgr)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to get osmosis params cache: %w", err)
 	}
 
-	liquidAllowedDenomsCache, err := types.GetCache[prewards.LiquidAllowedDenomProtocolData](ctx, cacheMgr)
+	liquidAllowedDenomsCache, err := lookup.GetCache[prewards.LiquidAllowedDenomProtocolData](ctx, cacheMgr)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to get liquid allowed denoms cache: %w", err)
 	}
 
-	zoneCache, err := types.GetCache[icstypes.Zone](ctx, cacheMgr)
+	zoneCache, err := lookup.GetCache[icstypes.Zone](ctx, cacheMgr)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to get zone cache: %w", err)
 	}
@@ -126,7 +126,7 @@ func MembraneClaim(
 	}
 
 	// Create RPC client
-	client, err := types.NewRPCClient(host, time.Duration(cfg.Timeout)*time.Second)
+	client, err := lookup.NewRPCClient(host, time.Duration(cfg.Timeout)*time.Second)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to create RPC client: %w", err)
 	}
