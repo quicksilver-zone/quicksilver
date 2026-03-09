@@ -5546,11 +5546,11 @@ func (suite *KeeperTestSuite) TestHandleFailedUndelegate_MixedDistributionMultiW
 	suite.False(found)
 }
 
-// TestHandleFailedUndelegate_Guard1_RelatedQAssetExceedsBurnAmount tests the defensive
-// Guard 1 which caps relatedQAsset at BurnAmount. This guards against corrupt state where
+// TestHandleFailedUndelegate_Guard3_RelatedQAssetExceedsBurnAmount tests the defensive
+// Guard 3 which caps relatedQAsset at BurnAmount. This guards against corrupt state where
 // distribution amount exceeds total amount, which would cause relatedQAsset to exceed
 // BurnAmount and potentially produce negative values after SubAmount.
-func (suite *KeeperTestSuite) TestHandleFailedUndelegate_Guard1_RelatedQAssetExceedsBurnAmount() {
+func (suite *KeeperTestSuite) TestHandleFailedUndelegate_Guard3_RelatedQAssetExceedsBurnAmount() {
 	suite.SetupTest()
 	suite.setupTestZones()
 

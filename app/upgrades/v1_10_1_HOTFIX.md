@@ -11,7 +11,7 @@ Consensus-breaking hotfix for a bug in `HandleFailedUndelegate` that blocks all 
 - **Store Changes**: None
 - **Consensus Breaking**: Yes — changes ack callback behavior
 
-No state migration is needed because the bug causes full tx revert on every failed ack relay. No partial or corrupted writes exist on-chain. All withdrawal records remain in their original `WithdrawStatusUnbond` state, untouched.
+No state migration is needed because the bug causes full tx revert on every failed ack relay. No partial writes from the failed ack relay path are committed on-chain. All withdrawal records remain in their original `WithdrawStatusUnbond` state, untouched.
 
 ## Root Cause
 
@@ -159,7 +159,7 @@ Tests the edge case where `BurnAmount=1` and `Amount=1,000,000` — the redempti
 
 Validates correct behavior when an unbonding record references two WDRs: one where the validator IS in the distribution (normal requeue at 299,999,999 due to TruncateInt), and one where it is NOT (skip requeue). Confirms both paths work within a single `HandleFailedUndelegate` call.
 
-### TestHandleFailedUndelegate_Guard1_RelatedQAssetExceedsBurnAmount
+### TestHandleFailedUndelegate_Guard3_RelatedQAssetExceedsBurnAmount
 
 Tests Guard 3 (cap relatedQAsset at BurnAmount) with corrupt state where distribution amount exceeds total amount. Verifies that `relatedQAsset` is capped to prevent negative values after `SubAmount`.
 
@@ -179,7 +179,7 @@ All 10 tests pass (4 existing + 1 pre-existing missing-WDR + 5 new):
 --- PASS: TestHandleFailedUndelegate_ValidatorNotInDistribution (0.30s)
 --- PASS: TestHandleFailedUndelegate_TinyBurnAmountTruncatesToZero (0.32s)
 --- PASS: TestHandleFailedUndelegate_MixedDistributionMultiWDR (0.35s)
---- PASS: TestHandleFailedUndelegate_Guard1_RelatedQAssetExceedsBurnAmount (0.30s)
+--- PASS: TestHandleFailedUndelegate_Guard3_RelatedQAssetExceedsBurnAmount (0.30s)
 --- PASS: TestHandleFailedUndelegate_AmountZeroGuard (0.30s)
 ```
 
