@@ -7,23 +7,23 @@ import (
 
 	prewards "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 
-	"github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/types"
+	"github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/lookup"
 )
 
 // MockClaimsService is a mock implementation of ClaimsServiceInterface
 type MockClaimsService struct {
-	OsmosisClaimFunc  func(ctx context.Context, address, submitAddress, chain string, height int64) (types.OsmosisResult, error)
+	OsmosisClaimFunc  func(ctx context.Context, address, submitAddress, chain string, height int64) (lookup.OsmosisResult, error)
 	UmeeClaimFunc     func(ctx context.Context, address, submitAddress, chain string, height int64) (map[string]prewards.MsgSubmitClaim, map[string]sdk.Coins, error)
 	LiquidClaimFunc   func(ctx context.Context, address, submitAddress string, connection prewards.ConnectionProtocolData, height int64) (map[string]prewards.MsgSubmitClaim, map[string]sdk.Coins, error)
 	MembraneClaimFunc func(ctx context.Context, address, submitAddress, chain string, height int64) (map[string]prewards.MsgSubmitClaim, map[string]sdk.Coins, error)
 }
 
 // OsmosisClaim calls the mock function
-func (m *MockClaimsService) OsmosisClaim(ctx context.Context, address, submitAddress, chain string, height int64) (types.OsmosisResult, error) {
+func (m *MockClaimsService) OsmosisClaim(ctx context.Context, address, submitAddress, chain string, height int64) (lookup.OsmosisResult, error) {
 	if m.OsmosisClaimFunc != nil {
 		return m.OsmosisClaimFunc(ctx, address, submitAddress, chain, height)
 	}
-	return types.OsmosisResult{}, nil
+	return lookup.OsmosisResult{}, nil
 }
 
 // UmeeClaim calls the mock function
@@ -51,4 +51,4 @@ func (m *MockClaimsService) MembraneClaim(ctx context.Context, address, submitAd
 }
 
 // Ensure MockClaimsService implements ClaimsServiceInterface
-var _ types.ClaimsServiceInterface = &MockClaimsService{}
+var _ lookup.ClaimsServiceInterface = &MockClaimsService{}

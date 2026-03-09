@@ -1,7 +1,7 @@
 package mocks
 
 import (
-	"github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/types"
+	"github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/lookup"
 )
 
 // MockVersionService is a mock implementation of VersionServiceInterface
@@ -18,4 +18,4 @@ func (m *MockVersionService) GetVersion() ([]byte, error) {
 }
 
 // Ensure MockVersionService implements VersionServiceInterface
-var _ types.VersionServiceInterface = &MockVersionService{}
+var _ lookup.VersionServiceInterface = &MockVersionService{}

@@ -1,4 +1,4 @@
-package types
+package lookup
 
 import (
 	prewards "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"

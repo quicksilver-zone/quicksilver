@@ -13,27 +13,27 @@ import (
 
 	prewards "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 
+	"github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/lookup"
 	"github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/mocks"
 	"github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/services"
-	"github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/types"
 )
 
 func TestAssetsHandler_Handle(t *testing.T) {
 	tests := []struct {
 		name           string
 		address        string
-		mockResponse   *types.Response
+		mockResponse   *lookup.Response
 		mockErrors     map[string]error
 		expectedStatus int
 	}{
 		{
 			name:    "successful assets request",
 			address: "test-address",
-			mockResponse: &types.Response{
+			mockResponse: &lookup.Response{
 				Messages: []prewards.MsgSubmitClaim{
 					{UserAddress: "test-address"},
 				},
-				Assets: map[string][]types.Asset{
+				Assets: map[string][]lookup.Asset{
 					"chain1": {{Type: "token1", Amount: sdk.NewCoins(sdk.NewCoin("token1", sdk.NewInt(100)))}},
 				},
 			},
@@ -43,9 +43,9 @@ func TestAssetsHandler_Handle(t *testing.T) {
 		{
 			name:    "assets request with errors",
 			address: "test-address",
-			mockResponse: &types.Response{
+			mockResponse: &lookup.Response{
 				Messages: []prewards.MsgSubmitClaim{},
-				Assets:   map[string][]types.Asset{},
+				Assets:   map[string][]lookup.Asset{},
 			},
 			mockErrors: map[string]error{
 				"OsmosisClaim": assert.AnError,
@@ -73,12 +73,12 @@ func TestAssetsHandler_Handle(t *testing.T) {
 			mockClaimsService := &mocks.MockClaimsService{}
 
 			// Create assets service
-			cfg := types.Config{}
+			cfg := lookup.Config{}
 			heights := map[string]int64{}
 			assetsService := services.NewAssetsService(cfg, mockCacheManager, mockClaimsService, heights)
 
 			// Create output function
-			outputFunc := func(w http.ResponseWriter, response *types.Response, errors map[string]error) {
+			outputFunc := func(w http.ResponseWriter, response *lookup.Response, errors map[string]error) {
 				// Mock output function
 			}
 
@@ -107,11 +107,11 @@ func TestAssetsHandler_Handle(t *testing.T) {
 func TestNewAssetsHandler(t *testing.T) {
 	mockCacheManager := &mocks.MockCacheManager{}
 	mockClaimsService := &mocks.MockClaimsService{}
-	cfg := types.Config{}
+	cfg := lookup.Config{}
 	heights := map[string]int64{}
 	assetsService := services.NewAssetsService(cfg, mockCacheManager, mockClaimsService, heights)
 
-	outputFunc := func(w http.ResponseWriter, response *types.Response, errors map[string]error) {}
+	outputFunc := func(w http.ResponseWriter, response *lookup.Response, errors map[string]error) {}
 	handler := NewAssetsHandler(assetsService, outputFunc)
 
 	assert.NotNil(t, handler)
@@ -122,9 +122,9 @@ func TestNewAssetsHandler(t *testing.T) {
 func TestGetAssetsHandler(t *testing.T) {
 	mockCacheManager := &mocks.MockCacheManager{}
 	mockClaimsService := &mocks.MockClaimsService{}
-	cfg := types.Config{}
+	cfg := lookup.Config{}
 	heights := map[string]int64{}
-	outputFunc := func(w http.ResponseWriter, response *types.Response, errors map[string]error) {}
+	outputFunc := func(w http.ResponseWriter, response *lookup.Response, errors map[string]error) {}
 
 	handlerFunc := GetAssetsHandler(t.Context(), cfg, mockCacheManager, mockClaimsService, heights, outputFunc)
 

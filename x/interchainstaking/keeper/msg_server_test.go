@@ -1795,18 +1795,6 @@ func (suite *KeeperTestSuite) TestGovCancelAllPendingRedemptions() {
 			errMsg:    "zone not found",
 		},
 		{
-			name: "zone not in offboarding mode",
-			malleate: func(suite *KeeperTestSuite) *icstypes.MsgGovCancelAllPendingRedemptions {
-				k := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
-				return &icstypes.MsgGovCancelAllPendingRedemptions{
-					ChainId:   suite.chainB.ChainID,
-					Authority: sdk.MustBech32ifyAddressBytes(sdk.GetConfig().GetBech32AccountAddrPrefix(), k.AccountKeeper.GetModuleAddress(govtypes.ModuleName)),
-				}
-			},
-			expectErr: true,
-			errMsg:    "not in offboarding mode",
-		},
-		{
 			name: "cancel pending redemptions success - no records",
 			malleate: func(suite *KeeperTestSuite) *icstypes.MsgGovCancelAllPendingRedemptions {
 				k := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper

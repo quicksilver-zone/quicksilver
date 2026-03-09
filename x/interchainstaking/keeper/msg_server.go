@@ -196,11 +196,9 @@ func (k msgServer) UpdateRedemption(goCtx context.Context, msg *types.MsgUpdateR
 	switch msg.NewStatus {
 	case types.WithdrawStatusTokenize: // intentionally removed as not currently supported, but included here for completeness.
 		return nil, errors.New("new status WithdrawStatusTokenize not supported")
-	case types.WithdrawStatusQueued:
-	case types.WithdrawStatusUnbond:
+	case types.WithdrawStatusQueued, types.WithdrawStatusUnbond, types.WithdrawStatusCompleted:
 	case types.WithdrawStatusSend: // send is not a valid state for recovery, included here for completeness.
 		return nil, errors.New("new status WithdrawStatusSend not supported")
-	case types.WithdrawStatusCompleted:
 	default:
 		return nil, errors.New("new status not provided or invalid")
 	}
@@ -603,6 +601,10 @@ func (k msgServer) GovCancelAllPendingRedemptions(goCtx context.Context, msg *ty
 	zone, found := k.GetZone(ctx, msg.ChainId)
 	if !found {
 		return nil, fmt.Errorf("zone not found for chain id: %s", msg.ChainId)
+	}
+
+	if !zone.IsOffboarding {
+		return nil, fmt.Errorf("zone %s is not in offboarding mode", msg.ChainId)
 	}
 
 	var cancelledCount uint64

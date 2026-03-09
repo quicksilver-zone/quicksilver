@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/lookup"
 	"github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/services"
-	"github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/types"
 )
 
 // CacheHandler handles cache-related HTTP requests
@@ -34,8 +34,8 @@ func (h *CacheHandler) Handle(w http.ResponseWriter, r *http.Request) {
 // GetCacheHandler returns a function that creates a cache handler
 func GetCacheHandler(
 	ctx context.Context,
-	_ types.Config,
-	cacheMgr types.CacheManagerInterface,
+	_ lookup.Config,
+	cacheMgr lookup.CacheManagerInterface,
 ) func(http.ResponseWriter, *http.Request) {
 	cacheService := services.NewCacheService(cacheMgr)
 	handler := NewCacheHandler(cacheService)

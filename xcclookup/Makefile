@@ -4,9 +4,9 @@ QSVERSION ?= $(shell grep github.com/quicksilver-zone/quicksilver go.mod | grep 
 COMMIT ?= $(shell git log -1 --format='%H')
 VERSION ?= $(shell git describe --tags --match 'xcclookup/*' | head -n1 | sed 's/.*\///')
 
-ldflags = -X github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/types.VERSION=xcclookup/$(VERSION) \
-          -X github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/types.COMMIT=$(COMMIT) \
-          -X github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/types.QUICKSILVER_VERSION=$(QSVERSION)
+ldflags = -X github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/lookup.VERSION=xcclookup/$(VERSION) \
+          -X github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/lookup.COMMIT=$(COMMIT) \
+          -X github.com/quicksilver-zone/quicksilver/xcclookup/pkgs/lookup.QUICKSILVER_VERSION=$(QSVERSION)
 
 build:
 	go build -ldflags '$(ldflags)'
@@ -23,7 +23,7 @@ docker-push:
 ###############################################################################
 
 lint:
-	@go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint run
+	@go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.11.2 run
 
 lint-fix:
 	@go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint run --fix --issues-exit-code=0
