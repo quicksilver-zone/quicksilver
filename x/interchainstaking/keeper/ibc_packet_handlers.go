@@ -1069,6 +1069,18 @@ func (k *Keeper) HandleFailedUndelegate(ctx sdk.Context, msg sdk.Msg, memo strin
 			k.Logger(ctx).Error("withdrawal record amount is zero; skipping", "chain_id", zone.ChainId, "txhash", hash)
 			continue
 		}
+		if relatedAmount.GT(amount) {
+			k.Logger(ctx).Error(
+				"withdrawal record distribution amount exceeds total amount; capping related amount",
+				"chain_id", zone.ChainId,
+				"txhash", hash,
+				"validator", ubr.Validator,
+				"related_amount", relatedAmount.String(),
+				"amount", amount.String(),
+			)
+			relatedAmount = amount
+		}
+
 		rr := sdk.NewDecFromInt(wdr.BurnAmount.Amount).Quo(sdk.NewDecFromInt(amount))
 		relatedQAsset := sdk.NewDecFromInt(relatedAmount).Mul(rr).TruncateInt()
 
