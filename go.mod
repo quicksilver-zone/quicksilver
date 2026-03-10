@@ -26,7 +26,7 @@ require (
 	github.com/osmosis-labs/osmosis/osmomath v0.0.16
 	github.com/prometheus/client_golang v1.23.0
 	github.com/prometheus/common v0.67.5
-	github.com/rakyll/statik v0.1.7
+	github.com/rakyll/statik v0.1.8
 	github.com/spf13/cast v1.10.0
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/viper v1.21.0
