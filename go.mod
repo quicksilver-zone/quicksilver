@@ -4,7 +4,7 @@ go 1.24.13
 
 require (
 	cosmossdk.io/api v0.3.1
-	cosmossdk.io/errors v1.0.2
+	cosmossdk.io/errors v1.1.0
 	cosmossdk.io/math v1.5.3
 	github.com/armon/go-metrics v0.4.1
 	github.com/celestiaorg/go-square/v2 v2.3.3
