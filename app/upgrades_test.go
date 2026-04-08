@@ -6,23 +6,19 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/suite"
-
 	"cosmossdk.io/math"
-
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
-
 	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
 	ibctesting "github.com/cosmos/ibc-go/v7/testing"
-
 	"github.com/quicksilver-zone/quicksilver/app/upgrades"
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
+	"github.com/stretchr/testify/suite"
 )
 
 func init() {
@@ -612,24 +608,24 @@ func (s *AppTestSuite) TestV0101002UpgradeHandler() {
 
 	// Set up stargaze-1 zone
 	stargazeZone := icstypes.Zone{
-		ConnectionId:    "connection-3",
-		ChainId:         "stargaze-1",
-		AccountPrefix:   "stars",
-		LocalDenom:      "uqstars",
-		BaseDenom:       "ustars",
-		DepositsEnabled: true,
+		ConnectionId:     "connection-3",
+		ChainId:          "stargaze-1",
+		AccountPrefix:    "stars",
+		LocalDenom:       "uqstars",
+		BaseDenom:        "ustars",
+		DepositsEnabled:  true,
 		UnbondingEnabled: true,
 	}
 	app.InterchainstakingKeeper.SetZone(ctx, &stargazeZone)
 
 	// Set up omniflixhub-1 zone
 	omniflixZone := icstypes.Zone{
-		ConnectionId:    "connection-4",
-		ChainId:         "omniflixhub-1",
-		AccountPrefix:   "omniflix",
-		LocalDenom:      "uqflix",
-		BaseDenom:       "uflix",
-		DepositsEnabled: true,
+		ConnectionId:     "connection-4",
+		ChainId:          "omniflixhub-1",
+		AccountPrefix:    "omniflix",
+		LocalDenom:       "uqflix",
+		BaseDenom:        "uflix",
+		DepositsEnabled:  true,
 		UnbondingEnabled: true,
 	}
 	app.InterchainstakingKeeper.SetZone(ctx, &omniflixZone)
@@ -641,36 +637,36 @@ func (s *AppTestSuite) TestV0101002UpgradeHandler() {
 
 	// Create withdrawal records for stargaze-1
 	s.NoError(app.InterchainstakingKeeper.SetWithdrawalRecord(ctx, icstypes.WithdrawalRecord{
-		ChainId:    "stargaze-1",
-		Delegator:  user1,
-		Recipient:  addressutils.GenerateAddressForTestWithPrefix("stars"),
-		BurnAmount: sdk.NewCoin("uqstars", math.NewInt(5000000)),
-		Amount:     sdk.NewCoins(sdk.NewCoin("ustars", math.NewInt(5000000))),
-		Txhash:     fmt.Sprintf("%064d", 100),
-		Status:     icstypes.WithdrawStatusQueued,
+		ChainId:     "stargaze-1",
+		Delegator:   user1,
+		Recipient:   addressutils.GenerateAddressForTestWithPrefix("stars"),
+		BurnAmount:  sdk.NewCoin("uqstars", math.NewInt(5000000)),
+		Amount:      sdk.NewCoins(sdk.NewCoin("ustars", math.NewInt(5000000))),
+		Txhash:      fmt.Sprintf("%064d", 100),
+		Status:      icstypes.WithdrawStatusQueued,
 		EpochNumber: 1,
 	}))
 
 	s.NoError(app.InterchainstakingKeeper.SetWithdrawalRecord(ctx, icstypes.WithdrawalRecord{
-		ChainId:    "stargaze-1",
-		Delegator:  user2,
-		Recipient:  addressutils.GenerateAddressForTestWithPrefix("stars"),
-		BurnAmount: sdk.NewCoin("uqstars", math.NewInt(3000000)),
-		Amount:     sdk.NewCoins(sdk.NewCoin("ustars", math.NewInt(3000000))),
-		Txhash:     fmt.Sprintf("%064d", 101),
-		Status:     icstypes.WithdrawStatusUnbond,
+		ChainId:     "stargaze-1",
+		Delegator:   user2,
+		Recipient:   addressutils.GenerateAddressForTestWithPrefix("stars"),
+		BurnAmount:  sdk.NewCoin("uqstars", math.NewInt(3000000)),
+		Amount:      sdk.NewCoins(sdk.NewCoin("ustars", math.NewInt(3000000))),
+		Txhash:      fmt.Sprintf("%064d", 101),
+		Status:      icstypes.WithdrawStatusUnbond,
 		EpochNumber: 1,
 	}))
 
 	// Create withdrawal record for omniflixhub-1
 	s.NoError(app.InterchainstakingKeeper.SetWithdrawalRecord(ctx, icstypes.WithdrawalRecord{
-		ChainId:    "omniflixhub-1",
-		Delegator:  user3,
-		Recipient:  addressutils.GenerateAddressForTestWithPrefix("omniflix"),
-		BurnAmount: sdk.NewCoin("uqflix", math.NewInt(2000000)),
-		Amount:     sdk.NewCoins(sdk.NewCoin("uflix", math.NewInt(2000000))),
-		Txhash:     fmt.Sprintf("%064d", 102),
-		Status:     icstypes.WithdrawStatusQueued,
+		ChainId:     "omniflixhub-1",
+		Delegator:   user3,
+		Recipient:   addressutils.GenerateAddressForTestWithPrefix("omniflix"),
+		BurnAmount:  sdk.NewCoin("uqflix", math.NewInt(2000000)),
+		Amount:      sdk.NewCoins(sdk.NewCoin("uflix", math.NewInt(2000000))),
+		Txhash:      fmt.Sprintf("%064d", 102),
+		Status:      icstypes.WithdrawStatusQueued,
 		EpochNumber: 1,
 	}))
 
