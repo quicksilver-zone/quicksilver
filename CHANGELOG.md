@@ -2,6 +2,22 @@
 
 ## Unreleased
 
+### v1.10.2
+
+#### Features
+
+- Sunset `stargaze-1` and `omniflixhub-1` zones: lock zones in offboarding mode and cancel all pending redemptions (qAssets refunded from escrow to users) by @ajansari95
+
+#### Bug Fixes
+
+- fix(interchainstaking): add defensive guards to `HandleFailedUndelegate` for zero `BurnAmount` edge cases that blocked ICA delegate channel ack relay on cosmoshub-4, osmosis-1, and sommelier-3 by @ajansari95 in #2026
+
+#### Upgrade Notes
+
+- Upgrade name: `v1.10.2`
+- Handler: `V0101002UpgradeHandler` (sets offboarding + cancels redemptions for stargaze and omniflix)
+- v1.10.1 remains registered as `NoOpHandler` (code-only fix, no state migration)
+
 ## Released
 
 ### v1.10.0

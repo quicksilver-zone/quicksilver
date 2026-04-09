@@ -30,6 +30,9 @@ func Upgrades() []Upgrade {
 
 		// v1.10.1 - HandleFailedUndelegate BurnAmount zero guard hotfix
 		{UpgradeName: V0101001UpgradeName, CreateUpgradeHandler: NoOpHandler},
+
+		// v1.10.2 - Sunset stargaze & omniflix + HandleFailedUndelegate fix
+		{UpgradeName: V0101002UpgradeName, CreateUpgradeHandler: V0101002UpgradeHandler},
 	}
 }
 

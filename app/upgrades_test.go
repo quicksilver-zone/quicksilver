@@ -604,3 +604,124 @@ func (s *AppTestSuite) TestV010800UpgradeHandler() {
 	_, found = app.InterchainstakingKeeper.GetWithdrawalRecord(ctx, "juno-1", "quick194dawsp29zcp4s9r6hdppdak0cy5kf3xqumt9x", 266)
 	s.False(found)
 }
+
+func (s *AppTestSuite) TestV0101002UpgradeHandler() {
+	s.SetupTest()
+	app := s.GetQuicksilverApp(s.chainA)
+	ctx := s.chainA.GetContext()
+
+	// Set up stargaze-1 zone
+	stargazeZone := icstypes.Zone{
+		ConnectionId:     "connection-3",
+		ChainId:          "stargaze-1",
+		AccountPrefix:    "stars",
+		LocalDenom:       "uqstars",
+		BaseDenom:        "ustars",
+		DepositsEnabled:  true,
+		UnbondingEnabled: true,
+	}
+	app.InterchainstakingKeeper.SetZone(ctx, &stargazeZone)
+
+	// Set up omniflixhub-1 zone
+	omniflixZone := icstypes.Zone{
+		ConnectionId:     "connection-4",
+		ChainId:          "omniflixhub-1",
+		AccountPrefix:    "omniflix",
+		LocalDenom:       "uqflix",
+		BaseDenom:        "uflix",
+		DepositsEnabled:  true,
+		UnbondingEnabled: true,
+	}
+	app.InterchainstakingKeeper.SetZone(ctx, &omniflixZone)
+
+	// Create test users
+	user1 := addressutils.GenerateAddressForTestWithPrefix("quick")
+	user2 := addressutils.GenerateAddressForTestWithPrefix("quick")
+	user3 := addressutils.GenerateAddressForTestWithPrefix("quick")
+
+	// Create withdrawal records for stargaze-1
+	s.NoError(app.InterchainstakingKeeper.SetWithdrawalRecord(ctx, icstypes.WithdrawalRecord{
+		ChainId:     "stargaze-1",
+		Delegator:   user1,
+		Recipient:   addressutils.GenerateAddressForTestWithPrefix("stars"),
+		BurnAmount:  sdk.NewCoin("uqstars", math.NewInt(5000000)),
+		Amount:      sdk.NewCoins(sdk.NewCoin("ustars", math.NewInt(5000000))),
+		Txhash:      fmt.Sprintf("%064d", 100),
+		Status:      icstypes.WithdrawStatusQueued,
+		EpochNumber: 1,
+	}))
+
+	s.NoError(app.InterchainstakingKeeper.SetWithdrawalRecord(ctx, icstypes.WithdrawalRecord{
+		ChainId:     "stargaze-1",
+		Delegator:   user2,
+		Recipient:   addressutils.GenerateAddressForTestWithPrefix("stars"),
+		BurnAmount:  sdk.NewCoin("uqstars", math.NewInt(3000000)),
+		Amount:      sdk.NewCoins(sdk.NewCoin("ustars", math.NewInt(3000000))),
+		Txhash:      fmt.Sprintf("%064d", 101),
+		Status:      icstypes.WithdrawStatusUnbond,
+		EpochNumber: 1,
+	}))
+
+	// Create withdrawal record for omniflixhub-1
+	s.NoError(app.InterchainstakingKeeper.SetWithdrawalRecord(ctx, icstypes.WithdrawalRecord{
+		ChainId:     "omniflixhub-1",
+		Delegator:   user3,
+		Recipient:   addressutils.GenerateAddressForTestWithPrefix("omniflix"),
+		BurnAmount:  sdk.NewCoin("uqflix", math.NewInt(2000000)),
+		Amount:      sdk.NewCoins(sdk.NewCoin("uflix", math.NewInt(2000000))),
+		Txhash:      fmt.Sprintf("%064d", 102),
+		Status:      icstypes.WithdrawStatusQueued,
+		EpochNumber: 1,
+	}))
+
+	// Fund escrow with qAssets to refund
+	s.NoError(app.BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(
+		sdk.NewCoin("uqstars", math.NewInt(8000000)),
+		sdk.NewCoin("uqflix", math.NewInt(2000000)),
+	)))
+	s.NoError(app.BankKeeper.SendCoinsFromModuleToModule(ctx, icstypes.ModuleName, icstypes.EscrowModuleAccount, sdk.NewCoins(
+		sdk.NewCoin("uqstars", math.NewInt(8000000)),
+		sdk.NewCoin("uqflix", math.NewInt(2000000)),
+	)))
+
+	// Run the upgrade handler
+	handler := upgrades.V0101002UpgradeHandler(app.mm, app.configurator, &app.AppKeepers)
+	_, err := handler(ctx, types.Plan{}, app.mm.GetVersionMap())
+	s.NoError(err)
+
+	// Verify stargaze-1 is offboarded
+	sz, found := app.InterchainstakingKeeper.GetZone(ctx, "stargaze-1")
+	s.True(found)
+	s.True(sz.IsOffboarding, "stargaze should be offboarding")
+	s.False(sz.DepositsEnabled, "stargaze deposits should be disabled")
+	s.False(sz.UnbondingEnabled, "stargaze unbonding should be disabled")
+
+	// Verify omniflixhub-1 is offboarded
+	oz, found := app.InterchainstakingKeeper.GetZone(ctx, "omniflixhub-1")
+	s.True(found)
+	s.True(oz.IsOffboarding, "omniflix should be offboarding")
+	s.False(oz.DepositsEnabled, "omniflix deposits should be disabled")
+	s.False(oz.UnbondingEnabled, "omniflix unbonding should be disabled")
+
+	// Verify all stargaze withdrawal records are deleted
+	stargazeRecords := app.InterchainstakingKeeper.AllZoneWithdrawalRecords(ctx, "stargaze-1")
+	s.Equal(0, len(stargazeRecords), "all stargaze withdrawal records should be deleted")
+
+	// Verify all omniflix withdrawal records are deleted
+	omniflixRecords := app.InterchainstakingKeeper.AllZoneWithdrawalRecords(ctx, "omniflixhub-1")
+	s.Equal(0, len(omniflixRecords), "all omniflix withdrawal records should be deleted")
+
+	// Verify users received refunds
+	user1Addr := addressutils.MustAccAddressFromBech32(user1, "")
+	user2Addr := addressutils.MustAccAddressFromBech32(user2, "")
+	user3Addr := addressutils.MustAccAddressFromBech32(user3, "")
+
+	s.Equal(math.NewInt(5000000), app.BankKeeper.GetBalance(ctx, user1Addr, "uqstars").Amount, "user1 should be refunded uqstars")
+	s.Equal(math.NewInt(3000000), app.BankKeeper.GetBalance(ctx, user2Addr, "uqstars").Amount, "user2 should be refunded uqstars")
+	s.Equal(math.NewInt(2000000), app.BankKeeper.GetBalance(ctx, user3Addr, "uqflix").Amount, "user3 should be refunded uqflix")
+
+	// Verify escrow is drained for these denoms
+	escrowAddr := app.AccountKeeper.GetModuleAddress(icstypes.EscrowModuleAccount)
+	s.True(app.BankKeeper.GetBalance(ctx, escrowAddr, "uqstars").IsZero(), "escrow uqstars should be zero")
+	s.True(app.BankKeeper.GetBalance(ctx, escrowAddr, "uqflix").IsZero(), "escrow uqflix should be zero")
+}
