@@ -725,3 +725,248 @@ func (s *AppTestSuite) TestV0101002UpgradeHandler() {
 	s.True(app.BankKeeper.GetBalance(ctx, escrowAddr, "uqstars").IsZero(), "escrow uqstars should be zero")
 	s.True(app.BankKeeper.GetBalance(ctx, escrowAddr, "uqflix").IsZero(), "escrow uqflix should be zero")
 }
+
+// --- v1.10.3 sunset tests (clamp-ASC strategy) ---
+
+// setupV0101003Zones writes stargaze-1 and omniflixhub-1 zones and returns three
+// test user bech32 addresses.
+func (s *AppTestSuite) setupV0101003Zones(ctx sdk.Context, app *Quicksilver) (string, string, string) {
+	app.InterchainstakingKeeper.SetZone(ctx, &icstypes.Zone{
+		ConnectionId:     "connection-3",
+		ChainId:          "stargaze-1",
+		AccountPrefix:    "stars",
+		LocalDenom:       "uqstars",
+		BaseDenom:        "ustars",
+		DepositsEnabled:  true,
+		UnbondingEnabled: true,
+	})
+	app.InterchainstakingKeeper.SetZone(ctx, &icstypes.Zone{
+		ConnectionId:     "connection-4",
+		ChainId:          "omniflixhub-1",
+		AccountPrefix:    "omniflix",
+		LocalDenom:       "uqflix",
+		BaseDenom:        "uflix",
+		DepositsEnabled:  true,
+		UnbondingEnabled: true,
+	})
+	return addressutils.GenerateAddressForTestWithPrefix("quick"),
+		addressutils.GenerateAddressForTestWithPrefix("quick"),
+		addressutils.GenerateAddressForTestWithPrefix("quick")
+}
+
+func (s *AppTestSuite) seedWDR(ctx sdk.Context, app *Quicksilver, chainID, delegator, denom, baseDenom string, burn int64, status int32, tx int) {
+	s.NoError(app.InterchainstakingKeeper.SetWithdrawalRecord(ctx, icstypes.WithdrawalRecord{
+		ChainId:     chainID,
+		Delegator:   delegator,
+		Recipient:   addressutils.GenerateAddressForTestWithPrefix("stars"),
+		BurnAmount:  sdk.NewCoin(denom, math.NewInt(burn)),
+		Amount:      sdk.NewCoins(sdk.NewCoin(baseDenom, math.NewInt(burn))),
+		Txhash:      fmt.Sprintf("%064d", tx),
+		Status:      status,
+		EpochNumber: 1,
+	}))
+}
+
+func (s *AppTestSuite) fundEscrow(ctx sdk.Context, app *Quicksilver, coins sdk.Coins) {
+	s.NoError(app.BankKeeper.MintCoins(ctx, icstypes.ModuleName, coins))
+	s.NoError(app.BankKeeper.SendCoinsFromModuleToModule(ctx, icstypes.ModuleName, icstypes.EscrowModuleAccount, coins))
+}
+
+// Sufficient: escrow >= total obligation → every record refunded, zero skipped,
+// zero supply change.
+func (s *AppTestSuite) TestV0101003UpgradeHandler_Clamp_AllRefunded() {
+	s.SetupTest()
+	app := s.GetQuicksilverApp(s.chainA)
+	ctx := s.chainA.GetContext()
+
+	u1, u2, u3 := s.setupV0101003Zones(ctx, app)
+
+	s.seedWDR(ctx, app, "stargaze-1", u1, "uqstars", "ustars", 5_000_000, icstypes.WithdrawStatusQueued, 100)
+	s.seedWDR(ctx, app, "stargaze-1", u2, "uqstars", "ustars", 3_000_000, icstypes.WithdrawStatusUnbond, 101)
+	s.seedWDR(ctx, app, "omniflixhub-1", u3, "uqflix", "uflix", 2_000_000, icstypes.WithdrawStatusQueued, 102)
+
+	s.fundEscrow(ctx, app, sdk.NewCoins(
+		sdk.NewCoin("uqstars", math.NewInt(8_000_000)),
+		sdk.NewCoin("uqflix", math.NewInt(2_000_000)),
+	))
+
+	supplyQStarsBefore := app.BankKeeper.GetSupply(ctx, "uqstars").Amount
+	supplyQFlixBefore := app.BankKeeper.GetSupply(ctx, "uqflix").Amount
+
+	handler := upgrades.V0101003UpgradeHandler(app.mm, app.configurator, &app.AppKeepers)
+	_, err := handler(ctx, types.Plan{}, app.mm.GetVersionMap())
+	s.NoError(err)
+
+	// Zero supply change — clamp strategy never mints.
+	s.Equal(supplyQStarsBefore, app.BankKeeper.GetSupply(ctx, "uqstars").Amount)
+	s.Equal(supplyQFlixBefore, app.BankKeeper.GetSupply(ctx, "uqflix").Amount)
+
+	s.Equal(0, len(app.InterchainstakingKeeper.AllZoneWithdrawalRecords(ctx, "stargaze-1")))
+	s.Equal(0, len(app.InterchainstakingKeeper.AllZoneWithdrawalRecords(ctx, "omniflixhub-1")))
+
+	s.Equal(math.NewInt(5_000_000), app.BankKeeper.GetBalance(ctx, addressutils.MustAccAddressFromBech32(u1, ""), "uqstars").Amount)
+	s.Equal(math.NewInt(3_000_000), app.BankKeeper.GetBalance(ctx, addressutils.MustAccAddressFromBech32(u2, ""), "uqstars").Amount)
+	s.Equal(math.NewInt(2_000_000), app.BankKeeper.GetBalance(ctx, addressutils.MustAccAddressFromBech32(u3, ""), "uqflix").Amount)
+}
+
+// Shortfall: escrow < total obligation → smallest records refunded first, the
+// boundary/larger records skipped and left in state.
+func (s *AppTestSuite) TestV0101003UpgradeHandler_Clamp_AscShortfall() {
+	s.SetupTest()
+	app := s.GetQuicksilverApp(s.chainA)
+	ctx := s.chainA.GetContext()
+
+	u1, u2, u3 := s.setupV0101003Zones(ctx, app)
+	// Intentionally seed in non-sorted txhash order to prove ASC sort works.
+	s.seedWDR(ctx, app, "stargaze-1", u1, "uqstars", "ustars", 7_000_000, icstypes.WithdrawStatusUnbond, 300) // pathological
+	s.seedWDR(ctx, app, "stargaze-1", u2, "uqstars", "ustars", 1_000_000, icstypes.WithdrawStatusQueued, 301) // smallest
+	s.seedWDR(ctx, app, "stargaze-1", u3, "uqstars", "ustars", 2_000_000, icstypes.WithdrawStatusUnbond, 302) // medium
+
+	// Escrow = 5,000,000; obligation = 10,000,000. Clamp must refund 1M and 2M
+	// (total 3M), skip the 7M record.
+	s.fundEscrow(ctx, app, sdk.NewCoins(sdk.NewCoin("uqstars", math.NewInt(5_000_000))))
+
+	supplyBefore := app.BankKeeper.GetSupply(ctx, "uqstars").Amount
+
+	handler := upgrades.V0101003UpgradeHandler(app.mm, app.configurator, &app.AppKeepers)
+	_, err := handler(ctx, types.Plan{}, app.mm.GetVersionMap())
+	s.NoError(err, "clamp must not panic on insufficient funds")
+
+	// Zone offboarded regardless.
+	sz, ok := app.InterchainstakingKeeper.GetZone(ctx, "stargaze-1")
+	s.True(ok)
+	s.True(sz.IsOffboarding)
+
+	// Never mints.
+	s.Equal(supplyBefore, app.BankKeeper.GetSupply(ctx, "uqstars").Amount)
+
+	// u2 (1M) and u3 (2M) refunded; u1 (7M) skipped.
+	s.Equal(math.NewInt(1_000_000), app.BankKeeper.GetBalance(ctx, addressutils.MustAccAddressFromBech32(u2, ""), "uqstars").Amount)
+	s.Equal(math.NewInt(2_000_000), app.BankKeeper.GetBalance(ctx, addressutils.MustAccAddressFromBech32(u3, ""), "uqstars").Amount)
+	s.True(app.BankKeeper.GetBalance(ctx, addressutils.MustAccAddressFromBech32(u1, ""), "uqstars").IsZero(), "pathological record must not be partially refunded")
+
+	// Escrow keeps the 2M residual (5M − 1M − 2M) for follow-up reconciliation.
+	escrowAddr := app.AccountKeeper.GetModuleAddress(icstypes.EscrowModuleAccount)
+	s.Equal(math.NewInt(2_000_000), app.BankKeeper.GetBalance(ctx, escrowAddr, "uqstars").Amount)
+
+	// The skipped record is still in state under its original status so it can
+	// be handled by follow-up governance.
+	remaining := app.InterchainstakingKeeper.AllZoneWithdrawalRecords(ctx, "stargaze-1")
+	s.Equal(1, len(remaining))
+	s.Equal(u1, remaining[0].Delegator)
+	s.Equal(math.NewInt(7_000_000), remaining[0].BurnAmount.Amount)
+	s.Equal(icstypes.WithdrawStatusUnbond, remaining[0].Status)
+}
+
+// Skip mid-sequence: clamp stops at the first record it cannot afford, but then
+// continues to consider later (still-ascending) records that happen to be
+// individually affordable. Verifies that the loop keeps iterating past a skip.
+func (s *AppTestSuite) TestV0101003UpgradeHandler_Clamp_SkipThenContinue() {
+	s.SetupTest()
+	app := s.GetQuicksilverApp(s.chainA)
+	ctx := s.chainA.GetContext()
+
+	u1, u2, u3 := s.setupV0101003Zones(ctx, app)
+	// u1=1M, u2=10M, u3=2M. Escrow=4M. After u1 (remaining 3M), u2 is skipped
+	// (10M > 3M), u3 is still paid (2M ≤ 3M, remaining 1M).
+	s.seedWDR(ctx, app, "stargaze-1", u1, "uqstars", "ustars", 1_000_000, icstypes.WithdrawStatusQueued, 400)
+	s.seedWDR(ctx, app, "stargaze-1", u2, "uqstars", "ustars", 10_000_000, icstypes.WithdrawStatusQueued, 401)
+	s.seedWDR(ctx, app, "stargaze-1", u3, "uqstars", "ustars", 2_000_000, icstypes.WithdrawStatusUnbond, 402)
+
+	s.fundEscrow(ctx, app, sdk.NewCoins(sdk.NewCoin("uqstars", math.NewInt(4_000_000))))
+
+	handler := upgrades.V0101003UpgradeHandler(app.mm, app.configurator, &app.AppKeepers)
+	_, err := handler(ctx, types.Plan{}, app.mm.GetVersionMap())
+	s.NoError(err)
+
+	// u1 and u3 refunded, u2 left in place.
+	s.Equal(math.NewInt(1_000_000), app.BankKeeper.GetBalance(ctx, addressutils.MustAccAddressFromBech32(u1, ""), "uqstars").Amount)
+	s.Equal(math.NewInt(2_000_000), app.BankKeeper.GetBalance(ctx, addressutils.MustAccAddressFromBech32(u3, ""), "uqstars").Amount)
+	s.True(app.BankKeeper.GetBalance(ctx, addressutils.MustAccAddressFromBech32(u2, ""), "uqstars").IsZero())
+
+	remaining := app.InterchainstakingKeeper.AllZoneWithdrawalRecords(ctx, "stargaze-1")
+	s.Equal(1, len(remaining))
+	s.Equal(u2, remaining[0].Delegator)
+
+	escrowAddr := app.AccountKeeper.GetModuleAddress(icstypes.EscrowModuleAccount)
+	s.Equal(math.NewInt(1_000_000), app.BankKeeper.GetBalance(ctx, escrowAddr, "uqstars").Amount)
+}
+
+// Zero escrow: every record is skipped cleanly, no panic, zone offboarded.
+func (s *AppTestSuite) TestV0101003UpgradeHandler_Clamp_ZeroEscrow() {
+	s.SetupTest()
+	app := s.GetQuicksilverApp(s.chainA)
+	ctx := s.chainA.GetContext()
+
+	u1, _, _ := s.setupV0101003Zones(ctx, app)
+	s.seedWDR(ctx, app, "stargaze-1", u1, "uqstars", "ustars", 5_000_000, icstypes.WithdrawStatusQueued, 500)
+
+	handler := upgrades.V0101003UpgradeHandler(app.mm, app.configurator, &app.AppKeepers)
+	_, err := handler(ctx, types.Plan{}, app.mm.GetVersionMap())
+	s.NoError(err)
+
+	sz, ok := app.InterchainstakingKeeper.GetZone(ctx, "stargaze-1")
+	s.True(ok)
+	s.True(sz.IsOffboarding)
+
+	s.True(app.BankKeeper.GetBalance(ctx, addressutils.MustAccAddressFromBech32(u1, ""), "uqstars").IsZero())
+	s.Equal(1, len(app.InterchainstakingKeeper.AllZoneWithdrawalRecords(ctx, "stargaze-1")))
+}
+
+// No records: zone still offboarded, nothing refunded.
+func (s *AppTestSuite) TestV0101003UpgradeHandler_Clamp_NoRecords() {
+	s.SetupTest()
+	app := s.GetQuicksilverApp(s.chainA)
+	ctx := s.chainA.GetContext()
+
+	s.setupV0101003Zones(ctx, app)
+
+	handler := upgrades.V0101003UpgradeHandler(app.mm, app.configurator, &app.AppKeepers)
+	_, err := handler(ctx, types.Plan{}, app.mm.GetVersionMap())
+	s.NoError(err)
+
+	sz, ok := app.InterchainstakingKeeper.GetZone(ctx, "stargaze-1")
+	s.True(ok)
+	s.True(sz.IsOffboarding)
+}
+
+// Malformed BurnAmount: a legacy WDR with zero BurnAmount must be skipped
+// (not panic) and must remain in state for manual follow-up.
+func (s *AppTestSuite) TestV0101003UpgradeHandler_Clamp_SkipsMalformedWDR() {
+	s.SetupTest()
+	app := s.GetQuicksilverApp(s.chainA)
+	ctx := s.chainA.GetContext()
+
+	u1, u2, _ := s.setupV0101003Zones(ctx, app)
+
+	// Valid record first.
+	s.seedWDR(ctx, app, "stargaze-1", u1, "uqstars", "ustars", 2_000_000, icstypes.WithdrawStatusQueued, 600)
+
+	// Bypass validation to inject a malformed (zero BurnAmount) record.
+	s.UncheckedSetWithdrawalRecord(ctx, app, icstypes.WithdrawalRecord{
+		ChainId:     "stargaze-1",
+		Delegator:   u2,
+		Recipient:   addressutils.GenerateAddressForTestWithPrefix("stars"),
+		BurnAmount:  sdk.Coin{Denom: "uqstars", Amount: math.ZeroInt()},
+		Amount:      sdk.NewCoins(sdk.NewCoin("ustars", math.NewInt(0))),
+		Txhash:      fmt.Sprintf("%064d", 601),
+		Status:      icstypes.WithdrawStatusUnbond,
+		EpochNumber: 1,
+	})
+
+	s.fundEscrow(ctx, app, sdk.NewCoins(sdk.NewCoin("uqstars", math.NewInt(2_000_000))))
+
+	handler := upgrades.V0101003UpgradeHandler(app.mm, app.configurator, &app.AppKeepers)
+	s.NotPanics(func() {
+		_, err := handler(ctx, types.Plan{}, app.mm.GetVersionMap())
+		s.NoError(err)
+	})
+
+	// Valid record refunded.
+	s.Equal(math.NewInt(2_000_000), app.BankKeeper.GetBalance(ctx, addressutils.MustAccAddressFromBech32(u1, ""), "uqstars").Amount)
+	// Malformed record left in place under its original status.
+	remaining := app.InterchainstakingKeeper.AllZoneWithdrawalRecords(ctx, "stargaze-1")
+	s.Equal(1, len(remaining))
+	s.Equal(u2, remaining[0].Delegator)
+	s.True(remaining[0].BurnAmount.Amount.IsZero())
+}

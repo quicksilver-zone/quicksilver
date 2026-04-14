@@ -33,6 +33,9 @@ func Upgrades() []Upgrade {
 
 		// v1.10.2 - Sunset stargaze & omniflix + HandleFailedUndelegate fix
 		{UpgradeName: V0101002UpgradeName, CreateUpgradeHandler: V0101002UpgradeHandler},
+
+		// v1.10.3 - Zone sunset (re-attempt of failed v1.10.2) with clamp-ASC refund
+		{UpgradeName: V0101003UpgradeName, CreateUpgradeHandler: V0101003UpgradeHandler},
 	}
 }
 
