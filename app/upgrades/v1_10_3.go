@@ -65,6 +65,21 @@ func sunsetZoneMintToCover(ctx sdk.Context, appKeepers *keepers.AppKeepers, chai
 	totalObligation := math.ZeroInt()
 
 	collect := func(_ int64, record icstypes.WithdrawalRecord) bool {
+		// Defensive: legacy WDRs pre-v1.10.1 guards could have malformed BurnAmount
+		// (empty denom, zero, or negative). sdk.NewCoins panics on those, so drop
+		// them from the refund set. Excluding them here also prevents the mint
+		// branch from over-minting against obligations we can't actually honor.
+		// Malformed records remain in state under their original status for
+		// manual follow-up.
+		if !record.BurnAmount.IsValid() || record.BurnAmount.IsZero() {
+			ctx.Logger().Error("malformed BurnAmount on WDR; skipping refund",
+				"chain_id", chainID,
+				"txhash", record.Txhash,
+				"delegator", record.Delegator,
+				"burn_amount", record.BurnAmount.String(),
+			)
+			return false
+		}
 		records = append(records, record)
 		totalObligation = totalObligation.Add(record.BurnAmount.Amount)
 		return false
