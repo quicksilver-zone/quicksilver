@@ -62,6 +62,19 @@ func sunsetZoneClampASC(ctx sdk.Context, appKeepers *keepers.AppKeepers, chainID
 
 	var records []icstypes.WithdrawalRecord
 	collect := func(_ int64, r icstypes.WithdrawalRecord) bool {
+		// Defensive: legacy WDRs pre-v1.10.1 guards could have malformed BurnAmount
+		// (empty denom, zero, or negative). sdk.NewCoins panics on those, so drop
+		// them here. They remain in state under their original status for manual
+		// follow-up.
+		if !r.BurnAmount.IsValid() || r.BurnAmount.IsZero() {
+			ctx.Logger().Error("malformed BurnAmount on WDR; skipping refund",
+				"chain_id", chainID,
+				"txhash", r.Txhash,
+				"delegator", r.Delegator,
+				"burn_amount", r.BurnAmount.String(),
+			)
+			return false
+		}
 		records = append(records, r)
 		return false
 	}
