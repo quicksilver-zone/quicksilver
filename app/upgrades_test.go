@@ -605,13 +605,12 @@ func (s *AppTestSuite) TestV010800UpgradeHandler() {
 	s.False(found)
 }
 
-func (s *AppTestSuite) TestV0101002UpgradeHandler() {
-	s.SetupTest()
-	app := s.GetQuicksilverApp(s.chainA)
-	ctx := s.chainA.GetContext()
+// --- v1.10.2 sunset tests (mint-to-cover strategy) ---
 
-	// Set up stargaze-1 zone
-	stargazeZone := icstypes.Zone{
+// setupV0101002Zones writes stargaze-1 and omniflixhub-1 zones and returns three
+// test user bech32 addresses (2 for stargaze, 1 for omniflix).
+func (s *AppTestSuite) setupV0101002Zones(ctx sdk.Context, app *Quicksilver) (string, string, string) {
+	app.InterchainstakingKeeper.SetZone(ctx, &icstypes.Zone{
 		ConnectionId:     "connection-3",
 		ChainId:          "stargaze-1",
 		AccountPrefix:    "stars",
@@ -619,11 +618,8 @@ func (s *AppTestSuite) TestV0101002UpgradeHandler() {
 		BaseDenom:        "ustars",
 		DepositsEnabled:  true,
 		UnbondingEnabled: true,
-	}
-	app.InterchainstakingKeeper.SetZone(ctx, &stargazeZone)
-
-	// Set up omniflixhub-1 zone
-	omniflixZone := icstypes.Zone{
+	})
+	app.InterchainstakingKeeper.SetZone(ctx, &icstypes.Zone{
 		ConnectionId:     "connection-4",
 		ChainId:          "omniflixhub-1",
 		AccountPrefix:    "omniflix",
@@ -631,97 +627,209 @@ func (s *AppTestSuite) TestV0101002UpgradeHandler() {
 		BaseDenom:        "uflix",
 		DepositsEnabled:  true,
 		UnbondingEnabled: true,
-	}
-	app.InterchainstakingKeeper.SetZone(ctx, &omniflixZone)
+	})
+	return addressutils.GenerateAddressForTestWithPrefix("quick"),
+		addressutils.GenerateAddressForTestWithPrefix("quick"),
+		addressutils.GenerateAddressForTestWithPrefix("quick")
+}
 
-	// Create test users
-	user1 := addressutils.GenerateAddressForTestWithPrefix("quick")
-	user2 := addressutils.GenerateAddressForTestWithPrefix("quick")
-	user3 := addressutils.GenerateAddressForTestWithPrefix("quick")
-
-	// Create withdrawal records for stargaze-1
+func (s *AppTestSuite) seedWDR(ctx sdk.Context, app *Quicksilver, chainID, delegator, denom, baseDenom string, burn int64, status int32, tx int) {
 	s.NoError(app.InterchainstakingKeeper.SetWithdrawalRecord(ctx, icstypes.WithdrawalRecord{
-		ChainId:     "stargaze-1",
-		Delegator:   user1,
+		ChainId:     chainID,
+		Delegator:   delegator,
 		Recipient:   addressutils.GenerateAddressForTestWithPrefix("stars"),
-		BurnAmount:  sdk.NewCoin("uqstars", math.NewInt(5000000)),
-		Amount:      sdk.NewCoins(sdk.NewCoin("ustars", math.NewInt(5000000))),
-		Txhash:      fmt.Sprintf("%064d", 100),
-		Status:      icstypes.WithdrawStatusQueued,
+		BurnAmount:  sdk.NewCoin(denom, math.NewInt(burn)),
+		Amount:      sdk.NewCoins(sdk.NewCoin(baseDenom, math.NewInt(burn))),
+		Txhash:      fmt.Sprintf("%064d", tx),
+		Status:      status,
 		EpochNumber: 1,
 	}))
+}
 
-	s.NoError(app.InterchainstakingKeeper.SetWithdrawalRecord(ctx, icstypes.WithdrawalRecord{
-		ChainId:     "stargaze-1",
-		Delegator:   user2,
-		Recipient:   addressutils.GenerateAddressForTestWithPrefix("stars"),
-		BurnAmount:  sdk.NewCoin("uqstars", math.NewInt(3000000)),
-		Amount:      sdk.NewCoins(sdk.NewCoin("ustars", math.NewInt(3000000))),
-		Txhash:      fmt.Sprintf("%064d", 101),
-		Status:      icstypes.WithdrawStatusUnbond,
-		EpochNumber: 1,
-	}))
+func (s *AppTestSuite) fundEscrow(ctx sdk.Context, app *Quicksilver, coins sdk.Coins) {
+	s.NoError(app.BankKeeper.MintCoins(ctx, icstypes.ModuleName, coins))
+	s.NoError(app.BankKeeper.SendCoinsFromModuleToModule(ctx, icstypes.ModuleName, icstypes.EscrowModuleAccount, coins))
+}
 
-	// Create withdrawal record for omniflixhub-1
-	s.NoError(app.InterchainstakingKeeper.SetWithdrawalRecord(ctx, icstypes.WithdrawalRecord{
-		ChainId:     "omniflixhub-1",
-		Delegator:   user3,
-		Recipient:   addressutils.GenerateAddressForTestWithPrefix("omniflix"),
-		BurnAmount:  sdk.NewCoin("uqflix", math.NewInt(2000000)),
-		Amount:      sdk.NewCoins(sdk.NewCoin("uflix", math.NewInt(2000000))),
-		Txhash:      fmt.Sprintf("%064d", 102),
-		Status:      icstypes.WithdrawStatusQueued,
-		EpochNumber: 1,
-	}))
+// Shortfall: escrow < sum(burn_amount). Mint-to-cover must mint the delta and
+// refund every user in full.
+func (s *AppTestSuite) TestV0101002UpgradeHandler_MintToCover_Shortfall() {
+	s.SetupTest()
+	app := s.GetQuicksilverApp(s.chainA)
+	ctx := s.chainA.GetContext()
 
-	// Fund escrow with qAssets to refund
-	s.NoError(app.BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(
-		sdk.NewCoin("uqstars", math.NewInt(8000000)),
-		sdk.NewCoin("uqflix", math.NewInt(2000000)),
-	)))
-	s.NoError(app.BankKeeper.SendCoinsFromModuleToModule(ctx, icstypes.ModuleName, icstypes.EscrowModuleAccount, sdk.NewCoins(
-		sdk.NewCoin("uqstars", math.NewInt(8000000)),
-		sdk.NewCoin("uqflix", math.NewInt(2000000)),
-	)))
+	u1, u2, u3 := s.setupV0101002Zones(ctx, app)
 
-	// Run the upgrade handler
+	// stargaze obligation: 5,000,000 + 3,000,000 = 8,000,000 uqstars
+	s.seedWDR(ctx, app, "stargaze-1", u1, "uqstars", "ustars", 5_000_000, icstypes.WithdrawStatusQueued, 100)
+	s.seedWDR(ctx, app, "stargaze-1", u2, "uqstars", "ustars", 3_000_000, icstypes.WithdrawStatusUnbond, 101)
+	// omniflix obligation: 2,000,000 uqflix
+	s.seedWDR(ctx, app, "omniflixhub-1", u3, "uqflix", "uflix", 2_000_000, icstypes.WithdrawStatusQueued, 102)
+
+	// Escrow is short: stargaze has only 6,000,000 vs 8,000,000 needed (2M short);
+	// omniflix has only 500,000 vs 2,000,000 needed (1.5M short).
+	s.fundEscrow(ctx, app, sdk.NewCoins(
+		sdk.NewCoin("uqstars", math.NewInt(6_000_000)),
+		sdk.NewCoin("uqflix", math.NewInt(500_000)),
+	))
+
+	stargazeSupplyBefore := app.BankKeeper.GetSupply(ctx, "uqstars").Amount
+	omniflixSupplyBefore := app.BankKeeper.GetSupply(ctx, "uqflix").Amount
+
 	handler := upgrades.V0101002UpgradeHandler(app.mm, app.configurator, &app.AppKeepers)
 	_, err := handler(ctx, types.Plan{}, app.mm.GetVersionMap())
 	s.NoError(err)
 
-	// Verify stargaze-1 is offboarded
-	sz, found := app.InterchainstakingKeeper.GetZone(ctx, "stargaze-1")
-	s.True(found)
-	s.True(sz.IsOffboarding, "stargaze should be offboarding")
-	s.False(sz.DepositsEnabled, "stargaze deposits should be disabled")
-	s.False(sz.UnbondingEnabled, "stargaze unbonding should be disabled")
+	// Zones offboarded.
+	sz, ok := app.InterchainstakingKeeper.GetZone(ctx, "stargaze-1")
+	s.True(ok)
+	s.True(sz.IsOffboarding)
+	s.False(sz.DepositsEnabled)
+	s.False(sz.UnbondingEnabled)
+	oz, ok := app.InterchainstakingKeeper.GetZone(ctx, "omniflixhub-1")
+	s.True(ok)
+	s.True(oz.IsOffboarding)
 
-	// Verify omniflixhub-1 is offboarded
-	oz, found := app.InterchainstakingKeeper.GetZone(ctx, "omniflixhub-1")
-	s.True(found)
-	s.True(oz.IsOffboarding, "omniflix should be offboarding")
-	s.False(oz.DepositsEnabled, "omniflix deposits should be disabled")
-	s.False(oz.UnbondingEnabled, "omniflix unbonding should be disabled")
+	// Records consumed.
+	s.Equal(0, len(app.InterchainstakingKeeper.AllZoneWithdrawalRecords(ctx, "stargaze-1")))
+	s.Equal(0, len(app.InterchainstakingKeeper.AllZoneWithdrawalRecords(ctx, "omniflixhub-1")))
 
-	// Verify all stargaze withdrawal records are deleted
-	stargazeRecords := app.InterchainstakingKeeper.AllZoneWithdrawalRecords(ctx, "stargaze-1")
-	s.Equal(0, len(stargazeRecords), "all stargaze withdrawal records should be deleted")
+	// Users refunded their full BurnAmount.
+	s.Equal(math.NewInt(5_000_000), app.BankKeeper.GetBalance(ctx, addressutils.MustAccAddressFromBech32(u1, ""), "uqstars").Amount)
+	s.Equal(math.NewInt(3_000_000), app.BankKeeper.GetBalance(ctx, addressutils.MustAccAddressFromBech32(u2, ""), "uqstars").Amount)
+	s.Equal(math.NewInt(2_000_000), app.BankKeeper.GetBalance(ctx, addressutils.MustAccAddressFromBech32(u3, ""), "uqflix").Amount)
 
-	// Verify all omniflix withdrawal records are deleted
-	omniflixRecords := app.InterchainstakingKeeper.AllZoneWithdrawalRecords(ctx, "omniflixhub-1")
-	s.Equal(0, len(omniflixRecords), "all omniflix withdrawal records should be deleted")
-
-	// Verify users received refunds
-	user1Addr := addressutils.MustAccAddressFromBech32(user1, "")
-	user2Addr := addressutils.MustAccAddressFromBech32(user2, "")
-	user3Addr := addressutils.MustAccAddressFromBech32(user3, "")
-
-	s.Equal(math.NewInt(5000000), app.BankKeeper.GetBalance(ctx, user1Addr, "uqstars").Amount, "user1 should be refunded uqstars")
-	s.Equal(math.NewInt(3000000), app.BankKeeper.GetBalance(ctx, user2Addr, "uqstars").Amount, "user2 should be refunded uqstars")
-	s.Equal(math.NewInt(2000000), app.BankKeeper.GetBalance(ctx, user3Addr, "uqflix").Amount, "user3 should be refunded uqflix")
-
-	// Verify escrow is drained for these denoms
+	// Escrow drained for both denoms.
 	escrowAddr := app.AccountKeeper.GetModuleAddress(icstypes.EscrowModuleAccount)
-	s.True(app.BankKeeper.GetBalance(ctx, escrowAddr, "uqstars").IsZero(), "escrow uqstars should be zero")
-	s.True(app.BankKeeper.GetBalance(ctx, escrowAddr, "uqflix").IsZero(), "escrow uqflix should be zero")
+	s.True(app.BankKeeper.GetBalance(ctx, escrowAddr, "uqstars").IsZero())
+	s.True(app.BankKeeper.GetBalance(ctx, escrowAddr, "uqflix").IsZero())
+
+	// Supply increased by exactly the shortfall (2M uqstars, 1.5M uqflix).
+	s.Equal(stargazeSupplyBefore.Add(math.NewInt(2_000_000)), app.BankKeeper.GetSupply(ctx, "uqstars").Amount)
+	s.Equal(omniflixSupplyBefore.Add(math.NewInt(1_500_000)), app.BankKeeper.GetSupply(ctx, "uqflix").Amount)
+}
+
+// Exact: escrow == sum(burn_amount). No mint, no leftover.
+func (s *AppTestSuite) TestV0101002UpgradeHandler_MintToCover_Exact() {
+	s.SetupTest()
+	app := s.GetQuicksilverApp(s.chainA)
+	ctx := s.chainA.GetContext()
+
+	u1, _, _ := s.setupV0101002Zones(ctx, app)
+	s.seedWDR(ctx, app, "stargaze-1", u1, "uqstars", "ustars", 7_000_000, icstypes.WithdrawStatusUnbond, 200)
+	s.fundEscrow(ctx, app, sdk.NewCoins(sdk.NewCoin("uqstars", math.NewInt(7_000_000))))
+
+	supplyBefore := app.BankKeeper.GetSupply(ctx, "uqstars").Amount
+
+	handler := upgrades.V0101002UpgradeHandler(app.mm, app.configurator, &app.AppKeepers)
+	_, err := handler(ctx, types.Plan{}, app.mm.GetVersionMap())
+	s.NoError(err)
+
+	s.Equal(supplyBefore, app.BankKeeper.GetSupply(ctx, "uqstars").Amount, "no mint expected when escrow matches obligation")
+	s.Equal(math.NewInt(7_000_000), app.BankKeeper.GetBalance(ctx, addressutils.MustAccAddressFromBech32(u1, ""), "uqstars").Amount)
+	escrowAddr := app.AccountKeeper.GetModuleAddress(icstypes.EscrowModuleAccount)
+	s.True(app.BankKeeper.GetBalance(ctx, escrowAddr, "uqstars").IsZero())
+}
+
+// Surplus: escrow > sum(burn_amount). No mint. Leftover remains in escrow
+// (to be reclaimed by a follow-up governance action).
+func (s *AppTestSuite) TestV0101002UpgradeHandler_MintToCover_Surplus() {
+	s.SetupTest()
+	app := s.GetQuicksilverApp(s.chainA)
+	ctx := s.chainA.GetContext()
+
+	u1, _, _ := s.setupV0101002Zones(ctx, app)
+	s.seedWDR(ctx, app, "stargaze-1", u1, "uqstars", "ustars", 4_000_000, icstypes.WithdrawStatusQueued, 300)
+	s.fundEscrow(ctx, app, sdk.NewCoins(sdk.NewCoin("uqstars", math.NewInt(10_000_000))))
+
+	supplyBefore := app.BankKeeper.GetSupply(ctx, "uqstars").Amount
+
+	handler := upgrades.V0101002UpgradeHandler(app.mm, app.configurator, &app.AppKeepers)
+	_, err := handler(ctx, types.Plan{}, app.mm.GetVersionMap())
+	s.NoError(err)
+
+	s.Equal(supplyBefore, app.BankKeeper.GetSupply(ctx, "uqstars").Amount, "no mint when escrow > obligation")
+	s.Equal(math.NewInt(4_000_000), app.BankKeeper.GetBalance(ctx, addressutils.MustAccAddressFromBech32(u1, ""), "uqstars").Amount)
+	escrowAddr := app.AccountKeeper.GetModuleAddress(icstypes.EscrowModuleAccount)
+	s.Equal(math.NewInt(6_000_000), app.BankKeeper.GetBalance(ctx, escrowAddr, "uqstars").Amount, "surplus stays in escrow for later reclaim")
+}
+
+// No records: zone is still offboarded but nothing is refunded.
+func (s *AppTestSuite) TestV0101002UpgradeHandler_NoRecords() {
+	s.SetupTest()
+	app := s.GetQuicksilverApp(s.chainA)
+	ctx := s.chainA.GetContext()
+
+	s.setupV0101002Zones(ctx, app)
+	supplyBefore := app.BankKeeper.GetSupply(ctx, "uqstars").Amount
+
+	handler := upgrades.V0101002UpgradeHandler(app.mm, app.configurator, &app.AppKeepers)
+	_, err := handler(ctx, types.Plan{}, app.mm.GetVersionMap())
+	s.NoError(err)
+
+	sz, ok := app.InterchainstakingKeeper.GetZone(ctx, "stargaze-1")
+	s.True(ok)
+	s.True(sz.IsOffboarding)
+	s.Equal(supplyBefore, app.BankKeeper.GetSupply(ctx, "uqstars").Amount)
+}
+
+// Zone not found: handler silently skips (matches original v1.10.2 semantics).
+func (s *AppTestSuite) TestV0101002UpgradeHandler_ZoneNotFound() {
+	s.SetupTest()
+	app := s.GetQuicksilverApp(s.chainA)
+	ctx := s.chainA.GetContext()
+
+	handler := upgrades.V0101002UpgradeHandler(app.mm, app.configurator, &app.AppKeepers)
+	_, err := handler(ctx, types.Plan{}, app.mm.GetVersionMap())
+	s.NoError(err)
+}
+
+// Malformed BurnAmount: a legacy WDR with zero BurnAmount must be skipped
+// (not panic, not counted toward the mint obligation) and must remain in
+// state for manual follow-up.
+func (s *AppTestSuite) TestV0101002UpgradeHandler_MintToCover_SkipsMalformedWDR() {
+	s.SetupTest()
+	app := s.GetQuicksilverApp(s.chainA)
+	ctx := s.chainA.GetContext()
+
+	u1, u2, _ := s.setupV0101002Zones(ctx, app)
+
+	// Valid record.
+	s.seedWDR(ctx, app, "stargaze-1", u1, "uqstars", "ustars", 2_000_000, icstypes.WithdrawStatusQueued, 600)
+
+	// Bypass validation to inject a malformed (zero BurnAmount) record.
+	s.UncheckedSetWithdrawalRecord(ctx, app, icstypes.WithdrawalRecord{
+		ChainId:     "stargaze-1",
+		Delegator:   u2,
+		Recipient:   addressutils.GenerateAddressForTestWithPrefix("stars"),
+		BurnAmount:  sdk.Coin{Denom: "uqstars", Amount: math.ZeroInt()},
+		Amount:      sdk.NewCoins(sdk.NewCoin("ustars", math.NewInt(0))),
+		Txhash:      fmt.Sprintf("%064d", 601),
+		Status:      icstypes.WithdrawStatusUnbond,
+		EpochNumber: 1,
+	})
+
+	// Escrow short by 500_000 relative to the VALID obligation (2_000_000).
+	s.fundEscrow(ctx, app, sdk.NewCoins(sdk.NewCoin("uqstars", math.NewInt(1_500_000))))
+
+	supplyBefore := app.BankKeeper.GetSupply(ctx, "uqstars").Amount
+
+	handler := upgrades.V0101002UpgradeHandler(app.mm, app.configurator, &app.AppKeepers)
+	s.NotPanics(func() {
+		_, err := handler(ctx, types.Plan{}, app.mm.GetVersionMap())
+		s.NoError(err)
+	})
+
+	// Mint should target only the valid obligation (2M − 1.5M = 500K), NOT the
+	// malformed record.
+	s.Equal(supplyBefore.Add(math.NewInt(500_000)), app.BankKeeper.GetSupply(ctx, "uqstars").Amount,
+		"mint amount must ignore malformed BurnAmount")
+
+	// Valid user refunded in full.
+	s.Equal(math.NewInt(2_000_000), app.BankKeeper.GetBalance(ctx, addressutils.MustAccAddressFromBech32(u1, ""), "uqstars").Amount)
+	// Malformed record kept in state.
+	remaining := app.InterchainstakingKeeper.AllZoneWithdrawalRecords(ctx, "stargaze-1")
+	s.Equal(1, len(remaining))
+	s.Equal(u2, remaining[0].Delegator)
+	s.True(remaining[0].BurnAmount.Amount.IsZero())
 }
