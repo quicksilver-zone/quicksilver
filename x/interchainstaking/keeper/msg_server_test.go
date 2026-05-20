@@ -814,7 +814,7 @@ func (suite *KeeperTestSuite) TestMsgCancelRedemeption() {
 					FromAddress: addressutils.GenerateAddressForTestWithPrefix("quick"),
 				}
 			},
-			fmt.Sprintf("no queued record with hash %q found", hash),
+			fmt.Sprintf("no cancellable record with hash %q found", hash),
 		},
 		{
 			"no hash exists",
@@ -825,7 +825,7 @@ func (suite *KeeperTestSuite) TestMsgCancelRedemeption() {
 					FromAddress: addressutils.GenerateAddressForTestWithPrefix("quick"),
 				}
 			},
-			fmt.Sprintf("no queued record with hash %q found", hash),
+			fmt.Sprintf("no cancellable record with hash %q found", hash),
 		},
 		{
 			"hash exists but in unbond status, no errors",
@@ -851,7 +851,7 @@ func (suite *KeeperTestSuite) TestMsgCancelRedemeption() {
 			fmt.Sprintf("cannot cancel unbond %q with no errors", hash),
 		},
 		{
-			"hash exists in queued status, with errors",
+			"hash exists in unbond status with send errors",
 			func(s *KeeperTestSuite) *icstypes.MsgCancelRedemption {
 				ctx := s.chainA.GetContext()
 				k := s.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
@@ -963,22 +963,76 @@ func (suite *KeeperTestSuite) TestMsgCancelRedemeption() {
 
 			msg := tt.malleate(suite)
 
+			ctx := suite.chainA.GetContext()
 			msgSrv := icskeeper.NewMsgServerImpl(suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper)
-			res, err := msgSrv.CancelRedemption(sdk.WrapSDKContext(suite.chainA.GetContext()), msg)
+			icsKeeper := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
+			res, err := msgSrv.CancelRedemption(sdk.WrapSDKContext(ctx), msg)
 			if len(tt.expectErr) != 0 {
 				suite.ErrorContains(err, tt.expectErr)
 				suite.Nil(res)
 			} else {
 				suite.NoError(err)
 				suite.NotNil(res)
+				_, foundQueued := icsKeeper.GetWithdrawalRecord(ctx, msg.ChainId, msg.Hash, icstypes.WithdrawStatusQueued)
+				_, foundUnbond := icsKeeper.GetWithdrawalRecord(ctx, msg.ChainId, msg.Hash, icstypes.WithdrawStatusUnbond)
+				suite.False(foundQueued)
+				suite.False(foundUnbond)
+
+				_, err = msgSrv.CancelRedemption(sdk.WrapSDKContext(ctx), msg)
+				suite.ErrorContains(err, fmt.Sprintf("no cancellable record with hash %q found", msg.Hash))
 			}
 
-			qapp := suite.GetQuicksilverApp(suite.chainA)
-			icsKeeper := qapp.InterchainstakingKeeper
-			_, found := icsKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
+			_, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
 			suite.True(found)
 		})
 	}
+}
+
+func (suite *KeeperTestSuite) TestCancelRedemptionDrainsEscrowOnUnbondStatus() {
+	suite.SetupTest()
+	suite.setupTestZones()
+	ctx := suite.chainA.GetContext()
+	k := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
+
+	attacker := addressutils.GenerateAddressForTestWithPrefix("quick")
+	hash := randomutils.GenerateRandomHashAsHex(32)
+
+	suite.NoError(k.SetWithdrawalRecord(ctx, icstypes.WithdrawalRecord{
+		ChainId:    suite.chainB.ChainID,
+		Delegator:  attacker,
+		BurnAmount: sdk.NewCoin("uqatom", math.NewInt(1)),
+		Status:     icstypes.WithdrawStatusUnbond,
+		Txhash:     hash,
+		SendErrors: 1,
+	}))
+
+	suite.NoError(k.BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(sdk.NewCoin("uqatom", math.NewInt(1000)))))
+	suite.NoError(k.BankKeeper.SendCoinsFromModuleToModule(ctx, icstypes.ModuleName, icstypes.EscrowModuleAccount, sdk.NewCoins(sdk.NewCoin("uqatom", math.NewInt(1000)))))
+
+	msgSrv := icskeeper.NewMsgServerImpl(k)
+	cancelMsg := &icstypes.MsgCancelRedemption{
+		ChainId:     suite.chainB.ChainID,
+		Hash:        hash,
+		FromAddress: attacker,
+	}
+
+	_, err := msgSrv.CancelRedemption(sdk.WrapSDKContext(ctx), cancelMsg)
+	suite.NoError(err)
+
+	attackerAddr, err := addressutils.AccAddressFromBech32(attacker, "")
+	suite.NoError(err)
+	suite.Equal(int64(1), k.BankKeeper.GetBalance(ctx, attackerAddr, "uqatom").Amount.Int64())
+
+	escrowAddr := k.AccountKeeper.GetModuleAddress(icstypes.EscrowModuleAccount)
+	suite.Equal(int64(999), k.BankKeeper.GetBalance(ctx, escrowAddr, "uqatom").Amount.Int64())
+
+	_, foundUnbond := k.GetWithdrawalRecord(ctx, suite.chainB.ChainID, hash, icstypes.WithdrawStatusUnbond)
+	suite.False(foundUnbond)
+
+	_, err = msgSrv.CancelRedemption(sdk.WrapSDKContext(ctx), cancelMsg)
+	suite.ErrorContains(err, fmt.Sprintf("no cancellable record with hash %q found", hash))
+	suite.Equal(int64(1), k.BankKeeper.GetBalance(ctx, attackerAddr, "uqatom").Amount.Int64())
+	suite.Equal(int64(999), k.BankKeeper.GetBalance(ctx, escrowAddr, "uqatom").Amount.Int64())
 }
 
 func (suite *KeeperTestSuite) TestMsgRequeueRedemeption() {

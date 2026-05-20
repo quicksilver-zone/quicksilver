@@ -100,25 +100,29 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 func (k msgServer) CancelRedemption(goCtx context.Context, msg *types.MsgCancelRedemption) (*types.MsgCancelRedemptionResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
+	foundStatus := types.WithdrawStatusQueued
 	record, found := k.GetWithdrawalRecord(ctx, msg.ChainId, msg.Hash, types.WithdrawStatusQueued)
 	// QUEUED records can be cancelled at any time.
 	if !found {
 		// check for errored unbond in UNBONDING status
 		record, found = k.GetWithdrawalRecord(ctx, msg.ChainId, msg.Hash, types.WithdrawStatusUnbond)
 		if !found {
-			return nil, fmt.Errorf("no queued record with hash %q found", msg.Hash)
+			return nil, fmt.Errorf("no cancellable record with hash %q found", msg.Hash)
 		}
 		if record.SendErrors == 0 {
 			return nil, fmt.Errorf("cannot cancel unbond %q with no errors", msg.Hash)
 		}
+		foundStatus = types.WithdrawStatusUnbond
 	}
 
 	if record.Delegator != msg.FromAddress && k.GetGovAuthority(ctx) != msg.FromAddress {
 		return nil, fmt.Errorf("incorrect user for record with hash %q", msg.Hash)
 	}
 
-	// all good. delete!
-	k.DeleteWithdrawalRecord(ctx, msg.ChainId, msg.Hash, types.WithdrawStatusQueued)
+	k.DeleteWithdrawalRecord(ctx, msg.ChainId, msg.Hash, foundStatus)
+	if _, stillFound := k.GetWithdrawalRecord(ctx, msg.ChainId, msg.Hash, foundStatus); stillFound {
+		return nil, fmt.Errorf("failed to delete withdrawal record with hash %q", msg.Hash)
+	}
 
 	userAccAddress, err := addressutils.AddressFromBech32(record.Delegator, "")
 	if err != nil {
