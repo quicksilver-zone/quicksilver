@@ -162,6 +162,20 @@ message MsgGovRemoveValidatorDenyList {
 
 message MsgGovRemoveValidatorDenyListResponse {}
 
+// MsgGovClientUpdateProposal updates an expired or frozen IBC client using a substitute client.
+message MsgGovClientUpdateProposal {
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string title = 1;
+  string description = 2;
+  string subject_client_id = 3;
+  string substitute_client_id = 4;
+  string authority = 5 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+message MsgGovClientUpdateProposalResponse {}
+
 // MsgGovSetZoneOffboarding sets a zone into offboarding mode.
 // When enabled, deposits are disabled and redemption rate updates are frozen.
 message MsgGovSetZoneOffboarding {

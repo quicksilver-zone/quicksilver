@@ -13,6 +13,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
+	ibcclienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
 
 	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 )
@@ -196,6 +197,39 @@ func (k msgServer) GovExecuteICATx(goCtx context.Context, msg *types.MsgGovExecu
 	}
 
 	return &types.MsgGovExecuteICATxResponse{}, nil
+}
+
+func (k msgServer) GovClientUpdateProposal(goCtx context.Context, msg *types.MsgGovClientUpdateProposal) (*types.MsgGovClientUpdateProposalResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	if err := k.validateSunsetAuthority(ctx, msg.Authority); err != nil {
+		return nil, err
+	}
+
+	proposal := &ibcclienttypes.ClientUpdateProposal{
+		Title:              msg.Title,
+		Description:        msg.Description,
+		SubjectClientId:    msg.SubjectClientId,
+		SubstituteClientId: msg.SubstituteClientId,
+	}
+
+	if err := k.IBCKeeper.ClientKeeper.ClientUpdateProposal(ctx, proposal); err != nil {
+		return nil, err
+	}
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+		),
+		sdk.NewEvent(
+			types.EventTypeClientUpdateProposal,
+			sdk.NewAttribute(types.AttributeKeySubjectClientID, msg.SubjectClientId),
+			sdk.NewAttribute(types.AttributeKeySubstituteClientID, msg.SubstituteClientId),
+		),
+	})
+
+	return &types.MsgGovClientUpdateProposalResponse{}, nil
 }
 
 func validateSunsetICAMsg(account *types.ICAAccount, msg sdk.Msg) error {

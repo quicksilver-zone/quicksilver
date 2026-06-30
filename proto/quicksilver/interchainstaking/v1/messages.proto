@@ -98,6 +98,14 @@ service Msg {
     };
   }
 
+  // GovClientUpdateProposal updates an expired/frozen IBC client from a substitute client.
+  rpc GovClientUpdateProposal(MsgGovClientUpdateProposal) returns (MsgGovClientUpdateProposalResponse) {
+    option (google.api.http) = {
+      post: "/quicksilver/tx/v1/interchainstaking/client_update_proposal"
+      body: "*"
+    };
+  }
+
   // GovSetZoneOffboarding sets a zone into offboarding mode.
   rpc GovSetZoneOffboarding(MsgGovSetZoneOffboarding) returns (MsgGovSetZoneOffboardingResponse) {
     option (google.api.http) = {
@@ -207,4 +215,3 @@ message MsgGovExecuteICATx {
 }
 
 message MsgGovExecuteICATxResponse {}
-

@@ -32,6 +32,7 @@ const (
 	TypeMsgGovAddValidatorDenyList        = "govaddvalidatordenylist"
 	TypeMsgGovRemoveValidatorDenyList     = "govremovevalidatordenylist"
 	TypeMsgGovExecuteICATx                = "govexecuteicatx"
+	TypeMsgGovClientUpdateProposal        = "govclientupdateproposal"
 	TypeMsgGovSetZoneOffboarding          = "govsetzoneoffboarding"
 	TypeMsgGovCancelAllPendingRedemptions = "govcancelallpendingredemptions"
 	TypeMsgGovForceUnbondAllDelegations   = "govforceunbondalldelegations"
@@ -48,6 +49,7 @@ var (
 	_ sdk.Msg = &MsgGovAddValidatorDenyList{}
 	_ sdk.Msg = &MsgGovRemoveValidatorDenyList{}
 	_ sdk.Msg = &MsgGovExecuteICATx{}
+	_ sdk.Msg = &MsgGovClientUpdateProposal{}
 	_ sdk.Msg = &MsgGovSetZoneOffboarding{}
 	_ sdk.Msg = &MsgGovCancelAllPendingRedemptions{}
 	_ sdk.Msg = &MsgGovForceUnbondAllDelegations{}
@@ -63,6 +65,7 @@ var (
 	_ legacytx.LegacyMsg = &MsgGovAddValidatorDenyList{}
 	_ legacytx.LegacyMsg = &MsgGovRemoveValidatorDenyList{}
 	_ legacytx.LegacyMsg = &MsgGovExecuteICATx{}
+	_ legacytx.LegacyMsg = &MsgGovClientUpdateProposal{}
 	_ legacytx.LegacyMsg = &MsgGovSetZoneOffboarding{}
 	_ legacytx.LegacyMsg = &MsgGovCancelAllPendingRedemptions{}
 	_ legacytx.LegacyMsg = &MsgGovForceUnbondAllDelegations{}
@@ -606,6 +609,54 @@ func (msg MsgGovExecuteICATx) Route() string {
 
 func (msg MsgGovExecuteICATx) Type() string {
 	return TypeMsgGovExecuteICATx
+}
+
+// MsgGovClientUpdateProposal
+
+func (msg MsgGovClientUpdateProposal) ValidateBasic() error {
+	_, err := addressutils.AccAddressFromBech32(msg.Authority, "")
+	if err != nil {
+		return err
+	}
+
+	if strings.TrimSpace(msg.Title) == "" {
+		return errors.New("title cannot be blank")
+	}
+
+	if strings.TrimSpace(msg.Description) == "" {
+		return errors.New("description cannot be blank")
+	}
+
+	if len(msg.SubjectClientId) == 0 || len(msg.SubjectClientId) > 100 {
+		return errors.New("invalid subject client id")
+	}
+
+	if len(msg.SubstituteClientId) == 0 || len(msg.SubstituteClientId) > 100 {
+		return errors.New("invalid substitute client id")
+	}
+
+	if msg.SubjectClientId == msg.SubstituteClientId {
+		return errors.New("subject and substitute client ids must differ")
+	}
+
+	return nil
+}
+
+func (msg MsgGovClientUpdateProposal) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+func (msg MsgGovClientUpdateProposal) GetSigners() []sdk.AccAddress {
+	fromAddress, _ := addressutils.AccAddressFromBech32(msg.Authority, "")
+	return []sdk.AccAddress{fromAddress}
+}
+
+func (msg MsgGovClientUpdateProposal) Route() string {
+	return RouterKey
+}
+
+func (msg MsgGovClientUpdateProposal) Type() string {
+	return TypeMsgGovClientUpdateProposal
 }
 
 // MsgSignalIntent
