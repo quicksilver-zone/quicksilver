@@ -173,10 +173,5 @@ func (k *Keeper) GetModuleBalance(ctx sdk.Context) sdkmath.Int {
 
 func LoadSubmodules() map[cmtypes.ClaimType]Submodule {
 	out := make(map[cmtypes.ClaimType]Submodule, 0)
-	out[cmtypes.ClaimTypeLiquidToken] = &LiquidTokensModule{}
-	out[cmtypes.ClaimTypeOsmosisPool] = &OsmosisModule{}
-	out[cmtypes.ClaimTypeOsmosisCLPool] = &OsmosisClModule{}
-	out[cmtypes.ClaimTypeUmeeToken] = &UmeeModule{}
-	out[cmtypes.ClaimTypeMembrane] = &MembraneModule{}
 	return out
 }

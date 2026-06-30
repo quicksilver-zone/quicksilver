@@ -55,7 +55,6 @@ import (
 	"github.com/quicksilver-zone/quicksilver/x/interchainquery"
 	interchainquerytypes "github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
 	"github.com/quicksilver-zone/quicksilver/x/interchainstaking"
-	interchainstakingclient "github.com/quicksilver-zone/quicksilver/x/interchainstaking/client"
 	interchainstakingtypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 	"github.com/quicksilver-zone/quicksilver/x/mint"
 	minttypes "github.com/quicksilver-zone/quicksilver/x/mint/types"
@@ -81,7 +80,7 @@ var (
 		gov.NewAppModuleBasic(
 			[]govclient.ProposalHandler{
 				paramsclient.ProposalHandler, upgradeclient.LegacyProposalHandler, upgradeclient.LegacyCancelProposalHandler,
-				ibcclientclient.UpdateClientProposalHandler, ibcclientclient.UpgradeProposalHandler, interchainstakingclient.RegisterProposalHandler, interchainstakingclient.UpdateProposalHandler,
+				ibcclientclient.UpdateClientProposalHandler, ibcclientclient.UpgradeProposalHandler,
 				participationrewardsclient.AddProtocolDataProposalHandler,
 			},
 		),

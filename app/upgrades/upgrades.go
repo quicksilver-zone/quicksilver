@@ -10,20 +10,6 @@ import (
 
 func Upgrades() []Upgrade {
 	return []Upgrade{
-		{UpgradeName: V010700UpgradeName, CreateUpgradeHandler: V010700UpgradeHandler},
-		{UpgradeName: V010702UpgradeName, CreateUpgradeHandler: V010702UpgradeHandler},
-		{UpgradeName: V010704UpgradeName, CreateUpgradeHandler: V010704UpgradeHandler},
-		{UpgradeName: V010705UpgradeName, CreateUpgradeHandler: V010705UpgradeHandler},
-		{UpgradeName: V010706UpgradeName, CreateUpgradeHandler: V010706UpgradeHandler},
-		{UpgradeName: V010707UpgradeName, CreateUpgradeHandler: NoOpHandler},
-
-		{UpgradeName: V010800r1UpgradeName, CreateUpgradeHandler: NoOpHandler},
-
-		{UpgradeName: V010800UpgradeName, CreateUpgradeHandler: V010800UpgradeHandler},
-		{UpgradeName: V010801UpgradeName, CreateUpgradeHandler: NoOpHandler},
-
-		{UpgradeName: V010900UpgradeName, CreateUpgradeHandler: NoOpHandler},
-
 		// v1.10.0 - Zone Offboarding
 		{UpgradeName: V0101000rc0UpgradeName, CreateUpgradeHandler: V0101000UpgradeHandler},
 		{UpgradeName: V0101000UpgradeName, CreateUpgradeHandler: V0101000UpgradeHandler},
@@ -33,6 +19,9 @@ func Upgrades() []Upgrade {
 
 		// v1.10.2 - Zone sunset (stargaze-1, omniflixhub-1) with mint-to-cover refund
 		{UpgradeName: V0101002UpgradeName, CreateUpgradeHandler: V0101002UpgradeHandler},
+
+		// v1.11.0 - Quicksilver sunset exploit cleanup
+		{UpgradeName: V011000UpgradeName, CreateUpgradeHandler: V011000UpgradeHandler},
 	}
 }
 

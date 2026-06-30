@@ -34,6 +34,11 @@ const (
 	V0101000UpgradeName    = "v1.10.0"
 	V0101001UpgradeName    = "v1.10.1"
 	V0101002UpgradeName    = "v1.10.2"
+	V011000UpgradeName     = "v1.11.0"
+
+	// V011000ForcedUpgradeHeight is the restricted-sunset restart trigger.
+	// The archive node is halted at 18556563, so restart next block + 1 is 18556565.
+	V011000ForcedUpgradeHeight int64 = 18556565
 )
 
 // Upgrade defines a struct containing necessary fields that a SoftwareUpgradeProposal

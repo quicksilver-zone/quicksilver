@@ -1,6 +1,6 @@
 module github.com/quicksilver-zone/quicksilver/xcclookup
 
-go 1.24.13
+go 1.26.4
 
 require (
 	cosmossdk.io/math v1.5.3

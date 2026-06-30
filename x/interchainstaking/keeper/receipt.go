@@ -2,16 +2,12 @@ package keeper
 
 import (
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/tx"
-	"github.com/cosmos/cosmos-sdk/x/authz"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	icacontrollerkeeper "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/keeper"
 	icacontrollertypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/types"
@@ -22,8 +18,6 @@ import (
 
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
-	minttypes "github.com/quicksilver-zone/quicksilver/x/mint/types"
-	prtypes "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 )
 
 const (
@@ -32,123 +26,6 @@ const (
 	ICATimeout      = time.Hour * 6
 	// AuthzAutoClaimAddress = "quick1psevptdp90jad76zt9y9x2nga686hutgmasmwd"
 )
-
-func (k *Keeper) HandleReceiptTransaction(ctx sdk.Context, txn *tx.Tx, hash string, zone types.Zone) error {
-	k.Logger(ctx).Info("Deposit receipt.", "ischeck", ctx.IsCheckTx(), "isrecheck", ctx.IsReCheckTx())
-	memo := txn.Body.Memo
-
-	senderAddress := Unset
-	assets := sdk.Coins{}
-
-	for _, msg := range txn.GetMsgs() {
-		msgSend, ok := msg.(*banktypes.MsgSend)
-		if !ok {
-			k.Logger(ctx).Error("got message that wasn't MsgSend!")
-			continue
-		}
-		sender := msgSend.FromAddress
-		amount := msgSend.Amount
-
-		if msgSend.ToAddress == zone.DepositAddress.GetAddress() { // negate case where sender sends to multiple addresses in one tx
-			if senderAddress == Unset {
-				senderAddress = sender
-			}
-
-			if sender != senderAddress {
-				// TODO: technically nothing wrong with this; just need to make sure we _only_ consider assets sent to QS
-				k.Logger(ctx).Error("sender mismatch", "expected", senderAddress, "received", sender)
-				k.NilReceipt(ctx, &zone, hash) // nil receipt will stop this hash being submitted again
-				return k.SendToWithdrawal(ctx, &zone, zone.DepositAddress, assets)
-			}
-
-			k.Logger(ctx).Info("Deposit receipt", "deposit_address", zone.DepositAddress.GetAddress(), "sender", sender, "amount", amount)
-
-			assets = assets.Add(amount...)
-		}
-
-	}
-
-	if senderAddress == Unset { // not sure this is ever reachable. A valid MsgSend must always have a valid sender.
-		k.Logger(ctx).Error("no sender found. Ignoring.")
-		k.NilReceipt(ctx, &zone, hash) // nil receipt will stop this hash being submitted again
-		return k.SendToWithdrawal(ctx, &zone, zone.DepositAddress, assets)
-
-	}
-	senderAccAddress, err := addressutils.AccAddressFromBech32(senderAddress, zone.GetAccountPrefix())
-	if err != nil { // not sure this is ever reachable. A valid MsgSend must always have a valid sender.
-		k.Logger(ctx).Error("unable to decode sender address. Ignoring.", "senderAddress", senderAddress, "error", err)
-		k.NilReceipt(ctx, &zone, hash) // nil receipt will stop this hash being submitted again
-		return k.SendToWithdrawal(ctx, &zone, zone.DepositAddress, assets)
-
-	}
-
-	valid, matchesVals := zone.ValidateCoinsForZone(assets, k.GetValidatorAddressesAsMap(ctx, zone.ChainId))
-
-	if !valid {
-		k.Logger(ctx).Error("unable to validate coins. Ignoring.", "senderAddress", senderAddress)
-		k.NewCompletedReceipt(ctx, &zone, senderAddress, hash, assets) // nil receipt will stop this hash being submitted again
-		// send tokens to withdrawal for disbursal.
-		return k.SendToWithdrawal(ctx, &zone, zone.DepositAddress, assets)
-	} else if !matchesVals {
-		k.Logger(ctx).Error("unable to validate coins for this valset.", "senderAddress", senderAddress)
-		// Do not set a nil receipt so we can revisit this tx.
-		// Don't return an error as to not clog queue.
-		return nil
-	}
-
-	k.Logger(ctx).Info("found new deposit tx", "deposit_address", zone.DepositAddress.GetAddress(), "senderAddress", senderAddress, "local", senderAccAddress.String(), "chain id", zone.ChainId, "assets", assets, "hash", hash)
-
-	var (
-		memoIntent    types.ValidatorIntents
-		memoFields    types.MemoFields
-		memoRTS       bool
-		memoAutoClaim bool
-		mappedAddress []byte
-	)
-
-	if len(memo) > 0 {
-		// process memo
-		memoFields, err = zone.DecodeMemo(memo)
-		if err != nil {
-			// What should we do on error here? just log?
-			k.Logger(ctx).Error("error decoding memo", "error", err.Error(), "memo", memo)
-		}
-		memoRTS = memoFields.RTS()
-		mappedAddress, _ = memoFields.AccountMap()
-		memoIntent, _ = memoFields.Intent(assets, &zone)
-		memoAutoClaim = memoFields.AutoClaim()
-	}
-
-	// update state
-	if err := k.UpdateDelegatorIntent(ctx, senderAccAddress, &zone, assets, memoIntent); err != nil {
-		k.Logger(ctx).Error("unable to update intent. Ignoring.", "senderAddress", senderAddress, "zone", zone.ChainId, "err", err.Error())
-		return fmt.Errorf("unable to update intent. Ignoring. senderAddress=%q zone=%q err: %w", senderAddress, zone.ChainId, err)
-	}
-
-	success, err := k.MintAndSendQAsset(ctx, senderAccAddress, senderAddress, &zone, assets, memoRTS, mappedAddress)
-	if err != nil {
-		k.Logger(ctx).Error("unable to mint QAsset. Ignoring.", "senderAddress", senderAddress, "zone", zone.ChainId, "err", err)
-		return fmt.Errorf("unable to mint QAsset. Ignoring. senderAddress=%q zone=%q err: %w", senderAddress, zone.ChainId, err)
-	}
-
-	if success {
-		if err := k.TransferToDelegate(ctx, &zone, assets, hash); err != nil {
-			k.Logger(ctx).Error("unable to transfer to delegate. Ignoring.", "senderAddress", senderAddress, "zone", zone.ChainId, "err", err)
-			return fmt.Errorf("unable to transfer to delegate. Ignoring. senderAddress=%q zone=%q err: %w", senderAddress, zone.ChainId, err)
-		}
-		if memoAutoClaim {
-			if err := k.HandleAutoClaim(ctx, senderAccAddress); err != nil {
-				k.Logger(ctx).Error("unable to handle auto claim. Ignoring.", "senderAddress", senderAddress, "zone", zone.ChainId, "err", err)
-				return fmt.Errorf("unable to handle auto claim. Ignoring. senderAddress=%q zone=%q err: %w", senderAddress, zone.ChainId, err)
-			}
-		}
-	}
-	// create receipt
-	receipt := k.NewReceipt(ctx, &zone, senderAddress, hash, assets)
-	k.SetReceipt(ctx, *receipt)
-
-	return nil
-}
 
 // SendTokenIBC is a helper function that finds the zone channel and performs an ibc transfer from senderAccAddress
 // to receiver.
@@ -182,105 +59,6 @@ func (k *Keeper) SendTokenIBC(ctx sdk.Context, senderAccAddress sdk.AccAddress, 
 		Memo:             "",
 	})
 	return err
-}
-
-func (k *Keeper) HandleAutoClaim(ctx sdk.Context, senderAddress sdk.AccAddress) error {
-	authzAutoClaimAddress := k.GetAuthzAutoClaimAddress(ctx)
-	if authzAutoClaimAddress == "" {
-		return errors.New("no auto claim address set")
-	}
-
-	return k.AuthzKeeper.SaveGrant(
-		ctx,
-		addressutils.MustAccAddressFromBech32(authzAutoClaimAddress, "quick"),
-		senderAddress,
-		&authz.GenericAuthorization{
-			Msg: sdk.MsgTypeURL(&prtypes.MsgSubmitClaim{}),
-		},
-		nil,
-	)
-}
-
-// MintAndSendQAsset mints qAssets based on the native asset redemption rate.  Tokens are then transferred to the given user.
-// The function handles the following cases:
-//  1. If the zone is labeled "return to sender" or the Tx memo contains "return to sender" flag:
-//     - Mint QAssets and IBC transfer to the corresponding zone acc
-//  2. If there is no mapped account but the zone is labeled as non-118 coin type:
-//     - Do not mint QAssets and refund assets
-//  3. If a mapped account is set for a non-118 coin type zone:
-//     - Mint QAssets and send to corresponding mapped address
-//  4. If a new mapped account is provided to the function and the zone is labeled as non-118 coin type:
-//     - Mint QAssets, set new mapping for the mapped account in the keeper, and send to corresponding mapped account.
-//  5. If the zone is 118 and no other flags are set:
-//     - Mint QAssets and transfer to send to msg creator.
-func (k *Keeper) MintAndSendQAsset(ctx sdk.Context, sender sdk.AccAddress, senderAddress string, zone *types.Zone, assets sdk.Coins, memoRTS bool, mappedAddress sdk.AccAddress) (bool, error) {
-	if zone.RedemptionRate.IsZero() {
-		return false, errors.New("zero redemption rate")
-	}
-
-	qAssets := sdk.Coins{}
-	for _, asset := range assets.Sort() {
-		amount := sdk.NewDecFromInt(asset.Amount).Quo(zone.RedemptionRate).TruncateInt()
-		qAssets = qAssets.Add(sdk.NewCoin(zone.LocalDenom, amount))
-	}
-
-	// check if a remote address exists for a non 118 coin type zone
-	setMappedAddress := true
-	if mappedAddress == nil && !zone.Is_118 && !zone.ReturnToSender && !memoRTS {
-		var found bool
-		mappedAddress, found = k.GetRemoteAddressMap(ctx, sender, zone.ChainId)
-		if !found {
-			// if not found, skip minting and refund assets
-			msg := &banktypes.MsgSend{FromAddress: zone.DepositAddress.GetAddress(), ToAddress: senderAddress, Amount: assets}
-			return false, k.SubmitTx(ctx, []sdk.Msg{msg}, zone.DepositAddress, "refund", zone.MessagesPerTx)
-		}
-		// do not set, since mapped address already exists
-		setMappedAddress = false
-	}
-
-	k.Logger(ctx).Info("Minting qAssets for receipt", "assets", qAssets)
-	err := k.BankKeeper.MintCoins(ctx, types.ModuleName, qAssets)
-	if err != nil {
-		return false, err
-	}
-
-	switch {
-	case zone.ReturnToSender || memoRTS:
-		err = k.SendTokenIBC(ctx, k.AccountKeeper.GetModuleAddress(types.ModuleName), senderAddress, zone, qAssets[0])
-		k.Logger(ctx).Info("Transferred qAssets via rts", "address", senderAddress, "assets", qAssets)
-
-	case mappedAddress != nil:
-		// set mapped account
-		if setMappedAddress {
-			k.SetAddressMapPair(ctx, mappedAddress, sender, zone.ChainId)
-		}
-
-		// set send to mapped account
-		err = k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, mappedAddress, qAssets)
-		k.Logger(ctx).Info("Transferred qAssets to mapped account", "address", mappedAddress, "assets", qAssets)
-	default:
-		err = k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, sender, qAssets)
-		k.Logger(ctx).Info("Transferred qAssets to sender", "address", sender, "assets", qAssets)
-
-	}
-
-	if err != nil {
-		return false, fmt.Errorf("unable to transfer coins: %w", err)
-	}
-
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			minttypes.EventTypeMint,
-			sdk.NewAttribute(sdk.AttributeKeyAmount, qAssets.String()),
-		),
-	)
-	return true, nil
-}
-
-// TransferToDelegate transfers tokens from the zone deposit account address to the zone delegate account address.
-func (k *Keeper) TransferToDelegate(ctx sdk.Context, zone *types.Zone, coins sdk.Coins, memo string) error {
-	msg := &banktypes.MsgSend{FromAddress: zone.DepositAddress.GetAddress(), ToAddress: zone.DelegationAddress.GetAddress(), Amount: coins}
-	return k.SubmitTx(ctx, []sdk.Msg{msg}, zone.DepositAddress, memo, zone.MessagesPerTx)
 }
 
 func (k *Keeper) SubmitTx(ctx sdk.Context, msgs []sdk.Msg, account *types.ICAAccount, memo string, messagesPerTx int64) error {

@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"encoding/json"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -20,19 +19,5 @@ func (k *Keeper) Params(c context.Context, _ *types.QueryParamsRequest) (*types.
 }
 
 func (k *Keeper) ProtocolData(c context.Context, q *types.QueryProtocolDataRequest) (*types.QueryProtocolDataResponse, error) {
-	ctx := sdk.UnwrapSDKContext(c)
-	out := []json.RawMessage{}
-
-	pdType, exists := types.ProtocolDataType_value[q.Type]
-	if !exists {
-		return nil, types.ErrUnknownProtocolDataType
-	}
-
-	prefix := append(types.GetPrefixProtocolDataKey(types.ProtocolDataType(pdType)), q.Key...)
-	k.IteratePrefixedProtocolDatas(ctx, prefix, func(index int64, _ []byte, data types.ProtocolData) (stop bool) {
-		out = append(out, data.Data)
-		return false
-	})
-
-	return &types.QueryProtocolDataResponse{Data: out}, nil
+	return nil, nil
 }

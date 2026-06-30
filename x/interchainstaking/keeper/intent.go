@@ -1,19 +1,9 @@
 package keeper
 
 import (
-	"errors"
-	"fmt"
-
-	"go.uber.org/multierr"
-
-	sdkmath "cosmossdk.io/math"
-
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/quicksilver-zone/quicksilver/utils"
-	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
-	prtypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
 	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 )
 
@@ -92,162 +82,11 @@ func (k *Keeper) AllDelegatorIntentsAsPointer(ctx sdk.Context, zone *types.Zone,
 	return intents
 }
 
-// AggregateDelegatorIntents takes a snapshot of delegator intents for a given zone.
-func (k *Keeper) AggregateDelegatorIntents(ctx sdk.Context, zone *types.Zone) error {
-	snapshot := false
-	aggregate := make(types.ValidatorIntents, 0)
-	ordinalizedIntentSum := sdk.ZeroDec()
-
-	k.IterateDelegatorIntents(ctx, zone, snapshot, func(_ int64, delIntent types.DelegatorIntent) (stop bool) {
-		balance := sdk.NewCoin(zone.LocalDenom, sdkmath.ZeroInt())
-		// grab offchain asset value, and raise the users' base value by this amount.
-		// currently ignoring base value (locally held assets)
-		k.ClaimsManagerKeeper.IterateUserClaims(ctx, zone.ChainId, delIntent.Delegator, func(index int64, data prtypes.Claim) (stop bool) {
-			balance.Amount = balance.Amount.Add(data.Amount)
-			// claim amounts are in zone.baseDenom - but given weights are all relative to one another this okay.
-			k.Logger(ctx).Debug(
-				"intents - found claim for user",
-				"user", delIntent.Delegator,
-				"claim amount", data.Amount,
-				"new balance", balance.Amount,
-			)
-			return false
-		})
-
-		valIntents := delIntent.Ordinalize(sdk.NewDecFromInt(balance.Amount)).Intents
-		k.Logger(ctx).Debug(
-			"intents - ordinalized",
-			"user", delIntent.Delegator,
-			"new balance", balance.Amount,
-			"normal intents", delIntent.Intents,
-			"intents", valIntents,
-		)
-
-		for idx := range valIntents.Sort() {
-			valIntent, found := aggregate.GetForValoper(valIntents[idx].ValoperAddress)
-			ordinalizedIntentSum = ordinalizedIntentSum.Add(valIntents[idx].Weight)
-			if !found {
-				aggregate = append(aggregate, valIntents[idx])
-			} else {
-				valIntent.Weight = valIntent.Weight.Add(valIntents[idx].Weight)
-				aggregate = aggregate.SetForValoper(valIntents[idx].ValoperAddress, valIntent)
-			}
-		}
-
-		return false
-	})
-
-	// weight supply for which we do not have claim equally across active validators.
-	// this stops a small number of claimants exercising a disproportionate amount of
-	// power, in the event claims cannot be made properly.
-	supply := k.BankKeeper.GetSupply(ctx, zone.LocalDenom)
-	defaults := k.DefaultAggregateIntents(ctx, zone.ChainId)
-	nonVotingSupply := sdk.NewDecFromInt(supply.Amount).Sub(ordinalizedIntentSum)
-	di := types.DelegatorIntent{Delegator: "", Intents: defaults}
-	di = di.Ordinalize(nonVotingSupply)
-	defaults = di.Intents
-
-	for idx := range defaults.Sort() {
-		valIntent, found := aggregate.GetForValoper(defaults[idx].ValoperAddress)
-		ordinalizedIntentSum = ordinalizedIntentSum.Add(defaults[idx].Weight)
-		if !found {
-			aggregate = append(aggregate, defaults[idx])
-		} else {
-			valIntent.Weight = valIntent.Weight.Add(defaults[idx].Weight)
-			aggregate = aggregate.SetForValoper(defaults[idx].ValoperAddress, valIntent)
-		}
-	}
-
-	if len(aggregate) > 0 && !ordinalizedIntentSum.IsPositive() {
-		return errors.New("ordinalized intent sum is zero, this may happen if no claims are recorded")
-	}
-
-	// normalise aggregated intents again.
-	newAggregate := make(types.ValidatorIntents, 0)
-	for _, valIntent := range aggregate.Sort() {
-		if valIntent.Weight.IsPositive() {
-			valIntent.Weight = valIntent.Weight.Quo(ordinalizedIntentSum)
-			newAggregate = append(newAggregate, valIntent)
-		}
-	}
-
-	k.Logger(ctx).Info(
-		"aggregates",
-		"agg", newAggregate,
-		"chain", zone.ChainId,
-	)
-
-	zone.AggregateIntent = newAggregate
-	k.SetZone(ctx, zone)
-	return nil
-}
-
 // UpdateDelegatorIntent updates delegator intents.
 func (k *Keeper) UpdateDelegatorIntent(ctx sdk.Context, delegator sdk.AccAddress, zone *types.Zone, inAmount sdk.Coins, memoIntent types.ValidatorIntents) error {
-	snapshot := false
-	updateWithCoin := inAmount.IsValid()
-	updateWithMemo := memoIntent != nil
-
-	// this is here because we need access to the bankKeeper to ordinalize intent
-	delIntent, _ := k.GetDelegatorIntent(ctx, zone, delegator.String(), snapshot)
-
-	// ordinalize
-	// this is the currently held amount
-	// not aligned with last epoch claims
-	// balance := k.BankKeeper.GetBalance(ctx, sender, zone.BaseDenom)
-	// if balance.Amount.IsNil() {
-	// 	balance.Amount = math.ZeroInt()
-	// }
-	claimAmt := sdkmath.ZeroInt()
-
-	// grab offchain asset value, and raise the users' base value by this amount.
-	k.ClaimsManagerKeeper.IterateLastEpochUserClaims(ctx, zone.ChainId, delegator.String(), func(index int64, claim prtypes.Claim) (stop bool) {
-		claimAmt = claimAmt.Add(claim.Amount)
-		k.Logger(ctx).Info("Update intents - found claim for user", "user", delIntent.Delegator, "claim amount", claim.Amount, "new balance", claimAmt)
-		return false
-	})
-
-	// inAmount is ordinal with respect to the redemption rate, so we must scale
-	baseBalance := zone.RedemptionRate.Mul(sdk.NewDecFromInt(claimAmt))
-	if baseBalance.IsZero() {
-		return nil
-	}
-
-	if updateWithCoin {
-		delIntent = zone.UpdateIntentWithCoins(delIntent, baseBalance, inAmount, utils.StringSliceToMap(k.GetValidatorAddresses(ctx, zone.ChainId)))
-	}
-
-	if updateWithMemo {
-		delIntent = zone.UpdateZoneIntentWithMemo(memoIntent, delIntent, baseBalance)
-	}
-
-	if len(delIntent.Intents) == 0 {
-		return nil
-	}
-
-	k.SetDelegatorIntent(ctx, zone, delIntent, snapshot)
-
 	return nil
 }
 
 func (k msgServer) validateValidatorIntents(ctx sdk.Context, zone types.Zone, intents []*types.ValidatorIntent) error {
-	errMap := make(map[string]error)
-
-	for i, intent := range intents {
-		var valAddrBytes []byte
-		valAddrBytes, err := addressutils.ValAddressFromBech32(intent.ValoperAddress, zone.GetValoperPrefix())
-		if err != nil {
-			return err
-		}
-		_, found := k.GetValidator(ctx, zone.ChainId, valAddrBytes)
-		if !found {
-			errMap[fmt.Sprintf("intent[%v]", i)] = fmt.Errorf("unable to find valoper %s", intent.ValoperAddress)
-		}
-	}
-
-	if len(errMap) > 0 {
-		return multierr.Combine(utils.ErrorMapToSlice(errMap)...)
-	}
-
 	return nil
 }

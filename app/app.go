@@ -33,6 +33,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	dbm "github.com/cometbft/cometbft-db"
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -44,6 +45,7 @@ import (
 	ibctestingtypes "github.com/cosmos/ibc-go/v7/testing/types"
 
 	"github.com/quicksilver-zone/quicksilver/app/keepers"
+	"github.com/quicksilver-zone/quicksilver/app/upgrades"
 	"github.com/quicksilver-zone/quicksilver/docs"
 	interchainstakingtypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 	supplytypes "github.com/quicksilver-zone/quicksilver/x/supply/types"
@@ -240,6 +242,19 @@ func NewQuicksilver(
 
 // BeginBlocker updates every begin block.
 func (app *Quicksilver) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
+	if ctx.ChainID() == upgrades.ProductionChainID && ctx.BlockHeight() == upgrades.V011000ForcedUpgradeHeight {
+		if !app.UpgradeKeeper.HasHandler(upgrades.V011000UpgradeName) {
+			panic("forced v1.11.0 sunset upgrade handler is not registered")
+		}
+
+		ctx.Logger().Info("applying forced v1.11.0 sunset upgrade", "height", ctx.BlockHeight())
+		upgradeCtx := ctx.WithBlockGasMeter(sdk.NewInfiniteGasMeter())
+		app.UpgradeKeeper.ApplyUpgrade(upgradeCtx, upgradetypes.Plan{
+			Name:   upgrades.V011000UpgradeName,
+			Height: upgrades.V011000ForcedUpgradeHeight,
+		})
+	}
+
 	return app.mm.BeginBlock(ctx, req)
 }
 

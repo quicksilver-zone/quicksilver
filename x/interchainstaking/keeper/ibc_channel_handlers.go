@@ -2,11 +2,9 @@ package keeper
 
 import (
 	"fmt"
-	"math"
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 )
@@ -53,29 +51,6 @@ func (k *Keeper) HandleChannelOpenAck(ctx sdk.Context, portID, connectionID stri
 			}
 
 			k.SetAddressZoneMapping(ctx, address, zone.ChainId)
-
-			balanceQuery := banktypes.QueryAllBalancesRequest{Address: address}
-			bz, err := k.GetCodec().Marshal(&balanceQuery)
-			if err != nil {
-				return err
-			}
-
-			param := k.GetParam(ctx, types.KeyDepositInterval)
-			if param > math.MaxInt64 {
-				return fmt.Errorf("deposit interval parameter exceeds int64 range: %d", param)
-			}
-
-			k.ICQKeeper.MakeRequest(
-				ctx,
-				connectionID,
-				chainID,
-				"cosmos.bank.v1beta1.Query/AllBalances",
-				bz,
-				sdk.NewInt(int64(param)),
-				types.ModuleName,
-				"allbalances",
-				0,
-			)
 		}
 
 	// withdrawal address
@@ -108,12 +83,6 @@ func (k *Keeper) HandleChannelOpenAck(ctx sdk.Context, portID, connectionID stri
 				return err
 			}
 			k.SetAddressZoneMapping(ctx, address, zone.ChainId)
-		}
-
-		// emit this periodic query the first time, but not subsequently.
-		if err := k.EmitPerformanceBalanceQuery(ctx, &zone); err != nil {
-			k.Logger(ctx).Error("error emitting performance balance query", "error", err)
-			return err
 		}
 
 	default:

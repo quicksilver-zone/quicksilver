@@ -1,12 +1,11 @@
 module github.com/quicksilver-zone/quicksilver
 
-go 1.24.13
+go 1.26.4
 
 require (
 	cosmossdk.io/api v0.3.1
 	cosmossdk.io/errors v1.1.0
 	cosmossdk.io/math v1.5.3
-	github.com/armon/go-metrics v0.4.1
 	github.com/celestiaorg/go-square/v2 v2.3.3
 	github.com/celestiaorg/nmt v0.24.2
 	github.com/client9/misspell v0.3.4
@@ -17,7 +16,6 @@ require (
 	github.com/cosmos/gogoproto v1.7.2
 	github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7 v7.3.0
 	github.com/cosmos/ibc-go/v7 v7.10.0
-	github.com/cosmos/ics23/go v0.11.0
 	github.com/gogo/protobuf v1.3.3
 	github.com/golang/protobuf v1.5.4
 	github.com/golangci/golangci-lint/v2 v2.7.2
@@ -89,6 +87,7 @@ require (
 	github.com/alfatraining/structtag v1.0.0 // indirect
 	github.com/alingse/asasalint v0.0.11 // indirect
 	github.com/alingse/nilnesserr v0.2.0 // indirect
+	github.com/armon/go-metrics v0.4.1 // indirect
 	github.com/ashanbrown/forbidigo/v2 v2.3.0 // indirect
 	github.com/ashanbrown/makezero/v2 v2.1.0 // indirect
 	github.com/aws/aws-sdk-go v1.55.7 // indirect
@@ -133,6 +132,7 @@ require (
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/gogogateway v1.2.0 // indirect
 	github.com/cosmos/iavl v0.20.1 // indirect
+	github.com/cosmos/ics23/go v0.11.0 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.12.4 // indirect
 	github.com/cosmos/rosetta-sdk-go v0.10.0 // indirect
 	github.com/creachadair/taskgroup v0.13.2 // indirect
